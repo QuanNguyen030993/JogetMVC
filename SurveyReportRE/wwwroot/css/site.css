@@ -1,0 +1,262 @@
+﻿.dExForm{
+    padding: 10px;
+}
+
+.dExFormToolBar {
+    position: inherit;
+    top: auto;
+    right: 0;
+    padding-right: 25px;
+}
+
+.custom-link {
+    color: #007bff;
+    text-decoration: none; 
+    font-weight: bold; 
+    cursor: pointer; 
+}
+
+    .custom-link:hover {
+        text-decoration: underline;
+        color: #0056b3;
+    }
+
+.imagePreviewContainer {
+    position: relative; width: 120px; height: 120px; margin: 5px; margin-top: 20px;
+}
+
+.imagePreview {
+    width: 100%;
+    min-height: 100px; /* Chiều cao tối thiểu để hiển thị khi chưa có ảnh */
+    border: 2px dashed #ccc; /* Khung viền dashed */
+    display: flex;
+    flex-wrap: wrap; /* Cho phép ảnh tự xuống dòng khi không đủ chỗ */
+    gap: 10px; /* Khoảng cách giữa các ảnh */
+    align-items: center;
+    justify-content: start;
+    overflow-y: auto; /* Cho phép cuộn dọc nếu có nhiều ảnh */
+    background-color: #f9f9f9; /* Màu nền nhạt */
+    color: #aaa; /* Màu chữ placeholder */  
+    font-size: 16px;
+    position: relative;
+    padding: 10px; /* Khoảng cách giữa khung và ảnh */
+}
+
+    .imagePreview img {
+        width: 100px; /* Chiều rộng cố định của mỗi ảnh */
+        height: 100px; /* Chiều cao cố định của mỗi ảnh */
+        object-fit: cover; /* Đảm bảo ảnh vừa khít khung ảnh mà không bị méo */
+        border-radius: 5px; /* Bo góc nhẹ cho ảnh */
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    }
+
+.wrapper {
+    font-size: 12px !important;
+}
+.container {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 70vh;
+    padding-right: 0px !important;
+    padding-left: 0px !important;
+    margin-right: 0px !important;
+    margin-left: 0px !important;
+    font-size: 12px;
+}
+
+.vertical-group {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #ccc; /* Kẻ đường viền dọc */
+    border-left: 1px solid #ccc; /* Kẻ đường viền dọc */
+}
+
+.factory-cell {
+    height: 175px;
+    grid-column: 1 / 2; /* Nằm ở cột đầu tiên */
+    grid-row: 1 / span 2; /* Chiếm toàn bộ chiều cao */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+    font-weight: bold;
+    background-color: #ffffff;
+    border: 1px solid #b0bec5;
+    width: 100%;
+    text-align: center;
+}
+
+.direction-container {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr 1px 1fr; /* Chia lưới 5 cột */
+    grid-template-rows: 175px auto; /* Hàng đầu cao 175px */
+    gap: 10px; /* Khoảng cách giữa các ô */
+    align-items: center;
+    justify-items: center;
+    height: 100%;
+    width: 100%;
+    background-color: #e0f7fa; /* Màu nền tổng thể */
+    padding: 20px;
+    border: 1px solid #b0bec5;
+}
+/*.dx-htmleditor-content {
+    font-family: monospace;
+    white-space: pre-wrap;
+    background: #f4f4f4;
+    border: 1px solid #ccc;
+    padding: 10px;
+    overflow: auto;
+    max-height: 400px;
+}
+*/
+
+.locked-tabpanel {
+    pointer-events: none; /* Ngăn mọi tương tác */
+    opacity: 0.6; /* Giảm độ sáng để thể hiện tab bị khóa */
+}
+
+.custom-popup-content {
+    padding: 20px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+/*.custom-radio-button {
+    content: "";
+    background: #f4f4f4;
+    border-radius: 100%;
+    border: 1px solid #b4b4b4;
+    display: inline-block;
+    width: 1.4em;
+    height: 1.4em;
+    position: relative;
+    top: 0.1em;
+    margin-right: -1px;
+    vertical-align: top;
+    cursor: pointer;
+    text-align: center;
+    transition: all 250ms ease;
+}*/
+
+/**/
+.custom-radio-button {
+    /*margin: 0.5rem;*/
+}
+
+    .custom-radio-button input[type=radio] {
+        position: relative;
+        opacity: 0;
+    }
+
+        .custom-radio-button input[type=radio] + .radio-label:before {
+            content: "";
+            background: #f4f4f4;
+            border-radius: 100%;
+            border: 1px solid #b4b4b4;
+            display: inline-block;
+            width: 1.4em;
+            height: 1.4em;
+            position: relative;
+            top: 0px;
+            margin-right: 1em;
+            vertical-align: top;
+            cursor: pointer;
+            text-align: center;
+            transition: all 250ms ease;
+        }
+
+        .custom-radio-button input[type=radio]:checked + .radio-label:before {
+            background-color: #3197ee;
+            box-shadow: inset 0 0 0 4px #f4f4f4;
+        }
+
+        .custom-radio-button input[type=radio]:focus + .radio-label:before {
+            outline: none;
+            border-color: #3197ee;
+        }
+
+        .custom-radio-button input[type=radio]:disabled + .radio-label:before {
+            box-shadow: inset 0 0 0 4px #f4f4f4;
+            border-color: #b4b4b4;
+            background: #b4b4b4;
+        }
+
+        .custom-radio-button input[type=radio] + .radio-label:empty:before {
+            margin-right: 0;
+        }
+
+
+.indexeddb-button {
+    justify-content: flex-start;
+    padding: 10px;
+}
+
+.indexeddb-row-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fff;
+    margin-bottom: 10px;
+}
+
+.indexeddb-button-group {
+    display: flex;
+    gap: 10px;
+}
+
+.indexeddb-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    height: 100%;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.indexeddb-command-button-group {
+    display: flex;
+    gap: 10px;
+    float: right;
+}
+
+.status-button {
+    width: 10px; /* Tăng kích thước để dễ nhìn hơn */
+    height: 10px;
+    border-radius: 50%; /* Tạo hình tròn */
+    border: none;
+    cursor: pointer;
+    outline: none;
+    background-color: gray; /* Mặc định trạng thái chờ hoặc chưa xác định */
+    box-shadow: 0 0 5px rgba(128, 128, 128, 0.8); /* Ánh sáng nhẹ mặc định */
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    margin-left: -15px;
+    margin-top: -15px
+}
+
+    .status-button.online {
+        background-color: deepskyblue;
+        box-shadow: 0 0 10px rgba(0, 191, 255, 0.8); /* Ánh sáng xanh lá */
+    }
+
+    .status-button.warning {
+        background-color: yellow;
+        box-shadow: 0 0 10px rgba(255, 223, 0, 0.8); /* Ánh sáng vàng */
+    }
+
+    .status-button.offline {
+        background-color: yellow;
+        /*background-color: red;*/
+        /*box-shadow: 0 0 10px rgba(255, 0, 0, 0.8);*/ /* Ánh sáng đỏ */
+        box-shadow: 0 0 10px rgba(255, 223, 0, 0.8); /* Ánh sáng vàng */
+    }

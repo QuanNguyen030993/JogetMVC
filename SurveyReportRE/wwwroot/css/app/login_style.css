@@ -1,0 +1,263 @@
+.login-body {
+	background: url("../../images/login_bg.jpg") no-repeat center center fixed;
+	background-size: cover;
+	font-size: 16px;
+	font-family: 'Lato', sans-serif;
+	font-weight: 300;
+	margin: 0;
+	color: #666;
+}
+
+/* Typography */
+h1#title {
+	font-family: 'Roboto Slab', serif;
+	font-weight: 300;
+	font-size: 3.2em;
+	color: white;
+	text-shadow: 0 0 10px rgba(0,0,0,0.8);
+	margin: 0 auto;
+	padding-top: 180px;
+	max-width: 300px;
+	text-align: center;
+	position: relative;
+	top: 0px;
+}
+
+h1#title span span {
+	font-weight: 400;
+}
+
+h2 {
+	text-transform: uppercase;
+	color: white;
+	font-weight: 400;
+	letter-spacing: 1px;
+	font-size: 1.4em;
+	line-height: 2.8em;
+}
+
+a {
+	text-decoration: none;
+	color: #666;
+}
+
+a:hover {
+	color: #aeaeae;
+}
+
+p.small {
+	font-size: 0.8em;
+	margin: 20px 0 0;
+}
+
+
+/* Layout */
+.login-container {
+	margin: 0;
+}
+
+.login-top {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	background: -moz-linear-gradient(top,  rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%); /* FF3.6-15 */
+	background: -webkit-linear-gradient(top,  rgba(0,0,0,0.6) 0%,rgba(0,0,0,0) 100%); /* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(to bottom,  rgba(0,0,0,0.6) 0%,rgba(0,0,0,0) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#99000000', endColorstr='#00000000',GradientType=0 ); /* IE6-9 */
+}
+
+.login-box {
+    background-color: white;
+    max-width: 450px;
+    margin: 0 auto;
+    position: relative;
+    top: 250px;
+    border-radius: 5px;
+    box-shadow: 0 5px 50px rgba(0,0,0,0.4);
+    text-align: center;
+}
+
+	.login-box .box-header {
+		background-color: #305f72;
+		margin-top: 0;
+		border-radius: 5px 5px 0 0;
+		padding: 4px;
+		color: white;
+	}
+
+.login-box label {
+	font-weight: 700;
+	font-size: .8em;
+	color: #888;
+	letter-spacing: 1px;
+	text-transform: uppercase;
+	line-height: 2em;
+}
+
+.login-box input {
+	margin-bottom: 20px;
+	padding: 8px;
+	border: 1px solid #ccc;
+	border-radius: 2px;
+	font-size: .9em;
+	color: #888;
+}
+
+.login-box input:focus {
+	outline: none;
+	border-color: #665851;
+	transition: 0.5s;
+	color: #665851;
+}
+
+.login-box button {
+	margin-top: 0px;
+	border: 0;
+	border-radius: 2px;
+	color: white;
+	padding: 10px;
+	text-transform: uppercase;
+	font-weight: 400;
+	font-size: 0.7em;
+	letter-spacing: 1px;
+	background-color: #665851;
+	cursor:pointer;
+	outline: none;
+}
+
+.login-box button:hover {
+	opacity: 0.7;
+	transition: 0.5s;
+}
+
+.login-box button:hover {
+	opacity: 0.7;
+	transition: 0.5s;
+}
+
+.selected {
+	color: #665851!important;
+	transition: 0.5s;
+}
+.login-form {
+	padding: 25px 0px;
+}
+/* Animation Delay */
+#logo {
+	-webkit-animation-duration: 1s;
+	-webkit-animation-delay: 2s;
+	max-width: 100%;
+	max-height: 100%;
+}
+
+#logo {
+    z-index: 10;
+}
+
+.login-caption {
+    -webkit-animation-duration: 1s;
+    -webkit-animation-delay: 1s;
+}
+
+.login-box {
+  -webkit-animation-duration: 1s;
+  -webkit-animation-delay: 1s;
+}
+
+.text-danger {
+    text-align:left;
+    color:red;
+}
+.a-link a{
+	color: #888;
+}
+
+/*==================================================
+=            Bootstrap 3 Media Queries             =
+==================================================*/
+/*==========  Mobile First Method  ==========*/
+/* Custom, iPhone Retina */
+@media only screen and (min-width : 320px) {
+}
+
+/* Extra Small Devices, Phones */
+@media only screen and (min-width : 480px) {
+}
+
+/* Small Devices, Tablets */
+@media only screen and (min-width : 768px) {
+}
+
+/* Medium Devices, Desktops */
+@media only screen and (min-width : 992px) {
+}
+
+/* Large Devices, Wide Screens */
+@media only screen and (min-width : 1200px) {
+}
+
+/*==========  Non-Mobile First Method  ==========*/
+.logo-container-small {
+    width: 75px;
+    height: 75px;
+    margin-left:42.5%;
+    margin-top: 5%;
+}
+
+.logo-container {
+    position: absolute;
+    top: 10%;
+    left: 15%;
+    width: 300px;
+    height: 300px;
+}
+/* Large Devices, Wide Screens */
+@media only screen and (max-width : 1250px) {
+    .logo-container {
+        width: 250px;
+        height: 250px;
+        left: 10%;
+    }
+}
+
+/* Large Devices, Wide Screens */
+@media only screen and (max-width : 1100px) {
+    .logo-container {
+        width: 250px;
+        height: 250px;
+        left: 10%;
+    }
+}
+
+/* Medium Devices, Desktops */
+@media only screen and (max-width : 992px) {
+    .logo-container {
+        width: 200px;
+        height: 200px;
+        left: 10%;
+    }
+}
+
+/* Small Devices, Tablets */
+@media only screen and (max-width : 768px) {
+    .logo-container {
+        width: 150px;
+        height: 150px;
+        top: 5%;
+        left: 40%;
+    }
+}
+
+/* Extra Small Devices, Phones */
+@media only screen and (max-width : 480px) {
+    .logo-container {
+        width: 75px;
+        height: 75px;
+        top: 5%;
+        left: 40%;
+    }
+}
+
+/* Custom, iPhone Retina */
+@media only screen and (max-width : 320px) {
+}

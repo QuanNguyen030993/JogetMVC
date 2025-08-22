@@ -1,0 +1,438 @@
+﻿@page
+@model Search_FormModel
+@{
+
+
+}
+
+
+<style>
+    /* 	.main-container-report {
+                    display: flex;
+                    width: 100%;
+                    height: 95%;
+                } */
+
+    .filter-container {
+        width: 200px;
+        transition: width 0.5s ease;
+        white-space: nowrap;
+    }
+
+    .dx-field-item-label-location-left {
+        width: 175px;
+    }
+
+    .custom-search-custom {
+        margin: 30px;
+    }
+
+    .sidenav {
+        height: 100%;
+        width: 0;
+        position: absolute;
+        z-index: 1;
+        top: 0;
+        left: 0;
+        overflow-x: hidden;
+        transition: 0.5s;
+        padding-top: 25px;
+    }
+
+        .sidenav a {
+            text-decoration: none;
+            font-size: 25px;
+            color: #818181;
+            display: block;
+            transition: 0.3s;
+        }
+
+            .sidenav a:hover {
+                color: #f1f1f1;
+            }
+
+        .sidenav .closebtn {
+            position: absolute;
+            top: -20px;
+            right: 25px;
+            font-size: 36px;
+            margin-left: 50px;
+        }
+
+    .mainside {
+        transition: margin-left .5s;
+        height: 105%;
+    }
+
+    @@media screen and (max-height: 450px) {
+        .sidenav a {
+            font-size: 18px;
+        }
+    }
+
+</style>
+
+
+@{
+    string idContainer = "container" + Search_FormModel.ModelName;
+    string idLeftTab = "leftTab" + Search_FormModel.ModelName;
+    string idRightTab = "mainTabIndex" + Search_FormModel.ModelName;
+    string idSearchBox = "formSearchBox" + Search_FormModel.ModelName;
+    string idButton = "button" + Search_FormModel.ModelName;
+    string searchToggle = "toggleSidenavPLProductionLine" + Search_FormModel.ModelName;
+}
+
+
+
+<script>
+    function openNav() {
+        document.getElementById("@idLeftTab").style.width = "275px";
+        document.getElementById("@idRightTab").style.marginLeft = "275px";
+    }
+
+    function closeNav() {
+        document.getElementById("@idLeftTab").style.width = "0";
+        document.getElementById("@idRightTab").style.marginLeft = "0";
+    }
+</script>
+
+@* <div id="@idSearchBox" style="text-align: right;" class="dExForm"></div> *@
+
+<div id="@idContainer">
+    <div style="position:relative;height:800px">
+        <div id="@idLeftTab" class="sidenav">
+            <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+            <div id="@idSearchBox" style="text-align: right;"></div>
+            <div id="@idButton" style="left: 30px;top: 10px;"> </div>
+        </div>
+        <div id="@idRightTab" class="mainside">
+            <span id="@searchToggle" style="cursor:pointer" onclick="openNav()">&#9776;Search Panel</span>
+            <div id='dataGrid_@Search_FormModel.ModelName' style="height: 100%; width:100%" class="report-grid a	pp-main-grid-container ">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var isOpen = true;
+    $(function () {
+        var _viewConfig = [
+            { FilterField: "", Type: "dxDateBox", ElementName: "fromDateDateBox", Caption: "From Date", ParameterField: "FromDate", SelectedValue: null, ValueExpr: null, DisplayExpr: null, ShowColumns: null }
+            , { FilterField: "", Type: "dxDateBox", ElementName: "toDateDateDateBox", Caption: "To Date", ParameterField: "ToDate", SelectedValue: null, ValueExpr: null, DisplayExpr: null, ShowColumns: null }
+            , { FilterField: "", Type: "dxTextBox", ElementName: "outlineText", Caption: "Heading", ParameterField: "Outline", SelectedValue: null, ValueExpr: null, DisplayExpr: null, ShowColumns: null }
+            , { FilterField: "", Type: "dxTextBox", ElementName: "contentText", Caption: "Content", ParameterField: "Content", SelectedValue: null, ValueExpr: null, DisplayExpr: null, ShowColumns: null }
+            // , { FilterField: "ItemType", Type: "Enum", ElementName: "ItemTypeWH", Caption: "Loại NPL", ParameterField: "ItemTypeId", SelectedValue: null, ValueExpr: null, DisplayExpr: null, ShowColumns: null }
+            // , { FilterField: "Warehouse", Type: "Entity", ElementName: "WareHouseWH", Caption: "Kho", ParameterField: "WareHouseId", SelectedValue: null, ValueExpr: "Id", DisplayExpr: "Name", ShowColumns: [{ dataField: "Id", caption: "Mã" }, { dataField: "Name", caption: "Tên kho" }] }
+        ]
+        var searchFormData = {};
+        var selectedSearchItems = "";
+        var filterExpr = null;
+        var _filterWidth = 150;
+        var _filterHeight = 30;
+        var _enumWidth = 300;
+        var _enumHeight = 500;
+        var _entityWidth = 600;
+        var _entityHeight = 500;
+        var _isFirstLoad = true;
+        var searchFormControls = [
+        ];
+        openNav();
+        function RenderElementV2() {
+            $.each(_viewConfig, function (i, item) {
+                if (item.Type == "dxDateBox") {
+                    searchFormControls.push({
+                        elementAttr: { id: item.ElementName },
+                        dataField: item.ElementName,
+                        editorType: item.Type,
+                        editorOptions: {
+                            width: _filterWidth,
+                            showClearButton: true
+                        },
+                        label: { location: "left", text: item.Caption },
+                        validationRules: [{
+                            type: "custom",
+                            reevaluate: true,
+                            validationCallback: function (options) {
+                                var toDate = searchForm.getEditor("toDateDateDateBox");
+                                var fromDate = searchForm.getEditor("fromDateDateBox");
+                                var toDateValue = "";
+                                var fromDateValue = "";
+
+                                if (toDate && toDate.option('value'))
+                                    toDateValue = toDate.option('value');
+                                if (fromDate && fromDate.option('value'))
+                                    fromDateValue = fromDate.option('value');
+
+                                if (toDateValue && fromDateValue)
+                                    if (toDateValue < fromDateValue) {
+                                        // if (options.value < 0) {
+                                        // options.rule.message = "To Date cannot be earlier than From Date.";
+                                        return false;
+                                        // }
+                                    }
+                                return true;
+                            }, message: "To date cannot be earlier than from date.",
+                        }]
+                    });
+                }
+                if (item.Type == "Enum") {
+                    var elements = appGetElementsByName(item.FilterField);
+                    searchFormControls.push({
+                        dataField: item.ElementName,
+                        editorType: "dxDropDownBox",
+                        label: { location: "left", text: item.Caption },
+                        editorOptions: {
+                            dropDownOptions: {
+                                width: _enumWidth
+                            },
+                            width: _filterWidth,
+                            valueExpr: "value",
+                            displayExpr: "caption",
+                            dataSource: new DevExpress.data.ArrayStore({
+                                data: elements,
+                                key: "value"
+                            }),
+                            columns: [
+                                { dataField: "code", caption: "Mã" }
+                                , { dataField: "caption", caption: "Tên" }
+                            ],
+                            contentTemplate: function (e) {
+                                const $dataGrid = $("<div>").dxDataGrid({
+                                    dataSource: e.component.option("dataSource"),
+                                    columns: e.component.option("columns"),
+                                    selection: { mode: "multiple" },
+                                    onSelectionChanged: function (selectedItems) {
+                                        e.component.selectedItem = selectedItems.selectedRowsData;
+                                        const keys = selectedItems.selectedRowKeys;
+                                        e.component.option("value", selectedItems.selectedRowsData.map(obj => obj.caption).join(','));
+                                    }
+                                });
+                                return $dataGrid;
+                            }
+                        }
+                    });
+                }
+                if (item.Type == "Entity") {
+                    var mDropDownDS = new MDropDownDataSource();
+                    var dataSource = mDropDownDS.getDropDownDS('Id', `api/${item.FilterField}Api/GetLookup`);
+                    searchFormControls.push({
+                        dataField: item.ElementName,
+                        editorType: "dxDropDownBox",
+                        label: { location: "left", text: item.Caption },
+                        editorOptions: {
+                            width: _filterWidth,
+                            dropDownOptions: {
+                                width: _entityWidth
+                            },
+                            valueExpr: item.ValueExpr,
+                            displayExpr: item.DisplayExpr,
+                            dataSource: dataSource,
+                            columns: item.ShowColumns,
+                            contentTemplate: function (e) {
+                                const $dataGrid = $("<div>").dxDataGrid({
+                                    selectionMode: 'all',
+                                    // remoteOperations: { paging: true, filtering: true, sorting: true, grouping: true, summary: true, groupPaging: true },
+                                    filterRow: { visible: true },
+                                    dataSource: e.component.option("dataSource"),
+                                    columns: e.component.option("columns"),
+                                    selection: { mode: "multiple" },
+                                    scrolling: {
+                                        mode: 'virtual',
+                                        preloadEnabled: false,
+                                        showScrollbar: 'always'
+                                    },
+                                    width: "100%",
+                                    height: "100%",
+                                    allowItemDeleting: false,
+                                    showSelectionControls: true,
+                                    sorting: {
+                                        mode: 'multiple',
+                                    },
+                                    onSelectionChanged: function (selectedItems) {
+                                        e.component.selectedItem = selectedItems.selectedRowsData;
+                                        const keys = selectedItems.selectedRowKeys;
+                                        e.component.option("value", keys);
+                                        e.component.option("value", selectedItems.selectedRowsData.map(obj => obj.Id).join(','));
+                                    },
+                                    columnAutoWidth: true,
+                                    customizeColumns: function (columns) {
+                                    },
+                                });
+                                return $dataGrid;
+                            }
+                        }
+                    });
+                }
+                if (item.Type == "dxTextBox") {
+                    searchFormControls.push({
+                        dataField: item.ElementName,
+                        editorType: item.Type,
+                        editorOptions: {
+                            width: _filterWidth,
+                            showClearButton: true
+                        },
+                        label: { location: "left", text: item.Caption }
+                    });
+                }
+            });
+
+
+            $("#@idButton").dxButton({
+                height: 30,
+                width: 200,
+                text: "Search",
+                onClick: function (e) {
+                    if (searchForm.validate().isValid) {
+                        var dataSource = $(`#dataGrid_@Search_FormModel.ModelName`).dxDataGrid().dxDataGrid("instance").option("dataSource");
+                        dataSource.load()
+                            .done(function () {
+                                myGrid.dxDataGrid("instance").refresh();
+                            })
+                            .fail(function () {
+                            });
+                    }
+                    else {
+                        alert("To date cannot be earlier than from date.");
+                    }
+                }
+            }).addClass("custom-search-custom");
+        }
+
+      
+
+        var searchFormData = {};
+        RenderElementV2();
+        var searchForm = $('<div style="text-align: left;">').appendTo($("#@idSearchBox")).dxForm({
+            items: [{ itemType: "group", items: searchFormControls }],
+            width: 300
+        }).dxForm('instance');
+
+
+        const columns = [
+            {
+                dataField: "FileName",
+                width: "auto",
+                caption: "File Name",
+                cellTemplate: function (container, options) {
+                    // Tạo link gọi iframe đọc PDF
+                    const filePath = options.data.Path;
+                        $("<div>").dxButton({
+                            stylingMode: 'contained',
+                            text: 'View PDF',
+                            type: 'normal',
+                            disabled: filePath ? false :true,
+                        })
+                        .attr("href", "javascript:void(0)")
+                        .on("click", function () {
+                            $.ajax({
+                                url: `/api/SurveyWorkflow/GetPdfFile?id=${options.data.SurveyId}`,
+                                method: "GET",
+                                xhrFields: {
+                                    responseType: "blob"
+                                },
+                                success: function (blob) {
+                                    const url = window.URL.createObjectURL(blob);
+
+                                    const tabName = `pdfPreviewTab_${options.data.SurveyId}`;
+                                    const existingTab = window.open('', tabName);
+
+                                    if (existingTab) {
+                                        existingTab.location.href = url;
+                                    } else {
+                                        window.open(url, tabName);
+                                    }
+
+                                    window.URL.revokeObjectURL(url);
+                                },
+                                error: function (xhr, status, error) {
+                                    appNotifyWarning("File is not exists.");
+                                }
+                            });
+                        })
+                        .appendTo(container);
+
+                    $("<div>").dxButton({
+                        stylingMode: 'contained',
+                        text: options.value,
+                        type: 'normal'
+                    })
+                       .attr("href", "javascript:void(0)")
+                       .on("click", function () {
+                           callElementView(`/Business/Form/Survey_Form/${options.data.SurveyId}`, `form_Survey_Form_${options.data.SurveyId}`, `Survey ${options.value}`);
+                       })
+                       .appendTo(container);
+                }
+            },
+                // { dataField: "Extension", caption: "Extension", dataType: "string"},
+                { dataField: "Path", caption: "Path", dataType: "string" },
+            { dataField: "Line", caption: "Line", dataType: "string" },
+            { dataField: "FileSize", caption: "File Size" },
+            { dataField: "DateCreated", caption: "Date Created", dataType: "string" },
+            { dataField: "DateAccessed", caption: "Date Accessed", dataType: "string" },
+            { dataField: "SurveyId", caption: "Survey Id", dataType: "number", visible: false },
+
+        ];
+
+        var myGrid = $(`#dataGrid_@Search_FormModel.ModelName`).dxDataGrid({
+            columns: columns,
+            width: "100%",
+            height: "100%",
+            dataSource: new DevExpress.data.CustomStore({
+                key: "Id",
+                load: function (loadOptions) {
+                    return $.ajax({
+                        url: "/api/Search/Query",
+                        type: "POST",
+                        headers: { 'Content-Type': 'application/json' },
+                        data: JSON.stringify(getSearchParameters()),
+                        success: function (data) {
+                        },
+                        error: function (error) {
+                            console.error("Error loading data:", error);
+                        }
+                    });
+                }
+            }),
+            remoteOperations: false, // Tắt các xử lý tự động
+        });
+
+
+        function getSearchParameters() {
+            var params = {};
+            _viewConfig.forEach(function (item) {
+                var instance = searchForm.getEditor(item.ElementName);
+                if (instance) {
+                    switch (item.Type) {
+                        case "dxDateBox":
+                            params[item.ParameterField] = convertToDateString(instance.option("value"));
+                            break;
+                        case "Enum":
+                        case "Entity":
+                            if (instance.selectedItem) {
+                                var values = instance.selectedItem.map(obj => obj.value || obj.Id);
+                                params[item.ElementName] = values.join(",");
+                            }
+                            break;
+                        case "dxTextBox":
+                            params[item.ParameterField] = instance.option("value");
+                            break;
+                    }
+                }
+            });
+            return params;
+        }
+    });
+
+    function convertToDateString(dateTime) {
+        if (dateTime != null) {
+            var year = dateTime.getFullYear();
+            var month = ('0' + (dateTime.getMonth() + 1)).slice(-2);
+            var day = ('0' + dateTime.getDate()).slice(-2);
+            return formattedDate = year + '-' + month + '-' + day;
+        }
+        else {
+            return null;
+        }
+    }
+
+</script>

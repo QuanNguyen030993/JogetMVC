@@ -1,0 +1,35 @@
+﻿@page "{refPageNum:int?}/{pageNum:int?}/{jsonConfig?}"
+@model Survey_LossExpValueBrkdwn_FormModel
+@{
+    Layout = null;
+}
+<script>
+
+    $(function () {
+          var _id = @Convert.ToInt32(ViewData["Id"]);
+          var _fkId = @Convert.ToInt32(ViewData["FKId"]);
+          var _jsonConfig = '@Html.Raw(ViewData["JsonConfig"])'; 
+          var _surveyData = new Object(); 
+          if (_jsonConfig) _surveyData = JSON.parse(_jsonConfig);
+        var _formConfig = new MFormOption(_surveyData);
+          _formConfig.cloneUrl = '/Business/Form/SurveyDetail/Survey_LossExpValueBrkdwn_Form/' + _id;
+          _formConfig.tabCode = 'Survey_LossExpValueBrkdwn_Form';
+          _formConfig.tabName = "";
+          _formConfig.fieldsFilterByTab = "LossExpValueBrkdwn";
+          _formConfig.allowFormActionButton = false;
+          _formConfig.originModelName = "@Survey_LossExpValueBrkdwn_FormModel.ModelName";
+          _formConfig.formElementName = "Survey_LossExpValueBrkdwn_Form";
+          _formConfig.colCount = 1;
+          _formConfig.labelLocation = "top";
+          _formConfig.schemeBasedOn = `@(Survey_LossExpValueBrkdwn_FormModel.SchemeModelName)`;
+          _formConfig.refFieldId = _fkId;
+        _formConfig.refFieldName = `@(Survey_LossExpValueBrkdwn_FormModel.FKModelName)Id`;
+        _formConfig.isChildForeignKey = true;
+        _formConfig.outlineForm = { isUse: true, surveyTypeId: _surveyData.surveyTypeId, isOutlineChecked: false };
+        _formConfig.isAllowAddOutline = false;
+        _formConfig.isReadOnly = _surveyData.isReadOnly;
+        new LossExpValueBrkdwnForm(_id, null, _formConfig, _formConfig);
+    });
+</script>
+<div id="form_Survey_LossExpValueBrkdwn_Form_@(Convert.ToInt32(ViewData["FKId"]))_@(Convert.ToInt32(ViewData["Id"]))"></div>
+

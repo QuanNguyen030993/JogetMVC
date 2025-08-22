@@ -1,0 +1,11 @@
+﻿@page
+@model SurveyMemoWorkflowModel
+@{
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@SurveyMemoWorkflowModel.ModelName`), new SurveyMemoWorkflowGridOption('@SurveyMemoWorkflowModel.ModelName'), null);
+    });
+</script>
+<div id="dataGrid_@SurveyMemoWorkflowModel.ModelName"></div>

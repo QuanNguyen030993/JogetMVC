@@ -1,0 +1,125 @@
+﻿@page "{pageNum:int?}/{jsonConfig?}"
+@model Survey_SurveyEvaluation_FormModel
+@{
+    ViewData["Title"] = "Home page";
+    ViewBag.Title = "Survey";
+    Layout = null;
+}
+<script>
+    $(function () {
+        var categories = [];
+        var _id = @Convert.ToInt32(ViewData["Id"]);
+        var _fkId = @Convert.ToInt32(ViewData["FKId"]);
+        var _jsonConfig = '@Html.Raw(ViewData["JsonConfig"])';
+        var _surveyData = new Object();
+        if (_jsonConfig) _surveyData = JSON.parse(_jsonConfig);
+        var staticTab = ["Summary", "Protection", "Management", "Occupancy", "Construction", "ExtFireExpExposures", "OtherExposures", "LossHistory", "Overall"];
+        // var originModelName = "@Survey_PosNegAspect_FormModel.ModelName";
+        // var schemeBasedOn = "@Survey_PosNegAspect_FormModel.FKModelName";
+        var refFieldName = `SurveyId`;
+        var oldData = [];
+        var grades = [];
+        var colorGradeConfigs = [
+            { name: "Excellent", colorHex: "#28a745" },
+            { name: "Good", colorHex: "#17a2b8" },
+            { name: "Average", colorHex: "#ffc107" },
+            { name: "Marginal", colorHex: "#fd7e14" },
+            { name: "Poor", colorHex: "#dc3545" }
+        ];
+
+
+
+        apiInvokeRequest(`api/SurveyEvaluation/GetCategories`
+            , "GET"
+            , 'json'
+            , { contentType: 'application/json' }
+            , getCategories, false);
+
+        apiInvokeRequest(`api/SurveyEvaluation/GetGrades`
+            , "GET"
+            , 'json'
+            , { contentType: 'application/json' }
+            , getGrades, false);
+
+        apiInvokeRequest(`api/SurveyEvaluation/GetFKMany?fkId=${_fkId}&fkField=${refFieldName}`
+            , "GET"
+            , 'json'
+            , { contentType: 'application/json' }
+            , loadOldResult, false);
+
+        function getCategories(data) {
+            categories = data;
+            var itemArrays = [];
+            $.ajax({
+                url: `api/SurveyOutlineOptions/GetMainOutLineListInclude/${_id}/${_surveyData.surveyTypeId}`,
+                type: 'GET',
+                async: false,
+                success: function (response) {
+                    itemArrays = response;
+                },
+                error: function (exception) {
+                }
+            });
+
+            itemArrays.forEach(item => {
+                if (item.mainEnable === false) {
+                    categories = categories.filter(category =>
+                        category.mappingField.toLowerCase() !== (item.outlineFK ? item.outlineFK.placeHolder.toLowerCase() : "")
+                    );
+                }
+            });
+
+        }
+
+        function getGrades(data) {
+            grades = data;
+        }
+
+        function loadOldResult(data) {
+            oldData = data;
+        }
+
+        
+        const resultArray = categories.map(item => {
+            var categoryExist = oldData.find(f => f.surveyCategoryTypeId == item.id);
+            return {
+                editorType: "dxRadioGroup",
+                readOnly: _surveyData.isReadOnly,
+                editorOptions: {
+                    layout: 'horizontal',
+                    dataSource: grades.map(mitem => { return { id: mitem.id, key: mitem.key }; }),
+                    valueExpr: 'id',
+                    displayExpr: 'key',
+                    value: categoryExist ? categoryExist.surveyStatusId : grades.map(mitem => { return { id: mitem.id, key: mitem.key }; })[2].id,
+                    itemTemplate: function (itemData) {
+                        const isBold = (item.key === "Overall");
+                        var divContainer = $("<div>");
+                        $(`.dx-field-item-label-text:contains('Overall')`).first().attr("style", "font-weight: bold;");
+                        return divContainer
+                            .text(itemData.key)
+                            .css({ "font-weight": isBold ? "bold" : "normal" }, { "disabled": _surveyData.isReadOnly });
+                    },
+                },
+                dataField: item.key.trim().replace(/\s+/g, ''),
+                elementAttr: {
+                    id: item.id
+                }
+            };
+        });
+
+        $("#form_Survey_SurveyEvaluation_Form_@Convert.ToInt32(ViewData["FKId"])").dxForm({
+            colCount: 1,
+            readOnly: _surveyData.isReadOnly,
+            items: resultArray,
+            onContentReady: function (e) {
+                // var items = e.element.find(".dx-radiobutton");
+                // for (var index = 0; index < items.length; index++) {
+                //   var color = index % 2 == 0 ? "red" : "green";
+                //   $(items[index]).css("backgroundColor", color);
+                //  }
+            }
+        });
+    });
+</script>
+<div id="form_Survey_SurveyEvaluation_Form_@Convert.ToInt32(ViewData["FKId"])" class="dExForm">
+</div>

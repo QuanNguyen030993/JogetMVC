@@ -1,0 +1,11 @@
+﻿@page
+@model PendingJogetModel
+@{
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@PendingJogetModel.ModelName`), new PendingJogetGridOption('@PendingJogetModel.ModelName'), null);
+    });
+</script>
+<div id="dataGrid_@PendingJogetModel.ModelName"></div>

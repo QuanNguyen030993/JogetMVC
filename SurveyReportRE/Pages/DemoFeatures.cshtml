@@ -1,0 +1,480 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Demo";
+}
+@await Html.PartialAsync("_LayoutReference")
+@await Html.PartialAsync("_SPAReference")
+<div id="buttonTestFunction"></div>
+<div id="selectBox" style="height:50px; width:300px;"></div>
+<div id="accordion"></div>
+<div class="details">
+    <h2>
+        Grid items dynamic by columns
+    </h2>
+    <table id="gridaddcolumn" class="table table-responsive">
+        <tbody>
+            <tr>
+                <td>Category</td>
+                <td>Product</td>
+                <td>Quantity</td>
+                <td>Rate</td>
+                <td>&nbsp;</td>
+            </tr>
+            <tr class="mycontainer" id="mainrow">
+                <td>
+                    <select id="productCategory" class="pc form-control" onchange="LoadProduct(this)">
+                        <option>Select</option>
+                    </select>
+                    <span class="error">Select Category</span>
+                </td>
+                <td>
+                    <select id="product" class="product form-control">
+                        <option>Select</option>
+                    </select>
+                    <span class="error">Select product</span>
+                </td>
+                <td>
+                    <input type="text" id="quantity" class="quantity form-control" />
+                    <span class="error">Valid quantity required</span>
+                </td>
+                <td>
+                    <input type="text" id="rate" class="rate form-control" />
+                    <span class="error">Valid rate required</span>
+                </td>
+                <td>
+                    <input type="button" id="addcolumn" value="Add" style="width:80px" class="btn btn-success" />
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+<div class="details">
+    <h2>
+        Grid items dynamic by line
+    </h2>
+    <table id="gridaddline" class="table table-responsive">
+        <tbody>
+            <tr>
+                <td>Category</td>
+                <td>Product</td>
+                <td>Quantity</td>
+                <td>Rate</td>
+                <td>&nbsp;</td>
+            </tr>
+            <tr class="mycontainer" id="mainrow">
+                <td>
+                    <select id="productCategory" class="pc form-control" onchange="LoadProduct(this)">
+                        <option>Select</option>
+                    </select>
+                    <span class="error">Select Category</span>
+                </td>
+                <td>
+                    <select id="product" class="product form-control">
+                        <option>Select</option>
+                    </select>
+                    <span class="error">Select product</span>
+                </td>
+                <td>
+                    <input type="text" id="quantity" class="quantity form-control" />
+                    <span class="error">Valid quantity required</span>
+                </td>
+                <td>
+                    <input type="text" id="rate" class="rate form-control" />
+                    <span class="error">Valid rate required</span>
+                </td>
+                <td>
+                    <input type="button" id="add" value="Add" style="width:80px" class="btn btn-success" />
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+<div class="details">
+    <h2>
+        Devextreme Component Add
+    </h2>
+    <input type="button" value="Devextreme Controls test" onclick="DevExtremeHandle()" />
+</div>
+
+<div id="appendTextBox" style="width: 300px; height: 20px;">Text Box Add Here</div>
+
+<h2>
+    Upload Image
+</h2>
+<form id="fileUploadForm" method="post" enctype="multipart/form-data">
+    <input type="file" name="file" />
+    <input type="button" value="Upload" onclick="uploadFile()" />
+</form>
+
+<script type="text/javascript">
+    $(`#buttonTestFunction`).dxButton({
+        onClick: function(e){
+            $.ajax({
+               url: '/api/Survey/ConcatenateFile'
+            });
+        }
+    });
+
+
+
+      const dataSourceLookup = DevExpress.data.AspNet.createStore({
+        key: 'id',
+        loadUrl: `api/ProtectionDetail/EnumLookup?refField=firefightingEquipmentId`,
+        insertUrl: `api/ProtectionDetail/UpdateEnum`,
+        paginate: true
+    });
+
+
+
+    var itemArray = [
+        { id: 1, name: "Item 1" },
+        { id: 2, name: "Item 2" },
+    ];
+    $.ajax({
+        url: `api/ProtectionDetail/EnumLookup?refField=firefightingEquipmentId`,
+        method: "GET",
+        dataType: "json",
+        async: false,
+        success: function (data) {
+            itemArray = data.map(item => {
+                return {
+                    id: item.id,
+                    name: `${item.key}`
+                }
+            });
+        }
+    })
+
+    dataSourceLookup.load().done(function (data) {
+        itemArray = data.map(item => {
+            return {
+                id: item.id,
+                name: `${item.key}`
+            }
+        });
+    });
+
+    // Tạo dataSource từ array -> Có store thì .reload
+    // Cấu trúc 
+    //_changedTime:0
+    //_eventsStrategy:e {_events: {…}, _owner: t, _options: {…}}
+    //_isLastPage:false
+    //_isLoaded:false
+    //_items:[]
+    //_loadQueue:{add: ƒ, busy: ƒ}
+    //_loadingCount:0
+    //_mapFunc:undefined
+    //_onPushHandler:ƒ (e)
+    //_operationManager:e {_counter: -1, _deferreds: {…}}
+    //_pageIndex:0
+    //_pageSize:20
+    //_paginate:true
+    //_postProcessFunc:undefined
+    //_reshapeOnPush:false
+    //_searchExpr:undefined
+    //_searchOperation:"contains"
+    //_searchValue:null
+    //_store:t {callBase: undefined, _eventsStrategy: e, _key: 'id', _errorHandler: undefined, _useDefaultSearch: true, …}
+    //_storeLoadOptions:{sort: undefined, filter: undefined, select: undefined, group: undefined, requireTotalCount: undefined}
+    //_totalCount:-1
+    //_userData:{}
+
+
+
+
+    let dataSource = new DevExpress.data.DataSource({
+        store: {
+            type: "array",
+            key: "id", // Trường duy nhất
+            data: itemArray,
+        },
+    });
+
+    // Tạo CustomStore
+    // Cấu trúc 
+    //callBase: undefined
+    //_byKeyFunc: undefined
+    //_cacheRawData: true
+    //_errorHandler: undefined
+    //_eventsStrategy: e {_event: …}, _owne: , _option: …}}
+    //_insertFunc: ƒ (values)
+    //_key: "id"
+    //_loadFunc: ƒ ()
+    //_loadMode: undefined
+    //_removeFunc: ƒ (key)
+    //_totalCountFunc: undefined
+    //_updateFunc: ƒ (key, values)
+    //_useDefaultSearch: false
+
+    const customStore = new DevExpress.data.CustomStore({
+        key: "id",
+        load: function () {
+            return itemArray; // Load dữ liệu
+        },
+        insert: function (values) {
+            values.id = itemArray.length + 1; // Tự sinh ID
+            itemArray.push(values); // Thêm vào mảng
+        },
+        update: function (key, values) {
+            const index = itemArray.findIndex((item) => item.id === key);
+            if (index >= 0) {
+                itemArray[index] = { ...itemArray[index], ...values }; // Sửa dữ liệu
+            }
+        },
+        remove: function (key) {
+            itemArray = itemArray.filter((item) => item.id !== key); // Xóa dữ liệu
+        },
+    });
+
+
+    // let dataSource = new DevExpress.data.DataSource({
+    //     store: {
+    //         type: "array",
+    //         data: [
+    //             { id: 1, name: "Item A" },
+    //             { id: 2, name: "Item B" },
+    //         ],
+    //     },
+    // });
+
+    // // Lọc dữ liệu theo `id = 1` và chỉ tải dữ liệu này
+    // dataSource.load({ filter: ["id", "=", 1] }).done(function (result) {
+    //     console.log(result); // [{ id: 1, name: "Item A" }]
+    // });
+    // // Thêm dữ liệu mới
+    // dataSource.store().insert({ id: 3, name: "Item C" });
+    // dataSource.reload().done(function () {
+    //     console.log(dataSource.items()); // [{ id: 1, name: "Item A" }, { id: 2, name: "Item B" }, { id: 3, name: "Item C" }]
+    // });
+
+
+    $("#selectBox").dxSelectBox({
+        dataSource: dataSource,
+        displayExpr: "name", // Hiển thị text
+        valueExpr: "id", // Giá trị được chọn
+        acceptCustomValue: true,
+        searchEnabled: true,
+        onCustomItemCreating: function (e) {
+            const newItem = { id: itemArray.length + 1, name: e.text };
+            itemArray.push(newItem); // Thêm mục mới vào mảng
+            dataSource.reload(); // Làm mới dataSource
+            e.customItem = newItem.id; // Đặt giá trị của mục mới
+        },
+    });
+
+    // const accordionItems = [
+    //     { title: "Item 1", content: "Content for item 1" },
+    //     { title: "Item 2", content: "Content for item 2" },
+    //     { title: "Item 3", content: "Content for item 3" }
+    // ];
+
+    // $("#accordion").dxAccordion({
+    //     items: accordionItems,
+    //     multiple: false, // Allow only one section open at a time
+    //     itemTitleTemplate: function (titleData) {
+    //         // Outer container that still triggers the accordion toggle
+    //         const outerContainer = $("<div style='display:flex'>").addClass("outer-container");
+
+    //         // Inner container with radio buttons (does not toggle accordion)
+    //         const radioContainer = $("<div>").addClass("radio-container").on("click", function (e) {
+    //             e.stopPropagation(); // Prevent toggling accordion
+    //         });
+
+
+    //         $("<div>")
+    //             .dxRadioGroup({
+    //                 readOnly: false,
+    //                 items: [
+    //                     { text: "Yes", value: 1 },
+    //                     { text: "No", value: 0 },
+    //                     { text: "N/A", value: -1 }
+    //                 ],
+    //                 layout: "horizontal",
+    //                 value: -1, // Default selected value
+    //                 onValueChanged: function (e) {
+    //                     console.log("Selected value for", titleData.title, ":", e.value);
+    //                 }
+    //             })
+    //             .on("click", function (e) {
+    //                 e.stopPropagation(); // Prevent click from propagating to Accordion
+    //             })
+    //             .appendTo(outerContainer);
+
+    //         $("<span>")
+    //             .text(titleData.title)
+    //             .appendTo(outerContainer).on("click", function (e) {
+    //                 e.stopPropagation();
+    //             });
+
+    //         createRadioGroup({
+    //             title: titleData.title
+    //         }, radioContainer);
+
+    //         // Add the radioContainer to the outerContainer
+    //         radioContainer.appendTo(outerContainer);
+
+    //         return outerContainer;
+
+    //         return container;
+    //     },
+    //     onItemTitleClick: function (e) {
+    //         console.log("Accordion item clicked:", e.itemData.title);
+    //     },
+    //     itemTemplate: function (data) {
+    //         return `<div>${data.content}</div>`;
+    //     }
+    // });
+
+    function DevExtremeHandle() {
+        // var test = $("#appendTextBox").dxTextBox({
+        //     width: 300,
+        //     height: 50,
+        //     placeholder: "entity name..."
+        // }).dxTextBox("instance");
+        var grid = $("#appendTextBox").dxDataGrid({
+            columns: ["Col1", "Col2"],
+            width: 500,
+            height: 200
+        }).dxDataGrid("instance");
+
+        // var testIns = test.dxTextBox("instance")
+
+        // var appendTbx = $("#appendTextBox");
+
+        // $("#appendTextBox").html($("#testBox").dxTextBox({
+        //     placeholder: "entity name..."
+        // }));
+    }
+
+    function uploadFile() {
+        var formData = new FormData($('#fileUploadForm')[0]);
+        $.ajax({
+            url: '/api/Home/UploadFileUrl',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                alert('File uploaded successfully!');
+            },
+            error: function () {
+                alert('Error uploading file.');
+            }
+        });
+    }
+
+
+
+    document.getElementById('add').addEventListener('click', function () {
+        var category = document.getElementById('productCategory').value;
+        var product = document.getElementById('product').value;
+        var quantity = document.getElementById('quantity').value;
+        var rate = document.getElementById('rate').value;
+        var total = (parseFloat(quantity) * parseFloat(rate)).toFixed(2);
+
+        var table = document.getElementById('gridaddline').getElementsByTagName('tbody')[0];
+        var newRow = table.insertRow();
+
+        newRow.innerHTML = `
+                                                        <td>${category}</td>
+                                                    <td>${product}</td>
+                                                            <td>${quantity}</td>
+                                                            <td>${rate}</td>
+                                                            <td>${total}</td>
+                                                            <td><button class="btn btn-danger btn-sm removeItem">Remove</button></td>
+                                                        `;
+
+        document.getElementById('productCategory').value = 'Select';
+        document.getElementById('product').value = 'Select';
+        document.getElementById('quantity').value = '';
+        document.getElementById('rate').value = '';
+
+        newRow.querySelector('.removeItem').addEventListener('click', function () {
+            this.closest('tr').remove();
+        });
+    });
+
+    document.getElementById('addcolumn').addEventListener('click', function () {
+        var category = document.getElementById('productCategory').value;
+        var product = document.getElementById('product').value;
+        var quantity = document.getElementById('quantity').value;
+        var rate = document.getElementById('rate').value;
+        var total = (parseFloat(quantity) * parseFloat(rate)).toFixed(2);
+
+        var rows = document.querySelectorAll('#gridaddcolumn tr');
+
+        rows.forEach(function (row, index) {
+            if (index > 0) {
+                var newCategoryCell = row.insertCell(-1);
+                newCategoryCell.innerHTML = category;
+
+                var newProductCell = row.insertCell(-1);
+                newProductCell.innerHTML = product;
+
+                var newQuantityCell = row.insertCell(-1);
+                newQuantityCell.innerHTML = quantity;
+
+                var newRateCell = row.insertCell(-1);
+                newRateCell.innerHTML = rate;
+
+                var newTotalCell = row.insertCell(-1);
+                newTotalCell.innerHTML = total;
+
+                var newRemoveCell = row.insertCell(-1);
+                newRemoveCell.innerHTML = '<button class="btn btn-danger btn-sm removeColumn">Remove</button>';
+
+                newRemoveCell.querySelector('.removeColumn').addEventListener('click', function () {
+                    for (let i = 0; i < 6; i++) {
+                        row.deleteCell(-1);
+                    }
+                });
+            }
+        });
+
+        document.getElementById('productCategory').value = 'Select';
+        document.getElementById('product').value = 'Select';
+        document.getElementById('quantity').value = '';
+        document.getElementById('rate').value = '';
+    });
+
+
+    function createRadioGroup(titleData, radioContainer) {
+        const groupName = `group_${titleData.title}`; // Tên nhóm radio
+        const radioOptions = [
+            { text: "Yes", value: 1 },
+            { text: "No", value: 0 },
+            { text: "N/A", value: -1 },
+        ];
+
+        // Thêm radio button vào container
+        radioOptions.forEach(option => {
+            const id = `${groupName}_${option.text}`;
+
+            // Tạo label
+            $("<label>")
+                .attr("for", id)
+                .text(option.text)
+                .addClass("custom-radio-label") // Thêm class tùy chỉnh để định dạng
+                .appendTo(radioContainer);
+            //<input type="radio" name="category" value="rating" rating == "Average" ? "checked" : "") />
+            // Tạo input radio
+            $("<input>")
+                .attr({
+                    type: "radio",
+                    id: id,
+                    name: groupName,
+                    value: option.value
+                })
+                .addClass("dx-item") // Thêm class tùy chỉnh để định dạng
+                .on("change", function () {
+                    // console.log(`${titleData.title} selected: ${option.text}`);
+                })
+                .appendTo(radioContainer);
+        });
+    }
+</script>

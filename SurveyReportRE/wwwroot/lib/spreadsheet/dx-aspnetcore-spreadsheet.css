@@ -1,0 +1,3253 @@
+/*Main container*/
+.dxssControlSys {
+	width: 1000px;
+	height: 500px;
+	min-height: 300px;
+	-webkit-tap-highlight-color: rgba(0,0,0,0);
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	user-select: none;
+	-ms-user-select: none;
+	-ms-touch-action: pinch-zoom;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
+	background-color: white;
+}
+.dxss-fullscreen {
+    z-index: 1000 !important;
+    left: 0 !important;
+    position: fixed !important;
+    border-top-width: 0 !important;
+    border-left-width: 0 !important;
+    border-right-width: 0 !important;
+    border-bottom-width: 0 !important;
+}
+.dxssControlSys > .dx-tabs {
+	display: block;
+	border: 0!important;
+}
+.dxssControlSys .dxss-first-sheet-tab:after {
+	border-left: 0 !important;
+}
+.dxssControlSys > .dx-tabs .dx-tab.dx-state-focused:after {
+	border-bottom: 0!important;
+}
+
+.dxssControlSys .dxrSys .dxm-item .dxm-content .dxalink:focus {
+    outline: none;
+}
+.dxss-rit {
+    display: inline-table;
+}
+.dxss-md,
+.dxss-sctb,
+.dxss-tb,
+.dxss-cctb {
+	border-style: hidden!important;
+}
+
+/* DX Spreadsheet Main Div */
+.dxss-md {
+	position: relative;
+	z-index: 0;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* DX Spreadsheet Grid Row */
+.dxss-gr {
+	position: absolute;
+	z-index: 1;
+	left: 0;
+	width: 100%;
+	height: 0;
+	border-top: 1px solid #d4d4d4;
+}
+
+/* DX Spreadsheet Single Cell Text Box */
+.dxss-sctb {
+	position: absolute;
+	z-index: 4;
+    overflow: hidden;
+}
+
+/* DX Spreadsheet Complex Cell Text Box */
+.dxss-cctb {
+	position: absolute;
+	z-index: 4;
+	overflow: hidden;
+}
+
+/* DX Spreadsheet Text Box Background only */
+.dxss-tbg {
+	position: absolute;
+	z-index: 3;
+}
+
+/* DX Spreadsheet Drawing Box */
+.dxss-db {
+	position: absolute;
+	z-index: 9; /* To be above the selection and edition*/
+	cursor: move;
+    touch-action: none;
+}
+
+/* DX Spreadsheet Text Box content*/
+.dxss-tb {
+	z-index: 5;
+	white-space: nowrap;
+}
+.dxss-tw {
+    position: absolute;
+}
+/* DX Spreadsheet Fill Text Box Container*/
+.dxss-ftc {
+    position: absolute;
+}
+/* DX Spreadsheet Merged Cells */
+.dxss-mc {
+	position: absolute;
+	z-index: 2;
+	background-color: white;
+}
+/* DX Spreadsheet Default Cell Style*/
+.dxss-dcs,
+.dxss-ddcs {
+    font-family: Calibri;
+    font-size: 11pt;
+    vertical-align: bottom;
+    padding: 0px 0px 0px 2px;
+    display: table-cell;
+}
+.dxss-dcs {
+    text-align: left;
+}
+.dxss-ddcs {
+    text-align: right;
+}
+/* DX Spreadsheet Comment Indicator */
+.dxss-ci:before
+{
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 1px;
+    display: block;
+    width: 0;
+    border-left: 5px solid transparent;
+    border-top: 5px solid #FF0000;
+}
+/* DX Spreadsheet Comment Container */
+.dxss-cc {
+    background-color: #ffffe1;
+    position: absolute;
+    z-index: 101;
+    padding: 2px;
+    border: 1px solid black;
+    cursor: move;
+    box-sizing: border-box;
+}
+.dxss-cc.highlighted {
+    border-color: #217346;
+    z-index:102;
+}
+.dxss-ccte {
+    position: absolute;
+    z-index: 101;
+    cursor: move;
+    box-sizing: border-box;
+}
+/* DX Spreadsheet Connection Line */
+.dxss-cl {
+    z-index: 101;
+    padding: 0px;
+    margin: 0px;
+    background-color: black;
+    line-height: 1px;
+    position: absolute;
+    height: 1px;
+}
+.dxss-cl.highlighted {
+    background-color: #217346;
+    z-index:102;
+}
+
+/* DX Spreadsheet Fill Handle Element */
+.dxss-fh 
+{
+	position: absolute;
+	right: -4px;
+	top: -2px;
+	width: 5px;
+	height: 5px;
+	cursor: crosshair;
+	border: solid 1px #FFF;
+	background-color: #7493C0;
+}
+
+/* DX Spreadsheet Dynamic Selection Element */
+.dxss-cdse {
+	position: absolute;
+	z-index: 7;
+	border: 2px solid;
+}
+.dxss-cdse.highlighted {
+    border-style: dashed;
+}
+.dxss-cdse.marker {
+    z-index: 8;
+}
+.dxss-cdse.marker.nw, .dxss-cdse.marker.se {
+    cursor: nwse-resize;
+}
+.dxss-cdse.marker.ne, .dxss-cdse.marker.sw {
+    cursor: nesw-resize;
+}
+.dxss-cdse.color0 {
+    border-color: #5F8CED;
+    background-color: rgba(95, 140, 237, .12);
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr='#1F5F8CED', endColorstr='#1F5F8CED');
+}
+.dxss-cdse.color1 {
+    border-color: #EB5E60;
+    background-color: rgba(235, 94, 96, .12);
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr='#1FEB5E60', endColorstr='#1FEB5E60');
+}
+.dxss-cdse.color2 {
+    border-color: #8D61C2;
+    background-color: rgba(141, 97, 194, .12);
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr='#1F8D61C2', endColorstr='#1F8D61C2');
+}
+.dxss-cdse.color3 {
+    border-color: #2D9639;
+    background-color: rgba(45, 150, 57, .12);
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr='#1F2D9639', endColorstr='#1F2D9639');
+}
+.dxss-cdse.color4 {
+    border-color: #BF4C91;
+    background-color: rgba(191, 76, 145, .12);
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr='#1FBF4C91', endColorstr='#1FBF4C91');
+}
+.dxss-cdse.color5 {
+    border-color: #E38222;
+    background-color: rgba(227, 130, 34, .12);
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr='#1FE38222', endColorstr='#1FE38222');
+}
+.dxss-cdse.color6 {
+    border-color: #377F9E;
+    background-color: rgba(55, 127, 158, .12);
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr='#1F377F9E', endColorstr='#1F377F9E');
+}
+
+/* DX Spreadsheet Cell Active Selected Element */
+.dxss-case {
+	position: absolute;
+	z-index: 2;
+}
+/* DX Spreadsheet Cell Range Selected Element */
+.dxss-crse {
+	position: absolute;
+	z-index: 7;
+	background-color: #2291FF;
+	opacity: .25;
+	filter: alpha(opacity=25);
+	pointer-events: none;
+}
+/* DX Spreadsheet Top Range Border Element */
+.dxss-trbe {
+	position: absolute;
+	z-index: 8;
+	border-top: 2px solid #7493C0;
+    cursor: move;
+}
+/* DX Spreadsheet Right Range Border Element */
+.dxss-rrbe {
+	position: absolute;
+	z-index: 8;
+	border-right: 2px solid #7493C0;
+    cursor: move;
+}
+/* DX Spreadsheet Selection Movement Border Element */
+.dxss-sbe {
+    position: absolute;
+	z-index: 9;
+	border: 3px solid #7493C0;
+    cursor: move;
+    box-sizing: border-box;
+}
+/* DX Spreadsheet Touch Selection Element */
+.dxss-tse {
+	position: absolute;
+	width: 15px;
+	height: 15px;
+	z-index: 9;
+	border-radius: 50%;
+	border: 2px solid #7493C0;
+	background: white;
+}
+
+/* DX Spreadsheet Bottom Range Border Element */
+.dxss-brbe {
+	position: absolute;
+	z-index: 8;
+	border-bottom: 2px solid #7493C0;
+    cursor: move;
+}
+/* DX Spreadsheet Left Range Border Element */
+.dxss-lrbe {
+	position: absolute;
+	z-index: 8;
+	border-left: 2px solid #7493C0;
+    cursor: move;
+}
+/* DX Spreadsheet Cell Selected border */
+.dxss-csb {
+	position: absolute;
+	z-index: 8;
+	border: 2px solid #7493C0;
+}
+/* DX Spreadsheet Drawing Box Selected border */
+.dxss-dbse {
+	position: absolute;
+	z-index: 100; /* To be above the dxss-db */
+	border: 1px solid #5A93D3;
+    cursor: move;
+}
+
+/* DX Spreadsheet Comment Box Selected element */
+.dxss-cbse {
+	position: absolute;
+	z-index: 101; /* To be above the dxss-db */
+	border: 1px solid #5A93D3;
+    cursor: move;
+}
+
+/* DX Spreadsheet Copied range style */
+.dxss-crs {
+	position: absolute;
+	z-index: 12;
+	pointer-events: none;
+	border-style: dotted;
+	border-color: #7493C0;
+	border-width: 3px;
+	box-sizing: border-box;
+}
+
+.dxss-crs.dxss-crsb {
+	background-color: rgba(255, 255, 255, 0.4);
+}
+
+/* DX Spreadsheet AutoFilter image */
+.dxss-afi 
+{
+    position: absolute;
+    right: 0;
+    bottom: 1px;
+    cursor: pointer;
+    background-color: white;
+    z-index: 5;
+    width: 16px;
+    height: 16px;
+}
+
+/* DX Spreadsheet InvalidDataCircle */
+.dxss-idc
+{
+    position: absolute;
+    border: 1px solid red;
+    border-radius: 100%;
+    z-index: 4;
+}
+/* DX Spreadsheet DropDownButton */
+.dxss-ddb
+{
+    position: absolute;
+    cursor: pointer;
+    background-color: white;
+    z-index: 9;
+    width: 16px;
+    height: 16px;
+    border: 1px solid #d4d4d4;
+}
+.dxss-ddb > use
+{
+    pointer-events: none;
+}
+.dxss-pm
+{
+    position: absolute;
+    z-index: 9;
+    display: table;
+    background-color: #FFFFE1;
+    cursor: default;
+    border: 1px solid black;
+    max-width: 168px;
+    height:50px;
+    padding: 5px;
+}
+.dxss-pm div:first-child
+{
+    font-weight: bold;
+    white-space: pre;
+}
+/* DX Spreadsheet DropDown panel */
+.dxss-ddp
+{
+    position: absolute;
+    background-color: white;
+    border: 1px solid black;
+    max-height: 152px;
+    overflow: auto;
+    z-index: 8;
+    cursor: default;
+}
+.dxss-ddp table
+{
+    width: 100%;
+}
+.dxss-ddp tr:hover 
+{
+    background-color: #1d85cd;
+}
+.dxss-ddp td 
+{
+    height: 17px;
+    padding-left: 4px;
+}
+
+/* DX Spreadsheet Cell Editor Element */
+.dxss-cee,
+.dxss-ctve {
+	position: absolute;		   /*the same -dxss-cfe */
+	z-index: 1000;
+    resize: none;
+    height: 1em;
+    outline: none;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+}
+/* DX Spreadsheet Inplace Comment Editor Element */
+.dxss-icee {
+    font-size: 12px;
+	border: none;
+	z-index: 1000;
+    background-color: #ffffe1 ;
+    resize: none;
+    height: 100% !important;
+    width: 100% !important;
+    outline: none;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;    
+    box-sizing:border-box
+}
+.dxss-cc textarea.dxss-icee {
+    font-family: Tahoma;
+    line-height: normal;
+}
+.dxss-icee.noselect {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.dxssControlSys .dxss-fbw > .dxss-cee,
+.dxssControlSys .dxss-fbw > .dxss-ctve {
+    border: 0;
+}
+.dxssControlSys .dxss-cee {
+    border: 1px solid white;
+    padding: 0 2px 0 0!important;
+}
+.dxss-md .dxss-ctve {
+    padding: 0 2px 0 0!important;
+}
+
+.dxssControlSys .dxss-fb {
+    box-sizing: content-box;
+}
+.dxss-fb .dxeTextBoxSys .dxeEditAreaSys {
+    visibility: hidden;
+}
+.dxss-fb .dxm-ltr {
+    float: left;
+    display: inline-block;
+}
+.dxss-fbw {
+    overflow: hidden;
+    height: 100%;
+    padding: 3px 3px 2px 3px;
+    box-sizing: border-box;
+}
+.dxss-fbw textarea {
+    position: static;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+}
+.dxss-fbw table {
+    width: 100%;
+}
+.dxss-fbw .dxeTextBoxSys {
+    display: none;
+}
+.dxssControlSys .dxm-ltr .dxss-fbMenu {
+    padding: 0;
+}
+.dxssControlSys .dxss-fbMenu > ul {
+    height: 100%;
+}
+.dxssControlSys .dxss-fbMenu .dxm-item {
+    border-width: 0;
+    height: 100%;
+}
+.dxss-funcLB {
+    position: absolute;
+    visibility: hidden;
+    display: none;
+    -ms-touch-action: pinch-zoom;
+    touch-action: pinch-zoom;
+
+    width: 150px;
+    background-color: white;
+    border: 1px solid #A0A0A0;
+    z-index: 1;
+}
+.dxss-funcLB .dx-scrollable-container {
+    max-height: 400px;
+}
+.dxss-hint {
+    position: absolute;
+	white-space: pre;
+    pointer-events: none;
+}
+.dxss-hint.dxss-funcInfo {
+    white-space: nowrap;
+    margin: 0 10px;
+}
+
+.dxss-cbse .corner, 
+.dxss-dbse .corner {
+    border: 1px solid #989898;
+    position: absolute;
+    width: 9px!important;
+    height: 9px;
+    background-color: #F2FAFB;
+    z-index: 9;
+    margin-top: -6px;
+    margin-left: -6px;
+    border-radius: 5px;
+}
+.dxss-cbse .cornerTouch,
+.dxss-dbse .cornerTouch 
+{
+	border: 1px solid #989898;
+    position: absolute;
+	width: 15px!important;
+	height: 15px;
+	margin-top: -9px;
+    margin-left: -9px;
+    border-radius: 50%;
+}
+.corner.ne,
+.corner.e,
+.corner.se {
+	margin-left: -5px;
+}
+.cornerTouch.ne,
+.cornerTouch.e,
+.cornerTouch.se {
+	margin-left: -8px;
+}
+.corner.sw,
+.corner.s,
+.corner.se {
+	margin-top: -5px;
+}
+.cornerTouch.sw,
+.cornerTouch.s,
+.cornerTouch.se {
+	margin-top: -8px;
+}
+
+.corner.n,
+.corner.e,
+.corner.s,
+.corner.w {
+	border-radius: 3px
+}
+
+.corner.nw {
+    left: 0;
+    top: 0;
+    cursor:nw-resize;
+}
+.corner.ne {
+    left: 100%;
+    top: 0;
+    cursor:ne-resize;
+}
+.corner.se {
+    left: 100%;
+    top: 100%;
+    cursor:se-resize;
+}
+.corner.sw {
+    left: 0;
+    top: 100%;
+    cursor:sw-resize;
+}
+
+.corner.n {
+    left: 50%;
+    top:0;
+    cursor:n-resize;
+}
+.corner.e {
+    left: 100%;
+    top:50%;
+    cursor:e-resize;
+}
+.corner.s {
+    left: 50%;
+    top:100%;
+    cursor:s-resize;
+}
+.corner.w {
+    left: 0;
+    top:50%;
+    cursor:w-resize;
+}
+
+.dxss-cbse .corner.nw.cornerTouch {
+    margin-left: -17px;
+    margin-top: -17px;
+}
+.dxss-cbse .corner.w.cornerTouch {
+    margin-left: -17px;
+}
+.dxss-cbse .corner.sw.cornerTouch {
+    margin-left: -17px;
+}
+.dxss-cbse .corner.n.cornerTouch {
+    margin-top: -17px;
+}
+.dxss-cbse .corner.ne.cornerTouch {
+    margin-top: -17px;
+}
+
+.dxss-cbse .corner.nw {
+    margin-left: -12px;
+    margin-top: -12px;
+    border-radius: 3px;
+}
+.dxss-cbse .corner.w {
+    margin-left: -12px;
+    border-radius: 3px;
+}
+.dxss-cbse .corner.sw {
+    margin-left: -12px;
+    margin-top: 0px;
+    border-radius: 3px;
+}
+
+.dxss-cbse .corner.n {
+    margin-top: -12px;
+    border-radius: 3px;
+}
+.dxss-cbse .corner.ne {
+    margin-top: -12px;
+    margin-left: 0px;
+    border-radius: 3px;
+}
+
+.dxss-cbse .corner.e {
+    margin-left: 0px;
+    border-radius: 3px;
+}
+.dxss-cbse .corner.se {
+    margin-left: 0px;
+    margin-top: 0px;
+    border-radius: 3px;
+}
+
+.dxss-cbse .corner.s {
+    margin-top: 0px;
+    border-radius: 3px;
+}
+
+.dxss-colHeader,
+.dxss-rowHeader,
+.dxss-grid
+{
+    position: absolute;
+	z-index: 1;
+    overflow: hidden;
+    width: 0;
+    height: 0;
+	border-right: 1px solid #d4d4d4;
+	border-bottom: 1px solid #d4d4d4;
+    touch-action: none;
+}
+.dxss-rowHeader.dxss-hidden,
+.dxss-colHeader.dxss-hidden {
+    display: none;
+}
+.dxss-colHeader .dxss-htd,
+.dxss-rowHeader .dxss-htd {
+	cursor: pointer;
+}
+.dxss-colHeader.resizing .dxss-htd,
+.dxss-colHeader.resizing .dxss-v
+{
+	cursor: w-resize;
+}
+.dxss-rowHeader.resizing .dxss-htd,
+.dxss-rowHeader.resizing .dxss-h  
+{
+	cursor: n-resize;
+}
+.dxss-colHeader
+{
+    border-bottom: 1px solid #d4d4d4;
+	border-left: 1px solid #d4d4d4;
+}
+.dxss-rowHeader
+{
+    border-right: 1px solid #d4d4d4;
+	border-top: 1px solid #d4d4d4;
+}
+.dxss-fc
+{
+    width: 1000000px;
+    clear: both;
+}
+.dxss-ts,
+.dxss-bs
+{
+    width: 1px;
+    height: 50000px;
+}
+.dxss-ls,
+.dxss-rs
+{
+    height: 2px; /*T366198*/
+    width: 50000px;
+}
+.dxss-ls,
+.dxss-rs,
+.dxss-tc
+{
+    float: left;
+}
+.dxss-bs
+{
+    clear: both;
+}
+.dxss-tc
+{
+    position: relative;
+}
+
+.dxss-sc
+{
+    position: absolute;
+    overflow: scroll;
+    width: 0;
+    height: 0;
+}
+
+.dxss-ssb {
+    position: absolute;
+    left: 0;
+    top: 0; 
+    cursor: pointer;
+    z-index: 1;
+}
+.dxss-ssbi {
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 0 12px 12px;
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    pointer-events: none;
+}
+
+.dxss-gt
+{
+    float: left;
+    position: relative;
+    min-height: 1px;
+}
+.dxss-ht
+{
+    position: relative;
+}
+.dxss-fc .dxss-ht
+{
+    float: left;
+}
+.dxss-htd
+{
+    position: absolute;
+    text-align: center;
+    overflow: hidden;
+    color: #777;
+}
+.dxss-htd:hover {
+    background-color: #f1f1f1;
+}
+
+.dxss-htd.dxss-hlh:hover {
+    background-color: #e1e1e1;
+}
+
+.dxss-rowHeader .dxss-tc
+{
+    width: 100%;
+    float: none;
+}
+.dxss-rowHeader .dxss-ht
+{
+    width: 100%;
+}
+.dxss-rowHeader .dxss-htd
+{
+    left: 0;
+    width: 100%;
+}
+.dxss-colHeader .dxss-htd
+{
+    top: 0;
+    height: 100%;
+}
+/* Vertical extended area*/
+.dxss-vea
+{
+	width: 1px;
+	display: block;
+}
+/* Horizontal extended area*/
+.dxss-hea
+{
+	height: 1px;
+	display: inline;
+}
+
+/* Grid Lines */
+.dxss-gl
+{
+    width: 100%;
+    height: 100%;
+}
+.dxss-gl .dxss-v,
+.dxss-gl .dxss-h
+{
+    position: absolute;
+    z-index: 1;
+    border-style: solid;
+    border-color: #d4d4d4;
+    border-width: 0;
+}
+.dxss-gl .dxss-v
+{
+    top: 0;
+	width: 0;
+	height: 100%;
+    border-left-width: 1px;
+}
+.dxss-gl .dxss-h
+{
+    left: 0;
+	width: 100%;
+	height: 0;
+    border-top-width: 1px;
+}
+.dxss-ht .dxss-h.db
+{
+	height: 3px;
+	border-bottom-width: 1px;
+	margin-top: -2px;
+}
+.dxss-ht .dxss-v.db
+{
+	width: 3px;
+	border-right-width: 1px;
+	margin-left: -2px;
+}
+
+.dxss-hideGridLines .dxss-grid .dxss-gl .dxss-h,
+.dxss-hideGridLines .dxss-grid .dxss-gl .dxss-v 
+{
+	border: none;
+}
+.dxss-hh .dxss-colHeader,
+.dxss-hh .dxss-rowHeader
+{
+    border: none;
+}
+
+.dxss-fap {
+    position: absolute;
+    margin: 21px 6px 0 0;
+    z-index: 1000;
+}
+.dxss-fapb {    
+    display: inline-block;
+    width: 36px;
+    height: 36px;
+}
+
+.dxss-ab {
+    background-color: #13a10e;
+}
+.dxss-cb {
+    background-color: #e81123;
+}
+.dxss-fapb > div {
+    margin: auto;
+    -ms-transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+.dxss-ab .dxss-fbi {
+    width: 19px;
+    height: 14px;
+}
+.dxss-cb .dxss-fbi {
+    width: 14px;
+    height: 14px;
+}
+.dxss-fapb > div > div {
+    position: absolute;
+    background-color: #fff;
+}
+.dxss-ab .dxss-fbs {
+    width: 2px;
+    height: 19px;
+    left: 17px;
+    top: 3px;
+}
+.dxss-ab .dxss-fbk {
+    width: 7px;
+    height: 2px;
+    left: 12px;
+    top: 20px;
+}
+
+.dxss-cb .dxss-fbs {
+    width: 2px;
+    height: 19px;
+    left: 13px;
+    top: 5px;
+}
+
+.dxss-cb .dxss-fbk {
+    width: 19px;
+    height: 2px;
+    left: 5px;
+    top: 13px;
+}
+/* Resizing */
+.dxss-hrg,
+.dxss-vrg
+{
+    position: absolute;
+    background: #7493C0;
+    z-index: 2;
+}
+.dxss-tre 
+{
+	position: absolute;
+	width: 20px;
+	height: 20px;
+    z-index: 2;
+    pointer-events: none;
+}
+.dxss-tre.tre-hor
+{
+	-webkit-transform: rotate(90deg);
+    -ms-transform: rotate(90deg);
+}
+
+.dxss-rmc,
+.dxss-rmcv,
+.dxss-rmch
+{
+    position: absolute;
+}
+.dxss-rowHeader .dxss-rmc,
+.dxss-rmch
+{
+    width: 100%;
+}
+.dxss-colHeader .dxss-rmc,
+.dxss-rmcv
+{
+    height: 100%;
+}
+.dxss-rmch
+{
+    left: 0;
+}
+.dxss-rmcv
+{
+    top: 0;
+}
+
+.dxssControlSys .dxr-itemDisabled img
+{
+	opacity: .35;
+	filter: alpha(opacity=35);
+}
+/* Multy line text container*/
+.dxss-mltc {
+    display: table-cell;
+    height: inherit;
+    pointer-events: none;
+}
+.dxss-wrap 
+{
+	-moz-hyphens: auto;
+    -webkit-hyphens: auto;
+    -ms-hyphens: auto;
+    hyphens: auto;
+    word-break: break-word;
+    word-wrap: break-word;
+	white-space: pre-wrap;
+}
+
+/* DX Spreadsheet Borders */
+
+.dxss-bt-t,
+.dxss-bt-h,
+.dxss-bt-d,
+.dxss-bt-da,
+.dxss-bt-ddd,
+.dxss-bt-ddd,
+.dxss-bt-m,
+.dxss-bt-md,
+.dxss-bt-mdd,
+.dxss-bt-mddd,
+.dxss-bt-sdd,
+.dxss-bt-dbl,
+.dxss-bt-tk {
+	position: absolute;
+	z-index: 6;
+	border-color: black;
+	border-width: 1px;
+	border-left-style: solid;
+	border-top-style: solid;
+}
+
+.dxss-bt-m,
+.dxss-bt-md,
+.dxss-bt-mdd,
+.dxss-bt-mddd,
+.dxss-bt-sdd {
+	border-width: 2px;
+}
+.dxss-bt-dbl,
+.dxss-bt-tk {
+	border-width: 3px;
+}
+
+.dxss-bt-da,
+.dxss-bt-md,
+.dxss-bt-mdd,
+.dxss-bt-sdd {
+	border-left-style: dashed;
+	border-top-style: dashed;
+}
+.dxss-bt-d,
+.DashDotDot,
+.dxss-bt-mddd {
+	border-left-style: dotted;
+	border-top-style: dotted;
+}
+.dxss-bt-dbl {
+	border-left-style: double;
+	border-top-style: double;
+}
+
+.dxss-v.dxss-bt-t,
+.dxss-v.dxss-bt-h,
+.dxss-v.dxss-bt-d,
+.dxss-v.dxss-bt-da,
+.dxss-v.dxss-bt-ddd,
+.dxss-v.dxss-bt-ddd,
+.dxss-v.dxss-bt-m,
+.dxss-v.dxss-bt-md,
+.dxss-v.dxss-bt-mdd,
+.dxss-v.dxss-bt-mddd,
+.dxss-v.dxss-bt-sdd,
+.dxss-v.dxss-bt-dbl,
+.dxss-v.dxss-bt-tk {
+	border-top-style: none;
+}
+
+.dxss-h.dxss-bt-t,
+.dxss-h.dxss-bt-h,
+.dxss-h.dxss-bt-d,
+.dxss-h.dxss-bt-da,
+.dxss-h.dxss-bt-ddd,
+.dxss-h.dxss-bt-ddd,
+.dxss-h.dxss-bt-m,
+.dxss-h.dxss-bt-md,
+.dxss-h.dxss-bt-mdd,
+.dxss-h.dxss-bt-mddd,
+.dxss-h.dxss-bt-sdd,
+.dxss-h.dxss-bt-dbl,
+.dxss-h.dxss-bt-tk {
+	border-left-style: none;
+}
+.dxss-supportFrame
+{
+	top: -100px;
+	left: -100px;
+	overflow: hidden;
+	position: absolute;
+	border-style: none;
+}
+.dxss-hlh
+{
+	background-color: #e1e1e1;
+}
+.dxssControlSys .dxm-disabled .dxm-pImage
+{
+	opacity: 0.2;
+}
+.dxss-ch-container {
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 120%;
+}
+.dxss-ch-container .dxss-ch-text {
+    font-weight: 700;
+}
+/*Tab sample strip control*/
+.dxssControlSys .dxtc-bottom .dxss-tcer 
+{
+	display: none;
+}
+/* Cell Editing */
+.dxssControlSys .dxss-inputTarget {
+	padding: 0;
+	outline: none;
+	height: 0;
+    width: 0;
+    left: 0;
+    top: 0;
+	position: absolute;
+    z-index: 1000;
+}
+.dxssControlSys.icbem .dxss-inputTarget {
+	border: 2px solid #7493C0;
+}
+.dxssControlSys.fbem .dxss-inputTarget {
+	border: none;
+}
+.dxssControlSys.nem .dxss-inputTarget {
+	width: 0!important;
+	height: 0!important;
+	left: 0!important;
+	top: 0!important;
+	border: 0!important;
+}
+/*Cell position hint*/
+.dxss-cell-pos-hint {
+    background-color: #7493C0;
+    color: white;
+    border-color: #7493C0;
+    border-radius: 0;
+}
+.dxss-cell-pos-hint .dxh-content {
+    padding: 2px 10px 3px;
+	border: none;
+}
+.dxss-vfbe,
+.dxss-hfbe {
+    position: absolute;
+    z-index: 1;
+    background-color: #818181;
+    pointer-events: none;
+}
+.dxss-ast {
+    width: 30px;
+}
+.dxss-ast-circle {
+    width: 16px;
+    height: 16px;
+
+    box-sizing: border-box;
+    margin-top: 4px;
+    margin-left: 10px;
+}
+.dxss-ast-btn {
+    position: relative;
+    width: 16px;
+    height: 16px;
+    margin-top: 3px;
+    margin-left: 3px;
+}
+.dxss-ast-btn:before,
+.dxss-ast-btn:after {
+    content: "";
+    position: absolute;
+    transition: transform 0.25s ease-out;
+}
+.dxss-ast-btn:before {
+    top: 0;
+    left: 50%;
+    width: 2px;
+    height: 100%;
+    margin-left: -1px;
+}
+.dxss-ast-btn:after {
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    margin-top: -1px;
+}
+/* Only for DesignTime */
+/* Design Time Grid Cell */
+.dxss-dtgc {
+    width: 64px;
+    height: 20px;
+    border-right: 1px solid #d4d4d4;
+    border-bottom: 1px solid #d4d4d4;
+    position: absolute;
+    text-align: center;
+    vertical-align: middle;
+    display: table-cell;
+}
+/* bootstrap fix */
+.dxss-ctve,
+.dxss-inputTarget,
+.dxss-case,
+.dxss-rrbe,
+.dxss-trbe,
+.dxss-brbe,
+.dxss-lrbe,
+.dxss-fh {
+    -webkit-box-sizing: content-box;
+    -moz-box-sizing: content-box;
+    box-sizing: content-box;
+}
+
+.dxss-svg-container {
+    display: block;
+    visibility: hidden;
+    position: absolute;
+    left: -10px;
+    top: -10px;
+    width: 1px;
+    height: 1px;
+}
+
+/*Dialog rules*/
+.dxssControlSys .dxss-dialog {
+    width: 100%;
+}
+.dxssControlSys .dxss-dialogSimpleFooterGroup,
+.dxssControlSys .dxss-dialogFooter {
+    width: auto;
+    padding: 11px;
+}
+.dxssControlSys .dxss-dialogFooterGroup {
+    padding: 0px;
+}
+
+.dxss-dialogControlsWrapper,
+.dxss-dialog .dxss-dialogControlsWrapper > tbody > tr > td:first-child {
+    width: 100%;
+}
+
+.dxss-dialog .dxss-dialogControlsWrapper > tbody > tr > td:first-child {
+    text-align: right;
+}
+
+.dxssControlSys .dxss-dialog .dxss-dialogFooterBtn {
+    width: 80px !important;
+    margin-left: 8px;
+}
+
+.dxssControlSys .dxss-dialog > div.dxss-dialogLG.dxflGroupSys {
+    padding: 0px !important;
+}
+
+.dxssControlSys .dxss-dialog div.dxss-dialogLGC:first-child {
+    padding: 0px;
+}
+
+.dxssControlSys .dxss-dialogContentGroup {
+    padding-top: 20px;
+    padding-bottom: 20px;
+    padding-left: 11px;
+    padding-right: 11px;
+}
+.dxssControlSys .dxss-dialogFileManagerGroup .dxss-fileManager > table {
+    border-style: none;
+}
+.dxssControlSys .dxss-dialogFileManagerGroup,
+.dxssControlSys .dxss-dialogFileManagerGroup .dxss-dialogLINC  {
+    padding: 0px;
+}
+.dxssControlSys .dxss-dialogHeaderGroup {
+    padding-bottom: 0px;
+    padding-top: 10px;
+}
+.dxssControlSys .dxss-dialogRadionButtonList {
+    width: auto !important;
+}
+.dxssControlSys .dxss-dialog .dxss-dialogRadionButtonList .dxichTextCellSys {
+    padding-right: 25px;
+}
+.dxssControlSys .dxss-dialogContentGroup .dxss-sheetListBox {
+    height: 200px;
+}
+.dxssControlSys .dxss-dialogContentGroup .dxss-dialogFirstColumn {
+    padding-right: 30px;
+}
+.dxssControlSys .dxss-dialog .dxss-dialogSimpleContentGroup {
+    padding: 20px 11px 20px 11px;
+}
+.dxssControlSys .dxss-dialog .dxss-dialogSimpleContentGroup .dxtcSys {
+    background-color: transparent;
+    width: 100%;
+}
+
+.dxssControlSys .dxss-dialog .dxss-dialogSimpleContentGroup > table .dxssDlgCaptionCell {
+    white-space: nowrap;
+    padding-right: 6px;
+}
+.dxssControlSys .dxss-dialog .dxss-dialogSimpleContentGroup > table,
+.dxssControlSys .dxss-dialog .dxss-dialogSimpleContentGroup > table .dxssDlgInputCell {
+    width: 100%;
+}
+.dxssControlSys .dxss-dialog .dxss-dialogContentGroup .dxuc-root tbody > tr > td > div {
+    padding-top: 3px !important;
+}
+.dxssControlSys .dxss-dialog .dxss-chartsbtn {
+	padding: 3px;
+	margin: 3px;
+}
+.dxss-dialog .dxss-longCaption{
+    white-space: normal;
+}
+/*Rules for a specific dialog*/
+.dxssControlSys .dxss-saveFileAsForm .dxss-dialogContentGroup,
+.dxssControlSys .dxss-insertLinkForm .dxss-dialogContentGroup {
+    padding-left: 40px;
+    padding-right: 40px;
+    padding-top: 11px;
+    padding-bottom: 21px;
+}
+.dxssControlSys .dxss-insertLinkForm .dxss-dialogContentGroup.dxss-dialogSingleContentGroup,
+.dxssControlSys .dxss-saveFileAsForm .dxss-dialogContentGroup.dxss-dialogSingleContentGroup {
+    padding-top: 21px;
+}
+.dxssControlSys .dxss-insertImageForm .dxss-dialogContentGroup.dxss-dialogSingleContentGroup {
+    padding-top: 8px;
+}
+.dxssControlSys .dxss-unhideSheetForm .dxss-dialogContentGroup,
+.dxssControlSys .dxss-moveOrCopySheetForm .dxss-dialogContentGroup,
+.dxssControlSys .dxss-insertTableForm .dxss-dialogContentGroup {
+    padding-top: 11px;
+    padding-bottom: 11px;
+}
+.dxssControlSys .dxss-insertImageForm .dxss-dialogContentGroup {
+    padding-top: 1px;
+    padding-bottom: 11px;
+}
+
+.dxssControlSys .dxss-pivotTableForm .dxss-dialogContentGroup,
+.dxssControlSys .dxss-pivotTableDateFilterForm .dxss-dialogContentGroup,
+.dxssControlSys .dxss-pivotTableValueFilterForm .dxss-dialogContentGroup,
+.dxssControlSys .dxss-pivotTableTop10FilterForm .dxss-dialogContentGroup,
+.dxssControlSys .dxss-pivotTableLabelFilterForm .dxss-dialogContentGroup {
+    padding-top: 1px;
+    padding-bottom: 1px;
+}
+.dxssControlSys .dxss-modifyChartLayoutForm .dxss-chartPresetContainer {
+    width: 100%;
+    display: none;
+}
+/* Find and replace dialog */
+.dxssControlSys .dxss-findAndReplaceForm .dxss-dialogContentGroup div.dxss-dialogLGC:first-child {
+    padding: 0px 8px;
+}
+.dxssControlSys .dxss-findAndReplaceForm .dxss-dialogContentGroup .dxss-firstFindRow {
+    padding-bottom: 20px;
+}
+.dxssControlSys .dxss-findAndReplaceForm .dxss-dialogContentGroup .dxss-lastFindRow {
+    padding-top: 10px;
+}
+@media (max-width: 400px) {
+    .dxssControlSys .dxss-findAndReplaceForm .dxss-dialogContentGroup .dxss-firstFindRow {
+        padding-bottom: 5px;
+    }
+}
+.dxssControlSys .dxss-dialog .dxss-imagePreview {
+    padding-top: 10px;
+}
+.dxssControlSys .dxss-dialog .dxss-imagePreview > table:first-child {
+    width: 100%;
+}
+.dxssControlSys .dxss-dialog.dxss-modifyChartStyleForm .dxss-modifyChartStyleContent {
+	overflow: auto;
+    text-align: left;
+	background-color: white;
+    height: 350px;
+}
+.dxssControlSys .dxss-dialog.dxss-modifyChartStyleForm .dxss-dialogSimpleContentGroup {
+    padding: 0;
+}
+.dxss-modifyChartStyleContent .dxbButtonSys {
+    border-color: transparent;
+    background-color: transparent;
+    background-image: unset;
+    box-shadow: none;
+}
+/* Filter dialog */
+.dxssControlSys .dxss-dialog.dxss-dataFilterSimpleForm .dxtv-control {
+    width: 100% !important;
+    height: 100%;
+}
+.dxssControlSys .dxss-dialog.dxss-dataFilterSimpleForm .dxtv-control.dxss-tv-desktop {
+    height: 300px;
+}
+.dxssControlSys .dxss-dialog.dxss-dataFilterSimpleForm .dxss-dialogSimpleContentGroupDesktop {
+    overflow: auto;
+}
+.dxss-dialog.dxss-dataFilterSimpleForm .dxss-dialogControlsWrapper > tbody > tr > td:first-child {
+    text-align: left;
+    width: auto;
+}
+.dxss-dialog.dxss-dataFilterSimpleForm .dxss-dialogControlsWrapper > tbody > tr > td:nth-child(2) {
+    width: 100%;
+}
+/* Top 10 filter dialog */
+.dxss-dialog.dxss-top10FilterForm .dxss-dialogContentGroup > div:first-child,
+.dxss-dialog.dxss-customDataFilterForm .dxss-dialogContentGroup > div:first-child {
+    padding-bottom: 5px;
+}
+.dxss-dialog.dxss-top10FilterForm .dxss-dialogContentGroup > div:nth-child(2),
+.dxss-dialog.dxss-top10FilterForm .dxss-dialogContentGroup > div:nth-child(3),
+.dxss-dialog.dxss-customDataFilterForm .dxss-dialogContentGroup > div:nth-child(2),
+.dxss-dialog.dxss-customDataFilterForm .dxss-dialogContentGroup > div:nth-child(5),
+.dxss-dialog.dxss-customDataFilterForm .dxss-dialogContentGroup > div:nth-child(3),
+.dxss-dialog.dxss-customDataFilterForm .dxss-dialogContentGroup > div:nth-child(6) {
+    padding-right: 10px;
+}
+.dxss-dialog.dxss-customDataFilterForm .dxss-dialogContentGroup > div:nth-child(7) {
+    padding-top: 10px;
+}
+.dxss-dialog.dxss-customDataFilterForm .dxss-dialogContentGroup .dxss-dialogRadionButtonList .dxichTextCellSys {
+    padding-right: 0px !important;
+}
+.dxss-dialog.dxss-customDataFilterForm .dxss-dialogContentGroup .dxss-filterValueTable > tbody > tr > td:first-child {
+    padding-right: 10px;
+}
+.dxss-dialog.dxss-customDataFilterForm .dxss-dialogContentGroup .dxss-filterValueTable,
+.dxss-dialog.dxss-customDataFilterForm .dxss-dialogContentGroup .dxss-filterValueComboBox {
+    width: 100%;
+}
+.dxss-dialog.dxss-customDataFilterForm .dxss-dialogContentGroup .dxss-filterValueTable .dxss-filterDateEdit .dxic {
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+    width: 0px;
+}
+.dxss-dialog.dxss-customDataFilterForm .dxss-dialogContentGroup .dxss-filterValueTable .dxss-filterDateEdit .dxic > input {
+    display: none;
+}
+.dxss-dialog.dxss-customDataFilterForm .dxss-dialogContentGroup .dxss-filterValueTable .dxss-filterDateEdit td {
+    border-style: none !important;
+    padding: 0 2px 0 2px;
+}
+/* Format Cell Dialog*/
+.dxss-dialog.dxss-formatCellsForm .dxss-dialogContentGroup .dxss-FCCategory {
+    height: 293px;
+}
+.dxss-dialog.dxss-formatCellsForm .dxss-dialogContentGroup .dxss-FCCategoryFormLayout .dxflGroupBoxSys {
+    margin-top: 0px;
+}
+.dxss-dialog.dxss-formatCellsForm .dxss-dialogContentGroup .dxss-FCCategoryFormLayout > div:first-child {
+    padding: 6px 0px 0px 7px;    
+}
+.dxss-dialog.dxss-formatCellsForm .dxss-dialogContentGroup .dxss-FCCategoryFormLayout .dxflGroupSys > div > div:first-child {
+    padding: 0px;
+}
+.dxss-dialog.dxss-formatCellsForm .dxss-dialogContentGroup > div {
+    padding-left: 7px;
+}
+.dxss-dialog.dxss-formatCellsForm .dxss-dialogContentGroup > div:nth-child(3) {
+    padding-left: 0px;
+}
+.dxss-dialog.dxss-formatCellsForm .dxss-dialogContentGroup .dxss-FCCategoryFormLayout .dxss-FCSample {
+    padding: 3px 10px 3px 10px;
+}
+/* Page Setup */
+.dxssControlSys .dxss-dialog.dxss-pageSetupForm .dxss-dialogSimpleContentGroup {
+    padding: 10px;
+}
+.dxss-pageSetupForm .dxss-psPrintContainer {
+    text-align: right;
+    padding: 10px;
+    position: absolute;
+    bottom: 70px;
+    right: 10px;
+}
+.dxssControlSys .dxss-dialog.dxss-pageSetupForm .dxss-dialogSimpleContentGroup .dxss-psContainer .dxflRadioButtonListItemSys,
+.dxssControlSys .dxss-dialog.dxss-pageSetupForm .dxss-dialogSimpleContentGroup .dxss-psContainer .dxflRadioButtonListItemSys td.dxe,
+.dxssControlSys .dxss-dialog.dxss-pageSetupForm .dxss-dialogSimpleContentGroup .dxss-psContainer .dxflHeadingLineGroupBoxSys {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+.dxss-psContainer .dxflRadioButtonListItemSys td.dxe {
+    padding-left: 3px;
+}
+.dxss-psContainer .dxss-pageOrderGroup .dxflRadioButtonListItemSys td.dxe {
+    padding-left: 0px;
+}
+.dxss-pageSetupForm .dxss-psContainer  {
+    height: 100%;
+    width: 100%;
+}
+.dxss-psContainer .dxss-pageControl .dxtc-content {
+    padding: 0px 0px 60px 0px;
+}
+.dxss-dialog .dxss-shortEditor {
+    min-width: 70px;
+    max-width: 70px;
+}
+.dxss-dialog .dxss-unresizeShortEditor {
+    max-width: 70px;
+}
+.dxss-dialog .dxss-psContainer .dxss-customPaddingGroup,
+.dxss-compactGroupBox .dxflGroupCell{
+    padding-left: 0px;
+}
+.dxss-shortEditorContainer > div:first-child {
+    width: auto !important;
+}
+.dxss-shortEditorContainer .dxflCaptionCellSys {
+    width: 100% !important;    
+    min-width: unset !important;
+}
+.dxss-shortEditorContainer .dxss-wrapCaption {
+    white-space: normal;
+    word-wrap: break-word; 
+}
+.dxssControlSys .dxss-dialog.dxss-pageSetupForm .dxss-dialogSimpleContentGroup .dxss-compactGroupBox .dxss-compactLayoutItem,
+.dxssControlSys .dxss-dialog.dxss-pageSetupForm .dxss-dialogSimpleContentGroup .dxss-compactGroupBox .dxss-shortEditorContainer {
+    padding-top: 5px;
+}
+.dxssControlSys .dxss-dialog.dxss-pageSetupForm .dxss-dialogSimpleContentGroup .dxss-contentAlignGroup .dxss-compactLayoutItem {
+    padding-top: 0px;
+}
+.dxss-pageSetupForm .dxss-printAreaGroup {
+    padding: 10px 0 5px 0;
+}
+.dxss-pageSetupForm .dxss-pageSetupContent .dxss-pageOrderGroup {
+    padding-left: 0px;
+}
+.dxss-pageSetupForm .dxss-customPaddingGroup .dxss-firstPageGroup {
+    padding: 5px 0 0 13px
+}
+.dxss-pageSetupContent .dxss-customPaddingGroup .dxss-pagePrintGroup,
+.dxss-pageSetupContent .dxss-customPaddingGroup .dxss-scalingGroup {
+    padding-left: 13px;
+    padding-right: 0px;
+}
+.dxss-pageSetupForm .dxss-CustomHFButton {
+    margin-top: 8px;
+}
+
+/* Margins preview */
+.dxss-previewTable {
+    border-collapse:separate;
+    border-spacing: 15px 10px;
+}
+.dxss-MPArea {
+    border: 1px solid;
+    box-shadow: 1px 1px;
+    position: relative;
+}
+.dxss-vOrientation .dxss-MPArea {
+    width: 92px;
+    height: 126px;
+}
+.dxss-hOrientation .dxss-MPArea {
+    width: 126px;
+    height: 92px;
+}
+.dxss-MPCG {
+    position: relative;
+    background: url('DevExpress.Web.ASPxSpreadsheet.Images.CellsGrid.png') repeat;
+    display: inline-block;
+}
+.dxss-vOrientation .dxss-MPCG {
+    width: 53px;
+    height: 65px;
+    top: 15px;
+    left: 10px;
+}
+.dxss-hOrientation .dxss-MPCG {
+    width: 66px;
+    height: 53px;
+    top: 10px;
+    left: 15px;
+}
+
+.dxss-HCentered.dxss-MPArea {
+    text-align: center;
+}
+.dxss-HCentered .dxss-MPCG {
+    left: auto;
+}
+.dxss-VCentered .dxss-VHelper {
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+}
+.dxss-VCentered .dxss-MPCG {
+    top: auto;
+    vertical-align: middle;
+}
+
+.dxss-LinesBox {
+    position: absolute;
+    box-sizing: border-box;
+    border: solid #B0B0B0;
+}
+.dxss-LinesBoxLR {
+    height: inherit;
+    border-width: 0 1px;
+    top: 0;
+}
+.dxss-vOrientation .dxss-LinesBoxLR {
+    width: 72px;
+    margin: 0 10px;
+}
+.dxss-hOrientation .dxss-LinesBoxLR {
+    width: 96px;
+    margin: 0 15px;
+}
+
+.dxss-LinesBoxBT {
+    width: inherit;
+    border-width: 1px 0;
+}
+.dxss-vOrientation .dxss-LinesBoxBT {
+    height: 96px;
+    top: 15px;
+}
+.dxss-hOrientation .dxss-LinesBoxBT {
+    height: 72px;
+    top: 10px;
+}
+
+.dxss-LinesBoxFH {
+    width: inherit;
+    border-width: 1px 0;
+    top: 5px;
+}
+.dxss-vOrientation .dxss-LinesBoxFH {
+    height: 116px;
+}
+.dxss-hOrientation .dxss-LinesBoxFH {
+    height: 82px;
+}
+
+/* header footer preview */
+.dxss-HFPArea {
+    width: auto;
+    height: 40px;
+    margin-right: 1px;
+    border: 1px solid;
+    position: relative;
+    overflow: hidden;
+}
+.dxss-HFPArea.dxss-PSHeader {
+    border-bottom-width: 0;
+    box-shadow: 1px 0;
+}
+.dxss-HFPArea.dxss-PSFooter {
+    border-top-width: 0;
+    box-shadow: 1px 1px;
+    margin-top: 5px;
+}
+
+.dxss-HFP {
+    width: 33%;
+    padding: 5px;
+    box-sizing: border-box;
+    display: inline-block;
+    position: absolute;
+    font-size: 8pt;
+    font-family: "Times New Roman", serif;
+}
+.dxss-PSFooter .dxss-HFP {
+    bottom: 0;
+}
+.dxss-PSHeader .dxss-HFP {
+    top: 0;
+}
+.dxss-HFPLeft.dxss-HFP {
+    text-align: left;
+    left: 0;
+}
+.dxss-HFPCenter.dxss-HFP {
+    text-align: center;
+    left: 33%;
+}
+.dxss-HFPRight.dxss-HFP {
+    text-align: right;
+    left: 66%;
+}
+/* end preview */
+
+@media (max-width: 450px) 
+{
+	.dxssControlSys .dxss-dialog .dxss-pageSetupContent .dxss-shortEditor {
+		max-width: unset;
+		min-width: unset;
+	}
+    .dxss-printLayoutGroup .dxflHARSys > div:first-child {
+        margin-left: 0px;
+        margin-right: 0px;
+        width: 100%;
+    }
+    .dxss-pageSetupContent .dxss-printAreaGroup {
+        padding-left: 4px;
+    }
+}
+@media (max-width: 365px) 
+{
+	.dxss-marginPreviewContainer .dxss-previewTable {
+        margin-left: 0px;
+        margin-right: 0px;
+        border-spacing: 7px 10px;
+	}
+    .dxss-pageSetupContent .dxss-marginPreviewContainer {
+        padding-left: 0px;
+        padding-right: 0px;
+    }
+    .dxss-pageSetupContent .dxss-marginPreviewContainer div.dxflFloatedElConSys:first-child {
+        padding-left: 0px;
+        padding-right: 0px;
+    }
+}
+/* Custom header/footer dialog */
+.dxss-customHeaderFooterForm .dxss-HFETable > tbody > tr > td {
+    padding: 0 5px 5px 5px;
+}
+.dxss-customHeaderFooterForm .dxss-HFButtonsContainer {
+    padding: 15px 0 15px 0;
+}
+.dxss-customHeaderFooterForm .dxss-HFInsertBtn {
+    margin: 0 2px;
+    padding-left: 4px;
+    padding-right: 4px;
+}
+.dxss-customHeaderFooterForm .dxss-HFInsertBtn div.dxb {
+    padding: 0;
+}
+.dxss-customHeaderFooterForm .dxss-HFSpacer {
+    display: inline-block;
+    width: 30px;
+}
+.dxss-customHeaderFooterForm .dxss-HFELeft textarea {
+    text-align: left;
+}
+.dxss-customHeaderFooterForm .dxss-HFECenter textarea {
+    text-align: center;
+}
+.dxss-customHeaderFooterForm .dxss-HFERight textarea {
+    text-align: right;
+}
+.dxss-customHeaderFooterForm .dxss-dialogSimpleContentGroup .dxtcLite {
+    padding-bottom: 0px;
+}
+.dxss-headerFooterContent .dxss-HFButtonContainer {
+    text-align: center;
+}
+
+.dxss-customHeaderFooterForm .dxss-pageControl .dxtc-content {
+    padding: 0px;
+}
+.dxssControlSys .dxss-dialog.dxss-customHeaderFooterForm .dxss-pageControl .dxss-descriptionLabel {
+    padding-bottom: 20px;
+}
+
+@media (max-width: 450px) 
+{ 
+	.dxss-customHeaderFooterForm .dxss-HFButtonContainer .dxss-HFSpacer {
+        width: 0px;
+	}
+    .dxss-customHeaderFooterForm .dxss-HFInsertBtn {
+        margin-left: 5px;
+        margin-top: 5px;
+    }
+}
+/* end custom HF dialog */
+/* Pivot Tables*/
+.dxssControlSys .dxss-pivotTableForm .dxss-dialogFirstLGB {
+    padding-bottom: 1px;
+}
+.dxssControlSys .dxss-pivotTableLabelFilterForm.dxss-dialog div.dxss-pivotFirstGroupContainer,
+.dxssControlSys .dxss-pivotTableTop10FilterForm.dxss-dialog div.dxss-pivotFirstGroupContainer,
+.dxssControlSys .dxss-pivotTableValueFilterForm.dxss-dialog div.dxss-pivotFirstGroupContainer,
+.dxssControlSys .dxss-pivotTableDateFilterForm.dxss-dialog div.dxss-pivotFirstGroupContainer,
+.dxssControlSys .dxss-pivotTableForm.dxss-dialog div.dxss-pivotFirstGroupContainer,
+.dxssControlSys .dxss-pivotTableForm.dxss-dialog div.dxss-pivotSecondGroupContainer {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+.dxssControlSys .dxss-pivotTableLabelFilterForm.dxss-dialog div.dxss-pivotFirstGroupContainer,
+.dxssControlSys .dxss-pivotTableTop10FilterForm.dxss-dialog div.dxss-pivotFirstGroupContainer,
+.dxssControlSys .dxss-pivotTableValueFilterForm.dxss-dialog div.dxss-pivotFirstGroupContainer,
+.dxssControlSys .dxss-pivotTableDateFilterForm.dxss-dialog div.dxss-pivotFirstGroupContainer,
+.dxssControlSys .dxss-pivotTableForm.dxss-dialog div.dxss-pivotFirstGroupContainer {
+    padding-top: 5px;
+}
+.dxssControlSys .dxss-pivotTableForm .dxss-pivotFirstGroupContainer .dxss-dialogFirstLGB {
+    margin-bottom: 5px;
+}
+.dxssControlSys .dxss-pivotTableForm .dxss-dialogLG .dxss-dialogLGC.dxss-pivotSecondGroupContainer {
+    padding-top: 5px;
+}
+.dxssControlSys .dxss-pivotTableForm .dxss-pivotFirstGroupContainer .dxss-dialogContentGroup .dxss-reportPlacedContainer,
+.dxssControlSys .dxss-pivotTableForm .dxss-pivotSecondGroupContainer .dxss-dialogContentGroup .dxss-reportPlacedContainer {
+    padding-top: 0px;
+}
+.dxssControlSys .dxss-pivotTableForm .dxss-pivotReportPlaced .dxe {
+    padding-top: 0px;
+    padding-left: 0px;
+    padding-bottom: 2px;
+}
+.dxssControlSys .dxss-pivotTableForm .dxss-pivotSecondGroupContainer .dxss-dialogContentGroup .dxss-locationContainer {
+    padding-left: 50px;
+}
+.dxssControlSys .dxss-pivotTableForm.dxss-dialog div.dxss-pivotFirstGroupContainer.dxss-single {
+    padding-bottom: 10px;
+}
+@media (max-width: 400px) {
+    .dxssControlSys .dxss-pivotTableForm .dxss-pivotSecondGroupContainer .dxss-dialogContentGroup .dxss-locationContainer {
+        padding-left: 0px;
+    }
+}
+/* PivotTables Field List*/
+.dxssControlSys .dxss-pivotTableFieldListForm .dxss-dialogContentGroup {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+.dxssControlSys .dxss-pivotTableFieldListForm .dxss-dialogContentGroup > div:nth-child(2) {
+    padding-top: 10px;
+    padding-bottom: 2px;
+}
+.dxssControlSys .dxss-pivotTableFieldListForm .dxss-dialogContentGroup > div:nth-child(3),
+.dxssControlSys .dxss-pivotTableFieldListForm .dxss-dialogContentGroup > div:nth-child(5) {
+    padding-right: 10px;
+}
+.dxssControlSys .dxss-pivotTableFieldListForm .dxss-pt-filters,
+.dxssControlSys .dxss-pivotTableFieldListForm .dxss-pt-rows,
+.dxssControlSys .dxss-pivotTableFieldListForm .dxss-pt-columns,
+.dxssControlSys .dxss-pivotTableFieldListForm .dxss-pt-values {
+    background-repeat: no-repeat;
+    background-position-y: 6px;
+}
+.dxssControlSys .dxss-pivotTableFieldListForm .dxss-pt-filters {
+    background-image: url('DevExpress.Web.ASPxSpreadsheet.Images.Dialogs.Filters.png');
+}
+.dxssControlSys .dxss-pivotTableFieldListForm .dxss-pt-columns {
+    background-image: url('DevExpress.Web.ASPxSpreadsheet.Images.Dialogs.Columns.png');
+}
+.dxssControlSys .dxss-pivotTableFieldListForm .dxss-pt-rows {
+    background-image: url('DevExpress.Web.ASPxSpreadsheet.Images.Dialogs.Rows.png');
+}
+.dxssControlSys .dxss-pivotTableFieldListForm .dxss-pt-values {
+    background-image: url('DevExpress.Web.ASPxSpreadsheet.Images.Dialogs.Values.png');
+}
+.dxssControlSys .dxss-pivotTableFieldListForm .dxss-caption-cell {
+    padding-left: 22px;
+}
+@media (max-width: 400px) {
+    .dxssControlSys .dxss-pivotTableFieldListForm .dxss-dialogContentGroup > div:nth-child(3),
+    .dxssControlSys .dxss-pivotTableFieldListForm .dxss-dialogContentGroup > div:nth-child(5) {
+        padding-right: 0px;
+    }
+}
+/*PivotTable Date AutoFilter*/
+.dxssControlSys .dxss-pivotTableLabelFilterForm .dxss-dialogContentGroup > div:nth-child(2),
+.dxssControlSys .dxss-pivotTableTop10FilterForm .dxss-dialogContentGroup > div:nth-child(2),
+.dxssControlSys .dxss-pivotTableTop10FilterForm .dxss-dialogContentGroup > div:nth-child(3),
+.dxssControlSys .dxss-pivotTableValueFilterForm .dxss-dialogContentGroup > div:nth-child(2),
+.dxssControlSys .dxss-pivotTableValueFilterForm .dxss-dialogContentGroup > div:nth-child(3),
+.dxssControlSys .dxss-pivotTableDateFilterForm .dxss-dialogContentGroup > div:nth-child(2) {
+    padding-left: 10px;
+}
+.dxssControlSys .dxss-pivotTableTop10FilterForm .dxss-dialogContentGroup > div:nth-child(4),
+.dxssControlSys .dxss-pivotTableValueFilterForm .dxss-dialogContentGroup > div:nth-child(4),
+.dxssControlSys .dxss-pivotTableDateFilterForm .dxss-dialogContentGroup > div:nth-child(3),
+.dxssControlSys .dxss-pivotTableLabelFilterForm .dxss-dialogContentGroup > div:nth-child(3) {
+    padding-left: 6px;
+}
+.dxssControlSys .dxss-pivotTableDateFilterForm .dxss-dialogContentGroup .dxss-dialogLGC .dxss-pivotDateFilterOperator,
+.dxssControlSys .dxss-pivotTableDateFilterForm .dxss-dialogContentGroup .dxss-dialogLGC .dxss-pivotDateFilterValue,
+.dxssControlSys .dxss-pivotTableDateFilterForm .dxss-dialogContentGroup .dxss-dialogLGC .dxss-pivotDateSecondFilterValue {
+    padding-top: 5px;
+}
+.dxssControlSys .dxss-pivotTableTop10FilterForm.dxss-dialog div.dxss-pivotFirstGroupContainer .dxss-dialogFirstLGB,
+.dxssControlSys .dxss-pivotTableValueFilterForm.dxss-dialog div.dxss-pivotFirstGroupContainer .dxss-dialogFirstLGB,
+.dxssControlSys .dxss-pivotTableLabelFilterForm.dxss-dialog div.dxss-pivotFirstGroupContainer .dxss-dialogFirstLGB,
+.dxssControlSys .dxss-pivotTableDateFilterForm.dxss-dialog div.dxss-pivotFirstGroupContainer .dxss-dialogFirstLGB {
+    padding-bottom: 5px;
+}
+.dxssControlSys .dxss-pivotTableLabelFilterForm .dxss-dialogContentGroup > div:nth-child(4) {
+    padding-top: 15px;
+}
+@media (max-width: 480px) {
+    .dxssControlSys .dxss-pivotTableDateFilterForm .dxss-dialogContentGroup > div:nth-child(2),
+    .dxssControlSys .dxss-pivotTableDateFilterForm .dxss-dialogContentGroup > div:nth-child(3),
+    .dxssControlSys .dxss-pivotTableLabelFilterForm .dxss-dialogContentGroup > div:nth-child(2),
+    .dxssControlSys .dxss-pivotTableLabelFilterForm .dxss-dialogContentGroup > div:nth-child(3),
+    .dxssControlSys .dxss-pivotTableTop10FilterForm .dxss-dialogContentGroup > div:nth-child(2),
+    .dxssControlSys .dxss-pivotTableTop10FilterForm .dxss-dialogContentGroup > div:nth-child(3),
+    .dxssControlSys .dxss-pivotTableTop10FilterForm .dxss-dialogContentGroup > div:nth-child(4),
+    .dxssControlSys .dxss-pivotTableValueFilterForm .dxss-dialogContentGroup > div:nth-child(2),
+    .dxssControlSys .dxss-pivotTableValueFilterForm .dxss-dialogContentGroup > div:nth-child(3),
+    .dxssControlSys .dxss-pivotTableValueFilterForm .dxss-dialogContentGroup > div:nth-child(4) {
+        padding-left: 0px;
+    }
+    .dxssControlSys .dxss-pivotTableLabelFilterForm .dxss-dialogContentGroup .dxss-dialogLGC .dxss-PivotTable-LabelFilter-SecondItem,
+    .dxssControlSys .dxss-pivotTableDateFilterForm .dxss-dialogContentGroup .dxss-dialogLGC .dxss-pivotDateSecondFilterValue,
+    .dxssControlSys .dxss-pivotTableValueFilterForm .dxss-dialogContentGroup .dxss-dialogLGC .dxss-PivotTable-ValueFilter-SecondItem,
+    .dxssControlSys .dxss-pivotTableTop10FilterForm .dxss-dialogContentGroup .dxss-dialogLGC .dxss-PivotTable-Top10-Field {
+        padding-top: 0px;
+    }
+    .dxssControlSys .dxss-pivotTableValueFilterForm .dxss-dialogContentGroup .dxss-dialogLGC .dxss-PivotTable-ValueFilter-SecondItem .dxflCaptionCellSys,
+    .dxssControlSys .dxss-pivotTableTop10FilterForm .dxss-dialogContentGroup .dxss-dialogLGC .dxss-PivotTable-Top10-Field .dxflCaptionCellSys,
+    .dxssControlSys .dxss-pivotTableLabelFilterForm .dxss-dialogContentGroup .dxss-dialogLGC .dxss-PivotTable-LabelFilter-SecondItem .dxflCaptionCellSys,
+    .dxssControlSys .dxss-pivotTableDateFilterForm .dxss-dialogContentGroup .dxss-dialogLGC .dxss-pivotDateSecondFilterValue .dxflCaptionCellSys {
+        padding-bottom: 6px;
+    }
+}
+.dxssControlSys .dxss-dialog.dxss-pivotTableItemFilterForm .dxtv-control.dxss-tv-desktop {
+    height: 300px;
+}
+.dxssControlSys .dxss-dialog.dxss-pivotTableItemFilterForm .dxss-dialogSimpleContentGroupDesktop {
+    overflow: auto;
+}
+.dxss-dialog.dxss-pivotTableItemFilterForm .dxss-dialogControlsWrapper > tbody > tr > td:first-child {
+    text-align: left;
+    width: auto;
+}
+.dxss-dialog.dxss-pivotTableItemFilterForm .dxss-dialogControlsWrapper > tbody > tr > td:nth-child(2) {
+    width: 100%;
+}
+.dxss-dialog.dxss-pivotTableItemFilterForm .dxss-dialogControlsWrapper .dxss-filterItem-selectAll {
+    padding-bottom: 10px;
+    padding-left: 5px;
+}
+@media (max-width: 400px) {
+    .dxss-pivotTableItemFilterForm .dxss-dialogControlsWrapper > tbody > tr > td:first-child {
+        display: none;
+    }
+    .dxss-pivotTableItemFilterForm .dxss-dialogControlsWrapper > tbody > tr > td:first-child.dxss-filterItem-selectAll {
+        display: table-cell;
+    }
+}
+
+/*Insert picture dialog*/
+.dxss-dialogFormWrapper .dxss-imagePreviewCell {
+    display: table;
+    text-align: center;
+    width: 100%;
+    height: 170px;
+}
+.dxss-dialogFormWrapper .dxss-previewImage {
+    width: 100%;
+    height: 100px;
+}
+.dxss-dialogFormWrapper .dxss-imagePreviewText {
+    display: table-cell;
+    vertical-align: middle;
+}
+.dxss-insertPictureUploader .dx-fileuploader-upload-button,
+.dxss-insertPictureUploader .dx-fileuploader-button-container {
+    display: none;
+}
+.dxss-insertPictureUploader .dx-fileuploader-wrapper {
+    padding-left: 0;
+}
+.dxss-insertPictureUploader.dx-fileuploader-dragover .dx-fileuploader-input-container {
+    height: 200px;
+}
+/*Change table Style dialog*/
+.dxss-tableStyle svg {
+    width: 86px;
+    height: 66px;
+}
+
+.dxss-tableStyleButton.dx-button .dx-button-content {
+    padding: 8px;
+}
+
+/*Data validation dialog*/
+.dxss-validation-form-container {
+    position: relative;
+    height: 100%;
+}
+.dxss-data-validation-apply-changes {
+    padding: 10px 20px;
+    position:absolute;
+    bottom: 0;
+}
+
+/*Dialog labels vertical align middle*/
+.dxss-form-item-middle .dx-box-item-content {
+    justify-content: center;
+}
+
+/*Dialog labels horizontal align left*/
+.dx-single-column-item-content .dxss-dialog-item-label-left .dx-field-item-content {
+    max-width: 80px;
+}
+.dxMobileUI .dx-single-column-item-content .dxss-dialog-item-label-left .dx-field-item-content {
+    max-width: 110px;
+}
+
+
+/*Dialogs with tabs*/
+.dxss-dialogWithTabs .dx-popup-content {
+    padding: 0;
+}
+.dxss-dialogWithTabs .dx-multiview-wrapper {
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+}
+.dxss-dialogWithTabs .dx-tabs {
+    border: none;
+}
+.dxss-button-like-popup-bottom .dx-button {
+    min-width: 100px;
+}
+.dxss-dialogWithTabs .dx-numberbox-spin-touch-friendly {
+    min-width: 110px;
+}
+.dx-layout-manager-one-col .dxss-button-one-col-center {
+    text-align: center !important;
+}
+.dx-layout-manager-one-col .dxss-button-one-col-center .dx-button {
+    min-width: 150px;
+}
+.dxss-dialogWithTabs .dx-numberbox-spin-touch-friendly {
+    min-width: 110px;
+}
+.dx-layout-manager-one-col .dxss-button-one-col-center {
+    text-align: center !important;
+}
+.dx-layout-manager-one-col .dxss-button-one-col-center .dx-button {
+    min-width: 150px;
+}
+.dxss-dialogWithTabs .dx-popup-bottom {
+    border-top: 1px solid #ddd;
+}
+.dxssControl 
+{
+	border-style: solid;
+	border-width: 1px;
+	font: 12px Tahoma, Geneva, sans-serif;
+}
+/*.dxssControl.generic-light,
+.dxssControl.generic-light-compact
+{
+    border-color: #ddd;
+}*/
+.dxssControl.generic-light,
+.dxssControl.generic-light-compact,
+.dxssControl.generic-softblue
+{
+    background-color: #f7f7f7;
+}
+.dxssControl.generic-dark,
+.dxssControl.generic-dark-compact
+{
+    background-color: #323232;
+}
+.dxssControl.generic-contrast,
+.dxssControl.generic-contrast-compact
+{
+    background-color: #000000;
+}
+.dxssControl.generic-darkmoon
+{
+    background-color: #4c5d7b;
+}
+.dxssControl.generic-carmine
+{
+    background-color: #fafafa;
+}
+.dxssControl.generic-darkviolet
+{
+    background-color: #17171f;
+}
+.dxssControl.generic-greenmist
+{
+    background-color: #f5f5f5;
+}
+.dxssControl[class*='material-'][class*='-dark']
+{
+    background-color: #363640;
+}
+.dxssControl .dxss-md
+{
+    background-color: #FFFFFF;
+}
+
+/* DX Spreadsheet Cell Editor Element, Formula Bar, IntelliSense elements */
+.dxssControl .dxss-ctve {
+	border: 2px solid #7493C0; /*the same -dxss-cfe */
+	/*ANCxSpreadsheet test*/
+	background-color: red!important;
+	border: 10px dashed red!important;
+	display: block;
+}
+/* Hint */
+.dxssControl .dxss-hint {
+    border: 1px solid #A8A8A8;
+    background-color: white;
+    padding: 3px 8px 4px 8px;
+    border-radius: 3px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    -o-border-radius: 3px;
+    -khtml-border-radius: 3px;
+    -webkit-box-shadow: rgba(0, 0, 0, 0.1) 0 1px 3px;
+    -moz-box-shadow: rgba(0, 0, 0, 0.1) 0 1px 3px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.dxssControl .dxss-hint.dxss-funcInfo {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+
+/* --------------Select-All----------------- */
+.dxss-ssbi {
+    border-color: transparent;
+    border-bottom-color: #cecece;
+}
+.dxss-ssb:hover .dxss-ssbi {
+    border-bottom-color: #a8a8a8;
+}
+/* --------------Select-All------------------*/
+.dxss-ast-circle:hover .dxss-ast-btn:before,
+.dxss-ast-circle:hover .dxss-ast-btn:after {
+    background-color: #979797;
+}
+.dxss-ast-btn:before,
+.dxss-ast-btn:after {
+    background-color: #757575;
+}
+.dxss-ast {
+    border-top: 1px solid #A8A8A8;
+}
+/* Sheet tabs */
+.dxss-tab-container
+{
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    width: 100%;
+}
+
+.dxss-tab-container > li
+{
+    float: left;
+}
+
+.dxss-tabs
+{
+    width: auto !important;
+    max-width: 100%;
+    border-bottom: none !important;
+    border-left: none !important;
+    border-top: none !important;
+}
+
+.dxss-plus-button
+{
+    margin: auto;
+    border: none;
+    border-radius: 0;
+    margin: auto auto auto 10px;
+    height: 100%;
+    vertical-align: middle;
+}
+.dxss-tab-container .dxss-tabs .dx-tabs-wrapper
+{
+    border-bottom: none;
+}
+
+.dxss-plus-button-container .dxss-plus-button .dx-button-content
+{
+    border-radius: 0;
+}
+div[class*='generic-'] .dxss-plus-button .dx-icon
+{
+    font-size: 14px;
+}
+div[class*='generic-'][class*='-compact'] .dxss-plus-button .dx-icon
+{
+    font-size: 12px;
+}
+div[class*='generic-'] .dxss-tabs-wrapper
+{
+    max-width: calc(100% - 55px);
+}
+div[class*='generic-'][class*='-compact'] .dxss-tabs-wrapper
+{
+    max-width: calc(100% - 44px);
+}
+div[class*='material-'] .dxss-tabs-wrapper
+{
+    max-width: calc(100% - 66px);
+}
+.generic-light .dxss-plus-button,
+.generic-softblue .dxss-plus-button,
+.generic-light-compact .dxss-plus-button
+{
+    background-color: #f7f7f7;
+}
+.generic-dark .dxss-plus-button,
+.generic-dark-compact .dxss-plus-button
+{
+    background-color: #323232;
+}
+.generic-contrast .dxss-plus-button,
+.generic-contrast-compact .dxss-plus-button
+{
+    background-color: #000000;
+}
+.generic-carmine .dxss-plus-button
+{
+    background-color: #fafafa;
+}
+.generic-darkmoon .dxss-plus-button
+{
+    background-color: #4c5d7b;
+}
+.generic-darkviolet .dxss-plus-button
+{
+    background-color: #1e1e28;
+}
+.generic-greenmist .dxss-plus-button
+{
+    background-color: #ededed;
+}
+div[class*='material-'] .dxss-plus-button
+{
+    background-color: #f5f5f5;
+}
+div[class*='material-'][class*='-dark'] .dxss-plus-button
+{
+    background-color: #363640;
+}
+
+div[class*='generic-'] .dxss-tab-container
+{
+    border-top-style: solid;
+    border-top-width: 1px;
+}
+.generic-light .dxss-tab-container,
+.generic-light-compact .dxss-tab-container
+{
+    border-color: #ddd;
+}
+.generic-dark .dxss-tab-container,
+.generic-dark-compact .dxss-tab-container
+{
+    border-color: #4d4d4d;
+}
+.generic-contrast .dxss-tab-container,
+.generic-contrast-compact .dxss-tab-container
+{
+    border-color: #FFFFFF;
+}
+
+.generic-carmine .dxss-tab-container
+{
+    border-color: #dee1e3;
+}
+.generic-darkmoon .dxss-tab-container
+{
+    border-color: #596980;
+}
+.generic-softblue .dxss-tab-container
+{
+    border-color: #e8eaeb;
+}
+.generic-darkviolet .dxss-tab-container
+{
+    border-color: #343840;
+}
+.generic-greenmist .dxss-tab-container
+{
+    border-color: #dedede;
+}
+/* Toggle button style */
+.generic-light .dx-button.dx-button-success,
+.generic-light-compact .dx-button.dx-button-success,
+.generic-softblue .dx-button.dx-button-success
+{
+    background-color: #e6e6e6;
+}
+.generic-dark .dx-button.dx-button-success,
+.generic-dark-compact .dx-button.dx-button-success
+{
+    background-color: #444444;
+}
+.generic-contrast .dx-button.dx-button-success,
+.generic-contrast-compact .dx-button.dx-button-success
+{
+    background-color: #ffffff;
+}
+.generic-carmine .dx-button.dx-button-success
+{
+    background-color: #f8b1a4;
+}
+.generic-darkmoon .dx-button.dx-button-success
+{
+    background-color: #596e92;
+}
+.generic-darkviolet .dx-button.dx-button-success
+{
+    background-color: #573199;
+}
+.generic-greenmist .dx-button.dx-button-success
+{
+    background-color: #dcdcdc;
+}
+div[class*='material-'][class*='-light'] .dx-button.dx-button-success
+{
+    background-color: #e0e0e0;
+}
+div[class*='material-'][class*='-dark'] .dx-button.dx-button-success
+{
+    background-color: #525261;
+}
+
+/* Dialogs */
+div[class*='generic-'] .dxss-insertHyperlinkDialog
+{
+    min-height: 210px;
+}
+div[class*='generic-'] .dxss-insertHyperlinkDialog.dxss-mv
+{
+    min-height: 286px;
+}
+div[class*='generic-'][class*='-compact'] .dxss-insertHyperlinkDialog
+{
+    min-height: 164px;
+}
+div[class*='generic-'][class*='-compact'] .dxss-insertHyperlinkDialog.dxss-mv
+{
+    min-height: 228px;
+}
+div[class*='material-'] .dxss-insertHyperlinkDialog
+{
+    min-height: 256px;
+}
+div[class*='material-'] .dxss-insertHyperlinkDialog.dxss-mv
+{
+    min-height: 392px;
+}
+
+.dxss-dialogFormWrapper .dx-tile
+{
+    border: none;
+}
+/*Find and replace dialog*/
+.dxss-findAndReplaceDialog .dx-layout-manager .dx-field-item:not(.dx-first-col) {
+    padding-left: 0px;
+}
+.dxss-findAndReplaceDialog .dx-layout-manager .dx-field-item:not(.dx-last-col) {
+    padding-right: 10px;
+}
+
+.dxss-chartType svg,
+.dxss-chartLayoutPreset svg {
+    width: 32px;
+    height: 32px;
+}
+
+.dxss-chartType,
+.dxss-chartLayoutPreset
+{
+    top: 50%;
+    transform: translateY(-50%);
+    position: relative;
+}
+
+.dxss-chartCategory
+{
+    display: flex;
+    align-items: center;
+}
+.dxss-chartCategory svg
+{
+    width: 18px;
+    height: 18px;
+    margin-right: 4px;
+}
+
+.dxss-chartStyle svg
+{
+    width: 93px;
+    height: 56px;
+}
+
+.dxss-chartStyle
+{
+    top: 50%;
+    transform: translateY(-50%);
+    position: relative;
+}
+
+/*Insert picture dialog*/
+.dxss-dialogFormWrapper .dxss-imagePreviewCell {
+    color: #878787;
+    border: dashed 1px #cac8c8;
+}
+
+/* Auto filter dialogs */
+.dxss-date-container
+{
+    display: flex;
+}
+.dxss-date-container .dxss-date-box
+{
+    width: unset !important;
+    margin-left: 10px;
+}
+.dxss-date-container .dxss-date-box .dx-texteditor-buttons-container
+{
+    position: relative;
+}
+.dxss-date-container .dxss-date-box .dx-texteditor-container > input
+{
+    display: none;
+}
+@charset "UTF-8";
+.dx-ribbon .dx-toolbar .dx-toolbar-items-container {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  box-sizing: content-box; }
+
+.dx-ribbon .dx-tab-text {
+  font-weight: 500; }
+
+.dx-ribbon .dx-texteditor.dx-editor-filled,
+.dx-toolbar-menu-section .dx-texteditor.dx-editor-filled {
+  background-color: transparent; }
+
+.dx-ribbon .dx-toolbar .dx-toolbar-items-container .dx-numberbox {
+  box-sizing: border-box;
+  padding-left: 8px;
+  padding-right: 8px; }
+
+.dx-ribbon .dx-tabs {
+  border-width: 0; }
+
+.dx-ribbon .dx-multiview-wrapper {
+  border-left-width: 0;
+  border-right-width: 0; }
+
+.dx-ribbon .dx-toolbar .dx-toolbar-item {
+  padding: 0; }
+
+.dx-ribbon .dx-toolbar-item .dx-button {
+  margin-left: 1px;
+  margin-right: 1px; }
+
+.dx-ribbon .dx-toolbar-item .dx-selectbox {
+  margin: 0 6px; }
+
+.dx-ribbon .dx-toolbar-before {
+  padding-left: 8px; }
+
+.dx-ribbon .dx-r-separator,
+.dx-toolbar-menu-section .dx-r-separator {
+  border-style: solid;
+  border-width: 0; }
+
+.dx-ribbon .dx-r-separator-container {
+  height: 2.6em; }
+
+.dx-ribbon .dx-r-separator {
+  margin: 0 7px 0 8px;
+  border-right-width: 1px;
+  height: 100%; }
+
+.dx-toolbar-menu-section .dx-r-separator {
+  margin: 0 -16px 0 -16px;
+  border-bottom-width: 1px;
+  height: 0; }
+
+.dx-ribbon-item.dx-colorbox .dx-colorbox-color-result-preview {
+  cursor: pointer; }
+
+.dx-toolbar-menu-section .dx-ribbon-item.dx-numberbox,
+.dx-toolbar-menu-section .dx-ribbon-item.dx-colorbox,
+.dx-toolbar-menu-section .dx-ribbon-item.dx-selectbox,
+.dx-toolbar-menu-section .dx-ribbon-item .dx-menu-items-container,
+.dx-toolbar-menu-section .dx-ribbon-item .dx-menu-items-container .dx-menu-item-wrapper {
+  width: 100% !important; }
+
+.dx-ribbon .dx-menu .dx-menu-item .dx-menu-item-content {
+  padding-right: 8px;
+  padding-left: 8px; }
+
+.dx-ribbon[class*="material"] .dx-menu-base.dx-ribbon-item :not(.dx-submenu) .dx-menu-item .dx-menu-item-content .dx-menu-item-text {
+  font-size: 14px;
+  text-transform: uppercase;
+  font-weight: 500; }
+
+.dx-ribbon .dx-menu-base.dx-ribbon-item.dx-showTextInMenu :not(.dx-submenu) .dx-menu-item .dx-menu-item-content .dx-menu-item-text, .dx-ribbon .dx-menu-base.dx-ribbon-item.dx-showTextInMenu :not(.dx-submenu) .dx-menu-item .dx-menu-item-content .dx-menu-item-popout:before {
+  display: none; }
+
+.dx-toolbar-menu-section .dx-menu-base.dx-ribbon-item.dx-showTextInMenu :not(.dx-submenu) .dx-menu-item .dx-menu-item-content .dx-menu-item-text {
+  display: inline; }
+
+.dx-menu.dx-ribbon-item .dx-menu-item.dx-menu-item-has-text.dx-menu-item-has-icon .dx-icon {
+  margin-right: 12px; }
+
+.dx-ribbon .dx-menu.dx-ribbon-item.dx-showTextInMenu .dx-menu-item.dx-menu-item-has-text.dx-menu-item-has-icon .dx-icon {
+  margin-right: 0; }
+
+.dx-ribbon .dx-toolbar-menu-container .dx-dropdownmenu-button {
+  margin-right: 10px;
+  border-width: 0; }
+
+@font-face {
+  font-family: "dxss-icons";
+  src: url("./icons/dxss-icons.woff2") format("woff2"), url("./icons/dxss-icons.woff") format("woff"), url("./icons/dxss-icons.ttf") format("truetype"); }
+
+.dxss-icon-ChartChangeLayout:before, .dxss-icon-ChartChangeStyle:before, .dxss-icon-ChartChangeType:before, .dxss-icon-ChartSelectData:before, .dxss-icon-ChartSwitchRowColumn:before, .dxss-icon-FloatingObjectBringForward:before, .dxss-icon-FloatingObjectBringToFront:before, .dxss-icon-FloatingObjectSendBackward:before, .dxss-icon-FloatingObjectSendToBack:before, .dxss-icon-ChartAxesGroup:before, .dxss-icon-ChartGridlines:before, .dxss-icon-ChartGridlinesHorizontal_Major:before, .dxss-icon-ChartGridlinesHorizontal_MajorMinor:before, .dxss-icon-ChartGridlinesHorizontal_Minor:before, .dxss-icon-ChartGridlinesHorizontal_None:before, .dxss-icon-ChartGridlinesVertical_Major:before, .dxss-icon-ChartGridlinesVertical_MajorMinor:before, .dxss-icon-ChartGridlinesVertical_Minor:before, .dxss-icon-ChartGridlinesVertical_None:before, .dxss-icon-ChartHorizontalAxis_Default:before, .dxss-icon-ChartHorizontalAxis_LeftToRight:before, .dxss-icon-ChartHorizontalAxis_None:before, .dxss-icon-ChartHorizontalAxis_RightToLeft:before, .dxss-icon-ChartHorizontalAxis_WithoutLabeling:before, .dxss-icon-ChartUpDownBars_None:before, .dxss-icon-ChartVerticalAxis_Billions:before, .dxss-icon-ChartVerticalAxis_Default:before, .dxss-icon-ChartVerticalAxis_LogScale:before, .dxss-icon-ChartVerticalAxis_Millions:before, .dxss-icon-ChartVerticalAxis_None:before, .dxss-icon-ChartVerticalAxis_Thousands:before, .dxss-icon-ChartAxisTitleGroup:before, .dxss-icon-ChartAxisTitleHorizontal_None:before, .dxss-icon-ChartAxisTitleHorizontal:before, .dxss-icon-ChartAxisTitleVertical_HorizonlalText:before, .dxss-icon-ChartAxisTitleVertical_None:before, .dxss-icon-ChartAxisTitleVertical_RotatedText:before, .dxss-icon-ChartAxisTitleVertical_VerticalText:before, .dxss-icon-ChartAxisTitleVertical:before, .dxss-icon-ChartLabels_InsideBase:before, .dxss-icon-ChartLabels_InsideCenter:before, .dxss-icon-ChartLabels_InsideEnd:before, .dxss-icon-ChartLabels_None:before, .dxss-icon-ChartLabels_OutsideEnd:before, .dxss-icon-ChartLegend_Bottom:before, .dxss-icon-ChartLegend_Left:before, .dxss-icon-ChartLegend_LeftOverlay:before, .dxss-icon-ChartLegend_None:before, .dxss-icon-ChartLegend_Right:before, .dxss-icon-ChartLegend_RightOverlay:before, .dxss-icon-ChartLegend_Top:before, .dxss-icon-ChartTitleAbove:before, .dxss-icon-ChartTitleCenteredOverlay:before, .dxss-icon-ChartTitleGroup:before, .dxss-icon-ChartTitleNone:before, .dxss-icon-CircleInvalidData:before, .dxss-icon-ClearValidationCircles:before, .dxss-icon-DataValidation:before, .dxss-icon-ClearFilter:before, .dxss-icon-Filter:before, .dxss-icon-ReapplyFilter:before, .dxss-icon-CalculateNow:before, .dxss-icon-CalculateSheet:before, .dxss-icon-CalculationOptions:before, .dxss-icon-FunctionsCompatibility:before, .dxss-icon-FunctionsDateAndTime:before, .dxss-icon-FunctionsEngineering:before, .dxss-icon-FunctionsFinancial:before, .dxss-icon-FunctionsInformation:before, .dxss-icon-FunctionsLogical:before, .dxss-icon-FunctionsLookupAndReference:before, .dxss-icon-FunctionsMathAndTrigonometry:before, .dxss-icon-FunctionsMore:before, .dxss-icon-FunctionsStatistical:before, .dxss-icon-FunctionsText:before, .dxss-icon-FunctionSum:before, .dxss-icon-AlignBottomCenter:before, .dxss-icon-AlignCenter:before, .dxss-icon-AlignLeft:before, .dxss-icon-AlignMiddleCenter:before, .dxss-icon-AlignRight:before, .dxss-icon-AlignTopCenter:before, .dxss-icon-EditingMergeAndCenterCells:before, .dxss-icon-EditingMergeCells:before, .dxss-icon-EditingMergeCellsAcross:before, .dxss-icon-EditingUnmergeCells:before, .dxss-icon-FormatWrapText:before, .dxss-icon-IndentDecrease:before, .dxss-icon-IndentIncrease:before, .dxss-icon-Format:before, .dxss-icon-InsertCellsCommandGroup:before, .dxss-icon-InsertSheet:before, .dxss-icon-InsertSheetColumns:before, .dxss-icon-InsertSheetRows:before, .dxss-icon-RemoveCellsCommandGroup:before, .dxss-icon-RemoveSheet:before, .dxss-icon-RemoveSheetColumns:before, .dxss-icon-RemoveSheetRows:before, .dxss-icon-Copy:before, .dxss-icon-Cut:before, .dxss-icon-Paste:before, .dxss-icon-ClearAll:before, .dxss-icon-ClearFormats:before, .dxss-icon-Delete_Hyperlink:before, .dxss-icon-EditingFillDown:before, .dxss-icon-EditingFillLeft:before, .dxss-icon-EditingFillRight:before, .dxss-icon-EditingFillUp:before, .dxss-icon-Find:before, .dxss-icon-FormatCells:before, .dxss-icon-SortAndFilter:before, .dxss-icon-SortAsc:before, .dxss-icon-SortDesc:before, .dxss-icon-Bold:before, .dxss-icon-BorderBottom:before, .dxss-icon-BorderBottomThick:before, .dxss-icon-BorderLeft:before, .dxss-icon-BorderLineStyle:before, .dxss-icon-BorderNone:before, .dxss-icon-BorderRight:before, .dxss-icon-BordersAll:before, .dxss-icon-BordersOutside:before, .dxss-icon-BordersOutsideThick:before, .dxss-icon-BorderTop:before, .dxss-icon-BorderTopAndBottom:before, .dxss-icon-BorderTopAndBottomThick:before, .dxss-icon-FillBackground:before, .dxss-icon-FontColor:before, .dxss-icon-FontSizeDecrease:before, .dxss-icon-FontSizeIncrease:before, .dxss-icon-Italic:before, .dxss-icon-LineColor:before, .dxss-icon-Strikeout:before, .dxss-icon-Underline:before, .dxss-icon-FormatNumberCommaStyle:before, .dxss-icon-FormatNumberCurrency:before, .dxss-icon-FormatNumberDecreaseDecimal:before, .dxss-icon-FormatNumberIncreaseDecimal:before, .dxss-icon-FormatNumberPercent:before, .dxss-icon-PrintDialog:before, .dxss-icon-FormatAsTable:before, .dxss-icon-Redo:before, .dxss-icon-Undo:before, .dxss-icon-ChartGroupArea:before, .dxss-icon-ChartGroupBar:before, .dxss-icon-ChartGroupColumn:before, .dxss-icon-ChartGroupLine:before, .dxss-icon-ChartGroupOther:before, .dxss-icon-ChartGroupPie:before, .dxss-icon-ChartGroupScatter:before, .dxss-icon-CreateArea3DChart:before, .dxss-icon-CreateAreaChart:before, .dxss-icon-CreateBar3DChart:before, .dxss-icon-CreateBarChart:before, .dxss-icon-CreateBubble3DChart:before, .dxss-icon-CreateBubbleChart:before, .dxss-icon-CreateConeBar3DChart:before, .dxss-icon-CreateConeFullStackedBar3DChart:before, .dxss-icon-CreateConeManhattanBarChart:before, .dxss-icon-CreateConeStackedBar3DChart:before, .dxss-icon-CreateCylinderBar3DChart:before, .dxss-icon-CreateCylinderFullStackedBar3DChart:before, .dxss-icon-CreateCylinderManhattanBarChart:before, .dxss-icon-CreateCylinderStackedBar3DChart:before, .dxss-icon-CreateDoughnutChart:before, .dxss-icon-CreateExplodedDoughnutChart:before, .dxss-icon-CreateExplodedPie3DChart:before, .dxss-icon-CreateExplodedPieChart:before, .dxss-icon-CreateFullStackedArea3DChart:before, .dxss-icon-CreateFullStackedAreaChart:before, .dxss-icon-CreateFullStackedBar3DChart:before, .dxss-icon-CreateFullStackedBarChart:before, .dxss-icon-CreateFullStackedLineChart:before, .dxss-icon-CreateFullStackedLineChartNoMarkers:before, .dxss-icon-CreateLine3DChart:before, .dxss-icon-CreateLineChart:before, .dxss-icon-CreateLineChartNoMarkers:before, .dxss-icon-CreateManhattanBarChart:before, .dxss-icon-CreatePie3DChart:before, .dxss-icon-CreatePieChart:before, .dxss-icon-CreatePyramidBar3DChart:before, .dxss-icon-CreatePyramidFullStackedBar3DChart:before, .dxss-icon-CreatePyramidManhattanBarChart:before, .dxss-icon-CreatePyramidStackedBar3DChart:before, .dxss-icon-CreateRadarLineChart:before, .dxss-icon-CreateRadarLineChartFilled:before, .dxss-icon-CreateRadarLineChartNoMarkers:before, .dxss-icon-CreateRotatedBar3DChart:before, .dxss-icon-CreateRotatedBarChart:before, .dxss-icon-CreateRotatedConeBar3DChart:before, .dxss-icon-CreateRotatedCylinderBar3DChart:before, .dxss-icon-CreateRotatedFullStackedBar3DChart:before, .dxss-icon-CreateRotatedFullStackedBarChart:before, .dxss-icon-CreateRotatedFullStackedConeBar3DChart:before, .dxss-icon-CreateRotatedFullStackedCylinderBar3DChart:before, .dxss-icon-CreateRotatedFullStackedPyramidBar3DChart:before, .dxss-icon-CreateRotatedPyramidBar3DChart:before, .dxss-icon-CreateRotatedStackedBar3DChart:before, .dxss-icon-CreateRotatedStackedBarChart:before, .dxss-icon-CreateRotatedStackedConeBar3DChart:before, .dxss-icon-CreateRotatedStackedCylinderBar3DChart:before, .dxss-icon-CreateRotatedStackedPyramidBar3DChart:before, .dxss-icon-CreateScatterChartLines:before, .dxss-icon-CreateScatterChartLinesAndMarkers:before, .dxss-icon-CreateScatterChartMarkersOnly:before, .dxss-icon-CreateScatterChartSmoothLines:before, .dxss-icon-CreateScatterChartSmoothLinesAndMarkers:before, .dxss-icon-CreateStackedArea3DChart:before, .dxss-icon-CreateStackedAreaChart:before, .dxss-icon-CreateStackedBar3DChart:before, .dxss-icon-CreateStackedBarChart:before, .dxss-icon-CreateStackedLineChart:before, .dxss-icon-CreateStackedLineChartNoMarkers:before, .dxss-icon-CreateStockChartHighLowClose:before, .dxss-icon-CreateStockChartOpenHighLowClose:before, .dxss-icon-CreateStockChartVolumeHighLowClose:before, .dxss-icon-CreateStockChartVolumeOpenHighLowClose:before, .dxss-icon-PivotTable:before, .dxss-icon-InsertFloatingObjectImage:before, .dxss-icon-Hyperlink:before, .dxss-icon-InsertTable:before, .dxss-icon-DeleteComment:before, .dxss-icon-EditComment:before, .dxss-icon-InsertComment:before, .dxss-icon-ShowHideComment:before, .dxss-icon-TableConvertToRange:before, .dxss-icon-FullScreen:before, .dxss-icon-FreezeColumnWebCommand:before, .dxss-icon-FreezePanesWebCommand:before, .dxss-icon-FreezeRowWebCommand:before, .dxss-icon-ViewUnfreezePanes:before {
+  font-family: "dxss-icons";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: normal;
+  text-decoration: none;
+  text-transform: none; }
+
+.dxss-icon-ChartChangeLayout:before {
+  content: ""; }
+
+.dxss-icon-ChartChangeStyle:before {
+  content: ""; }
+
+.dxss-icon-ChartChangeType:before {
+  content: ""; }
+
+.dxss-icon-ChartSelectData:before {
+  content: ""; }
+
+.dxss-icon-ChartSwitchRowColumn:before {
+  content: ""; }
+
+.dxss-icon-FloatingObjectBringForward:before {
+  content: ""; }
+
+.dxss-icon-FloatingObjectBringToFront:before {
+  content: ""; }
+
+.dxss-icon-FloatingObjectSendBackward:before {
+  content: ""; }
+
+.dxss-icon-FloatingObjectSendToBack:before {
+  content: ""; }
+
+.dxss-icon-ChartAxesGroup:before {
+  content: ""; }
+
+.dxss-icon-ChartGridlines:before {
+  content: ""; }
+
+.dxss-icon-ChartGridlinesHorizontal_Major:before {
+  content: ""; }
+
+.dxss-icon-ChartGridlinesHorizontal_MajorMinor:before {
+  content: ""; }
+
+.dxss-icon-ChartGridlinesHorizontal_Minor:before {
+  content: ""; }
+
+.dxss-icon-ChartGridlinesHorizontal_None:before {
+  content: ""; }
+
+.dxss-icon-ChartGridlinesVertical_Major:before {
+  content: ""; }
+
+.dxss-icon-ChartGridlinesVertical_MajorMinor:before {
+  content: ""; }
+
+.dxss-icon-ChartGridlinesVertical_Minor:before {
+  content: ""; }
+
+.dxss-icon-ChartGridlinesVertical_None:before {
+  content: ""; }
+
+.dxss-icon-ChartHorizontalAxis_Default:before {
+  content: ""; }
+
+.dxss-icon-ChartHorizontalAxis_LeftToRight:before {
+  content: ""; }
+
+.dxss-icon-ChartHorizontalAxis_None:before {
+  content: ""; }
+
+.dxss-icon-ChartHorizontalAxis_RightToLeft:before {
+  content: ""; }
+
+.dxss-icon-ChartHorizontalAxis_WithoutLabeling:before {
+  content: ""; }
+
+.dxss-icon-ChartUpDownBars_None:before {
+  content: ""; }
+
+.dxss-icon-ChartVerticalAxis_Billions:before {
+  content: ""; }
+
+.dxss-icon-ChartVerticalAxis_Default:before {
+  content: ""; }
+
+.dxss-icon-ChartVerticalAxis_LogScale:before {
+  content: ""; }
+
+.dxss-icon-ChartVerticalAxis_Millions:before {
+  content: ""; }
+
+.dxss-icon-ChartVerticalAxis_None:before {
+  content: ""; }
+
+.dxss-icon-ChartVerticalAxis_Thousands:before {
+  content: ""; }
+
+.dxss-icon-ChartAxisTitleGroup:before {
+  content: ""; }
+
+.dxss-icon-ChartAxisTitleHorizontal_None:before {
+  content: ""; }
+
+.dxss-icon-ChartAxisTitleHorizontal:before {
+  content: ""; }
+
+.dxss-icon-ChartAxisTitleVertical_HorizonlalText:before {
+  content: ""; }
+
+.dxss-icon-ChartAxisTitleVertical_None:before {
+  content: ""; }
+
+.dxss-icon-ChartAxisTitleVertical_RotatedText:before {
+  content: ""; }
+
+.dxss-icon-ChartAxisTitleVertical_VerticalText:before {
+  content: ""; }
+
+.dxss-icon-ChartAxisTitleVertical:before {
+  content: ""; }
+
+.dxss-icon-ChartLabels_InsideBase:before {
+  content: ""; }
+
+.dxss-icon-ChartLabels_InsideCenter:before {
+  content: ""; }
+
+.dxss-icon-ChartLabels_InsideEnd:before {
+  content: ""; }
+
+.dxss-icon-ChartLabels_None:before {
+  content: ""; }
+
+.dxss-icon-ChartLabels_OutsideEnd:before {
+  content: ""; }
+
+.dxss-icon-ChartLegend_Bottom:before {
+  content: ""; }
+
+.dxss-icon-ChartLegend_Left:before {
+  content: ""; }
+
+.dxss-icon-ChartLegend_LeftOverlay:before {
+  content: ""; }
+
+.dxss-icon-ChartLegend_None:before {
+  content: ""; }
+
+.dxss-icon-ChartLegend_Right:before {
+  content: ""; }
+
+.dxss-icon-ChartLegend_RightOverlay:before {
+  content: ""; }
+
+.dxss-icon-ChartLegend_Top:before {
+  content: ""; }
+
+.dxss-icon-ChartTitleAbove:before {
+  content: ""; }
+
+.dxss-icon-ChartTitleCenteredOverlay:before {
+  content: ""; }
+
+.dxss-icon-ChartTitleGroup:before {
+  content: ""; }
+
+.dxss-icon-ChartTitleNone:before {
+  content: ""; }
+
+.dxss-icon-CircleInvalidData:before {
+  content: ""; }
+
+.dxss-icon-ClearValidationCircles:before {
+  content: ""; }
+
+.dxss-icon-DataValidation:before {
+  content: ""; }
+
+.dxss-icon-ClearFilter:before {
+  content: ""; }
+
+.dxss-icon-Filter:before {
+  content: ""; }
+
+.dxss-icon-ReapplyFilter:before {
+  content: ""; }
+
+.dxss-icon-CalculateNow:before {
+  content: ""; }
+
+.dxss-icon-CalculateSheet:before {
+  content: ""; }
+
+.dxss-icon-CalculationOptions:before {
+  content: ""; }
+
+.dxss-icon-FunctionsCompatibility:before {
+  content: ""; }
+
+.dxss-icon-FunctionsDateAndTime:before {
+  content: ""; }
+
+.dxss-icon-FunctionsEngineering:before {
+  content: ""; }
+
+.dxss-icon-FunctionsFinancial:before {
+  content: ""; }
+
+.dxss-icon-FunctionsInformation:before {
+  content: ""; }
+
+.dxss-icon-FunctionsLogical:before {
+  content: ""; }
+
+.dxss-icon-FunctionsLookupAndReference:before {
+  content: ""; }
+
+.dxss-icon-FunctionsMathAndTrigonometry:before {
+  content: ""; }
+
+.dxss-icon-FunctionsMore:before {
+  content: ""; }
+
+.dxss-icon-FunctionsStatistical:before {
+  content: ""; }
+
+.dxss-icon-FunctionsText:before {
+  content: ""; }
+
+.dxss-icon-FunctionSum:before {
+  content: ""; }
+
+.dxss-icon-AlignBottomCenter:before {
+  content: ""; }
+
+.dxss-icon-AlignCenter:before {
+  content: ""; }
+
+.dxss-icon-AlignLeft:before {
+  content: ""; }
+
+.dxss-icon-AlignMiddleCenter:before {
+  content: ""; }
+
+.dxss-icon-AlignRight:before {
+  content: ""; }
+
+.dxss-icon-AlignTopCenter:before {
+  content: ""; }
+
+.dxss-icon-EditingMergeAndCenterCells:before {
+  content: ""; }
+
+.dxss-icon-EditingMergeCells:before {
+  content: ""; }
+
+.dxss-icon-EditingMergeCellsAcross:before {
+  content: ""; }
+
+.dxss-icon-EditingUnmergeCells:before {
+  content: ""; }
+
+.dxss-icon-FormatWrapText:before {
+  content: ""; }
+
+.dxss-icon-IndentDecrease:before {
+  content: ""; }
+
+.dxss-icon-IndentIncrease:before {
+  content: ""; }
+
+.dxss-icon-Format:before {
+  content: ""; }
+
+.dxss-icon-InsertCellsCommandGroup:before {
+  content: ""; }
+
+.dxss-icon-InsertSheet:before {
+  content: ""; }
+
+.dxss-icon-InsertSheetColumns:before {
+  content: ""; }
+
+.dxss-icon-InsertSheetRows:before {
+  content: ""; }
+
+.dxss-icon-RemoveCellsCommandGroup:before {
+  content: ""; }
+
+.dxss-icon-RemoveSheet:before {
+  content: ""; }
+
+.dxss-icon-RemoveSheetColumns:before {
+  content: ""; }
+
+.dxss-icon-RemoveSheetRows:before {
+  content: ""; }
+
+.dxss-icon-Copy:before {
+  content: ""; }
+
+.dxss-icon-Cut:before {
+  content: ""; }
+
+.dxss-icon-Paste:before {
+  content: ""; }
+
+.dxss-icon-ClearAll:before {
+  content: ""; }
+
+.dxss-icon-ClearFormats:before {
+  content: ""; }
+
+.dxss-icon-Delete_Hyperlink:before {
+  content: ""; }
+
+.dxss-icon-EditingFillDown:before {
+  content: ""; }
+
+.dxss-icon-EditingFillLeft:before {
+  content: ""; }
+
+.dxss-icon-EditingFillRight:before {
+  content: ""; }
+
+.dxss-icon-EditingFillUp:before {
+  content: ""; }
+
+.dxss-icon-Find:before {
+  content: ""; }
+
+.dxss-icon-FormatCells:before {
+  content: ""; }
+
+.dxss-icon-SortAndFilter:before {
+  content: ""; }
+
+.dxss-icon-SortAsc:before {
+  content: ""; }
+
+.dxss-icon-SortDesc:before {
+  content: ""; }
+
+.dxss-icon-Bold:before {
+  content: ""; }
+
+.dxss-icon-BorderBottom:before {
+  content: ""; }
+
+.dxss-icon-BorderBottomThick:before {
+  content: ""; }
+
+.dxss-icon-BorderLeft:before {
+  content: ""; }
+
+.dxss-icon-BorderLineStyle:before {
+  content: ""; }
+
+.dxss-icon-BorderNone:before {
+  content: ""; }
+
+.dxss-icon-BorderRight:before {
+  content: ""; }
+
+.dxss-icon-BordersAll:before {
+  content: ""; }
+
+.dxss-icon-BordersOutside:before {
+  content: ""; }
+
+.dxss-icon-BordersOutsideThick:before {
+  content: ""; }
+
+.dxss-icon-BorderTop:before {
+  content: ""; }
+
+.dxss-icon-BorderTopAndBottom:before {
+  content: ""; }
+
+.dxss-icon-BorderTopAndBottomThick:before {
+  content: ""; }
+
+.dxss-icon-FillBackground:before {
+  content: ""; }
+
+.dxss-icon-FontColor:before {
+  content: ""; }
+
+.dxss-icon-FontSizeDecrease:before {
+  content: ""; }
+
+.dxss-icon-FontSizeIncrease:before {
+  content: ""; }
+
+.dxss-icon-Italic:before {
+  content: ""; }
+
+.dxss-icon-LineColor:before {
+  content: ""; }
+
+.dxss-icon-Strikeout:before {
+  content: ""; }
+
+.dxss-icon-Underline:before {
+  content: ""; }
+
+.dxss-icon-FormatNumberCommaStyle:before {
+  content: ""; }
+
+.dxss-icon-FormatNumberCurrency:before {
+  content: ""; }
+
+.dxss-icon-FormatNumberDecreaseDecimal:before {
+  content: ""; }
+
+.dxss-icon-FormatNumberIncreaseDecimal:before {
+  content: ""; }
+
+.dxss-icon-FormatNumberPercent:before {
+  content: ""; }
+
+.dxss-icon-PrintDialog:before {
+  content: ""; }
+
+.dxss-icon-FormatAsTable:before {
+  content: ""; }
+
+.dxss-icon-Redo:before {
+  content: ""; }
+
+.dxss-icon-Undo:before {
+  content: ""; }
+
+.dxss-icon-ChartGroupArea:before {
+  content: ""; }
+
+.dxss-icon-ChartGroupBar:before {
+  content: ""; }
+
+.dxss-icon-ChartGroupColumn:before {
+  content: ""; }
+
+.dxss-icon-ChartGroupLine:before {
+  content: ""; }
+
+.dxss-icon-ChartGroupOther:before {
+  content: ""; }
+
+.dxss-icon-ChartGroupPie:before {
+  content: ""; }
+
+.dxss-icon-ChartGroupScatter:before {
+  content: ""; }
+
+.dxss-icon-CreateArea3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateAreaChart:before {
+  content: ""; }
+
+.dxss-icon-CreateBar3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateBarChart:before {
+  content: ""; }
+
+.dxss-icon-CreateBubble3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateBubbleChart:before {
+  content: ""; }
+
+.dxss-icon-CreateConeBar3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateConeFullStackedBar3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateConeManhattanBarChart:before {
+  content: ""; }
+
+.dxss-icon-CreateConeStackedBar3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateCylinderBar3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateCylinderFullStackedBar3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateCylinderManhattanBarChart:before {
+  content: ""; }
+
+.dxss-icon-CreateCylinderStackedBar3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateDoughnutChart:before {
+  content: ""; }
+
+.dxss-icon-CreateExplodedDoughnutChart:before {
+  content: ""; }
+
+.dxss-icon-CreateExplodedPie3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateExplodedPieChart:before {
+  content: ""; }
+
+.dxss-icon-CreateFullStackedArea3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateFullStackedAreaChart:before {
+  content: ""; }
+
+.dxss-icon-CreateFullStackedBar3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateFullStackedBarChart:before {
+  content: ""; }
+
+.dxss-icon-CreateFullStackedLineChart:before {
+  content: ""; }
+
+.dxss-icon-CreateFullStackedLineChartNoMarkers:before {
+  content: ""; }
+
+.dxss-icon-CreateLine3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateLineChart:before {
+  content: ""; }
+
+.dxss-icon-CreateLineChartNoMarkers:before {
+  content: ""; }
+
+.dxss-icon-CreateManhattanBarChart:before {
+  content: ""; }
+
+.dxss-icon-CreatePie3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreatePieChart:before {
+  content: ""; }
+
+.dxss-icon-CreatePyramidBar3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreatePyramidFullStackedBar3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreatePyramidManhattanBarChart:before {
+  content: ""; }
+
+.dxss-icon-CreatePyramidStackedBar3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateRadarLineChart:before {
+  content: ""; }
+
+.dxss-icon-CreateRadarLineChartFilled:before {
+  content: ""; }
+
+.dxss-icon-CreateRadarLineChartNoMarkers:before {
+  content: ""; }
+
+.dxss-icon-CreateRotatedBar3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateRotatedBarChart:before {
+  content: ""; }
+
+.dxss-icon-CreateRotatedConeBar3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateRotatedCylinderBar3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateRotatedFullStackedBar3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateRotatedFullStackedBarChart:before {
+  content: ""; }
+
+.dxss-icon-CreateRotatedFullStackedConeBar3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateRotatedFullStackedCylinderBar3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateRotatedFullStackedPyramidBar3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateRotatedPyramidBar3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateRotatedStackedBar3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateRotatedStackedBarChart:before {
+  content: ""; }
+
+.dxss-icon-CreateRotatedStackedConeBar3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateRotatedStackedCylinderBar3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateRotatedStackedPyramidBar3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateScatterChartLines:before {
+  content: ""; }
+
+.dxss-icon-CreateScatterChartLinesAndMarkers:before {
+  content: ""; }
+
+.dxss-icon-CreateScatterChartMarkersOnly:before {
+  content: ""; }
+
+.dxss-icon-CreateScatterChartSmoothLines:before {
+  content: ""; }
+
+.dxss-icon-CreateScatterChartSmoothLinesAndMarkers:before {
+  content: ""; }
+
+.dxss-icon-CreateStackedArea3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateStackedAreaChart:before {
+  content: ""; }
+
+.dxss-icon-CreateStackedBar3DChart:before {
+  content: ""; }
+
+.dxss-icon-CreateStackedBarChart:before {
+  content: ""; }
+
+.dxss-icon-CreateStackedLineChart:before {
+  content: ""; }
+
+.dxss-icon-CreateStackedLineChartNoMarkers:before {
+  content: ""; }
+
+.dxss-icon-CreateStockChartHighLowClose:before {
+  content: ""; }
+
+.dxss-icon-CreateStockChartOpenHighLowClose:before {
+  content: ""; }
+
+.dxss-icon-CreateStockChartVolumeHighLowClose:before {
+  content: ""; }
+
+.dxss-icon-CreateStockChartVolumeOpenHighLowClose:before {
+  content: ""; }
+
+.dxss-icon-PivotTable:before {
+  content: ""; }
+
+.dxss-icon-InsertFloatingObjectImage:before {
+  content: ""; }
+
+.dxss-icon-Hyperlink:before {
+  content: ""; }
+
+.dxss-icon-InsertTable:before {
+  content: ""; }
+
+.dxss-icon-DeleteComment:before {
+  content: ""; }
+
+.dxss-icon-EditComment:before {
+  content: ""; }
+
+.dxss-icon-InsertComment:before {
+  content: ""; }
+
+.dxss-icon-ShowHideComment:before {
+  content: ""; }
+
+.dxss-icon-TableConvertToRange:before {
+  content: ""; }
+
+.dxss-icon-FullScreen:before {
+  content: ""; }
+
+.dxss-icon-FreezeColumnWebCommand:before {
+  content: ""; }
+
+.dxss-icon-FreezePanesWebCommand:before {
+  content: ""; }
+
+.dxss-icon-FreezeRowWebCommand:before {
+  content: ""; }
+
+.dxss-icon-ViewUnfreezePanes:before {
+  content: ""; }

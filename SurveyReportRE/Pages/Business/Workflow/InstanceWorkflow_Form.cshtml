@@ -1,0 +1,25 @@
+﻿@page "{pageNum:int?}"
+@model InstanceWorkflow_FormModel
+@{
+
+
+}
+<script>
+    $(function () {
+        var _id = @Convert.ToInt32(ViewData["Id"]);
+
+        var _formConfig = new MFormOption();
+        _formConfig.cloneUrl = '/Business/MasterData/InstanceWorkflow_Form/' + _id;
+        _formConfig.tabCode = `form_InstanceWorkflow_Form_${_id}`;
+        _formConfig.tabName = '@HttpContext.Request.Query["Caption"].ToString()';
+        _formConfig.originModelName = "@InstanceWorkflow_FormModel.ModelName";
+        _formConfig.formElementName = "@InstanceWorkflow_FormModel.ModelName";
+        _formConfig.schemeBasedOn = `@(InstanceWorkflow_FormModel.SchemeModelName)`;
+        _formConfig.allowFormActionButton = true;
+        _formConfig.colCount = 4;
+        _formConfig.isCustomQuery = true;
+        new InstanceWorkflowForm(_id, null, _formConfig);
+    });
+</script>
+<div id="form_@(InstanceWorkflow_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])" class="dExForm"></div>
+

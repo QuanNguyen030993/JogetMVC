@@ -1,0 +1,11 @@
+﻿@page
+@model UsersCacheModel
+@{
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@UsersCacheModel.ModelName`), new UsersCacheGridOption('@UsersCacheModel.ModelName','System'), null);
+    });
+</script>
+<div id="dataGrid_@UsersCacheModel.ModelName"></div>

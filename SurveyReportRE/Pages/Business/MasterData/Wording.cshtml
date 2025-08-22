@@ -1,0 +1,11 @@
+﻿@page
+@model WordingModel
+@{
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@WordingModel.ModelName`), new WordingGridOption('@WordingModel.ModelName'), null);
+    });
+</script>
+<div id="dataGrid_@WordingModel.ModelName"></div>

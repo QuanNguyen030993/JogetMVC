@@ -1,0 +1,2028 @@
+﻿@page "{pageNum:int?}"
+@using Newtonsoft.Json
+@model Survey_FormModel
+@{
+    ViewData["Title"] = "Management";
+    ViewBag.Title = "Survey";
+}
+<style>
+    .dx-tabpanel .dx-tabpanel-tabs .dx-tab {
+        width: auto;
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+</style>
+<script type="text/javascript">
+    $(function () {
+
+        var focusTab = 0;
+        var focusTabName = "";
+
+       const reloadPage = function (){
+
+       var categories = [];
+                     $.ajax({
+                         url: `api/SurveyEvaluation/GetCategories`,
+                         type: 'GET',
+                         async: false,
+                         success: function (response) {
+                             categories = response;
+                         },
+                         error: function (exception) {
+                         }
+                     });
+
+        var progressValue = 0;
+        var _id = @Convert.ToInt32(ViewData["Id"]);
+        var _formInstances = [];
+        let db;
+        var draftCurrentTab = false;
+        var draftCurrentObject = new Object();
+        var draftCurrentCopiedObject = new Object();
+        var appLoadPanel = $("<div>").appendTo($("main")).dxLoadPanel({
+            shadingColor: "rgba(0,0,0,0.4)",
+            visible: false,
+            showIndicator: true,
+            showPane: false,
+            shading: true,
+            closeOnOutsideClick: false//,
+            // onShown: function () {
+            //     setTimeout(function () {
+            //         appLoadPanel.hide();
+            //     }, 3000);
+            // }
+        });
+        var appLoadPanelInstance = appLoadPanel.dxLoadPanel("instance");
+        var draftSession = null;
+        var draftCloneSurveyId = 0;
+        var tabs = null
+        _isAllowDraft = 1;
+        function showLoadPanelWithTimeout(timeout, callback) {
+            appLoadPanelInstance.show();
+            setTimeout(() => {
+                appLoadPanelInstance.hide();
+                if (callback && typeof callback === "function") {
+                    callback();
+                }
+            }, timeout);
+        }
+
+        function setFormDataToInstances(requestPassingParams, _formInstances, draft) {
+            $.each(_formInstances, function (index, formInstance) {
+                const { formName, instance } = formInstance;
+                if (formName === "Overview" && requestPassingParams.Survey) {
+                    var formObject = { ...requestPassingParams.Survey };
+                    if (draftCloneSurveyId)
+                    formObject.cloneSurveyId = draftCloneSurveyId;
+                    instance.option("formData",formObject);
+                }
+
+                if (formName === "REOpinion" && requestPassingParams.Survey && requestPassingParams.Survey.reOpinion) {
+                    instance.option("formData", { reOpinion: requestPassingParams.Survey.reOpinion });
+                }
+
+                if (formName === "Management" && requestPassingParams.Management) {
+                    instance.option("formData", requestPassingParams.Management);
+                }
+
+                if (formName === "Summary" && requestPassingParams.Summary) {
+                    instance.option("formData", requestPassingParams.Summary);
+                }
+
+                if (formName === "SurveyEvaluation" && requestPassingParams.SurveyEvaluations) {
+                    const evaluationsData = {};
+                    requestPassingParams.SurveyEvaluations.forEach(item => {
+                        evaluationsData[item.SurveyCategoryTypeId] = item.SurveyStatusId;
+                    });
+                    instance.option("formData", evaluationsData);
+                }
+
+                if (formName === "Construction" && requestPassingParams.Construction) {
+                    instance.option("formData", requestPassingParams.Construction);
+                }
+
+                if (formName === "LossHistory" && requestPassingParams.LossHistory) {
+                    instance.option("formData", requestPassingParams.LossHistory);
+                }
+
+                if (formName === "Occupancy" && requestPassingParams.Occupancy) {
+                    instance.option("formData", requestPassingParams.Occupancy);
+                }
+
+                if (formName === "Protection" && requestPassingParams.Protection) {
+                    instance.option("formData", requestPassingParams.Protection);
+                }
+
+                if (formName === "ExtFireExpExposures" && requestPassingParams.ExtFireExpExposures) {
+                    instance.option("formData", requestPassingParams.ExtFireExpExposures);
+                }
+
+                if (formName === "OtherExposures" && requestPassingParams.OtherExposures) {
+                    instance.option("formData", requestPassingParams.OtherExposures);
+                }
+
+                if (formName === "LossExpValueBrkdwn" && requestPassingParams.LossExpValueBrkdwn) {
+                    instance.option("formData", requestPassingParams.LossExpValueBrkdwn);
+                }
+
+                if (formName === "Appendix" && requestPassingParams.Appendix) {
+                    instance.option("formData", requestPassingParams.Appendix);
+                }
+            });
+
+
+
+            if (draft != null || draft != undefined) {
+                var transaction = db.transaction(['drafts'], 'readwrite');
+                var store = transaction.objectStore('drafts');
+                var deleteRequest = store.delete(draft.id);
+            }
+        }
+
+
+        function loadIndexDBDraft() {
+            var transaction = db.transaction(['drafts'], 'readonly');
+            var store = transaction.objectStore('drafts');
+            var request = store.getAll();
+            request.onsuccess = function (event) {
+                if (request.result) {
+                    if (request.result.length > 0) {
+                        var checkSessionNeedToRestore = request.result.find(f => f.draftStatus == 'restore');
+                        if (checkSessionNeedToRestore != null) {
+                            draftCurrentCopiedObject = checkSessionNeedToRestore;
+                            if (checkSessionNeedToRestore.cloneId)
+                                draftCloneSurveyId = checkSessionNeedToRestore.cloneId;
+
+                            setFormDataToInstances(draftCurrentCopiedObject.data.requestPassingData, _formInstances, draftCurrentCopiedObject);
+                            // setTabName(`Copy Survey  ${draftCurrentCopiedObject.id}`, `form_Survey_Form_${draftCurrentCopiedObject.id}`);
+                            draftCurrentCopiedObject = new Object();
+                        }
+                        // var popupInstance = $(`#inputTextPopup`).dxPopup({
+                        //     width: "70%",
+                        //     height: "70%",
+                        //     showTitle: true,
+                        //     title: `You have some drafts on your session`,
+                        //     dragEnabled: false,
+                        //     closeOnOutsideClick: true,
+                        //     contentTemplate: function (container) {
+                        //         const listContainer = $("<div>")
+                        //             .addClass("indexeddb-list-container")
+                        //             .appendTo(container);
+
+
+                        //         listContainer.on("wheel", function (e) {
+                        //             e.stopPropagation();
+                        //         });
+                        //         const sortedResults = request.result.sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
+                        //         sortedResults.forEach((draft, index) => {
+                        //             const rowContainer = $("<div>")
+                        //                 .addClass("indexeddb-row-container")
+                        //                 .appendTo(listContainer);
+
+                        //             const buttonGroup = $("<div>")
+                        //                 .addClass("indexeddb-button-group")
+                        //                 .appendTo(rowContainer);
+
+                        //             const commandButtonGroup = $("<div>")
+                        //                 .addClass("indexeddb-command-button-group")
+                        //                 .appendTo(rowContainer);
+
+                        //             const infoContainer = $("<div>")
+                        //                 .css({ flex: "1", paddingRight: "10px" })
+                        //                 .appendTo(buttonGroup);
+
+                        //             // var locationObject = draft.data.requestPassingData.Survey.locationAddress == null || draft.data.requestPassingData.Survey.locationAddress == undefined ? "<Unknown>" : draft.data.requestPassingData.Survey.locationAddress;
+                        //             infoContainer
+                        //                 .dxButton({
+                        //                     stylingMode: "contained",
+                        //                     type: "normal",
+                        //                     text: `Version: ${draft.datetime}`,
+                        //                     onClick() {
+                        //                         let detailPopup = $("#detailPopup")
+                        //                             .dxPopup({
+                        //                                 width: "60%",
+                        //                                 height: "70%",
+                        //                                 showTitle: true,
+                        //                                 title: `Details for Draft ${draft.datetime}`,
+                        //                                 dragEnabled: true,
+                        //                                 closeOnOutsideClick: true,
+                        //                                 contentTemplate: function (detailContainer) {
+                        //                                     const detailTable = jsonToTable(
+                        //                                         draft.data.requestPassingData.Survey,
+                        //                                         ["latitudeLongitude", "locationAddress", "surveyedPremises", "dateOfVisit", "clientId"]
+                        //                                     );
+                        //                                     detailTable.appendTo(detailContainer);
+                        //                                     return detailContainer;
+                        //                                 },
+                        //                             })
+                        //                             .dxPopup("instance");
+                        //                         detailPopup.show();
+                        //                     },
+                        //                 })
+                        //                 .appendTo(buttonGroup);
+
+                        //             // Nút Restore
+                        //             $("<div>")
+                        //                 .dxButton({
+                        //                     stylingMode: "contained",
+                        //                     type: "success",
+                        //                     text: "Restore",
+                        //                     onClick() {
+                        //                         setFormDataToInstances(draft.data.requestPassingData, _formInstances, draft);
+                        //                         //Restore by reloadTab session
+                        //                     },
+                        //                 })
+                        //                 .appendTo(commandButtonGroup);
+
+                        //             // Nút Delete
+                        //             $("<div>")
+                        //                 .dxButton({
+                        //                     stylingMode: "contained",
+                        //                     type: "danger",
+                        //                     text: "Delete",
+                        //                     onClick() {
+                        //                         var transaction = db.transaction(['drafts'], 'readwrite');
+                        //                         var store = transaction.objectStore('drafts');
+                        //                         var deleteRequest = store.delete(draft.id);
+                        //                         deleteRequest.onsuccess = function () {
+                        //                             rowContainer.remove();
+                        //                         };
+
+                        //                         deleteRequest.onerror = function () {
+                        //                         };
+                        //                     },
+                        //                 })
+                        //                 .appendTo(commandButtonGroup);
+                        //         });
+
+
+                        //         return container
+                        //     },
+                        //     onHiding: function (e) {
+
+                        //     },
+                        //     toolbarItems: [{
+                        //         widget: 'dxButton',
+                        //         toolbar: 'bottom',
+                        //         location: 'after',
+                        //         options: {
+                        //             stylingMode: 'contained',
+                        //             type: 'normal',
+                        //             text: "Close",
+                        //             onClick() {
+                        //                 popupInstance.hide();
+                        //             },
+                        //         },
+                        //     }]
+
+                        // }).dxPopup("instance");
+                        // popupInstance.show();
+                    }
+                }
+            };
+        }
+
+        function saveIndexDBDraft(passingData, cloneData = null) {
+            const date = new Date();
+
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+
+            var content = {
+                id: generateGUID(),
+                data: passingData,
+                datetime: `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`,
+                draftStatus: draftCurrentTab ? 'restore' : 'none',
+                cloneId: cloneData ? passingData.requestPassingData.Survey.id : 0
+            };
+
+            draftCurrentObject.draftGuid = content.id;
+             draftCurrentObject.isClone  = false;
+            var transaction = db.transaction(['drafts'], 'readwrite');
+            var store = transaction.objectStore('drafts');
+            store.put(content);
+        }
+
+        var surveyData = new Object();
+        var surveyType = "";
+        function loadData() {
+            $.ajax({
+                url: `api/Survey/GetSingleInclude/${_id}`,
+                type: 'GET',
+                async: false,
+                success: function (response) {
+                    surveyData = response;
+                    if (surveyData.surveyTypeId == 51) 
+                    surveyType  = "Factory" ;
+                    else
+                    surveyType  = "Warehouse";
+                },
+                error: function (exception) {
+                }
+            });
+        }
+
+
+
+        // fetch('/data/SurveyConfig.json')
+        //     .then(res => res.json())
+        //     .then(json => {
+        //         tabs = json.data[surveyType];
+        //     });
+
+
+
+        var isWordRender = false;
+        var isPDFRender = false;
+
+       function checkSaveWord() {
+        if (surveyData.surveyNo)
+            $.ajax({
+                url: `api/Survey/IsWordRender/${surveyData.surveyNo}`,
+                type: 'GET',
+                async: false,
+                success: function (response) {
+                    isWordRender = response;
+                },
+                error: function (exception) {
+                }
+            });
+        }
+        function checkSavePDF() {
+        if (surveyData.surveyNo)
+            $.ajax({
+                url: `api/Survey/IsPDFRender/${surveyData.surveyNo}`,
+                type: 'GET',
+                async: false,
+                success: function (response) {
+                    isPDFRender = response;
+                },
+                error: function (exception) {
+                }
+            });
+        }
+
+
+        var _posnesInstance = null;
+        var _surveyNo = "";
+        var isSubmit = false;
+        var isChecking = false
+        var isUpdate = false;
+        var isDone = false;
+        var isNotOwner = false;
+        var isHelpingDraft = false;
+        var disableTab = true;
+        var staticTab = ["Summary", "Protection", "Management", "Occupancy", "Construction", "ExtFireExpExposures", "OtherExposures", "LossHistory"];
+        const reloadTab = function (session) {
+            disableTab = (_id != 0) ? false : true;
+                       
+            if (draftSession) disableTab = false;
+            
+            var outlineOpsData = new Object();
+            if (_id != 0) {
+                isUpdate = true;
+                loadData();
+                checkSaveWord() ;
+                checkSavePDF();
+                 if (surveyData.instanceWorkflowFK?.workflowStatusEnum?.key == "Waiting" || surveyData.instanceWorkflowFK?.workflowStatusEnum?.key == "Checking"|| surveyData.instanceWorkflowFK?.workflowStatusEnum?.key == "Done")
+                          isSubmit = true;
+                if (surveyData.instanceWorkflowFK?.workflowStatusEnum?.key == "Checking")
+                          isChecking = true;
+                _surveyNo = surveyData.surveyNo;
+                if (surveyData.instanceWorkflowFK?.workflowStatusEnum?.key == "Done") { isDone = true; isSubmit = true; }
+                if (surveyData.createdBy != _loginUser) isNotOwner = true;
+                if (surveyData.createdBy == "quan.tm" || surveyData.createdBy == "tran.nnh") isHelpingDraft = true;
+                // if (surveyData.grantSurvey)
+                // surveyData.grantSurvey = JSON.parse(surveyData.grantSurvey);
+            }
+            var filteredOutlineOptions = null;
+            if (surveyData.surveyOutlineOptions)
+                filteredOutlineOptions = surveyData.surveyOutlineOptions.filter(option => (option.outlineFK ? option.outlineFK.parentId : null) === null);
+            // Render chuỗi ban đầu từ tabs
+            var tabsString = "";
+            
+            $.ajax({
+                url: '/data/SurveyConfig.json',
+                type: 'GET',
+                async: false,
+                success: function (response) {
+                    if (surveyType)
+                    tabsString = response.data[surveyType];
+                    else if (_id == 0 || draftCloneSurveyId != 0)
+                        tabsString = `
+                                [
+                                 { title: 'Overview', entity: 'Overview', totalField: 0, instance: null, validateCheck: false }
+                    ]`;
+
+                },
+                error: function (exception) {
+                }
+            });
+
+            if (draftSession) {
+                filteredOutlineOptions = _cacheCompanyData.find(f => f.table == "Outline").rows;
+                tabsString = `
+                            [
+                                { title: 'Overview', entity: 'Overview', totalField: 0, instance: null, validateCheck: false },
+                                { title: 'Participant List', entity: 'ParticipantList', disabled: disableTab, totalField: 0, instance: null, validateCheck: false },
+                                { title: 'Risk Engineer’s Opinion', entity: 'REOpinion', disabled: disableTab, totalField: 0, instance: null, validateCheck: true },
+                                { title: 'Risk Grading Summary', entity: 'SurveyEvaluation', disabled: disableTab, totalField: 0, instance: null, validateCheck: false },
+                                { title: '', entity: 'Summary', disabled: disableTab, totalField: 0, instance: null, validateCheck: true },
+                                { title: '', entity: 'Management', disabled: disableTab, totalField: 0, instance: null, validateCheck: true },
+                                { title: '', entity: 'Construction', disabled: disableTab, totalField: 0, instance: null, validateCheck: true },
+                                { title: '', entity: 'Occupancy', disabled: disableTab, totalField: 0, instance: null, validateCheck: true },
+                                { title: '', entity: 'Protection', disabled: disableTab, totalField: 0, instance: null, validateCheck: true },
+                                { title: '', entity: 'ExtFireExpExposures', disabled: disableTab, totalField: 0, instance: null, validateCheck: false },
+                                { title: '', entity: 'OtherExposures', disabled: disableTab, totalField: 0, instance: null, validateCheck: true },
+                                { title: '', entity: 'LossHistory', disabled: disableTab, totalField: 0, instance: null, validateCheck: true },
+                                { title: '', entity: 'LossExpValueBrkdwn', disabled: disableTab, totalField: 0, instance: null, validateCheck: true },
+                                { title: '', entity: 'Appendix', disabled: disableTab, totalField: 0, instance: null, validateCheck: true },
+                                { title: '', entity: 'SitePictures', disabled: disableTab, totalField: 0, instance: null, validateCheck: false }
+                            ]`;
+            }
+            var buttonVisibility = getButtonVisibility(_id, isUpdate, isSubmit, isDone, isNotOwner);
+            tabs = eval(tabsString);
+            tabs = tabs.filter(tab => {
+                if (filteredOutlineOptions) {
+                    var matchingOption = null
+                    if (draftSession)
+                        matchingOption = filteredOutlineOptions.find(f => tab.entity == f.placeHolder);
+                    else
+                        matchingOption = filteredOutlineOptions.find(f => tab.entity == (f.outlineFK ? f.outlineFK.placeHolder : ""));
+                    if (matchingOption) {
+                        if (tab.title && tab.title.trim() !== "") {
+                            return true;
+                        } else if (draftSession) {
+                            if (staticTab.includes(tab.entity)) {
+                                tab.title = convertToTitleCase(matchingOption.content);
+                                return true; // Giữ lại tab
+                            }
+                            else {
+                                if (draftCurrentObject.mainOutlines)
+                                if (draftCurrentObject.mainOutlines.some(f => tab.entity == f.placeholder)){
+                                    matchingOption = draftCurrentObject.mainOutlines.find(f => tab.entity == f.placeholder);
+                                    tab.title = convertToTitleCase(matchingOption.outline);
+                                    return true;
+                                }
+                                else {
+                                    return false;
+                                }
+                            }
+                        }
+                        else if (matchingOption.mainEnable) {
+                            tab.title = convertToTitleCase(matchingOption.outlineFK.content);
+                            return true; // Giữ lại tab
+                        } else
+                            return false; // Loại bỏ tab nếu không thỏa điều kiện
+                    }
+                }
+                return true;
+            });
+
+            function saveDraft(surveyData, isManual = false) {
+                if (!isManual) {
+                    var passingParams = collectionFormData(surveyData, tabs, isManual);
+                    if (passingParams.validate) {
+                        if (!passingParams.isUpdate) {
+                            //ajax CreateSurvey
+                        }
+                        else {
+                            passingParams.requestPassingData.Survey.id = surveyData.id;
+                            passingParams.requestPassingData.autoSavedFlag = true;
+                            // passingParams.requestPassingData.Management.id = surveyData.managementFK.id;
+                            $.ajax({
+                                url: '/api/Survey/UpdateSurvey',
+                                headers: { 'Content-Type': 'application/json' },
+                                type: 'POST',
+                                data: JSON.stringify(passingParams.requestPassingData)
+                                , success: function (response) {
+                                    console.log(`${surveyData.surveyNo} Survey auto-saved!`);
+                                },
+                                error: function (err) {
+                                    console.log('Auto-saved fail !', err);
+                                }
+                            });
+                        }
+                    }
+                }
+                else {
+                    var passingParams = collectionFormData(surveyData, tabs, isManual);
+                    saveIndexDBDraft(passingParams);
+                    console.log('Fields is not filled!');
+                }
+            }
+
+            setInterval(() => saveDraft(surveyData), _surveyFormAutoSavedInterval);
+
+            var createSurveyContent = isUpdate ?  'Update Report' : 'Create Survey';
+
+            var tabItems = [
+                {
+                    itemType: "simpleItem",
+                    template: function (data, $itemElement) {
+                        $itemElement.html(`
+                                        <div id="surveyTabs_${_id}"  style="width: 100%"></div>
+                                        <div id="stickyBar_${_id}" style="padding:10px 0; text-align:right; width: 100%">
+                                        <div class="dx-button dx-button-default dx-button-mode-contained dx-widget dx-button-has-icon" aria-label="refresh" tabindex="0" role="button" id="refreshSurveyForm_${_id}"><i class="dx-icon dx-icon-refresh"></i></div>
+                                        <div id="downloadSurveyForm_${_id}" class="btn btn-warning" style="padding:10px 20px; font-size:12px;"></div>
+
+                                        <div id="previewSurveyForm_${_id}" class="btn btn-info" style="padding:10px 20px; font-size:12px;"></div>
+                                        <div id="saveSurveyForm_${_id}" class="btn btn-primary" style="padding:10px 20px; font-size:12px;"></div>
+                                        <div id="copySurveyForm_${_id}" class="btn btn-primary" style="padding:10px 20px; font-size:12px;"></div>
+                                        <div id="submitSurveyForm_${_id}" class="btn btn-success" style="padding:10px 20px; font-size:12px;"></div>
+                                        <div id="recallSurveyForm_${_id}" class="btn btn-danger" style="padding:10px 20px; font-size:12px;"></div>
+                                        </div>
+
+                                    `);
+
+                                        //<div id="previewDocSurveyForm_${_id}" class="btn btn-primary" style="padding:10px 20px; font-size:12px;">Preview Report</div>
+                                        // <div id="downloadTemplateSurveyForm_${_id}" class="btn btn-warning" style="padding:10px 20px; font-size:12px;">Download Template</div>
+                                        //<div style="position: fixed; bottom: 10px; right: 10px; z-index: 1000; background-color: white; padding: 10px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); border-radius: 8px;">
+                                        // <div id="draftSurveyForm_${_id}" class="btn btn-warning" style="padding:10px 20px; font-size:12px;">Draft</div>
+                        $(`#surveyTabs_${_id}`).dxTabPanel({
+                            dataSource: tabs,
+                            deferRendering: true,
+                            height: "100%",
+                            scrollByContent: true,
+                             animationEnabled: true,
+                            swipeEnabled: false, // Slide to change
+                            showNavButtons: true,
+                            selectedIndex: focusTab,
+                            itemTitleTemplate: function (itemData) {
+                                var container = $(`<span><strong>${itemData.title}</strong><strong id='numberofinputfield_${_id}_${itemData.entity}'></strong></span>`)
+                                    .css({ 'width': 'auto' });
+                                return container;
+                            },
+                            onTitleClick: function (e) {
+                                handleTitleClick(e);
+                            },
+                            onItemRendered: function (e) {
+
+
+                            },
+                            onContentReady: function (e) {
+                                setTimeout(() => {
+                                    $.each(_formInstances, function (formIndex, formItem) {
+                                        var fItems = formItem.instance.option("items");
+                                        formItem.numberOfInputField = 0;
+                                        if (fItems != null)
+                                        {
+                                        formItem.formItems = flattenItems(fItems.filter(f => f.itemType != "button"));
+                                        formItem.numberOfInputField = Object.keys(fItems.filter(f => f.itemType != "button")).length;
+                                        }
+                                        formItem.tabData.totalField = formItem.numberOfInputField;
+                                        formItem.formData = formItem.instance.option("formData");
+                                        formItem.elementAttr = formItem.instance.option("elementAttr");
+
+                                        if (formItem.formName == "Overview") {
+                                            if (Object.keys(draftCurrentObject).length > 0) {
+                                                // var passingParams = collectionFormData(surveyData, tabs, true);
+                                                // passingParams.Survey = draftCurrentObject;
+                                                // draftCurrentObject.draftGuid = draftSession;
+                                                // setTabName(`${draftCloneSurveyId ? 'Draft copy survey' : 'Draft Survey'} ${draftSession}`, `form_Survey_Form_${draftSession}`);
+                                                // formItem.instance.option("formData", draftCurrentObject);
+                                                // draftCurrentObject = new Object();
+                                            }
+                                        }
+
+
+                                        if (formItem.formName == "Overview") {
+                                            // formItem.instance.option("onFieldDataChanged", function (e) {
+                                            //     var that = formItem.instance.option("config");
+                                            //     const changedFields = e.component.option("changedFields");
+                                            //     if (e.value !== e.previousValue) {
+                                            //         changedFields[e.dataField] = e.value;
+                                            //         if (that.fieldByOutlineGroup.length > 0) {
+                                            //             var outlineObject = that.fieldByOutlineGroup.find(f => f.dataField == e.dataField);
+                                            //             changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance[0];
+                                            //         }
+                                            //         if (that.fieldByOutline)
+                                            //         if (that.fieldByOutline.length > 0) {
+                                            //             var outlineObject = that.fieldByOutline.find(f => f.dataField == e.dataField);
+                                            //             changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance[0];
+                                            //         }
+                                            //     } else {
+                                            //         delete changedFields[e.dataField];
+                                            //     }
+                                            //     e.component.option("changedFields", changedFields);
+
+                                            //     if (e.dataField == "clientName" || e.dataField == "locationAddress" || e.dataField == "dateOfVisit" || e.dataField == "surveyTypeId") {
+                                            //         var formInstance = e.component;
+                                            //         var formData = formInstance.option("formData");
+                                            //         var formItems = formInstance.option("items");
+
+                                            //         var requiredFields = formItems.filter(item => {
+                                            //             if (item.validationRules) {
+                                            //                 return item.validationRules.some(rule => rule.type === "required");
+                                            //             }
+                                            //             return false;
+                                            //         });
+
+                                            //         var validFieldsCount = requiredFields.filter(item => {
+                                            //             var value = formData[item.dataField];
+                                            //             return value !== undefined && value !== null && value !== "";
+                                            //         }).length;
+
+                                            //         if (validFieldsCount === requiredFields.length) {
+                                            //             if (_id == 0) {
+                                            //                 draftCurrentObject = formData;
+                                            //                 draftSession = generateGUID();
+                                            //                 const tabPanel = $(`#surveyTabs_${_id}`).dxTabPanel("instance");
+                                            //                 const items = tabPanel.option("items");
+                                            //                 draftCurrentTab = true;
+                                            //                 reloadTab();
+                                            //                 // items.forEach((item, index) => {
+                                            //                 //     if (index > 0)
+                                            //                 //         enableTab(tabPanel, index, true);
+                                            //                 // });
+                                            //                 // tabPanel.repaint();
+                                            //             }
+                                            //         }
+                                            //     }
+                                            // });
+                                        }
+                                        let fieldsWithDataCount = 0;
+                                        $.each(formItem.formItems, function (itemIndex, item) {
+                                            var dataField = item.dataField;
+                                            if (item.dataField == "reOpinion")
+                                            {
+                                                dataField = "rEOpinion";
+                                            }
+                                            if (dataField && formItem.formData.hasOwnProperty(dataField)) {
+                                                const value = formItem.formData[dataField];
+                                                if (value !== null && value !== undefined && value !== "") {
+                                                    fieldsWithDataCount++;
+                                                }
+                                            }
+                                        });
+
+                                        formItem.tabData.fieldsWithData = fieldsWithDataCount;
+                                    });
+                                    // if (Object.keys(draftCurrentCopiedObject).length > 0) {
+                                    //     setFormDataToInstances(draftCurrentCopiedObject.data, _formInstances, draftCurrentCopiedObject);
+                                    //     setTabName(`Draft Client ${draftCurrentCopiedObject.guid}`, `form_Survey_Form_${draftCurrentCopiedObject.guid}`);
+                                    //     draftCurrentCopiedObject = new Object();
+                                    // }
+
+                                }, _timeoutSurveyDelay);
+                                // setTimeout(() => {
+                                //     $.each(_formInstances, function (formIndex, formItem) {
+                                //         if (formItem.tabData.validateCheck) {
+                                //             // var elementString = `(${formItem.tabData.fieldsWithData}/${formItem.tabData.totalField})`;
+                                //             // var elementString = `(${formItem.tabData.totalField})`;
+                                //             var elementString = ``;
+                                //             var validateStringRequired = `<span style='color:red; margin-left:5px;'>*</span>`;
+                                //             if (formItem.tabData.fieldsWithData == 0)
+                                //                 elementString += validateStringRequired;
+                                //             $(`#numberofinputfield_${_id}_${formItem.tabData.entity}`).html(elementString);
+                                //         }
+
+                                //     });
+                                // }, _timeoutSurveyDelay + 500);
+                            },
+                            itemTemplate: function (itemData, itemIndex, itemElement) {
+                                //_formInstances = [];
+                                var formViewUrl = `/Business/Form/SurveyDetail/Survey_${itemData.entity}_Form`;
+                                // var formId = "";
+                                // var passingParams = {};
+                                var surveyJsonConfig = new Object();
+                                surveyJsonConfig.surveyTypeId = 51;
+
+
+                                if (_id != 0) {
+                                    surveyJsonConfig.surveyTypeId = surveyData.surveyTypeId;
+                                    //surveyJsonConfig.surveyType = surveyType;
+                                    surveyJsonConfig.overViewAttachmentId = surveyData.overViewAttachmentId;
+                                    surveyJsonConfig.isReadOnly = isSubmit;// && isChecking && isDone ;
+                                    if (isChecking ) // Điều kiện thêm ở đây
+                                        surveyJsonConfig.isReadOnly = false ;
+                                    if (_role == "Approver")
+                                        surveyJsonConfig.isReadOnly = false ;
+                                    if (surveyData.lossExpValueBrkdwnId) {
+                                        surveyJsonConfig.currencyId = surveyData.lossExpValueBrkdwnFK.currencyId;
+                                        if (surveyData.lossExpValueBrkdwnFK.currencyEnum)
+                                            surveyJsonConfig.currencyName = surveyData.lossExpValueBrkdwnFK.currencyEnum.key;
+                                        // if (surveyData.managementFK?.additionalOutline)
+                                        //     surveyJsonConfig.additionalOutline = surveyData.managementFK?.additionalOutline;
+                                    }
+                                    if (surveyData.surveyTypeEnum)
+                                            surveyJsonConfig.surveyTypeName = surveyData.surveyTypeEnum.key;
+                                    // surveyJsonConfig.outlineOptions = [];
+                                    // surveyJsonConfig.outlineOptions = outlineOpsData;
+
+                                    // surveyJsonConfig.outlineId = outlineOpsData.outlineId;
+                                    // surveyJsonConfig.optionValue = outlineOpsData.optionValue;
+                                }
+                                // if (draftSession)
+                                //     surveyJsonConfig.draftSession = draftSession;
+                                //  if (draftCloneSurveyId)
+                                //     surveyJsonConfig.draftCloneSurveyId = draftCloneSurveyId;
+                                const { formId, passingParams } = generateFormIdAndParams(itemData.entity, surveyData, _id, surveyJsonConfig);
+                                appendElementViewInsideAsync(formViewUrl, passingParams, itemElement, formId, "appendTo")
+                                    .then(form => {
+                                        _formInstances.push({ formName: itemData.entity, instance: form, numberOfInputField: 0, tabData: itemData, formData: null, formItems: null });
+                                    })
+                                    .catch(error => {
+                                            try {
+                                                sendClientErrorLog("Lỗi khi tải dữ liệu:", error);
+                                            }
+                                            catch {
+                                            }
+                                        console.error("Lỗi khi tải dữ liệu:", error);
+                                    });
+
+
+
+                                itemElement.html($(`#${itemData.entity}Tab`));
+                                // lockTabPanel(itemElement, true)
+                            }
+                        });
+
+                        // $(`#draftSurveyForm_${_id}`).dxButton(
+                        //     {
+                        //         visible: _isAllowDraft ? true : false,
+                        //         onClick: function () {
+                        //             saveDraft(surveyData, true);
+                        //             appNotifySuccess("Draft success!", false);
+                        //         }
+                        //     }
+                        // );
+
+
+                            $(`#form_Survey_Form_${_id}_progressBar`).dxBarGauge({
+                                startValue: 0,
+                                endValue: 100,
+                                values: [progressValue],
+                                label: {
+                                    visible: true,
+                                    format: "fixedPoint",
+                                    precision: 0,
+                                    font: {
+                                        size: 18
+                                    }
+                                },
+                                geometry: {
+                                    startAngle: 180,
+                                    endAngle: 540 // để tạo hình tròn hoàn chỉnh
+                                },
+                                relativeInnerRadius: 0.85, // tăng sẽ làm vòng mỏng hơn
+                                size: {
+                                    height: 20,
+                                    width: 20
+                                },
+                                    label: {
+                                    visible: false
+                                },
+                                onDrawn: function (e) {
+                                    const icon = $(`#form_Survey_Form_${_id}_progressSuccessIcon`);
+                                     icon.css({
+                                         fontSize: "15px",
+                                         color: "green"
+                                     });
+                                    const errorIcon = $(`#form_Survey_Form_${_id}_progressErrorIcon`);
+                                     errorIcon.css({
+                                         fontSize: "15px",
+                                         color: "red"
+                                     });
+
+                                    const currentValue = $(`#form_Survey_Form_${_id}_progressBar`).dxBarGauge("instance").option("values");
+                                    var status = $(`#form_Survey_Form_${_id}_progressBar`).dxBarGauge("instance").option("customStatus");
+                                    if (currentValue == 100 && status) {
+                                        icon.show();
+                                    } else {
+                                        if (status == "error" && status){
+                                            errorIcon.show();
+                                        }
+                                        else
+                                        {
+                                            errorIcon.hide();
+                                            icon.hide();
+                                        }
+                                    }
+                                }
+                            });
+
+
+
+                            $(`#refreshSurveyForm_${_id}`).dxButton({
+                            width: 54,
+                            height: 54,
+                            onClick: function () {
+                                reloadPage();
+                            }
+                        });
+
+
+                        $(`#recallSurveyForm_${_id}`).dxButton(
+                            {
+                                text: !isChecking || buttonVisibility.recall ? 'Recall Survey' : 'Reject Survey',
+                                // visible: _id ? !isSubmit : false,
+                                visible: (isChecking && isHelpingDraft) ? true : buttonVisibility.recall,
+                                onClick: function () {
+                                    if (!isChecking){
+                                    var popupInstance = $(`#inputTextPopup`).dxPopup({
+                                        width: "50%",
+                                        height: "50%",
+                                        showTitle: true,
+                                        title: `Recall survey reason`,
+                                        dragEnabled: false,
+                                        closeOnOutsideClick: true,
+                                        contentTemplate: function (container) {
+                                            $("<div id='recallReason'>").dxTextArea({
+                                                dataField: "recallReason",
+                                                label: { text: "Reason", location: "top" },
+                                                height: "50%",
+                                                width: "100%",
+                                            }).appendTo(container);
+                                            return container
+                                        },
+                                        onHiding: function (e) {
+
+                                        },
+                                        toolbarItems: [{
+                                            widget: 'dxButton',
+                                            toolbar: 'bottom',
+                                            location: 'after',
+                                            options: {
+                                                stylingMode: 'contained',
+                                                type: 'normal',
+                                                text: "Ok",
+                                                onClick() {
+                                                    var dxText = $("#recallReason").dxTextArea().dxTextArea("instance");
+                                                    surveyData.recallReason = dxText.option("value");
+                                                    // var passingObject = {...surveyData};
+                                                    // passingObject.surveyOutlineOptions = [];
+                                                    // passingObject.instanceWorkflowFK = null;
+                                                    if (surveyData.recallReason) {
+                                                        $.ajax({
+                                                            url: '/api/Survey/RecallSurvey',
+                                                            headers: { 'Content-Type': 'application/json' },
+                                                            type: 'POST',
+                                                            data: JSON.stringify(cloneAndCleanObject(surveyData)),
+                                                            async: false,
+                                                            success: function (response) {
+                                                                // popupInstance.hide();
+
+                                                            },
+                                                            error: function (err) {
+                                                                appErrorHandling('Survey recalled failed !', err);
+                                                            }
+                                                        });
+                                                        appNotifySuccess(`Survey recalled !`, false);
+                                                        popupInstance.hide();
+                                                         reloadPage();
+                                                    }
+                                                    else {
+                                                        appNotifySuccess(`Reason is not empty!`, false);
+                                                    }
+
+                                                },
+                                            },
+                                        }, {
+                                            widget: 'dxButton',
+                                            toolbar: 'bottom',
+                                            location: 'after',
+                                            options: {
+                                                stylingMode: 'contained',
+                                                type: 'normal',
+                                                text: "Cancel",
+                                                onClick() {
+                                                    popupInstance.hide();
+                                                },
+                                            },
+                                        }]
+
+                                    }).dxPopup("instance");
+                                    popupInstance.show();
+                                    }
+                                    else {
+                                            $.ajax({
+                                                url: `api/Survey/RejectSurvey/${_id}`,
+                                                headers: { 'content-type': 'application/json' },
+                                                type: 'get',
+                                                success: function (result) {
+                                                    appNotifySuccess(`Survey rejected !`, false);
+                                                    reloadPage();
+                                                },
+                                                error: function (e) {
+                                                    appNotifyWarning(e.responseJSON.detail);
+                                                }
+                                            });
+                                    }
+                                }
+                            }
+                        );
+                        $(`#previewSurveyForm_${_id}`).dxButton(
+                            {
+                                // visible: _id ? true : false,
+                                text: isPDFRender ? 'Preview PDF': 'Create PDF',
+                                visible: buttonVisibility.preview,
+                                onClick: function () {
+                                    // appLoadPanel.dxLoadPanel("show");
+                                    // appLoadPanelInstance.show();
+                                    showLoadPanelWithTimeout(30000, function () {
+                                    });
+                                    $.ajax({
+                                        url: `/api/SurveyWorkflow/GetPdfFile?id=${_id}`,
+                                        method: "GET",
+                                        xhrFields: {
+                                            responseType: "blob"
+                                        },
+                                        success: function (blob) {
+                                            // appLoadPanel.dxLoadPanel("hide");
+                                            appLoadPanelInstance.hide();
+                                            // const url = window.URL.createObjectURL(blob);
+                                            // window.open(url, '_blank');
+                                            // window.URL.revokeObjectURL(url);
+                                            const url = window.URL.createObjectURL(blob);
+
+                                            const tabName = `pdfPreviewTab_${_id}`;
+                                            const existingTab = window.open('', tabName);
+
+                                            if (existingTab) {
+                                                existingTab.location.href = url;
+                                            } else {
+                                                window.open(url, tabName);
+                                            }
+
+                                            window.URL.revokeObjectURL(url);
+                                            reloadPage();
+                                        },
+                                        error: function (xhr) {
+                                            appLoadPanelInstance.hide();
+                                            UserGuideExceptionHandle(xhr);
+                                            // var typeError = xhr.getResponseHeader("X-Error-Type");
+                                            // var errorMessage = xhr.getResponseHeader("X-Error-Message");
+                                            // if (typeError == "FileNotFound") errorMessage = "Please try Update Report once!";
+                                            // if (typeError == "InternalError") errorMessage = "Document is processing, please try again later.";
+                                            // appNotifyWarning(errorMessage);
+                                            console.error("Error loading PDF:", xhr);
+                                        }
+                                    });
+
+                                }
+                            }
+                        );
+                        //$(`#previewDocSurveyForm_${_id}`).dxButton(
+                        //   {
+                        //       // visible: _id ? true : false,
+                        //       visible: buttonVisibility.preview,
+                        //       onClick: function () {
+                        //           callElementView(`/Business/Tool/WordView_Form/${_id}`, `form_WordView_Form_${_id}`, `WordView Word ${_id}`);
+                        //            // callElementView('/Business/MasterData/Wording_Form', 'Wording_Form_0', 'Add New Wording Form');
+                        //       }
+                        //   }
+                        //);
+                        $(`#downloadSurveyForm_${_id}`).dxButton(
+                            {
+                                // visible: _id ? true : false,
+                                visible: buttonVisibility.download,
+                                text: 'Download Report',
+                                onClick: function () {
+                                    $.ajax({
+                                        url: '/api/Survey/GenerateWord',
+                                        type: "POST",
+                                        headers: {
+                                            "Accept": "*/*",
+                                            "Accept-Language": "en-US,en;q=0.9",
+                                            "Content-Type": "application/json",
+                                            "X-Requested-With": "XMLHttpRequest"
+                                        },
+                                        contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                        xhrFields: {
+                                            responseType: 'blob'
+                                        },
+                                        data: JSON.stringify(cloneAndCleanObject(surveyData)),
+                                        success: function (blob) {
+                                            if (blob.size === 0) {
+                                                appNotifyWarning(`The file is empty and cannot be downloaded.`);
+                                            }
+                                            else {
+                                            const url = window.URL.createObjectURL(blob);
+                                            const a = document.createElement('a');
+                                            a.href = url;
+                                            a.download = `${_surveyNo}.docx`;
+                                            document.body.appendChild(a);
+                                            a.click();
+                                            a.remove();
+                                            window.URL.revokeObjectURL(url);
+                                            }
+
+
+                                            // const reader = new FileReader();
+
+                                            // reader.onload = function (event) {
+                                            //     mammoth.convertToHtml({ arrayBuffer: event.target.result })
+                                            //         .then(result => {
+                                            //             // document.getElementById("output").innerHTML = result.value;
+                                            //         })
+                                            //         .catch(err => console.error("Error converting document:", err));
+                                            // };
+
+                                            // reader.readAsArrayBuffer(blob);
+
+
+                                            // // const doc = new Document({
+                                            // //     // sections: [
+                                            // //     //     {
+                                            // //     //         properties: {},
+                                            // //     //         children: [
+                                            // //     //             new Paragraph({
+                                            // //     //                 children: [
+                                            // //     //                     new TextRun("Hello, this is a sample document created with docx.js"),
+                                            // //     //                     new TextRun({
+                                            // //     //                         text: "This text is bold.",
+                                            // //     //                         bold: true,
+                                            // //     //                     }),
+                                            // //     //                 ],
+                                            // //     //             }),
+                                            // //     //         ],
+                                            // //     //     },
+                                            // //     // ],
+                                            // // });
+                                        },
+                                        error: function (error) {
+                                            UserGuideExceptionHandle(error);
+                                            console.error("Error generating Word document:", error);
+                                        }
+                                    });
+                                }
+                            }
+                        );
+
+                        $(`#downloadTemplateSurveyForm_${_id}`).dxButton(
+                            {
+                                // visible: _id ? true : false,
+                                visible: buttonVisibility.template,
+                                text: 'Download Template',
+                                onClick: function () {
+                                    $.ajax({
+                                        url: '/api/Survey/GetTemplate',
+                                        type: "GET",
+                                        headers: {
+                                            "Accept": "*/*",
+                                            "Accept-Language": "en-US,en;q=0.9",
+                                            "Content-Type": "application/json",
+                                            "X-Requested-With": "XMLHttpRequest"
+                                        },
+                                        contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                        xhrFields: {
+                                            responseType: 'blob'
+                                        },                                        // data: JSON.stringify(surveyData),
+
+                                        success: function (blob) {
+                                            const url = window.URL.createObjectURL(blob);
+                                            const a = document.createElement('a');
+                                            a.href = url;
+                                            a.download = `Template.docx`;
+                                            document.body.appendChild(a);
+                                            a.click();
+                                            a.remove();
+                                            window.URL.revokeObjectURL(url);
+                                        },
+                                        error: function (error) {
+                                            console.error("Error generating Word document:", error);
+                                        }
+                                    });
+                                }
+                            }
+                        );
+                        $(`#submitSurveyForm_${_id}`).dxButton(
+                            {
+                                visible: buttonVisibility.submit,
+                                onClick: function () {
+
+                                    if (!isPDFRender){
+                                        appNotifyWarning("Please create PDF before submit!");
+                                    }
+                                    else{
+                                    var isAllowView = true;
+                                    var missingFields = [];
+                                    var warningContent = ``;
+                                    $.each(_formInstances, function (formIndex, formItem) {
+                                        if (formItem.tabData.validateCheck) {
+                                            if (formItem.tabData.fieldsWithData == 0) {
+                                                isAllowView = false;
+                                                tabNeedToComplete = formItem.tabData.title;
+                                                missingFields.push(formItem.tabData.title);
+                                            }
+                                        }
+                                    });
+                                    if (isAllowView) {
+                                        warningContent = `Are you sure you want to submit this survey ? `;
+                                    }
+                                    else {
+                                        warningContent = `Are you sure you want to submit this survey? Some information is still missing. ${missingFields.join(' ,')} need to input!! `;
+                                    }
+                                    var popupBox = appNotifyWarning(warningContent, true);
+                                    popupBox.then((result) => {
+                                        if (result.isConfirmed) {
+                                            // var passingSurvey = { ...surveyData };
+                                            // passingSurvey.surveyOutlineOptions = [];
+                                            // passingSurvey.instanceWorkflowFK = null;
+                                            if (!isChecking){
+                                            $.ajax({
+                                                url: '/api/Survey/SubmitSurvey',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                type: 'POST',
+                                                data: JSON.stringify(cloneAndCleanObject(surveyData))
+                                                , success: function (response) {
+                                                    if (response.status === "success") {
+                                                       appNotifySuccess(`Survey submitted !`, false);
+                                                    } else if (response.status === "warning") {
+                                                        appNotifyWarning(response.details);
+                                                    } else if (response.status === "error") {
+                                                        appNotifyError(response.message);
+                                                    }
+                                                    reloadPage();
+                                                },
+                                                error: function (err) {
+                                                    appErrorHandling('Survey submitted failed !', err);
+                                                }
+                                            });
+                                            }
+                                            else{
+                                                $.ajax({
+                                                    url: `api/Survey/ApproveSurvey/${_id}`,
+                                                    headers: { 'content-type': 'application/json' },
+                                                    type: 'get',
+                                                    success: function (result) {
+                                                       appNotifySuccess(`Survey checked !`, false);
+                                                       reloadPage();
+                                                    },
+                                                    error: function (e) {
+                                                        appNotifyWarning(e.responseJSON.detail);
+                                                    }
+                                                });
+                                            }
+                                        }
+                                        else {
+                                        }
+                                    });
+                                    }
+
+                                }
+                            }
+                        );
+
+                        $(`#copySurveyForm_${_id}`).dxButton(
+                            {
+                                text: 'Copy',
+                                visible: buttonVisibility.copy,
+                                onClick: function () {
+                                    var warningContent = `Are you sure you want to copy this survey ? `;
+                                    var popupBox = appNotifyWarning(warningContent, true);
+                                    popupBox.then((result) => {
+                                        if (result.isConfirmed) {
+                                            draftCurrentTab = true;
+                                            var passingParams = collectionFormData(surveyData, tabs, true);
+                                            saveIndexDBDraft(passingParams, true);
+                                            draftCurrentTab = false;
+                                            callElementView(`/Business/Form/Survey_Form/0`, `form_Survey_Form_0`, `Draft copy survey ${surveyData.surveyNo}`);
+                                            // setFormDataToInstances(passingParams, _formInstances, null);
+                                            // $.ajax({
+                                            //     url: '/api/Survey/CopySurvey',
+                                            //     headers: { 'Content-Type': 'application/json' },
+                                            //     type: 'POST',
+                                            //     data: JSON.stringify(passingParams.requestPassingData)
+                                            //     , success: function (response) {
+                                            //         appNotifySuccess(`Survey copied !`, false);
+                                            //     },
+                                            //     error: function (err) {
+                                            //         appErrorHandling('Copied survey failed !', err);
+                                            //     }
+                                            // });
+                                        }
+                                        else {
+                                        }
+                                    });
+                                }
+                            }
+                        );
+                        $(`#saveSurveyForm_${_id}`).dxButton(
+                            {
+                                text: isUpdate ? 'Update Report' : 'Create Survey',
+                                visible: (isChecking || isHelpingDraft)? true : buttonVisibility.save,
+                                onClick: async function () {
+                                    var requestPassingData = collectionFormData(surveyData, tabs, true);
+                                    // connectionId = await connectionSignR.invoke("GetConnectionId");
+                                    requestPassingData.requestPassingData.connectionId = connectionId;
+                                    if (requestPassingData.validate) {
+                                        if (!requestPassingData.isUpdate) {
+                                            // const checkServer = await checkConnection(url);
+                                            // if (checkServer.status >= 200 && checkServer.status < 300) {
+                                            //    //
+                                            // } else {
+                                            //     saveIndexDBDraft(requestPassingData);
+                                            //     appNotifyWarning(`Draft saved due to lost connection !`, false);
+                                            // }
+
+                                            if (draftCloneSurveyId)
+                                            {
+                                                 $.ajax({
+                                                        url: '/api/Survey/CopySurvey',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        type: 'POST',
+                                                        data: JSON.stringify(requestPassingData.requestPassingData)
+                                                        , success: function (response) {
+                                                             appNotifySuccess(`Survey created !`, false);
+                                                             surveyData = response;
+                                                             _id = surveyData.id;
+                                                             setTabName(`Survey ${surveyData.surveyNo}`, `form_Survey_Form_${surveyData.id}`);
+                                                             callElementView(`/Business/Form/Survey_Form/${surveyData.id}`, `form_Survey_Form_${surveyData.id}`, `Survey ${surveyData.surveyNo}`);
+                                                        },
+                                                        error: function (err) {
+                                                            appErrorHandling('Copied survey failed !', err);
+                                                        }
+                                                    });
+                                            }
+                                            else {
+                                             $.ajax({
+                                                url: '/api/Survey/CreateSurvey',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                timeout: 10000,
+                                                type: 'POST',
+                                                data: JSON.stringify(requestPassingData.requestPassingData)
+                                                , success: function (response) {
+                                                    appNotifySuccess(`Survey created !`, false);
+                                                    surveyData = response;
+                                                    _id = surveyData.id;
+                                                    setTabName(`Survey ${surveyData.surveyNo}`, `form_Survey_Form_${surveyData.id}`);
+                                                    $(`#Survey_progressBar`).attr('id', `form_Survey_Form_${surveyData.id}_progressBar`);
+                                                    $(`#Survey_progressSuccessIcon`).attr('id', `form_Survey_Form_${surveyData.id}_progressSuccessIcon`);
+                                                    $(`#Survey_progressErrorIcon`).attr('id', `form_Survey_Form_${surveyData.id}_progressErrorIcon`);
+                                                    callElementView(`/Business/Form/Survey_Form/${surveyData.id}`, `form_Survey_Form_${surveyData.id}`, `Survey ${surveyData.surveyNo}`);
+                                                },
+                                                error: function (err, status, error) {
+                                                    appErrorHandling('Created survey failed !', err);
+                                                }
+                                            });
+                                            }
+                                        }
+                                        else {
+                                            requestPassingData.requestPassingData.Survey.id = surveyData.id;
+                                            $(`#saveSurveyForm_${_id}`).dxButton("instance").option("disabled",true);
+                                            $(`#form_Survey_Form_${_id}_progressBar`).dxBarGauge("instance").option("values", [0]);
+
+                                            // requestPassingData.requestPassingData.Management.id = surveyData.managementFK.id;
+                                            // setTabName(`Survey ${surveyData.surveyNo} saving...`, `form_Survey_Form_${surveyData.id}`);
+                                            setTimeout(function () {
+                                                $.ajax({
+                                                url: '/api/Survey/UpdateSurvey',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                type: 'POST',
+                                               // async: false,
+                                                data: JSON.stringify(requestPassingData.requestPassingData)
+                                                , success: function (response) {
+
+                                                },
+                                                error: function (err) {
+                                                    appErrorHandling(`Updated survey failed !`, err);
+                                                }
+                                            });
+                                            }, 500);
+
+                                            //setTabName(`Survey ${surveyData.surveyNo} saved!`, `form_Survey_Form_${surveyData.id}`);
+                                        }
+                                    }
+                                    else {
+                                        appNotifyWarning('Please fill in required fields!');
+                                    }
+                                }
+                            }
+                        );
+
+                       if (focusTab != 0) {
+                           handleTitleClick();
+                       }
+                    }
+                }];
+            var form = $(`#form_@(Survey_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])`).dxForm({
+                items: tabItems
+            }).dxForm("instance");
+            tabValidationCheck();
+            // form.formInstance.option("items", );
+            // function checkFileProcessingStatus(surveyId) {
+            //     let interval = setInterval(function () {
+            //         $.ajax({
+            //             url: `/api/Survey/GetFileProcessingStatus/${surveyId}`,
+            //             type: "GET",
+            //             success: function (response) {
+            //                 if (response.status === "Completed") {
+            //                     clearInterval(interval);
+            //                     setTabName(`Survey ${surveyData.surveyNo} saved!`, `form_Survey_Form_${surveyData.id}`);
+            //                 }
+            //             }
+            //         });
+            //     }, 3000); // Kiểm tra mỗi 3 giây
+            // }
+
+            function generateFormIdAndParams(entity, surveyData, _id, surveyJsonConfig) {
+                let formId = '';
+                let passingParams = {};
+                let entityId = 0; // Mặc định gán 0 nếu không tìm thấy ID tương ứng
+                const entityIdMap = {
+                    "Summary": surveyData?.summaryFK?.id || 0,
+                    "Management": surveyData?.managementFK?.id || 0,
+                    "Construction": surveyData?.constructionFK?.id || 0,
+                    "Occupancy": surveyData?.occupancyFK?.id || 0,
+                    "Protection": surveyData?.protectionFK?.id || 0,
+                    "ExtFireExpExposures": surveyData?.extFireExpExposuresFK?.id || 0,
+                    "OtherExposures": surveyData?.otherExposuresFK?.id || 0,
+                    "LossHistory": surveyData?.lossHistoryFK?.id || 0,
+                    "LossExpValueBrkdwn": surveyData?.lossExpValueBrkdwnFK?.id || 0,
+                    "Appendix": surveyData?.appendixFK?.id || 0
+                };
+
+                entityId = entityIdMap[entity] || 0;
+
+                formId = entityId > 0
+                    ? `Survey_${entity}_Form_${_id}_${entityId}`
+                    : `Survey_${entity}_Form_${_id}_0`;
+
+                if (["Overview", "SurveyEvaluation", "SitePictures"].includes(entity)) {
+                    formId = `Survey_${entity}_Form_${_id}`;
+                    passingParams = {
+                        UITabId: formId,
+                        pageNum: _id,
+                        jsonConfig: JSON.stringify(surveyJsonConfig)
+                    };
+                } else if (["REOpinion"].includes(entity)) {
+                    formId = `Survey_${entity}_Form_${_id}`;
+                    passingParams = {
+                        UITabId: formId,
+                        pageNum: _id,
+                        refPageNum: _id,
+                        jsonConfig: JSON.stringify(surveyJsonConfig)
+                    };
+                } else if (["ParticipantList"].includes(entity)) {
+                    if (Object.keys(draftCurrentObject).length > 0) {
+                        surveyJsonConfig.clientName = draftCurrentObject.clientName;
+                        surveyJsonConfig.draftGuid = draftSession;
+                    }
+                    formId = `Survey_${entity}_Form_${_id}`;
+                    passingParams = {
+                        UITabId: formId,
+                        pageNum: _id,
+                        jsonConfig: JSON.stringify(surveyJsonConfig)
+                    };
+                }
+                else if (["Summary", "Management", "Construction", "Occupancy", "Protection", "ExtFireExpExposures", "OtherExposures", "LossHistory", "LossExpValueBrkdwn", "Appendix"].includes(entity)) {
+                    passingParams = {
+                        UITabId: formId,
+                        refPageNum: _id,
+                        pageNum: entityId,
+                        jsonConfig: JSON.stringify(surveyJsonConfig)
+                    };
+
+                    // Thêm jsonConfig chỉ khi _id != 0
+                    if (_id !== 0) {
+                        passingParams.jsonConfig = JSON.stringify(surveyJsonConfig);
+                    }
+                    // else if (["Construction", "LossHistory", "LossExpValueBrkdwn", "Appendix"].includes(entity)) {
+                    //     passingParams.jsonConfig = "";
+                    // }
+                }
+
+                return { formId, passingParams };
+            }
+
+
+
+            function collectionFormData(surveyData, tabs, isManual) {
+                var requestPassingData = {
+                    Survey: {},
+                    // PosNegAspectContent: {},
+                    SurveyEvaluations: [],
+                    Management: {},
+                    Summary: {},
+                    Construction: {},
+                    ConstructionBuilding: [],
+                    OccupancyUtility: [],
+                    OccupancyIndGas: [],
+                    Occupancy: {},
+                    // Charts: [],
+                    AttachmentRequests: [],
+                    Protection: {},
+                    ExtFireExpExposures: {},
+                    OtherExposures: {},
+                    LossExpValueBrkdwn: {},
+                    Appendix: {},
+                    SurveyOutlineOptions: []
+                };
+                if (draftSession)
+                    requestPassingData.DraftGuid = draftSession;
+
+                if (draftCloneSurveyId)
+                    requestPassingData.CloneSurveyId = draftCloneSurveyId;
+
+                var validate = true;
+                var isUpdate = Object.keys(surveyData).length === 0 ? false : true;
+                var outlineList = [];
+                $.each(tabs, function (tIndex, tab) {
+                    _id = Object.keys(surveyData).length === 0 ? 0 : surveyData.id;
+                    if (Object.keys(surveyData).length != 0) {
+                        // var surveyUpdate = { ...surveyData };
+                        // $.each(surveyUpdate.surveyOutlineOptions, function (surveyOptionsIndex, surveyOptions) {
+                        //     surveyOptions.outlineFK = null;
+                        // });
+                        // requestPassingData.Survey = surveyUpdate;
+                         requestPassingData.Survey = cloneAndCleanObject(surveyData);
+                    }
+
+                    var findForm = _formInstances.find(f => f.formName == tab.entity);
+                    if (findForm) {
+                        var form = findForm.instance;
+                        if (tab.entity == "Overview" && form) {
+                            if (isManual)
+                                validate = form.validate().isValid;
+                            var formData = form.option(isUpdate ? 'changedFields' : 'formData');
+
+                            if (formData.mainOutlines?.length > 0) {
+                                requestPassingData.MainOutlines = formData.mainOutlines;
+                            }
+                            requestPassingData.Survey = formData;
+                            if (isUpdate) requestPassingData.surveyValues = JSON.stringify(formData);
+                        }
+                        if (tab.entity == "REOpinion" && form) {
+                            var formData = form.option(isUpdate ? 'changedFields' : 'formData');
+                            if (isUpdate && formData[`reOpinion`]) {
+                                requestPassingData.Survey.reOpinion = formData[`reOpinion`];
+                                requestPassingData.reOpinionValues = JSON.stringify(formData);
+                            }
+                        }
+                        // if (tab.entity == "PosNegAspect" && form) {
+                        //     var refId = _id;
+                        //
+                        //
+                        //     var formData = form.option(isUpdate ? 'changedFields' : 'formData');
+                        //     requestPassingData.PosNegAspectContent.posAspecContent = formData.posAspecContent;
+                        //     requestPassingData.PosNegAspectContent.negAspecContent = formData.negAspecContent;
+                        //     if (isUpdate) requestPassingData.posNegValues = JSON.stringify(formData);
+
+                        // }
+
+                        if (tab.entity == "Management" && form) {
+                            // var refId = _id;
+                            // _id = Object.keys(surveyData).length === 0 ? 0 : surveyData.managementFK.id;
+                            var formData = form.option(isUpdate ? 'changedFields' : 'formData');
+                            requestPassingData.Management = formData;
+                            if (isUpdate) requestPassingData.managementValues = JSON.stringify(formData);
+                        }
+                        if (tab.entity == "Summary" && form) {
+                            // var refId = _id;
+                            // _id = Object.keys(surveyData).length === 0 ? 0 : surveyData.summaryFK.id;
+                            var formData = form.option(isUpdate ? 'changedFields' : 'formData');
+                            requestPassingData.Summary = formData;
+                            if (isUpdate) requestPassingData.summaryValues = JSON.stringify(formData);
+                        }
+
+                        if (tab.entity == "SurveyEvaluation" && form) {
+                            //Chỗ này bị interval
+                            var formData = form.option('formData');
+
+                            const resultArray = Object.keys(formData).map(key => {
+                                const lookupItem = categories.find(item => item.key.replace(' ', '') === key);
+                                if (lookupItem) {
+                                    return {
+                                        SurveyCategoryTypeId: lookupItem.id,
+                                        SurveyStatusId: formData[key]
+                                    };
+                                }
+                                return null;
+                            }).filter(item => item !== null);  // Loại bỏ các phần tử null (nếu không tìm thấy)
+                            requestPassingData.SurveyEvaluations = resultArray;
+
+                        }
+                        if (tab.entity == "Construction" && form) {
+                            // var refId = _id;
+                            // _id = Object.keys(surveyData).length === 0 ? 0 : surveyData.constructionFK.id;
+                            var formData = form.option(isUpdate ? 'changedFields' : 'formData');
+                            // var buildingGrid = $(`#dataGrid_${tab.entity}Building_${refId}`).dxDataGrid().dxDataGrid("instance");
+                            // if (buildingGrid != null || buildingGrid != undefined) {
+                            //     requestPassingData.Construction.ConstructionBuildingPivot = "";
+                            //     var bdGridData = buildingGrid.getVisibleRows();
+                            //     requestPassingData.ConstructionBuilding = bdGridData.map(m => m.data);
+                            //     var groupSize = 4;
+                            //     var htmlData = ``;
+                            //     for (let i = 0; i < bdGridData.length; i += groupSize) {
+                            //         var dataSubset = bdGridData.slice(i, i + groupSize);
+                            //         htmlData += createTable(dataSubset.map(m => m.data), i / groupSize);
+                            //     }
+                            //     formData["ConstructionBuildingPivot"] = htmlData;
+                            // }
+                            requestPassingData.Construction = formData;
+                            if (isUpdate) {
+                                requestPassingData.constructionValues = JSON.stringify(formData);
+                            }
+                        }
+                        if (tab.entity == "LossHistory" && form) {
+                            // var refId = _id;
+                            // _id = Object.keys(surveyData).length === 0 ? 0 : surveyData.lossHistoryFK.id;
+                            var formData = form.option(isUpdate ? 'changedFields' : 'formData');
+                            requestPassingData.LossHistory = formData;
+                            if (isUpdate) {
+                                requestPassingData.lossHistoryValues = JSON.stringify(formData);
+                            }
+                        }
+                        if (tab.entity == "Occupancy" && form) {
+                            var refId = _id;
+                            // _id = Object.keys(surveyData).length === 0 ? 0 : surveyData.occupancyFK.id;
+                            var formData = form.option(isUpdate ? 'changedFields' : 'formData');
+                            requestPassingData.Occupancy = formData;
+                            var utilityGrid = $(`#dataGrid_${tab.entity}Detail_Utility_${refId}`).dxDataGrid().dxDataGrid("instance && form");
+                            if (utilityGrid != null || utilityGrid != undefined) {
+                                var utilityGridData = utilityGrid.getVisibleRows();
+                                requestPassingData.OccupancyUtility = utilityGridData.map(m => m.data);
+                            }
+                            var industrialGasSupplyGrid = $(`#dataGrid_${tab.entity}Detail_IndustrialGasSupply_${refId}`).dxDataGrid().dxDataGrid("instance && form");
+                            if (industrialGasSupplyGrid != null || industrialGasSupplyGrid != undefined) {
+                                var industrialGasSupplyGridData = industrialGasSupplyGrid.getVisibleRows();
+                                requestPassingData.OccupancyIndGas = industrialGasSupplyGridData.map(m => m.data);
+                            }
+                            if (isUpdate) requestPassingData.occupancyValues = JSON.stringify(formData);
+                        }
+                        if (tab.entity == "Protection" && form) {
+                            var formData = form.option(isUpdate ? 'changedFields' : 'formData');
+                            requestPassingData.Protection = formData;
+                            if (isUpdate) requestPassingData.protectionValues = JSON.stringify(formData);
+                        }
+                        if (tab.entity == "ExtFireExpExposures" && form) {
+                            var formData = form.option(isUpdate ? 'changedFields' : 'formData');
+                            requestPassingData.ExtFireExpExposures = formData;
+                            if (isUpdate) requestPassingData.extFireExpExposuresValues = JSON.stringify(formData);
+                        }
+                        if (tab.entity == "OtherExposures" && form) {
+                            var formData = form.option(isUpdate ? 'changedFields' : 'formData');
+                            requestPassingData.OtherExposures = formData;
+                            if (isUpdate) requestPassingData.otherExposuresValues = JSON.stringify(formData);
+                        }
+                        if (tab.entity == "LossExpValueBrkdwn" && form) {
+                            var formData = form.option(isUpdate ? 'changedFields' : 'formData');
+                            requestPassingData.LossExpValueBrkdwn = formData;
+                            if (isUpdate) {
+                                requestPassingData.lossExpValueBrkdwnValues = JSON.stringify(formData);
+                            }
+                        }
+                        if (tab.entity == "Appendix" && form) {
+                            var formData = form.option(isUpdate ? 'changedFields' : 'formData');
+                            requestPassingData.Appendix = formData;
+                            if (isUpdate) {
+                                requestPassingData.appendixValues = JSON.stringify(formData);
+                            }
+                        }
+                        if (tab.entity == "SitePictures" && form) {
+                            // var refId = _id;
+                            // _id = Object.keys(surveyData).length === 0 ? 0 : surveyData.sitePicturesFK.id;
+                            //
+                            //
+                            // var formData = form.option(isUpdate ? 'changedFields' : 'formData');
+                            // requestPassingData.SitePictures = formData;
+                            // if (isUpdate) {
+                            //     requestPassingData.sitePicturesValues = JSON.stringify(formData);
+                            // }
+                        }
+                    }
+                });
+                _id = Object.keys(surveyData).length === 0 ? 0 : surveyData.id;
+                $.each(_formInstances, function (fIndex, formChild) {
+                    var formDa = formChild.instance.option(isUpdate ? 'changedFields' : 'formData');
+                    $.each(formDa, function (key, value) {
+                        if (key.startsWith("uploadFile")) {
+                            $.each(value, function (fIndex, fileObject) {
+                                //requestPassingData.AttachmentRequests.push(fileObject);
+                            });
+                            formChild.instance.option(isUpdate ? 'changedFields' : 'formData', {});
+                        }
+                        if (key.startsWith("outlineOptions") && isUpdate) {
+                            value.surveyId = surveyData.id
+                            requestPassingData.SurveyOutlineOptions.push(value);
+                            // $.each(value, function (vIndex, vItem) {
+                            //     vItem.surveyId = surveyData.id;
+                            //     requestPassingData.SurveyOutlineOptions.push(vItem);
+                            // });
+                        }
+                    });
+                });
+                return {
+                    requestPassingData, validate, isUpdate, outlineList
+                };
+            }
+        }
+         if (_isAllowDraft) {
+            //Khi nào dùng đến tính năng nháp này thì mới mở lại
+            const request = window.indexedDB.open('DraftDB', 1);
+            request.onupgradeneeded = function (event) {
+                db = event.target.result;
+                if (!db.objectStoreNames.contains('drafts')) {
+                    db.createObjectStore('drafts', { keyPath: 'id' });
+                }
+            };
+
+            request.onsuccess = function (event) {
+                db = event.target.result;
+                if (_id == 0) {
+                    loadIndexDBDraft();
+                }
+            };
+        }
+
+
+        reloadTab();
+        function tabValidationCheck(){
+            var checkFields = [];
+            if (surveyData.id && _cacheDataGridConfigs){
+                               $.each(tabs,function(tabIndex, tabItem){
+                                    var timeoutCount = 200;
+                                   if (tabItem.validateCheck){
+                                   checkFields = _cacheDataGridConfigs.filter(f => f.sysTableFK?.name == tabItem.entity).map(m => m.dataField)
+                                      if (checkFields.length > 0)
+                                      {
+                                            // setTimeout(function() {
+
+                                       $.ajax({
+                                           url: `/api/Survey/RenderSurveyTabNotCompleted/${surveyData.id}/${tabItem.entity}/${connectionId}`,
+                                           headers: { 'Content-Type': 'application/json' },
+                                           type: 'POST',
+                                           data: JSON.stringify(checkFields),
+                                           success: function (response) {
+                                           },
+                                           error: function (err) {
+                                           }
+                                       });
+                                            // }, timeoutCount);
+                                       }
+                                   }
+                                   // timeoutCount = timeoutCount + 200;
+                });
+            }
+        }
+        function subTabValidationCheck(formName){
+        var checkFields = [];
+        var subTabs = tabs.filter(f => f.entity == formName);
+             if (surveyData.id && _cacheDataGridConfigs){
+             $.each(subTabs,function(tabIndex, tabItem){
+                 if (tabItem.validateCheck){
+                 checkFields = _cacheDataGridConfigs.filter(f => f.sysTableFK?.name == formName).map(m => m.dataField)
+                 $.ajax({
+                     url: `/api/Survey/RenderSurveySubTabNotCompleted/${surveyData.id}/${tabItem.entity}/${connectionId}`,
+                     headers: { 'Content-Type': 'application/json' },
+                     type: 'POST',
+                     data: JSON.stringify(checkFields),
+                     success: function (response) {
+                     },
+                     error: function (err) {
+                     }
+                 });
+                 }
+             });
+        }}
+       async function submitButtonSignalRVisible(){
+           // connectionId = await  connectionSignR.invoke("GetConnectionId");
+            var requestPassingData = new Object();
+             requestPassingData.Survey = new Object();
+             requestPassingData.Survey.Id = _id
+             requestPassingData.connectionId = connectionId;
+             $.ajax({
+                 url: `/api/Survey/SubmitRecallVisible/${connectionId}/${_id}`,
+                 type: 'GET',
+                 data: JSON.stringify(requestPassingData)
+                 , success: function (response) {
+                 },
+                 error: function (err) {
+                 }
+             });
+        }
+        submitButtonSignalRVisible();
+        connectionSignR.on("FileProcessingCompleted", function (responseData) {
+           if (responseData.connectionId == connectionId)
+           {
+               progressValue = responseData.surveyData.progressvalue;
+               if (responseData.surveyData.progressvalue == 100){
+                   $(`#saveSurveyForm_${responseData.surveyData.data.id}`).dxButton("instance").option("disabled",false);
+                   submitButtonSignalRVisible();
+                   tabValidationCheck();
+                    var focusForm = _formInstances.find(f => f.formName == focusTabName);
+                    if (focusForm)
+                   subTabValidationCheck(focusForm.formName);
+               }
+               $(`#form_Survey_Form_${responseData.surveyData.data.id}_progressBar`).dxBarGauge("instance").option("values", [responseData.surveyData.progressvalue]);
+               $(`#form_Survey_Form_${responseData.surveyData.data.id}_progressBar`).dxBarGauge("instance").option("customStatus", responseData.surveyData.type);
+               if (responseData.errorMsg){
+                    $(`#saveSurveyForm_${responseData.surveyData.data.id}`).dxButton("instance").option("disabled",false);
+                    appErrorHandling(responseData.errorMsg);
+                    tabValidationCheck();
+                    var focusForm = _formInstances.find(f => f.formName == focusTabName);
+                    if (focusForm)
+                   subTabValidationCheck(focusForm.formName);
+               }
+           }
+        });
+        function handleTitleClick(e) {
+            if (e != null){
+                focusTab = e.itemIndex;
+                focusTabName = e.itemData.entity;
+                subTabValidationCheck(e.itemData.entity);
+                }
+            else
+            {
+                subTabValidationCheck(focusTabName);
+
+            }
+        }
+
+        function getButtonVisibility(_id, isUpdate, isSubmit, isDone, isNotOwner) {
+            return {
+                save: _id === 0 || (isUpdate && !isSubmit) && !isNotOwner || (_isSuperUser == "true" ? true : false),
+                // submit: _id !== 0 && isUpdate && !isSubmit && !isDone && !isNotOwner && isWordRender,
+                submit: false,
+                // recall: _id !== 0 && isUpdate && isSubmit && !isDone && !isNotOwner,
+                recall: false,
+                download: _id !== 0 && isUpdate && !isNotOwner || (_isSuperUser == "true" ? true : false),
+                template: _id !== 0 && isUpdate,
+                preview: _id !== 0 && isUpdate,
+                copy: _id !== 0 && isDone
+            };
+        }
+
+
+        function createTable(dataSubset, tableIndex) {
+            var table = $("<div>");
+            var elementClass = "style='width: 150px; border: 1px solid black; padding: 8px;'";
+            var labelClass = "style= 'width: 100px; text-align: left; background-color: #cce5ff; font-weight: bold;'";
+
+            $(`<div class="quill-better-table-wrapper">
+                                                    <table class="quill-better-table" style="width: ${165 + (dataSubset.length * 115)}px;">
+                                                    <colgroup>
+                                                    <col width="100" style="text-align: center;">
+                                                        <col width="100" style="text-align: center;">
+                                                            ${dataSubset.map(building => `<col width="150" style="text-align: center;">`).join('')}
+                                                </colgroup>
+                                                <tbody>
+                                                    <tr data-row="1">
+                                                    <td data-row="1" rowspan="1" colspan="2" data-cell-bg="rgb(198, 217, 241)" style="background-color: rgb(198, 217, 241);">
+                                                    <p class="qlbt-cell-line" data-row="1" data-cell="1" data-rowspan="1" data-colspan="2" data-cell-bg="rgb(198, 217, 241)" style="text-align: center;">
+                                                    <strong style="font-size: 11pt; font-family: Asap, sans-serif; color: black;">Building Name</strong>
+                                                </p>
+                                                </td>
+                                                    ${dataSubset.map(building => `<td data-row="1" rowspan="1" colspan="1" data-cell-bg="rgb(198, 217, 241)" style="background-color: rgb(198, 217, 241);">
+                                                    <p class="qlbt-cell-line" data-row="1" data-cell="2" data-rowspan="1" data-colspan="1" data-cell-bg="rgb(198, 217, 241)" style="text-align: center;">
+                                                        <strong style="color: black; font-family: Asap, sans-serif; font-size: 11pt;">${building.nameOfBuilding}</strong>
+                                                </p>
+                                                    </td>`).join('')}
+                                                </tr>
+                                                <tr data-row="2">
+                                                    <td data-row="2" rowspan="1" colspan="2" data-cell-bg="rgb(198, 217, 241)" style="background-color: rgb(198, 217, 241);">
+                                                    <p class="qlbt-cell-line" data-row="2" data-cell="1" data-rowspan="1" data-colspan="2" data-cell-bg="rgb(198, 217, 241)" style="text-align: center;">
+                                                    <strong style="font-size: 11pt; font-family: Asap, sans-serif; color: black;">Number of Stories</strong>
+                                                </p>
+                                                </td>
+                                                    ${dataSubset.map(building => `<td data-row="2" rowspan="1" colspan="1">
+                                                        <p class="qlbt-cell-line" data-row="2" data-cell="2" data-rowspan="1" data-colspan="1" style="text-align: center;">${building.numberOfStories}</p>
+                                                    </td>`).join('')}
+                                                </tr>
+                                                <tr data-row="3">
+                                                    <td data-row="3" rowspan="1" colspan="2" data-cell-bg="rgb(198, 217, 241)" style="background-color: rgb(198, 217, 241);">
+                                                    <p class="qlbt-cell-line" data-row="3" data-cell="1" data-rowspan="1" data-colspan="2" data-cell-bg="rgb(198, 217, 241)" style="text-align: center;">
+                                                    <strong style="font-size: 11pt; font-family: Asap, sans-serif; color: black;">Area (m</strong>
+                                                <sup style="font-size: 11pt; font-family: Asap, sans-serif; color: black;">
+                                                    <strong>2</strong>
+                                                </sup>
+                                                <strong style="font-size: 11pt; font-family: Asap, sans-serif; color: black;">)</strong>
+                                                </p>
+                                                </td>
+                                                    ${dataSubset.map(building => `<td data-row="3" rowspan="1" colspan="1">
+                                                        <p class="qlbt-cell-line" data-row="3" data-cell="2" data-rowspan="1" data-colspan="1" style="text-align: center;">${building.area}</p>
+                                                    </td>`).join('')}
+                                                </tr>
+                                                <tr data-row="4">
+                                                    <td data-row="4" rowspan="1" colspan="2" data-cell-bg="rgb(198, 217, 241)" style="background-color: rgb(198, 217, 241);">
+                                                    <p class="qlbt-cell-line" data-row="4" data-cell="1" data-rowspan="1" data-colspan="2" data-cell-bg="rgb(198, 217, 241)" style="text-align: center;">
+                                                    <strong style="font-size: 11pt; font-family: Asap, sans-serif; color: black;">Height (m)</strong>
+                                                </p>
+                                                </td>
+                                                    ${dataSubset.map(building => `<td data-row="4" rowspan="1" colspan="1">
+                                                        <p class="qlbt-cell-line" data-row="4" data-cell="2" data-rowspan="1" data-colspan="1" style="text-align: center;">${building.height}</p>
+                                                    </td>`).join('')}
+                                                </tr>
+                                                <tr data-row="5">
+                                                    <td data-row="5" rowspan="1" colspan="2" data-cell-bg="rgb(198, 217, 241)" style="background-color: rgb(198, 217, 241);">
+                                                    <p class="qlbt-cell-line" data-row="5" data-cell="1" data-rowspan="1" data-colspan="2" data-cell-bg="rgb(198, 217, 241)" style="text-align: center;">
+                                                    <strong style="font-size: 11pt; font-family: Asap, sans-serif; color: black;">Year Built</strong>
+                                                </p>
+                                                </td>
+                                                    ${dataSubset.map(building => `<td data-row="5" rowspan="1" colspan="1">
+                                                        <p class="qlbt-cell-line" data-row="5" data-cell="2" data-rowspan="1" data-colspan="1" style="text-align: center;">${building.yearBuilt}</p>
+                                                    </td>`).join('')}
+                                                </tr>
+                                                <tr data-row="6">
+                                                    <td data-row="6" rowspan="4" colspan="1" data-cell-bg="rgb(198, 217, 241)" style="background-color: rgb(198, 217, 241);">
+                                                    <p class="qlbt-cell-line" data-row="6" data-cell="1" data-rowspan="4" data-colspan="1" data-cell-bg="rgb(198, 217, 241)" style="text-align: center;">
+                                                    <br>
+                                                </p>
+                                                <p class="qlbt-cell-line" data-row="6" data-cell="1" data-rowspan="4" data-colspan="1" data-cell-bg="rgb(198, 217, 241)" style="text-align: center;">
+                                                    <strong style="font-size: 11pt; font-family: Asap, sans-serif; color: black;">Structure of</strong>
+                                                </p>
+                                                <p class="qlbt-cell-line" data-row="6" data-cell="1" data-rowspan="4" data-colspan="1" data-cell-bg="rgb(198, 217, 241)" style="text-align: center;">
+                                                    <strong style="font-size: 11pt; font-family: Asap, sans-serif; color: black;">Buildings</strong>
+                                                </p>
+                                                </td>
+                                                <td data-row="6" rowspan="1" colspan="1" data-cell-bg="rgb(198, 217, 241)" style="background-color: rgb(198, 217, 241);">
+                                                    <p class="qlbt-cell-line" data-row="6" data-cell="2" data-rowspan="1" data-colspan="1" data-cell-bg="rgb(198, 217, 241)" style="text-align: center;">
+                                                    <strong style="font-size: 11pt; font-family: Asap, sans-serif; color: black;width:100px">Pillars</strong>
+                                                </p>
+                                                </td>
+                                                    ${dataSubset.map(building => `<td data-row="6" rowspan="1" colspan="1">
+                                                        <p class="qlbt-cell-line" data-row="6" data-cell="3" data-rowspan="1" data-colspan="1" style="text-align: center;">${building.pillars}</p>
+                                                    </td>`).join('')}
+                                                </tr>
+                                                <tr data-row="7">
+                                                    <td data-row="7" rowspan="1" colspan="1" data-cell-bg="rgb(198, 217, 241)" style="background-color: rgb(198, 217, 241);">
+                                                    <p class="qlbt-cell-line" data-row="7" data-cell="1" data-rowspan="1" data-colspan="1" data-cell-bg="rgb(198, 217, 241)" style="text-align: center;">
+                                                        <strong style="font-size: 11pt; font-family: Asap, sans-serif; color: black;width:100px">Walls</strong>
+                                                </p>
+                                                </td>
+                                                    ${dataSubset.map(building => `<td data-row="7" rowspan="1" colspan="1">
+                                                        <p class="qlbt-cell-line" data-row="7" data-cell="2" data-rowspan="1" data-colspan="1" style="text-align: center;">${building.wall}</p>
+                                                    </td>`).join('')}
+                                                </tr>
+                                                <tr data-row="8">
+                                                    <td data-row="8" rowspan="1" colspan="1" data-cell-bg="rgb(198, 217, 241)" style="background-color: rgb(198, 217, 241);">
+                                                    <p class="qlbt-cell-line" data-row="8" data-cell="1" data-rowspan="1" data-colspan="1" data-cell-bg="rgb(198, 217, 241)" style="text-align: center;">
+                                                        <strong style="font-size: 11pt; font-family: Asap, sans-serif; color: black;width:100px">Roofs</strong>
+                                                </p>
+                                                </td>
+                                                    ${dataSubset.map(building => `<td data-row="8" rowspan="1" colspan="1">
+                                                        <p class="qlbt-cell-line" data-row="8" data-cell="2" data-rowspan="1" data-colspan="1" style="text-align: center;">${building.roof}</p>
+                                                    </td>`).join('')}
+                                                </tr>
+                                                <tr data-row="9">
+                                                    <td data-row="9" rowspan="1" colspan="1" data-cell-bg="rgb(198, 217, 241)" style="background-color: rgb(198, 217, 241);">
+                                                    <p class="qlbt-cell-line" data-row="9" data-cell="1" data-rowspan="1" data-colspan="1" data-cell-bg="rgb(198, 217, 241)" style="text-align: center;">
+                                                        <strong style="font-size: 11pt; font-family: Asap, sans-serif; color: black;width:100px">Floors</strong>
+                                                </p>
+                                                </td>
+                                                    ${dataSubset.map(building => `<td data-row="9" rowspan="1" colspan="1">
+                                                        <p class="qlbt-cell-line" data-row="9" data-cell="2" data-rowspan="1" data-colspan="1" style="text-align: center;">${building.numberOfFloors}</p>
+                                                    </td>`).join('')}
+                                                </tr>
+                                                <tr data-row="10">
+                                                    <td data-row="10" rowspan="1" colspan="2" data-cell-bg="rgb(198, 217, 241)" style="background-color: rgb(198, 217, 241);">
+                                                    <p class="qlbt-cell-line" data-row="10" data-cell="1" data-rowspan="1" data-colspan="2" data-cell-bg="rgb(198, 217, 241)" style="text-align: center;">
+                                                    <strong style="font-size: 11pt; font-family: Asap, sans-serif; color: black;">Occupancy</strong>
+                                                </p>
+                                                </td>
+                                                    ${dataSubset.map(building => `<td data-row="10" rowspan="1" colspan="1">
+                                                        <p class="qlbt-cell-line" data-row="10" data-cell="2" data-rowspan="1" data-colspan="1" style="text-align: center;">${building.occupancy}</p>
+                                                    </td>`).join('')}
+                                                </tr>
+                                                </tbody>
+                                                </table>
+                                                </div>
+                                                <p>
+                                                    <br>
+                                                </p>`).appendTo(table);
+
+            return table.html();
+            // tableContainer.appendChild(table);
+        }
+        $(document).ready(function () {
+            var stickyBar = $(`#stickyBar_${_id}`);
+            var offset = window.innerHeight;
+
+            function updateOffset() {
+                offset = window.innerHeight;
+            }
+
+            function handleStickyBar() {
+                if ($(window).scrollTop() < offset) {
+                    stickyBar.css({
+                        position: "fixed",
+                        bottom: "10px",
+                        right: "10px",
+                        zIndex: "1000",
+                        backgroundColor: "white",
+                        padding: "10px",
+                        boxShadow: "0 2px 5px rgba(0, 0, 0, 0.2)",
+                        borderRadius: "8px",
+                        width: "auto",
+                        textAlign: "left"
+                    });
+                } else {
+                    stickyBar.css({
+                        position: "static",
+                        padding: "10px 0",
+                        textAlign: "right",
+                        width: "100%",
+                        backgroundColor: "",
+                        boxShadow: "",
+                        borderRadius: ""
+                    });
+                }
+            }
+
+            $(window).on("resize", function () {
+                //Browser function change size
+                updateOffset();
+                handleStickyBar();
+            });
+            $(window).on("scroll", handleStickyBar);
+
+            const observer = new ResizeObserver(() => {
+                //Content change size
+                updateOffset();
+                handleStickyBar();
+            });
+
+            observer.observe(document.body);
+
+            updateOffset();
+            handleStickyBar();
+            connectionSignR.on("RenderSurveyTabNotCompleted", function (tabName, statusTab,resConnectionId) {
+                if (resConnectionId == connectionId)
+                {
+                     var elementString = ``;
+                     var validateStringRequired = `<span style='color:red; margin-left:5px;'>*</span>`;
+                     if (statusTab)
+                         elementString += validateStringRequired;
+                        $(`#numberofinputfield_${_id}_${tabName}`).html(elementString);
+                }
+             });
+            connectionSignR.on("SubmitRecallVisible", function (responseData) {
+            if (responseData.connectionId == connectionId)
+                {
+                    if (responseData.buttonType == "Submit"){
+                        $(`#submitSurveyForm_${_id}`).dxButton("instance").option("visible", responseData.visibleStatus);
+                        $(`#submitSurveyForm_${_id}`).dxButton("instance").option("text", responseData.buttonText);
+                    }
+                    if (responseData.buttonType == "Recall"){
+                        $(`#recallSurveyForm_${_id}`).dxButton("instance").option("visible", responseData.visibleStatus);
+                    }
+                }
+            });
+               connectionSignR.on("RenderSurveySubTabNotCompleted", function (responseData) {
+                if (responseData.connectionId == connectionId)
+                {
+                    Object.entries(responseData.data).forEach(([key, value]) => {
+                        var titleElement = $(`#title_accordion_${responseData.surveyData.id}_${key}`);
+                        var elementInstance = new Object();
+                        if (titleElement.length) {
+                              if (value) {
+                                  if (!titleElement.find(".required-indicator").length) {
+                                      elementInstance = titleElement.append(`<span class="required-indicator" style="color:red; margin-left:5px;">*</span>`);
+                                  }
+                              } else {
+                                  elementInstance = titleElement.find(".required-indicator").remove();
+                              }
+                        }
+                        if (responseData.attachments.some(s => s.outlinePlaceholder.toLowerCase() == key.toLowerCase()))
+                        {
+                            //check if outline has image
+                            //  titleElement.find(".fa.fa-image").remove();
+                            // var hasImage = responseData.attachments.some(
+                            //     s => s.outlinePlaceholder.toLowerCase() === key.toLowerCase()
+                            // );
+                            // if (hasImage) {
+                            //     titleElement.append(`<span style="margin-left:5px;" class="fa fa-image"></span>`);
+                            // }
+                        }
+
+                    });
+
+                }
+            });
+        });
+        }
+        reloadPage();
+    })
+
+
+</script>
+<div class="container">
+    <div id="surveyPopup"></div>
+    <div id="form_@(Survey_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])" class="dExForm"></div>
+
+
+    <div class="modal fade product-dialog" tabSurvey="-1" role="dialog" aria-labelledby="gridSystemModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="gridSystemModalLabel">Select Your Products</h4>
+                </div>
+                <div class="modal-body">
+                    <!-- "Loading" spinner displayed while we get the product list. -->
+                    <div class="text-center"><i class="fa fa-fw fa-spin fa-spinner"></i> Loading...</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary select-button">Select</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->

@@ -1,0 +1,11 @@
+﻿@page
+@model UserRolesModel
+@{
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@UserRolesModel.ModelName`), new MGridOption('@UserRolesModel.ModelName', "System"), null);
+    });
+</script>
+<div id="dataGrid_@UserRolesModel.ModelName"></div>

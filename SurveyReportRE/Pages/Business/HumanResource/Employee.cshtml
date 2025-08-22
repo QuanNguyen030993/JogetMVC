@@ -1,0 +1,12 @@
+﻿@page
+@model EmployeeModel
+@{
+
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@EmployeeModel.ModelName`), new EmployeeGridOption('@EmployeeModel.ModelName'), null);
+    });
+</script>
+<div id="dataGrid_@EmployeeModel.ModelName"></div>

@@ -1,0 +1,11 @@
+﻿@page
+@model FormatCodeNoModel
+@{
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@FormatCodeNoModel.ModelName`), new MGridOption('@FormatCodeNoModel.ModelName', "System"), null);
+    });
+</script>
+<div id="dataGrid_@FormatCodeNoModel.ModelName"></div>

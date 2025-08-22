@@ -1,0 +1,960 @@
+#salesviewer, html {
+    margin: 0;
+    padding: 0;
+    font-family: "Helvetica Neue","Segoe UI",Helvetica,Verdana,san-serif;
+    height: 100%
+}
+
+#salesviewer {
+    overflow-y: scroll;
+    min-width: 1000px;
+    font-size: 16px
+}
+
+    #salesviewer h3 {
+        font-size: 20px;
+        line-height: 32px;
+        font-weight: 400;
+        color: #252525
+    }
+
+    #salesviewer .layout-box h3 {
+        margin-top: 0;
+        margin-bottom: 15px
+    }
+
+    #salesviewer h5 {
+        font-size: 16px;
+        font-weight: 400;
+        margin-bottom: 0;
+        color: #252525
+    }
+
+        #salesviewer h5.manager {
+            margin-top: 0
+        }
+
+    #salesviewer .plant-description {
+        font-size: 14px;
+        color: gray
+    }
+
+    #salesviewer .page-content-wrapper {
+        min-height: 100%;
+        margin-top: -40px
+    }
+
+        #salesviewer .page-content-wrapper .page-content-push {
+            height: 80px
+        }
+
+    #salesviewer .range-content {
+        max-width: 1270px;
+        min-width: 970px;
+        margin: 0 auto;
+        padding: 0 15px
+    }
+
+    #salesviewer .big-content {
+        max-width: 1260px;
+        min-width: 960px;
+        margin: 0 auto;
+        padding: 0 20px
+    }
+
+        #salesviewer .big-content.right-padding {
+            padding: 0 28px 0 12px
+        }
+
+        #salesviewer .big-content .chart {
+            padding-right: 14px
+        }
+
+    #salesviewer .content {
+        max-width: 1200px;
+        min-width: 900px;
+        /*padding: 0 50px;*/
+        margin: 0 auto
+    }
+
+        #salesviewer .content.right-padding {
+            max-width: 1195px;
+            min-width: 895px;
+            /*padding: 0 55px 0 50px*/
+        }
+
+        #salesviewer .content .left-indent {
+            margin-left: -36px
+        }
+
+            #salesviewer .content .left-indent#chart-channelsperformance {
+                margin-left: -37px
+            }
+
+        #salesviewer .content .right-indent {
+            float: right;
+            margin-right: -22px
+        }
+
+        #salesviewer .content .indent {
+            margin-left: 8px
+        }
+
+            #salesviewer .content .indent.params-indent {
+                margin-left: 120px
+            }
+
+            #salesviewer .content .indent.line {
+                border-top: 2px solid #e5e5e5
+            }
+
+            #salesviewer .content .indent.daily-sales {
+                margin-left: 2px
+            }
+
+        #salesviewer .content div.indent {
+            margin-left: 80px
+        }
+
+        #salesviewer .content h3.indent {
+            margin-left: 6px
+        }
+
+    #salesviewer .info-link {
+        border: 1px solid #fff;
+        width: 30px;
+        height: 30px;
+        display: inline-block;
+        text-align: center;
+        border-radius: 15px;
+        line-height: 30px;
+        margin-top: -5px;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none
+    }
+
+        #salesviewer .info-link::selection {
+            background-color: transparent;
+            color: #fff
+        }
+
+    #salesviewer .top-menu {
+        float: left
+    }
+
+        #salesviewer .top-menu .dx-menu-horizontal {
+            height: 100%
+        }
+
+        #salesviewer .top-menu .dx-state-hover {
+            background-color: #525362
+        }
+
+        #salesviewer .top-menu .top-menu-item {
+            padding: 16px 15px 13px 15px;
+            font-size: 16px;
+            color: #fff
+        }
+
+            #salesviewer .top-menu .top-menu-item.top-menu-first {
+                text-align: right;
+                padding: 16px 31px 13px 15px
+            }
+
+                #salesviewer .top-menu .top-menu-item.top-menu-first:after {
+                    content: " ";
+                    display: block;
+                    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAQAAAAnOwc2AAAANElEQVQY02P4z4AJGUgQdPj/9T8y+PrfASTjiCT8FciDaocJg4UQZoKEoULIFjkBIclOAgDQ6nnDn+kafwAAAABJRU5ErkJggg==');
+                    background-repeat: no-repeat;
+                    position: absolute;
+                    height: 10px;
+                    width: 10px;
+                    top: 26px;
+                    right: 20px
+                }
+
+        #salesviewer .top-menu .top-submenu-item {
+            padding: 11px 14px 9px 14px;
+            font-size: 16px;
+            color: #000
+        }
+
+            #salesviewer .top-menu .top-submenu-item.not-last:after {
+                content: " ";
+                display: block;
+                height: 1px;
+                width: 100%;
+                padding-left: 2px;
+                -webkit-box-sizing: content-box;
+                -moz-box-sizing: content-box;
+                box-sizing: content-box;
+                background: rgba(0,0,0,.18);
+                position: absolute;
+                left: -1px;
+                top: 50px
+            }
+
+        #salesviewer .top-menu .dx-context-menu-content-delimiter {
+            display: none !important
+        }
+
+        #salesviewer .top-menu.dx-context-menu .dx-submenu > .dx-menu-items-container {
+            border-top: none
+        }
+
+        #salesviewer .top-menu .dx-menu-item .dx-context-menu-container-border {
+            border: none
+        }
+
+        #salesviewer .top-menu .dx-menu-item.dx-state-focused {
+            background-color: transparent
+        }
+
+            #salesviewer .top-menu .dx-menu-item.dx-state-focused.dx-menu-item-expanded.dx-menu-item-has-submenu {
+                background-color: #525362
+            }
+
+        #salesviewer .top-menu .dx-menu-item.dx-menu-item-expanded.dx-menu-item-has-submenu {
+            background-color: #525362
+        }
+
+            #salesviewer .top-menu .dx-menu-item.dx-menu-item-expanded.dx-menu-item-has-submenu.dx-menu-item-selected {
+                background-color: #da5859
+            }
+
+    #salesviewer #header {
+        height: 60px;
+        background-color: #343547;
+        color: #fff
+    }
+
+        #salesviewer #header .logo {
+            width: 200px;
+            height: 14px;
+            margin-top: 24px;
+            display: block;
+            background: url(../Images/logo.png) no-repeat;
+            float: left
+        }
+
+        #salesviewer #header .content {
+            height: 100%
+        }
+
+            #salesviewer #header .content .menu {
+                float: right;
+                height: 100%
+            }
+
+                #salesviewer #header .content .menu div#openPopupButton {
+                    cursor: pointer;
+                    height: 100%;
+                    margin: 0;
+                    padding: 0;
+                    float: left
+                }
+
+                    #salesviewer #header .content .menu div#openPopupButton:hover {
+                        background-color: #525362
+                    }
+
+                    #salesviewer #header .content .menu div#openPopupButton a {
+                        padding: 19px 20px 14px 20px;
+                        display: block
+                    }
+
+    #salesviewer .page .left-arrow, #salesviewer .page .right-arrow {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        position: absolute;
+        top: 35px;
+        cursor: pointer;
+        -moz-background-size: 24px 24px;
+        -o-background-size: 24px 24px;
+        -webkit-background-size: 24px 24px;
+        background-size: 24px 24px;
+        background-repeat: no-repeat
+    }
+
+        #salesviewer .page .left-arrow.disabled, #salesviewer .page .right-arrow.disabled {
+            opacity: .25;
+            cursor: default
+        }
+
+    #salesviewer .page .left-arrow {
+        background-image: url(../Images/prev.png);
+        left: -5px
+    }
+
+    #salesviewer .page .right-arrow {
+        background-image: url(../Images/next.png);
+        right: -7px
+    }
+
+    #salesviewer .page .layout-box {
+        padding: 30px 0 20px 0
+    }
+
+    #salesviewer .page #grid.grid-container {
+        height: 100%;
+        border-bottom: 1px solid #d2d2d2
+    }
+
+        #salesviewer .page #grid.grid-container .dx-datagrid-search-panel {
+            width: 300px !important
+        }
+
+        #salesviewer .page #grid.grid-container .dx-datagrid-headers.dx-datagrid-nowrap {
+            border-top: none
+        }
+
+    #salesviewer #footer {
+        color: #fff;
+        font-size: 12px;
+        height: 80px;
+        background-color: #343547
+    }
+
+        #salesviewer #footer .wrapper {
+            padding: 20px 0
+        }
+
+            #salesviewer #footer .wrapper .text {
+                display: inline-block
+            }
+
+                #salesviewer #footer .wrapper .text h2 {
+                    color: #da5859;
+                    font-weight: 400;
+                    font-family: "Helvetica Neue","Segoe UI",Helvetica,Verdana,san-serif;
+                    margin: 0;
+                    font-size: 18px
+                }
+
+                #salesviewer #footer .wrapper .text p {
+                    margin: 0 0 0 2px
+                }
+
+                    #salesviewer #footer .wrapper .text p a {
+                        color: #fff
+                    }
+
+            #salesviewer #footer .wrapper .dx-logo {
+                float: right;
+                background: url(../Images/dx-logo.png) no-repeat;
+                margin-top: 6px;
+                width: 160px;
+                height: 30px;
+                display: block
+            }
+
+    #salesviewer .dx-menu-item.dx-menu-item-selected {
+        background-color: #da5859
+    }
+
+        #salesviewer .dx-menu-item.dx-menu-item-selected.dx-state-focused {
+            background-color: #da5859
+        }
+
+    #salesviewer .dx-menu-item.dx-state-focused {
+        background-color: rgba(218,88,89,.15)
+    }
+
+        #salesviewer .dx-menu-item.dx-state-focused.dx-menu-item-expanded.dx-menu-item-has-submenu {
+            background-color: #fff
+        }
+
+    #salesviewer div#grid {
+        height: 100%;
+        width: 100%
+    }
+
+        #salesviewer div#grid .dx-datagrid .dx-datagrid-filter-row .dx-menu-item.dx-state-focused.dx-menu-item-expanded:after {
+            border: none
+        }
+
+        #salesviewer div#grid .dx-datagrid .dx-datagrid-filter-row .dx-menu-item.dx-state-focused:after {
+            border: 2px solid #da5859
+        }
+
+        #salesviewer div#grid .dx-datagrid .dx-texteditor.dx-state-hover, #salesviewer div#grid .dx-datagrid .dx-texteditor.dx-state-focused {
+            border-color: #da5859
+        }
+
+        #salesviewer div#grid .dx-datagrid .dx-datagrid-columns-separator {
+            background-color: rgba(218,88,89,.5)
+        }
+
+        #salesviewer div#grid .dx-datagrid .dx-page-size, #salesviewer div#grid .dx-datagrid .dx-texteditor-input {
+            background-color: #fff
+        }
+
+        #salesviewer div#grid .dx-datagrid .dx-pager .dx-pages .dx-selection {
+            color: #fff;
+            background-color: #da5859
+        }
+
+        #salesviewer div#grid .dx-datagrid .dx-pager .dx-page-sizes .dx-selection {
+            color: #fff;
+            background-color: #da5859
+        }
+
+        #salesviewer div#grid .dx-datagrid .dx-datagrid-search-text {
+            background-color: #da5859
+        }
+
+        #salesviewer div#grid .dx-datagrid .dx-datagrid-rowsview .dx-group-row {
+            color: gray
+        }
+
+            #salesviewer div#grid .dx-datagrid .dx-datagrid-rowsview .dx-group-row > td {
+                padding: 10px 7px
+            }
+
+        #salesviewer div#grid .dx-datagrid .dx-datagrid-rowsview .dx-data-row {
+            color: #252525
+        }
+
+            #salesviewer div#grid .dx-datagrid .dx-datagrid-rowsview .dx-data-row > td {
+                padding: 10px 7px
+            }
+
+            #salesviewer div#grid .dx-datagrid .dx-datagrid-rowsview .dx-data-row.dx-selection {
+                border-bottom-color: #da5859;
+                color: #fff;
+                background-color: #da5859
+            }
+
+                #salesviewer div#grid .dx-datagrid .dx-datagrid-rowsview .dx-data-row.dx-selection td {
+                    color: #fff;
+                    background-color: #da5859;
+                    border-bottom: none;
+                    border-top: none
+                }
+
+                #salesviewer div#grid .dx-datagrid .dx-datagrid-rowsview .dx-data-row.dx-selection:hover {
+                    background-color: #da5859;
+                    border-bottom-color: #da5859
+                }
+
+        #salesviewer div#grid .dx-datagrid .dx-datagrid-focus-overlay {
+            border: 2px solid #da5859
+        }
+
+        #salesviewer div#grid .dx-datagrid .dx-datagrid-headers {
+            color: gray
+        }
+
+            #salesviewer div#grid .dx-datagrid .dx-datagrid-headers.dx-datagrid-nowrap {
+                border-top: 1px solid #d2d2d2
+            }
+
+            #salesviewer div#grid .dx-datagrid .dx-datagrid-headers .dx-row {
+                color: gray
+            }
+
+        #salesviewer div#grid.products {
+            width: 100%
+        }
+
+    #salesviewer .products-pie-container {
+        width: 78%;
+        padding-right: 5px;
+        float: right;
+        height: 100%;
+        position: relative
+    }
+
+        #salesviewer .products-pie-container .products-pie {
+            width: 30%;
+            max-width: 30%;
+            float: left
+        }
+
+            #salesviewer .products-pie-container .products-pie:nth-child(1) {
+                margin: 0 auto;
+                position: relative;
+                height: 100%;
+                max-width: 240px
+            }
+
+            #salesviewer .products-pie-container .products-pie:nth-child(2) {
+                position: absolute;
+                left: 50%;
+                margin-left: -15%
+            }
+
+            #salesviewer .products-pie-container .products-pie:nth-child(3) {
+                float: right;
+                max-width: 240px
+            }
+
+    #salesviewer .hb-1 {
+        height: 568px;
+        margin-bottom: 70px
+    }
+
+    #salesviewer .hb-2 {
+        position: relative;
+        overflow: hidden;
+        height: 90px;
+        width: 100%;
+        margin: 10px 0 0 0;
+        padding: 0 0 30px 0
+    }
+
+        #salesviewer .hb-2 #rangeSelector {
+            height: 100%
+        }
+
+    #salesviewer .hb-3 {
+        height: 283px
+    }
+
+    #salesviewer .hb-4 {
+        height: 310px;
+        padding-top: 10px;
+        padding-bottom: 20px
+    }
+
+    #salesviewer .hb-5 {
+        height: 275px;
+        padding-top: 10px;
+        padding-bottom: 20px
+    }
+
+    #salesviewer .hb-a {
+        height: auto
+    }
+
+    #salesviewer .lb-1 {
+        width: 56%;
+        height: 100%;
+        float: left
+    }
+
+        #salesviewer .lb-1 div#productsMap {
+            height: 100%
+        }
+
+    #salesviewer .lb-2 {
+        float: left;
+        width: 40%;
+        margin-left: 4%;
+        height: 100%
+    }
+
+        #salesviewer .lb-2 div#productsChart {
+            height: 100%
+        }
+
+    #salesviewer .lb-3 {
+        float: left;
+        height: 100%;
+        width: 18%
+    }
+
+    #salesviewer .lb-4 {
+        float: left;
+        height: 100%;
+        width: 29%;
+        max-width: 310px;
+        padding: 2% 0;
+        position: relative
+    }
+
+#salesviewer .lb-4 {
+    height: 100%;
+    position: relative
+}
+
+        #salesviewer .lb-4 #pie-sectors {
+            height: 100%;
+            position: relative
+        }
+
+        #salesviewer .lb-4 #pie-regions {
+            height: 100%;
+            position: relative
+        }
+
+        #salesviewer .lb-4 #pie-channels {
+            height: 100%;
+            position: relative
+        }
+
+        #salesviewer .lb-4 #pie-products {
+            height: 100%;
+            position: relative
+        }
+
+        #salesviewer .lb-4 .doughnut-content {
+            position: absolute;
+            text-align: center;
+            color: gray;
+            width: 40%;
+            height: 20%;
+            top: 34%;
+            left: 30%;
+            font-size: 14px
+        }
+
+            #salesviewer .lb-4 .doughnut-content.dashboard-bottom {
+                display: table;
+                top: 50%;
+                margin-top: -30px;
+                height: 60px
+            }
+
+                #salesviewer .lb-4 .doughnut-content.dashboard-bottom.dashboard-bottom-products {
+                    top: 39%
+                }
+
+                #salesviewer .lb-4 .doughnut-content.dashboard-bottom .performance-text {
+                    display: table-cell;
+                    vertical-align: middle;
+                    text-align: center;
+                    padding-top: 20px;
+                }
+
+    #salesviewer .lb-5 {
+        height: 100%;
+        width: 82%;
+        float: left;
+        position: relative
+    }
+
+    #salesviewer .lb-6 {
+        height: 100%;
+        padding-top: 1%;
+        width: 71%;
+        float: right;
+        position: relative
+    }
+
+        #salesviewer .lb-6 .year-container {
+            padding-left: 38px;
+            padding-top: 5px
+        }
+
+            #salesviewer .lb-6 .year-container .year {
+                height: 40px;
+                font-size: 28px;
+                color: #252525;
+                font-weight: 200
+            }
+
+        #salesviewer .lb-6 .chart {
+            height: 190px;
+            padding-top: 10px
+        }
+
+        #salesviewer .lb-6 #chart-channelsperformance {
+            height: 250px;
+            padding-top: 10px
+        }
+
+    #salesviewer .lb-7 {
+        padding-top: 3px;
+        float: left;
+        width: 48%
+    }
+
+        #salesviewer .lb-7:first-child {
+            padding-right: 2%
+        }
+
+        #salesviewer .lb-7:last-child {
+            padding-left: 2%
+        }
+
+        #salesviewer .lb-7 .parameters {
+            float: left;
+            font-size: 14px;
+            padding-right: 25px;
+            padding-top: 5px;
+            padding-bottom: 1px;
+            color: gray
+        }
+
+            #salesviewer .lb-7 .parameters .parameter {
+                color: #252525
+            }
+
+        #salesviewer .lb-7 #chart-sectorsunits {
+            clear: both;
+            height: 215px;
+            position: relative;
+            top: -15px
+        }
+
+        #salesviewer .lb-7 #chart-sectorssales {
+            clear: both;
+            height: 215px;
+            position: relative;
+            top: -15px
+        }
+
+        #salesviewer .lb-7 #chart-productsunits {
+            clear: both;
+            height: 215px;
+            position: relative;
+            top: -15px
+        }
+
+        #salesviewer .lb-7 #chart-productssales {
+            clear: both;
+            height: 215px;
+            position: relative;
+            top: -15px
+        }
+
+    #salesviewer .performance-title {
+        font-family: "Helvetica Neue","Segoe UI",Helvetica,Verdana,san-serif;
+        font-weight: 400;
+        font-size: 14px;
+        color: gray;
+        display: inline-block
+    }
+
+        #salesviewer .performance-title.criteria {
+            padding-bottom: 2px
+        }
+
+    #salesviewer .switcher {
+        float: right;
+        position: relative;
+        margin-right: 20px;
+        color: gray;
+        font-size: 14px;
+        padding-top: 2px;
+        line-height: 20px;
+        z-index: 1
+    }
+
+        #salesviewer .switcher .date {
+            display: inline-block;
+            width: 90px;
+            text-align: center
+        }
+
+        #salesviewer .switcher.sector {
+            padding-top: 13px;
+            margin-right: 30px
+        }
+
+            #salesviewer .switcher.sector.month .date {
+                width: 70px
+            }
+
+        #salesviewer .switcher .switcher-prev {
+            left: -25px;
+            background: url(../Images/switcher-prev.png) center no-repeat;
+            cursor: pointer;
+            width: 15px;
+            height: 20px;
+            position: absolute;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none
+        }
+
+        #salesviewer .switcher .switcher-next {
+            right: -25px;
+            background: url(../Images/switcher-next.png) center no-repeat;
+            cursor: pointer;
+            width: 15px;
+            height: 20px;
+            position: absolute;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none
+        }
+
+        #salesviewer .switcher .disabled {
+            opacity: .25;
+            cursor: default
+        }
+
+    #salesviewer .nopadding {
+        padding: 0
+    }
+
+    #salesviewer .vars {
+        padding-top: 40px;
+        width: 215px;
+        font-size: 14px
+    }
+
+        #salesviewer .vars .row {
+            padding: 0 7px;
+            height: 32px
+        }
+
+            #salesviewer .vars .row.total {
+                padding-top: 13px;
+                border-top: 2px solid #e5e5e5
+            }
+
+            #salesviewer .vars .row div {
+                float: left;
+                width: 50%;
+                text-align: right;
+                color: #252525
+            }
+
+            #salesviewer .vars .row .name {
+                color: gray;
+                float: left;
+                text-align: left
+            }
+
+    #salesviewer .legended-header {
+        height: 40px
+    }
+
+        #salesviewer .legended-header h3 {
+            float: left
+        }
+
+        #salesviewer .legended-header #legend {
+            float: right;
+            position: relative;
+            padding-top: 7px;
+            text-align: right
+        }
+
+            #salesviewer .legended-header #legend div {
+                display: inline-block
+            }
+
+            #salesviewer .legended-header #legend .legend-item {
+                padding-left: 20px
+            }
+
+                #salesviewer .legended-header #legend .legend-item .color {
+                    height: 10px;
+                    width: 10px;
+                    margin-right: 5px;
+                    padding: 0
+                }
+
+                #salesviewer .legended-header #legend .legend-item .field {
+                    color: gray;
+                    font-size: 14px;
+                    line-height: 18px
+                }
+
+    #salesviewer #popup a {
+        text-decoration: none
+    }
+
+    #salesviewer #popup .popupButtons {
+        cursor: pointer;
+        background-color: #da5859;
+        color: #fff;
+        padding: 10px 40px;
+        float: right;
+        margin-left: 10px
+    }
+
+    #salesviewer #popup #closePopupButton {
+        cursor: pointer;
+        background-color: #da5859;
+        color: #fff;
+        padding: 10px 40px;
+        float: right;
+        margin-left: 10px;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none
+    }
+
+    #salesviewer #popup #downloadPopupButton {
+        cursor: pointer;
+        background-color: #da5859;
+        color: #fff;
+        padding: 10px 40px;
+        float: right;
+        margin-left: 10px;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none
+    }
+
+    #salesviewer #popup .select-text {
+        color: #da5859
+    }
+
+    #salesviewer #popup .dx-overlay-content.dx-state-focused {
+        outline: 0
+    }
+
+    #salesviewer #popup .dx-overlay-content .dx-popup-content {
+        padding: 20px
+    }
+
+        #salesviewer #popup .dx-overlay-content .dx-popup-content .popup-content {
+            padding: 20px
+        }
+
+            #salesviewer #popup .dx-overlay-content .dx-popup-content .popup-content .popup-title {
+                margin: 0 0 30px 0;
+                width: 191px;
+                height: 15px;
+                background: url(../Images/popup-title.png)
+            }
+
+            #salesviewer #popup .dx-overlay-content .dx-popup-content .popup-content .popup-text p {
+                margin: 10px 0;
+                color: #484747
+            }
+
+                #salesviewer #popup .dx-overlay-content .dx-popup-content .popup-content .popup-text p a {
+                    color: #484747
+                }
+
+    #salesviewer #popup .dx-overlay-wrapper.dx-overlay-shader {
+        background-color: rgba(254,254,254,.75)
+    }
+
+    #salesviewer #popup .dx-popup-wrapper .dx-overlay-content {
+        border-radius: 0;
+        box-shadow: 0 32px 64px rgba(0,0,0,.5);
+        border: 1px solid rgba(0,0,0,.1)
+    }
+
+    #salesviewer .dx-overlay-wrapper .top-menu .dx-submenu .dx-item-content:hover {
+        background-color: #fef4e7
+    }
+
+.dx-datagrid-drag-header {
+    border-color: rgba(218,88,89,.5)
+}
+
+@media(max-width:1100px) {
+    #salesviewer .legended-header {
+        height: 50px
+    }
+
+        #salesviewer .legended-header #legend {
+            max-width: 575px
+        }
+}

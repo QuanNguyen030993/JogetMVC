@@ -1,0 +1,40 @@
+﻿@page "{pageNum:int?}"
+@model WordView_FormModel
+@{
+
+
+}
+<script>
+    $(function () {
+        var _id =@Convert.ToInt32(ViewData["Id"]);
+        $.ajax({
+            url: `/api/SurveyWorkflow/GetWordFile?id=${_id}`,
+            method: "GET",
+            xhrFields: {
+                responseType: "blob"
+            },
+            success: function (blob) {
+                 const url = window.URL.createObjectURL(blob);
+                  var docData =blob;
+                    docx.renderAsync(docData, document.getElementById(`form_WordView_Form_@Convert.ToInt32(ViewData["Id"])`))
+                        .then(x => console.log("docx: finished"));
+                 const googleViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
+                 $("#wordViewer").attr("src", googleViewerUrl);
+
+            },
+            error: function (xhr, status, error) {
+                // appLoadPanel.dxLoadPanel("hide");
+                appLoadPanelInstance.hide();
+                appNotifyWarning("Document is processing, please try again later.");
+                console.error("Error loading PDF:", error);
+            }
+        });
+    });
+</script>
+<div id="form_WordView_Form_@Convert.ToInt32(ViewData["Id"])"  width="100%" height="600px" class="dExForm">
+    <iframe id="wordViewer"  frameborder="0"></iframe>
+</div>
+@*     <iframe id="myIframe" src="https://view.officeapps.live.com/op/view.aspx?src=https://yoursite.com/files/yourfile.docx"
+            width="100%" height="600px"></iframe> *@
+
+

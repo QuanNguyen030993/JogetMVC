@@ -1,0 +1,102 @@
+﻿<aside class="main-sidebar">
+    <section class="sidebar" style="height: auto;">
+        <div class="sidebar-form">
+        </div>
+        <ul class="sidebar-menu tree" data-widget="tree" id="my-tree">
+        </ul>
+
+    </section>
+</aside>
+
+<script>
+    var dataSource = new DevExpress.data.DataSource({
+        load: function (loadOptions) {
+            var d = new $.Deferred();
+            $.get("/api/Menu/GetHierarchyMenu?pageSystem=Approval").done(function (result) {
+                d.resolve(result);
+            });
+            return d.promise();
+        }
+    });
+
+
+    dataSource.load().done(function (response) {
+        var arrs = convertArrayParentToChild(response);
+        var sortArry = arrs.sort(function (a, b) {
+            return a.sortOrder - b.sortOrder;
+        });
+        //remove every menu do not have children
+        var convertArr = $.map(arrs, function (value) {
+            return value.children.length > 0 ? value : null;
+        });
+        loadData(convertArr, "ul.tree");
+
+    });
+
+
+
+    function loadData(arrs, elementId) {
+        var hasChild = false;
+        $.each(arrs, function (i, val) {
+            if (val.children.length > 0) {
+                hasChild = true;
+            }
+            if (hasChild) {
+                $(elementId).append(`<li class="treeview menu-general">
+                                    <a href="#" class="icon-menu">
+                                     <i class="${val.icon}"></i> <span>${val.caption}</span>
+                                    <span class="pull-right-container">
+                                        <i class="fa fa-angle-left pull-right"></i>
+                                    </span>
+                                    </a>
+                                    <ul class="treeview-menu treeview-menu-general menu-${val.id}"></ul>
+                                </li>`);
+            }
+            else {
+                $(elementId).append(`<li><a href="#" id="new-tab-${val.id}" data-action="${val.action}" data-name="${val.name}" data-caption="${val.caption}"> <i class="${val.icon}"></i><span>${val.caption}</span> </a></li>`)
+            }
+            $(`ul.sidebar-menu.tree a#new-tab-${val.id}`).click(function () {
+                var url = $(this).attr("data-action");
+                var caption = $(this).attr("data-name");
+
+                var name = $(this).attr("data-caption");
+                var passingParams = { UITabId: ``}; 
+                replaceElementView(url, passingParams, $("#tablist"));
+                // callElementView(url, caption, name);
+
+            });
+            if (hasChild) {
+                hasChild = false;
+                var sortArry = val.children.sort(function (a, b) {
+                    return a.SortOrder - b.SortOrder;
+                });
+                loadData(sortArry, `ul.menu-${val.id}`);
+            }
+        });
+
+    }
+
+    $(function () {
+
+        // new treefilter($("#my-tree"), {
+        //     searcher: $("input#my-search"),
+        //     multiselect: false,
+        // });
+
+        $("#remove-search-btn").click(function () {
+            $("input#my-search").val("");
+            $("ul.treeview-menu-general.tf-search-result").css("display", "none");
+            $("ul.treeview-menu-general").css("display", "none");
+            $(".menu-general").removeClass("menu-open");
+            $("input#my-search").trigger("keyup");
+        });
+
+        $("ul.sidebar-menu.tree.tf-tree").css({ "overflow-y": "scroll", "height": screen.height - 300 });
+    });
+</script>
+
+<style>
+    li.menu-open-quick-access > ul.treeview-menu {
+        display: block;
+    }
+</style>

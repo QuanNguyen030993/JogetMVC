@@ -1,0 +1,12 @@
+﻿@page
+@model SysTableModel
+@{
+
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@SysTableModel.ModelName`), new MGridOption('@SysTableModel.ModelName', "System"), null);
+    });
+</script>
+<div id="dataGrid_@SysTableModel.ModelName"></div>

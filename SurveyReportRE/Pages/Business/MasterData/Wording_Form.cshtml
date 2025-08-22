@@ -1,0 +1,20 @@
+﻿@page "{pageNum:int?}"
+@model Wording_FormModel
+@{
+
+
+}
+<script>
+    $(function () {
+        var _id = @Convert.ToInt32(ViewData["Id"]);
+        var _formConfig = new MFormOption();
+        _formConfig.originModelName = "@Wording_FormModel.ModelName";
+        _formConfig.formElementName = "@Wording_FormModel.ModelName";
+        _formConfig.allowFormActionButton = true;
+        _formConfig.colCount = 1;
+        new MForm(_id, null, _formConfig);
+        // var form = new MForm(null, '@Wording_FormModel.ModelName');
+    });
+</script>
+<div id="form_@(Wording_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])"></div>
+

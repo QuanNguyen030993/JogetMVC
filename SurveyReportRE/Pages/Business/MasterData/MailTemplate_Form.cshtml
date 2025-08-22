@@ -1,0 +1,21 @@
+﻿@page "{pageNum:int?}"
+@model MailTemplate_FormModel
+@{
+
+}
+<script>
+    $(function () {
+        var _id = @Convert.ToInt32(ViewData["Id"])
+        var _formConfig  = new MFormOption();
+        // _formConfig.cloneUrl = '/Business/MasterData/MailTemplate_Form/' + _id;
+        // _formConfig.tabCode = 'MailTemplate_Form';
+        // _formConfig.tabName = "";
+        _formConfig.originModelName = "@MailTemplate_FormModel.ModelName";
+        _formConfig.formElementName = "@MailTemplate_FormModel.ModelName";
+        _formConfig.colCount = 1;
+        _formConfig.schemeBasedOn = `@(MailTemplate_FormModel.SchemeModelName)`;
+        new MForm(_id, null, _formConfig);
+    });
+</script>
+<div id="form_@(MailTemplate_FormModel.ModelName)_@(Convert.ToInt32(ViewData["Id"]))"></div>
+

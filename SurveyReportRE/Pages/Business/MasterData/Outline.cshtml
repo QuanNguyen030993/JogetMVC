@@ -1,0 +1,11 @@
+﻿@page
+@model OutlineModel
+@{
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@OutlineModel.ModelName`), new OutlineGridOption('@OutlineModel.ModelName'), null);
+    });
+</script>
+<div id="dataGrid_@OutlineModel.ModelName"></div>

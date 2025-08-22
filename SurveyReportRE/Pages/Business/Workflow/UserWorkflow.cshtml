@@ -1,0 +1,11 @@
+﻿@page
+@model UserWorkflowModel
+@{
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@UserWorkflowModel.ModelName`), new UserWorkflowGridOption('@UserWorkflowModel.ModelName'), null);
+    });
+</script>
+<div id="dataGrid_@UserWorkflowModel.ModelName"></div>

@@ -1,0 +1,16 @@
+﻿@page
+@model SurveyModel
+@{
+
+}
+<script>
+    $(function () {
+        var mGridOption = new Object();
+        mGridOption.isAllowRowMenu = true;
+        var mGrid = new MGrid(null, $(`#dataGrid_@SurveyModel.ModelName`), new SurveyGridOption('@SurveyModel.ModelName', "User", mGridOption), null);
+        var DS = mGrid.component.getDataSource();
+        DS.filter(["isArchived", "=", null], "or", ["isArchived", "=", false]);
+        mGrid.component.option("dataSource", DS);
+    });
+</script>
+<div id="dataGrid_@SurveyModel.ModelName"></div>

@@ -1,0 +1,55 @@
+﻿@page "{refPageNum:int?}/{pageNum:int?}/{jsonConfig?}"
+@model Survey_Occupancy_FormModel
+@{
+    Layout = null;
+}
+<script>
+    $(function () {
+
+        var _id = @Convert.ToInt32(ViewData["Id"]);
+        var _fkId = @Convert.ToInt32(ViewData["FKId"]);
+          var _jsonConfig = '@Html.Raw(ViewData["JsonConfig"])';
+          var _surveyData = new Object();
+          if (_jsonConfig) _surveyData = JSON.parse(_jsonConfig);
+          if (_id)
+          $.ajax({
+            url: `api/Occupancy/GetAdditionalOutline/${_id}`,
+            type: 'GET',
+            async: false,
+            success: function (response) {
+                _surveyData.additionalOutline = response;
+            },
+            error: function (exception) {
+            }
+        });
+        var _formConfig = new MFormOption(_surveyData);
+        // _formConfig.cloneUrl = '/Business/Form/SurveyDetail/Survey_Occupancy_Form/' + _id;
+        // _formConfig.tabCode = 'Survey_Occupancy_Form';
+        // _formConfig.tabName = "";
+        _formConfig.allowFormActionButton = false;
+        _formConfig.originModelName = "@Survey_Occupancy_FormModel.ModelName";
+        // _formConfig.schemeBasedOn = "@Survey_Occupancy_FormModel.FKModelName";
+        _formConfig.schemeBasedOn = "@Survey_Occupancy_FormModel.SchemeModelName";
+        _formConfig.formElementName = "Survey_Occupancy_Form";
+        _formConfig.colCount = 1;
+        _formConfig.refFieldId = _fkId;
+        _formConfig.refFieldName = `@(Survey_Occupancy_FormModel.FKModelName)Id`;
+        _formConfig.isChildForeignKey = true;
+        _formConfig.isAllowAddOutline = true;
+        if (_surveyData.surveyType == "Factory")
+        {
+        _formConfig.addOutlineTitle = "ADD POWER & UTILITIES OUTLINE";
+        _formConfig.prefixChildOutline = "Power & Utilities - ";
+        }
+        _formConfig.outlineForm = { isUse: true, surveyTypeId: _surveyData.surveyTypeId, isOutlineChecked: false, isOutlineDynamic: true, isAllowRemoveOutline: true };
+        _formConfig.isReadOnly = _surveyData.isReadOnly;
+        var form = new OccupancyForm(_id, null, _formConfig, _formConfig);
+
+    });
+</script>
+<div>
+    <div id="form_Survey_Occupancy_Form_@Convert.ToInt32(ViewData["FKId"])_@Convert.ToInt32(ViewData["Id"])">
+    </div>
+
+</div>
+

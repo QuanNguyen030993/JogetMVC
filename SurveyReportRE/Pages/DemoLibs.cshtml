@@ -1,0 +1,149 @@
+﻿@* @page
+@model ApprovalModel
+@{
+    ViewData["Title"] = "Approval";
+}
+@await Html.PartialAsync("_LayoutReference")
+<script src="~/js/app/appUtil.js"></script>
+<script src="~/js/app/mainHome.js"></script>
+<link href="~/favicon_new.ico" rel="icon" type="image/x-icon" />
+<script src="~/lib/AdminLTE/adminlte.min.js"></script> 
+<body class="sidebar-mini skin-green" style="height: auto; min-height: 100%;">
+	<div class="wrapper" style="height: auto; min-height: 100%;">
+		<header class="main-header">
+			<a href="#" class="logo" data-toggle="push-menu" role="button">
+				<span class="logo-mini"><b>RE Approval</b></span>
+				<span class="logo-lg"><b>RE Approval</b></span>
+			</a>
+			@await Html.PartialAsync("_SPAReference")  
+			<div id="mainPopup"></div>
+			<div id="outlinePopup"></div>
+		</header>
+		@await Html.PartialAsync("_MenuMPAPartial")
+		<!-- Content Wrapper. Contains page content -->
+		<div id="content-wrapper" class="content-wrapper" style="min-height: 901px;margin-top: 60px;">
+			<div id="tabs" style="position: relative;width:100%;height: 100%">
+			</div>
+		</div>
+	</div>
+
+</body>
+<script type="text/javascript">
+	initTabs();
+	//Close tab button function
+	$("#tablist").on("click", "span.fa.fa-times", function () {
+		var panelId = $(this).closest("li").remove().attr("aria-controls");
+		$("#" + panelId).remove();
+		$("#tablist").tabs("refresh");
+	});
+</script>
+
+
+ *@
+
+
+		@page "{loadParams?}"
+@model ManagementModel
+@{
+    ViewData["Title"] = "Management";
+}
+@await Html.PartialAsync("_LayoutReference")
+<script src="~/js/app/appUtil.js"></script>
+<script src="~/js/app/mainHome.js"></script>
+<link href="~/favicon_new.ico" rel="icon" type="image/x-icon" />
+<script src="~/lib/AdminLTE/adminlte.min.js"></script>
+
+<body class="sidebar-mini skin-re" style="height: auto; min-height: 100%;">
+
+    <header>
+        <div class="main-header wrapper" style="height: auto; min-height: 100%;">
+            <div>
+                <a href="#" class="logo" data-toggle="push-menu" role="button">
+                    <span class="logo-mini"><b>Joget</b></span>
+                    <span class="logo-lg"><b>Joget</b></span>
+                </a>
+            </div>
+
+            <div class="navbar-custom-menu" style="float: right; position: relative; margin-top:15px;margin-right:10px;">
+                <ul class="nav navbar-nav">
+                    <li class="user user-menu">
+                        <div href="#" class="user-infor" style="color: white">
+                        </div>
+                        <input id="rolename" type="hidden" />
+                    </li>
+                </ul>
+                <p id="onlineState" class="status-button"> </p>
+            </div>
+
+
+             @await Html.PartialAsync("_SPAReference")  
+            <div id="mainPopup"></div>
+            <div id="outlinePopup"></div>
+            <div id="inputTextPopup"></div>
+            <div id="detailPopup"></div>
+            <div id="tablist" class="ui-tabs-nav" style="position: relative;width: 75%;margin-left:190px;">
+                <ul></ul>
+            </div>
+
+        </div>
+
+    </header>
+     @* @await Html.PartialAsync("_MenuPartial")  *@
+    <!-- Content Wrapper. Contains page content -->
+    @* <div id="content-wrapper" class="content-wrapper" style="min-height: 901px; margin-top:0px;">
+        </div> 
+ *@
+</body>
+<script type="text/javascript">
+        function monitorConnection(url, buttonId, interval = 5000) {
+        // setInterval(() => {
+        //     checkConnection(url, interval).then(className => {
+        //         updateButtonStatus(buttonId, className);
+        //     });
+        // }, interval);
+        checkConnection(url, interval).then(className => {
+                updateButtonStatus(buttonId, className);
+            });
+    }
+
+        // removed this as not need any more => var appLoadingPanel = $("<div>").appendTo($(constNotifyContainer)).dxLoadPanel({ visible: false }).dxLoadPanel("instance");
+        initTabs();
+        callElementView(`/Business/Form/Survey_Form/319`, `form_Survey_Form_319`, `Survey Test`);
+        //Close tab button function
+        $("#tablist").on("click", "span.fa.fa-times", function () {
+            var panelId = $(this).closest("li").remove().attr("aria-controls");
+            $("#" + panelId).remove();
+            $("#tablist").tabs("refresh");
+        });
+
+        var loginUser = `@Html.Raw(ViewData["LoginUser"])`;
+                _isSuperUser =  `@Html.Raw(ViewData["IsSuperUser"])`;
+        _loginUser = loginUser.replace("TOKIOMARINE\\", "");
+            $.ajax({
+                url: `/api/Users/GetUserRoles?accountName=${loginUser}`,
+                type: 'GET',
+                async: false,
+                data: { accountName: loginUser },
+                success: function (response) {
+                    $("#rolename").text(response);
+                    _role = response;
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error:', error);
+                }
+            });
+
+
+        var loadParams = `@Html.Raw(@ViewData["LoadParams"])`;
+        var validJsonString = loadParams.slice(1, -1);
+        if (loadParams != "{}" && loadParams != "" && loadParams != undefined && loadParams != null) {
+            var obj = JSON.parse(validJsonString);
+            callElementView(obj.url, obj.caption, obj.name, null)
+            window.history.replaceState(null, '', '/Management#');
+        }
+
+        var avatar = `https://icon-library.com/images/no-profile-pic-icon/no-profile-pic-icon-11.jpg`;
+        $(".user.user-menu .user-infor").append(`<img src="${avatar}" class="user-image" alt="User Image"><span class="hidden-xs">${loginUser}</span>`);
+        var url = '@ViewData["HostUrl"]'
+            monitorConnection(url, 'onlineState', 10000);
+</script>

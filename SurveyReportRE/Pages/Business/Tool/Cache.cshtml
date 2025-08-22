@@ -1,0 +1,186 @@
+﻿@page
+@model CacheModel
+@{
+    ViewData["Title"] = "Cache Configuration";
+    ViewBag.Title = "SessionStorage Viewer";
+}
+<script>
+    $(function () {
+        var sessionData = getSessionStorageData();
+        // Parse dữ liệu từ sessionStorage
+       $("#clearAllCacheButton").dxButton({
+            height: 50,
+            width: 120,
+            text: "Clear All Cache",
+            type: "info",
+            stylingMode: "contained",
+            onClick: function () {
+                sessionStorage.clear();
+                dataGrid.option("dataSource", getSessionStorageData());
+                DevExpress.ui.notify("All cache cleared!", "success", 2000); // Hiển thị thông báo
+            }
+        });
+     
+
+        function getSessionStorageData() {
+            const data = [];
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                try {
+                    const value = JSON.parse(sessionStorage.getItem(key));
+                    data.push({ key, value });
+                } catch (e) {
+                    console.error(`Unable to parse value for key: ${key}`, e);
+                }
+            }
+            return data;
+        }
+
+        // Tải dữ liệu từ sessionStorage
+        
+
+        // Render lưới dxDataGrid
+        const dataGrid = $("#sessionStorageContainer").dxDataGrid({
+            dataSource: sessionData,
+            columnAutoWidth: true,
+            showBorders: true,
+            columns: [
+                {
+                    dataField: "key",
+                    caption: "Key",
+                    width: 150
+                },
+                {
+                    dataField: "value",
+                    caption: "Value",
+                    cellTemplate: function (container, options) {
+                       $("<a>")
+                            .text("View Details")
+                            .css({ cursor: "pointer", color: "blue", textDecoration: "underline" })
+                            .on("click", function () {
+                                const content = $("<div>").css({ padding: "10px" });
+            
+            $("<pre>")
+                .text(JSON.stringify(options.data.value, null, 2)) // Hiển thị JSON chi tiết, format đẹp
+                .css({ whiteSpace: "pre-wrap", wordWrap: "break-word" }) // Chỉnh style
+                .appendTo(content);
+
+           var popupInstance = $(`#inputTextPopup`).dxPopup({
+               width: "90%",
+               height: "90%",
+               showTitle: true,
+               title: `Details`,
+               dragEnabled: false,
+               closeOnOutsideClick: true,
+               contentTemplate: function (container) {
+                   const listContainer = $("<div>")
+                       .addClass("indexeddb-list-container")
+                       .appendTo(container);
+                   listContainer.on("wheel", function (e) {
+                       e.stopPropagation();
+                   });
+                   options.data.value.forEach((draft, index) => {
+                       const rowContainer = $("<div>")
+                           .addClass("indexeddb-row-container")
+                           .appendTo(listContainer);
+
+                       const buttonGroup = $("<div>")
+                           .addClass("indexeddb-button-group")
+                           .appendTo(rowContainer);
+
+                       const commandButtonGroup = $("<div>")
+                           .addClass("indexeddb-command-button-group")
+                           .appendTo(rowContainer);
+
+                       const infoContainer = $("<div>")
+                           .css({ flex: "1", paddingRight: "10px" })
+                           .appendTo(buttonGroup);
+
+                       infoContainer
+                           .dxButton({
+                               stylingMode: "contained",
+                               type: "normal",
+                               text: `${draft.content}`,
+                               onClick() {
+                                   let detailPopup = $("#detailPopup")
+                                       .dxPopup({
+                                           width: "60%",
+                                           height: "70%",
+                                           showTitle: true,
+                                           title: `Details for ${draft.content}`,
+                                           dragEnabled: true,
+                                           closeOnOutsideClick: true,
+                                           contentTemplate: function (detailContainer) {
+                                               const detailTable = jsonToTable(
+                                                   draft,
+                                                   ["content","listStyleId","placeHolder"]
+                                               );
+                                               detailTable.appendTo(detailContainer);
+                                               return detailContainer;
+                                           },
+                                       })
+                                       .dxPopup("instance");
+                                   detailPopup.show();
+                               },
+                           })
+                           .appendTo(buttonGroup);
+
+                       
+                       // // Nút Delete
+                       // $("<div>")
+                       //     .dxButton({
+                       //         stylingMode: "contained",
+                       //         type: "danger",
+                       //         text: "Delete",
+                       //         onClick() {
+                       //          sessionStorage.removeItem(draft.key); // Xóa khỏi sessionStorage
+                       //         },
+                       //     })
+                       //     .appendTo(commandButtonGroup);
+                   });
+
+                   return container
+               },
+               onHiding: function (e) {
+
+               },
+               toolbarItems: [{
+                   widget: 'dxButton',
+                   toolbar: 'bottom',
+                   location: 'after',
+                   options: {
+                       stylingMode: 'contained',
+                       type: 'normal',
+                       text: "Close",
+                       onClick() {
+                           popupInstance.hide();
+                       },
+                   },
+               }]
+
+           }).dxPopup("instance");
+           popupInstance.show();
+                            })
+                            .appendTo(container);
+                    }
+                }
+            ]
+        }).dxDataGrid("instance");
+        $("#refreshCacheButton").dxButton({
+            height: 50,
+            width: 120,
+            text: "Refresh",
+            type: "info",
+            stylingMode: "contained",
+            onClick: function () {
+                dataGrid.option("dataSource", getSessionStorageData());
+                dataGrid.refresh();
+            }
+        });
+
+    });
+</script>
+
+<div id="clearAllCacheButton"></div>
+<div id="refreshCacheButton"></div>
+<div id="sessionStorageContainer" class="container"></div>

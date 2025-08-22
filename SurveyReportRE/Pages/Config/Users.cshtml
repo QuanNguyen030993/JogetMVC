@@ -1,0 +1,154 @@
+﻿@page
+@model UsersModel
+@{
+
+}
+<script>
+    $(function () {
+        var grid = null;
+        $("#tabPanel").dxTabPanel({
+            items: [
+                {
+                    title: "Information",
+                },
+                {
+                    title: "User access permission"
+                },
+            ],
+            selectedIndex: 0,
+            animationEnabled: true,
+            swipeEnabled: true,
+            loop: false,
+            itemTemplate: function (itemData, itemIndex, itemElement) {
+                if (itemIndex == 0)
+                    grid = new MGrid(null, $(`<div id='dataGrid_@UsersModel.ModelName'>`).appendTo(itemElement), new UsersGridOption('@UsersModel.ModelName', "System"), null);
+                if (itemIndex == 1){
+                    var userData = [];
+                    $.ajax({
+                         url: `/api/Users/GetAll`,
+                         async: false,
+                         success: function (response) {
+                             userData = response;
+                         },
+                         error: function (err) {
+                         }
+                     }); 
+
+
+                    var userStatus = [];
+                     $.ajax({
+                         url: `/api/Users/GetUserRoleStatus`,
+                         async: false,
+                         success: function (response) {
+                             userStatus = response;
+                         },
+                         error: function (err) {
+                         }
+                     });
+
+                    var mergedDataSource = userData.map(user => {
+                        var status = userStatus.find(status => status.username === user.username) || {};
+                        return {
+                            ...user,      
+                            ...status     
+                        };
+                    });
+                    $("<div>").dxDataGrid(
+                        {
+                        dataSource: mergedDataSource,
+                        keyExpr: "username",
+                        columnAutoWidth: true,
+                        showBorders: true,
+                        width: "100%",
+                        paging: { pageSize: 10 },
+                             searchPanel: { visible: true, highlightCaseSensitive: false }, 
+                            filterRow: { visible: true, applyFilter: "auto" }, 
+                            groupPanel: { visible: true },
+                            headerFilter: { visible: true },
+                            columns: [
+                            {
+                                dataField: "username",
+                                caption: "User Name",
+                                width: 200
+                            },
+                            {
+                                dataField: "department",
+                                caption: "Department",
+                                width: 200
+                            },
+                            {
+                                caption: "Menu Roles",
+                                columns: [
+                                    {
+                                        dataField: "accessStatus",
+                                        caption: "Access Status",
+                                        dataType: "boolean",
+                                        width: 120
+                                    },
+                                    {
+                                        dataField: "modifiedDate",
+                                        caption: "Update Date",
+                                        dataType: "date",
+                                        format: "yyyy-MM-dd",  // Format ngày
+                                        alignment: "center",    // Căn giữa
+                                        width: 120              // Độ rộng phù hợp
+                                    },
+                                    {
+                                        caption: "Update",
+                                        width: 150,
+                                        cellTemplate: function(container, options) {
+                                            $("<div>")
+                                                .dxButton({
+                                                    text: "Update",
+                                                    type: "success",
+                                                    onClick: function() {
+
+                                                         $.ajax({
+                                                            url: `/api/Users/RoleAddUser/${options.data.username}`,
+                                                            success: function (response) {
+                                                                appNotifySuccess("Process done!", false);
+                                                            },
+                                                            error: function (err) {
+                                                                appErrorHandling("Process fail!", err);
+                                                            }
+                                                        });
+                                                    }
+                                                })
+                                                .appendTo(container);
+                                        }
+                                    },
+                                    {
+                                        caption: "Remove",
+                                        width: 150,
+                                        cellTemplate: function(container, options) {
+                                            $("<div>")
+                                                .dxButton({
+                                                    text: "Clear",
+                                                    type: "danger",
+                                                    onClick: function() {
+                                                         $.ajax({
+                                                            url: `/api/Users/ClearRoleUser/${options.data.username}`,
+                                                            success: function (response) {
+                                                                appNotifySuccess("Process done!", false);
+                                                            },
+                                                            error: function (err) {
+                                                                appErrorHandling("Process fail!", err);
+                                                            }
+                                                        });
+                                                    }
+                                                })
+                                                .appendTo(container);
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                    ).appendTo(itemElement);
+                }
+            }});
+    });
+</script>
+<div id="tabPanel">
+    @* <div id="dataGrid_@UsersModel.ModelName"></div> *@
+</div>

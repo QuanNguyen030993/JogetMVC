@@ -1,0 +1,11 @@
+﻿@page
+@model MenuModel
+@{
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@MenuModel.ModelName`), new MGridOption('@MenuModel.ModelName', "System"), null);
+    });
+</script>
+<div id="dataGrid_@MenuModel.ModelName"></div>

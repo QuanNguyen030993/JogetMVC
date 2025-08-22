@@ -1,0 +1,191 @@
+﻿<!--CSS library: common -->
+<link href="~/css/app/dx.css" rel="stylesheet" type="text/css" />
+<!--Only use 1 CSS-->
+<link href="~/css/app/dx-controls.css" rel="stylesheet" type="text/css" />
+<link href="~/css/app/theme.css" rel="stylesheet" type="text/css" />
+<!--Only use 1 CSS-->
+@* <link href="~/css/devextreme-20.1.4/dx.material.blue.light.css" rel="stylesheet" type="text/css" /> *@
+<link href="~/css/jquery/top-panel.min.css" rel="stylesheet" type="text/css" />
+<link href="~/css/fonts/font-awesome.min.css" rel="stylesheet" type="text/css" />
+<!--App CSS: customized-->
+<link href="~/css/app/tabs.css" rel="stylesheet" type="text/css" />
+<link href="~/lib/AdminLTE/sidebar-menu.min.css" rel="stylesheet" />
+<link href="~/lib/AdminLTE/_all-skins.min.css" rel="stylesheet" />
+<!--JS library: common -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<!-- SignalR Library -->
+@* <script src="~/lib/signalr/signalr.min.js"></script> *@
+<script src="~/lib/jquery/jquery-ui.min.js"></script>
+<script src="~/lib/jquerymutation/events.min.js"></script>
+<script src="~/lib/jquerymutation/events.js"></script>
+<script src="~/lib/jquerymutation/mutate.js"></script>
+<script src="~/lib/jquerymutation/mutate.min.js"></script>
+<script src="~/lib/quill-better-table/dist/dx-quill.min.js"></script>
+<script src="https://cdn.rawgit.com/kensnyder/quill-image-resize-module/3411c9a7/image-resize.min.js"></script>
+<!-- Prism CSS -->
+<link rel="stylesheet" href="~/lib/prism/prism.min.css">
+<!-- Prism JS -->
+<script src="~/lib/prism/prism.min.js"></script>
+<!-- Define global alias -->
+<script type="text/javascript">
+    window.Quill = window.DevExpress.Quill;
+</script>
+
+<script src="~/lib/knockout/knockout.js"></script>
+<script src="~/lib/wysiwyg-editor-summernote/summernote.js"></script>
+<script src="~/lib/bootstrap/tooltip.js"></script>
+<script src="~/lib/bootstrap/popper.js"></script>
+<script src="~/lib/bootstrap/bootstrap.min.js"></script>
+<script src="~/lib/map/infobubble-compiled.js"></script>
+<script src="~/lib/moment/moment.min.js"></script>
+<!--JS library: js push channel -->
+<script src="~/lib/postal/lodash.min.js"></script>
+<script src="~/lib/postal/postal.min.js"></script>
+
+<script src="~/lib/bootstrap-tagsinput/bootstrap-tagsinput.js"></script>
+@*<script scr="~/lib/ckeditor/ckeditor.js"></script>*@
+<script src="~/lib/ckeditor/ckeditor.js"></script>
+
+<!--JS library: devextreme-19.1.3 globalization -->
+<script src="~/lib/devextreme-20.1.4/cldr.js"></script>
+<script src="~/lib/devextreme-20.1.4/cldr/event.js"></script>
+<script src="~/lib/devextreme-20.1.4/cldr/supplemental.js"></script>
+<script src="~/lib/devextreme-20.1.4/cldr/unresolved.min.js"></script>
+
+<script src="~/lib/devextreme/globalize.min.js"></script>
+<script src="~/lib/devextreme/globalize/message.min.js"></script>
+
+<!-- dx control jquery support -->
+<script type="text/javascript" src="~/lib/quill-better-table/dist/quill-better-table.js"></script>
+
+
+<!--JS library: devextreme-20.1.4 -->
+<script src="~/lib/devextreme-20.1.4/jszip.min.js"></script>
+<script src="~/lib/devextreme-20.1.4/dx-diagram.js"></script>
+<script src="~/lib/devextreme-20.1.4/dx-diagram.min.js"></script>
+<script src="~/lib/devextreme-20.2.13/dx.all.js"></script>
+<script src="~/lib/devextreme-20.1.4/aspnet/dx.aspnet.data.js"></script>
+<script src="~/lib/devextreme-20.1.4/aspnet/dx.aspnet.mvc.js"></script>
+<!-- Xtrareport-->
+<script src="~/lib/xtrareport-20.1.4/js/dx-analytics-core.js"></script>
+<script src="~/lib/xtrareport-20.1.4/js/dx-webdocumentviewer.js"></script>
+
+
+<!--JS library: sheetjs, import data from excel -->
+<script src="~/lib/sheetjs/xlsx.full.min.js"></script>
+<script src="~/lib/excelljs/excel.js"></script>
+<script src="~/lib/excelljs/FileSaver.js"></script>
+
+<!-- Important: All app data must be included before app script-->
+<!-- SpreadSheet script-->
+<script src="~/lib/spreadsheet/dx-aspnetcore-spreadsheet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/js/bootstrap-multiselect.js"></script>
+<script src="~/lib/sweet-alert/sweetalert2.js"></script>
+<script src="~/lib/tagify/tagify.min.js"></script>
+<script src="~/lib/signalr/signalr-current.min.js"></script>
+
+<!-- docx preview -->
+<script src="~/lib/docxjs/jszip.min.js"></script>
+<script src="~/lib/docxjs/docx-preview.min.js"></script>
+
+<script>
+    // var constHostName = 'https://localhost:7253/api';
+    const _defaultFormFieldWidth = 300;
+    const _defaultFormFieldHeight = 50;
+    const _defaultGridFieldWidth = 150;
+    const _defaultGridFieldHeight = 50;
+    const _defaultTextAreaHeight = 50;
+    const _defaultTextAreaWidth = "100%";
+    const _defaultDropDownWidth = 500;
+    const _defaultDropDownHeight = 500;
+    const _defaultGridMinHeight = 350;
+    const _defaultHtmlEditorHeight = 300;
+    const _defaultHtmlEditorWidth = "100%";
+    const _defaultButtonHeight = 50;
+    const _defaultGridDropDownOptionsWidth = 600;
+    const _defaultGridDropDownOptionsHeight = 400;
+    const _timeoutSurveyDelay = 2000;
+    const _timeoutPopup = 15000;
+    const _swalPopupDelayTime = 20000;
+    const _surveyFormAutoSavedInterval = 120000;
+    var _menus = [];
+    var _isAllowDraft = 0;
+    var _cacheModels = [];
+    
+    // function getDataFromIndexedDB() {
+    //     if (_db) {
+           
+    //     }
+    // }
+    // getDataFromIndexedDB();
+
+
+
+    $.ajax({
+        url: `api/DataGridConfig/CacheUsingModel`,
+        async: false,
+        success: function (response) {
+            _cacheModels = response;
+        },
+        error: function (exception) {
+        }
+    });
+
+
+
+    var _sysTables = [];
+    $.ajax({
+        url: `/api/SysTable/GetAll`,
+        type: 'GET',
+        async: false,
+        success: function (response) {
+            modelConfig = response;
+            if (_sysTables.length == 0) {
+                _sysTables = response;
+            }
+        },
+        error: function () {
+            appErrorHandling("Load SysTables fail!");
+        }
+    });
+    var _role = "";
+    var _loginUser = "";
+    var _isSuperUser = "false";
+    var _isDebugMode = "false";
+    const currencyFormatter = "#,##0.## VNĐ";
+    const currency4Formatter = "#,##0.#### VNĐ";
+    const percentageFormatter = "#,###.## %";
+    const decimalFormatter = "#,##0.##";
+    const decimal3Formatter = "#,##0.###";
+    const decimal4Formatter = "#,##0.####";
+    const dateFormatter = "dd MMM yyyy";
+    const datetimeFormatter = "dd MMM yyyy hh:mm";
+    const timeFormatter = "hh:mm";
+
+    const variableMapping = {
+        currencyFormatter,
+        currency4Formatter,
+        percentageFormatter,
+        decimalFormatter,
+        decimal3Formatter,
+        decimal4Formatter,
+        dateFormatter,
+        datetimeFormatter,
+        timeFormatter
+    };
+        // Write your JavaScript code.
+    var connectionId = null;//generateGUID();
+    const connectionSignR = new signalR.HubConnectionBuilder()
+        .withUrl("/fileProcessingHub").build(); //
+    connectionSignR.start().then(async function () {
+        connectionId = await connectionSignR.invoke("GetConnectionId");
+        // console.log("SignalR Connected.");
+    }).catch(function (err) {
+        console.error("SignalR connection failed:", err);
+    });
+    connectionSignR.serverTimeoutInMilliseconds = 28800000; // 60s
+    connectionSignR.keepAliveIntervalInMilliseconds = 28800000; // gửi keepalive mỗi 15s
+    var _fetchTables = ["Client", "Outline", "DataGridConfig"];
+
+</script>

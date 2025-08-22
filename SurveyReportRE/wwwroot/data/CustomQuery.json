@@ -1,0 +1,6 @@
+﻿{
+  "baseOnExist": {
+    "PDFList": "SELECT Attachment.Id,Attachment.SurveyId,Attachment.SubDirectory,Attachment.IsPrimary, CONVERT(DATE,Attachment.CreatedDate) AS CreatedDate FROM Attachment LEFT JOIN Survey ON Attachment.SurveyId = Survey.Id WHERE Attachment.SurveyId = @Id AND Attachment.FileType = '.pdf'",
+    "ClientOverview": "SELECT c.Id, c.ClientCode , c.ClientName, l.LocationAddress AS ClientAddress, l.ClientId AS ClientId, l.Id AS LocationId, l.LocationName FROM Client c left join [Location] l ON l.ClientId = c.Id WHERE l.Id IS NOT NULL AND c.Deleted = 0"
+  }
+}

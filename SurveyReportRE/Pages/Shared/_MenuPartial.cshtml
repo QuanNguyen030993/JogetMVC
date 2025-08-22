@@ -1,0 +1,178 @@
+﻿@* <link href="~/lib/tree-search/jquery.treefilter.css" rel="stylesheet" />
+<script src="~/lib/tree-search/jquery.treefilter.js"></script> *@
+<aside class="main-sidebar">
+    <section class="sidebar" style="height: auto;">
+        @* <div class="sidebar-form"> *@
+            @* <div class="input-group"> *@
+            @* <input type="text" id="my-search" name="q" class="form-control" placeholder="Search..."> *@
+            @* <span class="input-group-btn">
+            <a href="#" id="remove-search-btn" class="btn btn-flat">
+            <i class="fa fa-remove"></i>
+            </a>
+            </span> *@
+            @* </div> *@
+        @* </div> *@
+        <ul class="sidebar-menu tree" data-widget="tree" id="my-tree">
+        </ul>
+
+    </section>
+</aside>
+
+<script>
+
+
+
+    var dataSource = new DevExpress.data.DataSource({
+        load: function (loadOptions) {
+            var d = new $.Deferred();
+            $.get("/api/Menu/GetHierarchyMenu?pageSystem=Management").done(function (result) {
+                d.resolve(result);
+                _menus = result;
+            });
+            return d.promise();
+        }
+    });
+
+
+    dataSource.load().done(function (response) {
+        var arrs = convertArrayParentToChild(response);
+        var sortArry = arrs.sort(function (a, b) {
+            return a.sortOrder - b.sortOrder;
+        });
+        //remove every menu do not have children
+        var convertArr = $.map(arrs, function (value) {
+            return value.children.length > 0 ? value : null;
+        });
+        loadData(convertArr, "ul.tree");
+
+    });
+
+
+
+    function loadData(arrs, elementId) {
+        var hasChild = false;
+        $.each(arrs, function (i, val) {
+            if (val.children.length > 0) {
+                hasChild = true;
+            }
+            if (hasChild) {
+                $(elementId).append(`<li class="treeview menu-general icon-id-${val.id}">
+                                            <a href="#" class="icon-menu ">
+                                         <i class="${val.icon}"></i> <span>${val.caption}</span>
+                                        <span class="pull-right-container">
+                                                <i class="fa fa-angle-left pull-right pull-right-${val.id}"></i>
+                                        </span>
+                                        </a>
+                                        <ul class="treeview-menu treeview-menu-general menu-${val.id}"></ul>
+                                    </li>`);
+            }
+            else {
+                $(elementId).append(`<li><a href="#" id="new-tab-${val.id}" data-action="${val.action}" data-name="${val.name}" data-caption="${val.caption}"> <i class="${val.icon}"></i><span>${val.caption}</span> </a></li>`)
+            }
+            $(`ul.sidebar-menu.tree a#new-tab-${val.id}`).click(function () {
+                var url = $(this).attr("data-action");
+                var caption = $(this).attr("data-name");
+                var name = $(this).attr("data-caption");
+                callElementView(url, caption, name);
+            });
+
+            $(elementId)
+                .find(`li.icon-id-${val.id}`)
+                .hover(
+                    function () {
+
+                        var $icon = $(this).find(`i.fa-angle-left.pull-right.pull-right-${val.id}`);
+                        if ($icon[0].clientHeight == 0) {
+                            // Show tooltip on hover
+                            const tooltip = $(`
+                                <div class="hover-tooltip-${val.id}">
+                                <p>${val.caption}</p>
+                                    ${val.children.length > 0 ? val.children.map(m =>
+                                `<div><a href="#" id="new-tab-${m.id}" data-action="${m.action}" data-name="${m.name}" data-caption="${m.caption}"> <i class="${m.icon}"></i><span>${m.caption}</span> </a></div>`) : ''}
+                            </div>
+                        `).css({
+                                    position: 'absolute',
+                                    top: $(this).offset().top + 'px',
+                                    left: $(this).offset().left + $(this).outerWidth() + 'px',
+                                    background: '#fff',
+                                    padding: '10px',
+                                    border: '1px solid #ddd',
+                                    boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)',
+                                    zIndex: 1050,
+                                    borderRadius: '5px',
+                                }).hide();
+
+                            $('body').append(tooltip);
+                            if (val.children.length > 0) {
+                                val.children.forEach(m => {
+                                    tooltip.find(`#new-tab-${m.id}`).click(function (e) {
+                                        var url = $(this).attr("data-action");
+                                        var caption = $(this).attr("data-name");
+                                        var name = $(this).attr("data-caption");
+                                        callElementView(url, caption, name);
+                                    });
+                                });
+                            }
+                            tooltip.fadeIn(200);
+
+                            // Keep tooltip visible when hovering over it
+                            tooltip.hover(
+                                function () {
+                                    $(this).stop(true, true).show();
+                                },
+                                function () {
+                                    $(this).fadeOut(300, function () {
+                                        $(this).remove();
+                                    });
+                                }
+                            );
+                        }
+                    },
+                    function () {
+                        // Remove tooltip when hover out
+                        setTimeout(() => {
+                            if (!$('.hover-tooltip:hover').length) {
+                                $(`.hover-tooltip-${val.id}`).fadeOut(300, function () {
+                                    $(this).remove();
+                                });
+                            }
+                        }, 500);
+                    }
+                );
+            if (hasChild) {
+                hasChild = false;
+                var sortArry = val.children.sort(function (a, b) {
+                    return a.SortOrder - b.SortOrder;
+                });
+                loadData(sortArry, `ul.menu-${val.id}`);
+            }
+        });
+
+    }
+
+    $(function () {
+
+        // new treefilter($("#my-tree"), {
+        //     searcher: $("input#my-search"),
+        //     multiselect: false,
+        // });
+
+        $("#remove-search-btn").click(function () {
+            $("input#my-search").val("");
+            $("ul.treeview-menu-general.tf-search-result").css("display", "none");
+            $("ul.treeview-menu-general").css("display", "none");
+            $(".menu-general").removeClass("menu-open");
+            $("input#my-search").trigger("keyup");
+        });
+
+        $("ul.sidebar-menu.tree.tf-tree").css({ "overflow-y": "scroll", "height": screen.height - 300 });
+    });
+        
+
+</script>
+
+<style>
+    li.menu-open-quick-access > ul.treeview-menu {
+        display: block;
+    }
+</style>
