@@ -50,8 +50,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Folder Include="Logs\" />
 		<Folder Include="Pages\Business\LCForm\LossControlDetail\" />
-		<Folder Include="Script\" />
+		<Folder Include="Template\" />
 		<Folder Include="wwwroot\js\scripts\" />
 	</ItemGroup>
 

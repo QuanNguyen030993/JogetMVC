@@ -570,7 +570,7 @@ var MGridOption = class MGridOption {
                 loadPanel: { showPane: false, text: null },
                 rowAlternationEnabled: false,
                 paging: { enabled: true, pageSize: 50 }, // điều chỉnh nếu data nhiều
-                pager: { showPageSizeSelector: true, allowedPageSizes: 50, showInfo: true },// điều chỉnh nếu data nhiều
+                pager: { visible: true, allowedPageSizes: [5, 10, 'all'],  showPageSizeSelector: true, allowedPageSizes: 50, showInfo: true },// điều chỉnh nếu data nhiều
                 showBorders: true,
                 summary: summary,
                 export: (Object.keys(exportConfig)).length > 0 ? exportConfig : {
