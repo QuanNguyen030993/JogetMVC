@@ -166,40 +166,7 @@ namespace SurveyReportRE.Common
         //    return returnData;
         //}
 
-        public static List<CopyAttachment> RemakeAttachment(Survey survey, string blobPath)
-        {
-            List<CopyAttachment> copyAttachments = new List<CopyAttachment>();
-            var unixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            if (survey.Attachments.Count > 0)
-            {
-                if (survey.Attachments.Any(a => a.FileType.ToLower() != ".pdf"))
-                {
-                    copyAttachments.AddRange(survey.Attachments.Where(a => a.FileType.ToLower() != ".pdf").Select(s =>
-                    {
-                        CopyAttachment copyAttachment = new CopyAttachment();
-                        Attachment attachment = new Attachment();
-                        copyAttachment.OldAttachment = s;
-                        SitePictures sitePictures = new SitePictures();
-                        if (survey.SitePictures.Any(a => a.AttachmentId == s.Id))
-                        {
-                            copyAttachment.OldSitePictures = survey.SitePictures.Where(a => a.AttachmentId == s.Id).FirstOrDefault();
-                        }
-
-                        JsonConvert.PopulateObject(JsonConvert.SerializeObject(s), attachment);
-                        attachment.CreatedDate = DateTime.Now;
-                        attachment.SurveyId = survey.Id;
-                        attachment.SubDirectory = CloneAttachment(attachment, nameof(attachment.SubDirectory), unixMilliseconds, blobPath);
-                        attachment.SubSitePictureDirectory = CloneAttachment(attachment, nameof(attachment.SubSitePictureDirectory), unixMilliseconds, blobPath);
-                        attachment.SubThumbnailDirectory = CloneAttachment(attachment, nameof(attachment.SubThumbnailDirectory), unixMilliseconds, blobPath);
-                        attachment.SubOverviewDirectory = CloneAttachment(attachment, nameof(attachment.SubOverviewDirectory), unixMilliseconds, blobPath);
-                        attachment.FileName = $"{unixMilliseconds}_{attachment.FileName}";
-                        copyAttachment.NewAttachment = attachment;
-                        return copyAttachment;
-                    }));
-                }
-            }
-            return copyAttachments;
-        }
+     
 
         public static string CloneAttachment(Attachment attachment, string type, long unixMilliseconds, string blobPath)
         {
@@ -302,90 +269,7 @@ namespace SurveyReportRE.Common
                 paramerters);
         }
 
-        public static Tuple<Attachment, SitePictures> HtmlWriteDown<T>(T objectInstance, string changeData, string moduleFolder, string prefixName, string baseDirectory, AttachmentRequest? attachmentRequest = null) where T : class
-        {
-            AddFontToHTMLNodes<T>(objectInstance);
-            Tuple<Attachment, SitePictures> returnData = null;
-            var properties = ObjectProperties<T>().ToList().Where(x => !systemColumns.Contains(x.Name));
-
-
-            foreach (PropertyInfo property in properties)
-            {
-                //string serial = _baseRepository._baseConfiguration.GetSection("SautinSoft:License").Value;
-                string fieldName = property.Name;
-                object fieldValue = property.GetValue((dynamic)objectInstance);
-                if (changeData != "{}")
-                {
-                    dynamic outlineObjects = JsonConvert.DeserializeObject<dynamic>(changeData);
-                    var types = outlineObjects.GetType();
-                    foreach (JProperty prop in outlineObjects.Properties())
-                    {
-                        if (prop.Name.Contains("_outlineId"))
-                        {
-                            if (attachmentRequest != null)
-                                attachmentRequest.outlineId = prop.Value["id"]?.Value<long?>() ?? null;
-                        }
-                    }
-                }
-                if (fieldValue == null) continue;
-                string nameValueType = fieldValue.GetType().Name;
-                if (nameValueType == "String")
-                {
-
-                    string outputHtml = fieldValue.ToString();
-
-                    if (IsHtml(fieldValue.ToString()))
-                    {
-                        HtmlDocument document = new HtmlDocument();
-                        document = TableHTMLRemake(fieldValue.ToString());
-                        var imgs = document.DocumentNode.SelectNodes("//img");
-                        if (imgs != null)
-                        {
-                            foreach (var img in imgs)
-                            {
-                                string base64Pattern = @"data:image/\w+;base64,([^""]+)";
-                                Match match = Regex.Match(img.OuterHtml, base64Pattern);
-                                string base64Data = "";
-                                if (match.Success)
-                                {
-                                    base64Data = match.Groups[1].Value;
-                                    byte[] byteArray = Convert.FromBase64String(base64Data);
-                                    string folder = "SitePictures";
-                                    string fileName = GenerateFileNameFromBase64(base64Data);
-                                    Attachment attachment = new Attachment();
-                                    attachment = BindingAttachment(baseDirectory, folder, fileName, byteArray, attachmentRequest);
-                                    SitePictures sitePictures = new SitePictures();
-                                    sitePictures.AttachmentId = attachment.Id;
-                                    sitePictures.SurveyId = attachmentRequest.surveyId;
-                                    returnData = new Tuple<Attachment, SitePictures>(attachment, sitePictures);
-                                }
-
-                            }
-                        }
-                        outputHtml = document.DocumentNode.OuterHtml;
-                        property.SetValue(objectInstance, outputHtml);
-                        // Xuất HTML sau khi chỉnh sửa
-                    }
-                    // Tạo đường dẫn file
-                    string htmlFilePath = System.IO.Path.Combine(baseDirectory, moduleFolder, $"{prefixName}_{fieldName}.html");
-                    string txtFilePath = System.IO.Path.Combine(baseDirectory, moduleFolder, $"{prefixName}_{fieldName}.txt");
-                    string docxFilePath = System.IO.Path.Combine(baseDirectory, moduleFolder, $"{prefixName}_{fieldName}.docx");
-                    if (!Directory.Exists(System.IO.Path.Combine(baseDirectory, moduleFolder)))
-                        Directory.CreateDirectory(System.IO.Path.Combine(baseDirectory, moduleFolder));
-
-
-                    HtmlDocument documentTxt = new HtmlDocument();
-                    documentTxt = TableHTMLRemake(fieldValue.ToString());
-                    System.IO.File.WriteAllText(htmlFilePath, outputHtml); // ?
-                    System.IO.File.WriteAllText(txtFilePath, documentTxt.DocumentNode.InnerText); // ?
-
-
-                    //WordUtil.ConvertDocxToHtml(htmlFilePath, docxFilePath, serial);
-                    //WordUtil.SyncfusionConvertDocxToHtml(htmlFilePath, docxFilePath);
-                }
-            }
-            return returnData;
-        }
+        
         public static void AddFontFamilyToNodes(HtmlDocument document, string fontFamily = "Asap")
         {
             // Chọn các thẻ div, p, và span
@@ -833,52 +717,7 @@ namespace SurveyReportRE.Common
                     break;
             }
         }
-        public static Attachment BindingAttachment(string path, string folder, string fileName, byte[] fileBytes, AttachmentRequest? attachmentRequest = null)
-        {
-            var unixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            if (!System.IO.Directory.Exists(path))
-                Directory.CreateDirectory(path);
-            if (!System.IO.Directory.Exists(System.IO.Path.Combine(path, folder)))
-                Directory.CreateDirectory(System.IO.Path.Combine(path, folder));
-
-            Attachment attachment = new Attachment();
-            attachment.SubDirectory = System.IO.Path.Combine(folder, $"{unixMilliseconds}_{fileName}");
-            attachment.FileName = $"{unixMilliseconds}_{fileName}";
-            attachment.FileType = System.IO.Path.GetExtension($"{unixMilliseconds}_{fileName}");
-
-            if (fileBytes.Length > 0)
-            {
-                attachment.Size = fileBytes.Length;
-            }
-
-            //attachment.Guid = new Guid();
-            if (attachmentRequest != null)
-            {
-                attachment.SurveyId = attachmentRequest.surveyId;
-                attachment.OutlineId = attachmentRequest.outlineId;
-                attachment.OutlinePlaceholder = attachmentRequest.outlinePlaceholder;
-                attachment.ItemWidth = attachmentRequest.attachment?.width;
-                attachment.ItemHeight = attachmentRequest.attachment?.height;
-            }
-            string outputFiles = System.IO.Path.Combine(path, folder, $"{unixMilliseconds}_{fileName}");
-            string saveThumbPart = System.IO.Path.Combine(path, folder);
-            System.IO.File.WriteAllBytes(outputFiles, fileBytes);
-            Dictionary<string, string> refFiles = new Dictionary<string, string>();
-            string mimeType = GetMimeType(fileName);
-
-            if (mimeType.Contains("image/"))
-            {
-                Util.createThumb(outputFiles, saveThumbPart, folder, ref refFiles);
-                attachment.SubThumbnailDirectory = refFiles.FirstOrDefault(f => f.Key == "thumbnail").Value;
-                attachment.SubOverviewDirectory = refFiles.FirstOrDefault(f => f.Key == "overview").Value;
-                attachment.SubSitePictureDirectory = refFiles.FirstOrDefault(f => f.Key == "sitepicture").Value;
-            }
-            else
-            {
-
-            }
-            return attachment;
-        }
+      
 
 
 
@@ -896,52 +735,7 @@ namespace SurveyReportRE.Common
             return byteArray;
         }
 
-        public static string GenerateDataField(string freetext, List<OutlineDynamic> outlineDynamics = null)
-        {
-            if (outlineDynamics == null)
-            {
-                if (string.IsNullOrWhiteSpace(freetext))
-                    return string.Empty;
-
-                //string processedText = Regex.Replace(freetext, @"^[\dIVXLCDM]+\.[\s]*|^[A-Za-z]\.[\s]*|^[^a-zA-Z\s]+[\s]*", "");
-                string processedText = Regex.Replace(freetext, @"^[\dIVXLCDM]+\.[\s]*|^[A-Za-z]\.[\s]*|^[^a-zA-Z\s]+[\s]*|[:/\[\]\.]+", "");
-
-                string[] words = processedText.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                string result = string.Join("", words.Select((word, index) =>
-                {
-                    if (index == 0)
-                        return word.ToLower(); // Chữ đầu viết thường
-                    return char.ToUpper(word[0]) + word.Substring(1).ToLower(); // Các từ sau viết hoa chữ cái đầu
-                }));
-
-                // Xử lý abbreviation nếu cần
-                result = ApplyAbbreviation(result);
-
-                return result;
-            }
-            else
-            {
-                if (string.IsNullOrWhiteSpace(freetext))
-                    return string.Empty;
-
-                //string processedText = Regex.Replace(freetext, @"^[\dIVXLCDM]+\.[\s]*|^[A-Za-z]\.[\s]*|^[^a-zA-Z\s]+[\s]*", "");
-                string processedText = Regex.Replace(freetext, @"^[\dIVXLCDM]+\.[\s]*|^[A-Za-z]\.[\s]*|^[^a-zA-Z\s]+[\s]*|[:/\[\]\.]+", "");
-
-                string[] words = processedText.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                string result = string.Join("", words.Select((word, index) =>
-                {
-                    if (index == 0)
-                        return word.ToLower(); // Chữ đầu viết thường
-                    return char.ToUpper(word[0]) + word.Substring(1).ToLower(); // Các từ sau viết hoa chữ cái đầu
-                }));
-
-                // Xử lý abbreviation nếu cần
-                result = ApplyAbbreviation(result);
-                if (outlineDynamics.Count > 0) result = $"{result}_{outlineDynamics.Count + 1}";
-                return result;
-            }
-        }
-
+    
         private static Dictionary<string, string> LoadAbbreviationsFromJson()
         {
             string JsonFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/config/abbreviations.json");
@@ -958,53 +752,7 @@ namespace SurveyReportRE.Common
 
         }
 
-        public static byte[] AdditionalOutlineHandle(string changeValues, dynamic handleObject, Survey survey, AttachmentRequest attachmentRequest, string BLOB_PATH)
-        {
-            List<DynamicOutline> dynamicOutline = new List<DynamicOutline>();
-            List<DynamicOutline> newdynamicOUtline = new List<DynamicOutline>();
-            string jsonString = Encoding.UTF8.GetString(handleObject.AdditionalOutline);
-            dynamicOutline.AddRange(JsonConvert.DeserializeObject<List<DynamicOutline>>(jsonString));
-            JObject dynamicObject = JObject.Parse(changeValues);
-            newdynamicOUtline = dynamicOutline.Select(s =>
-            {
-                foreach (var property in dynamicObject.Properties())
-                {
-                    if (property.Name.StartsWith("outlineOptions"))
-                    {
-                        string outlineKey = property.Name;
-                        string outlineValue = property.Value.ToString();
-                        JObject dynamicOutlineObject = JObject.Parse(outlineValue);
-                        SurveyOutlineOptions surveyOutlineOption = new SurveyOutlineOptions();
-                        surveyOutlineOption = JsonConvert.DeserializeObject<SurveyOutlineOptions>(JsonConvert.SerializeObject(dynamicOutlineObject));
-                        s.SurveyOutlineOptions.OptionValue = surveyOutlineOption.OptionValue;
-                    }
-                    if (property.Name.EndsWith("_outlineId")) continue;
-
-                    string key = property.Name;
-                    string value = property.Value.ToString();
-                    value = HandleDefaultFont(value);
-                    JObject objectWriteDown = new JObject();
-                    objectWriteDown[key] = value;
-
-                    var outlineProperty = dynamicObject[$"{key}_outlineId"] as JObject;
-                    if (outlineProperty != null)
-                    {
-                        string placeHolder = outlineProperty["placeHolder"]?.ToString();
-                        //int outline = outlineProperty["id"]?.Value<int>() ?? 0;
-                        if (s != null)
-                        {
-                            if (s.OutlineDynamic.PlaceHolder == placeHolder)
-                            {
-                                s.Content = value;
-                            }
-                        }
-                    }
-                }
-
-                return s;
-            }).ToList();
-            return ConvertObjectToByteArray(newdynamicOUtline);
-        }
+       
 
         public static List<Dictionary<string, object>> ConvertDataTableToDictionaryList(System.Data.DataTable dt)
         {
@@ -1024,68 +772,7 @@ namespace SurveyReportRE.Common
 
             return list;
         }
-        public static string CopyApprovedSurvey(Survey survey, Client client, Location location, FileEncrypt fileEncrypt, string path, string keyword, string suffixKeyword)
-        {
-            string processedFilePath = "";
-            string folder = Path.Combine(path, "GrantedSurvey");
-            if (!Directory.Exists(folder))
-                Directory.CreateDirectory(folder);
-            string userDirectory = Path.Combine(folder, survey.OwnerReport);
-            if (!Directory.Exists(userDirectory))
-                Directory.CreateDirectory(userDirectory);
-            string pdfFile = Path.Combine(path, $"Survey\\{survey.SurveyNo}.pdf");
-            if (File.Exists(pdfFile))
-            {
-                string clientName = client != null ? client.ShortName : "";
-                string locationName = location != null ? location.ShortLocationName : "";
-                string surveyDate = survey.DateOfVisit != null ? survey.DateOfVisit?.ToString("yyyy") : DateTime.Now.ToString("yyyy");
-                processedFilePath = $"{clientName}_{locationName}{keyword}{surveyDate}.pdf";
-                //processedFilePath = $"{survey.SurveyNo}_{survey.ApprovalDate.Value.ToString("yyyyMMdd")}.pdf";
-                //string snapPdfFile = Path.Combine(userDirectory, $"{survey.SurveyNo}_{survey.ApprovalDate.Value.ToString("yyyyMMdd")}.pdf");
-                //string snapPdfEnFile = Path.Combine(userDirectory, $"{survey.SurveyNo}_{survey.ApprovalDate.Value.ToString("yyyyMMdd")}_encrypted.pdf");       
-                string snapPdfFile = Path.Combine(userDirectory, $"{clientName}_{locationName}{keyword}{surveyDate}.pdf");
-                string snapPdfEnFile = Path.Combine(userDirectory, $"{clientName}_{locationName}{keyword}{surveyDate}{suffixKeyword}.pdf");
-                if (!File.Exists(snapPdfFile))
-                {
-                    File.Copy(pdfFile, snapPdfFile);
-                    processedFilePath = snapPdfFile;
-                }
-                else processedFilePath = snapPdfFile;
-
-                //string sourcePdf = "input.pdf";
-                //string destinationPdf = "output_protected.pdf";
-                string userPassword = fileEncrypt.PassWordHash;
-                string ownerPassword = fileEncrypt.PassWordHash;
-
-                // Mở tệp PDF
-                using (FileStream inputFile = new FileStream(pdfFile, FileMode.Open, FileAccess.Read))
-                using (PdfLoadedDocument loadedDocument = new PdfLoadedDocument(inputFile))
-                {
-                    // Cấu hình bảo mật
-                    PdfSecurity security = loadedDocument.Security;
-
-                    // Thiết lập mật khẩu người dùng và mật khẩu chủ sở hữu
-                    security.UserPassword = userPassword;
-                    security.OwnerPassword = ownerPassword;
-
-                    // Cấp quyền cho tệp PDF (ví dụ: chỉ in hoặc chỉnh sửa nhất định)
-                    security.Permissions = PdfPermissionsFlags.Print | PdfPermissionsFlags.FillFields;
-
-                    // Lưu tệp PDF đã mã hóa
-                    if (!File.Exists(snapPdfEnFile))
-                    {
-                        using (FileStream outputFile = new FileStream(snapPdfEnFile, FileMode.Create, FileAccess.Write))
-                        {
-                            loadedDocument.Save(outputFile);
-                        }
-                    }
-                    //else processedFilePath = snapPdfEnFile;
-                }
-
-            }
-            return processedFilePath;
-        }
-
+    
 
         public static MailQueue MakeMailQueueItem(MailItem mailItem, MailConfig emailSettings, List<string> attachments = null, string type = "")
         {
@@ -1134,25 +821,7 @@ namespace SurveyReportRE.Common
             return null;
         }
 
-        public static SurveyWorkflowHistory LogWorkflow(Survey survey, long currentStatusId, long toStatusId, string fromAccount, string toAccount)
-        {
-            SurveyWorkflowHistory surveyWorkflowHistory = new SurveyWorkflowHistory();
-            surveyWorkflowHistory.SurveyId = survey.Id;
-            surveyWorkflowHistory.SurveyNo = survey.SurveyNo;
-            surveyWorkflowHistory.SurveyedBy = survey.SurveyedBy;
-            surveyWorkflowHistory.SubmitBy = survey.CreatedBy;
-            surveyWorkflowHistory.ApprovalBy = survey.ApprovalBy;
-            surveyWorkflowHistory.ApprovalDate = survey.ApprovalDate;
-            surveyWorkflowHistory.Comment = survey.Comment;
-            surveyWorkflowHistory.DueDate = survey.DueDate;
-            surveyWorkflowHistory.RecallReason = survey.RecallReason;
-            surveyWorkflowHistory.GrantSurvey = survey.GrantSurvey;
-            surveyWorkflowHistory.FromWorkflowStatus = currentStatusId;
-            surveyWorkflowHistory.ToWorkflowStatus = toStatusId;
-            surveyWorkflowHistory.FromAccount = fromAccount;
-            surveyWorkflowHistory.ToAccount = toAccount;
-            return surveyWorkflowHistory;
-        }
+       
 
 
         private static int getDecreaseTime(int maxSize, double x)//x is imgWidth or imgHeight

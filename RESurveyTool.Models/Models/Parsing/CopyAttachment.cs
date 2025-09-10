@@ -13,8 +13,6 @@ namespace RESurveyTool.Models.Models.Parsing
     {
         public Attachment? OldAttachment { get; set; }    
         public Attachment? NewAttachment { get; set; }    
-        public SitePictures? OldSitePictures { get; set; }       
-        public SitePictures? NewSitePictures { get; set; } 
 
     }
 }

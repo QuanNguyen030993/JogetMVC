@@ -15,7 +15,6 @@ namespace SurveyReportRE.Pages
         public static string SchemeModelName { get; set; } = "";
         private static int Id { get; set; }
         private static int FKId { get; set; } private static string JsonConfig {get;set;} = "";
-        private readonly IBaseRepository<Survey> _surveyRepository;
 
         public Client_FormModel(ILogger<Client_FormModel> logger)
         {

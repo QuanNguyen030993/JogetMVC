@@ -8,6 +8,8 @@
 
   <ItemGroup>
     <Folder Include="Models\Migration\Business\Base\" />
+    <Folder Include="Models\Migration\Business\LCForm\" />
+    <Folder Include="Models\Migration\ExportData\" />
   </ItemGroup>
 
   <ItemGroup>

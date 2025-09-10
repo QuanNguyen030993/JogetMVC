@@ -43,7 +43,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RESurveyTool.Models\RESurveyTool.Models.csproj" />
+    <ProjectReference Include="..\RESurveyTool.Models\JogetMVC.Models.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Models\" />
   </ItemGroup>
 
 </Project>

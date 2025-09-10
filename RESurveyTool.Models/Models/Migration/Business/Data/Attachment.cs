@@ -19,10 +19,6 @@ namespace SurveyReportRE.Models.Migration.Business.Data
         
         public string SubDirectory { get; set; } = "";
         public Guid? RecordGuid { get; set; }
-        public long? SurveyId { get; set; }
-        public Survey? SurveyFK { get; set; }
-        public long? OutlineId { get; set; }
-        public Outline? OutlineFK { get; set; }
         public string OutlinePlaceholder { get; set; } = "";
         public bool? IsDynamicOutline { get; set; }
         public long? Size { get; set; }

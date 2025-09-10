@@ -810,37 +810,26 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
 
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    //using (var reader = await command.ExecuteReaderAsync())
-                    //{
-                    //    // Đọc dữ liệu từ DataReader
-                    //    while (await reader.ReadAsync())
-                    //    {
-                    //        var row = new Dictionary<string, object>();
-                    //
-                    //        for (int i = 0; i < reader.FieldCount; i++)
-                    //        {
-                    //            var columnName = Char.ToLowerInvariant(reader.GetName(i)[0]) + reader.GetName(i).Substring(1);
-                    //
-                    //            //var columnName = reader.GetName(i); // Tên cột
-                    //            var value = reader.IsDBNull(i) ? null : reader.GetValue(i); // Giá trị cột
-                    //            row[columnName] = value; // Thêm vào dictionary
-                    //        }
-                    //
-                    //        resultList.Add(row);
-                    //    }
-                    //}
-                    using var reader = await command.ExecuteReaderAsync();
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        // Đọc dữ liệu từ DataReader
+                        while (await reader.ReadAsync())
+                        {
+                            var row = new Dictionary<string, object>();
 
-                    var dt = new DataTable();
-                    dt.Load(reader); // <-- không cần while
-                    resultList = dt.AsEnumerable()
-                                .Select(row => dt.Columns.Cast<DataColumn>()
-                                    .ToDictionary(
-                                        col => Char.ToLowerInvariant(col.ColumnName[0]) + col.ColumnName[1..],
-                                        col => row[col] == DBNull.Value ? null : row[col]
-                                    ))
-                                .ToList();
-                                }
+                            for (int i = 0; i < reader.FieldCount; i++)
+                            {
+                                var columnName = Char.ToLowerInvariant(reader.GetName(i)[0]) + reader.GetName(i).Substring(1);
+
+                                //var columnName = reader.GetName(i); // Tên cột
+                                var value = reader.IsDBNull(i) ? null : reader.GetValue(i); // Giá trị cột
+                                row[columnName] = value; // Thêm vào dictionary
+                            }
+
+                            resultList.Add(row);
+                        }
+                    }
+                }
                 Util.QueryLogs(_connectionString, "sp_Querylogs",
                        ("@QueryString", $"ExecuteCustomQuery: {query}")
                        , ("@Duration", "")
@@ -868,37 +857,25 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
 
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    //using (var reader = await command.ExecuteReaderAsync())
-                    //{
-                    //    // Đọc dữ liệu từ DataReader
-                    //    while (await reader.ReadAsync())
-                    //    {
-                    //        var row = new Dictionary<string, object>();
-                    //
-                    //        for (int i = 0; i < reader.FieldCount; i++)
-                    //        {
-                    //            var columnName = Char.ToLowerInvariant(reader.GetName(i)[0]) + reader.GetName(i).Substring(1);
-                    //
-                    //            //var columnName = reader.GetName(i); // Tên cột
-                    //            var value = reader.IsDBNull(i) ? null : reader.GetValue(i); // Giá trị cột
-                    //            row[columnName] = value; // Thêm vào dictionary
-                    //        }
-                    //
-                    //        resultList.Add(row);
-                    //    }
-                    //}
-                    using var reader = await command.ExecuteReaderAsync();
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        // Đọc dữ liệu từ DataReader
+                        while (await reader.ReadAsync())
+                        {
+                            var row = new Dictionary<string, object>();
 
-                    var dt = new DataTable();
-                    dt.Load(reader); // <-- không cần while
+                            for (int i = 0; i < reader.FieldCount; i++)
+                            {
+                                var columnName = Char.ToLowerInvariant(reader.GetName(i)[0]) + reader.GetName(i).Substring(1);
 
-                    resultList = dt.AsEnumerable()
-                                   .Select(row => dt.Columns.Cast<DataColumn>()
-                                       .ToDictionary(
-                                           col => Char.ToLowerInvariant(col.ColumnName[0]) + col.ColumnName[1..],
-                                           col => row[col] == DBNull.Value ? null : row[col]
-                                       ))
-                                   .ToList();
+                                //var columnName = reader.GetName(i); // Tên cột
+                                var value = reader.IsDBNull(i) ? null : reader.GetValue(i); // Giá trị cột
+                                row[columnName] = value; // Thêm vào dictionary
+                            }
+
+                            resultList.Add(row);
+                        }
+                    }
                 }
                 Util.QueryLogs(_connectionString, "sp_Querylogs",
                        ("@QueryString", $"ExecuteCustomQuery: {query}")

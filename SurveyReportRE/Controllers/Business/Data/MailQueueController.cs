@@ -4,12 +4,12 @@ using SurveyReportRE.Models.Migration.Business.Data;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
-public class MailQueueController : BaseControllerApi<SurveyWorkflowHistory>
+public class MailQueueController : BaseControllerApi<MailQueue>
 {
-    private readonly IBaseRepository<SurveyWorkflowHistory> _BaseRepository;
+    private readonly IBaseRepository<MailQueue> _BaseRepository;
 	private readonly IConfiguration configuration;
 
-	public MailQueueController(IBaseRepository<SurveyWorkflowHistory> BaseRepository, IConfiguration config,IHttpContextAccessor httpContextAccessor) : base(BaseRepository,httpContextAccessor)
+	public MailQueueController(IBaseRepository<MailQueue> BaseRepository, IConfiguration config,IHttpContextAccessor httpContextAccessor) : base(BaseRepository,httpContextAccessor)
     {
         configuration = config;
         _BaseRepository = BaseRepository;

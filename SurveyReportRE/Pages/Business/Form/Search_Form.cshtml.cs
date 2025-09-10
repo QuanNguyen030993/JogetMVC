@@ -18,7 +18,7 @@ namespace SurveyReportRE.Pages
         {
             ModelName = nameof(Search);
             ViewData[nameof(Id)] = pageNum;
-            ViewData[nameof(SchemeModelName)] = nameof(Survey);
+            //ViewData[nameof(SchemeModelName)] = nameof(Survey);
 
 
 

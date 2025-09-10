@@ -1,4 +1,6 @@
+﻿using DocumentFormat.OpenXml.Office2013.Excel;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Serilog;
@@ -62,229 +64,88 @@ public class PendingJogetController : BaseControllerApi<PendingJoget>
     [HttpPost]
     public override async Task<object> ExecuteCustomQuery([FromBody] string query)
     {
+
+        query = "EXEC usp_rp_pending_request";
         List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomJogetQuery(query);
-        //var Base = obj.Where(dict => dict.ContainsKey("workflowStatus") && dict["workflowStatus"] != null).ToList();
-
-        //string userName = _httpContextAccessor.HttpContext.User.Identity.Name.Replace(DOMAIN_NAME, "");
-        //Users user = await _usersRepository.GetSingleObject(s => s.username == userName);
-        //Employee employee = await _employeeRepository.GetSingleObject(s => s.AccountName == userName);
-        //
-        //if (user == null)
-        //{
-        //    return NotFound("User not found.");
-        //}
-        //
-        //if (SUPER_USER.Contains(user.username))
-        //{
-        //    return Ok(Base);
-        //}
-        //
-        //UserRoles userRole = await _userRolesRepository.GetSingleObject(s => s.UserId == user.Id);
-        //Roles roles = await _rolesRepository.GetSingleObject(s => s.Id == userRole.RoleId);
-        //List<Dictionary<string, object>> filteredBase = new List<Dictionary<string, object>>();
-        //filteredBase = Base;
-        //if (roles.RoleName == MANAGER_APP)
-        //{
-        //    filteredBase = Base
-        //        .Where(w =>
-        //            w.ContainsKey("areaId") &&
-        //            w["areaId"] != null &&
-        //            Convert.ToInt32(w["areaId"]) == employee.AreaId
-        //        )
-        //        .ToList();
-        //}
-
+         
         return obj;
     }
 
-    public async Task<IActionResult> GetPdfFile(long id)
+    [HttpGet]
+    public async Task PullData()
     {
-        string typeError = "InternalError";
-        try
-        {
-            Survey survey = await _surveyRepository.GetObjectByIdAsync(id);
+        //string query = "EXEC usp_rp_pending_request";
+        //List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomJogetQuery(query);
 
-            string docPath = System.IO.Path.Combine(path.Value, nameof(Survey), $"{survey.SurveyNo}.docx");
-            string pdfPath = System.IO.Path.Combine(path.Value, nameof(Survey), $"{survey.SurveyNo}.pdf");
-
-
-            //if ((System.IO.File.Exists(docPath) && !System.IO.File.Exists(pdfPath)) || (survey.NeedPDFConvert ?? false))
-            if ((System.IO.File.Exists(docPath) && !System.IO.File.Exists(pdfPath)))
-            {
-                WordUtil.ConvertPDF(docPath, pdfPath);
-                DataUtil.ExecuteStoredProcedureReturn(_BaseRepository._logConnectionString, "sp_WriteLogs",
-                       ("@Message", $"{pdfPath} saving complete!")
-                       , ("@TimeStamp", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))
-                       , ("@MessageTemplate", $"{pdfPath} saving complete!")
-                       , ("@Properties", "")
-                       , ("@Level", "Information")
-                       , ("@User", CURRENT_USER)
-                       , ("@Exception", ""));
-                bool isExists = await _attachmentRepository.RecordExistsAsync<Attachment>("FileName", (object)$"{survey.SurveyNo}.pdf");
-                Attachment attachment = new Attachment();
-                if (!isExists)
-                {
-                    attachment.SurveyId = survey.Id;
-                    attachment.FileName = $"{survey.SurveyNo}.pdf";
-                    attachment.SubDirectory = System.IO.Path.Combine(nameof(Survey), $"{survey.SurveyNo}.pdf");
-                    attachment.FileType = Path.GetExtension($"{survey.SurveyNo}.pdf");
-                    attachment = await _attachmentRepository.InsertData(attachment);
-                }
-                else
-                {
-                    var attachments = await _attachmentRepository.GetFKMany((int)survey.Id, "SurveyId");
-                    attachment = attachments.FirstOrDefault(f => f.FileType == ".pdf");
-                }
-
-
-                survey.PDFAttachmentId = attachment.Id;
-                survey.NeedPDFConvert = false;
-                survey = await _surveyRepository.UpdateData(survey, JsonConvert.SerializeObject(survey), survey.Id, "Id");
-            }
-
-
-            if (survey.PDFAttachmentId != null)
-            {
-                Attachment attachment = await _attachmentRepository.GetObjectByIdAsync((int)survey.PDFAttachmentId);
-                string fullPath = System.IO.Path.Combine(path.Value, attachment.SubDirectory);
-                if (System.IO.File.Exists(fullPath))
-                {
-                    var fileStream = System.IO.File.OpenRead(fullPath);
-                    return File(fileStream, "application/pdf", Path.GetFileName(fullPath));
-                }
-                else
-                {
-                    typeError = "FileNotFound";
-                    throw new Exception($"{fullPath} not found.");
-                }
-            }
-            typeError = "UserGuide";
-            Response.Headers.Add("X-Error-Message", $"Please try \"Update Report\" once !");
-            Response.Headers.Add("X-Error-Type", typeError);
-            return StatusCode(500);
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, ex.Message);
-            Response.Headers.Add("X-Error-Message", ex.Message);
-            Response.Headers.Add("X-Error-Type", typeError);
-            return StatusCode(500); // Internal Server Error
-        }
+        //var list = ConvertToPendingJogetList(obj);
+        //await BulkInsertPendingJogetAsync(list);
     }
-    public async Task<IActionResult> GetWordFile(long id)
+    public async Task BulkInsertPendingJogetAsync(List<PendingJoget> data)
     {
-        string typeError = "InternalError";
-        try
+        var dt = new DataTable();
+
+        // Khởi tạo cột (phải khớp DB)
+        foreach (var prop in typeof(PendingJoget).GetProperties())
         {
-            Survey survey = await _surveyRepository.GetObjectByIdAsync(id);
-            string docPath = System.IO.Path.Combine(path.Value, nameof(Survey), $"{survey.SurveyNo}.docx");
-            if (System.IO.File.Exists(docPath))
-            {
-                var fileStream = System.IO.File.OpenRead(docPath);
-                return File(fileStream, "application/pdf", Path.GetFileName(docPath));
-            }
-            else
-            {
-                typeError = "FileNotFound";
-                throw new Exception($"{docPath} not found.");
-            }
+            dt.Columns.Add(prop.Name, typeof(string));
         }
-        catch (Exception ex)
+
+        // Gán dữ liệu
+        foreach (var item in data)
         {
-            Log.Error(ex, ex.Message);
-            Response.Headers.Add("X-Error-Message", ex.Message);
-            Response.Headers.Add("X-Error-Type", typeError);
-            return StatusCode(500); // Internal Server Error
-        }
-    }
-    public async Task<IActionResult> SurveyConvertPDF(long id)
-    {
-        try
-        {
-            Survey survey = await _surveyRepository.GetObjectByIdAsync(id);
-            string docPath = System.IO.Path.Combine(path.Value, nameof(Survey), $"{survey.SurveyNo}.docx");
-            string pdfPath = System.IO.Path.Combine(path.Value, nameof(Survey), $"{survey.SurveyNo}.pdf");
-            bool checkPDF = System.IO.File.Exists(pdfPath);
-            if ((survey.NeedPDFConvert ?? true) || !(checkPDF))
+            var row = dt.NewRow();
+            foreach (var prop in typeof(PendingJoget).GetProperties())
             {
-                WordUtil.ConvertPDF(docPath, pdfPath);
-                survey.NeedPDFConvert = false;
-                await _surveyRepository.UpdateData(survey, JsonConvert.SerializeObject(survey), id, "Id");
-                return Ok($"{pdfPath} {docPath} process!");
+                row[prop.Name] = prop.GetValue(item) ?? DBNull.Value;
             }
-            else
-            {
-                return Ok($"Already have document!");
-            }
+            dt.Rows.Add(row);
         }
-        catch (Exception ex)
+
+        // Bulk insert
+        using var connection = new SqlConnection(_BaseRepository._connectionString);
+        await connection.OpenAsync();
+        using var bulkCopy = new SqlBulkCopy(connection)
         {
-            Log.Error(ex, ex.Message);
-            return StatusCode(500, $"Internal Server Error: {ex.Message}");
-        }
+            DestinationTableName = "dbo.PendingJoget", // Đảm bảo đúng tên bảng
+            BulkCopyTimeout = 60
+        };
+
+        await bulkCopy.WriteToServerAsync(dt);
     }
 
-    public override HttpResponseMessage UpdateData([FromForm] UpdateFormCollection form)
+
+    public static List<PendingJoget> ConvertToPendingJogetList(List<Dictionary<string, object>> rawData)
     {
-        Task.Factory.StartNew(async () =>
+        var result = new List<PendingJoget>();
+
+        foreach (var dict in rawData)
         {
-            var entity = new Attachment();
-            JsonConvert.PopulateObject(form.values, entity);
-            await _attachmentRepository.UpdateData(entity, form.values, form.key, "Id");
-            long? attachmentId = form.key;
-            Attachment attachment = new Attachment();
-            attachment = await _attachmentRepository.GetSingleObject(a => a.Id == attachmentId);
-            if (attachment != null && (entity.IsPrimary ?? false))
+            var obj = new PendingJoget();
+            foreach (var prop in typeof(PendingJoget).GetProperties())
             {
-                long? surveyId = attachment.SurveyId;
-                Survey survey = new Survey();
-                survey = await _surveyRepository.GetSingleObject(s => s.Id == surveyId);
-                if (survey != null)
+                var key = prop.Name;
+                if (key == "Id") continue;
+                if (key == "Guid") continue;
+                if (key == "CreatedBy") continue;
+                if (key == "CreatedDate") continue;
+                if (key == "ModifiedBy") continue;
+                if (key == "ModifiedDate") continue;
+                if (key == "Deleted") continue;
+                if (key == "DeletedBy") continue;
+                if (key == "DeletedDate") continue;
+                if (key == "RowOrder") continue;
+                if (key == "CopyFromGuid") continue;
+                if (key == "DraftGuid") continue;
+
+                if (dict.TryGetValue(key, out var value) && value != null)
                 {
-                    survey.PDFAttachmentId = attachment.Id;
-                    await _surveyRepository.UpdateData(survey, JsonConvert.SerializeObject(survey), survey.Id, "Id");
+                    prop.SetValue(obj, value.ToString());
                 }
             }
-        });
-        return new HttpResponseMessage(HttpStatusCode.OK);
+            result.Add(obj);
+        }
+
+        return result;
+    }
+
 }
-
-public async Task<IActionResult> AsyncUploadPDF(int surveyId)
-{// Use blog settings while override this method instead
-    var path = BLOB_PATH;
-    string folder = Request.Headers["X-Folder-Path"];
-    IBaseRepository<Attachment> _attachmentRepository = new BaseRepository<Attachment>(_BaseRepository._baseConfiguration, _httpContextAccessor);
-    IFormFileCollection files = null;
-    files = ((FormCollection)(Request.Form)).Files;
-
-    IFormFile file = null;
-    file = files.FirstOrDefault();
-    if (file != null && file.Length > 0)
-    {
-        using (var ms = new MemoryStream())
-        {
-            file.CopyTo(ms);
-            var fileBytes = ms.ToArray();
-            var unixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            string s = Convert.ToBase64String(fileBytes);
-            if (!System.IO.Directory.Exists(BLOB_PATH))
-                Directory.CreateDirectory(BLOB_PATH);
-            if (!System.IO.Directory.Exists(Path.Combine(BLOB_PATH, folder)))
-                Directory.CreateDirectory(Path.Combine(BLOB_PATH, folder));
-
-            Attachment attachment = new Attachment();
-            AttachmentRequest attachmentRequest = new AttachmentRequest();
-            attachmentRequest.surveyId = surveyId;
-            attachment = Util.BindingAttachment(BLOB_PATH, folder, file.FileName, fileBytes, attachmentRequest);
-            attachment = await _attachmentRepository.InsertData(attachment);
-            AttachmentForm attachmentForm = ControllerHelper.BindingAttachmentForm(attachment, BLOB_PATH);
-            //System.IO.File.WriteAllBytes(Path.Combine(path.Value, folder, $"{unixMilliseconds}_{file.FileName}"), fileBytes);
-
-            return Ok(new { success = true, message = "File uploaded successfully", attachment = attachmentForm });
-        }
-    }
-    else
-        return Ok(new { success = false, message = "No file uploaded" });
-}
-}
-

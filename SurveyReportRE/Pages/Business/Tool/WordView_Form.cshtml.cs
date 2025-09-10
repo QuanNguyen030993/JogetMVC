@@ -20,7 +20,7 @@ namespace SurveyReportRE.Pages
         public void OnGet(int pageNum)
         {
             ViewData[nameof(Id)] = pageNum;
-            ViewData[nameof(SchemeModelName)] = nameof(Survey);
+            //ViewData[nameof(SchemeModelName)] = nameof(Survey);
         }
     }
 }

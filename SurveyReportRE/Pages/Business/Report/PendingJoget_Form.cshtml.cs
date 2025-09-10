@@ -23,7 +23,7 @@ namespace SurveyReportRE.Pages
         {
             ModelName = nameof(PendingJoget);
             ViewData[nameof(Id)] = pageNum;
-            ViewData[nameof(SchemeModelName)] = nameof(Survey);
+            //ViewData[nameof(SchemeModelName)] = nameof(Survey);
 
         }
     }

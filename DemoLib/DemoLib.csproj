@@ -26,8 +26,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RESurveyTool.Common\RESurveyTool.Common.csproj" />
-    <ProjectReference Include="..\RESurveyTool.Models\RESurveyTool.Models.csproj" />
+    <ProjectReference Include="..\RESurveyTool.Common\JogetMVC.Common.csproj" />
+    <ProjectReference Include="..\RESurveyTool.Models\JogetMVC.Models.csproj" />
   </ItemGroup>
 
 </Project>

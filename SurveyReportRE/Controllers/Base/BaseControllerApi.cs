@@ -420,38 +420,7 @@ namespace SurveyReportRE.Controllers.Base
                 return BadRequest(ex.Message);
             }
         }
-        public virtual async Task<ActionResult<Attachment>> GetAttachtmentBySurvey(int id)
-        {//Dùng cho control
-            List<Attachment> sitePictures = new List<Attachment>();
-            IBaseRepository<Attachment> _attachmentRepository = new BaseRepository<Attachment>(_BaseRepository._baseConfiguration, _httpContextAccessor);
-            sitePictures = await _attachmentRepository.GetFKMany(id, "SurveyId");
-            List<AttachmentForm> attachmentRequests = new List<AttachmentForm>();
-            foreach (Attachment item in sitePictures)
-            {
-                AttachmentForm attachmentForm = new AttachmentForm();
-                Attachment BaseItem = new Attachment();
-                BaseItem = item;
-                attachmentForm.name = BaseItem.FileName;
-                string mimeType = MimeUtility.GetMimeMapping(BaseItem.FileName);
-                attachmentForm.type = mimeType;
-                if (!System.IO.File.Exists(Path.Combine(BLOB_PATH, BaseItem.SubThumbnailDirectory))) continue;
-                byte[] byteArray = System.IO.File.ReadAllBytes(Path.Combine(BLOB_PATH, BaseItem.SubThumbnailDirectory));
-                attachmentForm.baseString = Convert.ToBase64String(byteArray);
-                attachmentForm.fileData = Array.ConvertAll(byteArray, b => (int)b);
-                attachmentForm.byteArray = byteArray;
-                attachmentForm.size = attachmentForm.fileData.Length;
-                attachmentForm.surveyId = BaseItem.SurveyId;
-                attachmentForm.attachmentId = BaseItem.Id;
-                attachmentForm.outlineId = BaseItem.OutlineId;
-                attachmentForm.outlinePlaceholder = BaseItem.OutlinePlaceholder;
-                attachmentForm.sitePictureId = 0;
-                attachmentForm.sitePictureDescription = BaseItem.AttachmentNote;
-                attachmentForm.attachmentGuid = item.Guid.ToString();
-                attachmentForm.fileDate = item.ModifiedDate.ToString() ?? "";
-                attachmentRequests.Add(attachmentForm);
-            }
-            return Ok(attachmentRequests);
-        }
+    
 
         public virtual async Task<IEnumerable<T>>  GetJsonData<T>(IWebHostEnvironment env, string folder, string filename)
         {
@@ -461,48 +430,7 @@ namespace SurveyReportRE.Controllers.Base
         #endregion
 
         #region POST API 
-        [HttpPost]
-        public virtual async Task<IActionResult> AsyncUploadPicture(int surveyId, int outlineId, string outlinePlaceHolder = "")
-        {// Use blog settings while override this method instead
-            var path = BLOB_PATH;
-            string folder = typeof(T).Name;
-            IBaseRepository<Attachment> _attachmentRepository = new BaseRepository<Attachment>(_BaseRepository._baseConfiguration, _httpContextAccessor);
-            //var storageFolder = _blobStorageSettings.CurrentValue.Path;
-            IFormFileCollection files = null;
-            files = ((FormCollection)(Request.Form)).Files;
-
-            IFormFile file = null;
-            file = files.FirstOrDefault();
-            if (file != null && file.Length > 0)
-            {
-                using (var ms = new MemoryStream())
-                {
-                    file.CopyTo(ms);
-                    var fileBytes = ms.ToArray();
-                    var unixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                    string s = Convert.ToBase64String(fileBytes);
-                    if (!System.IO.Directory.Exists(BLOB_PATH))
-                        Directory.CreateDirectory(BLOB_PATH);
-                    if (!System.IO.Directory.Exists(Path.Combine(BLOB_PATH, folder)))
-                        Directory.CreateDirectory(Path.Combine(BLOB_PATH, folder));
-
-                    Attachment attachment = new Attachment();
-                    AttachmentRequest attachmentRequest = new AttachmentRequest();
-                    attachmentRequest.surveyId = surveyId;
-                    attachmentRequest.outlineId = outlineId;
-                    attachmentRequest.outlinePlaceholder = outlinePlaceHolder;
-                    attachment = Util.BindingAttachment(BLOB_PATH, folder, file.FileName, fileBytes, attachmentRequest);
-                    attachment = await _attachmentRepository.InsertData(attachment);
-                    AttachmentForm attachmentForm = ControllerHelper.BindingAttachmentForm(attachment,BLOB_PATH);
-                    //System.IO.File.WriteAllBytes(Path.Combine(path.Value, folder, $"{unixMilliseconds}_{file.FileName}"), fileBytes);
-
-                    return Ok(new { success = true, message = "File uploaded successfully", attachment = attachmentForm });
-                }
-            }
-            else
-                return Ok(new { success = false, message = "No file uploaded" });
-        }
-
+       
         [HttpPost]
         public virtual async Task<object> ExecuteCustomQuery([FromBody] string query)
         {

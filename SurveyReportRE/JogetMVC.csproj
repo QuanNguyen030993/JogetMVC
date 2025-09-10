@@ -50,7 +50,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="Logs\" />
+		<Folder Include="Controllers\Business\Data\" />
+		<Folder Include="Pages\Business\ExportData\" />
+		<Folder Include="Pages\Business\Form\Popup\" />
+		<Folder Include="Pages\Business\Form\SurveyDetail\" />
 		<Folder Include="Pages\Business\LCForm\LossControlDetail\" />
 		<Folder Include="Template\" />
 		<Folder Include="wwwroot\js\scripts\" />
@@ -61,23 +64,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\RESurveyTool.Common\RESurveyTool.Common.csproj" />
-	  <ProjectReference Include="..\RESurveyTool.Models\RESurveyTool.Models.csproj" />
+	  <ProjectReference Include="..\RESurveyTool.Common\JogetMVC.Common.csproj" />
+	  <ProjectReference Include="..\RESurveyTool.Models\JogetMVC.Models.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<Content Update="Pages\Business\Form\SurveyDetail\Survey_Management_Form.cshtml">
-			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</Content>
-		<Content Update="Pages\Business\Form\SurveyDetail\Survey_Overview_Form.cshtml">
-			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</Content>
-		<Content Update="Pages\Business\MasterData\Outline.cshtml">
-		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</Content>
 		<Content Update="Pages\DemoLibs.cshtml">
 		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
 		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>

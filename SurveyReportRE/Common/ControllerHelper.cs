@@ -78,57 +78,8 @@ namespace SurveyReportRE.ControllerUtil
             await workflowRepository.UpdateData(instanceWorkflow, JsonConvert.SerializeObject(instanceWorkflow), instanceWorkflow.Id, "Id");
         }
 
-        public async static Task SurveyMemoMaking(string docPath, Survey survey, IBaseRepository<SurveyMemoWorkflow> _surveyMemoWorkflowRepository)
-        {
-            List<Outline> outlines = new List<Outline>();
-            List<SurveyMemoWorkflow> tocParagraphs = new List<SurveyMemoWorkflow>();
-            tocParagraphs = WordUtil.ExtractTocLines(docPath);
-            long? surveyTypeId = survey.SurveyTypeId;
-            //if (surveyTypeId != null)
-            //{
-            //    outlines = await _outlineRepository.GetListObject(l => l.SurveyTypeId == surveyTypeId);
-            //    foreach (Outline item in outlines)
-            //    {
-            //        SurveyMemoWorkflow surveyMemoWorkflow = new SurveyMemoWorkflow();
-            //        surveyMemoWorkflow.SurveyId = survey.Id;
-            //        surveyMemoWorkflow.OutlineId = item.Id;
-            //        surveyMemoWorkflow.OutlineName = item.Content;
-            //        surveyMemoWorkflow.SubmitDate = survey.SubmitDate;
-            //        await _surveyMemoWorkflowRepository.InsertData(surveyMemoWorkflow);
-            //    }
-            //}
-            foreach (SurveyMemoWorkflow surveyMemoWorkflow in tocParagraphs)
-            {
-                surveyMemoWorkflow.SurveyId = survey.Id;
-                surveyMemoWorkflow.SubmitDate = survey.SubmitDate;
-                await _surveyMemoWorkflowRepository.InsertData(surveyMemoWorkflow);
-            }
-        }
-
-        public async static Task WFChangeStatus(IBaseRepository<InstanceWorkflow> baseRepository, Survey survey, InstanceWorkflow instanceWorkflow, long? stepsWorkflow, string stepDirection, bool isDelete = false)
-        {
-            if (instanceWorkflow != null)
-            {
-                if (!isDelete)
-                {
-                    if (stepDirection == "Up" || stepDirection == "Down")
-                    {
-                        instanceWorkflow.CurrentStep = (stepDirection == "Up" ? UpStep(instanceWorkflow) : DownStep(instanceWorkflow));
-                        instanceWorkflow.WorkflowStatusId = stepsWorkflow;
-                    }
-                    else
-                    {
-                        instanceWorkflow.CurrentStep = 1;
-                        instanceWorkflow.WorkflowStatusId = stepsWorkflow;
-                    }
-                    await baseRepository.UpdateData(instanceWorkflow, JsonConvert.SerializeObject(instanceWorkflow), instanceWorkflow.Id, "Id");
-                }
-                else
-                {
-                    await baseRepository.DeleteData(instanceWorkflow, instanceWorkflow.Id, "Id", isDelete);
-                }
-            }
-        }
+      
+      
         public static int UpStep(InstanceWorkflow instanceWorkflow)
         {
             if (instanceWorkflow != null)
@@ -142,40 +93,6 @@ namespace SurveyReportRE.ControllerUtil
             else return 1;
         }
 
-        public static AttachmentForm BindingAttachmentForm(Attachment Base, string blobPath)
-        {
-            AttachmentForm attachmentForm = new AttachmentForm();
-            attachmentForm.name = Base.FileName;
-            string mimeType = MimeUtility.GetMimeMapping(Base.FileName);
-            attachmentForm.type = mimeType;
-            byte[] byteArray = System.IO.File.ReadAllBytes(Path.Combine(blobPath, Base.SubDirectory));
-            attachmentForm.baseString = Convert.ToBase64String(byteArray);
-            attachmentForm.fileData = Array.ConvertAll(byteArray, b => (int)b);
-            attachmentForm.byteArray = byteArray;
-            attachmentForm.size = attachmentForm.fileData.Length;
-            attachmentForm.surveyId = Base.SurveyId;
-            attachmentForm.attachmentId = Base.Id;
-            attachmentForm.outlineId = Base.OutlineId;
-            attachmentForm.outlinePlaceholder = Base.OutlinePlaceholder;
-            attachmentForm.sitePictureId = 0;
-            attachmentForm.sitePictureDescription = Base.AttachmentNote;
-            attachmentForm.attachmentGuid = Base.Guid.ToString();
-            attachmentForm.fileDate = Base.ModifiedDate.ToString() ?? "";
-            return attachmentForm;
-        }
-
-        public static void DynamicOutlineObjectHandle(string placeHolder, DynamicOutline dynamicOutline, SurveyCustomOutline surveyData, OutlineDynamic outlineDynamic, DataGridConfig gridConfig, SurveyOutlineOptions surveyOutlineOptions)
-        {
-            dynamicOutline.Outline = surveyData.Outline;
-            if (dynamicOutline.Outline != null)
-            {
-                dynamicOutline.Outline.PlaceHolder = placeHolder;
-            }
-            dynamicOutline.OutlineDynamic = outlineDynamic;
-            dynamicOutline.Params = "";
-            dynamicOutline.Content = "";
-            dynamicOutline.DataGridConfig = gridConfig;
-            dynamicOutline.SurveyOutlineOptions = surveyOutlineOptions;
-        }
+     
     }
 }
