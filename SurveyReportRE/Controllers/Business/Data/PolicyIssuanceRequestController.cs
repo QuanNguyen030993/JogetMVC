@@ -65,7 +65,7 @@ public class PolicyIssuanceRequestController : BaseControllerApi<PolicyIssuanceR
     public override async Task<object> ExecuteCustomQuery([FromBody] string query)
     {
 
-        query = "EXEC usp_fd_policy_issuance_request";
+        //query = "EXEC usp_fd_policy_issuance_request";
         List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomJogetQuery(query);
          
         return obj;
