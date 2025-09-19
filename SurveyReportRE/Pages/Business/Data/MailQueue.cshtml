@@ -1,0 +1,11 @@
+﻿@page
+@model MailQueueModel
+@{
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@MailQueueModel.ModelName`), new MailQueueGridOption('@MailQueueModel.ModelName','System'), null);
+    });
+</script>
+<div id="dataGrid_@MailQueueModel.ModelName"></div>

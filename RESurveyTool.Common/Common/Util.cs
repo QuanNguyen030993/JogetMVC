@@ -777,17 +777,17 @@ namespace SurveyReportRE.Common
         public static MailQueue MakeMailQueueItem(MailItem mailItem, MailConfig emailSettings, List<string> attachments = null, string type = "")
         {
             MailQueue mailQueue = new MailQueue();
-            mailQueue.ToName = mailItem.ToName;
-            mailQueue.ToEmail = mailItem.ToEmail;
-            mailQueue.Subject = mailItem.Subject;
-            mailQueue.TextBody = mailItem.HtmlBody;
-            mailQueue.HtmlBody = mailItem.TextBody;
-            mailQueue.CC = mailItem.CC;
-            mailQueue.BCC = mailItem.BCC;
-            mailQueue.FromAccount = emailSettings.User;
-            mailQueue.Type = type;
-            mailQueue.Attachments = attachments != null ? string.Join(',', attachments) : "";
-            mailQueue.IsSend = true;
+            //mailQueue.ToName = mailItem.ToName;
+            //mailQueue.ToEmail = mailItem.ToEmail;
+            //mailQueue.Subject = mailItem.Subject;
+            //mailQueue.TextBody = mailItem.HtmlBody;
+            //mailQueue.HtmlBody = mailItem.TextBody;
+            //mailQueue.CC = mailItem.CC;
+            //mailQueue.BCC = mailItem.BCC;
+            //mailQueue.FromAccount = emailSettings.User;
+            //mailQueue.Type = type;
+            //mailQueue.Attachments = attachments != null ? string.Join(',', attachments) : "";
+            //mailQueue.IsSend = true;
             return mailQueue;
         }
 

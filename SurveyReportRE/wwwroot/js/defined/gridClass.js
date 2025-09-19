@@ -1768,3 +1768,39 @@ var ConstructionInfoGridOption = class ConstructionInfoGridOption extends MGridO
 //        }
 //    }
 //}
+
+
+var MailQueueGridOption = class MailQueueGridOption extends MGridOption {
+    constructor(modelName, gridType) {
+        super(modelName, gridType);
+    };
+    onCustomizeColumns(columns) {
+        var that = this;
+        super.onCustomizeColumns(columns);
+        var colResend = {
+            dataField: "cmdResend",
+            caption: "Resend",
+            fixed: true,
+            fixedPosition: "right",
+            cellTemplate: function (container, options) {
+                console.log(options);
+                container.append($(`<span class="dx-link">Resend</span>`).on('click', function () {
+                    $.ajax({
+                        headers: { 'Content-Type': 'application/json' },
+                        type: 'POST',
+                        data: JSON.stringify(options.row.data),
+                        url: `/api/MailQueue/Resend`,
+                        success: function (data) {
+                            appNotifySuccess("Resend successed.");
+                        },
+                        error: function (e) {
+                            appErrorHandling(e.responseText, e);
+                        }
+                    });
+                }));
+            }
+        }
+        columns.push(colResend);
+    }
+
+}
