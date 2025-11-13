@@ -41,6 +41,7 @@ public class SystemPropertiesController : BaseControllerApi<SystemProperties>
     public static string DOMAIN_NAME = "";
     private static string BLOB_PATH = "";
     public static string CURRENT_USER = "";
+    private static string Query = ""; 
     public SystemPropertiesController(IBaseRepository<SystemProperties> BaseRepository, IConfiguration config, IHttpContextAccessor httpContextAccessor, ILogger<SystemProperties> logger) : base(BaseRepository, httpContextAccessor)
     {
         configuration = config;
@@ -66,8 +67,13 @@ public class SystemPropertiesController : BaseControllerApi<SystemProperties>
     {
 
         //query = "EXEC usp_fd_policy_issuance_request";
-        List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomJogetQuery(query);
-         
+        List<Dictionary<string, object>> obj = new List<Dictionary<string, object>>();
+        if (Query != query && !query.Contains("@"))
+        {
+           
+            Query = query;
+        }
+        obj = await _BaseRepository.ExecuteCustomJogetQuery(Query);
         return obj;
     }
 

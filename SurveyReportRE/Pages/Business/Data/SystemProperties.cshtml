@@ -3,9 +3,83 @@
 @{
 
 }
+
+
+@{
+    string idContainer = "container" + SystemPropertiesModel.ModelName;
+    string idSearchBox = "formSearchBox" + SystemPropertiesModel.ModelName;
+    string idButton = "button" + SystemPropertiesModel.ModelName;
+    string idGrid = "dataGrid_" + SystemPropertiesModel.ModelName;
+    string idController = RecordWorkflowModel.ModelName;
+}
+
+<script>
+</script>
+
+
 <script>
     $(function () {
-        new MGrid(null, $(`#dataGrid_@SystemPropertiesModel.ModelName`), new MGridOption('@SystemPropertiesModel.ModelName'), null);
+
+        var _viewConfig = [
+             { FilterField: "", Type: "dxTextBox", ElementName: "findByJson", Caption: "Find Prop String", ParameterField: "query", SelectedValue: null, ValueExpr: null, DisplayExpr: null, ShowColumns: null }
+        ]
+        var objectIds = {
+             containerId : '@idContainer',
+             searchBoxId : '@idSearchBox',
+             buttonId : '@idButton',
+             gridId : '@idGrid',
+             controllerId : '@idController'
+        };
+        var searchFormData = {};
+        var searchFormControls = [
+        ];
+
+        var grid = new Object();
+        RenderElementV2(_viewConfig, searchFormControls, objectIds, getSearchParameters, grid );
+        var searchFormData = {};
+        var searchForm = $('<div style="text-align: left;">').appendTo($("#@idSearchBox")).dxForm({
+            items: [{ itemType: "group", items: searchFormControls }],
+            width: 300
+        }).dxForm('instance');
+        grid = new MGrid(null, $(`#dataGrid_@SystemPropertiesModel.ModelName`), new MGridOption('@SystemPropertiesModel.ModelName'), null);
+
+        function getSearchParameters(_viewConfig) {
+        var params = {};
+        _viewConfig.forEach(function (item) {
+            var instance = searchForm.getEditor(item.ElementName);
+            if (instance) {
+                switch (item.Type) {
+                    case "dxDateBox":
+                        params[item.ParameterField] = convertToDateString(instance.option("value"));
+                        break;
+                    case "Enum":
+                    case "Entity":
+                        if (instance.selectedItem) {
+                            var values = instance.selectedItem.map(obj => obj.value || obj.Id);
+                            params[item.ElementName] = values.join(",");
+                        }
+                        break;
+                    case "dxTextBox":
+                        if(instance.option("value"))
+                        params[item.ParameterField] = `EXEC [sp_check_prop] '${instance.option("value")}'`;
+                        break;
+                }
+            }
+        });
+        return params["query"];
+    }
     });
+
+
+
+
+
+
 </script>
+
+<div id="@idContainer" style="display:flex">
+<div id="@idSearchBox" style="text-align: right;"></div>
+<div id="@idButton" style="left: 30px;top: 10px;"> </div>
+</div>
 <div id="dataGrid_@SystemPropertiesModel.ModelName"></div>
+

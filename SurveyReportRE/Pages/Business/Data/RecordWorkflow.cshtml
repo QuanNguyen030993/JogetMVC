@@ -1,11 +1,70 @@
 ﻿@page
 @model RecordWorkflowModel
-@{
 
+@{
+    string idContainer = "container" + RecordWorkflowModel.ModelName;
+    string idSearchBox = "formSearchBox" + RecordWorkflowModel.ModelName;
+    string idButton = "button" + RecordWorkflowModel.ModelName;
+    string idGrid = "dataGrid_" + RecordWorkflowModel.ModelName;
+    string idController = RecordWorkflowModel.ModelName;
 }
+
 <script>
-    $(function () {
-        new MGrid(null, $(`#dataGrid_@RecordWorkflowModel.ModelName`), new MGridOption('@RecordWorkflowModel.ModelName'), null);
+     $(function () {
+
+        var _viewConfig = [
+             { FilterField: "", Type: "dxTextBox", ElementName: "guid", Caption: "Record Guid", ParameterField: "query", SelectedValue: null, ValueExpr: null, DisplayExpr: null, ShowColumns: null }
+        ]
+        var objectIds = {
+             containerId : '@idContainer',
+             searchBoxId : '@idSearchBox',
+             buttonId : '@idButton',
+             gridId : '@idGrid',
+             controllerId : '@idController'
+        };
+        var searchFormData = {};
+        var searchFormControls = [
+        ];
+
+        var grid = new Object();
+        RenderElementV2(_viewConfig, searchFormControls, objectIds, getSearchParameters, grid );
+        var searchFormData = {};
+        var searchForm = $('<div style="text-align: left;">').appendTo($("#@idSearchBox")).dxForm({
+            items: [{ itemType: "group", items: searchFormControls }],
+            width: 300
+        }).dxForm('instance');
+        grid = new MGrid(null, $(`#dataGrid_@RecordWorkflowModel.ModelName`), new MGridOption('@RecordWorkflowModel.ModelName'), null);
+
+        function getSearchParameters(_viewConfig) {
+        var params = {};
+        _viewConfig.forEach(function (item) {
+            var instance = searchForm.getEditor(item.ElementName);
+            if (instance) {
+                switch (item.Type) {
+                    case "dxDateBox":
+                        params[item.ParameterField] = convertToDateString(instance.option("value"));
+                        break;
+                    case "Enum":
+                    case "Entity":
+                        if (instance.selectedItem) {
+                            var values = instance.selectedItem.map(obj => obj.value || obj.Id);
+                            params[item.ElementName] = values.join(",");
+                        }
+                        break;
+                    case "dxTextBox":
+                        if(instance.option("value"))
+                        params[item.ParameterField] = `EXEC [find_record_process] '${instance.option("value")}'`;
+                        break;
+                }
+            }
+        });
+        return params["query"];
+    }
     });
+
 </script>
+<div id="@idContainer" style="display:flex">
+    <div id="@idSearchBox" style="text-align: right;"></div>
+    <div id="@idButton" style="left: 30px;top: 10px;"> </div>
+</div>
 <div id="dataGrid_@RecordWorkflowModel.ModelName"></div>
