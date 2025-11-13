@@ -10,7 +10,7 @@
     string idSearchBox = "formSearchBox" + SystemPropertiesModel.ModelName;
     string idButton = "button" + SystemPropertiesModel.ModelName;
     string idGrid = "dataGrid_" + SystemPropertiesModel.ModelName;
-    string idController = RecordWorkflowModel.ModelName;
+    string idController = SystemPropertiesModel.ModelName;
 }
 
 <script>
@@ -30,6 +30,7 @@
              gridId : '@idGrid',
              controllerId : '@idController'
         };
+        debugger
         var searchFormData = {};
         var searchFormControls = [
         ];
