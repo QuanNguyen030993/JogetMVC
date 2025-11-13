@@ -1,0 +1,11 @@
+﻿@page
+@model QuotationRequestModel
+@{
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@QuotationRequestModel.ModelName`), new MGridOption('@QuotationRequestModel.ModelName'), null);
+    });
+</script>
+<div id="dataGrid_@QuotationRequestModel.ModelName"></div>

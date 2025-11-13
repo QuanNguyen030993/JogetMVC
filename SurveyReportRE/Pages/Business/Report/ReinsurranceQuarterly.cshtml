@@ -1,0 +1,11 @@
+﻿@page
+@model ReinsurranceQuarterlyModel
+@{
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@ReinsurranceQuarterlyModel.ModelName`), new ReinsurranceQuarterlyGridOption('@ReinsurranceQuarterlyModel.ModelName'), null);
+    });
+</script>
+<div id="dataGrid_@ReinsurranceQuarterlyModel.ModelName"></div>

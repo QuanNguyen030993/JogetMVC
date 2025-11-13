@@ -1,0 +1,11 @@
+﻿@page
+@model PolicyIssuanceProcessModel
+@{
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@PolicyIssuanceProcessModel.ModelName`), new MGridOption('@PolicyIssuanceProcessModel.ModelName'), null);
+    });
+</script>
+<div id="dataGrid_@PolicyIssuanceProcessModel.ModelName"></div>

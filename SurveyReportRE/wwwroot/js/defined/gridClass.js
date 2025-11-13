@@ -926,6 +926,103 @@ var PendingJogetGridOption = class PendingJogetGridOption extends MGridOption {
 
 }
 
+var ReinsurranceQuarterlyGridOption = class ReinsurranceQuarterlyGridOption extends MGridOption {
+    constructor(modelName, gridType) {
+        super(modelName, gridType);
+    };
+
+    onCustomizeColumns(columns) {
+        var that = this;
+        super.onCustomizeColumns(columns);
+        //hyperLinkCodeReplace(columns, "Business/Workflow", "PendingJoget", "id", "surveyNo");
+        this.hyperLinkCode(columns, "Business/Workflow", "PendingJoget", "id", "surveyNo");
+        $.each(columns, function (colIndex, col) {
+            if (col.dataField == "submitDate") {
+                col.sortOrder = "desc";
+            }
+            if (col.dataField == "workflowStatus") {
+                col.cellTemplate = function (container, options) {
+
+                    container = markupStatusCSS(container, options);
+                    return container;
+
+                };
+            }
+
+        });
+    }
+
+    hyperLinkCode(columns, moduleName, controllerName, propertyName, specificLinkField = null) {
+        $.each(columns, function (i, col) {
+            if (col.dataField == (specificLinkField != null ? specificLinkField : "Code")) {
+                col.cellTemplate = function (container, options) {
+                    if (options.row.data.workflowStatus != "Recall") {
+                        var selectedValue = options.data[propertyName];
+                        $('<a>').addClass('dx-link dx-link-edit')
+                            .text(options.text)
+                            .css({ color: "blue", textDecoration: "underline", cursor: "pointer" })
+                            .on('dxclick', function () {
+                                if (Object.keys(options.key).length > 0)
+                                    callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}`, `form_${controllerName}_Form_${options.key.id}`, `${controllerName} ${options.text}`);
+                                else
+                                    callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}`, `form_${controllerName}_Form_${options.key}`, `${controllerName} ${options.text}`);
+                                //callElementView(`/Business/MasterData/Client_Form/2`, `${controllerName}_Form`, `${controllerName} ${options.text}`);
+                            })
+                            .appendTo(container);
+                    }
+                    else {
+                        var selectedValue = options.data[propertyName];
+                        $('<a>').addClass('dx-link dx-link-edit')
+                            .text(options.text)
+                            .css({ color: "blue", textDecoration: "underline", cursor: "pointer" })
+                            .on('dxclick', function () {
+                                var popupInstance = $(`#inputTextPopup`).dxPopup({
+                                    width: "50%",
+                                    height: "40%",
+                                    showTitle: true,
+                                    title: `Recall reason`,
+                                    dragEnabled: false,
+                                    closeOnOutsideClick: true,
+                                    contentTemplate: function (containerPopup) {
+                                        $("<div style='height:100%'>")
+                                            .addClass("custom-popup-content")
+                                            .text(options.row.data.recallReason)
+                                            .appendTo(containerPopup);
+                                        //$(`<div id='recallReason'>${options.row.data.recallReason}</div>`).appendTo(containerPopup);
+                                        return containerPopup;
+                                    },
+                                    onHiding: function (e) {
+
+                                    },
+                                    toolbarItems: [{
+                                        widget: 'dxButton',
+                                        toolbar: 'bottom',
+                                        location: 'after',
+                                        options: {
+                                            stylingMode: 'contained',
+                                            type: 'normal',
+                                            text: "Close",
+                                            onClick() {
+                                                popupInstance.hide();
+                                            },
+                                        },
+                                    }]
+
+                                }).dxPopup("instance");
+                                popupInstance.show();
+                            })
+                            .appendTo(container);
+                    }
+                }
+            } else {
+
+            }
+        });
+    }
+
+
+}
+
 var ClientGridOption = class ClientGridOption extends MGridOption {
     constructor(modelName, gridType) {
         super(modelName, gridType);

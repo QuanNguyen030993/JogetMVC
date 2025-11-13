@@ -1,0 +1,11 @@
+﻿@page
+@model SystemPropertiesModel
+@{
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@SystemPropertiesModel.ModelName`), new MGridOption('@SystemPropertiesModel.ModelName'), null);
+    });
+</script>
+<div id="dataGrid_@SystemPropertiesModel.ModelName"></div>
