@@ -168,61 +168,61 @@ namespace SurveyReportRE.Common
 
      
 
-        public static string CloneAttachment(Attachment attachment, string type, long unixMilliseconds, string blobPath)
-        {
-            string subCopyPath = "";
-            string sourcePath = "";
-            string fileName = $"{unixMilliseconds}_{attachment.FileName}";
+        //public static string CloneAttachment(Attachment attachment, string type, long unixMilliseconds, string blobPath)
+        //{
+        //    string subCopyPath = "";
+        //    string sourcePath = "";
+        //    string fileName = $"{unixMilliseconds}_{attachment.FileName}";
 
-            // Bổ sung tên file riêng biệt nếu cần clone các loại như thumbnail
-            string prefix = "";
-            switch (type)
-            {
-                case nameof(attachment.SubDirectory):
-                    prefix = ""; // Không thêm gì cho file chính
-                    subCopyPath = Path.Combine("Management", fileName);
-                    sourcePath = Path.Combine(blobPath, attachment.SubDirectory);
-                    break;
+        //    // Bổ sung tên file riêng biệt nếu cần clone các loại như thumbnail
+        //    string prefix = "";
+        //    switch (type)
+        //    {
+        //        case nameof(attachment.SubDirectory):
+        //            prefix = ""; // Không thêm gì cho file chính
+        //            subCopyPath = Path.Combine("Management", fileName);
+        //            sourcePath = Path.Combine(blobPath, attachment.SubDirectory);
+        //            break;
 
-                case nameof(attachment.SubThumbnailDirectory):
-                    prefix = "thumbnail_";
-                    fileName = $"{prefix}{unixMilliseconds}_{attachment.FileName}";
-                    subCopyPath = Path.Combine("Management", fileName);
-                    sourcePath = Path.Combine(blobPath, attachment.SubThumbnailDirectory);
-                    break;
+        //        case nameof(attachment.SubThumbnailDirectory):
+        //            prefix = "thumbnail_";
+        //            fileName = $"{prefix}{unixMilliseconds}_{attachment.FileName}";
+        //            subCopyPath = Path.Combine("Management", fileName);
+        //            sourcePath = Path.Combine(blobPath, attachment.SubThumbnailDirectory);
+        //            break;
 
-                case nameof(attachment.SubOverviewDirectory):
-                    prefix = "overviewthumbnail_";
-                    fileName = $"{prefix}{unixMilliseconds}_{attachment.FileName}";
-                    subCopyPath = Path.Combine("Management", fileName);
-                    sourcePath = Path.Combine(blobPath, attachment.SubOverviewDirectory);
-                    break;
+        //        case nameof(attachment.SubOverviewDirectory):
+        //            prefix = "overviewthumbnail_";
+        //            fileName = $"{prefix}{unixMilliseconds}_{attachment.FileName}";
+        //            subCopyPath = Path.Combine("Management", fileName);
+        //            sourcePath = Path.Combine(blobPath, attachment.SubOverviewDirectory);
+        //            break;
 
-                case nameof(attachment.SubSitePictureDirectory):
-                    prefix = "sitepicturethumbnail_";
-                    fileName = $"{prefix}{unixMilliseconds}_{attachment.FileName}";
-                    subCopyPath = Path.Combine("Management", fileName);
-                    sourcePath = Path.Combine(blobPath, attachment.SubSitePictureDirectory);
-                    break;
+        //        case nameof(attachment.SubSitePictureDirectory):
+        //            prefix = "sitepicturethumbnail_";
+        //            fileName = $"{prefix}{unixMilliseconds}_{attachment.FileName}";
+        //            subCopyPath = Path.Combine("Management", fileName);
+        //            sourcePath = Path.Combine(blobPath, attachment.SubSitePictureDirectory);
+        //            break;
 
-                default:
-                    break;
-            }
+        //        default:
+        //            break;
+        //    }
 
-            string destPath = Path.Combine(blobPath, subCopyPath);
+        //    string destPath = Path.Combine(blobPath, subCopyPath);
 
-            // Đảm bảo thư mục đích tồn tại
-            var dir = Path.GetDirectoryName(destPath);
-            if (!Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
+        //    // Đảm bảo thư mục đích tồn tại
+        //    var dir = Path.GetDirectoryName(destPath);
+        //    if (!Directory.Exists(dir))
+        //    {
+        //        Directory.CreateDirectory(dir);
+        //    }
 
-            if (File.Exists(sourcePath))
-                File.Copy(sourcePath, destPath, overwrite: true);
+        //    if (File.Exists(sourcePath))
+        //        File.Copy(sourcePath, destPath, overwrite: true);
 
-            return subCopyPath;
-        }
+        //    return subCopyPath;
+        //}
 
         public static void GetQueryLog(string _connectionString)
         {
