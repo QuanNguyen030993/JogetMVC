@@ -87,6 +87,14 @@ namespace SurveyReportRE.Controllers.Base
 
 
         #region GET API 
+
+
+        public async Task<IActionResult> DbContextEnvironmentChange(string environment)
+        {
+            await _BaseRepository.DbContextEnvironmentChange(environment);
+            return Ok();
+        }
+            
         public async Task<string> GetHtmlString(long id, string fieldName)
         {
             T survey = new T();

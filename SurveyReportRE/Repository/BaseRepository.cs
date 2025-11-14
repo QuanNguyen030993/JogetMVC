@@ -78,6 +78,7 @@ public interface IBaseRepository<T> where T : class
     Task ExecuteStoredProcedure(string storedProcedureName, params (string Key, object Value)[] parameters);
     Task<DataTable> ExecuteStoredProcedureReturn(string storedProcedureName, params (string Key, object Value)[] parameters);
     Task<T> IncludeListsOnly(T entity);
+    Task DbContextEnvironmentChange(string environment);
     IConfiguration _baseConfiguration { get; set; }
     IHttpContextAccessor _httpContextAccessor { get; set; }
     //Task<EnumData?> ObjectSpecificEnumInclude(object entity, string enumName, params Expression<Func<T, object>>[] includeProperties);
@@ -106,6 +107,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
     public string _connectionString { get; set; }
     public string _jogetConnectionString { get; set; }
     public string _logConnectionString { get; set; }
+    public string queryEnvironment { get; set; } = "";
     public string userName { get; set; }
 
     public BaseRepository(IConfiguration config, IHttpContextAccessor httpContextAccessor)
@@ -121,6 +123,11 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
     {
         return _baseConfiguration.GetConnectionString("DefaultConnection");
     }
+
+    public async Task DbContextEnvironmentChange(string environment)
+    {
+        _jogetConnectionString = _baseConfiguration.GetConnectionString(environment == "Live" ? "JogetConnection" : "UATConnection");
+    } 
 
     //public void GetRepositoryHttpContent(IHttpContextAccessor httpContextAccessor)
     //{
