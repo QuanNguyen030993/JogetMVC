@@ -467,9 +467,9 @@ namespace SurveyReportRE.Controllers.Base
             if (form.key != null)
             {
                 attachment = await _attachmentRepository.GetSingleObject(s => s.Id == (int)form.key);
-                if (attachment.SubDirectory != null)
-                    if (System.IO.File.Exists(Path.Combine(BLOB_PATH, attachment.SubDirectory)))
-                        System.IO.File.Delete(Path.Combine(BLOB_PATH, attachment.SubDirectory));
+                if (attachment.file_folder != null)
+                    if (System.IO.File.Exists(Path.Combine(BLOB_PATH, attachment.file_folder)))
+                        System.IO.File.Delete(Path.Combine(BLOB_PATH, attachment.file_folder));
 
                 attachment = await _attachmentRepository.DeleteData(attachment, (int)attachment.Id, "Id", false);
             }
