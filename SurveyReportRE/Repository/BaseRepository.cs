@@ -19,6 +19,8 @@ using System;
 using Microsoft.Identity.Client;
 using System.Drawing.Text;
 using Core.Arango.Linq;
+using Microsoft.AspNetCore.Mvc;
+using SurveyReportRE.ControllerUtil;
 public interface IBaseRepository<T> where T : class
 {
     Task<T> GetObjectByIdAsync(long id); //Use for Base processing 
@@ -107,14 +109,14 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
     public string _connectionString { get; set; }
     public string _jogetConnectionString { get; set; }
     public string _logConnectionString { get; set; }
-    public string queryEnvironment { get; set; } = "";
+
     public string userName { get; set; }
 
     public BaseRepository(IConfiguration config, IHttpContextAccessor httpContextAccessor)
     {
         _baseConfiguration = config;
         _connectionString = _baseConfiguration.GetConnectionString("DefaultConnection");
-        _jogetConnectionString = _baseConfiguration.GetConnectionString("JogetConnection");
+        _jogetConnectionString = _baseConfiguration.GetConnectionString(ControllerUtil.queryEnvironment);
         _logConnectionString = _baseConfiguration.GetConnectionString("LogConnection");
         _httpContextAccessor = httpContextAccessor;
         userName = _httpContextAccessor?.HttpContext?.User?.Identity?.Name ?? "";
@@ -123,10 +125,11 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
     {
         return _baseConfiguration.GetConnectionString("DefaultConnection");
     }
-
+ 
     public async Task DbContextEnvironmentChange(string environment)
     {
-        _jogetConnectionString = _baseConfiguration.GetConnectionString(environment == "Live" ? "JogetConnection" : "UATConnection");
+        ControllerUtil.queryEnvironment = environment == "Live" ? "JogetConnection" : "UATJogetConnection";
+        _jogetConnectionString = _baseConfiguration.GetConnectionString(ControllerUtil.queryEnvironment);
     } 
 
     //public void GetRepositoryHttpContent(IHttpContextAccessor httpContextAccessor)

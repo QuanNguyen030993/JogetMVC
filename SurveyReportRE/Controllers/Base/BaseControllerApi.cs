@@ -88,7 +88,7 @@ namespace SurveyReportRE.Controllers.Base
 
         #region GET API 
 
-
+        [HttpGet("{environment}")]
         public async Task<IActionResult> DbContextEnvironmentChange(string environment)
         {
             await _BaseRepository.DbContextEnvironmentChange(environment);

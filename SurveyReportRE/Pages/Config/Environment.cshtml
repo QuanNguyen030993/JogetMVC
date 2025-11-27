@@ -1,0 +1,26 @@
+﻿@page
+@model EnvironmentModel
+@{
+
+}
+<script>
+    $(function () {
+        $("#tabPanel").dxSelectBox({
+            dataSource:["Live", "UAT"],
+             searchEnabled: true,
+             width: 300,
+             onValueChanged: function (e) { // handle after select
+                  $.ajax({
+                      url: `/api/Menu/DbContextEnvironmentChange/${e.value}`,
+                      success: function (response) {
+                      },
+                      error: function (err) {
+                      }
+                  });
+             },
+        });
+    });
+</script>
+<div id="tabPanel">
+    @* <div id="dataGrid_@UsersModel.ModelName"></div> *@
+</div>

@@ -12,6 +12,7 @@ namespace SurveyReportRE.ControllerUtil
 {
     public static class ControllerUtil
     {
+        public static string queryEnvironment = "JogetConnection";
         public static string GetWebFile(IWebHostEnvironment env, string folder, string filename)
         {
             return env.WebRootPath
@@ -165,11 +166,5 @@ namespace SurveyReportRE.ControllerUtil
             else
                 return "...";
         }
-    }
-    public enum CommandQueryType
-    {
-        Insert,
-        Update,
-        Delete
     }
 }
