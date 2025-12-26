@@ -14,6 +14,7 @@ namespace SurveyReportRE.Pages
         private static string HostUrl { get; set; } = "";
         private static bool IsSuperUser { get; set; } = false;
         private static bool IsDebugMode { get; set; } = false;
+        private static bool NotifyEnv { get; set; } = false;
         IConfiguration _configuration;
 
         public ManagementModel(ILogger<ManagementModel> logger, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
@@ -22,8 +23,8 @@ namespace SurveyReportRE.Pages
             _configuration = configuration;
             //string checkIfLoginAsDebug = configuration.GetSection("SuperUser:LoginAs").Value;
             bool isDebugMode = false;
-            string superUsers = _configuration.GetSection("SuperUser:SuperUser").Value;
-            ControllerUtil.ControllerUtil.ContextHandle(httpContextAccessor, configuration,out isDebugMode);
+            string superUsers = _configuration.GetSection("SuperUser:SuperUser").Value ?? "";
+            ControllerUtil.ControllerUtil.ContextHandle(httpContextAccessor, configuration, out isDebugMode);
             //if (!string.IsNullOrEmpty(checkIfLoginAsDebug))
             //{
             //    {
@@ -48,27 +49,30 @@ namespace SurveyReportRE.Pages
             //        var newIdentity = new ClaimsIdentity();
             //        newIdentity.AddClaim(new System.Security.Claims.Claim(newIdentity.NameClaimType, impersonatedUser));
             //        httpContextAccessor.HttpContext.User = new ClaimsPrincipal(newIdentity);
-            //    }
+            //   }
             //}
-            IsSuperUser = superUsers.Contains(httpContextAccessor.HttpContext.User.Identity.Name.Replace(@"TOKIOMARINE\", @""));
-            var DebugEnv = bool.Parse(_configuration.GetSection("SuperUser:IsDebug").Value);
+            IsSuperUser = superUsers.Contains(ControllerUtil.ControllerUtil.GetCurrentContextUser(httpContextAccessor, configuration));
+            var DebugEnv = bool.Parse(_configuration?.GetSection("SuperUser:IsDebug").Value ?? "");
             if (DebugEnv)
             {
-                IsSuperUser = true;
+                //IsSuperUser = true;
                 IsDebugMode = isDebugMode;
+                NotifyEnv = DebugEnv;
             }
         }
 
         public void OnGet(string loadParams)
         {
             //var windowsIdentity = WindowsIdentity.GetCurrent();
-            var loginUser = User.Identity.Name.Replace(@"\", @"\\");
+            var loginUser = User?.Identity?.Name?.Replace(@"\", @"\\") ?? "Anonymous";
             ViewData["LoginUser"] = loginUser;
             ViewData["IsSuperUser"] = IsSuperUser ? "true" : "false";
             ViewData["IsDebugMode"] = IsDebugMode ? "true" : "false";
+            ViewData["NotifyEnv"] = NotifyEnv ? "true" : "false";
             if (!string.IsNullOrEmpty(loadParams))
-            ViewData["LoadParams"] = loadParams;
+                ViewData["LoadParams"] = loadParams;
             ViewData[nameof(HostUrl)] = _configuration.GetSection("UrlConfig:Host").Value;
+            ViewData["Environment"] = ControllerUtil.ControllerUtil.queryEnvironment;
         }
     }
 }

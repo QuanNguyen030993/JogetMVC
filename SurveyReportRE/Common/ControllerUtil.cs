@@ -14,7 +14,7 @@ namespace SurveyReportRE.ControllerUtil
 {
     public static class ControllerUtil
     {
-        public static string queryEnvironment = "Joget";
+        public static string queryEnvironment = "Default";
         public static string GetWebFile(IWebHostEnvironment env, string folder, string filename)
         {
             return env.WebRootPath

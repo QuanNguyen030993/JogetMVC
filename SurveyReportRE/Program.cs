@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication.Negotiate;
+﻿using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using SautinSoft.Document;
@@ -8,6 +8,8 @@ using Serilog.Sinks.MSSqlServer;
 using SurveyReportRE.Controllers.Base;
 using SurveyReportRE.Models.Base;
 using Syncfusion.Licensing;
+using System.Net;
+using System.Security.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 var logger = new LoggerConfiguration()
@@ -59,11 +61,22 @@ builder.Services.AddRazorPages()
 builder.Services.Configure<KestrelServerOptions>(options =>
 {//Request body too large. The max request body size is ... exception
     options.Limits.MaxRequestBodySize = null; // 52428800 50MB
-    //options.ListenLocalhost(5000, listenOptions =>
-    //{
-    //    listenOptions.UseHttps();
+    //options.ListenAnyIP(5000); // HTTP
+    //options.ListenLocalhost(5001, listenOptions =>
+    //{// Dùng certificate thật (PFX) - KHÔNG dùng dev cert localhost nếu gọi qua IP/hostname
+    //    listenOptions.UseHttps(https =>
+    //    {
+    //        https.ServerCertificate = new System.Security.Cryptography.X509Certificates.X509Certificate2(
+    //            builder.Configuration["Kestrel:Certificates:Default:Path"],
+    //            builder.Configuration["Kestrel:Certificates:Default:Password"]);
+
+    //        https.SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
+
+    //    });
+
     //    listenOptions.UseConnectionLogging();
     //});
+    //options.Listen(IPAddress.Parse("127.0.0.1"), 5000);
 });
 builder.Services.AddSession();
 

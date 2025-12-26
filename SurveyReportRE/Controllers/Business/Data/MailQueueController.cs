@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Office2013.Excel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
@@ -60,7 +61,7 @@ public class MailQueueController : BaseControllerApi<MailQueue>
         DOMAIN_NAME = configuration.GetSection("Domain:DCServer").Value;
         path = _BaseRepository._baseConfiguration.GetSection("BlobStorage:Path");
         BLOB_PATH = path.Value;
-        CURRENT_USER = _httpContextAccessor.HttpContext.User.Identity.Name.Replace(DOMAIN_NAME, "");
+        CURRENT_USER = _httpContextAccessor?.HttpContext?.User?.Identity?.Name?.Replace(DOMAIN_NAME, "") ?? "Anonymous";
     }
     [HttpPost]
     public override async Task<object> ExecuteCustomQuery([FromBody] string query)
@@ -150,6 +151,32 @@ public class MailQueueController : BaseControllerApi<MailQueue>
     }
     [HttpPost]
     public async Task<IActionResult> Resend([FromBody] MailQueue mailQueue)
+    {
+        try
+        {
+            MailConfig emailSettings = configuration.GetSection("Email").Get<MailConfig>();
+            List<string> attachments = null;
+            //MailQueue mailQueue = new MailQueue();//await _BaseRepository.GetSingleObject(s => s.Id == key);
+            MailItem mailItem = new MailItem();
+            mailItem.ToName = mailQueue.to_name;
+            mailItem.ToEmail = mailQueue.to_email;
+            mailItem.Subject = mailQueue.subject;
+            mailItem.HtmlBody = mailQueue.html_body;// mailQueue.HtmlBody;
+            mailItem.TextBody = mailQueue.text_body;//mailQueue.HtmlBody;
+            mailItem.CC = mailQueue.cc;
+            MailUtil.SendEmail(emailSettings, mailItem, attachments).Wait();
+        }
+        catch (Exception ex)
+        {
+            //throw new CustomException("Resend notify was failed.", ex);
+        }
+        return Ok();
+    }
+    
+    [HttpPost]
+    [AllowAnonymous]
+    [InternalTokenAuthorize]
+    public async Task<IActionResult> Sendmail([FromBody] MailQueue mailQueue)
     {
         try
         {
