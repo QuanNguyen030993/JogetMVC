@@ -19,22 +19,23 @@ using System;
 using Microsoft.Identity.Client;
 using System.Drawing.Text;
 using Core.Arango.Linq;
-using Microsoft.AspNetCore.Mvc;
 using SurveyReportRE.ControllerUtil;
 public interface IBaseRepository<T> where T : class
 {
     Task<T> GetObjectByIdAsync(long id); //Use for Base processing 
     Task<T> GetObjectIncludeByIdAsync(long id); //Use for Base processing 
     Task<T> GetSingleObject(Expression<Func<T, bool>> predicate); //Use for Class processing
-    Task<T> GetSingleObjectFullInclude(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includeProperties); //Use for Class processing
+    Task<T> GetSingleObjectToClone(string connectionString, Expression<Func<T, bool>> predicate); //Use for Class processing
+    Task<T> GetSingleObjectFullInclude(Expression<Func<T, bool>> predicate, List<string> excludeProperties = null, params Expression<Func<T, object>>[] includeProperties); //Use for Class processing
     Task<List<T>> GetListObject(Expression<Func<T, bool>> predicate);
+    Task<List<T>> GetListObjectToClone(string connectionString, Expression<Func<T, bool>> predicate);
     Task<List<T>> GetListObjectFullInclude(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includeProperties);
     Task<List<T>> GetFKMany(int fkId, string fkField);
     Task<List<T>> GetManyObjectByIdAsync(int id);
     Task<List<T>> EnumData(string name);
     Task<List<Dictionary<string, object>>> ExecuteCustomQuery(string query);
     Task<List<Dictionary<string, object>>> ExecuteCustomJogetQuery(string query);
-    Task<List<dynamic>> EnumLookup(string refField, string enumName = null);
+    Task<List<dynamic>> EnumLookup(string refField, string enumName = null, bool isSameUsing = false);
     Task UpdateEnum(string refField, string valueKey, long sysTableId);
     Task<List<T>> GetAll();
     Task<List<T>> GetAllInclude();
@@ -71,8 +72,12 @@ public interface IBaseRepository<T> where T : class
     /// <param name="changeFields"> string field cần update</param>
     /// <param name="keyId"> id chỉ định để update</param>
     /// <param name="keyField"></param>
-    /// Method 1: Update đơn lẻ chỉ truyền entity có giá trị thay đổi cùng với string, Populate entity từ chuỗi thay đổi này trước 
+    /// Method 1: Update đơn lẻ chỉ truyền entity có giá trị thay đổi cùng với string (string buộc là chuỗi thuần), Populate entity từ chuỗi thay đổi này trước 
+    /// VD: object.A = "1", chuỗi cũng phải là A : "1", không dùng 1 đối tượng mới assign rồi parse ra
+    /// Method 2: Update đơn lẻ chỉ truyền entity có giá trị thay đổi cùng với string (parse từ object), assign cho đối tượng từ data hiện có 
+    /// VD: objectA = objectB, , objectB.C = "2",  Parse(objectB)
     /// Method 2: Update toàn bộ, Populate toàn bộ object thành 1 string rồi truyền vào, để không bị sai thì phải update object entity trước khi Json SerialObject
+    /// VD: objectA = objectB, chuỗi là parse từ objectB toàn bộ
     /// <returns></returns>
     Task<T> UpdateData(T entity, string changeFields, long? keyId, string keyField);
     Task<T> DeleteData(T entity, object keyId, string keyField, bool isRemove);
@@ -109,29 +114,27 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
     public string _connectionString { get; set; }
     public string _jogetConnectionString { get; set; }
     public string _logConnectionString { get; set; }
-
     public string userName { get; set; }
 
     public BaseRepository(IConfiguration config, IHttpContextAccessor httpContextAccessor)
     {
         _baseConfiguration = config;
         _connectionString = _baseConfiguration.GetConnectionString("DefaultConnection");
-        _jogetConnectionString = _baseConfiguration.GetConnectionString(ControllerUtil.queryEnvironment);
+        _jogetConnectionString = _baseConfiguration.GetConnectionString(ControllerUtil.queryEnvironment + "Connection");
         _logConnectionString = _baseConfiguration.GetConnectionString("LogConnection");
         _httpContextAccessor = httpContextAccessor;
         userName = _httpContextAccessor?.HttpContext?.User?.Identity?.Name ?? "";
     }
     public string GetConnection()
     {
-        return _baseConfiguration.GetConnectionString("DefaultConnection");
+        return _baseConfiguration.GetConnectionString(ControllerUtil.queryEnvironment + "Connection");
     }
- 
+
     public async Task DbContextEnvironmentChange(string environment)
     {
-        ControllerUtil.queryEnvironment = environment == "Live" ? "JogetConnection" : "UATJogetConnection";
+        //ControllerUtil.queryEnvironment = environment == "Live" ? "JogetConnection" : "UATJogetConnection";
         _jogetConnectionString = _baseConfiguration.GetConnectionString(ControllerUtil.queryEnvironment);
-    } 
-
+    }
     //public void GetRepositoryHttpContent(IHttpContextAccessor httpContextAccessor)
     //{
     //    _httpContextAccessor = httpContextAccessor;
@@ -143,11 +146,54 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
         using (var connection = new SqlConnection(_connectionString))
         {
             List<T> entities = new List<T>();
-            var sql = Util.BuildSelectAllQuery<T>(typeof(T).Name); ;
+            try
+            {
+                try
+                {
+                    var (sql, parameters) = Util.BuildSelectAllQuery<T>(typeof(T).Name, predicate); ;
+                    var compiledPredicate = predicate.Compile();
+                    var result = await connection.QueryAsync<T>(sql, parameters);
+                    IQueryable<T> queryableResult = result.ToList().AsQueryable();
+                    if (queryableResult.Any(predicate))
+                        entities.AddRange(queryableResult.Where(predicate).ToList());
+                    Util.QueryLogs(_connectionString, "sp_Querylogs",
+                                ("@QueryString", $"GetListObject: {sql}")
+                                , ("@Duration", "")
+                                , ("@User", userName));
+                }
+                catch (Exception ex)
+                {
+                    var (sql, parameters) = Util.BuildSelectAllQuery<T>(typeof(T).Name, predicate, true); ;
+                    var compiledPredicate = predicate.Compile();
+                    var result = await connection.QueryAsync<T>(sql, new { });
+                    IQueryable<T> queryableResult = result.ToList().AsQueryable();
+                    if (queryableResult.Any(predicate))
+                        entities.AddRange(queryableResult.Where(predicate).ToList());
+                    Util.QueryLogs(_connectionString, "sp_Querylogs",
+                                ("@QueryString", $"GetListObject: {sql}")
+                                , ("@Duration", "")
+                                , ("@User", userName));
+                }
+            }
+            catch (Exception exFrom)
+            {
+
+            }
+
+
+            return entities;
+        }
+    }
+    public async Task<List<T>> GetListObjectToClone(string connectionString, Expression<Func<T, bool>> predicate)
+    {
+        using (var connection = new SqlConnection(connectionString))
+        {
+            List<T> entities = new List<T>();
+            var (sql, parameters) = Util.BuildSelectAllQuery<T>(typeof(T).Name, predicate); ;
             try
             {
                 var compiledPredicate = predicate.Compile();
-                var result = await connection.QueryAsync<T>(sql, new { });
+                var result = await connection.QueryAsync<T>(sql, parameters);
                 IQueryable<T> queryableResult = result.ToList().AsQueryable();
                 if (queryableResult.Any(predicate))
                     entities.AddRange(queryableResult.Where(predicate).ToList());
@@ -190,7 +236,41 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
                             ("@QueryString", $"GetSingleObject: {sql}")
                             , ("@Duration", "")
                             , ("@User", userName));
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
+            {
+                Util.QueryLogs(_connectionString, "sp_Querylogs",
+                            ("@QueryString", $"Error GetSingleObject: {sql}")
+                            , ("@Duration", "")
+                            , ("@User", userName));
+            }
+            return entity;
+        }
+    }
+
+    public async Task<T> GetSingleObjectToClone(string connectionString, Expression<Func<T, bool>> predicate)
+    {
+        using (var connection = new SqlConnection(connectionString))
+        {
+            T entity = new T();
+            var (sql, parameters) = Util.BuildSelectQuery<T>(typeof(T).Name, predicate);
+            try
+            {
+                var compiledPredicate = predicate.Compile();
+                //var sql = Util.BuildSelectQuery<T>(typeof(T).Name, predicate);
+                var result = await connection.QueryAsync<T>(sql, parameters);
+                IQueryable<T> queryableResult = result.ToList().AsQueryable();
+                entity = queryableResult.FirstOrDefault(predicate);
+                //foreach (var includeProperty in includeProperties)
+                //{
+                //    entity = await ObjectSpecificInclude(entity, includeProperty);
+                //}
+                Util.QueryLogs(_connectionString, "sp_Querylogs",
+                            ("@QueryString", $"GetSingleObject: {sql}")
+                            , ("@Duration", "")
+                            , ("@User", userName));
+            }
+            catch (Exception ex)
             {
                 Util.QueryLogs(_connectionString, "sp_Querylogs",
                             ("@QueryString", $"Error GetSingleObject: {sql}")
@@ -205,7 +285,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
     {
         using (var connection = new SqlConnection(_connectionString))
         {
-            var userName = _httpContextAccessor?.HttpContext?.User?.Identity?.Name.Replace("TOKIOMARINE\\", "");
+            var userName = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, _baseConfiguration);
             string insertQuery = Util.BuildInsertQuery(entity, typeof(T).Name, userName);
             dynamic? inserted = null;
             try
@@ -328,7 +408,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
     {
         using (var connection = new SqlConnection(_connectionString))
         {
-            var userName = _httpContextAccessor?.HttpContext?.User?.Identity?.Name.Replace("TOKIOMARINE\\", "");
+            var userName = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, _baseConfiguration);
             Util.HandleSystemAttribute(entity, userName, CommandQueryType.Update);
             string updateQuery = Util.BuildUpdateQuery<T>(changeFields, typeof(T).Name, keyId, keyField, userName);
             try
@@ -358,7 +438,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
     {
         using (var connection = new SqlConnection(_connectionString))
         {
-            var userName = _httpContextAccessor?.HttpContext?.User?.Identity?.Name.Replace("TOKIOMARINE\\", "");
+            var userName = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, _baseConfiguration);
             Util.HandleSystemAttribute(entity, userName, CommandQueryType.Update);
             string updateQuery = Util.BuildUpdateQuery<T>(changeFields, typeof(T).Name, keyId, keyField, userName);
             try
@@ -388,7 +468,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
     {
         using (var connection = new SqlConnection(_connectionString))
         {
-            var userName = _httpContextAccessor?.HttpContext?.User?.Identity?.Name.Replace("TOKIOMARINE\\", "");
+            var userName = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, _baseConfiguration);
             var query = Util.BuildDeleteQuery(entity, keyId, keyField, userName, isRemove);
 
             var parameters = new DynamicParameters();
@@ -452,12 +532,12 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
             var sql = Util.BuildSelectQuery<T>(); ;
             try
             {
-            var result = await connection.QueryAsync<T>(sql, new { Id = id });
-            Util.QueryLogs(_connectionString, "sp_Querylogs",
-                    ("@QueryString", $"GetManyObjectByIdAsync: {sql}")
-                    , ("@Duration", "")
-                    , ("@User", userName));
-            return result.ToList();
+                var result = await connection.QueryAsync<T>(sql, new { Id = id });
+                Util.QueryLogs(_connectionString, "sp_Querylogs",
+                        ("@QueryString", $"GetManyObjectByIdAsync: {sql}")
+                        , ("@Duration", "")
+                        , ("@User", userName));
+                return result.ToList();
             }
             catch
             {
@@ -484,7 +564,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
             return result.ToList();
         }
     }
-    public async Task<List<dynamic>> EnumLookup(string refField, string enumName = null)
+    public async Task<List<dynamic>> EnumLookup(string refField, string enumName = null, bool isSameUsing = false)
     {
         using (var connection = new SqlConnection(_connectionString))
         {
@@ -495,6 +575,10 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
             if (!string.IsNullOrEmpty(enumName))
                 sql = $@"SELECT EnumData.* FROM EnumData WITH (NOLOCK) 
                         INNER JOIN SysTable ON SysTable.Id = EnumData.SysTableId
+                        WHERE EnumData.Name = '{enumName}' ORDER BY EnumOrder ASC";
+
+            if (isSameUsing)
+                sql = $@"SELECT EnumData.* FROM EnumData WITH (NOLOCK) 
                         WHERE EnumData.Name = '{enumName}' ORDER BY EnumOrder ASC";
 
             var result = await connection.QueryAsync<dynamic>(sql);
@@ -541,7 +625,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
     {
         using (var connection = new SqlConnection(_connectionString))
         {
-            var query = Util.BuildSelectAllQuery<T>(typeof(T).Name);
+            var (query, parameters) = Util.BuildSelectAllQuery<T>(typeof(T).Name);
             var result = await connection.QueryAsync<T>(query);
             var prop = typeof(T).GetProperty("RowOrder");
             if (prop != null)
@@ -719,7 +803,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
     {
         using (var connection = new SqlConnection(_connectionString))
         {
-            var query = Util.BuildSelectAllQuery<T>(typeof(T).Name);
+            var (query, parameters) = Util.BuildSelectAllQuery<T>(typeof(T).Name);
             var result = await connection.QueryAsync<T>(query);
             Util.QueryLogs(_connectionString, "sp_Querylogs",
                       ("@QueryString", $"FindBy: {query}")
@@ -807,7 +891,6 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
         }
     }
 
-
     public async Task<List<Dictionary<string, object>>> ExecuteCustomQuery(string query)
     {
         try
@@ -820,26 +903,39 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
 
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    using (var reader = await command.ExecuteReaderAsync())
-                    {
-                        // Đọc dữ liệu từ DataReader
-                        while (await reader.ReadAsync())
-                        {
-                            var row = new Dictionary<string, object>();
+                    //using (var reader = await command.ExecuteReaderAsync())
+                    //    {
+                    //        // Đọc dữ liệu từ DataReader
+                    //        while (await reader.ReadAsync())
+                    //        {
+                    //            var row = new Dictionary<string, object>();
 
-                            for (int i = 0; i < reader.FieldCount; i++)
-                            {
-                                var columnName = Char.ToLowerInvariant(reader.GetName(i)[0]) + reader.GetName(i).Substring(1);
+                    //            for (int i = 0; i < reader.FieldCount; i++)
+                    //            {
+                    //                var columnName = Char.ToLowerInvariant(reader.GetName(i)[0]) + reader.GetName(i).Substring(1);
 
-                                //var columnName = reader.GetName(i); // Tên cột
-                                var value = reader.IsDBNull(i) ? null : reader.GetValue(i); // Giá trị cột
-                                row[columnName] = value; // Thêm vào dictionary
-                            }
+                    //                //var columnName = reader.GetName(i); // Tên cột
+                    //                var value = reader.IsDBNull(i) ? null : reader.GetValue(i); // Giá trị cột
+                    //                row[columnName] = value; // Thêm vào dictionary
+                    //            }
 
-                            resultList.Add(row);
-                        }
-                    }
+                    //            resultList.Add(row);
+                    //        }
+                    //    }
+                    //}
+                    using var reader = await command.ExecuteReaderAsync();
+
+                    var dt = new DataTable();
+                    dt.Load(reader); // <-- không cần while
+                    resultList = dt.AsEnumerable()
+                                .Select(row => dt.Columns.Cast<DataColumn>()
+                                    .ToDictionary(
+                                        col => Char.ToLowerInvariant(col.ColumnName[0]) + col.ColumnName[1..],
+                                        col => row[col] == DBNull.Value ? null : row[col]
+                                    ))
+                                .ToList();
                 }
+
                 Util.QueryLogs(_connectionString, "sp_Querylogs",
                        ("@QueryString", $"ExecuteCustomQuery: {query}")
                        , ("@Duration", "")
@@ -881,7 +977,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
                                 //var columnName = reader.GetName(i); // Tên cột
                                 var value = reader.IsDBNull(i) ? null : reader.GetValue(i); // Giá trị cột
                                 row[columnName] = value; // Thêm vào dictionary
-                            }
+                }
 
                             resultList.Add(row);
                         }
@@ -901,6 +997,8 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
             return null;
         }
     }
+
+
     public async Task<List<T>> GetAllInclude()
     {
         List<T> returnObjectList = new List<T>();
@@ -912,11 +1010,11 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
         return returnObjectList;
     }
 
-    public async Task<T> GetSingleObjectFullInclude(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includeProperties)
+    public async Task<T> GetSingleObjectFullInclude(Expression<Func<T, bool>> predicate, List<string> excludeProperties = null, params Expression<Func<T, object>>[] includeProperties)
     {
         T entity = new T();
         entity = await GetSingleObject(predicate);
-        FKEnumLogicRunSync(entity);
+        FKEnumLogicRunSync(entity, excludeProperties);
         if (includeProperties.Count() > 0)
             entity = IncludeSpecificFieldSync(entity, includeProperties);
         return entity;
@@ -938,8 +1036,8 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
         using (var connection = new SqlConnection(_connectionString))
         {
 
-            var sql = Util.BuildSelectAllQuery<T>(typeof(T).Name); ;
-            var result = await connection.QueryAsync<T>(sql, new { });
+            var (sql, parameters) = Util.BuildSelectAllQuery<T>(typeof(T).Name, predicate); ;
+            var result = await connection.QueryAsync<T>(sql, parameters);
             IQueryable<T> queryableResult = result.ToList().AsQueryable();
             entities = queryableResult.ToList();
             entities.ForEach(f =>
@@ -981,27 +1079,37 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
     }
 
     //Last change date: 2025-02-21
-    public void FKEnumLogicRunSync(T entity)
+    public void FKEnumLogicRunSync(T entity, List<string> excludeProperties = null)
     {
         var entityType = typeof(T);
-        var properties = entityType.GetProperties();
-        foreach (var property in properties)
+        if (entityType.GetProperties().Any(w => w.Name.EndsWith("FK") || w.Name.EndsWith("Enum")))
         {
-            if (property.Name.EndsWith("FK") &&
-               !property.PropertyType.IsValueType &&
-               property.PropertyType != typeof(string) &&
-               property.PropertyType != typeof(byte[]))
+            var properties = entityType.GetProperties().Where(w => w.Name.EndsWith("FK") || w.Name.EndsWith("Enum"));
+            if (excludeProperties != null)
             {
-                var lambda = Util.MakeLambda<T>(entityType, property);
-                ObjectSpecificIncludeSync(entity, lambda);
+                if (properties.Any(w => !(excludeProperties.Contains(w.Name.Replace("FK", "")))))
+                    properties = properties.Where(w => !(excludeProperties.Contains(w.Name.Replace("FK", ""))));
             }
-            if (property.Name.EndsWith("Enum") &&
-              !property.PropertyType.IsValueType &&
-              property.PropertyType != typeof(string) &&
-              property.PropertyType != typeof(byte[]))
+            foreach (var property in properties)
             {
-                var lambda = Util.MakeLambda<T>(entityType, property);
-                ObjectSpecificEnumIncludeSync(entity, "", lambda);
+                if (property.Name.EndsWith("FK") &&
+                   !property.PropertyType.IsValueType &&
+                   property.PropertyType != typeof(string) &&
+                   property.PropertyType != typeof(byte[]))
+                {
+                    if (excludeProperties != null)
+                        if (excludeProperties.Contains(property.Name)) continue;
+                    var lambda = Util.MakeLambda<T>(entityType, property);
+                    ObjectSpecificIncludeSync(entity, lambda);
+                }
+                if (property.Name.EndsWith("Enum") &&
+                  !property.PropertyType.IsValueType &&
+                  property.PropertyType != typeof(string) &&
+                  property.PropertyType != typeof(byte[]))
+                {
+                    var lambda = Util.MakeLambda<T>(entityType, property);
+                    ObjectSpecificEnumIncludeSync(entity, "", lambda);
+                }
             }
         }
     }

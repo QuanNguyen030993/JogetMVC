@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
+using RESurveyTool.Models.Models.Parsing;
 using Serilog.Context;
+using SurveyReportRE.Models.Migration.Business.Form;
 using SurveyReportRE.Models.Migration.Business.Workflow;
 using SurveyReportRE.Models.Migration.Config;
 using System.Data;
@@ -12,7 +14,7 @@ namespace SurveyReportRE.ControllerUtil
 {
     public static class ControllerUtil
     {
-        public static string queryEnvironment = "JogetConnection";
+        public static string queryEnvironment = "Joget";
         public static string GetWebFile(IWebHostEnvironment env, string folder, string filename)
         {
             return env.WebRootPath
@@ -21,12 +23,24 @@ namespace SurveyReportRE.ControllerUtil
                + Path.DirectorySeparatorChar.ToString()
                + filename;
         }
+
+        public static string GetCurrentContextUser(IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
+        {
+            string domain = configuration?.GetSection("Domain:DCServer").Value ?? "";
+            var DebugEnv = bool.Parse(configuration?.GetSection("SuperUser:IsDebug").Value ?? "");
+            if (DebugEnv && httpContextAccessor?.HttpContext?.User?.Identity?.Name == null)
+            {
+                return "quan.nh";
+            }
+            return httpContextAccessor?.HttpContext?.User?.Identity?.Name?.Replace(domain, "") ?? "";
+        }
+
         public static void ContextHandle(IHttpContextAccessor httpContextAccessor, IConfiguration configuration, out bool isDebugmode)
         {
             isDebugmode = false;
             string checkIfLoginAsDebug = configuration.GetSection("SuperUser:LoginAs").Value;
             string superUsers = configuration.GetSection("SuperUser:SuperUser").Value;
-            
+
             if (!string.IsNullOrEmpty(checkIfLoginAsDebug))
             {
                 {
@@ -46,11 +60,13 @@ namespace SurveyReportRE.ControllerUtil
                     newIdentity.AddClaim(new System.Security.Claims.Claim(newIdentity.NameClaimType, impersonatedUser));
                     httpContextAccessor.HttpContext.User = new ClaimsPrincipal(newIdentity);
                 }
-            }else
+            }
+            else
             {
-               
+
             }
         }
+
 
         public static string GenerateNumberSeq(List<FormatCodeNo> tableConfigs, IBaseRepository<FormatCodeNo> baseRepository, string tableName = "")
         {

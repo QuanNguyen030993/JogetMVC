@@ -9,35 +9,14 @@ using System.Text;
 using SurveyReportRE.Models.Request;
 using Newtonsoft.Json.Linq;
 using System.Data;
-using Syncfusion.Pdf.Parsing;
-using BitMiracle.LibTiff.Classic;
-using SurveyReportRE.Models.Migration.Business.Form;
-using RESurveyTool.Models.Models.Parsing;
-using DocumentFormat.OpenXml.Drawing.Charts;
 using System.Drawing;
-using System.Reflection.Metadata.Ecma335;
-using System.Collections;
-using Azure.Core;
 using RESurveyTool.Common.Constant;
-using Syncfusion.Pdf.Security;
-using AngleSharp;
 using SurveyReportRE.Models.Migration.Business.HumanResource;
-using SurveyReportRE.Models.Migration.Business.Workflow;
 using SurveyReportRE.Models.Migration.Business.Config;
-using DocumentFormat.OpenXml.ExtendedProperties;
 using SurveyReportRE.Models.Migration.Business.MasterData;
-using DocumentFormat.OpenXml.Office2016.Excel;
 using System.Linq.Expressions;
-using DocumentFormat.OpenXml.Office2010.PowerPoint;
-using MailKit;
 using System.Drawing.Imaging;
-using MailKit.Security;
-using MimeKit;
-using RESurveyTool.Common.Common;
-using System.Linq;
-using DocumentFormat.OpenXml.InkML;
 using Microsoft.Data.SqlClient;
-using static SkiaSharp.HarfBuzz.SKShaper;
 namespace SurveyReportRE.Common
 {
     public static class Util
@@ -166,63 +145,6 @@ namespace SurveyReportRE.Common
         //    return returnData;
         //}
 
-     
-
-        //public static string CloneAttachment(Attachment attachment, string type, long unixMilliseconds, string blobPath)
-        //{
-        //    string subCopyPath = "";
-        //    string sourcePath = "";
-        //    string fileName = $"{unixMilliseconds}_{attachment.FileName}";
-
-        //    // Bổ sung tên file riêng biệt nếu cần clone các loại như thumbnail
-        //    string prefix = "";
-        //    switch (type)
-        //    {
-        //        case nameof(attachment.SubDirectory):
-        //            prefix = ""; // Không thêm gì cho file chính
-        //            subCopyPath = Path.Combine("Management", fileName);
-        //            sourcePath = Path.Combine(blobPath, attachment.SubDirectory);
-        //            break;
-
-        //        case nameof(attachment.SubThumbnailDirectory):
-        //            prefix = "thumbnail_";
-        //            fileName = $"{prefix}{unixMilliseconds}_{attachment.FileName}";
-        //            subCopyPath = Path.Combine("Management", fileName);
-        //            sourcePath = Path.Combine(blobPath, attachment.SubThumbnailDirectory);
-        //            break;
-
-        //        case nameof(attachment.SubOverviewDirectory):
-        //            prefix = "overviewthumbnail_";
-        //            fileName = $"{prefix}{unixMilliseconds}_{attachment.FileName}";
-        //            subCopyPath = Path.Combine("Management", fileName);
-        //            sourcePath = Path.Combine(blobPath, attachment.SubOverviewDirectory);
-        //            break;
-
-        //        case nameof(attachment.SubSitePictureDirectory):
-        //            prefix = "sitepicturethumbnail_";
-        //            fileName = $"{prefix}{unixMilliseconds}_{attachment.FileName}";
-        //            subCopyPath = Path.Combine("Management", fileName);
-        //            sourcePath = Path.Combine(blobPath, attachment.SubSitePictureDirectory);
-        //            break;
-
-        //        default:
-        //            break;
-        //    }
-
-        //    string destPath = Path.Combine(blobPath, subCopyPath);
-
-        //    // Đảm bảo thư mục đích tồn tại
-        //    var dir = Path.GetDirectoryName(destPath);
-        //    if (!Directory.Exists(dir))
-        //    {
-        //        Directory.CreateDirectory(dir);
-        //    }
-
-        //    if (File.Exists(sourcePath))
-        //        File.Copy(sourcePath, destPath, overwrite: true);
-
-        //    return subCopyPath;
-        //}
 
         public static void GetQueryLog(string _connectionString)
         {
@@ -269,7 +191,7 @@ namespace SurveyReportRE.Common
                 paramerters);
         }
 
-        
+      
         public static void AddFontFamilyToNodes(HtmlDocument document, string fontFamily = "Asap")
         {
             // Chọn các thẻ div, p, và span
@@ -475,7 +397,7 @@ namespace SurveyReportRE.Common
                             foreach (var img in imgs)
                             {
                                 int maxWidth = ConfigConstant._maxWordPictureWidth;
-                                int maxHeight = 400;
+                                //int maxHeight = 400;
                                 string base64Pattern = @"data:image/\w+;base64,([^""]+)";
                                 Match match = Regex.Match(img.OuterHtml, base64Pattern);
                                 string base64Data = "";
@@ -501,8 +423,10 @@ namespace SurveyReportRE.Common
                                                 if (double.Parse(width) > maxWidth)
                                                     newImgNode.SetAttributeValue("width", maxWidth.ToString());
                                                 //if (image.Height > maxHeight)
-                                                if (double.Parse(height) > maxHeight)
-                                                    newImgNode.SetAttributeValue("height", maxHeight.ToString());
+                                                //if (double.Parse(height) > maxHeight)
+                                                //newImgNode.SetAttributeValue("height", maxHeight.ToString());
+                                                if (double.Parse(height) > 0)
+                                                    newImgNode.SetAttributeValue("height", height.ToString());
 
 
 
@@ -547,6 +471,14 @@ namespace SurveyReportRE.Common
                 return $"{attr}=\"{rounded}\"";
             });
         }
+
+        public static string HtmlExtractToString(string htmlContent)
+        {
+            HtmlDocument document = new HtmlDocument();
+            document.LoadHtml(htmlContent);
+            return document.DocumentNode.InnerText;
+        }
+
         public static HtmlDocument TableHTMLRemake(string stringValue)
         {
             HtmlDocument document = new HtmlDocument();
@@ -717,10 +649,6 @@ namespace SurveyReportRE.Common
                     break;
             }
         }
-      
-
-
-
         public static byte[] ConvertIntArrayToByteArray(int[] intArray)
         {
             // Mỗi int có 4 byte, nên byte array sẽ có độ dài gấp 4 lần int array
@@ -735,7 +663,7 @@ namespace SurveyReportRE.Common
             return byteArray;
         }
 
-    
+
         private static Dictionary<string, string> LoadAbbreviationsFromJson()
         {
             string JsonFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/config/abbreviations.json");
@@ -752,7 +680,7 @@ namespace SurveyReportRE.Common
 
         }
 
-       
+     
 
         public static List<Dictionary<string, object>> ConvertDataTableToDictionaryList(System.Data.DataTable dt)
         {
@@ -772,7 +700,7 @@ namespace SurveyReportRE.Common
 
             return list;
         }
-    
+
 
         public static MailQueue MakeMailQueueItem(MailItem mailItem, MailConfig emailSettings, List<string> attachments = null, string type = "")
         {
@@ -780,14 +708,14 @@ namespace SurveyReportRE.Common
             //mailQueue.ToName = mailItem.ToName;
             //mailQueue.ToEmail = mailItem.ToEmail;
             //mailQueue.Subject = mailItem.Subject;
-            //mailQueue.TextBody = mailItem.HtmlBody;
-            //mailQueue.HtmlBody = mailItem.TextBody;
+            //mailQueue.TextBody = mailItem.TextBody;
+            //mailQueue.HtmlBody = mailItem.HtmlBody;
             //mailQueue.CC = mailItem.CC;
             //mailQueue.BCC = mailItem.BCC;
             //mailQueue.FromAccount = emailSettings.User;
             //mailQueue.Type = type;
             //mailQueue.Attachments = attachments != null ? string.Join(',', attachments) : "";
-            //mailQueue.IsSend = true;
+            //mailQueue.IsSend = false;
             return mailQueue;
         }
 
@@ -821,7 +749,6 @@ namespace SurveyReportRE.Common
             return null;
         }
 
-       
 
 
         private static int getDecreaseTime(int maxSize, double x)//x is imgWidth or imgHeight
@@ -1061,6 +988,97 @@ namespace SurveyReportRE.Common
                     }
                 }
         }
+
+        public static void createThumbLC(string subDirectory, string saveToPath, string folder, ref Dictionary<string, string> newFiles)
+        {
+            //Stream fileStream, string path, string name
+            string name = subDirectory.Split("\\").LastOrDefault();
+
+            if (File.Exists(subDirectory))
+                using (var fileStream = new FileStream(subDirectory, FileMode.Open))
+                {
+                    Image img = Image.FromStream(fileStream, true, false);
+
+                    ExifRotate(img);
+                    //----------Getting Size of Original Image
+                    double imgHeight = img.Size.Height;
+                    double imgWidth = img.Size.Width;
+                    double x = 0;
+                    int maxSize = 100;
+                    int y = 0;
+                    bool isLanscape = false;
+
+                    if (imgHeight > imgWidth)
+                    {
+                        x = imgHeight;
+                        isLanscape = false;
+                    }
+                    else
+                    {
+                        x = imgWidth;
+                        isLanscape = true;
+                    }
+
+
+                    //create small size
+                    y = getDecreaseTime(maxSize, x);
+                    string thumbS_Name = Path.Combine(saveToPath, "thumbS_" + name);
+                    createImage(img, thumbS_Name, Convert.ToInt32(imgWidth / y), Convert.ToInt32(imgHeight / y));
+                    if (newFiles != null)
+                    {
+                        //newFiles.Add(thumbS_Name);
+                    }
+                    //create medium size
+                    maxSize = 300;
+                    y = getDecreaseTime(maxSize, x);
+                    string thumbM_Name = Path.Combine(saveToPath, "thumbM_" + name);
+                    createImage(img, thumbM_Name, Convert.ToInt32(imgWidth / y), Convert.ToInt32(imgHeight / y));
+                    if (newFiles != null)
+                    {
+                        //newFiles.Add(thumbM_Name);
+                    }
+                    //create larg size
+                    if (isLanscape == true)
+                    {
+                        if (x < 1000)
+                        {
+                            maxSize = Convert.ToInt32(x);
+                        }
+                        else
+                        {
+                            maxSize = 1000;
+                        }
+                    }
+                    else
+                    {
+                        if (x < 680)
+                        {
+                            maxSize = Convert.ToInt32(x);
+                        }
+                        else
+                        {
+                            maxSize = 680;
+                        }
+                    }
+                    y = getDecreaseTime(maxSize, x);
+                    string thumbL_Name = Path.Combine(saveToPath, "thumbL_" + name);
+                    createImage(img, thumbL_Name, Convert.ToInt32(imgWidth / y), Convert.ToInt32(imgHeight / y));
+                    if (newFiles != null)
+                    {
+                        //newFiles.Add(thumbL_Name);
+                    }
+                    maxSize = 160;
+                    y = getDecreaseTime(maxSize, x);
+                    string thumbnail_Name = Path.Combine(saveToPath, "thumbnail_" + name);
+                    createImage(img, thumbnail_Name, Convert.ToInt32(imgWidth / y), Convert.ToInt32(imgHeight / y));
+                    if (newFiles != null)
+                    {
+                        newFiles.Add("thumbnail", $"{folder}\\thumbnail_{name}");
+                    }
+                    maxSize = 434;
+                    y = getDecreaseTime(maxSize, x);
+                }
+        }
         public static bool IsObjectEmpty(object obj, string[] checkFields)
         {
             if (obj == null || checkFields == null || checkFields.Length == 0)
@@ -1137,7 +1155,28 @@ namespace SurveyReportRE.Common
 
         //    return returnObject;
         //}
-
+        public static string CheckImageQualityByConfig(string optimizeSize)
+        {
+            string prefixThumbnailName = "";
+            switch (optimizeSize)
+            {
+                case "S":
+                    prefixThumbnailName = "thumb" + optimizeSize;
+                    break;
+                case "SM":
+                    prefixThumbnailName = "thumbnail";
+                    break;
+                case "M":
+                    prefixThumbnailName = "thumb" + optimizeSize;
+                    break;
+                case "L":
+                    prefixThumbnailName = "thumb" + optimizeSize;
+                    break;
+                default:
+                    break;
+            }
+            return prefixThumbnailName;
+        }
         public static Dictionary<string, bool> IsObjectProperties(object obj, string[] checkFields)
         {
             Dictionary<string, bool> returnObject = new Dictionary<string, bool>();
@@ -1210,7 +1249,10 @@ namespace SurveyReportRE.Common
         {
             return $@"SELECT 
                                 col.column_id AS Id,  
-                                STUFF(LOWER(LEFT(col.name, 1)) + SUBSTRING(col.name, 2, LEN(col.name)), 1, LEN(col.name), LOWER(LEFT(col.name, 1)) + SUBSTRING(col.name, 2, LEN(col.name))) AS DataField, 
+                                CASE col.name WHEN 'CSSClass' THEN 'cssClass'
+                                ELSE
+                                STUFF(LOWER(LEFT(col.name, 1)) + SUBSTRING(col.name, 2, LEN(col.name)), 1, LEN(col.name), LOWER(LEFT(col.name, 1)) + SUBSTRING(col.name, 2, LEN(col.name))) 
+                                END AS DataField, 
                                 CASE 
                                     WHEN typ.name IN ('varchar', 'nvarchar', 'char', 'text', 'ntext') THEN 'string'
                                     WHEN typ.name IN ('int', 'bigint', 'smallint', 'tinyint', 'decimal', 'numeric', 'float', 'real', 'money') THEN 'number'
@@ -1231,17 +1273,23 @@ namespace SurveyReportRE.Common
             return $@"SELECT dgc.* 
                             FROM DataGridConfig dgc WITH (NOLOCK) 
                             INNER JOIN SysTable st ON dgc.SysTableId = st.Id
-                            WHERE st.Name = '{tableName}' AND dgc.Deleted = 0 ORDER BY [Order] ASC
+                            WHERE st.Name = '{tableName}' AND dgc.Deleted = 0 
+                            --ORDER BY [Order] ASC
                       "; ;
         }
 
         public static string BuildGetAllTableColumnsFromConfigQuery()
         {
+            //return $@"SELECT dgc.* 
+            //                FROM DataGridConfig dgc WITH (NOLOCK) 
+            //                INNER JOIN SysTable st ON dgc.SysTableId = st.Id
+            //                WHERE  dgc.Deleted = 0
+            //                ORDER BY [Order] ASC
+            //          "; ;
             return $@"SELECT dgc.* 
                             FROM DataGridConfig dgc WITH (NOLOCK) 
                             INNER JOIN SysTable st ON dgc.SysTableId = st.Id
                             WHERE  dgc.Deleted = 0
-                            ORDER BY [Order] ASC
                       "; ;
         }
         public static bool IsHtml(string input)
@@ -1284,10 +1332,26 @@ namespace SurveyReportRE.Common
             else
                 return $"DELETE FROM [{typeof(T).Name}] WHERE [{keyColumn}] = '{keyId}'";
         }
-        public static string BuildSelectAllQuery<T>(string tableName)
+        public static (string sqlQuery, Dictionary<string, object> parameters) BuildSelectAllQuery<T>(string tableName, Expression<Func<T, bool>> predicate = null, bool nonCondition = false)
         {
             //return $"SELECT * FROM [{tableName}] WITH (NOLOCK) WHERE Deleted = 0 ORDER BY RowOrder ASC";
-            return $"SELECT * FROM [{tableName}] WITH (NOLOCK) WHERE Deleted = 0";
+            string baseQuery = $"SELECT * FROM [{tableName}] WITH (NOLOCK) WHERE Deleted = 0";
+            if (nonCondition) return (baseQuery, new Dictionary<string, object>());
+            if (predicate != null)
+            {
+                var (whereClause, parameters) = ExpressionToSqlConverter<T>.ConvertToSqlWhere(predicate);
+
+                if (!string.IsNullOrEmpty(whereClause))
+                {
+                    baseQuery += " AND " + whereClause;
+                }
+                return (baseQuery, parameters);
+            }
+            else
+            {
+                return (baseQuery, new Dictionary<string, object>());
+            }
+
         }
 
         public static (string sqlQuery, Dictionary<string, object> parameters) BuildSelectQuery<T>(string tableName, Expression<Func<T, bool>> predicate)
@@ -1312,8 +1376,46 @@ namespace SurveyReportRE.Common
         }
 
 
+        public static Dictionary<string, object> MakeQueryIntoDirectory(DataRow row)
+        {
+            var dictionary = new Dictionary<string, object>();
+            if (row != null)
+            {
+                // Lấy danh sách các cột từ DataRow
+                foreach (DataColumn column in row.Table.Columns)
+                {
+                    // Lấy giá trị và chuẩn hóa về chuỗi
+                    var value = row[column.ColumnName]?.ToString();
 
+                    if (!string.IsNullOrWhiteSpace(value))
+                    {
+                        string propertyName = column.ColumnName;
 
+                        if (propertyName == "DueDate")
+                        {
+                            DateTime? dueDate = DateTime.Parse(value);
+                            string formattedDate = dueDate?.ToString("dd/MM/yyyy");
+                            dictionary.Add($"@@{char.ToLower(propertyName[0])}{propertyName.Substring(1)}", formattedDate);
+                        }
+                        else
+                        {
+                            dictionary.Add($"@@{char.ToLower(propertyName[0])}{propertyName.Substring(1)}", value);
+                        }
+                    }
+                }
+            }
+            return dictionary;
+        }
+
+        public static Dictionary<string, object> SimilarObject(object obj)
+        {
+            if (obj == null)
+                return new Dictionary<string, object>();
+
+            return obj.GetType()
+                      .GetProperties()
+                      .ToDictionary(prop => prop.Name, prop => prop.GetValue(obj, null));
+        }
     }
     public enum CommandQueryType
     {
