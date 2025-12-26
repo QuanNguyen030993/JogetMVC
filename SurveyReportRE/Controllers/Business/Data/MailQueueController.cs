@@ -174,7 +174,6 @@ public class MailQueueController : BaseControllerApi<MailQueue>
     }
     
     [HttpPost]
-    [AllowAnonymous]
     [InternalTokenAuthorize]
     public async Task<IActionResult> Sendmail([FromBody] MailQueue mailQueue)
     {
