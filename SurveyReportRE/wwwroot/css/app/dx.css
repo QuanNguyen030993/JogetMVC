@@ -4149,10 +4149,11 @@
 .dx-datagrid-content .dx-datagrid-table .dx-row > tr > td {
   vertical-align: top;
 }
-.dx-datagrid-content .dx-datagrid-table .dx-row > td:first-child,
-.dx-datagrid-content .dx-datagrid-table .dx-row > tr > td:first-child {
-  border-left: 0;
-}
+    .dx-datagrid-content .dx-datagrid-table .dx-row > td:first-child,
+    .dx-datagrid-content .dx-datagrid-table .dx-row > tr > td:first-child {
+        border-left: 0;
+        /*background-color: white;*/
+    }
 .dx-datagrid-content .dx-datagrid-table .dx-row > td.dx-datagrid-group-space,
 .dx-datagrid-content .dx-datagrid-table .dx-row > tr > td.dx-datagrid-group-space {
   border-right: none;
@@ -4160,7 +4161,8 @@
 }
 .dx-datagrid-content .dx-datagrid-table .dx-row > td.dx-datagrid-group-space + td,
 .dx-datagrid-content .dx-datagrid-table .dx-row > tr > td.dx-datagrid-group-space + td {
-  border-left: none;
+    border-left: none;
+    /*background-color: #ffffff;*/
 }
 .dx-datagrid-content .dx-datagrid-table .dx-row .dx-editor-container {
   overflow: hidden;
@@ -4178,9 +4180,10 @@
   text-overflow: ellipsis;
 }
 .dx-datagrid-content .dx-datagrid-table .dx-row .dx-editor-cell {
-  max-width: 0;
-  padding: 0;
-  vertical-align: middle;
+    max-width: 0;
+    padding: 0;
+    vertical-align: middle;
+    background-color: #ffffff;
 }
 .dx-datagrid-content .dx-datagrid-table .dx-row .dx-editor-cell .dx-texteditor,
 .dx-datagrid-content .dx-datagrid-table .dx-row .dx-editor-cell .dx-texteditor-container {
@@ -6105,31 +6108,45 @@ input.dx-hidden {
   cursor: default;
 }
 .dx-multiview-wrapper {
-  overflow: hidden;
-  width: 100%;
-  height: 100%;
-  -ms-touch-action: pinch-zoom pan-y;
-  touch-action: pinch-zoom pan-y;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    -ms-touch-action: pinch-zoom pan-y;
+    touch-action: pinch-zoom pan-y;
 }
 .dx-multiview-item-container {
-  position: relative;
-  overflow: visible;
-  width: 100%;
-  height: 100%;
+    position: relative;
+    overflow: visible;
+    width: 100%;
+    height: 100%;
 }
 .dx-multiview-item-container .dx-empty-message {
   text-align: center;
 }
 .dx-multiview-item {
-  position: absolute;
-  overflow: hidden;
-  top: 0;
-  width: 100%;
-  height: 100%;
+    position: absolute;
+    overflow: hidden;
+    top: 0;
+    width: 100%;
+    height: 100%;
 }
-.dx-multiview-item.dx-item-selected {
-  position: relative;
+    .dx-multiview-item.dx-item-selected {
+        position: relative;
+        animation: mvFadeSlideDown 0.5s ease-out forwards;
+    }
+@keyframes mvFadeSlideDown {
+    from 
+    {
+        opacity: 0;
+        transform: translateY(0px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(5px);
+    }
+
 }
+
 .dx-multiview-item-content {
   width: 100%;
   height: 100%;
@@ -6255,7 +6272,7 @@ input.dx-hidden {
   height: 100%;
   width: 100%;
 }
-.dx-fileuploader-input-wrapper:after,
+/*.dx-fileuploader-input-wrapper:after,
 .dx-fileuploader-input-wrapper:before {
   display: table;
   content: "";
@@ -6276,7 +6293,7 @@ input.dx-hidden {
 }
 .dx-fileuploader-input-wrapper .dx-button + .dx-button {
   margin-left: 12px;
-}
+}*/
 .dx-fileuploader-button {
   position: relative;
 }
@@ -6342,7 +6359,7 @@ input.dx-hidden {
   margin: 0;
   cursor: default;
 }
-.dx-fileuploader-input-label {
+/*.dx-fileuploader-input-label {
   pointer-events: none;
   position: absolute;
   top: 0;
@@ -6357,7 +6374,7 @@ input.dx-hidden {
   top: -50%;
   overflow: hidden;
   cursor: default;
-}
+}*/
 .dx-fileuploader-button-container {
   display: table-cell;
   vertical-align: middle;
@@ -6376,6 +6393,42 @@ input.dx-hidden {
   font-size: 12px;
   height: 16px;
 }
+.dx-fileuploader {
+    width: 100%;
+    height: 110px;
+    background-color: #f5faff;
+    border: 2px dashed #007bff;
+    border-radius: 8px;
+    padding: 5px 10px;
+    text-align: center;
+    box-shadow: 0 3px 11px rgba(0, 0, 0, 0.05);
+    transition: border-color 0.3s ease-in-out;
+}
+    .dx-fileuploader .dx-fileuploader-input-label {
+        font-size: 16px;
+        color: #333;
+    }
+    .dx-fileuploader:hover {
+        border-color: #0056b3;
+    }
+
+    .dx-fileuploader .dx-fileuploader-input-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+    .dx-fileuploader .dx-fileuploader-button {
+        margin-top: 10px;
+        background-color: #007bff;
+        color: white;
+        border-radius: 4px;
+        padding: 8px 24px;
+    }
+    .dx-fileuploader .dx-fileuploader-button:hover {
+        background-color: #0056b3;
+    }
+
 .dx-fileuploader .dx-progressbar {
   float: left;
   width: 100%;
@@ -6395,7 +6448,7 @@ input.dx-hidden {
   vertical-align: super;
   font-size: 10px;
 }
-.dx-rtl .dx-fileuploader .dx-fileuploader-button,
+/*.dx-rtl .dx-fileuploader .dx-fileuploader-button,
 .dx-rtl.dx-fileuploader .dx-fileuploader-button {
   float: right;
 }
@@ -6403,7 +6456,7 @@ input.dx-hidden {
 .dx-rtl.dx-fileuploader .dx-fileuploader-file-container .dx-fileuploader-button {
   margin-left: 10px;
   margin-right: 0;
-}
+}*/
 .dx-rtl .dx-fileuploader .dx-fileuploader-file-name,
 .dx-rtl .dx-fileuploader .dx-fileuploader-file-size,
 .dx-rtl .dx-fileuploader .dx-fileuploader-file-status-message,
@@ -6663,6 +6716,7 @@ input.dx-hidden {
 }
 .dx-layout-manager .dx-label-h-align .dx-field-item-label .dx-field-item-label-content {
   display: block;
+  margin-top: 8px;
 }
 .dx-layout-manager .dx-label-h-align .dx-field-item-content {
   vertical-align: top;
@@ -6677,7 +6731,7 @@ input.dx-hidden {
   width: 100%;
 }
 .dx-layout-manager .dx-tabpanel .dx-multiview-item-content {
-  padding: 20px;
+    padding: 20px;
 }
 .dx-field-item-label-location-top {
   display: block;
@@ -7930,19 +7984,21 @@ input.dx-hidden {
   float: right;
 }
 .dx-diagram {
-  border: 1px solid transparent;
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-  -webkit-flex-flow: column;
-  -ms-flex-flow: column;
-  flex-flow: column;
-  height: 600px;
-  min-height: 350px;
+    border: 1px solid transparent;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -webkit-flex-flow: column;
+    -ms-flex-flow: column;
+    flex-flow: column;
+    height: 810px;
+    min-height: 350px;
 }
+
+
 .dx-diagram .dx-diagram-toolbar-wrapper {
   padding: 5px;
   -webkit-box-flex: 0;
@@ -7953,20 +8009,20 @@ input.dx-hidden {
 .dx-diagram .dx-diagram-toolbar-wrapper .dx-diagram-toolbar {
   background-color: transparent;
 }
-.dx-diagram .dx-diagram-content-wrapper {
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-flex: 1;
-  -webkit-flex-grow: 1;
-  -ms-flex-positive: 1;
-  flex-grow: 1;
-  -webkit-flex-basis: 0;
-  -ms-flex-preferred-size: 0;
-  flex-basis: 0;
-  overflow: hidden;
-}
+    .dx-diagram .dx-diagram-content-wrapper {
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-flex: 1;
+        -webkit-flex-grow: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        -webkit-flex-basis: 0;
+        -ms-flex-preferred-size: 0;
+        flex-basis: 0;
+        overflow: hidden;
+    }
 .dx-diagram .dx-diagram-content,
 .dx-diagram .dx-diagram-scroll-view {
   height: 100%;
@@ -8339,4 +8395,29 @@ input.dx-hidden {
 .dx-deferrendering.dx-pending-rendering .dx-invisible-while-pending-rendering,
 .dx-deferrendering:not(.dx-pending-rendering) .dx-visible-while-pending-rendering {
   display: none!important;
+}
+.dx-invalid-message.dx-overlay {
+    position: relative;
+}
+
+.dx-invalid-message.dx-overlay-wrapper {
+    width: 100%;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.dx-invalid-message > .dx-overlay-content {
+    display: inline-block;
+    border-width: 0;
+    font-size: .85em;
+    line-height: normal;
+    word-wrap: break-word;
+}
+
+.dx-dropdownbox.dx-dropdowneditor-active .dx-invalid-message-auto,
+.dx-invalid-message-visible.dx-invalid .dx-invalid-message-auto,
+.dx-invalid-message.dx-invalid-message-always,
+.dx-lookup.dx-dropdowneditor-active .dx-invalid-message-auto,
+.dx-state-focused.dx-invalid .dx-invalid-message-auto {
+    visibility: visible;
 }

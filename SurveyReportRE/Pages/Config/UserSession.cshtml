@@ -1,0 +1,30 @@
+﻿@page
+@model EnvironmentModel
+@{
+
+}
+<script>
+    $(function () {
+        connectionSignR.invoke("GetOnlineUsers");
+    //     connectionSignR.on("onlineUsersChanged", (users) => {
+    //     userRender(users);
+    // });
+    });
+</script>
+<div style="margin: 8px 0;">
+    <span>Connected users: </span><b id="count">0</b>
+</div>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse; width: 700px;">
+    <thead>
+        <tr>
+            <th>User</th>
+            <th>AuthType</th>
+            <th>Connections</th>
+            <th>LastSeen</th>
+        </tr>
+    </thead>
+    <tbody id="tbody">
+        <tr><td colspan="4">Loading...</td></tr>
+    </tbody>
+</table>

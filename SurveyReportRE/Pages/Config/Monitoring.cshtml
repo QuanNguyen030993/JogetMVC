@@ -1,0 +1,156 @@
+﻿@page
+@model MonitoringModel
+@{
+
+}
+<script>
+    $(function () {
+
+        var loginStats = [
+        ];
+
+        $.ajax({
+            url: `/api/UsersSession/ExecuteCustomQuery`,
+            method: "POST",
+            async: false,
+            contentType: "application/json",
+            data: JSON.stringify("1"),
+            success: function(data) {
+                     data.forEach(row => {
+                     var month = row.Month || row.month; // phòng trường hợp lowercase
+
+                     Object.keys(row).forEach(key => {
+                         if (key.startsWith("h")) {
+                             var hour = parseInt(key.substring(1), 10); 
+                             var count = Number(row[key]) || 0;
+                             loginStats.push({
+                                 month: month,
+                                 hour: hour,
+                                 loginCount: count
+                             });
+                         }
+                     });
+                    });
+
+               
+            }
+        });
+
+       const ds = new DevExpress.data.PivotGridDataSource({
+               fields: [
+                 { dataField: "month", area: "row", caption: "Month" },
+                 { dataField: "hour",  area: "column", caption: "Hour" },
+                 { dataField: "loginCount", area: "data", caption: "User Logins", summaryType: "sum" }
+               ],
+               store: loginStats
+             });
+
+
+       const pivotGridChart = $('#Monitoring_pivot_chart').dxChart({
+        commonSeriesSettings: {
+          type: 'bar',
+        },
+        tooltip: {
+          enabled: true,
+          customizeTooltip(args) {
+            // return {
+            //   html: `${args.seriesName} | Total<div class='currency'>${args.valueText}</div>`,
+            // };
+            return {
+              html: `<div>${args.valueText}</div>`,
+            };
+          },
+        },
+        size: {
+          height: 200,
+        },
+        adaptiveLayout: {
+          width: 450,
+        },
+      }).dxChart('instance');
+
+      const pivotGrid = $('#Monitoring_pivotgrid').dxPivotGrid({
+        allowSortingBySummary: true,
+        allowFiltering: true,
+        showBorders: true,
+        showColumnGrandTotals: false,
+        showRowGrandTotals: false,
+        showRowTotals: false,
+        showColumnTotals: false,
+        fieldChooser: {
+          enabled: true,
+          height: 500,
+        },
+        dataSource: ds
+      }).dxPivotGrid('instance');
+
+      pivotGrid.bindChart(pivotGridChart, {
+        dataFieldsDisplayMode: 'splitPanes',
+        alternateDataFields: false,
+      });
+
+      function expand() {
+        const dataSource = pivotGrid.getDataSource();
+        // dataSource.expandHeaderItem('row', ['North America']);
+        // dataSource.expandHeaderItem('column', [2013]);
+      }
+
+      setTimeout(expand, 0);
+       });
+
+       var  gaugeDataSource = [{
+              name: 'Disk capacity',
+              mean: 0,
+              min: 292,
+              max: 50,
+            }];
+
+
+       $.ajax({
+            url: `/api/UsersSession/ExecuteCustomQuery`,
+            method: "POST",
+            async: false,
+            contentType: "application/json",
+            data: JSON.stringify("2"),
+            success: function(data) {
+                gaugeDataSource[0].mean = data[0].availableSpace;
+            }s
+        });
+
+
+
+   
+
+
+        $('#Monitoring_gauge').dxCircularGauge({
+        scale: {
+          startValue: 292,
+          endValue: 0,
+          tickInterval: 5,
+          label: {
+            customizeText(arg) {
+              return `${arg.valueText} GBs`;
+            },
+          },
+        },
+        rangeContainer: {
+          ranges: [
+            { startValue: 292, endValue: 200, color: '#77DD77' },
+            { startValue: 200, endValue: 100, color: '#E6E200' },
+            { startValue: 100, endValue: 0, color: '#770000' },
+          ],
+        },
+        tooltip: { enabled: true },
+        title: {
+          text: 'Disk capacity',
+          font: { size: 28 },
+        },
+        value: gaugeDataSource[0].mean,
+        subvalues: [gaugeDataSource[0].min, gaugeDataSource[0].max],
+      }).dxCircularGauge('instance');
+
+</script>
+
+<div id="Monitoring_pivot_chart"></div>
+<div id="Monitoring_pivotgrid"></div>
+<div id="Monitoring_gauge"></div>

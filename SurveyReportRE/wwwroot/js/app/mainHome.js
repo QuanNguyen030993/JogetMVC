@@ -40,7 +40,7 @@
                 appNotify({ message: `${errorThrown}. ${jqXHR.responseText}`, type: 'warning' });
             }
         }).always(function () {
-            console.log("Go to " + url);
+            //console.log("Go to " + url);
         });
     }
     catch (err) {
@@ -91,7 +91,7 @@ var replaceElementView = function (url, params, container) {
                 appNotify({ message: `${errorThrown}. ${jqXHR.responseText}`, type: 'warning' });
             }
         }).always(function () {
-            console.log("Replace " + url);
+            //console.log("Replace " + url);
         });
     }
     catch (err) {
@@ -196,7 +196,7 @@ var appendElementViewInside = function (url, params, container, code, typeChild)
                 appNotify({ message: `${errorThrown}. ${jqXHR.responseText}`, type: 'warning' });
             }
         }).always(function () {
-            console.log("Append " + url);
+            //console.log("Append " + url);
         });
     }
     catch (err) {
@@ -283,7 +283,7 @@ var appendElementViewInsideAsync = function (url, params, container, code, typeC
                 }
                 reject(`${errorThrown}. ${jqXHR.responseText}`); // Trả lỗi từ AJAX
             }).always(function () {
-                console.log("Append " + url);
+                //console.log("Append " + url);
             });
         } catch (err) {
             appErrorHandling('Library error: call callElementView was failed.', err);
@@ -293,28 +293,28 @@ var appendElementViewInsideAsync = function (url, params, container, code, typeC
 };
 
 
-function hyperLinkCode(columns, moduleName, controllerName, propertyName, specificLinkField = null) {
-    $.each(columns, function (i, col) {
-        if (col.dataField == (specificLinkField != null ? specificLinkField : "Code")) {
-            col.cellTemplate = function (container, options) {
-                var selectedValue = options.data[propertyName];
-                $('<a>').addClass('dx-link dx-link-edit')
-                    .text(options.text)
-                    .css({ color: "#337ab7", textDecoration: "underline", cursor: "pointer" })
-                    .on('dxclick', function () {
-                        if (Object.keys(options.key).length > 0)
-                            callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}`, `form_${controllerName}_Form_${options.key.id}`, `${controllerName} ${options.text}`);
-                        else
-                            callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}`, `form_${controllerName}_Form_${options.key}`, `${controllerName} ${options.text}`);
-                        //callElementView(`/Business/MasterData/Client_Form/2`, `${controllerName}_Form`, `${controllerName} ${options.text}`);
-                    })
-                    .appendTo(container);
-            }
-        } else {
+//function hyperLinkCode(columns, moduleName, controllerName, propertyName, specificLinkField = null) {
+//    $.each(columns, function (i, col) {
+//        if (col.dataField == (specificLinkField != null ? specificLinkField : "Code")) {
+//            col.cellTemplate = function (container, options) {
+//                var selectedValue = options.data[propertyName];
+//                $('<a>').addClass('dx-link dx-link-edit')
+//                    .text(options.text)
+//                    .css({ color: "#337ab7", textDecoration: "underline", cursor: "pointer" })
+//                    .on('dxclick', function () {
+//                        if (Object.keys(options.key).length > 0)
+//                            callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}`, `form_${controllerName}_Form_${options.key.id}`, `${controllerName} ${options.text}`);
+//                        else
+//                            callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}`, `form_${controllerName}_Form_${options.key}`, `${controllerName} ${options.text}`);
+//                        //callElementView(`/Business/MasterData/Client_Form/2`, `${controllerName}_Form`, `${controllerName} ${options.text}`);
+//                    })
+//                    .appendTo(container);
+//            }
+//        } else {
 
-        }
-    });
-}
+//        }
+//    });
+//}
 
 
 function hyperLinkCodeReplace(columns, moduleName, controllerName, propertyName, specificLinkField = null) {
@@ -377,7 +377,7 @@ function initTabs() {
 
                 if (dataGrid != null) {
                     //dataGrid.option("height", "100%");
-                    //dataGrid.refresh();
+                    dataGrid.refresh();
                 }
             } catch (err) {
                 appErrorHandling('Library error: call onTabActivate was failed.', err);
@@ -407,8 +407,8 @@ var addTab = function (code, tabTitle = '...', tabContent) {
 
 var createNewTabElement = function (code, tabTitle = '...', $tabs, tabContent) {
     const li = $(`
-                <li>
-                    <div style="display: flex;float: left;"><a href="#${code}" style="padding: 7px;">${tabTitle}</a> 
+                <li id="${code}_li_tab" class="expand-ltr">
+                    <div id="${code}_tab" style="display: flex;float: left;"><a href="#${code}" style="padding: 7px;">${tabTitle}</a> 
                     <div id="${code}_progressBar" style="position: relative; display: inline-block;padding: 5px;">
                     </div>
                     <div id="${code}_progressSuccessIcon" style="display: none;margin-left: -22px;margin-top: 6px;padding-right: 10px;">
@@ -417,7 +417,7 @@ var createNewTabElement = function (code, tabTitle = '...', $tabs, tabContent) {
                     <div id="${code}_progressErrorIcon" style="display: none;margin-left: -22px;margin-top: 6px;padding-right: 10px;">
                          <i class="fa fa-times-circle" aria-hidden="true"></i>
                     </div>
-                    <span class='${tabFormatButtonClass}'"></span><div>
+                    <span id="${code}_closeTab" class='${tabFormatButtonClass}' data-code="${code}_closeTab"></span><div>
                 </li>
             `);//.attr("aria-controls", code);
                     //<span id="${code}_progressBar" style="padding: 5px;"></span>
@@ -438,12 +438,29 @@ var removeTab = function (activeId) {
         if (tabIndex >= 0) {
             $("#tablist").tabs("option", "active", tabIndex);
         }
-        $("#tablist").tabs("refresh");
+            $("#tablist").tabs("refresh");
     } catch (err) {
         appErrorHandling('Library error: call removeTab was failed.', err);
         return;
     }
 };
+
+var nativeRemoveTab = function($tabDivId){
+    $tabDivId.animate({
+        width: '0px',
+        opacity: '0'
+    }, 220);
+    setTimeout(function () {
+        var $li = $tabDivId.closest("li");
+        var panelId = $li.attr("aria-controls");
+        $li.remove();
+
+        if (panelId) {
+            $("#" + panelId).remove();
+        }
+        $("#tablist").tabs("refresh");
+    }, 150); // === duration animate
+}
 
 var setTabName = function (name, code) {
     try {

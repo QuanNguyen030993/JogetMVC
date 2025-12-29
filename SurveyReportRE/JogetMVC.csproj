@@ -51,6 +51,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Folder Include="Controllers\Development\" />
 		<Folder Include="Pages\Business\ExportData\" />
 		<Folder Include="Pages\Business\Form\Popup\" />
 		<Folder Include="Pages\Business\Form\SurveyDetail\" />

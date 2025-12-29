@@ -23,6 +23,9 @@
                 if (formConfig.fieldsFilterByTab != null || formConfig.fieldsFilterByTab != undefined) {
                     this.fieldsFilterByTab = formConfig.fieldsFilterByTab;
                 }
+                if (formConfig.fieldsFilterByGridByForm != null || formConfig.fieldsFilterByGridByForm != undefined) {
+                    this.fieldsFilterByGridByForm = formConfig.fieldsFilterByGridByForm;
+                }
                 this.allowFormActionButton = true;
                 if (formConfig.allowFormActionButton != null || formConfig.allowFormActionButton != undefined) {
                     this.allowFormActionButton = formConfig.allowFormActionButton;
@@ -59,6 +62,12 @@
                 if (formConfig.isReadOnly != null || formConfig.isReadOnly != undefined) {
                     this.isReadOnly = formConfig.isReadOnly;
                 }
+                if (formConfig.fieldTemplate != null || formConfig.fieldTemplate != undefined) {
+                    this.fieldTemplate = formConfig.fieldTemplate;
+                }
+                if (formConfig.signalRConnectionId != null || formConfig.signalRConnectionId != undefined) {
+                    this.signalRConnectionId = formConfig.signalRConnectionId;
+                }
             }
             this.formInstance = null;
             this.toolbarInstance = null;
@@ -78,7 +87,9 @@
                 this.formOptions = formOptions;
             else
                 this.formOptions = new MFormOption();
-
+            if (this.formOptions.container != null || this.formOptions.container != undefined) 
+                this.container = this.formOptions.container;
+                else 
             this.container = formElement;
             if (formConfig != null || formConfig != undefined) {
                 this.tabCode = formConfig.tabCode ? formConfig.tabCode : 'form_' + this.ModelName + `_Form_${this.id}`;;
@@ -193,6 +204,12 @@
                     dataVar = { key: dataInput.key, values: dataInput.values };
                 }
             }
+
+            if (apiMethod == "CustomQuery") {
+                appNotifyWarning('Please override callApi feature for type Custom Query');
+                return;
+            }
+
             var ajaxOptions = {
                 url: url,
                 headers: {
@@ -366,14 +383,14 @@
                     }
                 }
                 else {
-                    console.log(`${this.ModelName} is missing Survey Type`);
+                    //console.log(`${this.ModelName} is missing Survey Type`);
                 }
                 this.Outline = outline;
             }
 
 
             var itemsConfig = this.buildFormItem(); //should not do the same time.
-
+            formElement.addClass("fade-slide-up");
             this.formInstance = formElement.dxForm({
                 colCount: this.colCount,
                 items: itemsConfig,
@@ -393,12 +410,18 @@
                 groupingLayout: tryExecute(this.groupingLayout.bind(this)),
                 onFieldDataChanged: tryExecute(function (e) {
                     var that = this;
+                    const changedFields = e.component.option("changedFields");
+                    const currentItem = e.component.itemOption(e.dataField);
+                    //if (e.dataField.includes("date") && that.isBindingData) {
+                    //    changedFields[e.dataField] = stringToUtcDate(e.value);
+                    //}
                     if (that.isBindingData) {
                         return;
                     }
-                    const changedFields = e.component.option("changedFields");
-                    const currentItem = this.formInstance.itemOption(e.dataField);
                     if (e.value !== e.previousValue) {
+                        //if (e.dataField.includes("date")) {
+                        //    changedFields[e.dataField] = stringToUtcDate(e.value);
+                        //}
                         changedFields[e.dataField] = e.value;
                         if (that.fieldByOutlineGroup.length > 0) {
                             var outlineObject = that.fieldByOutlineGroup.find(f => f.dataField == e.dataField);
@@ -427,6 +450,8 @@
             if (this.formInstance)
                 this.formInstance.option("config", this);
             this.toolbarInstance = this.initFormToolbar(this.formInstance);
+        
+            
             //$formElement.find(".dx-tabpanel-container").css("height", `100%`);
             if (that.id > 0)
                 this.loadData();
@@ -534,21 +559,21 @@
                 this.cloneUrl = menu.action + `_Form/${this.id}`;
             }
             var getScheme = [];
-            //if (_cacheDataGridConfigs.length > 0)
-            //    getScheme = _cacheDataGridConfigs.filter(f => f.sysTableFK.name == that.SchemeModelName);
-            //else {
-                $.ajax({
-                    url: `api/DataGridConfig/GetAllScheme`,
-                    method: "GET",
-                    async: false,
-                    success: function (dataIn) {
-                        getScheme = dataIn.filter(f => f.sysTableFK.name == that.SchemeModelName);;
-                    },
-                    error: function (error) {
-                        console.error(`Error fetching data from API for table :`, error);
-                    }
-                });
-            //}
+            if (_cacheDataGridConfigs.length > 0)
+                getScheme = _cacheDataGridConfigs.filter(f => f.sysTableFK.name == that.SchemeModelName);
+            else {
+                //$.ajax({
+                //    url: `api/DataGridConfig/GetAllScheme`,
+                //    method: "GET",
+                //    async: false,
+                //    success: function (dataIn) {
+                //        getScheme = dataIn.filter(f => f.sysTableFK.name == that.SchemeModelName);;
+                //    },
+                //    error: function (error) {
+                //        console.error(`Error fetching data from API for table :`, error);
+                //    }
+                //});
+            }
             //if (_cacheModels.includes(that.SchemeModelName)) {
             //    getScheme = _allScheme.filter(f => f.sysTableFK.name == that.SchemeModelName);
             //}
@@ -568,12 +593,16 @@
             if (that.fieldsFilterByTab != undefined || that.fieldsFilterByTab != null) {
                 getScheme = getScheme.filter(f => f.formGroupName == `Tab@${that.fieldsFilterByTab}`);
             }
+            if (that.fieldsFilterByGridByForm != undefined || that.fieldsFilterByGridByForm != null) {
+                getScheme = getScheme.filter(f => f.formGroupName == `GridByForm@${that.fieldsFilterByGridByForm}`);
+            }
+
+
             this.gridInstanceConfig = getScheme;
             var itemLayout = that.customizeItemLayout();
             RenderFormElement(getScheme, itemLayout, this);
             that.renderTabFormElement(getScheme, itemLayout, that);
             itemLayout = that.groupingLayout(getScheme, itemLayout, that);
-
             return itemLayout;
         } catch (err) {
             appErrorHandling('Library error: call MForm.buildFormItem() was failed.', err);

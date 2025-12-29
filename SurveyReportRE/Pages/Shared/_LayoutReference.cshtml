@@ -8,25 +8,28 @@
 <link href="~/css/jquery/top-panel.min.css" rel="stylesheet" type="text/css" />
 <link href="~/css/fonts/font-awesome.min.css" rel="stylesheet" type="text/css" />
 <!--App CSS: customized-->
+<link href="~/css/devextreme/dx-diagram.min.css" rel="stylesheet">
 <link href="~/css/app/tabs.css" rel="stylesheet" type="text/css" />
+<link href="~/css/devextreme-20.1.4/dx-gantt.css" rel="stylesheet" type="text/css" />
 <link href="~/lib/AdminLTE/sidebar-menu.min.css" rel="stylesheet" />
 <link href="~/lib/AdminLTE/_all-skins.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 <!--JS library: common -->
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="~/lib/devextreme-20.1.4/jquery.min.js"></script>
 <!-- SignalR Library -->
 @* <script src="~/lib/signalr/signalr.min.js"></script> *@
 <script src="~/lib/jquery/jquery-ui.min.js"></script>
 <script src="~/lib/jquerymutation/events.min.js"></script>
 <script src="~/lib/jquerymutation/events.js"></script>
-<script src="~/lib/jquerymutation/mutate.js"></script>
-<script src="~/lib/jquerymutation/mutate.min.js"></script>
+@* <script src="~/lib/jquerymutation/mutate.js"></script>
+<script src="~/lib/jquerymutation/mutate.min.js"></script> *@
 <script src="~/lib/quill-better-table/dist/dx-quill.min.js"></script>
-<script src="https://cdn.rawgit.com/kensnyder/quill-image-resize-module/3411c9a7/image-resize.min.js"></script>
+<script src="~/lib/quill-image-resize-module/kensnyder/image-resize.min.js"></script>
 <!-- Prism CSS -->
-<link rel="stylesheet" href="~/lib/prism/prism.min.css">
+@* <link rel="stylesheet" href="~/lib/prism/prism.min.css"> *@
 <!-- Prism JS -->
-<script src="~/lib/prism/prism.min.js"></script>
+@* <script src="~/lib/prism/prism.min.js"></script> *@
 <!-- Define global alias -->
 <script type="text/javascript">
     window.Quill = window.DevExpress.Quill;
@@ -35,7 +38,7 @@
 <script src="~/lib/knockout/knockout.js"></script>
 <script src="~/lib/wysiwyg-editor-summernote/summernote.js"></script>
 <script src="~/lib/bootstrap/tooltip.js"></script>
-<script src="~/lib/bootstrap/popper.js"></script>
+@* <script src="~/lib/bootstrap/popper.js"></script> *@
 <script src="~/lib/bootstrap/bootstrap.min.js"></script>
 <script src="~/lib/map/infobubble-compiled.js"></script>
 <script src="~/lib/moment/moment.min.js"></script>
@@ -62,14 +65,16 @@
 
 <!--JS library: devextreme-20.1.4 -->
 <script src="~/lib/devextreme-20.1.4/jszip.min.js"></script>
-<script src="~/lib/devextreme-20.1.4/dx-diagram.js"></script>
-<script src="~/lib/devextreme-20.1.4/dx-diagram.min.js"></script>
-<script src="~/lib/devextreme-20.2.13/dx.all.js"></script>
+@* <script src="~/lib/devextreme-20.1.4/dx-diagram.js"></script> *@
+<script src="~/lib/devextreme-diagram/2.0.45/dx-diagram.min.js"></script>
+<script src="~/lib/devextreme-gantt/2.0.40/dx-gantt.min.js"></script>
+ <script src="~/lib/devextreme-20.2.13/dx.all.js"></script>  
+ @* <script src="~/lib/devextreme-21.1.5/dx.all.js"></script>  *@
 <script src="~/lib/devextreme-20.1.4/aspnet/dx.aspnet.data.js"></script>
 <script src="~/lib/devextreme-20.1.4/aspnet/dx.aspnet.mvc.js"></script>
 <!-- Xtrareport-->
-<script src="~/lib/xtrareport-20.1.4/js/dx-analytics-core.js"></script>
-<script src="~/lib/xtrareport-20.1.4/js/dx-webdocumentviewer.js"></script>
+@* <script src="~/lib/xtrareport-20.1.4/js/dx-analytics-core.js"></script>
+<script src="~/lib/xtrareport-20.1.4/js/dx-webdocumentviewer.js"></script> *@
 
 
 <!--JS library: sheetjs, import data from excel -->
@@ -79,18 +84,18 @@
 
 <!-- Important: All app data must be included before app script-->
 <!-- SpreadSheet script-->
-<script src="~/lib/spreadsheet/dx-aspnetcore-spreadsheet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/js/bootstrap-multiselect.js"></script>
+@* <script src="~/lib/spreadsheet/dx-aspnetcore-spreadsheet.js"></script> *@
+<script src="~/lib/bootstrap-multiselect/0.9.13/bootstrap-multiselect.js"></script>
 <script src="~/lib/sweet-alert/sweetalert2.js"></script>
-<script src="~/lib/tagify/tagify.min.js"></script>
+@* <script src="~/lib/tagify/tagify.min.js"></script> *@
 <script src="~/lib/signalr/signalr-current.min.js"></script>
 
 <!-- docx preview -->
 <script src="~/lib/docxjs/jszip.min.js"></script>
-<script src="~/lib/docxjs/docx-preview.min.js"></script>
+@* <script src="~/lib/docxjs/docx-preview.min.js"></script> *@
 
 <script>
-    // var constHostName = 'https://localhost:7254/api';
+    // var constHostName = 'https://localhost:5000/api';
     const _defaultFormFieldWidth = 300;
     const _defaultFormFieldHeight = 50;
     const _defaultGridFieldWidth = 150;
@@ -103,9 +108,10 @@
     const _defaultHtmlEditorHeight = 300;
     const _defaultHtmlEditorWidth = "100%";
     const _defaultButtonHeight = 50;
-    const _defaultGridDropDownOptionsWidth = 600;
-    const _defaultGridDropDownOptionsHeight = 400;
+    const _defaultGridDropDownOptionsWidth = 700;
+    const _defaultGridDropDownOptionsHeight = 550;
     const _timeoutSurveyDelay = 2000;
+    const _timeoutLossControlDelay = 2000;
     const _timeoutPopup = 15000;
     const _swalPopupDelayTime = 20000;
     const _surveyFormAutoSavedInterval = 120000;
@@ -175,17 +181,11 @@
         timeFormatter
     };
         // Write your JavaScript code.
-    var connectionId = null;//generateGUID();
-    const connectionSignR = new signalR.HubConnectionBuilder()
-        .withUrl("/fileProcessingHub").build(); //
-    connectionSignR.start().then(async function () {
-        connectionId = await connectionSignR.invoke("GetConnectionId");
-        // console.log("SignalR Connected.");
-    }).catch(function (err) {
-        console.error("SignalR connection failed:", err);
-    });
-    connectionSignR.serverTimeoutInMilliseconds = 28800000; // 60s
-    connectionSignR.keepAliveIntervalInMilliseconds = 28800000; // gửi keepalive mỗi 15s
-    var _fetchTables = ["Client", "Outline", "DataGridConfig"];
+    var _connectionId = null;//generateGUID();
+    // const connectionSignR = new signalR.HubConnectionBuilder()
+    //     .withUrl("/fileProcessingHub").build(); //
+
+
 
 </script>
+<script src="~/js/defined/signalR.js"></script>

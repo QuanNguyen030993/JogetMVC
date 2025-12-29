@@ -6,6 +6,9 @@
 <script>
     $(function () {
         new MGrid(null, $(`#dataGrid_@DataGridConfigModel.ModelName`), new DataGridConfigGridOption('@DataGridConfigModel.ModelName', "System"), null);
+        setTimeout(() => { 
+        const dataSource = $(`#dataGrid_@DataGridConfigModel.ModelName`).dxDataGrid("instance").getDataSource();
+        },5000);
     });
 </script>
 <div id="dataGrid_@DataGridConfigModel.ModelName"></div>

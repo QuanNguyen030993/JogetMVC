@@ -5,12 +5,14 @@
             this.refId = 0;
             this.refField = "Id";
             this.isAllowRowMenu = true;
+            //Note: 
+            //refField correct in best practices column
             if (mGridOption) {
                 if (mGridOption.mGridDetailOption != null || mGridOption.mGridDetailOption != undefined)
                     this.mGridDetailOption = mGridOption.mGridDetailOption;
                 if (mGridOption.filterRefId != null || mGridOption.filterRefId != undefined)
                     this.refId = mGridOption.filterRefId;
-                if (mGridOption.filterRefField != null || mGridOption.filterRefField != undefined)
+                if (mGridOption.filterRefField != null || mGridOption.filterRefField != undefined) 
                     this.refField = mGridOption.filterRefField;
                 if (mGridOption.filterRefId2 != undefined)
                     this.refId2 = mGridOption.filterRefId2;
@@ -18,6 +20,10 @@
                     this.refField2 = mGridOption.filterRefField2;
                 if (mGridOption.isAllowRowMenu != null || mGridOption.isAllowRowMenu != undefined)
                     this.isAllowRowMenu = mGridOption.isAllowRowMenu;
+                if (mGridOption.allowBuildOption != null || mGridOption.allowBuildOption != undefined)
+                    this.allowBuildOption = mGridOption.allowBuildOption;
+                if (mGridOption.gridEditorOptions != null || mGridOption.gridEditorOptions != undefined)
+                    this.gridEditorOptions = mGridOption.gridEditorOptions;
                 this.mGridOption = mGridOption;
             }
             else
@@ -37,7 +43,10 @@
     renderGrid() {
         try {
             var that = this;
-            this.component = this.container.dxDataGrid(that.mGridOption.getGridOptions(null)).dxDataGrid("instance");
+            if (!that.mGridOption.allowBuildOption)
+                this.component = this.container.dxDataGrid(that.mGridOption.getGridOptions(null)).dxDataGrid("instance");
+            else 
+                this.component = this.container.dxDataGrid(that.mGridOption.getGridOptions(that.mGridOption)).dxDataGrid("instance");
 
             return this.component;
         } catch (err) {
@@ -374,6 +383,7 @@ var MGridOption = class MGridOption {
                     var selectedValue = options.data[propertyName];
                     $('<a>').addClass('dx-link dx-link-edit')
                         .text(options.text)
+                        .css({ color: "#337ab7", textDecoration: "underline", cursor: "pointer" })
                         .on('dxclick', function () {
                             if (Object.keys(options.key).length > 0)
                                 callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}`, `form_${controllerName}_Form_${options.key.id}`, `${controllerName} ${options.text}`);
@@ -483,6 +493,8 @@ var MGridOption = class MGridOption {
 
                 }
             }
+            if (this.gridEditorOptions != null || this.gridEditorOptions != undefined)
+                  gridEditorOptions = this.gridEditorOptions;
             var defaultEditing = new Object();
             var exportConfig = new Object();
             if (fetchConfig.sysTableConfig) {
@@ -570,7 +582,7 @@ var MGridOption = class MGridOption {
                 loadPanel: { showPane: false, text: null },
                 rowAlternationEnabled: false,
                 paging: { enabled: true, pageSize: 50 }, // điều chỉnh nếu data nhiều
-                pager: { visible: true, allowedPageSizes: [5, 10, 'all'],  showPageSizeSelector: true, allowedPageSizes: 50, showInfo: true },// điều chỉnh nếu data nhiều
+                pager: { visible: true, allowedPageSizes: [5, 10, 'all'], showPageSizeSelector: true, allowedPageSizes: 50, showInfo: true },// điều chỉnh nếu data nhiều
                 showBorders: true,
                 summary: summary,
                 export: (Object.keys(exportConfig)).length > 0 ? exportConfig : {
@@ -581,7 +593,7 @@ var MGridOption = class MGridOption {
                     ////fileName: gConfig.MainObject,
                     //texts: { exportAll: 'Export all', exportSelectedRows: 'Export selected rows', exportTo: 'Export' }
                 },
-                //masterDetail: {},
+                masterDetail: this.masterDetail,
                 width: "100%",//"inherit"
                 height: this.height ? this.height : window.innerHeight - 130, // == null ? "inherit"
                 columns: this.columns,
@@ -606,11 +618,12 @@ var MGridOption = class MGridOption {
                 onInitialized: tryExecute(this.onInitialized.bind(this)),
                 //onRowValidating: tryExecute(this.onRowValidating.bind(this)),
                 onInitNewRow: tryExecute(this.onInitNewRow.bind(this)),
+                getGridOptions: tryExecute(this.getGridOptions.bind(this)),
                 onContextMenuPreparing: tryExecute(this.onContextMenuPreparing.bind(this)),
                 //onDataErrorOccurred: tryExecute(this.onDataErrorOccurred.bind(this))
                 onCellPrepared: tryExecute(this.onCellPrepared.bind(this)),
                 //onCellHoverChanged: tryExecute(this.onCellHoverChanged.bind(this)),
-                //,onRowClick: function (e) {
+                 //,onRowClick: function (e) {
                 //    if (e.rowType == 'group') {
                 //        if (e.isExpanded)
                 //            e.component.collapseRow(e.key);

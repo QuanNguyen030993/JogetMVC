@@ -1,0 +1,26 @@
+﻿@page "{pageNum:int?}"
+@model DrawModel
+@{
+    Layout = null;
+}
+
+<script type="text/javascript">
+    $(function () {
+     var diagram = $('#diagram').dxDiagram()
+      .dxDiagram('instance');
+
+        $.ajax({
+          url: '/data/DiagramFlow.json',
+          dataType: 'text',
+          success(data) {
+            diagram.import(data);
+          },
+        });
+    });
+
+</script>
+
+
+<div id="Draw" style="top:316px">
+</div> 
+<div id="diagram"></div>

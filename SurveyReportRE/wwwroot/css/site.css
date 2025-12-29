@@ -50,6 +50,20 @@
         box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
     }
 
+
+.imageLCPreview {
+    background-color: #ffffff;
+    border: 2px solid #ffffff;
+    border-radius: 8px;
+    padding: 30px 10px;
+    text-align: center;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    transition: border-color 0.3s ease-in-out;
+    height: 500px;
+}
+
+
+
 .wrapper {
     font-size: 12px !important;
 }
@@ -260,3 +274,108 @@
         /*box-shadow: 0 0 10px rgba(255, 0, 0, 0.8);*/ /* Ánh sáng đỏ */
         box-shadow: 0 0 10px rgba(255, 223, 0, 0.8); /* Ánh sáng vàng */
     }
+
+
+/*Update CSS 20251203*/
+
+.custom-label-margin {
+    margin-left: -165px !important;
+}
+
+.admin-float-btn {
+    left: 1%;
+    position: fixed;
+    top: 96%;
+    transform: translateY(-50%);
+    background-color: #007bff;
+    color: white;
+    border-radius: 50%;
+    width: 55px;
+    height: 55px;
+    text-align: center;
+    line-height: 55px;
+    font-size: 22px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    z-index: 9999;
+    transition: all 0.2s ease-in-out;
+}
+
+    .admin-float-btn:hover {
+        background-color: #0056b3;
+        transform: translateY(-50%) scale(1.1);
+    }
+
+.fade-slide-up {
+    animation: fadeSlideUp 0.45s ease-out forwards;
+}
+
+@keyframes fadeSlideUp {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+.expand-ltr {
+    transform-origin: left center;
+    animation: expandLTR 220ms ease-out forwards;
+}
+
+.expand-rtl {
+    transform-origin: right center;
+    animation: expandRTL 220ms ease-out forwards;
+}
+
+.collapse-rtl {
+    transform-origin: right center;
+    animation: collapseRTL 220ms ease-in forwards;
+}
+
+@keyframes expandLTR {
+    from {
+        opacity: 0;
+        transform: scaleX(0);
+    }
+
+    to {
+        opacity: 1;
+        transform: scaleX(1);
+    }
+}
+
+@keyframes expandRTL {
+    from {
+        opacity: 0;
+        transform: scaleX(0);
+    }
+
+    to {
+        opacity: 1;
+        transform: scaleX(1);
+    }
+}
+
+
+@keyframes collapseRTL {
+    from {
+        opacity: 1;
+        transform: scaleX(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: scaleX(0);
+    }
+}
+
+.tab-container {
+    animation: fadeSlideUp 0.45s ease-out forwards;
+}
+
+.badge-theme {
+    background-color: #1e88e5;
+    color: #ffffff;
+}

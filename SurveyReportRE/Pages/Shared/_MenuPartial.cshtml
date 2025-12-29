@@ -19,6 +19,7 @@
 </aside>
 
 <script>
+   
 
 
 
@@ -44,9 +45,25 @@
             return value.children.length > 0 ? value : null;
         });
         loadData(convertArr, "ul.tree");
-
     });
 
+         $(document).on("menu:loaded", "a[data-name]", function () {
+          var menuName = $(this).data("name");
+
+            switch (menuName) {
+                case "UserSession":
+                    {
+                        setTimeout(() => {
+                        connectionSignR.invoke("GetOnlineUsers");
+                        }, 1000);
+                        break;
+                    }
+
+                default:
+                    break;
+            }
+
+        });
 
 
     function loadData(arrs, elementId) {
@@ -60,14 +77,29 @@
                                             <a href="#" class="icon-menu ">
                                          <i class="${val.icon}"></i> <span>${val.caption}</span>
                                         <span class="pull-right-container">
-                                                <i class="fa fa-angle-left pull-right pull-right-${val.id}"></i>
+                                        <i class="fa fa-angle-left pull-right pull-right-${val.id}"></i>
                                         </span>
                                         </a>
                                         <ul class="treeview-menu treeview-menu-general menu-${val.id}"></ul>
                                     </li>`);
             }
             else {
-                $(elementId).append(`<li><a href="#" id="new-tab-${val.id}" data-action="${val.action}" data-name="${val.name}" data-caption="${val.caption}"> <i class="${val.icon}"></i><span>${val.caption}</span> </a></li>`)
+                var $a = $(`
+                <a href="#" id="new-tab-${val.id}"
+                   data-action="${val.action}"
+                   data-name="${val.name}"
+                   data-caption="${val.caption}">
+                  <i class="${val.icon}"></i>
+                  <span>${val.caption}</span>
+                  <span class="pull-right badge badge-theme rowCount"
+                        data-name="Count_${val.name}"
+                        style="display:none"></span>
+                </a>
+                `);
+                var $li = $("<li></li>");   
+                $li.append($a);
+                $(elementId).append($li);
+                $a.trigger("menu:loaded");
             }
             $(`ul.sidebar-menu.tree a#new-tab-${val.id}`).click(function () {
                 var url = $(this).attr("data-action");
@@ -166,6 +198,7 @@
         });
 
         $("ul.sidebar-menu.tree.tf-tree").css({ "overflow-y": "scroll", "height": screen.height - 300 });
+
     });
         
 

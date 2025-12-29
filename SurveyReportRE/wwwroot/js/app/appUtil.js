@@ -23,20 +23,9 @@ var _cacheCompanyData = null;
 const _dbName = "CompanyDataDB";
 const _storeName = "CompanyData";
 var _cacheOutlines = [];
-var _cacheDataGridConfigs = [];
 var _allScheme = [];
 var fetchTables = ["Client", "Outline", "DataGridConfig"];
-$.ajax({
-    url: `api/DataGridConfig/GetAllScheme`,
-    method: "GET",
-    async: false,
-    success: function (dataIn) {
-        _cacheDataGridConfigs = dataIn;
-    },
-    error: function (error) {
-        console.error(`Error fetching data from API for table :`, error);
-    }
-});
+
 function initIndexedDB() {
     const request = indexedDB.open(_dbName, 1);
     request.onupgradeneeded = function (event) {
@@ -551,7 +540,7 @@ function RenderGridElement(_gridConfig, gridInstance) {
         else
             item.visibleIndex = item.order;
 
-        if (item.ValidationRules != null) {
+        if (item.validationRules != null && item.validationRules != "") {
             item.validationRules = JSON.parse(item.validationRules);
         }
 
@@ -694,6 +683,8 @@ function getModelConfig(model, isFilter = true) {
 //}
 //getSchemeConfig();
 
+
+
 function addImageToPreview(imagePath, item) {
     var controllerName = item.ModelName ? item.ModelName : "SitePictures";
     //const $imageContainer = $("<div>").css({ position: 'relative', width: '120px', height: '120px', margin: '5px' });
@@ -809,9 +800,44 @@ function addImagePreviewElement(imagePath, item, $imageContainer) {
         .attr("src", imagePath)
         .css({ width: '100%', height: 'auto', objectFit: 'cover', borderRadius: '5px' })
         .appendTo($imageLink);
-
-    $(`#imagePreview_${item.surveyId}_${item.outline.id}`).append($imageContainer);
+    if (item.outline?.id)
+        $(`#imagePreview_${item.surveyId}_${item.outline.id}`).append($imageContainer);
+    else
+        $(`#imagePreview_${item.surveyId}`).append($imageContainer);
 }
+
+//function addLCImagePreviewElement(imagePath, item, $imageContainer) {
+//    var imageHeight = 0;
+//    var imageWidth = 0;
+//    const byteArray = new Uint8Array(item.fileData); // Example byte array for "Hello"
+//    const blob = new Blob([byteArray], { type: item.type }); 
+//    var fr = new FileReader();
+//    fr.readAsArrayBuffer(blob);
+//    fr.onload = function (event) {
+//        var url = URL.createObjectURL(blob);
+//        const img = new Image();
+//        img.src = url;
+//        img.onload = function () {
+//            imageHeight = img.height;
+//            imageWidth = img.width;
+//            var url = `https://${window.location.host}/api/Attachment/Browse/${item.attachmentGuid}`;
+//            const $imageLink = $("<a>")
+//                .attr("href", url) // Set href to the image path
+//                .attr("target", "_blank") // Open link in a new tab
+//                .appendTo($imageContainer);
+//            $("<img>")
+//                .attr("src", imagePath)
+//                .css({ width: imageWidth + 'px', height: imageHeight + 'px', objectFit: 'cover', borderRadius: '5px' })
+//                .appendTo($imageLink);
+//            if (item.outline?.id)
+//                $(`#imagePreview_${item.lossControlId}_${item.outline.id}`).append($imageContainer);
+//            else
+//                $(`#imagePreview_${item.lossControlId}`).append($imageContainer);
+//        };
+
+//    }
+
+//}
 
 
 // Hàm asynchronous để xóa dữ liệu qua AJAX
@@ -901,7 +927,7 @@ function createEditor(item, $container, $element, editorOptions) {
                                 imageInstance.ModelName = controllerName;
                                 addImageToPreview(url, imageInstance);
                             });
-            
+
                             $(`#imagePreview_${editorOptions.refFieldId}_${editorOptions.outline.id} .previewLoader`).remove();
                         }
                     }
@@ -939,7 +965,8 @@ function createEditor(item, $container, $element, editorOptions) {
                             showPane: true,
                             closeOnOutsideClick: false,
                             position: { of: `#imagePreview_${editorOptions.refFieldId}_${editorOptions.outline.id}` }
-                        });                },
+                        });
+                },
                 onUploaded: function (e) {
                     $(`#imagePreview_${editorOptions.refFieldId}_${editorOptions.outline.id} .previewLoader`).remove();
                     var response = e.request.response;
@@ -1087,6 +1114,19 @@ function toggleFullScreen(editor, editorElement, item, editorOptions) {
 }
 
 function createHtmlEditor(container, $element, item, editorOptions, isFullscreen = false) {
+
+    var defaultOnValueChanged = function (e) {
+        if (item.instanceProps?.formInstance) {
+            item.instanceProps.formInstance.updateData(item.dataField, e.value);
+        }
+        editorOptions.value = e.value;
+    };
+
+    if (item.customEditorOptions) {
+        if (editorOptions.onValueChanged)
+            defaultOnValueChanged = editorOptions.onValueChanged;
+    }
+
     var quillInstance;
     var currentRange = new Object;
     currentRange.index = 0;
@@ -1106,7 +1146,6 @@ function createHtmlEditor(container, $element, item, editorOptions, isFullscreen
     ];
 
     var controlId = editorOptions.instanceProps ? editorOptions.instanceProps.refFieldId : editorOptions.id;
-
     var editor = $element.dxHtmlEditor({
         elementAttr: {
             id: `dxHtmlEditor_${item.dataField}_${controlId}`
@@ -1129,7 +1168,7 @@ function createHtmlEditor(container, $element, item, editorOptions, isFullscreen
             modules: ['Resize', 'DisplaySize', 'Toolbar']
         },
         mediaResizing: {
-            enabled: true 
+            enabled: true
         },
         toolbar: {
 
@@ -1311,12 +1350,7 @@ function createHtmlEditor(container, $element, item, editorOptions, isFullscreen
         onFocusOut: function () {
             currentRange = quillInstance.getSelection();
         },
-        onValueChanged: function (e) {
-            if (item.instanceProps?.formInstance) {
-                item.instanceProps.formInstance.updateData(item.dataField, e.value);
-            }
-            editorOptions.value = e.value;
-        }
+        onValueChanged: defaultOnValueChanged
     }).appendTo(container);
 
     return editor;
@@ -1337,7 +1371,6 @@ function toggleCodeView(editor, button) {
         button.option("text", "Code View");
     } else {
         const htmlContent = editor.option("value");
-        //const prettyContent = Prism.highlight(htmlContent, Prism.languages.html, "html");
         const textarea = $("<textarea>").addClass("dx-htmleditor-content ql-editor").val(htmlContent);
         contentContainer.replaceWith(textarea);
         button.option("text", "Text View");
@@ -1360,6 +1393,15 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
     }
     var _formConfig = formInstanceProps.gridInstanceConfig.map(item => {
         var validationRules = [];
+        //const result = {};
+        //Object.keys(item).forEach(key => {
+        //    if (key in item) {
+        //        result[key] = item[key];
+        //    }
+        //});
+        item = ObjectPopulateKey(item);
+
+
         if (item != null && item != undefined)
             if (item.validationRules != null && item.validationRules != undefined && item.validationRules != "") {
                 try {
@@ -1388,8 +1430,8 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
         item.validationRules = validationRules
         item.editorType = item.formDataType;
         item.calculatedDisplayField = item.dataField;
-        item.width = isNullOrEmpty(item.formWidth) ? _defaultFormFieldWidth : (!item.formWidth.includes("%") ? parseInt(item.formWidth) : item.formWidth);
-        item.height = isNullOrEmpty(item.formHeight) ? _defaultFormFieldHeight : (!item.formHeight.includes("%") ? parseInt(item.formHeight) : item.formHeight);
+        item.width = isNullOrEmpty(item.formWidth) ? _defaultFormFieldWidth : (!(item.formWidth?.includes("%")) ? parseInt(item.formWidth) : item.formWidth);
+        item.height = isNullOrEmpty(item.formHeight) ? _defaultFormFieldHeight : (!(item.formHeight?.includes("%")) ? parseInt(item.formHeight) : item.formHeight);
         if (!(typeof item.editorOptions === "object") && !(item.editorOptions == null)) {
 
             const decodedBytes = Uint8Array.from(atob(item.editorOptions), c => c.charCodeAt(0));
@@ -1398,14 +1440,21 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
                 const jsonObject = JSON.parse(decodedString);
                 Object.keys(jsonObject).forEach(key => {
                     const value = jsonObject[key];
-                    if (jsonObject[key] in variableMapping) {
-                        jsonObject[key] = variableMapping[jsonObject[key]];
+                    if (key.startsWith("on")) {
+                        var scriptFunctionHandle = jsonObject[key].replace("##id", formInstanceProps.id).replace("##datafield", item.dataField);
+                        jsonObject[key] = Function("e", scriptFunctionHandle);
+                    }
+                    else {
+                        if (jsonObject[key] in variableMapping) {
+                            jsonObject[key] = variableMapping[jsonObject[key]];
+                        }
                     }
                 });
 
                 item.editorOptionsConfig = jsonObject;
             }
-            catch {
+            catch (exception) {
+                console.log(exception);
             }
         }
         if (item.formItem != null)
@@ -1433,6 +1482,11 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
                     outlineIds.includes(outline.id.toString())
                 )
                 item.outlineObject = outlineObj;
+            }
+        }
+        if (formInstanceProps.formOptions?.fieldTemplate) {
+            if (item.dataField == formInstanceProps.formOptions?.fieldTemplate.fieldName) {
+                item.template = formInstanceProps.formOptions?.fieldTemplate.template
             }
         }
         return item;
@@ -1507,47 +1561,77 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
 
     var tabIndexNumber = 1;
     $.each(formInstanceProps.fieldConfigs, function (i, item) {
+
+
+
         var additionalEditorOptions = new Object();
+        var customEditorOptions = false;
+        var customFormItem = false;
         if (item.editorOptionsConfig) {
             additionalEditorOptions = item.editorOptionsConfig;
+            customEditorOptions = true;
         }
         item.formItem = item.formItemConfig;
+        var itemOptions = {};
+
+
         if (item.editorType == "dxTextArea") {
-            itemsArray.push({
-                validationRules: item.validationRules,
-                dataField: item.dataField,
-                editorType: item.editorType,
-                editorOptions: {
-                    minHeight: item.height >= _defaultTextAreaHeight ? parseInt(item.height) : _defaultTextAreaHeight,
-                    tabIndex: tabIndexNumber,
-                    onFocusIn: function (e) { //not required
-                        //e.component.option("autoResizeEnabled", true);
-                        //e.component.option("maxHeight", 150);
-                    },
-                    onFocusOut: function (e) { //not reuuired
-                        //e.component.option("autoResizeEnable
-                        //e.component.option("autoResizeEnabled", false);
-                    },
-                    height: item.height >= _defaultTextAreaHeight ? parseInt(item.height) : _defaultTextAreaHeight,
-                    width: item.width >= _defaultTextAreaWidth ? parseInt(item.width) : _defaultTextAreaWidth,
-                    value: item.defaultValue ?? "",
-                    ...additionalEditorOptions
+            itemOptions = ObjectPopulateKey(item);
+            //itemOptions = {
+            //    validationRules: item.validationRules,
+            //    dataField: item.dataField,
+            //    editorType: item.editorType,
+            //    customEditorOptions: customEditorOptions,
+            //    editorOptions: {
+            //        //minHeight: item.height >= _defaultTextAreaHeight ? parseInt(item.height) : _defaultTextAreaHeight,
+            //        tabIndex: tabIndexNumber,
+            //        onFocusIn: function (e) { //not required
+            //            //e.component.option("autoResizeEnabled", true);
+            //            //e.component.option("maxHeight", 150);
+            //        },
+            //        onFocusOut: function (e) { //not reuuired
+            //            //e.component.option("autoResizeEnable
+            //            //e.component.option("autoResizeEnabled", false);
+            //        },
+            //        //height: item.height >= _defaultTextAreaHeight ? parseInt(item.height) : _defaultTextAreaHeight,
+            //        height: (item.height != null || item.height != '' || item.height != undefined) ? ((item.height !== '' && !isNaN(parseFloat(item.height)) && isFinite(item.height)) ? parseInt(item.height) : item.height.replace("%", "") / 100 * 47) : _defaultTextAreaHeight,
+            //        //width: item.width >= _defaultTextAreaWidth ? parseInt(item.width) : _defaultTextAreaWidth,
+            //        width: (item.width != null || item.width != '' || item.width != undefined) ? ((item.width !== '' && !isNaN(parseFloat(item.width)) && isFinite(item.width)) ? parseInt(item.width) : item.width) : _defaultTextAreaWidth,
+            //        value: item.defaultValue ?? "",
+            //        ...additionalEditorOptions
+            //    },
+            //    label: { location: formInstanceProps.labelLocation, text: item.caption, visible: true },
+            //    formGroupName: item.formGroupName,
+            //    formItem: item.formItem,
+            //    outlineObject: item.outlineObject,
+            //    visible: item.visible
+            //};
+            itemOptions.customEditorOptions = customEditorOptions;
+            itemOptions.editorOptions = {
+                tabIndex: tabIndexNumber,
+                onFocusIn: function (e) { //not required
                 },
-                label: { location: formInstanceProps.labelLocation, text: item.caption, visible: true },
-                formGroupName: item.formGroupName,
-                formItem: item.formItem,
-                outlineObject: item.outlineObject,
-                visible: item.visible
-            });
+                onFocusOut: function (e) { //not required
+                },
+                height: (item.height != null || item.height != '' || item.height != undefined) ? ((item.height !== '' && !isNaN(parseFloat(item.height)) && isFinite(item.height)) ? parseInt(item.height) : item.height.replace("%", "") / 100 * 47) : _defaultTextAreaHeight,
+                width: (item.width != null || item.width != '' || item.width != undefined) ? ((item.width !== '' && !isNaN(parseFloat(item.width)) && isFinite(item.width)) ? parseInt(item.width) : item.width) : _defaultTextAreaWidth,
+                value: item.defaultValue ?? "",
+                ...additionalEditorOptions
+            };
+            itemOptions.label = { location: formInstanceProps.labelLocation, text: item.caption, visible: true };
+
+            if ((itemOptions.editorOptions.height !== '' && !isNaN(parseFloat(itemOptions.editorOptions.height)) && isFinite(itemOptions.editorOptions.height)))
+                itemOptions.editorOptions.minHeight = item.height >= _defaultTextAreaHeight ? parseInt(item.height) : _defaultTextAreaHeight;
         }
         else if (item.editorType == "dxSelectBox") {
-            itemsArray.push(selectBoxRemakeOption(item, formInstanceProps, tabIndexNumber, additionalEditorOptions));
+            itemOptions = selectBoxRemakeOption(item, formInstanceProps, tabIndexNumber, additionalEditorOptions);
         }
         else if (item.editorType == "dxList") {
-            itemsArray.push({
+            itemOptions = {
                 formGroupName: item.formGroupName,
                 dataField: item.dataField,
                 editorType: "dxTextBox",
+                customEditorOptions: customEditorOptions,
                 editorOptions: {
                     tabIndex: tabIndexNumber,
                     width: item.width,
@@ -1561,19 +1645,20 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
                 validationRules: item.validationRules,
                 outlineObject: item.outlineObject,
                 visible: item.visible
-            });
+            };
         }
         else if (item.editorType == "dxMultiDataGrid") {
             var model = "Users";
             var mDropDownDS = new MDropDownDataSource();
             dataSource = mDropDownDS.getDropDownDS('id', `api/${model}/DropDownLookUp`);
-            itemsArray.push({
+            itemOptions = {
                 validationRules: item.validationRules,
                 formGroupName: item.formGroupName,
                 dataField: item.dataField,
                 editorType: "dxDropDownBox",
                 label: { location: formInstanceProps.labelLocation, text: item.caption, visible: true },
                 formItem: item.formItem,
+                customEditorOptions: customEditorOptions,
                 editorOptions: {
                     showClearButton: true,
                     tabIndex: tabIndexNumber,
@@ -1642,17 +1727,18 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
                 },
                 outlineObject: item.outlineObject,
                 visible: item.visible
-            });
+            };
         }
         else if (item.editorType == "dxDropDownBox") {
             var configData = makeFieldFeatures(item, null, "form");
-            itemsArray.push({
+            itemOptions = {
                 validationRules: item.validationRules,
                 formGroupName: item.formGroupName,
                 dataField: item.dataField,
                 editorType: "dxDropDownBox",
                 label: { location: formInstanceProps.labelLocation, text: item.caption, visible: true },
                 formItem: item.formItem,
+                customEditorOptions: customEditorOptions,
                 editorOptions: {
                     showClearButton: true,
                     tabIndex: tabIndexNumber,
@@ -1718,22 +1804,31 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
                 },
                 outlineObject: item.outlineObject,
                 visible: item.visible
-            });
+            };
         }
         else if (item.editorType == "dxDataGrid") {
         }
         else if (item.editorType == "dxDateBox") {
-            itemsArray.push({
+            itemOptions = {
                 formGroupName: item.formGroupName,
                 dataField: item.dataField,
                 editorType: item.editorType,
+                customEditorOptions: customEditorOptions,
                 editorOptions: {
                     tabIndex: tabIndexNumber,
                     width: item.width,
                     heigth: item.height,
                     showClearButton: true,
                     value: item.defaultValue ?? "",
+                    //onValueChanged: function (e) {
+                    //    let localDate = e.value; // This is in the user's local time
+                    //    if (localDate instanceof Date) {
+                    //        localDate.setHours(localDate.getHours() + 7); // Add 7 hours for GMT+7
+                    //    }
+                    //    //stringToUtcDate(e.value);
+                    //},
                     displayFormat: dateFormatter,
+                    dateSerializationFormat: "yyyy-MM-ddTHH:mm:ss",
                     acceptCustomValue: false, // according to typing date
                     //onFocusIn: function (e) {
                     //    e.component.option("opened", true);
@@ -1746,13 +1841,14 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
                 outlineObject: item.outlineObject,
                 visible: item.visible
 
-            });
+            };
         }
         else {
-            itemsArray.push({
+            itemOptions = {
                 formGroupName: item.formGroupName,
                 dataField: item.dataField,
                 editorType: item.editorType,
+                customEditorOptions: customEditorOptions,
                 editorOptions: {
                     tabIndex: tabIndexNumber,
                     width: item.width,
@@ -1766,11 +1862,16 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
                 validationRules: item.validationRules,
                 visible: item.visible,
                 outlineObject: item.outlineObject,
-                visible: item.visible
-            });
+                visible: item.visible,
+
+            };
         }
+        itemOptions.template = item.template;
+        itemsArray.push(itemOptions);
         tabIndexNumber++;
     });
+
+
     var templateItem = new Object();
 
     if (itemsArray.length > 0)
@@ -1963,9 +2064,10 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
                                     e.component.option("value", e.component.option("placeholder"));
                                 });
                             }
-                            editorOptions.onValueChanged = function (e) {
-                                data.component.updateData(item.dataField, e.value);
-                            };
+                            //if (!item.customEditorOptions)
+                            //editorOptions.onValueChanged = function (e) {
+                            //    data.component.updateData(item.dataField, e.value);
+                            //};
 
                             createAccordionField(item, itemElement, editorOptions, formInstanceProps);
                         }
@@ -1989,9 +2091,10 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
                 if (item.editorType == "dxHtmlEditor")
                     item.template = function (data, itemElement) {
                         //doubleClickDefaultPlaceHolderToText(editorOptions, data, item);
-                        item.editorOptions.onValueChanged = function (e) {
-                            data.component.updateData(item.dataField, e.value);
-                        };
+                        //if (!item.customEditorOptions)
+                        //item.editorOptions.onValueChanged = function (e) {
+                        //    data.component.updateData(item.dataField, e.value);
+                        //};
                         var childProps = customChildProps(item.editorOptions, formInstanceProps); //Field lẻ không nhóm
                         if (!childProps.value) {
                             childProps.value = getHtmlEditorBeforeRender(item, formInstanceProps);
@@ -2092,7 +2195,6 @@ function makeBasicDataSource(instance, isForm = false) {
 
         if (checkCustomQueryByModel != null || checkCustomQueryByModel != undefined) {
             if (checkCustomQueryByModel.customQuery != "" && checkCustomQueryByModel.customQuery != null && checkCustomQueryByModel.customQuery != undefined) {
-
                 return new DevExpress.data.DataSource({
                     load: function () {
                         return $.ajax({
@@ -2110,6 +2212,17 @@ function makeBasicDataSource(instance, isForm = false) {
                     store: DevExpress.data.AspNet.createStore({
                         key: "id",
                         loadUrl: `/api/${instance.ModelName}/GetAll`,
+                        onBeforeSend: function (method, ajaxOptions) {
+                            if (method === "load") {
+                                ajaxOptions.data = ajaxOptions.data || {};
+                                ajaxOptions.headers = {
+                                    "filterField": instance?.filterRefField ?? "",
+                                    "filterField2": instance?.filterRefField2 ?? "",
+                                    "filterValue": instance?.filterRefId ?? "",
+                                    "filterValue2": instance?.filterRefId2 ?? ""
+                                };
+                            }
+                        },
                         updateUrl: `/api/${instance.ModelName}/UpdateData`,
                         insertUrl: `/api/${instance.ModelName}/InsertData`,
                         deleteUrl: `/api/${instance.ModelName}/DeleteData`
@@ -2134,7 +2247,7 @@ function makeBasicDataSource(instance, isForm = false) {
         let filter = null;
         filter = ["id", "=", instance.id];
         if (checkCustomQueryByModel != null || checkCustomQueryByModel != undefined) {
-            if (checkCustomQueryByModel.customQuery == "" || checkCustomQueryByModel.customQuery == null || checkCustomQueryByModel.customQuery == undefined)
+            if (checkCustomQueryByModel.customQuery == "" || checkCustomQueryByModel.customQuery == null || checkCustomQueryByModel.customQuery == undefined) {
                 return new DevExpress.data.CustomStore({
                     load: function () {
                         if (instance.isQuery) {
@@ -2146,6 +2259,7 @@ function makeBasicDataSource(instance, isForm = false) {
                         }
                     }
                 });
+            }
             else {
                 checkCustomQueryByModel.filter = filter;
                 return new DevExpress.data.CustomStore({
@@ -3028,15 +3142,21 @@ function doubleClickDefaultPlaceHolderToText(editorOptions, data, item) {
 }
 
 function dataSourceEnum(item, gridInstance) {
+    var isSameUsing = false;
+    var loadUrl = `api/${gridInstance.ModelName}/EnumLookup?refField=${item.formItemConfig.enum}&enumName=${item.formItemConfig.enum}`;
+    if (item.formItemConfig.isSameUsing)
+        loadUrl = `api/${gridInstance.ModelName}/EnumLookup?refField=${item.formItemConfig.enum}&enumName=${item.formItemConfig.enum}&isSameUsing=${item.formItemConfig.isSameUsing}`;
     const dataSourceLookup = DevExpress.data.AspNet.createStore({
         key: 'id',
-        loadUrl: `api/${gridInstance.ModelName}/EnumLookup?refField=${item.formItemConfig.enum}&enumName=${item.formItemConfig.enum}`,
+        //loadUrl: `api/${gridInstance.ModelName}/EnumLookup?refField=${item.formItemConfig.enum}&enumName=${item.formItemConfig.enum}`,
+        loadUrl: loadUrl,
         insertUrl: `api/${gridInstance.ModelName}/UpdateEnum`,
         paginate: true
     });
 
     $.ajax({
-        url: `api/${gridInstance.ModelName}/EnumLookup?refField=${item.formItemConfig.enum}&enumName=${item.formItemConfig.enum}`,
+        //url: `api/${gridInstance.ModelName}/EnumLookup?refField=${item.formItemConfig.enum}&enumName=${item.formItemConfig.enum}`,
+        url: loadUrl,
         method: "GET",
         dataType: "json",
         async: false,
@@ -3462,6 +3582,9 @@ function convertToTitleCase(str) {
         .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Viết hoa chữ cái đầu mỗi từ
         .join(" ");    // Ghép lại thành chuỗi
 }
+
+
+
 function convertKeysToUpperFirstChar(obj) {
     const newObj = {};
 
@@ -3526,10 +3649,10 @@ function moveGroupRow(rowIndex, direction, gridInstance) {
     var dataFilter = groupRows.find(f => f.rowIndex === rowIndex);
     var dataFilterIndex = groupRows.findIndex(f => f.rowIndex === rowIndex);
     var targetIndex = direction === "up" ? (rowIndex - (groupRows[dataFilter.key - 1].data.items.length) - 1) : rowIndex + (dataFilter.data.items.length + 1);
-    var dataTargetFilter = groupRows.find(f => f.rowIndex === (targetIndex  ));
+    var dataTargetFilter = groupRows.find(f => f.rowIndex === (targetIndex));
     var targetDataFilterIndex = groupRows.findIndex(f => f.rowIndex === targetIndex);
     if (direction === "up" && dataFilterIndex === 0) return;
-    if (direction === "down" && dataFilterIndex === groupRows.length - 1) return; 
+    if (direction === "down" && dataFilterIndex === groupRows.length - 1) return;
     if (dataTargetFilter) if (dataTargetFilter.data.key === 999) return;
     if (!dataTargetFilter || targetDataFilterIndex < 0) return;
     $.each(dataFilter.data.items, function (childIndex, childItem) {
@@ -3583,7 +3706,7 @@ function disableCellClick(e) {
     })
 }
 function participantListColumnsProcess(columns, gridInstance, that) {
-    
+
     $.each(columns, function (i, col) {
         //if (col.dataField === "sideName") {
         if (col.dataField === "sideOrder") {
@@ -3601,21 +3724,21 @@ function participantListColRemake(col, gridInstance, that) {
     col.groupCellTemplate = function (element, options) {
         const allRows = gridInstance.getVisibleRows();
         var groupRowsForDisplay = allRows.find(m => m.rowType == "group" && m.key == options.displayValue);
-         const $container = $("<div>")
-        .css({
-            display: "flex",
-            alignItems: "center",
-            gap: "10px"
-        })
-        .on("click", function (e) {
-            e.stopPropagation(); 
-        })
+        const $container = $("<div>")
+            .css({
+                display: "flex",
+                alignItems: "center",
+                gap: "10px"
+            })
+            .on("click", function (e) {
+                e.stopPropagation();
+            })
             .appendTo(element);
         if (groupRowsForDisplay) {
 
-        $("<span>")
-            //.text(options.displayValue + ". " + groupRowsForDisplay.data?.items[0]?.sideName)// + ". " + )
-            .text(groupRowsForDisplay.data?.items[0]?.sideName)// + ". " + )
+            $("<span>")
+                //.text(options.displayValue + ". " + groupRowsForDisplay.data?.items[0]?.sideName)// + ". " + )
+                .text(groupRowsForDisplay.data?.items[0]?.sideName)// + ". " + )
                 .css({
                     "margin-right": "10px", // Tạo khoảng cách giữa span và nút
                     "vertical-align": "middle" // Căn giữa nội dung nếu cần
@@ -3675,8 +3798,8 @@ function participantListColRemake(col, gridInstance, that) {
                         if (groupRows) {
                             //const rowIndex = groupRows.find(row => row.data.key === options.displayValue);
                             //if (rowIndex.rowIndex > 0) {
-                                groupRows = moveGroupRow(groupRowsForDisplay.rowIndex, "up", gridInstance);
-                                gridInstance.refresh();
+                            groupRows = moveGroupRow(groupRowsForDisplay.rowIndex, "up", gridInstance);
+                            gridInstance.refresh();
                             //}
                         }
                     }
@@ -3695,8 +3818,134 @@ function participantListColRemake(col, gridInstance, that) {
                         if (groupRows) {
                             //const rowIndex = groupRows.find(row => row.data.key === options.displayValue);
                             //if (rowIndex.rowIndex >= 0) {
-                                groupRows = moveGroupRow(groupRowsForDisplay.rowIndex, "down", gridInstance);
-                                gridInstance.refresh();
+                            groupRows = moveGroupRow(groupRowsForDisplay.rowIndex, "down", gridInstance);
+                            gridInstance.refresh();
+                            //}
+                        }
+                    }
+                }).css({
+                    "display": "inline-block",
+                    "margin-left": "10px"
+                }).appendTo($container);
+            }
+        }
+    };
+}
+function LCparticipantListColumnsProcess(columns, gridInstance, that) {
+
+    $.each(columns, function (i, col) {
+        //if (col.dataField === "sideName") {
+        if (col.dataField === "sideOrder") {
+            //customDataSourceRecalculate(gridInstance);
+            LCparticipantListColRemake(col, gridInstance, that);
+        }
+    });
+}
+function LCparticipantListColRemake(col, gridInstance, that) {
+    col.allowGrouping = true;
+    col.groupIndex = 0;
+    col.allowSorting = true;
+    col.sortOrder = "asc";
+    //col.sortOrder = undefined;
+    col.groupCellTemplate = function (element, options) {
+        const allRows = gridInstance.getVisibleRows();
+        var groupRowsForDisplay = allRows.find(m => m.rowType == "group" && m.key == options.displayValue);
+        const $container = $("<div>")
+            .css({
+                display: "flex",
+                alignItems: "center",
+                gap: "10px"
+            })
+            .on("click", function (e) {
+                e.stopPropagation();
+            })
+            .appendTo(element);
+        if (groupRowsForDisplay) {
+
+            $("<span>")
+                //.text(options.displayValue + ". " + groupRowsForDisplay.data?.items[0]?.sideName)// + ". " + )
+                .text(groupRowsForDisplay.data?.items[0]?.sideName)// + ". " + )
+                .css({
+                    "margin-right": "10px", // Tạo khoảng cách giữa span và nút
+                    "vertical-align": "middle" // Căn giữa nội dung nếu cần
+                })
+                .appendTo($container);
+
+            $("<div>").dxButton({
+                text: "Add member",
+                onClick: function (e) {
+                    e.event.stopPropagation();
+                    if (gridInstance) {
+                        var passingParams = new FormData();
+                        const newGroup = {
+                            sideName: options.data.items[0]?.sideName,
+                            sideOrder: options.data.items[0]?.sideOrder,
+                            personName: "",
+                            personDepartment: "",
+                            sideId: that.filterRefId2,
+                            lossControlId: that.filterRefId,
+                            rowOrder: 0
+                        };
+
+                        // Gán giá trị vào FormData
+                        passingParams.append("values", JSON.stringify(newGroup));
+
+                        $.ajax({
+                            url: 'api/ParticipantList/InsertData',
+                            processData: false, // Để không xử lý FormData thành chuỗi
+                            contentType: false, // Để jQuery tự động thêm Content-Type phù hợp
+                            type: 'POST',
+                            async: false,
+                            data: passingParams,
+                            success: function (response) {
+                            },
+                            error: function (err) {
+                            }
+                        });
+                        dataSource.reload();
+                        //dataSource.store().insert(newGroup)
+                        //    .then(() => )
+                        //    .catch(error => console.error("Error adding group:", error));
+                        gridInstance.refresh();
+                    }
+                }
+            }).css({
+                "display": "inline-block", // Hiển thị nút trên cùng dòng
+                "margin-left": "10px" // Tạo khoảng cách giữa nút và span
+            }).appendTo($container);
+            if (options.data.items[0]?.sideName != "Tokio Marine Insurance Vietnam Company Limited") {
+                // Thêm nút Move Up
+                $("<div>").dxButton({
+                    text: "Move group up",
+                    onClick: function (e) {
+                        e.event.stopPropagation();
+                        const rows = gridInstance.getVisibleRows();
+                        var groupRows = rows.filter(m => m.rowType == "group");
+                        if (groupRows) {
+                            //const rowIndex = groupRows.find(row => row.data.key === options.displayValue);
+                            //if (rowIndex.rowIndex > 0) {
+                            groupRows = moveGroupRow(groupRowsForDisplay.rowIndex, "up", gridInstance);
+                            gridInstance.refresh();
+                            //}
+                        }
+                    }
+                }).css({
+                    "display": "inline-block",
+                    "margin-left": "10px"
+                }).appendTo($container);
+
+                // Thêm nút Move Down
+                $("<div>").dxButton({
+                    text: "Move group down",
+                    onClick: function (e) {
+                        e.event.stopPropagation();
+                        const rows = gridInstance.getVisibleRows();
+                        var groupRows = rows.filter(m => m.rowType == "group");
+                        if (groupRows) {
+                            //const rowIndex = groupRows.find(row => row.data.key === options.displayValue);
+                            //if (rowIndex.rowIndex >= 0) {
+                            groupRows = moveGroupRow(groupRowsForDisplay.rowIndex, "down", gridInstance);
+                            gridInstance.refresh();
                             //}
                         }
                     }
@@ -4006,174 +4255,716 @@ function buildGroupedData(rawData, groupField, groupSortField) {
 
     return result;
 }
-
-function RenderElementV2(_viewConfig, searchFormControls, objectIds, callback) {
-    var filterExpr = null;
-    var _filterWidth = 150;
-    var _filterHeight = 30;
-    var _enumWidth = 300;
-    var _enumHeight = 500;
-    var _entityWidth = 600;
-    var _entityHeight = 500;
-    var _isFirstLoad = true;
-    $.each(_viewConfig, function (i, item) {
-        if (item.Type == "dxDateBox") {
-            searchFormControls.push({
-                elementAttr: { id: item.ElementName },
-                dataField: item.ElementName,
-                editorType: item.Type,
-                editorOptions: {
-                    width: _filterWidth,
-                    showClearButton: true
-                },
-                label: { location: "left", text: item.Caption },
-                validationRules: [{
-                    type: "custom",
-                    reevaluate: true,
-                    validationCallback: function (options) {
-                        var toDate = searchForm.getEditor("toDateDateDateBox");
-                        var fromDate = searchForm.getEditor("fromDateDateBox");
-                        var toDateValue = "";
-                        var fromDateValue = "";
-
-                        if (toDate && toDate.option('value'))
-                            toDateValue = toDate.option('value');
-                        if (fromDate && fromDate.option('value'))
-                            fromDateValue = fromDate.option('value');
-
-                        if (toDateValue && fromDateValue)
-                            if (toDateValue < fromDateValue) {
-                                // if (options.value < 0) {
-                                // options.rule.message = "To Date cannot be earlier than From Date.";
-                                return false;
-                                // }
-                            }
-                        return true;
-                    }, message: "To date cannot be earlier than from date.",
-                }]
-            });
+function stringToUtcDate(stringDate) {
+    const date = new Date(stringDate);
+    var resultDate = date;
+    if (stringDate)
+        if (stringDate.slice(-1) === "Z") {
+            // getTimezoneOffset() returns minutes, so multiply by 60000 for milliseconds
+            const offsetMinutes = date.getTimezoneOffset();
+            const utcDate = new Date(date.getTime() + (-1 * offsetMinutes * 60 * 1000));
+            resultDate = new Date(utcDate.getTime() + (7 * 60 * 60 * 1000));
         }
-        if (item.Type == "Enum") {
-            var elements = appGetElementsByName(item.FilterField);
-            searchFormControls.push({
-                dataField: item.ElementName,
-                editorType: "dxDropDownBox",
-                label: { location: "left", text: item.Caption },
-                editorOptions: {
-                    dropDownOptions: {
-                        width: _enumWidth
-                    },
-                    width: _filterWidth,
-                    valueExpr: "value",
-                    displayExpr: "caption",
-                    dataSource: new DevExpress.data.ArrayStore({
-                        data: elements,
-                        key: "value"
-                    }),
-                    columns: [
-                        { dataField: "code", caption: "Mã" }
-                        , { dataField: "caption", caption: "Tên" }
-                    ],
-                    contentTemplate: function (e) {
-                        const $dataGrid = $("<div>").dxDataGrid({
-                            dataSource: e.component.option("dataSource"),
-                            columns: e.component.option("columns"),
-                            selection: { mode: "multiple" },
-                            onSelectionChanged: function (selectedItems) {
-                                e.component.selectedItem = selectedItems.selectedRowsData;
-                                const keys = selectedItems.selectedRowKeys;
-                                e.component.option("value", selectedItems.selectedRowsData.map(obj => obj.caption).join(','));
-                            }
-                        });
-                        return $dataGrid;
+    //return date; // Return the original date if it's not UTC
+    return resultDate;
+}
+
+const tabClickEvent = function (e, eTabName, eTab, callback) {
+    var eTabNameR = eTabName;
+    var eTabR = eTab;
+    if (e != null) {
+        eTabR = e.itemIndex;
+        eTabNameR = e.itemData.entity;
+        if (callback != null || callback != undefined)
+            callback(e.itemData.entity);
+    }
+    else {
+        if (callback != null || callback != undefined)
+            callback(eTabName);
+    }
+    return { eTabNameR, eTabR };
+}
+function formatNumber(num) {
+    return num < 10 ? '0' + num : num.toString();
+}
+
+function tabValidationCheck(checkFields, tabs, id, connectionId, entityName) {
+    if (id && _cacheDataGridConfigs) {
+        $.each(tabs, function (tabIndex, tabItem) {
+            var timeoutCount = 200;
+            if (tabItem.validateCheck) {
+                checkFields = _cacheDataGridConfigs.filter(f => f.sysTableFK?.name == tabItem.entity).map(m => m.dataField)
+                if (checkFields.length > 0) {
+
+                    $.ajax({
+                        url: `/api/${entityName}/Render${entityName}TabNotCompleted/${surveyData.id}/${tabItem.entity}/${connectionId}`,
+                        headers: { 'Content-Type': 'application/json' },
+                        type: 'POST',
+                        data: JSON.stringify(checkFields),
+                        success: function (response) {
+                        },
+                        error: function (err) {
+                        }
+                    });
+                }
+            }
+        });
+    }
+}
+
+function fieldPictureFeature($fieldContainer, itemElement, object, info, folder) {
+    var fixFrameSize = "width:400px;height:300px";
+    var imgSizeObject = { width: '100%', height: '200px', objectFit: 'cover', borderRadius: '5px' };
+    var imgContainerSizeObject = { position: 'relative', width: '100%', height: '100%', margin: '5px' };
+    const $container = $(`<div style="display:flex; width:800px">`)
+        .appendTo($fieldContainer);
+
+    const innerPreviewContent = $(`<div>
+    
+    <img loading="lazy" style="padding-bottom:50px" src="https://cdn.prod.website-files.com/65faa2691a34b9fe3f9dd039/65faa9182c784424ecf41a18_Cloud%20Upload.svg" alt="" class="icon-1x1-medium align-center">
+     </div>
+    <div> <label for="filepond--browser-gowe03lre" id="filepond--drop-label-gowe03lre">Drag &amp; Drop your files or <span class="filepond--label-action" tabindex="0">Browse</span></label> 
+
+    </div>
+
+    `)
+    const previewId1NoHash = `imagePreview_${object.id}_first`;
+    const previewId2NoHash = `imagePreview_${object.id}_second`;
+    const previewId1 = `#${previewId1NoHash}`;
+    const previewId2 = `#${previewId2NoHash}`;
+    const $frameImage1 = $(`<div id='image${folder}Preview_${object.id}_first' class="imageLCPreview" width='50%'>`)
+        .appendTo($container);
+    const $frameImage2 = $(`<div id='image${folder}Preview_${object.id}_second' class="imageLCPreview"  width='50%'>`)
+        .appendTo($container);
+    const $imagePreview1 = $(`<div id='${previewId1NoHash}' class='dx-fileuploader' style='display:block;${fixFrameSize}' >`)
+        .appendTo($frameImage1);
+    const $imagePreview2 = $(`<div id='${previewId2NoHash}' class='dx-fileuploader' style='display:block;${fixFrameSize}'>`)
+        .appendTo($frameImage2);
+
+
+
+    const firstText = $(`<div style="font-family: Asap; font-size: 35px; font-weight: bold;">1</div>`);
+    const secondText = $(`<div style="font-family: Asap; font-size: 35px; font-weight: bold;">2</div>`);
+
+    firstText.appendTo($frameImage1);
+    secondText.appendTo($frameImage2);
+
+    $.ajax({
+        url: `/api/Attachment/GetLCPicAttachment/${object.guid}/${folder}`, // Replace with your actual API
+        method: 'GET',
+        success: async function (imageInstances) {
+
+            $.each(imageInstances, function (imageIndex, imageInstance) {
+                if (imageInstance != null || imageInstance != undefined) {
+                    if (imageInstance.id != 0) {
+                        var uint8Array = new Uint8Array(imageInstance.fileData);
+                        var blob = new Blob([uint8Array], { type: imageInstance.type });
+                        var url = URL.createObjectURL(blob);
+                        imageInstance.guid = imageInstance.attachmentGuid;
+                        imageInstance.id = imageInstance.attachmentId;
+                        imageInstance.request = new Object();
+                        imageInstance.request.response = JSON.stringify({ attachment: imageInstance });
+                        imageInstance.url = url;
+                        makeLCPreviewPictureObject(imageInstance, imgContainerSizeObject, imgSizeObject, $imagePreview1, $imagePreview2);
+
+                        $(`${previewId1} .previewLoader`).remove();
+                        $(`${previewId2} .previewLoader`).remove();
                     }
                 }
+
             });
+
         }
-        if (item.Type == "Entity") {
-            var mDropDownDS = new MDropDownDataSource();
-            var dataSource = mDropDownDS.getDropDownDS('Id', `api/${item.FilterField}Api/GetLookup`);
-            searchFormControls.push({
-                dataField: item.ElementName,
-                editorType: "dxDropDownBox",
-                label: { location: "left", text: item.Caption },
-                editorOptions: {
-                    width: _filterWidth,
-                    dropDownOptions: {
-                        width: _entityWidth
-                    },
-                    valueExpr: item.ValueExpr,
-                    displayExpr: item.DisplayExpr,
-                    dataSource: dataSource,
-                    columns: item.ShowColumns,
-                    contentTemplate: function (e) {
-                        const $dataGrid = $("<div>").dxDataGrid({
-                            selectionMode: 'all',
-                            // remoteOperations: { paging: true, filtering: true, sorting: true, grouping: true, summary: true, groupPaging: true },
-                            filterRow: { visible: true },
-                            dataSource: e.component.option("dataSource"),
-                            columns: e.component.option("columns"),
-                            selection: { mode: "multiple" },
-                            scrolling: {
-                                mode: 'virtual',
-                                preloadEnabled: false,
-                                showScrollbar: 'always'
-                            },
-                            width: "100%",
-                            height: "100%",
-                            allowItemDeleting: false,
-                            showSelectionControls: true,
-                            sorting: {
-                                mode: 'multiple',
-                            },
-                            onSelectionChanged: function (selectedItems) {
-                                e.component.selectedItem = selectedItems.selectedRowsData;
-                                const keys = selectedItems.selectedRowKeys;
-                                e.component.option("value", keys);
-                                e.component.option("value", selectedItems.selectedRowsData.map(obj => obj.Id).join(','));
-                            },
-                            columnAutoWidth: true,
-                            customizeColumns: function (columns) {
-                            },
-                        });
-                        return $dataGrid;
-                    }
+    });
+    var fileUploadId1 = `<div id="fileUpload_LCGoodPractices_${object.id}_1">`
+    var fileUploadId2 = `<div id="fileUpload_LCGoodPractices_${object.id}_2">`
+
+    var fileUploader1 = $(fileUploadId1).dxFileUploader({
+        dropZone: $imagePreview1,
+        name: "files",
+        labelText: "",
+        accept: "image/*",
+        selectButtonText: `Choose Image 1`,
+        uploadMode: "instantly",
+        uploadUrl: `/api/${folder}/UpdateMultiplePicture`,
+        uploadHeaders: {
+            "Record-Guid": object.guid,
+            "Folder": folder,
+            "RowOrder": 1
+        },
+        multiple: false,
+        showFileList: false,
+        onDropZoneEnter: function (e) {
+            //$(e.dropZoneElement).addClass("highlight-drop-zone");
+        },
+        onDropZoneLeave: function (e) {
+            //$(e.dropZoneElement).removeClass("highlight-drop-zone");
+        },
+        onUploadStarted: function (e) {
+            $(previewId1).css("position", "relative"); // đảm bảo relative
+            $(`${previewId1} .previewLoader`).remove(); // nếu có rồi
+            $("<div>").addClass("previewLoader").appendTo(previewId1)
+                .dxLoadPanel({
+                    message: "Image loading...",
+                    visible: true,
+                    shading: true,
+                    shadingColor: "rgba(255,255,255,0.7)",
+                    showPane: true,
+                    closeOnOutsideClick: false,
+                    position: { of: previewId1 }
+                });
+        },
+        onUploaded: function (e) {
+            var fr = new FileReader();
+            fr.readAsArrayBuffer(e.file);
+            fr.onload = function (event) {
+                var arrayBuffer = fr.result;
+                var byteArray = new Uint8Array(arrayBuffer);
+                var blob = new Blob([byteArray], { type: e.file.type });
+                var url = URL.createObjectURL(blob);
+                if (e.file && e.file.type.startsWith("image/")) {
+                    const img = new Image();
+                    img.src = url;
+                    img.onload = function () {
+                        e.file.width = img.width;
+                        e.file.height = img.height;
+                    };
+                    e.url = url;
+                    e.fileData = fr.result;
+                    makeLCPreviewPictureObject(e, imgContainerSizeObject, imgSizeObject, $imagePreview1, $imagePreview2)
+                    $(`${previewId1} .previewLoader`).remove();
                 }
-            });
+
+            }
         }
-        if (item.Type == "dxTextBox") {
-            searchFormControls.push({
-                dataField: item.ElementName,
-                editorType: item.Type,
-                editorOptions: {
-                    width: _filterWidth,
-                    showClearButton: true
-                },
-                label: { location: "left", text: item.Caption }
-            });
+    }).appendTo($frameImage1);
+
+    var fileUploader2 = $(fileUploadId2).dxFileUploader({
+        dropZone: $imagePreview2,
+        name: "files",
+        labelText: "",
+        multiple: false,
+        accept: "image/*",
+        selectButtonText: `Choose Image 2`,
+        uploadMode: "instantly",
+        uploadUrl: `/api/${folder}/UpdateMultiplePicture`,
+        uploadHeaders: {
+            "Record-Guid": object.guid,
+            "Folder": folder,
+            "RowOrder": 2
+        },
+        showFileList: false,
+        onUploadStarted: function (e) {
+            $(`${previewId2}`).css("position", "relative"); // đảm bảo relative
+            $(`${previewId2} .previewLoader`).remove(); // nếu có rồi
+            $("<div>").addClass("previewLoader").appendTo(previewId2)
+                .dxLoadPanel({
+                    message: "Image loading...",
+                    visible: true,
+                    shading: true,
+                    shadingColor: "rgba(255,255,255,0.7)",
+                    showPane: true,
+                    closeOnOutsideClick: false,
+                    position: { of: previewId2 }
+                });
+        },
+        onUploaded: function (e) {
+            var fr = new FileReader();
+            fr.readAsArrayBuffer(e.file);
+            fr.onload = function (event) {
+                var arrayBuffer = fr.result;
+                var byteArray = new Uint8Array(arrayBuffer);
+                var blob = new Blob([byteArray], { type: e.file.type });
+                var url = URL.createObjectURL(blob);
+                if (e.file && e.file.type.startsWith("image/")) {
+                    const img = new Image();
+                    img.src = url;
+                    img.onload = function () {
+                        e.file.width = img.width;
+                        e.file.height = img.height;
+                    };
+                    e.url = url;
+                    e.fileData = fr.result;
+                    makeLCPreviewPictureObject(e, imgContainerSizeObject, imgSizeObject, $imagePreview1, $imagePreview2)
+                    $(`${previewId2} .previewLoader`).remove();
+                }
+
+            }
+        }
+    }).appendTo($frameImage2);
+
+    //}).css({
+    //    display: "flex",
+    //    marginRight: "10%",
+    //}).appendTo(itemElement);
+
+    $("<div>")
+        .text("Supported formats: JPG, PNG, GIF")
+        .css({
+            fontSize: "12px",
+            color: "gray",
+            whiteSpace: "nowrap"
+        })
+        .appendTo(itemElement);
+    $("<div>")
+        .text("Minimum image size recommended: > 1MB, dimension: 1200 x 800")
+        .css({
+            fontSize: "12px",
+            color: "red",
+            whiteSpace: "nowrap"
+        })
+        .appendTo(itemElement);
+
+    $container.appendTo(itemElement);
+    return itemElement;
+}
+
+function ObjectPopulateKey(item) {
+    var cloneItems = {};
+    Object.keys(item).forEach(key => {
+        if (key in item) {
+            cloneItems[key] = item[key];
+        }
+    });
+    return cloneItems;
+}
+
+
+function fieldMultiplePictureFeature($fieldContainer, itemElement, object, info, folder) {
+
+    var fileUploadId = `<div id="fileUpload_LC${folder}_${object.id}">`
+    var imgContainerSizeObject = { position: 'relative', width: '400px', height: '300px', margin: '5px' };
+    var imgSizeObject = { width: '100%', height: '200px', objectFit: 'cover', borderRadius: '5px' };
+    const $container = $(`<div style="display:flex; width:100%">`)
+        .appendTo($fieldContainer);
+    var idPreviewImageId = `imagePreview_${object.id}_${folder}`;
+    const $frameImage = $(`<div id='${idPreviewImageId}' class="imagePreview" width='100%'>`)
+        .appendTo($container);
+    const previewId = `#imagePreview_${object.id}_${folder}`;
+    $.ajax({
+        url: `/api/Attachment/GetLCPicAttachment/${object.guid}/${folder}`, // Replace with your actual API
+        method: 'GET',
+        success: async function (data) {
+            if (data.length > 0) {
+                const $previewWrapper = $(previewId);
+                if ($previewWrapper.find(".previewLoader").length === 0) {
+                    const $loadDiv = $("<div>")
+                        .addClass("previewLoader")
+                        .css({ position: "absolute", width: "100%", height: "100%", top: 0, left: 0 })
+                        .appendTo($previewWrapper.css("position", "relative")); // đảm bảo container có position
+
+                    const panel = $("<div>").appendTo($loadDiv);
+
+                    panel.dxLoadPanel({
+                        message: "Image loading...",
+                        visible: true,
+                        shading: true,
+                        shadingColor: "rgba(255,255,255,0.7)",
+                        showPane: true,
+                        closeOnOutsideClick: false,
+                        position: { of: $previewWrapper }
+                    });
+                }
+                data.forEach(imageInstance => {
+                    var uint8Array = new Uint8Array(imageInstance.fileData);
+                    var blob = new Blob([uint8Array], { type: imageInstance.type });
+                    var url = URL.createObjectURL(blob);
+                    imageInstance.guid = imageInstance.attachmentGuid;
+                    imageInstance.id = imageInstance.attachmentId;
+                    imageInstance.request = new Object();
+                    imageInstance.request.response = JSON.stringify({ attachment: imageInstance });
+                    imageInstance.url = url;
+                    makeLCPreviewPictureObject(imageInstance, imgContainerSizeObject, imgSizeObject, $frameImage, null, "33%");
+                });
+
+                $(`#${idPreviewImageId} .previewLoader`).remove();
+            }
         }
     });
 
 
-    $(`#${objectIds.buttonId}`).dxButton({
-        height: 30,
-        width: 200,
-        text: "Submit",
-        onClick: function (e) {
-            
-                $.ajax({
-                    url: `/api/${objectIds.controllerId}/ExecuteCustomQuery`,
-                    type: "POST",
-                    headers: { 'Content-Type': 'application/json' },
-                    data: JSON.stringify(callback(_viewConfig)),
-                    success: function (data) {
-                        $(`#${objectIds.gridId}`).dxDataGrid("instance").refresh();
-                    },
-                    error: function (error) {
-                        console.error("Error loading data:", error);
-                    }
+    var fileUploader = $(fileUploadId).dxFileUploader({
+        dropZone: $frameImage,
+        name: "files",
+        labelText: "",
+        accept: "image/*",
+        selectButtonText: `Choose Image`,
+        uploadMode: "instantly",
+        uploadUrl: `/api/${folder}/UpdateMultiplePicture`,
+        uploadHeaders: {
+            "Record-Guid": info.guid,
+            "Folder": folder
+        },
+        multiple: true,
+        showFileList: false,
+        onDropZoneEnter: function (e) {
+            //$(e.dropZoneElement).addClass("highlight-drop-zone");
+        },
+        onDropZoneLeave: function (e) {
+            //$(e.dropZoneElement).removeClass("highlight-drop-zone");
+        },
+        onUploadStarted: function (e) {
+            $(`#imagePreview_${object.id}_${folder}`).css("position", "relative"); // đảm bảo relative
+            $(`#imagePreview_${object.id}_${folder} .previewLoader`).remove(); // nếu có rồi
+            $("<div>").addClass("previewLoader").appendTo(`#imagePreview_${object.id}_${folder}`)
+                .dxLoadPanel({
+                    message: "Image loading...",
+                    visible: true,
+                    shading: true,
+                    shadingColor: "rgba(255,255,255,0.7)",
+                    showPane: true,
+                    closeOnOutsideClick: false,
+                    position: { of: `#imagePreview_${object.id}_${folder}` }
                 });
+        },
+        onUploaded: function (e) {
+            var fr = new FileReader();
+            fr.readAsArrayBuffer(e.file);
+            fr.onload = function (event) {
+                var arrayBuffer = fr.result;
+                var byteArray = new Uint8Array(arrayBuffer);
+                var blob = new Blob([byteArray], { type: e.file.type });
+                var url = URL.createObjectURL(blob);
+                if (e.file && e.file.type.startsWith("image/")) {
+
+                    const img = new Image();
+                    img.src = url;
+                    img.onload = function () {
+                        e.file.width = img.width;
+                        e.file.height = img.height;
+                    };
+                    e.url = url;
+                    e.fileData = fr.result;
+                    makeLCPreviewPictureObject(e, imgContainerSizeObject, imgSizeObject, $frameImage, null, "33%");
+
+                    $(`#${idPreviewImageId} .previewLoader`).remove();
+                }
+
+            }
         }
-    }).addClass("custom-search-custom");
+    }).appendTo($frameImage);
+
+
+    //}).css({
+    //    display: "flex",
+    //    marginRight: "10%",
+    //}).appendTo(itemElement);
+
+    $("<div>")
+        .text("Supported formats: JPG, PNG, GIF")
+        .css({
+            fontSize: "12px",
+            color: "gray",
+            whiteSpace: "nowrap"
+        })
+        .appendTo(itemElement);
+    $("<div>")
+        .text("Minimum image size recommended: > 1MB, dimension: 1200 x 800")
+        .css({
+            fontSize: "12px",
+            color: "red",
+            whiteSpace: "nowrap"
+        })
+        .appendTo(itemElement);
+
+    $container.appendTo(itemElement);
+    return itemElement;
 }
 
+function makeTheClientLocationGrid(instanceItems, dropdownControl, instanceProps, container, onSelectionChanged = null) {
+    var divContainer = container;
+    divContainer.css({
+        width: "100%", height: "100%"
+    });
+
+    function defaultSelectionHandler(selectedItems) {
+        var hasSelection = selectedItems.selectedRowKeys.length > 0;
+        if (!hasSelection) return;
+
+        const selectedRow = selectedItems.selectedRowsData[0];
+        dropdownControl.component.option("value", selectedItems.selectedRowKeys[0]);
+
+        instanceProps.formInstance.updateData("clientName", selectedRow.clientName || "");
+        instanceProps.formInstance.updateData("locationAddress", selectedRow.clientAddress || "");
+        instanceProps.formInstance.updateData("clientCode", selectedRow.clientCode || "");
+        instanceProps.formInstance.updateData("locationId", selectedRow.locationId || 0);
+
+        dropdownControl.component.close();
+    }
+
+    // Wrapper: custom có thể chặn default bằng cách return false
+    function selectionHandlerWrapper(e) {
+        // Nếu có custom callback
+        if (typeof onSelectionChanged === "function") {
+            const result = onSelectionChanged(e, {
+                defaultHandler: defaultSelectionHandler,
+                dropdownControl,
+                instanceProps
+            });
+
+            // Nếu callback trả về false -> không chạy default
+            if (result === false) return;
+        }
+
+        // Mặc định vẫn chạy default
+        defaultSelectionHandler(e);
+    }
+
+    var grid = $("<div>").dxDataGrid({
+        dataSource: instanceItems.editorOptions.dataSource,
+        columns: [
+            { dataField: "clientCode", caption: "Client Code" },
+            { dataField: "clientName", caption: "Client Name" },
+            { dataField: "clientAddress", caption: "Client Address" },
+            { dataField: "locationAddressName", caption: "Location Address Name" }
+        ],
+        filterRow: { visible: true },
+        selectionMode: 'all',
+        selection: {
+            mode: "single" // Chọn một dòng duy nhất
+        },
+        width: "100%",
+        height: "85%",
+        allowItemDeleting: false,
+        showSelectionControls: true,
+        paging: { enabled: true, pageSize: 10 },
+        pager: { visible: true },
+        onSelectionChanged: selectionHandlerWrapper,
+        columnAutoWidth: true,
+
+    });
+
+    var divBranchCode = $(`<div style="display:flex;padding:10px">`)
+    $(`<div style="padding-top: 10px; padding-right: 10px;">Branch code: </div>`).appendTo(divBranchCode);
+    //$(`<div>`).dxSelectBox({
+    //    dataSource: [{ id: 89, key: "Ha Noi" }, { id: 88, key: "Ho Chi Minh" }],
+    //    valueExpr: 'id',
+    //    displayExpr: 'key',
+    //    searchEnabled: true,
+    //    width: 300,
+    //    onValueChanged: function (e) { // handle after select
+    //        var DS = grid.dxDataGrid("instance").getDataSource();
+    //        DS.filter(["areaId", "=", e.value]);
+    //        DS.load();
+    //    },
+    //}).appendTo(divBranchCode);
+    $("<div>").dxRadioGroup({
+        dataSource: [{ id: 89, key: "Ha Noi" }, { id: 88, key: "Ho Chi Minh" }],
+        valueExpr: 'id',
+        displayExpr: 'key',
+        onValueChanged: function (e) { // handle after select
+            var DS = grid.dxDataGrid("instance").getDataSource();
+            DS.filter(["areaId", "=", e.value]);
+            DS.load();
+        },
+        //itemTemplate: function (itemData) {
+        ////    const isBold = (item.key === "Overall");
+        ////    var divContainer = $("<div>");
+        ////    $(`.dx-field-item-label-text:contains('Overall')`).first().attr("style", "font-weight: bold;");
+        ////    return divContainer
+        ////        .text(itemData.key)
+        ////        .css({ "font-weight": isBold ? "bold" : "normal" }, { "disabled": _surveyData.isReadOnly });
+        //},
+        layout: "horizontal" // or "vertical"
+    }).appendTo(divBranchCode);
+
+    divBranchCode.appendTo(divContainer);
+
+    dropdownControl.component.on("valueChanged", function (args) {
+        if (args.value != null) {
+            dropdownControl.component.close();
+        }
+    });
+    grid.appendTo(divContainer);
+
+    var objectInstance = new Object();
+
+    var scrollView = $(`<div>`);
+    scrollView.dxScrollView({
+        width: "100%",
+        height: "100%",
+        useNative: false // Sử dụng thanh cuộn tùy chỉnh của DevExtreme
+    });
+    divContainer.appendTo(scrollView);
+
+    //var form = new GoodPracticesForm(_id, null, _formConfig, _formConfig);
+
+
+
+    //form.container.appendTo(scrollView);
+    //scrollView.appendTo(container);
+    //scrollView.dxScrollView({
+    //    width: "100%",
+    //    height: "100%",
+    //    useNative: false // Sử dụng thanh cuộn tùy chỉnh của DevExtreme
+    //});
+
+
+
+    objectInstance.container = divContainer;
+    objectInstance.component = grid;
+
+
+    return objectInstance;
+}
+function makeLCPreviewPictureObject(imageInstance, imgContainerSizeObject, imgSizeObject, $imagePreview1, $imagePreview2, defaultMargin = "0%") {
+    // Use .then() to handle the result asynchronously
+    var arrayBuffer = imageInstance.fileData;
+    var byteArray = new Uint8Array(arrayBuffer);
+    var blob = new Blob([byteArray], { type: "image/*" });
+    var url = URL.createObjectURL(blob);
+    var img = new Image();
+    img.src = url;
+    img.onload = function () {
+        if (img.height > img.width) {
+            imgSizeObject.width = "30%";
+            imgSizeObject.marginLeft = defaultMargin == "0%" ? "0%" : "33%";
+        }
+        else {
+            imgSizeObject.marginLeft = "0%";
+            imgSizeObject.width = "100%";
+        }
+        var response = imageInstance.request.response;
+        var responseObject = JSON.parse(response); // truy vấn attachment
+        var thumbUrl = `https://${window.location.host}/api/Attachment/Browse/${responseObject.attachment.guid}`;
+        const $imageContainer = $("<div>").css(imgContainerSizeObject);
+        const $imageLink = $("<a>")
+            .attr("href", thumbUrl)
+            .attr("target", "_blank")
+            .appendTo($imageContainer);
+
+        $("<img>")
+            .attr("src", imageInstance.url)
+            .attr("loading", "lazy")
+            .css(imgSizeObject)
+            .appendTo($imageLink);
+
+        $("<button>")
+            .html("&times;") // HTML entity for "x"
+            .css({
+                position: "absolute",
+                top: "5px",
+                right: "5px",
+                width: "20px",
+                height: "20px",
+                borderRadius: "50%",
+                backgroundColor: "red",
+                color: "white",
+                border: "none",
+                cursor: "pointer",
+                fontSize: "14px",
+                lineHeight: "18px",
+                textAlign: "center",
+                padding: "0"
+            })
+            .on("click", async function () { // Sử dụng async để xử lý
+                try {
+                    responseObject.attachmentId = responseObject.attachment?.id ?? 0;
+                    responseObject.key = responseObject.attachment?.id ?? 0;
+                    await deleteImageData(responseObject);
+                    $(this).parent().remove();
+                } catch (error) {
+                }
+            }).appendTo($imageContainer);
+        var descriptionId = `description_${responseObject.attachment.id}_${responseObject.attachment.id}`;
+        var descriptionWrapper = $(`<div id='${descriptionId}'>`).css({
+            width: '100%',
+            marginTop: '5px',
+            boxSizing: 'border-box',
+            fontSize: '12px',
+            borderRadius: '4px',
+            border: '1px solid #ccc'
+        });
+        const $descriptionInput = $(`<input>`)
+            .attr("type", "text")
+            .attr("placeholder", "Enter description...") // Placeholder text
+            .css({
+                width: '100%',
+                boxSizing: 'border-box',
+                padding: '5px',
+                fontSize: '12px',
+                borderRadius: '4px',
+                border: '1px solid #ccc'
+            })
+            .val(responseObject.attachment.attachmentNote || "")
+            .on("change", function () {
+                responseObject.attachment.attachmentNote = $(this).val();
+                $.ajax({
+                    url: `api/Attachment/UpdateNote`,
+                    type: 'PUT',
+                    data: {
+                        values: JSON.stringify({
+                            attachmentNote: responseObject.attachment.attachmentNote
+                        }),
+                        key: responseObject.attachment.id
+                    },
+                    processData: true,
+                    success: function (response) {
+                        markAccordionAsSaved(descriptionId);
+                        //console.log("Description updated successfully!");
+                    },
+                    error: function (error) {
+                        console.error("Error updating description:", error);
+                    }
+                });
+            })
+            .on("keydown", function () { clearAccordionHighlight(descriptionId) })
+            .appendTo(descriptionWrapper);
+        descriptionWrapper.appendTo($imageContainer);
+        if (responseObject.attachment.rowOrder > 0)
+            $imageContainer.appendTo(responseObject.attachment.rowOrder == 1 ? $imagePreview1 : $imagePreview2);
+        else
+            $imageContainer.appendTo($imagePreview1);
+    };
+
+}
+
+function userRender(users) {
+    menuCountNotify("UserSession", users);
+    const tbody = document.getElementById("tbody");
+    if (tbody == null) return;
+    const countEl = document.getElementById("count");
+    if (countEl == null) return;
+    countEl.textContent = users.length;
+    tbody.innerHTML = "";
+    if (!users || users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4">No one online</td></tr>`;
+        return;
+    }
+
+    for (const u of users) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+                    <td>${escapeHtml(u.user)}</td>
+                    <td>${escapeHtml(u.authType)}</td>
+                    <td>${u.connections}</td>
+                    <td>${escapeHtml(u.lastSeen)}</td>
+                `;
+        tbody.appendChild(tr);
+    }
+}
+function escapeHtml(s) {
+    return (s ?? "").toString()
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function menuCountNotify(menuName, object)
+{
+    switch (menuName) {
+        case "UserSession":
+            {
+                var notifyElement = $(`[data-name=Count_UserSession]`);
+                notifyElement.css({ "display": "block" });
+                notifyElement.text(object.length);
+                break;
+            }
+
+        default:
+            break;
+    }
+
+}

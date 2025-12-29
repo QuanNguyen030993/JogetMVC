@@ -1,0 +1,491 @@
+﻿@page "{pageNum:int?}"
+@model PlanModel
+@{
+    Layout = null;
+}
+
+<script type="text/javascript">
+
+
+
+
+    var chartG =  $('#gantt').dxGantt({
+        tasks: {
+            dataSource: new Object(),
+        },
+        dependencies: {
+            dataSource:  new Object(),
+        },
+        resources: {
+            dataSource: new Object(),
+        },
+        resourceAssignments: {
+            dataSource: new Object(),
+        },
+        editing: {
+            enabled: true,
+        },
+        validation: {
+            autoUpdateParentTasks: true,
+        },
+        title: 'Project timeline',
+        toolbar: {
+            items: [
+                'undo',
+                'redo',
+                'separator',
+                'collapseAll',
+                'expandAll',
+                'separator',
+                'addTask',
+                'deleteTask',
+                'separator',
+                'zoomIn',
+                'zoomOut',
+            ],
+        },
+        columns: [{
+            dataField: 'title',
+            caption: 'Subject',
+            width: 300,
+        }, {
+            dataField: 'start',
+            caption: 'Start Date',
+            dataType: 'datetime',
+            format: 'MM/dd/yyyy'
+        }, {
+            dataField: 'end',
+            caption: 'End Date', 
+            dataType: 'datetime',
+            format: 'MM/dd/yyyy'//,
+            // calculateCellValue: function (row) {
+            //     if (!row.end) return null;
+
+            //     const d = new Date(row.end);
+            //     d.setHours(23, 59, 59, 0);
+            //     return d;
+            // }
+        }, {
+            dataField: 'progress',
+            caption: 'Progress',
+            dataType: 'number',
+            calculateCellValue: function (row) {
+                if (row.progress == null) return null;
+                return row.progress + '%';
+            }
+
+        }],
+        scaleType: 'weeks',
+        taskListWidth: 500
+    });
+
+    $.when(
+        $.getJSON("/api/Utility/GetData?sheetName=Tasks"),
+        $.getJSON("/api/Utility/GetData?sheetName=Dependencies"),
+        $.getJSON("/api/Utility/GetData?sheetName=Resources"),
+        $.getJSON("/api/Utility/GetData?sheetName=ResourceAssignments")
+    ).done(function (t, d, r, ra) {
+
+
+
+        chartG.dxGantt("instance").option("tasks.dataSource" , t[0]);
+        chartG.dxGantt("instance").option("dependencies.dataSource", d[0]);
+        chartG.dxGantt("instance").option("resources.dataSource", r[0]);
+        chartG.dxGantt("instance").option("resourceAssignments.dataSource", ra[0]);
+
+    });
+    // $("#gantt").dxGantt({
+    //     scaleType: "weeks",
+    //     taskListWidth: 400,
+
+    //     tasks: {
+    //         dataSource: DevExpress.data.AspNet.createStore({
+    //             key: "id",
+    //             loadUrl: `/api/Utility/GetData?sheetName=Tasks`,
+    //             insertUrl: `/api/Utility/InsertData`,
+    //             updateUrl: `/api/Utility/UpdateData`,
+    //             deleteUrl: `/api/Utility/DeleteData`
+    //         }),
+    //         keyExpr: "id",
+    //         parentIdExpr: "parentId",
+    //         titleExpr: "title",
+    //         startExpr: "startDate",
+    //         endExpr: "endDate",
+    //         progressExpr: "progress"
+    //     },
+
+    //     dependencies: {
+    //         dataSource: DevExpress.data.AspNet.createStore({
+    //             key: "id",
+    //             loadUrl: `/api/Utility/GetData?sheetName=Dependencies`,
+    //             insertUrl: `/api/Utility/InsertData`,
+    //             updateUrl: `/api/Utility/UpdateData`,
+    //             deleteUrl: `/api/Utility/DeleteData`
+    //         }),
+    //         keyExpr: "id",
+    //         predecessorIdExpr: "predecessorId",
+    //         successorIdExpr: "successorId",
+    //         typeExpr: "type"
+    //     },
+    //     resources: {
+    //         dataSource: DevExpress.data.AspNet.createStore({
+    //             key: "id",
+    //             loadUrl: `/api/Utility/GetData?sheetName=Resources`,
+    //             insertUrl: `/api/Utility/InsertData`,
+    //             updateUrl: `/api/Utility/UpdateData`,
+    //             deleteUrl: `/api/Utility/DeleteData`
+    //         }),
+    //         keyExpr: "id"
+    //     },
+    //     resourceAssignments: {
+    //         dataSource: DevExpress.data.AspNet.createStore({
+    //             key: "id",
+    //             loadUrl: `/api/Utility/GetData?sheetName=ResourceAssignments`,
+    //             insertUrl: `/api/Utility/InsertData`,
+    //             updateUrl: `/api/Utility/UpdateData`,
+    //             deleteUrl: `/api/Utility/DeleteData`
+    //         }),
+    //         keyExpr: "id",
+    //         taskExpr: "taskId",
+    //         resourceExpr: "resourceId",
+    //     },
+    //     editing: {
+    //         enabled: true,
+    //         allowTaskAdding: true,
+    //         allowTaskUpdating: true,
+    //         allowTaskDeleting: true,
+    //         allowDependencyAdding: true,
+    //         allowDependencyDeleting: true
+    //     },
+
+    //     columns: [
+    //         { dataField: "title", caption: "Task", width: 250 },
+    //         { dataField: "startDate", caption: "Start", dataType: "date" },
+    //         { dataField: "endDate", caption: "End", dataType: "date" },
+    //         { dataField: "progress", caption: "Progress", dataType: "number" }
+    //     ]
+    // });
+    async function importExcel(file) {
+        var form = new FormData();
+        form.append("file", file);
+
+        var res = await fetch("/api/Utility/import", { method: "POST", body: form });
+        var json = await res.json(); // { planId: 123 }
+
+        // reload gantt bằng planId mới
+        loadGantt(json.planId);
+    }
+    function toDate(v) {
+        if (!v) return null;
+        if (v instanceof Date) return v;
+
+        // nếu v là string: "2019-02-21T05:00:00.000Z" hoặc "2019-02-21"
+        const d = new Date(v);
+        return isNaN(d.getTime()) ? null : d;
+    }
+
+    async function exportPlanXlsxFromGantt(chartG) {
+        var chartInstance = chartG.dxGantt("instance");
+        var tasks = chartInstance.option("tasks.dataSource");
+        var deps = chartInstance.option("dependencies.dataSource");
+        var rs = chartInstance.option("resources.dataSource");
+        var ras = chartInstance.option("resourceAssignments.dataSource");
+
+
+        var wb = new ExcelJS.Workbook();
+
+        // Sheet 1: Tasks
+        var wsTasks = wb.addWorksheet("Tasks");
+        wsTasks.addRow(["id", "parentId", "title", "start", "end", "progress"]);
+        var i = 2;
+        var colorMap = buildColorMapByParentId(tasks);
+
+        tasks.forEach(t => {
+            
+
+            wsTasks.addRow([
+                t.id,
+                t.parentId ?? 0,
+                t.title,
+                toDate(t.start),
+                toDate(t.end),
+                t.progress
+            ]);
+            var excelRow = i;
+            var argb = colorMap.get(t.id) || "FFFFFFFF";
+            fillRow(wsTasks, excelRow, 1, 6, argb); // ví dụ tô 2 cột id,parentId
+            i++
+        });
+
+        // Sheet 2: Dependencies
+        var wsDeps = wb.addWorksheet("Dependencies");
+        wsDeps.addRow(["id", "predecessorId", "successorId", "type"]);
+        deps.forEach(d => {
+            wsDeps.addRow([d.id, d.predecessorId, d.successorId, d.type]);
+
+        });
+
+        var wsrss = wb.addWorksheet("Resources");
+        wsrss.addRow(["id", "text"]);
+        rs.forEach(d => {
+            wsrss.addRow([d.id, d.text]);
+        });
+
+        var wsrass = wb.addWorksheet("ResourceAssignments");
+        wsrass.addRow(["id", "taskId", "resourceId"]);
+        ras.forEach(d => {
+            wsrass.addRow([d.id, d.taskId, d.resourceId]);
+        });
+
+        var buffer = await wb.xlsx.writeBuffer();
+        saveAs(new Blob([buffer]), "plan.xlsx");
+    }
+    function fillRow(ws, rowIndex, fromCol, toCol, argb) {
+        // for (let c = fromCol; c <= toCol; c++) {
+        //     var cell = ws.getRow(rowIndex).getCell(c);
+        //     cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb } };
+        // }
+        for (let c = fromCol; c <= toCol; c++) {
+            ws.getRow(rowIndex).getCell(c).fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb }
+            };
+        }
+    }
+
+    var COLOR_PARENT_GREEN = "FF7DC67D"; // xanh lá (parent)
+    var COLOR_TASK_BLUE = "FF2E77BB"; // xanh dương (child) - anh có thể đổi đúng shade
+
+    function buildColorMapByParentId(rows) {
+        // rows: [{id:1,parentId:0}, ...]
+        var hasChild = new Set();
+
+        for (var r of rows) {
+            if (r.parentId != null && r.parentId !== 0) {
+                hasChild.add(r.parentId);
+            }
+        }
+
+        var colorMap = new Map(); // id -> ARGB
+        for (var r of rows) {
+            var isLeaf = !hasChild.has(r.id);
+            colorMap.set(r.id, isLeaf ? COLOR_TASK_BLUE : COLOR_PARENT_GREEN);
+        }
+        return colorMap;
+    }
+     // tasks có id,parentId
+    $("#scaleTypeGroup").dxRadioGroup({
+        items: [
+            { text: "Days", value: "days" },
+            { text: "Weeks", value: "weeks" },
+            { text: "Months", value: "months" },
+            { text: "Quarters", value: "quarters" },
+            { text: "Years", value: "years" }
+        ],
+        displayExpr: "text",
+        valueExpr: "value",
+        value:  chartG.dxGantt("instance").option("scaleType") || "weeks",
+        layout: "horizontal",
+        onValueChanged: function (e) {
+            chartG.dxGantt("instance").option("scaleType", e.value);
+
+            // optional: refresh nhẹ nếu anh thấy UI chưa update trong vài version/theme
+            // gantt.repaint();
+        }
+    });
+    var $file = $("#excelFileHidden");
+
+    // Nút nhìn như dxButton
+    $("#btnImportExcel").dxButton({
+        text: "Import",
+        icon: "upload",
+        type: "default",
+        stylingMode: "contained",
+        onClick: function () {
+            // mở hộp thoại chọn file
+            $file.trigger("click");
+        }
+    });
+
+    // Khi user chọn file xong -> auto gọi API
+    $file.on("change", async function () {
+        var file = this.files?.[0];
+        if (!file) return;
+
+        // reset để lần sau chọn lại đúng file vẫn trigger change
+        this.value = "";
+
+        // chỉ nhận .xlsx
+        if (!file.name.toLowerCase().endsWith(".xlsx")) {
+            DevExpress.ui.notify("Only support .xlsx", "warning", 2500);
+            return;
+        }
+
+        var btn = $("#btnImportExcel").dxButton("instance");
+
+        var formData = new FormData();
+        formData.append("file", file); // name phải khớp API [FromForm] IFormFile file
+
+        try {
+            btn.option({ disabled: true, text: "Importing..." });
+
+            var resp = await fetch("/api/Utility/ImportExcel", {
+                method: "POST",
+                body: formData
+            });
+
+            var data = await resp.json().catch(() => null);
+
+            if (!resp.ok) {
+                DevExpress.ui.notify(data?.message || `Import failed (${resp.status})`, "error", 4000);
+                return;
+            }
+
+            DevExpress.ui.notify(data?.message || "Import done", "success", 2500);
+            callElementView(`/Development/Plan`, `Plan`, `Plan`);
+            // Nếu muốn reload gantt sau import:
+           
+        } catch (e) {
+            DevExpress.ui.notify(e?.message || "Error API", "error", 4000);
+        } finally {
+            btn.option({ disabled: false, text: "Import Excel" });
+        }
+    });
+    async function uploadExcelBlob(excelBlob) {
+        const formData = new FormData();
+
+        // quan trọng: field name = "file" phải khớp API
+        formData.append(
+            "file",
+            excelBlob,
+            "gantt-plan.xlsx"   // fake filename
+        );
+
+        const resp = await fetch("/api/Utility/ImportExcel", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await resp.json().catch(() => null);
+
+        if (!resp.ok) {
+            throw new Error(data?.message || `ImportExcel failed (${resp.status})`);
+        }
+
+        return data;
+    }
+    async function exportGanttToExcelBlob(chartG) {
+        var chartInstance = chartG.dxGantt("instance");
+        var tasks = chartInstance.option("tasks.dataSource");
+        var deps = chartInstance.option("dependencies.dataSource");
+        var rs = chartInstance.option("resources.dataSource");
+        var ras = chartInstance.option("resourceAssignments.dataSource");
+
+
+        var wb = new ExcelJS.Workbook();
+
+        // Sheet 1: Tasks
+        var wsTasks = wb.addWorksheet("Tasks");
+        wsTasks.addRow(["id", "parentId", "title", "start", "end", "progress"]);
+        var i = 2;
+        var colorMap = buildColorMapByParentId(tasks);
+
+        tasks.forEach(t => {
+
+
+            wsTasks.addRow([
+                t.id,
+                t.parentId ?? 0,
+                t.title,
+                toDate(t.start),
+                toDate(t.end),
+                t.progress
+            ]);
+            var excelRow = i;
+            var argb = colorMap.get(t.id) || "FFFFFFFF";
+            fillRow(wsTasks, excelRow, 1, 6, argb); // ví dụ tô 2 cột id,parentId
+            i++
+        });
+
+        // Sheet 2: Dependencies
+        var wsDeps = wb.addWorksheet("Dependencies");
+        wsDeps.addRow(["id", "predecessorId", "successorId", "type"]);
+        deps.forEach(d => {
+            wsDeps.addRow([d.id, d.predecessorId, d.successorId, d.type]);
+
+        });
+
+        var wsrss = wb.addWorksheet("Resources");
+        wsrss.addRow(["id", "text"]);
+        rs.forEach(d => {
+            wsrss.addRow([d.id, d.text]);
+        });
+
+        var wsrass = wb.addWorksheet("ResourceAssignments");
+        wsrass.addRow(["id", "taskId", "resourceId"]);
+        ras.forEach(d => {
+            wsrass.addRow([d.id, d.taskId, d.resourceId]);
+        });
+
+        var buffer = await wb.xlsx.writeBuffer();
+
+
+        // 👉 tạo Blob giả lập file excel
+        return new Blob(
+            [buffer],
+            { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }
+        );
+    }
+
+    $("#ganttExport").dxButton({
+        text:"Export",
+        type: "default",
+        icon: "export",
+        onClick: function(e){
+            exportPlanXlsxFromGantt(chartG);
+        }
+    })
+    $("#saveGantt").dxButton({
+        text: "Save",
+        type: "default",
+        icon: "save",
+        onClick: async function (e) {
+            try {
+                DevExpress.ui.notify("Saving gantt...", "info", 1500);
+
+                // 1) export gantt data -> Excel Blob (in-memory)
+                const excelBlob = await exportGanttToExcelBlob(chartG);
+
+                // 2) gọi API ImportExcel với Blob như file upload
+                await uploadExcelBlob(excelBlob);
+
+                DevExpress.ui.notify("Save gantt thành công", "success", 2500);
+            }
+            catch (e) {
+                DevExpress.ui.notify(e?.message || "Save gantt lỗi", "error", 4000);
+            }
+        }
+    })
+</script>
+
+<div id="Plan">
+    <div width="100%" x="0" y="31" transform="translate(0,0)" text-anchor="middle"
+         style=" font-size: 28px; font-family: Segoe UI Light, Helvetica Neue Light, Segoe UI, Helvetica Neue, Trebuchet MS, Verdana, sans-serif; font-weight: 200; fill: rgb(35, 35, 35); cursor: default;text-align: center;">
+        Project timeline
+    </div>
+    
+<div id="gantt" style="height:500px"></div>
+</div>
+
+<div style="display:flex">
+    <div> 
+        <div id="scaleTypeGroup"></div>
+    </div>
+    <div>
+        <div id="ganttExport"></div>
+        <input type="file" id="excelFileHidden" accept=".xlsx" style="display:none" />
+        <div id="btnImportExcel"></div>
+        <div id="saveGantt"></div>
+    </div>
+</div>
