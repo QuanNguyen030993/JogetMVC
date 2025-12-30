@@ -1,4 +1,4 @@
-﻿.dExForm{
+﻿.dExForm {
     padding: 10px;
 }
 
@@ -11,9 +11,9 @@
 
 .custom-link {
     color: #007bff;
-    text-decoration: none; 
-    font-weight: bold; 
-    cursor: pointer; 
+    text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
 }
 
     .custom-link:hover {
@@ -22,7 +22,11 @@
     }
 
 .imagePreviewContainer {
-    position: relative; width: 120px; height: 120px; margin: 5px; margin-top: 20px;
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 5px;
+    margin-top: 20px;
 }
 
 .imagePreview {
@@ -36,7 +40,7 @@
     justify-content: start;
     overflow-y: auto; /* Cho phép cuộn dọc nếu có nhiều ảnh */
     background-color: #f9f9f9; /* Màu nền nhạt */
-    color: #aaa; /* Màu chữ placeholder */  
+    color: #aaa; /* Màu chữ placeholder */
     font-size: 16px;
     position: relative;
     padding: 10px; /* Khoảng cách giữa khung và ảnh */
@@ -67,6 +71,7 @@
 .wrapper {
     font-size: 12px !important;
 }
+
 .container {
     width: 100% !important;
     height: 100% !important;
@@ -282,10 +287,17 @@
     margin-left: -165px !important;
 }
 
-.admin-float-btn {
-    left: 1%;
+.admin-float-swicher {
+    margin-left: 1%;
     position: fixed;
-    top: 96%;
+    top: 90%;
+    z-index: 9999;
+}
+
+.admin-float-btn {
+    margin-left: 14%%;
+    position: fixed;
+    top: 95%;
     transform: translateY(-50%);
     background-color: #007bff;
     color: white;
@@ -319,6 +331,7 @@
         opacity: 1;
     }
 }
+
 .expand-ltr {
     transform-origin: left center;
     animation: expandLTR 220ms ease-out forwards;
@@ -378,4 +391,95 @@
 .badge-theme {
     background-color: #1e88e5;
     color: #ffffff;
+}
+
+.notification-icon {
+    position: relative;
+    cursor: pointer;
+    color: #444; /* Màu icon chính */
+    transition: color 0.2s ease;
+}
+
+    .notification-icon:hover {
+        color: #000;
+    }
+
+/* Dot */
+.notification-dot {
+    transform: scale(1);
+    transform-origin: center;
+    transition: transform 0.3s ease;
+}
+
+.notification-icon.has-notification .notification-dot {
+    transform: scale(1.3);
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+/* Pulse effect */
+@keyframes pulse {
+    0% {
+        transform: scale(1.3);
+    }
+
+    50% {
+        transform: scale(1.5);
+    }
+
+    100% {
+        transform: scale(1.3);
+    }
+}
+
+.notif-wrapper {
+    position: relative;
+    display: inline-block;
+    padding: 5px;
+    color: white;
+    margin-right: 15px;
+    border-radius: 50%;
+    border: solid;
+}
+
+    .notif-wrapper:hover {
+        opacity: .5;
+        background-color: #fff;
+        color: #02787b;
+    }
+
+    .notif-wrapper.is-open {
+        background-color: #fff;
+        color: #02787b;
+        opacity: 1;
+        filter: none;
+    }
+
+    .notif-wrapper:active {
+        transform: scale(.95);
+    }
+
+.notif-count {
+    position: absolute;
+    top: -4px;
+    right: -10px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    background: #FF3B30;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 999px;
+    display: none;
+    line-height: 16px;
+    text-align: center;
+    box-shadow: 0 0 0 2px white;
+}
+
+.content-wrapper {
+    margin-top: 30px;
+    position: absolute;
+    width: 120%;
+    height: 100%;
+    z-index: 0
 }

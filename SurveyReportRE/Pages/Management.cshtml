@@ -9,32 +9,61 @@
 <link href="~/favicon_new.ico" rel="icon" type="image/x-icon" />
 <script src="~/lib/AdminLTE/adminlte.min.js"></script>
 
-<body class="sidebar-mini skin-re" style="height: auto; min-height: 100%;">
+<body class="sidebar-mini skin-re" style="height: auto; min-height: 100%;width: 100%;">
 
     <header>
-        <div class="main-header wrapper" style="height: auto; min-height: 100%;">
-            <div>
+        <div class="main-header wrapper" style="display:flex;">
+            <!--Logo-->
+            <div class="pull-left" style="width:14%">
                 <a href="#" class="logo" data-toggle="push-menu" role="button">
                     <div class="logo-mini">
-                        <b>Joget</b>
-                        <div id="environmentLabel" style="position: absolute;top: 30%;left: 33px; color: yellow;"></div>
+                        <b>RE Survey Tool</b>
 
                     </div>
                     <span class="logo-lg"><b>RE Survey Tool</b></span>
                 </a>
-                <p id="returnToSuperUser" style="position: absolute;top: 75%;left: 2%;" />
-
+            </div>
+            <div class="admin-float-swicher">
+                <p id="returnToSuperUser" />
+                <div id="environmentLabel" style="color: red;"></div>
+            </div>
+            <!--Tab list-->
+            <div id="tablist" class="ui-tabs-nav" style="position: relative;width: 75%;">
+                <ul></ul>
             </div>
 
-            <div class="navbar-custom-menu" style="float: right; position: relative; margin-top:15px;margin-right:10px;">
-                <ul class="nav navbar-nav">
-                    <li class="user user-menu">
-                        <div href="#" class="user-infor" style="color: white">
-                        </div>
+            <!--Login Info-->
+            <div style="display:flex;padding:5px;width: 16%;margin-top: 6px;justify-content: flex-end;">
+                <div id="notificationBtn" class="notif-wrapper">
+                    <svg width="18px"
+                         height="17px"
+                         viewBox="0 0 24 24"
+                         fill="none">
+                        <path d="M12 2C8.1 2 5 5.1 5 9V13C5 14.1 4.1 15 3 15V16H21V15C19.9 15 19 14.1 19 13V9C19 5.1 15.9 2 12 2Z"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round" />
+                        <path d="M9.8 21C10.3 22 11.1 22 12 22C12.9 22 13.7 22 14.2 21"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round" />
+                        <circle class="notification-dot"
+                                cx="18"
+                                cy="6"
+                                r="6"
+                                style="display:none"
+                                fill="#FF3B30" />
+                    </svg>
+                    <span class="notif-count"></span>
+                </div>
+                <div class="navbar-nav user user-menu" style="display:contents;margin-right: 15%; margin-left: auto;">
+                    <div>
+
                         <input id="rolename" type="hidden" />
-                    </li>
-                </ul>
-                <p id="onlineState" class="status-button"> </p>
+                    </div>
+                </div>
+                @* <p id="onlineState" class="status-button"> </p> *@
 
             </div>
 
@@ -43,9 +72,9 @@
             <div id="outlinePopup"></div>
             <div id="inputTextPopup"></div>
             <div id="detailPopup"></div>
-            <div id="tablist" class="ui-tabs-nav" style="position: relative;width: 75%;margin-left:190px;">
-                <ul></ul>
-            </div>
+            <div id="notificationPopup"></div>
+            <div id="notificationPopOver"></div>
+
 
         </div>
     </header>
@@ -57,16 +86,11 @@
  *@
 </body>
 <script type="text/javascript">
-        function monitorConnection(url, buttonId, interval = 5000) {
-        // setInterval(() => {
-        //     checkConnection(url, interval).then(className => {
+        // function monitorConnection(url, buttonId, interval = 5000) {
+        // checkConnection(url, interval).then(className => {
         //         updateButtonStatus(buttonId, className);
         //     });
-        // }, interval);
-        checkConnection(url, interval).then(className => {
-                updateButtonStatus(buttonId, className);
-            });
-    }
+        // }
 
         // removed this as not need any more => var appLoadingPanel = $("<div>").appendTo($(constNotifyContainer)).dxLoadPanel({ visible: false }).dxLoadPanel("instance");
         initTabs();
@@ -74,20 +98,6 @@
         //Close tab button function
         $("#tablist").on("click", "span.fa.fa-times", function () {
             var $tabDivId = $(this).closest("[id$='_li_tab']");
-            // $tabDivId.animate({
-            //     width: '0px',
-            //     opacity: '0'
-            // }, 220);
-            // setTimeout(function () {
-            //     var $li = $tabDivId.closest("li");
-            //     var panelId = $li.attr("aria-controls");
-            //     $li.remove();
-
-            //     if (panelId) {
-            //         $("#" + panelId).remove();
-            //     }
-            //     $("#tablist").tabs("refresh");
-            // }, 150); // === duration animate
             nativeRemoveTab($tabDivId);
         });
 
@@ -101,7 +111,7 @@
 
 
             $("#returnToSuperUser").dxButton({
-                 text: "Return To Admin",
+                 text: "Back To Admin",
                  stylingMode: "contained",
                  type: "normal",
                  onClick: function () {
@@ -134,24 +144,22 @@
             var loadParams = `@Html.Raw(@ViewData["LoadParams"])`;
             var validJsonString = loadParams.slice(1, -1);
             if (loadParams != "{}" && loadParams != "" && loadParams != undefined && loadParams != null) {
-                var obj = JSON.parse(validJsonString);
-                  setTimeout(() => {
-                    callElementView(obj.url, obj.caption, obj.name, null)
-                    window.history.replaceState(null, '', '/Management#');
-                   }, 1000);
+                invokePageTab(validJsonString);
+                // var obj = JSON.parse(validJsonString);
+                //   setTimeout(() => {
+                //     callElementView(obj.url, obj.caption, obj.name, null)
+                //     window.history.replaceState(null, '', '/Management#');
+                //    }, 1000);
             }
 
-
+            var marginTop = "margin-top:3px";
         var avatar = `./img/no-profile-icon.jpg`;
-        // 	var position = ``;
-        // 	if (loginUser.Position) {
-        // 		position = `- ${loginUser.Position}`
-        // 	}
-
-        // 	if (loginUser.Avatar != null) {
-        // 		avatar = loginUser.Avatar;
-        // 	}
-        $(".user.user-menu .user-infor").append(`<img src="${avatar}" class="user-image" alt="User Image"><span class="hidden-xs">${loginUser}</span>`);
+       $(".user.user-menu").append(`<div style="margin-right:5px;${marginTop}">
+       <img src="${avatar}" class="user-image" style="border-radius:50%"
+       width="25px" height="25px" alt="User Image"/> </div>
+       <div style="color: white;${marginTop}">
+       ${loginUser}</div>
+       `);
         // $(".user .user-menu-dropdown").append(`
         //                                         <li class="user-header">
         //                                          <img src="${avatar}" style= class="user-image" alt="User Image">
@@ -171,10 +179,342 @@
         //                                                 </div>
         //                                             </div>
         //                                         </li>`);
-        //<a href="#" onclick="callElementView('/Employees/Employee/Detail/${loginUser.EmpId}', 'Employee_${loginUser.EmpId}', '${loginUser.EmpName}');" class="btn btn-default btn-flat">Profile</a>
-
-
 
         var url = '@ViewData["HostUrl"]'
-            monitorConnection(url, 'onlineState', 10000);
+            // monitorConnection(url, 'onlineState', 10000);
+
+
+
+
+         // ====== Notification state ======
+    let _notif = {
+        items: [],
+        unreadCount: 0,
+        // popup: null,
+        popover: null,
+        list: null
+    };
+
+    // updateNotification(100);
+
+
+
+    function setNotifCount(n) {
+        const $count = $("#notificationBtn .notif-count");
+        if (!n || n <= 0) {
+            $count.text("").hide();
+            hideNotificationDot();
+        } else {
+            $count.text(n > 99 ? "99+" : n).show();
+            showNotificationDot();
+        }
+    }
+
+    // ====== API call (mock) ======
+    function apiGetNotifications(take = 30) {
+        // TODO: thay bằng API thật của bạn
+        //Example
+        var objectJson =  {url:"/Business/Form/Survey_Form/67",caption:"form_Survey_Form_67",name:"Survey SVRE.1225.067",data:""}
+        var stringObjectJson = JSON.stringify(objectJson);
+        // Mock demo
+        return $.Deferred().resolve({
+            items: [
+                { id: 101, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
+                { id: 102, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
+                { id: 103, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
+                { id: 104, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
+                { id: 105, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
+                { id: 106, title: "Approval required", message: "Quotation QT-2025-123 needs approval", createdOn: new Date(Date.now() - 3600_000), isRead: true, url: `/Management?loadParams=...` }
+            ]
+        }).promise();
+    }
+
+    function apiMarkRead(id) {
+        // TODO: thay bằng API thật
+        // return $.post(`/api/Notifications/MarkRead?id=${id}`);
+        return $.Deferred().resolve(true).promise();
+    }
+
+    function apiMarkAllRead() {
+        // TODO: thay bằng API thật
+        // return $.post(`/api/Notifications/MarkAllRead`);
+        return $.Deferred().resolve(true).promise();
+    }
+
+    // ====== Build popup once ======
+    function ensureNotificationPopup() {
+        if (_notif.popup) return;
+
+        // _notif.popup = $("#notificationPopup").dxPopup({
+        //     title: "Notifications",
+        //     width: 420,
+        //     height: 520,
+        //     showCloseButton: true,
+        //     hideOnOutsideClick: true,
+        //     dragEnabled: false,
+        //     wrapperAttr: {
+        //         class: "dx-overlay-shader-custom"
+        //     },
+        //     position: {
+        //         // neo gần bell
+        //         of: $("#notificationBtn"),
+        //         my: "right top",
+        //         at: "right bottom",
+        //         offset: "0 10"
+        //     },
+        //     contentTemplate: function (contentEl) {
+        //         // Header tools
+        //         const $toolbar = $(`
+        //             <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
+        //               <div id="notifMarkAllBtn"></div>
+        //               <div style="margin-left:auto; opacity:.7; font-size:12px;" id="notifHint"></div>
+        //             </div>
+        //             <div id="notifList"></div>
+        //         `);
+
+        //         $(contentEl).append($toolbar);
+
+        //         $("#notifMarkAllBtn").dxButton({
+        //             text: "Mark all as read",
+        //             icon: "check",
+        //             type: "default",
+        //             stylingMode: "outlined",
+        //             onClick: async function () {
+        //                 await apiMarkAllRead();
+        //                 // update local state
+        //                 _notif.items.forEach(x => x.isRead = true);
+        //                 refreshNotifUI();
+        //             }
+        //         });
+
+        //         _notif.list = $("#notifList").dxList({
+        //             dataSource: _notif.items,
+        //             height: 440,
+        //             noDataText: "No notifications",
+        //             searchEnabled: true,
+        //             searchExpr: ["title", "message"],
+        //             itemTemplate: function (itemData) {
+        //                 // item UI
+        //                 const isUnread = !itemData.isRead;
+        //                 const timeText = formatTime(itemData.createdOn);
+
+        //                 return $(`
+        //                     <div style="padding:10px 8px; border-bottom:1px solid rgba(0,0,0,.06);">
+        //                       <div style="display:flex; gap:8px; align-items:flex-start;">
+        //                         <div style="width:10px; margin-top:6px;">
+        //                           <span style="display:${isUnread ? "inline-block" : "none"}; width:8px; height:8px; border-radius:50%; background:#ff3b30;"></span>
+        //                         </div>
+        //                         <div style="flex:1;">
+        //                           <div style="display:flex; justify-content:space-between; gap:8px;">
+        //                             <div style="font-weight:${isUnread ? 700 : 600};">${escapeHtml(itemData.title || "")}</div>
+        //                             <div style="opacity:.6; font-size:12px; white-space:nowrap;">${timeText}</div>
+        //                           </div>
+        //                           <div style="opacity:.85; margin-top:4px; font-size:13px;">
+        //                             ${escapeHtml(itemData.message || "")}
+        //                           </div>
+        //                           <div style="margin-top:8px; display:flex; gap:8px;">
+        //                             <a href="javascript:void(0)" class="notif-open">Open</a>
+        //                             <a href="javascript:void(0)" class="notif-mark">${isUnread ? "Mark read" : "Read"}</a>
+        //                           </div>
+        //                         </div>
+        //                       </div>
+        //                     </div>
+        //                 `)
+        //                 .data("item", itemData)
+        //                 .on("click", ".notif-open", async function (e) {
+        //                     e.stopPropagation();
+        //                     await openNotification(itemData);
+        //                 })
+        //                 .on("click", ".notif-mark", async function (e) {
+        //                     e.stopPropagation();
+        //                     if (!itemData.isRead) {
+        //                         await apiMarkRead(itemData.id);
+        //                         itemData.isRead = true;
+        //                         refreshNotifUI();
+        //                     }
+        //                 });
+        //             }
+        //         }).dxList("instance");
+        //     },
+        //     onShown: function () {
+        //         // khi mở panel thì có thể reload để đảm bảo mới nhất
+        //         reloadNotifications();
+        //     }
+        // }).dxPopup("instance");
+
+            _notif.popover = $("#notificationPopOver").dxPopover({
+            target: "#notificationBtn",       // 🔔 neo theo bell
+            position: {
+                my: "right top",
+                at: "right bottom",
+                offset: "0 8"
+            },
+            width: 420,
+            height: 520,
+            shading: false,                   // ❌ KHÔNG overlay
+            closeOnOutsideClick: true,
+            showCloseButton: false,
+            wrapperAttr: {
+                class: "notif-popover-wrapper"
+            },
+            contentTemplate: function (contentEl) {
+               const $toolbar = $(`
+                    <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
+                      <div id="notifMarkAllBtn"></div>
+                      <div style="margin-left:auto; opacity:.7; font-size:12px;" id="notifHint"></div>
+                    </div>
+                    <div id="notifList"></div>
+                `);
+
+                $(contentEl).append($toolbar);
+
+                $("#notifMarkAllBtn").dxButton({
+                    text: "Mark all as read",
+                    icon: "check",
+                    type: "default",
+                    stylingMode: "outlined",
+                    onClick: async function () {
+                        await apiMarkAllRead();
+                        // update local state
+                        _notif.items.forEach(x => x.isRead = true);
+                        refreshNotifUI();
+                    }
+                });
+
+                _notif.list = $("#notifList").dxList({
+                    dataSource: _notif.items,
+                    height: 440,
+                    noDataText: "No notifications",
+                    searchEnabled: true,
+                    searchExpr: ["title", "message"],
+                    itemTemplate: function (itemData) {
+                        // item UI
+                        const isUnread = !itemData.isRead;
+                        const timeText = formatTime(itemData.createdOn);
+
+                        return $(`
+                            <div style="padding:10px 8px; border-bottom:1px solid rgba(0,0,0,.06);">
+                              <div style="display:flex; gap:8px; align-items:flex-start;">
+                                <div style="width:10px; margin-top:6px;">
+                                  <span style="display:${isUnread ? "inline-block" : "none"}; width:8px; height:8px; border-radius:50%; background:#ff3b30;"></span>
+                                </div>
+                                <div style="flex:1;">
+                                  <div style="display:flex; justify-content:space-between; gap:8px;">
+                                    <div style="font-weight:${isUnread ? 700 : 600};">${escapeHtml(itemData.title || "")}</div>
+                                    <div style="opacity:.6; font-size:12px; white-space:nowrap;">${timeText}</div>
+                                  </div>
+                                  <div style="opacity:.85; margin-top:4px; font-size:13px;">
+                                    ${escapeHtml(itemData.message || "")}
+                                  </div>
+                                  <div style="margin-top:8px; display:flex; gap:8px;">
+                                    <a href="javascript:void(0)" class="notif-open">Open</a>
+                                    <a href="javascript:void(0)" class="notif-mark">${isUnread ? "Mark read" : "Read"}</a>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                        `)
+                        .data("item", itemData)
+                        .on("click", ".notif-open", async function (e) {
+                            e.stopPropagation();
+                            await openNotification(itemData);
+                        })
+                        .on("click", ".notif-mark", async function (e) {
+                            e.stopPropagation();
+                            if (!itemData.isRead) {
+                                await apiMarkRead(itemData.id);
+                                itemData.isRead = true;
+                                refreshNotifUI();
+                            }
+                        });
+                    }
+                }).dxList("instance");
+            }
+        }).dxPopover("instance");
+    }
+
+    function formatTime(dt) {
+        try {
+            const d = (dt instanceof Date) ? dt : new Date(dt);
+            return d.toLocaleString();
+        } catch { return ""; }
+    }
+
+    function escapeHtml(str) {
+        return (str || "").replace(/[&<>"']/g, s => ({
+            "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+        }[s]));
+    }
+
+    // ====== open item ======
+    async function openNotification(item) {
+        // 1) mark read
+        if (!item.isRead) {
+            await apiMarkRead(item.id);
+            item.isRead = true;
+            refreshNotifUI();
+        }
+
+        // 2) hành động mở: tùy hệ bạn
+        // Nếu bạn có obj.url/caption/name kiểu loadParams -> callElementView(...)
+        if (item.url) {
+            invokePageTab(item.url,true);
+        } else {
+            DevExpress.ui.notify("No target action for this notification", "warning", 1500);
+        }
+    }
+
+    // ====== reload + refresh UI ======
+    async function reloadNotifications(take = 30) {
+        try {
+            const res = await apiGetNotifications(take);
+            _notif.items = res.items || [];
+            refreshNotifUI();
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function refreshNotifUI() {
+        _notif.unreadCount = (_notif.items || []).filter(x => !x.isRead).length;
+        setNotifCount(_notif.unreadCount);
+
+        if (_notif.list) {
+            _notif.list.option("dataSource", _notif.items);
+            $("#notifHint").text(_notif.unreadCount ? `${_notif.unreadCount} unread` : "");
+        }
+    }
+
+    // ====== public function you already call ======
+    function updateNotification(intervalMs = 10000) {
+        reloadNotifications();
+
+        // polling
+        setInterval(() => {
+            reloadNotifications();
+        }, intervalMs);
+    }
+
+    function invokePageTab(objString, isNotify = false){
+        var  obj = JSON.parse(objString);
+                  setTimeout(() => {
+                    callElementView(obj.url, obj.caption, obj.name, null)
+                    if (!isNotify)
+                    window.history.replaceState(null, '', '/Management#');
+                   }, 1000);
+    }
+
+    ensureNotificationPopup();
+    updateNotification();
+     $("#notificationBtn").on("click", function () {
+         $(this).toggleClass("is-open");
+     hideNotificationDot();
+     // _notif.popup.show();
+     _notif.popover.toggle();
+     });
+
+
 </script>
+<style>
+
+</style>
