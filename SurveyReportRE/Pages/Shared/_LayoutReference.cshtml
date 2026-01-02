@@ -185,7 +185,21 @@
     // const connectionSignR = new signalR.HubConnectionBuilder()
     //     .withUrl("/fileProcessingHub").build(); //
 
+     var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
+          shadingColor: "rgba(0,0,0,0.4)",
+          visible: false,
+          showIndicator: true,
+          showPane: false,
+          shading: true,
+          closeOnOutsideClick: false//,
+          // onShown: function () {
+          //     setTimeout(function () {
+          //         appLoadPanel.hide();
+          //     }, 3000);
+          // }
+      });
 
+      var globalLoadPanelInstance = globalLoadPanel.dxLoadPanel("instance");
 
 </script>
 <script src="~/js/defined/signalR.js"></script>

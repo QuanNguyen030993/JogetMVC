@@ -45,7 +45,7 @@ namespace SurveyReportRE.Controllers.Config
         public override async Task<ActionResult<Users>> GetAll()
         {
             var Base = await _BaseRepository.GetAll();
-            string userName = _httpContextAccessor.HttpContext.User.Identity.Name.Replace(DOMAIN_NAME, "");
+            string userName = ControllerUtil.ControllerUtil.GetCurrentContextUser(_httpContextAccessor, _configuration);
             if (SUPER_USER.Contains(userName))
                 return Ok(Base);
             else
@@ -73,7 +73,7 @@ namespace SurveyReportRE.Controllers.Config
                 dynamicObj[item.Key] = item.Value;
             }
             var Base = await _BaseRepository.GetAll();
-            string userName = _httpContextAccessor.HttpContext.User.Identity.Name.Replace(DOMAIN_NAME, "");
+            string userName = ControllerUtil.ControllerUtil.GetCurrentContextUser(_httpContextAccessor, _configuration);
             Base = Base.Where(w => w.department == "RE" && w.username != userName).ToList();
             if (dynamicObj.ContainsKey("key"))
             {
@@ -134,7 +134,7 @@ namespace SurveyReportRE.Controllers.Config
         public async Task<IActionResult> RoleAddUser(string userName)
         {
             Employee employee = new Employee();
-            employee = await _employeeRepository.GetSingleObjectFullInclude(s => s.AccountName == userName, null, i => i.SystemRolesFK);
+            employee = await _employeeRepository.GetSingleObjectFullInclude(s => s.AccountName == userName,null, i => i.SystemRolesFK);
             if (employee != null)
             {
                 var Base = await _BaseRepository.ExecuteStoredProcedureReturn("usp_Role_AddUser",
@@ -148,7 +148,7 @@ namespace SurveyReportRE.Controllers.Config
         public async Task<IActionResult> ClearRoleUser(string userName)
         {
             Employee employee = new Employee();
-            employee = await _employeeRepository.GetSingleObjectFullInclude(s => s.AccountName == userName, null, i => i.SystemRolesFK);
+            employee = await _employeeRepository.GetSingleObjectFullInclude(s => s.AccountName == userName, null,i => i.SystemRolesFK);
             if (employee != null)
             {
                 var Base = await _BaseRepository.ExecuteStoredProcedureReturn("usp_Role_AddUser",

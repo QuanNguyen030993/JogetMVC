@@ -1,4 +1,4 @@
-using LdapService;
+﻿using LdapService;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
@@ -15,30 +15,32 @@ using System.Security.Claims;
 using System.Security.Principal;
 using SurveyReportRE.Models.Migration.Business.HumanResource;
 using SurveyReportRE.Common;
+using SurveyReportRE.Models.Migration.Business.Data;
+using MimeMapping;
+using Newtonsoft.Json.Linq;
+using SurveyReportRE.ControllerUtil;
+using SurveyReportRE.Models.Business.Migration.Config;
+using SurveyReportRE.Models.Migration.Config;
+using System.Reflection;
 using RESurveyTool.Models.Models.Parsing;
-
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
+using System.Globalization;
 namespace SurveyReportRE.Controllers.Config
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
-    public class EnvironmentController : BaseControllerApi<EmptyClass>
+    public class ConstantController : BaseControllerApi<Constant>
     {
-        private readonly IBaseRepository<EmptyClass> _BaseRepository;
+        private readonly IBaseRepository<Constant> _BaseRepository;
         private readonly IConfiguration _configuration;
-        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public static string DOMAIN_NAME = "";
-        public static string SUPER_USER = "";
-        public EnvironmentController(IBaseRepository<EmptyClass> BaseRepository, IConfiguration configuration, IHttpContextAccessor httpContextAccessor) : base(BaseRepository, httpContextAccessor)
+        public ConstantController(IBaseRepository<Constant> BaseRepository, IConfiguration configuration, IHttpContextAccessor httpContextAccessor) : base(BaseRepository, httpContextAccessor)
         {
             _BaseRepository = BaseRepository;
             _configuration = configuration;
-            _httpContextAccessor = httpContextAccessor;
+
         }
 
-
-
     }
-
 }
-

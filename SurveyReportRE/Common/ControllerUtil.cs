@@ -14,7 +14,7 @@ namespace SurveyReportRE.ControllerUtil
 {
     public static class ControllerUtil
     {
-        public static string queryEnvironment = "Joget";
+        public static string queryEnvironment = "Default";
         public static string GetWebFile(IWebHostEnvironment env, string folder, string filename)
         {
             return env.WebRootPath
@@ -24,7 +24,7 @@ namespace SurveyReportRE.ControllerUtil
                + filename;
         }
 
-        public static string GetCurrentContextUser(IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
+        public static string  GetCurrentContextUser(IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
         {
             string domain = configuration?.GetSection("Domain:DCServer").Value ?? "";
             var DebugEnv = bool.Parse(configuration?.GetSection("SuperUser:IsDebug").Value ?? "");
@@ -32,7 +32,7 @@ namespace SurveyReportRE.ControllerUtil
             {
                 return "quan.nh";
             }
-            return httpContextAccessor?.HttpContext?.User?.Identity?.Name?.Replace(domain, "") ?? "";
+            return httpContextAccessor?.HttpContext?.User?.Identity?.Name?.Replace(domain, "") ?? ""; 
         }
 
         public static void ContextHandle(IHttpContextAccessor httpContextAccessor, IConfiguration configuration, out bool isDebugmode)
@@ -40,7 +40,7 @@ namespace SurveyReportRE.ControllerUtil
             isDebugmode = false;
             string checkIfLoginAsDebug = configuration.GetSection("SuperUser:LoginAs").Value;
             string superUsers = configuration.GetSection("SuperUser:SuperUser").Value;
-
+            
             if (!string.IsNullOrEmpty(checkIfLoginAsDebug))
             {
                 {
@@ -60,10 +60,9 @@ namespace SurveyReportRE.ControllerUtil
                     newIdentity.AddClaim(new System.Security.Claims.Claim(newIdentity.NameClaimType, impersonatedUser));
                     httpContextAccessor.HttpContext.User = new ClaimsPrincipal(newIdentity);
                 }
-            }
-            else
+            }else
             {
-
+               
             }
         }
 

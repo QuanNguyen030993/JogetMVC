@@ -24,7 +24,7 @@ public class UsersCacheController : BaseControllerApi<UsersCache>
     public async Task<IActionResult> TrackUserCache([FromBody] string cacheData)
     {
         UsersCache usersCache = new UsersCache();
-        string userName = _httpContextAccessor.HttpContext.User.Identity.Name;
+        string userName = _httpContextAccessor?.HttpContext?.User?.Identity?.Name ?? "Anonymous";
         usersCache = await _BaseRepository.GetSingleObject(s => s.AccountName == userName);
         dynamic cacheObject = JsonConvert.DeserializeObject<dynamic>(cacheData);
 

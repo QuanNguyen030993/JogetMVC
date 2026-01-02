@@ -17,5 +17,14 @@ public class UsersSessionController : BaseControllerApi<UsersSession>
         _BaseRepository = BaseRepository;
         _httpContextAccessor = httpContextAccessor;
     }
-}
+
+
+    public override async Task<object> ExecuteCustomQuery([FromBody] string query)
+    {
+        string baseQuery = $"EXEC usp_Monitoring_GetData ${query}";
+        List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomQuery(baseQuery);
+        return (obj);
+    }
+
+ }
 

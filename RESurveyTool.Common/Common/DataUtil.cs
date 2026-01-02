@@ -36,7 +36,8 @@ namespace SurveyReportRE.Common
             catch (Exception ex)
             {
                 Handler.ErrorException(ex, "");
-                return null;
+                throw new Exception(ex.Message);
+                //return null;
             }
         }
 
@@ -45,28 +46,29 @@ namespace SurveyReportRE.Common
             try
             {
                 var resultTable = new DataTable();
-
-                using (SqlConnection connection = new SqlConnection(connectionString))
+                if (!string.IsNullOrEmpty(query))
                 {
-                    connection.Open();
-
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlConnection connection = new SqlConnection(connectionString))
                     {
-                        command.CommandType = CommandType.Text;
+                        connection.Open();
 
-                        // Gắn các tham số vào câu query
-                        foreach (var param in parameters)
+                        using (SqlCommand command = new SqlCommand(query, connection))
                         {
-                            command.Parameters.AddWithValue(param.Key, param.Value ?? DBNull.Value);
-                        }
+                            command.CommandType = CommandType.Text;
 
-                        using (SqlDataAdapter adapter = new SqlDataAdapter(command))
-                        {
-                            adapter.Fill(resultTable);
+                            // Gắn các tham số vào câu query
+                            foreach (var param in parameters)
+                            {
+                                command.Parameters.AddWithValue(param.Key, param.Value ?? DBNull.Value);
+                            }
+
+                            using (SqlDataAdapter adapter = new SqlDataAdapter(command))
+                            {
+                                adapter.Fill(resultTable);
+                            }
                         }
                     }
                 }
-
                 return resultTable;
             }
             catch (Exception ex)

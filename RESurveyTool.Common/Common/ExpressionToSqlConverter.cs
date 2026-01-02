@@ -72,10 +72,61 @@ public static class ExpressionToSqlConverter<T>
         {
             return FormatValue(constantExpression.Value, parameters);
         }
+        else if (expression is MethodCallExpression methodCallExpression)
+        {
+            if (methodCallExpression == null) return ""; 
+            if (methodCallExpression.Method.Name == "ToString"
+            && methodCallExpression.Object is MemberExpression memberExpr)
+            {
+                // Tên cột
+                var columnName = memberExpr.Member.Name;
 
+                // Giá trị bên phải nếu là so sánh
+                if (methodCallExpression.Object is BinaryExpression binaryExpr)
+                {
+                    var right = binaryExpr.Right;
+                    var value = GetValueFromExpression(right);
+
+                    string paramName = $"@{columnName}";
+                    parameters[paramName] = value;
+
+                    return $"CONVERT(NVARCHAR(MAX), [{columnName}]) = {paramName}";
+                }
+
+                // Trường hợp chưa so sánh thì chỉ trả về CAST
+                return $"CONVERT(NVARCHAR(MAX), [{columnName}])";
+            }
+        }
         throw new NotSupportedException($"Unsupported expression type: {expression.GetType()}");
     }
 
+    private static object GetValueFromExpression(Expression expression)
+    {
+        switch (expression)
+        {
+            case ConstantExpression constExpr:
+                return constExpr.Value;
+
+            case MemberExpression memberExpr:
+                var obj = GetValueFromExpression(memberExpr.Expression);
+                var member = memberExpr.Member;
+                if (member is PropertyInfo propInfo)
+                    return propInfo.GetValue(obj);
+                if (member is FieldInfo fieldInfo)
+                    return fieldInfo.GetValue(obj);
+                break;
+
+            case UnaryExpression unaryExpr:
+                return GetValueFromExpression(unaryExpr.Operand);
+
+            case MethodCallExpression methodCallExpr:
+                var lambda = Expression.Lambda(methodCallExpr);
+                var compiled = lambda.Compile();
+                return compiled.DynamicInvoke();
+        }
+
+        throw new NotSupportedException($"Unsupported expression type: {expression.GetType().Name}");
+    }
 
     private static string GetSqlOperator(ExpressionType expressionType)
     {

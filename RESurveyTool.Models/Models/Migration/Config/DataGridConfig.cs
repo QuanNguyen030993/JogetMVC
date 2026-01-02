@@ -32,6 +32,7 @@ namespace SurveyReportRE.Models.Business.Migration.Config
         public string Height { get; set; } = "";//Column Height
         public string FormWidth { get; set; } = "";//Form Item Width
         public string FormHeight { get; set; } = "";//Form Item Height
+        public string CSSClass { get; set; } = "";//Form CSSClass
         public long? MappingFieldId { get; set; }
         public SysTable? MappingFieldFK { get; set; }   
     }

@@ -1,15 +1,16 @@
-﻿using Microsoft.AspNetCore.Authentication.Negotiate;
+using Microsoft.AspNetCore.Authentication.Negotiate;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
+using RESurveyTool.Models.Config;
 using SautinSoft.Document;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.MSSqlServer;
 using SurveyReportRE.Controllers.Base;
 using SurveyReportRE.Models.Base;
+using SurveyReportRE.Models.Business.Migration.Config;
 using Syncfusion.Licensing;
-using System.Net;
-using System.Security.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 var logger = new LoggerConfiguration()
@@ -20,7 +21,6 @@ var logger = new LoggerConfiguration()
                     //)
                     .CreateLogger();
 Log.Logger = logger;
-
 string sautinSoftLicenseKey = builder.Configuration.GetSection("SautinSoft:License").Value;
 DocumentCore.SetLicense(sautinSoftLicenseKey);
 
@@ -35,15 +35,17 @@ builder.Services.AddRazorPages(options => {
 builder.Services.AddMvc().AddRazorRuntimeCompilation();
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR(options => {
-    options.KeepAliveInterval = TimeSpan.FromSeconds(28800);
-    options.ClientTimeoutInterval = TimeSpan.FromSeconds(28800); // client timeout > keepalive
+    options.KeepAliveInterval = TimeSpan.FromSeconds(double.Parse(builder.Configuration.GetSection("SignalRConfig:KeepAliveInterval").Value));
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(double.Parse(builder.Configuration.GetSection("SignalRConfig:ClientTimeoutInterval").Value)); // client timeout > keepalive
 });
 builder.Services.AddControllers();
 builder.Services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
+builder.Services.AddScoped(typeof(IHttpRequestAuditLogWriter), typeof(HttpRequestAuditLogWriter));
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddSingleton(connectionString);
 
-
+//-------------------------------------------
+//Comment out if Allow anomymous for debugging 
 builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
     .AddNegotiate();
 builder.Services.AddAuthorization(options =>
@@ -51,11 +53,17 @@ builder.Services.AddAuthorization(options =>
     // By default, all incoming requests will be authorized according to the default policy.
     options.FallbackPolicy = options.DefaultPolicy;
 });
+
+//-------------------------------------------
+
+
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
 
 builder.Services.Configure<BlobStorageSettings>(builder.Configuration.GetSection("BlobStorage"));
+builder.Services.Configure<BusinessConfig>(builder.Configuration.GetSection("BusinessConfig"));
+builder.Services.Configure<TemplateUsing>(builder.Configuration.GetSection("TemplateUsing"));
 builder.Services.AddRazorPages()
     .WithRazorPagesRoot("/Pages");
 builder.Services.Configure<KestrelServerOptions>(options =>
@@ -63,7 +71,7 @@ builder.Services.Configure<KestrelServerOptions>(options =>
     options.Limits.MaxRequestBodySize = null; // 52428800 50MB
     //options.ListenAnyIP(5000); // HTTP
     //options.ListenLocalhost(5001, listenOptions =>
-    //{// Dùng certificate thật (PFX) - KHÔNG dùng dev cert localhost nếu gọi qua IP/hostname
+    //{// 
     //    listenOptions.UseHttps(https =>
     //    {
     //        https.ServerCertificate = new System.Security.Cryptography.X509Certificates.X509Certificate2(
@@ -76,10 +84,11 @@ builder.Services.Configure<KestrelServerOptions>(options =>
 
     //    listenOptions.UseConnectionLogging();
     //});
-    //options.Listen(IPAddress.Parse("127.0.0.1"), 5000);
 });
 builder.Services.AddSession();
-
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(@"C:\AppKeys\MyApp"))
+    .SetApplicationName("TMIV.MyApp");
 builder.Host.UseSerilog(logger);
 
 var app = builder.Build();
@@ -96,13 +105,21 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+
+
+//-------------------------------------------
+//Comment out if Allow anomymous for debugging 
 app.UseAuthentication();
 app.UseAuthorization();
+//-------------------------------------------
+
+
 
 app.MapRazorPages();
 app.MapControllers();
 app.MapHub<FileProcessingHub>("/fileProcessingHub");
 app.UseMiddleware<CookieImpersonationMiddleware>();
+app.UseMiddleware<HttpRequestAuditMiddleware>();
 app.UseSession();
 app.MapDefaultControllerRoute();
 app.MapControllerRoute(
@@ -120,6 +137,8 @@ app.Use(async (context, next) =>
         //context.Response.Redirect("/DemoLibs");
         return;
     }
+    context.Items["RequestSource"] =
+     context.Request.Headers["X-Request-Source"].FirstOrDefault() ?? "unknown";
     await next();
 });
 

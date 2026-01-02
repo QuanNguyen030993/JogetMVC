@@ -1,0 +1,11 @@
+﻿@page
+@model ConstantModel
+@{
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@ConstantModel.ModelName`), new MGridOption('@ConstantModel.ModelName', "System"), null);
+    });
+</script>
+<div id="dataGrid_@ConstantModel.ModelName"></div>

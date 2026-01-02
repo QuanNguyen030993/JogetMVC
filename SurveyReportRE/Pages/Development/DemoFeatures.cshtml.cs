@@ -6,7 +6,6 @@ using RESurveyTool.Models.Models.Parsing;
 using SurveyReportRE.Models.Migration.Business.Data;
 using SurveyReportRE.Models.Migration.Business.Form;
 
-
 namespace SurveyReportRE.Pages
 {
     public class DemoFeaturesModel : PageModel

@@ -421,7 +421,7 @@ var createNewTabElement = function (code, tabTitle = '...', $tabs, tabContent) {
                 </li>
             `);//.attr("aria-controls", code);
                     //<span id="${code}_progressBar" style="padding: 5px;"></span>
-    var $tabContainer = $(`<div id="${code}" class="content-wrapper" style="min-height: 901px; margin-top:5px;position:absolute;width: 117%;z-index:0">`);
+    var $tabContainer = $(`<div id="${code}" class="content-wrapper">`);
     $tabs.find(".ui-tabs-nav").append(li);
     //var $contentDiv = $(`<div></div>`).html(tabContent);
     //$contentDiv.appendTo($tabContainer);

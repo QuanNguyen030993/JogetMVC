@@ -14,7 +14,7 @@ public class CookieImpersonationMiddleware
 
     public async Task Invoke(HttpContext context)
     {
-        LogContext.PushProperty("User", context.User.Identity.Name);
+        LogContext.PushProperty("User", context?.User?.Identity?.Name);
 
         if (context.Request.Cookies.TryGetValue("ImpersonatedUser", out var impersonatedUser) &&
             !string.IsNullOrWhiteSpace(impersonatedUser))

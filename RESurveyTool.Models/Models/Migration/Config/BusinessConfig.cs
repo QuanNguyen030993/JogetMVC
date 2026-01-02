@@ -16,6 +16,7 @@ namespace SurveyReportRE.Models.Business.Migration.Config
         public string DefaultCurrencyEnumName { get; set; } = "";
         public string DefaultCurrencyType { get; set; } = "";
         public string ApprovedDocxFileName { get; set; } = "";
+        public string ApprovedLCDocxFileName { get; set; } = "";
         public string SuffixApprovedDocxFileName { get; set; } = "";
         public string SurveyEvaluationStatusKeyName { get; set; } = "";
         public string SurveyEvaluationCategoryKeyName { get; set; } = "";
@@ -24,5 +25,14 @@ namespace SurveyReportRE.Models.Business.Migration.Config
         public string HNSiteName { get; set; } = "";
         public string HCMSiteEmailCCAccount { get; set; } = "";
         public string HNSiteEmailCCAccount { get; set; } = "";
+        public Dictionary<string, SiteConfig> Sites { get; set; } = new Dictionary<string, SiteConfig>();
+    }
+
+    public class SiteConfig
+    {
+        public int? BranchCode { get; set; } = 0;
+        public string Name { get; set; } = "";
+        public string EmailCCAccount { get; set; } = "";
+        public string OwnData { get; set; } = "";   
     }
 }

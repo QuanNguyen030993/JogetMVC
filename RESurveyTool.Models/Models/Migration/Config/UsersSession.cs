@@ -16,5 +16,6 @@ namespace SurveyReportRE.Models.Migration.Config
         public DateTime? LoginTime { get; set; } = DateTime.Now;
         public DateTime? LogoutTime { get; set; }
         public bool IsActive { get; set; } = true;
+        public string SignalRConnectionId { get; set; } = "";
     }
 }

@@ -10,17 +10,17 @@
 <script src="~/lib/AdminLTE/adminlte.min.js"></script>
 
 <body class="sidebar-mini skin-re" style="height: auto; min-height: 100%;width: 100%;">
-
+       
     <header>
         <div class="main-header wrapper" style="display:flex;">
             <!--Logo-->
             <div class="pull-left" style="width:14%">
                 <a href="#" class="logo" data-toggle="push-menu" role="button">
                     <div class="logo-mini">
-                        <b>RE Survey Tool</b>
-
+                        <b>Quotation</b>
+                       
                     </div>
-                    <span class="logo-lg"><b>RE Survey Tool</b></span>
+                    <span class="logo-lg"><b>Quotation</b></span>
                 </a>
             </div>
             <div class="admin-float-swicher">
@@ -28,13 +28,13 @@
                 <div id="environmentLabel" style="color: red;"></div>
             </div>
             <!--Tab list-->
-            <div id="tablist" class="ui-tabs-nav" style="position: relative;width: 75%;">
+            <div id="tablist" class="ui-tabs-nav" style="position: relative;width: 75%;">                
                 <ul></ul>
             </div>
-
+             
             <!--Login Info-->
             <div style="display:flex;padding:5px;width: 16%;margin-top: 6px;justify-content: flex-end;">
-                <div id="notificationBtn" class="notif-wrapper">
+               @*  <div id="notificationBtn" class="notif-wrapper">
                     <svg width="18px"
                          height="17px"
                          viewBox="0 0 24 24"
@@ -56,37 +56,77 @@
                                 fill="#FF3B30" />
                     </svg>
                     <span class="notif-count"></span>
-                </div>
+                </div> *@
                 <div class="navbar-nav user user-menu" style="display:contents;margin-right: 15%; margin-left: auto;">
-                    <div>
+                        <div>
 
                         <input id="rolename" type="hidden" />
+                        </div>
                     </div>
-                </div>
                 @* <p id="onlineState" class="status-button"> </p> *@
 
             </div>
-
+            
             @await Html.PartialAsync("_SPAReference")
             <div id="mainPopup"></div>
             <div id="outlinePopup"></div>
+            <div id="loadingPopup"></div>
             <div id="inputTextPopup"></div>
             <div id="detailPopup"></div>
             <div id="notificationPopup"></div>
             <div id="notificationPopOver"></div>
-
+            
 
         </div>
     </header>
     @await Html.PartialAsync("_MenuPartial")
-
     <!-- Content Wrapper. Contains page content -->
     @* <div id="content-wrapper" class="content-wrapper" style="min-height: 901px; margin-top:0px;">
         </div> 
  *@
+     <div id="dashboard" style="margin-left: 50%;margin-top: 12%;">
+                <img src="https://play-lh.googleusercontent.com/ehviCuzUOKyADahIhD0axGjKyQPKrbiR5rgoM7Er0pHgV5hbq2jMCpAXAd8C0rQaWDk=w240-h480-rw" 
+                 aria-hidden="true" alt="Icon image"   style="opacity:0.5">
+     </div>
 </body>
 <script type="text/javascript">
-        // function monitorConnection(url, buttonId, interval = 5000) {
+    //Chrome popup => allow site setting, allow windows chrome app notifications
+    //    $(document).on('DOMContentLoaded', function () {
+    //     // Request desktop notifications permission on page load
+
+    //     if (!Notification) {
+    //       console.log('Desktop notifications are not available in your browser.');
+    //       return;
+    //     }
+
+    //     if (Notification.permission !== 'granted') {
+    //       Notification.requestPermission();
+    //     }
+    //   });
+
+    //   function showNotification(title, body) {
+    //     if (Notification.permission !== 'granted') {
+    //       Notification.requestPermission();
+    //     } else {
+    //       const options = {
+    //         body: body,
+    //         dir: 'ltr'//,
+    //         // image: 'image.jpg'
+    //       };
+    //       const notification = new Notification(title, options);
+
+    //       notification.onclick = function () {
+    //         window.open('https://www.google.com');
+    //       };
+    //     }
+    //   }
+    // setTimeout(() => {
+    //     // window.confirm("your warning text here");
+    // showNotification( "RE Survey Tool",
+    //     "Quotation QT-2025-123 needs approval");},3000
+    // );
+    
+    // function monitorConnection(url, buttonId, interval = 5000) {
         // checkConnection(url, interval).then(className => {
         //         updateButtonStatus(buttonId, className);
         //     });
@@ -183,7 +223,7 @@
         var url = '@ViewData["HostUrl"]'
             // monitorConnection(url, 'onlineState', 10000);
 
-
+    
 
 
          // ====== Notification state ======
@@ -516,5 +556,5 @@
 
 </script>
 <style>
-
+   
 </style>

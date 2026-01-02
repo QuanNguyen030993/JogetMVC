@@ -51,20 +51,20 @@ namespace SurveyReportRE.Pages
             //        httpContextAccessor.HttpContext.User = new ClaimsPrincipal(newIdentity);
             //   }
             //}
-            IsSuperUser = superUsers.Contains(ControllerUtil.ControllerUtil.GetCurrentContextUser(httpContextAccessor, configuration));
-            var DebugEnv = bool.Parse(_configuration?.GetSection("SuperUser:IsDebug").Value ?? "");
-            if (DebugEnv)
-            {
-                //IsSuperUser = true;
-                IsDebugMode = isDebugMode;
-                NotifyEnv = DebugEnv;
-            }
+                IsSuperUser = superUsers.Contains(ControllerUtil.ControllerUtil.GetCurrentContextUser(httpContextAccessor, configuration));
+                var DebugEnv = bool.Parse(_configuration?.GetSection("SuperUser:IsDebug").Value ?? "");
+                if (DebugEnv)
+                {
+                    //IsSuperUser = true;
+                    IsDebugMode = isDebugMode;
+                    NotifyEnv = DebugEnv;
+                }
         }
 
         public void OnGet(string loadParams)
         {
             //var windowsIdentity = WindowsIdentity.GetCurrent();
-            var loginUser = User?.Identity?.Name?.Replace(@"\", @"\\") ?? "Anonymous";
+            var loginUser =    User?.Identity?.Name?.Replace(@"\", @"\\") ?? "Anonymous";
             ViewData["LoginUser"] = loginUser;
             ViewData["IsSuperUser"] = IsSuperUser ? "true" : "false";
             ViewData["IsDebugMode"] = IsDebugMode ? "true" : "false";

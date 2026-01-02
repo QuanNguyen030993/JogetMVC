@@ -5,5 +5,6 @@
         public string Path { get; set; } = "";
         public string TemplateFolder { get; set; } = "";
         public string GrantedSurveyFolder { get; set; } = "";
+        public string GrantedLossControlFolder { get; set; } = "";
     }
 }

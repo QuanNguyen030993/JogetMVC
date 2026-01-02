@@ -1,0 +1,20 @@
+﻿@page
+@model JogetMVC.Pages.Demo.Mockup2Model
+@{
+}
+<div style="height:calc(100vh - 120px); border:1px solid #e6e9f0; border-radius:14px; overflow:hidden;">
+    <iframe id="quoteMockFrame"
+            style="width:100%; height:100%; border:0; background:#fff;"
+            sandbox="allow-scripts allow-forms allow-same-origin"
+            src="/page/quotation_with_field.html"
+            referrerpolicy="no-referrer"></iframe>
+</div>
+
+<script>
+    // 1) Paste full HTML string của anh vào đây (giữ nguyên)
+    // const html = `PASTE_FULL_HTML_HERE`;
+
+    // // 2) Inject vào iframe
+    // const f = document.getElementById("quoteMockFrame");
+    // f.srcdoc = html;
+</script>

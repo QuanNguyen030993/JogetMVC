@@ -62,8 +62,7 @@ public class MenuController : BaseControllerApi<Menu>
     {
         var result = new List<MenuHierarchy>();
         string superUsers = _configuration.GetSection("SuperUser:SuperUser").Value;
-        string dcDomain = _configuration.GetSection("Domain:DCServer").Value;
-        string loginAccount = _httpContextAccessor.HttpContext.User.Identity.Name.ToString().Replace(dcDomain, "");
+        string loginAccount = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, _configuration);
         if (superUsers.Contains(loginAccount))
         {
 
@@ -116,17 +115,6 @@ public class MenuController : BaseControllerApi<Menu>
                 }
             }
         }
-
-        UsersSession usersSession = new UsersSession();
-        usersSession.UserName = loginAccount;
-        usersSession.IPAddress = "";
-        usersSession.UserAgent = "";
-        usersSession.DeviceInfo = "";
-        usersSession.Token = "";
-        usersSession.LoginTime = DateTime.Now;
-        usersSession.IsActive = true;
-
-        _userSessionRepository.InsertData(usersSession);
 
         return Ok(result);
     }
