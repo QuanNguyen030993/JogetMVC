@@ -1,0 +1,1093 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quotation Module - ERP Mock (DevExtreme)</title>
+
+  <!-- DevExtreme -->
+  <link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/23.2.6/css/dx.light.css">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn3.devexpress.com/jslib/23.2.6/js/dx.all.js"></script>
+
+  <style>
+    :root{
+      --bg:#eef2f7;
+      --card:#fff;
+      --border:#e6e9f0;
+      --text:#1f2a37;
+      --muted:#6b7280;
+
+      --nav:#1f2937;
+      --nav2:#111827;
+      --brand:#2f7fbf;
+
+      --status:#e84a5f;     /* stage ring */
+      --focus:#2563eb;      /* click focus ring */
+      --focusSoft: rgba(37,99,235,.14);
+
+      --shadow: 0 2px 10px rgba(0,0,0,.06);
+      --radius: 10px;
+
+      --node: 34px;
+      --nodeBorder: rgba(31,41,55,.28);
+      --line: rgba(17,24,39,.18);
+    }
+
+    html, body{ height:100%; }
+    body{
+      margin:0;
+      font-family: Segoe UI, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow:hidden;
+    }
+
+    .app{
+      height:100%;
+      display:grid;
+      grid-template-columns: 240px 1fr;
+      grid-template-rows: 52px 1fr;
+      grid-template-areas:
+        "left top"
+        "left main";
+    }
+
+    /* Top bar */
+    .topbar{
+      grid-area: top;
+      background: var(--brand);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 0 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.10);
+      z-index: 20;
+    }
+    .top-left{
+      display:flex; align-items:center; gap:10px;
+      font-weight:800;
+    }
+    .hamburger{
+      width:34px;height:34px;border-radius:8px;
+      display:flex;align-items:center;justify-content:center;
+      background: rgba(255,255,255,.14);
+      user-select:none;
+    }
+    .top-right{
+      display:flex; align-items:center; gap:10px;
+      font-size:12px;
+      opacity:.95;
+    }
+
+    /* Sidebar */
+    .sidebar{
+      grid-area: left;
+      background: linear-gradient(180deg, var(--nav), var(--nav2));
+      color:#e5e7eb;
+      display:flex;
+      flex-direction:column;
+      border-right: 1px solid rgba(255,255,255,.06);
+      z-index: 10;
+    }
+    .sidebar .brand{
+      height:52px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 0 14px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      font-weight:900;
+      letter-spacing:.02em;
+    }
+    .menu{
+      padding: 10px 8px;
+      overflow:auto;
+      flex:1;
+    }
+    .menuGroup{
+      margin: 12px 10px 6px;
+      font-size: 11px;
+      opacity: .6;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .menuItem{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor:pointer;
+      user-select:none;
+      border: 1px solid transparent;
+      font-size: 13px;
+    }
+    .menuItem:hover{ background: rgba(255,255,255,.06); }
+    .menuItem.active{
+      background: rgba(47,127,191,.22);
+      border-color: rgba(47,127,191,.45);
+    }
+    .dot{ width:8px;height:8px;border-radius:999px;background: rgba(255,255,255,.35); }
+    .menuItem.active .dot{ background: #7dd3fc; }
+
+    .demoBox{
+      padding: 10px 10px 12px;
+      border-top: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+    }
+    .demoLabel{
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      opacity: .7;
+      margin-bottom: 6px;
+    }
+    .demoRow{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .demoHint{
+      margin-top:6px;
+      font-size: 12px;
+      opacity: .75;
+    }
+
+    /* Main */
+    .main{
+      grid-area: main;
+      overflow:auto;
+      padding: 10px 12px 14px;
+    }
+
+    .pageHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom: 8px;
+    }
+    .crumbs{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      color:#334155;
+      font-weight:800;
+    }
+    .crumbs .sep{ opacity:.45; font-weight:700; }
+    .pills{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .pill{
+      display:inline-flex; align-items:center;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.7);
+      border: 1px solid rgba(0,0,0,.06);
+      font-size: 12px;
+      color:#0f172a;
+      gap:6px;
+    }
+    .pill b{ font-weight:900; }
+
+    .actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    /* Stepper: 1 2 3 4 = dept order */
+    .stepper{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      margin: 8px 0 10px;
+    }
+    .step{
+      flex:1;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      padding: 10px 14px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      position:relative;
+      min-width: 170px;
+      overflow:hidden;
+    }
+    .step:after{
+      content:"";
+      position:absolute;
+      right:-10px;
+      top:50%;
+      transform: translateY(-50%);
+      width: 0; height: 0;
+      border-top: 16px solid transparent;
+      border-bottom: 16px solid transparent;
+      border-left: 16px solid #fff;
+      filter: drop-shadow(1px 0 0 var(--border));
+    }
+    .step:last-child:after{ display:none; }
+
+    .badge{
+      width:22px;height:22px;border-radius:999px;
+      display:inline-flex;align-items:center;justify-content:center;
+      font-size:11px;font-weight:900;
+      background:#e5e7eb;color:#111827;
+      flex:0 0 auto;
+    }
+    .step .label{
+      font-weight:900;
+      font-size: 12px;
+      color:#0f172a;
+      line-height: 1.1;
+    }
+
+    /* stage vs focus like old mockup */
+    .step.stage{
+      border-color: rgba(232,74,95,.40);
+      box-shadow: 0 0 0 3px rgba(232,74,95,.10), var(--shadow);
+    }
+    .step.focus{
+      border-color: rgba(37,99,235,.45);
+      box-shadow: 0 0 0 3px var(--focusSoft), var(--shadow);
+    }
+    .step.stage .badge{ background: var(--status); color:#fff; }
+    .step.focus .badge{ background: var(--focus); color:#fff; }
+    .step.stage.focus .badge{ background: var(--focus); }
+    .step.stage.focus .badge::after{
+      content:"";
+      position:absolute;
+      width:14px;height:14px;border-radius:999px;
+      border: 2px solid var(--status);
+      transform: translateY(18px);
+      display:none; /* keep clean */
+    }
+
+    /* ERP-like content grid */
+    .grid{
+      display:grid;
+      grid-template-columns: 1.35fr 1fr 360px;
+      gap: 10px;
+      align-items:start;
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .cardHeader{
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      background:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .cardHeader .h{
+      font-weight: 900;
+      font-size: 12px;
+      color:#0f172a;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .cardBody{ padding: 12px; }
+
+    /* Right summary */
+    .stack{ display:flex; flex-direction:column; gap:10px; }
+    .kv{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 10px;
+      font-size:12px;
+      color:#334155;
+    }
+    .kv .k{ opacity:.75; }
+    .kv .v{ font-weight:900; color:#0f172a; text-align:right; }
+    .thinRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      font-size:12px;
+      padding: 6px 0;
+      border-top: 1px dashed rgba(0,0,0,.08);
+    }
+
+    /* Bottom */
+    .bottom{
+      margin-top: 10px;
+      display:grid;
+      grid-template-columns: 1fr 360px;
+      gap: 10px;
+      align-items:start;
+    }
+    .tabsHead{
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background:#fff;
+    }
+    .tabsHead .left{
+      display:flex; align-items:center; gap:10px;
+      font-weight:900; font-size: 12px; color:#0f172a;
+    }
+
+    /* Focus highlight for dept sections (like old mockup) */
+    .deptBox.focused{
+      border-color: rgba(37,99,235,.45) !important;
+      box-shadow: 0 0 0 3px var(--focusSoft), var(--shadow) !important;
+    }
+
+    /* Make dx controls smaller like ERP */
+    .dx-texteditor-input{ font-size: 12px !important; }
+    .dx-field-item-label-text, .dx-field-item-label{
+      font-size: 12px !important;
+      color:#334155;
+      font-weight:700;
+    }
+    .dx-form-group-caption{
+      font-size: 12px !important;
+      font-weight: 900 !important;
+      color:#0f172a !important;
+    }
+
+    @media (max-width: 1280px){
+      body{ overflow:auto; }
+      .app{ grid-template-columns: 0 1fr; }
+      .sidebar{ display:none; }
+      .grid{ grid-template-columns: 1fr; }
+      .bottom{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <!-- LEFT -->
+    <aside class="sidebar">
+      <div class="brand">
+        <span style="width:10px;height:10px;border-radius:999px;background:#93c5fd;display:inline-block;"></span>
+        Quotation
+      </div>
+
+      <div class="menu">
+        <div class="menuGroup">Quotation</div>
+        <div class="menuItem active" data-page="personal"><span class="dot"></span> Personal Quotation</div>
+        <div class="menuItem" data-page="team"><span class="dot"></span> Team Quotation</div>
+        <div class="menuItem" data-page="pending"><span class="dot"></span> Pending Quotation</div>
+      </div>
+
+      <div class="demoBox">
+        <div class="demoLabel">Demo</div>
+        <div class="demoRow">
+          <div style="flex:1;" id="deptSelect"></div>
+        </div>
+        <div class="demoHint">
+          Login dept: <b id="loginDeptLabel">MKT</b><br/>
+          Stage: <b id="stageDeptLabel">UW</b> • Focus: <b id="focusDeptLabel">PM</b>
+        </div>
+      </div>
+    </aside>
+
+    <!-- TOP -->
+    <header class="topbar">
+      <div class="top-left">
+        <div class="hamburger">≡</div>
+        <div>Home</div>
+        <div style="opacity:.6;">›</div>
+        <div>Quotation</div>
+      </div>
+      <div class="top-right">
+        <span style="opacity:.9;">Robert Mahochi</span>
+        <span style="width:1px;height:18px;background:rgba(255,255,255,.35);display:inline-block;"></span>
+        <span>Help</span>
+      </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="main">
+      <div class="pageHeader">
+        <div class="crumbs">
+          <span style="opacity:.85;">Quotation</span>
+          <span class="sep">›</span>
+          <span id="pageTitle" style="font-weight:900;">Personal Quotation</span>
+        </div>
+
+        <div class="pills">
+          <span class="pill">Quotation: <b id="pillQuo">-</b></span>
+          <span class="pill">RequestNo: <b id="pillReq">-</b></span>
+          <span class="pill">Login: <b id="pillLogin">MKT</b></span>
+          <span class="pill">Stage: <b id="pillStage">UW</b></span>
+          <span class="pill">Focus: <b id="pillFocus">PM</b></span>
+        </div>
+
+        <div class="actions">
+          <div id="btnHelp"></div>
+          <div id="btnSave"></div>
+        </div>
+      </div>
+
+      <!-- Stepper = dept order (1..4), focus/stage behave like old mock -->
+      <div class="stepper" id="deptStepper">
+        <div class="step" data-dept="MKT"><div class="badge">1</div><div class="label">MKT</div></div>
+        <div class="step" data-dept="TS"><div class="badge">2</div><div class="label">TS</div></div>
+        <div class="step" data-dept="UW"><div class="badge">3</div><div class="label">UW</div></div>
+        <div class="step" data-dept="PM"><div class="badge">4</div><div class="label">PM</div></div>
+      </div>
+
+      <!-- Top grid (same content mapping as last version, just layout adjusted) -->
+      <div class="grid">
+        <!-- Left big: MKT -->
+        <section class="card deptBox" id="boxMKT">
+          <div class="cardHeader">
+            <div class="h">MKT — Request / Parties / Product</div>
+            <div id="btnFocusMKT"></div>
+          </div>
+          <div class="cardBody">
+            <div id="formMKT"></div>
+          </div>
+        </section>
+
+        <!-- Middle: TS + UW (no "Technical/Underwriting" title panel; we use accordion titles only) -->
+        <section class="card deptBox" id="boxTSUW">
+          <div class="cardHeader">
+            <div class="h">TS / UW Sections</div>
+            <div id="btnFocusUW"></div>
+          </div>
+          <div class="cardBody" style="padding:0;">
+            <div id="midAccordion"></div>
+          </div>
+        </section>
+
+        <!-- Right: Summary + Note + Attachment -->
+        <section class="stack">
+          <div class="card">
+            <div class="cardHeader">
+              <div class="h">Summary</div>
+              <div id="btnDuplicate"></div>
+            </div>
+            <div class="cardBody">
+              <div class="kv">
+                <div class="k">Number</div><div class="v" id="sumQuotationCode">-</div>
+                <div class="k">Date</div><div class="v" id="sumRequestedDate">-</div>
+                <div class="k">Due date</div><div class="v" id="sumDueDate">-</div>
+                <div class="k">Currency</div><div class="v" id="sumCurrency">-</div>
+              </div>
+
+              <div class="thinRow">
+                <span class="k">Net amount</span>
+                <span class="v" id="sumNet">0</span>
+              </div>
+              <div class="thinRow">
+                <span class="k">VAT amount</span>
+                <span class="v" id="sumVat">0</span>
+              </div>
+              <div class="thinRow">
+                <span class="k">Total amount</span>
+                <span class="v" id="sumTotal">0</span>
+              </div>
+
+              <div style="margin-top:10px;">
+                <div id="currencyEditor"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="cardHeader">
+              <div class="h">Note</div>
+              <div style="opacity:.65;font-size:12px;">(terms)</div>
+            </div>
+            <div class="cardBody">
+              <div id="noteBox"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="cardHeader">
+              <div class="h">Attachment</div>
+              <div style="opacity:.65;font-size:12px;">drop files</div>
+            </div>
+            <div class="cardBody">
+              <div id="uploader"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Bottom: Goods/Services grid + (LMKT + PM) -->
+      <div class="bottom">
+        <section class="card">
+          <div class="tabsHead">
+            <div class="left">Goods / Services</div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <div id="btnAddRow"></div>
+              <div id="searchItems" style="width:220px;"></div>
+            </div>
+          </div>
+          <div class="cardBody" style="padding:0;">
+            <div id="goodsServicesTabs"></div>
+          </div>
+        </section>
+
+        <section class="stack">
+          <div class="card deptBox" id="boxLMKT">
+            <div class="cardHeader">
+              <div class="h">Leader MKT — Approval</div>
+              <div id="btnFocusLMKT"></div>
+            </div>
+            <div class="cardBody">
+              <div id="formLMKT"></div>
+            </div>
+          </div>
+
+          <div class="card deptBox" id="boxPM">
+            <div class="cardHeader">
+              <div class="h">PM — Policy Issuance Data</div>
+              <div id="btnFocusPM"></div>
+            </div>
+            <div class="cardBody">
+              <div id="formPM"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+<script>
+  // ============================================================
+  // Mock payload: QuotationOneRowModel (same mapping content as previous)
+  // ============================================================
+  const quotation = {
+    RequestNo: "QR-00027",
+    RequestRefNo: "REF-2023-00027",
+    QuotationCode: "QT-10030",
+    RequestedDate: "2023-01-02",
+    DueDate: "2023-01-18",
+    RequestType: "Renewal",
+    QuotationType: "IAR",
+    BusinessChannelName: "Broker",
+    SourceOfBusinessName: "Referral",
+    BusinessChannelDisplayName: "ABC Broker",
+
+    PolicyHolderId: "PH001",
+    InsuredId: "IN001",
+    ClientCodePA: "PA-CL-001",
+    ClientCodeJG: "JG-CL-001",
+    PolicyHolderName: "Công ty Allied Electronics (VI)",
+    InsuredName: "Allied Electronics (EN)",
+    ClientName: "Allied Electronics",
+    RegisteredAddress: "HCM, Vietnam",
+    BusinessAddress: "District 1, HCM",
+    PartyMultiLangJson: JSON.stringify({ vi:{ policyHolder:"...", insured:"..." }, en:{ policyHolder:"...", insured:"..." } }),
+
+    ProductName: "Industrial All Risks",
+    ProductDisplayName: "IAR",
+    ProductType: "Property",
+    LineName: "Property",
+    SubLineName: "IAR",
+    CfeCode: "CFE-01",
+    IsCfe: "Y",
+
+    LocationCountDeclared: 2,
+    LocationCountActual: 2,
+    LocationSummary: "HCM (Warehouse); HN (Office)",
+    LocationSituation: "Normal",
+
+    SumInsuredTotal: 1500000,
+    SumInsuredBI: 250000,
+    TsiTotal: 1750000,
+    TsiBI: 250000,
+    TopRisk: "Electrical fire",
+    Exposure: "Medium",
+
+    PremiumTotal: 1370445.30,
+    PremiumTotalBeforeVat: 1245868.45,
+    TotalDue: 1370445.30,
+    PremiumRate: 0.12,
+    DiscountPercentOrValue: "5%",
+    PremiumDiscount: 20000,
+    VatPercent: 10,
+    VatAmount: 124576.85,
+    CurrencyCode: "VND",
+    ExchangeRate: 24500,
+
+    TermsConditionsText: "Điều kiện điều khoản (VI)...",
+    Deductible: "1,000 USD each and every loss",
+    LimitOfLiability: "As per schedule",
+
+    ReferralRequiredFlag: "Y",
+    ReferralReasonsText: "High TSI / High risk",
+    ReferralType: "Internal",
+    RiskGrade: "A",
+    RiskGradingText: "Low to medium risk",
+
+    UwCommentText: "OK to proceed",
+    UwAssessorName: "UW John"
+  };
+
+  // Leader/PM states (model doesn't have these)
+  const leaderMktState = { Approval: null, Comment: "" };
+  const pmState = { PolicyNo:"", InvoiceTo:"", Inception:null, Expiry:null };
+
+  // Goods/services (mock)
+  let goodsItems = [
+    { id: 1, Good: "C00000...", Unit: "Piece1", Available: 600, Quantity: 0, Price: 0, Net: 0, VAT: "10%", VatAmount: 0, Total: 0 }
+  ];
+  let servicesItems = [
+    { id: 1, Service: "Inspection", Unit: "job", Quantity: 1, Price: 50, Net: 50, VAT: "10%", VatAmount: 5, Total: 55 }
+  ];
+
+  // ============================================================
+  // Dept focus/stage rules like old mockup
+  // - stageDept: status ring (workflow stage)
+  // - focusDept: click highlight (user focus)
+  // - edit allowed only when loginDept == focusDept
+  // ============================================================
+  const Depts = ["MKT","TS","UW","PM"];
+  let loginDept = "MKT";
+  let stageDept = "UW";
+  let focusDept = "PM";
+
+  function fmtDate(s){
+    if(!s) return "-";
+    const d = new Date(s);
+    if(isNaN(d.getTime())) return s;
+    return d.toLocaleDateString();
+  }
+  function fmtMoney(n){
+    const v = Number(n || 0);
+    return new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(v);
+  }
+
+  function setActiveMenu(page){
+    $(".menuItem").removeClass("active");
+    $(`.menuItem[data-page='${page}']`).addClass("active");
+    $("#pageTitle").text(
+      page === "personal" ? "Personal Quotation" :
+      page === "team" ? "Team Quotation" : "Pending Quotation"
+    );
+  }
+
+  function refreshPills(){
+    $("#pillQuo").text(quotation.QuotationCode || "-");
+    $("#pillReq").text(quotation.RequestNo || "-");
+    $("#pillLogin").text(loginDept);
+    $("#pillStage").text(stageDept);
+    $("#pillFocus").text(focusDept);
+
+    $("#loginDeptLabel").text(loginDept);
+    $("#stageDeptLabel").text(stageDept);
+    $("#focusDeptLabel").text(focusDept);
+  }
+
+  function refreshSummary(){
+    $("#sumQuotationCode").text(quotation.QuotationCode || "-");
+    $("#sumRequestedDate").text(fmtDate(quotation.RequestedDate));
+    $("#sumDueDate").text(fmtDate(quotation.DueDate));
+    $("#sumCurrency").text(quotation.CurrencyCode || "-");
+
+    const net = Number(quotation.PremiumTotalBeforeVat || 0);
+    const vat = Number(quotation.VatAmount || 0);
+    const total = Number(quotation.PremiumTotal || quotation.TotalDue || 0);
+
+    $("#sumNet").text(fmtMoney(net));
+    $("#sumVat").text(fmtMoney(vat));
+    $("#sumTotal").text(fmtMoney(total));
+  }
+
+  function applyStepperHighlights(){
+    $("#deptStepper .step").removeClass("stage focus");
+    $(`#deptStepper .step[data-dept='${stageDept}']`).addClass("stage");
+    $(`#deptStepper .step[data-dept='${focusDept}']`).addClass("focus");
+  }
+
+  function applySectionFocusHighlight(){
+    // focused visual for related cards
+    $(".deptBox").removeClass("focused");
+
+    if(focusDept === "MKT") $("#boxMKT").addClass("focused");
+    if(focusDept === "TS")  $("#boxTSUW").addClass("focused");
+    if(focusDept === "UW")  $("#boxTSUW").addClass("focused");
+    if(focusDept === "PM")  $("#boxPM").addClass("focused");
+
+    // LMKT focus (not in step 1..4), still allowed via button
+    if(focusDept === "LMKT") $("#boxLMKT").addClass("focused");
+  }
+
+  function applyEditLock(){
+    const roMKT = !(loginDept === "MKT" && focusDept === "MKT");
+    const roTS  = !(loginDept === "TS"  && focusDept === "TS");
+    const roUW  = !(loginDept === "UW"  && focusDept === "UW");
+    const roPM  = !(loginDept === "PM"  && focusDept === "PM");
+
+    $("#formMKT").dxForm("instance")?.option("readOnly", roMKT);
+
+    // inside accordion: we can set readOnly by recreating (simple) or just readOnly for forms
+    $("#tsForm").dxForm("instance")?.option("readOnly", roTS);
+    $("#uwForm").dxForm("instance")?.option("readOnly", roUW);
+
+    $("#formPM").dxForm("instance")?.option("readOnly", roPM);
+
+    // Leader MKT is separate (optional): edit only when login is LMKT and focus is LMKT
+    const roLMKT = !(loginDept === "LMKT" && focusDept === "LMKT");
+    $("#formLMKT").dxForm("instance")?.option("readOnly", roLMKT);
+  }
+
+  function setFocusDept(dept){
+    focusDept = dept;
+    refreshPills();
+    applyStepperHighlights();
+    applySectionFocusHighlight();
+    applyEditLock();
+    DevExpress.ui.notify(`Focus: ${dept}`, "info", 800);
+  }
+
+  function buildMktForm(){
+    $("#formMKT").dxForm({
+      formData: quotation,
+      readOnly: true,
+      colCount: 2,
+      labelLocation: "top",
+      items: [
+        { itemType:"group", caption:"Customer / Address", colCount:2, items: [
+          { dataField:"ClientName", label:{text:"Customer *"} },
+          { dataField:"BusinessChannelDisplayName", label:{text:"Business channel"} },
+          { dataField:"RegisteredAddress", label:{text:"Shipment address"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 46 } },
+          { dataField:"BusinessAddress", label:{text:"Address details"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 46 } },
+        ]},
+        { itemType:"group", caption:"Request", colCount:2, items: [
+          { dataField:"RequestNo", label:{text:"Request No"} },
+          { dataField:"RequestRefNo", label:{text:"Request Ref No"} },
+          { dataField:"QuotationCode", label:{text:"Quotation Code"} },
+          { dataField:"RequestedDate", label:{text:"Requested date"}, editorType:"dxDateBox", editorOptions:{ type:"date" } },
+          { dataField:"DueDate", label:{text:"Due date"}, editorType:"dxDateBox", editorOptions:{ type:"date" } },
+          { dataField:"RequestType", label:{text:"Request type"} },
+          { dataField:"QuotationType", label:{text:"Quotation type"} },
+        ]},
+        { itemType:"group", caption:"Parties", colCount:2, items: [
+          { dataField:"PolicyHolderName", label:{text:"PolicyHolder"} },
+          { dataField:"InsuredName", label:{text:"Insured"} },
+          { dataField:"ClientCodePA", label:{text:"Client Code (PA)"} },
+          { dataField:"ClientCodeJG", label:{text:"Client Code (JG)"} },
+        ]},
+        { itemType:"group", caption:"Product / Line / CFE", colCount:2, items: [
+          { dataField:"ProductDisplayName", label:{text:"Product"} },
+          { dataField:"ProductType", label:{text:"Product type"} },
+          { dataField:"LineName", label:{text:"Line"} },
+          { dataField:"SubLineName", label:{text:"Sub line"} },
+          { dataField:"CfeCode", label:{text:"CFE Code"} },
+          { dataField:"IsCfe", label:{text:"Is CFE"} },
+        ]},
+      ]
+    });
+  }
+
+  function buildTsForm(){
+    const $el = $("<div id='tsForm'/>");
+    $el.dxForm({
+      formData: quotation,
+      readOnly: true,
+      colCount: 2,
+      labelLocation: "top",
+      items: [
+        { itemType:"group", caption:"Location", colCount:2, items: [
+          { dataField:"LocationCountDeclared", label:{text:"# Locations (declared)"}, editorType:"dxNumberBox" },
+          { dataField:"LocationCountActual", label:{text:"# Locations (actual)"}, editorType:"dxNumberBox" },
+          { dataField:"LocationSummary", label:{text:"Location summary"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 56 } },
+          { dataField:"LocationSituation", label:{text:"Location situation"}, colSpan:2 },
+        ]},
+        { itemType:"group", caption:"TSI / Sum Insured", colCount:2, items: [
+          { dataField:"SumInsuredTotal", label:{text:"Sum insured total"}, editorType:"dxNumberBox" },
+          { dataField:"SumInsuredBI", label:{text:"Sum insured BI"}, editorType:"dxNumberBox" },
+          { dataField:"TsiTotal", label:{text:"TSI total"}, editorType:"dxNumberBox" },
+          { dataField:"TsiBI", label:{text:"TSI BI"}, editorType:"dxNumberBox" },
+          { dataField:"TopRisk", label:{text:"Top risk"}, colSpan:2 },
+          { dataField:"Exposure", label:{text:"Exposure"}, colSpan:2 },
+        ]},
+      ]
+    });
+    return $el;
+  }
+
+  function buildUwForm(){
+    const $el = $("<div id='uwForm'/>");
+    $el.dxForm({
+      formData: quotation,
+      readOnly: true,
+      colCount: 2,
+      labelLocation: "top",
+      items: [
+        { itemType:"group", caption:"Premium / VAT / Currency", colCount:2, items: [
+          { dataField:"CurrencyCode", label:{text:"Currency *"} },
+          { dataField:"ExchangeRate", label:{text:"Exchange rate"}, editorType:"dxNumberBox" },
+          { dataField:"PremiumTotalBeforeVat", label:{text:"Net amount"}, editorType:"dxNumberBox" },
+          { dataField:"VatPercent", label:{text:"VAT %"}, editorType:"dxNumberBox" },
+          { dataField:"VatAmount", label:{text:"VAT amount"}, editorType:"dxNumberBox" },
+          { dataField:"PremiumTotal", label:{text:"Total amount"}, editorType:"dxNumberBox" },
+          { dataField:"DiscountPercentOrValue", label:{text:"Discount"} },
+          { dataField:"PremiumDiscount", label:{text:"Premium discount"}, editorType:"dxNumberBox" },
+        ]},
+        { itemType:"group", caption:"Terms / Conditions", colCount:2, items: [
+          { dataField:"TermsConditionsText", label:{text:"Terms & conditions"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 60 } },
+          { dataField:"Deductible", label:{text:"Deductible"}, colSpan:2 },
+          { dataField:"LimitOfLiability", label:{text:"Limit of liability"}, colSpan:2 },
+        ]},
+        { itemType:"group", caption:"UW Evaluation / Referral", colCount:2, items: [
+          { dataField:"ReferralRequiredFlag", label:{text:"Referral required"} },
+          { dataField:"ReferralType", label:{text:"Referral type"} },
+          { dataField:"ReferralReasonsText", label:{text:"Reasons"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 50 } },
+          { dataField:"RiskGrade", label:{text:"Risk grade"} },
+          { dataField:"RiskGradingText", label:{text:"Risk grading"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 50 } },
+          { dataField:"UwAssessorName", label:{text:"UW assessor"} },
+          { dataField:"UwCommentText", label:{text:"UW comment"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 50 } },
+        ]},
+      ]
+    });
+    return $el;
+  }
+
+  function buildMidAccordion(){
+    const ts = buildTsForm();
+    const uw = buildUwForm();
+
+    $("#midAccordion").dxAccordion({
+      dataSource: [
+        { dept:"TS", title: "TS — Location / TSI / Sum Insured", tpl: ts },
+        { dept:"UW", title: "UW — Premium / Terms / Evaluation", tpl: uw }
+      ],
+      itemTitleTemplate: (item) => $("<div/>").text(item.title).css({ fontWeight: 900, fontSize: "12px", padding: "10px 12px" }),
+      itemTemplate: (item) => $("<div/>").append(item.tpl).css({ padding: "12px" }),
+      multiple: true,
+      collapsible: true,
+      animationDuration: 120
+    });
+  }
+
+  function buildApprovalAndPm(){
+    $("#formLMKT").dxForm({
+      formData: leaderMktState,
+      readOnly: true,
+      colCount: 1,
+      labelLocation: "top",
+      items: [
+        {
+          dataField:"Approval",
+          label:{text:"Approval *"},
+          editorType:"dxRadioGroup",
+          editorOptions:{ items:[{text:"Approve", value:true},{text:"Reject", value:false}], layout:"horizontal" },
+          isRequired:true
+        },
+        { dataField:"Comment", label:{text:"Comment"}, editorType:"dxTextArea", editorOptions:{ height: 80 } }
+      ]
+    });
+
+    $("#formPM").dxForm({
+      formData: pmState,
+      readOnly: true,
+      colCount: 2,
+      labelLocation: "top",
+      items: [
+        { dataField:"PolicyNo", label:{text:"Policy No"} },
+        { dataField:"InvoiceTo", label:{text:"Invoice To"} },
+        { dataField:"Inception", label:{text:"Inception"}, editorType:"dxDateBox", editorOptions:{ type:"date" } },
+        { dataField:"Expiry", label:{text:"Expiry"}, editorType:"dxDateBox", editorOptions:{ type:"date" } },
+      ]
+    });
+  }
+
+  function calcTotals(row){
+    const qty = Number(row.Quantity || 0);
+    const price = Number(row.Price || 0);
+    const net = qty * price;
+    const vatPerc = 10;
+    const vatAmount = net * (vatPerc/100);
+    row.Net = net;
+    row.VatAmount = vatAmount;
+    row.Total = net + vatAmount;
+  }
+
+  function buildGoodsServicesTabs(){
+    function gridFor(ds, cols){
+      const $g = $("<div/>");
+      $g.dxDataGrid({
+        dataSource: ds,
+        keyExpr: "id",
+        showBorders: true,
+        height: 270,
+        columnAutoWidth: true,
+        editing: { mode:"cell", allowUpdating:true, allowAdding:true, allowDeleting:true },
+        columns: cols,
+        onRowUpdating: (e) => {
+          const next = { ...e.oldData, ...e.newData };
+          calcTotals(next);
+          e.newData.Net = next.Net;
+          e.newData.VatAmount = next.VatAmount;
+          e.newData.Total = next.Total;
+        }
+      });
+      return $g;
+    }
+
+    const goodsGrid = gridFor(goodsItems, [
+      { dataField:"Good", caption:"*Good" },
+      { dataField:"Unit", caption:"*Unit", width: 90 },
+      { dataField:"Available", caption:"Available", dataType:"number", width: 100 },
+      { dataField:"Quantity", caption:"Quantity", dataType:"number", width: 90 },
+      { dataField:"Price", caption:"Price", dataType:"number", width: 90 },
+      { dataField:"Net", caption:"Net", dataType:"number", width: 90, allowEditing:false },
+      { dataField:"VAT", caption:"VAT", width: 70 },
+      { dataField:"VatAmount", caption:"VAT amt", dataType:"number", width: 90, allowEditing:false },
+      { dataField:"Total", caption:"Total", dataType:"number", width: 90, allowEditing:false }
+    ]);
+
+    const servicesGrid = gridFor(servicesItems, [
+      { dataField:"Service", caption:"*Service" },
+      { dataField:"Unit", caption:"Unit", width: 90 },
+      { dataField:"Quantity", caption:"Quantity", dataType:"number", width: 90 },
+      { dataField:"Price", caption:"Price", dataType:"number", width: 90 },
+      { dataField:"Net", caption:"Net", dataType:"number", width: 90, allowEditing:false },
+      { dataField:"VAT", caption:"VAT", width: 70 },
+      { dataField:"VatAmount", caption:"VAT amt", dataType:"number", width: 90, allowEditing:false },
+      { dataField:"Total", caption:"Total", dataType:"number", width: 90, allowEditing:false }
+    ]);
+
+    $("#goodsServicesTabs").dxTabPanel({
+      items: [
+        { title: "Goods", template: () => goodsGrid },
+        { title: "Services", template: () => servicesGrid }
+      ],
+      selectedIndex: 0,
+      animationEnabled: true,
+      swipeEnabled: false
+    });
+  }
+
+  function wireStepperClicks(){
+    $("#deptStepper .step").css("cursor","pointer").on("click", function(){
+      const dept = $(this).data("dept");
+      setFocusDept(dept);
+    });
+  }
+
+  $(function(){
+    // Sidebar menu click
+    $(".menuItem").on("click", function(){
+      const page = $(this).data("page");
+      setActiveMenu(page);
+      DevExpress.ui.notify("Mock page: " + page, "info", 900);
+    });
+
+    // Buttons
+    $("#btnHelp").dxButton({ text:"Help", type:"normal", stylingMode:"outlined", onClick:()=>DevExpress.ui.notify("Mock: Help", "info", 900) });
+    $("#btnSave").dxDropDownButton({
+      text:"Save",
+      type:"default",
+      items:["Save", "Save & Close", "Save as Draft"],
+      onItemClick:(e)=>DevExpress.ui.notify("Mock: "+e.itemData, "success", 900)
+    });
+    $("#btnDuplicate").dxButton({ text:"Duplicate", icon:"copy", type:"normal", stylingMode:"outlined", onClick:()=>DevExpress.ui.notify("Mock: Duplicate", "success", 900) });
+
+    // Demo dept select (login dept)
+    $("#deptSelect").dxSelectBox({
+      items:["MKT","TS","UW","LMKT","PM"],
+      value: loginDept,
+      stylingMode:"outlined",
+      onValueChanged:(e)=>{
+        loginDept = e.value;
+        refreshPills();
+        applyEditLock();
+        DevExpress.ui.notify("Login dept: " + loginDept, "info", 900);
+      }
+    });
+
+    // Focus buttons
+    $("#btnFocusMKT").dxButton({ text:"Focus", stylingMode:"outlined", onClick:()=>setFocusDept("MKT") });
+    $("#btnFocusUW").dxButton({ text:"Focus UW", stylingMode:"outlined", onClick:()=>setFocusDept("UW") });
+    $("#btnFocusLMKT").dxButton({ text:"Focus", stylingMode:"outlined", onClick:()=>setFocusDept("LMKT") });
+    $("#btnFocusPM").dxButton({ text:"Focus", stylingMode:"outlined", onClick:()=>setFocusDept("PM") });
+
+    // Currency editor
+    $("#currencyEditor").dxForm({
+      formData: quotation,
+      readOnly: true,
+      colCount: 1,
+      labelLocation: "top",
+      items: [
+        { dataField:"CurrencyCode", label:{text:"Currency"}, editorType:"dxTextBox" },
+        { dataField:"PremiumTotal", label:{text:"Total amount"}, editorType:"dxNumberBox" },
+        { dataField:"VatAmount", label:{text:"VAT amount"}, editorType:"dxNumberBox" }
+      ]
+    });
+
+    // Note
+    $("#noteBox").dxTextArea({
+      value: quotation.TermsConditionsText || "",
+      height: 110,
+      stylingMode: "outlined"
+    });
+
+    // Attachment uploader (mock)
+    $("#uploader").dxFileUploader({
+      selectButtonText: "Browse",
+      labelText: "or Drop file here",
+      accept: "*/*",
+      uploadMode: "useButtons",
+      showFileList: true,
+      onValueChanged: ()=>DevExpress.ui.notify("Mock: file selected", "info", 900)
+    });
+
+    $("#btnAddRow").dxButton({
+      text:"Add new",
+      icon:"plus",
+      type:"default",
+      onClick:()=>{
+        const tp = $("#goodsServicesTabs").dxTabPanel("instance");
+        if(tp.option("selectedIndex") === 0){
+          goodsItems.push({ id: Date.now(), Good:"", Unit:"", Available:0, Quantity:0, Price:0, Net:0, VAT:"10%", VatAmount:0, Total:0 });
+        }else{
+          servicesItems.push({ id: Date.now(), Service:"", Unit:"", Quantity:1, Price:0, Net:0, VAT:"10%", VatAmount:0, Total:0 });
+        }
+        buildGoodsServicesTabs();
+        DevExpress.ui.notify("Added row", "success", 700);
+      }
+    });
+
+    $("#searchItems").dxTextBox({
+      placeholder:"Search items...",
+      mode:"search",
+      stylingMode:"outlined",
+      onValueChanged: (e)=>DevExpress.ui.notify("Mock search: "+(e.value||""), "info", 700)
+    });
+
+    // Build forms/grids
+    buildMktForm();
+    buildMidAccordion();
+    buildApprovalAndPm();
+    buildGoodsServicesTabs();
+    refreshSummary();
+
+    // Stepper behavior
+    wireStepperClicks();
+
+    // Apply initial focus/stage & edit rules
+    refreshPills();
+    applyStepperHighlights();
+    applySectionFocusHighlight();
+    applyEditLock();
+  });
+</script>
+</body>
+</html>
