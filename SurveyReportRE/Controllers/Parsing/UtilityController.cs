@@ -188,8 +188,8 @@ namespace SurveyReportRE.Controllers.Config
                     case "Tasks":
                         dto = new
                         {
-                            id = GetInt(cells, colMap, "id", wbPart),
-                            parentId = GetInt(cells, colMap, "parentId", wbPart),
+                            id = GetString(cells, colMap, "id", wbPart),
+                            parentId = GetString(cells, colMap, "parentId", wbPart),
                             title = GetString(cells, colMap, "title", wbPart),
                             start = GetDate(cells, colMap, "start", wbPart)?.AddHours(-7).ToString("yyyy-MM-ddTHH:mm:ss.000Z"),
                             end = GetDate(cells, colMap, "end", wbPart)?.Add(new TimeSpan(16,59,59)).ToString("yyyy-MM-ddTHH:mm:ss.000Z"),
