@@ -1,0 +1,164 @@
+﻿@page
+@model EvaluationModel
+@{
+
+}
+<script>
+    $(function () {
+      
+    // Hook vào zoom end: (làm bằng event optionChanged cho argumentAxis.visualRange)
+
+
+    var chartOptions = {
+      mode: "trend_action",   // trend_total | trend_action | trend_endpoint | top_action | ...
+      from: null,
+      to: null,
+      interval: "day",        // day|month|year
+      topN: 1000,
+      method: null,
+      controller: null,
+      action: null
+    };
+
+    function buildQueryPayload() {
+      // endpoint nhận [FromBody] string query => body phải là JSON string
+      console.log(JSON.stringify(chartOptions));
+      return JSON.stringify(chartOptions);
+    }
+
+    var store = new DevExpress.data.CustomStore({
+      load: function () {
+        return $.ajax({
+          url: "/api/HttpRequestAuditLog/Query",     // đổi đúng route của bạn
+          method: "POST",
+          contentType: "application/json",
+          data: JSON.stringify(buildQueryPayload())
+        });
+      }
+    });
+    store.load();
+
+
+     var chart = $("#httpLogChart").dxChart({
+          dataSource: store,
+        commonSeriesSettings: {
+          argumentField: "t",
+          valueField: "count",
+          type: "line",
+          point: { visible: false }
+        },
+        seriesTemplate: { nameField: "dim" },
+        argumentAxis: { argumentType: "datetime" },
+        zoomAndPan: { argumentAxis: "both", allowMouseWheel: true, dragToZoom: true },
+        scrollBar: { visible: true },
+
+          // Nếu dimension=total thì 1 series; nếu có dim thì dùng seriesTemplate
+        zoomAndPan: {
+          argumentAxis: "both",
+          allowMouseWheel: true,
+          dragToZoom: true
+        },
+      tooltip: { enabled: true }
+    }).dxChart("instance");
+
+    function reloadChart() {
+      chart.getDataSource().reload();
+      chart.render();
+    }
+        $("#dimensionSelect").dxSelectBox({
+            width: 300,
+      dataSource: ["total", "action", "controller", "endpoint", "method"],
+      value: chartOptions.dimension,
+      onValueChanged(e) {
+        chartOptions.dimension = e.value;
+        applyDimension(e.value);
+        reloadChart();
+      }
+    });
+
+    $("#intervalSelect").dxSelectBox({
+         width: 300,
+      dataSource: ["hour","day", "month", "year"],
+      value: chartOptions.interval,
+      onValueChanged(e) {
+        chartOptions.interval = e.value;
+        reloadChart();
+      }
+    });
+
+    $("#topN").dxNumberBox({
+       width: 300,
+      value: chartOptions.topN,
+      min: 1,
+      max: 1000,
+      showSpinButtons: true,
+      onValueChanged(e) {
+        chartOptions.topN = e.value;
+        reloadChart();
+      }
+    });
+    function applyDimension(dimension) {
+      chartOptions.dimension = dimension;
+
+      switch (dimension) {
+        case "total":
+          chartOptions.mode = "trend_total";
+          chart.option({
+              seriesTemplate: null,
+              series: [{
+                name: "Total Requests",
+                argumentField: "t",
+                valueField: "count",
+                type: "line"
+              }]
+            });
+          // total không cần dim series
+          break;
+
+        case "action":
+          chartOptions.mode = "trend_action";
+          chart.option("seriesTemplate", { nameField: "dim" });
+          break;
+
+        case "endpoint":
+          chartOptions.mode = "trend_endpoint";
+          chart.option("seriesTemplate", { nameField: "dim" });
+          break;
+
+        case "controller":
+          chartOptions.mode = "trend_controller"; // nếu bạn có mode này
+          chart.option("seriesTemplate", { nameField: "dim" });
+          break;
+
+        case "method":
+          chartOptions.mode = "trend_method"; // nếu bạn có mode này
+          chart.option("seriesTemplate", { nameField: "dim" });
+          break;
+      }
+    }
+
+    
+    });
+</script>
+<div style="display:flex" >
+
+    <div style="padding:5px ; font-size: 14px; font-family: 'Segoe UI Light', 'Helvetica Neue Light', 'Segoe UI', 'Helvetica Neue', 'Trebuchet MS', Verdana, sans-serif; font-weight: 200; fill: rgb(35, 35, 35); cursor: default;">
+    Dimension:
+</div>
+<div id="dimensionSelect"></div>
+    <div style="padding:5px ; font-size: 14px; font-family: 'Segoe UI Light', 'Helvetica Neue Light', 'Segoe UI', 'Helvetica Neue', 'Trebuchet MS', Verdana, sans-serif; font-weight: 200; fill: rgb(35, 35, 35); cursor: default;">
+    Interval:
+</div>
+<div id="intervalSelect"></div>
+<div   style="padding:5px ; font-size: 14px; font-family: 'Segoe UI Light', 'Helvetica Neue Light', 'Segoe UI', 'Helvetica Neue', 'Trebuchet MS', Verdana, sans-serif; font-weight: 200; fill: rgb(35, 35, 35); cursor: default;">
+    Top: 
+ </div>
+<div id="topN"></div>
+</div>
+<div style="display:block">
+<div style="width:100%; font-size: 28px; font-family: 'Segoe UI Light', 'Helvetica Neue Light', 'Segoe UI', 'Helvetica Neue', 'Trebuchet MS', Verdana, sans-serif; font-weight: 200; fill: rgb(35, 35, 35); cursor: default;">
+    Request API Income:
+</div>
+
+<div id="httpLogChart"></div>
+</div>

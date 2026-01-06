@@ -3,11 +3,15 @@ using System.Text;
 using System.Text.Json;
 using Dapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using RESurveyTool.Models.Models.Parsing;
+using SurveyReportRE.Common;
+using SurveyReportRE.Controllers.Base;
 using SurveyReportRE.ControllerUtil;
 
 
@@ -80,10 +84,11 @@ public sealed class HttpRequestAuditMiddleware
             {
                 AUDIT_LOG = false;
             }
-            else{
+            else
+            {
 
-            var valueStr = ((string)resultList[0].First().Value);
-            AUDIT_LOG = bool.Parse(valueStr);
+                var valueStr = ((string)resultList[0].First().Value);
+                AUDIT_LOG = bool.Parse(valueStr);
             }
         }
     }
@@ -91,7 +96,7 @@ public sealed class HttpRequestAuditMiddleware
     public async Task Invoke(HttpContext ctx, IHttpRequestAuditLogWriter writer)
     {
         var req = ctx.Request;
-        
+
         // Filter sớm
         if (OnlyApi && !req.Path.StartsWithSegments("/api"))
         {
@@ -133,7 +138,7 @@ public sealed class HttpRequestAuditMiddleware
             }
 
             // Ghi DB
-            await writer.WriteAsync(log, _connectionString,AUDIT_LOG);
+            await writer.WriteAsync(log, _connectionString, AUDIT_LOG);
 
             // Log kỹ thuật (optional)
             //_logger.LogInformation("HTTP {Method} {Path} => {Status} ({Elapsed} ms) TraceId={TraceId}",
@@ -262,7 +267,7 @@ public interface IHttpRequestAuditLogWriter
 public sealed class HttpRequestAuditLogWriter : IHttpRequestAuditLogWriter
 {
 
-    public Task WriteAsync(HttpRequestAuditLog log, string _connectionString,bool AUDIT_LOG)
+    public Task WriteAsync(HttpRequestAuditLog log, string _connectionString, bool AUDIT_LOG)
     {
         if (AUDIT_LOG)
         {
