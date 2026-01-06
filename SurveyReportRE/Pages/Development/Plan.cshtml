@@ -9,7 +9,17 @@
 
 
 
-    var chartG =  $('#gantt').dxGantt({
+   
+
+    var popupInstance = $(`#mainPopup`).dxPopup({
+                                        width: "95%",
+                                        height: "95%",
+                                        showTitle: true,
+                                        title: ``,
+                                        dragEnabled: false,
+                                        closeOnOutsideClick: true,
+                                        contentTemplate: function (container) {
+                                             var chartG =  $('#gantt').dxGantt({
         tasks: {
             dataSource: new Object(),
         },
@@ -55,7 +65,7 @@
             format: 'MM/dd/yyyy'
         }, {
             dataField: 'end',
-            caption: 'End Date', 
+            caption: 'End Date',
             dataType: 'datetime',
             format: 'MM/dd/yyyy'//,
             // calculateCellValue: function (row) {
@@ -201,7 +211,7 @@
         var colorMap = buildColorMapByParentId(tasks);
 
         tasks.forEach(t => {
-            
+
 
             wsTasks.addRow([
                 t.id,
@@ -345,7 +355,7 @@
             DevExpress.ui.notify(data?.message || "Import done", "success", 2500);
             callElementView(`/Development/Plan`, `Plan`, `Plan`);
             // Nếu muốn reload gantt sau import:
-           
+
         } catch (e) {
             DevExpress.ui.notify(e?.message || "Error API", "error", 4000);
         } finally {
@@ -467,6 +477,36 @@
             }
         }
     })
+    var divCon = $("#Plan").appendTo($("<div>"))
+             divCon.appendTo(container);
+             // $("<div id='recallReason'>").dxTextArea({
+             //     dataField: "recallReason",
+             //     label: { text: "Reason", location: "top" },
+             //     height: "50%",
+             //     width: "100%",
+             // }).appendTo(container);
+             return container
+         },
+         onHiding: function (e) {
+
+         },
+         toolbarItems: [ {
+             widget: 'dxButton',
+             toolbar: 'bottom',
+             location: 'after',
+             options: {
+                 stylingMode: 'contained',
+                 type: 'normal',
+                 text: "Cancel",
+                 onClick() {
+                     popupInstance.hide();
+                 },
+             },
+         }]
+
+     }).dxPopup("instance");
+                                    popupInstance.show();
+
 </script>
 
 <div id="Plan">

@@ -178,10 +178,10 @@ namespace SurveyReportRE.Controllers.Config
                     case "Dependencies":
                         dto = new
                         {
-                            id = GetInt(cells, colMap, "id", wbPart),
-                            predecessorId = GetInt(cells, colMap, "predecessorId", wbPart),
-                            successorId = GetInt(cells, colMap, "successorId", wbPart),
-                            type = GetInt(cells, colMap, "type", wbPart)
+                            id = GetString(cells, colMap, "id", wbPart),
+                            predecessorId = GetString(cells, colMap, "predecessorId", wbPart),
+                            successorId = GetString(cells, colMap, "successorId", wbPart),
+                            type = GetString(cells, colMap, "type", wbPart)
                         };
                         break;
 
@@ -200,7 +200,7 @@ namespace SurveyReportRE.Controllers.Config
                     case "Resources":
                         dto = new
                         {
-                            id = GetInt(cells, colMap, "id", wbPart),
+                            id = GetString(cells, colMap, "id", wbPart),
                             text = GetString(cells, colMap, "text", wbPart)
                         };
                         break;
@@ -208,9 +208,9 @@ namespace SurveyReportRE.Controllers.Config
                     case "ResourceAssignments":
                         dto = new
                         {
-                            id = GetInt(cells, colMap, "id", wbPart),
-                            taskId = GetInt(cells, colMap, "taskId", wbPart),
-                            resourceId = GetInt(cells, colMap, "resourceId", wbPart)
+                            id = GetString(cells, colMap, "id", wbPart),
+                            taskId = GetString(cells, colMap, "taskId", wbPart),
+                            resourceId = GetString(cells, colMap, "resourceId", wbPart)
                         };
                         break;
 
