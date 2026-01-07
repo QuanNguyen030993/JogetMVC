@@ -72,7 +72,8 @@ namespace SurveyReportRE.Pages
             if (!string.IsNullOrEmpty(loadParams))
                 ViewData["LoadParams"] = loadParams;
             ViewData[nameof(HostUrl)] = _configuration.GetSection("UrlConfig:Host").Value;
-            ViewData["Environment"] = ControllerUtil.ControllerUtil.queryEnvironment;
+            ViewData["Environment"] = ControllerUtil.ControllerUtil.tmivEnvironment;
+            ViewData["JogetEnvironment"] = ControllerUtil.ControllerUtil.jogetEnvironment;
         }
     }
 }

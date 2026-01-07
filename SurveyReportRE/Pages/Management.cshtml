@@ -18,7 +18,6 @@
                 <a href="#" class="logo" data-toggle="push-menu" role="button">
                     <div class="logo-mini">
                         <b>Quotation Management</b>
-                       
                     </div>
                     <span class="logo-lg"><b>Quotation Management</b></span>
                 </a>
@@ -26,6 +25,7 @@
             <div class="admin-float-swicher">
                 <p id="returnToSuperUser" />
                 <div id="environmentLabel" style="color: red;"></div>
+                <div id="environmentJogetLabel" style="color: red;"></div>
             </div>
             <!--Tab list-->
             <div id="tablist" class="ui-tabs-nav" style="position: relative;width: 75%;">                
@@ -146,7 +146,9 @@
         _isDebugMode = `@Html.Raw(ViewData["IsDebugMode"])`;
         var _notifyEnv = `@Html.Raw(ViewData["NotifyEnv"])`;
         if (_notifyEnv  == "true")
-            $("#environmentLabel").text(`(Environment: @ViewData["Environment"])`);
+            $("#environmentLabel").text(`(TMIV Environment: @ViewData["Environment"])`);
+        if (_notifyEnv  == "true")
+            $("#environmentJogetLabel").text(`(Joget Environment: @ViewData["JogetEnvironment"])`);
         if (_isDebugMode == "true"){
 
 
