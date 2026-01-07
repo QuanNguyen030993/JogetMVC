@@ -5046,3 +5046,173 @@ function flashNotificationDot() {
     $icon.removeClass("has-notification");
     setTimeout(() => $icon.addClass("has-notification"), 50);
 }
+function RenderElementV2(_viewConfig, searchFormControls, objectIds, callback) {
+    var filterExpr = null;
+    var _filterWidth = 150;
+    var _filterHeight = 30;
+    var _enumWidth = 300;
+    var _enumHeight = 500;
+    var _entityWidth = 600;
+    var _entityHeight = 500;
+    var _isFirstLoad = true;
+    $.each(_viewConfig, function (i, item) {
+        if (item.Type == "dxDateBox") {
+            searchFormControls.push({
+                elementAttr: { id: item.ElementName },
+                dataField: item.ElementName,
+                editorType: item.Type,
+                editorOptions: {
+                    width: _filterWidth,
+                    showClearButton: true
+                },
+                label: { location: "left", text: item.Caption },
+                validationRules: [{
+                    type: "custom",
+                    reevaluate: true,
+                    validationCallback: function (options) {
+                        var toDate = searchForm.getEditor("toDateDateDateBox");
+                        var fromDate = searchForm.getEditor("fromDateDateBox");
+                        var toDateValue = "";
+                        var fromDateValue = "";
+
+                        if (toDate && toDate.option('value'))
+                            toDateValue = toDate.option('value');
+                        if (fromDate && fromDate.option('value'))
+                            fromDateValue = fromDate.option('value');
+
+                        if (toDateValue && fromDateValue)
+                            if (toDateValue < fromDateValue) {
+                                // if (options.value < 0) {
+                                // options.rule.message = "To Date cannot be earlier than From Date.";
+                                return false;
+                                // }
+                            }
+                        return true;
+                    }, message: "To date cannot be earlier than from date.",
+                }]
+            });
+        }
+        if (item.Type == "Enum") {
+            var elements = appGetElementsByName(item.FilterField);
+            searchFormControls.push({
+                dataField: item.ElementName,
+                editorType: "dxDropDownBox",
+                label: { location: "left", text: item.Caption },
+                editorOptions: {
+                    dropDownOptions: {
+                        width: _enumWidth
+                    },
+                    width: _filterWidth,
+                    valueExpr: "value",
+                    displayExpr: "caption",
+                    dataSource: new DevExpress.data.ArrayStore({
+                        data: elements,
+                        key: "value"
+                    }),
+                    columns: [
+                        { dataField: "code", caption: "Mã" }
+                        , { dataField: "caption", caption: "Tên" }
+                    ],
+                    contentTemplate: function (e) {
+                        const $dataGrid = $("<div>").dxDataGrid({
+                            dataSource: e.component.option("dataSource"),
+                            columns: e.component.option("columns"),
+                            selection: { mode: "multiple" },
+                            onSelectionChanged: function (selectedItems) {
+                                e.component.selectedItem = selectedItems.selectedRowsData;
+                                const keys = selectedItems.selectedRowKeys;
+                                e.component.option("value", selectedItems.selectedRowsData.map(obj => obj.caption).join(','));
+                            }
+                        });
+                        return $dataGrid;
+                    }
+                }
+            });
+        }
+        if (item.Type == "Entity") {
+            var mDropDownDS = new MDropDownDataSource();
+            var dataSource = mDropDownDS.getDropDownDS('Id', `api/${item.FilterField}Api/GetLookup`);
+            searchFormControls.push({
+                dataField: item.ElementName,
+                editorType: "dxDropDownBox",
+                label: { location: "left", text: item.Caption },
+                editorOptions: {
+                    width: _filterWidth,
+                    dropDownOptions: {
+                        width: _entityWidth
+                    },
+                    valueExpr: item.ValueExpr,
+                    displayExpr: item.DisplayExpr,
+                    dataSource: dataSource,
+                    columns: item.ShowColumns,
+                    contentTemplate: function (e) {
+                        const $dataGrid = $("<div>").dxDataGrid({
+                            selectionMode: 'all',
+                            // remoteOperations: { paging: true, filtering: true, sorting: true, grouping: true, summary: true, groupPaging: true },
+                            filterRow: { visible: true },
+                            dataSource: e.component.option("dataSource"),
+                            columns: e.component.option("columns"),
+                            selection: { mode: "multiple" },
+                            scrolling: {
+                                mode: 'virtual',
+                                preloadEnabled: false,
+                                showScrollbar: 'always'
+                            },
+                            width: "100%",
+                            height: "100%",
+                            allowItemDeleting: false,
+                            showSelectionControls: true,
+                            sorting: {
+                                mode: 'multiple',
+                            },
+                            onSelectionChanged: function (selectedItems) {
+                                e.component.selectedItem = selectedItems.selectedRowsData;
+                                const keys = selectedItems.selectedRowKeys;
+                                e.component.option("value", keys);
+                                e.component.option("value", selectedItems.selectedRowsData.map(obj => obj.Id).join(','));
+                            },
+                            columnAutoWidth: true,
+                            customizeColumns: function (columns) {
+                            },
+                        });
+                        return $dataGrid;
+                    }
+                }
+            });
+        }
+        if (item.Type == "dxTextBox") {
+            searchFormControls.push({
+                dataField: item.ElementName,
+                editorType: item.Type,
+                editorOptions: {
+                    width: _filterWidth,
+                    showClearButton: true
+                },
+                label: { location: "left", text: item.Caption }
+            });
+        }
+    });
+
+
+    $(`#${objectIds.buttonId}`).dxButton({
+        height: 30,
+        width: 200,
+        text: "Submit",
+        onClick: function (e) {
+
+            $.ajax({
+                url: `/api/${objectIds.controllerId}/ExecuteCustomQuery`,
+                type: "POST",
+                headers: { 'Content-Type': 'application/json' },
+                data: JSON.stringify(callback(_viewConfig)),
+                success: function (data) {
+                    $(`#${objectIds.gridId}`).dxDataGrid("instance").refresh();
+                },
+                error: function (error) {
+                    console.error("Error loading data:", error);
+                }
+            });
+        }
+    }).addClass("custom-search-custom");
+}
+
