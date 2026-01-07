@@ -71,15 +71,7 @@ public class PolicyIssuanceProcessController : BaseControllerApi<PolicyIssuanceP
         return obj;
     }
 
-    [HttpGet]
-    public async Task PullData()
-    {
-        //string query = "EXEC usp_rp_pending_request";
-        //List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomJogetQuery(query);
-
-        //var list = ConvertToPolicyIssuanceProcessList(obj);
-        //await BulkInsertPolicyIssuanceProcessAsync(list);
-    }
+  
     public async Task BulkInsertPolicyIssuanceProcessAsync(List<PolicyIssuanceProcess> data)
     {
         var dt = new DataTable();

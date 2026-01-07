@@ -73,15 +73,7 @@ public class MailQueueController : BaseControllerApi<MailQueue>
         return obj;
     }
 
-    [HttpGet]
-    public async Task PullData()
-    {
-        //string query = "EXEC usp_rp_pending_request";
-        //List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomJogetQuery(query);
-
-        //var list = ConvertToMailQueueList(obj);
-        //await BulkInsertMailQueueAsync(list);
-    }
+  
     public async Task BulkInsertMailQueueAsync(List<MailQueue> data)
     {
         var dt = new DataTable();

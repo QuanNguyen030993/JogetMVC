@@ -71,15 +71,7 @@ public class PendingJogetController : BaseControllerApi<PendingJoget>
         return obj;
     }
 
-    [HttpGet]
-    public async Task PullData()
-    {
-        //string query = "EXEC usp_rp_pending_request";
-        //List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomJogetQuery(query);
-
-        //var list = ConvertToPendingJogetList(obj);
-        //await BulkInsertPendingJogetAsync(list);
-    }
+   
     public async Task BulkInsertPendingJogetAsync(List<PendingJoget> data)
     {
         var dt = new DataTable();

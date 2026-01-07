@@ -71,15 +71,7 @@ public class ReinsurranceQuarterlyController : BaseControllerApi<ReinsurranceQua
         return obj;
     }
 
-    [HttpGet]
-    public async Task PullData()
-    {
-        //string query = "EXEC usp_rp_pending_request";
-        //List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomJogetQuery(query);
-
-        //var list = ConvertToReinsurranceQuarterlyList(obj);
-        //await BulkInsertReinsurranceQuarterlyAsync(list);
-    }
+   
     public async Task BulkInsertReinsurranceQuarterlyAsync(List<ReinsurranceQuarterly> data)
     {
         var dt = new DataTable();

@@ -71,15 +71,6 @@ public class QuotationProcessController : BaseControllerApi<QuotationProcess>
         return obj;
     }
 
-    [HttpGet]
-    public async Task PullData()
-    {
-        //string query = "EXEC usp_rp_pending_request";
-        //List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomJogetQuery(query);
-
-        //var list = ConvertToQuotationProcessList(obj);
-        //await BulkInsertQuotationProcessAsync(list);
-    }
     public async Task BulkInsertQuotationProcessAsync(List<QuotationProcess> data)
     {
         var dt = new DataTable();

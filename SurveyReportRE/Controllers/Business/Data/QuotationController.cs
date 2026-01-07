@@ -22,9 +22,9 @@ using System.Net;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
-public class RecordIdTrackingController : BaseControllerApi<RecordIdTracking>
+public class QuotationController : BaseControllerApi<Quotation>
 {
-    private readonly IBaseRepository<RecordIdTracking> _BaseRepository;
+    private readonly IBaseRepository<Quotation> _BaseRepository;
     private readonly IConfiguration configuration;
     private readonly IBaseRepository<Survey> _surveyRepository;
     private readonly IBaseRepository<Attachment> _attachmentRepository;
@@ -41,7 +41,7 @@ public class RecordIdTrackingController : BaseControllerApi<RecordIdTracking>
     public static string DOMAIN_NAME = "";
     private static string BLOB_PATH = "";
     public static string CURRENT_USER = "";
-    public RecordIdTrackingController(IBaseRepository<RecordIdTracking> BaseRepository, IConfiguration config, IHttpContextAccessor httpContextAccessor, ILogger<RecordIdTracking> logger) : base(BaseRepository, httpContextAccessor)
+    public QuotationController(IBaseRepository<Quotation> BaseRepository, IConfiguration config, IHttpContextAccessor httpContextAccessor, ILogger<Quotation> logger) : base(BaseRepository, httpContextAccessor)
     {
         configuration = config;
         _BaseRepository = BaseRepository;
@@ -61,21 +61,35 @@ public class RecordIdTrackingController : BaseControllerApi<RecordIdTracking>
         BLOB_PATH = path.Value;
         CURRENT_USER = _httpContextAccessor.HttpContext.User.Identity.Name.Replace(DOMAIN_NAME, "");
     }
+
+   [HttpGet("{id}")]
+    public override async Task<ActionResult<Quotation>> PullData(string id)
+    {
+        string query = $"EXEC [usp_fd_quotation_process_pull] '{id}'";
+        List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomJogetQuery(query);
+
+        await base.PullData(id);
+        return Ok();
+    }
+
+
+
     [HttpPost]
     public override async Task<object> ExecuteCustomQuery([FromBody] string query)
     {
+
+        //query = "EXEC usp_fd_policy_issuance_request";
         List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomJogetQuery(query);
          
         return obj;
     }
 
- 
-    public async Task BulkInsertRecordIdTrackingAsync(List<RecordIdTracking> data)
+    public async Task BulkInsertQuotationAsync(List<Quotation> data)
     {
         var dt = new DataTable();
 
         // Khởi tạo cột (phải khớp DB)
-        foreach (var prop in typeof(RecordIdTracking).GetProperties())
+        foreach (var prop in typeof(Quotation).GetProperties())
         {
             dt.Columns.Add(prop.Name, typeof(string));
         }
@@ -84,7 +98,7 @@ public class RecordIdTrackingController : BaseControllerApi<RecordIdTracking>
         foreach (var item in data)
         {
             var row = dt.NewRow();
-            foreach (var prop in typeof(RecordIdTracking).GetProperties())
+            foreach (var prop in typeof(Quotation).GetProperties())
             {
                 row[prop.Name] = prop.GetValue(item) ?? DBNull.Value;
             }
@@ -96,7 +110,7 @@ public class RecordIdTrackingController : BaseControllerApi<RecordIdTracking>
         await connection.OpenAsync();
         using var bulkCopy = new SqlBulkCopy(connection)
         {
-            DestinationTableName = "dbo.RecordIdTracking", // Đảm bảo đúng tên bảng
+            DestinationTableName = "dbo.Quotation", // Đảm bảo đúng tên bảng
             BulkCopyTimeout = 60
         };
 
@@ -104,14 +118,14 @@ public class RecordIdTrackingController : BaseControllerApi<RecordIdTracking>
     }
 
 
-    public static List<RecordIdTracking> ConvertToRecordIdTrackingList(List<Dictionary<string, object>> rawData)
+    public static List<Quotation> ConvertToQuotationList(List<Dictionary<string, object>> rawData)
     {
-        var result = new List<RecordIdTracking>();
+        var result = new List<Quotation>();
 
         foreach (var dict in rawData)
         {
-            var obj = new RecordIdTracking();
-            foreach (var prop in typeof(RecordIdTracking).GetProperties())
+            var obj = new Quotation();
+            foreach (var prop in typeof(Quotation).GetProperties())
             {
                 var key = prop.Name;
                 if (key == "Id") continue;
