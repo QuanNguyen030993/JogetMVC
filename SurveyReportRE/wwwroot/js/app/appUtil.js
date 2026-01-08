@@ -4919,6 +4919,7 @@ function makeLCPreviewPictureObject(imageInstance, imgContainerSizeObject, imgSi
 
 }
 
+
 function userRender(users) {
     menuCountNotify("UserSession", users);
     const tbody = document.getElementById("tbody");
@@ -4939,11 +4940,11 @@ function userRender(users) {
                     <td>${escapeHtml(u.authType)}</td>
                     <td>${u.connections}</td>
                     <td>${escapeHtml(u.lastSeen)}</td>
+                    <td>${escapeHtml(u.connectionId)}</td>
                 `;
         tbody.appendChild(tr);
     }
-}
-function escapeHtml(s) {
+} function escapeHtml(s) {
     return (s ?? "").toString()
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")

@@ -11,14 +11,33 @@
 
    
 
-    var popupInstance = $(`#mainPopup`).dxPopup({
-                                        width: "95%",
-                                        height: "95%",
-                                        showTitle: true,
-                                        title: ``,
-                                        dragEnabled: false,
-                                        closeOnOutsideClick: true,
-                                        contentTemplate: function (container) {
+    // var popupInstance = $(`#mainPopup`).dxPopup({
+    //                                     width: "95%",
+    //                                     height: "95%",
+    //                                     showTitle: true,
+    //                                     title: ``,
+    //                                     dragEnabled: false,
+    //                                     closeOnOutsideClick: true,
+    //                                     contentTemplate: function (container) {
+    //                                             var contentDiv = $(`<div id="Plan">
+    //     <div width="100%" x="0" y="31" transform="translate(0,0)" text-anchor="middle"
+    //          style=" font-size: 28px; font-family: Segoe UI Light, Helvetica Neue Light, Segoe UI, Helvetica Neue, Trebuchet MS, Verdana, sans-serif; font-weight: 200; fill: rgb(35, 35, 35); cursor: default;text-align: center;">
+    //         Project timeline
+    //     </div>
+
+    // <div id="gantt" style="height:500px"></div>
+    //     </div><div style="display:flex">
+    //     <div>
+    //         <div id="scaleTypeGroup"></div>
+    //     </div>
+    //     <div>
+    //         <div id="ganttExport"></div>
+    //         <input type="file" id="excelFileHidden" accept=".xlsx" style="display:none" />
+    //         <div id="btnImportExcel"></div>
+    //         <div id="saveGantt"></div>
+    //     </div>
+    // </div>
+    // `).appendTo(container);
                                              var chartG =  $('#gantt').dxGantt({
         tasks: {
             dataSource: new Object(),
@@ -477,48 +496,40 @@
             }
         }
     })
-    var divCon = $("#Plan").appendTo($("<div>"))
-             divCon.appendTo(container);
-             // $("<div id='recallReason'>").dxTextArea({
-             //     dataField: "recallReason",
-             //     label: { text: "Reason", location: "top" },
-             //     height: "50%",
-             //     width: "100%",
-             // }).appendTo(container);
-             return container
-         },
-         onHiding: function (e) {
+     //         return container
+     //     },
+     //     onHiding: function (e) {
 
-         },
-         toolbarItems: [ {
-             widget: 'dxButton',
-             toolbar: 'bottom',
-             location: 'after',
-             options: {
-                 stylingMode: 'contained',
-                 type: 'normal',
-                 text: "Cancel",
-                 onClick() {
-                     popupInstance.hide();
-                 },
-             },
-         }]
+     //     },
+     //     toolbarItems: [ {
+     //         widget: 'dxButton',
+     //         toolbar: 'bottom',
+     //         location: 'after',
+     //         options: {
+     //             stylingMode: 'contained',
+     //             type: 'normal',
+     //             text: "Cancel",
+     //             onClick() {
+     //                 popupInstance.hide();
+     //             },
+     //         },
+     //     }]
 
-     }).dxPopup("instance");
-                                    popupInstance.show();
+     // }).dxPopup("instance");
+     //                                popupInstance.show();
 
 </script>
 
-<div id="Plan">
+ <div id="Plan">
     <div width="100%" x="0" y="31" transform="translate(0,0)" text-anchor="middle"
          style=" font-size: 28px; font-family: Segoe UI Light, Helvetica Neue Light, Segoe UI, Helvetica Neue, Trebuchet MS, Verdana, sans-serif; font-weight: 200; fill: rgb(35, 35, 35); cursor: default;text-align: center;">
         Project timeline
     </div>
     
 <div id="gantt" style="height:500px"></div>
-</div>
+</div> 
 
-<div style="display:flex">
+ <div style="display:flex">
     <div> 
         <div id="scaleTypeGroup"></div>
     </div>
@@ -529,3 +540,4 @@
         <div id="saveGantt"></div>
     </div>
 </div>
+ 
