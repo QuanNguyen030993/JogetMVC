@@ -1,24 +1,11 @@
 ﻿using DocumentFormat.OpenXml.Office2013.Excel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
-using Serilog;
-using SurveyReportRE.Common;
 using SurveyReportRE.Controllers.Base;
-using SurveyReportRE.ControllerUtil;
-using SurveyReportRE.Models.Base;
 using SurveyReportRE.Models.Migration.Business.Config;
-using SurveyReportRE.Models.Migration.Business.Data;
-using SurveyReportRE.Models.Migration.Business.Form;
-using SurveyReportRE.Models.Migration.Business.HumanResource;
-using SurveyReportRE.Models.Migration.Business.MasterData;
-using SurveyReportRE.Models.Migration.Business.Workflow;
-using SurveyReportRE.Models.Request;
-using SurveyReportRE.Repository;
-using Syncfusion.Pdf.Graphics;
 using System.Data;
-using System.Net;
+using SurveyReportRE.ControllerUtil;
+using SurveyReportRE.Common;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -27,11 +14,8 @@ public class QuotationController : BaseControllerApi<Quotation>
     private readonly IBaseRepository<Quotation> _BaseRepository;
     private readonly IConfiguration configuration;
     private readonly IBaseRepository<Survey> _surveyRepository;
-    private readonly IBaseRepository<Attachment> _attachmentRepository;
-    private readonly IBaseRepository<Employee> _employeeRepository;
+    private readonly IBaseRepository<SurveyReportRE.Models.Migration.Business.Data.Attachment> _attachmentRepository;
     private readonly IBaseRepository<Users> _usersRepository;
-    private readonly IBaseRepository<UserRoles> _userRolesRepository;
-    private readonly IBaseRepository<Roles> _rolesRepository;
     private readonly IConfigurationSection path;
     public static string MANAGER_APP = "";
     public static string APPROVER_APP = "";
@@ -41,16 +25,16 @@ public class QuotationController : BaseControllerApi<Quotation>
     public static string DOMAIN_NAME = "";
     private static string BLOB_PATH = "";
     public static string CURRENT_USER = "";
+    private static string spUserName = "";
+    private static string spPassword = "";
+    private static string MAPPING_PATH = "";
     public QuotationController(IBaseRepository<Quotation> BaseRepository, IConfiguration config, IHttpContextAccessor httpContextAccessor, ILogger<Quotation> logger) : base(BaseRepository, httpContextAccessor)
     {
         configuration = config;
         _BaseRepository = BaseRepository;
         _surveyRepository = new BaseRepository<Survey>(configuration, _httpContextAccessor);
-        _attachmentRepository = new BaseRepository<Attachment>(configuration, _httpContextAccessor);
-        _employeeRepository = new BaseRepository<Employee>(configuration, _httpContextAccessor);
+        _attachmentRepository = new BaseRepository<SurveyReportRE.Models.Migration.Business.Data.Attachment>(configuration, _httpContextAccessor);
         _usersRepository = new BaseRepository<Users>(configuration, _httpContextAccessor);
-        _userRolesRepository = new BaseRepository<UserRoles>(configuration, _httpContextAccessor);
-        _rolesRepository = new BaseRepository<Roles>(configuration, _httpContextAccessor);
         MANAGER_APP = configuration.GetSection("BusinessConfig:ManagerAppKey").Value;
         APPROVER_APP = configuration.GetSection("BusinessConfig:ApproverAppKey").Value;
         CHECKER_APP = configuration.GetSection("BusinessConfig:CheckerAppKey").Value;
@@ -58,15 +42,130 @@ public class QuotationController : BaseControllerApi<Quotation>
         SUPER_USER = configuration.GetSection("SuperUser:SuperUser").Value;
         DOMAIN_NAME = configuration.GetSection("Domain:DCServer").Value;
         path = _BaseRepository._baseConfiguration.GetSection("BlobStorage:Path");
+        MAPPING_PATH = _BaseRepository._baseConfiguration.GetSection("MigrationConfig:MappingField").Value;
         BLOB_PATH = path.Value;
         CURRENT_USER = _httpContextAccessor.HttpContext.User.Identity.Name.Replace(DOMAIN_NAME, "");
+        spUserName = configuration.GetSection("SharePoint:Username").Value;
+        spPassword = configuration.GetSection("SharePoint:Password").Value;
     }
 
    [HttpGet("{id}")]
     public override async Task<ActionResult<Quotation>> PullData(string id)
     {
-        string query = $"EXEC [usp_fd_quotation_process_pull] '{id}'";
-        List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomJogetQuery(query);
+        string excelPath = Path.Combine(BLOB_PATH, MAPPING_PATH);
+
+        DataSet ds = Util.ReadExcelFiles(excelPath);
+        DataTable? dtMigration = Util.GetTableBySheetName(ds,"Migration");
+        if (dtMigration != null)
+        {
+        // Ensure there are at least 2 columns
+
+        var col1Name = dtMigration.Columns[0].ColumnName;
+        var col2Name = dtMigration.Columns[1].ColumnName;
+
+        bool IsTrueLike(object? v)
+        {
+            if (v == null || v == DBNull.Value) return false;
+
+            // ExcelReader có thể trả bool, double, string...
+            if (v is bool b) return b;
+            if (v is double d) return Math.Abs(d - 1d) < 0.0000001; // 1 = TRUE
+            var s = v.ToString()?.Trim();
+            if (string.IsNullOrEmpty(s)) return false;
+
+            return s.Equals("true", StringComparison.OrdinalIgnoreCase)
+                || s.Equals("yes", StringComparison.OrdinalIgnoreCase)
+                || s.Equals("y", StringComparison.OrdinalIgnoreCase)
+                || s.Equals("1");
+        }
+
+        // Tạo table output chỉ gồm 2 cột
+        DataTable output = new DataTable($"{dtMigration.TableName}_Filtered");
+        output.Columns.Add(col1Name, typeof(string));
+        output.Columns.Add(col2Name, typeof(string));
+
+        foreach (DataRow r in dtMigration.Rows)
+            { 
+                if (!IsTrueLike(r["Query"])) continue;
+
+                output.Rows.Add(
+                    r[col1Name]?.ToString(),
+                    r[col2Name]?.ToString()
+                );
+
+            }
+            string query = Util.MakingSelectSql(
+               output,                         // DataTable đã filter Query = TRUE
+               "app_fd_tmiv_qp_m_qt",
+               "",
+               id
+            );
+
+            string pullingQuery = $"EXEC [usp_fd_quotation_process_pull] '{id}' , '{query}'";
+            string queryInsert = Util.MakingInsertSql(
+               output,                         // DataTable đã filter Query = TRUE
+               "",
+               "Quotation"
+            );
+            List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomJogetQuery(pullingQuery);
+            var built = Util.BuildInsertValuesSql(
+                targetTable: "Quotation",
+                mapping: output,         // cột1: sourceKey, cột2: targetCol
+                rows: obj,
+                ignoreCaseKeys: true,
+                skipRowsMissingAnyMappedField: false
+            );
+
+                // không có row hợp lệ
+
+            using var conn = new SqlConnection(_BaseRepository._connectionString);
+            await conn.OpenAsync();
+
+            using var cmd = new SqlCommand(built.Sql, conn);
+            cmd.Parameters.AddRange(built.Parameters.ToArray());
+
+            int affected = await cmd.ExecuteNonQueryAsync();
+
+            /// Attachment handle if in need
+
+        }
+
+
+        //SecureString theSecureString = new NetworkCredential(spUserName, spPassword).SecurePassword;
+
+        //SharePointOnlineCredentials onlineCredentials = new SharePointOnlineCredentials(spUserName, theSecureString);
+        //string myWebsiteUrl = "https://tokiomarinevn.sharepoint.com/:x:/r/sites/Jogettechnicaldocuments/_layouts/15/Doc.aspx?dtMigrationdoc=%7Bfc836aef-8fbf-4b7d-8118-6db3d8e1d45d%7D&action=edit&wdenableroaming=1&wdlcid=en-US&wdorigin=ItemsView&wdhostclicktime=1767835335974&wdredirectionreason=Force_SingleStepBoot&wdinitialsession=68cb23ed-0a45-e1b5-3d08-429011b3e4cd&wdrldsc=2&wdrldc=1&wdrldr=ContinueInExcel";
+        ////var authManager = new OfficeDevPnP.Core.AuthenticationManager();
+        //var authManager = new AuthenticationManager().GetACSAppOnlyContext(myWebsiteUrl, clientId, clientSecret));
+        //{
+        //    ClientContext ctx = authManager.GetWebLoginClientContext(myWebsiteUrl);
+        //    //ClientContext ctx = new ClientContext(myWebsiteUrl);
+        //    ctx.Credentials = onlineCredentials;
+        //    Web web = ctx.Web;
+        //    ctx.Load(web);
+        //    ctx.ExecuteQuery();
+        //    ctx.Load(ctx.Web, p => p.Title);
+        //    ctx.ExecuteQuery();
+        //}
+
+        //string siteUrl = "https://tenant.sharepoint.com/";
+        //using (var ctx = new OfficeDevPnP.Core.AuthenticationManager().GetWebLoginClientContext(myWebsiteUrl))
+        //{
+        //    ctx.Load(ctx.Web, p => p.Title);
+        //    ctx.ExecuteQuery();
+        //    Microsoft.SharePoint.Client.File file = ctx.Web.GetFileByUrl(myWebsiteUrl);
+        //    ctx.Load(file);
+        //    ctx.ExecuteQuery();
+        //    //string filepath = @"C:\temp\" + file.Name;
+        //    //Microsoft.SharePoint.Client.ClientResult<Stream> mstream = file.OpenBinaryStream();
+        //    //ctx.ExecuteQuery();
+
+        //};
+
+        // This method calls a pop up window with the login page and it also prompts 
+        // for the multi factor authentication code. 
+
+        //
 
         await base.PullData(id);
         return Ok();

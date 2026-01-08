@@ -377,7 +377,7 @@ function initTabs() {
 
                 if (dataGrid != null) {
                     //dataGrid.option("height", "100%");
-                    dataGrid.refresh();
+                    //dataGrid.refresh();
                 }
             } catch (err) {
                 appErrorHandling('Library error: call onTabActivate was failed.', err);

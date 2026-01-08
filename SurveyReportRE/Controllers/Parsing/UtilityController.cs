@@ -9,23 +9,17 @@ using SurveyReportRE.Controllers.Base;
 using SurveyReportRE.Models.Base;
 using SurveyReportRE.Models.Migration.Business.Config;
 using SurveyReportRE.Models.Request;
-using System.Dynamic;
 using System.Net;
-using System.Security.Claims;
-using System.Security.Principal;
-using SurveyReportRE.Models.Migration.Business.HumanResource;
-using SurveyReportRE.Common;
-using SurveyReportRE.Models.Migration.Business.Data;
-using MimeMapping;
-using Newtonsoft.Json.Linq;
-using SurveyReportRE.ControllerUtil;
-using SurveyReportRE.Models.Business.Migration.Config;
-using SurveyReportRE.Models.Migration.Config;
-using System.Reflection;
 using RESurveyTool.Models.Models.Parsing;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using System.Globalization;
+using SurveyReportRE.ControllerUtil;
+using SurveyReportRE.Common;
+
+
+
+
 namespace SurveyReportRE.Controllers.Config
 {
     [Route("api/[controller]/[action]")]
@@ -55,7 +49,7 @@ namespace SurveyReportRE.Controllers.Config
             string excelPath =
                 $@"{_blobStorageSettings.CurrentValue.Path}\StaticData\plan.xlsx";
 
-            using var stream1 = OpenExcelReadStream(excelPath);
+            using var stream1 = Util.OpenExcelReadStream(excelPath);
             var dependencies = ReadDependenciesFromStream(stream1, sheetName);
             return Ok(dependencies); // trả JSON đúng cho JS
             //return Ok(Base);
@@ -274,15 +268,7 @@ namespace SurveyReportRE.Controllers.Config
             var text = GetCellValue(wbPart, cells[idx]);
             return int.TryParse(text, out int v) ? v : 0;
         }
-        private static FileStream OpenExcelReadStream(string filePath)
-        {
-            return new FileStream(
-                filePath,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.ReadWrite // để không bị lock nếu file đang mở ở nơi khác
-            );
-        }
+        
 
         private static SpreadsheetDocument OpenSpreadsheetDocument(Stream stream)
         {

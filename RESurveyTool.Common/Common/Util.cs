@@ -17,6 +17,9 @@ using SurveyReportRE.Models.Migration.Business.MasterData;
 using System.Linq.Expressions;
 using System.Drawing.Imaging;
 using Microsoft.Data.SqlClient;
+using ExcelDataReader;
+using static SkiaSharp.HarfBuzz.SKShaper;
+using System.Globalization;
 namespace SurveyReportRE.Common
 {
     public static class Util
@@ -1416,6 +1419,249 @@ namespace SurveyReportRE.Common
                       .GetProperties()
                       .ToDictionary(prop => prop.Name, prop => prop.GetValue(obj, null));
         }
+        public static FileStream OpenExcelReadStream(string filePath)
+        {
+            return new FileStream(
+                filePath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.ReadWrite // để không bị lock nếu file đang mở ở nơi khác
+            );
+        }
+
+        // Source - https://stackoverflow.com/a
+        // Posted by Tim Schmelter, modified by community. See post 'Timeline' for change history
+        // Retrieved 2026-01-08, License - CC BY-SA 3.0
+
+        public static DataSet ReadExcelFiles(string filePath, bool useHeaderRow = true)
+        {
+            // Required for .NET Core to handle various encodings (xls)
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read))
+            using (var reader = ExcelReaderFactory.CreateReader(stream))
+            {
+                var result = reader.AsDataSet(new ExcelDataSetConfiguration
+                {
+                    ConfigureDataTable = _ => new ExcelDataTableConfiguration
+                    {
+                        UseHeaderRow = useHeaderRow
+                    }
+                });
+
+                return result;
+            }
+        }
+        public static DataTable? GetTableBySheetName(DataSet ds, string sheetName, bool ignoreCase = true)
+        {
+            if (ds == null || ds.Tables.Count == 0) return null;
+
+            if (!ignoreCase) return ds.Tables.Contains(sheetName) ? ds.Tables[sheetName] : null;
+
+            // case-insensitive lookup
+            return ds.Tables
+                     .Cast<DataTable>()
+                     .FirstOrDefault(t => string.Equals(t.TableName, sheetName, StringComparison.OrdinalIgnoreCase));
+        }
+        public static string MakingSelectSql(
+            DataTable mappingTable,
+            string sourceTable,
+            string targetTable,
+            string idValue)
+                {
+                        var sourceFields = new List<string>();
+                        var targetFields = new List<string>();
+
+                        foreach (DataRow r in mappingTable.Rows)
+                        {
+                            sourceFields.Add(r[0].ToString()!); // cột 1
+                            targetFields.Add(r[1].ToString()!); // cột 2
+                        }
+
+                        return $@"
+            SELECT {string.Join(", ", sourceFields)}
+            FROM {sourceTable}
+            WHERE c_jogetQuoNum = ''{idValue}''
+            ".Trim();
+        }
+
+        public static string MakingInsertSql(
+            DataTable mappingTable,
+            string sourceTable,
+            string targetTable)
+        {
+            var sourceFields = new List<string>();
+            var targetFields = new List<string>();
+
+            foreach (DataRow r in mappingTable.Rows)
+            {
+                sourceFields.Add(r[0].ToString()!); // cột 1
+                targetFields.Add(r[1].ToString()!); // cột 2
+            }
+
+            return $@"
+            INSERT INTO {targetTable} ({string.Join(", ", targetFields)})
+             ";
+        }
+        public sealed class BuiltSql
+        {
+            public string Sql { get; init; } = "";
+            public List<SqlParameter> Parameters { get; init; } = new();
+            public int RowCount { get; init; }
+            public int ColumnCount { get; init; }
+        }
+
+        /// <summary>
+        /// mapping: cột 1 = sourceField (key trong Dictionary), cột 2 = targetField (cột DB)
+        /// rows: list dictionary từ ExecuteCustomJogetQuery
+        /// </summary>
+        public static BuiltSql BuildInsertValuesSql(
+            string targetTable,
+            DataTable mapping,
+            List<Dictionary<string, object>> rows,
+            bool ignoreCaseKeys = true,
+            bool skipRowsMissingAnyMappedField = false)
+        {
+            if (string.IsNullOrWhiteSpace(targetTable)) throw new ArgumentNullException(nameof(targetTable));
+            if (mapping == null) throw new ArgumentNullException(nameof(mapping));
+            if (rows == null) throw new ArgumentNullException(nameof(rows));
+            if (rows.Count == 0) return new BuiltSql { Sql = "", RowCount = 0, ColumnCount = 0 };
+
+            // 1) Chuẩn hoá mapping
+            var mapPairs = mapping.Rows.Cast<DataRow>()
+                .Select(r => new
+                {
+                    Source = (r[0]?.ToString() ?? "").Trim(),
+                    Target = (r[1]?.ToString() ?? "").Trim()
+                })
+                .Where(x => !string.IsNullOrWhiteSpace(x.Source) && !string.IsNullOrWhiteSpace(x.Target))
+                .ToList();
+
+            if (mapPairs.Count == 0)
+                throw new InvalidOperationException("Mapping table không có dòng hợp lệ (cột 1/2 rỗng).");
+
+            // 2) Key comparer cho Dictionary
+            StringComparer cmp = ignoreCaseKeys ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+
+            // 3) Chọn “target columns” theo mapping, giữ đúng thứ tự mapping
+            var targetColumns = mapPairs.Select(x => x.Target).ToList();
+
+            // 4) Build VALUES rows + parameters
+            var parameters = new List<SqlParameter>();
+            var valuesRowsSql = new List<string>();
+
+            int rowIndex = 0;
+            foreach (var row in rows)
+            {
+                // Bọc lại dictionary để lookup ignoreCase ổn định
+                var dict = (row is Dictionary<string, object> d && d.Comparer.Equals(cmp))
+                    ? d
+                    : new Dictionary<string, object>(row, cmp);
+
+                // optional: bỏ qua row nếu thiếu field quan trọng
+                if (skipRowsMissingAnyMappedField)
+                {
+                    bool missing = mapPairs.Any(p => !dict.ContainsKey(p.Source));
+                    if (missing) continue;
+                }
+
+                var oneRowPlaceholders = new List<string>();
+
+                for (int colIndex = 0; colIndex < mapPairs.Count; colIndex++)
+                {
+                    var p = mapPairs[colIndex];
+                    string paramName = $"@p_{rowIndex}_{colIndex}";
+
+                    object? raw = dict.TryGetValue(p.Source, out var v) ? v : null;
+                    object dbValue = NormalizeToDbValue(raw);
+
+                    // Tạo parameter (SqlParameter tự infer type là được trong nhiều case)
+                    var sp = new SqlParameter(paramName, dbValue ?? DBNull.Value);
+                    parameters.Add(sp);
+
+                    oneRowPlaceholders.Add(paramName);
+                }
+
+                valuesRowsSql.Add("(" + string.Join(", ", oneRowPlaceholders) + ")");
+                rowIndex++;
+            }
+
+            if (valuesRowsSql.Count == 0)
+                return new BuiltSql { Sql = "", Parameters = parameters, RowCount = 0, ColumnCount = mapPairs.Count };
+
+            string sql = $@"
+INSERT INTO {targetTable} ({string.Join(", ", targetColumns)})
+VALUES
+{string.Join(",\n", valuesRowsSql)};
+".Trim();
+
+            return new BuiltSql
+            {
+                Sql = sql,
+                Parameters = parameters,
+                RowCount = valuesRowsSql.Count,
+                ColumnCount = mapPairs.Count
+            };
+        }
+
+        private static object NormalizeToDbValue(object? v)
+        {
+            if (v == null || v == DBNull.Value) return DBNull.Value;
+
+            // Excel/Joget hay trả string "TRUE"/"FALSE", "1"/"0"
+            if (v is string s)
+            {
+                s = s.Trim();
+
+                if (string.Equals(s, "NULL", StringComparison.OrdinalIgnoreCase)) return DBNull.Value;
+
+                // bool-like
+                if (string.Equals(s, "TRUE", StringComparison.OrdinalIgnoreCase)) return true;
+                if (string.Equals(s, "FALSE", StringComparison.OrdinalIgnoreCase)) return false;
+
+                // số (optional)
+                if (decimal.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var dec))
+                    return dec;
+
+                // datetime (optional)
+                if (DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dt))
+                    return dt;
+
+                return s;
+            }
+
+            return v;
+        }
+
+        public static DataTable ReadExcelFile(string filePath)
+        {
+            // Required for .NET Core to handle various encodings
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read))
+            {
+                // Auto-detect the file type (xls or xlsx)
+                using (var reader = ExcelReaderFactory.CreateReader(stream))
+                {
+                    // Configure the data set to use the first row as column headers
+                    var result = reader.AsDataSet(new ExcelDataSetConfiguration()
+                    {
+                        ConfigureDataTable = _ => new ExcelDataTableConfiguration()
+                        {
+                            UseHeaderRow = true
+                        }
+                    });
+
+                    // Return the first sheet as a DataTable
+                    if (result.Tables.Count > 0)
+                    {
+                        return result.Tables[0];
+                    }
+                }
+            }
+            return null;
+        }
+
     }
     public enum CommandQueryType
     {

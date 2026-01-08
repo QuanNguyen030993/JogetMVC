@@ -37,6 +37,8 @@
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.8" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
+		<PackageReference Include="Microsoft.SharePoint.Client" Version="14.0.4762.1000" />
+		<PackageReference Include="Microsoft.SharePoint.Client.Online.CSOM" Version="15.0.4919.1000" />
 		<PackageReference Include="MimeMapping" Version="3.0.1" />
 		<PackageReference Include="MiniWord" Version="0.8.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
