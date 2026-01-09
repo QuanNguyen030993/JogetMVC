@@ -5,17 +5,15 @@ using SurveyReportRE.Pages;
 
 namespace SurveyReportRE.Pages
 {
-    public class Quotation_FormModel : PageModel
+    public class PullQuotation_FormModel : PageModel
     {
-        //private readonly ILogger<Quotation_FormModel> _logger;
         public static string ModelName { get; set; } = ""; 
         private static string Id {get; set;}
        
 
 
-        public Quotation_FormModel(ILogger<Quotation_FormModel> logger, IConfiguration configuration)
+        public PullQuotation_FormModel(ILogger<PullQuotation_FormModel> logger, IConfiguration configuration)
         {
-            //_logger = logger;
         }
         public void OnGet(int? pageNum)
         {
@@ -23,7 +21,7 @@ namespace SurveyReportRE.Pages
             {
                 
             }
-            ModelName = "Quotation";
+            ModelName = "PullQuotation";
             ViewData[nameof(Id)] = pageNum ?? 0;
         }
     }

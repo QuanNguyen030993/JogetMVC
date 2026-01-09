@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace RESurveyTool.Models.Models.Parsing
 {
-    public class GrantSurvey
+    public class GrantQuotation
     {
         public List<Users> GrantUsers { get; set; } = new List<Users>();
     }

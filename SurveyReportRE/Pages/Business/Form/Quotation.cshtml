@@ -1,5 +1,5 @@
-﻿@* @page
-@model SurveyModel
+﻿@page
+@model QuotationModel
 @{
 
 }
@@ -7,11 +7,10 @@
     $(function () {
         var mGridOption = new Object();
         mGridOption.isAllowRowMenu = true;
-        var mGrid = new MGrid(null, $(`#dataGrid_@SurveyModel.ModelName`), new SurveyGridOption('@SurveyModel.ModelName', "User", mGridOption), null);
+        var mGrid = new MGrid(null, $(`#dataGrid_@QuotationModel.ModelName`), new QuotationGridOption('@QuotationModel.ModelName', "User", mGridOption), null);
         var DS = mGrid.component.getDataSource();
         DS.filter(["isArchived", "=", null], "or", ["isArchived", "=", false]);
         mGrid.component.option("dataSource", DS);
     });
 </script>
-<div id="dataGrid_@SurveyModel.ModelName"></div>
- *@
+<div id="dataGrid_@QuotationModel.ModelName"></div>

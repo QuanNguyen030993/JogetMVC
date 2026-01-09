@@ -1,9 +1,9 @@
 ﻿@page "{pageNum:int?}"
 @using Newtonsoft.Json
-@model Quotation_FormModel
+@model PullQuotation_FormModel
 @{
     ViewData["Title"] = "Management";
-    ViewBag.Title = "Quotation";
+    ViewBag.Title = "PullQuotation";
 }
 <style>
     .dx-tabpanel .dx-tabpanel-tabs .dx-tab {
@@ -18,14 +18,14 @@
                         .dxPopup({
                             width: "40%",
                             height: "70%",
-                            title: "Input Quotation No",
+                            title: "Input PullQuotation No",
                             showTitle: true,
                             dragEnabled: true,
                             closeOnOutsideClick: true,
                             contentTemplate: function (contentElement) {
                                 $("<div>").dxForm({
                                     items: [
-                                        { dataField: "quotationNo", label: { text: "Quotation No" }, editorOptions: { placeholder: "Enter Quotation No" } },
+                                        { dataField: "quotationNo", label: { text: "PullQuotation No" }, editorOptions: { placeholder: "Enter PullQuotation No" } },
                                     ]
                                 }).appendTo(contentElement);
 
@@ -36,7 +36,7 @@
                                     onClick: function () {
                                         var data = contentElement.find(".dx-form").dxForm("instance").option("formData");
                                         $.ajax({
-                                            url: `/api/Quotation/PullData/${data.quotationNo}`,
+                                            url: `/api/PullQuotation/PullData/${data.quotationNo}`,
                                             success: function (response) {
                                                 appNotifySuccess("Process done!", false);
                                             },
@@ -60,10 +60,10 @@
 </script>
 <div class="container">
     <div id="detailPopup"></div>
-    <div id="form_@(Quotation_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])" class="dExForm"></div>
+    <div id="form_@(PullQuotation_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])" class="dExForm"></div>
 
 
-    <div class="modal fade product-dialog" tabQuotation="-1" role="dialog" aria-labelledby="gridSystemModalLabel">
+    <div class="modal fade product-dialog" tabPullQuotation="-1" role="dialog" aria-labelledby="gridSystemModalLabel">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
