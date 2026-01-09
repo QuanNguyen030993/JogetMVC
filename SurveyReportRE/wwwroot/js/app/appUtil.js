@@ -4932,7 +4932,6 @@ function userRender(users) {
         tbody.innerHTML = `<tr><td colspan="4">No one online</td></tr>`;
         return;
     }
-
     for (const u of users) {
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -4970,54 +4969,8 @@ function menuCountNotify(menuName, object)
 
 }
 
-function userRender(users) {
-    menuCountNotify("UserSession", users);
-    const tbody = document.getElementById("tbody");
-    if (tbody == null) return;
-    const countEl = document.getElementById("count");
-    if (countEl == null) return;
-    countEl.textContent = users.length;
-    tbody.innerHTML = "";
-    if (!users || users.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4">No one online</td></tr>`;
-        return;
-    }
 
-    for (const u of users) {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-                    <td>${escapeHtml(u.user)}</td>
-                    <td>${escapeHtml(u.authType)}</td>
-                    <td>${u.connections}</td>
-                    <td>${escapeHtml(u.lastSeen)}</td>
-                `;
-        tbody.appendChild(tr);
-    }
-}
-function escapeHtml(s) {
-    return (s ?? "").toString()
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
 
-function menuCountNotify(menuName, object) {
-    switch (menuName) {
-        case "UserSession":
-            {
-                var notifyElement = $(`[data-name=Count_UserSession]`);
-                notifyElement.css({ "display": "block" });
-                notifyElement.text(object.length);
-                break;
-            }
-
-        default:
-            break;
-    }
-
-}
 
 function showNotificationDot() {
     const $icon = $("#notificationBtn");

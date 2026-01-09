@@ -67,16 +67,6 @@ public class FileProcessingHub : Hub
 
         return Context.ConnectionId;
     }
-    public async Task RenderSurveyTabNotCompleted(string TabName)
-    {
-        await Clients.Caller.SendAsync("RenderSurveyTabNotCompleted", TabName);
-
-    }
-    public async Task SubmitRecallVisible(string connectionId, long? id)
-    {
-        await Clients.Caller.SendAsync("SubmitRecallVisible", connectionId);
-
-    }
 }
 
 public record OnlineUserDto(string User, string AuthType, int Connections, DateTimeOffset LastSeen, string ConnectionId);
