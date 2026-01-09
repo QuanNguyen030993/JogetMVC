@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using SurveyReportRE.Pages;
+using ERPCore.Pages;
 
-namespace SurveyReportRE.Pages
+namespace ERPCore.Pages
 {
     public class PullQuotation_FormModel : PageModel
     {

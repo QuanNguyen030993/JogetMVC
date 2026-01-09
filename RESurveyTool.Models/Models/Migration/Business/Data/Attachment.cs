@@ -1,6 +1,6 @@
-﻿using SurveyReportRE.Models.Migration.Base;
-using SurveyReportRE.Models.Migration.Business.Form;
-using SurveyReportRE.Models.Migration.Business.MasterData;
+﻿using ERPCore.Models.Migration.Base;
+using ERPCore.Models.Migration.Business.Form;
+using ERPCore.Models.Migration.Business.MasterData;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SurveyReportRE.Models.Migration.Business.Data
+namespace ERPCore.Models.Migration.Business.Data
 {
     public class Attachment : BaseModel
     {

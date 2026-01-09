@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace SurveyReportRE.Pages
+namespace ERPCore.Pages
 {
     public class HomeModel : PageModel
     {

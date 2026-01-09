@@ -1,5 +1,5 @@
 ﻿
-namespace SurveyReportRE.Models.Request
+namespace ERPCore.Models.Request
 {
     public class MenuHierarchy
     {

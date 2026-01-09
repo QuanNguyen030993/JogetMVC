@@ -1,7 +1,7 @@
-﻿using SurveyReportRE.Models.Migration.Business.Config;
-using SurveyReportRE.Models.Migration.Config;
+﻿using ERPCore.Models.Migration.Business.Config;
+using ERPCore.Models.Migration.Config;
 
-namespace SurveyReportRE.Models.Base
+namespace ERPCore.Models.Base
 {
     public class ADUser : Users
     {

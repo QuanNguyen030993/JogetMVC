@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace SurveyReportRE.Models.Migration.Base
+namespace ERPCore.Models.Migration.Base
 {
     public class BaseModel
     {

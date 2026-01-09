@@ -5,13 +5,13 @@
 //using System.Reflection.Metadata.Ecma335;
 //using System.Text;
 //using System.Threading.Tasks;
-//using SurveyReportRE.Models.Migration.Base;
-//using SurveyReportRE.Models.Migration.Business.Data;
-//using SurveyReportRE.Models.Migration.Business.MasterData;
-//using SurveyReportRE.Models.Migration.Business.Workflow;
-//using SurveyReportRE.Models.Migration.Config;
+//using ERPCore.Models.Migration.Base;
+//using ERPCore.Models.Migration.Business.Data;
+//using ERPCore.Models.Migration.Business.MasterData;
+//using ERPCore.Models.Migration.Business.Workflow;
+//using ERPCore.Models.Migration.Config;
 
-//namespace SurveyReportRE.Models.Migration.Business.Form
+//namespace ERPCore.Models.Migration.Business.Form
 //{
 //    public class Survey : BaseModel
 //    {

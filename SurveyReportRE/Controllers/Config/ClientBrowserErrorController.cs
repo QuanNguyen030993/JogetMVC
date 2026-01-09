@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Serilog;
-using SurveyReportRE.Controllers.Base;
-using SurveyReportRE.Models.Business.Migration.Config;
-using SurveyReportRE.Models.Request;
+using ERPCore.Controllers.Base;
+using ERPCore.Models.Business.Migration.Config;
+using ERPCore.Models.Request;
 
 [ApiController]
 [Route("api/[controller]/[action]")]

@@ -1,7 +1,7 @@
-﻿using SurveyReportRE.Models.Migration.Base;
+﻿using ERPCore.Models.Migration.Base;
 using System.ComponentModel.DataAnnotations;
 
-namespace SurveyReportRE.Models.Migration.Config
+namespace ERPCore.Models.Migration.Config
 {
     public class HttpRequestAuditLog : BaseModel
     {

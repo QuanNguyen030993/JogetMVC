@@ -1,4 +1,4 @@
-﻿namespace SurveyReportRE.Models.Base
+﻿namespace ERPCore.Models.Base
 {
     public class BlobStorageSettings
     {

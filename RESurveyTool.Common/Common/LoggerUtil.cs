@@ -5,10 +5,10 @@ using Serilog;
 using Serilog.Debugging;
 using System.Linq.Expressions;
 using Serilog.Events;
-using SurveyReportRE.Common;
-using RESurveyTool.Models.Models.Base;
+using ERPCore.Common;
+using ERPCore.Models.Models.Base;
 
-namespace RESurveyTool.Common
+namespace ERPCore.Common
 {
     public static class LoggerUtil
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RESurveyTool.Models.Config
+namespace ERPCore.Models.Config
 {
     public class TemplateUsing
     {

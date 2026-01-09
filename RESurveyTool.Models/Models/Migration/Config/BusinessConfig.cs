@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SurveyReportRE.Models.Business.Migration.Config
+namespace ERPCore.Models.Business.Migration.Config
 {
     public class BusinessConfig
     {

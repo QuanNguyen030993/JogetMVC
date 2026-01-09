@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Serilog.Context;
-using SurveyReportRE.Models.Migration.Business.Config;
+using ERPCore.Models.Migration.Business.Config;
 using System.Security.Claims;
 
 public class CookieImpersonationMiddleware

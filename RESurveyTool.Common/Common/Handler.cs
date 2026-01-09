@@ -1,4 +1,4 @@
-﻿using RESurveyTool.Models.Models.Base;
+﻿using ERPCore.Models.Models.Base;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RESurveyTool.Common.Common
+namespace ERPCore.Common.Common
 {
     public static class Handler
     {

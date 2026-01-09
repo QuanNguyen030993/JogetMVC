@@ -1,4 +1,4 @@
-using SurveyReportRE.Models.Migration.Base;
+using ERPCore.Models.Migration.Base;
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
 

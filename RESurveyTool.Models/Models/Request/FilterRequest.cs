@@ -1,6 +1,6 @@
 ﻿using System.Data;
 
-namespace SurveyReportRE.Models.Request
+namespace ERPCore.Models.Request
 {
     public class FilterRequest
     {

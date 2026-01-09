@@ -3,7 +3,7 @@
 ////using DocumentFormat.OpenXml.Drawing.Wordprocessing;
 ////using DocumentFormat.OpenXml.Drawing;
 
-//namespace SurveyReportRE.Models.Migration.Base
+//namespace ERPCore.Models.Migration.Base
 //{
 //    public static class Render
 //    {

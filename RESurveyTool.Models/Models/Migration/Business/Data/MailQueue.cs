@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using SurveyReportRE.Models.Migration.Base;
-namespace SurveyReportRE.Models.Migration.Business.Data
+using ERPCore.Models.Migration.Base;
+namespace ERPCore.Models.Migration.Business.Data
 {
     public class MailQueue : BaseModel
     {

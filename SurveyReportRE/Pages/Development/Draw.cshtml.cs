@@ -2,11 +2,11 @@ using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
-using RESurveyTool.Models.Models.Parsing;
-using SurveyReportRE.Models.Migration.Business.Data;
-using SurveyReportRE.Models.Migration.Business.Form;
+using ERPCore.Models.Models.Parsing;
+using ERPCore.Models.Migration.Business.Data;
+using ERPCore.Models.Migration.Business.Form;
 
-namespace SurveyReportRE.Pages
+namespace ERPCore.Pages
 {
     public class DrawModel : PageModel
     {

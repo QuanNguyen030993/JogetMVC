@@ -1,8 +1,8 @@
 ﻿using Microsoft.Data.SqlClient;
-using RESurveyTool.Common.Common;
+using ERPCore.Common.Common;
 using System.Data;
 
-namespace SurveyReportRE.Common
+namespace ERPCore.Common
 {
     public static class DataUtil
     {

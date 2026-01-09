@@ -1,26 +1,26 @@
 ﻿using Newtonsoft.Json;
-using SurveyReportRE.Models.Migration.Business.Data;
-using SurveyReportRE.Models.Migration.Config;
+using ERPCore.Models.Migration.Business.Data;
+using ERPCore.Models.Migration.Config;
 using System.Reflection;
 using HtmlAgilityPack;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
 using System.Text;
-using SurveyReportRE.Models.Request;
+using ERPCore.Models.Request;
 using Newtonsoft.Json.Linq;
 using System.Data;
 using System.Drawing;
-using RESurveyTool.Common.Constant;
-using SurveyReportRE.Models.Migration.Business.HumanResource;
-using SurveyReportRE.Models.Migration.Business.Config;
-using SurveyReportRE.Models.Migration.Business.MasterData;
+using ERPCore.Common.Constant;
+using ERPCore.Models.Migration.Business.HumanResource;
+using ERPCore.Models.Migration.Business.Config;
+using ERPCore.Models.Migration.Business.MasterData;
 using System.Linq.Expressions;
 using System.Drawing.Imaging;
 using Microsoft.Data.SqlClient;
 using ExcelDataReader;
 using static SkiaSharp.HarfBuzz.SKShaper;
 using System.Globalization;
-namespace SurveyReportRE.Common
+namespace ERPCore.Common
 {
     public static class Util
     {

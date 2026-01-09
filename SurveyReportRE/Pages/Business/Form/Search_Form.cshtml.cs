@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using SurveyReportRE.Models.Migration.Business.Form;
+using ERPCore.Models.Migration.Business.Form;
 
-namespace SurveyReportRE.Pages
+namespace ERPCore.Pages
 {
     public class Search_FormModel : PageModel
     {

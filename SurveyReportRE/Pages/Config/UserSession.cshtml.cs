@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using RESurveyTool.Models.Models.Parsing;
-using SurveyReportRE.Models.Migration.Business.Config;
+using ERPCore.Models.Models.Parsing;
+using ERPCore.Models.Migration.Business.Config;
 
-namespace SurveyReportRE.Pages
+namespace ERPCore.Pages
 {
     public class UserSessionModel : PageModel
     {

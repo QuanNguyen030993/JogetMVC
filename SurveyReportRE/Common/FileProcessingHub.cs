@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
-using SurveyReportRE.Models.Migration.Config;
+using ERPCore.Models.Migration.Config;
 
 public class FileProcessingHub : Hub
 {

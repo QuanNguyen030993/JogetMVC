@@ -1,11 +1,11 @@
 ﻿using DocumentFormat.OpenXml.Office2013.Excel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
-using SurveyReportRE.Controllers.Base;
-using SurveyReportRE.Models.Migration.Business.Config;
+using ERPCore.Controllers.Base;
+using ERPCore.Models.Migration.Business.Config;
 using System.Data;
-using SurveyReportRE.ControllerUtil;
-using SurveyReportRE.Common;
+using ERPCore.ControllerUtil;
+using ERPCore.Common;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -14,7 +14,7 @@ public class QuotationController : BaseControllerApi<Quotation>
     private readonly IBaseRepository<Quotation> _BaseRepository;
     private readonly IConfiguration configuration;
     private readonly IBaseRepository<Survey> _surveyRepository;
-    private readonly IBaseRepository<SurveyReportRE.Models.Migration.Business.Data.Attachment> _attachmentRepository;
+    private readonly IBaseRepository<ERPCore.Models.Migration.Business.Data.Attachment> _attachmentRepository;
     private readonly IBaseRepository<Users> _usersRepository;
     private readonly IConfigurationSection path;
     public static string MANAGER_APP = "";
@@ -33,7 +33,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         configuration = config;
         _BaseRepository = BaseRepository;
         _surveyRepository = new BaseRepository<Survey>(configuration, _httpContextAccessor);
-        _attachmentRepository = new BaseRepository<SurveyReportRE.Models.Migration.Business.Data.Attachment>(configuration, _httpContextAccessor);
+        _attachmentRepository = new BaseRepository<ERPCore.Models.Migration.Business.Data.Attachment>(configuration, _httpContextAccessor);
         _usersRepository = new BaseRepository<Users>(configuration, _httpContextAccessor);
         MANAGER_APP = configuration.GetSection("BusinessConfig:ManagerAppKey").Value;
         APPROVER_APP = configuration.GetSection("BusinessConfig:ApproverAppKey").Value;

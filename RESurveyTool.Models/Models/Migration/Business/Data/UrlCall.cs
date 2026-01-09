@@ -1,8 +1,8 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using SurveyReportRE.Models.Migration.Base;
+using ERPCore.Models.Migration.Base;
 
-namespace SurveyReportRE.Models.Migration.Business.Data
+namespace ERPCore.Models.Migration.Business.Data
 {
     public class UrlCall : BaseModel
     {

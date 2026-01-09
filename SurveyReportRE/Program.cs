@@ -2,14 +2,14 @@ using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
-using RESurveyTool.Models.Config;
+using ERPCore.Models.Config;
 using SautinSoft.Document;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.MSSqlServer;
-using SurveyReportRE.Controllers.Base;
-using SurveyReportRE.Models.Base;
-using SurveyReportRE.Models.Business.Migration.Config;
+using ERPCore.Controllers.Base;
+using ERPCore.Models.Base;
+using ERPCore.Models.Business.Migration.Config;
 using Syncfusion.Licensing;
 
 var builder = WebApplication.CreateBuilder(args);

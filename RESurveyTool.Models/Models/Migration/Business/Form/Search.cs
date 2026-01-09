@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
-using SurveyReportRE.Models.Migration.Base;
-namespace SurveyReportRE.Models.Migration.Business.Form
+using ERPCore.Models.Migration.Base;
+namespace ERPCore.Models.Migration.Business.Form
 {
     public class Search : BaseModel
     {

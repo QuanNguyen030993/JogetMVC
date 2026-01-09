@@ -6,18 +6,18 @@ using DocumentFormat.OpenXml.Drawing.Diagrams;
 using DocumentFormat.OpenXml.Office2010.PowerPoint;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
-using RESurveyTool.Common.Common;
-using SurveyReportRE.Models.Migration.Business.Form;
+using ERPCore.Common.Common;
+using ERPCore.Models.Migration.Business.Form;
 using System.Configuration;
 
 
 //Survey survey = new Survey();
 //survey.Id = 315;
 //survey.SurveyNo = "SVRE.0225.259";
-//string PATH_TEMPLATE = "D:\\Source\\MySource\\TMIVReport\\TMIVReport\\SurveyReportRE\\bin\\Debug\\Attachment\\Template\\RE_Survey_Template_20250220.docx";
-//string BLOB_PATH = "D:\\Source\\MySource\\TMIVReport\\TMIVReport\\SurveyReportRE\\bin\\Debug\\Attachment";
-//string ConnectionString = "Persist Security Info=True;Server=.\\SQLSERVER2022;Database=RESurveyTool;uid=sa;pwd=password@123;Connection Timeout=60;MultipleActiveResultSets=true;TrustServerCertificate=True;";
-//string NO_IMAGE = "D:\\Source\\MySource\\TMIVReport\\TMIVReport\\SurveyReportRE\\bin\\Debug\\Attachment\\System\\No_Image_Available.jpg";
+//string PATH_TEMPLATE = "D:\\Source\\MySource\\TMIVReport\\TMIVReport\\ERPCore\\bin\\Debug\\Attachment\\Template\\RE_Survey_Template_20250220.docx";
+//string BLOB_PATH = "D:\\Source\\MySource\\TMIVReport\\TMIVReport\\ERPCore\\bin\\Debug\\Attachment";
+//string ConnectionString = "Persist Security Info=True;Server=.\\SQLSERVER2022;Database=ERPCore;uid=sa;pwd=password@123;Connection Timeout=60;MultipleActiveResultSets=true;TrustServerCertificate=True;";
+//string NO_IMAGE = "D:\\Source\\MySource\\TMIVReport\\TMIVReport\\ERPCore\\bin\\Debug\\Attachment\\System\\No_Image_Available.jpg";
 
 string path = "D:\\Example\\Reading.docx";
 string OutputPath = "D:\\Example\\Result";
@@ -141,8 +141,8 @@ catch (Exception ex)
 
 }
 
-//string inputPath = "D:\\Source\\MySource\\TMIVReport\\TMIVReport\\SurveyReportRE\\bin\\Debug\\Attachment\\Survey\\SVRE.0225.259.docx";
-//string outputPath = "D:\\Source\\MySource\\TMIVReport\\TMIVReport\\SurveyReportRE\\bin\\Debug\\Attachment\\Survey\\SVRE.0225.259_output.docx";
+//string inputPath = "D:\\Source\\MySource\\TMIVReport\\TMIVReport\\ERPCore\\bin\\Debug\\Attachment\\Survey\\SVRE.0225.259.docx";
+//string outputPath = "D:\\Source\\MySource\\TMIVReport\\TMIVReport\\ERPCore\\bin\\Debug\\Attachment\\Survey\\SVRE.0225.259_output.docx";
 //File.Copy(inputPath, outputPath, true);
 
 //using (WordprocessingDocument checkTables = WordprocessingDocument.Open(outputPath, true))
@@ -204,8 +204,8 @@ catch (Exception ex)
 
 //Application wordApp = new Application();
 //Document wordDoc = null;
-//string wordPath = "D:\\Source\\MySource\\TMIVReport\\TMIVReport\\SurveyReportRE\\bin\\Debug\\net8.0\\Attachment\\Survey\\SVRE.1124.122.docx";
-//string pdfOutputPath = "D:\\Source\\MySource\\TMIVReport\\TMIVReport\\SurveyReportRE\\bin\\Debug\\net8.0\\Attachment\\Survey\\SVRE.1124.122_Convert.pdf";
+//string wordPath = "D:\\Source\\MySource\\TMIVReport\\TMIVReport\\ERPCore\\bin\\Debug\\net8.0\\Attachment\\Survey\\SVRE.1124.122.docx";
+//string pdfOutputPath = "D:\\Source\\MySource\\TMIVReport\\TMIVReport\\ERPCore\\bin\\Debug\\net8.0\\Attachment\\Survey\\SVRE.1124.122_Convert.pdf";
 //try
 //{
 //    // Mở tài liệu Word

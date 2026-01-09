@@ -2,17 +2,17 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using SurveyReportRE.Common;
-using SurveyReportRE.Controllers.Base;
-using SurveyReportRE.Models;
-using SurveyReportRE.Models.Base;
-using SurveyReportRE.Models.Migration.Business.HumanResource;
-using SurveyReportRE.Models.Request;
-using SurveyReportRE.Pages;
+using ERPCore.Common;
+using ERPCore.Controllers.Base;
+using ERPCore.Models;
+using ERPCore.Models.Base;
+using ERPCore.Models.Migration.Business.HumanResource;
+using ERPCore.Models.Request;
+using ERPCore.Pages;
 using System.IO;
 using System.Transactions;
 using static System.Net.Mime.MediaTypeNames;
-namespace SurveyReportRE.Controllers
+namespace ERPCore.Controllers
 {
     public class FileUploadModel
     {

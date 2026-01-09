@@ -1,8 +1,8 @@
-using SurveyReportRE.Models.Business.Migration.Config;
-using SurveyReportRE.Models.Migration.Base;
+using ERPCore.Models.Business.Migration.Config;
+using ERPCore.Models.Migration.Base;
 using System.ComponentModel.DataAnnotations;
 
-namespace SurveyReportRE.Models.Migration.Business.MasterData
+namespace ERPCore.Models.Migration.Business.MasterData
 {
     public class Wording : BaseModel
     {

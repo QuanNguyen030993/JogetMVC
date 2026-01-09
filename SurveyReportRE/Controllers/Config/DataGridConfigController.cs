@@ -2,12 +2,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
-using SurveyReportRE.Common;
-using SurveyReportRE.Controllers.Base;
-using SurveyReportRE.Models.Business.Migration.Config;
-using SurveyReportRE.Models.Request;
+using ERPCore.Common;
+using ERPCore.Controllers.Base;
+using ERPCore.Models.Business.Migration.Config;
+using ERPCore.Models.Request;
 using System.Net;
-namespace SurveyReportRE.Controllers.Config
+namespace ERPCore.Controllers.Config
 {
     [Route("api/[controller]/[action]")]
     [ApiController]

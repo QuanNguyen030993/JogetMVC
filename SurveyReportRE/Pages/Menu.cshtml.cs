@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using SurveyReportRE.Models;
+using ERPCore.Models;
 
-namespace SurveyReportRE.Pages
+namespace ERPCore.Pages
 {
     public class MenuModel : PageModel
     {

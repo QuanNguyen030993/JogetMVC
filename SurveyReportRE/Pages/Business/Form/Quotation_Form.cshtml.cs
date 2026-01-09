@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace SurveyReportRE.Pages
+namespace ERPCore.Pages
 {
     public class Quotation_FormModel : PageModel
     {

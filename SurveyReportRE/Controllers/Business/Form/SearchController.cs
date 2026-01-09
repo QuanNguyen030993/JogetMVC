@@ -2,11 +2,11 @@ using DevExtreme.AspNet.Data;
 using HtmlAgilityPack;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SurveyReportRE.Common;
-using SurveyReportRE.Controllers.Base;
-using SurveyReportRE.Models.Migration.Business.Form;
-using SurveyReportRE.Models.Migration.Config;
-using SurveyReportRE.Models.Request;
+using ERPCore.Common;
+using ERPCore.Controllers.Base;
+using ERPCore.Models.Migration.Business.Form;
+using ERPCore.Models.Migration.Config;
+using ERPCore.Models.Request;
 using System.Data;
 using System.Dynamic;
 

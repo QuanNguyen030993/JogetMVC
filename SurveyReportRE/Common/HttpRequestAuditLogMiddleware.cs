@@ -9,17 +9,17 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using RESurveyTool.Models.Models.Parsing;
-using SurveyReportRE.Common;
-using SurveyReportRE.Controllers.Base;
-using SurveyReportRE.ControllerUtil;
+using ERPCore.Models.Models.Parsing;
+using ERPCore.Common;
+using ERPCore.Controllers.Base;
+using ERPCore.ControllerUtil;
 
 
 //using Microsoft.IO;
 //using System.Data;
 //using Dapper;
 
-using SurveyReportRE.Models.Migration.Config;
+using ERPCore.Models.Migration.Config;
 
 public sealed class HttpRequestAuditMiddleware
 {

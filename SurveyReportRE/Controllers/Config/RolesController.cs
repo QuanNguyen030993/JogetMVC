@@ -2,12 +2,12 @@ using LdapService;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
-using SurveyReportRE.Controllers.Base;
-using SurveyReportRE.Models.Base;
-using SurveyReportRE.Models.Migration.Business.Config;
-using SurveyReportRE.Models.Request;
+using ERPCore.Controllers.Base;
+using ERPCore.Models.Base;
+using ERPCore.Models.Migration.Business.Config;
+using ERPCore.Models.Request;
 using System.Net;
-namespace SurveyReportRE.Controllers.Config
+namespace ERPCore.Controllers.Config
 {
     [Route("api/[controller]/[action]")]
     [ApiController]

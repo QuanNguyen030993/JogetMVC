@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
 using System.Security.Principal;
-namespace SurveyReportRE.Pages
+namespace ERPCore.Pages
 {
     public class ManagementModel : PageModel
     {
