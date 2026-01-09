@@ -48,6 +48,7 @@
 }
 
 .skin-re .main-header .logo {
+    width: 65%;
     color: #fff;
     border-bottom: 0 solid transparent;
     border-radius: 5px;
