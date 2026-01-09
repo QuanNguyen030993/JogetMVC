@@ -86,6 +86,7 @@ public interface IBaseRepository<T> where T : class
     Task<DataTable> ExecuteStoredProcedureReturn(string storedProcedureName, params (string Key, object Value)[] parameters);
     Task<T> IncludeListsOnly(T entity);
     Task DbContextEnvironmentChange(string environment);
+    Task DbContextJogetEnvironmentChange(string environment);
     IConfiguration _baseConfiguration { get; set; }
     IHttpContextAccessor _httpContextAccessor { get; set; }
     //Task<EnumData?> ObjectSpecificEnumInclude(object entity, string enumName, params Expression<Func<T, object>>[] includeProperties);
@@ -120,21 +121,21 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
     {
         _baseConfiguration = config;
         _connectionString = _baseConfiguration.GetConnectionString("DefaultConnection");
-        _jogetConnectionString = _baseConfiguration.GetConnectionString(ControllerUtil.queryEnvironment + "Connection");
+        _jogetConnectionString = _baseConfiguration.GetConnectionString(ControllerUtil.jogetEnvironment + "Connection");
         _logConnectionString = _baseConfiguration.GetConnectionString("LogConnection");
         _httpContextAccessor = httpContextAccessor;
         userName = _httpContextAccessor?.HttpContext?.User?.Identity?.Name ?? "";
     }
     public string GetConnection()
     {
-        return _baseConfiguration.GetConnectionString(ControllerUtil.queryEnvironment + "Connection");
+        return _baseConfiguration.GetConnectionString(ControllerUtil.jogetEnvironment + "Connection");
     }
 
-    public async Task DbContextEnvironmentChange(string environment)
-    {
-        //ControllerUtil.queryEnvironment = environment == "Live" ? "JogetConnection" : "UATJogetConnection";
-        _jogetConnectionString = _baseConfiguration.GetConnectionString(ControllerUtil.queryEnvironment);
-    }
+    //public async Task DbContextEnvironmentChange(string environment)
+    //{
+    //    //ControllerUtil.jogetEnvironment = environment == "Live" ? "JogetConnection" : "UATJogetConnection";
+    //    _jogetConnectionString = _baseConfiguration.GetConnectionString(ControllerUtil.jogetEnvironment);
+    //}
     //public void GetRepositoryHttpContent(IHttpContextAccessor httpContextAccessor)
     //{
     //    _httpContextAccessor = httpContextAccessor;
@@ -280,7 +281,16 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
             return entity;
         }
     }
-
+    public async Task DbContextEnvironmentChange(string environment)
+    {
+        ControllerUtil.tmivEnvironment = environment;
+        _connectionString = _baseConfiguration.GetConnectionString(ControllerUtil.tmivEnvironment + "Connection");
+    }    
+    public async Task DbContextJogetEnvironmentChange(string environment)
+    {
+        ControllerUtil.jogetEnvironment = environment;
+        _jogetConnectionString = _baseConfiguration.GetConnectionString(ControllerUtil.jogetEnvironment + "Connection");
+    }
     public async Task<T> InsertData(T entity)
     {
         using (var connection = new SqlConnection(_connectionString))

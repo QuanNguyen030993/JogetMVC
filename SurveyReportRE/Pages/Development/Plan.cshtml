@@ -9,7 +9,36 @@
 
 
 
-    var chartG =  $('#gantt').dxGantt({
+   
+
+    // var popupInstance = $(`#mainPopup`).dxPopup({
+    //                                     width: "95%",
+    //                                     height: "95%",
+    //                                     showTitle: true,
+    //                                     title: ``,
+    //                                     dragEnabled: false,
+    //                                     closeOnOutsideClick: true,
+    //                                     contentTemplate: function (container) {
+    //                                             var contentDiv = $(`<div id="Plan">
+    //     <div width="100%" x="0" y="31" transform="translate(0,0)" text-anchor="middle"
+    //          style=" font-size: 28px; font-family: Segoe UI Light, Helvetica Neue Light, Segoe UI, Helvetica Neue, Trebuchet MS, Verdana, sans-serif; font-weight: 200; fill: rgb(35, 35, 35); cursor: default;text-align: center;">
+    //         Project timeline
+    //     </div>
+
+    // <div id="gantt" style="height:500px"></div>
+    //     </div><div style="display:flex">
+    //     <div>
+    //         <div id="scaleTypeGroup"></div>
+    //     </div>
+    //     <div>
+    //         <div id="ganttExport"></div>
+    //         <input type="file" id="excelFileHidden" accept=".xlsx" style="display:none" />
+    //         <div id="btnImportExcel"></div>
+    //         <div id="saveGantt"></div>
+    //     </div>
+    // </div>
+    // `).appendTo(container);
+                                             var chartG =  $('#gantt').dxGantt({
         tasks: {
             dataSource: new Object(),
         },
@@ -55,7 +84,7 @@
             format: 'MM/dd/yyyy'
         }, {
             dataField: 'end',
-            caption: 'End Date', 
+            caption: 'End Date',
             dataType: 'datetime',
             format: 'MM/dd/yyyy'//,
             // calculateCellValue: function (row) {
@@ -201,7 +230,7 @@
         var colorMap = buildColorMapByParentId(tasks);
 
         tasks.forEach(t => {
-            
+
 
             wsTasks.addRow([
                 t.id,
@@ -345,7 +374,7 @@
             DevExpress.ui.notify(data?.message || "Import done", "success", 2500);
             callElementView(`/Development/Plan`, `Plan`, `Plan`);
             // Nếu muốn reload gantt sau import:
-           
+
         } catch (e) {
             DevExpress.ui.notify(e?.message || "Error API", "error", 4000);
         } finally {
@@ -467,18 +496,40 @@
             }
         }
     })
+     //         return container
+     //     },
+     //     onHiding: function (e) {
+
+     //     },
+     //     toolbarItems: [ {
+     //         widget: 'dxButton',
+     //         toolbar: 'bottom',
+     //         location: 'after',
+     //         options: {
+     //             stylingMode: 'contained',
+     //             type: 'normal',
+     //             text: "Cancel",
+     //             onClick() {
+     //                 popupInstance.hide();
+     //             },
+     //         },
+     //     }]
+
+     // }).dxPopup("instance");
+     //                                popupInstance.show();
+
 </script>
 
-<div id="Plan">
+ <div id="Plan">
     <div width="100%" x="0" y="31" transform="translate(0,0)" text-anchor="middle"
          style=" font-size: 28px; font-family: Segoe UI Light, Helvetica Neue Light, Segoe UI, Helvetica Neue, Trebuchet MS, Verdana, sans-serif; font-weight: 200; fill: rgb(35, 35, 35); cursor: default;text-align: center;">
         Project timeline
     </div>
     
 <div id="gantt" style="height:500px"></div>
-</div>
+</div> 
 
-<div style="display:flex">
+ <div style="display:flex">
     <div> 
         <div id="scaleTypeGroup"></div>
     </div>
@@ -489,3 +540,4 @@
         <div id="saveGantt"></div>
     </div>
 </div>
+ 

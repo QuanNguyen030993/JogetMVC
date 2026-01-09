@@ -77,15 +77,7 @@ public class RecordWorkflowController : BaseControllerApi<RecordWorkflow>
         return obj;
     }
 
-    [HttpGet]
-    public async Task PullData()
-    {
-        //string query = "EXEC usp_rp_pending_request";
-        //List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomJogetQuery(query);
-
-        //var list = ConvertToRecordWorkflowList(obj);
-        //await BulkInsertRecordWorkflowAsync(list);
-    }
+  
     public async Task BulkInsertRecordWorkflowAsync(List<RecordWorkflow> data)
     {
         var dt = new DataTable();

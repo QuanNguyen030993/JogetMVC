@@ -94,7 +94,14 @@ namespace SurveyReportRE.Controllers.Base
             await _BaseRepository.DbContextEnvironmentChange(environment);
             return Ok();
         }
-            
+
+        [HttpGet("{environment}")]
+        public async Task<IActionResult> DbContextJogetEnvironmentChange(string environment)
+        {
+            await _BaseRepository.DbContextJogetEnvironmentChange(environment);
+            return Ok();
+        }
+
         public async Task<string> GetHtmlString(long id, string fieldName)
         {
             T survey = new T();
@@ -428,8 +435,14 @@ namespace SurveyReportRE.Controllers.Base
                 return BadRequest(ex.Message);
             }
         }
-    
 
+
+
+        [HttpGet("{id}")]
+        public virtual async Task<ActionResult<T>> PullData(string id)
+        {
+            return Ok();
+            }
         public virtual async Task<IEnumerable<T>>  GetJsonData<T>(IWebHostEnvironment env, string folder, string filename)
         {
             var pathToFile = ControllerUtil.ControllerUtil.GetWebFile(env, folder, filename);

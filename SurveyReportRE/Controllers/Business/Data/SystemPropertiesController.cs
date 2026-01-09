@@ -77,15 +77,7 @@ public class SystemPropertiesController : BaseControllerApi<SystemProperties>
         return obj;
     }
 
-    [HttpGet]
-    public async Task PullData()
-    {
-        //string query = "EXEC usp_rp_pending_request";
-        //List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomJogetQuery(query);
-
-        //var list = ConvertToSystemPropertiesList(obj);
-        //await BulkInsertSystemPropertiesAsync(list);
-    }
+  
     public async Task BulkInsertSystemPropertiesAsync(List<SystemProperties> data)
     {
         var dt = new DataTable();

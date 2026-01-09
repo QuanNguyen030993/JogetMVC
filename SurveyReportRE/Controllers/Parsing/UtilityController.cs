@@ -9,23 +9,17 @@ using SurveyReportRE.Controllers.Base;
 using SurveyReportRE.Models.Base;
 using SurveyReportRE.Models.Migration.Business.Config;
 using SurveyReportRE.Models.Request;
-using System.Dynamic;
 using System.Net;
-using System.Security.Claims;
-using System.Security.Principal;
-using SurveyReportRE.Models.Migration.Business.HumanResource;
-using SurveyReportRE.Common;
-using SurveyReportRE.Models.Migration.Business.Data;
-using MimeMapping;
-using Newtonsoft.Json.Linq;
-using SurveyReportRE.ControllerUtil;
-using SurveyReportRE.Models.Business.Migration.Config;
-using SurveyReportRE.Models.Migration.Config;
-using System.Reflection;
 using RESurveyTool.Models.Models.Parsing;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using System.Globalization;
+using SurveyReportRE.ControllerUtil;
+using SurveyReportRE.Common;
+
+
+
+
 namespace SurveyReportRE.Controllers.Config
 {
     [Route("api/[controller]/[action]")]
@@ -55,7 +49,7 @@ namespace SurveyReportRE.Controllers.Config
             string excelPath =
                 $@"{_blobStorageSettings.CurrentValue.Path}\StaticData\plan.xlsx";
 
-            using var stream1 = OpenExcelReadStream(excelPath);
+            using var stream1 = Util.OpenExcelReadStream(excelPath);
             var dependencies = ReadDependenciesFromStream(stream1, sheetName);
             return Ok(dependencies); // trả JSON đúng cho JS
             //return Ok(Base);
@@ -178,18 +172,18 @@ namespace SurveyReportRE.Controllers.Config
                     case "Dependencies":
                         dto = new
                         {
-                            id = GetInt(cells, colMap, "id", wbPart),
-                            predecessorId = GetInt(cells, colMap, "predecessorId", wbPart),
-                            successorId = GetInt(cells, colMap, "successorId", wbPart),
-                            type = GetInt(cells, colMap, "type", wbPart)
+                            id = GetString(cells, colMap, "id", wbPart),
+                            predecessorId = GetString(cells, colMap, "predecessorId", wbPart),
+                            successorId = GetString(cells, colMap, "successorId", wbPart),
+                            type = GetString(cells, colMap, "type", wbPart)
                         };
                         break;
 
                     case "Tasks":
                         dto = new
                         {
-                            id = GetInt(cells, colMap, "id", wbPart),
-                            parentId = GetInt(cells, colMap, "parentId", wbPart),
+                            id = GetString(cells, colMap, "id", wbPart),
+                            parentId = GetString(cells, colMap, "parentId", wbPart),
                             title = GetString(cells, colMap, "title", wbPart),
                             start = GetDate(cells, colMap, "start", wbPart)?.AddHours(-7).ToString("yyyy-MM-ddTHH:mm:ss.000Z"),
                             end = GetDate(cells, colMap, "end", wbPart)?.Add(new TimeSpan(16,59,59)).ToString("yyyy-MM-ddTHH:mm:ss.000Z"),
@@ -200,7 +194,7 @@ namespace SurveyReportRE.Controllers.Config
                     case "Resources":
                         dto = new
                         {
-                            id = GetInt(cells, colMap, "id", wbPart),
+                            id = GetString(cells, colMap, "id", wbPart),
                             text = GetString(cells, colMap, "text", wbPart)
                         };
                         break;
@@ -208,9 +202,9 @@ namespace SurveyReportRE.Controllers.Config
                     case "ResourceAssignments":
                         dto = new
                         {
-                            id = GetInt(cells, colMap, "id", wbPart),
-                            taskId = GetInt(cells, colMap, "taskId", wbPart),
-                            resourceId = GetInt(cells, colMap, "resourceId", wbPart)
+                            id = GetString(cells, colMap, "id", wbPart),
+                            taskId = GetString(cells, colMap, "taskId", wbPart),
+                            resourceId = GetString(cells, colMap, "resourceId", wbPart)
                         };
                         break;
 
@@ -274,15 +268,7 @@ namespace SurveyReportRE.Controllers.Config
             var text = GetCellValue(wbPart, cells[idx]);
             return int.TryParse(text, out int v) ? v : 0;
         }
-        private static FileStream OpenExcelReadStream(string filePath)
-        {
-            return new FileStream(
-                filePath,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.ReadWrite // để không bị lock nếu file đang mở ở nơi khác
-            );
-        }
+        
 
         private static SpreadsheetDocument OpenSpreadsheetDocument(Stream stream)
         {

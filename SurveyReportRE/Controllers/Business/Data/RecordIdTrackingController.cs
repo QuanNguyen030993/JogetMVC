@@ -69,15 +69,7 @@ public class RecordIdTrackingController : BaseControllerApi<RecordIdTracking>
         return obj;
     }
 
-    [HttpGet]
-    public async Task PullData()
-    {
-        //string query = "EXEC usp_rp_pending_request";
-        //List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomJogetQuery(query);
-
-        //var list = ConvertToRecordIdTrackingList(obj);
-        //await BulkInsertRecordIdTrackingAsync(list);
-    }
+ 
     public async Task BulkInsertRecordIdTrackingAsync(List<RecordIdTracking> data)
     {
         var dt = new DataTable();

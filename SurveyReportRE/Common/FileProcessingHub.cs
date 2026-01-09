@@ -24,7 +24,7 @@ public class FileProcessingHub : Hub
         if (_store == null)
             _store = new MemoryPresenceStore();
         if (_store != null)
-        _store.Remove(Context.ConnectionId);
+            _store.Remove(Context.ConnectionId);
         await Clients.All.SendAsync("onlineUsersChanged", _store.GetOnlineUsers());
         await base.OnDisconnectedAsync(exception);
     }
@@ -44,7 +44,7 @@ public class FileProcessingHub : Hub
     public string GetConnectionId()
     {
         if (_store == null)
-        _store = new MemoryPresenceStore();
+            _store = new MemoryPresenceStore();
         var user = Context.User?.Identity?.Name ?? "Anonymous";
         var authType = Context.User?.Identity?.AuthenticationType ?? "None";
 
@@ -79,14 +79,14 @@ public class FileProcessingHub : Hub
     }
 }
 
-public record OnlineUserDto(string User, string AuthType, int Connections, DateTimeOffset LastSeen);
+public record OnlineUserDto(string User, string AuthType, int Connections, DateTimeOffset LastSeen, string ConnectionId);
 
 public class MemoryPresenceStore //: IPresenceStore
 {
-    private readonly ConcurrentDictionary<string, (string User, string AuthType, DateTimeOffset LastSeen)> _byConn = new();
+    private readonly ConcurrentDictionary<string, (string User, string AuthType, DateTimeOffset LastSeen, string ConnectionId)> _byConn = new();
 
     public void AddOrUpdate(string user, string authType, string connId)
-        => _byConn[connId] = (user, authType, DateTimeOffset.Now);
+        => _byConn[connId] = (user, authType, DateTimeOffset.Now, connId);
 
     public void Remove(string connId)
         => _byConn.TryRemove(connId, out _);
@@ -94,12 +94,14 @@ public class MemoryPresenceStore //: IPresenceStore
     public IReadOnlyList<OnlineUserDto> GetOnlineUsers()
     {
         return _byConn.Values
-            .GroupBy(x => (x.User, x.AuthType))
+            .GroupBy(x => (x.User, x.AuthType, x.ConnectionId))
             .Select(g => new OnlineUserDto(
                 g.Key.User,
                 g.Key.AuthType,
                 g.Count(),
-                g.Max(x => x.LastSeen)))
+                g.Max(x => x.LastSeen),
+                g.Key.ConnectionId)
+            )
             .OrderBy(x => x.User)
             .ToList();
     }
