@@ -36,7 +36,7 @@
                                     onClick: function () {
                                         var data = contentElement.find(".dx-form").dxForm("instance").option("formData");
                                         $.ajax({
-                                            url: `/api/PullQuotation/PullData/${data.quotationNo}`,
+                                            url: `/api/Quotation/PullData/${data.quotationNo}`,
                                             success: function (response) {
                                                 appNotifySuccess("Process done!", false);
                                             },

@@ -6,6 +6,7 @@ using ERPCore.Models.Migration.Business.Config;
 using System.Data;
 using ERPCore.ControllerUtil;
 using ERPCore.Common;
+using System.Net;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -127,7 +128,49 @@ public class QuotationController : BaseControllerApi<Quotation>
             int affected = await cmd.ExecuteNonQueryAsync();
 
             /// Attachment handle if in need
+            string pullingQueryAttachment = $"EXEC [usp_fd_quotation_process_attachment_pull] '{id}'";
+            List<Dictionary<string, object>> objAtt = await _BaseRepository.ExecuteCustomJogetQuery(pullingQueryAttachment);
+            foreach (var objAt in objAtt)
+            {
+                string attachmentId = objAt["id"]?.ToString() ?? "";
+                string attachmentName = objAt["c_attachQT"]?.ToString() ?? ""   ;
+                if (!string.IsNullOrEmpty(attachmentId) && !string.IsNullOrEmpty(attachmentName))
+                {
 
+                    string URL = $@"https://wf.tokiomarine.com.vn/jw/web/client/app/TMIV_qp/23/form/download/tmiv_qp_grid_attach/{attachmentId}/{Uri.EscapeDataString(attachmentName)}";
+
+                    using var client = new HttpClient();
+
+                    // ===== Headers tối thiểu =====
+                    client.DefaultRequestHeaders.Add(
+                        "Cookie",
+                        "JSESSIONID=4322F3C9DFA7C67CF268C5940D3C4546"
+                    );
+
+                    client.DefaultRequestHeaders.Referrer =
+                        new Uri("https://wf.tokiomarine.com.vn/jw/web/userview/TMIV_qp/tmiv_qp_userview/_/completedQT");
+
+                    client.DefaultRequestHeaders.UserAgent.ParseAdd(
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+                    );
+
+                    // ===== GET =====
+                    var response = await client.GetAsync(URL);
+                    response.EnsureSuccessStatusCode();
+
+                    // ===== Read file =====
+                    var bytes = await response.Content.ReadAsByteArrayAsync();
+                    string tempDir = "D:\\Source\\MySource\\ERPCore\\ERPCore\\ERPCore\\bin\\Debug\\Attachment\\Quotation";
+                    if (!Directory.Exists(tempDir))
+                    {
+                        Directory.CreateDirectory(tempDir);
+                    }
+                    System.IO.File.WriteAllBytes(System.IO.Path.Combine(tempDir, attachmentName), bytes);
+
+                    ///Remove attachment after process 
+                    //System.IO.File.Delete(System.IO.Path.Combine(tempDir, attachmentName));
+                }
+            }
         }
 
 
@@ -178,7 +221,7 @@ public class QuotationController : BaseControllerApi<Quotation>
     {
 
         //query = "EXEC usp_fd_policy_issuance_request";
-        List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomJogetQuery(query);
+        List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomQuery(query);
          
         return obj;
     }

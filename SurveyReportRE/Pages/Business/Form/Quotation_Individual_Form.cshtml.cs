@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace ERPCore.Pages
 {
-    public class Quotation_FormModel : PageModel
+    public class Quotation_Individual_FormModel : PageModel
     {
         //private readonly ILogger<Quotation_FormModel> _logger;
         public static string ModelName { get; set; } = "";
@@ -11,7 +11,7 @@ namespace ERPCore.Pages
 
 
 
-        public Quotation_FormModel(ILogger<Quotation_FormModel> logger, IConfiguration configuration)
+        public Quotation_Individual_FormModel(ILogger<Quotation_Individual_FormModel> logger, IConfiguration configuration)
         {
             //_logger = logger;
         }
@@ -21,7 +21,7 @@ namespace ERPCore.Pages
             {
 
             }
-            ModelName = nameof(EmptyClass);
+            ModelName = nameof(Quotation);
             ViewData[nameof(Id)] = pageNum ?? 0;
         }
     }

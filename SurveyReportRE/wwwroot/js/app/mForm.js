@@ -390,7 +390,6 @@
 
 
             var itemsConfig = this.buildFormItem(); //should not do the same time.
-            debugger
             formElement.addClass("fade-slide-up");
             this.formInstance = formElement.dxForm({
                 colCount: this.colCount,
