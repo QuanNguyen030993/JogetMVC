@@ -1618,7 +1618,9 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
                 value: item.defaultValue ?? "",
                 ...additionalEditorOptions
             };
-            itemOptions.label = { location: formInstanceProps.labelLocation, text: item.caption, visible: true };
+            itemOptions.label = {
+                location: formInstanceProps.labelLocation, text: item.caption, visible: true, template: function (text) { }
+            };
 
             if ((itemOptions.editorOptions.height !== '' && !isNaN(parseFloat(itemOptions.editorOptions.height)) && isFinite(itemOptions.editorOptions.height)))
                 itemOptions.editorOptions.minHeight = item.height >= _defaultTextAreaHeight ? parseInt(item.height) : _defaultTextAreaHeight;
@@ -1640,7 +1642,7 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
                     value: item.defaultValue ?? "",
                     ...additionalEditorOptions
                 },
-                label: { location: formInstanceProps.labelLocation, text: item.caption, visible: true },
+                label: { location: formInstanceProps.labelLocation, text: item.caption, visible: true, template: function (text) { } },
                 formItem: item.formItem,
                 validationRules: item.validationRules,
                 outlineObject: item.outlineObject,
@@ -1736,7 +1738,7 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
                 formGroupName: item.formGroupName,
                 dataField: item.dataField,
                 editorType: "dxDropDownBox",
-                label: { location: formInstanceProps.labelLocation, text: item.caption, visible: true },
+                label: { location: formInstanceProps.labelLocation, text: item.caption, visible: true, template: function (text) { } },
                 formItem: item.formItem,
                 customEditorOptions: customEditorOptions,
                 editorOptions: {
@@ -1835,7 +1837,7 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
                     //},
                     ...additionalEditorOptions
                 },
-                label: { location: formInstanceProps.labelLocation, text: item.caption, visible: true },
+                label: { location: formInstanceProps.labelLocation, text: item.caption, visible: true, template: function (text) { } },
                 formItem: item.formItem,
                 validationRules: item.validationRules,
                 outlineObject: item.outlineObject,
@@ -1857,7 +1859,7 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
                     value: item.defaultValue ?? "",
                     ...additionalEditorOptions
                 },
-                label: { location: formInstanceProps.labelLocation, text: item.caption, visible: true },
+                label: { location: formInstanceProps.labelLocation, text: item.caption, visible: true, template: function (text) {  } },
                 formItem: item.formItem,
                 validationRules: item.validationRules,
                 visible: item.visible,
@@ -5169,4 +5171,104 @@ function RenderElementV2(_viewConfig, searchFormControls, objectIds, callback) {
         }
     }).addClass("custom-search-custom");
 }
+function normalizeSpaces(s) {
+    return (s || "").replace(/\s+/g, " ").trim();
+}
 
+// escape các ký tự nhạy cảm nếu sau này bạn lỡ dùng .html()
+// (hiện mình dùng .text() nên đã an toàn, nhưng keep cho chắc)
+function safeText(s) {
+    return (s ?? "").toString();
+}
+
+/**
+ * Parse theo format:
+ *   "FieldName - Label (note)"
+ *   "FieldName - Label"
+ *   "Label (note)"
+ *   "Label"
+ *
+ * Output:
+ *   top:  FieldName (nếu có)
+ *   title: Label (phần chính)
+ *   note: note (không gồm ngoặc)
+ */
+function parseLabelSmart(input) {
+    const raw = normalizeSpaces(safeText(input));
+
+    // 1) ưu tiên tách theo " - " (có spaces 2 bên)
+    let top = "";
+    let rest = raw;
+
+    const dash = " - ";
+    const idxDash = raw.indexOf(dash);
+    if (idxDash > -1) {
+        top = normalizeSpaces(raw.substring(0, idxDash));
+        rest = normalizeSpaces(raw.substring(idxDash + dash.length));
+    }
+
+    // 2) tách note theo ngoặc cuối cùng: "... (note)"
+    // Cho phép label có ngoặc giữa câu, nhưng note lấy ngoặc ở cuối.
+    let title = rest;
+    let note = "";
+
+    const m = rest.match(/^(.*)\(([^()]*)\)\s*$/); // note ở cuối
+    if (m) {
+        title = normalizeSpaces(m[1]);
+        note = normalizeSpaces(m[2]);
+    }
+
+    // fallback nếu title rỗng
+    if (!title && top) {
+        title = top;
+        top = "";
+    }
+
+    return { top, title, note };
+}
+
+/**
+ * Inline template: 3 dòng tối đa
+ * - top (field name) nhỏ & mờ hơn
+ * - title (label chính) đậm
+ * - note (trong ngoặc) nhỏ hơn
+ */
+function labelTpl(text) {
+    const { top, title, note } = parseLabelSmart(text);
+    return function (_, $label) {
+        // wrapper
+        const $wrap = $("<div>").css({
+            whiteSpace: "normal",   // cho phép xuống dòng
+            lineHeight: "1.2"
+        });
+        //$("<div>")
+        //    .text(top)
+        //    .css({
+        //        fontWeight: "600",
+        //        display: "block"
+        //    })
+        //    .appendTo($wrap);
+        // title (dòng 1)
+        $("<div>")
+            .text(top)
+            .css({
+                fontWeight: "600",
+                display: "block"
+            })
+            .appendTo($wrap);
+
+        // note (dòng 2)
+        if (title) {
+            $("<div>")
+                .text(`(${title})`)
+                .css({
+                    fontSize: "11px",
+                    opacity: "0.75",
+                    display: "block"
+                })
+                .appendTo($wrap);
+        }
+
+        $label.append($wrap);
+    };
+}

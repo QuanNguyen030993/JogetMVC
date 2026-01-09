@@ -390,6 +390,7 @@
 
 
             var itemsConfig = this.buildFormItem(); //should not do the same time.
+            debugger
             formElement.addClass("fade-slide-up");
             this.formInstance = formElement.dxForm({
                 colCount: this.colCount,
@@ -403,6 +404,7 @@
                 changedFields: {},
                 config: this,
                 labelLocation: that.labelLocation,
+                //toolbarItems:
                 customizeItem: tryExecute(this.customizeForm.bind(this)),
                 customFormOrgData: tryExecute(this.customFormOrgData.bind(this)),
                 onContentReady: tryExecute(this.onContentReady.bind(this)),
@@ -733,10 +735,12 @@
     }
 
     initFormToolbar(formInstance) {
+        //Note: this is custom method not belong to Devextreme
         var that = this;
         if (that.allowFormActionButton) {
             //var headerbox = formInstance.element().find(".dx-item.dx-box-item").first();
-            var headerbox = formInstance.element().find(".dx-box-flex.dx-box.dx-widget.dx-visibility-change-handler.dx-collection").first();
+            //var headerbox = formInstance.element().find(".dx-box-flex.dx-box.dx-widget.dx-visibility-change-handler.dx-collection").first();
+            var headerbox = formInstance.element().find(".dx-box-flex.dx-box.dx-widget.dx-collection").first();
 
             var toolbarItems = $(`<div id="${that.ModelName}Toolbar" class="dExFormToolBar"'/>`)
                 .dxToolbar({
