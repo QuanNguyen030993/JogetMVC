@@ -12,6 +12,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using System.Text.RegularExpressions;
 using MimeKit;
 using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.SharePoint.Taxonomy.WebServices;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -67,7 +68,15 @@ public class QuotationController : BaseControllerApi<Quotation>
     public async Task<ActionResult<Quotation>> PullDataBySession(string id,string jsessionId)
     {
         string excelPath = Path.Combine(BLOB_PATH, MAPPING_PATH);
+        Quotation checkQuotation = new Quotation();
+        bool isExist = await _BaseRepository.RecordExistsAsync<Quotation>("QuotationCode", id);
 
+        if (isExist)
+        {
+            checkQuotation = await _BaseRepository.GetSingleObject(s => s.QuotationCode == id);
+            await _BaseRepository.DeleteData(checkQuotation, checkQuotation.Id, "Id", true);
+            //return Ok();
+        }
         DataSet ds = Util.ReadExcelFiles(excelPath);
         DataTable? dtMigration = Util.GetTableBySheetName(ds,"Migration");
         if (dtMigration != null)
