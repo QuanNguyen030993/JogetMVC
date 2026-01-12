@@ -7,6 +7,11 @@ using System.Data;
 using ERPCore.ControllerUtil;
 using ERPCore.Common;
 using System.Net;
+using ERPCore.Models.Base;
+using DocumentFormat.OpenXml.Wordprocessing;
+using System.Text.RegularExpressions;
+using MimeKit;
+using DocumentFormat.OpenXml.Bibliography;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -29,7 +34,14 @@ public class QuotationController : BaseControllerApi<Quotation>
     private static string spUserName = "";
     private static string spPassword = "";
     private static string MAPPING_PATH = "";
-    public QuotationController(IBaseRepository<Quotation> BaseRepository, IConfiguration config, IHttpContextAccessor httpContextAccessor, ILogger<Quotation> logger) : base(BaseRepository, httpContextAccessor)
+    private readonly Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> _blobStorageSettings;
+    public QuotationController(IBaseRepository<Quotation> BaseRepository
+        , IConfiguration config
+        , IHttpContextAccessor httpContextAccessor
+        , ILogger<Quotation> logger
+        , Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> blobStorageSettings
+        ) : base(BaseRepository, httpContextAccessor
+            )
     {
         configuration = config;
         _BaseRepository = BaseRepository;
@@ -48,10 +60,11 @@ public class QuotationController : BaseControllerApi<Quotation>
         CURRENT_USER = _httpContextAccessor.HttpContext.User.Identity.Name.Replace(DOMAIN_NAME, "");
         spUserName = configuration.GetSection("SharePoint:Username").Value;
         spPassword = configuration.GetSection("SharePoint:Password").Value;
+        _blobStorageSettings = blobStorageSettings;
     }
 
-   [HttpGet("{id}")]
-    public override async Task<ActionResult<Quotation>> PullData(string id)
+   [HttpGet("{id}/{jsessionId}")]
+    public async Task<ActionResult<Quotation>> PullDataBySession(string id,string jsessionId)
     {
         string excelPath = Path.Combine(BLOB_PATH, MAPPING_PATH);
 
@@ -134,17 +147,23 @@ public class QuotationController : BaseControllerApi<Quotation>
             {
                 string attachmentId = objAt["id"]?.ToString() ?? "";
                 string attachmentName = objAt["c_attachQT"]?.ToString() ?? ""   ;
+                //Selen.IJavaScriptExecutor js = (Selen.IJavaScriptExecutor)driver;
+                //js.ExecuteScript($"arguments[0].scrollTop = arguments[0].scrollTop - {initialScrollHeight.ToString()};", messagePane);
                 if (!string.IsNullOrEmpty(attachmentId) && !string.IsNullOrEmpty(attachmentName))
                 {
 
-                    string URL = $@"https://wf.tokiomarine.com.vn/jw/web/client/app/TMIV_qp/23/form/download/tmiv_qp_grid_attach/{attachmentId}/{Uri.EscapeDataString(attachmentName)}";
+                    string URL = $@"https://wf.tokiomarine.com.vn/jw/web/client/app/TMIV_qp/23/form/download/tmiv_qp_grid_attach/{attachmentId}/{Uri.EscapeUriString(attachmentName)}";
 
                     using var client = new HttpClient();
+                    ///window.getCookie = function(name) {
+                    ///var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+                    ///if (match) return match[2];
+                    ///}
 
-                    // ===== Headers tối thiểu =====
-                    client.DefaultRequestHeaders.Add(
+                // ===== Headers tối thiểu =====
+                client.DefaultRequestHeaders.Add(
                         "Cookie",
-                        "JSESSIONID=4322F3C9DFA7C67CF268C5940D3C4546"
+                        $"JSESSIONID={jsessionId}"
                     );
 
                     client.DefaultRequestHeaders.Referrer =
@@ -160,7 +179,8 @@ public class QuotationController : BaseControllerApi<Quotation>
 
                     // ===== Read file =====
                     var bytes = await response.Content.ReadAsByteArrayAsync();
-                    string tempDir = "D:\\Source\\MySource\\ERPCore\\ERPCore\\ERPCore\\bin\\Debug\\Attachment\\Quotation";
+                    string tempDir = System.IO.Path.Combine(_blobStorageSettings.CurrentValue.Path, _blobStorageSettings.CurrentValue.QuotationAttachmentFolder,id);
+                    //string tempDir = "D:\\Source\\MySource\\ERPCore\\ERPCore\\ERPCore\\bin\\Debug\\Attachment\\Quotation";
                     if (!Directory.Exists(tempDir))
                     {
                         Directory.CreateDirectory(tempDir);

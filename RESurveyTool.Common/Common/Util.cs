@@ -1575,6 +1575,11 @@ namespace ERPCore.Common
                     object? raw = dict.TryGetValue(p.Source, out var v) ? v : null;
                     object dbValue = NormalizeToDbValue(raw);
 
+                    //if (p.Source.Contains("oductName"))
+                    //{
+                      
+                    //}
+
                     // Tạo parameter (SqlParameter tự infer type là được trong nhiều case)
                     var sp = new SqlParameter(paramName, dbValue ?? DBNull.Value);
                     parameters.Add(sp);
@@ -1622,10 +1627,28 @@ VALUES
                 // số (optional)
                 if (decimal.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var dec))
                     return dec;
-
+                DateTime dateValue = new DateTime();
+                string[] formats = { "dd-mm-yyyy" };
+                string[] excludesFormats = {"m.d.y", "d.m.y" };
+                if (DateTime.TryParseExact(s, formats,
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.None,
+                        out dateValue))
+                {
+                    return dateValue;
+                }
                 // datetime (optional)
-                if (DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dt))
+                if (DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTime dt))
+                { 
+                    if (DateTime.TryParseExact(s, excludesFormats,
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.None,
+                        out dateValue))
+                    {
+                        return s;
+                    }
                     return dt;
+                }
 
                 return s;
             }
