@@ -605,6 +605,7 @@
     grid-template-columns: 380px 1fr;
     gap: var(--gap);
     align-items: start;
+    height: 100%;
 }
 
 /* Cards */
@@ -666,7 +667,7 @@
     gap: 8px;
 }
 
-.quoteNo {
+.quotationCode {
     font-weight: 900;
 }
 

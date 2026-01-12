@@ -18,39 +18,78 @@
                         .dxPopup({
                             width: "40%",
                             height: "70%",
-                            title: "Input PullQuotation No",
+                            title: "Input Quotation No",
                             showTitle: true,
                             dragEnabled: true,
                             closeOnOutsideClick: true,
                             contentTemplate: function (contentElement) {
-                                $("<div>").dxForm({
+                                var name = "JSESSIONID";
+                                var value = "";
+                                const regex = new RegExp(`${name}`)
+                                
+                                 const match = document.cookie.match(regex);
+                                 if (match) {
+                                     const parts = document.cookie.split(`${name}=`);
+                                     if (parts.length === 2) value =  parts.pop().split(';').shift();
+                                 }
+
+
+                                var form = $("<div>").dxForm({
                                     items: [
-                                        { dataField: "quotationNo", label: { text: "PullQuotation No" }, editorOptions: { placeholder: "Enter PullQuotation No" } },
+                                        { dataField: "quotationNo", label: { text: "PullQuotation No" }, editorOptions: { placeholder: "Quotation No" } },
+                                        { dataField: "jsessionID", dataType: "string", label: { text: "Joget JSESSIONID" }, editorOptions: { placeholder: "JSESSION ID" } }
                                     ]
                                 }).appendTo(contentElement);
-
+                                form.dxForm("instance").updateData("jsessionID", value);
 
                                 $("<div>").dxButton({
                                     text: "OK",
                                     type: "success",
                                     onClick: function () {
                                         var data = contentElement.find(".dx-form").dxForm("instance").option("formData");
-                                        $.ajax({
-                                            url: `/api/Quotation/PullData/${data.quotationNo}`,
+
+                                         if (data.jsessionID != value) {
+                                         document.cookie = name + "=" + (data.jsessionID || "");
+                                        }
+
+                                        if (data.jsessionID && data.quotationNo)
+                                        {
+                                            $.ajax({
+                                            url: `/api/Quotation/PullDataBySession/${data.quotationNo}/${data.jsessionID}`,
                                             success: function (response) {
                                                 appNotifySuccess("Process done!", false);
+                                                popup.hide();
                                             },
                                             error: function (err) {
                                                 appErrorHandling("Process update!", err);
                                             }
-                                        });
-
+                                            });
+                                        }
+                                        else {
+                                            var typeField = data.jsessionID ? "JSessionId" : "Quotation No";
+                                            DevExpress.ui.notify({
+                                                message: `Please input ${typeField}`,
+                                                type: "warning",
+                                                displayTime: 2000,
+                                                width: 300, // 👈 điều chỉnh độ rộng
+                                                height: 60, // 👈 chiều cao nếu muốn
+                                                position: {
+                                                    my: "center top",   // vị trí của toast
+                                                    at: "center top",   // neo ở đâu trên cửa sổ
+                                                    of: window,         // container
+                                                    offset: "0 20"      // dịch xuống 20px cho đẹp
+                                                }
+                                            });
+                                            popup.hide();
+                                        }
                                         // Ẩn Popup
-                                        contentElement.closest(".dx-popup").dxPopup("instance").hide();
+                                        
                                     }
                                                                     })
                                     .appendTo(contentElement);
                                 return contentElement;
+                            },onHiding: function (e) {
+                                removeTab("PullQuotation");
                             }
                         }).dxPopup("instance");
                     popup.show();

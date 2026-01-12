@@ -21,7 +21,7 @@ namespace ERPCore.Pages
             {
 
             }
-            ModelName = nameof(EmptyClass);
+            ModelName = nameof(Quotation);
             ViewData[nameof(Id)] = pageNum ?? 0;
         }
     }
