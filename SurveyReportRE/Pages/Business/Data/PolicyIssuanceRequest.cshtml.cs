@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using SurveyReportRE.Models.Migration.Business.MasterData;
-using SurveyReportRE.Models.Migration.Business.Workflow;
+using ERPCore.Models.Migration.Business.MasterData;
+using ERPCore.Models.Migration.Business.Workflow;
 
-namespace SurveyReportRE.Pages
+namespace ERPCore.Pages
 {
     public class PolicyIssuanceRequestModel : PageModel
     {

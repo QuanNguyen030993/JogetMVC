@@ -1,0 +1,606 @@
+﻿@page "{pageNum:int?}"
+@using Newtonsoft.Json
+@model Quotation_Individual_FormModel
+@{
+    ViewData["Title"] = "Management";
+    ViewBag.Title = "Quotation";
+}
+@*
+Note: 
+-Change style to site.css
+-Comment out menu topbar + sidebar 
+-Call ajax to main table 
+-Replace Quotation visible data fields, should replace by VS 
+-Remove app div for scroll
+*@
+<style>
+    .dx-tabpanel .dx-tabpanel-tabs .dx-tab {
+        width: auto;
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+</style>
+<script type="text/javascript">
+    $(function () {
+                        var quotes = [
+          { id:10030, quotationCode:"Qu-10030", clientName:"Allied Electronics", status:"accepted", requestNo:27, quotationNumber:27, date:"2023-01-02", expiry:"2023-01-18", owner:"Maria Garcia", terms:"Quotations are valid for 30 days from quotation date. This is an information offer and may be withdrawn/modified any time.", amount:1370445.30,
+            items:[{ name:"MacBook Air", unit:"pcs", qty:1, rate:1199.00 },{ name:"Warranty", unit:"service", qty:1, rate:99.00 }]
+          },
+          { id:10031, quotationCode:"Qu-10031", clientName:"Newark Electronics", status:"sent", requestNo:28, quotationNumber:28, date:"2023-01-02", expiry:"2023-01-20", owner:"David Chen", terms:"Sent to client. Waiting for acceptance.", amount:1276657.50,
+            items:[{ name:"Server Rack", unit:"pcs", qty:4, rate:15500.00 }]
+          },
+          { id:10035, quotationCode:"Qu-10035", clientName:"Rutronik", status:"new", requestNo:32, quotationNumber:32, date:"2023-01-02", expiry:"2023-01-25", owner:"Anna White", terms:"Internal review required by TS/UW.", amount:1035918.00,
+            items:[{ name:"Switch", unit:"pcs", qty:30, rate:210.00 }]
+          },
+          { id:10036, quotationCode:"Qu-10036", clientName:"Marshall Electronics", status:"declined", requestNo:33, quotationNumber:33, date:"2023-01-02", expiry:"2023-01-12", owner:"Nina Park", terms:"Declined due to underwriting constraints.", amount:1844402.20,
+            items:[{ name:"Battery Pack", unit:"pcs", qty:100, rate:55.00 }]
+          }
+        ];
+        // ===== Mock quotation list data =====
+         var query = "SELECT * FROM Quotation WITH (NOLOCK)";
+         $.ajax({
+            url: `/api/Quotation/ExecuteCustomQuery`,
+            method: "POST",
+            async: false,
+            contentType: "application/json",
+            data: JSON.stringify(query),
+            success: function(data) {
+                  quotes = data;
+
+            }
+        });
+
+
+
+
+        // ===== UI state =====
+        var Roles = ["MKT","TS","UW","LMKT","PM"];
+        var currentUserRole = "MKT";
+        var filter = "all";
+        var searchText = "";
+        var selectedId = quotes[0]?.id;
+
+        
+        function money(n){ return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(n||0); }
+        function statusClass(s){ if(s==="accepted") return "accepted"; if(s==="sent") return "sent"; if(s==="declined") return "declined"; return ""; }
+        function statusText(s){ if(s==="accepted") return "Accepted"; if(s==="sent") return "Sent To Client"; if(s==="declined") return "Declined"; return "New"; }
+        // NEW: stageDept (status highlight) vs focusDept (click highlight)
+        var stageDept = statusText(quotes[0]?.status ?? "") == "New" ?  "MKT" : "MKT";   // this is from quotation workflow stage (status only)
+        var focusDept = "PM";   // this is from user click (focus highlight)
+        var focusLocked = false; // to prevent scroll from changing focus (we never change on scroll anyway)
+
+        function applyFilter(data){
+          var arr = data.slice();
+          if(filter !== "all") arr = arr.filter(x => x.status === filter);
+          if(searchText){
+            var t = searchText.toLowerCase();
+            arr = arr.filter(x => x.quotationCode.toLowerCase().includes(t) || x.clientName?.toLowerCase().includes(t) || String(x.requestNo).includes(t));
+          }
+          return arr;
+        }
+
+        function renderList(){
+          var data = applyFilter(quotes);
+          var $root = $("#quoteList").empty();
+          if(!data.length){
+            $root.append(`<div style="color:#6b7280;padding:10px;">No quotations found.</div>`);
+            return;
+          }
+          data.forEach(q => {
+            var isSel = q.id === selectedId;
+            $root.append(`
+              <div class="quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}">
+                <div class="quoteTop">
+                  <div>
+                    <div class="quotationCode">${q.quotationCode}</div>
+                  <div >${q.productDisplayName}</div>
+                  </div>
+                    <div class="quoteClient">${q.clientName}</div>
+                  <div class="statusTag ${statusClass(q.status)}">${statusText(q.status)}</div>
+                </div>
+                <div class="quoteMeta">
+                  <div>#${q.requestNo}</div>
+                  <div>${q.requestedDate}</div>
+                  <div class="quoteAmount">${money(q.amount)}</div>
+                </div>
+              </div>
+            `);
+          });
+
+          $(".quoteCard").off("click").on("click", function(){
+            selectedId = Number($(this).attr("data-id"));
+            renderList();
+            renderDetail();
+          });
+        }
+
+        // ===== Form data =====
+        var deptData = {
+          MKT: { clientName:"", broker:"", requestType:"Renewal", notes:"" },
+          TS:  { riskInfo:"", locationCount: 1, surveyNeeded: true },
+          UW:  { decision:"", premium: null, terms:"", exclusions:"" },
+          LMKT:{ approve: null, comment:"" },
+          PM:  { policyNo:"", inception:null, expiry:null, invoiceTo:"" }
+        };
+        var tsLocations = [
+          { site:"HCM", address:"District 1", occ:"Warehouse", sumInsured: 1200000 },
+          { site:"HN",  address:"Cau Giay",   occ:"Office",    sumInsured: 350000  },
+        ];
+
+        function renderDetail(){
+          var q = quotes.find(x => x.id === selectedId) || quotes[0];
+          if(!q) return;
+
+          $("#recordNo").text(q.quotationCode);
+          $("#detailStatus").text(statusText(q.status)).attr("class", `statusTag ${statusClass(q.status)}`);
+
+          // demo: stageDept derived from something (here we keep existing stageDept)
+          // You can map from q.status or workflow stage:
+          // stageDept = q.status === 'accepted' ? 'PM' : 'UW' ... etc
+          $("#stageDeptPill").text(`Stage: ${stageDept}`);
+
+          deptData.MKT.clientName = q.clientName;
+          deptData.MKT.notes = q.terms;
+
+          renderDeptForms();
+          renderItemsGrid(q);
+
+          // apply highlight rings without using scroll
+          applyNodeHighlights();
+          applySectionFocusHighlight();
+
+          // scroll to focus dept once when selecting a quotation (optional)
+          scrollToDept(focusDept);
+        }
+
+        function renderItemsGrid(q){
+          $("#itemsGrid").dxDataGrid({
+            dataSource: q.items,//.map(it => ({ ...it, amount: (it.qty||0)*(it.rate||0) })),
+            showBorders: true,
+            height: 240,
+            columnAutoWidth: true,
+            columns: [
+              { dataField:"name", caption:"Product / Services Name" },
+              { dataField:"unit", caption:"Unit", width: 90 },
+              { dataField:"qty", caption:"Quantity", dataType:"number", width: 100 },
+              { dataField:"rate", caption:"Rate", dataType:"number", format: { type:"currency", precision:2 } },
+              { dataField:"amount", caption:"Amount", dataType:"number", format: { type:"currency", precision:2 } }
+            ],
+            summary: { totalItems:[{ column:"amount", summaryType:"sum", valueFormat:{type:"currency",precision:2}, displayFormat:"Total: {0}" }] }
+          });
+        }
+
+        function renderDeptForms(){
+          $("#formMKT").dxForm({
+            formData: deptData.MKT, readOnly: true, colCount: 2,
+            items: [
+              { dataField:"clientName", label:{text:"Client Name"}, isRequired:true },
+              { dataField:"broker", label:{text:"Broker"} },
+              { dataField:"requestType", editorType:"dxSelectBox", label:{text:"Request Type"}, editorOptions:{ items:["New","Renewal","Endorsement"] } },
+              { dataField:"notes", label:{text:"Notes"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 80 } }
+            ]
+          });
+
+          $("#formTS").dxForm({
+            formData: deptData.TS, readOnly: true, colCount: 2,
+            items: [
+              { dataField:"locationCount", label:{text:"Locations"}, editorType:"dxNumberBox", editorOptions:{ min:0 } },
+              { dataField:"surveyNeeded", label:{text:"Survey Needed"}, editorType:"dxSwitch" },
+              { dataField:"riskInfo", label:{text:"Risk Info"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 90 } }
+            ]
+          });
+
+          $("#gridTSLocations").dxDataGrid({
+            dataSource: tsLocations, height: 220, showBorders: true,
+            editing: { mode:"cell", allowUpdating:false, allowAdding:false, allowDeleting:false },
+            columns: [
+              { dataField:"site", caption:"Site", width: 90 },
+              { dataField:"address", caption:"Address" },
+              { dataField:"occ", caption:"Occupancy", width: 140 },
+              { dataField:"sumInsured", caption:"Sum Insured", dataType:"number", format:"#0" }
+            ]
+          });
+
+          $("#formUW").dxForm({
+            formData: deptData.UW, readOnly: true, colCount: 2,
+            items: [
+              { dataField:"decision", label:{text:"Decision"}, editorType:"", editorOptions:{ items:["Approve","Decline","Need More Info"] }, isRequired:true },
+              { dataField:"premium", label:{text:"Premium"}, editorType:"dxNumberBox", editorOptions:{ min:0 } },
+              { dataField:"terms", label:{text:"Terms"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 90 } },
+              { dataField:"exclusions", label:{text:"Exclusions"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 70 } }
+            ]
+          });
+
+          $("#formLMKT").dxForm({
+            formData: deptData.LMKT, readOnly: true, colCount: 2,
+            items: [
+              { dataField:"approve", label:{text:"Approval"}, editorType:"dxRadioGroup", editorOptions:{ items:[{text:"Approve",value:true},{text:"Reject",value:false}], layout:"horizontal" }, isRequired:true },
+              { dataField:"comment", label:{text:"Comment"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 80 } }
+            ]
+          });
+
+          $("#formPM").dxForm({
+            formData: deptData.PM, readOnly: true, colCount: 2,
+            items: [
+              { dataField:"policyNo", label:{text:"Policy No"} },
+              { dataField:"invoiceTo", label:{text:"Invoice To"} },
+              { dataField:"inception", label:{text:"Inception"}, editorType:"dxDateBox", editorOptions:{ type:"date" } },
+              { dataField:"expiry", label:{text:"Expiry"}, editorType:"dxDateBox", editorOptions:{ type:"date" } }
+            ]
+          });
+
+          applyEditLock();
+          updateHints();
+        }
+
+        function applyEditLock(){
+          // Only allow edit when focusDept matches currentUserRole (demo rule)
+          var roMKT  = !(currentUserRole === "MKT"  && focusDept === "MKT");
+          var roTS   = !(currentUserRole === "TS"   && focusDept === "TS");
+          var roUW   = !(currentUserRole === "UW"   && focusDept === "UW");
+          var roLMKT = !(currentUserRole === "LMKT" && focusDept === "LMKT");
+          var roPM   = !(currentUserRole === "PM"   && focusDept === "PM");
+
+          $("#formMKT").dxForm("instance").option("readOnly", roMKT);
+          $("#formTS").dxForm("instance").option("readOnly", roTS);
+          $("#formUW").dxForm("instance").option("readOnly", roUW);
+          $("#formLMKT").dxForm("instance").option("readOnly", roLMKT);
+          $("#formPM").dxForm("instance").option("readOnly", roPM);
+
+          $("#gridTSLocations").dxDataGrid("instance").option("editing", {
+            mode:"cell", allowUpdating: !roTS, allowAdding: !roTS, allowDeleting: !roTS
+          });
+        }
+
+        function updateHints(){
+          $("#loginRoleLabel").text(currentUserRole);
+          $("#focusDeptPill").text(`Focus: ${focusDept}`);
+
+          var all = ["MKT","TS","UW","LMKT","PM"];
+          all.forEach(k => {
+            var canEdit = (focusDept === k) && (currentUserRole === k);
+            $(`#hint${k}`).text(`${canEdit ? "EDIT ENABLED" : "READ ONLY"} • login=${currentUserRole}`);
+          });
+        }
+
+        function applyNodeHighlights(){
+          // status ring: stageDept only
+          // focus ring: focusDept only
+          $(".dept-node").removeClass("status focus");
+          $(`.dept-node[data-key='${stageDept}']`).addClass("status");
+          $(`.dept-node[data-key='${focusDept}']`).addClass("focus");
+        }
+
+        function applySectionFocusHighlight(){
+          $(".dept-section").removeClass("focused");
+          $(`#sec${focusDept}`).addClass("focused");
+        }
+
+        function scrollToDept(dept){
+          var selector = `#sec${dept}`;
+          var container = document.getElementById("overviewScroll");
+          var el = document.querySelector(selector);
+          if(!container || !el) return;
+          container.scrollTo({ top: el.offsetTop - 8, behavior:"smooth" });
+        }
+
+        function setupDeptTree(){
+          // Clicking node => set focusDept (blue), scroll, highlight section, apply edit lock
+          $(".dept-node").on("click", function(){
+            var key = $(this).data("key");
+            focusDept = key;
+
+            applyNodeHighlights();
+            applySectionFocusHighlight();
+            applyEditLock();
+            updateHints();
+
+            scrollToDept(focusDept);
+          });
+
+          // IMPORTANT: scroll does NOT change any circle selection (per your request)
+          // => We DO NOT register IntersectionObserver at all.
+        }
+
+        // Compute line height so it never crosses circles and never exceeds top/bottom circle edges
+        function layoutTreeLine(){
+          var $stack = $("#treeStack");
+          var $nodes = $stack.find(".dept-node");z
+          var $line = $("#treeVLine");
+          if(!$nodes.length) return;
+
+          var stackRect = $stack[0].getBoundingClientRect();
+
+          var first = $nodes[0].getBoundingClientRect();
+          var last  = $nodes[$nodes.length-1].getBoundingClientRect();
+
+          var topInside = (first.top - stackRect.top) + (first.height / 2);
+          var bottomInside = (last.top - stackRect.top) + (last.height / 2);
+
+          // line starts at center of first and ends at center of last
+          // BUT we want line to NOT pass through circles => put behind nodes (z-index 0), that's ok
+          // and ensure it doesn't exceed circle centers (so ends at centers, not beyond)
+          $line.css({
+            top: `${topInside}px`,
+            height: `${bottomInside - topInside}px`
+          });
+        }
+
+        // ===== Branch overlay =====
+        function openBranchOverlay(){ $("#branchOverlay").show(); }
+        function closeBranchOverlay(){
+          $("#branchOverlay").hide();
+          $("#routeTS, #routeUW").removeClass("active");
+        }
+        function routeTo(dept){
+          $("#routeTS, #routeUW").removeClass("active");
+          if(dept === "TS") $("#routeTS").addClass("active");
+          if(dept === "UW") $("#routeUW").addClass("active");
+
+          // change focus (blue) to routed dept
+          focusDept = dept;
+          applyNodeHighlights();
+          applySectionFocusHighlight();
+          applyEditLock();
+          updateHints();
+          scrollToDept(focusDept);
+
+          DevExpress.ui.notify(`Mock submit routed to ${dept}`, "success", 1200);
+          setTimeout(closeBranchOverlay, 350);
+        }
+
+        function setActiveNav(el){
+          $(".navItem").removeClass("active");
+          $(el).addClass("active");
+        }
+
+        $(function(){
+          // top buttons
+          $("#btnNew").dxButton({ text:"New", icon:"plus", type:"default", onClick:()=>DevExpress.ui.notify("Mock: New quotation","success",1200) });
+          $("#btnEdit").dxButton({ text:"Edit", icon:"edit", type:"normal", onClick:()=>DevExpress.ui.notify("Mock: Edit selected","info",1200) });
+          $("#btnMore").dxDropDownButton({ text:"More", icon:"overflow", items:["Export","Print","Email"], onItemClick:(e)=>DevExpress.ui.notify("Mock: "+e.itemData,"info",1200) });
+          $("#btnDuplicate").dxButton({ text:"Duplicate", icon:"copy", type:"normal", onClick:()=>DevExpress.ui.notify("Mock: Duplicated","success",1200) });
+
+          // bottom buttons
+          $("#btnSaveDraft").dxButton({ text:"Save Draft", icon:"save", type:"normal", onClick:()=>DevExpress.ui.notify("Mock: saved draft","success",1200) });
+          $("#btnSubmitBranch").dxButton({ text:"Submit", icon:"check", type:"success", onClick:openBranchOverlay });
+
+          // role selector
+          $("#roleSelect").dxSelectBox({
+            items: Roles, value: currentUserRole, placeholder:"Select role...", stylingMode:"outlined",
+            onValueChanged: (e) => {
+              currentUserRole = e.value;
+              applyEditLock();
+              updateHints();
+              DevExpress.ui.notify("Role switched: " + currentUserRole, "info", 1200);
+            }
+          });
+
+          // search
+          $("#searchBox").dxTextBox({
+            placeholder:"Search quotations...", stylingMode:"outlined", mode:"search",
+            onValueChanged: (e)=>{ searchText = e.value || ""; renderList(); }
+          });
+
+          // sidebar nav
+          $(".navItem").on("click", function(){
+            var f = $(this).attr("data-filter");
+            if(["all","new","sent","accepted","declined"].includes(f)){
+              filter = f;
+              setActiveNav(this);
+              $("#activeStage").text($(this).text().trim());
+              $("#listTitle").text($(this).text().trim());
+              renderList();
+
+              var data = applyFilter(quotes);
+              if(!data.find(x => x.id === selectedId)){
+                selectedId = data[0]?.id ?? quotes[0]?.id;
+              }
+              renderList();
+              renderDetail();
+            } else {
+              setActiveNav(this);
+              DevExpress.ui.notify("Mock: " + $(this).text().trim(), "info", 1200);
+            }
+          });
+
+          // Branch overlay events
+          $("#branchOverlay .backdrop").on("click", closeBranchOverlay);
+          $("#routeTS").on("click", () => routeTo("TS"));
+          $("#routeUW").on("click", () => routeTo("UW"));
+
+          // init
+          renderList();
+          renderDetail();
+          setupDeptTree();
+
+          // initial highlights
+          applyNodeHighlights();
+          applySectionFocusHighlight();
+          updateHints();
+
+          // layout line after DOM paint (and on resize)
+          setTimeout(layoutTreeLine, 0);
+          window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
+        });
+    })
+</script>
+<style>
+
+    :root {
+        --sidebar-w: 260px;
+        --gap: 12px;
+        --bg: #f5f7fb;
+        --card: #fff;
+        --border: #e6e9f0;
+        --text: #1f2a37;
+        --muted: #6b7280;
+        --brand: #e84a5f; /* status highlight (quotation stage) */
+        --focus: #2563eb; /* click focus highlight */
+        --focusSoft: rgba(37,99,235,.12);
+        --node: 30px;
+        --nodeBorder: rgba(31,41,55,.28);
+        --line: rgba(17,24,39,.18);
+    }
+</style>
+
+<body>
+    @* <div class="topbar"> *@
+        <div class="title">
+     @*        <span style="width:10px;height:10px;background:var(--brand);border-radius:999px;display:inline-block;"></span>
+            Quotation Management *@
+            <span id="activeStage" class="pill">All Quotations</span>
+            <span id="stageDeptPill" class="pill">Stage: UW</span>
+            <span id="focusDeptPill" class="pill">Focus: PM</span>
+        </div>
+  @*       <div class="toolbar">
+            <div id="btnNew"></div>
+            <div id="btnEdit"></div>
+            <div id="btnMore"></div>
+        </div> *@
+    @* </div> *@
+
+@*         <aside class="sidebar">
+            <div class="sidebarHeader">
+                <div class="appName">Quotation Management</div>
+                <div class="sub">Status ring = stage, Focus ring = click</div>
+            </div>
+
+            <div class="nav">
+                <div class="navGroupTitle">Quotations</div>
+                <div class="navItem active" data-filter="all"><span class="navDot"></span>All Quotations</div>
+                <div class="navItem" data-filter="new"><span class="navDot"></span>New Quotations</div>
+                <div class="navItem" data-filter="sent"><span class="navDot"></span>Sent To Client</div>
+                <div class="navItem" data-filter="accepted"><span class="navDot"></span>Accepted</div>
+                <div class="navItem" data-filter="declined"><span class="navDot"></span>Declined</div>
+
+                <div class="navGroupTitle">Demo Role</div>
+                <div id="roleSelect" style="padding:0 10px 10px;"></div>
+            </div>
+        </aside> *@
+
+        @* <main class="content"> *@
+            <div class="contentGrid">
+
+                <!-- List -->
+            <section class="card" style="height:130%   ;overflow: scroll;">
+                    <div class="cardHeader">
+                        <div class="h" id="listTitle">All Quotations</div>
+                        <div id="searchBox" style="width: 210px;"></div>
+                    </div>
+                    <div class="cardBody">
+                        <div id="quoteList"></div>
+                    </div>
+                </section>
+
+                <!-- Detail -->
+                        <section class="card" >
+                    <div class="cardHeader">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <div class="h">Overview</div>
+                            <span id="detailStatus" class="statusTag">-</span>
+                        </div>
+                        <div id="btnDuplicate"></div>
+                    </div>
+
+                    <div class="cardBody overview-wrap" style="padding:0">
+                        <!-- Navigator Tree (status vs focus) -->
+                        <div id="deptTree" class="dept-tree">
+                            <div class="treeStack" id="treeStack">
+                                <div class="vline" id="treeVLine"></div>
+
+                                <div class="dept-node" data-key="MKT" data-target="#secMKT" title="MKT">MKT</div>
+                                <div class="dept-node" data-key="TS" data-target="#secTS" title="TS">TS</div>
+                                <div class="dept-node" data-key="UW" data-target="#secUW" title="UW">UW</div>
+                                <div class="dept-node" data-key="LMKT" data-target="#secLMKT" title="Leader MKT">LMKT</div>
+                                <div class="dept-node" data-key="PM" data-target="#secPM" title="PM">PM</div>
+                            </div>
+                        </div>
+
+                        <div id="overviewScroll" class="overview-scroll">
+                            <section id="secMKT" class="dept-section">
+                                <div class="dept-header">
+                                    <div class="dept-title">MKT</div>
+                                    <div class="dept-hint" id="hintMKT"></div>
+                                </div>
+                                <div id="formMKT"></div>
+                            </section>
+
+                            <section id="secTS" class="dept-section">
+                                <div class="dept-header">
+                                    <div class="dept-title">TS</div>
+                                    <div class="dept-hint" id="hintTS"></div>
+                                </div>
+                                <div id="formTS"></div>
+                                <div style="margin-top:10px;font-weight:800;font-size:12px;">Locations (mock grid)</div>
+                                <div id="gridTSLocations" style="margin-top:8px;"></div>
+                            </section>
+
+                            <section id="secUW" class="dept-section">
+                                <div class="dept-header">
+                                    <div class="dept-title">UW</div>
+                                    <div class="dept-hint" id="hintUW"></div>
+                                </div>
+                                <div id="formUW"></div>
+                            </section>
+
+                            <section id="secLMKT" class="dept-section">
+                                <div class="dept-header">
+                                    <div class="dept-title">Leader MKT</div>
+                                    <div class="dept-hint" id="hintLMKT"></div>
+                                </div>
+                                <div id="formLMKT"></div>
+                            </section>
+
+                            <section id="secPM" class="dept-section">
+                                <div class="dept-header">
+                                    <div class="dept-title">PM</div>
+                                    <div class="dept-hint" id="hintPM"></div>
+                                </div>
+                                <div id="formPM"></div>
+
+                                <div style="margin-top:10px;font-weight:800;font-size:12px;">Products / Services</div>
+                                @* <div id="itemsGrid" style="margin-top:8px;"></div> *@
+                            </section>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        @* </main> *@
+    </div>
+
+    <!-- Bottom action bar -->
+    <div class="actionBar">
+        <div class="actionLeft">
+            <span class="pill">Record: <b id="recordNo">Qu-10030</b></span>
+            <span class="pill">Login role: <b id="loginRoleLabel">MKT</b></span>
+        </div>
+        <div class="actionRight">
+            <div id="btnSaveDraft"></div>
+            <div id="btnSubmitBranch"></div>
+        </div>
+    </div>
+
+    <!-- Branch overlay -->
+    <div id="branchOverlay" class="branchOverlay">
+        <div class="backdrop"></div>
+        <div class="branchPopup">
+            <div class="branchTitle">
+                <span>Submit Route</span>
+                <span class="branchHint">Choose next dept</span>
+            </div>
+            <div class="branchCanvas">
+                <svg width="100%" height="100%" viewBox="0 0 260 140" style="position:absolute;inset:0;">
+                    <path d="M40 70 L110 70" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />
+                    <path d="M110 40 L110 100" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />
+                    <path d="M110 40 L200 40" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />
+                    <path d="M110 100 L200 100" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />
+                </svg>
+
+                <div class="bnode root" style="left:14px; top:42px;" title="Submit">GO</div>
+                <div id="routeTS" class="bnode choice" style="left:182px; top:14px;" title="Route to TS">TS</div>
+                <div id="routeUW" class="bnode choice" style="left:182px; top:74px;" title="Route to UW">UW</div>
+            </div>
+        </div>
+</body>

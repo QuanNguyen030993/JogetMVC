@@ -1,7 +1,7 @@
-﻿using SurveyReportRE.Models.Business.Migration.Config;
-using SurveyReportRE.Models.Migration.Base;
+﻿using ERPCore.Models.Business.Migration.Config;
+using ERPCore.Models.Migration.Base;
 
-namespace SurveyReportRE.Models.Migration.Config
+namespace ERPCore.Models.Migration.Config
 {
     public class FormatCodeNo : BaseModel
     {

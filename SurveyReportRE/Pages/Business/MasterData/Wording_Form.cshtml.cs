@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using SurveyReportRE.Models.Migration.Business.Data;
-using SurveyReportRE.Models.Migration.Business.MasterData;
+using ERPCore.Models.Migration.Business.Data;
+using ERPCore.Models.Migration.Business.MasterData;
 
-namespace SurveyReportRE.Pages
+namespace ERPCore.Pages
 {
     public class Wording_FormModel : PageModel
     {

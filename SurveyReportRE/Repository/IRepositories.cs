@@ -1,7 +1,7 @@
-﻿using SurveyReportRE.Models.Migration.Business.HumanResource;
+﻿using ERPCore.Models.Migration.Business.HumanResource;
 using System;
 
-namespace SurveyReportRE.Repository
+namespace ERPCore.Repository
 {
     public interface IEmployeeRepository : IBaseRepository<Employee> { }
     

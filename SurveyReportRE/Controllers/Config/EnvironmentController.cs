@@ -5,19 +5,19 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
-using SurveyReportRE.Controllers.Base;
-using SurveyReportRE.Models.Base;
-using SurveyReportRE.Models.Migration.Business.Config;
-using SurveyReportRE.Models.Request;
+using ERPCore.Controllers.Base;
+using ERPCore.Models.Base;
+using ERPCore.Models.Migration.Business.Config;
+using ERPCore.Models.Request;
 using System.Dynamic;
 using System.Net;
 using System.Security.Claims;
 using System.Security.Principal;
-using SurveyReportRE.Models.Migration.Business.HumanResource;
-using SurveyReportRE.Common;
-using RESurveyTool.Models.Models.Parsing;
+using ERPCore.Models.Migration.Business.HumanResource;
+using ERPCore.Common;
+using ERPCore.Models.Models.Parsing;
 
-namespace SurveyReportRE.Controllers.Config
+namespace ERPCore.Controllers.Config
 {
     [Route("api/[controller]/[action]")]
     [ApiController]

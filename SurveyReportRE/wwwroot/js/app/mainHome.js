@@ -293,49 +293,8 @@ var appendElementViewInsideAsync = function (url, params, container, code, typeC
 };
 
 
-//function hyperLinkCode(columns, moduleName, controllerName, propertyName, specificLinkField = null) {
-//    $.each(columns, function (i, col) {
-//        if (col.dataField == (specificLinkField != null ? specificLinkField : "Code")) {
-//            col.cellTemplate = function (container, options) {
-//                var selectedValue = options.data[propertyName];
-//                $('<a>').addClass('dx-link dx-link-edit')
-//                    .text(options.text)
-//                    .css({ color: "#337ab7", textDecoration: "underline", cursor: "pointer" })
-//                    .on('dxclick', function () {
-//                        if (Object.keys(options.key).length > 0)
-//                            callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}`, `form_${controllerName}_Form_${options.key.id}`, `${controllerName} ${options.text}`);
-//                        else
-//                            callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}`, `form_${controllerName}_Form_${options.key}`, `${controllerName} ${options.text}`);
-//                        //callElementView(`/Business/MasterData/Client_Form/2`, `${controllerName}_Form`, `${controllerName} ${options.text}`);
-//                    })
-//                    .appendTo(container);
-//            }
-//        } else {
-
-//        }
-//    });
-//}
 
 
-function hyperLinkCodeReplace(columns, moduleName, controllerName, propertyName, specificLinkField = null) {
-    $.each(columns, function (i, col) {
-        if (col.dataField == (specificLinkField != null ? specificLinkField : "Code")) {
-            col.cellTemplate = function (container, options) {
-                var selectedValue = options.data[propertyName];
-                $('<a>').addClass('dx-link dx-link-edit')
-                    .text(options.text)
-                    .on('dxclick', function () {
-                        var passingParams = { UITabId: `` }
-                        replaceElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}`, passingParams, $("#tablist"));
-                        //callElementView(`/Business/MasterData/Client_Form/2`, `${controllerName}_Form`, `${controllerName} ${options.text}`);
-                    })
-                    .appendTo(container);
-            }
-        } else {
-
-        }
-    });
-}
 
 var apiInvokeRequest = function (url, method, dataTypeOptions, options, functionCall, values, asyncStatus) {
     $.ajax({

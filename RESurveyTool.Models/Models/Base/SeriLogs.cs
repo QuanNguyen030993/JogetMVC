@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RESurveyTool.Models.Models.Base
+namespace ERPCore.Models.Models.Base
 {
     public class SeriLogs
     {

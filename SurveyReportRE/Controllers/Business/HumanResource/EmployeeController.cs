@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using SurveyReportRE.Controllers.Base;
-using SurveyReportRE.Models.Migration.Business.Config;
-using SurveyReportRE.Models.Migration.Business.HumanResource;
+using ERPCore.Controllers.Base;
+using ERPCore.Models.Migration.Business.Config;
+using ERPCore.Models.Migration.Business.HumanResource;
 using System.Dynamic;
 using System.Text.RegularExpressions;
 

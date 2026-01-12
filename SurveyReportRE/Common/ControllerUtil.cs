@@ -1,16 +1,16 @@
 ﻿using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
-using RESurveyTool.Models.Models.Parsing;
+using ERPCore.Models.Models.Parsing;
 using Serilog.Context;
-using SurveyReportRE.Models.Migration.Business.Form;
-using SurveyReportRE.Models.Migration.Business.Workflow;
-using SurveyReportRE.Models.Migration.Config;
+using ERPCore.Models.Migration.Business.Form;
+using ERPCore.Models.Migration.Business.Workflow;
+using ERPCore.Models.Migration.Config;
 using System.Data;
 using System.Security.Claims;
 using System.Text;
 
-namespace SurveyReportRE.ControllerUtil
+namespace ERPCore.ControllerUtil
 {
     public static class ControllerUtil
     {

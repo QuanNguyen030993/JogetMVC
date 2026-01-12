@@ -1,8 +1,8 @@
 ﻿using Microsoft.VisualBasic;
-using SurveyReportRE.Models.Migration.Base;
+using ERPCore.Models.Migration.Base;
 using System.ComponentModel.DataAnnotations;
 
-namespace SurveyReportRE.Models.Business.Migration.Config
+namespace ERPCore.Models.Business.Migration.Config
 {
     public class SysTable : BaseModel
     {

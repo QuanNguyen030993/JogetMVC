@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RESurveyTool.Common.Constant
+namespace ERPCore.Common.Constant
 {
     public static class ConfigConstant
     {

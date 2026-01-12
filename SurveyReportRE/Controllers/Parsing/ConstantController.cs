@@ -5,28 +5,28 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
-using SurveyReportRE.Controllers.Base;
-using SurveyReportRE.Models.Base;
-using SurveyReportRE.Models.Migration.Business.Config;
-using SurveyReportRE.Models.Request;
+using ERPCore.Controllers.Base;
+using ERPCore.Models.Base;
+using ERPCore.Models.Migration.Business.Config;
+using ERPCore.Models.Request;
 using System.Dynamic;
 using System.Net;
 using System.Security.Claims;
 using System.Security.Principal;
-using SurveyReportRE.Models.Migration.Business.HumanResource;
-using SurveyReportRE.Common;
-using SurveyReportRE.Models.Migration.Business.Data;
+using ERPCore.Models.Migration.Business.HumanResource;
+using ERPCore.Common;
+using ERPCore.Models.Migration.Business.Data;
 using MimeMapping;
 using Newtonsoft.Json.Linq;
-using SurveyReportRE.ControllerUtil;
-using SurveyReportRE.Models.Business.Migration.Config;
-using SurveyReportRE.Models.Migration.Config;
+using ERPCore.ControllerUtil;
+using ERPCore.Models.Business.Migration.Config;
+using ERPCore.Models.Migration.Config;
 using System.Reflection;
-using RESurveyTool.Models.Models.Parsing;
+using ERPCore.Models.Models.Parsing;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using System.Globalization;
-namespace SurveyReportRE.Controllers.Config
+namespace ERPCore.Controllers.Config
 {
     [Route("api/[controller]/[action]")]
     [ApiController]

@@ -1,11 +1,18 @@
 ﻿using DocumentFormat.OpenXml.Office2013.Excel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
-using SurveyReportRE.Controllers.Base;
-using SurveyReportRE.Models.Migration.Business.Config;
+using ERPCore.Controllers.Base;
+using ERPCore.Models.Migration.Business.Config;
 using System.Data;
-using SurveyReportRE.ControllerUtil;
-using SurveyReportRE.Common;
+using ERPCore.ControllerUtil;
+using ERPCore.Common;
+using System.Net;
+using ERPCore.Models.Base;
+using DocumentFormat.OpenXml.Wordprocessing;
+using System.Text.RegularExpressions;
+using MimeKit;
+using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.SharePoint.Taxonomy.WebServices;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -14,7 +21,7 @@ public class QuotationController : BaseControllerApi<Quotation>
     private readonly IBaseRepository<Quotation> _BaseRepository;
     private readonly IConfiguration configuration;
     private readonly IBaseRepository<Survey> _surveyRepository;
-    private readonly IBaseRepository<SurveyReportRE.Models.Migration.Business.Data.Attachment> _attachmentRepository;
+    private readonly IBaseRepository<ERPCore.Models.Migration.Business.Data.Attachment> _attachmentRepository;
     private readonly IBaseRepository<Users> _usersRepository;
     private readonly IConfigurationSection path;
     public static string MANAGER_APP = "";
@@ -28,12 +35,19 @@ public class QuotationController : BaseControllerApi<Quotation>
     private static string spUserName = "";
     private static string spPassword = "";
     private static string MAPPING_PATH = "";
-    public QuotationController(IBaseRepository<Quotation> BaseRepository, IConfiguration config, IHttpContextAccessor httpContextAccessor, ILogger<Quotation> logger) : base(BaseRepository, httpContextAccessor)
+    private readonly Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> _blobStorageSettings;
+    public QuotationController(IBaseRepository<Quotation> BaseRepository
+        , IConfiguration config
+        , IHttpContextAccessor httpContextAccessor
+        , ILogger<Quotation> logger
+        , Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> blobStorageSettings
+        ) : base(BaseRepository, httpContextAccessor
+            )
     {
         configuration = config;
         _BaseRepository = BaseRepository;
         _surveyRepository = new BaseRepository<Survey>(configuration, _httpContextAccessor);
-        _attachmentRepository = new BaseRepository<SurveyReportRE.Models.Migration.Business.Data.Attachment>(configuration, _httpContextAccessor);
+        _attachmentRepository = new BaseRepository<ERPCore.Models.Migration.Business.Data.Attachment>(configuration, _httpContextAccessor);
         _usersRepository = new BaseRepository<Users>(configuration, _httpContextAccessor);
         MANAGER_APP = configuration.GetSection("BusinessConfig:ManagerAppKey").Value;
         APPROVER_APP = configuration.GetSection("BusinessConfig:ApproverAppKey").Value;
@@ -47,13 +61,22 @@ public class QuotationController : BaseControllerApi<Quotation>
         CURRENT_USER = _httpContextAccessor.HttpContext.User.Identity.Name.Replace(DOMAIN_NAME, "");
         spUserName = configuration.GetSection("SharePoint:Username").Value;
         spPassword = configuration.GetSection("SharePoint:Password").Value;
+        _blobStorageSettings = blobStorageSettings;
     }
 
-   [HttpGet("{id}")]
-    public override async Task<ActionResult<Quotation>> PullData(string id)
+   [HttpGet("{id}/{jsessionId}")]
+    public async Task<ActionResult<Quotation>> PullDataBySession(string id,string jsessionId)
     {
         string excelPath = Path.Combine(BLOB_PATH, MAPPING_PATH);
+        Quotation checkQuotation = new Quotation();
+        bool isExist = await _BaseRepository.RecordExistsAsync<Quotation>("QuotationCode", id);
 
+        if (isExist)
+        {
+            checkQuotation = await _BaseRepository.GetSingleObject(s => s.QuotationCode == id);
+            await _BaseRepository.DeleteData(checkQuotation, checkQuotation.Id, "Id", true);
+            //return Ok();
+        }
         DataSet ds = Util.ReadExcelFiles(excelPath);
         DataTable? dtMigration = Util.GetTableBySheetName(ds,"Migration");
         if (dtMigration != null)
@@ -127,7 +150,56 @@ public class QuotationController : BaseControllerApi<Quotation>
             int affected = await cmd.ExecuteNonQueryAsync();
 
             /// Attachment handle if in need
+            string pullingQueryAttachment = $"EXEC [usp_fd_quotation_process_attachment_pull] '{id}'";
+            List<Dictionary<string, object>> objAtt = await _BaseRepository.ExecuteCustomJogetQuery(pullingQueryAttachment);
+            foreach (var objAt in objAtt)
+            {
+                string attachmentId = objAt["id"]?.ToString() ?? "";
+                string attachmentName = objAt["c_attachQT"]?.ToString() ?? ""   ;
+                //Selen.IJavaScriptExecutor js = (Selen.IJavaScriptExecutor)driver;
+                //js.ExecuteScript($"arguments[0].scrollTop = arguments[0].scrollTop - {initialScrollHeight.ToString()};", messagePane);
+                if (!string.IsNullOrEmpty(attachmentId) && !string.IsNullOrEmpty(attachmentName))
+                {
 
+                    string URL = $@"https://wf.tokiomarine.com.vn/jw/web/client/app/TMIV_qp/23/form/download/tmiv_qp_grid_attach/{attachmentId}/{Uri.EscapeUriString(attachmentName)}";
+
+                    using var client = new HttpClient();
+                    ///window.getCookie = function(name) {
+                    ///var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+                    ///if (match) return match[2];
+                    ///}
+
+                // ===== Headers tối thiểu =====
+                client.DefaultRequestHeaders.Add(
+                        "Cookie",
+                        $"JSESSIONID={jsessionId}"
+                    );
+
+                    client.DefaultRequestHeaders.Referrer =
+                        new Uri("https://wf.tokiomarine.com.vn/jw/web/userview/TMIV_qp/tmiv_qp_userview/_/completedQT");
+
+                    client.DefaultRequestHeaders.UserAgent.ParseAdd(
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+                    );
+
+                    // ===== GET =====
+                    var response = await client.GetAsync(URL);
+                    response.EnsureSuccessStatusCode();
+
+                    // ===== Read file =====
+                    var bytes = await response.Content.ReadAsByteArrayAsync();
+                    string tempDir = System.IO.Path.Combine(_blobStorageSettings.CurrentValue.Path, _blobStorageSettings.CurrentValue.QuotationAttachmentFolder,id);
+                    //string tempDir = "D:\\Source\\MySource\\ERPCore\\ERPCore\\ERPCore\\bin\\Debug\\Attachment\\Quotation";
+                    if (!Directory.Exists(tempDir))
+                    {
+                        Directory.CreateDirectory(tempDir);
+                    }
+                    System.IO.File.WriteAllBytes(System.IO.Path.Combine(tempDir, attachmentName), bytes);
+
+                    ///Remove attachment after process 
+                    //System.IO.File.Delete(System.IO.Path.Combine(tempDir, attachmentName));
+                }
+            }
         }
 
 
@@ -178,7 +250,7 @@ public class QuotationController : BaseControllerApi<Quotation>
     {
 
         //query = "EXEC usp_fd_policy_issuance_request";
-        List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomJogetQuery(query);
+        List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomQuery(query);
          
         return obj;
     }

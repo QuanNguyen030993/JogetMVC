@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using SurveyReportRE.Models.Migration.Business.Data;
+using ERPCore.Models.Migration.Business.Data;
 
-namespace SurveyReportRE.Pages
+namespace ERPCore.Pages
 {
     public class MailQueueModel : PageModel
     {

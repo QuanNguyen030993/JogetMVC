@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SurveyReportRE.Controllers.Base;
-using SurveyReportRE.Models.Migration.Business.Data;
-using SurveyReportRE.Models.Request;
+using ERPCore.Controllers.Base;
+using ERPCore.Models.Migration.Business.Data;
+using ERPCore.Models.Request;
 using MimeMapping;
 using Microsoft.AspNetCore.Authorization;
 using DocumentFormat.OpenXml.Wordprocessing;
-using SurveyReportRE.Common;
+using ERPCore.Common;
 using Newtonsoft.Json;
 using Serilog;
 using Microsoft.Data.SqlClient;

@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using SurveyReportRE.Models.Migration.Base;
+using ERPCore.Models.Migration.Base;
 
-namespace SurveyReportRE.Models.Migration.Business.MasterData
+namespace ERPCore.Models.Migration.Business.MasterData
 {
     public class MailTemplate : BaseModel
     {

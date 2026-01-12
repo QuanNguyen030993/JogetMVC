@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using SurveyReportRE.Models.Migration.Business.Config;
+using ERPCore.Models.Migration.Business.Config;
 
-namespace SurveyReportRE.Pages
+namespace ERPCore.Pages
 {
     public class UsersModel : PageModel
     {

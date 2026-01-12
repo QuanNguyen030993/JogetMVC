@@ -1,7 +1,7 @@
-﻿using SurveyReportRE.Models.Migration.Base;
+﻿using ERPCore.Models.Migration.Base;
 using System.ComponentModel.DataAnnotations;
 
-namespace SurveyReportRE.Models.Migration.Business.Config
+namespace ERPCore.Models.Migration.Business.Config
 {
     public class UserRoles : BaseModel
     {

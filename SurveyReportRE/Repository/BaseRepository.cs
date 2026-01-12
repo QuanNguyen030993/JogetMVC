@@ -3,13 +3,13 @@ using Newtonsoft.Json;
 using Microsoft.Data.SqlClient;
 using Dapper;
 using System.Linq.Expressions;
-using SurveyReportRE.Common;
+using ERPCore.Common;
 using static Dapper.SqlMapper;
 using System.Linq;
 using System.Data;
 using System.Collections;
 using System.Reflection;
-using SurveyReportRE.Models.Migration.Config;
+using ERPCore.Models.Migration.Config;
 using Microsoft.AspNetCore.Http;
 using DocumentFormat.OpenXml.Math;
 using DocumentFormat.OpenXml.Office2016.Drawing.Command;
@@ -19,7 +19,7 @@ using System;
 using Microsoft.Identity.Client;
 using System.Drawing.Text;
 using Core.Arango.Linq;
-using SurveyReportRE.ControllerUtil;
+using ERPCore.ControllerUtil;
 public interface IBaseRepository<T> where T : class
 {
     Task<T> GetObjectByIdAsync(long id); //Use for Base processing 

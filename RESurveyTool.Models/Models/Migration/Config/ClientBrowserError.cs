@@ -1,7 +1,7 @@
-﻿using SurveyReportRE.Models.Migration.Base;
-using SurveyReportRE.Models.Request;
+﻿using ERPCore.Models.Migration.Base;
+using ERPCore.Models.Request;
 
-namespace SurveyReportRE.Models.Business.Migration.Config
+namespace ERPCore.Models.Business.Migration.Config
 {
     public class ClientBrowserError : BaseModel
     {

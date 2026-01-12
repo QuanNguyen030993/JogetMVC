@@ -1,12 +1,12 @@
-﻿using SurveyReportRE.Models.Migration.Business.Config;
-using SurveyReportRE.Models.Migration.Business.HumanResource;
+﻿using ERPCore.Models.Migration.Business.Config;
+using ERPCore.Models.Migration.Business.HumanResource;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RESurveyTool.Models.Models.Parsing
+namespace ERPCore.Models.Models.Parsing
 {
     public class UserInfo
     {

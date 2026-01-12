@@ -12,7 +12,7 @@
 //using Syncfusion.DocIORenderer;
 //using Break = DocumentFormat.OpenXml.Wordprocessing.Break;
 //using Color = DocumentFormat.OpenXml.Wordprocessing.Color;
-//using Outline = SurveyReportRE.Models.Migration.Business.MasterData.Outline;
+//using Outline = ERPCore.Models.Migration.Business.MasterData.Outline;
 //using Text = DocumentFormat.OpenXml.Wordprocessing.Text;
 //using TableRow = DocumentFormat.OpenXml.Wordprocessing.TableRow;
 //using TableCell = DocumentFormat.OpenXml.Wordprocessing.TableCell;
@@ -20,37 +20,37 @@
 //using Body = DocumentFormat.OpenXml.Wordprocessing.Body;
 //using Newtonsoft.Json;
 //using HtmlToOpenXml;
-//using RESurveyTool.Models.Models.Parsing;
-//using RESurveyTool.Common.Models;
+//using ERPCore.Models.Models.Parsing;
+//using ERPCore.Common.Models;
 //using System.Text;
 ////using OpenHtmlToPdf;
 ////using AngleSharp.Dom;
 ////using iText.Kernel.Pdf; html to pdf 
 //using Document = Microsoft.Office.Interop.Word.Document;
 //using Microsoft.Office.Interop.Word;
-//using SurveyReportRE.Models.Migration.Business.Data;
+//using ERPCore.Models.Migration.Business.Data;
 //using Org.BouncyCastle.Crypto.Paddings;
 //using DocumentFormat.OpenXml.Presentation;
-//using RESurveyTool.Common.Constant;
+//using ERPCore.Common.Constant;
 //using System.Dynamic;
 //using iText.IO.Image;
 //using Newtonsoft.Json.Linq;
 //using System.Linq;
 //using AngleSharp.Text;
-//using RESurveyTool.Common.Common;
+//using ERPCore.Common.Common;
 //using System.Drawing;
 //using System.Drawing.Imaging;
 //using Microsoft.AspNetCore.Http;
 //using static SkiaSharp.HarfBuzz.SKShaper;
-//using SurveyReportRE.Models.Migration.Business.Workflow;
+//using ERPCore.Models.Migration.Business.Workflow;
 //using System.Text.RegularExpressions;
 //using A = DocumentFormat.OpenXml.Drawing;
 //using PIC = DocumentFormat.OpenXml.Drawing.Pictures;
 //using DW = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 //using DocumentFormat.OpenXml.Vml;
-//using SurveyReportRE.Models.Business.Migration.Config;
+//using ERPCore.Models.Business.Migration.Config;
 
-//namespace SurveyReportRE.Common
+//namespace ERPCore.Common
 //{
 //    public static class WordUtil
 //    {
@@ -534,12 +534,12 @@
 //        List<dynamic> outlineSurveyQuerys)
 //        {
 
-//            List<SurveyReportRE.Models.Migration.Business.MasterData.Outline> outlines = new List<SurveyReportRE.Models.Migration.Business.MasterData.Outline>();
-//            List<SurveyReportRE.Models.Migration.Business.Data.SurveyOutlineOptions> outlineOptions = new List<Models.Migration.Business.Data.SurveyOutlineOptions>();
+//            List<ERPCore.Models.Migration.Business.MasterData.Outline> outlines = new List<ERPCore.Models.Migration.Business.MasterData.Outline>();
+//            List<ERPCore.Models.Migration.Business.Data.SurveyOutlineOptions> outlineOptions = new List<Models.Migration.Business.Data.SurveyOutlineOptions>();
 //            if (outlineSurveyQuerys.Count > 0)
 //            {
-//                outlines.AddRange(JsonConvert.DeserializeObject<List<SurveyReportRE.Models.Migration.Business.MasterData.Outline>>(JsonConvert.SerializeObject(outlineSurveyQuerys)));
-//                outlineOptions.AddRange(JsonConvert.DeserializeObject<List<SurveyReportRE.Models.Migration.Business.Data.SurveyOutlineOptions>>(JsonConvert.SerializeObject(outlineSurveyQuerys)));
+//                outlines.AddRange(JsonConvert.DeserializeObject<List<ERPCore.Models.Migration.Business.MasterData.Outline>>(JsonConvert.SerializeObject(outlineSurveyQuerys)));
+//                outlineOptions.AddRange(JsonConvert.DeserializeObject<List<ERPCore.Models.Migration.Business.Data.SurveyOutlineOptions>>(JsonConvert.SerializeObject(outlineSurveyQuerys)));
 //            }
 
 //            string placeholder = "yesnonaoption";
@@ -559,7 +559,7 @@
 //                    {
 //                        if (outlines.Any(a => a.Content.ToString().Contains(content.Trim())))//paragraph.InnerText.Replace(placeholder, "").Trim()))
 //                        {
-//                            SurveyReportRE.Models.Migration.Business.MasterData.Outline outL = outlines.FirstOrDefault(a => a.Content.ToString().Contains(content.Trim()));
+//                            ERPCore.Models.Migration.Business.MasterData.Outline outL = outlines.FirstOrDefault(a => a.Content.ToString().Contains(content.Trim()));
 //                            var checkOutline = outlineOptions.FirstOrDefault(a => a.OutlineId == outL.Id);
 //                            if (checkOutline != null)
 //                                foreach (var run in paragraph.Elements<Run>()) // Duyệt qua tất cả các Run trong đoạn

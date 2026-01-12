@@ -1,18 +1,18 @@
 ﻿using DocumentFormat.OpenXml.Math;
 using MimeMapping;
 using Newtonsoft.Json;
-using RESurveyTool.Models.Models.Parsing;
-using SurveyReportRE.Common;
-using SurveyReportRE.Models.Business.Migration.Config;
-using SurveyReportRE.Models.Migration.Business.Config;
-using SurveyReportRE.Models.Migration.Business.Data;
-using SurveyReportRE.Models.Migration.Business.Form;
-using SurveyReportRE.Models.Migration.Business.HumanResource;
-using SurveyReportRE.Models.Migration.Business.MasterData;
-using SurveyReportRE.Models.Migration.Business.Workflow;
-using SurveyReportRE.Models.Request;
+using ERPCore.Models.Models.Parsing;
+using ERPCore.Common;
+using ERPCore.Models.Business.Migration.Config;
+using ERPCore.Models.Migration.Business.Config;
+using ERPCore.Models.Migration.Business.Data;
+using ERPCore.Models.Migration.Business.Form;
+using ERPCore.Models.Migration.Business.HumanResource;
+using ERPCore.Models.Migration.Business.MasterData;
+using ERPCore.Models.Migration.Business.Workflow;
+using ERPCore.Models.Request;
 
-namespace SurveyReportRE.ControllerUtil
+namespace ERPCore.ControllerUtil
 {
     public static class ControllerHelper
     {

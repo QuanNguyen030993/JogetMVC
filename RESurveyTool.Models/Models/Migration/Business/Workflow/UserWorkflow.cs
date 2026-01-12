@@ -1,8 +1,8 @@
 using System;
 using System.ComponentModel.DataAnnotations;
-using SurveyReportRE.Models.Migration.Base;
-using SurveyReportRE.Models.Migration.Business.Config;
-namespace SurveyReportRE.Models.Migration.Business.Workflow
+using ERPCore.Models.Migration.Base;
+using ERPCore.Models.Migration.Business.Config;
+namespace ERPCore.Models.Migration.Business.Workflow
 {
     public class UserWorkflow : BaseModel
     {

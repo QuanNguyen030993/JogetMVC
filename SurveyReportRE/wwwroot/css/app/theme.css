@@ -48,7 +48,7 @@
 }
 
 .skin-re .main-header .logo {
-    background-color: #02787b;
+    width: 65%;
     color: #fff;
     border-bottom: 0 solid transparent;
     border-radius: 5px;
@@ -68,7 +68,7 @@
 
 .skin-re .wrapper {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    background-color: #02787b;
+    background: linear-gradient( 135deg, #5b6fdc 0%, #5e9fd6 40%, #8fbfd3 70%, #e2b1c4 100% );
 }
     .skin-re .main-sidebar {
         background-color: #f9fafc

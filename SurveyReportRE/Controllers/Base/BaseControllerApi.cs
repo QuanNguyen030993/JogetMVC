@@ -6,13 +6,13 @@ using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Org.BouncyCastle.Crypto;
-using SurveyReportRE.Common;
-using SurveyReportRE.Models;
-using SurveyReportRE.Models.Base;
-using SurveyReportRE.Models.Business.Migration.Config;
-using SurveyReportRE.Models.Migration.Business.Data;
-using SurveyReportRE.Models.Migration.Config;
-using SurveyReportRE.Models.Request;
+using ERPCore.Common;
+using ERPCore.Models;
+using ERPCore.Models.Base;
+using ERPCore.Models.Business.Migration.Config;
+using ERPCore.Models.Migration.Business.Data;
+using ERPCore.Models.Migration.Config;
+using ERPCore.Models.Request;
 using System.Dynamic;
 using System.Linq.Expressions;
 using System.Net;
@@ -21,11 +21,11 @@ using System.Reflection;
 using System.Security.AccessControl;
 using System.Security.Claims;
 using System.Security.Principal;
-using SurveyReportRE.ControllerUtil;
+using ERPCore.ControllerUtil;
 using MimeMapping;
 
 
-namespace SurveyReportRE.Controllers.Base
+namespace ERPCore.Controllers.Base
 {
     public class BaseControllerApi<T> : ControllerBase where T : class, new()
     {

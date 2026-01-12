@@ -3,9 +3,9 @@ using MailKit.Security;
 using MimeKit;
 using System;
 using System.IO;
-using SurveyReportRE.Models.Request;
-using RESurveyTool.Common.Common;
-namespace SurveyReportRE.Common
+using ERPCore.Models.Request;
+using ERPCore.Common.Common;
+namespace ERPCore.Common
 {
     public static class MailUtil
     {

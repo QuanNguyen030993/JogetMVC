@@ -1,12 +1,12 @@
-﻿using SurveyReportRE.Models.Migration.Base;
-using SurveyReportRE.Models.Migration.Business.Config;
-using SurveyReportRE.Models.Migration.Config;
+﻿using ERPCore.Models.Migration.Base;
+using ERPCore.Models.Migration.Business.Config;
+using ERPCore.Models.Migration.Config;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 
-namespace SurveyReportRE.Models.Migration.Business.HumanResource
+namespace ERPCore.Models.Migration.Business.HumanResource
 {
     public class Employee : BaseModel
     {

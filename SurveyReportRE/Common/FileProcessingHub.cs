@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
-using SurveyReportRE.Models.Migration.Config;
+using ERPCore.Models.Migration.Config;
 
 public class FileProcessingHub : Hub
 {
@@ -66,16 +66,6 @@ public class FileProcessingHub : Hub
         _userSessionRepository.InsertData(usersSession);
 
         return Context.ConnectionId;
-    }
-    public async Task RenderSurveyTabNotCompleted(string TabName)
-    {
-        await Clients.Caller.SendAsync("RenderSurveyTabNotCompleted", TabName);
-
-    }
-    public async Task SubmitRecallVisible(string connectionId, long? id)
-    {
-        await Clients.Caller.SendAsync("SubmitRecallVisible", connectionId);
-
     }
 }
 

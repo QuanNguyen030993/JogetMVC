@@ -1,10 +1,10 @@
 ﻿//using DocumentFormat.OpenXml.Wordprocessing;
 //using MiniSoftware;
-//using SurveyReportRE.Common;
-//using SurveyReportRE.Models.Migration.Business.Data;
-//using SurveyReportRE.Models.Migration.Business.Form;
-//using SurveyReportRE.Models.Migration.Business.MasterData;
-//using Outline = SurveyReportRE.Models.Migration.Business.MasterData.Outline;
+//using ERPCore.Common;
+//using ERPCore.Models.Migration.Business.Data;
+//using ERPCore.Models.Migration.Business.Form;
+//using ERPCore.Models.Migration.Business.MasterData;
+//using Outline = ERPCore.Models.Migration.Business.MasterData.Outline;
 //using System.Data;
 //using Syncfusion.DocIO.DLS;
 //using Syncfusion.DocIO;
@@ -14,13 +14,13 @@
 //using System.Net.Http;
 //using Syncfusion;
 //using DocumentFormat.OpenXml.Office2010.PowerPoint;
-//using RESurveyTool.Common.Constant;
+//using ERPCore.Common.Constant;
 //using System.Dynamic;
 //using Newtonsoft.Json;
 //
 //using Org.BouncyCastle.Crypto.Paddings;
 
-//namespace RESurveyTool.Common.Common
+//namespace ERPCore.Common.Common
 //{
 //    public static class PowerPointHelper
 //    {

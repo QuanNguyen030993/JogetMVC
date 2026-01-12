@@ -621,7 +621,7 @@ var WordingGridOption = class WordingGridOption extends MGridOption {
     onCustomizeColumns(columns) {
         var that = this;
         super.onCustomizeColumns(columns);
-        hyperLinkCode(columns, "Business/MasterData", "Wording", "id", "wordingName");
+        super.hyperLinkCode(columns, "Business/MasterData", "Wording", "id", "wordingName");
         $.each(columns, function (cIndex, column) {
             //if (column.dataField == "wordingContent") {
             //    column.width = 80;
@@ -666,7 +666,7 @@ var MailTemplateGridOption = class MailTemplateGridOption extends MGridOption {
     onCustomizeColumns(columns) {
         var that = this;
         super.onCustomizeColumns(columns);
-        hyperLinkCode(columns, "Business/MasterData", "MailTemplate", "id", "templateName");
+        super.hyperLinkCode(columns, "Business/MasterData", "MailTemplate", "id", "templateName");
 
     }
 }
@@ -1031,7 +1031,7 @@ var ClientGridOption = class ClientGridOption extends MGridOption {
     onCustomizeColumns(columns) {
         var that = this;
         super.onCustomizeColumns(columns);
-        hyperLinkCode(columns, "Business/MasterData", "Client", "id", "clientName");
+        super.hyperLinkCode(columns, "Business/MasterData", "Client", "id", "clientName");
     }
 }
 
@@ -1177,7 +1177,7 @@ var SurveyArchivedGridOption = class SurveyArchivedGridOption extends MGridOptio
     onCustomizeColumns(columns) {
         var that = this;
         super.onCustomizeColumns(columns);
-        hyperLinkCode(columns, "Business/Form", "Survey", "id", "surveyNo");
+        super.hyperLinkCode(columns, "Business/Form", "Survey", "id", "surveyNo");
         $.each(columns, function (colIndex, colItems) {
             if (colItems.dataField == "createdDate") {
                 colItems.sortOrder = "desc";
@@ -1461,7 +1461,7 @@ var SurveyGridOption = class SurveyGridOption extends MGridOption {
     onCustomizeColumns(columns) {
         var that = this;
         super.onCustomizeColumns(columns);
-        hyperLinkCode(columns, "Business/Form", "Survey", "id", "surveyNo");
+        super.hyperLinkCode(columns, "Business/Form", "Survey", "id", "surveyNo");
         $.each(columns, function (colIndex, colItems) {
             if (colItems.dataField == "createdDate") {
                 colItems.sortOrder = "desc";
@@ -1901,3 +1901,4 @@ var MailQueueGridOption = class MailQueueGridOption extends MGridOption {
     }
 
 }
+

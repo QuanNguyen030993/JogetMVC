@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SurveyReportRE.Models.Request
+namespace ERPCore.Models.Request
 {
     public class ErrorBrowserDetails
     {

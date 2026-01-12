@@ -2,11 +2,11 @@ using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using SurveyReportRE.Models.Migration.Business.Form;
-using SurveyReportRE.Models.Migration.Business.MasterData;
-using SurveyReportRE.Models.Migration.Business.Workflow;
+using ERPCore.Models.Migration.Business.Form;
+using ERPCore.Models.Migration.Business.MasterData;
+using ERPCore.Models.Migration.Business.Workflow;
 
-namespace SurveyReportRE.Pages
+namespace ERPCore.Pages
 {
     public class WordView_FormModel : PageModel
     {

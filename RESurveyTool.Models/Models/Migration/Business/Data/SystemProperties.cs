@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using SurveyReportRE.Models.Migration.Base;
+using ERPCore.Models.Migration.Base;
 
 public class SystemProperties : BaseModel
 {

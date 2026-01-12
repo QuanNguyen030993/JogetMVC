@@ -3,9 +3,9 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using SurveyReportRE.Models.Migration.Base;
+using ERPCore.Models.Migration.Base;
 
-namespace SurveyReportRE.Models.Migration.Business.MasterData
+namespace ERPCore.Models.Migration.Business.MasterData
 {
     public class Client : BaseModel 
     {

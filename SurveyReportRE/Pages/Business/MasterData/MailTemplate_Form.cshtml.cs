@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using SurveyReportRE.Models.Migration.Business.Data;
-using SurveyReportRE.Models.Migration.Business.Form;
-using SurveyReportRE.Models.Migration.Business.MasterData;
+using ERPCore.Models.Migration.Business.Data;
+using ERPCore.Models.Migration.Business.Form;
+using ERPCore.Models.Migration.Business.MasterData;
 
-namespace SurveyReportRE.Pages
+namespace ERPCore.Pages
 {
     public class MailTemplate_FormModel : PageModel
     {

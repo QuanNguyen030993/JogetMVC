@@ -1,14 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
-using SurveyReportRE.Common;
-using SurveyReportRE.Controllers.Base;
-using SurveyReportRE.ControllerUtil;
-using SurveyReportRE.Models;
-using SurveyReportRE.Models.Business.Migration.Config;
-using SurveyReportRE.Models.Migration.Business.Config;
-using SurveyReportRE.Models.Migration.Config;
-using SurveyReportRE.Models.Request;
+using ERPCore.Common;
+using ERPCore.Controllers.Base;
+using ERPCore.ControllerUtil;
+using ERPCore.Models;
+using ERPCore.Models.Business.Migration.Config;
+using ERPCore.Models.Migration.Business.Config;
+using ERPCore.Models.Migration.Config;
+using ERPCore.Models.Request;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
 

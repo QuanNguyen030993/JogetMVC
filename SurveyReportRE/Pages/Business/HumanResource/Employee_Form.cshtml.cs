@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using SurveyReportRE.Models.Migration.Business.HumanResource;
+using ERPCore.Models.Migration.Business.HumanResource;
 
-namespace SurveyReportRE.Pages
+namespace ERPCore.Pages
 {
     public class Employee_FormModel : PageModel
     {

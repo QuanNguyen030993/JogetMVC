@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using SurveyReportRE.Models.Migration.Config;
+using ERPCore.Models.Migration.Config;
 
-namespace SurveyReportRE.Pages
+namespace ERPCore.Pages
 {
     public class UsersCacheModel : PageModel
     {
