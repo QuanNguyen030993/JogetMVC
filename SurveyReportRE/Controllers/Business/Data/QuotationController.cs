@@ -64,9 +64,15 @@ public class QuotationController : BaseControllerApi<Quotation>
         _blobStorageSettings = blobStorageSettings;
     }
 
-   [HttpGet("{id}/{jsessionId}")]
-    public async Task<ActionResult<Quotation>> PullDataBySession(string id,string jsessionId)
+   [HttpGet("{listIds}/{jsessionId}")]
+    public async Task<ActionResult<Quotation>> PullDataBySession(string listIds,string jsessionId)
     {
+        string[] ids = listIds.Split(',');
+        foreach (string id in ids)
+        {
+            await Task.Factory.StartNew(async () => {
+                Thread.Sleep(5000);
+
         string excelPath = Path.Combine(BLOB_PATH, MAPPING_PATH);
         Quotation checkQuotation = new Quotation();
         bool isExist = await _BaseRepository.RecordExistsAsync<Quotation>("QuotationCode", id);
@@ -152,6 +158,7 @@ public class QuotationController : BaseControllerApi<Quotation>
             /// Attachment handle if in need
             string pullingQueryAttachment = $"EXEC [usp_fd_quotation_process_attachment_pull] '{id}'";
             List<Dictionary<string, object>> objAtt = await _BaseRepository.ExecuteCustomJogetQuery(pullingQueryAttachment);
+            if (objAtt != null)
             foreach (var objAt in objAtt)
             {
                 string attachmentId = objAt["id"]?.ToString() ?? "";
@@ -239,7 +246,9 @@ public class QuotationController : BaseControllerApi<Quotation>
 
         //
 
-        await base.PullData(id);
+                await base.PullData(id);
+            });
+                }
         return Ok();
     }
 

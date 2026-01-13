@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Mockup – Quotation Flow</title>
+
+<link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/23.2.6/css/dx.light.css">
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn3.devexpress.com/jslib/23.2.6/js/dx.all.js"></script>
+
+<style>
+  :root{
+    --bg:#f4f6fb;
+    --card:#fff;
+    --border:#e6e9f0;
+    --text:#1f2937;
+    --muted:#6b7280;
+
+    --focus:#2563eb;
+    --focusSoft: rgba(37,99,235,.16);
+    --status:#ef4444;
+
+    --shadow: 0 10px 35px rgba(0,0,0,.14);
+    --shadowSoft: 0 6px 20px rgba(0,0,0,.07);
+    --radius: 12px;
+
+    --node: 38px;
+    --line: rgba(17,24,39,.18);
+  }
+
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    font-family: Segoe UI, Arial, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    overflow:hidden;
+  }
+
+  .mockup-header{
+    height:52px;
+    background:#2563eb;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    padding:0 18px;
+    font-weight:900;
+    letter-spacing:.2px;
+    user-select:none;
+  }
+
+  .container{
+    display:flex;
+    height: calc(100vh - 52px);
+    position:relative;
+  }
+
+  /* LEFT CONTENT */
+  .content{
+    flex:1;
+    padding:16px 22px;
+    overflow:auto;
+  }
+
+  .quotation-card{
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow: var(--shadowSoft);
+    padding:18px;
+    position:relative;
+    border: 1px solid rgba(0,0,0,.04);
+  }
+
+  .quotation-title{
+    font-weight:900;
+    font-size:16px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .badge{
+    background:#dcfce7;
+    color:#166534;
+    font-size:12px;
+    padding:3px 10px;
+    border-radius:999px;
+    font-weight:800;
+    white-space:nowrap;
+  }
+
+  /* Comment popup (OK như anh nói) */
+  .comment-popup{
+    position:absolute;
+    top:44px;
+    right:20px;
+    width:340px;
+    background:#fff;
+    border-radius:12px;
+    box-shadow: var(--shadow);
+    padding:14px;
+    display:none;
+    z-index:40;
+    border: 1px solid rgba(0,0,0,.06);
+  }
+  .comment-popup h4{
+    margin:0 0 10px;
+    font-size:13px;
+    font-weight:900;
+  }
+  .comment-item{
+    border-left:3px solid #e5e7eb;
+    padding-left:10px;
+    margin-bottom:10px;
+  }
+  .comment-user{ font-weight:900; font-size:12px; }
+  .comment-time{ font-size:11px; color:var(--muted); }
+  .comment-text{ font-size:13px; margin-top:4px; }
+
+  .quotation-card:hover .comment-popup{ display:block; }
+
+  /* Sections */
+  .section{
+    margin-top:22px;
+    background:#fff;
+    border-radius:12px;
+    padding:16px;
+    box-shadow: var(--shadowSoft);
+    border: 1px solid rgba(0,0,0,.04);
+    position:relative;
+  }
+  .section h3{
+    margin:0 0 10px;
+    font-size:14px;
+    font-weight:900;
+  }
+  .section.focused{
+    border-color: rgba(37,99,235,.45);
+    box-shadow: 0 0 0 3px var(--focusSoft), var(--shadowSoft);
+  }
+
+  /* RIGHT SIDE TREE (current state) */
+  .tree-wrap{
+    width:96px;
+    display:flex;
+    justify-content:center;
+    position:sticky;
+    top:0;
+    border-left: 1px solid rgba(0,0,0,.04);
+    background: linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.0));
+  }
+
+  .tree{
+    margin-top:80px;
+    position:relative;
+  }
+  .tree-line{
+    position:absolute;
+    left:50%;
+    top: calc(var(--node)/2);
+    bottom: calc(var(--node)/2);
+    width:2px;
+    background:#e5e7eb;
+    transform:translateX(-50%);
+  }
+
+  .tree-node{
+    width: var(--node);
+    height: var(--node);
+    border-radius: 50%;
+    background:#fff;
+    border: 2px solid rgba(99,102,241,.35);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:900;
+    color:#4338ca;
+    margin: 24px 0;
+    cursor:pointer;
+    position:relative;
+    user-select:none;
+  }
+
+  /* ACTIVE = status (đỏ) */
+  .tree-node.active{
+    border-color: var(--status);
+    background:#fee2e2;
+    color:#991b1b;
+  }
+
+  /* FOCUS = click highlight (xanh) */
+  .tree-node.focus{
+    border-color: var(--focus);
+    box-shadow: 0 0 0 4px var(--focusSoft);
+    color:#1d4ed8;
+  }
+
+  /* ==== NEW: History side panel (as your red rectangle) ==== */
+  .history-panel{
+    position:absolute;
+    right: 98px;            /* nằm sát bên trái tree */
+    top: 50%;
+    transform: translateY(-50%);
+    width: 260px;
+    background:#fff;
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(0,0,0,.06);
+    padding: 12px 12px 10px;
+    display:none;
+    z-index:50;
+  }
+
+  .history-panel:after{
+    content:"";
+    position:absolute;
+    right:-10px;
+    top:50%;
+    transform:translateY(-50%);
+    width:0;height:0;
+    border-top:10px solid transparent;
+    border-bottom:10px solid transparent;
+    border-left:10px solid #fff;
+    filter: drop-shadow(1px 0 0 rgba(0,0,0,.08));
+  }
+
+  .history-title{
+    font-weight:900;
+    font-size:13px;
+    margin: 0 0 10px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .history-sub{
+    font-size:11px;
+    color: var(--muted);
+    font-weight:700;
+  }
+
+  /* Vertical flow inside panel: node + arrow down */
+  .hflow{
+    position:relative;
+    padding: 4px 4px 2px;
+    max-height: 360px;
+    overflow:auto;
+  }
+  .hrow{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .hnode{
+    width: 30px;
+    height: 30px;
+    border-radius:999px;
+    background:#fff;
+    border: 2px solid rgba(148,163,184,.65);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:900;
+    color:#0f172a;
+    flex:0 0 auto;
+    font-size:12px;
+  }
+  .hnode.cur{
+    border-color: var(--status);
+    background:#fee2e2;
+    color:#991b1b;
+  }
+  .hmeta{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    min-width:0;
+  }
+  .hdept{
+    font-size:12px;
+    font-weight:900;
+    color:#0f172a;
+    line-height:1.1;
+  }
+  .htime{
+    font-size:11px;
+    color: var(--muted);
+    font-weight:700;
+    line-height:1.1;
+  }
+
+  .harrow{
+    margin: 6px 0 8px 13px; /* align under node */
+    width: 16px;
+    display:flex;
+    justify-content:center;
+  }
+  .harrow svg{
+    width: 12px; height: 18px;
+    opacity:.55;
+  }
+
+  /* Show panel when hover on tree OR on panel itself */
+  .tree-wrap.show-history .history-panel{ display:block; }
+
+  /* Tooltip-like behavior: hover on tree area */
+  .tree-wrap{
+    position:relative;
+  }
+
+  /* Make scrollbar nicer (optional) */
+  .hflow::-webkit-scrollbar{ width: 8px; }
+  .hflow::-webkit-scrollbar-thumb{ background: rgba(0,0,0,.12); border-radius: 999px; }
+  .hflow::-webkit-scrollbar-track{ background: transparent; }
+
+</style>
+</head>
+
+<body>
+  <div class="mockup-header">Mockup</div>
+
+  <div class="container">
+
+    <!-- LEFT -->
+    <div class="content" id="scrollHost">
+      <div class="quotation-card">
+        <div class="quotation-title">
+          Quotation #QT-10030
+          <span class="badge">Accepted</span>
+        </div>
+
+        <!-- COMMENT POPUP -->
+        <div class="comment-popup">
+          <h4>Comment Log</h4>
+
+          <div class="comment-item">
+            <div class="comment-user">MKT – Quan Nguyen</div>
+            <div class="comment-time">2024-01-02 09:15</div>
+            <div class="comment-text">Submitted quotation to TS for risk review.</div>
+          </div>
+
+          <div class="comment-item">
+            <div class="comment-user">TS – Minh Tran</div>
+            <div class="comment-time">2024-01-02 11:02</div>
+            <div class="comment-text">Location exposure acceptable, forwarded to UW.</div>
+          </div>
+
+          <div class="comment-item">
+            <div class="comment-user">UW – John Smith</div>
+            <div class="comment-time">2024-01-03 15:40</div>
+            <div class="comment-text">Premium adjusted. Returned to MKT for client confirmation.</div>
+          </div>
+
+          <div class="comment-item">
+            <div class="comment-user">LMKT – Leader A</div>
+            <div class="comment-time">2024-01-03 17:10</div>
+            <div class="comment-text">Approved final terms.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" id="sec-mkt">
+        <h3>MKT Section</h3>
+        Request / Client / Product fields…
+      </div>
+
+      <div class="section" id="sec-ts">
+        <h3>TS Section</h3>
+        Location / TSI / Risk fields…
+      </div>
+
+      <div class="section" id="sec-uw">
+        <h3>UW Section</h3>
+        Premium / Terms / Decision…
+      </div>
+
+      <div class="section" id="sec-lmkt">
+        <h3>LMKT Section</h3>
+        Leader approval / comment…
+      </div>
+
+      <div class="section" id="sec-pm">
+        <h3>PM Section</h3>
+        Policy issuance fields…
+      </div>
+
+      <div style="height:300px;"></div>
+    </div>
+
+    <!-- RIGHT TREE -->
+    <div class="tree-wrap" id="treeWrap">
+      <!-- History panel (as your red rectangle area) -->
+      <div class="history-panel" id="historyPanel">
+        <div class="history-title">
+          <span>Flow History</span>
+          <span class="history-sub">MKT → TS → UW → MKT → LMKT → PM</span>
+        </div>
+
+        <div class="hflow" id="historyFlow">
+          <!-- injected by JS -->
+        </div>
+      </div>
+
+      <div class="tree">
+        <div class="tree-line"></div>
+
+        <div class="tree-node focus" data-target="sec-mkt" data-dept="MKT">mkt</div>
+        <div class="tree-node" data-target="sec-ts" data-dept="TS">ts</div>
+        <div class="tree-node active" data-target="sec-uw" data-dept="UW">uw</div>
+        <div class="tree-node" data-target="sec-lmkt" data-dept="LMKT">lm</div>
+        <div class="tree-node" data-target="sec-pm" data-dept="PM">pm</div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+  // ====== MOCK history data (đúng flow anh nói) ======
+  // MKT -> TS -> UW -> MKT -> LMKT -> PM
+  const history = [
+    { dept:"MKT",  time:"2024-01-02 09:15", note:"Submitted to TS" },
+    { dept:"TS",   time:"2024-01-02 11:02", note:"Checked location / forwarded" },
+    { dept:"UW",   time:"2024-01-03 15:40", note:"Adjusted premium / returned" },
+    { dept:"MKT",  time:"2024-01-03 16:05", note:"Client confirmation" },
+    { dept:"LMKT", time:"2024-01-03 17:10", note:"Leader approved" },
+    { dept:"PM",   time:"2024-01-04 09:00", note:"Proceed issuance" }
+  ];
+  // current stage is UW for demo
+  const currentStage = "UW";
+
+  function renderHistory(){
+    const $host = $("#historyFlow").empty();
+    history.forEach((x, idx) => {
+      const isCur = x.dept === currentStage;
+
+      const $row = $(`
+        <div>
+          <div class="hrow">
+            <div class="hnode ${isCur ? "cur" : ""}">${x.dept}</div>
+            <div class="hmeta">
+              <div class="hdept">${x.note}</div>
+              <div class="htime">${x.time}</div>
+            </div>
+          </div>
+        </div>
+      `);
+      $host.append($row);
+
+      if(idx < history.length - 1){
+        $host.append(`
+          <div class="harrow" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 4v12" stroke="black" stroke-width="2" stroke-linecap="round"/>
+              <path d="M7 13l5 5 5-5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        `);
+      }
+    });
+  }
+
+  function clearSectionFocus(){
+    $(".section").removeClass("focused");
+  }
+
+  function focusSection(id){
+    clearSectionFocus();
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.classList.add("focused");
+    el.scrollIntoView({ behavior:"smooth", block:"start" });
+  }
+
+  // Click tree -> scroll section + focus ring
+  $(".tree-node").on("click", function(){
+    $(".tree-node").removeClass("focus");
+    $(this).addClass("focus");
+
+    const target = $(this).data("target");
+    if(target) focusSection(target);
+  });
+
+  // Hover tree area -> show history panel (as red rectangle place)
+  const treeWrap = document.getElementById("treeWrap");
+  treeWrap.addEventListener("mouseenter", () => treeWrap.classList.add("show-history"));
+  treeWrap.addEventListener("mouseleave", () => treeWrap.classList.remove("show-history"));
+
+  // init
+  renderHistory();
+</script>
+
+</body>
+</html>
