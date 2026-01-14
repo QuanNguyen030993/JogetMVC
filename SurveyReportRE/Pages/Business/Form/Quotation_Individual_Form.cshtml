@@ -644,7 +644,19 @@ Note:
                         comment: "[STATIC] UW note for demo purpose"
                     }
                 ];
+                debugger
+                query = "SELECT * FROM QuotationCommentLog";
+                 $.ajax({
+                    url: `/api/QuotationCommentLog/ExecuteCustomQuery`,
+                    method: "POST",
+                    async: false,
+                    contentType: "application/json",
+                    data: JSON.stringify(query),
+                    success: function(data) {
+                          quotes = data;
 
+                    }
+                });
 
                 const loadComments = debounce(function (quoteCode) {
                     const key = `comments:${quoteCode}`;

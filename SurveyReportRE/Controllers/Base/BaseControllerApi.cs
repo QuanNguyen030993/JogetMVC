@@ -458,6 +458,9 @@ namespace ERPCore.Controllers.Base
             object obj = await _BaseRepository.ExecuteCustomQuery(query);
             return obj;
         }
+
+
+
         [HttpPost]
         public virtual async Task<IActionResult> InsertData([FromForm] InsertFormCollection form)
         {
