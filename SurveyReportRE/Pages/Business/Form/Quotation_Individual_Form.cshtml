@@ -53,21 +53,81 @@ Note:
 
 
 
-        // ===== UI state =====
-        var Roles = ["MKT","TS","UW","LMKT","PM"];
-        var currentUserRole = "MKT";
-        var filter = "all";
-        var searchText = "";
-        var selectedId = quotes[0]?.id;
+        // // ===== UI state =====
+        // var Roles = ["MKT","TS","UW","LMKT","PM"];
+        // var currentUserRole = "MKT";
+        // var filter = "all";
+        // var searchText = "";
+        // var selectedId = quotes[0]?.id;
 
         
-        function money(n){ return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(n||0); }
-        function statusClass(s){ if(s==="accepted") return "accepted"; if(s==="sent") return "sent"; if(s==="declined") return "declined"; return ""; }
-        function statusText(s){ if(s==="accepted") return "Accepted"; if(s==="sent") return "Sent To Client"; if(s==="declined") return "Declined"; return "New"; }
-        // NEW: stageDept (status highlight) vs focusDept (click highlight)
-        var stageDept = statusText(quotes[0]?.status ?? "") == "New" ?  "MKT" : "MKT";   // this is from quotation workflow stage (status only)
-        var focusDept = "PM";   // this is from user click (focus highlight)
-        var focusLocked = false; // to prevent scroll from changing focus (we never change on scroll anyway)
+        // function money(n){ return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(n||0); }
+        // function statusClass(s){ if(s==="accepted") return "accepted"; if(s==="sent") return "sent"; if(s==="declined") return "declined"; return ""; }
+        // function statusText(s){ if(s==="accepted") return "Accepted"; if(s==="sent") return "Sent To Client"; if(s==="declined") return "Declined"; return "New"; }
+        // // NEW: stageDept (status highlight) vs focusDept (click highlight)
+        // var stageDept = statusText(quotes[0]?.status ?? "") == "New" ?  "MKT" : "MKT";   // this is from quotation workflow stage (status only)
+        // var focusDept = "PM";   // this is from user click (focus highlight)
+        // var focusLocked = false; // to prevent scroll from changing focus (we never change on scroll anyway)
+
+
+        const Roles = ["MKT", "TS", "UW", "LMKT", "PM"];
+        let currentUserRole = "MKT";
+        var filter = "all";
+        let searchText = "";
+        let selectedId = quotes[0]?.id;
+
+        // stage vs focus
+        let stageDept = "UW";   // status ring only (from workflow stage)
+        let focusDept = "PM";   // click highlight only
+
+        function money(n) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n || 0); }
+        function statusClass(s) { if (s === "accepted") return "accepted"; if (s === "sent") return "sent"; if (s === "declined") return "declined"; return ""; }
+        function statusText(s) { if (s === "accepted") return "Accepted"; if (s === "sent") return "Sent To Client"; if (s === "declined") return "Declined"; return "New"; }
+
+        // function renderList() {
+        //     const t = (searchText || "").toLowerCase();
+        //     const data = quotes.filter(x => !t || x.quoteNo.toLowerCase().includes(t) || x.clientName.toLowerCase().includes(t) || String(x.requestNo).toLowerCase().includes(t));
+
+        //     const $root = $("#quoteList").empty();
+        //     if (!data.length) {
+        //         $root.append(`<div style="color:#6b7280;padding:10px;">No quotations found.</div>`);
+        //         return;
+        //     }
+        //     data.forEach(q => {
+        //         const isSel = q.id === selectedId;
+        //         $root.append(`
+        //     <div class="quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-quotation-code="${q.quoteNo}">
+        //       <div class="quoteTop">
+        //         <div>
+        //           <div class="quoteNo">${q.quoteNo}</div>
+        //           <div class="quoteClient">${q.clientName}</div>
+        //         </div>
+        //         <div class="statusTag ${statusClass(q.status)}">${statusText(q.status)}</div>
+        //       </div>
+        //       <div class="quoteMeta">
+        //         <div>${q.requestNo}</div>
+        //         <div>${q.date}</div>
+        //         <div class="quoteAmount">${money(q.amount)}</div>
+        //       </div>
+        //     </div>
+        //   `);
+        //     });
+
+        //     $(".quoteCard").off("click").on("click", function () {
+        //         selectedId = Number($(this).attr("data-id"));
+        //         renderList();
+        //         renderDetail();
+        //     });
+        // }
+
+        // =============================
+        // 3) Mapping model => DevExtreme Forms per dept
+        // =============================
+        function getSelectedModel() {
+            const idx = (selectedId || 1) - 1;
+            return quotes[idx] || quotes[0];
+        }
+
 
         function applyFilter(data){
           var arr = data.slice();
@@ -353,7 +413,361 @@ Note:
           $(".navItem").removeClass("active");
           $(el).addClass("active");
         }
+        const leaderMktState = { Approval: null, Comment: "" };
+        const pmState = { PolicyNo: "", InvoiceTo: "", Inception: null, Expiry: null, Ref_RequestNo: "", Ref_QuotationCode: "", Ref_ClientName: "", Ref_PremiumTotal: null };
 
+        function syncPmRefFromModel(m) {
+            pmState.Ref_RequestNo = m.RequestNo || "";
+            pmState.Ref_QuotationCode = m.QuotationCode || "";
+            pmState.Ref_ClientName = m.ClientName || m.PolicyHolderName || "";
+            pmState.Ref_PremiumTotal = m.PremiumTotal || null;
+        }
+
+        function applyEditLock() {
+            // demo rule: only edit when focusDept == currentUserRole
+            const roMKT = !(currentUserRole === "MKT" && focusDept === "MKT");
+            const roTS = !(currentUserRole === "TS" && focusDept === "TS");
+            const roUW = !(currentUserRole === "UW" && focusDept === "UW");
+            const roLMKT = !(currentUserRole === "LMKT" && focusDept === "LMKT");
+            const roPM = !(currentUserRole === "PM" && focusDept === "PM");
+
+            $("#formMKT").dxForm("instance")?.option("readOnly", roMKT);
+            $("#formTS").dxForm("instance")?.option("readOnly", roTS);
+            $("#formUW").dxForm("instance")?.option("readOnly", roUW);
+            $("#formLMKT").dxForm("instance")?.option("readOnly", roLMKT);
+            $("#formPM").dxForm("instance")?.option("readOnly", roPM);
+        }
+
+        function updateHints() {
+            $("#hintMKT").text(`READ/EDIT depends • login=${currentUserRole}`);
+            $("#hintTS").text(`READ/EDIT depends • login=${currentUserRole}`);
+            $("#hintUW").text(`READ/EDIT depends • login=${currentUserRole}`);
+            $("#hintLMKT").text(`READ/EDIT depends • login=${currentUserRole}`);
+            $("#hintPM").text(`READ/EDIT depends • login=${currentUserRole}`);
+            $("#focusDeptPill").text(`Focus: ${focusDept}`);
+        }
+
+        function applyNodeHighlights() {
+            $(".dept-node").removeClass("status focus");
+            $(`.dept-node[data-key='${stageDept}']`).addClass("status");
+            $(`.dept-node[data-key='${focusDept}']`).addClass("focus");
+        }
+        function applySectionFocusHighlight() {
+            $(".dept-section").removeClass("focused");
+            $(`#sec${focusDept}`).addClass("focused");
+        }
+        function scrollToDept(dept) {
+            const container = document.getElementById("overviewScroll");
+            const el = document.getElementById("sec" + dept);
+            if (!container || !el) return;
+            container.scrollTo({ top: el.offsetTop - 8, behavior: "smooth" });
+        }
+
+        function setupDeptTree() {
+            $(".dept-node").on("click", function () {
+                const key = $(this).data("key");
+                focusDept = key;
+                applyNodeHighlights();
+                applySectionFocusHighlight();
+                applyEditLock();
+                updateHints();
+                scrollToDept(focusDept);
+            });
+        }
+
+        function layoutTreeLine() {
+            const $stack = $("#treeStack");
+            const $nodes = $stack.find(".dept-node");
+            const $line = $("#treeVLine");
+            if (!$nodes.length) return;
+
+            const stackRect = $stack[0].getBoundingClientRect();
+            const first = $nodes[0].getBoundingClientRect();
+            const last = $nodes[$nodes.length - 1].getBoundingClientRect();
+
+            // start/end at centers (line not beyond first/last)
+            const topInside = (first.top - stackRect.top) + (first.height / 2);
+            const bottomInside = (last.top - stackRect.top) + (last.height / 2);
+
+            $line.css({ top: `${topInside}px`, height: `${bottomInside - topInside}px` });
+        }
+
+        // Branch overlay
+        function openBranchOverlay() { $("#branchOverlay").show(); }
+        function closeBranchOverlay() { $("#branchOverlay").hide(); $("#routeTS, #routeUW").removeClass("active"); }
+        function routeTo(dept) {
+            $("#routeTS, #routeUW").removeClass("active");
+            if (dept === "TS") $("#routeTS").addClass("active");
+            if (dept === "UW") $("#routeUW").addClass("active");
+
+            focusDept = dept;
+            applyNodeHighlights();
+            applySectionFocusHighlight();
+            applyEditLock();
+            updateHints();
+            scrollToDept(focusDept);
+
+            DevExpress.ui.notify(`Mock submit routed to ${dept}`, "success", 1200);
+            setTimeout(closeBranchOverlay, 350);
+        }
+
+
+        // =============================
+        // 4) Hover AJAX module (Comments + Flow History)
+        // - Replace endpoints below to call your server
+        // =============================
+        const MockupApi = {
+            // Example:
+            // commentsUrl: (quotationCode) => `/api/quotation/${encodeURIComponent(quotationCode)}/comments`,
+            // flowUrl: (quotationCode) => `/api/quotation/${encodeURIComponent(quotationCode)}/flow`,
+            commentsUrl: (quotationCode) => `/api/mock/comments?quotationCode=${encodeURIComponent(quotationCode)}`,
+            flowUrl: (quotationCode) => `/api/mock/flow?quotationCode=${encodeURIComponent(quotationCode)}`
+        };
+
+        const HoverAjax = (function () {
+            const cache = new Map(); // key -> { at, data }
+            const xhrs = new Map();  // key -> jqXHR
+            const CACHE_MS = 30000;
+
+            function debounce(fn, wait) {
+                let t = null;
+                return function (...args) {
+                    clearTimeout(t);
+                    t = setTimeout(() => fn.apply(this, args), wait);
+                };
+            }
+
+            function ajaxJson(url, key) {
+                const now = Date.now();
+                const c = cache.get(key);
+                if (c && (now - c.at) < CACHE_MS) return $.Deferred().resolve(c.data).promise();
+
+                const prev = xhrs.get(key);
+                if (prev && prev.readyState !== 4) prev.abort();
+
+                const dfd = $.Deferred();
+                const xhr = $.ajax({
+                    url, method: "GET", dataType: "json",
+                    success: (data) => { cache.set(key, { at: Date.now(), data }); dfd.resolve(data); },
+                    error: (xhr, status) => { if (status === "abort") return; dfd.reject(status); }
+                });
+                xhrs.set(key, xhr);
+                return dfd.promise();
+            }
+
+            function escapeHtml(s) {
+                return String(s ?? "")
+                    .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+                    .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+            }
+
+            function positionTooltip($tip, rect) {
+                const margin = 10;
+                const vw = window.innerWidth, vh = window.innerHeight;
+                const tipW = $tip.outerWidth(), tipH = $tip.outerHeight();
+
+                // prefer right side of card
+                let left = rect.right + margin;
+                let top = rect.top;
+
+                if (left + tipW > vw - 8) left = rect.left - tipW - margin;
+                if (left < 8) left = Math.max(8, vw - tipW - 8);
+                if (top + tipH > vh - 8) top = Math.max(8, vh - tipH - 8);
+
+                $tip.css({ left: `${left}px`, top: `${top}px` });
+            }
+
+            function renderComments(items) {
+                if (!Array.isArray(items) || items.length === 0) {
+                    return `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No comments</div>`;
+                }
+                return items.map((c) => `
+            <div class="ct-item">
+              <div class="ct-user">${escapeHtml((c.dept ? c.dept + " – " : "") + (c.user || ""))}</div>
+              <div class="ct-time">${escapeHtml(c.time || "")}${c.order != null ? " • #" + escapeHtml(c.order) : ""}</div>
+              <div class="ct-text">${escapeHtml(c.comment || "")}</div>
+            </div>
+          `).join("");
+            }
+
+            function renderFlow(items) {
+                if (!Array.isArray(items) || items.length === 0) {
+                    return { summary: "-", html: `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No history</div>` };
+                }
+                const summary = items.map(x => x.dept).join(" → ");
+                const arrow = `
+            <div class="fh-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" width="12" height="18">
+                <path d="M12 4v12" stroke="black" stroke-width="2" stroke-linecap="round"/>
+                <path d="M7 13l5 5 5-5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          `;
+                const html = items.map((x, idx) => {
+                    const isCur = (x.dept === stageDept); // stageDept already exists in your mock
+                    return `
+              <div>
+                <div class="fh-row">
+                  <div class="fh-node ${isCur ? "cur" : ""}">${escapeHtml(x.dept)}</div>
+                  <div class="fh-meta">
+                    <div class="fh-note">${escapeHtml(x.note || "")}</div>
+                    <div class="fh-time">${escapeHtml(x.time || "")}</div>
+                  </div>
+                </div>
+              </div>
+              ${idx < items.length - 1 ? arrow : ""}
+            `;
+                }).join("");
+                return { summary, html };
+            }
+
+            // public bind
+            function bind() {
+                const $tip = $("#commentTooltip");
+                const $tipSub = $("#commentTooltipSub");
+                const $tipList = $("#commentTooltipList");
+
+                let hoverQuoteCode = null;
+                var constItems = [
+                    {
+                        order: 900,
+                        dept: "MKT",
+                        user: "Static Demo User",
+                        time: "2024-01-05 10:30",
+                        comment: "[STATIC] Demo comment injected after AJAX"
+                    },
+                    {
+                        order: 901,
+                        dept: "UW",
+                        user: "Static UW",
+                        time: "2024-01-05 11:15",
+                        comment: "[STATIC] UW note for demo purpose"
+                    }
+                ];
+
+
+                const loadComments = debounce(function (quoteCode) {
+                    const key = `comments:${quoteCode}`;
+                    const url = MockupApi.commentsUrl(quoteCode);
+
+                    $tipList.html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
+                    ajaxJson(url, key).then((data) => {
+                        // allow payload shape: [] OR {items:[]}
+                        var items = Array.isArray(data) ? data : (data?.items || data?.data || []);
+
+
+
+                        // ignore if user already moved away
+                        if (hoverQuoteCode !== quoteCode) return;
+                        $tipList.html(renderComments(items));
+                    }).catch(() => {
+                        if (hoverQuoteCode !== quoteCode) return;
+                        $tipList.html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load comments</div>`);
+                        $tipList.html(renderComments(constItems));
+                    });
+                }, 180);
+
+                $("#quoteList")
+                    .off("mouseenter.qm mouseleave.qm")
+                    .on("mouseenter.qm", ".quoteCard", function () {
+                        const quoteCode = $(this).attr("data-quotation-code") || $(this).find(".quoteNo").text().trim();
+                        hoverQuoteCode = quoteCode;
+
+                        const rect = this.getBoundingClientRect();
+                        $tipSub.text(quoteCode || "-");
+                        $tip.show();
+                        positionTooltip($tip, rect);
+
+                        loadComments(quoteCode);
+                    })
+                    .on("mouseleave.qm", ".quoteCard", function () {
+                        hoverQuoteCode = null;
+                        $tip.hide();
+                    });
+
+
+                // Flow history hover (tree area)
+                let hoverFlowQuoteCode = null;
+
+                // Demo data: always available even when API is not ready
+                const staticFlow = [
+                    { dept: "MKT", time: "2024-01-02 09:15", note: "Submitted to TS" },
+                    { dept: "TS", time: "2024-01-02 11:02", note: "Checked location / forwarded" },
+                    { dept: "UW", time: "2024-01-03 15:40", note: "Adjusted premium / returned" },
+                    { dept: "MKT", time: "2024-01-03 16:05", note: "Client confirmation" },
+                    { dept: "LMKT", time: "2024-01-03 17:10", note: "Leader approved" },
+                    { dept: "PM", time: "2024-01-04 09:00", note: "Proceed issuance" }
+                ];
+
+                // Keep panel open when moving mouse between tree <-> panel
+                function scheduleHideFlowPanel() {
+                    setTimeout(() => {
+                        const overTree = document.querySelector("#deptTree:hover");
+                        const overPanel = document.querySelector("#flowHistoryPanel:hover");
+                        if (!overTree && !overPanel) {
+                            hoverFlowQuoteCode = null;
+                            $("#flowHistoryPanel").hide();
+                        }
+                    }, 90);
+                }
+
+                const loadFlow = debounce(function (quoteCode) {
+                    const key = `flow:${quoteCode}`;
+                    const url = MockupApi.flowUrl(quoteCode);
+
+                    // Render demo first (so you always have something to look at)
+                    const demo = renderFlow(staticFlow);
+                    $("#flowSummary").text(demo.summary);
+
+                    const loading = `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`;
+                    $("#flowHistoryBody").html(loading + demo.html);
+
+                    ajaxJson(url, key).then((data) => {
+                        const items = Array.isArray(data) ? data : (data?.items || data?.data || []);
+                        if (hoverFlowQuoteCode !== quoteCode) return;
+
+                        // If API returns empty -> fallback to demo
+                        const finalItems = (Array.isArray(items) && items.length) ? items : staticFlow;
+
+                        const r = renderFlow(finalItems);
+                        $("#flowSummary").text(r.summary);
+                        $("#flowHistoryBody").html(r.html);
+                    }).catch(() => {
+                        if (hoverFlowQuoteCode !== quoteCode) return;
+
+                        // Keep demo visible even when API fails
+                        $("#flowSummary").text(demo.summary);
+                        $("#flowHistoryBody").html(
+                            `<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load flow (showing demo)</div>`
+                            + demo.html
+                        );
+                    });
+                }, 180);
+
+                $("#deptTree")
+                    .off("mouseenter.qm mouseleave.qm")
+                    .on("mouseenter.qm", function () {
+                        const m = getSelectedModel();
+                        const quoteCode = m?.QuotationCode || "-";
+                        hoverFlowQuoteCode = quoteCode;
+                        $("#flowHistoryPanel").show();
+                        loadFlow(quoteCode);
+                    })
+                    .on("mouseleave.qm", scheduleHideFlowPanel);
+
+                $("#flowHistoryPanel")
+                    .off("mouseenter.qm mouseleave.qm")
+                    .on("mouseenter.qm", function () {
+                        // keep opened while hovering panel
+                        $("#flowHistoryPanel").show();
+                    })
+                    .on("mouseleave.qm", scheduleHideFlowPanel);
+
+
+            }
+
+            return { bind };
+        })();
         $(function(){
           // top buttons
           $("#btnNew").dxButton({ text:"New", icon:"plus", type:"default", onClick:()=>DevExpress.ui.notify("Mock: New quotation","success",1200) });
@@ -418,6 +832,11 @@ Note:
           applyNodeHighlights();
           applySectionFocusHighlight();
           updateHints();
+            HoverAjax.bind();
+
+            // render first detail
+            const m = getSelectedModel();
+            syncPmRefFromModel(m);
 
           // layout line after DOM paint (and on resize)
           setTimeout(layoutTreeLine, 0);
@@ -504,6 +923,25 @@ Note:
                     </div>
 
                     <div class="cardBody overview-wrap" style="padding:0">
+
+                        <div id="flowHistoryPanel" class="flow-history-panel">
+                            <div class="fh-title">
+                                <span>Flow History</span>
+                                <span id="flowSummary" class="fh-sub">-</span>
+                            </div>
+                            <div id="flowHistoryBody" class="fh-flow">
+                                <div style="color:#6b7280;font-size:12px;padding:6px 4px;">Hover tree to load…</div>
+                            </div>
+                        </div>
+                        <div id="commentTooltip" class="comment-tooltip" aria-hidden="true">
+                            <div class="ct-title">
+                                <span>Comment Log</span>
+                                <span id="commentTooltipSub" class="ct-sub">-</span>
+                            </div>
+                            <div id="commentTooltipList" class="ct-list">
+                                <div style="color:#6b7280;font-size:12px;padding:6px 4px;">Hover a quotation to load…</div>
+                            </div>
+                        </div>
                         <!-- Navigator Tree (status vs focus) -->
                         <div id="deptTree" class="dept-tree">
                             <div class="treeStack" id="treeStack">
@@ -603,4 +1041,7 @@ Note:
                 <div id="routeUW" class="bnode choice" style="left:182px; top:74px;" title="Route to UW">UW</div>
             </div>
         </div>
+
+      
+
 </body>

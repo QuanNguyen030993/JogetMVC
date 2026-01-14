@@ -4,7 +4,7 @@
 @{
     ViewData["Title"] = "Management";
     ViewBag.Title = "Quotation";
-    ViewData["Id"] = 1;
+    ViewData["Id"] = 0;
 }
 <style>
     .dx-tabpanel .dx-tabpanel-tabs .dx-tab {
@@ -14,21 +14,57 @@
     }
 </style>
 <script type="text/javascript">
+    // $(function () {
+    //     var _id = @Convert.ToInt32(ViewData["Id"]);
+    //     var _formConfig  = new MFormOption();
+    //     // _formConfig.cloneUrl = '/Business/MasterData/MailTemplate_Form/' + _id;
+    //     // _formConfig.tabCode = 'MailTemplate_Form';
+    //     // _formConfig.tabName = "";
+    //     _formConfig.originModelName = "@Quotation_FormModel.ModelName";
+    //     _formConfig.formElementName = "@Quotation_FormModel.ModelName";
+    //     _formConfig.colCount = 1;
+    //     new QuotationForm(1, null, _formConfig);
+    // })
     $(function () {
+
+
+        setTimeout(() => {  
         var _id = @Convert.ToInt32(ViewData["Id"]);
-        var _formConfig  = new MFormOption();
-        // _formConfig.cloneUrl = '/Business/MasterData/MailTemplate_Form/' + _id;
-        // _formConfig.tabCode = 'MailTemplate_Form';
-        // _formConfig.tabName = "";
-        _formConfig.originModelName = "@Quotation_FormModel.ModelName";
-        _formConfig.formElementName = "@Quotation_FormModel.ModelName";
-        _formConfig.colCount = 1;
-        new QuotationForm(1, null, _formConfig);
-    })
+        var ids =  JSON.parse(`@Html.Raw(ViewData["Data"])`);
+
+        $("#quotationIdSelect").dxSelectBox({
+            dataSource: ids,
+            value: _id,
+            placeholder: "Chọn Quotation Id...",
+            searchEnabled: true,
+            showClearButton: false,
+            onValueChanged: function (e) {
+                if (!e.value) return;
+               _id = e.value;
+               loadPage();
+            }
+        });
+
+        var _formConfig = new MFormOption();
+                _formConfig.originModelName = "@Quotation_FormModel.ModelName";
+                _formConfig.formElementName = "@Quotation_FormModel.ModelName";
+                _formConfig.colCount = 1;
+                _formConfig.container = $(`<div id = "form_${_formConfig.formElementName}_${_id}"  class="dExForm" >`);
+        function loadPage()
+            {
+                 new QuotationForm(_id, null, _formConfig, _formConfig);
+                 _formConfig.container.appendTo($("#container-Quotation"));
+            
+        }
+        loadPage();
+        }, 1000);
+
+    });
 </script>
-<div class="container">
+<div id="quotationIdSelect"></div>
+<div id="container-Quotation" class="container">
     <div id="quotationPopup"></div>
-    <div id="form_@(Quotation_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])" class="dExForm"></div>
+    @* <div id="form_@(Quotation_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])" class="dExForm"></div> *@
 </div>
 
    @*  <div class="modal fade product-dialog" tabQuotation="-1" role="dialog" aria-labelledby="gridSystemModalLabel">

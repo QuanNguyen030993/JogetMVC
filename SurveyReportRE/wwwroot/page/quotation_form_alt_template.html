@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quotation Process — Alternative Layout Template</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#121a32;
+      --panel2:#0f1730;
+      --border:rgba(255,255,255,.10);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.65);
+      --accent:#7c5cff;
+      --good:#27d17f;
+      --warn:#ffcc4a;
+      --bad:#ff5c73;
+      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      --radius:14px;
+      --radius2:18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background: radial-gradient(1100px 800px at 20% -10%, rgba(124,92,255,.25), transparent 60%),
+                  radial-gradient(900px 700px at 120% 10%, rgba(39,209,127,.18), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      font-family:var(--sans);
+    }
+    a{ color:inherit; text-decoration:none; }
+    .topbar{
+      position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(10px);
+      background: rgba(11,16,32,.65);
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar-inner{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:12px 18px;
+      max-width: 1400px; margin:0 auto;
+      gap:14px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      font-weight:700;
+      letter-spacing:.2px;
+    }
+    .pill{
+      font-size:12px;
+      padding:6px 10px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      color:var(--muted);
+      background: rgba(255,255,255,.04);
+    }
+    .actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .btn{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 12px;
+      cursor:pointer;
+      font-weight:600;
+      transition: transform .08s ease, background .2s ease, border-color .2s ease;
+      user-select:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .btn:hover{ background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.18); }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{
+      border-color: rgba(124,92,255,.55);
+      background: rgba(124,92,255,.16);
+    }
+    .btn.primary:hover{
+      background: rgba(124,92,255,.22);
+      border-color: rgba(124,92,255,.75);
+    }
+    .btn.danger{
+      border-color: rgba(255,92,115,.55);
+      background: rgba(255,92,115,.14);
+    }
+
+    .shell{
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+    .layout{
+      display:grid;
+      grid-template-columns: 320px minmax(520px, 1fr) 360px;
+      gap: 14px;
+      align-items:start;
+    }
+    @media (max-width: 1200px){
+      .layout{ grid-template-columns: 1fr; }
+      .right, .left{ position:static; }
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border: 1px solid var(--border);
+      border-radius: var(--radius2);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card-h{
+      padding: 14px 14px 12px 14px;
+      border-bottom: 1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .card-h h3{
+      margin:0;
+      font-size:14px;
+      letter-spacing:.25px;
+      color: rgba(255,255,255,.88);
+    }
+    .card-b{ padding: 12px 14px 14px 14px; }
+
+    .left{ position: sticky; top: 70px; }
+    .right{ position: sticky; top: 70px; }
+
+    /* Steps */
+    .steps{ display:flex; flex-direction:column; gap:8px; }
+    .step{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      border-radius: 14px;
+      padding: 10px 12px;
+      cursor:pointer;
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+      transition: background .2s ease, border-color .2s ease, transform .08s ease;
+      position:relative;
+    }
+    .step:hover{ background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.18); }
+    .step:active{ transform: translateY(1px); }
+    .dot{
+      width:10px; height:10px; border-radius:999px; margin-top:4px;
+      background: rgba(255,255,255,.35);
+      box-shadow: 0 0 0 4px rgba(255,255,255,.04);
+    }
+    .step[data-status="done"] .dot{ background: var(--good); box-shadow: 0 0 0 4px rgba(39,209,127,.15); }
+    .step[data-status="missing"] .dot{ background: var(--warn); box-shadow: 0 0 0 4px rgba(255,204,74,.15); }
+    .step[data-status="blocked"] .dot{ background: var(--bad); box-shadow: 0 0 0 4px rgba(255,92,115,.12); }
+    .step .meta{
+      display:flex; flex-direction:column; gap:2px;
+      min-width:0;
+    }
+    .step .title{
+      font-weight:700;
+      font-size:13px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .step .sub{
+      color: var(--muted);
+      font-size:12px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .badge{
+      font-size:11px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      color: var(--muted);
+    }
+
+    /* Hover history panel */
+    .hover-panel{
+      position: fixed;
+      z-index: 999;
+      width: 380px;
+      max-width: calc(100vw - 24px);
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(18,26,50,.92);
+      backdrop-filter: blur(12px);
+      border-radius: 16px;
+      box-shadow: 0 14px 40px rgba(0,0,0,.5);
+      display:none;
+      overflow:hidden;
+    }
+    .hover-panel .hp-h{
+      padding: 12px 12px;
+      border-bottom: 1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .hover-panel .hp-h .k{
+      font-size:12px; color: var(--muted);
+    }
+    .hover-panel .hp-b{
+      padding: 10px 12px 12px 12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      max-height: 320px;
+      overflow:auto;
+    }
+    .hp-row{
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 14px;
+      padding: 10px 10px;
+      background: rgba(255,255,255,.03);
+    }
+    .hp-row .r1{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px;
+      font-size:12px;
+      color: rgba(255,255,255,.86);
+    }
+    .hp-row .r2{ margin-top:6px; color: var(--muted); font-size:12px; line-height:1.35; }
+    .mono{ font-family:var(--mono); font-size: 11px; color: rgba(255,255,255,.72); }
+
+    /* Main form */
+    .formgrid{ display:grid; grid-template-columns: 1fr; gap:12px; }
+    details.section{
+      border: 1px solid var(--border);
+      border-radius: var(--radius2);
+      background: rgba(255,255,255,.03);
+      overflow:hidden;
+    }
+    details.section[open]{ background: rgba(255,255,255,.04); }
+    summary.section-h{
+      list-style:none;
+      cursor:pointer;
+      padding: 14px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      border-bottom: 1px solid var(--border);
+      user-select:none;
+    }
+    summary.section-h::-webkit-details-marker{ display:none; }
+    .section-title{
+      display:flex; align-items:center; gap:10px;
+      min-width:0;
+    }
+    .chev{
+      width: 10px; height: 10px;
+      border-right: 2px solid rgba(255,255,255,.55);
+      border-bottom: 2px solid rgba(255,255,255,.55);
+      transform: rotate(-45deg);
+      transition: transform .2s ease;
+      margin-top:2px;
+    }
+    details.section[open] .chev{ transform: rotate(45deg); }
+    .section-title h4{
+      margin:0; font-size:14px; letter-spacing:.2px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .section-meta{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .section-b{
+      padding: 12px 14px 14px 14px;
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 10px;
+    }
+    .field{
+      grid-column: span 6;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .field.full{ grid-column: span 12; }
+    .label{
+      font-size:12px;
+      color: rgba(255,255,255,.78);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+    }
+    .hint{ color: var(--muted); font-size:11px; }
+    .req{ color: var(--warn); font-size:11px; font-weight:700; }
+    input, select, textarea{
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(10,14,30,.60);
+      color: var(--text);
+      padding: 10px 12px;
+      outline:none;
+      transition: border-color .2s ease, background .2s ease;
+    }
+    input:focus, select:focus, textarea:focus{
+      border-color: rgba(124,92,255,.75);
+      background: rgba(10,14,30,.72);
+    }
+    textarea{ min-height: 86px; resize: vertical; }
+    .row-actions{
+      display:flex; align-items:center; justify-content:flex-end; gap:10px;
+      padding: 10px 0 0 0;
+    }
+
+    /* Right summary */
+    .kv{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px;
+      padding: 10px 0;
+      border-bottom: 1px dashed rgba(255,255,255,.14);
+    }
+    .kv:last-child{ border-bottom:none; }
+    .kv .k{ color: var(--muted); font-size:12px; }
+    .kv .v{ font-weight:800; letter-spacing:.2px; }
+    .mini{
+      font-size:11px; color: var(--muted);
+      margin-top:8px;
+      line-height:1.35;
+    }
+    .chiprow{ display:flex; flex-wrap:wrap; gap:8px; }
+    .chip{
+      padding:6px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.03);
+      font-size:12px;
+      color: rgba(255,255,255,.78);
+      cursor:pointer;
+    }
+    .chip:hover{ border-color: rgba(255,255,255,.24); background: rgba(255,255,255,.06); }
+    .toast{
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 1000;
+      background: rgba(18,26,50,.92);
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 14px;
+      padding: 10px 12px;
+      box-shadow: var(--shadow);
+      display:none;
+      max-width: min(420px, calc(100vw - 32px));
+      color: rgba(255,255,255,.9);
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span style="display:inline-flex;width:26px;height:26px;border-radius:9px;background:rgba(124,92,255,.18);border:1px solid rgba(124,92,255,.45);align-items:center;justify-content:center;">Q</span>
+        <div>
+          <div style="font-size:14px;line-height:1.1;">Quotation Process</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.1;">Alternative layout template (demo-only)</div>
+        </div>
+      </div>
+      <div class="actions">
+        <span class="pill">QR: <span class="mono" id="qrCode">RNQ-2026-0001</span></span>
+        <span class="pill">Status: <b id="wfStatus">Draft</b></span>
+        <button class="btn" id="btnSave">💾 Save draft</button>
+        <button class="btn primary" id="btnCalc">🧮 Calculate</button>
+        <button class="btn primary" id="btnSubmit">🚀 Submit</button>
+        <button class="btn danger" id="btnRecall">↩ Recall</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="layout">
+      <!-- LEFT: Workflow / Steps -->
+      <div class="left">
+        <div class="card">
+          <div class="card-h">
+            <h3>Workflow / Steps</h3>
+            <span class="badge" id="missingCount">Missing: 2</span>
+          </div>
+          <div class="card-b">
+            <div class="steps" id="steps"></div>
+            <div class="mini">
+              Hover step để xem Flow History. Click step để mở section tương ứng ở giữa.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CENTER: Form -->
+      <div class="center">
+        <div class="card">
+          <div class="card-h">
+            <h3>Input Form</h3>
+            <div class="chiprow">
+              <span class="chip" data-jump="sec_header">Header</span>
+              <span class="chip" data-jump="sec_risk">Risk</span>
+              <span class="chip" data-jump="sec_coverage">Coverage</span>
+              <span class="chip" data-jump="sec_uw">UW</span>
+            </div>
+          </div>
+          <div class="card-b">
+            <div class="formgrid" id="form"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Summary -->
+      <div class="right">
+        <div class="card">
+          <div class="card-h">
+            <h3>Pricing Snapshot</h3>
+            <span class="badge" id="premiumBadge">LIVE</span>
+          </div>
+          <div class="card-b">
+            <div class="kv"><div class="k">Base premium</div><div class="v" id="basePremium">$ 2,150</div></div>
+            <div class="kv"><div class="k">Loading</div><div class="v" id="loading">+ 10%</div></div>
+            <div class="kv"><div class="k">Discount</div><div class="v" id="discount">- 5%</div></div>
+            <div class="kv"><div class="k">Final premium</div><div class="v" id="finalPremium">$ 2,247.50</div></div>
+            <div class="mini" id="impactHint">
+              Tip: khi bạn nhập Sum Insured / Deductible, panel này sẽ highlight “field ảnh hưởng”.
+            </div>
+            <div class="row-actions">
+              <button class="btn" id="btnReset">♻ Reset demo</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div class="card">
+          <div class="card-h">
+            <h3>Quick Actions</h3>
+          </div>
+          <div class="card-b">
+            <div class="chiprow">
+              <span class="chip" id="chipCopy">📋 Copy from previous</span>
+              <span class="chip" id="chipApplyAll">🧩 Apply to all locations</span>
+              <span class="chip" id="chipTemplate">🧠 Apply clause template</span>
+            </div>
+            <div class="mini">
+              Đây là các “đường tắt” giúp nhập liệu nhanh (rất hợp quy trình báo giá enterprise).
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hover history -->
+  <div class="hover-panel" id="flowHistoryPanel" aria-hidden="true">
+    <div class="hp-h">
+      <div>
+        <div style="font-weight:800;font-size:13px;" id="hpTitle">Flow History</div>
+        <div class="k" id="hpSub">Step: ...</div>
+      </div>
+      <span class="badge mono" id="hpCount">0</span>
+    </div>
+    <div class="hp-b" id="hpBody"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ===== Demo data =====
+    const demo = {
+      steps: [
+        { id:"s1", title:"Header / Request", sub:"Thông tin request + khách hàng", status:"done", sectionId:"sec_header" },
+        { id:"s2", title:"Insured & Risk", sub:"Địa điểm + phân loại rủi ro", status:"missing", sectionId:"sec_risk" },
+        { id:"s3", title:"Coverage & SI", sub:"Điều khoản + số tiền BH", status:"missing", sectionId:"sec_coverage" },
+        { id:"s4", title:"Underwriting", sub:"Ghi chú + đề xuất UW", status:"blocked", sectionId:"sec_uw" },
+      ],
+      flowByStep: {
+        s1: [
+          { by:"Requester", at:"2026-01-12 09:14", action:"Created", note:"Tạo yêu cầu báo giá." },
+          { by:"QC", at:"2026-01-12 11:02", action:"Verified", note:"Kiểm tra thông tin header." },
+          { by:"System", at:"2026-01-12 11:05", action:"Locked", note:"Header locked sau khi verify." },
+        ],
+        s2: [
+          { by:"Surveyor", at:"2026-01-12 14:20", action:"Pending", note:"Chờ bổ sung thông tin risk (địa chỉ, ngành nghề)." },
+        ],
+        s3: [
+          { by:"Broker", at:"2026-01-13 09:10", action:"Draft", note:"Chưa có bảng SI / coverage bundle." },
+        ],
+        s4: [
+          { by:"UW", at:"2026-01-13 16:40", action:"Blocked", note:"Thiếu dữ liệu bước trước nên chưa review." },
+        ]
+      },
+      form: [
+        {
+          id:"sec_header",
+          title:"Header / Request",
+          meta:["Auto-fill (Joget)", "Read-only fields"],
+          fields:[
+            { id:"requestNo", label:"Request No", col:"6", req:true, placeholder:"RNQ-2026-0001", value:"RNQ-2026-0001", readonly:true, hint:"Lấy từ hệ thống." },
+            { id:"requestedDate", label:"Requested Date", col:"6", req:true, type:"date", value:"2026-01-12", hint:"Ngày yêu cầu." },
+            { id:"insuredName", label:"Insured Name", col:"12", req:true, placeholder:"Công ty ABC", value:"Công ty ABC", hint:"Tên bên được bảo hiểm." },
+            { id:"broker", label:"Broker", col:"6", placeholder:"Tokio Marine Broker", value:"Tokio Marine Broker" },
+            { id:"currency", label:"Currency", col:"6", type:"select", value:"USD", options:["USD","VND","EUR"] },
+          ]
+        },
+        {
+          id:"sec_risk",
+          title:"Insured & Risk",
+          meta:["Required for submit step"],
+          fields:[
+            { id:"industry", label:"Industry", col:"6", req:true, type:"select", value:"Manufacturing", options:["Manufacturing","Warehouse","Office","Retail"] },
+            { id:"riskGrade", label:"Risk Grade", col:"6", req:true, type:"select", value:"B", options:["A","B","C","D"] },
+            { id:"address", label:"Risk Address", col:"12", req:true, placeholder:"Số, đường, quận, TP", value:"", hint:"Thiếu → step sẽ báo Missing." },
+            { id:"construction", label:"Construction", col:"6", type:"select", value:"RCC", options:["RCC","Steel","Wood","Mixed"] },
+            { id:"sprinkler", label:"Sprinkler", col:"6", type:"select", value:"No", options:["Yes","No"] },
+          ]
+        },
+        {
+          id:"sec_coverage",
+          title:"Coverage & Sum Insured",
+          meta:["Affects pricing"],
+          fields:[
+            { id:"product", label:"Product", col:"6", req:true, type:"select", value:"IAR", options:["IAR","PAR","CAR","MB"] },
+            { id:"deductible", label:"Deductible", col:"6", req:true, placeholder:"e.g. 5,000", value:"5000", hint:"Nhập số → ảnh hưởng premium." },
+            { id:"sumInsured", label:"Sum Insured", col:"6", req:true, placeholder:"e.g. 10,000,000", value:"10000000", hint:"SI tăng → base premium tăng." },
+            { id:"territory", label:"Territory", col:"6", type:"select", value:"VN", options:["VN","SEA","Worldwide"] },
+            { id:"clauses", label:"Clauses / Endorsements", col:"12", type:"textarea", value:"CUSTOMERS' GOODS\nDIRECTORS' PERSONAL EFFECTS\nPLATE GLASS BREAKAGE", hint:"Có thể apply template." },
+          ]
+        },
+        {
+          id:"sec_uw",
+          title:"Underwriting Notes",
+          meta:["Workflow gate"],
+          fields:[
+            { id:"uwComment", label:"UW Comment", col:"12", req:true, type:"textarea", value:"", hint:"Ghi rõ rủi ro / yêu cầu bổ sung." },
+            { id:"recommendation", label:"Recommendation", col:"12", type:"textarea", value:"", hint:"Đề xuất điều kiện, loading/discount." },
+          ]
+        }
+      ]
+    };
+
+    // ===== Utilities =====
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+    const fmtMoney = (n) => {
+      const num = Number(n || 0);
+      return "$ " + num.toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    };
+    const toast = (msg) => {
+      const t = $("#toast");
+      t.textContent = msg;
+      t.style.display = "block";
+      clearTimeout(toast._t);
+      toast._t = setTimeout(()=> t.style.display="none", 2200);
+    };
+
+    // ===== Render steps =====
+    function renderSteps(){
+      const host = $("#steps");
+      host.innerHTML = "";
+      demo.steps.forEach(s=>{
+        const el = document.createElement("div");
+        el.className = "step";
+        el.dataset.stepId = s.id;
+        el.dataset.status = s.status;
+        el.innerHTML = `
+          <div class="dot"></div>
+          <div class="meta">
+            <div class="title">${s.title}</div>
+            <div class="sub">${s.sub}</div>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+            <span class="badge">${s.status.toUpperCase()}</span>
+          </div>
+        `;
+        el.addEventListener("click", ()=> jumpToSection(s.sectionId));
+        host.appendChild(el);
+      });
+
+      // missing count
+      const missing = demo.steps.filter(s=> s.status === "missing").length;
+      $("#missingCount").textContent = `Missing: ${missing}`;
+    }
+
+    // ===== Render form =====
+    function renderForm(){
+      const host = $("#form");
+      host.innerHTML = "";
+      demo.form.forEach(sec=>{
+        const det = document.createElement("details");
+        det.className = "section";
+        det.id = sec.id;
+        det.open = (sec.id === "sec_header");
+        const metaBadges = (sec.meta || []).map(m=> `<span class="badge">${m}</span>`).join("");
+        det.innerHTML = `
+          <summary class="section-h">
+            <div class="section-title">
+              <span class="chev"></span>
+              <h4>${sec.title}</h4>
+            </div>
+            <div class="section-meta">${metaBadges}</div>
+          </summary>
+          <div class="section-b"></div>
+        `;
+        const body = $(".section-b", det);
+
+        sec.fields.forEach(f=>{
+          const col = Number(f.col || 6);
+          const wrap = document.createElement("div");
+          wrap.className = "field" + (col === 12 ? " full" : "");
+          wrap.style.gridColumn = `span ${col}`;
+
+          const req = f.req ? `<span class="req">Required</span>` : `<span class="hint">&nbsp;</span>`;
+          const hint = f.hint ? `<div class="hint">${f.hint}</div>` : "";
+
+          let inputHtml = "";
+          const value = (f.value ?? "");
+          const ro = f.readonly ? "readonly" : "";
+          const ph = f.placeholder ? `placeholder="${escapeHtml(f.placeholder)}"` : "";
+          const common = `id="${f.id}" data-field="${f.id}" ${ro} ${ph}`;
+
+          if (f.type === "select"){
+            const opts = (f.options || []).map(o => `<option value="${escapeHtml(o)}" ${o===value?"selected":""}>${escapeHtml(o)}</option>`).join("");
+            inputHtml = `<select ${common}>${opts}</select>`;
+          } else if (f.type === "textarea"){
+            inputHtml = `<textarea ${common}>${escapeHtml(value)}</textarea>`;
+          } else {
+            const type = f.type || "text";
+            inputHtml = `<input type="${type}" value="${escapeHtml(value)}" ${common} />`;
+          }
+
+          wrap.innerHTML = `
+            <div class="label">
+              <span>${escapeHtml(f.label)}</span>
+              ${req}
+            </div>
+            ${inputHtml}
+            ${hint}
+          `;
+          body.appendChild(wrap);
+        });
+
+        host.appendChild(det);
+      });
+
+      // bind field changes
+      $$("[data-field]").forEach(el=>{
+        el.addEventListener("input", onFieldChange);
+        el.addEventListener("change", onFieldChange);
+      });
+    }
+
+    function escapeHtml(s){
+      return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    // ===== Jump =====
+    function jumpToSection(id){
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.open = true;
+      el.scrollIntoView({behavior:"smooth", block:"start"});
+    }
+
+    // ===== Pricing (demo) =====
+    function calcPricing(){
+      // simplistic demo formula
+      const si = Number(($("[data-field='sumInsured']")?.value || "0").replaceAll(",",""));
+      const deductible = Number(($("[data-field='deductible']")?.value || "0").replaceAll(",",""));
+      const grade = $("[data-field='riskGrade']")?.value || "B";
+      const sprinkler = $("[data-field='sprinkler']")?.value || "No";
+
+      const base = Math.max(900, si * 0.000215); // demo
+      let loadingPct = grade === "A" ? 0.02 : grade === "B" ? 0.10 : grade === "C" ? 0.18 : 0.28;
+      if (sprinkler === "Yes") loadingPct -= 0.03;
+      if (deductible >= 10000) loadingPct -= 0.02;
+
+      const discountPct = 0.05;
+      const final = base * (1 + loadingPct) * (1 - discountPct);
+
+      $("#basePremium").textContent = fmtMoney(base);
+      $("#loading").textContent = `+ ${(loadingPct*100).toFixed(0)}%`;
+      $("#discount").textContent = `- ${(discountPct*100).toFixed(0)}%`;
+      $("#finalPremium").textContent = fmtMoney(final);
+
+      return { base, loadingPct, discountPct, final };
+    }
+
+    function markImpact(fields){
+      // small UX: flash fields that impact pricing
+      fields.forEach(fid=>{
+        const el = $(`[data-field='${fid}']`);
+        if (!el) return;
+        el.style.borderColor = "rgba(255,204,74,.85)";
+        el.style.boxShadow = "0 0 0 4px rgba(255,204,74,.12)";
+        setTimeout(()=>{
+          el.style.borderColor = "rgba(255,255,255,.14)";
+          el.style.boxShadow = "none";
+        }, 700);
+      });
+    }
+
+    function onFieldChange(e){
+      const id = e.target.getAttribute("data-field");
+      // mark missing statuses quickly (demo)
+      syncStepStatuses();
+      // update pricing if relevant
+      if (["sumInsured","deductible","riskGrade","sprinkler"].includes(id)){
+        calcPricing();
+        markImpact([id]);
+      }
+    }
+
+    function syncStepStatuses(){
+      const address = $("[data-field='address']")?.value?.trim() || "";
+      const uwComment = $("[data-field='uwComment']")?.value?.trim() || "";
+
+      // update demo steps status based on simple rules
+      const s2 = demo.steps.find(x=>x.id==="s2");
+      const s4 = demo.steps.find(x=>x.id==="s4");
+      if (s2) s2.status = address ? "done" : "missing";
+      if (s4) s4.status = uwComment ? "done" : "blocked";
+
+      renderSteps();
+    }
+
+    // ===== Hover panel logic (no "tắt ngay") =====
+    const Hover = (() => {
+      let hideTimer = null;
+      const panel = () => $("#flowHistoryPanel");
+
+      function showForStep(stepId, anchorEl){
+        const data = demo.flowByStep[stepId] || [];
+        $("#hpSub").textContent = `Step: ${stepId}`;
+        $("#hpCount").textContent = String(data.length);
+
+        const body = $("#hpBody");
+        body.innerHTML = data.map(r=> `
+          <div class="hp-row">
+            <div class="r1">
+              <div><b>${escapeHtml(r.action)}</b> · ${escapeHtml(r.by)}</div>
+              <div class="mono">${escapeHtml(r.at)}</div>
+            </div>
+            <div class="r2">${escapeHtml(r.note)}</div>
+          </div>
+        `).join("");
+
+        // place near anchor
+        const rect = anchorEl.getBoundingClientRect();
+        const p = panel();
+        const left = Math.min(window.innerWidth - p.offsetWidth - 12, rect.right + 10);
+        const top = Math.min(window.innerHeight - 12, Math.max(72, rect.top));
+        p.style.left = Math.max(12, left) + "px";
+        p.style.top = top + "px";
+        p.style.display = "block";
+        p.setAttribute("aria-hidden", "false");
+      }
+
+      function hideLater(){
+        clearTimeout(hideTimer);
+        hideTimer = setTimeout(()=>{
+          const p = panel();
+          // only hide if neither steps nor panel hovered
+          const stillHovering = document.querySelector(".step:hover") || p.matches(":hover");
+          if (!stillHovering){
+            p.style.display = "none";
+            p.setAttribute("aria-hidden", "true");
+          }
+        }, 180);
+      }
+
+      function bind(){
+        // for each step
+        $$(".step").forEach(el=>{
+          el.addEventListener("mouseenter", ()=>{
+            clearTimeout(hideTimer);
+            const stepId = el.dataset.stepId;
+            $("#hpTitle").textContent = "Flow History";
+            showForStep(stepId, el);
+          });
+          el.addEventListener("mouseleave", hideLater);
+        });
+
+        // panel itself should keep open while hovering
+        panel().addEventListener("mouseenter", ()=> clearTimeout(hideTimer));
+        panel().addEventListener("mouseleave", hideLater);
+
+        // reposition on resize/scroll
+        window.addEventListener("scroll", ()=> hideLater(), {passive:true});
+        window.addEventListener("resize", ()=> hideLater(), {passive:true});
+      }
+
+      return { bind };
+    })();
+
+    // ===== Button actions =====
+    document.getElementById("btnSave").addEventListener("click", ()=> toast("Saved draft (demo)."));
+    document.getElementById("btnCalc").addEventListener("click", ()=> {
+      const p = calcPricing();
+      toast("Calculated (demo): " + fmtMoney(p.final));
+      markImpact(["sumInsured","deductible","riskGrade","sprinkler"]);
+    });
+    document.getElementById("btnSubmit").addEventListener("click", ()=> {
+      syncStepStatuses();
+      const missing = demo.steps.filter(s=> s.status === "missing" || s.status === "blocked").map(s=> s.title);
+      if (missing.length){
+        toast("Cannot submit. Please complete: " + missing.join(", "));
+      } else {
+        document.getElementById("wfStatus").textContent = "Submitted";
+        toast("Submitted to UW (demo).");
+      }
+    });
+    document.getElementById("btnRecall").addEventListener("click", ()=> toast("Recall (demo)."));
+
+    document.getElementById("btnReset").addEventListener("click", ()=>{
+      // reset some demo fields
+      document.querySelector("[data-field='address']").value = "";
+      document.querySelector("[data-field='uwComment']").value = "";
+      document.querySelector("[data-field='sumInsured']").value = "10000000";
+      document.querySelector("[data-field='deductible']").value = "5000";
+      document.querySelector("[data-field='riskGrade']").value = "B";
+      document.querySelector("[data-field='sprinkler']").value = "No";
+      syncStepStatuses();
+      calcPricing();
+      toast("Reset demo values.");
+    });
+
+    document.getElementById("chipCopy").addEventListener("click", ()=> toast("Copy previous quotation (demo)."));
+    document.getElementById("chipApplyAll").addEventListener("click", ()=> toast("Apply to all locations (demo)."));
+    document.getElementById("chipTemplate").addEventListener("click", ()=> {
+      const ta = document.querySelector("[data-field='clauses']");
+      if (ta){
+        ta.value = "CUSTOMERS' GOODS\nDIRECTORS' PERSONAL EFFECTS\nFIRE EXTINGUISHING EXPENSES\nPLATE GLASS BREAKAGE\nMONEY IN PREMISES AND IN TRANSIT";
+        toast("Applied clause template (demo).");
+        markImpact(["clauses"]);
+      }
+    });
+
+    // Chip jump
+    document.querySelectorAll("[data-jump]").forEach(ch=>{
+      ch.addEventListener("click", ()=> jumpToSection(ch.dataset.jump));
+    });
+
+    // ===== Boot =====
+    renderSteps();
+    renderForm();
+    calcPricing();
+    syncStepStatuses();
+    Hover.bind();
+  </script>
+</body>
+</html>
