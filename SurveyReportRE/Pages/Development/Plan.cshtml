@@ -280,11 +280,17 @@
                 pattern: "solid",
                 fgColor: { argb }
             };
+            if (argb === COLOR_PARENT_GREEN)
+             ws.getRow(rowIndex).getCell(c).font = {color: {argb: "ffffffff"}};
+
+           if (argb === COLOR_TASK_BLUE)
+             ws.getRow(rowIndex).getCell(c).font = {color: {argb: "ffffffff"}};
         }
     }
 
     var COLOR_PARENT_GREEN = "FF7DC67D"; // xanh lá (parent)
     var COLOR_TASK_BLUE = "FF2E77BB"; // xanh dương (child) - anh có thể đổi đúng shade
+    // var COLOR_TASK_BLUE = "FFFFFFFF"; // xanh dương (child) - anh có thể đổi đúng shade
 
     function buildColorMapByParentId(rows) {
         // rows: [{id:1,parentId:0}, ...]

@@ -78,6 +78,9 @@ public class QuotationCommentLogController : BaseControllerApi<QuotationCommentL
     }
 
 
+
+
+
     public async Task BulkInsertQuotationCommentLogAsync(List<QuotationCommentLog> data)
     {
         var dt = new DataTable();

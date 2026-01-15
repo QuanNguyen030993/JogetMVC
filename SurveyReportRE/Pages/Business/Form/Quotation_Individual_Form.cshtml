@@ -583,9 +583,9 @@ Note:
                 }
                 return items.map((c) => `
             <div class="ct-item">
-              <div class="ct-user">${escapeHtml((c.dept ? c.dept + " – " : "") + (c.user || ""))}</div>
-              <div class="ct-time">${escapeHtml(c.time || "")}${c.order != null ? " • #" + escapeHtml(c.order) : ""}</div>
-              <div class="ct-text">${escapeHtml(c.comment || "")}</div>
+              <div class="ct-user">${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.deptCode || ""))}</div>
+              <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
+              <div class="ct-text">${escapeHtml(c.commentText || "")}</div>
             </div>
           `).join("");
             }
@@ -644,45 +644,71 @@ Note:
                         comment: "[STATIC] UW note for demo purpose"
                     }
                 ];
-                debugger
-                query = "SELECT * FROM QuotationCommentLog";
-                 $.ajax({
-                    url: `/api/QuotationCommentLog/ExecuteCustomQuery`,
-                    method: "POST",
-                    async: false,
-                    contentType: "application/json",
-                    data: JSON.stringify(query),
-                    success: function(data) {
-                          quotes = data;
+              
+                //     var insertSql = `EXEC dbo.sp_InsertQuotationCommentLog
+                //         101, N'QT-10030', N'MKT', 900, N'Sales A',
+                //         '2024-01-10 09:15', N'Initial request', N'WEB', NULL, NULL;
 
-                    }
-                });
+                //     EXEC dbo.sp_InsertQuotationCommentLog
+                //         101, N'QT-10030', N'TS', 901, N'TS User',
+                //         '2024-01-11 10:30', N'Technical review started', N'WEB', NULL, NULL;
 
-                const loadComments = debounce(function (quoteCode) {
-                    const key = `comments:${quoteCode}`;
-                    const url = MockupApi.commentsUrl(quoteCode);
+                //     EXEC dbo.sp_InsertQuotationCommentLog
+                //         101, N'QT-10030', N'UW', 902, N'UW A',
+                //         '2024-01-12 14:20', N'Approved', N'WEB', NULL, NULL;
+                //     `;
 
-                    $tipList.html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
-                    ajaxJson(url, key).then((data) => {
-                        // allow payload shape: [] OR {items:[]}
-                        var items = Array.isArray(data) ? data : (data?.items || data?.data || []);
+                //       $.ajax({
+                //     url: `/api/QuotationCommentLog/ExecuteCustomQuery`,
+                //     method: "POST",
+                //     async: false,
+                //     contentType: "application/json",
+                //     data: JSON.stringify(insertSql),
+                //     success: function(data) {
 
+                //     }
+                // });
+                const loadComments = debounce(function (quoteCode, quoteId) {
+                    // const key = `comments:${quoteCode}`;
+                    // const url = MockupApi.commentsUrl(quoteCode);
+                        $tipList.html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
+                      query = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${quoteId}`;
+                         $.ajax({
+                            url: `/api/QuotationCommentLog/ExecuteCustomQuery`,
+                            method: "POST",
+                            async: false,
+                            contentType: "application/json",
+                            data: JSON.stringify(query),
+                            success: function(data) {
+                                if (hoverQuoteCode !== quoteCode) return;
+                                $tipList.html(renderComments(data));
 
-
-                        // ignore if user already moved away
-                        if (hoverQuoteCode !== quoteCode) return;
-                        $tipList.html(renderComments(items));
-                    }).catch(() => {
-                        if (hoverQuoteCode !== quoteCode) return;
+                            }  ,error: function (xhr, status, error) {
+                                    if (hoverQuoteCode !== quoteCode) return;
                         $tipList.html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load comments</div>`);
                         $tipList.html(renderComments(constItems));
-                    });
+                                }
+                        });
+                   
+                    // ajaxJson(url, key).then((data) => {
+                    //     // allow payload shape: [] OR {items:[]}
+                    //     var items = Array.isArray(data) ? data : (data?.items || data?.data || []);
+                        
+                    //     // ignore if user already moved away
+                    //     if (hoverQuoteCode !== quoteCode) return;
+                    //     $tipList.html(renderComments(items));
+                    // }).catch(() => {
+                    //     if (hoverQuoteCode !== quoteCode) return;
+                    //     $tipList.html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load comments</div>`);
+                    //     $tipList.html(renderComments(constItems));
+                    // });
                 }, 180);
 
                 $("#quoteList")
                     .off("mouseenter.qm mouseleave.qm")
                     .on("mouseenter.qm", ".quoteCard", function () {
                         const quoteCode = $(this).attr("data-quotation-code") || $(this).find(".quoteNo").text().trim();
+                        const quoteId = $(this).attr("data-id");
                         hoverQuoteCode = quoteCode;
 
                         const rect = this.getBoundingClientRect();
@@ -690,7 +716,7 @@ Note:
                         $tip.show();
                         positionTooltip($tip, rect);
 
-                        loadComments(quoteCode);
+                        loadComments(quoteCode, quoteId);
                     })
                     .on("mouseleave.qm", ".quoteCard", function () {
                         hoverQuoteCode = null;
