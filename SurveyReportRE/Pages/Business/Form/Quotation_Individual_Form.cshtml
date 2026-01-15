@@ -493,7 +493,7 @@ Note:
         }
 
         // Branch overlay
-        function openBranchOverlay() { $("#branchOverlay").show(); }
+        // function openBranchOverlay() { $("#branchOverlay").show(); }
         function closeBranchOverlay() { $("#branchOverlay").hide(); $("#routeTS, #routeUW").removeClass("active"); }
         function routeTo(dept) {
             $("#routeTS, #routeUW").removeClass("active");
@@ -880,6 +880,219 @@ Note:
           setTimeout(layoutTreeLine, 0);
           window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
         });
+
+            const ROUTE_GRAPH = {
+          MKT: [
+            { to: "TS",   rule: "MKT_to_TS" },
+            { to: "UW",   rule: "MKT_to_UW" },
+            { to: "LMKT", rule: "MKT_to_LMKT" },
+            { to: "PM",   rule: "MKT_to_PM" },
+          ],
+          TS: [
+            { to: "UW", rule: "TS_to_UW" },
+            { to: "MKT", rule: "TS_to_MKT" }, // ví dụ trả lại
+          ],
+          UW: [
+            { to: "LMKT", rule: "UW_to_LMKT" },
+            { to: "MKT",  rule: "UW_to_MKT" }, // ví dụ return
+          ],
+          LMKT: [
+            { to: "PM", rule: "LMKT_to_PM" },
+            { to: "MKT", rule: "LMKT_to_MKT" },
+          ],
+          PM: [
+            // có thể Done, hoặc return...
+          ]
+        };
+            // ví dụ: formState lấy từ store của bạn
+    // const formState = {
+    //           requiredDone: {
+    //             MKT: true,
+    //             TS: false,
+    //             UW: false,
+    //             LMKT: false,
+    //             PM: false,
+    //           },
+    //           flags: {
+    //             needTechnicalSurvey: true,
+    //             needUnderwriting: true,
+    //             needLeaderMarketing: false,
+    //             needPolicyManager: false,
+    //             hasBlockingErrors: false,
+    //           }
+    //         };
+
+
+                function buildFormState(){
+      // TODO: thay bằng dữ liệu thật từ dxForm / validation summary
+      return {
+        requiredDone: {
+          MKT: false,
+          TS: false,
+          UW: false,
+          LMKT: false,
+          PM: false
+        },
+        flags: {
+          needTechnicalSurvey: false,
+          needUnderwriting: false,
+          needLeaderMarketing: false,
+          needPolicyManager: false,
+          hasBlockingErrors: false
+        }
+      };
+    }
+
+                const RULES = {
+              MKT_to_TS:   (s) => s.flags.needTechnicalSurvey && s.requiredDone.MKT && !s.flags.hasBlockingErrors,
+              MKT_to_UW:   (s) => s.flags.needUnderwriting   && s.requiredDone.MKT && !s.flags.hasBlockingErrors,
+              MKT_to_LMKT: (s) => s.flags.needLeaderMarketing && s.requiredDone.MKT,
+              MKT_to_PM:   (s) => s.flags.needPolicyManager && s.requiredDone.MKT,
+
+              TS_to_UW:    (s) => s.requiredDone.TS && s.flags.needUnderwriting,
+              TS_to_MKT:   (s) => !s.requiredDone.TS, // TS chưa fill xong thì “return MKT” chẳng hạn
+
+              UW_to_LMKT:  (s) => s.requiredDone.UW && s.flags.needLeaderMarketing,
+              UW_to_MKT:   (s) => !s.requiredDone.UW,
+
+              LMKT_to_PM:  (s) => s.requiredDone.LMKT,
+              LMKT_to_MKT: (s) => !s.requiredDone.LMKT,
+            };
+                function getNextChoices(currentDept, formState) {
+      const edges = ROUTE_GRAPH[currentDept] ?? [];
+      return edges
+        .filter(e => (RULES[e.rule]?.(formState) ?? true))
+        .map(e => e.to);
+    }
+
+           function renderBranchOverlay(currentDept){
+      const formState = buildFormState();
+      const choices = getNextChoices(currentDept, formState);
+
+      if(!choices.length){
+        DevExpress.ui.notify("No valid route - please complete required fields", "warning", 1600);
+        return;
+      }
+
+      const $canvas = $("#branchOverlay .branchCanvas");
+      const $svg = $canvas.find("svg");
+
+      // clear
+      $svg.find("path").remove();
+      $canvas.find(".bnode").remove();
+
+      // constants (match style cũ)
+      const nodeSize = 52;
+      const xRootNode = 14;
+      const xChoiceNode = 182;
+
+      // svg coordinates (giống hard-code ban đầu)
+      const xRootLine = 40;
+      const xJ = 110;
+      const xRightLine = 200;
+
+      // auto height theo số nhánh
+      const canvasH = Math.max(140, choices.length * 70);
+      $canvas.css("height", canvasH + "px");
+      $svg.attr("viewBox", `0 0 260 ${canvasH}`);
+
+      const yJ = canvasH / 2;
+
+      // root node (GO) nằm giữa
+      const rootTop = Math.round(yJ - nodeSize/2);
+      // $canvas.append(`<div class="bnode root" style="left:${xRootNode}px; top:${rootTop}px;" title="Submit">GO</div>`);
+          $canvas.append(
+      `<div class="bnode root current"
+            style="left:${xRootNode}px; top:${rootTop}px;"
+            title="Current role: ${currentDept}">
+          ${currentDept}
+       </div>`
+    );
+      // compute y centers for choice nodes
+      const topPad = 14;
+      const bottomPad = 14;
+      const yMin = topPad + nodeSize/2;
+      const yMax = canvasH - bottomPad - nodeSize/2;
+
+      let ys;
+      if (choices.length === 1) {
+        ys = [yJ];
+      } else if (choices.length === 2) {
+        // giữ đúng style cũ: 2 nhánh trên/dưới
+        ys = [yJ - 30, yJ + 30];
+      } else {
+        // 3+ nhánh: chia đều
+        ys = choices.map((_, i) => yMin + i * ((yMax - yMin) / (choices.length - 1)));
+      }
+
+      // helper append path
+      const addPath = (d) => {
+        $svg.append(`<path d="${d}" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />`);
+      };
+
+      // ========= FIXED TYPE LINES =========
+      if (choices.length === 1) {
+        // 1) chỉ đường ngang GO -> choice (không junction)
+        // GO center y = yJ, choice center y = yJ
+        addPath(`M${xRootLine} ${yJ} L${xRightLine} ${yJ}`);
+      } else if (choices.length === 2) {
+        // 2) đúng như cũ:
+        // GO -> junction (ngang)
+        addPath(`M${xRootLine} ${yJ} L${xJ} ${yJ}`);
+        // junction vertical (dọc)
+        addPath(`M${xJ} ${ys[0]} L${xJ} ${ys[1]}`);
+        // 2 nhánh ngang
+        addPath(`M${xJ} ${ys[0]} L${xRightLine} ${ys[0]}`);
+        addPath(`M${xJ} ${ys[1]} L${xRightLine} ${ys[1]}`);
+      } else {
+        // 3+) GO -> junction + junction vertical + N nhánh ngang
+        addPath(`M${xRootLine} ${yJ} L${xJ} ${yJ}`);
+        addPath(`M${xJ} ${ys[0]} L${xJ} ${ys[ys.length - 1]}`);
+        ys.forEach(y => addPath(`M${xJ} ${y} L${xRightLine} ${y}`));
+      }
+
+      // ========= render choice nodes + click =========
+      choices.forEach((dept, i)=>{
+        const yChoice = ys[i];
+        const top = Math.round(yChoice - nodeSize/2);
+        const id = `route_${dept}`;
+
+        $canvas.append(
+          `<div id="${id}" class="bnode choice" style="left:${xChoiceNode}px; top:${top}px;" title="Route to ${dept}">${dept}</div>`
+        );
+
+        $(`#${id}`).off("click").on("click", ()=> routeTo(dept));
+      });
+    }
+
+
+      //   function openBranchOverlay(){
+      // // stageDept là biến bạn đang có trong mock (used in renderFlow) :contentReference[oaicite:5]{index=5}
+      // // hoặc dùng focusDept/loginRole tùy logic bạn.
+      //     const currentDept = stageDept || focusDept || "MKT";
+      //     renderBranchOverlay(currentDept);
+      //     $("#branchOverlay").show();
+      //   }
+      //       function closeBranchOverlay(){
+      //     $("#branchOverlay").hide();
+      //     $("#branchOverlay .bnode.choice").removeClass("active");
+      //   }
+
+    function routeTo(dept){
+      $("#branchOverlay .bnode.choice").removeClass("active");
+      $(`#route_${dept}`).addClass("active");
+
+      focusDept = dept;
+      applyNodeHighlights();
+      applySectionFocusHighlight();
+      applyEditLock();
+      updateHints();
+      scrollToDept(focusDept);
+
+      DevExpress.ui.notify(`Mock submit routed to ${dept}`, "success", 1200);
+      setTimeout(closeBranchOverlay, 350);
+    }
+
     })
 </script>
 <style>
@@ -1067,19 +1280,18 @@ Note:
                 <span class="branchHint">Choose next dept</span>
             </div>
             <div class="branchCanvas">
-                <svg width="100%" height="100%" viewBox="0 0 260 140" style="position:absolute;inset:0;">
-                    <path d="M40 70 L110 70" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />
+                 <svg width="100%" height="100%" viewBox="0 0 260 140" style="position:absolute;inset:0;">
+                     <path d="M40 70 L110 70" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />
                     <path d="M110 40 L110 100" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />
                     <path d="M110 40 L200 40" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />
                     <path d="M110 100 L200 100" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />
-                </svg>
+                </svg> 
 
                 <div class="bnode root" style="left:14px; top:42px;" title="Submit">GO</div>
-                <div id="routeTS" class="bnode choice" style="left:182px; top:14px;" title="Route to TS">TS</div>
-                <div id="routeUW" class="bnode choice" style="left:182px; top:74px;" title="Route to UW">UW</div>
+                 <div id="routeTS" class="bnode choice" style="left:182px; top:14px;" title="Route to TS">TS</div>
+                <div id="routeUW" class="bnode choice" style="left:182px; top:74px;" title="Route to UW">UW</div> 
             </div>
         </div>
-
-      
+    </div>
 
 </body>
