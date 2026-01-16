@@ -22,19 +22,7 @@ Note:
 </style>
 <script type="text/javascript">
     $(function () {
-                        var quotes = [
-          { id:10030, quotationCode:"Qu-10030", clientName:"Allied Electronics", status:"accepted", requestNo:27, quotationNumber:27, date:"2023-01-02", expiry:"2023-01-18", owner:"Maria Garcia", terms:"Quotations are valid for 30 days from quotation date. This is an information offer and may be withdrawn/modified any time.", amount:1370445.30,
-            items:[{ name:"MacBook Air", unit:"pcs", qty:1, rate:1199.00 },{ name:"Warranty", unit:"service", qty:1, rate:99.00 }]
-          },
-          { id:10031, quotationCode:"Qu-10031", clientName:"Newark Electronics", status:"sent", requestNo:28, quotationNumber:28, date:"2023-01-02", expiry:"2023-01-20", owner:"David Chen", terms:"Sent to client. Waiting for acceptance.", amount:1276657.50,
-            items:[{ name:"Server Rack", unit:"pcs", qty:4, rate:15500.00 }]
-          },
-          { id:10035, quotationCode:"Qu-10035", clientName:"Rutronik", status:"new", requestNo:32, quotationNumber:32, date:"2023-01-02", expiry:"2023-01-25", owner:"Anna White", terms:"Internal review required by TS/UW.", amount:1035918.00,
-            items:[{ name:"Switch", unit:"pcs", qty:30, rate:210.00 }]
-          },
-          { id:10036, quotationCode:"Qu-10036", clientName:"Marshall Electronics", status:"declined", requestNo:33, quotationNumber:33, date:"2023-01-02", expiry:"2023-01-12", owner:"Nina Park", terms:"Declined due to underwriting constraints.", amount:1844402.20,
-            items:[{ name:"Battery Pack", unit:"pcs", qty:100, rate:55.00 }]
-          }
+        var quotes = [
         ];
         // ===== Mock quotation list data =====
          var query = "SELECT * FROM Quotation WITH (NOLOCK)";
@@ -49,76 +37,29 @@ Note:
 
             }
         });
+            var commentPanelOpened = false;
 
+     
 
 
 
         // // ===== UI state =====
-        // var Roles = ["MKT","TS","UW","LMKT","PM"];
-        // var currentUserRole = "MKT";
-        // var filter = "all";
-        // var searchText = "";
-        // var selectedId = quotes[0]?.id;
-
-        
-        // function money(n){ return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(n||0); }
-        // function statusClass(s){ if(s==="accepted") return "accepted"; if(s==="sent") return "sent"; if(s==="declined") return "declined"; return ""; }
-        // function statusText(s){ if(s==="accepted") return "Accepted"; if(s==="sent") return "Sent To Client"; if(s==="declined") return "Declined"; return "New"; }
-        // // NEW: stageDept (status highlight) vs focusDept (click highlight)
-        // var stageDept = statusText(quotes[0]?.status ?? "") == "New" ?  "MKT" : "MKT";   // this is from quotation workflow stage (status only)
-        // var focusDept = "PM";   // this is from user click (focus highlight)
-        // var focusLocked = false; // to prevent scroll from changing focus (we never change on scroll anyway)
-
 
         const Roles = ["MKT", "TS", "UW", "LMKT", "PM"];
-        let currentUserRole = "MKT";
+        let currentUserRole = _role;
+        $("#loginRoleLabel").text(currentUserRole);
         var filter = "all";
         let searchText = "";
         let selectedId = quotes[0]?.id;
 
         // stage vs focus
         let stageDept = quotes[0]?.stageDept;   // status ring only (from workflow stage)
-        let focusDept = "PM";   // click highlight only
+        let focusDept = _role == "IT" ? "MKT" : _role;   // click highlight only
 
         function money(n) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n || 0); }
         function statusClass(s) { if (s === "accepted") return "accepted"; if (s === "sent") return "sent"; if (s === "declined") return "declined"; return ""; }
         function statusText(s) { if (s === "accepted") return "Accepted"; if (s === "sent") return "Sent To Client"; if (s === "declined") return "Declined"; return "New"; }
 
-        // function renderList() {
-        //     const t = (searchText || "").toLowerCase();
-        //     const data = quotes.filter(x => !t || x.quoteNo.toLowerCase().includes(t) || x.clientName.toLowerCase().includes(t) || String(x.requestNo).toLowerCase().includes(t));
-
-        //     const $root = $("#quoteList").empty();
-        //     if (!data.length) {
-        //         $root.append(`<div style="color:#6b7280;padding:10px;">No quotations found.</div>`);
-        //         return;
-        //     }
-        //     data.forEach(q => {
-        //         const isSel = q.id === selectedId;
-        //         $root.append(`
-        //     <div class="quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-quotation-code="${q.quoteNo}">
-        //       <div class="quoteTop">
-        //         <div>
-        //           <div class="quoteNo">${q.quoteNo}</div>
-        //           <div class="quoteClient">${q.clientName}</div>
-        //         </div>
-        //         <div class="statusTag ${statusClass(q.status)}">${statusText(q.status)}</div>
-        //       </div>
-        //       <div class="quoteMeta">
-        //         <div>${q.requestNo}</div>
-        //         <div>${q.date}</div>
-        //         <div class="quoteAmount">${money(q.amount)}</div>
-        //       </div>
-        //     </div>
-        //   `);
-        //     });
-
-        //     $(".quoteCard").off("click").on("click", function () {
-        //         selectedId = Number($(this).attr("data-id"));
-        //         renderList();
-        //         renderDetail();
-        //     });
-        // }
 
         // =============================
         // 3) Mapping model => DevExtreme Forms per dept
@@ -170,6 +111,9 @@ Note:
           $(".quoteCard").off("click").on("click", function(){
             selectedId = Number($(this).attr("data-id"));
              stageDept = $(this).attr("data-stagedept");
+             $(".dept-node").removeClass("focus");
+             $(`.dept-node[data-key='${currentUserRole}']`).addClass("focus");
+             // applyEditLock();
             renderList();
             renderDetail();
           });
@@ -294,7 +238,7 @@ Note:
           updateHints();
         }
 
-        function applyEditLock(){
+        function applyEditLock(){ //  Hàm focus
           // Only allow edit when focusDept matches currentUserRole (demo rule)
           var roMKT  = !(currentUserRole === "MKT"  && focusDept === "MKT");
           var roTS   = !(currentUserRole === "TS"   && focusDept === "TS");
@@ -314,7 +258,7 @@ Note:
         }
 
         function updateHints(){
-          $("#loginRoleLabel").text(currentUserRole);
+          
           $("#focusDeptPill").text(`Focus section: ${focusDept}`);
 
           var all = ["MKT","TS","UW","LMKT","PM"];
@@ -393,22 +337,22 @@ Note:
           $("#branchOverlay").hide();
           $("#routeTS, #routeUW").removeClass("active");
         }
-        function routeTo(dept){
-          $("#routeTS, #routeUW").removeClass("active");
-          if(dept === "TS") $("#routeTS").addClass("active");
-          if(dept === "UW") $("#routeUW").addClass("active");
+        // function routeTo(dept){
+        //   $("#routeTS, #routeUW").removeClass("active");
+        //   if(dept === "TS") $("#routeTS").addClass("active");
+        //   if(dept === "UW") $("#routeUW").addClass("active");
 
-          // change focus (blue) to routed dept
-          focusDept = dept;
-          applyNodeHighlights();
-          applySectionFocusHighlight();
-          applyEditLock();
-          updateHints();
-          scrollToDept(focusDept);
+        //   // change focus (blue) to routed dept
+        //   focusDept = dept;
+        //   applyNodeHighlights();
+        //   applySectionFocusHighlight();
+        //   applyEditLock();
+        //   updateHints();
+        //   scrollToDept(focusDept);
 
-          DevExpress.ui.notify(`Mock submit routed to ${dept}`, "success", 1200);
-          setTimeout(closeBranchOverlay, 350);
-        }
+        //   DevExpress.ui.notify(`Mock submit routed to ${dept}`, "success", 1200);
+        //   setTimeout(closeBranchOverlay, 350);
+        // }
 
         function setActiveNav(el){
           $(".navItem").removeClass("active");
@@ -491,34 +435,34 @@ Note:
         // Branch overlay
         // function openBranchOverlay() { $("#branchOverlay").show(); }
         function closeBranchOverlay() { $("#branchOverlay").hide(); $("#routeTS, #routeUW").removeClass("active"); }
-        function routeTo(dept) {
-            $("#routeTS, #routeUW").removeClass("active");
-            if (dept === "TS") $("#routeTS").addClass("active");
-            if (dept === "UW") $("#routeUW").addClass("active");
+        // function routeTo(dept) {
+        //     // $("#routeTS, #routeUW").removeClass("active");
+        //     // if (dept === "TS") $("#routeTS").addClass("active");
+        //     // if (dept === "UW") $("#routeUW").addClass("active");
 
-            focusDept = dept;
-            applyNodeHighlights();
-            applySectionFocusHighlight();
-            applyEditLock();
-            updateHints();
-            scrollToDept(focusDept);
+        //     focusDept = dept;
+        //     applyNodeHighlights();
+        //     applySectionFocusHighlight();
+        //     applyEditLock();
+        //     updateHints();
+        //     scrollToDept(focusDept);
 
-            DevExpress.ui.notify(`Mock submit routed to ${dept}`, "success", 1200);
-            setTimeout(closeBranchOverlay, 350);
-        }
+        //     DevExpress.ui.notify(`Mock submit routed to ${dept}`, "success", 1200);
+        //     setTimeout(closeBranchOverlay, 350);
+        // }
 
 
         // =============================
         // 4) Hover AJAX module (Comments + Flow History)
         // - Replace endpoints below to call your server
         // =============================
-        const MockupApi = {
-            // Example:
-            // commentsUrl: (quotationCode) => `/api/quotation/${encodeURIComponent(quotationCode)}/comments`,
-            // flowUrl: (quotationCode) => `/api/quotation/${encodeURIComponent(quotationCode)}/flow`,
-            commentsUrl: (quotationCode) => `/api/mock/comments?quotationCode=${encodeURIComponent(quotationCode)}`,
-            flowUrl: (quotationCode) => `/api/mock/flow?quotationCode=${encodeURIComponent(quotationCode)}`
-        };
+        // const MockupApi = {
+        //     // Example:
+        //     // commentsUrl: (quotationCode) => `/api/quotation/${encodeURIComponent(quotationCode)}/comments`,
+        //     // flowUrl: (quotationCode) => `/api/quotation/${encodeURIComponent(quotationCode)}/flow`,
+        //     commentsUrl: (quotationCode) => `/api/mock/comments?quotationCode=${encodeURIComponent(quotationCode)}`,
+        //     flowUrl: (quotationCode) => `/api/mock/flow?quotationCode=${encodeURIComponent(quotationCode)}`
+        // };
 
         const HoverAjax = (function () {
             const cache = new Map(); // key -> { at, data }
@@ -616,39 +560,88 @@ Note:
                 }).join("");
                 return { summary, html };
             }
-
             // public bind
             function bind() {
-                const $tip = $("#commentTooltip");
-                const $tipSub = $("#commentTooltipSub");
-                const $tipList = $("#commentTooltipList");
+                // const $tip = $("#commentTooltip");
+                // const $tipSub = $("#commentTooltipSub");
+                // const $tipList = $("#commentTooltipList");
+
+                    const $panel = $("#commentPanel");
+    const $panelSub = $("#commentPanelSub");
+    const $panelList = $("#commentPanelList");
+
 
                 let hoverQuoteCode = null;
 
             
-                const loadComments = debounce(function (quoteCode, quoteId) {
-                    // const key = `comments:${quoteCode}`;
-                    // const url = MockupApi.commentsUrl(quoteCode);
-                        $tipList.html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
-                      query = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${quoteId}`;
-                         $.ajax({
-                            url: `/api/QuotationCommentLog/ExecuteCustomQuery`,
-                            method: "POST",
-                            async: false,
-                            contentType: "application/json",
-                            data: JSON.stringify(query),
-                            success: function(data) {
-                                if (hoverQuoteCode !== quoteCode) return;
-                                $tipList.html(renderComments(data));
+                // const loadComments = debounce(function (quoteCode, quoteId) {
+                //     // const key = `comments:${quoteCode}`;
+                //     // const url = MockupApi.commentsUrl(quoteCode);
+                //         $tipList.html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
+                //       query = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${quoteId}`;
+                //          $.ajax({
+                //             url: `/api/QuotationCommentLog/ExecuteCustomQuery`,
+                //             method: "POST",
+                //             async: false,
+                //             contentType: "application/json",
+                //             data: JSON.stringify(query),
+                //             success: function(data) {
+                //                 if (hoverQuoteCode !== quoteCode) return;
+                //                 $tipList.html(renderComments(data));
 
-                            }  ,error: function (xhr, status, error) {
-                                    if (hoverQuoteCode !== quoteCode) return;
-                        $tipList.html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load comments</div>`);
-                                }
-                        });
+                //             }  ,error: function (xhr, status, error) {
+                //                     if (hoverQuoteCode !== quoteCode) return;
+                //         $tipList.html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load comments</div>`);
+                //                 }
+                //         });
                    
 
+                // }, 180);
+                const loadComments = debounce(function (quoteCode, quoteId) {
+                    $panelList.html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
+
+                    const query = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${quoteId}`;
+                    $.ajax({
+                        url: `/api/QuotationCommentLog/ExecuteCustomQuery`,
+                        method: "POST",
+                        async: true, // NOTE: đổi true để UI không bị đơ
+                        contentType: "application/json",
+                        data: JSON.stringify(query),
+                        success: function (data) {
+                            $panelList.html(renderComments(data));
+                        },
+                        error: function () {
+                            $panelList.html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load comments</div>`);
+                        }
+                    });
                 }, 180);
+                $("#btnToggleComment").dxButton({
+                    text: "Comments",
+                    icon: "comment",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                      commentPanelOpened = !commentPanelOpened;
+                   
+                      if (commentPanelOpened) {
+                        const q = quotes.find(x => x.id === selectedId) || quotes[0];
+                        if(!q) return;
+                   
+                        $("#commentPanel").show();
+                        $("#commentPanelSub").text(q.quotationCode || "-");
+                   
+                        // NOTE: call existing loadComments()
+                        loadComments(q.quotationCode, q.id);
+                      } else {
+                        $("#commentPanel").hide();
+                      }
+                    }
+                });
+
+                  $("#btnCloseCommentPanel").off("click").on("click", function(){
+                  commentPanelOpened = false;
+                  $("#commentPanel").hide();
+                });
                 var hideCmtTimer = null;
                   function cancelHideCommentTip(){
                   if(hideCmtTimer) clearTimeout(hideCmtTimer);
@@ -751,8 +744,8 @@ Note:
                         const m = getSelectedModel();
                         const quoteCode = m?.QuotationCode || "-";
                         hoverFlowQuoteCode = quoteCode;
-                        $("#flowHistoryPanel").show();
-                        loadFlow(quoteCode);
+                        // $("#flowHistoryPanel").show();
+                        // loadFlow(quoteCode); // visible flow icons
                     })
                     .on("mouseleave.qm", scheduleHideFlowPanel);
 
@@ -760,7 +753,7 @@ Note:
                     .off("mouseenter.qm mouseleave.qm")
                     .on("mouseenter.qm", function () {
                         // keep opened while hovering panel
-                        $("#flowHistoryPanel").show();
+                        // $("#flowHistoryPanel").show();
                     })
                     .on("mouseleave.qm", scheduleHideFlowPanel);
 
@@ -770,26 +763,52 @@ Note:
             return { bind };
         })();
         $(function(){
+            
+               // NOTE: load comments for currently selected quotation (no hover)
+
+          // NOTE: show quotationCode on panel
+          // $("#commentPanelSub").text(q.quotationCode || "-");
+
+          // $("#commentPanelList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
+
+          // const query = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${q.id}`;
+          // $.ajax({
+          //   url: `/api/QuotationCommentLog/ExecuteCustomQuery`,
+          //   method: "POST",
+          //   async: true,
+          //   contentType: "application/json",
+          //   data: JSON.stringify(query),
+          //   success: function(data) {
+          //     $("#commentPanelList").html(renderComments(data));
+          //   },
+          //   error: function() {
+          //     $("#commentPanelList").html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load comments</div>`);
+          //   }
+          // });
           // top buttons
           $("#btnNew").dxButton({ text:"New", icon:"plus", type:"default", onClick:()=>DevExpress.ui.notify("Mock: New quotation","success",1200) });
           $("#btnEdit").dxButton({ text:"Edit", icon:"edit", type:"normal", onClick:()=>DevExpress.ui.notify("Mock: Edit selected","info",1200) });
           $("#btnMore").dxDropDownButton({ text:"More", icon:"overflow", items:["Export","Print","Email"], onItemClick:(e)=>DevExpress.ui.notify("Mock: "+e.itemData,"info",1200) });
-          $("#btnDuplicate").dxButton({ text:"Duplicate", icon:"copy", type:"normal", onClick:()=>DevExpress.ui.notify("Mock: Duplicated","success",1200) });
+          // $("#btnDuplicate").dxButton({ text:"Duplicate", icon:"copy", type:"normal", onClick:()=>DevExpress.ui.notify("Mock: Duplicated","success",1200) });
+
+        
+          // $("#btnToggleComment").dxButton({ text:"Comments", type:"normal", onClick:()=>DevExpress.ui.notify("Mock: Duplicated","success",1200) });
+   
 
           // bottom buttons
           $("#btnSaveDraft").dxButton({ text:"Save Draft", icon:"save", type:"normal", onClick:()=>DevExpress.ui.notify("Mock: saved draft","success",1200) });
           $("#btnSubmitBranch").dxButton({ text:"Submit", icon:"check", type:"success", onClick:openBranchOverlay });
 
-          // role selector
-          $("#roleSelect").dxSelectBox({
-            items: Roles, value: currentUserRole, placeholder:"Select role...", stylingMode:"outlined",
-            onValueChanged: (e) => {
-              currentUserRole = e.value;
-              applyEditLock();
-              updateHints();
-              DevExpress.ui.notify("Role switched: " + currentUserRole, "info", 1200);
-            }
-          });
+          // // role selector
+          // $("#roleSelect").dxSelectBox({
+          //   items: Roles, value: currentUserRole, placeholder:"Select role...", stylingMode:"outlined",
+          //   onValueChanged: (e) => {
+          //     currentUserRole = e.value;
+          //     applyEditLock();
+          //     updateHints();
+          //     DevExpress.ui.notify("Role switched: " + currentUserRole, "info", 1200);
+          //   }
+          // });
 
           // search
           $("#searchBox").dxTextBox({
@@ -805,7 +824,7 @@ Note:
               setActiveNav(this);
               $("#activeStage").text($(this).text().trim());
               $("#listTitle").text($(this).text().trim());
-              renderList();
+
 
               var data = applyFilter(quotes);
               if(!data.find(x => x.id === selectedId)){
@@ -821,8 +840,8 @@ Note:
 
           // Branch overlay events
           $("#branchOverlay .backdrop").on("click", closeBranchOverlay);
-          $("#routeTS").on("click", () => routeTo("TS"));
-          $("#routeUW").on("click", () => routeTo("UW"));
+          // $("#routeTS").on("click", () => routeTo("TS"));
+          // $("#routeUW").on("click", () => routeTo("UW"));
 
           // init
           renderList();
@@ -1177,8 +1196,6 @@ Note:
     @* <div class="topbar"> *@
         <div class="title">
      @*        <span style="width:10px;height:10px;background:var(--brand);border-radius:999px;display:inline-block;"></span>
-            Quotation Management *@
-            @* <span id="activeStage" class="pill">All Quotations</span> *@
            
         </div>
   @*       <div class="toolbar">
@@ -1187,27 +1204,6 @@ Note:
             <div id="btnMore"></div>
         </div> *@
     @* </div> *@
-
-@*         <aside class="sidebar">
-            <div class="sidebarHeader">
-                <div class="appName">Quotation Management</div>
-                <div class="sub">Status ring = stage, Focus ring = click</div>
-            </div>
-
-            <div class="nav">
-                <div class="navGroupTitle">Quotations</div>
-                <div class="navItem active" data-filter="all"><span class="navDot"></span>All Quotations</div>
-                <div class="navItem" data-filter="new"><span class="navDot"></span>New Quotations</div>
-                <div class="navItem" data-filter="sent"><span class="navDot"></span>Sent To Client</div>
-                <div class="navItem" data-filter="accepted"><span class="navDot"></span>Accepted</div>
-                <div class="navItem" data-filter="declined"><span class="navDot"></span>Declined</div>
-
-                <div class="navGroupTitle">Demo Role</div>
-                <div id="roleSelect" style="padding:0 10px 10px;"></div>
-            </div>
-        </aside> *@
-
-        @* <main class="content"> *@
             <div class="contentGrid">
 
                 <!-- List -->
@@ -1228,7 +1224,8 @@ Note:
                             <div class="h">Overview</div>
                             <span id="detailStatus" class="statusTag">-</span>
                         </div>
-                        <div id="btnDuplicate"></div>
+                    <div id="btnToggleComment"></div>
+                        @* <div id="btnDuplicate"></div> *@
                     </div>
 
                     <div class="cardBody overview-wrap" style="padding:0">
@@ -1242,13 +1239,25 @@ Note:
                                 <div style="color:#6b7280;font-size:12px;padding:6px 4px;">Hover tree to load…</div>
                             </div>
                         </div>
-                        <div id="commentTooltip" class="comment-tooltip" aria-hidden="true">
+                       @*  <div id="commentTooltip" class="comment-tooltip" aria-hidden="true">
                             <div class="ct-title">
                                 <span>Comment Log</span>
                                 <span id="commentTooltipSub" class="ct-sub">-</span>
                             </div>
                             <div id="commentTooltipList" class="ct-list">
                                 <div style="color:#6b7280;font-size:12px;padding:6px 4px;">Hover a quotation to load…</div>
+                            </div>
+                        </div> *@
+                        <div id="commentPanel" class="comment-tooltip" style="display:none;">
+                            <div class="ct-title">
+                                <span>Comment Log</span>
+                                <span id="commentPanelSub" class="ct-sub">-</span>
+                                <span class="ct-actions">
+                                    <a href="javascript:void(0)" id="btnCloseCommentPanel" class="ct-close">✕</a>
+                                </span>
+                            </div>
+                            <div id="commentPanelList" class="ct-list">
+                                <div style="color:#6b7280;font-size:12px;padding:6px 4px;">Click “Comments” to load…</div>
                             </div>
                         </div>
                         <!-- Navigator Tree (status vs focus) -->
@@ -1314,14 +1323,13 @@ Note:
                 </section>
 
             </div>
-        @* </main> *@
     </div>
 
     <!-- Bottom action bar -->
     <div class="actionBar">
         <div class="actionLeft">
             <span class="pill">Record: <b id="recordNo">Qu-10030</b></span>
-            <span class="pill">Login role: <b id="loginRoleLabel">MKT</b></span>
+            <span class="pill">Login role: <b id="loginRoleLabel"></b></span>
             <span id="stageDeptPill" class="pill">Quotation status: </span>
             <span id="focusDeptPill" class="pill">Focus section: </span>
         </div>
@@ -1341,10 +1349,7 @@ Note:
             </div>
             <div class="branchCanvas">
                  <svg width="100%" height="100%" viewBox="0 0 260 140" style="position:absolute;inset:0;">
-                  @*    <path d="M40 70 L110 70" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />
-                    <path d="M110 40 L110 100" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />
-                    <path d="M110 40 L200 40" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />
-                    <path d="M110 100 L200 100" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" /> *@
+
                 </svg>
                 <svg width="100%" height="100%" viewBox="0 0 260 140" style="position:absolute;inset:0;">
                      <path d="M40 70 L110 70" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />
@@ -1353,8 +1358,6 @@ Note:
                     <path d="M110 100 L200 100" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" /> 
                 </svg>
                 <div class="bnode root" style="left:14px; top:42px;" title="Submit">GO</div>
-    @*              <div id="routeTS" class="bnode choice" style="left:182px; top:14px;" title="Route to TS">TS</div>
-                <div id="routeUW" class="bnode choice" style="left:182px; top:74px;" title="Route to UW">UW</div>  *@
             </div>
         </div>
     </div>

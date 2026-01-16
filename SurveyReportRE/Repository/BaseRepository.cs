@@ -51,7 +51,7 @@ public interface IBaseRepository<T> where T : class
     //Task<List<T>> FindByCreator(string userName);
     //Task<List<T>> FindByOther(string userName);
     //int Count();
-    Task<dynamic> GetUserRoles(string accountName);
+    Task<dynamic> GetUserRoles(string accountName, bool isSuperUser = false);
     //bool Any(Expression<Func<T, bool>> predicate);
     //List<T> GetList(Expression<Func<T, bool>> predicate = null);
     //List<T> GetList(Expression<Func<T, bool>> predicate = null, params Expression<Func<T, object>>[] includeProperties);
@@ -601,14 +601,18 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
         }
     }
 
-    public async Task<dynamic> GetUserRoles(string accountName)
+    public async Task<dynamic> GetUserRoles(string accountName, bool isSuperUser = false)
     {
         using (var connection = new SqlConnection(_connectionString))
         {
-            var sql = $@"SELECT DISTINCT TOP 1 r.RoleName
+            var sql = $@"SELECT DISTINCT TOP 1 r.Department RoleName
                     FROM UserRoles ur
-                    LEFT JOIN Users u ON ur.UserId = u.Id
-                    LEFT JOIN Roles r ON ur.RoleId = r.Id
+                    INNER JOIN Users u ON ur.UserId = u.Id
+                    LEFT JOIN Employee r ON ur.RoleId = r.Id
+                    WHERE u.[username] = '{accountName}'";
+            if (isSuperUser)
+                sql = $@"SELECT DISTINCT TOP 1 u.department RoleName
+                    FROM Users u 
                     WHERE u.[username] = '{accountName}'";
             var result = await connection.QueryAsync<dynamic>(sql);
             Util.QueryLogs(_connectionString, "sp_Querylogs",

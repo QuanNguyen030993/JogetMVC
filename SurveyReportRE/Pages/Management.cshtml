@@ -169,7 +169,7 @@
         }
         _loginUser = loginUser.replace("TOKIOMARINE\\", "");
             $.ajax({
-                url: `/api/Users/GetUserRoles?accountName=${loginUser}`,
+                url: `/api/Users/GetUserRoles?accountName=${_loginUser}`,
                 type: 'GET',
                 async: false,
                 data: { accountName: loginUser },

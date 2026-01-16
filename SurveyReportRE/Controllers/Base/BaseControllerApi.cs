@@ -191,7 +191,9 @@ namespace ERPCore.Controllers.Base
         public virtual async Task<ActionResult<T>> GetUserRoles(string accountName)
         {
             string roleName = "";
-            var roles = await _BaseRepository.GetUserRoles(accountName.Replace(DOMAIN_NAME, ""));
+            string superUsers = _BaseRepository?._baseConfiguration?.GetSection("SuperUser:SuperUser")?.Value ?? "Anonymous";
+            bool isSuperUser = superUsers.Contains(accountName);
+            var roles = await _BaseRepository.GetUserRoles(accountName.Replace(DOMAIN_NAME, ""), isSuperUser);
             if (roles != null)
                 roleName = roles.RoleName.ToString();
             return Ok(roleName);

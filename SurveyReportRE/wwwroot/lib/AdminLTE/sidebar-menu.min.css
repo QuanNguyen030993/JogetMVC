@@ -718,7 +718,7 @@ a {
     .sidebar-mini.sidebar-collapse .content-wrapper,
     .sidebar-mini.sidebar-collapse .right-side,
     .sidebar-mini.sidebar-collapse .main-footer {
-        margin-left: -130px !important;
+        margin-left: -15% !important;
         width: 130% !important;
         z-index: 840
     }
