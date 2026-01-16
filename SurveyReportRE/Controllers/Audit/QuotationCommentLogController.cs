@@ -25,17 +25,6 @@ public class QuotationCommentLogController : BaseControllerApi<QuotationCommentL
     private readonly IBaseRepository<ERPCore.Models.Migration.Business.Data.Attachment> _attachmentRepository;
     private readonly IBaseRepository<Users> _usersRepository;
     private readonly IConfigurationSection path;
-    public static string MANAGER_APP = "";
-    public static string APPROVER_APP = "";
-    public static string CHECKER_APP = "";
-    public static string USER_APP = "";
-    public static string SUPER_USER = "";
-    public static string DOMAIN_NAME = "";
-    private static string BLOB_PATH = "";
-    public static string CURRENT_USER = "";
-    private static string spUserName = "";
-    private static string spPassword = "";
-    private static string MAPPING_PATH = "";
     private readonly Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> _blobStorageSettings;
     private static string Query;
     public QuotationCommentLogController(IBaseRepository<QuotationCommentLog> BaseRepository
@@ -50,18 +39,7 @@ public class QuotationCommentLogController : BaseControllerApi<QuotationCommentL
         _BaseRepository = BaseRepository;
         _attachmentRepository = new BaseRepository<ERPCore.Models.Migration.Business.Data.Attachment>(configuration, _httpContextAccessor);
         _usersRepository = new BaseRepository<Users>(configuration, _httpContextAccessor);
-        MANAGER_APP = configuration.GetSection("BusinessConfig:ManagerAppKey").Value;
-        APPROVER_APP = configuration.GetSection("BusinessConfig:ApproverAppKey").Value;
-        CHECKER_APP = configuration.GetSection("BusinessConfig:CheckerAppKey").Value;
-        USER_APP = configuration.GetSection("BusinessConfig:UserAppKey").Value;
-        SUPER_USER = configuration.GetSection("SuperUser:SuperUser").Value;
-        DOMAIN_NAME = configuration.GetSection("Domain:DCServer").Value;
         path = _BaseRepository._baseConfiguration.GetSection("BlobStorage:Path");
-        MAPPING_PATH = _BaseRepository._baseConfiguration.GetSection("MigrationConfig:MappingField").Value;
-        BLOB_PATH = path.Value;
-        CURRENT_USER = _httpContextAccessor.HttpContext.User.Identity.Name.Replace(DOMAIN_NAME, "");
-        spUserName = configuration.GetSection("SharePoint:Username").Value;
-        spPassword = configuration.GetSection("SharePoint:Password").Value;
         _blobStorageSettings = blobStorageSettings;
     }
 

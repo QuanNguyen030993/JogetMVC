@@ -523,7 +523,7 @@ Note:
                 }
                 return items.map((c) => `
             <div class="ct-item">
-              <div class="ct-user">${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.deptCode || ""))}</div>
+              <div class="ct-user">${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}</div>
               <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
               <div class="ct-text">${escapeHtml(c.commentText || "")}</div>
             </div>
@@ -1077,7 +1077,7 @@ Note:
                                        width: "50%",
                                        height: "50%",
                                        showTitle: true,
-                                       title: `Remarks`,
+                                       title: `Remarks To ${dept}`,
                                        dragEnabled: false,
                                        closeOnOutsideClick: true,
                                        contentTemplate: function (container) {
@@ -1101,26 +1101,47 @@ Note:
                                                type: 'normal',
                                                text: "Ok",
                                                onClick() {
-                                                   var selectQuotationId = $(`.quoteCard.selected`).attr("data-id")
-                                                   var dxText = $("#commentText").dxTextArea().dxTextArea("instance").option("text");
-                                                   var timestamp = Date.now();
-                                                   var dateObject = new Date(timestamp);
-                                                   var insertQuery = `INSERT INTO QuotationCommentLog ( QuotationId
-                                                       ,DeptCode
-                                                       ,CommentOrder
-                                                       ,CommentBy
-                                                       ,CommentTime
-                                                       ,CommentText
-                                                       ,SourceSystem
-                                                       ,SourceRef
-                                                       ,RawJson
-                                                       ,CreatedAtUtc)
-                                                       VALUES (${selectQuotationId},'${stageDept}',0,'${_loginUser}','${dateObject.toISOString()}','${dxText}','WEB',NULL,NULL,'${dateObject.toISOString()}' );
-
-                                                   `;
-
+                                                    var selectQuotationId = $(`.quoteCard.selected`).attr("data-id")
+                                                    var dxText = $("#commentText").dxTextArea().dxTextArea("instance").option("text");
+                                                    var timestamp = Date.now();
+                                                    var dateObject = new Date(timestamp);
+                                                    var insertQuery = `INSERT INTO QuotationCommentLog ( QuotationId
+                                                        ,DeptCode
+                                                        ,CommentOrder
+                                                        ,CommentBy
+                                                        ,CommentTime
+                                                        ,CommentText
+                                                        ,SourceSystem
+                                                        ,SourceRef
+                                                        ,RawJson
+                                                        ,CreatedAtUtc)
+                                                        VALUES (${selectQuotationId},'${stageDept}',0,'${_loginUser}','${dateObject.toISOString()}','${dxText}','WEB',NULL,NULL,'${dateObject.toISOString()}' );
+                                                    `;
+                                                    
 
                                                     if (dxText) {
+                                                        var values = { stageDept : dept };
+
+                                                        $.ajax({
+                                                            url: `/api/Quotation/UpdateData`,
+                                                            type: "PUT",
+                                                            data: {
+                                                                values: JSON.stringify(values),
+                                                                key: selectQuotationId
+                                                            },
+                                                            processData: true,
+                                                            success: function (data) {
+                                                            },
+                                                            error: function (error) {
+                                                                console.error("Error loading data:", error);
+                                                            }
+                                                        });
+
+
+
+                                                      
+
+
                                                         $.ajax({
                                                             url: '/api/QuotationCommentLog/ExecuteCustomQuery',
                                                             headers: { 'Content-Type': 'application/json' },
