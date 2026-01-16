@@ -1455,6 +1455,8 @@
         Hover Ajax Popups (Comments + Flow History)
         =============================== */
 .comment-tooltip {
+    z-index: 99999;
+    pointer-events: auto; /* cho phép rê chuột vào tooltip */
     position: fixed;
     width: 360px;
     background: #fff;
@@ -1462,7 +1464,6 @@
     border-radius: 14px;
     box-shadow: 0 14px 40px rgba(0,0,0,.18);
     padding: 12px 12px 10px;
-    z-index: 200;
     display: none;
 }
 

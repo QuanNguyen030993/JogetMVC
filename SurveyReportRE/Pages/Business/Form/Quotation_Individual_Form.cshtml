@@ -77,7 +77,7 @@ Note:
         let selectedId = quotes[0]?.id;
 
         // stage vs focus
-        let stageDept = "UW";   // status ring only (from workflow stage)
+        let stageDept = quotes[0]?.stageDept;   // status ring only (from workflow stage)
         let focusDept = "PM";   // click highlight only
 
         function money(n) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n || 0); }
@@ -149,7 +149,7 @@ Note:
           data.forEach(q => {
             var isSel = q.id === selectedId;
             $root.append(`
-              <div class="quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}">
+              <div class="quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-stagedept="${q.stageDept}">
                 <div class="quoteTop">
                   <div>
                     <div class="quotationCode">${q.quotationCode}</div>
@@ -169,6 +169,7 @@ Note:
 
           $(".quoteCard").off("click").on("click", function(){
             selectedId = Number($(this).attr("data-id"));
+             stageDept = $(this).attr("data-stagedept");
             renderList();
             renderDetail();
           });
@@ -197,7 +198,7 @@ Note:
           // demo: stageDept derived from something (here we keep existing stageDept)
           // You can map from q.status or workflow stage:
           // stageDept = q.status === 'accepted' ? 'PM' : 'UW' ... etc
-          $("#stageDeptPill").text(`Stage: ${stageDept}`);
+          $("#stageDeptPill").text(`Quotation status: ${stageDept}`);
 
           deptData.MKT.clientName = q.clientName;
           deptData.MKT.notes = q.terms;
@@ -314,7 +315,7 @@ Note:
 
         function updateHints(){
           $("#loginRoleLabel").text(currentUserRole);
-          $("#focusDeptPill").text(`Focus: ${focusDept}`);
+          $("#focusDeptPill").text(`Focus section: ${focusDept}`);
 
           var all = ["MKT","TS","UW","LMKT","PM"];
           all.forEach(k => {
@@ -387,7 +388,7 @@ Note:
         }
 
         // ===== Branch overlay =====
-        function openBranchOverlay(){ $("#branchOverlay").show(); }
+        // function openBranchOverlay(){ $("#branchOverlay").show(); }
         function closeBranchOverlay(){
           $("#branchOverlay").hide();
           $("#routeTS, #routeUW").removeClass("active");
@@ -447,11 +448,6 @@ Note:
             $("#focusDeptPill").text(`Focus: ${focusDept}`);
         }
 
-        function applyNodeHighlights() {
-            $(".dept-node").removeClass("status focus");
-            $(`.dept-node[data-key='${stageDept}']`).addClass("status");
-            $(`.dept-node[data-key='${focusDept}']`).addClass("focus");
-        }
         function applySectionFocusHighlight() {
             $(".dept-section").removeClass("focused");
             $(`#sec${focusDept}`).addClass("focused");
@@ -628,46 +624,8 @@ Note:
                 const $tipList = $("#commentTooltipList");
 
                 let hoverQuoteCode = null;
-                var constItems = [
-                    {
-                        order: 900,
-                        dept: "MKT",
-                        user: "Static Demo User",
-                        time: "2024-01-05 10:30",
-                        comment: "[STATIC] Demo comment injected after AJAX"
-                    },
-                    {
-                        order: 901,
-                        dept: "UW",
-                        user: "Static UW",
-                        time: "2024-01-05 11:15",
-                        comment: "[STATIC] UW note for demo purpose"
-                    }
-                ];
-              
-                //     var insertSql = `EXEC dbo.sp_InsertQuotationCommentLog
-                //         101, N'QT-10030', N'MKT', 900, N'Sales A',
-                //         '2024-01-10 09:15', N'Initial request', N'WEB', NULL, NULL;
 
-                //     EXEC dbo.sp_InsertQuotationCommentLog
-                //         101, N'QT-10030', N'TS', 901, N'TS User',
-                //         '2024-01-11 10:30', N'Technical review started', N'WEB', NULL, NULL;
-
-                //     EXEC dbo.sp_InsertQuotationCommentLog
-                //         101, N'QT-10030', N'UW', 902, N'UW A',
-                //         '2024-01-12 14:20', N'Approved', N'WEB', NULL, NULL;
-                //     `;
-
-                //       $.ajax({
-                //     url: `/api/QuotationCommentLog/ExecuteCustomQuery`,
-                //     method: "POST",
-                //     async: false,
-                //     contentType: "application/json",
-                //     data: JSON.stringify(insertSql),
-                //     success: function(data) {
-
-                //     }
-                // });
+            
                 const loadComments = debounce(function (quoteCode, quoteId) {
                     // const key = `comments:${quoteCode}`;
                     // const url = MockupApi.commentsUrl(quoteCode);
@@ -686,23 +644,28 @@ Note:
                             }  ,error: function (xhr, status, error) {
                                     if (hoverQuoteCode !== quoteCode) return;
                         $tipList.html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load comments</div>`);
-                        $tipList.html(renderComments(constItems));
                                 }
                         });
                    
-                    // ajaxJson(url, key).then((data) => {
-                    //     // allow payload shape: [] OR {items:[]}
-                    //     var items = Array.isArray(data) ? data : (data?.items || data?.data || []);
-                        
-                    //     // ignore if user already moved away
-                    //     if (hoverQuoteCode !== quoteCode) return;
-                    //     $tipList.html(renderComments(items));
-                    // }).catch(() => {
-                    //     if (hoverQuoteCode !== quoteCode) return;
-                    //     $tipList.html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load comments</div>`);
-                    //     $tipList.html(renderComments(constItems));
-                    // });
+
                 }, 180);
+                var hideCmtTimer = null;
+                  function cancelHideCommentTip(){
+                  if(hideCmtTimer) clearTimeout(hideCmtTimer);
+                  hideCmtTimer = null;
+                }
+                function scheduleHideCommentTip(){
+                  cancelHideCommentTip();
+                  hideCmtTimer = setTimeout(() => {
+                    // IMPORTANT: giữ tooltip nếu đang hover trong vùng list hoặc đang hover tooltip
+                    const overList = document.querySelector("#quoteList:hover");
+                    const overTip  = document.querySelector("#commentTooltip:hover");
+                    if (!overList && !overTip) {
+                      hoverQuoteCode = null;
+                      $tip.hide();
+                    }
+                  }, 120);
+                }
 
                 $("#quoteList")
                     .off("mouseenter.qm mouseleave.qm")
@@ -715,12 +678,12 @@ Note:
                         $tipSub.text(quoteCode || "-");
                         $tip.show();
                         positionTooltip($tip, rect);
-
                         loadComments(quoteCode, quoteId);
                     })
                     .on("mouseleave.qm", ".quoteCard", function () {
+                        scheduleHideCommentTip();
                         hoverQuoteCode = null;
-                        $tip.hide();
+                        // $tip.hide();
                     });
 
 
@@ -929,16 +892,16 @@ Note:
         requiredDone: {
           MKT: false,
           TS: false,
-          UW: false,
+          UW: true,
           LMKT: false,
           PM: false
         },
         flags: {
           needTechnicalSurvey: false,
           needUnderwriting: false,
-          needLeaderMarketing: false,
-          needPolicyManager: false,
-          hasBlockingErrors: false
+          needLeaderMarketing: true,
+          needPolicyManager: true,
+          hasBlockingErrors: true
         }
       };
     }
@@ -967,6 +930,7 @@ Note:
 
            function renderBranchOverlay(currentDept){
       const formState = buildFormState();
+      console.log(formState);
       const choices = getNextChoices(currentDept, formState);
 
       if(!choices.length){
@@ -1027,7 +991,7 @@ Note:
 
       // helper append path
       const addPath = (d) => {
-        $svg.append(`<path d="${d}" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />`);
+        $svg.html(`<path d="${d}" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />`);
       };
 
       // ========= FIXED TYPE LINES =========
@@ -1035,6 +999,7 @@ Note:
         // 1) chỉ đường ngang GO -> choice (không junction)
         // GO center y = yJ, choice center y = yJ
         addPath(`M${xRootLine} ${yJ} L${xRightLine} ${yJ}`);
+        // addPath(`M40 70 L200 70`);
       } else if (choices.length === 2) {
         // 2) đúng như cũ:
         // GO -> junction (ngang)
@@ -1066,17 +1031,17 @@ Note:
     }
 
 
-      //   function openBranchOverlay(){
-      // // stageDept là biến bạn đang có trong mock (used in renderFlow) :contentReference[oaicite:5]{index=5}
-      // // hoặc dùng focusDept/loginRole tùy logic bạn.
-      //     const currentDept = stageDept || focusDept || "MKT";
-      //     renderBranchOverlay(currentDept);
-      //     $("#branchOverlay").show();
-      //   }
-      //       function closeBranchOverlay(){
-      //     $("#branchOverlay").hide();
-      //     $("#branchOverlay .bnode.choice").removeClass("active");
-      //   }
+        function openBranchOverlay(){
+      // stageDept là biến bạn đang có trong mock (used in renderFlow) :contentReference[oaicite:5]{index=5}
+      // hoặc dùng focusDept/loginRole tùy logic bạn.
+          const currentDept = stageDept || focusDept || "MKT";
+          renderBranchOverlay(currentDept);
+          $("#branchOverlay").show();
+        }
+            function closeBranchOverlay(){
+          $("#branchOverlay").hide();
+          $("#branchOverlay .bnode.choice").removeClass("active");
+        }
 
     function routeTo(dept){
       $("#branchOverlay .bnode.choice").removeClass("active");
@@ -1089,7 +1054,101 @@ Note:
       updateHints();
       scrollToDept(focusDept);
 
-      DevExpress.ui.notify(`Mock submit routed to ${dept}`, "success", 1200);
+      var popupInstance = $(`#inputTextPopup`).dxPopup({
+                                       width: "50%",
+                                       height: "50%",
+                                       showTitle: true,
+                                       title: `Remarks`,
+                                       dragEnabled: false,
+                                       closeOnOutsideClick: true,
+                                       contentTemplate: function (container) {
+                                           $("<div id='commentText'>").dxTextArea({
+                                               dataField: "commentText",
+                                               label: { text: "Remarks", location: "top" },
+                                               height: "50%",
+                                               width: "100%",
+                                           }).appendTo(container);
+                                           return container
+                                       },
+                                       onHiding: function (e) {
+
+                                       },
+                                       toolbarItems: [{
+                                           widget: 'dxButton',
+                                           toolbar: 'bottom',
+                                           location: 'after',
+                                           options: {
+                                               stylingMode: 'contained',
+                                               type: 'normal',
+                                               text: "Ok",
+                                               onClick() {
+                                                   var selectQuotationId = $(`.quoteCard.selected`).attr("data-id")
+                                                   var dxText = $("#commentText").dxTextArea().dxTextArea("instance").option("text");
+                                                   var timestamp = Date.now();
+                                                   var dateObject = new Date(timestamp);
+                                                   var insertQuery = `INSERT INTO QuotationCommentLog ( QuotationId
+                                                       ,DeptCode
+                                                       ,CommentOrder
+                                                       ,CommentBy
+                                                       ,CommentTime
+                                                       ,CommentText
+                                                       ,SourceSystem
+                                                       ,SourceRef
+                                                       ,RawJson
+                                                       ,CreatedAtUtc)
+                                                       VALUES (${selectQuotationId},'${stageDept}',0,'${_loginUser}','${dateObject.toISOString()}','${dxText}','WEB',NULL,NULL,'${dateObject.toISOString()}' );
+
+                                                   `;
+
+
+                                                    if (dxText) {
+                                                        $.ajax({
+                                                            url: '/api/QuotationCommentLog/ExecuteCustomQuery',
+                                                            headers: { 'Content-Type': 'application/json' },
+                                                            type: 'POST',
+                                                            data: JSON.stringify(insertQuery),
+                                                            async: false,
+                                                            success: function (response) {
+                                                                // popupInstance.hide();
+
+                                                            },
+                                                            error: function (err) {
+                                                                appErrorHandling('LossControl recalled failed !', err);
+                                                            }
+                                                        });
+                  
+                                                        popupInstance.hide();
+    
+                                                    }
+                                                    else {
+                                                        appNotifyWarning(`Remark is empty!`, false);
+                                                    }
+                                                   DevExpress.ui.notify(`Mock submit routed to ${dept}`, "success", 1200);
+                                                   popupInstance.hide();
+                                               },
+                                           },
+                                       }, {
+                                           widget: 'dxButton',
+                                           toolbar: 'bottom',
+                                           location: 'after',
+                                           options: {
+                                               stylingMode: 'contained',
+                                               type: 'normal',
+                                               text: "Cancel",
+                                               onClick() {
+                                                   popupInstance.hide();
+                                               },
+                                           },
+                                       }]
+
+                                   }).dxPopup("instance");
+                                   popupInstance.show();
+      
+      
+
+
+
+
       setTimeout(closeBranchOverlay, 350);
     }
 
@@ -1119,9 +1178,8 @@ Note:
         <div class="title">
      @*        <span style="width:10px;height:10px;background:var(--brand);border-radius:999px;display:inline-block;"></span>
             Quotation Management *@
-            <span id="activeStage" class="pill">All Quotations</span>
-            <span id="stageDeptPill" class="pill">Stage: UW</span>
-            <span id="focusDeptPill" class="pill">Focus: PM</span>
+            @* <span id="activeStage" class="pill">All Quotations</span> *@
+           
         </div>
   @*       <div class="toolbar">
             <div id="btnNew"></div>
@@ -1153,7 +1211,7 @@ Note:
             <div class="contentGrid">
 
                 <!-- List -->
-            <section class="card" style="height:130%   ;overflow: scroll;">
+            <section class="card" style="height:17%   ;overflow: scroll;">
                     <div class="cardHeader">
                         <div class="h" id="listTitle">All Quotations</div>
                         <div id="searchBox" style="width: 210px;"></div>
@@ -1264,6 +1322,8 @@ Note:
         <div class="actionLeft">
             <span class="pill">Record: <b id="recordNo">Qu-10030</b></span>
             <span class="pill">Login role: <b id="loginRoleLabel">MKT</b></span>
+            <span id="stageDeptPill" class="pill">Quotation status: </span>
+            <span id="focusDeptPill" class="pill">Focus section: </span>
         </div>
         <div class="actionRight">
             <div id="btnSaveDraft"></div>
@@ -1281,15 +1341,20 @@ Note:
             </div>
             <div class="branchCanvas">
                  <svg width="100%" height="100%" viewBox="0 0 260 140" style="position:absolute;inset:0;">
+                  @*    <path d="M40 70 L110 70" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />
+                    <path d="M110 40 L110 100" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />
+                    <path d="M110 40 L200 40" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />
+                    <path d="M110 100 L200 100" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" /> *@
+                </svg>
+                <svg width="100%" height="100%" viewBox="0 0 260 140" style="position:absolute;inset:0;">
                      <path d="M40 70 L110 70" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />
                     <path d="M110 40 L110 100" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />
                     <path d="M110 40 L200 40" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />
-                    <path d="M110 100 L200 100" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />
-                </svg> 
-
+                    <path d="M110 100 L200 100" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" /> 
+                </svg>
                 <div class="bnode root" style="left:14px; top:42px;" title="Submit">GO</div>
-                 <div id="routeTS" class="bnode choice" style="left:182px; top:14px;" title="Route to TS">TS</div>
-                <div id="routeUW" class="bnode choice" style="left:182px; top:74px;" title="Route to UW">UW</div> 
+    @*              <div id="routeTS" class="bnode choice" style="left:182px; top:14px;" title="Route to TS">TS</div>
+                <div id="routeUW" class="bnode choice" style="left:182px; top:74px;" title="Route to UW">UW</div>  *@
             </div>
         </div>
     </div>

@@ -1,7 +1,7 @@
 CREATE TABLE dbo.QuotationCommentLog (
     CommentId         BIGINT IDENTITY(1,1) PRIMARY KEY,
     QuotationId       BIGINT NOT NULL,
-    QuotationCode     NVARCHAR(50) NOT NULL,          -- denormalize để query nhanh (optional)
+    --QuotationCode     NVARCHAR(50) NULL,          -- denormalize để query nhanh (optional)
 
     DeptCode          NVARCHAR(20) NULL,              -- MKT/TS/UW/LMKT/PM
     CommentOrder      INT NULL,                       -- c.order (900,901,...)
@@ -20,12 +20,12 @@ CREATE TABLE dbo.QuotationCommentLog (
 GO
 
 CREATE INDEX IX_QCL_QuotationId_Time ON dbo.QuotationCommentLog(QuotationId, CommentTime DESC);
-CREATE INDEX IX_QCL_QuotationCode_Time ON dbo.QuotationCommentLog(QuotationCode, CommentTime DESC);
+--CREATE INDEX IX_QCL_QuotationCode_Time ON dbo.QuotationCommentLog(QuotationCode, CommentTime DESC);
 GO
 CREATE TABLE dbo.QuotationWorkflowHistory (
     HistoryId         BIGINT IDENTITY(1,1) PRIMARY KEY,
     QuotationId       BIGINT NOT NULL,
-    QuotationCode     NVARCHAR(50) NOT NULL,          -- denormalize (optional)
+    --QuotationCode     NVARCHAR(50) NULL,          -- denormalize (optional)
 
     StepNo            INT NULL,                       -- thứ tự nếu hệ nguồn có, hoặc bạn tự generate
     DeptCode          NVARCHAR(20) NOT NULL,          -- x.dept
@@ -47,5 +47,5 @@ CREATE TABLE dbo.QuotationWorkflowHistory (
 GO
 
 CREATE INDEX IX_QWH_QuotationId_Time ON dbo.QuotationWorkflowHistory(QuotationId, ActionTime DESC);
-CREATE INDEX IX_QWH_QuotationCode_Time ON dbo.QuotationWorkflowHistory(QuotationCode, ActionTime DESC);
+--CREATE INDEX IX_QWH_QuotationCode_Time ON dbo.QuotationWorkflowHistory(QuotationCode, ActionTime DESC);
 GO
