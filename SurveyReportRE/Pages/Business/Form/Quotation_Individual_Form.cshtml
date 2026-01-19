@@ -502,21 +502,21 @@ Note:
                     .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
             }
 
-            function positionTooltip($tip, rect) {
-                const margin = 10;
-                const vw = window.innerWidth, vh = window.innerHeight;
-                const tipW = $tip.outerWidth(), tipH = $tip.outerHeight();
+            // function positionTooltip($tip, rect) {
+            //     const margin = 10;
+            //     const vw = window.innerWidth, vh = window.innerHeight;
+            //     const tipW = $tip.outerWidth(), tipH = $tip.outerHeight();
 
-                // prefer right side of card
-                let left = rect.right + margin;
-                let top = rect.top;
+            //     // prefer right side of card
+            //     let left = rect.right + margin;
+            //     let top = rect.top;
 
-                if (left + tipW > vw - 8) left = rect.left - tipW - margin;
-                if (left < 8) left = Math.max(8, vw - tipW - 8);
-                if (top + tipH > vh - 8) top = Math.max(8, vh - tipH - 8);
+            //     if (left + tipW > vw - 8) left = rect.left - tipW - margin;
+            //     if (left < 8) left = Math.max(8, vw - tipW - 8);
+            //     if (top + tipH > vh - 8) top = Math.max(8, vh - tipH - 8);
 
-                $tip.css({ left: `${left}px`, top: `${top}px` });
-            }
+            //     $tip.css({ left: `${left}px`, top: `${top}px` });
+            // }
 
             function renderComments(items) {
                 if (!Array.isArray(items) || items.length === 0) {
@@ -656,7 +656,7 @@ Note:
                     const overTip  = document.querySelector("#commentTooltip:hover");
                     if (!overList && !overTip) {
                       hoverQuoteCode = null;
-                      $tip.hide();
+                      // $tip.hide();
                     }
                   }, 120);
                 }
@@ -669,10 +669,10 @@ Note:
                         hoverQuoteCode = quoteCode;
 
                         const rect = this.getBoundingClientRect();
-                        $tipSub.text(quoteCode || "-");
-                        $tip.show();
-                        positionTooltip($tip, rect);
-                        loadComments(quoteCode, quoteId);
+                        // $tipSub.text(quoteCode || "-");
+                        // $tip.show();
+                        // positionTooltip($tip, rect);
+                        // loadComments(quoteCode, quoteId);
                     })
                     .on("mouseleave.qm", ".quoteCard", function () {
                         scheduleHideCommentTip();
@@ -1312,8 +1312,7 @@ Note:
                                 </div>
                                 @* <div id="formTS"></div> *@
                             @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_TS_Form")
-                                <div style="margin-top:10px;font-weight:800;font-size:12px;">Locations (mock grid)</div>
-                                <div id="gridTSLocations" style="margin-top:8px;"></div>
+
                             </section>
 
                             <section id="secUW" class="dept-section">
