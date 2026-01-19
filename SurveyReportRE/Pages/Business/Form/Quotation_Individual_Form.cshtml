@@ -176,6 +176,7 @@ Note:
         }
 
         function renderDeptForms(){
+
           $("#formMKT").dxForm({
             formData: deptData.MKT, readOnly: true, colCount: 2,
             items: [
@@ -1300,7 +1301,8 @@ Note:
                                     <div class="dept-title">MKT</div>
                                     <div class="dept-hint" id="hintMKT"></div>
                                 </div>
-                                <div id="formMKT"></div>
+                                @* <div id="formMKT"></div> *@
+                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_MKT_Form")
                             </section>
 
                             <section id="secTS" class="dept-section">
@@ -1308,7 +1310,8 @@ Note:
                                     <div class="dept-title">TS</div>
                                     <div class="dept-hint" id="hintTS"></div>
                                 </div>
-                                <div id="formTS"></div>
+                                @* <div id="formTS"></div> *@
+                            @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_TS_Form")
                                 <div style="margin-top:10px;font-weight:800;font-size:12px;">Locations (mock grid)</div>
                                 <div id="gridTSLocations" style="margin-top:8px;"></div>
                             </section>
@@ -1318,7 +1321,8 @@ Note:
                                     <div class="dept-title">UW</div>
                                     <div class="dept-hint" id="hintUW"></div>
                                 </div>
-                                <div id="formUW"></div>
+                                @* <div id="formUW"></div> *@
+                            @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_UW_Form")
                             </section>
 
                             <section id="secLMKT" class="dept-section">
@@ -1326,7 +1330,8 @@ Note:
                                     <div class="dept-title">Leader MKT</div>
                                     <div class="dept-hint" id="hintLMKT"></div>
                                 </div>
-                                <div id="formLMKT"></div>
+                                @* <div id="formLMKT"></div> *@
+                            @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_LMKT_Form")
                             </section>
 
                             <section id="secPM" class="dept-section">
@@ -1334,8 +1339,8 @@ Note:
                                     <div class="dept-title">PM</div>
                                     <div class="dept-hint" id="hintPM"></div>
                                 </div>
-                                <div id="formPM"></div>
-
+                                @* <div id="formPM"></div> *@
+                            @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_PM_Form")
                                 <div style="margin-top:10px;font-weight:800;font-size:12px;">Products / Services</div>
                                 @* <div id="itemsGrid" style="margin-top:8px;"></div> *@
                             </section>
