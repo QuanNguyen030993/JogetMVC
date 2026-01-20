@@ -39,14 +39,14 @@ Note:
         });
             var commentPanelOpened = false;
 
-     
-
+         if (_isSuperUser)
+       
 
 
         // // ===== UI state =====
 
-        const Roles = ["MKT", "TS", "UW", "LMKT", "PM"];
-        let currentUserRole = _role;
+        var Roles = ["MKT", "TS", "UW", "LMKT", "PM"];
+        var currentUserRole = _role;
         $("#loginRoleLabel").text(currentUserRole);
         var filter = "all";
         let searchText = "";
@@ -174,7 +174,43 @@ Note:
             summary: { totalItems:[{ column:"amount", summaryType:"sum", valueFormat:{type:"currency",precision:2}, displayFormat:"Total: {0}" }] }
           });
         }
+        function updateHints() {
+            // $("#hintMKT").text(`READ/EDIT depends • login=${currentUserRole}`);
+            // $("#hintTS").text(`READ/EDIT depends • login=${currentUserRole}`);
+            // $("#hintUW").text(`READ/EDIT depends • login=${currentUserRole}`);
+            // $("#hintLMKT").text(`READ/EDIT depends • login=${currentUserRole}`);
+            // $("#hintPM").text(`READ/EDIT depends • login=${currentUserRole}`);
+            $("#focusDeptPill").text(`Focus: ${focusDept}`);
+               Roles.forEach(k => {
+        const canEdit =  (currentUserRole === k) ? true : false;
+        // <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+        //                   <!-- body -->
+        //                   <rect x="5" y="10" width="14" height="10" rx="2"
+        //                         stroke="currentColor" stroke-width="2"/>
 
+        //                   <!-- shackle: rotated left, detached feeling -->
+        //                   <path d="M9 11V6a4.5 4.5 0 0 1 7 -3"
+        //                         stroke="currentColor" stroke-width="2"
+        //                         stroke-linecap="round"/>
+        //                 </svg>
+        const icon = canEdit
+                  ? `
+                    <span class="lock editable" title="Editable">
+                             
+                      EDIT
+                    </span>`
+                  : `
+                    <span class="lock readonly" title="Read only">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2"/>
+                        <path d="M7 10V7a5 5 0 0 1 10 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      </svg>
+                      LOCK
+                    </span>`;
+
+        $(`#hint${k}`).html(icon);
+          });
+        }
         function renderDeptForms(){
 
           $("#formMKT").dxForm({
@@ -257,17 +293,26 @@ Note:
             mode:"cell", allowUpdating: !roTS, allowAdding: !roTS, allowDeleting: !roTS
           });
         }
+        //  function updateHints(){
 
-        function updateHints(){
-          
-          $("#focusDeptPill").text(`Focus section: ${focusDept}`);
+        //   $("#focusDeptPill").text(`Focus section: ${focusDept}`);
 
-          var all = ["MKT","TS","UW","LMKT","PM"];
-          all.forEach(k => {
-            var canEdit = (focusDept === k) && (currentUserRole === k);
-            $(`#hint${k}`).text(`${canEdit ? "EDIT ENABLED" : "READ ONLY"} • login=${currentUserRole}`);
-          });
-        }
+        //   Roles.forEach(k => {
+        //     var canEdit = currentUserRole === k ? true : false;
+        //     $(`#hint${k}`).text(`${canEdit ? "EDIT ENABLED" : "READ ONLY"} • login=${currentUserRole}`);
+        //   });
+        // }
+        $("#roleSelect").dxSelectBox({
+          items: Roles, value: currentUserRole, stylingMode:"outlined",
+          onValueChanged: (e) => {
+            currentUserRole = e.value;
+            $("#loginRoleLabel").text(currentUserRole);
+            applyEditLock();
+            updateHints();
+            DevExpress.ui.notify("Role switched: " + currentUserRole, "info", 1200);
+          }
+        });
+      
 
         function applyNodeHighlights(){
           // status ring: stageDept only
@@ -338,22 +383,7 @@ Note:
           $("#branchOverlay").hide();
           $("#routeTS, #routeUW").removeClass("active");
         }
-        // function routeTo(dept){
-        //   $("#routeTS, #routeUW").removeClass("active");
-        //   if(dept === "TS") $("#routeTS").addClass("active");
-        //   if(dept === "UW") $("#routeUW").addClass("active");
 
-        //   // change focus (blue) to routed dept
-        //   focusDept = dept;
-        //   applyNodeHighlights();
-        //   applySectionFocusHighlight();
-        //   applyEditLock();
-        //   updateHints();
-        //   scrollToDept(focusDept);
-
-        //   DevExpress.ui.notify(`Mock submit routed to ${dept}`, "success", 1200);
-        //   setTimeout(closeBranchOverlay, 350);
-        // }
 
         function setActiveNav(el){
           $(".navItem").removeClass("active");
@@ -371,11 +401,11 @@ Note:
 
         function applyEditLock() {
             // demo rule: only edit when focusDept == currentUserRole
-            const roMKT = !(currentUserRole === "MKT" && focusDept === "MKT");
-            const roTS = !(currentUserRole === "TS" && focusDept === "TS");
-            const roUW = !(currentUserRole === "UW" && focusDept === "UW");
-            const roLMKT = !(currentUserRole === "LMKT" && focusDept === "LMKT");
-            const roPM = !(currentUserRole === "PM" && focusDept === "PM");
+            const roMKT = !(currentUserRole === "MKT");
+            const roTS = !(currentUserRole === "TS");
+            const roUW = !(currentUserRole === "UW");
+            const roLMKT = !(currentUserRole === "LMKT");
+            const roPM = !(currentUserRole === "PM");
 
             $("#formMKT").dxForm("instance")?.option("readOnly", roMKT);
             $("#formTS").dxForm("instance")?.option("readOnly", roTS);
@@ -383,15 +413,9 @@ Note:
             $("#formLMKT").dxForm("instance")?.option("readOnly", roLMKT);
             $("#formPM").dxForm("instance")?.option("readOnly", roPM);
         }
-
-        function updateHints() {
-            $("#hintMKT").text(`READ/EDIT depends • login=${currentUserRole}`);
-            $("#hintTS").text(`READ/EDIT depends • login=${currentUserRole}`);
-            $("#hintUW").text(`READ/EDIT depends • login=${currentUserRole}`);
-            $("#hintLMKT").text(`READ/EDIT depends • login=${currentUserRole}`);
-            $("#hintPM").text(`READ/EDIT depends • login=${currentUserRole}`);
-            $("#focusDeptPill").text(`Focus: ${focusDept}`);
-        }
+        
+      
+        
 
         function applySectionFocusHighlight() {
             $(".dept-section").removeClass("focused");
@@ -436,21 +460,6 @@ Note:
         // Branch overlay
         // function openBranchOverlay() { $("#branchOverlay").show(); }
         function closeBranchOverlay() { $("#branchOverlay").hide(); $("#routeTS, #routeUW").removeClass("active"); }
-        // function routeTo(dept) {
-        //     // $("#routeTS, #routeUW").removeClass("active");
-        //     // if (dept === "TS") $("#routeTS").addClass("active");
-        //     // if (dept === "UW") $("#routeUW").addClass("active");
-
-        //     focusDept = dept;
-        //     applyNodeHighlights();
-        //     applySectionFocusHighlight();
-        //     applyEditLock();
-        //     updateHints();
-        //     scrollToDept(focusDept);
-
-        //     DevExpress.ui.notify(`Mock submit routed to ${dept}`, "success", 1200);
-        //     setTimeout(closeBranchOverlay, 350);
-        // }
 
 
         // =============================
@@ -787,7 +796,7 @@ Note:
           //   }
           // });
           // top buttons
-          $("#btnNew").dxButton({ text:"New", icon:"plus", type:"default", onClick:()=>DevExpress.ui.notify("Mock: New quotation","success",1200) });
+          
           $("#btnEdit").dxButton({ text:"Edit", icon:"edit", type:"normal", onClick:()=>DevExpress.ui.notify("Mock: Edit selected","info",1200) });
           $("#btnMore").dxDropDownButton({ text:"More", icon:"overflow", items:["Export","Print","Email"], onItemClick:(e)=>DevExpress.ui.notify("Mock: "+e.itemData,"info",1200) });
           // $("#btnDuplicate").dxButton({ text:"Duplicate", icon:"copy", type:"normal", onClick:()=>DevExpress.ui.notify("Mock: Duplicated","success",1200) });
@@ -1197,21 +1206,7 @@ Note:
 </script>
 <style>
 
-    :root {
-        --sidebar-w: 260px;
-        --gap: 12px;
-        --bg: #f5f7fb;
-        --card: #fff;
-        --border: #e6e9f0;
-        --text: #1f2a37;
-        --muted: #6b7280;
-        --brand: #e84a5f; /* status highlight (quotation stage) */
-        --focus: #2563eb; /* click focus highlight */
-        --focusSoft: rgba(37,99,235,.12);
-        --node: 30px;
-        --nodeBorder: rgba(31,41,55,.28);
-        --line: rgba(17,24,39,.18);
-    }
+  
 </style>
 
 <body>
@@ -1221,7 +1216,6 @@ Note:
            
         </div>
   @*       <div class="toolbar">
-            <div id="btnNew"></div>
             <div id="btnEdit"></div>
             <div id="btnMore"></div>
         </div> *@

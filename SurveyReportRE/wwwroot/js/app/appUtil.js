@@ -5272,3 +5272,6 @@ function labelTpl(text) {
         $label.append($wrap);
     };
 }
+function newQuotationForm() {
+    DevExpress.ui.notify("Mock: New quotation", "success", 1200);
+}

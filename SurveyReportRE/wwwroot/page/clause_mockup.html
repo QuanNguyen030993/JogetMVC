@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Full Mockup - Clause Blocks Reorder by Button Drag (Pointer)</title>
+  <style>
+    *{box-sizing:border-box;font-family:Segoe UI,Arial}
+    body{margin:0;background:#f6f7fb;color:#111827}
+    .top{height:56px;background:#111827;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 16px}
+    .wrap{max-width:1200px;margin:0 auto;padding:12px;display:grid;grid-template-columns:1fr 380px;gap:12px}
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.04);overflow:hidden}
+    .card h3{margin:0;padding:12px 14px;border-bottom:1px solid #eef2f7;font-size:14px}
+    .card .body{padding:12px 14px}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+    .btn{border:1px solid #e5e7eb;background:#fff;border-radius:10px;padding:9px 10px;font-size:12px;cursor:pointer}
+    .btn.primary{background:#111827;color:#fff;border-color:#111827}
+    .btn.danger{border-color:#ef4444;color:#ef4444}
+    input,select,textarea{width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;background:#fff}
+    textarea{min-height:80px;resize:vertical}
+    .muted{color:#6b7280;font-size:12px}
+    input, textarea, select { user-select:text; -webkit-user-select:text; }
+
+    .hint{padding:10px;border:1px dashed #cbd5e1;border-radius:12px;background:#fafafa}
+
+    .list{display:flex;flex-direction:column;gap:10px}
+    .block{border:1px solid #e5e7eb;border-radius:14px;background:#fff;overflow:hidden}
+    .block.drop-target{outline:2px dashed #93c5fd; outline-offset:2px}
+    .head{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:linear-gradient(#fff,#fafafa)}
+    .drag-btn{
+      border:1px solid #e5e7eb;border-radius:10px;background:#fff;
+      padding:6px 9px;cursor:grab;user-select:none;
+      display:flex;align-items:center;gap:6px;
+    }
+    .drag-btn:active{cursor:grabbing}
+    .meta{flex:1}
+    .meta .line1{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .badge{display:inline-block;border:1px solid #e5e7eb;border-radius:999px;padding:3px 8px;font-size:12px;background:#fff}
+    .actions{display:flex;gap:6px}
+    .actions button{padding:7px 9px}
+
+    .body2{padding:12px;display:none;border-top:1px solid #eef2f7}
+    .body2.show{display:block}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .grid1{display:grid;grid-template-columns:1fr;gap:10px}
+    .lbl{font-size:12px;color:#6b7280;margin-bottom:6px}
+
+    pre{margin:0;background:#0b1220;color:#e5e7eb;border-radius:12px;padding:12px;overflow:auto;max-height:520px}
+
+    /* floating “ghost” while dragging */
+    .ghost{
+      position:fixed; left:0; top:0;
+      width:480px;
+      pointer-events:none;
+      opacity:.92;
+      transform: translate(-9999px,-9999px);
+      z-index:9999;
+      border-radius:14px;
+      box-shadow:0 12px 40px rgba(0,0,0,.18);
+      border:1px solid #e5e7eb;
+      background:#fff;
+      overflow:hidden;
+    }
+    .ghost .head{background:#111827;color:#fff}
+    .ghost .muted{color:#cbd5e1}
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div>
+      <b>Clause Builder Mock</b>
+      <span class="muted" style="color:#9ca3af">/ Drag bằng button ↕ (pointer) • Input chọn text bình thường</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn" onclick="loadTemplate()">Load Template</button>
+      <button class="btn primary" onclick="alert('Mock only')">Save</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+      <h3>Selected Clauses</h3>
+      <div class="body">
+        <div class="toolbar">
+          <button class="btn primary" onclick="addClause()">+ Add Clause</button>
+          <button class="btn" onclick="expandAll(true)">Expand All</button>
+          <button class="btn" onclick="expandAll(false)">Collapse All</button>
+          <button class="btn" onclick="recalcNo()">Recalc No.</button>
+        </div>
+
+        <div class="hint muted">
+          Kéo thả: giữ chuột trên <b>button ↕</b> rồi kéo lên/xuống.<br/>
+          Bôi đen text trong input/textarea sẽ không kéo block nữa.
+        </div>
+        <div style="height:10px"></div>
+
+        <div id="list" class="list"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Preview (JSON)</h3>
+      <div class="body">
+        <div class="muted" style="margin-bottom:10px">Payload giả lập để lưu DB.</div>
+        <pre id="preview"></pre>
+      </div>
+    </div>
+  </div>
+
+  <div id="ghost" class="ghost"></div>
+
+  <script>
+    const limitTypeOptions = [
+      { v: "NONE", t: "No limit" },
+      { v: "DAYS", t: "Days" },
+      { v: "PERCENT", t: "Percent" },
+      { v: "AMOUNT", t: "Amount" },
+      { v: "TEXT", t: "Text" },
+    ];
+
+    let data = [
+      { id: crypto.randomUUID(), no: 1, code: "S119", nameEn: "Approved Loss Adjusters", nameVi: "Điều khoản sử dụng công ty tính toán tổn thất", category: "General", limitType: "NONE", limitValue: "", note: "" , expanded: true},
+      { id: crypto.randomUUID(), no: 2, code: "S124", nameEn: "Loss Notification Clause", nameVi: "Điều khoản quy định về thông báo tổn thất", category: "General", limitType: "DAYS", limitValue: "60", note: "", expanded: false},
+      { id: crypto.randomUUID(), no: 3, code: "S125", nameEn: "Payment On Account Clause", nameVi: "Điều khoản về tạm ứng khoản thanh toán bồi thường", category: "Special", limitType: "TEXT", limitValue: "50% of loss upon receipt of the primary report", note: "", expanded: false},
+    ];
+
+    function limitPlaceholder(type){
+      switch(type){
+        case "DAYS": return "e.g. 60";
+        case "PERCENT": return "e.g. 10%";
+        case "AMOUNT": return "e.g. 1000000000";
+        case "TEXT": return "free text...";
+        default: return "";
+      }
+    }
+
+    function escapeHtml(s){
+      return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[m]));
+    }
+    function escapeAttr(s){ return escapeHtml(s).replace(/\n/g," "); }
+
+    // ===== Pointer drag reorder (no HTML5 DnD) =====
+    const ghost = document.getElementById("ghost");
+    let dragging = null; // {fromId, fromIndex}
+
+    function clearDropHighlight(){
+      document.querySelectorAll(".block.drop-target").forEach(x => x.classList.remove("drop-target"));
+    }
+
+    function highlightTargetByIndex(toIndex){
+      clearDropHighlight();
+      const blocks = [...document.querySelectorAll(".block")];
+      if (toIndex >= 0 && toIndex < blocks.length) blocks[toIndex].classList.add("drop-target");
+    }
+
+    function indexFromPointer(clientY){
+      const blocks = [...document.querySelectorAll(".block")];
+      for (let i=0;i<blocks.length;i++){
+        const r = blocks[i].getBoundingClientRect();
+        const mid = r.top + r.height/2;
+        if (clientY < mid) return i;
+      }
+      return blocks.length - 1;
+    }
+
+    function setGhostContent(item){
+      ghost.innerHTML = `
+        <div class="head">
+          <button class="drag-btn" type="button">↕ <span class="muted" style="font-size:12px">drag</span></button>
+          <div class="meta">
+            <div class="line1">
+              <b>${item.no}. ${escapeHtml(item.code)}</b>
+              <span class="badge">${escapeHtml(item.category)}</span>
+              <span class="muted">${escapeHtml(item.nameEn)}</span>
+            </div>
+            <div class="muted">${escapeHtml(item.nameVi)}</div>
+            <div class="muted">Limit: <b>${escapeHtml(item.limitType)}</b> ${item.limitValue ? "• " + escapeHtml(item.limitValue) : ""}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function moveGhost(x,y){
+      ghost.style.transform = `translate(${x+12}px, ${y+12}px)`;
+    }
+
+    function onPointerMove(e){
+      if (!dragging) return;
+      moveGhost(e.clientX, e.clientY);
+
+      const toIndex = indexFromPointer(e.clientY);
+      dragging.toIndex = toIndex;
+      highlightTargetByIndex(toIndex);
+    }
+
+    function onPointerUp(){
+      if (!dragging) return;
+
+      clearDropHighlight();
+      ghost.style.transform = `translate(-9999px,-9999px)`;
+
+      const { fromIndex, toIndex } = dragging;
+      dragging = null;
+
+      if (toIndex == null || fromIndex === toIndex) return;
+
+      const moved = data.splice(fromIndex, 1)[0];
+      data.splice(toIndex, 0, moved);
+      recalcNo(false);
+      render();
+    }
+
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+
+    function startDrag(fromId, fromIndex, e){
+      // prevent selecting text while dragging the button
+      e.preventDefault();
+
+      dragging = { fromId, fromIndex, toIndex: fromIndex };
+      const item = data[fromIndex];
+      setGhostContent(item);
+      moveGhost(e.clientX, e.clientY);
+
+      clearDropHighlight();
+      highlightTargetByIndex(fromIndex);
+    }
+
+    // ===== UI logic =====
+    function render(){
+      const list = document.getElementById("list");
+      list.innerHTML = "";
+
+      data.forEach((x, i) => {
+        const block = document.createElement("div");
+        block.className = "block";
+        block.dataset.id = x.id;
+
+        const head = document.createElement("div");
+        head.className = "head";
+
+        const dragBtn = document.createElement("button");
+        dragBtn.className = "drag-btn";
+        dragBtn.type = "button";
+        dragBtn.innerHTML = `↕ <span class="muted" style="font-size:12px">drag</span>`;
+        dragBtn.addEventListener("pointerdown", (e) => startDrag(x.id, i, e));
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.innerHTML = `
+          <div class="line1">
+            <b>${x.no}. ${escapeHtml(x.code)}</b>
+            <span class="badge">${escapeHtml(x.category)}</span>
+            <span class="muted">${escapeHtml(x.nameEn)}</span>
+          </div>
+          <div class="muted">${escapeHtml(x.nameVi)}</div>
+          <div class="muted">Limit: <b>${escapeHtml(x.limitType)}</b> ${x.limitValue ? "• " + escapeHtml(x.limitValue) : ""}</div>
+        `;
+
+        const actions = document.createElement("div");
+        actions.className = "actions";
+        actions.innerHTML = `
+          <button class="btn" type="button">${x.expanded ? "Hide" : "Details"}</button>
+          <button class="btn danger" type="button">Remove</button>
+        `;
+        actions.children[0].addEventListener("click", () => toggleDetails(x.id));
+        actions.children[1].addEventListener("click", () => removeClause(x.id));
+
+        head.appendChild(dragBtn);
+        head.appendChild(meta);
+        head.appendChild(actions);
+
+        const body2 = document.createElement("div");
+        body2.className = "body2 " + (x.expanded ? "show" : "");
+        body2.innerHTML = `
+          <div class="grid">
+            <div>
+              <div class="lbl">Code</div>
+              <input value="${escapeAttr(x.code)}" />
+            </div>
+            <div>
+              <div class="lbl">Category</div>
+              <select>
+                ${["General","Exclusion","Special","Warranty"].map(c => `<option ${c===x.category?"selected":""}>${c}</option>`).join("")}
+              </select>
+            </div>
+          </div>
+
+          <div class="grid1" style="margin-top:10px">
+            <div>
+              <div class="lbl">Name (EN)</div>
+              <input value="${escapeAttr(x.nameEn)}" />
+            </div>
+            <div>
+              <div class="lbl">Name (VI)</div>
+              <input value="${escapeAttr(x.nameVi)}" />
+            </div>
+          </div>
+
+          <div class="grid" style="margin-top:10px">
+            <div>
+              <div class="lbl">Limit Type</div>
+              <select>
+                ${limitTypeOptions.map(o => `<option value="${o.v}" ${o.v===x.limitType?"selected":""}>${o.t}</option>`).join("")}
+              </select>
+            </div>
+            <div>
+              <div class="lbl">Limit Value</div>
+              <input
+                placeholder="${escapeAttr(limitPlaceholder(x.limitType))}"
+                value="${escapeAttr(x.limitValue)}"
+                ${x.limitType==="NONE" ? "disabled" : ""} />
+            </div>
+          </div>
+
+          <div style="margin-top:10px">
+            <div class="lbl">Note / Remark</div>
+            <textarea>${escapeHtml(x.note||"")}</textarea>
+          </div>
+        `;
+
+        // bind
+        const inputs = body2.querySelectorAll("input, textarea, select");
+        const codeInput = inputs[0];
+        const categorySelect = inputs[1];
+        const nameEnInput = inputs[2];
+        const nameViInput = inputs[3];
+        const limitTypeSelect = inputs[4];
+        const limitValueInput = inputs[5];
+        const noteTextarea = inputs[6];
+
+        codeInput.addEventListener("input", () => update(x.id, "code", codeInput.value));
+        nameEnInput.addEventListener("input", () => update(x.id, "nameEn", nameEnInput.value));
+        nameViInput.addEventListener("input", () => update(x.id, "nameVi", nameViInput.value));
+        noteTextarea.addEventListener("input", () => update(x.id, "note", noteTextarea.value));
+        categorySelect.addEventListener("change", () => update(x.id, "category", categorySelect.value));
+
+        limitTypeSelect.addEventListener("change", () => onLimitTypeChange(x.id, limitTypeSelect.value));
+        limitValueInput.addEventListener("input", () => update(x.id, "limitValue", limitValueInput.value));
+
+        block.appendChild(head);
+        block.appendChild(body2);
+        list.appendChild(block);
+      });
+
+      refreshPreview();
+    }
+
+    function refreshPreview(){
+      const payload = data.map(({expanded, ...rest}) => rest);
+      document.getElementById("preview").textContent = JSON.stringify(payload, null, 2);
+    }
+
+    function recalcNo(doRender=true){
+      data.forEach((x, i) => x.no = i + 1);
+      if (doRender) render();
+      else refreshPreview();
+    }
+
+    function toggleDetails(id){
+      const item = data.find(x => x.id === id);
+      if(!item) return;
+      item.expanded = !item.expanded;
+      render();
+    }
+
+    function expandAll(flag){
+      data.forEach(x => x.expanded = flag);
+      render();
+    }
+
+    function update(id, field, value){
+      const item = data.find(x => x.id === id);
+      if(!item) return;
+      item[field] = value;
+      render(); // đơn giản: rerender để header cập nhật
+    }
+
+    function onLimitTypeChange(id, value){
+      const item = data.find(x => x.id === id);
+      if(!item) return;
+      item.limitType = value;
+      if(value === "NONE") item.limitValue = "";
+      render();
+    }
+
+    function addClause(){
+      data.push({
+        id: crypto.randomUUID(),
+        no: data.length + 1,
+        code: "NEW",
+        nameEn: "New Clause",
+        nameVi: "Điều khoản mới",
+        category: "General",
+        limitType: "NONE",
+        limitValue: "",
+        note: "",
+        expanded: true
+      });
+      render();
+    }
+
+    function removeClause(id){
+      data = data.filter(x => x.id !== id);
+      recalcNo(false);
+      render();
+    }
+
+    function loadTemplate(){
+      data = [
+        { id: crypto.randomUUID(), no: 1, code: "S119", nameEn: "Approved Loss Adjusters", nameVi: "Điều khoản sử dụng công ty tính toán tổn thất", category: "General", limitType: "NONE", limitValue: "", note: "" , expanded: true},
+        { id: crypto.randomUUID(), no: 2, code: "S124", nameEn: "Loss Notification Clause", nameVi: "Điều khoản quy định về thông báo tổn thất", category: "General", limitType: "DAYS", limitValue: "60", note: "Notify within 60 days", expanded: false},
+        { id: crypto.randomUUID(), no: 3, code: "S125", nameEn: "Payment On Account Clause", nameVi: "Điều khoản về tạm ứng khoản thanh toán bồi thường", category: "Special", limitType: "TEXT", limitValue: "50% of loss upon receipt of the primary report", note: "", expanded: false},
+        { id: crypto.randomUUID(), no: 4, code: "PW01", nameEn: "Premium Warranty Period (PWP) Clause", nameVi: "Điều khoản bảo đảm thanh toán phí bảo hiểm", category: "Warranty", limitType: "NONE", limitValue: "", note: "", expanded: false},
+      ];
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>

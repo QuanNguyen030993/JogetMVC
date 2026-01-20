@@ -18,12 +18,13 @@
                 <a href="#" class="logo" data-toggle="push-menu" role="button">
                     <div class="logo-lg"><b>Quotation Management</b></div>
                     <div class="logo-mini">
-                        <b>QM</b>
+                        @* <b>QM</b> *@
                     </div>
                 </a>
             </div>
             <div class="admin-float-swicher">
                 <p id="returnToSuperUser" />
+                <div id="roleSelect"> </div>
                 <div id="environmentLabel" style="color: red;"></div>
                 <div id="environmentJogetLabel" style="color: red;"></div>
             </div>
@@ -34,6 +35,7 @@
              
             <!--Login Info-->
             <div style="display:flex;padding:5px;width: 16%;margin-top: 6px;justify-content: flex-end;">
+                <div id="btnNew" style=" margin-right: 15px;"></div>
                 <div id="notificationBtn" class="notif-wrapper">
                     <svg width="18px"
                          height="17px"
@@ -553,8 +555,27 @@
      hideNotificationDot();
      // _notif.popup.show();
      _notif.popover.toggle();
-     });
 
+     
+
+     });
+     document.addEventListener("DOMContentLoaded", function () {
+        const pushMenuBtn = document.querySelector('[data-toggle="push-menu"]');
+        if (!pushMenuBtn) return;
+        pushMenuBtn.addEventListener("click", function () {
+            setTimeout(function () {
+                const body = document.body;
+
+                if (body.classList.contains("sidebar-collapse")) {
+                    // sidebar collapsed → reset margin-right
+                    document.documentElement.style.setProperty("--collapsed-mr", "-22%");
+                } else {
+                    document.documentElement.style.setProperty("--collapsed-mr", "-22%");
+                }
+            }, 0); 
+        });
+    });
+     $("#btnNew").dxButton({ text:"New", icon:"plus", onClick:()=> newQuotationForm() });
 
 </script>
 <style>
