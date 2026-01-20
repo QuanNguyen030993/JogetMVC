@@ -86,8 +86,8 @@
     @* <div id="content-wrapper" class="content-wrapper" style="min-height: 901px; margin-top:0px;">
         </div> 
  *@
-     <div id="dashboard" style="margin-left: 50%;margin-top: 12%;">
-                <img src="https://play-lh.googleusercontent.com/ehviCuzUOKyADahIhD0axGjKyQPKrbiR5rgoM7Er0pHgV5hbq2jMCpAXAd8C0rQaWDk=w240-h480-rw" 
+     <div id="dashboard" style="margin-left: 40%;margin-top: 12%;">
+                <img src="~/img/TMIV_Logo.jpg" 
                  aria-hidden="true" alt="Icon image"   style="opacity:0.5">
      </div>
 </body>
@@ -569,8 +569,10 @@
                 if (body.classList.contains("sidebar-collapse")) {
                     // sidebar collapsed → reset margin-right
                     document.documentElement.style.setProperty("--collapsed-mr", "-22%");
+                    document.documentElement.style.setProperty("--collapsed-form-mr", "-52%");
                 } else {
                     document.documentElement.style.setProperty("--collapsed-mr", "-22%");
+                    document.documentElement.style.setProperty("--collapsed-form-mr", "-35%");
                 }
             }, 0); 
         });

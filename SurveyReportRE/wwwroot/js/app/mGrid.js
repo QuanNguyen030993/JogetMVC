@@ -594,7 +594,7 @@ var MGridOption = class MGridOption {
                     //texts: { exportAll: 'Export all', exportSelectedRows: 'Export selected rows', exportTo: 'Export' }
                 },
                 masterDetail: this.masterDetail,
-                width: "100%",//"inherit"
+                width: "inherit", //Change to margin left - right, must be without width, must not set 100% here
                 height: this.height ? this.height : window.innerHeight - 130, // == null ? "inherit"
                 columns: this.columns,
                 customizeColumns: tryExecute(this.onCustomizeColumns.bind(this)),

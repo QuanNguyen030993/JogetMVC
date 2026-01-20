@@ -1,5 +1,6 @@
-﻿.dExForm{
+﻿.dExForm {
     padding: 10px;
+    margin-right: var(--collapsed-form-mr);
 }
 
 .dExFormToolBar {
@@ -74,7 +75,6 @@
     min-height: 70vh;
     padding-right: 0px !important;
     padding-left: 0px !important;
-    margin-right: 0px !important;
     margin-left: 0px !important;
     font-size: 12px;
 }
@@ -470,11 +470,14 @@
 }
 .content-wrapper {
     margin-top: 30px;
-    margin-right: var(--collapsed-mr) !important;
-    position: absolute;
+    margin-right: var(--collapsed-mr);
+    /*position: absolute;*/
+    background-color: white;
     /*width: 120%;*/
-    height: 100%;
-    z-index: 1000;
+    /*height: 100%;*/
+    z-index: 0;
+    position: absolute;
+    min-height: 100vh;
 }
 
 /* Top header */

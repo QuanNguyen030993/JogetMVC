@@ -15,9 +15,15 @@
     }
 <body>
     @* <div class="container"> *@
-    <main role="main" class="container" class="pb-3">
+    @if (!string.IsNullOrEmpty(@ViewData["Title"]?.ToString()))
+    {
+    <main role="main" class="container pb-3">
             @RenderBody()
         </main>
+    }
+    else {
+        @RenderBody()
+    }
     @* </div> *@
     @* @if (!string.IsNullOrEmpty(@ViewData["Title"]?.ToString())) *@
     @* @await RenderSectionAsync("Scripts", required: false) *@

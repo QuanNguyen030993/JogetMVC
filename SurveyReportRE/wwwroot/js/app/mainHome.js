@@ -379,12 +379,14 @@ var createNewTabElement = function (code, tabTitle = '...', $tabs, tabContent) {
                     <span id="${code}_closeTab" class='${tabFormatButtonClass}' data-code="${code}_closeTab"></span><div>
                 </li>
             `);//.attr("aria-controls", code);
-                    //<span id="${code}_progressBar" style="padding: 5px;"></span>
-    var $tabContainer = $(`<div id="${code}" class="content-wrapper">`);
+    //<span id="${code}_progressBar" style="padding: 5px;"></span>
+    var $divContentWrapper = $(`<div class="content-wrapper">`);
+    var $tabContainer = $(`<div id="${code}">`);
+    $tabContainer.appendTo($divContentWrapper);
     $tabs.find(".ui-tabs-nav").append(li);
     //var $contentDiv = $(`<div></div>`).html(tabContent);
     //$contentDiv.appendTo($tabContainer);
-    $tabs.append($tabContainer);
+    $tabs.append($divContentWrapper);
     $tabs.tabs("refresh");
 }
 
