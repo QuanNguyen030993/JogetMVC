@@ -409,6 +409,22 @@ var MGridOption = class MGridOption {
     }
 
     onContentReady(e) {
+        function getRenderedGridWidth(grid) {
+            const el = grid.element().get(0);
+            return Math.ceil(el.getBoundingClientRect().width);
+        }
+
+        const grid = e.component;
+        const renderedWidth = getRenderedGridWidth(grid);
+
+        const vw = window.innerWidth;
+        if (renderedWidth > vw) {
+            const host = document.getElementById(this.ModelName);
+            if (!host) return;
+            host.style.setProperty('margin-right','var(--collapsed-grid-max-mr)');
+            grid.option("width", undefined);
+            grid.updateDimensions();
+        }
     }
 
     onInitialized(e) {
