@@ -22,9 +22,9 @@ using System.Net;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
-public class QuotationRequestController : BaseControllerApi<QuotationRequest>
+public class QuoRequestController : BaseControllerApi<QuoRequest>
 {
-    private readonly IBaseRepository<QuotationRequest> _BaseRepository;
+    private readonly IBaseRepository<QuoRequest> _BaseRepository;
     private readonly IConfiguration configuration;
     private readonly IBaseRepository<Survey> _surveyRepository;
     private readonly IBaseRepository<Attachment> _attachmentRepository;
@@ -41,7 +41,7 @@ public class QuotationRequestController : BaseControllerApi<QuotationRequest>
     public static string DOMAIN_NAME = "";
     private static string BLOB_PATH = "";
     public static string CURRENT_USER = "";
-    public QuotationRequestController(IBaseRepository<QuotationRequest> BaseRepository, IConfiguration config, IHttpContextAccessor httpContextAccessor, ILogger<QuotationRequest> logger) : base(BaseRepository, httpContextAccessor)
+    public QuoRequestController(IBaseRepository<QuoRequest> BaseRepository, IConfiguration config, IHttpContextAccessor httpContextAccessor, ILogger<QuoRequest> logger) : base(BaseRepository, httpContextAccessor)
     {
         configuration = config;
         _BaseRepository = BaseRepository;
@@ -72,12 +72,12 @@ public class QuotationRequestController : BaseControllerApi<QuotationRequest>
     }
 
  
-    public async Task BulkInsertQuotationRequestAsync(List<QuotationRequest> data)
+    public async Task BulkInsertQuoRequestAsync(List<QuoRequest> data)
     {
         var dt = new DataTable();
 
         // Khởi tạo cột (phải khớp DB)
-        foreach (var prop in typeof(QuotationRequest).GetProperties())
+        foreach (var prop in typeof(QuoRequest).GetProperties())
         {
             dt.Columns.Add(prop.Name, typeof(string));
         }
@@ -86,7 +86,7 @@ public class QuotationRequestController : BaseControllerApi<QuotationRequest>
         foreach (var item in data)
         {
             var row = dt.NewRow();
-            foreach (var prop in typeof(QuotationRequest).GetProperties())
+            foreach (var prop in typeof(QuoRequest).GetProperties())
             {
                 row[prop.Name] = prop.GetValue(item) ?? DBNull.Value;
             }
@@ -98,7 +98,7 @@ public class QuotationRequestController : BaseControllerApi<QuotationRequest>
         await connection.OpenAsync();
         using var bulkCopy = new SqlBulkCopy(connection)
         {
-            DestinationTableName = "dbo.QuotationRequest", // Đảm bảo đúng tên bảng
+            DestinationTableName = "dbo.QuoRequest", // Đảm bảo đúng tên bảng
             BulkCopyTimeout = 60
         };
 
@@ -106,14 +106,14 @@ public class QuotationRequestController : BaseControllerApi<QuotationRequest>
     }
 
 
-    public static List<QuotationRequest> ConvertToQuotationRequestList(List<Dictionary<string, object>> rawData)
+    public static List<QuoRequest> ConvertToQuoRequestList(List<Dictionary<string, object>> rawData)
     {
-        var result = new List<QuotationRequest>();
+        var result = new List<QuoRequest>();
 
         foreach (var dict in rawData)
         {
-            var obj = new QuotationRequest();
-            foreach (var prop in typeof(QuotationRequest).GetProperties())
+            var obj = new QuoRequest();
+            foreach (var prop in typeof(QuoRequest).GetProperties())
             {
                 var key = prop.Name;
                 if (key == "Id") continue;

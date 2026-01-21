@@ -13,6 +13,12 @@ using System.Text.RegularExpressions;
 using MimeKit;
 using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.SharePoint.Taxonomy.WebServices;
+using ERPCore.Models.Migration.Config;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using ERPCore.Models.Business.Migration.Config;
+using ERPCore.Models.Migration.Business.HumanResource;
+using ERPCore.Repository;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -22,7 +28,11 @@ public class QuotationController : BaseControllerApi<Quotation>
     private readonly IConfiguration configuration;
     private readonly IBaseRepository<Survey> _surveyRepository;
     private readonly IBaseRepository<ERPCore.Models.Migration.Business.Data.Attachment> _attachmentRepository;
+    private readonly IBaseRepository<FormatCodeNo> _formatCodeNoRepository;
     private readonly IBaseRepository<Users> _usersRepository;
+    private readonly IBaseRepository<Employee> _employeeRepository;
+    private readonly IBaseRepository<UserRoles> _userRolesRepository;
+    private readonly IBaseRepository<Roles> _rolesRepository;
     private readonly IConfigurationSection path;
     public static string MANAGER_APP = "";
     public static string APPROVER_APP = "";
@@ -48,7 +58,11 @@ public class QuotationController : BaseControllerApi<Quotation>
         _BaseRepository = BaseRepository;
         _surveyRepository = new BaseRepository<Survey>(configuration, _httpContextAccessor);
         _attachmentRepository = new BaseRepository<ERPCore.Models.Migration.Business.Data.Attachment>(configuration, _httpContextAccessor);
+        _formatCodeNoRepository = new BaseRepository<FormatCodeNo>(configuration, _httpContextAccessor);
         _usersRepository = new BaseRepository<Users>(configuration, _httpContextAccessor);
+        _employeeRepository = new BaseRepository<Employee>(configuration, _httpContextAccessor);
+        _userRolesRepository = new BaseRepository<UserRoles>(configuration, _httpContextAccessor);
+        _rolesRepository = new BaseRepository<Roles>(configuration, _httpContextAccessor);
         MANAGER_APP = configuration.GetSection("BusinessConfig:ManagerAppKey").Value;
         APPROVER_APP = configuration.GetSection("BusinessConfig:ApproverAppKey").Value;
         CHECKER_APP = configuration.GetSection("BusinessConfig:CheckerAppKey").Value;
@@ -64,7 +78,20 @@ public class QuotationController : BaseControllerApi<Quotation>
         _blobStorageSettings = blobStorageSettings;
     }
 
-   [HttpGet("{listIds}/{jsessionId}")]
+    [HttpPost]
+    public async Task<IActionResult> CreateQuotation([FromBody] Quotation quotationData)
+    {
+        Quotation quotation = new Quotation();
+        List<FormatCodeNo> tableConfig = new List<FormatCodeNo>();
+        tableConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(Quotation)+"Code");
+        JsonConvert.PopulateObject(JsonConvert.SerializeObject(quotationData), quotation);
+        quotation.QuotationCode = ControllerUtil.GenerateNumberSeq(tableConfig, _formatCodeNoRepository, nameof(Quotation));
+        quotation = await _BaseRepository.InsertData(quotation);
+        return Ok(quotation);
+    }
+
+
+    [HttpGet("{listIds}/{jsessionId}")]
     public async Task<ActionResult<Quotation>> PullDataBySession(string listIds,string jsessionId)
     {
         string[] ids = listIds.Split(',');
@@ -258,10 +285,92 @@ public class QuotationController : BaseControllerApi<Quotation>
     public override async Task<object> ExecuteCustomQuery([FromBody] string query)
     {
 
-        //query = "EXEC usp_fd_policy_issuance_request";
-        List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomQuery(query);
-         
-        return obj;
+        ////query = "EXEC usp_fd_policy_issuance_request";
+        //List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomQuery(query);
+        var Base = await _BaseRepository.ExecuteCustomQuery(query);
+        //return obj;
+        string userName = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration);
+        Users user = await _usersRepository.GetSingleObject(s => s.username == userName);
+        Employee employee = await _employeeRepository.GetSingleObject(s => s.AccountName == userName);
+
+        if (user == null)
+        {
+            return BadRequest("User not found.");
+        }
+
+        // Nếu là SUPER_USER, trả về tất cả dữ liệu
+        if (SUPER_USER.Contains(user.username))
+        {
+            return Ok(Base);
+        }
+
+        UserRoles userRole = await _userRolesRepository.GetSingleObject(s => s.UserId == user.Id);
+        Roles roles = await _rolesRepository.GetSingleObject(s => s.Id == userRole.RoleId);
+
+        List<Dictionary<string, object>> filteredBase = new List<Dictionary<string, object>>();
+
+        if (roles.RoleName == USER_APP || roles.RoleName == CHECKER_APP)// CheckerApp no case
+        {
+            var existingIds = new HashSet<object>();
+            if (employee.AreaId == null) return filteredBase;
+            long? empArea = employee.AreaId;
+            if (string.IsNullOrEmpty(employee.AccountName)) return filteredBase;
+            string surveyedByAccountName = employee.AccountName;
+            
+  
+            filteredBase = Base
+                .Where(w => w.ContainsKey("stageAccount") && w["stageAccount"]?.ToString() == userName)
+                .ToList();
+
+
+        }
+        else if (roles.RoleName == MANAGER_APP)
+        {
+            //var grantSurveys = Base.Where(w =>
+            //    w.ContainsKey("grantSurvey") && w["grantSurvey"]?.ToString()?.Contains(user.Id.ToString()) == true
+            //).ToList();
+            //var sitesByOwner = BusinessConfig.Sites
+            //.Where(x => x.Value.OwnData == userName)
+            //.Select(x => new
+            //{
+            //    SiteKey = x.Key,
+            //    SiteName = x.Value.Name,
+            //    BranchCode = x.Value.BranchCode
+            //})
+            //.ToList();
+
+            //var allowedBranchCodes = sitesByOwner
+            //.Select(x => x.BranchCode)
+            //.Where(x => x != null)
+            //.Distinct()
+            //.ToHashSet();
+
+            ////Comment quan.tm will be own all sites data
+            ////filteredBase = Base
+            ////    .Where(w =>
+            ////        w.ContainsKey("areaId") &&
+            ////        w["areaId"] != null &&
+            ////        Convert.ToInt32(w["areaId"]) == employee.AreaId
+            ////    )
+            ////    .ToList(); 
+
+            //filteredBase = Base
+            //    .Where(w =>
+            //        w.ContainsKey("areaId") &&
+            //        w["areaId"] != null &&
+            //        allowedBranchCodes.Contains(Convert.ToInt32(w["areaId"]))
+            //    )
+            //    .ToList();
+
+
+            //filteredBase.AddRange(grantSurveys);
+        }
+        else if (roles.RoleName == APPROVER_APP)
+        {
+            //filteredBase.AddRange(Base);
+        }
+
+        return filteredBase;
     }
 
     public async Task BulkInsertQuotationAsync(List<Quotation> data)

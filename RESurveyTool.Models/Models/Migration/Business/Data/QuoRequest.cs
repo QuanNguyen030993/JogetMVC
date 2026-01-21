@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using ERPCore.Models.Migration.Base;
 
-public class QuotationRequest : BaseModel
+public class QuoRequest : BaseModel
 {
     [Column("dateCreated")]
     public DateTime? dateCreated { get; set; }

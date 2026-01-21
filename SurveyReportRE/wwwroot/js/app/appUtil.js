@@ -5322,7 +5322,8 @@ function newQuotationForm() {
                 onClick() {
                     var quotationData = new Object();
                     quotationData.ClientName = "Client A";
-
+                    quotationData.StageAccount = "yen.tth";
+                    quotationData.StageDept = "MKT";
                     $.ajax({
                         url: '/api/Quotation/CreateQuotation',
                         headers: { 'Content-Type': 'application/json' },
