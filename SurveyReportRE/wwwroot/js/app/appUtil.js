@@ -5273,5 +5273,84 @@ function labelTpl(text) {
     };
 }
 function newQuotationForm() {
-    DevExpress.ui.notify("Mock: New quotation", "success", 1200);
+    var divMainPopup = $(`#mainPopup`);
+    var popupInstance = divMainPopup.dxPopup({
+        width: "60%",
+        height: "90%",
+        dragEnabled: true,
+        closeOnOutsideClick: true,
+        onHiding: function (e) {
+        },
+        contentTemplate: function (container) {
+            var passingParams = { UITabId: `Quotation_Request_Form`, pageNum: 0 };
+            appendElementViewInsideAsync(`/Business/Form/Popup/Quotation_Request_Form`, passingParams, container, `Quotation_Request_Form`, "appendTo")
+                .then(form => {
+                    var scrollView = popupStandardContentByScroll(form.option("container"));
+                        scrollView.appendTo(container);
+                })
+                .catch(error => {
+                    try {
+                        sendClientErrorLog("Lỗi khi tải dữ liệu:", error);
+                    }
+                    catch {
+                    }
+                    console.error("Lỗi khi tải dữ liệu:", error);
+                });
+            return container;
+        },
+        toolbarItems: [{
+            widget: 'dxButton',
+            toolbar: 'bottom',
+            location: 'after',
+            options: {
+                stylingMode: 'contained',
+                type: 'normal',
+                text: "Save As Draft",
+                onClick() {
+                    
+                    popupInstance.hide();
+                },
+            },
+        }, {
+            widget: 'dxButton',
+            toolbar: 'bottom',
+            location: 'after',
+            options: {
+                stylingMode: 'contained',
+                type: 'info',
+                text: "Complete",
+                onClick() {
+                    var quotationData = new Object();
+                    quotationData.ClientName = "Client A";
+
+                    $.ajax({
+                        url: '/api/Quotation/CreateQuotation',
+                        headers: { 'Content-Type': 'application/json' },
+                        type: 'POST',
+                        data: JSON.stringify(quotationData)
+                        , success: function (response) {
+                         },
+                        error: function (err, status, error) {
+                        }
+                    });
+                    DevExpress.ui.notify("Mock: New quotation", "success", 1200);
+                    popupInstance.hide();
+                },
+            },
+        }]
+
+    }).dxPopup("instance");
+    popupInstance.show();
+}
+
+function popupStandardContentByScroll(customContainer) {
+    var scrollView = $("<div>");
+    customContainer.appendTo(scrollView);
+
+    scrollView.dxScrollView({
+        width: "100%",
+        height: "100%",
+        useNative: false 
+    });
+    return scrollView;
 }
