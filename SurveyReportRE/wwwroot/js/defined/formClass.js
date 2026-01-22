@@ -2120,28 +2120,12 @@
 
 //}
 
-//var ClientForm = class ClientForm extends MForm {
-//    constructor(id, childGridConfig, formConfig, mFormConfig) {
-//        super(id, childGridConfig, formConfig, mFormConfig)
-//    }
+var ClientForm = class ClientForm extends MForm {
+    constructor(id, childGridConfig, formConfig, mFormConfig) {
+        super(id, childGridConfig, formConfig, mFormConfig)
+    }
 
-//}
-//var PNAspectForm = class PNAspectForm extends MForm {
-//    constructor(id, childGridConfig, formConfig) {
-//        super(id, childGridConfig, formConfig)
-//    }
-//    customFormOrgData(data) {
-//        var result = data.reduce((acc, item) => {
-//            if (item.posNegTypeId === 18) {
-//                acc.posAspecContent = item.posNegContent;
-//            } else if (item.posNegTypeId === 21) {
-//                acc.negAspecContent = item.posNegContent;
-//            }
-//            return acc;
-//        }, {});
-//        return result;
-//    }
-//}
+}
 
 //var ConstructionForm = class ConstructionForm extends MForm {
 //    constructor(id, childGridConfig, formConfig, mFormConfig) {

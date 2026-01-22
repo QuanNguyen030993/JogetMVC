@@ -1033,6 +1033,53 @@ var ClientGridOption = class ClientGridOption extends MGridOption {
         super.onCustomizeColumns(columns);
         super.hyperLinkCode(columns, "Business/MasterData", "Client", "id", "clientName");
     }
+
+    onToolbarPreparing(e) {
+        super.onToolbarPreparing(e);
+        var that = this;
+        e.toolbarOptions.items.unshift({
+            location: "after",
+            widget: "dxButton",
+            options: {
+                text: "Import",
+                onClick: function (e) {
+                    var popupInstance = makePopup("medium", "Documents");
+                    //popupInstance.option("toolbarItems[0].options.onClick", function () {
+                    //    that.refreshForm();
+                    //    popupInstance.hide();
+                    //});
+                    popupInstance.option("contentTemplate", function (container) {
+                        $("<div>").dxFileUploader({
+                            multiple: true,
+                            accept: "xlsx/*",
+                            selectButtonText: `Import Client`,
+                            labelText: "",
+                            uploadMode: "instantly",
+                            uploadUrl: `/api/${that.ModelName}/Import`,
+                            showFileList: false,
+                            onDropZoneEnter: function (e) {
+                                //$(e.dropZoneElement).addClass("highlight-drop-zone");
+                            },
+                            onDropZoneLeave: function (e) {
+                                //$(e.dropZoneElement).removeClass("highlight-drop-zone");
+                            },
+                            onBeforeSend: function (e) {
+                                e.request.setRequestHeader("X-Folder-Path", "Attachment");
+                            },
+                            onUploaded: function (e) {
+                                myGrid.dxDataGrid("instance").refresh();
+                            }
+                        }).appendTo(container);
+
+                    });
+                    popupInstance.show();
+                },
+                onInitialized: function (args) {
+                    this.btnExportInstance = args.component;
+                }
+            }
+        });
+    }
 }
 
 var UsersCacheGridOption = class UsersCacheGridOption extends MGridOption {
