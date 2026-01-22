@@ -5320,18 +5320,35 @@ function newQuotationForm() {
                 type: 'info',
                 text: "Complete",
                 onClick() {
+                    var entryForm = $(`#assigneeEntryForm`).dxForm().dxForm("instance");
+                    var entrySummaryForm = $(`#quotationRequestForm`).dxForm().dxForm("instance");
+                    var submitData = entryForm.option("formData");
+                    var submitSummaryData = entrySummaryForm.option("formData");
+                    console.log(submitData);
+                    console.log(submitSummaryData);
                     var quotationData = new Object();
-                    quotationData.ClientName = "Client A";
-                    quotationData.StageAccount = "yen.tth";
-                    quotationData.StageDept = "MKT";
-                    $.ajax({
-                        url: '/api/Quotation/CreateQuotation',
-                        headers: { 'Content-Type': 'application/json' },
-                        type: 'POST',
-                        data: JSON.stringify(quotationData)
-                        , success: function (response) {
-                         },
-                        error: function (err, status, error) {
+                    quotationData.StageAccount = submitData.to;
+                    quotationData.ClientName = submitSummaryData.clientName;
+                    quotationData.ClientId = submitSummaryData.clientId;
+                    quotationData.StageDept = submitSummaryData.assignedTeamOrRole;
+                    //$.ajax({
+                    //    url: '/api/Quotation/CreateQuotation',
+                    //    headers: { 'Content-Type': 'application/json' },
+                    //    type: 'POST',
+                    //    data: JSON.stringify(quotationData)
+                    //    , success: function (response) {
+                    //     },
+                    //    error: function (err, status, error) {
+                    //    }
+                    //});
+                    ajaxPost('/api/Quotation/CreateQuotation', quotationData, {
+                        onSuccess: function (response) {
+                            // success logic (y hệt success:)
+                            console.log("CreateQuotation OK", response);
+                        },
+                        onError: function (err) {
+                            // error logic (y hệt error:)
+                            console.error("CreateQuotation FAIL", err);
                         }
                     });
                     DevExpress.ui.notify("Mock: New quotation", "success", 1200);
@@ -5355,3 +5372,241 @@ function popupStandardContentByScroll(customContainer) {
     });
     return scrollView;
 }
+
+//function ajaxCore(method, url, {
+//    routeParam = null,   // ví dụ dept
+//    query = null,        // object => query string
+//    body = null,         // object => POST JSON
+//    headers = {},
+//    dataType = "json",
+//    timeout = 30000,
+
+//    // callbacks (optional)
+//    onSuccess = null,
+//    onError = null,
+//    onFinally = null,
+
+//    // hooks (optional)
+//    beforeSend = null,
+//} = {}) {
+
+//    const fullUrl = routeParam !== null && routeParam !== undefined
+//        ? `${url}/${encodeURIComponent(routeParam)}`
+//        : url;
+
+//    const isGet = method.toUpperCase() === "GET";
+
+//    const jqxhr = $.ajax({
+//        url: fullUrl,
+//        type: method,
+//        dataType,
+//        timeout,
+//        cache: false,
+//        headers,
+
+//        // GET => query, POST => JSON body
+//        data: isGet ? (query || {}) : (body == null ? null : JSON.stringify(body)),
+//        contentType: isGet ? undefined : "application/json; charset=utf-8",
+
+//        beforeSend: (xhr) => {
+//            try { beforeSend?.(xhr); } catch { }
+//        }
+//    });
+
+//    // bridge callbacks + promise
+//    jqxhr
+//        .done((res, textStatus, xhr) => {
+//            try { onSuccess?.(res, { url: fullUrl, method, textStatus, xhr }); } catch (e) {
+//                // callback lỗi vẫn không làm chết luồng ajax
+//                try { sendClientErrorLog?.("onSuccess callback error", e); } catch { }
+//            }
+//        })
+//        .fail((xhr, textStatus, errorThrown) => {
+//            const errorInfo = {
+//                url: fullUrl,
+//                method,
+//                textStatus,
+//                errorThrown,
+//                status: xhr?.status,
+//                responseText: xhr?.responseText,
+//            };
+
+//            try { onError?.(errorInfo); } catch (e) {
+//                try { sendClientErrorLog?.("onError callback error", e); } catch { }
+//            }
+
+//            // log theo style của bạn (nếu có)
+//            try { sendClientErrorLog?.("AJAX ERROR", errorInfo); } catch { }
+//        })
+//        .always(() => {
+//            try { onFinally?.(); } catch { }
+//        });
+
+//    // trả về jqXHR => dùng như Promise
+//    return jqxhr;
+//}
+//function ajaxGet(url, routeParamOrQuery = null, maybeQuery = null, opt = {}) {
+//    // Cho phép 2 kiểu gọi:
+//    // 1) ajaxGet("/api/Employee/AssigneeList", "UW", { key: 1 }, {...})
+//    // 2) ajaxGet("/api/Employee/AssigneeList", { key: 1 }, {...})  (không có routeParam)
+
+//    let routeParam = null;
+//    let query = {};
+
+//    if (typeof routeParamOrQuery === "string" || typeof routeParamOrQuery === "number") {
+//        routeParam = routeParamOrQuery;
+//        query = maybeQuery || {};
+//    } else if (routeParamOrQuery && typeof routeParamOrQuery === "object") {
+//        query = routeParamOrQuery;
+//    }
+
+//    return ajaxCore("GET", url, { routeParam, query, ...opt });
+//}
+//function ajaxPost(url, body = {}, opt = {}) {
+//    return ajaxCore("POST", url, { body, ...opt });
+//}
+    // =========================
+    // ajaxCore (base engine)
+    // =========================
+    function ajaxCore(method, url, {
+        routeParam = null,   // ví dụ dept cho route: /{dept}
+        query = null,        // object => query string
+        body = null,         // object => JSON body
+        headers = {},        // custom headers (merge)
+        dataType = "json",
+        timeout = 30000,
+        cache = false,
+
+        // callbacks (optional)
+        onSuccess = null,
+        onError = null,
+        onFinally = null,
+
+        // hook (optional)
+        beforeSend = null
+    } = {}) {
+
+        const fullUrl = (routeParam !== null && routeParam !== undefined)
+            ? `${url}/${encodeURIComponent(routeParam)}`
+            : url;
+
+        const m = (method || "GET").toUpperCase();
+        const isGet = m === "GET";
+
+        // NOTE: theo style bạn đang dùng: set 'Content-Type' trong headers cho POST JSON
+        const finalHeaders = { ...headers };
+        if (!isGet) {
+            // nếu user chưa set thì auto set
+            if (!finalHeaders["Content-Type"] && !finalHeaders["content-type"]) {
+                finalHeaders["Content-Type"] = "application/json";
+            }
+        }
+
+        const jqxhr = $.ajax({
+            url: fullUrl,
+            type: m,
+            dataType,
+            timeout,
+            cache,
+            headers: finalHeaders,
+
+            // GET => query, POST => JSON.stringify(body)
+            data: isGet ? (query || {}) : (body == null ? null : JSON.stringify(body)),
+
+            // nếu bạn muốn giữ đúng style "headers Content-Type" thì contentType có thể bỏ,
+            // nhưng để server đọc JSON ổn định thì giữ thêm contentType (không mâu thuẫn).
+            contentType: isGet ? undefined : "application/json; charset=utf-8",
+
+            beforeSend: (xhr) => {
+                try { beforeSend?.(xhr); } catch { }
+            }
+        });
+
+        // callbacks + promise bridge
+        jqxhr
+            .done((res, textStatus, xhr) => {
+                try { onSuccess?.(res, { url: fullUrl, method: m, textStatus, xhr }); } catch (e) {
+                    try { sendClientErrorLog?.("onSuccess callback error", e); } catch { }
+                }
+            })
+            .fail((xhr, textStatus, errorThrown) => {
+                const errInfo = {
+                    url: fullUrl,
+                    method: m,
+                    textStatus,
+                    errorThrown,
+                    status: xhr?.status,
+                    responseText: xhr?.responseText,
+                    xhr
+                };
+
+                try { onError?.(errInfo); } catch (e) {
+                    try { sendClientErrorLog?.("onError callback error", e); } catch { }
+                }
+
+                try { sendClientErrorLog?.("AJAX ERROR", errInfo); } catch { }
+            })
+            .always(() => {
+                try { onFinally?.(); } catch { }
+            });
+
+        return jqxhr; // jqXHR = Promise-like
+    }
+
+
+    // =========================
+    // ajaxGet (optional wrapper)
+    // =========================
+    function ajaxGet(url, routeParamOrQuery = null, maybeQuery = null, opt = {}) {
+        let routeParam = null;
+        let query = {};
+
+        if (typeof routeParamOrQuery === "string" || typeof routeParamOrQuery === "number") {
+            routeParam = routeParamOrQuery;
+            query = maybeQuery || {};
+        } else if (routeParamOrQuery && typeof routeParamOrQuery === "object") {
+            query = routeParamOrQuery;
+        }
+
+        return ajaxCore("GET", url, { routeParam, query, ...opt });
+    }
+
+
+    // =========================
+    // ajaxPost (EDIT theo code bạn đưa)
+    // - set headers: { 'Content-Type': 'application/json' }
+    // - data: JSON.stringify(data)
+    // - có callback success/error
+    // - trả promise
+    // =========================
+    function ajaxPost(url, data = {}, opt = {}) {
+        return ajaxCore("POST", url, {
+            body: data,
+            headers: { "Content-Type": "application/json", ...(opt.headers || {}) },
+
+            // forward callbacks/hook
+            onSuccess: opt.onSuccess,
+            onError: opt.onError,
+            onFinally: opt.onFinally,
+            beforeSend: opt.beforeSend,
+
+            // misc
+            dataType: opt.dataType || "json",
+            timeout: opt.timeout || 30000,
+            cache: opt.cache ?? false
+        });
+    }
+
+
+// =========================
+// Usage đúng theo ví dụ của bạn
+// =========================
+// quotationData.StageDept = "MKT";
+// ajaxPost("/api/Quotation/CreateQuotation", quotationData, {
+//     onSuccess: (response) => { console.log("OK", response); },
+//     onError: (err) => { console.log("ERR", err); },
+//     onFinally: () => { console.log("DONE"); }
+// })
+// .done(r => console.log("done:", r))
+// .fail(x => console.log("fail:", x?.responseText))
+// .always(() => console.log("always"));

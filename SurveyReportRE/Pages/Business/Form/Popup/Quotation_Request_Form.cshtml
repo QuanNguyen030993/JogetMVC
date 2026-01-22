@@ -43,7 +43,7 @@
         <div id="form_Quotation_Request_Form"></div>
     <div id="qrPage">
         @* <div id="qrSummary" style="margin-bottom:12px;"></div> *@
-        <div id="qrForm"></div>
+        <div id="quotationRequestForm"></div>
 
         <div class="toolbarRow">
             <div class="sectionTitle" style="margin:0;">Assignee (Routing)</div>
@@ -73,40 +73,38 @@
     <script>
         (function () {
           DevExpress.localization.locale("en");
-
-          // ===== mock options =====
-          const options = {
+           var options = {
             assignmentMode: [
-              { id: "auto", text: "Auto route (recommended)" },
+              // { id: "auto", text: "Auto route (recommended)" },
               { id: "later", text: "Assign later" },
               { id: "manual", text: "Manual assign" }
             ],
             teamOrRole: [
-              { id: "UW_TEAM", text: "Underwriting Team" },
-              { id: "UW_MGR", text: "Underwriting Manager" },
-              { id: "MKT_FO", text: "Marketing FO" },
-              { id: "MKT_TS", text: "Marketing TS" }
+              { id: "TS", text: "Marketing TS" },
+              { id: "UW", text: "Underwriting" }
             ],
             assignee: [
-              { id: "admin", text: "Admin admin" },
-              { id: "hien.ttt", text: "To Thi Thu Hien" },
-              { id: "accpentest", text: "accpentest test" }
+              // { accountName: "admin", fullName: "Admin admin" },
+              // { accountName: "hien.ttt", fullName: "To Thi Thu Hien" },
+              // { accountName: "accpentest", fullName: "accpentest test" }
             ],
             reqType: ["Endorsement", "Revise Quotation", "Renew Quotation", "New Quotation"],
             lineName: ["Fire & Property, BI", "Liability", "Cargo", "Engineering", "Motor"],
             productName: ["Product A", "Product B", "Product C"],
             businessChannel: ["Inward", "Direct (DIR)", "Agent (AGY)", "Broker (BRK)"]
           };
+       
+          // ===== mock options =====
+         
 
           // ===== ViewModel =====
           const vm = {
-            typeOfQR: "New",
             subject: "",
-            reqPerson: "Admin admin",
+            reqPerson: _loginUser,
             reqDate: new Date(2026, 0, 21), // 21-01-2026
 
-            assignmentMode: "auto",     // auto | later | manual
-            assignedTeamOrRole: "UW_TEAM",
+            assignmentMode: "manual",     // auto | later | manual
+            assignedTeamOrRole: "TS",
 
             assignees: []               // only for manual mode
           };
@@ -119,33 +117,10 @@
               vm.assignmentMode === "auto" ? "AUTO ROUTE" :
               vm.assignmentMode === "later" ? "ASSIGN LATER" :
               "MANUAL ASSIGN";
-
-            // $("#qrSummary").empty().append(
-            //   $("<div/>").css({
-            //     border: "1px solid rgba(0,0,0,.08)",
-            //     borderRadius: "14px",
-            //     padding: "10px 12px",
-            //     display: "flex",
-            //     justifyContent: "space-between",
-            //     gap: "12px",
-            //     background: "#fff"
-            //   }).append(
-            //     $("<div/>").append(
-            //       $("<div/>").css({ fontWeight: 750, fontSize: "16px" }).text("Quotation Request"),
-            //       $("<div/>").css({ opacity: .7, marginTop: "2px" })
-            //         .text("Routing: " + modeLabel + " • Team/Role: " + vm.assignedTeamOrRole)
-            //     ),
-            //     $("<div/>").css({ textAlign: "right" }).append(
-            //       $("<div/>").css({ fontWeight: 650 }).text("Requested: " + vm.reqPerson),
-            //       $("<div/>").css({ opacity: .7, marginTop: "2px" })
-            //         .text("Date: " + DevExpress.localization.formatDate(vm.reqDate, "dd-MM-yyyy"))
-            //     )
-            //   )
-            // );
           }
 
           // ===== Main Form =====
-          $("#qrForm").dxForm({
+          $("#quotationRequestForm").dxForm({
             formData: vm,
             colCount: 2,
             labelMode: "floating",
@@ -154,26 +129,35 @@
               {
                 itemType: "group", colSpan: 2, caption: "Quotation Request",
                 items: [
-                  {
-                    dataField: "typeOfQR",
-                    editorType: "dxRadioGroup",
-                    colSpan: 2,
-                    editorOptions: { items: ["New", "Clone Quotation Request"], layout: "horizontal" },
-                    validationRules: [{ type: "required" }]
-                  },
-                  { dataField: "reqPerson", editorType: "dxTextBox", editorOptions: { readOnly: true } },
-                  { dataField: "reqDate", editorType: "dxDateBox", editorOptions: { readOnly: true, displayFormat: "dd-MM-yyyy" } },
+                    // Create or clone will be move to header web status
+                  // {
+                  //   dataField: "typeOfQR",
+                  //   editorType: "dxRadioGroup",
+                  //   colSpan: 2,
+                  //   editorOptions: { items: ["New", "Clone Quotation Request"], layout: "horizontal" },
+                  //   validationRules: [{ type: "required" }]
+                  // },
+                  { dataField: "PIC", editorType: "dxTextBox", editorOptions: { readOnly: true } },
+                  { dataField: "clientName", editorType: "dxTextBox", label: {text: "Client Name"} },
+                  { dataField: "clientId", editorType: "dxNumberBox", label: {text: "Client Id"} }, 
+                  { dataField: "PIC", editorType: "dxTextBox", editorOptions: { readOnly: true } },
+                  { dataField: "createDate", editorType: "dxDateBox", editorOptions: { readOnly: true, displayFormat: "dd-MM-yyyy" } },
                   {
                     dataField: "subject",
                     colSpan: 2,
                     editorType: "dxTextArea",
                     editorOptions: { minHeight: 90 },
                     validationRules: [{ type: "required" }]
-                  }
+                  },
+                  { dataField: "reqType", editorType: "dxSelectBox", isRequired: true, editorOptions: { items: options.reqType } },
+                  { dataField: "lineName", editorType: "dxSelectBox", editorOptions: { items: options.lineName, searchEnabled: true } },
+                  { dataField: "productName", editorType: "dxSelectBox", editorOptions: { items: options.productName, searchEnabled: true } },
+                  { dataField: "dueDate", editorType: "dxDateBox", editorOptions: { displayFormat: "dd-MM-yyyy" } },
+                  { dataField: "businessChannel", editorType: "dxSelectBox", editorOptions: { items: options.businessChannel } },
                 ]
               },
               {
-                itemType: "group", colSpan: 2, caption: "Assignment (Routing)",
+                itemType: "group", colSpan: 2, caption: "Assignment",
                 items: [
                   {
                     dataField: "assignmentMode",
@@ -212,8 +196,8 @@
           });
 
           // ===== Assignee list (manual entries) =====
-          const assigneeStore = new DevExpress.data.ArrayStore({ key: "_key", data: vm.assignees });
-
+            const assigneeStore = new DevExpress.data.ArrayStore({ key: "_key", data: vm.assignees });
+       
           $("#assigneeList").dxDataGrid({
             dataSource: assigneeStore,
             keyExpr: "_key",
@@ -227,13 +211,8 @@
               {
                 dataField: "to",
                 caption: "Assignee",
-                lookup: { dataSource: options.assignee, valueExpr: "id", displayExpr: "text" }
+                lookup: { dataSource: options.assignee, valueExpr: "accountName", displayExpr: "fullName" }
               },
-              { dataField: "reqType", caption: "Request Type" },
-              // { dataField: "lineName", caption: "Line of Business" },
-              // { dataField: "productName", caption: "Product" }
-              // { dataField: "dueDate", caption: "Due Date", dataType: "date", format: "dd-MM-yyyy" },
-              // { dataField: "businessChannel", caption: "Business Channel" },
               {
                 dataField: "notes",
                 caption: "Notes",
@@ -257,13 +236,27 @@
               }
             ]
           });
-
+           var popupFormItems = [
+            {
+              dataField: "to",
+              editorType: "dxSelectBox",
+              isRequired: true,
+              editorOptions: { dataSource: options.assignee, displayExpr: "fullName", valueExpr: "accountName", searchEnabled: true }
+            },
+            { dataField: "notes", colSpan: 2, editorType: "dxTextArea", editorOptions: { minHeight: 90 } }
+          ];
           // ===== Buttons =====
+           var currentEntry = entryTemplate();
           $("#btnNewAssignee").dxButton({
             text: "New",
             icon: "plus",
             type: "default",
-            onClick() { openPopupForNew(); }
+            onClick() { 
+                    openPopupForNew();
+               
+                
+               
+            }
           });
 
           $("#btnClearAssignee").dxButton({
@@ -288,32 +281,14 @@
           function entryTemplate() {
             return {
               _key: newKey(),
-              to: null,
-              reqType: "New Quotation",
-              lineName: null,
-              productName: null,
-              dueDate: null,
-              businessChannel: null,
+              to: null,              
               notes: ""
             };
           }
 
-          let currentEntry = entryTemplate();
+         
 
-          const popupFormItems = [
-            {
-              dataField: "to",
-              editorType: "dxSelectBox",
-              isRequired: true,
-              editorOptions: { dataSource: options.assignee, displayExpr: "text", valueExpr: "id", searchEnabled: true }
-            },
-            { dataField: "reqType", editorType: "dxSelectBox", isRequired: true, editorOptions: { items: options.reqType } },
-            { dataField: "lineName", editorType: "dxSelectBox", editorOptions: { items: options.lineName, searchEnabled: true } },
-            { dataField: "productName", editorType: "dxSelectBox", editorOptions: { items: options.productName, searchEnabled: true } },
-            { dataField: "dueDate", editorType: "dxDateBox", editorOptions: { displayFormat: "dd-MM-yyyy" } },
-            { dataField: "businessChannel", editorType: "dxSelectBox", editorOptions: { items: options.businessChannel } },
-            { dataField: "notes", colSpan: 2, editorType: "dxTextArea", editorOptions: { minHeight: 90 } }
-          ];
+        
 
           $("#assigneePopup").dxPopup({
             width: 920,
@@ -326,7 +301,7 @@
             contentTemplate: function (content) {
               $("<div id='assigneeEntryForm' />").appendTo(content).dxForm({
                 formData: currentEntry,
-                colCount: 2,
+                colCount: 1,
                 labelMode: "floating",
                 items: popupFormItems
               });
@@ -373,10 +348,21 @@
             }
             popupMode = "new";
             currentEntry = entryTemplate();
-            const popup = $("#assigneePopup").dxPopup("instance");
-            popup.option("title", "New Assignee Entry");
-            popup.show();
-            setTimeout(() => $("#assigneeEntryForm").dxForm("instance").option("formData", currentEntry), 0);
+             ajaxGet("/api/Employee/AssigneeList", "TS")
+                .then(list => {
+                    options.assignee.push(...list);
+                     const popup = $("#assigneePopup").dxPopup("instance");
+                     popup.option("title", "New Assignee Entry");
+                     popup.show();
+                     setTimeout(() => $("#assigneeEntryForm").dxForm("instance").option("formData", currentEntry), 2000);
+                    console.log("then:", list);
+                    console.log("then:", options.assignee);
+                })
+                .fail(err => { // jQuery way (an toàn)
+                    console.log("fail:", err);
+                })
+                .always(() => console.log("always"));
+           
           }
 
           function openPopupForEdit(row) {
@@ -390,7 +376,7 @@
             const popup = $("#assigneePopup").dxPopup("instance");
             popup.option("title", "Edit Assignee Entry");
             popup.show();
-            setTimeout(() => $("#assigneeEntryForm").dxForm("instance").option("formData", currentEntry), 0);
+            setTimeout(() => $("#assigneeEntryForm").dxForm("instance").option("formData", currentEntry), 1000);
           }
 
           function refreshAssignmentUI() {
@@ -404,37 +390,8 @@
             grid.option("disabled", !enabled);
           }
           refreshAssignmentUI();
-
-          // ===== Actions =====
-          // $("#btnDraft").dxButton({
-          //   text: "Save As Draft",
-          //   type: "normal",
-          //   onClick() {
-          //     DevExpress.ui.notify("Draft saved (mock)", "success", 1200);
-          //     console.log("Draft payload:", JSON.parse(JSON.stringify(vm)));
-          //   }
-          // });
-
-          // $("#btnComplete").dxButton({
-          //   text: "Complete",
-          //   type: "default",
-          //   onClick() {
-          //     const form = $("#qrForm").dxForm("instance");
-          //     const result = form.validate();
-          //     if (!result.isValid) {
-          //       DevExpress.ui.notify("Please fill required fields.", "error", 1500);
-          //       return;
-          //     }
-          //     if (isManual() && vm.assignees.length === 0) {
-          //       DevExpress.ui.notify("Manual assign requires at least 1 assignee entry.", "error", 1600);
-          //       return;
-          //     }
-          //     DevExpress.ui.notify("Completed (mock)", "success", 1200);
-          //     console.log("Complete payload:", JSON.parse(JSON.stringify(vm)));
-          //   }
-          // });
+ 
 
         })();
     </script>
 </body>
-</html>

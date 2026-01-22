@@ -196,15 +196,40 @@ Note:
         const icon = canEdit
                   ? `
                     <span class="lock editable" title="Editable">
-                             
+                         <svg xmlns="http://www.w3.org/2000/svg" width="27" height="24"
+                             viewBox="0 0 27 24" aria-hidden="true">
+                          <!-- Shackle (open, shifted right) -->
+                          <path d="M16 10V8a4 4 0 0 1 8 0v4"
+                                fill="none" stroke="currentColor" stroke-width="3"
+                                stroke-linecap="round" stroke-linejoin="round"/>
+
+                          <!-- Body with keyhole (punched) -->
+                          <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"
+                                d="M6 10h12a4 4 0 0 1 4 4v6a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4v-6a4 4 0 0 1 4-4Zm6 4.2
+                                   a2 2 0 1 0 0 4a2 2 0 0 0 0-4Zm-.9 3.7
+                                   c0-.3.2-.5.5-.6a.9.9 0 1 0 .8 0c.3.1.5.3.5.6V20
+                                   a.9.9 0 0 1-1.8 0v-2.1Z"/>
+                        </svg>
+
                       EDIT
                     </span>`
                   : `
                     <span class="lock readonly" title="Read only">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2"/>
-                        <path d="M7 10V7a5 5 0 0 1 10 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                      </svg>
+                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                             viewBox="0 0 24 24" aria-hidden="true">
+                          <!-- Shackle -->
+                          <path d="M8 10V8a4 4 0 0 1 8 0v2"
+                                fill="none" stroke="currentColor" stroke-width="3"
+                                stroke-linecap="round" stroke-linejoin="round"/>
+
+                          <!-- Body with keyhole (punched) -->
+                          <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"
+                                d="M6 10h12a4 4 0 0 1 4 4v6a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4v-6a4 4 0 0 1 4-4Zm6 4.2
+                                   a2 2 0 1 0 0 4a2 2 0 0 0 0-4Zm-.9 3.7
+                                   c0-.3.2-.5.5-.6a.9.9 0 1 0 .8 0c.3.1.5.3.5.6V20
+                                   a.9.9 0 0 1-1.8 0v-2.1Z"/>
+                        </svg>
+
                       LOCK
                     </span>`;
 

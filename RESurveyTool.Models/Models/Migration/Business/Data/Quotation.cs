@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using ERPCore.Models.Migration.Base;
+using ERPCore.Models.Migration.Business.MasterData;
 
 public class Quotation : BaseModel
 {
@@ -39,6 +40,8 @@ public class Quotation : BaseModel
     public string? PolicyHolderName { get; set; }          // from c_phNameViet/c_policyHolderViet/c_phNameEng
     public string? InsuredName { get; set; }               // from c_insNameViet/c_insNameEng
     public string? ClientName { get; set; }                // from c_clientNameViet/c_clientNameEng
+    public long? ClientId { get; set; }                // from c_clientNameViet/c_clientNameEng
+    public Client? ClientFK { get; set; }                // from c_clientNameViet/c_clientNameEng
     public string? RegisteredAddress { get; set; }         // from c_registeredAddressViet/c_registeredAddress
     public string? BusinessAddress { get; set; }           // from c_businessAddressViet/c_businessAddressEng
 
