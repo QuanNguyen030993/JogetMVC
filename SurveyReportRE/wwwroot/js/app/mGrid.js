@@ -409,24 +409,32 @@ var MGridOption = class MGridOption {
     }
 
     onContentReady(e) {
-        function getRenderedGridWidth(grid) {
-            const el = grid.element().get(0);
-            console.log(el);
-            return Math.ceil(el.getBoundingClientRect().width);
-        }
+        //function getRenderedGridWidth(grid) {
+        //    const el = grid.element().get(0);
+        //    console.log(el);
+        //    return Math.ceil(el.getBoundingClientRect().width);
+        //}
 
-        const grid = e.component;
-        const renderedWidth = getRenderedGridWidth(grid);
+        //const grid = e.component;
+        //const renderedWidth = getRenderedGridWidth(grid);
 
-        const vw = window.innerWidth;
-        //if (renderedWidth > vw) {
-        if (renderedWidth > 1600) {
-            const host = document.getElementById(this.ModelName);
-            if (!host) return;
-            //host.style.setProperty('margin-right','var(--collapsed-grid-max-mr)');
-            grid.option("width", 1600);
-            grid.updateDimensions();
-        }
+        //const vw = window.innerWidth;
+        ////if (renderedWidth > vw) {
+        //if (renderedWidth > 1600) {
+        //    const host = document.getElementById(this.ModelName);
+        //    if (!host) return;
+        //    //host.style.setProperty('margin-right','var(--collapsed-grid-max-mr)');
+        //    grid.option("width", 1600);
+        //    grid.updateDimensions();
+        //}
+        stretchColumnsEvenly(e, {
+            targetWidth: 1600,
+            minWidthEach: 120,
+            excludeFields: [
+                // nếu bạn có cột action/checkbox riêng và muốn giữ nguyên
+                // ví dụ: "Actions", "Select"
+            ]
+        });
     }
 
     onInitialized(e) {

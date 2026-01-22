@@ -471,10 +471,10 @@
 }
 .content-wrapper {
     margin-top: 30px;
-    /*margin-right: var(--collapsed-mr);*/
+    margin-right: var(--collapsed-mr);
     /*position: absolute;*/
     background-color: white;
-    width: 120%;
+    /*width: 120%;*/
     /*height: 100%;*/
     z-index: 0;
     position: absolute;
@@ -606,13 +606,7 @@
     padding-bottom: 92px;
 }
 
-.contentGrid {
-    display: grid;
-    grid-template-columns: 380px 1fr;
-    gap: var(--gap);
-    align-items: start;
-    height: 100%;
-}*/
+
 
 /* Cards */
 /*.card {
@@ -696,31 +690,6 @@
     font-weight: 800;
     color: #111827;
 }
-
-.statusTag {
-    font-size: 11px;
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: #f3f4f6;
-    color: #374151;
-    white-space: nowrap;
-}
-
-    .statusTag.accepted {
-        background: rgba(16,185,129,.14);
-        color: #065f46;
-    }
-
-    .statusTag.sent {
-        background: rgba(59,130,246,.14);
-        color: #1e3a8a;
-    }
-
-    .statusTag.declined {
-        background: rgba(239,68,68,.14);
-        color: #7f1d1d;
-    }*/
-
 /* ===== Overview scroll + sections ===== */
 /*.overview-wrap {
     position: relative;
@@ -1096,13 +1065,13 @@
     padding-bottom: 92px;
 }
 
-.contentGrid {
+/*.contentGrid {
     display: grid;
     grid-template-columns: 380px 1fr;
     gap: var(--gap);
     align-items: start;
 }
-
+*/
 .card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -1184,29 +1153,65 @@
     color: #111827;
 }
 
+/* ================================
+   STATUS TAG – PROGRESS / WORKFLOW
+   ================================ */
+
 .statusTag {
     font-size: 11px;
-    padding: 2px 8px;
+    padding: 3px 9px;
     border-radius: 999px;
-    background: #f3f4f6;
-    color: #374151;
+    font-weight: 500;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
 }
 
-    .statusTag.accepted {
-        background: rgba(16,185,129,.14);
-        color: #065f46;
+    /* Pending / New */
+    .statusTag.pending,
+    .statusTag.new {
+        background: rgba(107,114,128,.14);
+        color: #374151;
     }
 
-    .statusTag.sent {
+    /* In Progress */
+    .statusTag.in-progress {
         background: rgba(59,130,246,.14);
         color: #1e3a8a;
     }
 
-    .statusTag.declined {
+    /* Accept / Approved / Client Accept */
+    .statusTag.accepted,
+    .statusTag.approve,
+    .statusTag.client-accept {
+        background: rgba(16,185,129,.14);
+        color: #065f46;
+    }
+
+    /* Reject / Decline / Client Refuse */
+    .statusTag.rejected,
+    .statusTag.declined,
+    .statusTag.client-refuse {
         background: rgba(239,68,68,.14);
         color: #7f1d1d;
     }
+
+    /* Done / Complete / Dispose / Archive */
+    .statusTag.done,
+    .statusTag.complete,
+    .statusTag.dispose,
+    .statusTag.archive {
+        background: rgba(139,92,246,.14);
+        color: #4c1d95;
+    }
+
+    /* Unknown / ? */
+    .statusTag.unknown {
+        background: rgba(245,158,11,.18);
+        color: #92400e;
+    }
+
 
 .overview-wrap {
     position: relative;

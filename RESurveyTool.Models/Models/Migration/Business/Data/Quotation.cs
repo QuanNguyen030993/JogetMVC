@@ -270,6 +270,9 @@ public class Quotation : BaseModel
     public string? MktAuthorityFormRef { get; set; }       // c_MKTAuthorityForm
     public string? StageDept { get; set; }
     public string? StageAccount { get; set; }
+    public string? WorkflowStatus { get; set; }
+    public string? QuotationStatus { get; set; }
+
 
     // =========================================================
     // Ý 9 — Attachment/email fields (commented-out + TODO)

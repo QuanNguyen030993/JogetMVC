@@ -5324,23 +5324,14 @@ function newQuotationForm() {
                     var entrySummaryForm = $(`#quotationRequestForm`).dxForm().dxForm("instance");
                     var submitData = entryForm.option("formData");
                     var submitSummaryData = entrySummaryForm.option("formData");
-                    console.log(submitData);
-                    console.log(submitSummaryData);
                     var quotationData = new Object();
                     quotationData.StageAccount = submitData.to;
                     quotationData.ClientName = submitSummaryData.clientName;
                     quotationData.ClientId = submitSummaryData.clientId;
                     quotationData.StageDept = submitSummaryData.assignedTeamOrRole;
-                    //$.ajax({
-                    //    url: '/api/Quotation/CreateQuotation',
-                    //    headers: { 'Content-Type': 'application/json' },
-                    //    type: 'POST',
-                    //    data: JSON.stringify(quotationData)
-                    //    , success: function (response) {
-                    //     },
-                    //    error: function (err, status, error) {
-                    //    }
-                    //});
+                    quotationData.QuotationStatus = "New";
+                    quotationData.WorkflowStatus = "Pending";
+
                     ajaxPost('/api/Quotation/CreateQuotation', quotationData, {
                         onSuccess: function (response) {
                             // success logic (y hệt success:)
@@ -5610,3 +5601,78 @@ function popupStandardContentByScroll(customContainer) {
 // .done(r => console.log("done:", r))
 // .fail(x => console.log("fail:", x?.responseText))
 // .always(() => console.log("always"));
+function getRenderedGridWidth(grid) {
+    const el = grid.element().get(0);
+    return Math.ceil(el.getBoundingClientRect().width);
+}
+
+// (optional) lấy scrollbar width để trừ nếu cần
+function getScrollbarWidth() {
+    const div = document.createElement("div");
+    div.style.width = "100px";
+    div.style.height = "100px";
+    div.style.overflow = "scroll";
+    div.style.position = "absolute";
+    div.style.top = "-9999px";
+    document.body.appendChild(div);
+    const sw = div.offsetWidth - div.clientWidth;
+    document.body.removeChild(div);
+    return sw;
+}
+
+function stretchColumnsEvenly(e, opts) {
+    const grid = e.component;
+
+    // chặn loop: chỉ chạy 1 lần mỗi lifecycle
+    const flagKey = "_stretched_evenly";
+    if (grid.__internalFlags?.[flagKey]) return;
+    grid.__internalFlags = grid.__internalFlags || {};
+    grid.__internalFlags[flagKey] = true;
+
+    const renderedWidth = getRenderedGridWidth(grid);
+
+    const targetWidth = opts?.targetWidth ?? 1600;
+    const minWidthEach = opts?.minWidthEach ?? 120;
+    const excludeFields = new Set(opts?.excludeFields ?? []); // vd ["_command", "Select", "Buttons"]
+
+    // nếu bạn muốn ép grid width như bạn đang làm
+    if (renderedWidth > targetWidth) {
+        grid.option("width", targetWidth);
+        grid.updateDimensions();
+    }
+
+    // width cuối cùng sau khi set option width
+    const finalWidth = getRenderedGridWidth(grid);
+
+    // visible columns
+    const cols = grid.getVisibleColumns().filter(c => !c.command); // loại command column (edit/delete/buttons)
+    const stretchCols = cols.filter(c => !excludeFields.has(c.dataField));
+
+    if (!stretchCols.length) return;
+
+    // trừ scrollbar nếu có vertical scroll
+    const sw = getScrollbarWidth();
+    const hasVScroll = grid.getScrollable && grid.getScrollable().scrollHeight() > grid.getScrollable().clientHeight();
+    const available = finalWidth - (hasVScroll ? sw : 0);
+
+    // nếu bạn có cột fixed width muốn giữ, tính tổng width fixed trước
+    const fixedSum = cols
+        .filter(c => excludeFields.has(c.dataField))
+        .reduce((sum, c) => sum + (c.width || 0), 0);
+
+    const free = Math.max(0, available - fixedSum);
+
+    const evenW = Math.max(minWidthEach, Math.floor(free / stretchCols.length));
+
+    grid.beginUpdate();
+    try {
+        stretchCols.forEach(c => {
+            // dùng visibleIndex / index chuẩn
+            grid.columnOption(c.index, "width", evenW);
+        });
+    } finally {
+        grid.endUpdate();
+        // update lại layout
+        grid.updateDimensions();
+    }
+}

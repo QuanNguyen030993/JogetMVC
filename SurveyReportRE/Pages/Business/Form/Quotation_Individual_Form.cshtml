@@ -19,6 +19,29 @@ Note:
         padding-left: 18px;
         padding-right: 18px;
     }
+
+    /* actionBar: giữ nguyên dưới cùng */
+    .actionBar {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        /* height cố định */
+        height: 56px; /* chỉnh theo UI bạn */
+        z-index: 2000;
+    }
+
+    /* contentGrid phải có height rõ ràng để % hoạt động */
+    .contentGrid {
+        height: calc(100vh - 56px); /* trừ đúng height actionBar */
+        display: grid;
+        grid-template-columns: 360px 1fr; /* ví dụ list + detail */
+        gap: 12px; /* tùy */
+        padding: 12px; /* tùy */
+        box-sizing: border-box;
+        min-height: 0; /* CỰC QUAN TRỌNG để con overflow được */
+    }
+
 </style>
 <script type="text/javascript">
     $(function () {
@@ -57,9 +80,42 @@ Note:
         let focusDept = _role == "IT" ? "MKT" : _role;   // click highlight only
 
         function money(n) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n || 0); }
-        function statusClass(s) { if (s === "accepted") return "accepted"; if (s === "sent") return "sent"; if (s === "declined") return "declined"; return ""; }
-        function statusText(s) { if (s === "accepted") return "Accepted"; if (s === "sent") return "Sent To Client"; if (s === "declined") return "Declined"; return "New"; }
+           function normalizeStatus(raw) {
+            const s = String(raw ?? "").trim();
 
+            // normalize lower + collapse spaces
+            const k = s.toLowerCase().replace(/\s+/g, " ");
+
+            // Map theo table bạn đưa
+            // Pending/New
+            if (k === "" || k === "new") return { css: "new", text: "New" };
+            if (k === "pending") return { css: "pending", text: "Pending" };
+
+            // In Progress group
+            if (k === "in progress") return { css: "in-progress", text: "In Progress" };
+            if (k === "accept") return { css: "accepted", text: "Accept" };
+            if (k === "approved") return { css: "approved", text: "Approved" };
+            if (k === "reject") return { css: "rejected", text: "Reject" };
+            if (k === "decline" || k === "declined") return { css: "declined", text: "Decline" };
+            if (k === "client accept") return { css: "client-accept", text: "Client accept" };
+            if (k === "client refuse") return { css: "client-refuse", text: "Client refuse" };
+
+            // Complete group
+            if (k === "done") return { css: "done", text: "Done" };
+            if (k === "complete") return { css: "complete", text: "Complete" };
+            if (k === "dispose") return { css: "dispose", text: "Dispose" };
+            if (k === "archive") return { css: "archive", text: "Archive" };
+
+            // Unknown / ?
+            if (k === "?" || k === "unknown") return { css: "unknown", text: "?" };
+
+            // Fallback: vẫn hiện text gốc nhưng cho màu unknown
+            return { css: "unknown", text: s || "?" };
+        }
+
+        /* API compatibility: giữ tên hàm cũ để bạn không phải sửa nhiều nơi */
+        function statusClass(raw) { return normalizeStatus(raw).css; }
+        function statusText(raw)  { return normalizeStatus(raw).text; }
 
         // =============================
         // 3) Mapping model => DevExtreme Forms per dept
@@ -97,7 +153,7 @@ Note:
                   <div >${q.productDisplayName}</div>
                   </div>
                     <div class="quoteClient">${q.clientName}</div>
-                  <div class="statusTag ${statusClass(q.status)}">${statusText(q.status)}</div>
+                  <div class="statusTag ${statusClass(q.quotationStatus)}">${statusText(q.quotationStatus)}</div>
                 </div>
                 <div class="quoteMeta">
                   <div>#${q.requestNo}</div>
@@ -137,7 +193,10 @@ Note:
           if(!q) return;
 
           $("#recordNo").text(q.quotationCode);
-          $("#detailStatus").text(statusText(q.status)).attr("class", `statusTag ${statusClass(q.status)}`);
+           const st = q.quotationStatus ?? q.status;
+        $("#detailStatus")
+          .text(statusText(st))
+          .attr("class", `statusTag ${statusClass(st)}`);
 
           // demo: stageDept derived from something (here we keep existing stageDept)
           // You can map from q.status or workflow stage:
