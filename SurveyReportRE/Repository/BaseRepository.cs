@@ -608,7 +608,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
             var sql = $@"SELECT DISTINCT TOP 1 r.Department RoleName
                     FROM UserRoles ur
                     INNER JOIN Users u ON ur.UserId = u.Id
-                    LEFT JOIN Employee r ON ur.RoleId = r.Id
+                    INNER JOIN Employee r ON r.AccountName = u.[username]
                     WHERE u.[username] = '{accountName}'";
             if (isSuperUser)
                 sql = $@"SELECT DISTINCT TOP 1 u.department RoleName

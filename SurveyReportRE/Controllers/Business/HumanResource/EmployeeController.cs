@@ -21,6 +21,39 @@ public class EmployeeController : BaseControllerApi<Employee>
         _usersRepository = new BaseRepository<Users>(configuration, httpContextAccessor);
     }
 
+
+    [HttpGet("{dept}")]
+    public async Task<ActionResult<Employee>> AssigneeList(string dept)
+    {
+        //var requestParams = HttpContext.Request.Query.ToList();
+        //IDictionary<string, object> dynamicObj = new ExpandoObject { };
+        //foreach (var item in requestParams)
+        //{
+        //    dynamicObj[item.Key] = item.Value;
+        //}
+        //var Base = await _BaseRepository.GetAll();
+
+        //if (dynamicObj.ContainsKey("key"))
+        //{
+        //    var obj = dynamicObj["key"];
+        //    int result = 0;
+        //    int.TryParse(obj.ToString(), out result);
+        //    if (result != 0)
+        //        Base = await _BaseRepository.GetManyObjectByIdAsync(int.Parse(obj.ToString()));
+        //    else
+        //        Base = Base.Where(s => s.FullName.ToString() == (obj.ToString() ?? "")).ToList();
+
+
+        //}
+        //if (Base == null)
+        //{
+        //    return NotFound();
+        //}
+        List<Employee> Base = new List<Employee>();
+        Base = await _BaseRepository.GetListObject(o => o.Department == dept);
+        return Ok(Base);
+    }
+
     [HttpGet]
     public override async Task<ActionResult<Employee>> DropDownLookup()
     {
