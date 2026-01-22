@@ -5357,6 +5357,13 @@
     background-position-x: -900%;
   }
 }
+/*.dx-tooltip-wrapper {
+    z-index: 99999 !important;
+    opacity: 1 !important;
+    display: block !important;
+}
+*/
+
 .dx-tooltip-wrapper .dx-overlay-content {
   border: 1px solid #ddd;
   background-color: #fff;

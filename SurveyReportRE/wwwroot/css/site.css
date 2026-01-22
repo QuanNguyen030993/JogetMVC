@@ -471,16 +471,18 @@
 }
 .content-wrapper {
     margin-top: 30px;
-    margin-right: var(--collapsed-mr);
+    /*margin-right: var(--collapsed-mr);*/
     /*position: absolute;*/
     background-color: white;
-    /*width: 120%;*/
+    width: 120%;
     /*height: 100%;*/
     z-index: 0;
     position: absolute;
     min-height: 100vh;
 }
-
+.dxc-tooltip {
+    z-index: 2000;
+}  
 /* Top header */
 /*.topbar {
     height: 56px;
@@ -1266,7 +1268,7 @@
     }
 
         .dept-hint .lock.readonly {
-            color: #9ca3af; /* gray */
+            color: #d97706; /* amber-600 */
         }
 
         .dept-hint .lock.editable {
