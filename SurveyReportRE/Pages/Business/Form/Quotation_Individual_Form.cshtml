@@ -21,14 +21,28 @@ Note:
     }
 
     /* actionBar: giữ nguyên dưới cùng */
-    .actionBar {
+   /*  .actionBar {
         position: fixed;
         left: 0;
         right: 0;
         bottom: 0;
-        /* height cố định */
-        height: 56px; /* chỉnh theo UI bạn */
+        height: 56px; 
         z-index: 2000;
+    } */
+    .actionBar {
+        position: fixed;
+        left: var(--sidebar-w);
+        right: 0;
+        bottom: 0;
+        z-index: 60;
+        background: rgba(255,255,255,.92);
+        border-top: 1px solid var(--border);
+        backdrop-filter: blur(6px);
+        padding: 10px 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
     }
 
     /* contentGrid phải có height rõ ràng để % hoạt động */
@@ -201,7 +215,7 @@ Note:
           // demo: stageDept derived from something (here we keep existing stageDept)
           // You can map from q.status or workflow stage:
           // stageDept = q.status === 'accepted' ? 'PM' : 'UW' ... etc
-          $("#stageDeptPill").text(`Quotation status: ${stageDept}`);
+          $("#stageDeptPill").text(`Quotation progress flow: ${stageDept}`);
 
           deptData.MKT.clientName = q.clientName;
           deptData.MKT.notes = q.terms;
@@ -1175,6 +1189,15 @@ Note:
                                        dragEnabled: false,
                                        closeOnOutsideClick: true,
                                        contentTemplate: function (container) {
+                                           var currentEntry = entryTemplate();
+                                          const selector = createAssigneeSelector({
+                                                container: container,
+                                                dept: dept,
+                                                onChanged(value) {
+                                                    currentEntry.to = value;
+                                                }
+                                            });
+
                                            $("<div id='commentText'>").dxTextArea({
                                                dataField: "commentText",
                                                label: { text: "Remarks", location: "top" },
@@ -1195,6 +1218,8 @@ Note:
                                                type: 'normal',
                                                text: "Ok",
                                                onClick() {
+                                                    var entryForm = $(`#assigneeEntryForm`).dxForm().dxForm("instance");
+                                                    var submitData = entryForm.option("formData");
                                                     var selectQuotationId = $(`.quoteCard.selected`).attr("data-id")
                                                     var dxText = $("#commentText").dxTextArea().dxTextArea("instance").option("text");
                                                     var timestamp = Date.now();
@@ -1211,10 +1236,11 @@ Note:
                                                         ,CreatedAtUtc)
                                                         VALUES (${selectQuotationId},'${stageDept}',0,'${_loginUser}','${dateObject.toISOString()}','${dxText}','WEB',NULL,NULL,'${dateObject.toISOString()}' );
                                                     `;
+                                                    debugger
                                                     
-
+                                                    var pic =  upsertPicByDept(`'{"MKT":"A","TS":"B","UW":"Old"}'`, dept, submitData.to); ;
                                                     if (dxText) {
-                                                        var values = { stageDept : dept };
+                                                        var values = { stageDept : "LMKT", pIC: pic };
 
                                                         $.ajax({
                                                             url: `/api/Quotation/UpdateData`,
@@ -1236,20 +1262,20 @@ Note:
                                                       
 
 
-                                                        $.ajax({
-                                                            url: '/api/QuotationCommentLog/ExecuteCustomQuery',
-                                                            headers: { 'Content-Type': 'application/json' },
-                                                            type: 'POST',
-                                                            data: JSON.stringify(insertQuery),
-                                                            async: false,
-                                                            success: function (response) {
-                                                                // popupInstance.hide();
+                                                        // $.ajax({
+                                                        //     url: '/api/QuotationCommentLog/ExecuteCustomQuery',
+                                                        //     headers: { 'Content-Type': 'application/json' },
+                                                        //     type: 'POST',
+                                                        //     data: JSON.stringify(insertQuery),
+                                                        //     async: false,
+                                                        //     success: function (response) {
+                                                        //         // popupInstance.hide();
 
-                                                            },
-                                                            error: function (err) {
-                                                                appErrorHandling('LossControl recalled failed !', err);
-                                                            }
-                                                        });
+                                                        //     },
+                                                        //     error: function (err) {
+                                                        //         appErrorHandling('LossControl recalled failed !', err);
+                                                        //     }
+                                                        // });
                   
                                                         popupInstance.hide();
     
@@ -1295,6 +1321,7 @@ Note:
 
 <body>
     @* <div class="topbar"> *@
+    <div id="assigneeEntryForm"></div>
         <div class="title">
      @*        <span style="width:10px;height:10px;background:var(--brand);border-radius:999px;display:inline-block;"></span>
            

@@ -62,13 +62,7 @@
 
         <div id="assigneePopup"></div>
     </div>
-@* 
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-    <!-- DevExtreme -->
-    <script src="https://cdn3.devexpress.com/jslib/24.2.6/js/dx.all.js"></script>
-    <script src="https://cdn3.devexpress.com/jslib/24.2.6/js/localization/dx.messages.en.js"></script> *@
 
     <script>
         (function () {
@@ -273,18 +267,9 @@
           let popupMode = "new"; // new | edit
           let editingKey = null;
 
-          function newKey() {
-            if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
-            return String(Date.now()) + "_" + Math.random().toString(16).slice(2);
-          }
 
-          function entryTemplate() {
-            return {
-              _key: newKey(),
-              to: null,              
-              notes: ""
-            };
-          }
+
+
 
          
 
@@ -299,12 +284,28 @@
             dragEnabled: true,
             closeOnOutsideClick: true,
             contentTemplate: function (content) {
-              $("<div id='assigneeEntryForm' />").appendTo(content).dxForm({
-                formData: currentEntry,
-                colCount: 1,
-                labelMode: "floating",
-                items: popupFormItems
-              });
+              // $("<div id='assigneeEntryForm' />").appendTo(content).dxForm({
+              //   formData: currentEntry,
+              //   colCount: 1,
+              //   labelMode: "floating",
+              //   items: popupFormItems
+              // });
+                  const selector = createAssigneeSelector({
+                        container: content,
+                        dept: vm.assignedTeamOrRole,
+                        onChanged(value) {
+                            currentEntry.to = value;
+                        }
+                    });
+
+                    $("<div/>").dxTextArea({
+                        label: "Notes",
+                        labelMode: "floating",
+                        minHeight: 90,
+                        onValueChanged(e) {
+                            currentEntry.notes = e.value;
+                        }
+                    }).appendTo(content);
             },
             toolbarItems: [
               {
@@ -344,24 +345,24 @@
           function openPopupForNew() {
             if (!isManual()) {
               DevExpress.ui.notify("Switch Assignment Mode to 'Manual assign' to add entries.", "warning", 1800);
-              return;
-            }
-            popupMode = "new";
-            currentEntry = entryTemplate();
-             ajaxGet("/api/Employee/AssigneeList", "TS")
-                .then(list => {
-                    options.assignee.push(...list);
-                     const popup = $("#assigneePopup").dxPopup("instance");
-                     popup.option("title", "New Assignee Entry");
-                     popup.show();
-                     setTimeout(() => $("#assigneeEntryForm").dxForm("instance").option("formData", currentEntry), 2000);
-                    console.log("then:", list);
-                    console.log("then:", options.assignee);
-                })
-                .fail(err => { // jQuery way (an toàn)
-                    console.log("fail:", err);
-                })
-                .always(() => console.log("always"));
+                   return;
+              }
+              popupMode = "new";
+              currentEntry = entryTemplate();
+                 ajaxGet("/api/Employee/AssigneeList", "TS")
+                    .then(list => {
+                        options.assignee.push(...list);
+                         const popup = $("#assigneePopup").dxPopup("instance");
+                         popup.option("title", "New Assignee Entry");
+                         popup.show();
+                         setTimeout(() => $("#assigneeEntryForm").dxForm("instance").option("formData", currentEntry), 2000);
+                        console.log("then:", list);
+                        console.log("then:", options.assignee);
+                    })
+                    .fail(err => { // jQuery way (an toàn)
+                        console.log("fail:", err);
+                    })
+                    .always(() => console.log("always"));
            
           }
 

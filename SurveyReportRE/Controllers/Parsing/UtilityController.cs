@@ -135,7 +135,7 @@ namespace ERPCore.Controllers.Config
         {
             var result = new List<dynamic>();
 
-            using var doc = OpenSpreadsheetDocument(excelStream);
+            using var doc = Util.OpenSpreadsheetDocument(excelStream);
             var wbPart = doc.WorkbookPart!;
 
             var sheet = wbPart.Workbook.Sheets!
@@ -155,7 +155,7 @@ namespace ERPCore.Controllers.Config
 
             for (int i = 0; i < headerCells.Count; i++)
             {
-                var colName = GetCellValue(wbPart, headerCells[i])?.Trim();
+                var colName = Util.GetCellValue(wbPart, headerCells[i])?.Trim();
                 if (!string.IsNullOrWhiteSpace(colName))
                     colMap[colName] = i;
             }
@@ -172,39 +172,39 @@ namespace ERPCore.Controllers.Config
                     case "Dependencies":
                         dto = new
                         {
-                            id = GetString(cells, colMap, "id", wbPart),
-                            predecessorId = GetString(cells, colMap, "predecessorId", wbPart),
-                            successorId = GetString(cells, colMap, "successorId", wbPart),
-                            type = GetString(cells, colMap, "type", wbPart)
+                            id = Util.GetString(cells, colMap, "id", wbPart),
+                            predecessorId = Util.GetString(cells, colMap, "predecessorId", wbPart),
+                            successorId = Util.GetString(cells, colMap, "successorId", wbPart),
+                            type = Util.GetString(cells, colMap, "type", wbPart)
                         };
                         break;
 
                     case "Tasks":
                         dto = new
                         {
-                            id = GetString(cells, colMap, "id", wbPart),
-                            parentId = GetString(cells, colMap, "parentId", wbPart),
-                            title = GetString(cells, colMap, "title", wbPart),
-                            start = GetDate(cells, colMap, "start", wbPart)?.AddHours(-7).ToString("yyyy-MM-ddTHH:mm:ss.000Z"),
-                            end = GetDate(cells, colMap, "end", wbPart)?.Add(new TimeSpan(16,59,59)).ToString("yyyy-MM-ddTHH:mm:ss.000Z"),
-                            progress = GetInt(cells, colMap, "progress", wbPart)
+                            id = Util.GetString(cells, colMap, "id", wbPart),
+                            parentId = Util.GetString(cells, colMap, "parentId", wbPart),
+                            title = Util.GetString(cells, colMap, "title", wbPart),
+                            start = Util.GetDate(cells, colMap, "start", wbPart)?.AddHours(-7).ToString("yyyy-MM-ddTHH:mm:ss.000Z"),
+                            end = Util.GetDate(cells, colMap, "end", wbPart)?.Add(new TimeSpan(16,59,59)).ToString("yyyy-MM-ddTHH:mm:ss.000Z"),
+                            progress = Util.GetInt(cells, colMap, "progress", wbPart)
                         };
                         break;
 
                     case "Resources":
                         dto = new
                         {
-                            id = GetString(cells, colMap, "id", wbPart),
-                            text = GetString(cells, colMap, "text", wbPart)
+                            id = Util.GetString(cells, colMap, "id", wbPart),
+                            text = Util.GetString(cells, colMap, "text", wbPart)
                         };
                         break;
 
                     case "ResourceAssignments":
                         dto = new
                         {
-                            id = GetString(cells, colMap, "id", wbPart),
-                            taskId = GetString(cells, colMap, "taskId", wbPart),
-                            resourceId = GetString(cells, colMap, "resourceId", wbPart)
+                            id = Util.GetString(cells, colMap, "id", wbPart),
+                            taskId = Util.GetString(cells, colMap, "taskId", wbPart),
+                            resourceId = Util.GetString(cells, colMap, "resourceId", wbPart)
                         };
                         break;
 
@@ -219,116 +219,10 @@ namespace ERPCore.Controllers.Config
             return result;
         }
 
-        private static string GetCellValue(WorkbookPart wbPart, Cell cell)
-        {
-            string value = "";
-            if (cell != null)
-            {
-                if (cell.CellValue != null) value = cell.CellValue.InnerText;
-                if (cell?.ChildElements[0] != null)
-                {
-                    var chillCell = cell?.ChildElements[0];
-                    value = chillCell.InnerText;
-                }
 
-                
-            }
-            else
-            {
-                return "";
-            }
-            
-            
 
-            if (cell.DataType != null && cell.DataType == CellValues.SharedString)
-            {
-                return wbPart.SharedStringTablePart
-                    .SharedStringTable
-                    .Elements<SharedStringItem>()
-                    .ElementAt(int.Parse(value))
-                    .InnerText;
-            }
 
-            return value;
-        }
-
-        private static int GetInt(
-            List<Cell> cells,
-            Dictionary<string, int> colMap,
-            string colName,
-            WorkbookPart wbPart)
-        {
-            if (!colMap.ContainsKey(colName))
-                return 0;
-
-            int idx = colMap[colName];
-            if (idx >= cells.Count)
-                return 0;
-
-            var text = GetCellValue(wbPart, cells[idx]);
-            return int.TryParse(text, out int v) ? v : 0;
-        }
         
-
-        private static SpreadsheetDocument OpenSpreadsheetDocument(Stream stream)
-        {
-            var settings = new OpenSettings
-            {
-                AutoSave = false//,
-                //LeaveOpen = true
-            };
-            return SpreadsheetDocument.Open(stream, false, settings);
-        }
-        static string GetString(
-    List<Cell> cells,
-    Dictionary<string, int> colMap,
-    string col,
-    WorkbookPart wbPart)
-        {
-            if (!colMap.ContainsKey(col)) return null;
-            int idx = colMap[col];
-            if (idx >= cells.Count) return null;
-            return GetCellValue(wbPart, cells[idx]);
-        }
-
-        static int? GetNullableInt(
-            List<Cell> cells,
-            Dictionary<string, int> colMap,
-            string col,
-            WorkbookPart wbPart)
-        {
-            var s = GetString(cells, colMap, col, wbPart);
-            return int.TryParse(s, out var v) ? v : (int?)null;
-        }
-
-        static DateTime? GetDate(
-            List<Cell> cells,
-            Dictionary<string, int> colMap,
-            string col,
-            WorkbookPart wbPart)
-        {
-            var raw = GetString(cells, colMap, col, wbPart);
-            if (string.IsNullOrWhiteSpace(raw))
-                return null;
-
-            if (double.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out double oaDate))
-            {
-                try
-                {
-                    return DateTime.FromOADate(oaDate);
-                }
-                catch
-                {
-                    return null;
-                }
-            }
-
-           
-            if (DateTime.TryParse(raw, out var d))
-                return d;
-
-            return null;
-        }
 
     }
 }

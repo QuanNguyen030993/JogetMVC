@@ -1362,21 +1362,7 @@
             pointer-events: none;
         }
 
-.actionBar {
-    position: fixed;
-    left: var(--sidebar-w);
-    right: 0;
-    bottom: 0;
-    z-index: 60;
-    background: rgba(255,255,255,.92);
-    border-top: 1px solid var(--border);
-    backdrop-filter: blur(6px);
-    padding: 10px 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
+
 
 .actionLeft {
     display: flex;

@@ -5676,3 +5676,87 @@ function stretchColumnsEvenly(e, opts) {
         grid.updateDimensions();
     }
 }
+function createAssigneeSelector(options) {
+    const {
+        container,
+        dept,
+        initialValue = null,
+        onChanged = function () { }
+    } = options;
+
+    const state = {
+        assignee: initialValue
+    };
+
+    const wrapper = $("<div class='assignee-selector'/>").appendTo(container);
+
+    $("<div/>").dxSelectBox({
+        label: "Assign To",
+        labelMode: "floating",
+        searchEnabled: true,
+        valueExpr: "accountName",
+        displayExpr: "fullName",
+        dataSource: [],
+        value: initialValue,
+        onInitialized(e) {
+            ajaxGet("/api/Employee/AssigneeList", dept)
+                .then(list => {
+                    e.component.option("dataSource", list);
+                });
+        },
+        onValueChanged(e) {
+            state.assignee = e.value;
+            onChanged(e.value);
+        }
+    }).appendTo(wrapper);
+
+    return {
+        getValue() {
+            return state.assignee;
+        },
+        setValue(v) {
+            state.assignee = v;
+        }
+    };
+}
+
+
+function newKey() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return String(Date.now()) + "_" + Math.random().toString(16).slice(2);
+}
+
+
+function entryTemplate() {
+    return {
+        _key: newKey(),
+        to: null,
+        notes: ""
+    };
+}
+function upsertPicByDept(jsonText, deptKey, picName) {
+    // 1) Normalize input
+    deptKey = (deptKey || "").trim();
+    picName = (picName || "").trim();
+
+    if (!deptKey) throw new Error("deptKey is empty.");
+    if (!picName) throw new Error("picName is empty.");
+
+    // 2) Parse JSON safely
+    let obj = {};
+    if (jsonText && String(jsonText).trim()) {
+        try {
+            const parsed = JSON.parse(jsonText);
+            if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) obj = parsed;
+        } catch {
+            // JSON lỗi => reset để tránh crash
+            obj = {};
+        }
+    }
+
+    // 3) Upsert (insert/update)
+    obj[deptKey] = picName;
+
+    // 4) Return string JSON
+    return JSON.stringify(obj);
+}

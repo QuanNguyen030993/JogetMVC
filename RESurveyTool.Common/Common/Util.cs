@@ -20,6 +20,8 @@ using Microsoft.Data.SqlClient;
 using ExcelDataReader;
 using static SkiaSharp.HarfBuzz.SKShaper;
 using System.Globalization;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
 namespace ERPCore.Common
 {
     public static class Util
@@ -727,7 +729,7 @@ namespace ERPCore.Common
             return Regex.Replace(input, @"@@[a-zA-Z0-9]+", "");
         }
 
-        public static MailQueue NotifySession(Employee staff, Users notifyUser, MailTemplate mailTemplate, MailConfig emailSettings, Dictionary<string, object> dictionary, string FOLLOW_CC, List<string> attachments = null)
+        public static MailQueue NotifySession(Employee staff, Models.Migration.Business.Config.Users notifyUser, MailTemplate mailTemplate, MailConfig emailSettings, Dictionary<string, object> dictionary, string FOLLOW_CC, List<string> attachments = null)
         {
             string contentHandle = MailUtil.BodyContentHandle(mailTemplate.TemplateContent, dictionary);
             mailTemplate.TemplateMailTitle = MailUtil.TitleContentHandle(mailTemplate.TemplateMailTitle, dictionary);
@@ -1684,7 +1686,118 @@ VALUES
             }
             return null;
         }
+        public static SpreadsheetDocument OpenSpreadsheetDocument(Stream stream)
+        {
+            var settings = new OpenSettings
+            {
+                AutoSave = false//,
+                //LeaveOpen = true
+            };
+            return SpreadsheetDocument.Open(stream, false, settings);
+        }
+        public static string GetString(
+    List<Cell> cells,
+    Dictionary<string, int> colMap,
+    string col,
+    WorkbookPart wbPart)
+        {
+            if (!colMap.ContainsKey(col)) return null;
+            int idx = colMap[col];
+            if (idx >= cells.Count) return null;
+            return GetCellValue(wbPart, cells[idx]);
+        }
 
+        public static int? GetNullableInt(
+            List<Cell> cells,
+            Dictionary<string, int> colMap,
+            string col,
+            WorkbookPart wbPart)
+        {
+            var s = GetString(cells, colMap, col, wbPart);
+            return int.TryParse(s, out var v) ? v : (int?)null;
+        }
+
+        public static DateTime? GetDate(
+            List<Cell> cells,
+            Dictionary<string, int> colMap,
+            string col,
+            WorkbookPart wbPart)
+        {
+            var raw = GetString(cells, colMap, col, wbPart);
+            if (string.IsNullOrWhiteSpace(raw))
+                return null;
+
+            if (double.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out double oaDate))
+            {
+                try
+                {
+                    return DateTime.FromOADate(oaDate);
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+
+
+            if (DateTime.TryParse(raw, out var d))
+                return d;
+
+            return null;
+        }
+
+        public static int GetInt(
+            List<Cell> cells,
+            Dictionary<string, int> colMap,
+            string colName,
+            WorkbookPart wbPart)
+        {
+            if (!colMap.ContainsKey(colName))
+                return 0;
+
+            int idx = colMap[colName];
+            if (idx >= cells.Count)
+                return 0;
+
+            var text = GetCellValue(wbPart, cells[idx]);
+            return int.TryParse(text, out int v) ? v : 0;
+        }
+
+        public static string GetCellValue(WorkbookPart wbPart, Cell cell)
+        {
+            string value = "";
+            if (cell != null)
+            {
+                if (cell.CellValue != null) value = cell.CellValue.InnerText;
+                if (cell.DataType?.Value == CellValues.SharedString)
+                {
+                    var sst = wbPart.SharedStringTablePart?.SharedStringTable;
+                    return sst?.ElementAt(int.Parse(value))?.InnerText ?? "";
+                }
+                if (cell?.ChildElements[0] != null)
+                {
+                    var chillCell = cell?.ChildElements[0];
+                    value = chillCell.InnerText;
+                }
+            }
+            else
+            {
+                return "";
+            }
+
+
+
+            if (cell.DataType != null && cell.DataType == CellValues.SharedString)
+            {
+                return wbPart.SharedStringTablePart
+                    .SharedStringTable
+                    .Elements<SharedStringItem>()
+                    .ElementAt(int.Parse(value))
+                    .InnerText;
+            }
+
+            return value;
+        }
     }
     public enum CommandQueryType
     {

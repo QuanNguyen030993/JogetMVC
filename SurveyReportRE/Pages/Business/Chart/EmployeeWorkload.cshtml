@@ -4,6 +4,7 @@
 
 }
 <script>
+    _role = "TS";
     var dataSource = new Object();
      function loadQuotationStacked() {
          const payload = JSON.stringify({
@@ -15,8 +16,8 @@
                method: "POST",
                async: false,
                contentType: "application/json",
-               // data: JSON.stringify(_role),
-               data: JSON.stringify("TS"),
+               data: JSON.stringify(_role),
+               // data: JSON.stringify("TS"),
                success: function(data) {
                     dataSource = data;
                }
