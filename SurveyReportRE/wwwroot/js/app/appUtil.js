@@ -5688,9 +5688,9 @@ function createAssigneeSelector(options) {
         assignee: initialValue
     };
 
-    const wrapper = $("<div class='assignee-selector'/>").appendTo(container);
+    const wrapper = $("<div  class='assignee-selector'/>").appendTo(container);
 
-    $("<div/>").dxSelectBox({
+    $("<div id='assigneeSelectBox'>").dxSelectBox({
         label: "Assign To",
         labelMode: "floating",
         searchEnabled: true,

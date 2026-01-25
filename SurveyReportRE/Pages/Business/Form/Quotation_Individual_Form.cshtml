@@ -56,6 +56,294 @@ Note:
         min-height: 0; /* CỰC QUAN TRỌNG để con overflow được */
     }
 
+    /* .dept-node {
+        position: relative;
+        width: var(--node);
+        height: var(--node);
+        border-radius: 999px;
+        background: #fff;
+        border: 2px solid var(--nodeBorder);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 8px;
+        font-weight: 900;
+        color: #111827;
+        box-shadow: 0 6px 18px rgba(0,0,0,.08);
+        pointer-events: auto;
+        cursor: pointer;
+        user-select: none;
+        transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+        z-index: 1;
+    }
+
+
+   
+        .dept-node.status {
+            border-color: rgba(232,74,95,.95);
+            box-shadow: 0 0 0 4px rgba(232,74,95,.16), 0 10px 22px rgba(0,0,0,.10);
+        }
+      
+        .dept-node.focus {
+            border-color: rgba(37,99,235,.95);
+            box-shadow: 0 0 0 4px rgba(37,99,235,.18), 0 10px 22px rgba(0,0,0,.10);
+        }
+       
+        .dept-node.status.focus {
+            border-color: rgba(37,99,235,.95);
+        }
+
+            .dept-node.status.focus::after {
+                content: "";
+                position: absolute;
+                inset: 4px;
+                border-radius: 999px;
+                border: 2px solid rgba(232,74,95,.9);
+                pointer-events: none;
+            }
+
+
+   
+    .dept-circle {
+        width: var(--node);
+        height: var(--node);
+        border-radius: 999px;
+        background: #fff;
+        border: 2px solid var(--nodeBorder);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 8px;
+        font-weight: 900;
+        color: #111827;
+        box-shadow: 0 6px 18px rgba(0,0,0,.08);
+        cursor: pointer;
+        user-select: none;
+        transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+    }
+
+    .dept-node:hover .dept-circle {
+        transform: scale(1.06);
+    }
+
+   
+    .dept-callout {
+        position: relative;
+        margin-right: 200px;
+        min-width: 150px;
+        height: 30px;
+        padding: 0 10px;
+        border-radius: 10px;
+        background: #fff;
+        border: 1px solid rgba(17,24,39,.14);
+        box-shadow: 0 6px 14px rgba(0,0,0,.08);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+       
+        opacity: 0;
+        visibility: hidden;
+        transform: translateX(10px);
+        pointer-events: none;
+        transition: opacity .12s ease, transform .12s ease, visibility .12s ease;
+    }
+
+       
+        .dept-callout::after {
+            content: "";
+            position: absolute;
+            right: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-left: 10px solid #fff;
+        }
+
+        .dept-callout::before {
+            content: "";
+            position: absolute;
+            right: -11px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 9px solid transparent;
+            border-bottom: 9px solid transparent;
+            border-left: 11px solid rgba(17,24,39,.14);
+        }
+
+    
+    .dept-node:hover .dept-callout {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(0);
+        pointer-events: auto;
+    }
+
+    
+    .dept-callout .co-icon {
+        width: 18px;
+        height: 18px;
+        display: inline-grid;
+        place-items: center;
+    }
+
+    .dept-callout .co-text {
+        font-size: 12px;
+        font-weight: 800;
+        color: rgba(17,24,39,.85);
+    } */
+
+    /* =========================
+       NODE container (không ép circle nữa)
+       ========================= */
+    .dept-node {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        /* khoảng cách callout-circle chỉ để đẹp, callout là absolute nên gap không ảnh hưởng */
+        gap: 10px;
+        z-index: 1;
+    }
+
+    /* =========================
+       CIRCLE = giữ nguyên style cũ của dept-node
+       ========================= */
+    .dept-circle {
+        position: relative; /* để vẽ inner ring khi both */
+        width: var(--node);
+        height: var(--node);
+        border-radius: 999px;
+        background: #fff;
+        border: 2px solid var(--nodeBorder);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 8px;
+        font-weight: 900;
+        color: #111827;
+        box-shadow: 0 6px 18px rgba(0,0,0,.08);
+        pointer-events: auto;
+        cursor: pointer;
+        user-select: none;
+        transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+        z-index: 2; /* nằm trên vline */
+    }
+
+    /* hover scale */
+    .dept-node:hover .dept-circle {
+        transform: scale(1.06);
+    }
+
+    /* =========================
+       RINGS (status / focus / both)
+       ========================= */
+    .dept-node.status .dept-circle {
+        border-color: rgba(232,74,95,.95);
+        box-shadow: 0 0 0 4px rgba(232,74,95,.16), 0 10px 22px rgba(0,0,0,.10);
+    }
+
+    .dept-node.focus .dept-circle {
+        border-color: rgba(37,99,235,.95);
+        box-shadow: 0 0 0 4px rgba(37,99,235,.18), 0 10px 22px rgba(0,0,0,.10);
+    }
+
+    .dept-node.status.focus .dept-circle {
+        border-color: rgba(37,99,235,.95);
+    }
+
+        .dept-node.status.focus .dept-circle::after {
+            content: "";
+            position: absolute;
+            inset: 4px;
+            border-radius: 999px;
+            border: 2px solid rgba(232,74,95,.9);
+            pointer-events: none;
+        }
+
+    /* =========================
+       CALLOUT (speech bubble) - hover only
+       - absolute để KHÔNG phá layout và KHÔNG mất click/text
+       ========================= */
+    .dept-callout {
+        position: absolute;
+        /* nằm bên trái circle */
+        right: calc(var(--node) + 12px);
+        top: 50%;
+        transform: translateY(-50%) translateX(10px);
+        min-width: 150px;
+        height: 30px;
+        padding: 0 10px;
+        border-radius: 10px;
+        background: #fff;
+        border: 1px solid rgba(17,24,39,.14);
+        box-shadow: 0 6px 14px rgba(0,0,0,.08);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+        /* hidden default */
+        opacity: 0;
+        visibility: hidden;
+        /* QUAN TRỌNG: để không chặn click vào circle */
+        pointer-events: none;
+        transition: opacity .12s ease, transform .12s ease, visibility .12s ease;
+        z-index: 3;
+    }
+
+        /* arrow */
+        .dept-callout::after {
+            content: "";
+            position: absolute;
+            right: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-left: 10px solid #fff;
+        }
+
+        .dept-callout::before {
+            content: "";
+            position: absolute;
+            right: -11px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 9px solid transparent;
+            border-bottom: 9px solid transparent;
+            border-left: 11px solid rgba(17,24,39,.14);
+        }
+
+    /* hover node => show callout */
+    .dept-node:hover .dept-callout {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(-50%) translateX(0);
+    }
+
+    /* icon + text */
+    .dept-callout .co-icon {
+        width: 18px;
+        height: 18px;
+        display: inline-grid;
+        place-items: center;
+    }
+
+    .dept-callout .co-text {
+        font-size: 12px;
+        font-weight: 800;
+        color: rgba(17,24,39,.85);
+    }
+
+
 </style>
 <script type="text/javascript">
     $(function () {
@@ -1218,8 +1506,8 @@ Note:
                                                type: 'normal',
                                                text: "Ok",
                                                onClick() {
-                                                    var entryForm = $(`#assigneeEntryForm`).dxForm().dxForm("instance");
-                                                    var submitData = entryForm.option("formData");
+                                                    var entryForm = $(`#assigneeSelectBox`).dxSelectBox().dxSelectBox("instance");
+                                                    var submitData = entryForm.option("value");
                                                     var selectQuotationId = $(`.quoteCard.selected`).attr("data-id")
                                                     var dxText = $("#commentText").dxTextArea().dxTextArea("instance").option("text");
                                                     var timestamp = Date.now();
@@ -1238,10 +1526,10 @@ Note:
                                                     `;
                                                     debugger
                                                     
-                                                    var pic =  upsertPicByDept(`'{"MKT":"A","TS":"B","UW":"Old"}'`, dept, submitData.to); ;
+                                                    var pic =  upsertPicByDept(`{"MKT":"A","TS":"hien.ttt","UW":"thanh.nt","LKMT":"thao.np"}`, dept, submitData); ;
                                                     if (dxText) {
                                                         var values = { stageDept : "LMKT", pIC: pic };
-
+                                                        console.log(values);
                                                         $.ajax({
                                                             url: `/api/Quotation/UpdateData`,
                                                             type: "PUT",
@@ -1311,6 +1599,61 @@ Note:
 
       setTimeout(closeBranchOverlay, 350);
     }
+        const PIC_JSON = `{"MKT":"thao.bp","TS":"hien.ttt","UW":"thanh.nt","LKMT":"thao.np"}`;
+
+        function normalizeDeptKey(k) {
+            const x = String(k || "").trim().toUpperCase();
+            return x === "LKMT" ? "LMKT" : x;
+        }
+        function parsePicMap(picJson) {
+            try {
+                const obj = JSON.parse(picJson || "{}");
+                const map = {};
+                Object.keys(obj).forEach(k => map[normalizeDeptKey(k)] = obj[k]);
+                return map;
+            } catch { return {}; }
+        }
+
+      //   function chatSvg() {
+      //       return `
+      // <svg viewBox="0 0 24 24" fill="none" width="18" height="18">
+      //   <path d="M7 8.5h10M7 12h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      //   <path d="M21 12a8 8 0 0 1-8 8H7l-4 3V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"
+      //         stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      // </svg>`;
+      //   }
+        function lockSvg() {
+            return `
+      <svg viewBox="0 0 24 24" fill="none" width="18" height="18">
+        <path d="M8 10V8a4 4 0 0 1 8 0v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M7 10h10a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z"
+              stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      </svg>`;
+        }
+
+        function renderDeptCallouts(picJson) {
+            const picMap = parsePicMap(picJson);
+
+            $(".dept-node").each(function () {
+                const dept = normalizeDeptKey($(this).data("key"));
+                const $co = $(this).find(".dept-callout");
+                if (!$co.length) return;
+
+                const pic = picMap[dept] || "-";
+
+                // bạn muốn nội dung dạng: icon hội thoại + PIC
+                // $co.find(".co-icon").html(chatSvg());
+                $co.find(".co-text").text(pic);
+                $co.css({ color: "rgba(17,24,39,.85)" });
+
+                // nếu muốn hiển thị LOCK cho dept không edit được:
+                // const canEdit = (dept === normalizeDeptKey(currentUserRole));
+                // if(!canEdit){ $co.find(".co-icon").html(lockSvg()); $co.find(".co-text").text("LOCK"); $co.css({ color:"#f59e0b" }); }
+            });
+        }
+
+        // init
+        renderDeptCallouts(PIC_JSON);
 
     })
 </script>
@@ -1391,12 +1734,45 @@ Note:
                         <div id="deptTree" class="dept-tree">
                             <div class="treeStack" id="treeStack">
                                 <div class="vline" id="treeVLine"></div>
-
-                                <div class="dept-node" data-key="MKT" data-target="#secMKT" title="MKT">MKT</div>
-                                <div class="dept-node" data-key="TS" data-target="#secTS" title="TS">TS</div>
+                                <div class="dept-node" data-key="MKT" data-target="#secMKT">
+                                    <div class="dept-callout" data-pic-for="MKT">
+                                        <span class="co-icon"></span>
+                                        <span class="co-text">-</span>
+                                    </div>
+                                    <div class="dept-circle">MKT</div>
+                                </div>
+                                 <div class="dept-node" data-key="TS" data-target="#secTS">
+                                    <div class="dept-callout" data-pic-for="TS">
+                                        <span class="co-icon"></span>
+                                        <span class="co-text">-</span>
+                                    </div>
+                                    <div class="dept-circle">TS</div>
+                                </div>
+                            <div class="dept-node" data-key="UW" data-target="#secUW">
+                                <div class="dept-callout" data-pic-for="UW">
+                                        <span class="co-icon"></span>
+                                        <span class="co-text">-</span>
+                                    </div>
+                                    <div class="dept-circle">UW</div>
+                                </div>
+                            <div class="dept-node" data-key="LMKT" data-target="#secLMKT">
+                                <div class="dept-callout" data-pic-for="LMKT">
+                                        <span class="co-icon"></span>
+                                        <span class="co-text">-</span>
+                                    </div>
+                                    <div class="dept-circle">LMKT</div>
+                                </div>
+                            <div class="dept-node" data-key="PM" data-target="#secPM">
+                                    <div class="dept-callout" data-pic-for="PM">
+                                    <span class="co-icon"></span>
+                                    <span class="co-text">-</span>
+                                    </div>
+                                    <div class="dept-circle">PM</div>
+                            </div>
+                               @*  <div class="dept-node" data-key="TS" data-target="#secTS" title="TS">TS</div>
                                 <div class="dept-node" data-key="UW" data-target="#secUW" title="UW">UW</div>
                                 <div class="dept-node" data-key="LMKT" data-target="#secLMKT" title="Leader MKT">LMKT</div>
-                                <div class="dept-node" data-key="PM" data-target="#secPM" title="PM">PM</div>
+                                <div class="dept-node" data-key="PM" data-target="#secPM" title="PM">PM</div> *@
                             </div>
                         </div>
 

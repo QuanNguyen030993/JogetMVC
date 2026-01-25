@@ -1313,56 +1313,6 @@
         z-index: 0;
     }
 
-.dept-node {
-    position: relative;
-    width: var(--node);
-    height: var(--node);
-    border-radius: 999px;
-    background: #fff;
-    border: 2px solid var(--nodeBorder);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 8px;
-    font-weight: 900;
-    color: #111827;
-    box-shadow: 0 6px 18px rgba(0,0,0,.08);
-    pointer-events: auto;
-    cursor: pointer;
-    user-select: none;
-    transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
-    z-index: 1;
-}
-
-    .dept-node:hover {
-        transform: scale(1.06);
-    }
-
-    /* status ring only */
-    .dept-node.status {
-        border-color: rgba(232,74,95,.95);
-        box-shadow: 0 0 0 4px rgba(232,74,95,.16), 0 10px 22px rgba(0,0,0,.10);
-    }
-    /* focus ring only */
-    .dept-node.focus {
-        border-color: rgba(37,99,235,.95);
-        box-shadow: 0 0 0 4px rgba(37,99,235,.18), 0 10px 22px rgba(0,0,0,.10);
-    }
-    /* both */
-    .dept-node.status.focus {
-        border-color: rgba(37,99,235,.95);
-    }
-
-        .dept-node.status.focus::after {
-            content: "";
-            position: absolute;
-            inset: 4px;
-            border-radius: 999px;
-            border: 2px solid rgba(232,74,95,.9);
-            pointer-events: none;
-        }
-
-
 
 .actionLeft {
     display: flex;
