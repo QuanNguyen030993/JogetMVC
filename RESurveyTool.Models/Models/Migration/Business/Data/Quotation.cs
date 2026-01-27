@@ -273,7 +273,9 @@ public class Quotation : BaseModel
     public string? WorkflowStatus { get; set; } = "";
     public string? QuotationStatus { get; set; } = "";
     public string? PIC { get; set; } = "";
-
+    public long? ProductId { get; set; }
+    public Product? ProductFK { get; set; }
+    public string? ProductCode { get; set; } = "";
 
     // =========================================================
     // Ý 9 — Attachment/email fields (commented-out + TODO)
