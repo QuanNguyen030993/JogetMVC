@@ -4289,7 +4289,19 @@ const tabClickEvent = function (e, eTabName, eTab, callback) {
 function formatNumber(num) {
     return num < 10 ? '0' + num : num.toString();
 }
+function formatDate(timeStampString, format) {
+    var d = new Date(timeStampString),
+        month = '' + (d.getMonth() + 1),
+        day = '' + d.getDate(),
+        year = d.getFullYear();
 
+    if (month.length < 2)
+        month = '0' + month;
+    if (day.length < 2)
+        day = '0' + day;
+
+    return [day, month, year].join('-');
+}
 function tabValidationCheck(checkFields, tabs, id, connectionId, entityName) {
     if (id && _cacheDataGridConfigs) {
         $.each(tabs, function (tabIndex, tabItem) {
