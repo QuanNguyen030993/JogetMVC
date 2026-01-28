@@ -445,21 +445,23 @@ Note:
             $root.append(`<div style="color:#6b7280;padding:10px;">No quotations found.</div>`);
             return;
           }
+          // <div>#${q.requestNo}</div>
           data.forEach(q => {
             var isSel = q.id === selectedId;
             $root.append(`
               <div class="quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-stagedept="${q.stageDept}">
                 <div class="quoteTop">
                   <div>
-                    <div class="quotationCode">${q.quotationCode}</div>
-                  <div >${q.productDisplayName}</div>
+                       <div class="quoteClient">${q.clientName}</div>
+                  <div >${q.productName}</div>
                   </div>
-                    <div class="quoteClient">${q.clientName}</div>
+                
                   <div class="statusTag ${statusClass(q.quotationStatus)}">${statusText(q.quotationStatus)}</div>
                 </div>
                 <div class="quoteMeta">
-                  <div>#${q.requestNo}</div>
-                  <div>${q.requestedDate}</div>
+                 <div class="quotationCode">${q.quotationCode}</div>
+                  
+                  <div>${formatDate(q.createdDate,"dd-mm-yyyy")}</div>
                   <div class="quoteAmount">${money(q.amount)}</div>
                 </div>
               </div>
