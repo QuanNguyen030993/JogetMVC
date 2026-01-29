@@ -1,0 +1,607 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>DHTMLX Gantt - From Excel Timeline</title>
+
+  <!-- DHTMLX Gantt CDN -->
+  <link rel="stylesheet" href="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.css">
+  <script src="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.js"></script>
+
+  <style>
+    html, body {
+      height: 100%;
+      padding: 0;
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: #fff;
+      border-bottom: 1px solid rgba(0,0,0,.08);
+    }
+
+    .btn {
+      border: 1px solid rgba(0,0,0,.2);
+      background: #fff;
+      padding: 6px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .btn:hover {
+      background: rgba(0,0,0,.04);
+    }
+
+    .btn.active {
+      background: rgba(0,0,0,.08);
+      font-weight: 600;
+    }
+
+    #gantt_here {
+      width: 100%;
+      height: calc(100vh - 52px);
+    }
+
+    /* Weekend shading + week bold line */
+    .weekend {
+      background: rgba(0,0,0,0.04);
+    }
+    .week-start { border-left: 1px solid rgba(0,0,0,.18) !important; }
+    .gantt_task_content {
+      line-height: 18px;
+      font-size: 12px;
+    }
+  
+    /* ===== Clean Gantt Theme (like screenshot) ===== */
+
+    .gantt_container { border: 0; }
+    .gantt_grid, .gantt_task { background: #fff; }
+    .gantt_grid_scale, .gantt_task_scale {
+      background: #fff;
+      border-bottom: 1px solid rgba(0,0,0,.08);
+    }
+
+    .gantt_scale_cell, .gantt_grid_head_cell {
+      color: rgba(17,24,39,.85);
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    .gantt_task_scale .gantt_scale_cell{white-space:normal; line-height:14px; padding-top:4px; padding-bottom:4px;}
+    .gantt_scale_line { border-top: 0; }
+    .gantt_grid_scale .gantt_grid_head_cell {
+      border-right: 1px solid rgba(0,0,0,.06);
+    }
+
+    .gantt_task_bg .gantt_task_row { border-bottom: 1px solid rgba(0,0,0,.06); }
+    .gantt_task_bg .gantt_task_cell { border-right: 1px solid rgba(0,0,0,.05); }
+
+    .gantt_row.gantt_selected, .gantt_task_row.gantt_selected { background: rgba(59,130,246,.08); }
+    .gantt_row:hover, .gantt_task_row:hover { background: rgba(0,0,0,.02); }
+
+    .week-start { border-left: 2px solid rgba(0,0,0,.22) !important; }
+
+    /* ===== Task bar base ===== */
+    .gantt_task_line {
+      border-radius: 10px;
+      border: 0 !important;
+      box-shadow: 0 1px 0 rgba(0,0,0,.05);
+    }
+    .gantt_task_content {
+      line-height: 18px;
+      font-size: 12px;
+      font-weight: 600;
+      padding-left: 10px;
+    }
+
+    /* ===== Color by level ===== */
+    .gantt_task_line.task-parent {
+      background: #16a34a !important;
+      height: 20px !important;
+      }
+    .gantt_task_line.task-parent .gantt_task_content {
+      line-height: 18px; color: #fff; }
+
+    .gantt_task_line.task-child {
+      background: #3b82f6 !important;
+      height: 18px !important;
+      }
+    .gantt_task_line.task-child .gantt_task_content {
+      line-height: 18px; color: #fff; }
+
+    .gantt_task_line.task-sub {
+      background: #14b8a6 !important;
+      height: 16px !important;
+      }
+    .gantt_task_line.task-sub .gantt_task_content {
+      line-height: 18px; color: #fff; }
+
+    .gantt_milestone .gantt_task_line,
+    .task-milestone .gantt_task_line {
+      background: #f59e0b !important;
+    }
+
+    /* Links */
+    .gantt_task_link .gantt_line_wrapper div {
+      background: rgba(17,24,39,.45) !important;
+    }
+    .gantt_task_link .gantt_link_arrow {
+      border-left-color: rgba(17,24,39,.55) !important;
+    }
+
+    /* Left grid cells */
+    .gantt_grid_data .gantt_cell {
+      border-right: 1px solid rgba(0,0,0,.06);
+      color: rgba(17,24,39,.75);
+      font-size: 12px;
+    }
+
+  
+    /* Prevent leftside text clipping & keep rows readable */
+    .gantt_task_row { overflow: visible; }
+    .gantt_task_cell { overflow: visible; }
+    .gantt_task_progress { border-radius: 10px; }
+    .gantt_task_content {
+      line-height: 18px; line-height: 18px; }
+
+    /* Make tree column show more text (still ellipsis) */
+    .gantt_tree_content {
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+  
+    .gantt_task_side_content{
+      padding-right: 8px;
+      color: rgba(17,24,39,.75);
+      font-weight: 600;
+      font-size: 12px;
+      line-height: 18px;
+      white-space: nowrap;
+    }
+    
+
+/* ===== Border consistency overrides ===== */
+:root{
+  --g-line: rgba(0,0,0,.08);
+  --g-line-soft: rgba(0,0,0,.06);
+  --g-line-strong: rgba(0,0,0,.18);
+}
+.gantt_grid_scale, .gantt_task_scale{
+  border-bottom: 1px solid var(--g-line) !important;
+}
+.gantt_grid_scale .gantt_grid_head_cell,
+.gantt_grid_data .gantt_cell{
+  border-right: 1px solid var(--g-line-soft) !important;
+}
+.gantt_task_bg .gantt_task_row{
+  border-bottom: 1px solid var(--g-line-soft) !important;
+}
+.gantt_task_bg .gantt_task_cell{
+  border-right: 1px solid var(--g-line-soft) !important;
+}
+.week-start{
+  border-left: 1px solid var(--g-line-strong) !important;
+}
+
+.gantt_grid_resize_area{
+  cursor: col-resize !important;
+  width: 8px !important;
+  background: rgba(0,0,0,.03) !important;
+}
+.gantt_grid_resize_area:hover{
+  background: rgba(0,0,0,.09) !important;
+}
+/* ===== Make the split-pane resizer obvious & draggable ===== */
+.gantt_layout_cell.gantt_layout_cell--resizer,
+.gantt_layout_cell.gantt_layout_cell_resizer,
+.gantt_layout_cell.resizer{
+  background: rgba(0,0,0,.04) !important;
+  cursor: col-resize !important;
+}
+.gantt_layout_cell.gantt_layout_cell--resizer:hover,
+.gantt_layout_cell.gantt_layout_cell_resizer:hover,
+.gantt_layout_cell.resizer:hover{
+  background: rgba(0,0,0,.08) !important;
+}
+
+
+
+</style>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+
+<body>
+  <div class="toolbar">
+    <button id="btnDay" class="btn">Day</button>
+    <button id="btnWeek" class="btn active">Week</button>
+    <button id="btnToggleGrid" class="btn">Cột: Task</button>
+    <button id="btnExport" class="btn">Export PNG</button>
+  </div>
+
+  <div id="gantt_here"></div>
+
+  <script>
+    // ===== Basic config =====
+    gantt.config.date_format = "%d/%m/%Y";
+    
+    
+    
+
+    gantt.config.start_on_monday = true;
+    // ===== Optional PRO plugins (graceful fallback if not available) =====
+    var gridResizeAvailable = false;
+    try {
+      gantt.plugins({ drag_timeline: true, grid_resize: true });
+      gantt.config.drag_timeline = { ignore: ".gantt_task_line, .gantt_task_link" };
+      gridResizeAvailable = true;
+    } catch(e) {
+      console.warn("Some plugins not available:", e);
+    }
+gantt.config.duration_unit = "day";
+    gantt.config.work_time = false;
+
+    gantt.config.row_height = 40;
+    gantt.config.bar_height = 18;
+gantt.config.link_line_width = 2;
+    gantt.config.show_links = false;
+var columnsFull = [
+      { name: "text", label: "Task", tree: true, width: 420 },
+      { name: "start_date", label: "Start", align: "center", width: 110 },
+      { name: "end_date", label: "End", align: "center", width: 110, template: function(task){
+          if(!task.end_date) return "";
+          return gantt.templates.date_grid(task.end_date);
+        }
+      },
+      { name: "duration", label: "Duration", align: "center", width: 90, template: function(task){
+          if(!task.start_date || !task.end_date) return task.duration || "";
+          return gantt.calculateDuration(task.start_date, task.end_date);
+        }
+      }
+    ];
+
+    var columnsTaskOnly = [
+      { name: "text", label: "Task", tree: true, width: 420 }
+    ];
+
+    gantt.config.columns = columnsFull;
+
+    gantt.config.grid_width = 400;
+    gantt.config.grid_resize = true; // allow drag-resize grid vs timeline
+    
+
+    // ===== Layout with dedicated scrollbars (restores vertical + horizontal scroll) =====
+    gantt.config.layout = {
+      css: "gantt_container",
+      cols: [
+        {
+          width: gantt.config.grid_width || 560,
+          min_width: 360,
+          rows: [
+            { view: "grid", scrollX: "gridScroll", scrollable: true, scrollY: "scrollVer" },
+            { view: "scrollbar", id: "gridScroll", group: "horizontal" }
+          ]
+        },
+   {resizer: true},
+        {
+          rows: [
+            { view: "timeline", scrollX: "scrollHor", scrollY: "scrollVer" },
+            { view: "scrollbar", id: "scrollHor", group: "horizontal" }
+          ]
+        },
+        { view: "scrollbar", id: "scrollVer" }
+      ]
+    };
+
+//      gantt.config.layout = {
+//   css: "gantt_container",
+//   cols: [
+//     {
+//       width: 420,
+//       min_width: 200,
+//       rows: [
+//         { view: "grid", scrollX: "gridScroll", scrollY: "scrollVer" },
+//       ]
+//     },
+//     {
+//       view: "resizer",
+//       css: "dx-splitter-border",
+//       width: 6
+//     },
+//     {
+//       rows: [
+//         { view: "timeline", scrollX: "scrollHor", scrollY: "scrollVer" }
+//       ]
+//     },
+//     { view: "scrollbar", id: "scrollVer" }
+//   ]
+// };
+
+
+// ===== Two layouts: with grid (split) and timeline-only (no grid) =====
+var layoutWithGrid = gantt.config.layout;
+
+var gridMode = "taskOnly"; // default hidden as you requested
+var currentScaleMode = "week";
+
+// Helper: re-init gantt to apply layout changes safely
+function applyGridMode(){
+  if(gridMode === "full"){
+    gantt.config.columns = columnsFull;
+    gantt.config.grid_width = 560;
+  } else {
+    gantt.config.columns = columnsTaskOnly;
+    gantt.config.grid_width = 460;
+  }
+}
+
+function reinitGanttLayout(){
+  var state = gantt.serialize();
+  gantt.clearAll();
+
+  // always keep grid so you can see full task list
+  gantt.config.layout = layoutWithGrid;
+  applyGridMode();
+
+  applyGridMode();
+    gantt.init("gantt_here");
+  gantt.parse(state);
+
+  // If grid_resize plugin is not available, enable a small custom drag handle
+  setupFallbackSplitDrag();
+
+  setScale(currentScaleMode);
+}
+
+// Fallback split-pane drag (works even without PRO grid_resize)
+function setupFallbackSplitDrag(){
+  if (gridResizeAvailable) return; // PRO plugin will handle
+
+  // Wait for layout to render
+  setTimeout(function(){
+    var host = document.getElementById("gantt_here");
+    if(!host) return;
+
+    var resizer = host.querySelector(
+      ".gantt_layout_cell.gantt_layout_cell--resizer, .gantt_layout_cell.gantt_layout_cell_resizer, .gantt_layout_cell.resizer"
+    );
+    if(!resizer) return;
+
+    // Prevent duplicate handlers
+    if(resizer.__splitDragBound) return;
+    resizer.__splitDragBound = true;
+
+    resizer.style.cursor = "col-resize";
+    resizer.addEventListener("mousedown", function(ev){
+      ev.preventDefault();
+      var startX = ev.clientX;
+      var startW = gantt.config.grid_width || 560;
+
+      function onMove(e){
+        var dx = e.clientX - startX;
+        var newW = Math.max(260, Math.min(900, startW + dx));
+        gantt.config.grid_width = newW;
+        // also update layout first column width
+        if (layoutWithGrid && layoutWithGrid.cols && layoutWithGrid.cols[0]){
+          layoutWithGrid.cols[0].width = newW;
+        }
+        gantt.render();
+      }
+      function onUp(){
+        window.removeEventListener("mousemove", onMove);
+        window.removeEventListener("mouseup", onUp);
+      }
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onUp);
+    });
+  }, 0);
+}
+
+// Text label on bars
+    gantt.templates.task_text = function(start, end, task) { return ""; };
+
+    // Title before bar (for all levels)
+    gantt.templates.leftside_text = function(start, end, task) { return task.text; };
+    // ===== Classify tasks for coloring (parent/child/subtask) =====
+    function getTaskLevel(task) {
+      var level = 0;
+      var p = task.parent;
+      while (p && p != 0) {
+        var parentTask = gantt.getTask(p);
+        if (!parentTask) break;
+        level++;
+        p = parentTask.parent;
+        if (level > 20) break;
+      }
+      return level;
+    }
+
+    gantt.templates.task_class = function (start, end, task) {
+      // milestone
+      if (task.type === gantt.config.types.milestone) return "task-milestone";
+
+      var hasChildren = gantt.hasChild(task.id);
+      if (hasChildren) return "task-parent";
+
+      var level = getTaskLevel(task);
+      if (level <= 1) return "task-child";
+      return "task-sub";
+    };
+// Weekend + week separator templates
+    function applyCellTemplates(enableWeekend, enableWeekLine) {
+      gantt.templates.timeline_cell_class = function(item, date) {
+        var css = "";
+        if (enableWeekend && (date.getDay() === 0 || date.getDay() === 6)) css += " weekend";
+        if (enableWeekLine && date.getDay() === 1) css += " week-start"; // Monday
+        var scc = sprintCellClass(date);
+        if(scc) css += " " + scc;
+        return css.trim();
+      };
+      gantt.templates.scale_cell_class = function(date) {
+        var css = "";
+        if (enableWeekend && (date.getDay() === 0 || date.getDay() === 6)) css += " weekend";
+        if (enableWeekLine && date.getDay() === 1) css += " week-start";
+        var scc = sprintCellClass(date);
+        if(scc) css += " " + scc;
+        return css.trim();
+      };
+    }
+
+    
+    
+    // ===== Sprint scale (4 blocks/month) with date-range title (S1..S4 as weeks) =====
+    function pad2(n){ return String(n).padStart(2,'0'); }
+    function fmtDM(d){ return pad2(d.getDate()) + "/" + pad2(d.getMonth()+1); }
+    function sprintLabelWeek(date){
+      var d = new Date(date);
+      var y = d.getFullYear();
+      var m = d.getMonth(); // 0-based
+      var day = d.getDate();
+      var lastDay = new Date(y, m+1, 0).getDate();
+
+      var startDay, endDay;
+      if(day <= 7){ startDay = 1; endDay = 7; }
+      else if(day <= 14){ startDay = 8; endDay = 14; }
+      else if(day <= 21){ startDay = 15; endDay = 21; }
+      else { startDay = 22; endDay = lastDay; }
+
+      var start = new Date(y, m, startDay);
+      var end = new Date(y, m, endDay);
+      return fmtDM(start) + "<br>" + fmtDM(end);
+    }
+    function sprintCellClass(date){
+      // bold line on sprint boundaries (1,8,15,22)
+      var d = new Date(date);
+      var day = d.getDate();
+      if(day === 1 || day === 8 || day === 15 || day === 22) return 'week-start';
+      return '';
+    }
+// ===== Scale switcher =====
+    function setScale(mode) {
+      currentScaleMode = mode;
+      if (mode === "day") {
+        gantt.config.scales = [
+          { unit: "month", step: 1, format: "%F %Y" },
+          { unit: "day", step: 1, format: "%d" }
+        ];
+        gantt.config.scale_height = 52;
+        gantt.config.min_column_width = 34;
+
+        // Day mode: weekend shading + week line (Monday)
+        applyCellTemplates(true, true);
+      } else if (mode === "week") {
+        gantt.config.scales = [
+          { unit: "month", step: 1, format: "%F %Y" },
+          { unit: "day", step: 7, format: sprintLabelWeek }
+        ];
+        gantt.config.scale_height = 76;
+        gantt.config.min_column_width = 80;
+
+        // In week mode: keep week lines; weekend shading is less meaningful -> disable
+        applyCellTemplates(false, true);
+      }
+
+      gantt.render();
+    }
+
+    function setActive(btnId) {
+      document.getElementById("btnDay").classList.remove("active");
+      document.getElementById("btnWeek").classList.remove("active");
+      document.getElementById(btnId).classList.add("active");
+    }
+
+    document.getElementById("btnDay").addEventListener("click", function() {
+      setActive("btnDay");
+      setScale("day");
+    });
+
+    document.getElementById("btnWeek").addEventListener("click", function() {
+      setActive("btnWeek");
+      setScale("week");
+    });
+
+    
+    // ===== Toggle grid (show/hide left columns) =====
+    document.getElementById("btnToggleGrid").addEventListener("click", function() {
+      gridMode = (gridMode === "full") ? "taskOnly" : "full";
+      this.innerText = (gridMode === "full") ? "Cột: Full" : "Cột: Task";
+      reinitGanttLayout();
+    });
+
+    // ===== Export chart to PNG (timeline + optional grid) =====
+    document.getElementById("btnExport").addEventListener("click", function() {
+      var target = document.getElementById("gantt_here");
+      html2canvas(target, { backgroundColor: "#ffffff", scale: 2 }).then(function(canvas){
+        var link = document.createElement("a");
+        link.download = "gantt.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
+    });
+
+
+
+// ===== Data =====
+    var data = {"data": [{"id": 1, "text": "Thiết kế cơ sở dữ liệu", "start_date": "15/01/2026", "duration": 8, "open": true, "end_date": "23/01/2026"}, {"id": 2, "text": "Tài liệu database specs", "start_date": "15/01/2026", "duration": 5, "open": true, "parent": 1, "end_date": "20/01/2026"}, {"id": 3, "text": "Tạo mới cơ sở dữ liệu", "start_date": "21/01/2026", "duration": 5, "open": true, "parent": 1, "end_date": "26/01/2026"}, {"id": 4, "text": "Làm màn hình", "start_date": "26/01/2026", "duration": 129, "open": true, "end_date": "04/06/2026"}, {"id": 5, "text": "Màn hình báo giá", "start_date": "26/01/2026", "duration": 66, "open": true, "parent": 4, "end_date": "02/04/2026"}, {"id": 6, "text": "Forms báo giá phòng FO", "start_date": "26/01/2026", "duration": 14, "parent": 5, "end_date": "09/02/2026"}, {"id": 7, "text": "Forms báo giá phòng TS", "start_date": "10/02/2026", "duration": 21, "parent": 5, "end_date": "03/03/2026"}, {"id": 8, "text": "Forms báo giá phòng UW", "start_date": "04/03/2026", "duration": 21, "parent": 5, "end_date": "25/03/2026"}, {"id": 9, "text": "Forms báo giá của Leader MKT", "start_date": "26/03/2026", "duration": 7, "parent": 5, "end_date": "02/04/2026"}, {"id": 10, "text": "Màn hình cấp đơn", "start_date": "02/04/2026", "duration": 63, "open": true, "parent": 4, "end_date": "04/06/2026"}, {"id": 11, "text": "Forms báo giá phòng FO", "start_date": "02/04/2026", "duration": 14, "parent": 10, "end_date": "16/04/2026"}, {"id": 12, "text": "Forms báo giá phòng TS", "start_date": "17/04/2026", "duration": 21, "parent": 10, "end_date": "08/05/2026"}, {"id": 13, "text": "Forms báo giá phòng PM", "start_date": "11/05/2026", "duration": 16, "parent": 10, "end_date": "27/05/2026"}, {"id": 14, "text": "Màn hình đính kèm", "start_date": "28/05/2026", "duration": 7, "open": true, "parent": 4, "end_date": "04/06/2026"}, {"id": 15, "text": "Chức năng thông báo", "start_date": "04/06/2026", "duration": 60, "open": true, "end_date": "03/08/2026"}, {"id": 16, "text": "Làm mới hệ thống mail", "start_date": "04/06/2026", "duration": 13, "open": true, "parent": 15, "end_date": "17/06/2026"}, {"id": 17, "text": "Tinh gọn nội dung mail - loại bỏ audit trail", "start_date": "04/06/2026", "duration": 5, "parent": 16, "end_date": "09/06/2026"}, {"id": 18, "text": "Làm nội dung mới, số lượng pending, thông tin khách hàng…", "start_date": "10/06/2026", "duration": 7, "parent": 16, "end_date": "17/06/2026"}, {"id": 19, "text": "Chức năng đẩy notification trong hệ thống thay mail", "start_date": "17/06/2026", "duration": 20, "open": true, "parent": 15, "end_date": "07/07/2026"}, {"id": 20, "text": "Làm mới tính năng trình duyệt cho thông báo popup trên PC", "start_date": "17/06/2026", "duration": 5, "parent": 19, "end_date": "22/06/2026"}, {"id": 21, "text": "Đổi complete form sang hình thức đẩy notification", "start_date": "23/06/2026", "duration": 14, "parent": 19, "end_date": "07/07/2026"}, {"id": 22, "text": "Công thức / SLA", "start_date": "07/07/2026", "duration": 27, "open": true, "parent": 15, "end_date": "03/08/2026"}, {"id": 23, "text": "Công thức SLA , TAT", "start_date": "07/07/2026", "duration": 3, "parent": 22, "end_date": "10/07/2026"}, {"id": 24, "text": "Công thức form báo giá", "start_date": "13/07/2026", "duration": 21, "parent": 22, "end_date": "03/08/2026"}, {"id": 25, "text": "Export", "start_date": "03/08/2026", "duration": 9, "open": true, "end_date": "12/08/2026"}, {"id": 26, "text": "Thiết kế đầu ra file export", "start_date": "03/08/2026", "duration": 3, "open": true, "parent": 25, "end_date": "06/08/2026"}, {"id": 27, "text": "Thiết kế bố cục file, ráp trường", "start_date": "07/08/2026", "duration": 5, "open": true, "parent": 25, "end_date": "12/08/2026"}, {"id": 28, "text": "Report", "start_date": "12/08/2026", "duration": 7, "open": true, "end_date": "19/08/2026"}, {"id": 29, "text": "General report", "start_date": "12/08/2026", "duration": 1, "open": true, "parent": 28, "end_date": "13/08/2026"}, {"id": 30, "text": "SLA report", "start_date": "14/08/2026", "duration": 3, "open": true, "parent": 28, "end_date": "17/08/2026"}, {"id": 31, "text": "Complete report", "start_date": "18/08/2026", "duration": 1, "open": true, "parent": 28, "end_date": "19/08/2026"}, {"id": 32, "text": "Tool migration data", "start_date": "19/08/2026", "duration": 29, "open": true, "end_date": "17/09/2026"}, {"id": 33, "text": "Kéo dữ liệu từ Joget cũ sang", "start_date": "19/08/2026", "duration": 7, "open": true, "parent": 32, "end_date": "26/08/2026"}, {"id": 34, "text": "Kéo đính kèm, bóc tách (nếu có thể)", "start_date": "27/08/2026", "duration": 21, "open": true, "parent": 32, "end_date": "17/09/2026"}, {"id": 35, "text": "Tài liệu", "start_date": "17/09/2026", "duration": 5, "open": true, "end_date": "22/09/2026"}, {"id": 36, "text": "Phát hành tài liệu hướng dẫn sử dụng", "start_date": "17/09/2026", "duration": 5, "open": true, "parent": 35, "end_date": "22/09/2026"}, {"id": 37, "text": "UAT", "start_date": "22/09/2026", "duration": 57, "open": true, "end_date": "18/11/2026"}, {"id": 38, "text": "UAT lần 1", "start_date": "22/09/2026", "duration": 9, "open": true, "parent": 37, "end_date": "01/10/2026"}, {"id": 39, "text": "Nhận feedback lần 1", "start_date": "02/10/2026", "duration": 3, "open": true, "parent": 37, "end_date": "05/10/2026"}, {"id": 40, "text": "Fix code", "start_date": "06/10/2026", "duration": 3, "open": true, "parent": 37, "end_date": "09/10/2026"}, {"id": 41, "text": "Test tool kéo dữ liệu", "start_date": "12/10/2026", "duration": 3, "open": true, "parent": 37, "end_date": "15/10/2026"}, {"id": 42, "text": "UAT lần 2", "start_date": "16/10/2026", "duration": 11, "open": true, "parent": 37, "end_date": "27/10/2026"}, {"id": 43, "text": "Nhận feedback lần 2", "start_date": "28/10/2026", "duration": 1, "open": true, "parent": 37, "end_date": "29/10/2026"}, {"id": 44, "text": "Fix code", "start_date": "30/10/2026", "duration": 5, "open": true, "parent": 37, "end_date": "04/11/2026"}, {"id": 45, "text": "Triển khai pre-golive", "start_date": "05/11/2026", "duration": 1, "open": true, "parent": 37, "end_date": "06/11/2026"}, {"id": 46, "text": "pre-golive test", "start_date": "09/11/2026", "duration": 9, "open": true, "parent": 37, "end_date": "18/11/2026"}, {"id": 47, "text": "Triển khai dự án", "start_date": "18/11/2026", "duration": 15, "open": true, "end_date": "03/12/2026"}, {"id": 48, "text": "Hot fix on pre-golive", "start_date": "18/11/2026", "duration": 5, "open": true, "parent": 47, "end_date": "23/11/2026"}, {"id": 49, "text": "Tẩy data môi trường pre-golive", "start_date": "24/11/2026", "duration": 1, "open": true, "parent": 47, "end_date": "25/11/2026"}, {"id": 50, "text": "Email golive permanent data", "start_date": "26/11/2026", "duration": 1, "open": true, "parent": 47, "end_date": "27/11/2026"}, {"id": 51, "text": "Migration old data(if in need)", "start_date": "30/11/2026", "duration": 3, "open": true, "parent": 47, "end_date": "03/12/2026"}], "links": []};
+    // Split-window mode: always show the left task pane (resizable by dragging the divider)
+    gantt.config.layout = layoutWithGrid;
+    applyGridMode();
+    gantt.init("gantt_here");
+    
+
+//   let splitter = document.querySelector(".dx-splitter-border");
+
+// debugger
+//   let isDragging = false;
+//   let startX = 0;
+//   let startWidth = 0;
+
+//   splitter.addEventListener("mousedown", function(e){
+//     debugger
+//     isDragging = true;
+//     startX = e.clientX;
+//     startWidth = gantt.config.grid_width || 420;
+//     document.body.style.cursor = "col-resize";
+//     e.preventDefault();
+//   });
+
+//   document.addEventListener("mousemove", function(e){
+//     debugger
+//     if(!isDragging) return;
+//     let diff = e.clientX - startX;
+//     let newWidth = Math.max(200, startWidth + diff);
+
+//     gantt.config.grid_width = newWidth;
+//     gantt.render();
+//   });
+
+//   document.addEventListener("mouseup", function(){
+//     if(!isDragging) return;
+//     isDragging = false;
+//     document.body.style.cursor = "";
+//   });
+
+
+    gantt.parse(data);
+
+    // Enable drag-to-resize split (works even without PRO grid_resize)
+    setupFallbackSplitDrag();
+
+    // Default: Week view
+    setScale("week");
+
+
+  </script>
+</body>
+</html>
