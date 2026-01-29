@@ -20,6 +20,7 @@ using Microsoft.Identity.Client;
 using System.Drawing.Text;
 using Core.Arango.Linq;
 using ERPCore.ControllerUtil;
+using TMIVHashing;
 public interface IBaseRepository<T> where T : class
 {
     Task<T> GetObjectByIdAsync(long id); //Use for Base processing 
@@ -122,6 +123,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
     {
         _baseConfiguration = config;
         _connectionString = _baseConfiguration.GetConnectionString("DefaultConnection");
+        _connectionString = ControllerUtil.ParseConnectionString(_connectionString,config);
         _jogetConnectionString = _baseConfiguration.GetConnectionString(ControllerUtil.jogetEnvironment + "Connection");
         _logConnectionString = _baseConfiguration.GetConnectionString("LogConnection");
         _httpContextAccessor = httpContextAccessor;

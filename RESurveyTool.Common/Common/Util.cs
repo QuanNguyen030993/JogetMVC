@@ -1908,6 +1908,7 @@ VALUES
                 // tuỳ bạn: log lỗi theo col/row/prop để debug
             }
         }
+
         public static void SetPropertyProductValue(Product dto, PropertyInfo prop, string? raw)
         {
             var s = (raw ?? "").Trim();

@@ -11,6 +11,18 @@ using ERPCore.Controllers.Base;
 using ERPCore.Models.Base;
 using ERPCore.Models.Business.Migration.Config;
 using Syncfusion.Licensing;
+using TMIVHashing;
+using Microsoft.Data.SqlClient;
+
+//Generate once
+string projectId = "9A19103F16F74668BE549A1E7A4F75";
+string randomKey = TMIVHashing.SaltKey.GenerateSalt32_Hex();
+var enc = SaltKey.EncryptECB(randomKey, projectId);
+string encryptKey = KeyVaultLocal.EncryptKey("password@123", System.Environment.GetEnvironmentVariable("ApplicationSecretKey", EnvironmentVariableTarget.Machine), randomKey); ;
+//
+
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 var logger = new LoggerConfiguration()
@@ -21,6 +33,7 @@ var logger = new LoggerConfiguration()
                     //)
                     .CreateLogger();
 Log.Logger = logger;
+
 string sautinSoftLicenseKey = builder.Configuration.GetSection("SautinSoft:License").Value;
 DocumentCore.SetLicense(sautinSoftLicenseKey);
 

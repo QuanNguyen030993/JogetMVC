@@ -9,6 +9,8 @@ using ERPCore.Models.Migration.Config;
 using System.Data;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.Data.SqlClient;
+using TMIVHashing;
 
 namespace ERPCore.ControllerUtil
 {
@@ -182,7 +184,16 @@ namespace ERPCore.ControllerUtil
             else
                 return "...";
         }
+        public static string ParseConnectionString(string connectionString, IConfiguration configuration)
+        {
+            string projectId = "9A19103F16F74668BE549A1E7A4F75";
+            var sourceId = configuration.GetSection("SourceId").Value;
+            var saltKey = SaltKey.DecryptECB(sourceId, projectId);
+            var builderStr = new SqlConnectionStringBuilder(connectionString);
+            string password = KeyVaultLocal.DecryptKey(builderStr.Password, System.Environment.GetEnvironmentVariable("ApplicationSecretKey", EnvironmentVariableTarget.Machine), saltKey); ;
+            builderStr.Password = password;
+            return builderStr.ConnectionString;
+        }
 
-        
     }
 }
