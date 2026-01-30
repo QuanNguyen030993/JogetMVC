@@ -28,36 +28,39 @@
     $(function () {
 
 
-        setTimeout(() => {  
         var _id = @Convert.ToInt32(ViewData["Id"]);
-        var ids =  JSON.parse(`@Html.Raw(ViewData["Data"])`);
+        var ids =  [];
+           var _formConfig = new MFormOption();
+                            _formConfig.originModelName = "@Quotation_FormModel.ModelName";
+                            _formConfig.formElementName = "@Quotation_FormModel.ModelName";
+                            _formConfig.colCount = 1;
+                            _formConfig.container = $(`<div id = "form_${_formConfig.formElementName}_${_id}"  class="dExForm" >`);
 
-        $("#quotationIdSelect").dxSelectBox({
-            dataSource: ids,
-            value: _id,
-            placeholder: "Chọn Quotation Id...",
-            searchEnabled: true,
-            showClearButton: false,
-            onValueChanged: function (e) {
-                if (!e.value) return;
-               _id = e.value;
-               loadPage();
-            }
-        });
-
-        var _formConfig = new MFormOption();
-                _formConfig.originModelName = "@Quotation_FormModel.ModelName";
-                _formConfig.formElementName = "@Quotation_FormModel.ModelName";
-                _formConfig.colCount = 1;
-                _formConfig.container = $(`<div id = "form_${_formConfig.formElementName}_${_id}"  class="dExForm" >`);
         function loadPage()
-            {
-                 new QuotationForm(_id, null, _formConfig, _formConfig);
-                 _formConfig.container.appendTo($("#container-Quotation"));
-            
-        }
-        loadPage();
-        }, 1000);
+                        {
+                             new QuotationForm(_id, null, _formConfig, _formConfig);
+                             _formConfig.container.appendTo($("#container-Quotation"));
+
+                    }
+          ajaxGet("/api/Quotation/GetIdsList")
+                .then(ids => {
+                     $("#quotationIdSelect").dxSelectBox({
+                        dataSource: ids,
+                        value: _id,
+                        placeholder: "Chọn Quotation Id...",
+                        searchEnabled: true,
+                        showClearButton: false,
+                        onValueChanged: function (e) {
+                            if (!e.value) return;
+                           _id = e.value;
+                           loadPage();
+                        }
+                    });
+                     e.component.option("dataSource", ids);
+                });
+                    loadPage();
+
+       
 
     });
 </script>

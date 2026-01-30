@@ -78,6 +78,23 @@ public class QuotationController : BaseControllerApi<Quotation>
         _blobStorageSettings = blobStorageSettings;
     }
 
+    public async Task<IActionResult> GetIdsList()
+    {
+        List<Quotation> quotation = await _BaseRepository.GetAll();
+        if (quotation != null)
+        {
+
+            object quotationData = quotation.Select(s => s.Id).ToArray();
+            return Ok(Newtonsoft.Json.JsonConvert.SerializeObject(quotationData));
+
+            if (quotation != null)
+            {
+            }
+        }
+        return Ok();
+    }
+
+
     [HttpPost]
     public async Task<IActionResult> CreateQuotation([FromBody] Quotation quotationData)
     {
