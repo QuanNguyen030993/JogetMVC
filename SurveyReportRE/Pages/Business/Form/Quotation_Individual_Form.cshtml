@@ -481,16 +481,12 @@ Note:
 
         // ===== Form data =====
         var deptData = {
-          MKT: { clientName:"", broker:"", requestType:"Renewal", notes:"" },
-          TS:  { riskInfo:"", locationCount: 1, surveyNeeded: true },
-          UW:  { decision:"", premium: null, terms:"", exclusions:"" },
-          LMKT:{ approve: null, comment:"" },
-          PM:  { policyNo:"", inception:null, expiry:null, invoiceTo:"" }
+          MKT: {} ,
+          TS:  {  },
+          UW:  { },
+          LMKT:{  },
+          PM:  {  }
         };
-        var tsLocations = [
-          { site:"HCM", address:"District 1", occ:"Warehouse", sumInsured: 1200000 },
-          { site:"HN",  address:"Cau Giay",   occ:"Office",    sumInsured: 350000  },
-        ];
 
         function renderDetail(){
           var q = quotes.find(x => x.id === selectedId) || quotes[0];
@@ -498,7 +494,7 @@ Note:
 
           $("#recordNo").text(q.quotationCode);
            const st = q.quotationStatus ?? q.status;
-        $("#detailStatus")
+          $("#detailStatus")
           .text(statusText(st))
           .attr("class", `statusTag ${statusClass(st)}`);
 
@@ -507,8 +503,13 @@ Note:
           // stageDept = q.status === 'accepted' ? 'PM' : 'UW' ... etc
           $("#stageDeptPill").text(`Quotation progress flow: ${stageDept}`);
 
-          deptData.MKT.clientName = q.clientName;
-          deptData.MKT.notes = q.terms;
+          // deptData.MKT.clientName = q.clientName;
+          // deptData.MKT.notes = q.terms;
+           deptData.MKT  = q;
+           deptData.TS  = q;
+           deptData.UW  = q;
+           deptData.LMKT  = q;
+           deptData.PM  = q;
 
           renderDeptForms();
           renderItemsGrid(q);
@@ -602,61 +603,23 @@ Note:
         function renderDeptForms(){
 
           $("#formMKT").dxForm({
-            formData: deptData.MKT, readOnly: true, colCount: 2,
-            items: [
-              { dataField:"clientName", label:{text:"Client Name"}, isRequired:true },
-              { dataField:"broker", label:{text:"Broker"} },
-              { dataField:"requestType", editorType:"dxSelectBox", label:{text:"Request Type"}, editorOptions:{ items:["New","Renewal","Endorsement"] } },
-              { dataField:"notes", label:{text:"Notes"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 80 } }
-            ]
+            formData: deptData.MKT, readOnly: true, colCount: 1
           });
 
           $("#formTS").dxForm({
-            formData: deptData.TS, readOnly: true, colCount: 2,
-            items: [
-              { dataField:"locationCount", label:{text:"Locations"}, editorType:"dxNumberBox", editorOptions:{ min:0 } },
-              { dataField:"surveyNeeded", label:{text:"Survey Needed"}, editorType:"dxSwitch" },
-              { dataField:"riskInfo", label:{text:"Risk Info"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 90 } }
-            ]
-          });
-
-          $("#gridTSLocations").dxDataGrid({
-            dataSource: tsLocations, height: 220, showBorders: true,
-            editing: { mode:"cell", allowUpdating:false, allowAdding:false, allowDeleting:false },
-            columns: [
-              { dataField:"site", caption:"Site", width: 90 },
-              { dataField:"address", caption:"Address" },
-              { dataField:"occ", caption:"Occupancy", width: 140 },
-              { dataField:"sumInsured", caption:"Sum Insured", dataType:"number", format:"#0" }
-            ]
+            formData: deptData.TS, readOnly: true, colCount: 1
           });
 
           $("#formUW").dxForm({
-            formData: deptData.UW, readOnly: true, colCount: 2,
-            items: [
-              { dataField:"decision", label:{text:"Decision"}, editorType:"", editorOptions:{ items:["Approve","Decline","Need More Info"] }, isRequired:true },
-              { dataField:"premium", label:{text:"Premium"}, editorType:"dxNumberBox", editorOptions:{ min:0 } },
-              { dataField:"terms", label:{text:"Terms"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 90 } },
-              { dataField:"exclusions", label:{text:"Exclusions"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 70 } }
-            ]
+            formData: deptData.UW, readOnly: true, colCount: 1,
           });
 
           $("#formLMKT").dxForm({
-            formData: deptData.LMKT, readOnly: true, colCount: 2,
-            items: [
-              { dataField:"approve", label:{text:"Approval"}, editorType:"dxRadioGroup", editorOptions:{ items:[{text:"Approve",value:true},{text:"Reject",value:false}], layout:"horizontal" }, isRequired:true },
-              { dataField:"comment", label:{text:"Comment"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 80 } }
-            ]
+            formData: deptData.LMKT, readOnly: true, colCount: 1
           });
 
           $("#formPM").dxForm({
-            formData: deptData.PM, readOnly: true, colCount: 2,
-            items: [
-              { dataField:"policyNo", label:{text:"Policy No"} },
-              { dataField:"invoiceTo", label:{text:"Invoice To"} },
-              { dataField:"inception", label:{text:"Inception"}, editorType:"dxDateBox", editorOptions:{ type:"date" } },
-              { dataField:"expiry", label:{text:"Expiry"}, editorType:"dxDateBox", editorOptions:{ type:"date" } }
-            ]
+            formData: deptData.PM, readOnly: true, colCount: 1
           });
 
           applyEditLock();
@@ -677,9 +640,7 @@ Note:
           $("#formLMKT").dxForm("instance").option("readOnly", roLMKT);
           $("#formPM").dxForm("instance").option("readOnly", roPM);
 
-          $("#gridTSLocations").dxDataGrid("instance").option("editing", {
-            mode:"cell", allowUpdating: !roTS, allowAdding: !roTS, allowDeleting: !roTS
-          });
+        
         }
         //  function updateHints(){
 
@@ -777,15 +738,15 @@ Note:
           $(".navItem").removeClass("active");
           $(el).addClass("active");
         }
-        const leaderMktState = { Approval: null, Comment: "" };
-        const pmState = { PolicyNo: "", InvoiceTo: "", Inception: null, Expiry: null, Ref_RequestNo: "", Ref_QuotationCode: "", Ref_ClientName: "", Ref_PremiumTotal: null };
+        // const leaderMktState = { Approval: null, Comment: "" };
+        // const pmState = { PolicyNo: "", InvoiceTo: "", Inception: null, Expiry: null, Ref_RequestNo: "", Ref_QuotationCode: "", Ref_ClientName: "", Ref_PremiumTotal: null };
 
-        function syncPmRefFromModel(m) {
-            pmState.Ref_RequestNo = m.RequestNo || "";
-            pmState.Ref_QuotationCode = m.QuotationCode || "";
-            pmState.Ref_ClientName = m.ClientName || m.PolicyHolderName || "";
-            pmState.Ref_PremiumTotal = m.PremiumTotal || null;
-        }
+        // function syncPmRefFromModel(m) {
+        //     pmState.Ref_RequestNo = m.RequestNo || "";
+        //     pmState.Ref_QuotationCode = m.QuotationCode || "";
+        //     pmState.Ref_ClientName = m.ClientName || m.PolicyHolderName || "";
+        //     pmState.Ref_PremiumTotal = m.PremiumTotal || null;
+        // }
 
         function applyEditLock() {
             // demo rule: only edit when focusDept == currentUserRole
@@ -1254,7 +1215,7 @@ Note:
 
             // render first detail
             const m = getSelectedModel();
-            syncPmRefFromModel(m);
+            // syncPmRefFromModel(m);
 
           // layout line after DOM paint (and on resize)
           setTimeout(layoutTreeLine, 0);
@@ -1526,7 +1487,6 @@ Note:
                                                         ,CreatedAtUtc)
                                                         VALUES (${selectQuotationId},'${stageDept}',0,'${_loginUser}','${dateObject.toISOString()}','${dxText}','WEB',NULL,NULL,'${dateObject.toISOString()}' );
                                                     `;
-                                                    debugger
                                                     
                                                     var pic =  upsertPicByDept(`{"MKT":"A","TS":"hien.ttt","UW":"thanh.nt","LKMT":"thao.np"}`, dept, submitData); ;
                                                     if (dxText) {
@@ -1784,7 +1744,6 @@ Note:
                                     <div class="dept-title">MKT</div>
                                     <div class="dept-hint" id="hintMKT"></div>
                                 </div>
-                                @* <div id="formMKT"></div> *@
                                 @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_MKT_Form")
                             </section>
 
@@ -1793,7 +1752,6 @@ Note:
                                     <div class="dept-title">TS</div>
                                     <div class="dept-hint" id="hintTS"></div>
                                 </div>
-                                @* <div id="formTS"></div> *@
                             @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_TS_Form")
 
                             </section>
@@ -1803,7 +1761,6 @@ Note:
                                     <div class="dept-title">UW</div>
                                     <div class="dept-hint" id="hintUW"></div>
                                 </div>
-                                @* <div id="formUW"></div> *@
                             @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_UW_Form")
                             </section>
 
@@ -1812,7 +1769,6 @@ Note:
                                     <div class="dept-title">Leader MKT</div>
                                     <div class="dept-hint" id="hintLMKT"></div>
                                 </div>
-                                @* <div id="formLMKT"></div> *@
                             @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_LMKT_Form")
                             </section>
 
@@ -1821,9 +1777,8 @@ Note:
                                     <div class="dept-title">PM</div>
                                     <div class="dept-hint" id="hintPM"></div>
                                 </div>
-                                @* <div id="formPM"></div> *@
                             @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_PM_Form")
-                                <div style="margin-top:10px;font-weight:800;font-size:12px;">Products / Services</div>
+
                                 @* <div id="itemsGrid" style="margin-top:8px;"></div> *@
                             </section>
                         </div>

@@ -13,8 +13,18 @@
         padding-right: 18px;
     }
 </style>
-<script type="text/javascript">
 
-</script>
 <div id="formUW">
 </div>
+
+<script type="text/javascript">
+     $("#formUW").dxForm({
+    items: [
+              { dataField:"decision", label:{text:"Decision"}, editorType:"dxRadioGroup", editorOptions:{ items:[{text:"Accept",value:true},{text:"Assign",value:false},{text:"Need More Info",value:false}], layout:"horizontal" }, isRequired:true },
+              { dataField:"premium", label:{text:"Premium"}, editorType:"dxNumberBox", editorOptions:{ min:0 } },
+              { dataField:"terms", label:{text:"Terms"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 90 } },
+              { dataField:"exclusions", label:{text:"Exclusions"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 70 } }//,
+              // { dataField:"surveyRefer", label:{text:"Survey Refer"}, editorType:"dxLink", editorOptions:{ items:[{text:"Refer",value:true, onClick:function(e){alert("Refer")}}] }}
+            ]
+    });
+</script>

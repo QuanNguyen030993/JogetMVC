@@ -14,7 +14,117 @@
     }
 </style>
 <script type="text/javascript">
+    $("#formTS").dxForm({
+         items: [
+            {
+         itemType: "group",
+         caption: "Location  TSI Sum Insured",
+         colCount: 2,
+         items: [
+             { dataField: "locationCountDeclared", label: { template: labelTpl("LocationCountDeclared - Số location khai báo") } },
+             { dataField: "locationCountLegacy", label: { template: labelTpl("LocationCountLegacy - Số location (legacy)") } },
+             { dataField: "locationCountAnnual", label: { template: labelTpl("LocationCountAnnual - Số location annual") } },
+             { dataField: "locationCountActual", label: { template: labelTpl("LocationCountActual - Số location actual") } },
+             { dataField: "locationSummary", label: { template: labelTpl("LocationSummary - Tóm tắt location (text)") } },
+             { dataField: "locationMapRef", label: { template: labelTpl("LocationMapRef - Tham chiếu map location") } },
+             { dataField: "locationAttachmentRef", label: { template: labelTpl("LocationAttachmentRef - Attachment location") } },
 
+             { dataField: "sumInsuredTotal", label: { template: labelTpl("SumInsuredTotal - Total Sum Insured (raw)") } },
+             { dataField: "sumInsuredTotalUsd", label: { template: labelTpl("SumInsuredTotalUsd - Total Sum Insured (USD)") } },
+
+             { dataField: "topRiskPd", label: { template: labelTpl("TopRiskPd - Top risk PD") } },
+             { dataField: "topRiskPdQuotation", label: { template: labelTpl("TopRiskPdQuotation - Top risk PD quotation") } },
+
+             { dataField: "tsiPd", label: { template: labelTpl("TsiPd - TSI PD") } },
+             { dataField: "tsiPdQuotation", label: { template: labelTpl("TsiPdQuotation - TSI PD quotation") } }
+
+
+         ]
+     },
+
+
+
+
+     {
+         itemType: "group",
+         caption: "Premium  Rate  VAT  Discount  Currency",
+         colCount: 2,
+         items: [
+             { dataField: "premiumTotal", label: { template: labelTpl("PremiumTotal - Tổng premium") } },
+             { dataField: "premiumTotalBeforeVat", label: { template: labelTpl("PremiumTotalBeforeVat - Tổng premium trước VAT") } },
+             { dataField: "totalDue", label: { template: labelTpl("TotalDue - Total due") } },
+             { dataField: "premiumAnnualTotal", label: { template: labelTpl("PremiumAnnualTotal - Total annual premium") } },
+
+             { dataField: "premiumVoluntary", label: { template: labelTpl("PremiumVoluntary - Voluntary premium") } },
+             { dataField: "premiumVoluntaryValue", label: { template: labelTpl("PremiumVoluntaryValue - Voluntary premium (value)") } },
+             { dataField: "premiumVoluntaryAnnual", label: { template: labelTpl("PremiumVoluntaryAnnual - Annual voluntary premium") } },
+
+             { dataField: "premiumCfe", label: { template: labelTpl("PremiumCfe - CFE premium") } },
+             { dataField: "premiumCfeAnnual", label: { template: labelTpl("PremiumCfeAnnual - Annual CFE premium") } },
+             { dataField: "premiumCommission", label: { template: labelTpl("PremiumCommission - Commission premium") } },
+
+             { dataField: "premiumRate", label: { template: labelTpl("PremiumRate - Premium rate") } },
+             { dataField: "annualRate", label: { template: labelTpl("AnnualRate - Annual rate") } },
+
+             { dataField: "vatFlagOrValue", label: { template: labelTpl("VatFlagOrValue - VAT flag/value") } },
+             { dataField: "vatPercent", label: { template: labelTpl("VatPercent - VAT %") } },
+             { dataField: "vatAmount", label: { template: labelTpl("VatAmount - VAT amount") } },
+
+             { dataField: "currencyCode", label: { template: labelTpl("CurrencyCode - Currency code") } },
+             { dataField: "exchangeRate", label: { template: labelTpl("ExchangeRate - Exchange rate") } }
+
+
+         ]
+     },
+
+
+
+
+     {
+         itemType: "group",
+         caption: "Terms  Conditions  Deductible  Claim Basis  Jurisdiction",
+         colCount: 2,
+         items: [
+             { dataField: "clauseName", label: { template: labelTpl("ClauseName - Tên clause") } },
+             { dataField: "deductible", label: { template: labelTpl("Deductible - Deductible") } },
+             { dataField: "limitOfLiability", label: { template: labelTpl("LimitOfLiability - Limit of liability") } }
+         ]
+     },
+
+
+
+
+     {
+         itemType: "group",
+         caption: "UW Evaluation  Referral  RI  Loss History",
+         colCount: 3,
+         items: [
+             { dataField: "riskGrade", label: { template: labelTpl("RiskGrade - Risk grade") } }
+
+
+         ]
+     }
+         ]
+       });
+      var tsLocations = [
+          { site:"HCM", address:"District 1", occ:"Warehouse", sumInsured: 1200000 },
+          { site:"HN",  address:"Cau Giay",   occ:"Office",    sumInsured: 350000  },
+        ];
+
+         $("#gridTSLocations").dxDataGrid("instance").option("editing", {
+            mode:"cell", allowUpdating: !roTS, allowAdding: !roTS, allowDeleting: !roTS
+          });
+
+                 $("#gridTSLocations").dxDataGrid({
+            dataSource: tsLocations, height: 220, showBorders: true,
+            editing: { mode:"cell", allowUpdating:false, allowAdding:false, allowDeleting:false },
+            columns: [
+              { dataField:"site", caption:"Site", width: 90 },
+              { dataField:"address", caption:"Address" },
+              { dataField:"occ", caption:"Occupancy", width: 140 },
+              { dataField:"sumInsured", caption:"Sum Insured", dataType:"number", format:"#0" }
+            ]
+          });
 </script>
 
 

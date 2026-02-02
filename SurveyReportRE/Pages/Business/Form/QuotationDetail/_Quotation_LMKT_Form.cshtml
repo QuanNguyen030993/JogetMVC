@@ -14,7 +14,12 @@
     }
 </style>
 <script type="text/javascript">
-
+    $("#formLMKT").dxForm({
+           items: [
+             { dataField:"approve", label:{text:"Approval"}, editorType:"dxRadioGroup", editorOptions:{ items:[{text:"Approve",value:true},{text:"Reject",value:false}], layout:"horizontal" }, isRequired:true },
+             { dataField:"comment", label:{text:"Comment"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 80 } }
+           ]
+    });
 </script>
 <div id="formLMKT">
 </div>

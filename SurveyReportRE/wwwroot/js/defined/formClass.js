@@ -2899,7 +2899,7 @@ var QuotationForm = class QuotationForm extends MForm {
 
             {
                 itemType: "group",
-                caption: "Location  TSI  Sum Insured",
+                caption: "Location  TSI Sum Insured",
                 colCount: 4,
                 items: [
                     { dataField: "locationCountDeclared", label: { template: labelTpl("LocationCountDeclared - Số location khai báo") } },
