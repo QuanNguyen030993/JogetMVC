@@ -23,7 +23,39 @@
               { dataField:"decision", label:{text:"Decision"}, editorType:"dxRadioGroup", editorOptions:{ items:[{text:"Accept",value:true},{text:"Assign",value:false},{text:"Need More Info",value:false}], layout:"horizontal" }, isRequired:true },
               { dataField:"premium", label:{text:"Premium"}, editorType:"dxNumberBox", editorOptions:{ min:0 } },
               { dataField:"terms", label:{text:"Terms"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 90 } },
-              { dataField:"exclusions", label:{text:"Exclusions"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 70 } }//,
+              { dataField:"exclusions", label:{text:"Exclusions"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 70 } },
+              {
+                itemType: "button",
+                    alignment: "left",
+                    buttonOptions: {
+                        text: "Survey refer",
+                        onClick: function () {
+                             $.ajax({
+                                url: `https://localhost:5000/api/SurveyWorkflow/UnderwritingRefer?id=13&surveyPremises=My Xuan factory`,
+                                method: "GET",
+                                xhrFields: {
+                                    responseType: "blob"
+                                },
+                                success: function (blob) {
+                                    const url = window.URL.createObjectURL(blob);
+                                    const tabName = `pdfPreviewTab_13`;
+                                    const existingTab = window.open('', tabName);
+
+                                    if (existingTab) {
+                                        existingTab.location.href = url;
+                                    } else {
+                                        window.open(url, tabName);
+                                    }
+
+                                    window.URL.revokeObjectURL(url);
+                                },
+                                error: function (xhr, status, error) {
+                                    appNotifyWarning("File is not exists.");
+                                }
+                            });
+                        }
+                    }
+                }
               // { dataField:"surveyRefer", label:{text:"Survey Refer"}, editorType:"dxLink", editorOptions:{ items:[{text:"Refer",value:true, onClick:function(e){alert("Refer")}}] }}
             ]
     });
