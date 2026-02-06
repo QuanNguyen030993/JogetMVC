@@ -5600,6 +5600,19 @@ function popupStandardContentByScroll(customContainer) {
         });
     }
 
+    function ajaxPut(url, data = {}, opt = {}) {
+    return ajaxCore("PUT", url, {
+        data: data,
+        processData: true,
+        // forward callbacks/hook
+        onSuccess: opt.onSuccess,
+        onError: opt.onError,
+        onFinally: opt.onFinally,
+        beforeSend: opt.beforeSend,
+        timeout: opt.timeout || 30000,
+        cache: opt.cache ?? false
+    });
+}
 
 // =========================
 // Usage đúng theo ví dụ của bạn

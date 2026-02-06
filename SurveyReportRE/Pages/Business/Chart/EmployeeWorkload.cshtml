@@ -91,6 +91,59 @@
        $("#stackedEW").dxChart("instance").option("dataSource", res);
        $("#stackedEW").dxChart("instance").render();
      });
+ 
+
+
+         $("#quoteKpiByYear").dxChart({
+
+      argumentAxis: {
+        argumentType: "numeric",
+        title: "Year",
+        tickInterval: 1
+      },
+
+      valueAxis: [
+        { name: "premiumAxis", title: { text: "Total Premium" } },
+        { name: "tsiAxis", position: "right", title: { text: "Total Sum Insured" } }
+      ],
+
+      commonSeriesSettings: {
+        argumentField: "year",
+        type: "bar" // bạn có thể đổi sang "line" nếu muốn trend
+      },
+
+      series: [
+        { valueField: "premiumTotal", name: "Total Premium", axis: "premiumAxis"},
+        { valueField: "sumInsuredTotal", name: "Total Sum Insured", axis: "tsiAxis"  , type: "line"}
+      ],
+
+      legend: { verticalAlignment: "top", horizontalAlignment: "center" },
+
+      tooltip: {
+        enabled: true,
+        customizeTooltip(arg) {
+          // format số có dấu phẩy
+          const val = Number(arg.value);
+          return { text: `${arg.seriesName}: ${val.toLocaleString("en-US")}` };
+        }
+      },
+
+      export: { enabled: true },
+    });
+    var query = "EXEC [usp_Revenue_GetData]";
+    $.ajax({
+      url: "/api/Report/ExecuteCustomQuery",
+      method: "POST",
+      contentType: "application/json",
+      data: JSON.stringify(query)
+    }).then(res => {
+          const cleanData = res
+    .filter(x => Number.isInteger(x.year))
+    .sort((a, b) => a.year - b.year);
+      $("#quoteKpiByYear").dxChart("instance").option("dataSource", cleanData);
+    });
+
 </script>
 
 <div id="stackedEW"></div>
+<div id="quoteKpiByYear"> </div>

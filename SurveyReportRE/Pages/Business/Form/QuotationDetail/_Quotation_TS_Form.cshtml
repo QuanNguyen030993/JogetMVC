@@ -14,11 +14,13 @@
     }
 </style>
 <script type="text/javascript">
+
+
     $("#formTS").dxForm({
          items: [
             {
          itemType: "group",
-         caption: "Location  TSI Sum Insured",
+         caption: "Location / TSI / Sum Insured",
          colCount: 2,
          items: [
              { dataField: "locationCountDeclared", label: { template: labelTpl("LocationCountDeclared - Số location khai báo") } },
@@ -29,7 +31,30 @@
              { dataField: "locationMapRef", label: { template: labelTpl("LocationMapRef - Tham chiếu map location") } },
              { dataField: "locationAttachmentRef", label: { template: labelTpl("LocationAttachmentRef - Attachment location") } },
 
-             { dataField: "sumInsuredTotal", label: { template: labelTpl("SumInsuredTotal - Total Sum Insured (raw)") } },
+             { dataField: "sumInsuredTotal", editorType:"dxNumberBox", editorOptions: {format: '#,##0', onValueChanged: function (e) { 
+                  
+             console.log(e);
+             if (e.previousValue != e.value){
+                 var formItems = $("#formTS").dxForm().dxForm("instance").option("formData");
+                  ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ sumInsuredTotal: e.value })} , {
+                         onSuccess: function (response) {
+                         },
+                         onError: function (err) {
+                         }
+                   });
+                     // $.ajax({
+                     //     url: `/api/Quotation/UpdateData`,
+                     //     type: "PUT",
+                     //     data: { key: formItems.id, values: JSON.stringify({ sumInsuredTotal: e.value })},
+                     //     processData: true,
+                     //     success: function (data) {
+                     //     },
+                     //     error: function (error) {
+                     //         console.error("Error loading data:", error);
+                     //     }
+                     // });
+             }
+             }} },
              { dataField: "sumInsuredTotalUsd", label: { template: labelTpl("SumInsuredTotalUsd - Total Sum Insured (USD)") } },
 
              { dataField: "topRiskPd", label: { template: labelTpl("TopRiskPd - Top risk PD") } },
@@ -125,6 +150,7 @@
               { dataField:"sumInsured", caption:"Sum Insured", dataType:"number", format:"#0" }
             ]
           });
+
 </script>
 
 

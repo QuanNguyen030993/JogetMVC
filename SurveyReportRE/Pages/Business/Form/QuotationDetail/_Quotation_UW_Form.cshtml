@@ -31,9 +31,10 @@
                         text: "Survey refer",
                         onClick: function () {
                              $.ajax({
-                                url: `https://localhost:5000/api/SurveyWorkflow/UnderwritingRefer?id=13&surveyPremises=My Xuan factory`,
+                                url: `https://appuat-sgn01.tokiomarine.com.vn:7254/api/SurveyWorkflow/UnderwritingRefer?id=62&surveyPremises=Location1`,
                                 method: "GET",
                                 xhrFields: {
+                                     withCredentials: true,
                                     responseType: "blob"
                                 },
                                 success: function (blob) {
