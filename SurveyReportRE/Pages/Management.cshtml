@@ -575,10 +575,12 @@
                     notificationData.Notification.Message = "Test HTML Message";
                     notificationData.Notification.IsRead = false;
                     notificationData.Notification.Url = "Link URL";
-                    notificationData.Notification.Resource = "MKT";
+                    notificationData.Notification.Resource = `${_loginUser}_${_role}` ;
                     notificationData.Notification.System = "Quotation Management";
+                    notificationData.MKTSurveyRequest = new Object();
+                    notificationData.MKTSurveyRequest.ClientName = "Client A";
                     notificationData.connectionId = "";
-                    // ajaxPost('https://locahost:5000/api/Notification/Notify', JSON.stringify(notificationData), {
+                    // ajaxPost('https://appuat-sgn01.tokiomarine.com.vn:7254/api/Notification/Notify', JSON.stringify(notificationData), {
                     //     onSuccess: function (response) {
                     //         // success logic (y hệt success:)
                     //         console.log("Request OK", response);
@@ -612,6 +614,34 @@
                        //         appNotifyWarning("File is not exists.");
                        //     }
                        // });
+
+                        $.ajax({
+                          url: "https://appuat-sgn01.tokiomarine.com.vn:7254/api/Notification/Notify",
+                          crossDomain: true,
+                          method: "POST",
+                           headers:{
+                               "X-Internal-Token": "TMIV_SENDMAIL_TOKEN_2025_xxx_long_random"
+                            },
+                               dataType: "json",
+                               contentType: "application/json",
+                               xhrFields: { withCredentials: true },
+                              data: JSON.stringify(notificationData)
+                            }).done(res => {
+                            }).fail(xhr => {
+                              console.log(xhr.status, xhr.responseText);
+                        });
+
+    //                         fetch("https://appuat-sgn01.tokiomarine.com.vn:7254/api/Notification/Notify", {
+    //   method: "POST",
+    //   credentials: "include", // ✅ NTLM
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     "X-Internal-Token": "TMIV_SENDMAIL_TOKEN_2025_xxx_long_random"
+    //   },
+    //   body: JSON.stringify(notificationData)
+    // });
+       
+
 
                         $.ajax({
                           url: "https://localhost:5000/api/Notification/Notify",

@@ -118,7 +118,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-
+app.UseCors();
 
 //-------------------------------------------
 //Comment out if Allow anomymous for debugging 
