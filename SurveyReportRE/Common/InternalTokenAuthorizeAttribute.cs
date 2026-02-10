@@ -8,7 +8,7 @@ public class InternalTokenAuthorizeAttribute : Attribute, IAuthorizationFilter
     private readonly string _headerName;
 
     public InternalTokenAuthorizeAttribute(
-        string configKey = "InternalAuth:SendMailToken",
+        string configKey = "InternalAuth:Token",
         string headerName = "X-Internal-Token")
     {
         _configKey = configKey;

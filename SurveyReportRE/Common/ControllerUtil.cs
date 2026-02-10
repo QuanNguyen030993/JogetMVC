@@ -186,12 +186,9 @@ namespace ERPCore.ControllerUtil
         }
         public static string ParseConnectionString(string connectionString, IConfiguration configuration)
         {
-            string projectId = "9A19103F16F74668BE549A1E7A4F75";
-            var sourceId = configuration.GetSection("SourceId").Value;
-            var saltKey = SaltKey.DecryptECB(sourceId, projectId);
             var builderStr = new SqlConnectionStringBuilder(connectionString);
-            string password = KeyVaultLocal.DecryptKey(builderStr.Password, System.Environment.GetEnvironmentVariable("ApplicationSecretKey", EnvironmentVariableTarget.Machine), saltKey); ;
-            builderStr.Password = password;
+            //string password = KeyVaultLocal.DecryptConnectionStringPassword(builderStr.Password, "ApplicationSecretKey", "ApplicationSaltKey", 10);
+            //builderStr.Password = password;
             return builderStr.ConnectionString;
         }
 

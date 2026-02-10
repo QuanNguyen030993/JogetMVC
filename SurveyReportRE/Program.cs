@@ -1,25 +1,23 @@
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.Configuration;
 using ERPCore.Models.Config;
 using SautinSoft.Document;
 using Serilog;
-using Serilog.Events;
-using Serilog.Sinks.MSSqlServer;
-using ERPCore.Controllers.Base;
 using ERPCore.Models.Base;
 using ERPCore.Models.Business.Migration.Config;
 using Syncfusion.Licensing;
 using TMIVHashing;
-using Microsoft.Data.SqlClient;
 
 //Generate once
-string projectId = "9A19103F16F74668BE549A1E7A4F75";
-string randomKey = TMIVHashing.SaltKey.GenerateSalt32_Hex();
-var enc = SaltKey.EncryptECB(randomKey, projectId);
-string encryptKey = KeyVaultLocal.EncryptKey("password@123", System.Environment.GetEnvironmentVariable("ApplicationSecretKey", EnvironmentVariableTarget.Machine), randomKey); ;
-//
+//string projectId = "9A19103F16F74668BE549A1E7A4F75";
+//string randomKey = TMIVHashing.SaltKey.GenerateSalt32_Hex();
+//var enc = SaltKey.EncryptECB(randomKey, projectId);
+//string encryptKey = KeyVaultLocal.EncryptKey("password@123", System.Environment.GetEnvironmentVariable("ApplicationSecretKey", EnvironmentVariableTarget.Machine), randomKey); ;
+
+//string encryptedKey = KeyVaultLocal.EncryptConnectionStringPassword("", "ApplicationSecretKey", "ApplicationSaltKey", 10);
+//string passwordSimpleFail = KeyVaultLocal.DecryptKey(encryptedKey, localKey, saltKey);
+//string password = KeyVaultLocal.DecryptConnectionStringPassword(encryptedKey, "ApplicationSecretKey", "ApplicationSaltKey", 10);
 
 
 
@@ -76,7 +74,6 @@ builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
 builder.Services.Configure<BlobStorageSettings>(builder.Configuration.GetSection("BlobStorage"));
 builder.Services.Configure<BusinessConfig>(builder.Configuration.GetSection("BusinessConfig"));
-builder.Services.Configure<TemplateUsing>(builder.Configuration.GetSection("TemplateUsing"));
 builder.Services.AddRazorPages()
     .WithRazorPagesRoot("/Pages");
 builder.Services.Configure<KestrelServerOptions>(options =>

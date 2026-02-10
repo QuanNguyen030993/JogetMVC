@@ -67,12 +67,7 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\RESurveyTool.Common\JogetMVC.Common.csproj" />
 	  <ProjectReference Include="..\RESurveyTool.Models\JogetMVC.Models.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Reference Include="TMIVHashing">
-	    <HintPath>bin\Debug\net8.0\TMIVHashing.dll</HintPath>
-	  </Reference>
+	  <ProjectReference Include="..\TMIVHashing\TMIVHashing.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

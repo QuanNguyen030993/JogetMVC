@@ -16,6 +16,10 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using System.Globalization;
 using ERPCore.ControllerUtil;
 using ERPCore.Common;
+using System.Text;
+using System.Net.Http.Headers;
+using RESurveyTool.Models.Models.Parsing;
+using ERPCore.Models.Config;
 
 
 
@@ -30,13 +34,16 @@ namespace ERPCore.Controllers.Config
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> _blobStorageSettings;
+        private readonly URLConfig _urlConfig;
+        private readonly InternalAuth _internalAuth;
 
         public UtilityController(IBaseRepository<Utility> BaseRepository, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> blobStorageSettings) : base(BaseRepository, httpContextAccessor)
         {
             //_BaseRepository = BaseRepository;
             _configuration = configuration;
             _blobStorageSettings = blobStorageSettings;
-
+            _urlConfig = configuration.GetSection("URLConfig").Get<URLConfig>();
+            _internalAuth = configuration.GetSection("InternalAuth").Get<InternalAuth>();
         }
 
         #region GET API 
@@ -128,8 +135,47 @@ namespace ERPCore.Controllers.Config
             return new HttpResponseMessage(HttpStatusCode.OK);
         }
         #endregion
+        [HttpPost]
+        public async Task<IActionResult> NotifyAnother([FromBody]NotificationRequest notificationRequest)
+        {
+            var handler = new HttpClientHandler();
+            handler.UseCookies = false;
+            handler.UseDefaultCredentials = true;
+            handler.PreAuthenticate = true;
 
+            using (var httpClient = new HttpClient(handler))
+            {
+                using (var request = new HttpRequestMessage(new HttpMethod("POST"), $"{_urlConfig.REHost}/api/Notification/Notify"))
+                {
+                    request.Headers.TryAddWithoutValidation("Accept", "*/*");
+                    request.Headers.TryAddWithoutValidation("Accept-Language", "en-US,en;q=0.9,vi;q=0.8");
+                    request.Headers.TryAddWithoutValidation("Access-Control-Request-Headers", "content-type");
+                    request.Headers.TryAddWithoutValidation("Access-Control-Request-Method", "POST");
+                    request.Headers.TryAddWithoutValidation("Cache-Control", "no-cache");
+                    request.Headers.TryAddWithoutValidation("Connection", "keep-alive");
+                    request.Headers.TryAddWithoutValidation("Origin", $"{_urlConfig.Host}");
+                    request.Headers.TryAddWithoutValidation("Pragma", "no-cache");
+                    request.Headers.TryAddWithoutValidation("Referer", $"{_urlConfig.Host}/");
+                    request.Headers.TryAddWithoutValidation("Sec-Fetch-Dest", "empty");
+                    request.Headers.TryAddWithoutValidation("Sec-Fetch-Mode", "cors");
+                    request.Headers.TryAddWithoutValidation("Sec-Fetch-Site", "cross-site");
+                    request.Headers.TryAddWithoutValidation("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36");
+                    request.Headers.TryAddWithoutValidation("Access-Control-Request-Origin", $"{_urlConfig.Host}");
+                    request.Headers.TryAddWithoutValidation("X-Internal-Token", _internalAuth.Token);
+                    //request.Headers.TryAddWithoutValidation("Cookie", "visid_incap_2798233=O7uM8s8YQ4Wt9z+ilLnLVUTi9WcAAAAAQUIPAAAAAABN6GD7Jnn01N8ILccHyjDS");
 
+                    //var base64authorization = Convert.ToBase64String(Encoding.ASCII.GetBytes("quan.nh:8iqvxbcvyF!@#$%"));
+                    //request.Headers.TryAddWithoutValidation("Authorization", $"Basic {base64authorization}");
+
+                    //request.Content = new StringContent("{\n  \"Notification\": {\n    \"Title\": \"Test Title\",\n    \"Message\": \"Test HTML Message\",\n    \"IsRead\": false,\n    \"Url\": \"Link URL\",\n    \"Resource\": \"IT_quannh\",\n    \"System\": \"Quotation Management\"\n  },\n  \"MKTSurveyRequest\": {\n    \"ClientName\": \"Client A\"\n  },\n  \"connectionId\": \"\"\n}");
+                    request.Content = new StringContent(JsonConvert.SerializeObject(notificationRequest));
+                    request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+
+                    var responsse = await httpClient.SendAsync(request);
+                }
+            }
+            return Ok();
+        }
 
         private static List<dynamic> ReadDependenciesFromStream(Stream excelStream, string sheetName)
         {
