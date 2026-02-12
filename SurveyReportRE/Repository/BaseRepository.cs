@@ -122,6 +122,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
     public BaseRepository(IConfiguration config, IHttpContextAccessor httpContextAccessor)
     {
         _baseConfiguration = config;
+        
         _connectionString = _baseConfiguration.GetConnectionString("DefaultConnection");
         _connectionString = ControllerUtil.ParseConnectionString(_connectionString,config);
         _jogetConnectionString = _baseConfiguration.GetConnectionString(ControllerUtil.jogetEnvironment + "Connection");

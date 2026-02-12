@@ -521,6 +521,9 @@ var removeTab = function (activeId) {
         var li = $("#tablist > ul").find("[tabindex = '0']");
         var panelId = li.remove().attr("aria-controls");
         $("#" + panelId).remove();
+
+
+
         var tabIndex = ($("#" + activeId).index()) - 1;
         if (tabIndex >= 0) {
             $("#tablist").tabs("option", "active", tabIndex);
@@ -544,6 +547,9 @@ var nativeRemoveTab = function($tabDivId){
 
         if (panelId) {
             $("#" + panelId).remove();
+            document.body.classList.remove("hasRightPanel");
+            $("#rightCommentDock").hide();
+            document.documentElement.style.setProperty("--collapsed-form-mr", "-26%");
         }
         $("#tablist").tabs("refresh");
     }, 150); // === duration animate

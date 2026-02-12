@@ -2,8 +2,6 @@
 @using Newtonsoft.Json
 @model Quotation_Individual_FormModel
 @{
-   
-    ViewBag.Title = "Quotation";
 }
 @*
 Note: 
@@ -47,13 +45,14 @@ Note:
 
     /* contentGrid phải có height rõ ràng để % hoạt động */
     .contentGrid {
-        height: calc(100vh - 56px); /* trừ đúng height actionBar */
+        height: calc(100vh - 56px); 
+        margin-right: var(--collapsed-form-mr);
         display: grid;
         grid-template-columns: 360px 1fr; /* ví dụ list + detail */
         gap: 12px; /* tùy */
         padding: 12px; /* tùy */
         box-sizing: border-box;
-        min-height: 0; /* CỰC QUAN TRỌNG để con overflow được */
+        min-height: 0;
     }
 
     /* .dept-node {
@@ -376,6 +375,8 @@ Note:
         var filter = "all";
         let searchText = "";
         let selectedId = quotes[0]?.id;
+        var selectedCodeNo = quotes[0]?.quotationCode;
+        var commentPanelOpened = false;
 
         // stage vs focus
         let stageDept = quotes[0]?.stageDept;   // status ring only (from workflow stage)
@@ -437,47 +438,9 @@ Note:
           }
           return arr;
         }
+       
 
-        function renderList(){
-          var data = applyFilter(quotes);
-          var $root = $("#quoteList").empty();
-          if(!data.length){
-            $root.append(`<div style="color:#6b7280;padding:10px;">No quotations found.</div>`);
-            return;
-          }
-          // <div>#${q.requestNo}</div>
-          data.forEach(q => {
-            var isSel = q.id === selectedId;
-            $root.append(`
-              <div class="quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-stagedept="${q.stageDept}">
-                <div class="quoteTop">
-                  <div>
-                       <div class="quoteClient">${q.clientName}</div>
-                  <div >${q.productName}</div>
-                  </div>
-                
-                  <div class="statusTag ${statusClass(q.quotationStatus)}">${statusText(q.quotationStatus)}</div>
-                </div>
-                <div class="quoteMeta">
-                 <div class="quotationCode">${q.quotationCode}</div>
-                  
-                  <div>${formatDate(q.createdDate,"dd-mm-yyyy")}</div>
-                  <div class="quoteAmount">${money(q.amount)}</div>
-                </div>
-              </div>
-            `);
-          });
-
-          $(".quoteCard").off("click").on("click", function(){
-            selectedId = Number($(this).attr("data-id"));
-             stageDept = $(this).attr("data-stagedept");
-             $(".dept-node").removeClass("focus");
-             $(`.dept-node[data-key='${currentUserRole}']`).addClass("focus");
-             // applyEditLock();
-            renderList();
-            renderDetail();
-          });
-        }
+ 
 
         // ===== Form data =====
         var deptData = {
@@ -823,304 +786,443 @@ Note:
         //     flowUrl: (quotationCode) => `/api/mock/flow?quotationCode=${encodeURIComponent(quotationCode)}`
         // };
 
+    //     const HoverAjax = (function () {
+    //         const cache = new Map(); // key -> { at, data }
+    //         const xhrs = new Map();  // key -> jqXHR
+    //         const CACHE_MS = 30000;
+
+    //         function debounce(fn, wait) {
+    //             let t = null;
+    //             return function (...args) {
+    //                 clearTimeout(t);
+    //                 t = setTimeout(() => fn.apply(this, args), wait);
+    //             };
+    //         }
+
+    //         function ajaxJson(url, key) {
+    //             const now = Date.now();
+    //             const c = cache.get(key);
+    //             if (c && (now - c.at) < CACHE_MS) return $.Deferred().resolve(c.data).promise();
+
+    //             const prev = xhrs.get(key);
+    //             if (prev && prev.readyState !== 4) prev.abort();
+
+    //             const dfd = $.Deferred();
+    //             const xhr = $.ajax({
+    //                 url, method: "GET", dataType: "json",
+    //                 success: (data) => { cache.set(key, { at: Date.now(), data }); dfd.resolve(data); },
+    //                 error: (xhr, status) => { if (status === "abort") return; dfd.reject(status); }
+    //             });
+    //             xhrs.set(key, xhr);
+    //             return dfd.promise();
+    //         }
+
+    //         function escapeHtml(s) {
+    //             return String(s ?? "")
+    //                 .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+    //                 .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+    //         }
+
+    //         // function positionTooltip($tip, rect) {
+    //         //     const margin = 10;
+    //         //     const vw = window.innerWidth, vh = window.innerHeight;
+    //         //     const tipW = $tip.outerWidth(), tipH = $tip.outerHeight();
+
+    //         //     // prefer right side of card
+    //         //     let left = rect.right + margin;
+    //         //     let top = rect.top;
+
+    //         //     if (left + tipW > vw - 8) left = rect.left - tipW - margin;
+    //         //     if (left < 8) left = Math.max(8, vw - tipW - 8);
+    //         //     if (top + tipH > vh - 8) top = Math.max(8, vh - tipH - 8);
+
+    //         //     $tip.css({ left: `${left}px`, top: `${top}px` });
+    //         // }
+
+    //         function renderComments(items) {
+    //             if (!Array.isArray(items) || items.length === 0) {
+    //                 return `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No comments</div>`;
+    //             }
+    //             return items.map((c) => `
+    //         <div class="ct-item">
+    //           <div class="ct-user">${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}</div>
+    //           <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
+    //           <div class="ct-text">${escapeHtml(c.commentText || "")}</div>
+    //         </div>
+    //       `).join("");
+    //         }
+
+    //         function renderFlow(items) {
+    //             if (!Array.isArray(items) || items.length === 0) {
+    //                 return { summary: "-", html: `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No history</div>` };
+    //             }
+    //             const summary = items.map(x => x.dept).join(" → ");
+    //             const arrow = `
+    //         <div class="fh-arrow" aria-hidden="true">
+    //           <svg viewBox="0 0 24 24" fill="none" width="12" height="18">
+    //             <path d="M12 4v12" stroke="black" stroke-width="2" stroke-linecap="round"/>
+    //             <path d="M7 13l5 5 5-5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    //           </svg>
+    //         </div>
+    //       `;
+    //             const html = items.map((x, idx) => {
+    //                 const isCur = (x.dept === stageDept); // stageDept already exists in your mock
+    //                 return `
+    //           <div>
+    //             <div class="fh-row">
+    //               <div class="fh-node ${isCur ? "cur" : ""}">${escapeHtml(x.dept)}</div>
+    //               <div class="fh-meta">
+    //                 <div class="fh-note">${escapeHtml(x.note || "")}</div>
+    //                 <div class="fh-time">${escapeHtml(x.time || "")}</div>
+    //               </div>
+    //             </div>
+    //           </div>
+    //           ${idx < items.length - 1 ? arrow : ""}
+    //         `;
+    //             }).join("");
+    //             return { summary, html };
+    //         }
+    //         // public bind
+    //         function bind() {
+    //             // const $tip = $("#commentTooltip");
+    //             // const $tipSub = $("#commentTooltipSub");
+    //             // const $tipList = $("#commentTooltipList");
+
+    //                 const $panel = $("#commentPanel");
+    //             const $panelSub = $("#commentPanelSub");
+    //             const $panelList = $("#commentPanelList");
+
+
+
+    //             // const loadComments = debounce(function (quoteCode, quoteId) {
+    //             //     $panelList.html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
+
+    //             //     const query = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${quoteId}`;
+    //             //     $.ajax({
+    //             //         url: `/api/QuotationCommentLog/ExecuteCustomQuery`,
+    //             //         method: "POST",
+    //             //         async: true, // NOTE: đổi true để UI không bị đơ
+    //             //         contentType: "application/json",
+    //             //         data: JSON.stringify(query),
+    //             //         success: function (data) {
+    //             //             $panelList.html(renderComments(data));
+    //             //         },
+    //             //         error: function () {
+    //             //             $panelList.html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load comments</div>`);
+    //             //         }
+    //             //     });
+    //             // }, 180);
+
+    //                    /* sửa loadComments: bắn output sang #rightCommentList */
+    //             const loadComments = debounce(function (quoteNo,quoteId) {
+    //                   $("#rightCommentList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
+    //                   const query = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${quoteId}`;
+    //                       $.ajax({
+    //                         url: `/api/QuotationCommentLog/ExecuteCustomQuery`,
+    //                         method: "POST",
+    //                         async: true,
+    //                         contentType: "application/json",
+    //                         data: JSON.stringify(query),
+    //                         success: function (data) {
+    //                           $("#rightCommentList").html(renderComments(data));
+    //                         },
+    //                         error: function () {
+    //                           $("#rightCommentList").html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load comments</div>`);
+    //                         }
+    //                       });
+
+    //                   return {loadComments };
+    //             }, 180);
+
+    //         function openRightCommentPanel() {
+    //           commentPanelOpened = true;
+    //           document.body.classList.add("hasRightPanel");
+    //           $("#rightCommentDock").show(); // optional (CSS đã handle)
+    //         }
+
+    //         function closeRightCommentPanel() {
+    //           commentPanelOpened = false;
+    //           document.body.classList.remove("hasRightPanel");
+    //           $("#rightCommentDock").hide(); // optional
+    //         }
+
+  
+
+    // $("#btnToggleComment").dxButton({
+    //   text: "Comments",
+    //   icon: "comment",
+    //   type: "normal",
+    //   stylingMode: "contained",
+    //   onClick: () => {
+    //     // const q = quotes.find(x => x.id === selectedId) || quotes[0];
+    //     // if (!q) return;
+
+    //     if (!commentPanelOpened) {
+    //       openRightCommentPanel();
+    //       $("#rightCommentSub").text(selectedCodeNo || "-");
+    //       setTimeout(function () {
+    //                 document.documentElement.style.setProperty("--collapsed-form-mr", "-2%");
+                    
+    //         }, 0);
+    //         loadComments(selectedCodeNo,selectedId);
+    //     } else {
+    //         document.documentElement.style.setProperty("--collapsed-form-mr", "-26%");
+    //         closeRightCommentPanel();
+    //     }
+    //   }
+    // });
+
+    // $("#btnCloseRightComment").off("click").on("click", function () {
+    //     document.documentElement.style.setProperty("--collapsed-form-mr", "-26%");
+    //     closeRightCommentPanel();
+    // });
+    // //Hover item instead
+    //             // $("#btnToggleComment").dxButton({
+    //             //     text: "Comments",
+    //             //     icon: "comment",
+    //             //     type: "normal",
+    //             //     stylingMode: "contained",
+    //             //     onClick: () => {
+    //             //       commentPanelOpened = !commentPanelOpened;
+                   
+    //             //       if (commentPanelOpened) {
+    //             //         const q = quotes.find(x => x.id === selectedId) || quotes[0];
+    //             //         if(!q) return;
+                   
+    //             //         $("#commentPanel").show();
+    //             //         $("#commentPanelSub").text(q.quotationCode || "-");
+                   
+    //             //         // NOTE: call existing loadComments()
+    //             //         loadComments(q.quotationCode, q.id);
+    //             //       } else {
+    //             //         $("#commentPanel").hide();
+    //             //       }
+    //             //     }
+    //             // });
+
+    //             //   $("#btnCloseCommentPanel").off("click").on("click", function(){
+    //             //   commentPanelOpened = false;
+    //             //   $("#commentPanel").hide();
+    //             // });
+    //             var hideCmtTimer = null;
+    //               function cancelHideCommentTip(){
+    //               if(hideCmtTimer) clearTimeout(hideCmtTimer);
+    //               hideCmtTimer = null;
+    //             }
+    //             function scheduleHideCommentTip(){
+    //               cancelHideCommentTip();
+    //               hideCmtTimer = setTimeout(() => {
+    //                 // IMPORTANT: giữ tooltip nếu đang hover trong vùng list hoặc đang hover tooltip
+    //                 const overList = document.querySelector("#quoteList:hover");
+    //                 const overTip  = document.querySelector("#commentTooltip:hover");
+    //                 if (!overList && !overTip) {
+    //                   hoverQuoteCode = null;
+    //                   // $tip.hide();
+    //                 }
+    //               }, 120);
+    //             }
+
+    //             $("#quoteList")
+    //                 .off("mouseenter.qm mouseleave.qm")
+    //                 .on("mouseenter.qm", ".quoteCard", function () {
+    //                     const quoteCode = $(this).attr("data-quotation-code") || $(this).find(".quoteNo").text().trim();
+    //                     const quoteId = $(this).attr("data-id");
+    //                     hoverQuoteCode = quoteCode;
+
+    //                     const rect = this.getBoundingClientRect();
+    //                     // $tipSub.text(quoteCode || "-");
+    //                     // $tip.show();
+    //                     // positionTooltip($tip, rect);
+    //                     // loadComments(quoteCode, quoteId);
+    //                 })
+    //                 .on("mouseleave.qm", ".quoteCard", function () {
+    //                     scheduleHideCommentTip();
+    //                     hoverQuoteCode = null;
+    //                     // $tip.hide();
+    //                 });
+
+
+    //             // Flow history hover (tree area)
+    //             let hoverFlowQuoteCode = null;
+
+    //             // Demo data: always available even when API is not ready
+    //             const staticFlow = [
+    //                 { dept: "MKT", time: "2024-01-02 09:15", note: "Submitted to TS" },
+    //                 { dept: "TS", time: "2024-01-02 11:02", note: "Checked location / forwarded" },
+    //                 { dept: "UW", time: "2024-01-03 15:40", note: "Adjusted premium / returned" },
+    //                 { dept: "MKT", time: "2024-01-03 16:05", note: "Client confirmation" },
+    //                 { dept: "LMKT", time: "2024-01-03 17:10", note: "Leader approved" },
+    //                 { dept: "PM", time: "2024-01-04 09:00", note: "Proceed issuance" }
+    //             ];
+
+    //             // Keep panel open when moving mouse between tree <-> panel
+    //             function scheduleHideFlowPanel() {
+    //                 setTimeout(() => {
+    //                     const overTree = document.querySelector("#deptTree:hover");
+    //                     const overPanel = document.querySelector("#flowHistoryPanel:hover");
+    //                     if (!overTree && !overPanel) {
+    //                         hoverFlowQuoteCode = null;
+    //                         $("#flowHistoryPanel").hide();
+    //                     }
+    //                 }, 90);
+    //             }
+
+    //             const loadFlow = debounce(function (quoteCode) {
+    //                 const key = `flow:${quoteCode}`;
+    //                 const url = MockupApi.flowUrl(quoteCode);
+
+    //                 // Render demo first (so you always have something to look at)
+    //                 const demo = renderFlow(staticFlow);
+    //                 $("#flowSummary").text(demo.summary);
+
+    //                 const loading = `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`;
+    //                 $("#flowHistoryBody").html(loading + demo.html);
+
+    //                 ajaxJson(url, key).then((data) => {
+    //                     const items = Array.isArray(data) ? data : (data?.items || data?.data || []);
+    //                     if (hoverFlowQuoteCode !== quoteCode) return;
+
+    //                     // If API returns empty -> fallback to demo
+    //                     const finalItems = (Array.isArray(items) && items.length) ? items : staticFlow;
+
+    //                     const r = renderFlow(finalItems);
+    //                     $("#flowSummary").text(r.summary);
+    //                     $("#flowHistoryBody").html(r.html);
+    //                 }).catch(() => {
+    //                     if (hoverFlowQuoteCode !== quoteCode) return;
+
+    //                     // Keep demo visible even when API fails
+    //                     $("#flowSummary").text(demo.summary);
+    //                     $("#flowHistoryBody").html(
+    //                         `<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load flow (showing demo)</div>`
+    //                         + demo.html
+    //                     );
+    //                 });
+    //             }, 180);
+
+    //             $("#deptTree")
+    //                 .off("mouseenter.qm mouseleave.qm")
+    //                 .on("mouseenter.qm", function () {
+    //                     const m = getSelectedModel();
+    //                     const quoteCode = m?.QuotationCode || "-";
+    //                     hoverFlowQuoteCode = quoteCode;
+    //                     // $("#flowHistoryPanel").show();
+    //                     // loadFlow(quoteCode); // visible flow icons
+    //                 })
+    //                 .on("mouseleave.qm", scheduleHideFlowPanel);
+
+    //             $("#flowHistoryPanel")
+    //                 .off("mouseenter.qm mouseleave.qm")
+    //                 .on("mouseenter.qm", function () {
+    //                     // keep opened while hovering panel
+    //                     // $("#flowHistoryPanel").show();
+    //                 })
+    //                 .on("mouseleave.qm", scheduleHideFlowPanel);
+
+
+    //         }
+
+    //         return { bind , loadComments};
+    //     })();
+    //     
+
         const HoverAjax = (function () {
-            const cache = new Map(); // key -> { at, data }
-            const xhrs = new Map();  // key -> jqXHR
-            const CACHE_MS = 30000;
+      const cache = new Map();
+      const xhrs  = new Map();
+      const CACHE_MS = 30000;
 
-            function debounce(fn, wait) {
-                let t = null;
-                return function (...args) {
-                    clearTimeout(t);
-                    t = setTimeout(() => fn.apply(this, args), wait);
-                };
+      function debounce(fn, wait) {
+        let t = null;
+        return function (...args) {
+          clearTimeout(t);
+          t = setTimeout(() => fn.apply(this, args), wait);
+        };
+      }
+
+      function escapeHtml(s) {
+        return String(s ?? "")
+          .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+      }
+
+      function renderComments(items) {
+        if (!Array.isArray(items) || items.length === 0) {
+          return `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No comments</div>`;
+        }
+        return items.map((c) => `
+          <div class="ct-item">
+            <div class="ct-user">${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}</div>
+            <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
+            <div class="ct-text">${escapeHtml(c.commentText || "")}</div>
+          </div>
+        `).join("");
+      }
+
+      // ✅ IMPORTANT: loadComments nằm ở scope module, không nằm trong bind()
+      const loadComments = debounce(function (quoteNo, quoteId) {
+        $("#rightCommentSub").text(quoteNo || "-");
+        $("#rightCommentList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
+
+        const query = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${quoteId}`;
+        $.ajax({
+          url: `/api/QuotationCommentLog/ExecuteCustomQuery`,
+          method: "POST",
+          async: true,
+          contentType: "application/json",
+          data: JSON.stringify(query),
+          success: function (data) {
+            $("#rightCommentList").html(renderComments(data));
+          },
+          error: function () {
+            $("#rightCommentList").html(
+              `<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load comments</div>`
+            );
+          }
+        });
+      }, 180);
+
+      function openRightCommentPanel() {
+        commentPanelOpened = true;
+        document.body.classList.add("hasRightPanel");
+        $("#rightCommentDock").show();
+        document.documentElement.style.setProperty("--collapsed-form-mr", "-2%");
+      }
+
+      function closeRightCommentPanel() {
+        commentPanelOpened = false;
+        document.body.classList.remove("hasRightPanel");
+        $("#rightCommentDock").hide();
+        document.documentElement.style.setProperty("--collapsed-form-mr", "-26%");
+      }
+
+      // ✅ bind giữ nguyên – chỉ còn việc gắn event như cũ
+      function bind() {
+        $("#btnToggleComment").dxButton({
+          text: "Comments",
+          icon: "comment",
+          type: "normal",
+          stylingMode: "contained",
+          onClick: () => {
+            if (!commentPanelOpened) {
+              openRightCommentPanel();
+              loadComments(selectedCodeNo, selectedId);
+            } else {
+              closeRightCommentPanel();
             }
+          }
+        });
 
-            function ajaxJson(url, key) {
-                const now = Date.now();
-                const c = cache.get(key);
-                if (c && (now - c.at) < CACHE_MS) return $.Deferred().resolve(c.data).promise();
+        $("#btnCloseRightComment").off("click").on("click", function () {
+          closeRightCommentPanel();
+        });
 
-                const prev = xhrs.get(key);
-                if (prev && prev.readyState !== 4) prev.abort();
+        // phần hover quoteCard / flow bạn cứ để nguyên như cũ (nếu cần)
+      }
 
-                const dfd = $.Deferred();
-                const xhr = $.ajax({
-                    url, method: "GET", dataType: "json",
-                    success: (data) => { cache.set(key, { at: Date.now(), data }); dfd.resolve(data); },
-                    error: (xhr, status) => { if (status === "abort") return; dfd.reject(status); }
-                });
-                xhrs.set(key, xhr);
-                return dfd.promise();
-            }
-
-            function escapeHtml(s) {
-                return String(s ?? "")
-                    .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
-                    .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
-            }
-
-            // function positionTooltip($tip, rect) {
-            //     const margin = 10;
-            //     const vw = window.innerWidth, vh = window.innerHeight;
-            //     const tipW = $tip.outerWidth(), tipH = $tip.outerHeight();
-
-            //     // prefer right side of card
-            //     let left = rect.right + margin;
-            //     let top = rect.top;
-
-            //     if (left + tipW > vw - 8) left = rect.left - tipW - margin;
-            //     if (left < 8) left = Math.max(8, vw - tipW - 8);
-            //     if (top + tipH > vh - 8) top = Math.max(8, vh - tipH - 8);
-
-            //     $tip.css({ left: `${left}px`, top: `${top}px` });
-            // }
-
-            function renderComments(items) {
-                if (!Array.isArray(items) || items.length === 0) {
-                    return `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No comments</div>`;
-                }
-                return items.map((c) => `
-            <div class="ct-item">
-              <div class="ct-user">${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}</div>
-              <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
-              <div class="ct-text">${escapeHtml(c.commentText || "")}</div>
-            </div>
-          `).join("");
-            }
-
-            function renderFlow(items) {
-                if (!Array.isArray(items) || items.length === 0) {
-                    return { summary: "-", html: `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No history</div>` };
-                }
-                const summary = items.map(x => x.dept).join(" → ");
-                const arrow = `
-            <div class="fh-arrow" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" width="12" height="18">
-                <path d="M12 4v12" stroke="black" stroke-width="2" stroke-linecap="round"/>
-                <path d="M7 13l5 5 5-5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-          `;
-                const html = items.map((x, idx) => {
-                    const isCur = (x.dept === stageDept); // stageDept already exists in your mock
-                    return `
-              <div>
-                <div class="fh-row">
-                  <div class="fh-node ${isCur ? "cur" : ""}">${escapeHtml(x.dept)}</div>
-                  <div class="fh-meta">
-                    <div class="fh-note">${escapeHtml(x.note || "")}</div>
-                    <div class="fh-time">${escapeHtml(x.time || "")}</div>
-                  </div>
-                </div>
-              </div>
-              ${idx < items.length - 1 ? arrow : ""}
-            `;
-                }).join("");
-                return { summary, html };
-            }
-            // public bind
-            function bind() {
-                // const $tip = $("#commentTooltip");
-                // const $tipSub = $("#commentTooltipSub");
-                // const $tipList = $("#commentTooltipList");
-
-                    const $panel = $("#commentPanel");
-    const $panelSub = $("#commentPanelSub");
-    const $panelList = $("#commentPanelList");
-
-
-                let hoverQuoteCode = null;
-
-            
-                // const loadComments = debounce(function (quoteCode, quoteId) {
-                //     // const key = `comments:${quoteCode}`;
-                //     // const url = MockupApi.commentsUrl(quoteCode);
-                //         $tipList.html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
-                //       query = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${quoteId}`;
-                //          $.ajax({
-                //             url: `/api/QuotationCommentLog/ExecuteCustomQuery`,
-                //             method: "POST",
-                //             async: false,
-                //             contentType: "application/json",
-                //             data: JSON.stringify(query),
-                //             success: function(data) {
-                //                 if (hoverQuoteCode !== quoteCode) return;
-                //                 $tipList.html(renderComments(data));
-
-                //             }  ,error: function (xhr, status, error) {
-                //                     if (hoverQuoteCode !== quoteCode) return;
-                //         $tipList.html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load comments</div>`);
-                //                 }
-                //         });
-                   
-
-                // }, 180);
-                const loadComments = debounce(function (quoteCode, quoteId) {
-                    $panelList.html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
-
-                    const query = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${quoteId}`;
-                    $.ajax({
-                        url: `/api/QuotationCommentLog/ExecuteCustomQuery`,
-                        method: "POST",
-                        async: true, // NOTE: đổi true để UI không bị đơ
-                        contentType: "application/json",
-                        data: JSON.stringify(query),
-                        success: function (data) {
-                            $panelList.html(renderComments(data));
-                        },
-                        error: function () {
-                            $panelList.html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load comments</div>`);
-                        }
-                    });
-                }, 180);
-                $("#btnToggleComment").dxButton({
-                    text: "Comments",
-                    icon: "comment",
-                    type: "normal",
-                    stylingMode: "contained",
-                    onClick: () => {
-                      commentPanelOpened = !commentPanelOpened;
-                   
-                      if (commentPanelOpened) {
-                        const q = quotes.find(x => x.id === selectedId) || quotes[0];
-                        if(!q) return;
-                   
-                        $("#commentPanel").show();
-                        $("#commentPanelSub").text(q.quotationCode || "-");
-                   
-                        // NOTE: call existing loadComments()
-                        loadComments(q.quotationCode, q.id);
-                      } else {
-                        $("#commentPanel").hide();
-                      }
-                    }
-                });
-
-                  $("#btnCloseCommentPanel").off("click").on("click", function(){
-                  commentPanelOpened = false;
-                  $("#commentPanel").hide();
-                });
-                var hideCmtTimer = null;
-                  function cancelHideCommentTip(){
-                  if(hideCmtTimer) clearTimeout(hideCmtTimer);
-                  hideCmtTimer = null;
-                }
-                function scheduleHideCommentTip(){
-                  cancelHideCommentTip();
-                  hideCmtTimer = setTimeout(() => {
-                    // IMPORTANT: giữ tooltip nếu đang hover trong vùng list hoặc đang hover tooltip
-                    const overList = document.querySelector("#quoteList:hover");
-                    const overTip  = document.querySelector("#commentTooltip:hover");
-                    if (!overList && !overTip) {
-                      hoverQuoteCode = null;
-                      // $tip.hide();
-                    }
-                  }, 120);
-                }
-
-                $("#quoteList")
-                    .off("mouseenter.qm mouseleave.qm")
-                    .on("mouseenter.qm", ".quoteCard", function () {
-                        const quoteCode = $(this).attr("data-quotation-code") || $(this).find(".quoteNo").text().trim();
-                        const quoteId = $(this).attr("data-id");
-                        hoverQuoteCode = quoteCode;
-
-                        const rect = this.getBoundingClientRect();
-                        // $tipSub.text(quoteCode || "-");
-                        // $tip.show();
-                        // positionTooltip($tip, rect);
-                        // loadComments(quoteCode, quoteId);
-                    })
-                    .on("mouseleave.qm", ".quoteCard", function () {
-                        scheduleHideCommentTip();
-                        hoverQuoteCode = null;
-                        // $tip.hide();
-                    });
-
-
-                // Flow history hover (tree area)
-                let hoverFlowQuoteCode = null;
-
-                // Demo data: always available even when API is not ready
-                const staticFlow = [
-                    { dept: "MKT", time: "2024-01-02 09:15", note: "Submitted to TS" },
-                    { dept: "TS", time: "2024-01-02 11:02", note: "Checked location / forwarded" },
-                    { dept: "UW", time: "2024-01-03 15:40", note: "Adjusted premium / returned" },
-                    { dept: "MKT", time: "2024-01-03 16:05", note: "Client confirmation" },
-                    { dept: "LMKT", time: "2024-01-03 17:10", note: "Leader approved" },
-                    { dept: "PM", time: "2024-01-04 09:00", note: "Proceed issuance" }
-                ];
-
-                // Keep panel open when moving mouse between tree <-> panel
-                function scheduleHideFlowPanel() {
-                    setTimeout(() => {
-                        const overTree = document.querySelector("#deptTree:hover");
-                        const overPanel = document.querySelector("#flowHistoryPanel:hover");
-                        if (!overTree && !overPanel) {
-                            hoverFlowQuoteCode = null;
-                            $("#flowHistoryPanel").hide();
-                        }
-                    }, 90);
-                }
-
-                const loadFlow = debounce(function (quoteCode) {
-                    const key = `flow:${quoteCode}`;
-                    const url = MockupApi.flowUrl(quoteCode);
-
-                    // Render demo first (so you always have something to look at)
-                    const demo = renderFlow(staticFlow);
-                    $("#flowSummary").text(demo.summary);
-
-                    const loading = `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`;
-                    $("#flowHistoryBody").html(loading + demo.html);
-
-                    ajaxJson(url, key).then((data) => {
-                        const items = Array.isArray(data) ? data : (data?.items || data?.data || []);
-                        if (hoverFlowQuoteCode !== quoteCode) return;
-
-                        // If API returns empty -> fallback to demo
-                        const finalItems = (Array.isArray(items) && items.length) ? items : staticFlow;
-
-                        const r = renderFlow(finalItems);
-                        $("#flowSummary").text(r.summary);
-                        $("#flowHistoryBody").html(r.html);
-                    }).catch(() => {
-                        if (hoverFlowQuoteCode !== quoteCode) return;
-
-                        // Keep demo visible even when API fails
-                        $("#flowSummary").text(demo.summary);
-                        $("#flowHistoryBody").html(
-                            `<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load flow (showing demo)</div>`
-                            + demo.html
-                        );
-                    });
-                }, 180);
-
-                $("#deptTree")
-                    .off("mouseenter.qm mouseleave.qm")
-                    .on("mouseenter.qm", function () {
-                        const m = getSelectedModel();
-                        const quoteCode = m?.QuotationCode || "-";
-                        hoverFlowQuoteCode = quoteCode;
-                        // $("#flowHistoryPanel").show();
-                        // loadFlow(quoteCode); // visible flow icons
-                    })
-                    .on("mouseleave.qm", scheduleHideFlowPanel);
-
-                $("#flowHistoryPanel")
-                    .off("mouseenter.qm mouseleave.qm")
-                    .on("mouseenter.qm", function () {
-                        // keep opened while hovering panel
-                        // $("#flowHistoryPanel").show();
-                    })
-                    .on("mouseleave.qm", scheduleHideFlowPanel);
-
-
-            }
-
-            return { bind };
-        })();
+      // ✅ expose để gọi trực tiếp mà không cần bind
+      return { bind, loadComments, openRightCommentPanel, closeRightCommentPanel };
+    })();
+    HoverAjax.bind();
         $(function(){
             
                // NOTE: load comments for currently selected quotation (no hover)
@@ -1168,7 +1270,51 @@ Note:
           //     DevExpress.ui.notify("Role switched: " + currentUserRole, "info", 1200);
           //   }
           // });
+            function renderList(){
+          var data = applyFilter(quotes);
+          var $root = $("#quoteList").empty();
+          if(!data.length){
+            $root.append(`<div style="color:#6b7280;padding:10px;">No quotations found.</div>`);
+            return;
+          }
+          // <div>#${q.requestNo}</div>
+          data.forEach(q => {
+            var isSel = q.id === selectedId;
+            $root.append(`
+              <div class="quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-codeno="${q.quotationCode}" data-stagedept="${q.stageDept}">
+                <div class="quoteTop">
+                  <div>
+                       <div class="quoteClient">${q.clientName}</div>
+                  <div >${q.productName}</div>
+                  </div>
 
+                  <div class="statusTag ${statusClass(q.quotationStatus)}">${statusText(q.quotationStatus)}</div>
+                </div>
+                <div class="quoteMeta">
+                 <div class="quotationCode" >${q.quotationCode}</div>
+
+                  <div>${formatDate(q.createdDate,"dd-mm-yyyy")}</div>
+                  <div class="quoteAmount">${money(q.amount)}</div>
+                </div>
+              </div>
+            `);
+          });
+
+          $(".quoteCard").off("click").on("click", function(){
+            selectedId = Number($(this).attr("data-id"));
+            selectedCodeNo = $(this).attr("data-codeno");
+             stageDept = $(this).attr("data-stagedept");
+             $(".dept-node").removeClass("focus");
+             $(`.dept-node[data-key='${currentUserRole}']`).addClass("focus");
+             // applyEditLock();
+            renderList();
+            renderDetail();
+               if (commentPanelOpened) {
+             HoverAjax.loadComments(selectedCodeNo, selectedId);
+             }
+                
+          });
+        }
           // search
           $("#searchBox").dxTextBox({
             placeholder:"Search quotations...", stylingMode:"outlined", mode:"search",
@@ -1211,8 +1357,7 @@ Note:
           applyNodeHighlights();
           applySectionFocusHighlight();
           updateHints();
-            HoverAjax.bind();
-
+             
             // render first detail
             const m = getSelectedModel();
             // syncPmRefFromModel(m);
@@ -1636,7 +1781,7 @@ Note:
             <div id="btnMore"></div>
         </div> *@
     @* </div> *@
-            <div class="contentGrid">
+        <div class="contentGrid">
 
                 <!-- List -->
             <section class="card" style="height:100%   ;overflow: scroll;">
@@ -1692,6 +1837,7 @@ Note:
                                 <div style="color:#6b7280;font-size:12px;padding:6px 4px;">Click “Comments” to load…</div>
                             </div>
                         </div>
+
                         <!-- Navigator Tree (status vs focus) -->
                         <div id="deptTree" class="dept-tree">
                             <div class="treeStack" id="treeStack">
@@ -1783,8 +1929,9 @@ Note:
                             </section>
                         </div>
                     </div>
+                
                 </section>
-
+           
             </div>
     </div>
 

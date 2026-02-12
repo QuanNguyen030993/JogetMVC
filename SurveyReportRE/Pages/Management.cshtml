@@ -68,6 +68,7 @@
         </div>
     </header>
     @await Html.PartialAsync("_MenuPartial")
+  
     <!-- Content Wrapper. Contains page content -->
     @* <div id="content-wrapper" class="content-wrapper" style="min-height: 901px; margin-top:0px;">
         </div> 
@@ -76,6 +77,7 @@
                 <img src="~/img/TMIV_Logo.jpg" 
                  aria-hidden="true" alt="Icon image"   style="opacity:0.5">
      </div>
+
 </body>
 <script type="text/javascript">
     //Chrome popup => allow site setting, allow windows chrome app notifications
@@ -555,11 +557,11 @@
                 if (body.classList.contains("sidebar-collapse")) {
                     // sidebar collapsed → reset margin-right
                     document.documentElement.style.setProperty("--collapsed-mr", "-22%");
-                    document.documentElement.style.setProperty("--collapsed-form-mr", "-52%");
+                    document.documentElement.style.setProperty("--collapsed-form-mr", "-42%");
                     // document.documentElement.style.setProperty("--collapsed-grid-max-mr", "70%");
                 } else {
                     document.documentElement.style.setProperty("--collapsed-mr", "-22%");
-                    document.documentElement.style.setProperty("--collapsed-form-mr", "-35%");
+                    document.documentElement.style.setProperty("--collapsed-form-mr", "-26%");
                     // document.documentElement.style.setProperty("--collapsed-grid-max-mr", "73%");
                 }
             }, 0); 

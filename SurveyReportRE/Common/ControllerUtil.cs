@@ -187,8 +187,19 @@ namespace ERPCore.ControllerUtil
         public static string ParseConnectionString(string connectionString, IConfiguration configuration)
         {
             var builderStr = new SqlConnectionStringBuilder(connectionString);
-            //string password = KeyVaultLocal.DecryptConnectionStringPassword(builderStr.Password, "ApplicationSecretKey", "ApplicationSaltKey", 10);
-            //builderStr.Password = password;
+            //try
+            //{
+            //    string writeString = Environment.GetEnvironmentVariable("RETool_PWD", EnvironmentVariableTarget.Machine);
+            //    File.WriteAllText("application_key.txt", writeString);
+            //}
+            //catch (Exception ex)
+            //{
+            //    File.WriteAllText("error.txt", "Error");
+            //}
+            
+            //var passwordDecrypt = KeyVaultLocal.DecryptConnectionStringPassword(Environment.GetEnvironmentVariable("RETool_PWD", EnvironmentVariableTarget.Machine), "ApplicationSecretKey", "ApplicationSaltKey", 10);
+            ////string password = KeyVaultLocal.DecryptConnectionStringPassword(builderStr.Password, "ApplicationSecretKey", "ApplicationSaltKey", 10);
+            //builderStr.Password = passwordDecrypt;
             return builderStr.ConnectionString;
         }
 

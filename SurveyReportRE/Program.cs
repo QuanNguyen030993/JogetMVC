@@ -16,7 +16,7 @@ using TMIVHashing;
 //string encryptKey = KeyVaultLocal.EncryptKey("password@123", System.Environment.GetEnvironmentVariable("ApplicationSecretKey", EnvironmentVariableTarget.Machine), randomKey); ;
 
 //string encryptedKey = KeyVaultLocal.EncryptConnectionStringPassword("", "ApplicationSecretKey", "ApplicationSaltKey", 10);
-//string passwordSimpleFail = KeyVaultLocal.DecryptKey(encryptedKey, localKey, saltKey);
+//////string passwordSimpleFail = KeyVaultLocal.DecryptKey(encryptedKey, localKey, saltKey);
 //string password = KeyVaultLocal.DecryptConnectionStringPassword(encryptedKey, "ApplicationSecretKey", "ApplicationSaltKey", 10);
 
 
