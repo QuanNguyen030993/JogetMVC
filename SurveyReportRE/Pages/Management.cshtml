@@ -63,7 +63,8 @@
             <div id="detailPopup"></div>
             <div id="notificationPopup"></div>
             <div id="notificationPopOver"></div>
-            
+            <div id="assigneeEntryForm"></div>
+
 
         </div>
     </header>
@@ -569,30 +570,9 @@
     });
      $("#btnNew").dxButton({ text:"New", icon:"plus", onClick:()=> 
      
-     // newQuotationForm() 
      {
-          var notificationData = new Object();
-                    notificationData.Notification =  new Object();
-                    notificationData.Notification.Title = "Test Title";
-                    notificationData.Notification.Message = "Test HTML Message";
-                    notificationData.Notification.IsRead = false;
-                    notificationData.Notification.Url = "Link URL";
-                    notificationData.Notification.Resource = `${_loginUser}_${_role}` ;
-                    notificationData.Notification.System = "Quotation Management";
-                    notificationData.MKTSurveyRequest = new Object();
-                    notificationData.MKTSurveyRequest.ClientName = "Client A";
-                    notificationData.connectionId = "";
-                       $.ajax({
-                          url: "api/Utility/NotifyAnother",
-                          method: "POST",
-                               dataType: "json",
-                               contentType: "application/json",
-                              data: JSON.stringify(notificationData)
-                            }).done(res => {
-                            }).fail(xhr => {
-                              console.log(xhr.status, xhr.responseText);
-                        });
-
+            newQuotationForm() 
+        
                       
      
      }

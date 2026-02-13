@@ -84,7 +84,6 @@
             ],
             reqType: ["Endorsement", "Revise Quotation", "Renew Quotation", "New Quotation"],
             lineName: ["Fire & Property, BI", "Liability", "Cargo", "Engineering", "Motor"],
-            productName: ["Product A", "Product B", "Product C"],
             businessChannel: ["Inward", "Direct (DIR)", "Agent (AGY)", "Broker (BRK)"]
           };
        
@@ -114,7 +113,7 @@
           }
 
           // ===== Main Form =====
-          $("#quotationRequestForm").dxForm({
+          var that = $("#quotationRequestForm").dxForm({
             formData: vm,
             colCount: 2,
             labelMode: "floating",
@@ -131,11 +130,79 @@
                   //   editorOptions: { items: ["New", "Clone Quotation Request"], layout: "horizontal" },
                   //   validationRules: [{ type: "required" }]
                   // },
-                  { dataField: "PIC", editorType: "dxTextBox", editorOptions: { readOnly: true } },
-                  { dataField: "clientName", editorType: "dxTextBox", label: {text: "Client Name"} },
-                  { dataField: "clientId", editorType: "dxNumberBox", label: {text: "Client Id"} }, 
-                  { dataField: "PIC", editorType: "dxTextBox", editorOptions: { readOnly: true } },
-                  { dataField: "createDate", editorType: "dxDateBox", editorOptions: { readOnly: true, displayFormat: "dd-MM-yyyy" } },
+                  { dataField: "PIC", editorType: "dxTextBox", editorOptions: { readOnly: true, value: _loginUser } },
+                  { dataField: "createDate", editorType: "dxDateBox", editorOptions: { readOnly: true, displayFormat: "dd-MM-yyyy", value: new Date() } },
+                  { dataField: "reqType", editorType: "dxSelectBox", isRequired: true, editorOptions: { items: options.reqType } },
+                  { dataField: "clientName", editorType: "dxTextBox", visible: false, editorOptions: { readOnly: true } },
+                  { dataField: "clientId", editorType: "dxDropDownBox", isRequired: true , label: { text: "Client"} ,
+                    editorOptions:  {
+                    displayExpr: "englishName",
+                    editorType: "dxDropDownBox",
+                    width: "100%",
+                    dropDownOptions: {
+                        width: _defaultDropDownWidth,
+                        height: _defaultDropDownHeight,
+                    },
+                    showClearButton: true,
+                    dataSource: new DevExpress.data.CustomStore({//Solve error first selection only
+                        key: "id",
+                        load: function (loadOptions) {
+                            return $.ajax({
+                                url: `/api/Client/ExecuteCustomQuery`,
+                                method: "POST",
+                                contentType: "application/json",
+                                data: JSON.stringify(`SELECT
+                                    c.Id,
+                                    c.ClientCode,
+                                    JSON_VALUE(c.ClientName, '$.Eng')  AS EnglishName,
+                                    JSON_VALUE(c.ClientName, '$.Viet') AS VietnameseName
+                                FROM Client c
+                                WHERE c.Deleted = 0;`)
+                            });
+                        }, byKey: function (key) {
+                            //return $.ajax({
+                            //    url: `/api/Client/ExecuteCustomQuery`,
+                            //    method: "POST",
+                            //    contentType: "application/json",
+                            //    data: JSON.stringify(checkCustomQueryByModel.customQuery)
+                            //});
+                            if (key)
+                                return $.ajax({
+                                    url: `/api/Client/DropDownLookupCustomQuery?key=${encodeURIComponent(key)}`,
+                                    method: "POST",
+                                    contentType: "application/json",
+                                    data: JSON.stringify(`SELECT
+                                        c.Id,
+                                        c.ClientCode,
+                                        JSON_VALUE(c.ClientName, '$.Eng')  AS EnglishName,
+                                        JSON_VALUE(c.ClientName, '$.Viet') AS VietnameseName
+                                    FROM Client c
+                                    WHERE c.Deleted = 0;`)
+                                }).then(function (result) {
+                                    return Array.isArray(result) ? result[0] : result;
+                                });
+                            else
+                                return new Array();
+                        },
+                    }),
+                    contentTemplate:function (e) {
+                        that.formInstance = that.dxForm("instance");
+                        var item = this;
+                        item.editorOptions = new Object();
+                        item.editorOptions.dataSource = e.component.option("dataSource");
+                        const dataGrid = makeTheClientLocationGrid(item, e, that, $("<div>"), function(selectedItems){
+                             var hasSelection = selectedItems.selectedRowKeys.length > 0;
+                            if (!hasSelection) return;
+                            const selectedRow = selectedItems.selectedRowsData[0];
+                            e.component.option("value", selectedItems.selectedRowKeys[0]);
+                            debugger
+                            that.formInstance.updateData("clientName" , selectedRow.englishName);
+                            e.component.close();
+                        });
+                        return dataGrid.container;
+                  
+                    }}},
+                  // { dataField: "clientName", editorType: "dxTextBox", isRequired: true , label: {text: "Client Name"} },
                   {
                     dataField: "subject",
                     colSpan: 2,
@@ -143,9 +210,27 @@
                     editorOptions: { minHeight: 90 },
                     validationRules: [{ type: "required" }]
                   },
-                  { dataField: "reqType", editorType: "dxSelectBox", isRequired: true, editorOptions: { items: options.reqType } },
                   { dataField: "lineName", editorType: "dxSelectBox", editorOptions: { items: options.lineName, searchEnabled: true } },
-                  { dataField: "productName", editorType: "dxSelectBox", editorOptions: { items: options.productName, searchEnabled: true } },
+                  { dataField: "productName", editorType: "dxTextBox", visible:false, editorOptions: { readOnly: true } },
+                      { dataField: "productId", editorType: "dxSelectBox", editorOptions: {
+                            label: {text: "Product Name"},
+                            labelMode: "floating",
+                            searchEnabled: true,
+                            valueExpr: "id",
+                            displayExpr: "productName",
+                            dataSource: [],
+                            onInitialized(e) {
+                                ajaxGet("/api/Product/GetAll", null)
+                                    .then(list => {
+                                        e.component.option("dataSource", list);
+                                    });
+                            },
+                            onValueChanged(e) {
+                                that.formInstance = that.dxForm("instance");
+                                that.formInstance.updateData("productName",e.component.option("text"));
+                                onChanged(e.value);
+                            }
+                        } },
                   { dataField: "dueDate", editorType: "dxDateBox", editorOptions: { displayFormat: "dd-MM-yyyy" } },
                   { dataField: "businessChannel", editorType: "dxSelectBox", editorOptions: { items: options.businessChannel } },
                 ]
@@ -182,6 +267,12 @@
                         buildSummary();
                       }
                     }
+                  },
+                  {
+                    dataField: "surveyNeeded",
+                    label: { text: "Need Survey" },
+                    editorType: "dxSwitch",
+                    colSpan: 1
                   }
                 ]
               }

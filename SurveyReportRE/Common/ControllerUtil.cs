@@ -187,6 +187,16 @@ namespace ERPCore.ControllerUtil
         public static string ParseConnectionString(string connectionString, IConfiguration configuration)
         {
             var builderStr = new SqlConnectionStringBuilder(connectionString);
+
+            bool isUseEncryption = bool.Parse(configuration?.GetSection("SystemConfig:DataEncryption").Value ?? "false");
+
+
+            if (isUseEncryption)
+            {
+                var passwordDecrypt = KeyVaultLocal.DecryptConnectionStringPassword(Environment.GetEnvironmentVariable("RETool_PWD", EnvironmentVariableTarget.Machine), "ApplicationSecretKey", "ApplicationSaltKey", 10);
+                //string password = KeyVaultLocal.DecryptConnectionStringPassword(builderStr.Password, "ApplicationSecretKey", "ApplicationSaltKey", 10);
+                builderStr.Password = passwordDecrypt;
+            }
             //try
             //{
             //    string writeString = Environment.GetEnvironmentVariable("RETool_PWD", EnvironmentVariableTarget.Machine);
@@ -196,10 +206,8 @@ namespace ERPCore.ControllerUtil
             //{
             //    File.WriteAllText("error.txt", "Error");
             //}
-            
-            //var passwordDecrypt = KeyVaultLocal.DecryptConnectionStringPassword(Environment.GetEnvironmentVariable("RETool_PWD", EnvironmentVariableTarget.Machine), "ApplicationSecretKey", "ApplicationSaltKey", 10);
-            ////string password = KeyVaultLocal.DecryptConnectionStringPassword(builderStr.Password, "ApplicationSecretKey", "ApplicationSaltKey", 10);
-            //builderStr.Password = passwordDecrypt;
+
+
             return builderStr.ConnectionString;
         }
 

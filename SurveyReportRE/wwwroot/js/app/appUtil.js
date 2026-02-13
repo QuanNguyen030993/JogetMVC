@@ -4697,11 +4697,10 @@ function makeTheClientLocationGrid(instanceItems, dropdownControl, instanceProps
 
         const selectedRow = selectedItems.selectedRowsData[0];
         dropdownControl.component.option("value", selectedItems.selectedRowKeys[0]);
-
-        instanceProps.formInstance.updateData("clientName", selectedRow.clientName || "");
-        instanceProps.formInstance.updateData("locationAddress", selectedRow.clientAddress || "");
-        instanceProps.formInstance.updateData("clientCode", selectedRow.clientCode || "");
-        instanceProps.formInstance.updateData("locationId", selectedRow.locationId || 0);
+        //instanceProps.formInstance.updateData("clientName", selectedRow.clientName || "");
+        //instanceProps.formInstance.updateData("locationAddress", selectedRow.clientAddress || "");
+        //instanceProps.formInstance.updateData("clientCode", selectedRow.clientCode || "");
+        //instanceProps.formInstance.updateData("locationId", selectedRow.locationId || 0);
 
         dropdownControl.component.close();
     }
@@ -4728,9 +4727,11 @@ function makeTheClientLocationGrid(instanceItems, dropdownControl, instanceProps
         dataSource: instanceItems.editorOptions.dataSource,
         columns: [
             { dataField: "clientCode", caption: "Client Code" },
-            { dataField: "clientName", caption: "Client Name" },
-            { dataField: "clientAddress", caption: "Client Address" },
-            { dataField: "locationAddressName", caption: "Location Address Name" }
+            //{ dataField: "clientName", caption: "Client Name" },
+            { dataField: "englishName", caption: "English Name" },
+            { dataField: "vietnameseName", caption: "Vietnamese Name" }//,
+            //{ dataField: "clientAddress", caption: "Client Address" },
+            //{ dataField: "locationAddressName", caption: "Location Address Name" }
         ],
         filterRow: { visible: true },
         selectionMode: 'all',
@@ -5346,15 +5347,48 @@ function newQuotationForm() {
 
                     ajaxPost('/api/Quotation/CreateQuotation', quotationData, {
                         onSuccess: function (response) {
-                            // success logic (y hệt success:)
-                            console.log("CreateQuotation OK", response);
                         },
                         onError: function (err) {
-                            // error logic (y hệt error:)
-                            console.error("CreateQuotation FAIL", err);
                         }
                     });
-                    DevExpress.ui.notify("Mock: New quotation", "success", 1200);
+
+                    if (submitSummaryData.surveyNeeded) {
+                        var notificationData = new Object();
+                        notificationData.Notification = new Object();
+                        notificationData.Notification.Title = submitSummaryData.subject;
+                        notificationData.Notification.Message = "";
+                        notificationData.Notification.IsRead = false;
+                        notificationData.Notification.Url = "Link URL";
+                        notificationData.Notification.Resource = `${_loginUser}_${_role}`;
+                        notificationData.Notification.System = "Quotation Management";
+                        notificationData.MKTSurveyRequest = new Object();
+                        notificationData.MKTSurveyRequest.ClientName = submitSummaryData.clientName;
+                        notificationData.MKTSurveyRequest.ProductName = submitSummaryData.productName;
+                        notificationData.MKTSurveyRequest.LineName = submitSummaryData.lineName;
+                        notificationData.MKTSurveyRequest.MKTPIC = "";
+                        notificationData.MKTSurveyRequest.MKTPICAccount = _loginUser;
+                        notificationData.connectionId = "";
+                        console.log(notificationData);
+                        ajaxPost('api/Utility/NotifyAnother', notificationData, {
+                            onSuccess: function (response) {
+                            },
+                            onError: function (err) {
+                            }
+                        });
+                    }
+                    //$.ajax({
+                    //    url: "api/Utility/NotifyAnother",
+                    //    method: "POST",
+                    //    dataType: "json",
+                    //    contentType: "application/json",
+                    //    data: JSON.stringify(notificationData)
+                    //}).done(res => {
+                    //}).fail(xhr => {
+                    //    console.log(xhr.status, xhr.responseText);
+                    //});
+
+
+                    DevExpress.ui.notify("Quotation created!", "success", 1200);
                     popupInstance.hide();
                 },
             },

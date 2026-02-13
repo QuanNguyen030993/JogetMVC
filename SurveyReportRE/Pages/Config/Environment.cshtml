@@ -22,20 +22,29 @@
         });
 
 
-        $("#jogetPanel").dxSelectBox({
-            dataSource:["UAT", "Joget"],
-             searchEnabled: true,
-             width: 300,
-             onValueChanged: function (e) { // handle after select
-                  $.ajax({
-                      url: `/api/Menu/DbContextJogetEnvironmentChange/${e.value}`,
+
+
+
+         $("#passwordResult").dxTextBox({
+        text: "Encryption Result"});
+         $("#inputPassword").dxTextBox({
+        text: "Input Password", mode: "password"});
+          $("#generateEncryptPassword").dxButton({
+        text: "Generate Encrypt Password"
+        ,onClick: () => {
+             var inputPassword = $("#inputPassword").dxTextBox().dxTextBox("instance");
+
+                
+               $.ajax({
+                      url: `/api/Environment/MakeEncryption?password=${inputPassword.option("value")}`,
                       success: function (response) {
+                          var passwordResult = $("#passwordResult").dxTextBox().dxTextBox("instance");
+                         passwordResult.option("value", response);
                       },
                       error: function (err) {
                       }
                   });
-             },
-        });
+        }})
     });
 </script>
 <div>TMIV environment
@@ -47,4 +56,8 @@
     <div id="jogetPanel">
     @* <div id="dataGrid_@UsersModel.ModelName"></div> *@
 </div>
+
 </div>
+    <div id="generateEncryptPassword"></div>
+<div id="inputPassword"></div>
+    <div id="passwordResult"></div>

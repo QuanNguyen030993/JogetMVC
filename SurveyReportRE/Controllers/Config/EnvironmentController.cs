@@ -16,6 +16,7 @@ using System.Security.Principal;
 using ERPCore.Models.Migration.Business.HumanResource;
 using ERPCore.Common;
 using ERPCore.Models.Models.Parsing;
+using TMIVHashing;
 
 namespace ERPCore.Controllers.Config
 {
@@ -35,7 +36,12 @@ namespace ERPCore.Controllers.Config
             _configuration = configuration;
             _httpContextAccessor = httpContextAccessor;
         }
-
+        [HttpGet]
+        public IActionResult MakeEncryption(string password)
+        {
+            string encryptedKey = KeyVaultLocal.EncryptConnectionStringPassword(password, "ApplicationSecretKey", "ApplicationSaltKey", 10);
+            return Ok(encryptedKey);
+        }
 
 
     }

@@ -1,6 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
-    @if (!string.IsNullOrEmpty(@ViewData["Title"]?.ToString()))
+@if (!string.IsNullOrEmpty(@ViewData["Title"]?.ToString()) && @ViewData["Title"]?.ToString() == "Management")
     {
 <head>
     <meta charset="utf-8" />
@@ -16,7 +16,7 @@
 <body>
    
     @* <div class="container"> *@
-    @if (!string.IsNullOrEmpty(@ViewData["Title"]?.ToString()))
+    @if (!string.IsNullOrEmpty(@ViewData["Title"]?.ToString()) && @ViewData["Title"]?.ToString() == "Management")
     {
         <aside class="main-sidebar">
             <section class="sidebar" style="height: auto;">
