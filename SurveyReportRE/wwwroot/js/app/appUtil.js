@@ -5367,8 +5367,8 @@ function newQuotationForm() {
                         notificationData.MKTSurveyRequest.LineName = submitSummaryData.lineName;
                         notificationData.MKTSurveyRequest.MKTPIC = "";
                         notificationData.MKTSurveyRequest.MKTPICAccount = _loginUser;
-                        notificationData.connectionId = "";
-                        console.log(notificationData);
+                        //notificationData.connectionId = "huan.lt";
+                        notificationData.connectionId = "quan.nh";
                         ajaxPost('api/Utility/NotifyAnother', notificationData, {
                             onSuccess: function (response) {
                             },
