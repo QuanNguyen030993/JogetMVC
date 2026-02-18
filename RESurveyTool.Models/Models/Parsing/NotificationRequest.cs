@@ -16,6 +16,7 @@ namespace RESurveyTool.Models.Models.Parsing
         public string? Url { get; set; } = "";
         public string? Resource { get; set; } = "";
         public string? System { get; set; } = "";
+        public string? ReceivedBy { get; set; } = "";
     }
     public class MKTSurveyRequest : BaseModel
     {
