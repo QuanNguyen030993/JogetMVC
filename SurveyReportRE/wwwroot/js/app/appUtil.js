@@ -5513,7 +5513,7 @@ function popupStandardContentByScroll(customContainer) {
         dataType = "json",
         timeout = 30000,
         cache = false,
-
+        processData = false,
         // callbacks (optional)
         onSuccess = null,
         onError = null,
@@ -5522,14 +5522,14 @@ function popupStandardContentByScroll(customContainer) {
         // hook (optional)
         beforeSend = null
     } = {}) {
-
+        debugger
         const fullUrl = (routeParam !== null && routeParam !== undefined)
             ? `${url}/${encodeURIComponent(routeParam)}`
             : url;
 
         const m = (method || "GET").toUpperCase();
         const isGet = m === "GET";
-
+        const isPut = m === "PUT";
         // NOTE: theo style bạn đang dùng: set 'Content-Type' trong headers cho POST JSON
         const finalHeaders = { ...headers };
         if (!isGet) {
@@ -5539,25 +5539,60 @@ function popupStandardContentByScroll(customContainer) {
             }
         }
 
-        const jqxhr = $.ajax({
+        var ajaxOptions = {
             url: fullUrl,
             type: m,
             dataType,
             timeout,
             cache,
-            headers: finalHeaders,
-
+            processData: processData,
             // GET => query, POST => JSON.stringify(body)
-            data: isGet ? (query || {}) : (body == null ? null : JSON.stringify(body)),
+            data: isGet ? (query || {}) : (body == null ? null : (isPut ? body : JSON.stringify(body))),
 
-            // nếu bạn muốn giữ đúng style "headers Content-Type" thì contentType có thể bỏ,
-            // nhưng để server đọc JSON ổn định thì giữ thêm contentType (không mâu thuẫn).
-            contentType: isGet ? undefined : "application/json; charset=utf-8",
+
+            //Should not use in PUT method
+            //headers: finalHeaders,
+            //contentType: isGet ? undefined : "application/json; charset=utf-8",
 
             beforeSend: (xhr) => {
                 try { beforeSend?.(xhr); } catch { }
             }
-        });
+        };
+
+        if (!isPut) {
+
+            // nếu không phải GET thì thêm contentType JSON
+            if (!isGet) {
+                ajaxOptions.contentType = "application/json; charset=utf-8";
+            }
+
+            if (finalHeaders) {
+                ajaxOptions.headers = finalHeaders;
+            }
+        }
+
+        const jqxhr = $.ajax(ajaxOptions);
+
+
+        //const jqxhr = $.ajax({
+        //    url: fullUrl,
+        //    type: m,
+        //    dataType,
+        //    timeout,
+        //    cache,
+        //    headers: finalHeaders,
+
+        //    // GET => query, POST => JSON.stringify(body)
+        //    data: isGet ? (query || {}) : (body == null ? null : JSON.stringify(body)),
+
+        //    // nếu bạn muốn giữ đúng style "headers Content-Type" thì contentType có thể bỏ,
+        //    // nhưng để server đọc JSON ổn định thì giữ thêm contentType (không mâu thuẫn).
+        //    contentType: isGet ? undefined : "application/json; charset=utf-8",
+
+        //    beforeSend: (xhr) => {
+        //        try { beforeSend?.(xhr); } catch { }
+        //    }
+        //});
 
         // callbacks + promise bridge
         jqxhr
@@ -5636,7 +5671,7 @@ function popupStandardContentByScroll(customContainer) {
 
     function ajaxPut(url, data = {}, opt = {}) {
     return ajaxCore("PUT", url, {
-        data: data,
+        body: data,
         processData: true,
         // forward callbacks/hook
         onSuccess: opt.onSuccess,
