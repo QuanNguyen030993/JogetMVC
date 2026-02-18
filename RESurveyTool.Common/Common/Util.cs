@@ -1,27 +1,24 @@
 ﻿using Newtonsoft.Json;
 using ERPCore.Models.Migration.Business.Data;
-using ERPCore.Models.Migration.Config;
 using System.Reflection;
 using HtmlAgilityPack;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
 using System.Text;
 using ERPCore.Models.Request;
-using Newtonsoft.Json.Linq;
 using System.Data;
 using System.Drawing;
 using ERPCore.Common.Constant;
 using ERPCore.Models.Migration.Business.HumanResource;
-using ERPCore.Models.Migration.Business.Config;
 using ERPCore.Models.Migration.Business.MasterData;
 using System.Linq.Expressions;
 using System.Drawing.Imaging;
 using Microsoft.Data.SqlClient;
 using ExcelDataReader;
-using static SkiaSharp.HarfBuzz.SKShaper;
 using System.Globalization;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using System.Text.Json;
 namespace ERPCore.Common
 {
     public static class Util
@@ -1994,6 +1991,357 @@ VALUES
             dt = default;
             return false;
         }
+
+        private static string? Get(Dictionary<string, string> dict, string key)
+        => dict.TryGetValue(key, out var v) ? v : null;
+
+        private static int ParseInt(string? s, int def)
+            => int.TryParse(s, out var x) ? x : def;
+
+        private static string QuoteName(string name)
+            => "[" + name.Replace("]", "]]") + "]";
+        private static readonly HashSet<string> _reservedKeys = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "mode","paging","skip","take","pageSize","orderBy","orderDir","key","_", "requireTotalCount"
+        };
+        public sealed class SqlQueryBuildResult
+        {
+            public string Sql { get; set; } = "";
+            public Dictionary<string, object> Parameters { get; set; } = new();
+        }
+
+        public static SqlQueryBuildResult LoadParamsBuildSelectAllQuery<T>(
+    string tableName,
+    List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> loadParams,
+    string defaultOrderBy = "Id",
+    string defaultOrderDir = "DESC",
+    int maxTake = 200,
+    int maxAll = 5000,
+    string? pkTieBreaker = "Id",
+    bool useNoLock = true
+)
+        {
+            // =========================
+            // 1) merge params (KHÔNG bỏ reserved ở đây)
+            // =========================
+            var allParams = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            if (loadParams != null)
+            {
+                foreach (var kv in loadParams)
+                {
+                    if (kv.Key == "_") continue;
+                    allParams[kv.Key] = kv.Value.ToString() ?? "";
+                }
+            }
+
+            // =========================
+            // 2) parse paging
+            // DevExtreme sẽ gửi skip/take trực tiếp
+            // =========================
+            int skip = ParseInt(Get(allParams, "skip"), 0);
+            int take = ParseInt(Get(allParams, "take"), ParseInt(Get(allParams, "pageSize"), 50));
+
+            skip = Math.Max(skip, 0);
+            take = Math.Clamp(take, 1, maxTake);
+
+            // Nếu bạn vẫn muốn tự bật/tắt paging theo flag:
+            var mode = Get(allParams, "mode");
+            var pagingFlag = Get(allParams, "paging");
+            bool paging =
+                string.Equals(mode, "page", StringComparison.OrdinalIgnoreCase)
+                || pagingFlag == "1"
+                || string.Equals(pagingFlag, "true", StringComparison.OrdinalIgnoreCase)
+                // ✅ nếu DevExtreme có skip/take thì coi như paging
+                || allParams.ContainsKey("skip")
+                || allParams.ContainsKey("take");
+
+            // =========================
+            // 3) build base SQL
+            // =========================
+            var sql = new StringBuilder();
+            sql.Append("SELECT * FROM ");
+            sql.Append(QuoteName(tableName));
+            if (useNoLock) sql.Append(" WITH (NOLOCK)");
+            sql.AppendLine();
+            sql.AppendLine("WHERE Deleted = 0");
+
+            var parameters = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            int pIndex = 0;
+
+            // =========================
+            // 4) apply DevExtreme FILTER (filter= JSON)
+            // =========================
+            var filterJson = Get(allParams, "filter");
+            if (!string.IsNullOrWhiteSpace(filterJson))
+            {
+                var filterSql = ParseDevExtremeFilter(filterJson!, _reservedKeys, ref pIndex, parameters);
+                if (!string.IsNullOrWhiteSpace(filterSql))
+                {
+                    sql.Append(" AND ");
+                    sql.AppendLine(filterSql);
+                }
+            }
+
+            // =========================
+            // 5) apply simple filters (query params ngoài filter/sort/skip/take)
+            // Ví dụ receivedBy=quan.nh
+            // =========================
+            foreach (var kv in allParams)
+            {
+                var key = kv.Key;
+                var value = kv.Value;
+
+                if (_reservedKeys.Contains(key)) continue;      // ✅ chỉ bỏ ở đây
+                if (string.IsNullOrWhiteSpace(value)) continue;
+                if (!_reservedKeys.Contains(key)) continue;    // ✅ chống inject column
+
+                var pName = "@p" + (++pIndex);
+
+                sql.Append(" AND ");
+                sql.Append(QuoteName(key));
+                sql.Append(" LIKE '%' + ");
+                sql.Append(pName);
+                sql.AppendLine(" + '%'");
+
+                parameters[pName] = value;
+            }
+
+            // =========================
+            // 6) ORDER BY (DevExtreme sort= JSON)
+            // =========================
+            var sortJson = Get(allParams, "sort");
+            var orderBySql = BuildOrderByFromSort(sortJson, _reservedKeys);
+
+            if (string.IsNullOrWhiteSpace(orderBySql))
+            {
+                // fallback từ orderBy/orderDir (nếu bạn tự truyền)
+                string orderBy = Get(allParams, "orderBy") ?? defaultOrderBy;
+                string orderDir = (Get(allParams, "orderDir") ?? defaultOrderDir);
+                orderDir = string.Equals(orderDir, "asc", StringComparison.OrdinalIgnoreCase) ? "ASC" : "DESC";
+
+                if (!_reservedKeys.Contains(orderBy)) orderBy = defaultOrderBy;
+                if (!_reservedKeys.Contains(orderBy)) orderBy = pkTieBreaker ?? "Id";
+
+                orderBySql = $"{QuoteName(orderBy)} {orderDir}";
+            }
+
+            // tie-breaker để paging ổn định khi trùng sort key
+            if (!string.IsNullOrWhiteSpace(pkTieBreaker) && _reservedKeys.Contains(pkTieBreaker))
+            {
+                var tie = QuoteName(pkTieBreaker);
+                if (!orderBySql.Contains(tie, StringComparison.OrdinalIgnoreCase))
+                    orderBySql += $", {tie} DESC";
+            }
+
+            sql.Append("ORDER BY ");
+            sql.AppendLine(orderBySql);
+
+            // =========================
+            // 7) paging / all
+            // =========================
+            if (paging)
+            {
+                sql.AppendLine("OFFSET @skip ROWS FETCH NEXT @take ROWS ONLY;");
+                parameters["@skip"] = skip;
+                parameters["@take"] = take;
+            }
+            else
+            {
+                sql.AppendLine($"OFFSET 0 ROWS FETCH NEXT {maxAll} ROWS ONLY;");
+            }
+
+            return new SqlQueryBuildResult
+            {
+                Sql = sql.ToString(),
+                Parameters = parameters
+            };
+        }
+
+        /* ---------------- helpers ---------------- */
+
+        private static string BuildOrderByFromSort(string? sortJson, HashSet<string> _reservedKeys)
+        {
+            if (string.IsNullOrWhiteSpace(sortJson)) return "";
+
+            try
+            {
+                using var doc = JsonDocument.Parse(sortJson);
+                if (doc.RootElement.ValueKind != JsonValueKind.Array) return "";
+
+                var parts = new List<string>();
+                foreach (var item in doc.RootElement.EnumerateArray())
+                {
+                    if (item.ValueKind != JsonValueKind.Object) continue;
+
+                    var selector = item.TryGetProperty("selector", out var selEl) ? selEl.GetString() : null;
+                    if (string.IsNullOrWhiteSpace(selector)) continue;
+
+                    var field = selector!;
+                    if (!_reservedKeys.Contains(field)) continue;
+
+                    bool desc = item.TryGetProperty("desc", out var dEl) && dEl.ValueKind == JsonValueKind.True;
+                    parts.Add($"{QuoteName(field)} {(desc ? "DESC" : "ASC")}");
+                }
+
+                return string.Join(", ", parts);
+            }
+            catch
+            {
+                return "";
+            }
+        }
+
+        // DevExtreme filter JSON (nested arrays)
+        private static string ParseDevExtremeFilter(
+            string filterJson,
+            HashSet<string> _reservedKeys,
+            ref int pIndex,
+            Dictionary<string, object> parameters
+        )
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(filterJson);
+                return ParseFilterNode(doc.RootElement, _reservedKeys, ref pIndex, parameters);
+            }
+            catch
+            {
+                return "";
+            }
+        }
+
+        private static string ParseFilterNode(
+            JsonElement node,
+            HashSet<string> _reservedKeys,
+            ref int pIndex,
+            Dictionary<string, object> parameters
+        )
+        {
+            if (node.ValueKind != JsonValueKind.Array) return "";
+
+            // condition: ["Field","op",value]
+            if (node.GetArrayLength() == 3
+                && node[0].ValueKind == JsonValueKind.String
+                && node[1].ValueKind == JsonValueKind.String)
+            {
+                var field = node[0].GetString()!;
+                var op = node[1].GetString()!;
+                var value = node[2];
+
+                if (_reservedKeys.Contains(field)) return "";
+                return BuildCondition(field, op, value, ref pIndex, parameters);
+            }
+
+            // composite: [expr, "and"/"or", expr, ...]
+            var parts = new List<string>();
+            string? pendingLogic = null;
+
+            for (int i = 0; i < node.GetArrayLength(); i++)
+            {
+                var item = node[i];
+
+                if (item.ValueKind == JsonValueKind.String)
+                {
+                    var token = item.GetString()!;
+                    if (string.Equals(token, "and", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(token, "or", StringComparison.OrdinalIgnoreCase))
+                    {
+                        pendingLogic = token.ToUpperInvariant();
+                        continue;
+                    }
+
+                    if (token == "!")
+                    {
+                        if (i + 1 < node.GetArrayLength())
+                        {
+                            var next = ParseFilterNode(node[i + 1], _reservedKeys, ref pIndex, parameters);
+                            if (!string.IsNullOrWhiteSpace(next)) parts.Add($"NOT ({next})");
+                            i++;
+                        }
+                        continue;
+                    }
+
+                    continue;
+                }
+
+                var expr = ParseFilterNode(item, _reservedKeys, ref pIndex, parameters);
+                if (string.IsNullOrWhiteSpace(expr)) continue;
+
+                if (parts.Count == 0) parts.Add($"({expr})");
+                else parts.Add($"{(pendingLogic ?? "AND")} ({expr})");
+
+                pendingLogic = null;
+            }
+
+            return parts.Count == 0 ? "" : string.Join(" ", parts);
+        }
+
+        private static string BuildCondition(
+            string field,
+            string op,
+            JsonElement valueEl,
+            ref int pIndex,
+            Dictionary<string, object> parameters
+        )
+        {
+            op = op.ToLowerInvariant();
+
+            bool isNull = valueEl.ValueKind == JsonValueKind.Null;
+            if (isNull)
+            {
+                return op switch
+                {
+                    "=" => $"{QuoteName(field)} IS NULL",
+                    "<>" => $"{QuoteName(field)} IS NOT NULL",
+                    _ => $"{QuoteName(field)} IS NULL"
+                };
+            }
+
+            object? val = valueEl.ValueKind switch
+            {
+                JsonValueKind.String => valueEl.GetString(),
+                JsonValueKind.Number => valueEl.TryGetInt64(out var l) ? l : valueEl.GetDouble(),
+                JsonValueKind.True => true,
+                JsonValueKind.False => false,
+                _ => valueEl.ToString()
+            };
+
+            var pName = "@p" + (++pIndex);
+
+            switch (op)
+            {
+                case "=":
+                case "<>":
+                case ">":
+                case "<":
+                case ">=":
+                case "<=":
+                    parameters[pName] = val!;
+                    return $"{QuoteName(field)} {op} {pName}";
+
+                case "contains":
+                    parameters[pName] = val?.ToString() ?? "";
+                    return $"{QuoteName(field)} LIKE '%' + {pName} + '%'";
+
+                case "notcontains":
+                    parameters[pName] = val?.ToString() ?? "";
+                    return $"{QuoteName(field)} NOT LIKE '%' + {pName} + '%'";
+
+                case "startswith":
+                    parameters[pName] = val?.ToString() ?? "";
+                    return $"{QuoteName(field)} LIKE {pName} + '%'";
+
+                case "endswith":
+                    parameters[pName] = val?.ToString() ?? "";
+                    return $"{QuoteName(field)} LIKE '%' + {pName}";
+
+                default:
+                    parameters[pName] = val!;
+                    return $"{QuoteName(field)} = {pName}";
+            }
+        }
+
     }
     public enum CommandQueryType
     {

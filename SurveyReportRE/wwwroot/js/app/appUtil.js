@@ -5351,16 +5351,17 @@ function newQuotationForm() {
                         onError: function (err) {
                         }
                     });
-
+                    debugger
                     if (submitSummaryData.surveyNeeded) {
                         var notificationData = new Object();
                         notificationData.Notification = new Object();
                         notificationData.Notification.Title = submitSummaryData.subject;
-                        notificationData.Notification.Message = "";
+                        notificationData.Notification.Message = "You have message from MKT team!";
                         notificationData.Notification.IsRead = false;
                         notificationData.Notification.Url = "Link URL";
                         notificationData.Notification.Resource = `${_loginUser}_${_role}`;
-                        notificationData.Notification.System = "Quotation Management";
+                        notificationData.Notification.System = "QM";
+                        notificationData.Notification.ReceivedBy = "quan.nh";  // Assign RE member ?
                         notificationData.MKTSurveyRequest = new Object();
                         notificationData.MKTSurveyRequest.ClientName = submitSummaryData.clientName;
                         notificationData.MKTSurveyRequest.ProductName = submitSummaryData.productName;
@@ -5545,7 +5546,7 @@ function popupStandardContentByScroll(customContainer) {
             dataType,
             timeout,
             cache,
-            processData: processData,
+           
             // GET => query, POST => JSON.stringify(body)
             data: isGet ? (query || {}) : (body == null ? null : (isPut ? body : JSON.stringify(body))),
 
@@ -5569,6 +5570,9 @@ function popupStandardContentByScroll(customContainer) {
             if (finalHeaders) {
                 ajaxOptions.headers = finalHeaders;
             }
+        }
+        else {
+            ajaxOptions.processData = processData;
         }
 
         const jqxhr = $.ajax(ajaxOptions);
@@ -5613,10 +5617,12 @@ function popupStandardContentByScroll(customContainer) {
                 };
 
                 try { onError?.(errInfo); } catch (e) {
+                    debugger
+                    console.error(errInfo);
                     try { sendClientErrorLog?.("onError callback error", e); } catch { }
                 }
 
-                try { sendClientErrorLog?.("AJAX ERROR", errInfo); } catch { }
+                try { console.error(errInfo);  sendClientErrorLog?.("AJAX ERROR", errInfo); } catch { }
             })
             .always(() => {
                 try { onFinally?.(); } catch { }

@@ -39,7 +39,7 @@ public interface IBaseRepository<T> where T : class
     Task<List<Dictionary<string, object>>> ExecuteCustomLogQuery(string query);
     Task<List<dynamic>> EnumLookup(string refField, string enumName = null, bool isSameUsing = false);
     Task UpdateEnum(string refField, string valueKey, long sysTableId);
-    Task<List<T>> GetAll();
+    Task<List<T>> GetAll(System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> loadParams = null);
     Task<List<T>> GetAllInclude();
     Task<List<T>> GetAllActive();
     //Task<List<T>> AllIncluding(params Expression<Func<T, object>>[] includeProperties);
@@ -639,30 +639,47 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
         }
     }
 
-    public async Task<List<T>> GetAll()
+    public async Task<List<T>> GetAll(System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> loadParams = null)
     {
         using (var connection = new SqlConnection(_connectionString))
         {
+
             var (query, parameters) = Util.BuildSelectAllQuery<T>(typeof(T).Name);
-            var result = await connection.QueryAsync<T>(query);
-            var prop = typeof(T).GetProperty("RowOrder");
-            if (prop != null)
+            if (loadParams != null && loadParams.Count > 1)
             {
-                return result.OrderBy(x =>
-                {
-                    var val = prop.GetValue(x);
-                    if (val == null) return 0;
-                    return Convert.ToInt32(val);
-                }).ToList();
+                var built = Util.LoadParamsBuildSelectAllQuery<T>(
+                    //loadParams,
+                    typeof(T).Name,
+                    loadParams,
+                    //allowedColumns: allowed,
+                    defaultOrderBy: "CreatedDate",
+                    defaultOrderDir: "DESC",
+                    pkTieBreaker: "Id"
+                );
+                var data = await connection.QueryAsync<T>(built.Sql, built.Parameters);
+                return data.ToList();
             }
-            Util.QueryLogs(_connectionString, "sp_Querylogs",
-               ("@QueryString", $"GetAll: {query}")
-               , ("@Duration", "")
-               , ("@User", userName));
-            return result.ToList();
+            else
+            {
+                var result = await connection.QueryAsync<T>(query);
+                var prop = typeof(T).GetProperty("RowOrder");
+                if (prop != null)
+                {
+                    return result.OrderBy(x =>
+                    {
+                        var val = prop.GetValue(x);
+                        if (val == null) return 0;
+                        return Convert.ToInt32(val);
+                    }).ToList();
+                }
+                Util.QueryLogs(_connectionString, "sp_Querylogs",
+                   ("@QueryString", $"GetAll: {query}")
+                   , ("@Duration", "")
+                   , ("@User", userName));
+                return result.ToList();
+            }
         }
     }
-
     public async Task<List<T>> GetAllActive()
     {
         using (var connection = new SqlConnection(_connectionString))

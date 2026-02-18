@@ -1,0 +1,19 @@
+
+
+UPDATE n SET n.RecordGuid = m.Guid
+FROM NOtification n 
+INNER JOIN dbo.MKTSurveyRequest m ON m.CreatedDate = n.CreatedDate
+ DELETE FROM NOtification WHERE Message = 'Test HTML Message'-- RecordGuid IS NULL
+ UPDATE n
+SET n.Url = REPLACE(j.JsonData, '\/', '/')
+FROM Notification n
+INNER JOIN dbo.MKTSurveyRequest m 
+    ON m.CreatedDate = n.CreatedDate
+CROSS APPLY (
+    SELECT 
+        CONCAT('/Business/Request/MKTSurveyRequest_Form/', m.Id)      AS url,
+        CONCAT('form_MKTSurveyRequest_Form_', m.Id)                   AS caption,
+        CONCAT('MKTSurveyRequest ', m.TicketNo)                       AS name,
+        ''                                                             AS data
+    FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
+) j(JsonData);
