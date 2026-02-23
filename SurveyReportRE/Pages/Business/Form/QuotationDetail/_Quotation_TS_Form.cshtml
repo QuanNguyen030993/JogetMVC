@@ -23,17 +23,9 @@
          caption: "Location / TSI / Sum Insured",
          colCount: 2,
          items: [
-             { dataField: "locationCountDeclared", label: { template: labelTpl("LocationCountDeclared - Số location khai báo") } },
-             { dataField: "locationCountLegacy", label: { template: labelTpl("LocationCountLegacy - Số location (legacy)") } },
-             { dataField: "locationCountAnnual", label: { template: labelTpl("LocationCountAnnual - Số location annual") } },
-             { dataField: "locationCountActual", label: { template: labelTpl("LocationCountActual - Số location actual") } },
-             { dataField: "locationSummary", label: { template: labelTpl("LocationSummary - Tóm tắt location (text)") } },
-             { dataField: "locationMapRef", label: { template: labelTpl("LocationMapRef - Tham chiếu map location") } },
-             { dataField: "locationAttachmentRef", label: { template: labelTpl("LocationAttachmentRef - Attachment location") } },
-
              { dataField: "sumInsuredTotal", editorType:"dxNumberBox", editorOptions: {format: '#,##0', onValueChanged: function (e) { 
                   
-             if (e.previousVsalue != e.value && e.previousValue != 0){
+             if (e.previousValue != e.value && e.previousValue != 0){
                  var formItems = $("#formTS").dxForm().dxForm("instance").option("formData");
                   ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ sumInsuredTotal: e.value })} , {
                          onSuccess: function (response) {
@@ -54,6 +46,14 @@
                      // });
              }
              }} },
+             { dataField: "locationCountDeclared", label: { template: labelTpl("LocationCountDeclared - Số location khai báo") } },
+             { dataField: "locationCountLegacy", label: { template: labelTpl("LocationCountLegacy - Số location (legacy)") } },
+             { dataField: "locationCountAnnual", label: { template: labelTpl("LocationCountAnnual - Số location annual") } },
+             { dataField: "locationCountActual", label: { template: labelTpl("LocationCountActual - Số location actual") } },
+             { dataField: "locationSummary", label: { template: labelTpl("LocationSummary - Tóm tắt location (text)") } },
+             { dataField: "locationMapRef", label: { template: labelTpl("LocationMapRef - Tham chiếu map location") } },
+             { dataField: "locationAttachmentRef", label: { template: labelTpl("LocationAttachmentRef - Attachment location") } },
+
              { dataField: "sumInsuredTotalUsd", label: { template: labelTpl("SumInsuredTotalUsd - Total Sum Insured (USD)") } },
 
              { dataField: "topRiskPd", label: { template: labelTpl("TopRiskPd - Top risk PD") } },
@@ -74,9 +74,53 @@
          caption: "Premium  Rate  VAT  Discount  Currency",
          colCount: 2,
          items: [
-             { dataField: "premiumTotal", label: { template: labelTpl("PremiumTotal - Tổng premium") } },
+             { dataField: "premiumTotal", editorType:"dxNumberBox", editorOptions: {format: '#,##0', onValueChanged: function (et) {
+
+             if (et.previousValue != et.value && et.previousValue != 0){
+                 var formItems = $("#formTS").dxForm().dxForm("instance").option("formData");
+                  ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ premiumTotal: et.value })} , {
+                         onSuccess: function (response) {
+                         },
+                         onError: function (err) {
+                         }
+                   });
+                     // $.ajax({
+                     //     url: `/api/Quotation/UpdateData`,
+                     //     type: "PUT",
+                     //     data: { key: formItems.id, values: JSON.stringify({ sumInsuredTotal: e.value })},
+                     //     processData: true,
+                     //     success: function (data) {
+                     //     },
+                     //     error: function (error) {
+                     //         console.error("Error loading data:", error);
+                     //     }
+                     // });
+             }
+             }} },
              { dataField: "premiumTotalBeforeVat", label: { template: labelTpl("PremiumTotalBeforeVat - Tổng premium trước VAT") } },
-             { dataField: "totalDue", label: { template: labelTpl("TotalDue - Total due") } },
+             { dataField: "totalDue", editorType:"dxNumberBox", editorOptions: {format: '#,##0', onValueChanged: function (ed) {
+
+             if (ed.previousValue != ed.value && ed.previousValue != 0){
+                 var formItems = $("#formTS").dxForm().dxForm("instance").option("formData");
+                  ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ totalDue: ed.value })} , {
+                         onSuccess: function (response) {
+                         },
+                         onError: function (err) {
+                         }
+                   });
+                     // $.ajax({
+                     //     url: `/api/Quotation/UpdateData`,
+                     //     type: "PUT",
+                     //     data: { key: formItems.id, values: JSON.stringify({ sumInsuredTotal: e.value })},
+                     //     processData: true,
+                     //     success: function (data) {
+                     //     },
+                     //     error: function (error) {
+                     //         console.error("Error loading data:", error);
+                     //     }
+                     // });
+             }
+             }} },
              { dataField: "premiumAnnualTotal", label: { template: labelTpl("PremiumAnnualTotal - Total annual premium") } },
 
              { dataField: "premiumVoluntary", label: { template: labelTpl("PremiumVoluntary - Voluntary premium") } },
@@ -135,20 +179,20 @@
           { site:"HN",  address:"Cau Giay",   occ:"Office",    sumInsured: 350000  },
         ];
 
-         $("#gridTSLocations").dxDataGrid("instance").option("editing", {
-            mode:"cell", allowUpdating: !roTS, allowAdding: !roTS, allowDeleting: !roTS
-          });
+         // $("#gridTSLocations").dxDataGrid("instance").option("editing", {
+         //    mode:"cell", allowUpdating: !roTS, allowAdding: !roTS, allowDeleting: !roTS
+         //  });
 
-                 $("#gridTSLocations").dxDataGrid({
-            dataSource: tsLocations, height: 220, showBorders: true,
-            editing: { mode:"cell", allowUpdating:false, allowAdding:false, allowDeleting:false },
-            columns: [
-              { dataField:"site", caption:"Site", width: 90 },
-              { dataField:"address", caption:"Address" },
-              { dataField:"occ", caption:"Occupancy", width: 140 },
-              { dataField:"sumInsured", caption:"Sum Insured", dataType:"number", format:"#0" }
-            ]
-          });
+         //         $("#gridTSLocations").dxDataGrid({
+         //    dataSource: tsLocations, height: 220, showBorders: true,
+         //    editing: { mode:"cell", allowUpdating:false, allowAdding:false, allowDeleting:false },
+         //    columns: [
+         //      { dataField:"site", caption:"Site", width: 90 },
+         //      { dataField:"address", caption:"Address" },
+         //      { dataField:"occ", caption:"Occupancy", width: 140 },
+         //      { dataField:"sumInsured", caption:"Sum Insured", dataType:"number", format:"#0" }
+         //    ]
+         //  });
 
 </script>
 

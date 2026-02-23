@@ -23,7 +23,7 @@
                  { dataField:"clientName", label:{text:"Client Name"}, isRequired:true },
                  { dataField:"requestType", editorType:"dxSelectBox", label:{text:"Request Type"}, editorOptions:{ items:["New","Renewal","Endorsement"] } },
                  { dataField:"notes", label:{text:"Notes"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 80 } }, 
-                 { dataField:"surveyNeeded", label:{text:"Survey Needed"}, editorType:"dxSwitch" },
+                 { dataField:"surveyNeeded", label:{text:"Survey Needed"}, editorType:"dxSwitch" ,editorOptions:{ switchedOnText: "Yes", switchedOffText: "No"} },
                  {itemType: "group",
                 caption: "Header  Request",
                 colCount: 3,

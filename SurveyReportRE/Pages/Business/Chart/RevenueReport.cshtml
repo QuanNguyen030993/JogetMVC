@@ -1,0 +1,160 @@
+﻿@page
+@model RevenueReportModel
+@{
+
+}
+<style>
+</style>
+<script>
+    var dataSource = new Object();
+    
+  
+    //      $("#quoteKpiByYear").dxChart({
+    //   argumentAxis: {
+    //     argumentType: "numeric",
+    //     title: "Year",
+    //     tickInterval: 1
+    //   },
+
+    //   valueAxis: [
+    //     { name: "premiumAxis", title: { text: "Total Premium" } },
+    //     { name: "tsiAxis", position: "right", title: { text: "Total Sum Insured" } }
+    //   ],
+
+    //   commonSeriesSettings: {
+    //     argumentField: "year",
+    //     type: "bar" // bạn có thể đổi sang "line" nếu muốn trend
+    //   },
+
+    //   series: [
+    //     { valueField: "premiumTotal", name: "Total Premium", axis: "premiumAxis"},
+    //     { valueField: "sumInsuredTotal", name: "Total Sum Insured", axis: "tsiAxis"  , type: "line"}
+    //   ],
+
+    //   legend: { verticalAlignment: "top", horizontalAlignment: "center" },
+
+    //   tooltip: {
+    //     enabled: true,
+    //     customizeTooltip(arg) {
+    //       // format số có dấu phẩy
+    //       const val = Number(arg.value);
+    //       return { text: `${arg.seriesName}: ${val.toLocaleString("en-US")}` };
+    //     }
+    //   },
+
+    //   export: { enabled: true },
+    // });
+
+        $("#quoteKpiByYear").dxChart({
+      argumentAxis: { argumentType: "numeric", tickInterval: 1, title: "Year" },
+
+      valueAxis: [
+        { name: "premiumAxis", title: { text: "Total Premium" } },
+        { name: "tsiAxis", position: "right", title: { text: "Total Sum Insured" } }//,
+        // { name: "dueAxis", position: "right", offset: 60, title: { text: "Total Due" } } // offset để không đè nhau
+      ],
+
+      commonSeriesSettings: {
+        argumentField: "year"
+      },
+
+      series: [
+        { valueField: "sumInsuredTotal", name: "Total Sum Insured", axis: "tsiAxis", type: "bar" },
+        { valueField: "premiumTotal", name: "Total Premium", axis: "premiumAxis", type: "line" }//,
+        // { valueField: "totalDue", name: "Total Due", axis: "dueAxis", type: "spline" }
+      ],
+
+      legend: { verticalAlignment: "top", horizontalAlignment: "center" },
+
+      tooltip: {
+        enabled: true,
+        customizeTooltip(arg) {
+          const v = Number(arg.value);
+          return {
+            text: `${arg.seriesName}: ${Intl.NumberFormat("vi-VN", {
+              style: "currency",
+              currency: "VND",
+              maximumFractionDigits: 0
+            }).format(v)}`
+          };
+        }
+      }
+    });
+
+
+    var query = "EXEC [usp_Revenue_GetData]";
+    $.ajax({
+      url: "/api/Report/ExecuteCustomQuery",
+      method: "POST",
+      contentType: "application/json",
+      data: JSON.stringify(query)
+    }).then(res => {
+          const cleanData = res
+    .filter(x => Number.isInteger(x.year))
+    .sort((a, b) => a.year - b.year);
+      $("#quoteKpiByYear").dxChart("instance").option("dataSource", cleanData);
+      $("#quoteKpiByYearGrid").dxDataGrid("instance").option("dataSource", cleanData);
+      var containerWidth = $("#quoteKpiByYear").parent().width();
+      $("#quoteKpiByYear").dxChart("instance").option("size.width", containerWidth);
+    });
+    //     UPDATE Quotation SET SumInsuredTotal = CONVERT(DECIMAL(18,6),ROUND( 10000000000 *RAND(convert(varbinary, newid())), 0))
+    // UPDATE Quotation SET PremiumTotal = CONVERT(DECIMAL(18,6),ROUND( 100000000 *RAND(convert(varbinary, newid())), 0))
+    // UPDATE Quotation SET TotalDue = CONVERT(DECIMAL(18,6),ROUND( 50000000 *RAND(convert(varbinary, newid())), 0))
+        // 2) Init grid trước (chưa có data)
+    $("#quoteKpiByYearGrid").dxDataGrid({
+      dataSource: [],
+      keyExpr: "year",
+      showBorders: true,
+      columnAutoWidth: true,
+      rowAlternationEnabled: true,
+      hoverStateEnabled: true,
+
+      columns: [
+        {
+          dataField: "year",
+          caption: "Year",
+          dataType: "number",
+          sortOrder: "asc",
+          alignment: "center",
+          width: 90
+        },
+        {
+          dataField: "premiumTotal",
+          caption: "Total Premium",
+          dataType: "number",
+          format: "#,##0",
+          alignment: "right"
+        },
+        {
+          dataField: "sumInsuredTotal",
+          caption: "Total Sum Insured",
+          dataType: "number",
+          format: "#,##0",
+          alignment: "right"
+        },
+        {
+          dataField: "totalDue",
+          caption: "Total Due",
+          dataType: "number",
+          format: "#,##0",
+          alignment: "right"
+        }
+      ],
+
+      summary: {
+        totalItems: [
+          { column: "year", summaryType: "count", displayFormat: "Rows: {0}" },
+          { column: "premiumTotal", summaryType: "sum", valueFormat: "#,##0", displayFormat: "Sum: {0}" },
+          { column: "sumInsuredTotal", summaryType: "sum", valueFormat: "#,##0", displayFormat: "Sum: {0}" },
+          { column: "totalDue", summaryType: "sum", valueFormat: "#,##0", displayFormat: "Sum: {0}" }
+        ]
+      },
+
+      paging: { enabled: false }, // dữ liệu theo năm ít -> khỏi phân trang
+      filterRow: { visible: false },
+      searchPanel: { visible: false }
+    });
+</script>
+
+<div id="quoteKpiByYear" class="chart-wrapper"> </div>
+<div id="quoteKpiByYearGrid"></div>

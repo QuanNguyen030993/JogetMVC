@@ -5334,12 +5334,9 @@ function newQuotationForm() {
                 text: "Complete",
                 onClick() {
                     var entryForm = $(`#assigneeEntryForm`).dxForm().dxForm("instance");
-                    debugger
                     var entrySummaryForm = $(`#quotationRequestForm`).dxForm().dxForm("instance");
                     var submitData = entryForm.option("formData");
                     var submitSummaryData = entrySummaryForm.option("formData");
-                    console.log(submitSummaryData);
-                    console.log(submitData);
                     var quotationData = new Object();
                     quotationData.StageAccount = submitData.to;
                     quotationData.ClientName = submitSummaryData.clientName;
@@ -5347,7 +5344,11 @@ function newQuotationForm() {
                     quotationData.StageDept = submitSummaryData.assignedTeamOrRole;
                     quotationData.QuotationStatus = "New";
                     quotationData.WorkflowStatus = "Pending";
-
+                    quotationData.SurveyNeeded = submitSummaryData.surveyNeeded;
+                    quotationData.DueDate = submitSummaryData.dueDate;
+                    quotationData.RequestedDate = submitSummaryData.createDate;
+                    //quotationData.LineId = submitSummaryData.lineId;  
+                    //quotationData.ProductId = submitSummaryData.productId;
                     ajaxPost('/api/Quotation/CreateQuotation', quotationData, {
                         onSuccess: function (response) {
                         },

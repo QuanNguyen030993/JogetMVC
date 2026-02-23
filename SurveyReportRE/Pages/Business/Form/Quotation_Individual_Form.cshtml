@@ -349,7 +349,7 @@ Note:
         var quotes = [
         ];
         // ===== Mock quotation list data =====
-         var query = "SELECT * FROM Quotation WITH (NOLOCK)";
+         var query = "SELECT * FROM Quotation WITH (NOLOCK) ORDER BY CreatedDate DESC";
          $.ajax({
             url: `/api/Quotation/ExecuteCustomQuery`,
             method: "POST",
@@ -382,7 +382,7 @@ Note:
         let stageDept = quotes[0]?.stageDept;   // status ring only (from workflow stage)
         let focusDept = _role == "IT" ? "MKT" : _role;   // click highlight only
 
-        function money(n) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n || 0); }
+        function money(n) { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(n || 0); }
            function normalizeStatus(raw) {
             const s = String(raw ?? "").trim();
 
@@ -475,7 +475,7 @@ Note:
            deptData.PM  = q;
 
           renderDeptForms();
-          renderItemsGrid(q);
+          // renderItemsGrid(q);
 
           // apply highlight rings without using scroll
           applyNodeHighlights();
@@ -1292,9 +1292,20 @@ Note:
                 </div>
                 <div class="quoteMeta">
                  <div class="quotationCode" >${q.quotationCode}</div>
-
-                  <div>${formatDate(q.createdDate,"dd-mm-yyyy")}</div>
-                  <div class="quoteAmount">${money(q.amount)}</div>
+                  <div>${q.lineName}</div>
+                  <div>${formatDate(q.requestedDate,"dd-mm-yyyy")}</div>
+                </div>
+                 <div class="quoteMeta">
+                  <div >Total Sum Insured</div>
+                  <div class="quoteAmount">${money(q.sumInsuredTotal)}</div>
+                </div>
+                 <div class="quoteMeta">
+                   <div >Total Premium</div>
+                  <div class="quoteAmount">${money(q.premiumTotal)}</div>
+                </div>
+                  <div class="quoteMeta">
+                   <div >Total Due</div>
+                  <div class="quoteAmount">${money(q.totalDue)}</div>
                 </div>
               </div>
             `);

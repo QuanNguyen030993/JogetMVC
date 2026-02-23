@@ -21,7 +21,10 @@
         text-decoration: underline;
         color: #0056b3;
     }
-
+.chart-wrapper {
+    width: calc(100vw - 500px);
+    height: calc(100vh - 300px); /* full màn hình trừ header */
+}
 .imagePreviewContainer {
     position: relative; width: 120px; height: 120px; margin: 5px; margin-top: 20px;
 }
@@ -503,6 +506,7 @@
     /*position: absolute;*/
     background-color: white;
     /*width: 120%;*/
+    /*width: calc(100vw - 600px);*/
     /*height: 100%;*/
     z-index: 0;
     position: absolute;

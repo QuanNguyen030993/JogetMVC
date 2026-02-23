@@ -476,13 +476,13 @@ var tabFormatButtonClass = 'fa fa-times close-tab-btn';
 var addTab = function (code, tabTitle = '...', tabContent) {
     try {
         var $tabs = $("#tablist");
-        const tabExisted = $tabs.find(`#${code}`).length;
+        const tabExisted = $tabs.find(`#${code}_content_wrapper`).length;
         if (!tabExisted) {
             createNewTabElement(code, tabTitle, $tabs, tabContent);
         }
         else {
         }
-        var tabIndex = $tabs.find(`#${code}`).index() - 1;
+        var tabIndex = $tabs.find(`#${code}_content_wrapper`).index() - 1;
         $tabs.tabs("option", "active", tabIndex);
         $tabs.find(`#${code}`).html(tabContent);
     } catch (err) {
@@ -547,6 +547,7 @@ var nativeRemoveTab = function($tabDivId){
 
         if (panelId) {
             $("#" + panelId).remove();
+            $(`#${panelId}_content_wrapper`).remove();
             document.body.classList.remove("hasRightPanel");
             $("#rightCommentDock").hide();
             document.documentElement.style.setProperty("--collapsed-form-mr", "-26%");
