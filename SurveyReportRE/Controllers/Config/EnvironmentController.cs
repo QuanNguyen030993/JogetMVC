@@ -42,7 +42,11 @@ namespace ERPCore.Controllers.Config
             string encryptedKey = KeyVaultLocal.EncryptConnectionStringPassword(password, "ApplicationSecretKey", "ApplicationSaltKey", 10);
             return Ok(encryptedKey);
         }
-
+        public IActionResult MakeDecryption(string variableName)
+        {
+            string decryptedKey = KeyVaultLocal.DecryptConnectionStringPassword(Environment.GetEnvironmentVariable(variableName, EnvironmentVariableTarget.Machine), "ApplicationSecretKey", "ApplicationSaltKey", 10);
+            return Ok(decryptedKey);
+        }
 
     }
 

@@ -1453,8 +1453,7 @@ Note:
 
            function renderBranchOverlay(currentDept){
       const formState = buildFormState();
-      console.log(formState);
-      const choices = getNextChoices(currentDept, formState);
+      const choices = getNextsChoices(currentDept, formState);
 
       if(!choices.length){
         DevExpress.ui.notify("No valid route - please complete required fields", "warning", 1600);

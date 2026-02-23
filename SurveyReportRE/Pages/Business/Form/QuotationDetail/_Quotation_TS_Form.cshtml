@@ -33,8 +33,7 @@
 
              { dataField: "sumInsuredTotal", editorType:"dxNumberBox", editorOptions: {format: '#,##0', onValueChanged: function (e) { 
                   
-             console.log(e);
-             if (e.previousValue != e.value && e.previousValue != 0){
+             if (e.previousVsalue != e.value && e.previousValue != 0){
                  var formItems = $("#formTS").dxForm().dxForm("instance").option("formData");
                   ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ sumInsuredTotal: e.value })} , {
                          onSuccess: function (response) {

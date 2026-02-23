@@ -25,7 +25,35 @@
 .imagePreviewContainer {
     position: relative; width: 120px; height: 120px; margin: 5px; margin-top: 20px;
 }
+.survey-field-wrap {
+    width: 100%;
+}
 
+.survey-field-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0;
+}
+
+.survey-field-hint {
+    opacity: .75;
+    font-size: 13px;
+}
+
+.survey-acc-wrap {
+    margin-top: 10px;
+}
+
+.acc-title {
+    font-weight: bold;
+    padding: 6px 12px;
+    font-size: 15px;
+}
+
+.acc-body {
+    padding: 12px;
+}
 .imagePreview {
     width: 100%;
     min-height: 100px; /* Chiều cao tối thiểu để hiển thị khi chưa có ảnh */

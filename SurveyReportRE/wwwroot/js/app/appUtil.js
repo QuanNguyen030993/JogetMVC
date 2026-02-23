@@ -5334,9 +5334,12 @@ function newQuotationForm() {
                 text: "Complete",
                 onClick() {
                     var entryForm = $(`#assigneeEntryForm`).dxForm().dxForm("instance");
+                    debugger
                     var entrySummaryForm = $(`#quotationRequestForm`).dxForm().dxForm("instance");
                     var submitData = entryForm.option("formData");
                     var submitSummaryData = entrySummaryForm.option("formData");
+                    console.log(submitSummaryData);
+                    console.log(submitData);
                     var quotationData = new Object();
                     quotationData.StageAccount = submitData.to;
                     quotationData.ClientName = submitSummaryData.clientName;
@@ -5351,25 +5354,25 @@ function newQuotationForm() {
                         onError: function (err) {
                         }
                     });
-                    debugger
                     if (submitSummaryData.surveyNeeded) {
                         var notificationData = new Object();
                         notificationData.Notification = new Object();
-                        notificationData.Notification.Title = submitSummaryData.subject;
-                        notificationData.Notification.Message = "You have message from MKT team!";
+                        notificationData.Notification.Title = submitSummaryData.reTitle;//submitSummaryData.subject;
+                        notificationData.Notification.Message = submitSummaryData.reMsg;
                         notificationData.Notification.IsRead = false;
                         notificationData.Notification.Url = "Link URL";
                         notificationData.Notification.Resource = `${_loginUser}_${_role}`;
                         notificationData.Notification.System = "QM";
-                        notificationData.Notification.ReceivedBy = "quan.nh";  // Assign RE member ?
+                        notificationData.Notification.ReceivedBy = submitSummaryData.rePIC;  // Assign RE member ?
                         notificationData.MKTSurveyRequest = new Object();
                         notificationData.MKTSurveyRequest.ClientName = submitSummaryData.clientName;
                         notificationData.MKTSurveyRequest.ProductName = submitSummaryData.productName;
                         notificationData.MKTSurveyRequest.LineName = submitSummaryData.lineName;
                         notificationData.MKTSurveyRequest.MKTPIC = "";
                         notificationData.MKTSurveyRequest.MKTPICAccount = _loginUser;
+                        notificationData.MKTSurveyRequest.DueDate = submitSummaryData.dueDate;
                         //notificationData.connectionId = "huan.lt";
-                        notificationData.connectionId = "quan.nh";
+                        notificationData.connectionId = submitSummaryData.rePIC;
                         ajaxPost('api/Utility/NotifyAnother', notificationData, {
                             onSuccess: function (response) {
                             },
@@ -5523,7 +5526,6 @@ function popupStandardContentByScroll(customContainer) {
         // hook (optional)
         beforeSend = null
     } = {}) {
-        debugger
         const fullUrl = (routeParam !== null && routeParam !== undefined)
             ? `${url}/${encodeURIComponent(routeParam)}`
             : url;
@@ -5617,7 +5619,6 @@ function popupStandardContentByScroll(customContainer) {
                 };
 
                 try { onError?.(errInfo); } catch (e) {
-                    debugger
                     console.error(errInfo);
                     try { sendClientErrorLog?.("onError callback error", e); } catch { }
                 }

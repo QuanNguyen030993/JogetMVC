@@ -45,6 +45,22 @@
                       }
                   });
         }})
+         $("#DecryptPassword").dxButton({
+        text: "Decrypt Password"
+        ,onClick: () => {
+             var inputPassword = $("#inputPassword").dxTextBox().dxTextBox("instance");
+
+
+               $.ajax({
+                      url: `/api/Environment/MakeDecryption?variableName=${inputPassword.option("value")}`,
+                      success: function (response) {
+                          var passwordResult = $("#passwordResult").dxTextBox().dxTextBox("instance");
+                         passwordResult.option("value", response);
+                      },
+                      error: function (err) {
+                      }
+                  });
+        }})
     });
 </script>
 <div>TMIV environment
@@ -59,5 +75,6 @@
 
 </div>
     <div id="generateEncryptPassword"></div>
+<div id="DecryptPassword"></div>
 <div id="inputPassword"></div>
     <div id="passwordResult"></div>

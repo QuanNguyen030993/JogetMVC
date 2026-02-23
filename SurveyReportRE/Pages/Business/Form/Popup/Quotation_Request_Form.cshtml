@@ -46,7 +46,7 @@
         <div id="quotationRequestForm"></div>
 
         <div class="toolbarRow">
-            <div class="sectionTitle" style="margin:0;">Assignee (Routing)</div>
+            <div class="sectionTitle" style="margin:0;">Quotation PIC</div>
             <div style="display:flex; gap:8px;">
                 <div id="btnNewAssignee"></div>
                 <div id="btnClearAssignee"></div>
@@ -66,6 +66,59 @@
 
     <script>
         (function () {
+                    // const DEPTS = ["MKT","RE","TS","UW","LMKT","PM"];
+                    const DEPTS = ["RE"];
+                    const REMEMS = ["quan.nh","huan.lt","minh.lh"];
+
+        function safeParseJson(s) {
+          if (!s) return {};
+          if (typeof s === "object") return s;
+          try { return JSON.parse(s); } catch { return {}; }
+        }
+
+        function ensurePicKeys(obj) {
+          const o = { ...obj };
+          DEPTS.forEach(k => { if (!(k in o)) o[k] = null; });
+          return o;
+        }
+
+        function updatePicMap(form, dept, account) {
+          const fd = form.option("formData") || {};
+          const current = ensurePicKeys(safeParseJson(fd.PIC));
+          current[dept] = account || null;
+
+          // Lưu về formData.PIC dưới dạng string JSON (an toàn khi post API)
+          form.option("formData.PIC", JSON.stringify(current));
+        }
+        function initPicIfEmpty(form) {
+          const fd = form.option("formData") || {};
+          const pic = safeParseJson(fd.PIC);
+          const hasAny = pic && Object.keys(pic).length > 0;
+
+          if (!hasAny) {
+            // khởi đầu: chỉ MKT + RE có account, còn lại null
+            form.option("formData.PIC", JSON.stringify({
+              MKT: _loginUser,
+              RE: "an.re",
+              TS: null,
+              UW: null,
+              LMKT: null,
+              PM: null
+            }));
+          } else {
+            // đảm bảo đủ key
+            form.option("formData.PIC", JSON.stringify(ensurePicKeys(pic)));
+          }
+        }
+
+        function showSurveyAccordion(show) {
+          $("#surveyAccordionWrap").toggle(!!show);
+          if (show) {
+            // mở accordion item đầu tiên cho tiện (tuỳ bạn)
+            $("#surveyAccordion").dxAccordion("instance")?.option("selectedIndex", 0);
+          }
+        }
+
           DevExpress.localization.locale("en");
            var options = {
             assignmentMode: [
@@ -232,6 +285,141 @@
                         } },
                   { dataField: "dueDate", editorType: "dxDateBox", editorOptions: { displayFormat: "dd-MM-yyyy" } },
                   { dataField: "businessChannel", editorType: "dxSelectBox", editorOptions: { items: options.businessChannel } },
+                   {
+          // ✅ Field element custom
+          itemType: "simple",
+          colSpan: 2,
+          label: { text: "Is Survey ?" },
+
+          template: function(data, itemElement) {
+            const form = data.component; // dxForm instance
+            const fd = form.option("formData") || {};
+
+            const $wrap = $("<div>").addClass("survey-field-wrap");
+            const $row = $("<div>").addClass("survey-field-row").appendTo($wrap);
+
+            const $switchHost = $("<div>").appendTo($row);
+            const $spacer = $("<div>").addClass("survey-field-spacer").appendTo($row); // optional
+            // const $hint = $("<div>").addClass("survey-field-hint").text("Toggle to assign Survey PIC").appendTo($row);
+
+            const $accWrap = $("<div>").addClass("survey-acc-wrap").appendTo($wrap);
+
+            // --- Switch ---
+            $switchHost.dxSwitch({
+              value: !!fd.surveyNeeded,
+              onValueChanged: function(e) {
+                // sync back to formData
+                form.option("formData.surveyNeeded", e.value);
+
+                // show/hide accordion block
+                $accWrap.toggle(!!e.value);
+
+                // open/close
+                const acc = $accWrap.find(".survey-acc").dxAccordion("instance");
+                if (acc) acc.option("selectedIndex", e.value ? 0 : -1);
+              }
+            });
+
+            // --- Accordion container ---
+            const $acc = $("<div>").addClass("survey-acc").appendTo($accWrap);
+
+            function updatePic(dept, account) {
+              const current = ensurePicKeys(safeParseJson(form.option("formData.PIC")));
+              current[dept] = account || null;
+              form.option("formData.PIC", JSON.stringify(current));
+
+              // nếu bạn có field PIC hiển thị nơi khác, có thể refresh editor đó
+              const picEditor = form.getEditor?.("PIC");
+              if (picEditor) picEditor.option("value", form.option("formData.PIC"));
+            }
+
+            // init accordion
+            $acc.dxAccordion({
+              multiple: false,
+              collapsible: true,
+              selectedIndex: fd.surveyNeeded ? 0 : -1,
+              animationDuration: 180,
+              dataSource: [{ key: "survey", title: "SURVEY PIC" }],
+              itemTitleTemplate: (it) => $("<div>").addClass("acc-title").text(it.title),
+              itemTemplate: (it, idx, el) => {
+
+                const $body = $("<div>").addClass("acc-body");
+                $("<div>").text("Title").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
+                const $preview = $("<div>").css("marginTop", 10).appendTo($body);
+                fd.reTitle = `Request survey to ${fd.clientName} by ${_loginUser}`;
+                 $("<div>").text("Department").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
+                const $dept = $("<div>").css("marginTop", 10).appendTo($body);
+                 $("<div>").text("Member").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
+                const $accText = $("<div>").css("marginTop", 10).appendTo($body);
+                 $("<div>").text("Message to RE").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
+                const $MsgText = $("<div>").css("marginTop", 10).appendTo($body);
+                const $btn = $("<div>").css("marginTop", 10).appendTo($body);
+
+                $dept.dxSelectBox({
+                  items: DEPTS,
+                  value: "RE",
+                  label: "Department",
+                  labelMode: "static"
+                });
+
+
+                $accText.dxSelectBox({
+                  items: REMEMS,
+                  label: "Member",
+                  labelMode: "static",
+                  onValueChanged: function(e){
+                      fd.rePIC = e.value;
+                  }
+                });
+
+                $MsgText.dxTextArea({
+                  value: "",
+                  label: "RE Message",
+                  labelMode: "static",
+                  placeholder: "Message to RE team",
+                   onValueChanged: function(e){
+                      fd.reMsg = e.value;
+                  }
+                });
+
+
+                $preview.dxTextBox({
+                  value: `Request survey to ${fd.clientName} by ${_loginUser}`,
+                  readOnly: true,
+                  height: 50,
+                  label: "RE Title",
+                  labelMode: "static"
+                });
+                // $btn.dxButton({
+                //   text: "Add/Update PIC",
+                //   type: "success",
+                //   onClick: () => {
+                //     const dept = $dept.dxSelectBox("instance").option("value");
+                //     const account = $accText.dxTextBox("instance").option("value");
+
+                //     if (!dept) return DevExpress.ui.notify("Select department", "warning", 1500);
+                //     if (!account) return DevExpress.ui.notify("Enter PIC account", "warning", 1500);
+
+                //     updatePic(dept, account);
+
+                //     DevExpress.ui.notify(`Updated PIC.${dept} = ${account}`, "success", 1200);
+                //     $preview.dxTextArea("instance").option("value", form.option("formData.PIC"));
+                //   }
+                // });
+
+
+
+                $(el).append($body);
+              }
+            });
+
+            // initial show/hide accordion based on switch
+            $accWrap.toggle(!!fd.surveyNeeded);
+
+            itemElement.append($wrap);
+          }
+        }
+
                 ]
               },
               {
@@ -267,12 +455,36 @@
                       }
                     }
                   },
-                  {
-                    dataField: "surveyNeeded",
-                    label: { text: "Need Survey" },
-                    editorType: "dxSwitch",
-                    colSpan: 1
-                  }
+                  // {
+                  //   dataField: "surveyNeeded",
+                  //   label: { text: "Need Survey" },
+                  //   editorType: "dxSwitch",
+                  //   colSpan: 1,
+                  //     editorOptions: {
+                  //     switchedOnText: "Yes",
+                  //     switchedOffText: "No",
+                  //     onValueChanged: function(e) {
+                  //       const form = that.dxForm("instance");
+
+                  //       if (e.value === true) {
+                  //         initPicIfEmpty(form);
+                  //         showSurveyAccordion(true);
+
+                  //         // refresh preview trong accordion (nếu đã render)
+                  //         const picStr = form.option("formData.PIC");
+                  //         $("#surveyPicPreview").dxTextArea?.("instance")?.option("value", picStr);
+                  //       } else {
+                  //         showSurveyAccordion(false);
+
+                  //         // tuỳ nghiệp vụ: bạn muốn clear PIC hay giữ lại?
+                  //         // Option 1: giữ lại PIC (không làm gì)
+                  //         // Option 2: clear PIC khi tắt:
+                  //         // form.option("formData.PIC", "");
+                  //       }
+                  //     }
+                  //   }
+                  //     },
+                     
                 ]
               }
             ],

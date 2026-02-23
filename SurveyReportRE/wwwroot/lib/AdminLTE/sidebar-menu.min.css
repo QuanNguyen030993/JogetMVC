@@ -429,7 +429,7 @@ a {
     display: block;
     float: left;
     height: 50px;
-    font-size: 12px;
+    font-size: 14px;
     line-height: 50px;
     text-align: center;
     width: 121px;
@@ -3801,7 +3801,7 @@ table.text-center th {
         .treeview-menu > li > a {
             padding: 5px 5px 5px 25px;
             display: block;
-            font-size: 11px
+            font-size: 14px
         }
 
             .treeview-menu > li > a > .fa,

@@ -2100,8 +2100,7 @@ var MailQueueGridOption = class MailQueueGridOption extends MGridOption {
             fixed: true,
             fixedPosition: "right",
             cellTemplate: function (container, options) {
-                console.log(options);
-                container.append($(`<span class="dx-link">Resend</span>`).on('click', function () {
+                container.append($(`<sspan class="dx-link">Resend</span>`).on('click', function () {
                     $.ajax({
                         headers: { 'Content-Type': 'application/json' },
                         type: 'POST',

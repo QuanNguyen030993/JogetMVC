@@ -8,6 +8,7 @@ using ERPCore.Models.Base;
 using ERPCore.Models.Business.Migration.Config;
 using Syncfusion.Licensing;
 using TMIVHashing;
+using ERPCore.ControllerUtil;
 
 //Generate once
 //string projectId = "9A19103F16F74668BE549A1E7A4F75";
@@ -23,6 +24,8 @@ using TMIVHashing;
 
 
 var builder = WebApplication.CreateBuilder(args);
+string connectionLogString = ControllerUtil.ParseConnectionString(builder.Configuration.GetConnectionString("LogConnection"), builder.Configuration);
+var config = builder.Configuration.GetFileProvider();
 var logger = new LoggerConfiguration()
                     .ReadFrom.Configuration(builder.Configuration)
                     .Enrich.FromLogContext()
