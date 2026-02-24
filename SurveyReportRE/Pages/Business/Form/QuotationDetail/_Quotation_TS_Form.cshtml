@@ -26,13 +26,7 @@
              { dataField: "sumInsuredTotal", editorType:"dxNumberBox", editorOptions: {format: '#,##0', onValueChanged: function (e) { 
                   
              if (e.previousValue != e.value && e.previousValue != 0){
-                 var formItems = $("#formTS").dxForm().dxForm("instance").option("formData");
-                  ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ sumInsuredTotal: e.value })} , {
-                         onSuccess: function (response) {
-                         },
-                         onError: function (err) {
-                         }
-                   });
+                 
                      // $.ajax({
                      //     url: `/api/Quotation/UpdateData`,
                      //     type: "PUT",
@@ -45,6 +39,14 @@
                      //     }
                      // });
              }
+             } ,onFocusOut: function (e) {
+               var formItems = $("#formTS").dxForm().dxForm("instance").option("formData");
+                  ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ sumInsuredTotal: formItems.sumInsuredTotal })} , {
+                         onSuccess: function (response) {
+                         },
+                         onError: function (err) {
+                         }
+                   });
              }} },
              { dataField: "locationCountDeclared", label: { template: labelTpl("LocationCountDeclared - Số location khai báo") } },
              { dataField: "locationCountLegacy", label: { template: labelTpl("LocationCountLegacy - Số location (legacy)") } },
@@ -77,13 +79,7 @@
              { dataField: "premiumTotal", editorType:"dxNumberBox", editorOptions: {format: '#,##0', onValueChanged: function (et) {
 
              if (et.previousValue != et.value && et.previousValue != 0){
-                 var formItems = $("#formTS").dxForm().dxForm("instance").option("formData");
-                  ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ premiumTotal: et.value })} , {
-                         onSuccess: function (response) {
-                         },
-                         onError: function (err) {
-                         }
-                   });
+                
                      // $.ajax({
                      //     url: `/api/Quotation/UpdateData`,
                      //     type: "PUT",
@@ -96,18 +92,20 @@
                      //     }
                      // });
              }
+             } ,onFocusOut: function (et) {
+                var formItems = $("#formTS").dxForm().dxForm("instance").option("formData");
+                  ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ premiumTotal: formItems.premiumTotal })} , {
+                         onSuccess: function (response) {
+                         },
+                         onError: function (err) {
+                         }
+                   });
              }} },
              { dataField: "premiumTotalBeforeVat", label: { template: labelTpl("PremiumTotalBeforeVat - Tổng premium trước VAT") } },
              { dataField: "totalDue", editorType:"dxNumberBox", editorOptions: {format: '#,##0', onValueChanged: function (ed) {
 
              if (ed.previousValue != ed.value && ed.previousValue != 0){
-                 var formItems = $("#formTS").dxForm().dxForm("instance").option("formData");
-                  ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ totalDue: ed.value })} , {
-                         onSuccess: function (response) {
-                         },
-                         onError: function (err) {
-                         }
-                   });
+                
                      // $.ajax({
                      //     url: `/api/Quotation/UpdateData`,
                      //     type: "PUT",
@@ -120,7 +118,20 @@
                      //     }
                      // });
              }
-             }} },
+             }
+             ,onFocusOut: function (ed) {
+               var formItems = $("#formTS").dxForm().dxForm("instance").option("formData");
+               debugger
+                  ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ totalDue: formItems.totalDue })} , {
+                         onSuccess: function (response) {
+                         },
+                         onError: function (err) {
+                         }
+                   });
+             }
+         
+                    
+         } },
              { dataField: "premiumAnnualTotal", label: { template: labelTpl("PremiumAnnualTotal - Total annual premium") } },
 
              { dataField: "premiumVoluntary", label: { template: labelTpl("PremiumVoluntary - Voluntary premium") } },
