@@ -19,6 +19,8 @@ using System.Globalization;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using System.Text.Json;
+using System.Configuration;
+using TMIVHashing;
 namespace ERPCore.Common
 {
     public static class Util
@@ -2342,6 +2344,34 @@ VALUES
             }
         }
 
+        public static string ParseConnectionString(string connectionString)
+        {
+            var builderStr = new SqlConnectionStringBuilder(connectionString);
+
+            bool isUseEncryption = bool.Parse(ConfigurationManager.AppSettings["encryption"]);
+
+
+            if (isUseEncryption)
+            {
+                string scheme = ConfigurationManager.AppSettings["scheme"];
+                string encryptString = Environment.GetEnvironmentVariable($"{scheme}_PWD", EnvironmentVariableTarget.Machine);
+                var passwordDecrypt = KeyVaultLocal.DecryptConnectionStringPassword(encryptString, "ApplicationSecretKey", "ApplicationSaltKey", 10);
+                //string password = KeyVaultLocal.DecryptConnectionStringPassword(builderStr.Password, "ApplicationSecretKey", "ApplicationSaltKey", 10);
+                builderStr.Password = passwordDecrypt;
+            }
+            //try
+            //{
+            //    string writeString = Environment.GetEnvironmentVariable("RETool_PWD", EnvironmentVariableTarget.Machine);
+            //    File.WriteAllText("application_key.txt", writeString);
+            //}
+            //catch (Exception ex)
+            //{
+            //    File.WriteAllText("error.txt", "Error");
+            //}
+
+
+            return builderStr.ConnectionString;
+        }
     }
     public enum CommandQueryType
     {

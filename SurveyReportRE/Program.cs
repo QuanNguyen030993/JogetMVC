@@ -27,8 +27,16 @@ var builder = WebApplication.CreateBuilder(args);
 string connectionLogString = ControllerUtil.ParseConnectionString(builder.Configuration.GetConnectionString("LogConnection"), builder.Configuration);
 var config = builder.Configuration.GetFileProvider();
 var logger = new LoggerConfiguration()
-                    .ReadFrom.Configuration(builder.Configuration)
+                    //.ReadFrom.Configuration(builder.Configuration)
                     .Enrich.FromLogContext()
+                    .WriteTo.MSSqlServer(
+                            connectionLogString,
+                            sinkOptions: new Serilog.Sinks.MSSqlServer.MSSqlServerSinkOptions
+                            {
+                                TableName = "Logs",
+                                AutoCreateSqlTable = true
+                            }
+                        )
                     //.Filter.ByIncludingOnly(logEvent =>
                     //     logEvent.Level == LogEventLevel.Error || logEvent.Level == LogEventLevel.Warning || logEvent.Level == LogEventLevel.Information
                     //)

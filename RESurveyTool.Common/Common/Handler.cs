@@ -45,9 +45,7 @@ namespace ERPCore.Common.Common
                     Directory.CreateDirectory(Path.Combine(blobpath, "LibLogs"));
                 }
             }
-            //LoggerUtil.LogInfo(seriLogs, Constant.ConfigConstant._logConnection, blobpath, exception);
-            LoggerUtil.LogError( exception, exception.Message, Constant.ConfigConstant._logConnection);
-            
+            LoggerUtil.LogError(exception, exception.Message, Util.ParseConnectionString(Constant.ConfigConstant._logConnection));
         }
     }
 }
