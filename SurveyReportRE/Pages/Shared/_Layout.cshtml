@@ -1,24 +1,24 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 @if (!string.IsNullOrEmpty(@ViewData["Title"]?.ToString()) && @ViewData["Title"]?.ToString() == "Management")
-    {
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+{
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>@ViewData["Title"] - Quotation Management</title>
-@*     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+        @*     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" /> *@
-    
-    @* <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script> *@
-    @* <script src="~/js/site.js" asp-append-version="true"></script> *@
-</head>
-    }
+
+        @* <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script> *@
+        @* <script src="~/js/site.js" asp-append-version="true"></script> *@
+    </head>
+}
 <body>
-   
+
     @* <div class="container"> *@
     @if (!string.IsNullOrEmpty(@ViewData["Title"]?.ToString()) && @ViewData["Title"]?.ToString() == "Management")
     {
-        <aside class="main-sidebar">
+        <nav class="main-sidebar">
             <section class="sidebar" style="height: auto;">
                 @* <div class="sidebar-form"> *@
                 @* <div class="input-group"> *@
@@ -34,13 +34,12 @@
                 </ul>
 
             </section>
-        </aside>
-        <main role="main" class="container pb-3">
-            @RenderBody()
-        </main>
-
-        <aside id="rightCommentDock" class="rightDock main-sidebar-right">
-            <div class="dockCard">
+        </nav>
+            <main role="main" class="container pb-3">
+                @RenderBody()
+            </main>
+                <aside id="rightCommentDock" class="rightDock main-sidebar-right">
+                    <div class="dockCard">
                 <div class="dockHeader">
                     <div>
                         <span class="dockTitle">Comment Log</span>

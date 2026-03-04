@@ -9,7 +9,13 @@
     right: 0;
     padding-right: 25px;
 }
+main {
+    flex: 3;
+}
 
+aside {
+    flex: 1;
+}
 .custom-link {
     color: #007bff;
     text-decoration: none; 
@@ -502,7 +508,7 @@
 }
 .content-wrapper {
     margin-top: 30px;
-    margin-right: var(--collapsed-mr);
+    /*margin-right: var(--collapsed-mr);*/
     /*position: absolute;*/
     background-color: white;
     /*width: 120%;*/

@@ -555,16 +555,16 @@
             setTimeout(function () {
                 const body = document.body;
 
-                if (body.classList.contains("sidebar-collapse")) {
-                    // sidebar collapsed → reset margin-right
-                    document.documentElement.style.setProperty("--collapsed-mr", "-22%");
-                    document.documentElement.style.setProperty("--collapsed-form-mr", "-42%");
-                    // document.documentElement.style.setProperty("--collapsed-grid-max-mr", "70%");
-                } else {
-                    document.documentElement.style.setProperty("--collapsed-mr", "-22%");
-                    document.documentElement.style.setProperty("--collapsed-form-mr", "-26%");
-                    // document.documentElement.style.setProperty("--collapsed-grid-max-mr", "73%");
-                }
+                // if (body.classList.contains("sidebar-collapse")) {
+                //     // sidebar collapsed → reset margin-right
+                //     document.documentElement.style.setProperty("--collapsed-mr", "-22%");
+                //     document.documentElement.style.setProperty("--collapsed-form-mr", "-42%");
+                //     // document.documentElement.style.setProperty("--collapsed-grid-max-mr", "70%");
+                // } else {
+                //     document.documentElement.style.setProperty("--collapsed-mr", "-22%");
+                //     document.documentElement.style.setProperty("--collapsed-form-mr", "-26%");
+                //     // document.documentElement.style.setProperty("--collapsed-grid-max-mr", "73%");
+                // }
             }, 0); 
         });
     });

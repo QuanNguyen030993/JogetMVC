@@ -1,6 +1,6 @@
 ﻿:root {
     --collapsed-ml: -15%;
-    --collapsed-mr: -22%;
+    --collapsed-mr: 5%;
     --collapsed-form-mr: -26%;
     /*--collapsed-grid-max-mr: 73%;*/
     --sidebar-w: 260px;
