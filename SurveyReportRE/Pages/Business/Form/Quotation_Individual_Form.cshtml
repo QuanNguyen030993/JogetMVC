@@ -18,15 +18,6 @@ Note:
         padding-right: 18px;
     }
 
-    /* actionBar: giữ nguyên dưới cùng */
-   /*  .actionBar {
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        height: 56px; 
-        z-index: 2000;
-    } */
     .actionBar {
         position: fixed;
         left: var(--sidebar-w);
@@ -43,177 +34,29 @@ Note:
         gap: 12px;
     }
 
-    /* contentGrid phải có height rõ ràng để % hoạt động */
     .contentGrid {
-        height: calc(100vh - 56px); 
+        height: calc(100vh - 56px);
         margin-right: var(--collapsed-form-mr);
         display: grid;
-        grid-template-columns: 360px 1fr; /* ví dụ list + detail */
-        gap: 12px; /* tùy */
-        padding: 12px; /* tùy */
+        grid-template-columns: 360px 1fr;
+        gap: 12px;
+        padding: 12px;
         box-sizing: border-box;
         min-height: 0;
     }
 
-    /* .dept-node {
-        position: relative;
-        width: var(--node);
-        height: var(--node);
-        border-radius: 999px;
-        background: #fff;
-        border: 2px solid var(--nodeBorder);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 8px;
-        font-weight: 900;
-        color: #111827;
-        box-shadow: 0 6px 18px rgba(0,0,0,.08);
-        pointer-events: auto;
-        cursor: pointer;
-        user-select: none;
-        transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
-        z-index: 1;
-    }
-
-
-   
-        .dept-node.status {
-            border-color: rgba(232,74,95,.95);
-            box-shadow: 0 0 0 4px rgba(232,74,95,.16), 0 10px 22px rgba(0,0,0,.10);
-        }
-      
-        .dept-node.focus {
-            border-color: rgba(37,99,235,.95);
-            box-shadow: 0 0 0 4px rgba(37,99,235,.18), 0 10px 22px rgba(0,0,0,.10);
-        }
-       
-        .dept-node.status.focus {
-            border-color: rgba(37,99,235,.95);
-        }
-
-            .dept-node.status.focus::after {
-                content: "";
-                position: absolute;
-                inset: 4px;
-                border-radius: 999px;
-                border: 2px solid rgba(232,74,95,.9);
-                pointer-events: none;
-            }
-
-
-   
-    .dept-circle {
-        width: var(--node);
-        height: var(--node);
-        border-radius: 999px;
-        background: #fff;
-        border: 2px solid var(--nodeBorder);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 8px;
-        font-weight: 900;
-        color: #111827;
-        box-shadow: 0 6px 18px rgba(0,0,0,.08);
-        cursor: pointer;
-        user-select: none;
-        transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
-    }
-
-    .dept-node:hover .dept-circle {
-        transform: scale(1.06);
-    }
-
-   
-    .dept-callout {
-        position: relative;
-        margin-right: 200px;
-        min-width: 150px;
-        height: 30px;
-        padding: 0 10px;
-        border-radius: 10px;
-        background: #fff;
-        border: 1px solid rgba(17,24,39,.14);
-        box-shadow: 0 6px 14px rgba(0,0,0,.08);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-       
-        opacity: 0;
-        visibility: hidden;
-        transform: translateX(10px);
-        pointer-events: none;
-        transition: opacity .12s ease, transform .12s ease, visibility .12s ease;
-    }
-
-       
-        .dept-callout::after {
-            content: "";
-            position: absolute;
-            right: -10px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 0;
-            height: 0;
-            border-top: 8px solid transparent;
-            border-bottom: 8px solid transparent;
-            border-left: 10px solid #fff;
-        }
-
-        .dept-callout::before {
-            content: "";
-            position: absolute;
-            right: -11px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 0;
-            height: 0;
-            border-top: 9px solid transparent;
-            border-bottom: 9px solid transparent;
-            border-left: 11px solid rgba(17,24,39,.14);
-        }
-
-    
-    .dept-node:hover .dept-callout {
-        opacity: 1;
-        visibility: visible;
-        transform: translateX(0);
-        pointer-events: auto;
-    }
-
-    
-    .dept-callout .co-icon {
-        width: 18px;
-        height: 18px;
-        display: inline-grid;
-        place-items: center;
-    }
-
-    .dept-callout .co-text {
-        font-size: 12px;
-        font-weight: 800;
-        color: rgba(17,24,39,.85);
-    } */
-
-    /* =========================
-       NODE container (không ép circle nữa)
-       ========================= */
+    /* ======= dept node + callout (giữ đúng style bạn đã làm) ======= */
     .dept-node {
         position: relative;
         display: flex;
         align-items: center;
         justify-content: flex-end;
-        /* khoảng cách callout-circle chỉ để đẹp, callout là absolute nên gap không ảnh hưởng */
         gap: 10px;
         z-index: 1;
     }
 
-    /* =========================
-       CIRCLE = giữ nguyên style cũ của dept-node
-       ========================= */
     .dept-circle {
-        position: relative; /* để vẽ inner ring khi both */
+        position: relative;
         width: var(--node);
         height: var(--node);
         border-radius: 999px;
@@ -230,17 +73,13 @@ Note:
         cursor: pointer;
         user-select: none;
         transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
-        z-index: 2; /* nằm trên vline */
+        z-index: 2;
     }
 
-    /* hover scale */
     .dept-node:hover .dept-circle {
         transform: scale(1.06);
     }
 
-    /* =========================
-       RINGS (status / focus / both)
-       ========================= */
     .dept-node.status .dept-circle {
         border-color: rgba(232,74,95,.95);
         box-shadow: 0 0 0 4px rgba(232,74,95,.16), 0 10px 22px rgba(0,0,0,.10);
@@ -264,13 +103,8 @@ Note:
             pointer-events: none;
         }
 
-    /* =========================
-       CALLOUT (speech bubble) - hover only
-       - absolute để KHÔNG phá layout và KHÔNG mất click/text
-       ========================= */
     .dept-callout {
         position: absolute;
-        /* nằm bên trái circle */
         right: calc(var(--node) + 12px);
         top: 50%;
         transform: translateY(-50%) translateX(10px);
@@ -285,16 +119,13 @@ Note:
         align-items: center;
         gap: 8px;
         white-space: nowrap;
-        /* hidden default */
         opacity: 0;
         visibility: hidden;
-        /* QUAN TRỌNG: để không chặn click vào circle */
         pointer-events: none;
         transition: opacity .12s ease, transform .12s ease, visibility .12s ease;
         z-index: 3;
     }
 
-        /* arrow */
         .dept-callout::after {
             content: "";
             position: absolute;
@@ -321,14 +152,12 @@ Note:
             border-left: 11px solid rgba(17,24,39,.14);
         }
 
-    /* hover node => show callout */
     .dept-node:hover .dept-callout {
         opacity: 1;
         visibility: visible;
         transform: translateY(-50%) translateX(0);
     }
 
-    /* icon + text */
     .dept-callout .co-icon {
         width: 18px;
         height: 18px;
@@ -342,15 +171,69 @@ Note:
         color: rgba(17,24,39,.85);
     }
 
+    /* ======= NEW: Section header click expand/collapse + updated time ======= */
+    .dept-section .dept-header {
+        cursor: pointer;
+        user-select: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 10px;
+        border-bottom: 1px solid rgba(17,24,39,.08);
+    }
+
+    .dept-hint-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .dept-updated {
+        font-size: 12px;
+        font-weight: 800;
+        color: rgba(17,24,39,.65);
+        white-space: nowrap;
+    }
+
+    .dept-toggle-icon {
+        font-size: 14px;
+        font-weight: 900;
+        opacity: .7;
+        transform: rotate(0deg);
+        transition: transform .15s ease;
+    }
+
+    .dept-body {
+        overflow: hidden;
+        max-height: 2000px;
+        transition: max-height .18s ease, opacity .18s ease;
+        opacity: 1;
+        min-height: 0;
+        padding: 10px;
+    }
+
+    .dept-section.collapsed .dept-body {
+        max-height: 0px;
+        opacity: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+
+    .dept-section.collapsed .dept-toggle-icon {
+        transform: rotate(-90deg);
+    }
 
 </style>
+
 <script type="text/javascript">
     $(function () {
-        var quotes = [
-        ];
-        // ===== Mock quotation list data =====
-         var query = "SELECT * FROM Quotation WITH (NOLOCK) ORDER BY CreatedDate DESC";
-         $.ajax({
+
+        // =========================
+        // 0) Data load
+        // =========================
+        var quotes = [];
+        var query = "SELECT * FROM Quotation WITH (NOLOCK) ORDER BY CreatedDate DESC";
+        $.ajax({
             url: `/api/Quotation/ExecuteCustomQuery`,
             method: "POST",
             async: false,
@@ -361,7 +244,6 @@ Note:
 
             }
         });
-            var commentPanelOpened = false;
 
          if (_isSuperUser)
        
@@ -372,29 +254,34 @@ Note:
         var Roles = ["MKT", "TS", "UW", "LMKT", "PM"];
         var currentUserRole = _role;
         $("#loginRoleLabel").text(currentUserRole);
+
         var filter = "all";
         let searchText = "";
         let selectedId = quotes[0]?.id;
         var selectedCodeNo = quotes[0]?.quotationCode;
+
         var commentPanelOpened = false;
 
-        // stage vs focus
-        let stageDept = quotes[0]?.stageDept;   // status ring only (from workflow stage)
-        let focusDept = _role == "IT" ? "MKT" : _role;   // click highlight only
+        let stageDept = quotes[0]?.stageDept;                 // status ring
+        let focusDept = _role == "IT" ? "MKT" : _role;        // focus ring
 
         function money(n) { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(n || 0); }
-           function normalizeStatus(raw) {
-            const s = String(raw ?? "").trim();
 
-            // normalize lower + collapse spaces
+        function fmtTimeLocal(isoOrDate) {
+            if (!isoOrDate) return "—";
+            const d = (isoOrDate instanceof Date) ? isoOrDate : new Date(isoOrDate);
+            if (isNaN(d.getTime())) return "—";
+            const pad = (n) => String(n).padStart(2, "0");
+            return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
+
+        function normalizeStatus(raw) {
+            const s = String(raw ?? "").trim();
             const k = s.toLowerCase().replace(/\s+/g, " ");
 
-            // Map theo table bạn đưa
-            // Pending/New
             if (k === "" || k === "new") return { css: "new", text: "New" };
             if (k === "pending") return { css: "pending", text: "Pending" };
 
-            // In Progress group
             if (k === "in progress") return { css: "in-progress", text: "In Progress" };
             if (k === "accept") return { css: "accepted", text: "Accept" };
             if (k === "approved") return { css: "approved", text: "Approved" };
@@ -403,316 +290,55 @@ Note:
             if (k === "client accept") return { css: "client-accept", text: "Client accept" };
             if (k === "client refuse") return { css: "client-refuse", text: "Client refuse" };
 
-            // Complete group
             if (k === "done") return { css: "done", text: "Done" };
             if (k === "complete") return { css: "complete", text: "Complete" };
             if (k === "dispose") return { css: "dispose", text: "Dispose" };
             if (k === "archive") return { css: "archive", text: "Archive" };
 
-            // Unknown / ?
             if (k === "?" || k === "unknown") return { css: "unknown", text: "?" };
-
-            // Fallback: vẫn hiện text gốc nhưng cho màu unknown
             return { css: "unknown", text: s || "?" };
         }
 
-        /* API compatibility: giữ tên hàm cũ để bạn không phải sửa nhiều nơi */
         function statusClass(raw) { return normalizeStatus(raw).css; }
-        function statusText(raw)  { return normalizeStatus(raw).text; }
+        function statusText(raw) { return normalizeStatus(raw).text; }
 
-        // =============================
-        // 3) Mapping model => DevExtreme Forms per dept
-        // =============================
         function getSelectedModel() {
-            const idx = (selectedId || 1) - 1;
-            return quotes[idx] || quotes[0];
+            const q = quotes.find(x => x.id === selectedId) || quotes[0];
+            return q || null;
         }
 
-
-        function applyFilter(data){
-          var arr = data.slice();
-          if(filter !== "all") arr = arr.filter(x => x.status === filter);
-          if(searchText){
-            var t = searchText.toLowerCase();
-            arr = arr.filter(x => x.quotationCode.toLowerCase().includes(t) || x.clientName?.toLowerCase().includes(t) || String(x.requestNo).includes(t));
-          }
-          return arr;
-        }
-       
-
- 
-
-        // ===== Form data =====
-        var deptData = {
-          MKT: {} ,
-          TS:  {  },
-          UW:  { },
-          LMKT:{  },
-          PM:  {  }
-        };
-
-        function renderDetail(){
-          var q = quotes.find(x => x.id === selectedId) || quotes[0];
-          if(!q) return;
-
-          $("#recordNo").text(q.quotationCode);
-           const st = q.quotationStatus ?? q.status;
-          $("#detailStatus")
-          .text(statusText(st))
-          .attr("class", `statusTag ${statusClass(st)}`);
-
-          // demo: stageDept derived from something (here we keep existing stageDept)
-          // You can map from q.status or workflow stage:
-          // stageDept = q.status === 'accepted' ? 'PM' : 'UW' ... etc
-          $("#stageDeptPill").text(`Quotation progress flow: ${stageDept}`);
-
-          // deptData.MKT.clientName = q.clientName;
-          // deptData.MKT.notes = q.terms;
-           deptData.MKT  = q;
-           deptData.TS  = q;
-           deptData.UW  = q;
-           deptData.LMKT  = q;
-           deptData.PM  = q;
-
-          renderDeptForms();
-          // renderItemsGrid(q);
-
-          // apply highlight rings without using scroll
-          applyNodeHighlights();
-          applySectionFocusHighlight();
-
-          // scroll to focus dept once when selecting a quotation (optional)
-          scrollToDept(focusDept);
+        function applyFilter(data) {
+            var arr = (data || []).slice();
+            if (filter !== "all") arr = arr.filter(x => x.status === filter);
+            if (searchText) {
+                var t = searchText.toLowerCase();
+                arr = arr.filter(x =>
+                    (x.quotationCode || "").toLowerCase().includes(t) ||
+                    (x.clientName || "").toLowerCase().includes(t) ||
+                    String(x.requestNo || "").includes(t)
+                );
+            }
+            return arr;
         }
 
-        function renderItemsGrid(q){
-          $("#itemsGrid").dxDataGrid({
-            dataSource: q.items,//.map(it => ({ ...it, amount: (it.qty||0)*(it.rate||0) })),
-            showBorders: true,
-            height: 240,
-            columnAutoWidth: true,
-            columns: [
-              { dataField:"name", caption:"Product / Services Name" },
-              { dataField:"unit", caption:"Unit", width: 90 },
-              { dataField:"qty", caption:"Quantity", dataType:"number", width: 100 },
-              { dataField:"rate", caption:"Rate", dataType:"number", format: { type:"currency", precision:2 } },
-              { dataField:"amount", caption:"Amount", dataType:"number", format: { type:"currency", precision:2 } }
-            ],
-            summary: { totalItems:[{ column:"amount", summaryType:"sum", valueFormat:{type:"currency",precision:2}, displayFormat:"Total: {0}" }] }
-          });
-        }
-        function updateHints() {
-            // $("#hintMKT").text(`READ/EDIT depends • login=${currentUserRole}`);
-            // $("#hintTS").text(`READ/EDIT depends • login=${currentUserRole}`);
-            // $("#hintUW").text(`READ/EDIT depends • login=${currentUserRole}`);
-            // $("#hintLMKT").text(`READ/EDIT depends • login=${currentUserRole}`);
-            // $("#hintPM").text(`READ/EDIT depends • login=${currentUserRole}`);
-            $("#focusDeptPill").text(`Focus: ${focusDept}`);
-               Roles.forEach(k => {
-        const canEdit =  (currentUserRole === k) ? true : false;
-        // <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-        //                   <!-- body -->
-        //                   <rect x="5" y="10" width="14" height="10" rx="2"
-        //                         stroke="currentColor" stroke-width="2"/>
+        // =========================
+        // 2) Form data per dept
+        // =========================
+        var deptData = { MKT: {}, TS: {}, UW: {}, LMKT: {}, PM: {} };
 
-        //                   <!-- shackle: rotated left, detached feeling -->
-        //                   <path d="M9 11V6a4.5 4.5 0 0 1 7 -3"
-        //                         stroke="currentColor" stroke-width="2"
-        //                         stroke-linecap="round"/>
-        //                 </svg>
-        const icon = canEdit
-                  ? `
-                    <span class="lock editable" title="Editable">
-                         <svg xmlns="http://www.w3.org/2000/svg" width="27" height="24"
-                             viewBox="0 0 27 24" aria-hidden="true">
-                          <!-- Shackle (open, shifted right) -->
-                          <path d="M16 10V8a4 4 0 0 1 8 0v4"
-                                fill="none" stroke="currentColor" stroke-width="3"
-                                stroke-linecap="round" stroke-linejoin="round"/>
+        function renderDeptForms() {
+            $("#formMKT").dxForm({ formData: deptData.MKT, readOnly: true, colCount: 1 });
+            $("#formTS").dxForm({ formData: deptData.TS, readOnly: true, colCount: 1 });
+            $("#formUW").dxForm({ formData: deptData.UW, readOnly: true, colCount: 1 });
+            $("#formLMKT").dxForm({ formData: deptData.LMKT, readOnly: true, colCount: 1 });
+            $("#formPM").dxForm({ formData: deptData.PM, readOnly: true, colCount: 1 });
 
-                          <!-- Body with keyhole (punched) -->
-                          <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"
-                                d="M6 10h12a4 4 0 0 1 4 4v6a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4v-6a4 4 0 0 1 4-4Zm6 4.2
-                                   a2 2 0 1 0 0 4a2 2 0 0 0 0-4Zm-.9 3.7
-                                   c0-.3.2-.5.5-.6a.9.9 0 1 0 .8 0c.3.1.5.3.5.6V20
-                                   a.9.9 0 0 1-1.8 0v-2.1Z"/>
-                        </svg>
-
-                      EDIT
-                    </span>`
-                  : `
-                    <span class="lock readonly" title="Read only">
-                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                             viewBox="0 0 24 24" aria-hidden="true">
-                          <!-- Shackle -->
-                          <path d="M8 10V8a4 4 0 0 1 8 0v2"
-                                fill="none" stroke="currentColor" stroke-width="3"
-                                stroke-linecap="round" stroke-linejoin="round"/>
-
-                          <!-- Body with keyhole (punched) -->
-                          <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"
-                                d="M6 10h12a4 4 0 0 1 4 4v6a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4v-6a4 4 0 0 1 4-4Zm6 4.2
-                                   a2 2 0 1 0 0 4a2 2 0 0 0 0-4Zm-.9 3.7
-                                   c0-.3.2-.5.5-.6a.9.9 0 1 0 .8 0c.3.1.5.3.5.6V20
-                                   a.9.9 0 0 1-1.8 0v-2.1Z"/>
-                        </svg>
-
-                      LOCK
-                    </span>`;
-
-        $(`#hint${k}`).html(icon);
-          });
-        }
-        function renderDeptForms(){
-
-          $("#formMKT").dxForm({
-            formData: deptData.MKT, readOnly: true, colCount: 1
-          });
-
-          $("#formTS").dxForm({
-            formData: deptData.TS, readOnly: true, colCount: 1
-          });
-
-          $("#formUW").dxForm({
-            formData: deptData.UW, readOnly: true, colCount: 1,
-          });
-
-          $("#formLMKT").dxForm({
-            formData: deptData.LMKT, readOnly: true, colCount: 1
-          });
-
-          $("#formPM").dxForm({
-            formData: deptData.PM, readOnly: true, colCount: 1
-          });
-
-          applyEditLock();
-          updateHints();
-        }
-
-        function applyEditLock(){ //  Hàm focus
-          // Only allow edit when focusDept matches currentUserRole (demo rule)
-          var roMKT  = !(currentUserRole === "MKT"  && focusDept === "MKT");
-          var roTS   = !(currentUserRole === "TS"   && focusDept === "TS");
-          var roUW   = !(currentUserRole === "UW"   && focusDept === "UW");
-          var roLMKT = !(currentUserRole === "LMKT" && focusDept === "LMKT");
-          var roPM   = !(currentUserRole === "PM"   && focusDept === "PM");
-
-          $("#formMKT").dxForm("instance").option("readOnly", roMKT);
-          $("#formTS").dxForm("instance").option("readOnly", roTS);
-          $("#formUW").dxForm("instance").option("readOnly", roUW);
-          $("#formLMKT").dxForm("instance").option("readOnly", roLMKT);
-          $("#formPM").dxForm("instance").option("readOnly", roPM);
-
-        
-        }
-        //  function updateHints(){
-
-        //   $("#focusDeptPill").text(`Focus section: ${focusDept}`);
-
-        //   Roles.forEach(k => {
-        //     var canEdit = currentUserRole === k ? true : false;
-        //     $(`#hint${k}`).text(`${canEdit ? "EDIT ENABLED" : "READ ONLY"} • login=${currentUserRole}`);
-        //   });
-        // }
-        $("#roleSelect").dxSelectBox({
-          items: Roles, value: currentUserRole, stylingMode:"outlined",
-          onValueChanged: (e) => {
-            currentUserRole = e.value;
-            $("#loginRoleLabel").text(currentUserRole);
             applyEditLock();
             updateHints();
-            DevExpress.ui.notify("Role switched: " + currentUserRole, "info", 1200);
-          }
-        });
-      
-
-        function applyNodeHighlights(){
-          // status ring: stageDept only
-          // focus ring: focusDept only
-          $(".dept-node").removeClass("status focus");
-          $(`.dept-node[data-key='${stageDept}']`).addClass("status");
-          $(`.dept-node[data-key='${focusDept}']`).addClass("focus");
         }
-
-        function applySectionFocusHighlight(){
-          $(".dept-section").removeClass("focused");
-          $(`#sec${focusDept}`).addClass("focused");
-        }
-
-        function scrollToDept(dept){
-          var selector = `#sec${dept}`;
-          var container = document.getElementById("overviewScroll");
-          var el = document.querySelector(selector);
-          if(!container || !el) return;
-          container.scrollTo({ top: el.offsetTop - 8, behavior:"smooth" });
-        }
-
-        function setupDeptTree(){
-          // Clicking node => set focusDept (blue), scroll, highlight section, apply edit lock
-          $(".dept-node").on("click", function(){
-            var key = $(this).data("key");
-            focusDept = key;
-
-            applyNodeHighlights();
-            applySectionFocusHighlight();
-            applyEditLock();
-            updateHints();
-
-            scrollToDept(focusDept);
-          });
-
-          // IMPORTANT: scroll does NOT change any circle selection (per your request)
-          // => We DO NOT register IntersectionObserver at all.
-        }
-
-        // Compute line height so it never crosses circles and never exceeds top/bottom circle edges
-        function layoutTreeLine(){
-          var $stack = $("#treeStack");
-          var $nodes = $stack.find(".dept-node");z
-          var $line = $("#treeVLine");
-          if(!$nodes.length) return;
-
-          var stackRect = $stack[0].getBoundingClientRect();
-
-          var first = $nodes[0].getBoundingClientRect();
-          var last  = $nodes[$nodes.length-1].getBoundingClientRect();
-
-          var topInside = (first.top - stackRect.top) + (first.height / 2);
-          var bottomInside = (last.top - stackRect.top) + (last.height / 2);
-
-          // line starts at center of first and ends at center of last
-          // BUT we want line to NOT pass through circles => put behind nodes (z-index 0), that's ok
-          // and ensure it doesn't exceed circle centers (so ends at centers, not beyond)
-          $line.css({
-            top: `${topInside}px`,
-            height: `${bottomInside - topInside}px`
-          });
-        }
-
-        // ===== Branch overlay =====
-        // function openBranchOverlay(){ $("#branchOverlay").show(); }
-        function closeBranchOverlay(){
-          $("#branchOverlay").hide();
-          $("#routeTS, #routeUW").removeClass("active");
-        }
-
-
-        function setActiveNav(el){
-          $(".navItem").removeClass("active");
-          $(el).addClass("active");
-        }
-        // const leaderMktState = { Approval: null, Comment: "" };
-        // const pmState = { PolicyNo: "", InvoiceTo: "", Inception: null, Expiry: null, Ref_RequestNo: "", Ref_QuotationCode: "", Ref_ClientName: "", Ref_PremiumTotal: null };
-
-        // function syncPmRefFromModel(m) {
-        //     pmState.Ref_RequestNo = m.RequestNo || "";
-        //     pmState.Ref_QuotationCode = m.QuotationCode || "";
-        //     pmState.Ref_ClientName = m.ClientName || m.PolicyHolderName || "";
-        //     pmState.Ref_PremiumTotal = m.PremiumTotal || null;
-        // }
 
         function applyEditLock() {
-            // demo rule: only edit when focusDept == currentUserRole
+            // demo rule: chỉ edit khi login đúng dept
             const roMKT = !(currentUserRole === "MKT");
             const roTS = !(currentUserRole === "TS");
             const roUW = !(currentUserRole === "UW");
@@ -724,15 +350,81 @@ Note:
             $("#formUW").dxForm("instance")?.option("readOnly", roUW);
             $("#formLMKT").dxForm("instance")?.option("readOnly", roLMKT);
             $("#formPM").dxForm("instance")?.option("readOnly", roPM);
+
+            $("#roleSelect").dxSelectBox({
+          items: Roles, value: currentUserRole, stylingMode:"outlined",
+          onValueChanged: (e) => {
+            currentUserRole = e.value;
+            $("#loginRoleLabel").text(currentUserRole);
+            applyEditLock();
+            updateHints();
+            DevExpress.ui.notify("Role switched: " + currentUserRole, "info", 1200);
+          }
+        });
         }
-        
-      
-        
+
+        function updateHints() {
+            $("#focusDeptPill").text(`Focus: ${focusDept}`);
+
+            Roles.forEach(k => {
+                const canEdit = (currentUserRole === k);
+                const icon = canEdit
+                    ? `<span class="lock editable" title="Editable">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="27" height="24" viewBox="0 0 27 24" aria-hidden="true">
+                           <path d="M16 10V8a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                           <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"
+                                 d="M6 10h12a4 4 0 0 1 4 4v6a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4v-6a4 4 0 0 1 4-4Zm6 4.2
+                                    a2 2 0 1 0 0 4a2 2 0 0 0 0-4Zm-.9 3.7
+                                    c0-.3.2-.5.5-.6a.9.9 0 1 0 .8 0c.3.1.5.3.5.6V20
+                                    a.9.9 0 0 1-1.8 0v-2.1Z"/>
+                         </svg> EDIT
+                       </span>`
+                    : `<span class="lock readonly" title="Read only">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+                           <path d="M8 10V8a4 4 0 0 1 8 0v2" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                           <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"
+                                 d="M6 10h12a4 4 0 0 1 4 4v6a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4v-6a4 4 0 0 1 4-4Zm6 4.2
+                                    a2 2 0 1 0 0 4a2 2 0 0 0 0-4Zm-.9 3.7
+                                    c0-.3.2-.5.5-.6a.9.9 0 1 0 .8 0c.3.1.5.3.5.6V20
+                                    a.9.9 0 0 1-1.8 0v-2.1Z"/>
+                         </svg> LOCK
+                       </span>`;
+
+                $(`#hint${k}`).html(icon);
+            });
+        }
+
+        // =========================
+        // 3) Updated time per section
+        // =========================
+        function updateSectionUpdatedTime(q) {
+            // Nếu bạn có field thật, map vào đây.
+            const map = {
+                MKT: q?.mktUpdatedAt || q?.modifiedDate || q?.updatedAt,
+                TS: q?.tsUpdatedAt,
+                UW: q?.uwUpdatedAt,
+                LMKT: q?.lmktUpdatedAt,
+                PM: q?.pmUpdatedAt
+            };
+            Object.keys(map).forEach(dept => {
+                $(`#upd${dept}`).text("Updated: " + fmtTimeLocal(map[dept]));
+            });
+        }
+
+        // =========================
+        // 4) Tree highlight + scroll
+        // =========================
+        function applyNodeHighlights() {
+            $(".dept-node").removeClass("status focus");
+            $(`.dept-node[data-key='${stageDept}']`).addClass("status");
+            $(`.dept-node[data-key='${focusDept}']`).addClass("focus");
+        }
 
         function applySectionFocusHighlight() {
             $(".dept-section").removeClass("focused");
             $(`#sec${focusDept}`).addClass("focused");
         }
+
         function scrollToDept(dept) {
             const container = document.getElementById("overviewScroll");
             const el = document.getElementById("sec" + dept);
@@ -741,14 +433,18 @@ Note:
         }
 
         function setupDeptTree() {
-            $(".dept-node").on("click", function () {
+            $(".dept-node").off("click.tree").on("click.tree", function () {
                 const key = $(this).data("key");
                 focusDept = key;
+
                 applyNodeHighlights();
                 applySectionFocusHighlight();
                 applyEditLock();
                 updateHints();
                 scrollToDept(focusDept);
+
+                // optional: auto expand focused dept
+                setSectionCollapsed(focusDept, false);
             });
         }
 
@@ -762,424 +458,101 @@ Note:
             const first = $nodes[0].getBoundingClientRect();
             const last = $nodes[$nodes.length - 1].getBoundingClientRect();
 
-            // start/end at centers (line not beyond first/last)
             const topInside = (first.top - stackRect.top) + (first.height / 2);
             const bottomInside = (last.top - stackRect.top) + (last.height / 2);
 
             $line.css({ top: `${topInside}px`, height: `${bottomInside - topInside}px` });
         }
 
-        // Branch overlay
-        // function openBranchOverlay() { $("#branchOverlay").show(); }
-        function closeBranchOverlay() { $("#branchOverlay").hide(); $("#routeTS, #routeUW").removeClass("active"); }
+        // =========================
+        // 5) Expand / Collapse sections by clicking header
+        // =========================
+        function setSectionCollapsed(dept, collapsed) {
+            const $sec = $(`#sec${dept}`);
+            if (!$sec.length) return;
+            debugger
+            const body = $sec.find(".dept-body")[0];
 
-
-        // =============================
-        // 4) Hover AJAX module (Comments + Flow History)
-        // - Replace endpoints below to call your server
-        // =============================
-        // const MockupApi = {
-        //     // Example:
-        //     // commentsUrl: (quotationCode) => `/api/quotation/${encodeURIComponent(quotationCode)}/comments`,
-        //     // flowUrl: (quotationCode) => `/api/quotation/${encodeURIComponent(quotationCode)}/flow`,
-        //     commentsUrl: (quotationCode) => `/api/mock/comments?quotationCode=${encodeURIComponent(quotationCode)}`,
-        //     flowUrl: (quotationCode) => `/api/mock/flow?quotationCode=${encodeURIComponent(quotationCode)}`
-        // };
-
-    //     const HoverAjax = (function () {
-    //         const cache = new Map(); // key -> { at, data }
-    //         const xhrs = new Map();  // key -> jqXHR
-    //         const CACHE_MS = 30000;
-
-    //         function debounce(fn, wait) {
-    //             let t = null;
-    //             return function (...args) {
-    //                 clearTimeout(t);
-    //                 t = setTimeout(() => fn.apply(this, args), wait);
-    //             };
-    //         }
-
-    //         function ajaxJson(url, key) {
-    //             const now = Date.now();
-    //             const c = cache.get(key);
-    //             if (c && (now - c.at) < CACHE_MS) return $.Deferred().resolve(c.data).promise();
-
-    //             const prev = xhrs.get(key);
-    //             if (prev && prev.readyState !== 4) prev.abort();
-
-    //             const dfd = $.Deferred();
-    //             const xhr = $.ajax({
-    //                 url, method: "GET", dataType: "json",
-    //                 success: (data) => { cache.set(key, { at: Date.now(), data }); dfd.resolve(data); },
-    //                 error: (xhr, status) => { if (status === "abort") return; dfd.reject(status); }
-    //             });
-    //             xhrs.set(key, xhr);
-    //             return dfd.promise();
-    //         }
-
-    //         function escapeHtml(s) {
-    //             return String(s ?? "")
-    //                 .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
-    //                 .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
-    //         }
-
-    //         // function positionTooltip($tip, rect) {
-    //         //     const margin = 10;
-    //         //     const vw = window.innerWidth, vh = window.innerHeight;
-    //         //     const tipW = $tip.outerWidth(), tipH = $tip.outerHeight();
-
-    //         //     // prefer right side of card
-    //         //     let left = rect.right + margin;
-    //         //     let top = rect.top;
-
-    //         //     if (left + tipW > vw - 8) left = rect.left - tipW - margin;
-    //         //     if (left < 8) left = Math.max(8, vw - tipW - 8);
-    //         //     if (top + tipH > vh - 8) top = Math.max(8, vh - tipH - 8);
-
-    //         //     $tip.css({ left: `${left}px`, top: `${top}px` });
-    //         // }
-
-    //         function renderComments(items) {
-    //             if (!Array.isArray(items) || items.length === 0) {
-    //                 return `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No comments</div>`;
-    //             }
-    //             return items.map((c) => `
-    //         <div class="ct-item">
-    //           <div class="ct-user">${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}</div>
-    //           <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
-    //           <div class="ct-text">${escapeHtml(c.commentText || "")}</div>
-    //         </div>
-    //       `).join("");
-    //         }
-
-    //         function renderFlow(items) {
-    //             if (!Array.isArray(items) || items.length === 0) {
-    //                 return { summary: "-", html: `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No history</div>` };
-    //             }
-    //             const summary = items.map(x => x.dept).join(" → ");
-    //             const arrow = `
-    //         <div class="fh-arrow" aria-hidden="true">
-    //           <svg viewBox="0 0 24 24" fill="none" width="12" height="18">
-    //             <path d="M12 4v12" stroke="black" stroke-width="2" stroke-linecap="round"/>
-    //             <path d="M7 13l5 5 5-5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    //           </svg>
-    //         </div>
-    //       `;
-    //             const html = items.map((x, idx) => {
-    //                 const isCur = (x.dept === stageDept); // stageDept already exists in your mock
-    //                 return `
-    //           <div>
-    //             <div class="fh-row">
-    //               <div class="fh-node ${isCur ? "cur" : ""}">${escapeHtml(x.dept)}</div>
-    //               <div class="fh-meta">
-    //                 <div class="fh-note">${escapeHtml(x.note || "")}</div>
-    //                 <div class="fh-time">${escapeHtml(x.time || "")}</div>
-    //               </div>
-    //             </div>
-    //           </div>
-    //           ${idx < items.length - 1 ? arrow : ""}
-    //         `;
-    //             }).join("");
-    //             return { summary, html };
-    //         }
-    //         // public bind
-    //         function bind() {
-    //             // const $tip = $("#commentTooltip");
-    //             // const $tipSub = $("#commentTooltipSub");
-    //             // const $tipList = $("#commentTooltipList");
-
-    //                 const $panel = $("#commentPanel");
-    //             const $panelSub = $("#commentPanelSub");
-    //             const $panelList = $("#commentPanelList");
-
-
-
-    //             // const loadComments = debounce(function (quoteCode, quoteId) {
-    //             //     $panelList.html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
-
-    //             //     const query = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${quoteId}`;
-    //             //     $.ajax({
-    //             //         url: `/api/QuotationCommentLog/ExecuteCustomQuery`,
-    //             //         method: "POST",
-    //             //         async: true, // NOTE: đổi true để UI không bị đơ
-    //             //         contentType: "application/json",
-    //             //         data: JSON.stringify(query),
-    //             //         success: function (data) {
-    //             //             $panelList.html(renderComments(data));
-    //             //         },
-    //             //         error: function () {
-    //             //             $panelList.html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load comments</div>`);
-    //             //         }
-    //             //     });
-    //             // }, 180);
-
-    //                    /* sửa loadComments: bắn output sang #rightCommentList */
-    //             const loadComments = debounce(function (quoteNo,quoteId) {
-    //                   $("#rightCommentList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
-    //                   const query = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${quoteId}`;
-    //                       $.ajax({
-    //                         url: `/api/QuotationCommentLog/ExecuteCustomQuery`,
-    //                         method: "POST",
-    //                         async: true,
-    //                         contentType: "application/json",
-    //                         data: JSON.stringify(query),
-    //                         success: function (data) {
-    //                           $("#rightCommentList").html(renderComments(data));
-    //                         },
-    //                         error: function () {
-    //                           $("#rightCommentList").html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load comments</div>`);
-    //                         }
-    //                       });
-
-    //                   return {loadComments };
-    //             }, 180);
-
-    //         function openRightCommentPanel() {
-    //           commentPanelOpened = true;
-    //           document.body.classList.add("hasRightPanel");
-    //           $("#rightCommentDock").show(); // optional (CSS đã handle)
-    //         }
-
-    //         function closeRightCommentPanel() {
-    //           commentPanelOpened = false;
-    //           document.body.classList.remove("hasRightPanel");
-    //           $("#rightCommentDock").hide(); // optional
-    //         }
-
-  
-
-    // $("#btnToggleComment").dxButton({
-    //   text: "Comments",
-    //   icon: "comment",
-    //   type: "normal",
-    //   stylingMode: "contained",
-    //   onClick: () => {
-    //     // const q = quotes.find(x => x.id === selectedId) || quotes[0];
-    //     // if (!q) return;
-
-    //     if (!commentPanelOpened) {
-    //       openRightCommentPanel();
-    //       $("#rightCommentSub").text(selectedCodeNo || "-");
-    //       setTimeout(function () {
-    //                 document.documentElement.style.setProperty("--collapsed-form-mr", "-2%");
-                    
-    //         }, 0);
-    //         loadComments(selectedCodeNo,selectedId);
-    //     } else {
-    //         document.documentElement.style.setProperty("--collapsed-form-mr", "-26%");
-    //         closeRightCommentPanel();
-    //     }
-    //   }
-    // });
-
-    // $("#btnCloseRightComment").off("click").on("click", function () {
-    //     document.documentElement.style.setProperty("--collapsed-form-mr", "-26%");
-    //     closeRightCommentPanel();
-    // });
-    // //Hover item instead
-    //             // $("#btnToggleComment").dxButton({
-    //             //     text: "Comments",
-    //             //     icon: "comment",
-    //             //     type: "normal",
-    //             //     stylingMode: "contained",
-    //             //     onClick: () => {
-    //             //       commentPanelOpened = !commentPanelOpened;
-                   
-    //             //       if (commentPanelOpened) {
-    //             //         const q = quotes.find(x => x.id === selectedId) || quotes[0];
-    //             //         if(!q) return;
-                   
-    //             //         $("#commentPanel").show();
-    //             //         $("#commentPanelSub").text(q.quotationCode || "-");
-                   
-    //             //         // NOTE: call existing loadComments()
-    //             //         loadComments(q.quotationCode, q.id);
-    //             //       } else {
-    //             //         $("#commentPanel").hide();
-    //             //       }
-    //             //     }
-    //             // });
-
-    //             //   $("#btnCloseCommentPanel").off("click").on("click", function(){
-    //             //   commentPanelOpened = false;
-    //             //   $("#commentPanel").hide();
-    //             // });
-    //             var hideCmtTimer = null;
-    //               function cancelHideCommentTip(){
-    //               if(hideCmtTimer) clearTimeout(hideCmtTimer);
-    //               hideCmtTimer = null;
-    //             }
-    //             function scheduleHideCommentTip(){
-    //               cancelHideCommentTip();
-    //               hideCmtTimer = setTimeout(() => {
-    //                 // IMPORTANT: giữ tooltip nếu đang hover trong vùng list hoặc đang hover tooltip
-    //                 const overList = document.querySelector("#quoteList:hover");
-    //                 const overTip  = document.querySelector("#commentTooltip:hover");
-    //                 if (!overList && !overTip) {
-    //                   hoverQuoteCode = null;
-    //                   // $tip.hide();
-    //                 }
-    //               }, 120);
-    //             }
-
-    //             $("#quoteList")
-    //                 .off("mouseenter.qm mouseleave.qm")
-    //                 .on("mouseenter.qm", ".quoteCard", function () {
-    //                     const quoteCode = $(this).attr("data-quotation-code") || $(this).find(".quoteNo").text().trim();
-    //                     const quoteId = $(this).attr("data-id");
-    //                     hoverQuoteCode = quoteCode;
-
-    //                     const rect = this.getBoundingClientRect();
-    //                     // $tipSub.text(quoteCode || "-");
-    //                     // $tip.show();
-    //                     // positionTooltip($tip, rect);
-    //                     // loadComments(quoteCode, quoteId);
-    //                 })
-    //                 .on("mouseleave.qm", ".quoteCard", function () {
-    //                     scheduleHideCommentTip();
-    //                     hoverQuoteCode = null;
-    //                     // $tip.hide();
-    //                 });
-
-
-    //             // Flow history hover (tree area)
-    //             let hoverFlowQuoteCode = null;
-
-    //             // Demo data: always available even when API is not ready
-    //             const staticFlow = [
-    //                 { dept: "MKT", time: "2024-01-02 09:15", note: "Submitted to TS" },
-    //                 { dept: "TS", time: "2024-01-02 11:02", note: "Checked location / forwarded" },
-    //                 { dept: "UW", time: "2024-01-03 15:40", note: "Adjusted premium / returned" },
-    //                 { dept: "MKT", time: "2024-01-03 16:05", note: "Client confirmation" },
-    //                 { dept: "LMKT", time: "2024-01-03 17:10", note: "Leader approved" },
-    //                 { dept: "PM", time: "2024-01-04 09:00", note: "Proceed issuance" }
-    //             ];
-
-    //             // Keep panel open when moving mouse between tree <-> panel
-    //             function scheduleHideFlowPanel() {
-    //                 setTimeout(() => {
-    //                     const overTree = document.querySelector("#deptTree:hover");
-    //                     const overPanel = document.querySelector("#flowHistoryPanel:hover");
-    //                     if (!overTree && !overPanel) {
-    //                         hoverFlowQuoteCode = null;
-    //                         $("#flowHistoryPanel").hide();
-    //                     }
-    //                 }, 90);
-    //             }
-
-    //             const loadFlow = debounce(function (quoteCode) {
-    //                 const key = `flow:${quoteCode}`;
-    //                 const url = MockupApi.flowUrl(quoteCode);
-
-    //                 // Render demo first (so you always have something to look at)
-    //                 const demo = renderFlow(staticFlow);
-    //                 $("#flowSummary").text(demo.summary);
-
-    //                 const loading = `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`;
-    //                 $("#flowHistoryBody").html(loading + demo.html);
-
-    //                 ajaxJson(url, key).then((data) => {
-    //                     const items = Array.isArray(data) ? data : (data?.items || data?.data || []);
-    //                     if (hoverFlowQuoteCode !== quoteCode) return;
-
-    //                     // If API returns empty -> fallback to demo
-    //                     const finalItems = (Array.isArray(items) && items.length) ? items : staticFlow;
-
-    //                     const r = renderFlow(finalItems);
-    //                     $("#flowSummary").text(r.summary);
-    //                     $("#flowHistoryBody").html(r.html);
-    //                 }).catch(() => {
-    //                     if (hoverFlowQuoteCode !== quoteCode) return;
-
-    //                     // Keep demo visible even when API fails
-    //                     $("#flowSummary").text(demo.summary);
-    //                     $("#flowHistoryBody").html(
-    //                         `<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load flow (showing demo)</div>`
-    //                         + demo.html
-    //                     );
-    //                 });
-    //             }, 180);
-
-    //             $("#deptTree")
-    //                 .off("mouseenter.qm mouseleave.qm")
-    //                 .on("mouseenter.qm", function () {
-    //                     const m = getSelectedModel();
-    //                     const quoteCode = m?.QuotationCode || "-";
-    //                     hoverFlowQuoteCode = quoteCode;
-    //                     // $("#flowHistoryPanel").show();
-    //                     // loadFlow(quoteCode); // visible flow icons
-    //                 })
-    //                 .on("mouseleave.qm", scheduleHideFlowPanel);
-
-    //             $("#flowHistoryPanel")
-    //                 .off("mouseenter.qm mouseleave.qm")
-    //                 .on("mouseenter.qm", function () {
-    //                     // keep opened while hovering panel
-    //                     // $("#flowHistoryPanel").show();
-    //                 })
-    //                 .on("mouseleave.qm", scheduleHideFlowPanel);
-
-
-    //         }
-
-    //         return { bind , loadComments};
-    //     })();
-    //     
-
-        const HoverAjax = (function () {
-      const cache = new Map();
-      const xhrs  = new Map();
-      const CACHE_MS = 30000;
-
-      function debounce(fn, wait) {
-        let t = null;
-        return function (...args) {
-          clearTimeout(t);
-          t = setTimeout(() => fn.apply(this, args), wait);
-        };
-      }
-
-      function escapeHtml(s) {
-        return String(s ?? "")
-          .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
-          .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
-      }
-
-      function renderComments(items) {
-        if (!Array.isArray(items) || items.length === 0) {
-          return `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No comments</div>`;
+            if (collapsed) {
+                $sec.addClass("collapsed");
+                if (body) {
+                    body.style.maxHeight = body.scrollHeight + "px";
+                    setTimeout(() => { body.style.maxHeight = "0px"; }, 220);
+                }
+            } else {
+                $sec.removeClass("collapsed");
+                if (body) {
+                    body.style.maxHeight = body.scrollHeight + "px";
+                    setTimeout(() => { body.style.maxHeight = "2000px"; }, 220);
+                }
+            }
         }
-        return items.map((c) => `
-          <div class="ct-item">
-            <div class="ct-user">${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}</div>
-            <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
-            <div class="ct-text">${escapeHtml(c.commentText || "")}</div>
-          </div>
-        `).join("");
-      }
 
-      // ✅ IMPORTANT: loadComments nằm ở scope module, không nằm trong bind()
-      const loadComments = debounce(function (quoteNo, quoteId) {
-        $("#rightCommentSub").text(quoteNo || "-");
-        $("#rightCommentList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
+        function toggleSection(dept) {
+            const $sec = $(`#sec${dept}`);
+            setSectionCollapsed(dept, !$sec.hasClass("collapsed"));
+        }
 
-        const query = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${quoteId}`;
-        $.ajax({
-          url: `/api/QuotationCommentLog/ExecuteCustomQuery`,
-          method: "POST",
-          async: true,
-          contentType: "application/json",
-          data: JSON.stringify(query),
-          success: function (data) {
-            $("#rightCommentList").html(renderComments(data));
-          },
-          error: function () {
-            $("#rightCommentList").html(
-              `<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load comments</div>`
-            );
-          }
-        });
-      }, 180);
+        function bindSectionHeaderToggle() {
+            ["MKT", "TS", "UW", "LMKT", "PM"].forEach(dept => {
+                const $sec = $(`#sec${dept}`);
+                if (!$sec.length) return;
+
+                $sec.find(".dept-header").off("click.sec").on("click.sec", function (e) {
+                    if ($(e.target).closest("a,button,.dx-button").length) return;
+                    toggleSection(dept);
+                });
+            });
+        }
+
+        // =========================
+        // 6) Comments panel module (giữ theo style bạn)
+        // =========================
+        const HoverAjax = (function () {
+            function debounce(fn, wait) {
+                let t = null;
+                return function (...args) {
+                    clearTimeout(t);
+                    t = setTimeout(() => fn.apply(this, args), wait);
+                };
+            }
+
+            function escapeHtml(s) {
+                return String(s ?? "")
+                    .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+                    .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+            }
+
+            function renderComments(items) {
+                if (!Array.isArray(items) || items.length === 0) {
+                    return `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No comments</div>`;
+                }
+                return items.map((c) => `
+                    <div class="ct-item">
+                        <div class="ct-user">${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}</div>
+                        <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
+                        <div class="ct-text">${escapeHtml(c.commentText || "")}</div>
+                    </div>
+                `).join("");
+            }
+
+            const loadComments = debounce(function (quoteNo, quoteId) {
+                $("#commentPanelSub").text(quoteNo || "-");
+                $("#commentPanelList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
+
+                const q = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${quoteId}`;
+                $.ajax({
+                    url: `/api/QuotationCommentLog/ExecuteCustomQuery`,
+                    method: "POST",
+                    async: true,
+                    contentType: "application/json",
+                    data: JSON.stringify(q),
+                    success: function (data) { $("#commentPanelList").html(renderComments(data)); },
+                    error: function () {
+                        $("#commentPanelList").html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load comments</div>`);
+                    }
+                });
+            }, 180);
 
       function openRightCommentPanel() {
         commentPanelOpened = true;
@@ -1196,532 +569,291 @@ Note:
       }
 
       // ✅ bind giữ nguyên – chỉ còn việc gắn event như cũ
-      function bind() {
-        $("#btnToggleComment").dxButton({
-          text: "Comments",
-          icon: "comment",
-          type: "normal",
-          stylingMode: "contained",
-          onClick: () => {
+            function bind() {
+                $("#btnToggleComment").dxButton({
+                    text: "Comments",
+                    icon: "comment",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
             if (!commentPanelOpened) {
               openRightCommentPanel();
-              loadComments(selectedCodeNo, selectedId);
-            } else {
+                            loadComments(selectedCodeNo, selectedId);
+                        } else {
               closeRightCommentPanel();
-            }
-          }
-        });
+                        }
+                    }
+                });
 
         $("#btnCloseRightComment").off("click").on("click", function () {
           closeRightCommentPanel();
-        });
-
-        // phần hover quoteCard / flow bạn cứ để nguyên như cũ (nếu cần)
-      }
+                });
+            }
 
       // ✅ expose để gọi trực tiếp mà không cần bind
       return { bind, loadComments, openRightCommentPanel, closeRightCommentPanel };
-    })();
-    HoverAjax.bind();
-        $(function(){
-            
-               // NOTE: load comments for currently selected quotation (no hover)
+        })();
 
-          // NOTE: show quotationCode on panel
-          // $("#commentPanelSub").text(q.quotationCode || "-");
+        // =========================
+        // 7) Render list/detail
+        // =========================
+        function renderDetail() {
+            var q = quotes.find(x => x.id === selectedId) || quotes[0];
+            if (!q) return;
 
-          // $("#commentPanelList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
+            $("#recordNo").text(q.quotationCode);
 
-          // const query = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${q.id}`;
-          // $.ajax({
-          //   url: `/api/QuotationCommentLog/ExecuteCustomQuery`,
-          //   method: "POST",
-          //   async: true,
-          //   contentType: "application/json",
-          //   data: JSON.stringify(query),
-          //   success: function(data) {
-          //     $("#commentPanelList").html(renderComments(data));
-          //   },
-          //   error: function() {
-          //     $("#commentPanelList").html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load comments</div>`);
-          //   }
-          // });
-          // top buttons
-          
-          $("#btnEdit").dxButton({ text:"Edit", icon:"edit", type:"normal", onClick:()=>DevExpress.ui.notify("Mock: Edit selected","info",1200) });
-          $("#btnMore").dxDropDownButton({ text:"More", icon:"overflow", items:["Export","Print","Email"], onItemClick:(e)=>DevExpress.ui.notify("Mock: "+e.itemData,"info",1200) });
-          // $("#btnDuplicate").dxButton({ text:"Duplicate", icon:"copy", type:"normal", onClick:()=>DevExpress.ui.notify("Mock: Duplicated","success",1200) });
+            const st = q.quotationStatus ?? q.status;
+            $("#detailStatus")
+                .text(statusText(st))
+                .attr("class", `statusTag ${statusClass(st)}`);
 
-        
-          // $("#btnToggleComment").dxButton({ text:"Comments", type:"normal", onClick:()=>DevExpress.ui.notify("Mock: Duplicated","success",1200) });
-   
+            // stage/focus pills
+            $("#stageDeptPill").text(`Quotation progress flow: ${stageDept}`);
+            $("#focusDeptPill").text(`Focus: ${focusDept}`);
 
-          // bottom buttons
-          $("#btnSaveDraft").dxButton({ text:"Save Draft", icon:"save", type:"normal", onClick:()=>DevExpress.ui.notify("Mock: saved draft","success",1200) });
-          $("#btnSubmitBranch").dxButton({ text:"Submit", icon:"check", type:"success", onClick:openBranchOverlay });
+            deptData.MKT = q;
+            deptData.TS = q;
+            deptData.UW = q;
+            deptData.LMKT = q;
+            deptData.PM = q;
 
-          // // role selector
-          // $("#roleSelect").dxSelectBox({
-          //   items: Roles, value: currentUserRole, placeholder:"Select role...", stylingMode:"outlined",
-          //   onValueChanged: (e) => {
-          //     currentUserRole = e.value;
-          //     applyEditLock();
-          //     updateHints();
-          //     DevExpress.ui.notify("Role switched: " + currentUserRole, "info", 1200);
-          //   }
-          // });
-            function renderList(){
-          var data = applyFilter(quotes);
-          var $root = $("#quoteList").empty();
-          if(!data.length){
-            $root.append(`<div style="color:#6b7280;padding:10px;">No quotations found.</div>`);
-            return;
-          }
-          // <div>#${q.requestNo}</div>
-          data.forEach(q => {
-            var isSel = q.id === selectedId;
-            $root.append(`
-              <div class="quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-codeno="${q.quotationCode}" data-stagedept="${q.stageDept}">
-                <div class="quoteTop">
-                  <div>
-                       <div class="quoteClient">${q.clientName}</div>
-                  <div >${q.productName}</div>
-                  </div>
+            renderDeptForms();
 
-                  <div class="statusTag ${statusClass(q.quotationStatus)}">${statusText(q.quotationStatus)}</div>
-                </div>
-                <div class="quoteMeta">
-                 <div class="quotationCode" >${q.quotationCode}</div>
-                  <div>${q.lineName}</div>
-                  <div>${formatDate(q.requestedDate,"dd-mm-yyyy")}</div>
-                </div>
-                 <div class="quoteMeta">
-                  <div >Total Sum Insured</div>
-                  <div class="quoteAmount">${money(q.sumInsuredTotal)}</div>
-                </div>
-                 <div class="quoteMeta">
-                   <div >Total Premium</div>
-                  <div class="quoteAmount">${money(q.premiumTotal)}</div>
-                </div>
-                  <div class="quoteMeta">
-                   <div >Total Due</div>
-                  <div class="quoteAmount">${money(q.totalDue)}</div>
-                </div>
-              </div>
-            `);
-          });
+            applyNodeHighlights();
+            applySectionFocusHighlight();
+            updateHints();
+            updateSectionUpdatedTime(q);
 
-          $(".quoteCard").off("click").on("click", function(){
-            selectedId = Number($(this).attr("data-id"));
-            selectedCodeNo = $(this).attr("data-codeno");
-             stageDept = $(this).attr("data-stagedept");
-             $(".dept-node").removeClass("focus");
-             $(`.dept-node[data-key='${currentUserRole}']`).addClass("focus");
-             // applyEditLock();
-            renderList();
-            renderDetail();
-               if (commentPanelOpened) {
-             HoverAjax.loadComments(selectedCodeNo, selectedId);
-             }
-                
-          });
+            scrollToDept(focusDept);
         }
-          // search
-          $("#searchBox").dxTextBox({
-            placeholder:"Search quotations...", stylingMode:"outlined", mode:"search",
-            onValueChanged: (e)=>{ searchText = e.value || ""; renderList(); }
-          });
 
-          // sidebar nav
-          $(".navItem").on("click", function(){
-            var f = $(this).attr("data-filter");
-            if(["all","new","sent","accepted","declined"].includes(f)){
-              filter = f;
-              setActiveNav(this);
-              $("#activeStage").text($(this).text().trim());
-              $("#listTitle").text($(this).text().trim());
+        function renderList() {
+            var data = applyFilter(quotes);
+            var $root = $("#quoteList").empty();
 
-
-              var data = applyFilter(quotes);
-              if(!data.find(x => x.id === selectedId)){
-                selectedId = data[0]?.id ?? quotes[0]?.id;
-              }
-              renderList();
-              renderDetail();
-            } else {
-              setActiveNav(this);
-              DevExpress.ui.notify("Mock: " + $(this).text().trim(), "info", 1200);
+            if (!data.length) {
+                $root.append(`<div style="color:#6b7280;padding:10px;">No quotations found.</div>`);
+                return;
             }
-          });
 
-          // Branch overlay events
-          $("#branchOverlay .backdrop").on("click", closeBranchOverlay);
-          // $("#routeTS").on("click", () => routeTo("TS"));
-          // $("#routeUW").on("click", () => routeTo("UW"));
+            data.forEach(q => {
+                var isSel = q.id === selectedId;
+                $root.append(`
+                    <div class="quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-codeno="${q.quotationCode}" data-stagedept="${q.stageDept}">
+                        <div class="quoteTop">
+                            <div>
+                                <div class="quoteClient">${q.clientName || ""}</div>
+                                <div>${q.productName || ""}</div>
+                            </div>
+                            <div class="statusTag ${statusClass(q.quotationStatus)}">${statusText(q.quotationStatus)}</div>
+                        </div>
+                        <div class="quoteMeta">
+                            <div class="quotationCode">${q.quotationCode || ""}</div>
+                            <div>${q.lineName || ""}</div>
+                            <div>${(typeof formatDate === "function") ? formatDate(q.requestedDate, "dd-mm-yyyy") : (q.requestedDate || "")}</div>
+                        </div>
+                        <div class="quoteMeta">
+                            <div>Total Sum Insured</div>
+                            <div class="quoteAmount">${money(q.sumInsuredTotal)}</div>
+                        </div>
+                        <div class="quoteMeta">
+                            <div>Total Premium</div>
+                            <div class="quoteAmount">${money(q.premiumTotal)}</div>
+                        </div>
+                        <div class="quoteMeta">
+                            <div>Total Due</div>
+                            <div class="quoteAmount">${money(q.totalDue)}</div>
+                        </div>
+                    </div>
+                `);
+            });
 
-          // init
-          renderList();
-          renderDetail();
-          setupDeptTree();
+            $(".quoteCard").off("click").on("click", function () {
+                selectedId = Number($(this).attr("data-id"));
+                selectedCodeNo = $(this).attr("data-codeno");
+                stageDept = $(this).attr("data-stagedept");
 
-          // initial highlights
-          applyNodeHighlights();
-          applySectionFocusHighlight();
-          updateHints();
-             
-            // render first detail
-            const m = getSelectedModel();
-            // syncPmRefFromModel(m);
+                // focus ring về đúng role hiện tại
+                focusDept = currentUserRole;
+                renderList();
+                renderDetail();
 
-          // layout line after DOM paint (and on resize)
-          setTimeout(layoutTreeLine, 0);
-          window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
-        });
+                if (commentPanelOpened) HoverAjax.loadComments(selectedCodeNo, selectedId);
+            });
+        }
 
-            const ROUTE_GRAPH = {
-          MKT: [
-            { to: "TS",   rule: "MKT_to_TS" },
-            { to: "UW",   rule: "MKT_to_UW" },
-            { to: "LMKT", rule: "MKT_to_LMKT" },
-            { to: "PM",   rule: "MKT_to_PM" },
-          ],
-          TS: [
-            { to: "UW", rule: "TS_to_UW" },
-            { to: "MKT", rule: "TS_to_MKT" }, // ví dụ trả lại
-          ],
-          UW: [
-            { to: "LMKT", rule: "UW_to_LMKT" },
-            { to: "MKT",  rule: "UW_to_MKT" }, // ví dụ return
-          ],
-          LMKT: [
-            { to: "PM", rule: "LMKT_to_PM" },
-            { to: "MKT", rule: "LMKT_to_MKT" },
-          ],
-          PM: [
-            // có thể Done, hoặc return...
-          ]
+        // =========================
+        // 8) Route overlay (fix bug getNextChoices + addPath append)
+        // =========================
+        const ROUTE_GRAPH = {
+            MKT: [
+                { to: "TS", rule: "MKT_to_TS" },
+                { to: "UW", rule: "MKT_to_UW" },
+                { to: "LMKT", rule: "MKT_to_LMKT" },
+                { to: "PM", rule: "MKT_to_PM" },
+            ],
+            TS: [
+                { to: "UW", rule: "TS_to_UW" },
+                { to: "MKT", rule: "TS_to_MKT" },
+            ],
+            UW: [
+                { to: "LMKT", rule: "UW_to_LMKT" },
+                { to: "MKT", rule: "UW_to_MKT" },
+            ],
+            LMKT: [
+                { to: "PM", rule: "LMKT_to_PM" },
+                { to: "MKT", rule: "LMKT_to_MKT" },
+            ],
+            PM: []
         };
-            // ví dụ: formState lấy từ store của bạn
-    // const formState = {
-    //           requiredDone: {
-    //             MKT: true,
-    //             TS: false,
-    //             UW: false,
-    //             LMKT: false,
-    //             PM: false,
-    //           },
-    //           flags: {
-    //             needTechnicalSurvey: true,
-    //             needUnderwriting: true,
-    //             needLeaderMarketing: false,
-    //             needPolicyManager: false,
-    //             hasBlockingErrors: false,
-    //           }
-    //         };
 
-
-                function buildFormState(){
-      // TODO: thay bằng dữ liệu thật từ dxForm / validation summary
-      return {
-        requiredDone: {
-          MKT: false,
-          TS: false,
-          UW: true,
-          LMKT: false,
-          PM: false
-        },
-        flags: {
-          needTechnicalSurvey: false,
-          needUnderwriting: false,
-          needLeaderMarketing: true,
-          needPolicyManager: true,
-          hasBlockingErrors: true
-        }
-      };
-    }
-
-                const RULES = {
-              MKT_to_TS:   (s) => s.flags.needTechnicalSurvey && s.requiredDone.MKT && !s.flags.hasBlockingErrors,
-              MKT_to_UW:   (s) => s.flags.needUnderwriting   && s.requiredDone.MKT && !s.flags.hasBlockingErrors,
-              MKT_to_LMKT: (s) => s.flags.needLeaderMarketing && s.requiredDone.MKT,
-              MKT_to_PM:   (s) => s.flags.needPolicyManager && s.requiredDone.MKT,
-
-              TS_to_UW:    (s) => s.requiredDone.TS && s.flags.needUnderwriting,
-              TS_to_MKT:   (s) => !s.requiredDone.TS, // TS chưa fill xong thì “return MKT” chẳng hạn
-
-              UW_to_LMKT:  (s) => s.requiredDone.UW && s.flags.needLeaderMarketing,
-              UW_to_MKT:   (s) => !s.requiredDone.UW,
-
-              LMKT_to_PM:  (s) => s.requiredDone.LMKT,
-              LMKT_to_MKT: (s) => !s.requiredDone.LMKT,
+        function buildFormState() {
+            return {
+                requiredDone: { MKT: false, TS: false, UW: true, LMKT: false, PM: false },
+                flags: {
+                    needTechnicalSurvey: false,
+                    needUnderwriting: false,
+                    needLeaderMarketing: true,
+                    needPolicyManager: true,
+                    hasBlockingErrors: true
+                }
             };
-                function getNextChoices(currentDept, formState) {
-      const edges = ROUTE_GRAPH[currentDept] ?? [];
-      return edges
-        .filter(e => (RULES[e.rule]?.(formState) ?? true))
-        .map(e => e.to);
-    }
-
-           function renderBranchOverlay(currentDept){
-      const formState = buildFormState();
-      const choices = getNextsChoices(currentDept, formState);
-
-      if(!choices.length){
-        DevExpress.ui.notify("No valid route - please complete required fields", "warning", 1600);
-        return;
-      }
-
-      const $canvas = $("#branchOverlay .branchCanvas");
-      const $svg = $canvas.find("svg");
-
-      // clear
-      $svg.find("path").remove();
-      $canvas.find(".bnode").remove();
-
-      // constants (match style cũ)
-      const nodeSize = 52;
-      const xRootNode = 14;
-      const xChoiceNode = 182;
-
-      // svg coordinates (giống hard-code ban đầu)
-      const xRootLine = 40;
-      const xJ = 110;
-      const xRightLine = 200;
-
-      // auto height theo số nhánh
-      const canvasH = Math.max(140, choices.length * 70);
-      $canvas.css("height", canvasH + "px");
-      $svg.attr("viewBox", `0 0 260 ${canvasH}`);
-
-      const yJ = canvasH / 2;
-
-      // root node (GO) nằm giữa
-      const rootTop = Math.round(yJ - nodeSize/2);
-      // $canvas.append(`<div class="bnode root" style="left:${xRootNode}px; top:${rootTop}px;" title="Submit">GO</div>`);
-          $canvas.append(
-      `<div class="bnode root current"
-            style="left:${xRootNode}px; top:${rootTop}px;"
-            title="Current role: ${currentDept}">
-          ${currentDept}
-       </div>`
-    );
-      // compute y centers for choice nodes
-      const topPad = 14;
-      const bottomPad = 14;
-      const yMin = topPad + nodeSize/2;
-      const yMax = canvasH - bottomPad - nodeSize/2;
-
-      let ys;
-      if (choices.length === 1) {
-        ys = [yJ];
-      } else if (choices.length === 2) {
-        // giữ đúng style cũ: 2 nhánh trên/dưới
-        ys = [yJ - 30, yJ + 30];
-      } else {
-        // 3+ nhánh: chia đều
-        ys = choices.map((_, i) => yMin + i * ((yMax - yMin) / (choices.length - 1)));
-      }
-
-      // helper append path
-      const addPath = (d) => {
-        $svg.html(`<path d="${d}" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />`);
-      };
-
-      // ========= FIXED TYPE LINES =========
-      if (choices.length === 1) {
-        // 1) chỉ đường ngang GO -> choice (không junction)
-        // GO center y = yJ, choice center y = yJ
-        addPath(`M${xRootLine} ${yJ} L${xRightLine} ${yJ}`);
-        // addPath(`M40 70 L200 70`);
-      } else if (choices.length === 2) {
-        // 2) đúng như cũ:
-        // GO -> junction (ngang)
-        addPath(`M${xRootLine} ${yJ} L${xJ} ${yJ}`);
-        // junction vertical (dọc)
-        addPath(`M${xJ} ${ys[0]} L${xJ} ${ys[1]}`);
-        // 2 nhánh ngang
-        addPath(`M${xJ} ${ys[0]} L${xRightLine} ${ys[0]}`);
-        addPath(`M${xJ} ${ys[1]} L${xRightLine} ${ys[1]}`);
-      } else {
-        // 3+) GO -> junction + junction vertical + N nhánh ngang
-        addPath(`M${xRootLine} ${yJ} L${xJ} ${yJ}`);
-        addPath(`M${xJ} ${ys[0]} L${xJ} ${ys[ys.length - 1]}`);
-        ys.forEach(y => addPath(`M${xJ} ${y} L${xRightLine} ${y}`));
-      }
-
-      // ========= render choice nodes + click =========
-      choices.forEach((dept, i)=>{
-        const yChoice = ys[i];
-        const top = Math.round(yChoice - nodeSize/2);
-        const id = `route_${dept}`;
-
-        $canvas.append(
-          `<div id="${id}" class="bnode choice" style="left:${xChoiceNode}px; top:${top}px;" title="Route to ${dept}">${dept}</div>`
-        );
-
-        $(`#${id}`).off("click").on("click", ()=> routeTo(dept));
-      });
-    }
-
-
-        function openBranchOverlay(){
-      // stageDept là biến bạn đang có trong mock (used in renderFlow) :contentReference[oaicite:5]{index=5}
-      // hoặc dùng focusDept/loginRole tùy logic bạn.
-          const currentDept = stageDept || focusDept || "MKT";
-          renderBranchOverlay(currentDept);
-          $("#branchOverlay").show();
-        }
-            function closeBranchOverlay(){
-          $("#branchOverlay").hide();
-          $("#branchOverlay .bnode.choice").removeClass("active");
         }
 
-    function routeTo(dept){
-      $("#branchOverlay .bnode.choice").removeClass("active");
-      $(`#route_${dept}`).addClass("active");
+        const RULES = {
+            MKT_to_TS: (s) => s.flags.needTechnicalSurvey && s.requiredDone.MKT && !s.flags.hasBlockingErrors,
+            MKT_to_UW: (s) => s.flags.needUnderwriting && s.requiredDone.MKT && !s.flags.hasBlockingErrors,
+            MKT_to_LMKT: (s) => s.flags.needLeaderMarketing && s.requiredDone.MKT,
+            MKT_to_PM: (s) => s.flags.needPolicyManager && s.requiredDone.MKT,
 
-      focusDept = dept;
-      applyNodeHighlights();
-      applySectionFocusHighlight();
-      applyEditLock();
-      updateHints();
-      scrollToDept(focusDept);
+            TS_to_UW: (s) => s.requiredDone.TS && s.flags.needUnderwriting,
+            TS_to_MKT: (s) => !s.requiredDone.TS,
 
-      var popupInstance = $(`#inputTextPopup`).dxPopup({
-                                       width: "50%",
-                                       height: "50%",
-                                       showTitle: true,
-                                       title: `Remarks To ${dept}`,
-                                       dragEnabled: false,
-                                       closeOnOutsideClick: true,
-                                       contentTemplate: function (container) {
-                                           var currentEntry = entryTemplate();
-                                          const selector = createAssigneeSelector({
-                                                container: container,
-                                                dept: dept,
-                                                onChanged(value) {
-                                                    currentEntry.to = value;
-                                                }
-                                            });
+            UW_to_LMKT: (s) => s.requiredDone.UW && s.flags.needLeaderMarketing,
+            UW_to_MKT: (s) => !s.requiredDone.UW,
 
-                                           $("<div id='commentText'>").dxTextArea({
-                                               dataField: "commentText",
-                                               label: { text: "Remarks", location: "top" },
-                                               height: "50%",
-                                               width: "100%",
-                                           }).appendTo(container);
-                                           return container
-                                       },
-                                       onHiding: function (e) {
+            LMKT_to_PM: (s) => s.requiredDone.LMKT,
+            LMKT_to_MKT: (s) => !s.requiredDone.LMKT,
+        };
 
-                                       },
-                                       toolbarItems: [{
-                                           widget: 'dxButton',
-                                           toolbar: 'bottom',
-                                           location: 'after',
-                                           options: {
-                                               stylingMode: 'contained',
-                                               type: 'normal',
-                                               text: "Ok",
-                                               onClick() {
-                                                    var entryForm = $(`#assigneeSelectBox`).dxSelectBox().dxSelectBox("instance");
-                                                    var submitData = entryForm.option("value");
-                                                    var selectQuotationId = $(`.quoteCard.selected`).attr("data-id")
-                                                    var dxText = $("#commentText").dxTextArea().dxTextArea("instance").option("text");
-                                                    var timestamp = Date.now();
-                                                    var dateObject = new Date(timestamp);
-                                                    var insertQuery = `INSERT INTO QuotationCommentLog ( QuotationId
-                                                        ,DeptCode
-                                                        ,CommentOrder
-                                                        ,CommentBy
-                                                        ,CommentTime
-                                                        ,CommentText
-                                                        ,SourceSystem
-                                                        ,SourceRef
-                                                        ,RawJson
-                                                        ,CreatedAtUtc)
-                                                        VALUES (${selectQuotationId},'${stageDept}',0,'${_loginUser}','${dateObject.toISOString()}','${dxText}','WEB',NULL,NULL,'${dateObject.toISOString()}' );
-                                                    `;
-                                                    
-                                                    var pic =  upsertPicByDept(`{"MKT":"A","TS":"hien.ttt","UW":"thanh.nt","LKMT":"thao.np"}`, dept, submitData); ;
-                                                    if (dxText) {
-                                                        var values = { stageDept : "LMKT", pIC: pic };
-                                                      
-                                                        $.ajax({
-                                                            url: `/api/Quotation/UpdateData`,
-                                                            type: "PUT",
-                                                            data: {
-                                                                values: JSON.stringify(values),
-                                                                key: selectQuotationId
-                                                            },
-                                                            processData: true,
-                                                            success: function (data) {
-                                                            },
-                                                            error: function (error) {
-                                                                console.error("Error loading data:", error);
-                                                            }
-                                                        });
+        function getNextChoices(currentDept, formState) {
+            const edges = ROUTE_GRAPH[currentDept] ?? [];
+            return edges
+                .filter(e => (RULES[e.rule]?.(formState) ?? true))
+                .map(e => e.to);
+        }
 
+        function renderBranchOverlay(currentDept) {
+            const formState = buildFormState();
+            const choices = getNextChoices(currentDept, formState);
 
+            if (!choices.length) {
+                DevExpress.ui.notify("No valid route - please complete required fields", "warning", 1600);
+                return;
+            }
 
-                                                      
+            const $canvas = $("#branchOverlay .branchCanvas");
+            const $svg = $canvas.find("svg").first();
 
+            // clear
+            $svg.find("path").remove();
+            $canvas.find(".bnode").remove();
 
-                                                        // $.ajax({
-                                                        //     url: '/api/QuotationCommentLog/ExecuteCustomQuery',
-                                                        //     headers: { 'Content-Type': 'application/json' },
-                                                        //     type: 'POST',
-                                                        //     data: JSON.stringify(insertQuery),
-                                                        //     async: false,
-                                                        //     success: function (response) {
-                                                        //         // popupInstance.hide();
+            const nodeSize = 52;
+            const xRootNode = 14;
+            const xChoiceNode = 182;
 
-                                                        //     },
-                                                        //     error: function (err) {
-                                                        //         appErrorHandling('LossControl recalled failed !', err);
-                                                        //     }
-                                                        // });
-                  
-                                                        popupInstance.hide();
-    
-                                                    }
-                                                    else {
-                                                        appNotifyWarning(`Remark is empty!`, false);
-                                                    }
-                                                   DevExpress.ui.notify(`Mock submit routed to ${dept}`, "success", 1200);
-                                                   popupInstance.hide();
-                                               },
-                                           },
-                                       }, {
-                                           widget: 'dxButton',
-                                           toolbar: 'bottom',
-                                           location: 'after',
-                                           options: {
-                                               stylingMode: 'contained',
-                                               type: 'normal',
-                                               text: "Cancel",
-                                               onClick() {
-                                                   popupInstance.hide();
-                                               },
-                                           },
-                                       }]
+            const xRootLine = 40;
+            const xJ = 110;
+            const xRightLine = 200;
 
-                                   }).dxPopup("instance");
-                                   popupInstance.show();
-      
-      
+            const canvasH = Math.max(140, choices.length * 70);
+            $canvas.css("height", canvasH + "px");
+            $svg.attr("viewBox", `0 0 260 ${canvasH}`);
 
+            const yJ = canvasH / 2;
+            const rootTop = Math.round(yJ - nodeSize / 2);
 
+            $canvas.append(
+                `<div class="bnode root current"
+                      style="left:${xRootNode}px; top:${rootTop}px;"
+                      title="Current role: ${currentDept}">
+                    ${currentDept}
+                 </div>`
+            );
 
+            const topPad = 14;
+            const bottomPad = 14;
+            const yMin = topPad + nodeSize / 2;
+            const yMax = canvasH - bottomPad - nodeSize / 2;
 
-      setTimeout(closeBranchOverlay, 350);
-    }
+            let ys;
+            if (choices.length === 1) ys = [yJ];
+            else if (choices.length === 2) ys = [yJ - 30, yJ + 30];
+            else ys = choices.map((_, i) => yMin + i * ((yMax - yMin) / (choices.length - 1)));
+
+            const addPath = (d) => $svg.append(`<path d="${d}" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />`);
+
+            if (choices.length === 1) {
+                addPath(`M${xRootLine} ${yJ} L${xRightLine} ${yJ}`);
+            } else {
+                addPath(`M${xRootLine} ${yJ} L${xJ} ${yJ}`);
+                addPath(`M${xJ} ${ys[0]} L${xJ} ${ys[ys.length - 1]}`);
+                ys.forEach(y => addPath(`M${xJ} ${y} L${xRightLine} ${y}`));
+            }
+
+            choices.forEach((dept, i) => {
+                const yChoice = ys[i];
+                const top = Math.round(yChoice - nodeSize / 2);
+                const id = `route_${dept}`;
+
+                $canvas.append(
+                    `<div id="${id}" class="bnode choice" style="left:${xChoiceNode}px; top:${top}px;" title="Route to ${dept}">${dept}</div>`
+                );
+
+                $(`#${id}`).off("click").on("click", () => routeTo(dept));
+            });
+        }
+
+        function openBranchOverlay() {
+            const currentDept = stageDept || focusDept || "MKT";
+            renderBranchOverlay(currentDept);
+            $("#branchOverlay").show();
+        }
+
+        function closeBranchOverlay() {
+            $("#branchOverlay").hide();
+            $("#branchOverlay .bnode.choice").removeClass("active");
+        }
+
+        function routeTo(dept) {
+            $("#branchOverlay .bnode.choice").removeClass("active");
+            $(`#route_${dept}`).addClass("active");
+
+            focusDept = dept;
+            applyNodeHighlights();
+            applySectionFocusHighlight();
+            applyEditLock();
+            updateHints();
+            scrollToDept(focusDept);
+
+            // popup remark (giữ code bạn, chỉ không đụng tới vì bạn đang dùng nhiều helper)
+            DevExpress.ui.notify(`Mock submit routed to ${dept}`, "success", 1200);
+
+            setTimeout(closeBranchOverlay, 350);
+        }
+
+        // =========================
+        // 9) PIC callouts
+        // =========================
         const PIC_JSON = `{"MKT":"thao.bp","TS":"hien.ttt","UW":"thanh.nt","LKMT":"thao.np"}`;
 
         function normalizeDeptKey(k) {
             const x = String(k || "").trim().toUpperCase();
             return x === "LKMT" ? "LMKT" : x;
         }
+
         function parsePicMap(picJson) {
             try {
                 const obj = JSON.parse(picJson || "{}");
@@ -1731,217 +863,225 @@ Note:
             } catch { return {}; }
         }
 
-      //   function chatSvg() {
-      //       return `
-      // <svg viewBox="0 0 24 24" fill="none" width="18" height="18">
-      //   <path d="M7 8.5h10M7 12h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      //   <path d="M21 12a8 8 0 0 1-8 8H7l-4 3V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"
-      //         stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-      // </svg>`;
-      //   }
-        function lockSvg() {
-            return `
-      <svg viewBox="0 0 24 24" fill="none" width="18" height="18">
-        <path d="M8 10V8a4 4 0 0 1 8 0v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        <path d="M7 10h10a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z"
-              stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-      </svg>`;
-        }
-
         function renderDeptCallouts(picJson) {
             const picMap = parsePicMap(picJson);
-
             $(".dept-node").each(function () {
                 const dept = normalizeDeptKey($(this).data("key"));
                 const $co = $(this).find(".dept-callout");
                 if (!$co.length) return;
 
                 const pic = picMap[dept] || "-";
-
-                // bạn muốn nội dung dạng: icon hội thoại + PIC
-                // $co.find(".co-icon").html(chatSvg());
                 $co.find(".co-text").text(pic);
                 $co.css({ color: "rgba(17,24,39,.85)" });
-
-                // nếu muốn hiển thị LOCK cho dept không edit được:
-                // const canEdit = (dept === normalizeDeptKey(currentUserRole));
-                // if(!canEdit){ $co.find(".co-icon").html(lockSvg()); $co.find(".co-text").text("LOCK"); $co.css({ color:"#f59e0b" }); }
             });
         }
 
-        // init
+        // =========================
+        // 10) Controls init
+        // =========================
+        $("#searchBox").dxTextBox({
+            placeholder: "Search quotations...",
+            stylingMode: "outlined",
+            mode: "search",
+            onValueChanged: (e) => { searchText = e.value || ""; renderList(); }
+        });
+
+        $("#btnEdit").dxButton({ text: "Edit", icon: "edit", type: "normal", onClick: () => DevExpress.ui.notify("Mock: Edit selected", "info", 1200) });
+        $("#btnMore").dxDropDownButton({ text: "More", icon: "overflow", items: ["Export", "Print", "Email"], onItemClick: (e) => DevExpress.ui.notify("Mock: " + e.itemData, "info", 1200) });
+
+        $("#btnSaveDraft").dxButton({ text: "Save Draft", icon: "save", type: "normal", onClick: () => DevExpress.ui.notify("Mock: saved draft", "success", 1200) });
+        $("#btnSubmitBranch").dxButton({ text: "Submit", icon: "check", type: "success", onClick: openBranchOverlay });
+
+        $("#branchOverlay .backdrop").on("click", closeBranchOverlay);
+
+        // =========================
+        // 11) Init render
+        // =========================
+        HoverAjax.bind();
+        bindSectionHeaderToggle();
+
+        renderList();
+        renderDetail();
+        setupDeptTree();
+
+        applyNodeHighlights();
+        applySectionFocusHighlight();
+        updateHints();
+
         renderDeptCallouts(PIC_JSON);
 
-    })
+        setTimeout(layoutTreeLine, 0);
+        window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
+    });
 </script>
-<style>
-
-  
-</style>
 
 <body>
-    @* <div class="topbar"> *@
-        <div class="title">
-     @*        <span style="width:10px;height:10px;background:var(--brand);border-radius:999px;display:inline-block;"></span>
-           
-        </div>
-  @*       <div class="toolbar">
-            <div id="btnEdit"></div>
-            <div id="btnMore"></div>
-        </div> *@
-    @* </div> *@
-        <div class="contentGrid">
+    <div class="title">
+        @* header removed *@
+    </div>
 
-                <!-- List -->
-            <section class="card" style="height:100%   ;overflow: scroll;">
-                    <div class="cardHeader">
-                        <div class="h" id="listTitle">All Quotations</div>
-                        <div id="searchBox" style="width: 210px;"></div>
-                    </div>
-                    <div class="cardBody">
-                        <div id="quoteList"></div>
-                    </div>
-                </section>
+    <div class="contentGrid">
 
-                <!-- Detail -->
-                        <section class="card" >
-                    <div class="cardHeader">
-                        <div style="display:flex;align-items:center;gap:10px;">
-                            <div class="h">Overview</div>
-                            <span id="detailStatus" class="statusTag">-</span>
-                        </div>
-                    <div id="btnToggleComment"></div>
-                        @* <div id="btnDuplicate"></div> *@
-                    </div>
-
-                    <div class="cardBody overview-wrap" style="padding:0">
-
-                        <div id="flowHistoryPanel" class="flow-history-panel">
-                            <div class="fh-title">
-                                <span>Flow History</span>
-                                <span id="flowSummary" class="fh-sub">-</span>
-                            </div>
-                            <div id="flowHistoryBody" class="fh-flow">
-                                <div style="color:#6b7280;font-size:12px;padding:6px 4px;">Hover tree to load…</div>
-                            </div>
-                        </div>
-                       @*  <div id="commentTooltip" class="comment-tooltip" aria-hidden="true">
-                            <div class="ct-title">
-                                <span>Comment Log</span>
-                                <span id="commentTooltipSub" class="ct-sub">-</span>
-                            </div>
-                            <div id="commentTooltipList" class="ct-list">
-                                <div style="color:#6b7280;font-size:12px;padding:6px 4px;">Hover a quotation to load…</div>
-                            </div>
-                        </div> *@
-                        <div id="commentPanel" class="comment-tooltip" style="display:none;">
-                            <div class="ct-title">
-                                <span>Comment Log</span>
-                                <span id="commentPanelSub" class="ct-sub">-</span>
-                                <span class="ct-actions">
-                                    <a href="javascript:void(0)" id="btnCloseCommentPanel" class="ct-close">✕</a>
-                                </span>
-                            </div>
-                            <div id="commentPanelList" class="ct-list">
-                                <div style="color:#6b7280;font-size:12px;padding:6px 4px;">Click “Comments” to load…</div>
-                            </div>
-                        </div>
-
-                        <!-- Navigator Tree (status vs focus) -->
-                        <div id="deptTree" class="dept-tree">
-                            <div class="treeStack" id="treeStack">
-                                <div class="vline" id="treeVLine"></div>
-                                <div class="dept-node" data-key="MKT" data-target="#secMKT">
-                                    <div class="dept-callout" data-pic-for="MKT">
-                                        <span class="co-icon"></span>
-                                        <span class="co-text">-</span>
-                                    </div>
-                                    <div class="dept-circle">MKT</div>
-                                </div>
-                                 <div class="dept-node" data-key="TS" data-target="#secTS">
-                                    <div class="dept-callout" data-pic-for="TS">
-                                        <span class="co-icon"></span>
-                                        <span class="co-text">-</span>
-                                    </div>
-                                    <div class="dept-circle">TS</div>
-                                </div>
-                            <div class="dept-node" data-key="UW" data-target="#secUW">
-                                <div class="dept-callout" data-pic-for="UW">
-                                        <span class="co-icon"></span>
-                                        <span class="co-text">-</span>
-                                    </div>
-                                    <div class="dept-circle">UW</div>
-                                </div>
-                            <div class="dept-node" data-key="LMKT" data-target="#secLMKT">
-                                <div class="dept-callout" data-pic-for="LMKT">
-                                        <span class="co-icon"></span>
-                                        <span class="co-text">-</span>
-                                    </div>
-                                    <div class="dept-circle">LMKT</div>
-                                </div>
-                            <div class="dept-node" data-key="PM" data-target="#secPM">
-                                    <div class="dept-callout" data-pic-for="PM">
-                                    <span class="co-icon"></span>
-                                    <span class="co-text">-</span>
-                                    </div>
-                                    <div class="dept-circle">PM</div>
-                            </div>
-                               @*  <div class="dept-node" data-key="TS" data-target="#secTS" title="TS">TS</div>
-                                <div class="dept-node" data-key="UW" data-target="#secUW" title="UW">UW</div>
-                                <div class="dept-node" data-key="LMKT" data-target="#secLMKT" title="Leader MKT">LMKT</div>
-                                <div class="dept-node" data-key="PM" data-target="#secPM" title="PM">PM</div> *@
-                            </div>
-                        </div>
-
-                        <div id="overviewScroll" class="overview-scroll">
-                            <section id="secMKT" class="dept-section">
-                                <div class="dept-header">
-                                    <div class="dept-title">MKT</div>
-                                    <div class="dept-hint" id="hintMKT"></div>
-                                </div>
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_MKT_Form")
-                            </section>
-
-                            <section id="secTS" class="dept-section">
-                                <div class="dept-header">
-                                    <div class="dept-title">TS</div>
-                                    <div class="dept-hint" id="hintTS"></div>
-                                </div>
-                            @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_TS_Form")
-
-                            </section>
-
-                            <section id="secUW" class="dept-section">
-                                <div class="dept-header">
-                                    <div class="dept-title">UW</div>
-                                    <div class="dept-hint" id="hintUW"></div>
-                                </div>
-                            @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_UW_Form")
-                            </section>
-
-                            <section id="secLMKT" class="dept-section">
-                                <div class="dept-header">
-                                    <div class="dept-title">Leader MKT</div>
-                                    <div class="dept-hint" id="hintLMKT"></div>
-                                </div>
-                            @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_LMKT_Form")
-                            </section>
-
-                            <section id="secPM" class="dept-section">
-                                <div class="dept-header">
-                                    <div class="dept-title">PM</div>
-                                    <div class="dept-hint" id="hintPM"></div>
-                                </div>
-                            @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_PM_Form")
-
-                                @* <div id="itemsGrid" style="margin-top:8px;"></div> *@
-                            </section>
-                        </div>
-                    </div>
-                
-                </section>
-           
+        <!-- List -->
+        <section class="card" style="height:100%;overflow: scroll;">
+            <div class="cardHeader">
+                <div class="h" id="listTitle">All Quotations</div>
+                <div id="searchBox" style="width: 210px;"></div>
             </div>
+            <div class="cardBody">
+                <div id="quoteList"></div>
+            </div>
+        </section>
+
+        <!-- Detail -->
+        <section class="card">
+            <div class="cardHeader">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div class="h">Overview</div>
+                    <span id="detailStatus" class="statusTag">-</span>
+                </div>
+                <div id="btnToggleComment"></div>
+            </div>
+
+            <div class="cardBody overview-wrap" style="padding:0">
+
+                <div id="flowHistoryPanel" class="flow-history-panel">
+                    <div class="fh-title">
+                        <span>Flow History</span>
+                        <span id="flowSummary" class="fh-sub">-</span>
+                    </div>
+                    <div id="flowHistoryBody" class="fh-flow">
+                        <div style="color:#6b7280;font-size:12px;padding:6px 4px;">Hover tree to load…</div>
+                    </div>
+                </div>
+
+                <div id="commentPanel" class="comment-tooltip" style="display:none;">
+                    <div class="ct-title">
+                        <span>Comment Log</span>
+                        <span id="commentPanelSub" class="ct-sub">-</span>
+                        <span class="ct-actions">
+                            <a href="javascript:void(0)" id="btnCloseCommentPanel" class="ct-close">✕</a>
+                        </span>
+                    </div>
+                    <div id="commentPanelList" class="ct-list">
+                        <div style="color:#6b7280;font-size:12px;padding:6px 4px;">Click “Comments” to load…</div>
+                    </div>
+                </div>
+
+                <!-- Navigator Tree -->
+                <div id="deptTree" class="dept-tree">
+                    <div class="treeStack" id="treeStack">
+                        <div class="vline" id="treeVLine"></div>
+
+                        <div class="dept-node" data-key="MKT" data-target="#secMKT">
+                            <div class="dept-callout" data-pic-for="MKT"><span class="co-icon"></span><span class="co-text">-</span></div>
+                            <div class="dept-circle">MKT</div>
+                        </div>
+
+                        <div class="dept-node" data-key="TS" data-target="#secTS">
+                            <div class="dept-callout" data-pic-for="TS"><span class="co-icon"></span><span class="co-text">-</span></div>
+                            <div class="dept-circle">TS</div>
+                        </div>
+
+                        <div class="dept-node" data-key="UW" data-target="#secUW">
+                            <div class="dept-callout" data-pic-for="UW"><span class="co-icon"></span><span class="co-text">-</span></div>
+                            <div class="dept-circle">UW</div>
+                        </div>
+
+                        <div class="dept-node" data-key="LMKT" data-target="#secLMKT">
+                            <div class="dept-callout" data-pic-for="LMKT"><span class="co-icon"></span><span class="co-text">-</span></div>
+                            <div class="dept-circle">LMKT</div>
+                        </div>
+
+                        <div class="dept-node" data-key="PM" data-target="#secPM">
+                            <div class="dept-callout" data-pic-for="PM"><span class="co-icon"></span><span class="co-text">-</span></div>
+                            <div class="dept-circle">PM</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div id="overviewScroll" class="overview-scroll">
+
+                    <!-- MKT -->
+                    <section id="secMKT" class="dept-section">
+                        <div class="dept-header">
+                            <div class="dept-title">MKT</div>
+                            <div class="dept-hint-wrap">
+                                <div class="dept-hint" id="hintMKT"></div>
+                                <div class="dept-updated" id="updMKT" title="Last updated">—</div>
+                                <div class="dept-toggle-icon" aria-hidden="true">▾</div>
+                            </div>
+                        </div>
+                        <div class="dept-body">
+                            @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_MKT_Form")
+                        </div>
+                    </section>
+
+                    <!-- TS -->
+                    <section id="secTS" class="dept-section">
+                        <div class="dept-header">
+                            <div class="dept-title">TS</div>
+                            <div class="dept-hint-wrap">
+                                <div class="dept-hint" id="hintTS"></div>
+                                <div class="dept-updated" id="updTS" title="Last updated">—</div>
+                                <div class="dept-toggle-icon" aria-hidden="true">▾</div>
+                            </div>
+                        </div>
+                        <div class="dept-body">
+                            @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_TS_Form")
+                        </div>
+                    </section>
+
+                    <!-- UW -->
+                    <section id="secUW" class="dept-section">
+                        <div class="dept-header">
+                            <div class="dept-title">UW</div>
+                            <div class="dept-hint-wrap">
+                                <div class="dept-hint" id="hintUW"></div>
+                                <div class="dept-updated" id="updUW" title="Last updated">—</div>
+                                <div class="dept-toggle-icon" aria-hidden="true">▾</div>
+                            </div>
+                        </div>
+                        <div class="dept-body">
+                            @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_UW_Form")
+                        </div>
+                    </section>
+
+                    <!-- LMKT -->
+                    <section id="secLMKT" class="dept-section">
+                        <div class="dept-header">
+                            <div class="dept-title">Leader MKT</div>
+                            <div class="dept-hint-wrap">
+                                <div class="dept-hint" id="hintLMKT"></div>
+                                <div class="dept-updated" id="updLMKT" title="Last updated">—</div>
+                                <div class="dept-toggle-icon" aria-hidden="true">▾</div>
+                            </div>
+                        </div>
+                        <div class="dept-body">
+                            @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_LMKT_Form")
+                        </div>
+                    </section>
+
+                    <!-- PM -->
+                    <section id="secPM" class="dept-section">
+                        <div class="dept-header">
+                            <div class="dept-title">PM</div>
+                            <div class="dept-hint-wrap">
+                                <div class="dept-hint" id="hintPM"></div>
+                                <div class="dept-updated" id="updPM" title="Last updated">—</div>
+                                <div class="dept-toggle-icon" aria-hidden="true">▾</div>
+                            </div>
+                        </div>
+                        <div class="dept-body">
+                            @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_PM_Form")
+                        </div>
+                    </section>
+
+                </div>
+            </div>
+
+        </section>
     </div>
 
     <!-- Bottom action bar -->
@@ -1967,16 +1107,7 @@ Note:
                 <span class="branchHint">Choose next dept</span>
             </div>
             <div class="branchCanvas">
-                 <svg width="100%" height="100%" viewBox="0 0 260 140" style="position:absolute;inset:0;">
-
-                </svg>
-                <svg width="100%" height="100%" viewBox="0 0 260 140" style="position:absolute;inset:0;">
-                     <path d="M40 70 L110 70" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />
-                    <path d="M110 40 L110 100" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />
-                    <path d="M110 40 L200 40" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />
-                    <path d="M110 100 L200 100" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" /> 
-                </svg>
-                <div class="bnode root" style="left:14px; top:42px;" title="Submit">GO</div>
+                <svg width="100%" height="100%" viewBox="0 0 260 140" style="position:absolute;inset:0;"></svg>
             </div>
         </div>
     </div>
