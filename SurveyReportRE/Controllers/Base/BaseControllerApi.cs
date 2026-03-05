@@ -497,7 +497,50 @@ namespace ERPCore.Controllers.Base
         #endregion
 
         #region POST API 
-       
+
+        [HttpPost]
+        public virtual async Task<IActionResult> AsyncUploadFile()
+        {// Use blog settings while override this method instead
+            var path = BLOB_PATH;
+            IBaseRepository<Document> _attachmentRepository = new BaseRepository<Document>(_BaseRepository._baseConfiguration, _httpContextAccessor);
+            //var storageFolder = _blobStorageSettings.CurrentValue.Path;
+            IFormFileCollection files = null;
+            files = ((FormCollection)(Request.Form)).Files;
+            string folder = Request.Headers["Folder"];
+            IFormFile file = null;
+            file = files.FirstOrDefault();
+            if (file != null && file.Length > 0)
+            {
+                using (var ms = new MemoryStream())
+                {
+                    file.CopyTo(ms);
+                    var fileBytes = ms.ToArray();
+                    var unixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                    string s = Convert.ToBase64String(fileBytes);
+                    if (!System.IO.Directory.Exists(BLOB_PATH))
+                        Directory.CreateDirectory(BLOB_PATH);
+                    if (!System.IO.Directory.Exists(Path.Combine(BLOB_PATH, folder)))
+                        Directory.CreateDirectory(Path.Combine(BLOB_PATH, folder));
+
+                    Document attachment = new Document();
+                    Attachment attachmentForm = new Attachment();
+                    attachment.SubDirectory = Path.Combine(folder, file.FileName) ;
+                    //AttachmentRequest attachmentRequest = new AttachmentRequest();
+                    //attachmentRequest.surveyId = surveyId;
+                    //attachmentRequest.outlineId = outlineId;
+                    //attachmentRequest.outlinePlaceholder = outlinePlaceHolder;
+                    //attachment = Util.BindingAttachment(BLOB_PATH, folder, file.FileName, fileBytes, attachmentRequest);
+                    attachment = await _attachmentRepository.InsertData(attachment);
+                    //AttachmentForm attachmentForm = ControllerHelper.BindingAttachmentForm(attachment, BLOB_PATH);
+                    System.IO.File.WriteAllBytes(Path.Combine(path, folder, $"{unixMilliseconds}_{file.FileName}"), fileBytes);
+
+                    return Ok(new { success = true, message = "File uploaded successfully", attachment = attachmentForm });
+                }
+            }
+            else
+                return Ok(new { success = false, message = "No file uploaded" });
+        }
+
         [HttpPost]
         public virtual async Task<object> ExecuteCustomQuery([FromBody] string query)
         {

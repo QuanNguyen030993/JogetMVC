@@ -1686,7 +1686,7 @@ aside {
 
     /* panel container: giống .comment-tooltip */
     .rightDock .dockCard {
-        z-index: 99999;
+        z-index: 0;
         pointer-events: auto;
         position: relative; /* dock layout -> relative */
         width: 100%;

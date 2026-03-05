@@ -657,11 +657,11 @@ a {
     position: absolute;
     top: 40px;
     display:none;
-    margin-left:83%;
-    margin-right:0%;
+    margin-left:85%;
+    margin-right:1%;
     padding-top: 50px;
     min-height: 110%;
-    width: 16%;
+    width: 14%;
     /*z-index: 10000;*/
     -webkit-transition: -webkit-transform .3s ease-in-out, width .3s ease-in-out;
     -moz-transition: -moz-transform .3s ease-in-out, width .3s ease-in-out;

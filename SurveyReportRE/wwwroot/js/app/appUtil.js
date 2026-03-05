@@ -5862,3 +5862,324 @@ function upsertPicByDept(jsonText, deptKey, picName) {
     // 4) Return string JSON
     return JSON.stringify(obj);
 }
+
+
+// wwwroot/js/app/attachmentUtil.js
+// Requires: jQuery + DevExtreme
+
+window.AttachmentUtil = (function () {
+
+    function _safe(obj, path, fallback) {
+        try {
+            return path.split(".").reduce((o, k) => (o ? o[k] : undefined), obj) ?? fallback;
+        } catch { return fallback; }
+    }
+
+    function _extOf(name) {
+        const s = (name || "").trim();
+        const idx = s.lastIndexOf(".");
+        return idx >= 0 ? s.substring(idx + 1).toLowerCase() : "";
+    }
+
+    function iconByExt(ext) {
+        ext = (ext || "").toLowerCase();
+        switch (ext) {
+            case "pdf": return "📕";
+            case "xls":
+            case "xlsx":
+            case "csv": return "📗";
+            case "doc":
+            case "docx": return "📘";
+            case "ppt":
+            case "pptx": return "📙";
+            case "msg":
+            case "eml": return "✉️";
+            case "xml":
+            case "json": return "🧾";
+            case "zip":
+            case "rar":
+            case "7z": return "🗜️";
+            case "png":
+            case "jpg":
+            case "jpeg":
+            case "gif":
+            case "bmp":
+            case "webp": return "🖼️";
+            default: return "📎";
+        }
+    }
+
+    function formatBytes(bytes) {
+        const n = Number(bytes || 0);
+        if (n < 1024) return n + " B";
+        const kb = n / 1024;
+        if (kb < 1024) return kb.toFixed(1) + " KB";
+        const mb = kb / 1024;
+        if (mb < 1024) return mb.toFixed(1) + " MB";
+        const gb = mb / 1024;
+        return gb.toFixed(1) + " GB";
+    }
+
+    function getFormInstance(formSelector) {
+        return $(formSelector).dxForm("instance");
+    }
+
+    function getKeyAndValues(formSelector, keyField) {
+        const form = getFormInstance(formSelector);
+        const formData = form?.option("formData") || {};
+        const key = keyField ? formData?.[keyField] : (formData?.id ?? formData?.Id);
+        return {
+            key,
+            values: JSON.stringify(formData) // đúng ý bạn: values change là JSON.stringify
+        };
+    }
+
+    async function apiUpload({ insertUrl, file, key, values, extraFormData, headers }) {
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("key", key);
+        fd.append("values", values);
+
+        if (extraFormData && typeof extraFormData === "object") {
+            Object.keys(extraFormData).forEach(k => fd.append(k, extraFormData[k]));
+        }
+
+        const res = await fetch(insertUrl, {
+            method: "POST",
+            body: fd,
+            headers: headers || undefined
+        });
+
+        if (!res.ok) {
+            const msg = await res.text().catch(() => "");
+            throw new Error(msg || ("Upload failed: " + res.status));
+        }
+
+        return await res.json().catch(() => ({}));
+    }
+
+    async function apiList({ listUrl, key, headers }) {
+        if (!listUrl) return [];
+        const url = typeof listUrl === "function" ? listUrl(key) : listUrl;
+        const res = await fetch(url, { method: "GET", headers: headers || undefined });
+        if (!res.ok) return [];
+        return await res.json().catch(() => []);
+    }
+
+    async function apiDelete({ deleteUrl, id, headers }) {
+        if (!deleteUrl) return true;
+        const url = typeof deleteUrl === "function" ? deleteUrl(id) : deleteUrl;
+        const res = await fetch(url, { method: "DELETE", headers: headers || undefined });
+        if (!res.ok) {
+            const msg = await res.text().catch(() => "");
+            throw new Error(msg || "Delete failed");
+        }
+        return true;
+    }
+
+    function normalizeItem(raw, map) {
+        // map: { id, fileName, extension, size, downloadUrl }
+        // có thể truyền string path, hoặc function
+        const get = (rule) => {
+            if (!rule) return undefined;
+            if (typeof rule === "function") return rule(raw);
+            if (typeof rule === "string") return _safe(raw, rule, undefined);
+            return undefined;
+        };
+
+        const fileName = get(map?.fileName) ?? raw.fileName ?? raw.FileName ?? raw.name;
+        const extension = get(map?.extension) ?? raw.extension ?? raw.Extension ?? _extOf(fileName);
+        const size = get(map?.size) ?? raw.size ?? raw.fileSize ?? raw.FileSize;
+        const downloadUrl = get(map?.downloadUrl) ?? raw.downloadUrl ?? raw.DownloadUrl ?? raw.url;
+
+        return {
+            id: get(map?.id) ?? raw.id ?? raw.Id ?? raw.attachmentId,
+            fileName,
+            extension,
+            size,
+            downloadUrl,
+            raw
+        };
+    }
+
+    function renderAttachmentList($host, store, options) {
+        // options: { onDownload, onDelete }
+        return $host.dxList({
+            dataSource: store,
+            height: 260,
+            noDataText: "No attachments",
+            itemTemplate: function (itemData) {
+                const name = itemData.fileName || "Unnamed";
+                const ext = itemData.extension || _extOf(name);
+                const size = itemData.size || 0;
+
+                const $item = $("<div style='display:flex;align-items:center;gap:10px;padding:6px 4px;'>");
+
+                $("<div style='width:32px;font-size:20px;text-align:center;'>")
+                    .text(iconByExt(ext))
+                    .appendTo($item);
+
+                const $mid = $("<div style='flex:1;min-width:0;'>").appendTo($item);
+                $("<div style='font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>")
+                    .text(name)
+                    .appendTo($mid);
+
+                $("<div style='opacity:.75;font-size:12px;'>")
+                    .text((ext ? ext.toUpperCase() : "FILE") + " • " + formatBytes(size))
+                    .appendTo($mid);
+
+                const $actions = $("<div style='display:flex;gap:6px;'>").appendTo($item);
+
+                $("<div>").dxButton({
+                    icon: "download",
+                    stylingMode: "contained",
+                    hint: "Download",
+                    onClick: function () { options?.onDownload?.(itemData); }
+                }).appendTo($actions);
+
+                $("<div>").dxButton({
+                    icon: "trash",
+                    stylingMode: "outlined",
+                    hint: "Delete",
+                    onClick: function () { options?.onDelete?.(itemData); }
+                }).appendTo($actions);
+
+                return $item;
+            }
+        }).dxList("instance");
+    }
+
+    /**
+     * Init attachment control inside a container
+     * cfg = {
+     *   formSelector: "#formMKT",
+     *   hostSelector: "#attHost",                 // nơi render uploader + list
+     *   keyField: "id",                           // field name trong formData
+     *   apis: { insertUrl, listUrl(key), deleteUrl(id) },
+     *   map: { id, fileName, extension, size, downloadUrl },
+     *   uploader: { multiple, allowedFileExtensions, maxFileSize, uploadMode },
+     *   extraFormData: () => ({...}) | object,
+     *   headers: () => ({...}) | object,
+     *   onUploaded: (result, file) => {},
+     * }
+     */
+    function init(cfg) {
+        const formSelector = cfg.formSelector;
+
+        // NEW: ưu tiên hostElement
+        const $host = cfg.hostElement ? $(cfg.hostElement) : $(cfg.hostSelector);
+
+        if ($host.length === 0) throw new Error("Attachment host not found");
+        $host.empty();
+        const $uploader = $("<div class='att-uploader'>").appendTo($host);
+        const $listWrap = $("<div class='att-list' style='margin-top:10px;'>").appendTo($host);
+
+        const store = new DevExpress.data.ArrayStore({ key: "id", data: [] });
+
+        const listInstance = renderAttachmentList($listWrap, store, {
+            onDownload: (item) => {
+                const url = item.downloadUrl;
+                if (url) window.open(url, "_blank");
+                else DevExpress.ui.notify("No downloadUrl", "warning", 2000);
+            },
+            onDelete: async (item) => {
+                const id = item.id;
+                if (!id) return DevExpress.ui.notify("Missing attachment id", "warning", 2500);
+
+                const headers = typeof cfg.headers === "function" ? cfg.headers() : cfg.headers;
+
+                try {
+                    await apiDelete({ deleteUrl: cfg.apis?.deleteUrl, id, headers });
+                    store.remove(id);
+                    store.load();
+                    DevExpress.ui.notify("Deleted", "success", 1200);
+                } catch (e) {
+                    DevExpress.ui.notify(e.message || "Delete error", "error", 3000);
+                }
+            }
+        });
+
+        async function reload() {
+            const payload = getKeyAndValues(formSelector, cfg.keyField);
+            if (!payload.key) return;
+
+            const headers = typeof cfg.headers === "function" ? cfg.headers() : cfg.headers;
+
+            const data = await apiList({ listUrl: cfg.apis?.listUrl, key: payload.key, headers });
+            const normalized = (data || [])
+                .map(x => normalizeItem(x, cfg.map))
+                .filter(x => x.id != null);
+
+            store.clear();
+            normalized.forEach(x => store.insert(x));
+            await store.load();
+        }
+
+        $uploader.dxFileUploader({
+            selectButtonText: "Upload files",
+            labelText: "",
+            multiple: cfg.uploader?.multiple ?? true,
+            accept: "*/*",
+            uploadMode: "instantly",
+            showFileList: true,
+            allowedFileExtensions: cfg.uploader?.allowedFileExtensions ?? undefined,
+            maxFileSize: cfg.uploader?.maxFileSize ?? undefined,
+
+            uploadFile: async function (file) {
+                const payload = getKeyAndValues(formSelector, cfg.keyField);
+                if (!payload.key) {
+                    DevExpress.ui.notify("Missing key (formData.id)", "warning", 2500);
+                    throw new Error("Missing key");
+                }
+
+                const extraFormData = typeof cfg.extraFormData === "function" ? cfg.extraFormData() : cfg.extraFormData;
+                const headers = typeof cfg.headers === "function" ? cfg.headers() : cfg.headers;
+
+                try {
+                    const result = await apiUpload({
+                        insertUrl: cfg.apis?.insertUrl,
+                        file,
+                        key: payload.key,
+                        values: payload.values,
+                        extraFormData,
+                        headers
+                    });
+
+                    cfg.onUploaded?.(result, file);
+
+                    // Nếu API trả về item => insert ngay, không thì reload
+                    const inserted = normalizeItem(result, cfg.map);
+                    if (inserted.id != null) {
+                        try { store.insert(inserted); await store.load(); } catch { await reload(); }
+                    } else {
+                        await reload();
+                    }
+
+                    DevExpress.ui.notify("Uploaded: " + file.name, "success", 1500);
+                } catch (e) {
+                    DevExpress.ui.notify(e.message || ("Upload error: " + file.name), "error", 3500);
+                    throw e;
+                }
+            }
+        });
+
+        // expose reload for caller
+        const api = {
+            reload,
+            listInstance,
+            store,
+            getKeyAndValues: () => getKeyAndValues(formSelector, cfg.keyField)
+        };
+
+        // initial load
+        reload();
+        return api;
+    }
+
+    return {
+        init,
+        iconByExt,
+        formatBytes,
+        getKeyAndValues
+    };
+})();

@@ -537,8 +537,9 @@ Note:
             }
 
             const loadComments = debounce(function (quoteNo, quoteId) {
-                $("#commentPanelSub").text(quoteNo || "-");
-                $("#commentPanelList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
+                debugger
+                $("#rightCommentSub").text(quoteNo || "-");
+                $("#rightCommentList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
 
                 const q = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${quoteId}`;
                 $.ajax({
@@ -547,9 +548,9 @@ Note:
                     async: true,
                     contentType: "application/json",
                     data: JSON.stringify(q),
-                    success: function (data) { $("#commentPanelList").html(renderComments(data)); },
+                    success: function (data) { $("#rightCommentList").html(renderComments(data)); },
                     error: function () {
-                        $("#commentPanelList").html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load comments</div>`);
+                        $("#rightCommentList").html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load comments</div>`);
                     }
                 });
             }, 180);
@@ -678,7 +679,7 @@ Note:
                 focusDept = currentUserRole;
                 renderList();
                 renderDetail();
-
+                debugger
                 if (commentPanelOpened) HoverAjax.loadComments(selectedCodeNo, selectedId);
             });
         }
