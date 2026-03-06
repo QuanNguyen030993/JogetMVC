@@ -326,13 +326,47 @@ Note:
         // =========================
         var deptData = { MKT: {}, TS: {}, UW: {}, LMKT: {}, PM: {} };
 
+
+    //         function recreateForm(selector, formData, items, readOnly = true) {
+    //     const $el = $(selector);
+    //     const instance = $el.dxForm("instance");
+
+    //     if (instance) {
+    //         instance.dispose();
+    //         $el.empty();
+    //     }
+
+    //     $el.dxForm({
+    //         formData: formData || {},
+    //         items: items || [],
+    //         readOnly: readOnly,
+    //         colCount: 1
+    //     });
+    // }
+
+    //     function renderDeptForms() {
+    //     recreateForm("#formMKT", deptData.MKT, getMKTItems(), true);
+    //     recreateForm("#formTS", deptData.TS, getTSItems(), true);
+    //     recreateForm("#formUW", deptData.UW, getUWItems(), true);
+    //     recreateForm("#formLMKT", deptData.LMKT, getLMKTItems(), true);
+    //     recreateForm("#formPM", deptData.PM, getPMItems(), true);
+
+    //     applyEditLock();
+    //     updateHints();
+    // }
+
         function renderDeptForms() {
+            //Data render to partial
             $("#formMKT").dxForm({ formData: deptData.MKT, readOnly: true, colCount: 1 });
             $("#formTS").dxForm({ formData: deptData.TS, readOnly: true, colCount: 1 });
             $("#formUW").dxForm({ formData: deptData.UW, readOnly: true, colCount: 1 });
             $("#formLMKT").dxForm({ formData: deptData.LMKT, readOnly: true, colCount: 1 });
             $("#formPM").dxForm({ formData: deptData.PM, readOnly: true, colCount: 1 });
-
+            loadAttachmentList("MKT");
+            loadAttachmentList("TS");
+            loadAttachmentList("UW");
+            loadAttachmentList("LMKT");
+            loadAttachmentList("PM");
             applyEditLock();
             updateHints();
         }
@@ -597,6 +631,7 @@ Note:
         // 7) Render list/detail
         // =========================
         function renderDetail() {
+            debugger
             var q = quotes.find(x => x.id === selectedId) || quotes[0];
             if (!q) return;
 

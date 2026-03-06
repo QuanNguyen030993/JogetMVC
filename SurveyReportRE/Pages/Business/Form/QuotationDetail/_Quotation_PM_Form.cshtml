@@ -16,72 +16,34 @@
 <div id="formPM">
 </div>
 <script type="text/javascript">
-    $("#formPM").dxForm({
-                 items: [ {itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
-        //     ,
-        //     editorOptions: {
-        //     dropZone: $imagePreview1,
-        //     name: "files",
-        //     labelText: "",
-        //     accept: "image/*",
-        //     selectButtonText: `Choose Image 1`,
-        //     uploadMode: "instantly",
-        //     uploadUrl: `/api/${folder}/UpdateMultiplePicture`,
-        //     uploadHeaders: {
-        //         "Record-Guid": object.guid,
-        //         "Folder": folder,
-        //         "RowOrder": 1
-        //     },
-        //     multiple: false,
-        //     showFileList: false,
-        //     onDropZoneEnter: function (e) {
-        //         //$(e.dropZoneElement).addClass("highlight-drop-zone");
-        //     },
-        //     onDropZoneLeave: function (e) {
-        //         //$(e.dropZoneElement).removeClass("highlight-drop-zone");
-        //     },
-        //     onUploadStarted: function (e) {
-        //         $(previewId1).css("position", "relative"); // đảm bảo relative
-        //         $(`${previewId1} .previewLoader`).remove(); // nếu có rồi
-        //         $("<div>").addClass("previewLoader").appendTo(previewId1)
-        //             .dxLoadPanel({
-        //                 message: "Image loading...",
-        //                 visible: true,
-        //                 shading: true,
-        //                 shadingColor: "rgba(255,255,255,0.7)",
-        //                 showPane: true,
-        //                 closeOnOutsideClick: false,
-        //                 position: { of: previewId1 }
-        //             });
-        //     },
-        //     onUploaded: function (e) {
-        //         var fr = new FileReader();
-        //         fr.readAsArrayBuffer(e.file);
-        //         fr.onload = function (event) {
-        //             var arrayBuffer = fr.result;
-        //             var byteArray = new Uint8Array(arrayBuffer);
-        //             var blob = new Blob([byteArray], { type: e.file.type });
-        //             var url = URL.createObjectURL(blob);
-        //             if (e.file && e.file.type.startsWith("image/")) {
-        //                 const img = new Image();
-        //                 img.src = url;
-        //                 img.onload = function () {
-        //                     e.file.width = img.width;
-        //                     e.file.height = img.height;
-        //                 };
-        //                 e.url = url;
-        //                 e.fileData = fr.result;
-        //                 makeLCPreviewPictureObject(e, imgContainerSizeObject, imgSizeObject, $imagePreview1, $imagePreview2)
-        //                 $(`${previewId1} .previewLoader`).remove();
-        //             }
 
-        //         }
-        //     }
-        // }
+    $(`#formPM`).dxForm({
+                 items: [
+                         {itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
+            ,
+            editorOptions: {
+            name: "files"
+        }
+        ,template: function (data, itemElement) {
+            setTimeout(function () {
+                var item = new Object();
+                item.editorType = "dxFileUploader";
+                 var form = $("#formPM").dxForm("instance");
+                var formData = form?.option("formData") || {};
+                var key = formData.id; // đúng ý bạn: lấy id từ formData
+               this.refFieldId = key;
+               this.guid = formData.guid;
+               this.folder = "PM";
+               this.SectionName ="PM";
+                createEditor(item, itemElement, $("<div>"), this);
+                loadAttachmentList("PM");
+                }, 1000);
+            }
 
-    }
-
-            ]},
+        }
+        ]}
+            
+            ,
                  { dataField:"approve", label:{text:"PM Status"}, editorType:"dxRadioGroup", editorOptions:{ items:[{text:"Accept",value:true},{text:"Assign",value:false}], layout:"horizontal" }, isRequired:true },
       // =========================================================
       // A. Header / Request

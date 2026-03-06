@@ -1015,15 +1015,94 @@ function createEditor(item, $container, $element, editorOptions) {
             }).appendTo($container);
             break;
         case "dxFileUploader":
-            const idControlElement = `#fileUpload_${editorOptions.SectionName}_${editorOptions.refFieldId}_${editorOptions.id}`;
+            //const idControlElement = `#fileUpload_${editorOptions.SectionName}_${editorOptions.refFieldId}_${editorOptions.id}`;
+            //var controllerName = "Document";
+
+
+
+
+            //if (editorOptions.refFieldId)
+            //    $.ajax({
+            //        url: `/api/${controllerName}/GetByKey?recordGuid=${editorOptions.guid}&folder=${editorOptions.SectionName}`, // Replace with your actual API
+            //        method: 'GET',
+            //        success: function (data) {
+            //            if (data.length > 0) {
+
+            //                var $element = $(idControlElement);
+            //                var $loadDiv = $element
+            //                    .css({ position: "absolute", width: "100%", height: "100%", top: 0, left: 0 })
+            //                    .appendTo($element.css("position", "relative")); // đảm bảo container có position
+
+            //                var panel = $("<div>").addClass("previewLoader").appendTo($loadDiv);
+            //                panel.dxLoadPanel({
+            //                    message: "File loading...",
+            //                    visible: true,
+            //                    shading: true,
+            //                    shadingColor: "rgba(255,255,255,0.7)",
+            //                    showPane: true,
+            //                    closeOnOutsideClick: false,
+            //                    position: { of: idControlElement }
+            //                });
+
+            //                data = data.filter(f => f.outlineId == editorOptions.id);
+            //                data.forEach(itemFile => {
+            //                    //if item image
+            //                    //if item file
+            //                });
+            //                $(`${idControlElement} .previewLoader`).remove();
+            //            }
+            //        }
+            //    });
+            //editorOptions.uploadTitle = "Files";
+            //var $filePreview = $(`<div id='attList_${editorOptions.SectionName}_${editorOptions.refFieldId}_${editorOptions.id}' style='display: flex; flex-wrap: wrap; gap: 25px;top: 10px'>`).appendTo($container);
+            //$(`<div id="fileUpload_${editorOptions.SectionName}_${editorOptions.refFieldId}_${editorOptions.id}">`).dxFileUploader({
+            //    readOnly: editorOptions.isReadOnly ? editorOptions.isReadOnly : false,
+            //    multiple: true,
+            //    accept: "*/*",
+            //    selectButtonText: `Upload ${editorOptions.uploadTitle}`,
+            //    dropZone: $filePreview,
+            //    labelText: "",
+            //    uploadMode: "instantly",
+            //    uploadUrl: `/api/Attachment/AsyncUploadFile`,
+            //    showFileList: false,
+            //    uploadHeaders: {
+            //        "RecordGuid": editorOptions.guid,
+            //        "Folder": editorOptions.SectionName,
+            //        // "RowOrder": 1
+            //    },
+            //    onUploadStarted: function (e) {
+            //        var $element = $(idControlElement);
+            //        var $loadDiv = $element
+            //            .css({ position: "absolute", width: "100%", height: "100%", top: 0, left: 0 })
+            //            .appendTo($element.css("position", "relative")); // đảm bảo container có position
+
+            //        var panel = $("<div>").addClass("previewLoader").appendTo($loadDiv);
+            //        panel.dxLoadPanel({
+            //            message: "File loading...",
+            //            visible: true,
+            //            shading: true,
+            //            shadingColor: "rgba(255,255,255,0.7)",
+            //            showPane: true,
+            //            closeOnOutsideClick: false,
+            //            position: { of: idControlElement }
+            //        });
+            //    },
+            //    onUploaded: function (e) {
+            //        $(`${idControlElement} .previewLoader`).remove();
+            //         loadAttachmentList();
+            //    }
+            //}).appendTo($container);
+        //break;
+
+            const idControlElement = `#fileUpload_${editorOptions.SectionName}`;
             var controllerName = "Document";
 
-           
+
 
 
             if (editorOptions.refFieldId)
                 $.ajax({
-                    url: `/api/${controllerName}/GetByKey?recordGuid=${editorOptions.guid}&folder=${editorOptions.folder}`, // Replace with your actual API
+                    url: `/api/${controllerName}/GetByKey?recordGuid=${editorOptions.guid}&folder=${editorOptions.SectionName}`, // Replace with your actual API
                     method: 'GET',
                     success: function (data) {
                         if (data.length > 0) {
@@ -1049,17 +1128,17 @@ function createEditor(item, $container, $element, editorOptions) {
                                 //if item image
                                 //if item file
                             });
-                            $(`${idControlElement} .previewLoader`).remove(); 
+                            $(`${idControlElement} .previewLoader`).remove();
                         }
                     }
                 });
             editorOptions.uploadTitle = "Files";
-            var $filePreview = $(`<div id='attListMKT_${editorOptions.refFieldId}_${editorOptions.id}' style='display: flex; flex-wrap: wrap; gap: 25px;top: 10px'>`).appendTo($container);
-            $(`<div id="fileUpload_${editorOptions.SectionName}_${editorOptions.refFieldId}_${editorOptions.id}">`).dxFileUploader({
+            var $filePreview = $(`<div id='attList_${editorOptions.SectionName}' style='display: flex; flex-wrap: wrap; gap: 25px;top: 10px'>`).appendTo($container);
+            $(`<div id="fileUpload_${editorOptions.SectionName}">`).dxFileUploader({
                 readOnly: editorOptions.isReadOnly ? editorOptions.isReadOnly : false,
                 multiple: true,
                 accept: "*/*",
-                selectButtonText: `Upload File`,
+                selectButtonText: `Upload ${editorOptions.uploadTitle}`,
                 dropZone: $filePreview,
                 labelText: "",
                 uploadMode: "instantly",
@@ -1067,7 +1146,7 @@ function createEditor(item, $container, $element, editorOptions) {
                 showFileList: false,
                 uploadHeaders: {
                     "RecordGuid": editorOptions.guid,
-                    "Folder": "MKT",
+                    "Folder": editorOptions.SectionName,
                     // "RowOrder": 1
                 },
                 onUploadStarted: function (e) {
@@ -1088,8 +1167,8 @@ function createEditor(item, $container, $element, editorOptions) {
                     });
                 },
                 onUploaded: function (e) {
-                    $(`${idControlElement} .previewLoader`).remove(); 
-                     loadAttachmentList_MKT();
+                    $(`${idControlElement} .previewLoader`).remove();
+                    loadAttachmentList();
                 }
             }).appendTo($container);
             break;
@@ -6262,3 +6341,151 @@ window.AttachmentUtil = (function () {
         getKeyAndValues
     };
 })();
+
+function getIconByExt(ext) {
+    ext = (ext || "").toLowerCase();
+    if (ext === "pdf") return "📕";
+    if (ext === "xls" || ext === "xlsx" || ext === "csv") return "📗";
+    if (ext === "doc" || ext === "docx") return "📘";
+    if (ext === "ppt" || ext === "pptx") return "📙";
+    if (ext === "msg" || ext === "eml") return "✉️";
+    if (ext === "xml" || ext === "json") return "🧾";
+    if (ext === "zip" || ext === "rar" || ext === "7z") return "🗜️";
+    if (["png", "jpg", "jpeg", "gif", "bmp", "webp"].includes(ext)) return "🖼️";
+    return "📎";
+}
+
+function getExt(fileName) {
+    const s = (fileName || "");
+    const i = s.lastIndexOf(".");
+    return i >= 0 ? s.substring(i + 1) : "";
+}
+
+function formatBytes(bytes) {
+    const n = Number(bytes || 0);
+    if (n < 1024) return n + " B";
+    const kb = n / 1024;
+    if (kb < 1024) return kb.toFixed(1) + " KB";
+    const mb = kb / 1024;
+    if (mb < 1024) return mb.toFixed(1) + " MB";
+    const gb = mb / 1024;
+    return gb.toFixed(1) + " GB";
+}
+
+// ✅ Load list attachments theo id trong formData
+async function loadAttachmentList(sectionName) {
+
+    var form = $(`#form${sectionName}`).dxForm("instance");
+    var formData = form?.option("formData") || {};
+    var key = formData.guid; // đúng ý bạn: lấy id từ formData
+
+    //var $host = $(`#attList_${sectionName}_${formData.id}_${formData.attachmentId}`);
+    var $host = $(`#attList_${sectionName}`);
+    if ($host.length === 0) return;
+
+    if (!key) {
+        $host.html("<div style='opacity:.7;padding:6px 2px;'>No record id yet</div>");
+        return;
+    }
+
+    try {
+        // TODO: đổi API list cho đúng hệ thống của bạn
+        var url = `/api/Document/GetByKey?recordGuid=${encodeURIComponent(key)}&folder=${sectionName}`;
+        var res = await fetch(url, { method: "GET" });
+        var data = res.ok ? (await res.json().catch(() => [])) : [];
+
+        renderAttachmentList(data || [], $host);
+    } catch (e) {
+        $host.html("<div style='color:#b91c1c;padding:6px 2px;'>Cannot load attachments</div>");
+    }
+}
+
+
+function renderAttachmentList(list, attList_Host) {
+    if (!attList_Host || attList_Host.length === 0) return;
+
+    attList_Host.empty();
+
+    if (!list || list.length === 0) {
+        attList_Host.html("<div style='opacity:.7;padding:6px 2px;'>No attachments</div>");
+        return;
+    }
+
+    list.forEach(function (x) {
+        const fileName = x.fileName || x.FileName || x.name || "Unnamed";
+        const ext = (x.extension || x.Extension || getExt(fileName)).toLowerCase();
+        const size = x.size || x.fileSize || x.FileSize || 0;
+        const downloadUrl = x.downloadUrl || x.DownloadUrl || x.url;
+        const id = x.id || x.Id || x.attachmentId;
+
+        const $item = $("<div>").addClass("att-item");
+
+        $("<div>")
+            .addClass("att-ico")
+            .text(getIconByExt(ext))
+            .appendTo($item);
+
+        const $meta = $("<div>").addClass("att-meta").appendTo($item);
+
+        $("<div>")
+            .addClass("att-name")
+            .attr("title", fileName)
+            .text(fileName)
+            .appendTo($meta);
+
+        $("<div>")
+            .addClass("att-sub")
+            .text((ext ? ext.toUpperCase() : "FILE") + " • " + formatBytes(size))
+            .appendTo($meta);
+
+        const $actions = $("<div>").addClass("att-actions").appendTo($item);
+
+        $("<div>").dxButton({
+            icon: "download",
+            hint: "Download",
+            stylingMode: "contained",
+            onClick: function (ev) {
+                ev.event?.stopPropagation?.();
+                if (downloadUrl) {
+                    window.open(downloadUrl, "_blank");
+                } else {
+                    DevExpress.ui.notify("No download url", "warning", 2000);
+                }
+            }
+        }).appendTo($actions);
+
+        $("<div>").dxButton({
+            icon: "trash",
+            hint: "Delete",
+            stylingMode: "outlined",
+            onClick: async function (ev) {
+                ev.event?.stopPropagation?.();
+                if (!id) {
+                    DevExpress.ui.notify("Missing id", "warning", 2000);
+                    return;
+                }
+
+                try {
+                    const res = await fetch(`/api/Document/DeleteDocumentData?id=${encodeURIComponent(id)}`, {
+                        method: "GET"
+                    });
+
+                    if (!res.ok) throw new Error("Delete failed");
+
+                    DevExpress.ui.notify("Deleted", "success", 1200);
+                    loadAttachmentList();
+                } catch (err) {
+                    DevExpress.ui.notify(err.message || "Delete error", "error", 2500);
+                }
+            }
+        }).appendTo($actions);
+
+        $item.css("cursor", downloadUrl ? "pointer" : "default");
+        $item.on("click", function (ev) {
+            if ($(ev.target).closest(".dx-button").length) return;
+            if (downloadUrl) window.open(downloadUrl, "_blank");
+        });
+
+        attList_Host.append($item);
+    });
+}
