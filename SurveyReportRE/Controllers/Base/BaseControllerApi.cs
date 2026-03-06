@@ -530,11 +530,6 @@ namespace ERPCore.Controllers.Base
                     attachment.FileName = file.FileName;
                     attachment.FileType = System.IO.Path.GetExtension(file.FileName);
                     attachment.Size = file.Length;
-                    //AttachmentRequest attachmentRequest = new AttachmentRequest();
-                    //attachmentRequest.surveyId = surveyId;
-                    //attachmentRequest.outlineId = outlineId;
-                    //attachmentRequest.outlinePlaceholder = outlinePlaceHolder;
-                    //attachment = Util.BindingAttachment(BLOB_PATH, folder, file.FileName, fileBytes, attachmentRequest);
                     attachment = await _attachmentRepository.InsertData(attachment);
                     //AttachmentForm attachmentForm = ControllerHelper.BindingAttachmentForm(attachment, BLOB_PATH);
                     System.IO.File.WriteAllBytes(Path.Combine(path, folder, $"{unixMilliseconds}_{file.FileName}"), fileBytes);

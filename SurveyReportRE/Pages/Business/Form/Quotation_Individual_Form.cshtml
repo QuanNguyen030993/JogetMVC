@@ -647,11 +647,11 @@ Note:
             $("#stageDeptPill").text(`Quotation progress flow: ${stageDept}`);
             $("#focusDeptPill").text(`Focus: ${focusDept}`);
 
-            deptData.MKT = { ...q, sectionName: "MKT" };
-            deptData.TS = { ...q, sectionName: "TS" };
-            deptData.UW = { ...q, sectionName: "UW" };
-            deptData.LMKT = { ...q, sectionName: "LMKT" };
-            deptData.PM = { ...q, sectionName: "PM" };
+            deptData.MKT = { ...q, sectionName: "MKT", code: q.quotationCode };
+            deptData.TS = { ...q, sectionName: "TS", code: q.quotationCode };
+            deptData.UW = { ...q, sectionName: "UW", code: q.quotationCode };
+            deptData.LMKT = { ...q, sectionName: "LMKT", code: q.quotationCode };
+            deptData.PM = { ...q, sectionName: "PM", code: q.quotationCode };
 
             renderDeptForms();
 

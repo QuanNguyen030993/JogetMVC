@@ -54,45 +54,7 @@ public class DocumentController : BaseControllerApi<Document>
 
 
 
-    ////api/Document/MakeThumbFiles
-    //[HttpGet]
-    //public async Task<IActionResult> MakeThumbFiles()
-    //{
-    //    List<Document> Documents = new List<Document>();
-    //    Documents = await _BaseRepository.GetAll();
 
-    //    Documents.ForEach(async f =>
-    //    {
-    //        if (string.IsNullOrEmpty(f.SubThumbnailDirectory) || string.IsNullOrEmpty(f.SubOverviewDirectory) || string.IsNullOrEmpty(f.SubSitePictureDirectory))
-    //        {
-    //            Dictionary<string, string> refFiles = new Dictionary<string, string>();
-    //            if (!string.IsNullOrEmpty(f.SubDirectory))
-    //            {
-    //                string outputFiles = System.IO.Path.Combine(path.Value, f.SubDirectory);
-    //                string folder = f.SubDirectory.Split("\\").FirstOrDefault();
-    //                string saveThumbPart = System.IO.Path.Combine(path.Value, folder);
-    //                string mimeType = Util.GetMimeType(outputFiles);
-
-    //                if (mimeType.Contains("image/"))
-    //                {
-    //                    Util.createThumb(outputFiles, saveThumbPart, folder, ref refFiles);
-    //                    f.SubThumbnailDirectory = refFiles.FirstOrDefault(f => f.Key == "thumbnail").Value;
-    //                    f.SubOverviewDirectory = refFiles.FirstOrDefault(f => f.Key == "overview").Value;
-    //                    f.SubSitePictureDirectory = refFiles.FirstOrDefault(f => f.Key == "sitepicture").Value;
-    //                    f = await _BaseRepository.UpdateData(f, JsonConvert.SerializeObject(f), f.Id, "Id");
-    //                }
-    //                else
-    //                {
-
-    //                }
-    //            }
-
-    //        }
-
-    //    });
-
-    //    return Ok();
-    //}
 
     [HttpGet]
     public async Task<IActionResult> DeleteDocumentData(long id)

@@ -6425,7 +6425,8 @@ function renderDxFileUploader(sectionName, $container, options) {
                 const latestOptions = getCurrentEditorOptions(sectionName);
                 e.component.option("uploadHeaders", {
                     RecordGuid: latestOptions?.guid || "",
-                    Folder: latestOptions?.sectionName || sectionName
+                    Folder: (latestOptions?.sectionName || sectionName) +
+                        (latestOptions?.code ? `\\${latestOptions.code}` : ""),
                 });
 
                 showUploaderLoader(idControlElement, "File loading...");
