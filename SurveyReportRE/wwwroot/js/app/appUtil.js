@@ -6048,13 +6048,68 @@ window.AttachmentUtil = (function () {
                     onClick: function () { options?.onDownload?.(itemData); }
                 }).appendTo($actions);
 
+                //$("<div>").dxButton({
+                //    icon: "trash",
+                //    stylingMode: "outlined",
+                //    hint: "Delete",
+                //    onClick: function () { options?.onDelete?.(itemData); }
+                //}).appendTo($actions);
+
                 $("<div>").dxButton({
                     icon: "trash",
-                    stylingMode: "outlined",
                     hint: "Delete",
-                    onClick: function () { options?.onDelete?.(itemData); }
-                }).appendTo($actions);
+                    stylingMode: "outlined",
+                    onClick: async function (ev) {
+                        ev.event?.stopPropagation?.();
 
+                        if (!id) {
+                            DevExpress.ui.notify("Missing id", "warning", 2000);
+                            return;
+                        }
+
+                        try {
+                            const res = await fetch(`/api/Document/DeleteDocumentData?id=${encodeURIComponent(id)}`, {
+                                method: "GET"
+                            });
+
+                            if (!res.ok) throw new Error("Delete failed");
+
+                            // animation slide đóng item
+                            $item.css({
+                                overflow: "hidden",
+                                maxHeight: $item.outerHeight() + "px",
+                                opacity: 1,
+                                transform: "translateX(0)",
+                                transition: "max-height .22s ease, opacity .18s ease, margin .22s ease, padding .22s ease, transform .22s ease"
+                            });
+
+                            requestAnimationFrame(() => {
+                                $item.css({
+                                    opacity: 0,
+                                    transform: "translateX(24px)",
+                                    maxHeight: "0px",
+                                    marginTop: "0px",
+                                    marginBottom: "0px",
+                                    paddingTop: "0px",
+                                    paddingBottom: "0px",
+                                    borderWidth: "0px"
+                                });
+                            });
+
+                            setTimeout(() => {
+                                $item.remove();
+                                DevExpress.ui.notify("Deleted", "success", 1200);
+
+                                if (typeof onDeleted === "function") {
+                                    onDeleted(x, { skipReload: true });
+                                }
+                            }, 240);
+
+                        } catch (err) {
+                            DevExpress.ui.notify(err.message || "Delete error", "error", 2500);
+                        }
+                    }
+                }).appendTo($actions);
                 return $item;
             }
         }).dxList("instance");
@@ -6226,123 +6281,122 @@ function formatBytes(bytes) {
 }
 
 // ✅ Load list attachments theo id trong formData
-async function loadAttachmentList(sectionName) {
-    var form = $(`#form${sectionName}`).dxForm("instance");
-    var formData = form?.option("formData") || {};
-    var key = formData.guid; // đúng ý bạn: lấy id từ formData
+//async function loadAttachmentList(sectionName) {
+//    var form = $(`#form${sectionName}`).dxForm("instance");
+//    var formData = form?.option("formData") || {};
+//    var key = formData.guid; // đúng ý bạn: lấy id từ formData
 
-    //var $host = $(`#attList_${sectionName}_${formData.id}_${formData.attachmentId}`);
-    var $host = $(`#attList_${sectionName}`);
-    if ($host.length === 0) return;
+//    //var $host = $(`#attList_${sectionName}_${formData.id}_${formData.attachmentId}`);
+//    var $host = $(`#attList_${sectionName}`);
+//    if ($host.length === 0) return;
 
-    if (!key) {
-        $host.html("<div style='opacity:.7;padding:6px 2px;'>No record id yet</div>");
-        return;
-    }
+//    if (!key) {
+//        $host.html("<div style='opacity:.7;padding:6px 2px;'>No record id yet</div>");
+//        return;
+//    }
 
-    try {
-        // TODO: đổi API list cho đúng hệ thống của bạn
-        var url = `/api/Document/GetByKey?recordGuid=${encodeURIComponent(key)}&folder=${sectionName}`;
-        var res = await fetch(url, { method: "GET" });
-        var data = res.ok ? (await res.json().catch(() => [])) : [];
+//    try {
+//        // TODO: đổi API list cho đúng hệ thống của bạn
+//        var url = `/api/Document/GetByKey?recordGuid=${encodeURIComponent(key)}&folder=${sectionName}`;
+//        var res = await fetch(url, { method: "GET" });
+//        var data = res.ok ? (await res.json().catch(() => [])) : [];
 
-        renderAttachmentList(data || [], $host);
-    } catch (e) {
-        $host.html("<div style='color:#b91c1c;padding:6px 2px;'>Cannot load attachments</div>");
-    }
-}
+//        renderAttachmentList(data || [], $host);
+//    } catch (e) {
+//        $host.html("<div style='color:#b91c1c;padding:6px 2px;'>Cannot load attachments</div>");
+//    }
+//}
 
 
-function renderAttachmentList(list, attList_Host) {
-    if (!attList_Host || attList_Host.length === 0) return;
+//function renderAttachmentList(list, attList_Host) {
+//    if (!attList_Host || attList_Host.length === 0) return;
 
-    attList_Host.empty();
+//    attList_Host.empty();
 
-    if (!list || list.length === 0) {
-        attList_Host.html("<div style='opacity:.7;padding:6px 2px;'>No attachments</div>");
-        return;
-    }
+//    if (!list || list.length === 0) {
+//        attList_Host.html("<div style='opacity:.7;padding:6px 2px;'>No attachments</div>");
+//        return;
+//    }
 
-    list.forEach(function (x) {
-        const fileName = x.fileName || x.FileName || x.name || "Unnamed";
-        const ext = (x.extension || x.Extension || getExt(fileName)).toLowerCase();
-        const size = x.size || x.fileSize || x.FileSize || 0;
-        const downloadUrl = x.downloadUrl || x.DownloadUrl || x.url;
-        const id = x.id || x.Id || x.attachmentId;
+//    list.forEach(function (x) {
+//        const fileName = x.fileName || x.FileName || x.name || "Unnamed";
+//        const ext = (x.extension || x.Extension || getExt(fileName)).toLowerCase();
+//        const size = x.size || x.fileSize || x.FileSize || 0;
+//        const downloadUrl = x.downloadUrl || x.DownloadUrl || x.url;
+//        const id = x.id || x.Id || x.attachmentId;
 
-        const $item = $("<div>").addClass("att-item");
+//        const $item = $("<div>").addClass("att-item");
 
-        $("<div>")
-            .addClass("att-ico")
-            .text(getIconByExt(ext))
-            .appendTo($item);
+//        $("<div>")
+//            .addClass("att-ico")
+//            .text(getIconByExt(ext))
+//            .appendTo($item);
 
-        const $meta = $("<div>").addClass("att-meta").appendTo($item);
+//        const $meta = $("<div>").addClass("att-meta").appendTo($item);
 
-        $("<div>")
-            .addClass("att-name")
-            .attr("title", fileName)
-            .text(fileName)
-            .appendTo($meta);
+//        $("<div>")
+//            .addClass("att-name")
+//            .attr("title", fileName)
+//            .text(fileName)
+//            .appendTo($meta);
 
-        $("<div>")
-            .addClass("att-sub")
-            .text((ext ? ext.toUpperCase() : "FILE") + " • " + formatBytes(size))
-            .appendTo($meta);
+//        $("<div>")
+//            .addClass("att-sub")
+//            .text((ext ? ext.toUpperCase() : "FILE") + " • " + formatBytes(size))
+//            .appendTo($meta);
 
-        const $actions = $("<div>").addClass("att-actions").appendTo($item);
+//        const $actions = $("<div>").addClass("att-actions").appendTo($item);
 
-        $("<div>").dxButton({
-            icon: "download",
-            hint: "Download",
-            stylingMode: "contained",
-            onClick: function (ev) {
-                ev.event?.stopPropagation?.();
-                if (downloadUrl) {
-                    window.open(downloadUrl, "_blank");
-                } else {
-                    DevExpress.ui.notify("No download url", "warning", 2000);
-                }
-            }
-        }).appendTo($actions);
+//        $("<div>").dxButton({
+//            icon: "download",
+//            hint: "Download",
+//            stylingMode: "contained",
+//            onClick: function (ev) {
+//                ev.event?.stopPropagation?.();
+//                if (downloadUrl) {
+//                    window.open(downloadUrl, "_blank");
+//                } else {
+//                    DevExpress.ui.notify("No download url", "warning", 2000);
+//                }
+//            }
+//        }).appendTo($actions);
 
-        $("<div>").dxButton({
-            icon: "trash",
-            hint: "Delete",
-            stylingMode: "outlined",
-            onClick: async function (ev) {
-                ev.event?.stopPropagation?.();
-                if (!id) {
-                    DevExpress.ui.notify("Missing id", "warning", 2000);
-                    return;
-                }
+//        $("<div>").dxButton({
+//            icon: "trash",
+//            hint: "Delete",
+//            stylingMode: "outlined",
+//            onClick: async function (ev) {
+//                ev.event?.stopPropagation?.();
+//                if (!id) {
+//                    DevExpress.ui.notify("Missing id", "warning", 2000);
+//                    return;
+//                }
 
-                try {
-                    const res = await fetch(`/api/Document/DeleteDocumentData?id=${encodeURIComponent(id)}`, {
-                        method: "GET"
-                    });
+//                try {
+//                    const res = await fetch(`/api/Document/DeleteDocumentData?id=${encodeURIComponent(id)}`, {
+//                        method: "GET"
+//                    });
 
-                    if (!res.ok) throw new Error("Delete failed");
+//                    if (!res.ok) throw new Error("Delete failed");
 
-                    DevExpress.ui.notify("Deleted", "success", 1200);
-                    loadAttachmentList();
-                } catch (err) {
-                    DevExpress.ui.notify(err.message || "Delete error", "error", 2500);
-                }
-            }
-        }).appendTo($actions);
+//                    DevExpress.ui.notify("Deleted", "success", 1200);
+//                    loadAttachmentList();
+//                } catch (err) {
+//                    DevExpress.ui.notify(err.message || "Delete error", "error", 2500);
+//                }
+//            }
+//        }).appendTo($actions);
 
-        $item.css("cursor", downloadUrl ? "pointer" : "default");
-        $item.on("click", function (ev) {
-            if ($(ev.target).closest(".dx-button").length) return;
-            if (downloadUrl) window.open(downloadUrl, "_blank");
-        });
+//        $item.css("cursor", downloadUrl ? "pointer" : "default");
+//        $item.on("click", function (ev) {
+//            if ($(ev.target).closest(".dx-button").length) return;
+//            if (downloadUrl) window.open(downloadUrl, "_blank");
+//        });
 
-        attList_Host.append($item);
-    });
-}
+//        attList_Host.append($item);
+//    });
+//}
 function getCurrentEditorOptions(sectionName) {
-    debugger
     const form = $(`#form${sectionName}`).dxForm("instance");
     if (!form) return null;
     return form.option("formData");
@@ -6416,41 +6470,58 @@ function renderDxFileUploader(sectionName, $container, options) {
             uploadUrl: options.uploadUrl || `/api/Attachment/AsyncUploadFile`,
             showFileList: false,
             uploadHeaders: {
-                RecordGuid: currentOptions.guid || "",
-                Folder: currentOptions.sectionName || sectionName
+                //RecordGuid: currentOptions.guid || "",
+                //Folder: currentOptions.sectionName || sectionName
             },
             onInitialized: function (e) {
                 updateDxFileUploaderHeaders(sectionName);
             },
             onUploadStarted: function (e) {
-                const latestOptions = getCurrentEditorOptions(sectionName);
-                e.component.option("uploadHeaders", {
-                    RecordGuid: latestOptions?.guid || "",
-                    Folder: (latestOptions?.sectionName || sectionName) +
-                        (latestOptions?.code ? `\\${latestOptions.code}` : ""),
-                });
+                //const latestOptions = getCurrentEditorOptions(sectionName);
+                //debugger
+                //e.component.option("uploadHeaders", {
+                //    RecordGuid: latestOptions?.guid || "",
+                //    Folder: (latestOptions?.sectionName || sectionName) +
+                //        (latestOptions?.code ? `\\${latestOptions.code}` : ""),
+                //});
 
                 showUploaderLoader(idControlElement, "File loading...");
             },
+            onBeforeSend: function (e, ajaxOptions) {
+                e.request.setRequestHeader("RecordGuid", null); // Fix
+                e.request.setRequestHeader("Folder", null);
+                const latestOptions = getCurrentEditorOptions(sectionName) || {};
+                const guid = latestOptions.guid || "";
+                const folder = buildFolder(latestOptions, sectionName);
+                // set thẳng vào request thật
+                //e.request.setRequestHeader("RecordGuid", guid);
+
+                //e.request.setRequestHeader("Folder", folder);
+                ajaxOptions.headers = {
+                    RecordGuid: guid,
+                    Folder: folder
+                }; 
+            },
             onUploaded: function (e) {
                 hideUploaderLoader(idControlElement);
-                renderAttachmentListLazy(currentOptions, $preview, {
-                    batchSize: 6,
-                    delay: 16,
-                    onDeleted: function () {
-                        loadDxFileUploaderAttachments(sectionName, controllerName);
-                    }
-                });
+                loadDxFileUploaderAttachments(sectionName, controllerName)
+                //renderAttachmentListLazy(currentOptions, $preview, {
+                //    batchSize: 6,
+                //    delay: 16,
+                //    onDeleted: function () {
+                //        loadDxFileUploaderAttachments(sectionName, controllerName);
+                //    }
+                //});
             }
         });
-
-    renderAttachmentListLazy(currentOptions, $preview, {
-        batchSize: 6,
-        delay: 16,
-        onDeleted: function () {
-            loadDxFileUploaderAttachments(sectionName, controllerName);
-        }
-    });
+    loadDxFileUploaderAttachments(sectionName, controllerName);
+    //renderAttachmentListLazy(currentOptions, $preview, {
+    //    batchSize: 6,
+    //    delay: 16,
+    //    onDeleted: function () {
+    //        loadDxFileUploaderAttachments(sectionName, controllerName);
+    //    }
+    //});
 }
 
 function updateDxFileUploaderHeaders(sectionName) {
@@ -6664,7 +6735,6 @@ function loadDxFileUploaderAttachments(sectionName, controllerName) {
         method: "GET",
         success: function (data) {
             const $preview = $(`#${previewId}`);
-
             renderAttachmentListLazy(data, $preview, {
                 batchSize: 6,
                 delay: 16,
@@ -6681,3 +6751,7 @@ function loadDxFileUploaderAttachments(sectionName, controllerName) {
     });
 }
 
+function buildFolder(latestOptions, sectionName) {
+    return (latestOptions?.sectionName || sectionName) +
+        (latestOptions?.code ? `\\${latestOptions.code}` : "");
+}

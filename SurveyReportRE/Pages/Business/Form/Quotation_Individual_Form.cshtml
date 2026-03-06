@@ -349,7 +349,7 @@ Note:
 
 <script type="text/javascript">
     $(function () {
-
+        $('[data-toggle="push-menu"]').click();
         // =========================
         // 0) Data load
         // =========================
@@ -479,17 +479,16 @@ Note:
 
         function renderDeptForms() {
             //Data render to partial
-            debugger
             $("#formMKT").dxForm({ formData: deptData.MKT, readOnly: true, colCount: 1 });
             $("#formTS").dxForm({ formData: deptData.TS, readOnly: true, colCount: 1 });
             $("#formUW").dxForm({ formData: deptData.UW, readOnly: true, colCount: 1 });
             $("#formLMKT").dxForm({ formData: deptData.LMKT, readOnly: true, colCount: 1 });
             $("#formPM").dxForm({ formData: deptData.PM, readOnly: true, colCount: 1 });
-            loadAttachmentList("MKT");
-            loadAttachmentList("TS");
-            loadAttachmentList("UW");
-            loadAttachmentList("LMKT");
-            loadAttachmentList("PM");
+            loadDxFileUploaderAttachments("MKT","Document");
+            loadDxFileUploaderAttachments("TS","Document");
+            loadDxFileUploaderAttachments("UW","Document");
+            loadDxFileUploaderAttachments("LMKT","Document");
+            loadDxFileUploaderAttachments("PM","Document");
             applyEditLock();
             updateHints();
         }
@@ -754,7 +753,6 @@ Note:
         // 7) Render list/detail
         // =========================
         function renderDetail() {
-            debugger
             var q = quotes.find(x => x.id === selectedId) || quotes[0];
             if (!q) return;
 
