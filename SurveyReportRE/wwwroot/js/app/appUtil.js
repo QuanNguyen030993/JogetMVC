@@ -6399,7 +6399,8 @@ function renderDxFileUploader(sectionName, $container, options) {
     $(`#${previewId}`).remove();
     $(`#${uploaderId}`).remove();
 
-    $(`<div id="${previewId}" style="display:flex;flex-wrap:wrap;gap:25px;top:10px"></div>`)
+    //const $preview =  $(`<div id="${previewId}" style="display:flex;flex-wrap:wrap;gap:25px;top:10px"></div>`)
+    const $preview = $(`<div id="${previewId}" class="att-preview"></div>`)
         .appendTo($container);
 
     $(`<div id="${uploaderId}"></div>`)
@@ -6433,11 +6434,23 @@ function renderDxFileUploader(sectionName, $container, options) {
             },
             onUploaded: function (e) {
                 hideUploaderLoader(idControlElement);
-                loadDxFileUploaderAttachments(sectionName, controllerName);
+                renderAttachmentListLazy(currentOptions, $preview, {
+                    batchSize: 6,
+                    delay: 16,
+                    onDeleted: function () {
+                        loadDxFileUploaderAttachments(sectionName, controllerName);
+                    }
+                });
             }
         });
 
-    loadDxFileUploaderAttachments(sectionName, controllerName);
+    renderAttachmentListLazy(currentOptions, $preview, {
+        batchSize: 6,
+        delay: 16,
+        onDeleted: function () {
+            loadDxFileUploaderAttachments(sectionName, controllerName);
+        }
+    });
 }
 
 function updateDxFileUploaderHeaders(sectionName) {
@@ -6457,6 +6470,186 @@ function updateDxFileUploaderHeaders(sectionName) {
     uploader.option("selectButtonText", `Upload ${currentOptions.uploadTitle || "Files"}`);
 }
 
+//function loadDxFileUploaderAttachments(sectionName, controllerName) {
+//    const currentOptions = getCurrentEditorOptions(sectionName);
+//    if (!currentOptions || !currentOptions.guid) return;
+
+//    const { uploaderId, previewId } = getDxFileUploaderIds(sectionName);
+//    const idControlElement = `#${uploaderId}`;
+
+//    showUploaderLoader(idControlElement, "File loading...");
+
+//    $.ajax({
+//        url: `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${currentOptions.sectionName}`,
+//        method: "GET",
+//        success: function (data) {
+//            const $preview = $(`#${previewId}`);
+//            $preview.empty();
+
+//            if (Array.isArray(data) && data.length > 0) {
+//                data.forEach(itemFile => {
+//                });
+//            }
+
+//            hideUploaderLoader(idControlElement);
+//        },
+//        error: function () {
+//            hideUploaderLoader(idControlElement);
+//        }
+//    });
+//}
+
+function createAttachmentItem(x, onDeleted) {
+    const fileName = x.fileName || x.FileName || x.name || "Unnamed";
+    const ext = (x.extension || x.Extension || getExt(fileName)).toLowerCase();
+    const size = x.size || x.fileSize || x.FileSize || 0;
+    const downloadUrl = x.downloadUrl || x.DownloadUrl || x.url;
+    const id = x.id || x.Id || x.attachmentId;
+
+    const $item = $("<div>")
+        .addClass("att-item")
+        .css({
+            opacity: 0,
+            transform: "translateY(8px)",
+            transition: "opacity .18s ease, transform .18s ease"
+        });
+
+    $("<div>")
+        .addClass("att-ico")
+        .text(getIconByExt(ext))
+        .appendTo($item);
+
+    const $meta = $("<div>").addClass("att-meta").appendTo($item);
+
+    $("<div>")
+        .addClass("att-name")
+        .attr("title", fileName)
+        .text(fileName)
+        .appendTo($meta);
+
+    $("<div>")
+        .addClass("att-sub")
+        .text((ext ? ext.toUpperCase() : "FILE") + " • " + formatBytes(size))
+        .appendTo($meta);
+
+    const $actions = $("<div>").addClass("att-actions").appendTo($item);
+
+    $("<div>").dxButton({
+        icon: "download",
+        hint: "Download",
+        stylingMode: "contained",
+        onClick: function (ev) {
+            ev.event?.stopPropagation?.();
+            if (downloadUrl) {
+                window.open(downloadUrl, "_blank");
+            } else {
+                DevExpress.ui.notify("No download url", "warning", 2000);
+            }
+        }
+    }).appendTo($actions);
+
+    $("<div>").dxButton({
+        icon: "trash",
+        hint: "Delete",
+        stylingMode: "outlined",
+        onClick: async function (ev) {
+            ev.event?.stopPropagation?.();
+
+            if (!id) {
+                DevExpress.ui.notify("Missing id", "warning", 2000);
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/Document/DeleteDocumentData?id=${encodeURIComponent(id)}`, {
+                    method: "GET"
+                });
+
+                if (!res.ok) throw new Error("Delete failed");
+
+                DevExpress.ui.notify("Deleted", "success", 1200);
+                if (typeof onDeleted === "function") {
+                    onDeleted(x);
+                }
+            } catch (err) {
+                DevExpress.ui.notify(err.message || "Delete error", "error", 2500);
+            }
+        }
+    }).appendTo($actions);
+
+    $item.css("cursor", downloadUrl ? "pointer" : "default");
+    $item.on("click", function (ev) {
+        if ($(ev.target).closest(".dx-button").length) return;
+        if (downloadUrl) window.open(downloadUrl, "_blank");
+    });
+
+    return $item;
+}
+function renderAttachmentListLazy(list, attList_Host, options) {
+    options = options || {};
+
+    const batchSize = options.batchSize || 8;
+    const delay = options.delay || 0;
+    const onDeleted = options.onDeleted;
+
+    if (!attList_Host || attList_Host.length === 0) return;
+
+    attList_Host.empty();
+
+    if (!list || list.length === 0) {
+        attList_Host.html("<div style='opacity:.7;padding:6px 2px;'>No attachments</div>");
+        return;
+    }
+
+    let index = 0;
+    let cancelled = false;
+
+    const token = Date.now() + "_" + Math.random().toString(36).slice(2);
+    attList_Host.data("lazyRenderToken", token);
+
+    function appendBatch() {
+        if (cancelled) return;
+        if (attList_Host.data("lazyRenderToken") !== token) return;
+
+        const frag = document.createDocumentFragment();
+        const itemsToAnimate = [];
+
+        for (let i = 0; i < batchSize && index < list.length; i++, index++) {
+            const $item = createAttachmentItem(list[index], onDeleted);
+            frag.appendChild($item[0]);
+            itemsToAnimate.push($item);
+        }
+
+        attList_Host[0].appendChild(frag);
+
+        requestAnimationFrame(() => {
+            itemsToAnimate.forEach(($item, idx) => {
+                setTimeout(() => {
+                    $item.css({
+                        opacity: 1,
+                        transform: "translateY(0)"
+                    });
+                }, idx * 20);
+            });
+        });
+
+        if (index < list.length) {
+            if (delay > 0) {
+                setTimeout(() => requestAnimationFrame(appendBatch), delay);
+            } else {
+                requestAnimationFrame(appendBatch);
+            }
+        }
+    }
+
+    appendBatch();
+
+    return {
+        cancel: function () {
+            cancelled = true;
+        }
+    };
+}
 function loadDxFileUploaderAttachments(sectionName, controllerName) {
     const currentOptions = getCurrentEditorOptions(sectionName);
     if (!currentOptions || !currentOptions.guid) return;
@@ -6471,12 +6664,14 @@ function loadDxFileUploaderAttachments(sectionName, controllerName) {
         method: "GET",
         success: function (data) {
             const $preview = $(`#${previewId}`);
-            $preview.empty();
 
-            if (Array.isArray(data) && data.length > 0) {
-                data.forEach(itemFile => {
-                });
-            }
+            renderAttachmentListLazy(data, $preview, {
+                batchSize: 6,
+                delay: 16,
+                onDeleted: function () {
+                    loadDxFileUploaderAttachments(sectionName, controllerName);
+                }
+            });
 
             hideUploaderLoader(idControlElement);
         },
@@ -6485,3 +6680,4 @@ function loadDxFileUploaderAttachments(sectionName, controllerName) {
         }
     });
 }
+
