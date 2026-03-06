@@ -28,14 +28,8 @@
             setTimeout(function () {
                 var item = new Object();
                 item.editorType = "dxFileUploader";
-                 var form = $("#formPM").dxForm("instance");
-                var formData = form?.option("formData") || {};
-                var key = formData.id; // đúng ý bạn: lấy id từ formData
-               this.refFieldId = key;
-               this.guid = formData.guid;
-               this.folder = "PM";
-               this.SectionName ="PM";
-                createEditor(item, itemElement, $("<div>"), this);
+                item.sectionName = "PM";
+                createEditor(item, itemElement, $("<div>"), null);
                 loadAttachmentList("PM");
                 }, 1000);
             }

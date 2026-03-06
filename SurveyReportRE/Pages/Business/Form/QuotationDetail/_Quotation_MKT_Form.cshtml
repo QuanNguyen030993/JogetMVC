@@ -82,14 +82,8 @@
             setTimeout(function () {
                 var item = new Object();
                 item.editorType = "dxFileUploader";
-                 var form = $(`#formMKT`).dxForm("instance");
-                var formData = form?.option("formData") || {};
-                var key = formData.id; // đúng ý bạn: lấy id từ formData
-               this.refFieldId = key;
-               this.guid = formData.guid;
-               this.folder = "MKT";
-               this.SectionName = "MKT";
-                createEditor(item, itemElement, $("<div>"), this);
+                item.sectionName = "MKT";
+                createEditor(item, itemElement, $("<div>"), null);
                 loadAttachmentList("MKT");
                 }, 1000);
             }

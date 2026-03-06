@@ -1015,162 +1015,15 @@ function createEditor(item, $container, $element, editorOptions) {
             }).appendTo($container);
             break;
         case "dxFileUploader":
-            //const idControlElement = `#fileUpload_${editorOptions.SectionName}_${editorOptions.refFieldId}_${editorOptions.id}`;
-            //var controllerName = "Document";
-
-
-
-
-            //if (editorOptions.refFieldId)
-            //    $.ajax({
-            //        url: `/api/${controllerName}/GetByKey?recordGuid=${editorOptions.guid}&folder=${editorOptions.SectionName}`, // Replace with your actual API
-            //        method: 'GET',
-            //        success: function (data) {
-            //            if (data.length > 0) {
-
-            //                var $element = $(idControlElement);
-            //                var $loadDiv = $element
-            //                    .css({ position: "absolute", width: "100%", height: "100%", top: 0, left: 0 })
-            //                    .appendTo($element.css("position", "relative")); // đảm bảo container có position
-
-            //                var panel = $("<div>").addClass("previewLoader").appendTo($loadDiv);
-            //                panel.dxLoadPanel({
-            //                    message: "File loading...",
-            //                    visible: true,
-            //                    shading: true,
-            //                    shadingColor: "rgba(255,255,255,0.7)",
-            //                    showPane: true,
-            //                    closeOnOutsideClick: false,
-            //                    position: { of: idControlElement }
-            //                });
-
-            //                data = data.filter(f => f.outlineId == editorOptions.id);
-            //                data.forEach(itemFile => {
-            //                    //if item image
-            //                    //if item file
-            //                });
-            //                $(`${idControlElement} .previewLoader`).remove();
-            //            }
-            //        }
-            //    });
-            //editorOptions.uploadTitle = "Files";
-            //var $filePreview = $(`<div id='attList_${editorOptions.SectionName}_${editorOptions.refFieldId}_${editorOptions.id}' style='display: flex; flex-wrap: wrap; gap: 25px;top: 10px'>`).appendTo($container);
-            //$(`<div id="fileUpload_${editorOptions.SectionName}_${editorOptions.refFieldId}_${editorOptions.id}">`).dxFileUploader({
-            //    readOnly: editorOptions.isReadOnly ? editorOptions.isReadOnly : false,
-            //    multiple: true,
-            //    accept: "*/*",
-            //    selectButtonText: `Upload ${editorOptions.uploadTitle}`,
-            //    dropZone: $filePreview,
-            //    labelText: "",
-            //    uploadMode: "instantly",
-            //    uploadUrl: `/api/Attachment/AsyncUploadFile`,
-            //    showFileList: false,
-            //    uploadHeaders: {
-            //        "RecordGuid": editorOptions.guid,
-            //        "Folder": editorOptions.SectionName,
-            //        // "RowOrder": 1
-            //    },
-            //    onUploadStarted: function (e) {
-            //        var $element = $(idControlElement);
-            //        var $loadDiv = $element
-            //            .css({ position: "absolute", width: "100%", height: "100%", top: 0, left: 0 })
-            //            .appendTo($element.css("position", "relative")); // đảm bảo container có position
-
-            //        var panel = $("<div>").addClass("previewLoader").appendTo($loadDiv);
-            //        panel.dxLoadPanel({
-            //            message: "File loading...",
-            //            visible: true,
-            //            shading: true,
-            //            shadingColor: "rgba(255,255,255,0.7)",
-            //            showPane: true,
-            //            closeOnOutsideClick: false,
-            //            position: { of: idControlElement }
-            //        });
-            //    },
-            //    onUploaded: function (e) {
-            //        $(`${idControlElement} .previewLoader`).remove();
-            //         loadAttachmentList();
-            //    }
-            //}).appendTo($container);
-        //break;
-
-            const idControlElement = `#fileUpload_${editorOptions.SectionName}`;
-            var controllerName = "Document";
-
-
-
-
-            if (editorOptions.refFieldId)
-                $.ajax({
-                    url: `/api/${controllerName}/GetByKey?recordGuid=${editorOptions.guid}&folder=${editorOptions.SectionName}`, // Replace with your actual API
-                    method: 'GET',
-                    success: function (data) {
-                        if (data.length > 0) {
-
-                            var $element = $(idControlElement);
-                            var $loadDiv = $element
-                                .css({ position: "absolute", width: "100%", height: "100%", top: 0, left: 0 })
-                                .appendTo($element.css("position", "relative")); // đảm bảo container có position
-
-                            var panel = $("<div>").addClass("previewLoader").appendTo($loadDiv);
-                            panel.dxLoadPanel({
-                                message: "File loading...",
-                                visible: true,
-                                shading: true,
-                                shadingColor: "rgba(255,255,255,0.7)",
-                                showPane: true,
-                                closeOnOutsideClick: false,
-                                position: { of: idControlElement }
-                            });
-
-                            data = data.filter(f => f.outlineId == editorOptions.id);
-                            data.forEach(itemFile => {
-                                //if item image
-                                //if item file
-                            });
-                            $(`${idControlElement} .previewLoader`).remove();
-                        }
-                    }
+            {
+                const sectionName = editorOptions?.sectionName || item.sectionName;
+                renderDxFileUploader(sectionName, $container, {
+                    controllerName: "Document",
+                    uploadTitle: "Files",
+                    uploadUrl: "/api/Attachment/AsyncUploadFile",
+                    accept: "*/*"
                 });
-            editorOptions.uploadTitle = "Files";
-            var $filePreview = $(`<div id='attList_${editorOptions.SectionName}' style='display: flex; flex-wrap: wrap; gap: 25px;top: 10px'>`).appendTo($container);
-            $(`<div id="fileUpload_${editorOptions.SectionName}">`).dxFileUploader({
-                readOnly: editorOptions.isReadOnly ? editorOptions.isReadOnly : false,
-                multiple: true,
-                accept: "*/*",
-                selectButtonText: `Upload ${editorOptions.uploadTitle}`,
-                dropZone: $filePreview,
-                labelText: "",
-                uploadMode: "instantly",
-                uploadUrl: `/api/Attachment/AsyncUploadFile`,
-                showFileList: false,
-                uploadHeaders: {
-                    "RecordGuid": editorOptions.guid,
-                    "Folder": editorOptions.SectionName,
-                    // "RowOrder": 1
-                },
-                onUploadStarted: function (e) {
-                    var $element = $(idControlElement);
-                    var $loadDiv = $element
-                        .css({ position: "absolute", width: "100%", height: "100%", top: 0, left: 0 })
-                        .appendTo($element.css("position", "relative")); // đảm bảo container có position
-
-                    var panel = $("<div>").addClass("previewLoader").appendTo($loadDiv);
-                    panel.dxLoadPanel({
-                        message: "File loading...",
-                        visible: true,
-                        shading: true,
-                        shadingColor: "rgba(255,255,255,0.7)",
-                        showPane: true,
-                        closeOnOutsideClick: false,
-                        position: { of: idControlElement }
-                    });
-                },
-                onUploaded: function (e) {
-                    $(`${idControlElement} .previewLoader`).remove();
-                    loadAttachmentList();
-                }
-            }).appendTo($container);
+            }
             break;
         case "empty":
             //$element.text(item.label.texts).appendTo($container);
@@ -6374,7 +6227,6 @@ function formatBytes(bytes) {
 
 // ✅ Load list attachments theo id trong formData
 async function loadAttachmentList(sectionName) {
-
     var form = $(`#form${sectionName}`).dxForm("instance");
     var formData = form?.option("formData") || {};
     var key = formData.guid; // đúng ý bạn: lấy id từ formData
@@ -6487,5 +6339,148 @@ function renderAttachmentList(list, attList_Host) {
         });
 
         attList_Host.append($item);
+    });
+}
+function getCurrentEditorOptions(sectionName) {
+    debugger
+    const form = $(`#form${sectionName}`).dxForm("instance");
+    if (!form) return null;
+    return form.option("formData");
+}
+function getDxFileUploaderIds(sectionName) {
+    return {
+        uploaderId: `fileUpload_${sectionName}`,
+        previewId: `attList_${sectionName}`
+    };
+}
+function showUploaderLoader(idControlElement, message) {
+    const $element = $(idControlElement);
+    if (!$element.length) return;
+
+    $(`${idControlElement} .previewLoader`).remove();
+
+    const $loadDiv = $("<div>")
+        .addClass("previewLoader")
+        .css({
+            position: "absolute",
+            width: "100%",
+            height: "100%",
+            top: 0,
+            left: 0
+        })
+        .appendTo($element.css("position", "relative"));
+
+    $("<div>").appendTo($loadDiv).dxLoadPanel({
+        message: message || "File loading...",
+        visible: true,
+        shading: true,
+        shadingColor: "rgba(255,255,255,0.7)",
+        showPane: true,
+        closeOnOutsideClick: false,
+        position: { of: idControlElement }
+    });
+}
+
+function hideUploaderLoader(idControlElement) {
+    $(`${idControlElement} .previewLoader`).remove();
+}
+function renderDxFileUploader(sectionName, $container, options) {
+    options = options || {};
+    const controllerName = options.controllerName || "Document";
+    const currentOptions = getCurrentEditorOptions(sectionName) || {};
+
+    const ids = getDxFileUploaderIds(sectionName);
+    const uploaderId = ids.uploaderId;
+    const previewId = ids.previewId;
+    const idControlElement = `#${uploaderId}`;
+
+    const uploadTitle = currentOptions.uploadTitle || options.uploadTitle || "Files";
+
+    $(`#${previewId}`).remove();
+    $(`#${uploaderId}`).remove();
+
+    $(`<div id="${previewId}" style="display:flex;flex-wrap:wrap;gap:25px;top:10px"></div>`)
+        .appendTo($container);
+
+    $(`<div id="${uploaderId}"></div>`)
+        .appendTo($container)
+        .dxFileUploader({
+            readOnly: !!currentOptions.isReadOnly,
+            multiple: true,
+            accept: options.accept || "*/*",
+            selectButtonText: `Upload ${uploadTitle}`,
+            dropZone: `#${previewId}`,
+            labelText: "",
+            uploadMode: "instantly",
+            uploadUrl: options.uploadUrl || `/api/Attachment/AsyncUploadFile`,
+            showFileList: false,
+            uploadHeaders: {
+                RecordGuid: currentOptions.guid || "",
+                Folder: currentOptions.sectionName || sectionName
+            },
+            onInitialized: function (e) {
+                updateDxFileUploaderHeaders(sectionName);
+            },
+            onUploadStarted: function (e) {
+                const latestOptions = getCurrentEditorOptions(sectionName);
+                e.component.option("uploadHeaders", {
+                    RecordGuid: latestOptions?.guid || "",
+                    Folder: latestOptions?.sectionName || sectionName
+                });
+
+                showUploaderLoader(idControlElement, "File loading...");
+            },
+            onUploaded: function (e) {
+                hideUploaderLoader(idControlElement);
+                loadDxFileUploaderAttachments(sectionName, controllerName);
+            }
+        });
+
+    loadDxFileUploaderAttachments(sectionName, controllerName);
+}
+
+function updateDxFileUploaderHeaders(sectionName) {
+    const currentOptions = getCurrentEditorOptions(sectionName);
+    if (!currentOptions) return;
+
+    const { uploaderId } = getDxFileUploaderIds(sectionName);
+    const uploader = $(`#${uploaderId}`).dxFileUploader("instance");
+    if (!uploader) return;
+
+    uploader.option("uploadHeaders", {
+        RecordGuid: currentOptions.guid || "",
+        Folder: currentOptions.sectionName || sectionName
+    });
+
+    uploader.option("readOnly", !!currentOptions.isReadOnly);
+    uploader.option("selectButtonText", `Upload ${currentOptions.uploadTitle || "Files"}`);
+}
+
+function loadDxFileUploaderAttachments(sectionName, controllerName) {
+    const currentOptions = getCurrentEditorOptions(sectionName);
+    if (!currentOptions || !currentOptions.guid) return;
+
+    const { uploaderId, previewId } = getDxFileUploaderIds(sectionName);
+    const idControlElement = `#${uploaderId}`;
+
+    showUploaderLoader(idControlElement, "File loading...");
+
+    $.ajax({
+        url: `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${currentOptions.sectionName}`,
+        method: "GET",
+        success: function (data) {
+            const $preview = $(`#${previewId}`);
+            $preview.empty();
+
+            if (Array.isArray(data) && data.length > 0) {
+                data.forEach(itemFile => {
+                });
+            }
+
+            hideUploaderLoader(idControlElement);
+        },
+        error: function () {
+            hideUploaderLoader(idControlElement);
+        }
     });
 }
