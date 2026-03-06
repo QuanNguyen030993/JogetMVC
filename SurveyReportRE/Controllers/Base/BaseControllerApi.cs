@@ -507,6 +507,7 @@ namespace ERPCore.Controllers.Base
             IFormFileCollection files = null;
             files = ((FormCollection)(Request.Form)).Files;
             string folder = Request.Headers["Folder"];
+            string guid = Request.Headers["RecordGuid"];
             IFormFile file = null;
             file = files.FirstOrDefault();
             if (file != null && file.Length > 0)
@@ -524,7 +525,11 @@ namespace ERPCore.Controllers.Base
 
                     Document attachment = new Document();
                     Attachment attachmentForm = new Attachment();
-                    attachment.SubDirectory = Path.Combine(folder, file.FileName) ;
+                    attachment.SubDirectory = Path.Combine(folder, $"{unixMilliseconds}_{file.FileName}") ;
+                    attachment.RecordGuid = Guid.Parse(guid);
+                    attachment.FileName = file.FileName;
+                    attachment.FileType = System.IO.Path.GetExtension(file.FileName);
+                    attachment.Size = file.Length;
                     //AttachmentRequest attachmentRequest = new AttachmentRequest();
                     //attachmentRequest.surveyId = surveyId;
                     //attachmentRequest.outlineId = outlineId;

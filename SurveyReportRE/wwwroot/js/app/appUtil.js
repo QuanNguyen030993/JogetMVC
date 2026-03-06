@@ -888,8 +888,8 @@ function base64ToUint8Array(base64) {
 function createEditor(item, $container, $element, editorOptions) {
     //editorOptions should be main property of control here
     switch (item.editorType) {
-        case "dxFileUploader":
-            var controllerName = editorOptions.ModelName ? editorOptions.ModelName : "SitePictures";
+        case "dxImageUploader":
+            var controllerName = "Document";
 
             if (editorOptions.refFieldId)
                 $.ajax({
@@ -933,7 +933,7 @@ function createEditor(item, $container, $element, editorOptions) {
                     }
                 });
             editorOptions.uploadTitle = "Images";
-            const $imagePreview = $(`<div id='imagePreview_${editorOptions.refFieldId}_${editorOptions.outline.id}' class='imagePreview' style='display: flex; flex-wrap: wrap; gap: 25px;top: 10px'>`).appendTo($container);
+            var $imagePreview = $(`<div id='imagePreview_${editorOptions.refFieldId}_${editorOptions.outline.id}' class='imagePreview' style='display: flex; flex-wrap: wrap; gap: 25px;top: 10px'>`).appendTo($container);
             $(`<div id="fileUpload_${editorOptions.ModelName}_${editorOptions.id}">`).dxFileUploader({
                 readOnly: editorOptions.isReadOnly ? editorOptions.isReadOnly : false,
                 multiple: true,
@@ -1011,6 +1011,85 @@ function createEditor(item, $container, $element, editorOptions) {
                         //addImageToPreview(url, item);
                         addImageToPreview(url, responseObject.attachment);
                     }
+                }
+            }).appendTo($container);
+            break;
+        case "dxFileUploader":
+            const idControlElement = `#fileUpload_${editorOptions.SectionName}_${editorOptions.refFieldId}_${editorOptions.id}`;
+            var controllerName = "Document";
+
+           
+
+
+            if (editorOptions.refFieldId)
+                $.ajax({
+                    url: `/api/${controllerName}/GetByKey?recordGuid=${editorOptions.guid}&folder=${editorOptions.folder}`, // Replace with your actual API
+                    method: 'GET',
+                    success: function (data) {
+                        if (data.length > 0) {
+
+                            var $element = $(idControlElement);
+                            var $loadDiv = $element
+                                .css({ position: "absolute", width: "100%", height: "100%", top: 0, left: 0 })
+                                .appendTo($element.css("position", "relative")); // đảm bảo container có position
+
+                            var panel = $("<div>").addClass("previewLoader").appendTo($loadDiv);
+                            panel.dxLoadPanel({
+                                message: "File loading...",
+                                visible: true,
+                                shading: true,
+                                shadingColor: "rgba(255,255,255,0.7)",
+                                showPane: true,
+                                closeOnOutsideClick: false,
+                                position: { of: idControlElement }
+                            });
+
+                            data = data.filter(f => f.outlineId == editorOptions.id);
+                            data.forEach(itemFile => {
+                                //if item image
+                                //if item file
+                            });
+                            $(`${idControlElement} .previewLoader`).remove(); 
+                        }
+                    }
+                });
+            editorOptions.uploadTitle = "Files";
+            var $filePreview = $(`<div id='attListMKT_${editorOptions.refFieldId}_${editorOptions.id}' style='display: flex; flex-wrap: wrap; gap: 25px;top: 10px'>`).appendTo($container);
+            $(`<div id="fileUpload_${editorOptions.SectionName}_${editorOptions.refFieldId}_${editorOptions.id}">`).dxFileUploader({
+                readOnly: editorOptions.isReadOnly ? editorOptions.isReadOnly : false,
+                multiple: true,
+                accept: "*/*",
+                selectButtonText: `Upload File`,
+                dropZone: $filePreview,
+                labelText: "",
+                uploadMode: "instantly",
+                uploadUrl: `/api/Attachment/AsyncUploadFile`,
+                showFileList: false,
+                uploadHeaders: {
+                    "RecordGuid": editorOptions.guid,
+                    "Folder": "MKT",
+                    // "RowOrder": 1
+                },
+                onUploadStarted: function (e) {
+                    var $element = $(idControlElement);
+                    var $loadDiv = $element
+                        .css({ position: "absolute", width: "100%", height: "100%", top: 0, left: 0 })
+                        .appendTo($element.css("position", "relative")); // đảm bảo container có position
+
+                    var panel = $("<div>").addClass("previewLoader").appendTo($loadDiv);
+                    panel.dxLoadPanel({
+                        message: "File loading...",
+                        visible: true,
+                        shading: true,
+                        shadingColor: "rgba(255,255,255,0.7)",
+                        showPane: true,
+                        closeOnOutsideClick: false,
+                        position: { of: idControlElement }
+                    });
+                },
+                onUploaded: function (e) {
+                    $(`${idControlElement} .previewLoader`).remove(); 
+                     loadAttachmentList_MKT();
                 }
             }).appendTo($container);
             break;

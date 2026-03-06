@@ -470,7 +470,6 @@ Note:
         function setSectionCollapsed(dept, collapsed) {
             const $sec = $(`#sec${dept}`);
             if (!$sec.length) return;
-            debugger
             const body = $sec.find(".dept-body")[0];
 
             if (collapsed) {
@@ -537,7 +536,6 @@ Note:
             }
 
             const loadComments = debounce(function (quoteNo, quoteId) {
-                debugger
                 $("#rightCommentSub").text(quoteNo || "-");
                 $("#rightCommentList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
 
@@ -679,7 +677,6 @@ Note:
                 focusDept = currentUserRole;
                 renderList();
                 renderDetail();
-                debugger
                 if (commentPanelOpened) HoverAjax.loadComments(selectedCodeNo, selectedId);
             });
         }

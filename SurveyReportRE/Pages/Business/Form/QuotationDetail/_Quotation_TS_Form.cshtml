@@ -187,7 +187,6 @@
              }
              ,onFocusOut: function (ed) {
                var formItems = $("#formTS").dxForm().dxForm("instance").option("formData");
-               debugger
                   ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ totalDue: formItems.totalDue })} , {
                          onSuccess: function (response) {
                          },

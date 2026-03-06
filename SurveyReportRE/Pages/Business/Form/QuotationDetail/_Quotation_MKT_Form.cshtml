@@ -63,6 +63,7 @@
         gap: 6px;
         flex: 0 0 auto;
     }
+
 </style>
 <div id="formMKT">
 </div>
@@ -103,7 +104,7 @@
       const formData = form?.option("formData") || {};
       const key = formData.guid; // đúng ý bạn: lấy id từ formData
 
-      const $host = $("#attListMKT");
+      const $host = $(`#attListMKT_${formData.id}_undefined`);
       if ($host.length === 0) return;
 
       if (!key) {
@@ -113,209 +114,131 @@
 
       try {
         // TODO: đổi API list cho đúng hệ thống của bạn
-        const url = `/api/Attachment/GetByKey?key=${encodeURIComponent(key)}&folder=MKT`;
+        const url = `/api/Document/GetByKey?recordGuid=${encodeURIComponent(key)}&folder=MKT`;
         const res = await fetch(url, { method: "GET" });
         const data = res.ok ? (await res.json().catch(() => [])) : [];
 
-        renderAttachmentList_MKT(data || []);
+        renderAttachmentList_MKT(data || [],$host);
       } catch (e) {
         $host.html("<div style='color:#b91c1c;padding:6px 2px;'>Cannot load attachments</div>");
       }
     }
 
-    function renderAttachmentList_MKT(list) {
-      const $host = $("#attListMKT");
-      $host.empty();
+    
+        function renderAttachmentList_MKT(list, attListMKT_Host) {
+        if (!attListMKT_Host || attListMKT_Host.length === 0) return;
 
-      if (!list || list.length === 0) {
-        $host.html("<div style='opacity:.7;padding:6px 2px;'>No attachments</div>");
-        return;
-      }
+        attListMKT_Host.empty();
 
-      list.forEach(x => {
-        const fileName = x.fileName || x.FileName || x.name || "Unnamed";
-        const ext = (x.extension || x.Extension || getExt(fileName)).toLowerCase();
-        const size = x.size || x.fileSize || x.FileSize || 0;
-        const downloadUrl = x.downloadUrl || x.DownloadUrl || x.url; // cần BE trả
+        if (!list || list.length === 0) {
+            attListMKT_Host.html("<div style='opacity:.7;padding:6px 2px;'>No attachments</div>");
+            return;
+        }
 
-        const $item = $("<div class='att-item'></div>");
-
-        $("<div class='att-ico'></div>").text(getIconByExt(ext)).appendTo($item);
-
-        const $meta = $("<div class='att-meta'></div>").appendTo($item);
-        $("<div class='att-name'></div>").text(fileName).appendTo($meta);
-        $("<div class='att-sub'></div>").text((ext ? ext.toUpperCase() : "FILE") + " • " + formatBytes(size)).appendTo($meta);
-
-        const $actions = $("<div class='att-actions'></div>").appendTo($item);
-
-        // Open/Download
-        $("<div>").dxButton({
-          icon: "download",
-          hint: "Download",
-          stylingMode: "contained",
-          onClick: function () {
-            if (downloadUrl) window.open(downloadUrl, "_blank");
-            else DevExpress.ui.notify("No downloadUrl from API", "warning", 2000);
-          }
-        }).appendTo($actions);
-
-        // Delete (nếu có API)
-        $("<div>").dxButton({
-          icon: "trash",
-          hint: "Delete",
-          stylingMode: "outlined",
-          onClick: async function () {
+        list.forEach(function (x) {
+            const fileName = x.fileName || x.FileName || x.name || "Unnamed";
+            const ext = (x.extension || x.Extension || getExt(fileName)).toLowerCase();
+            const size = x.size || x.fileSize || x.FileSize || 0;
+            const downloadUrl = x.downloadUrl || x.DownloadUrl || x.url;
             const id = x.id || x.Id || x.attachmentId;
-            if (!id) return DevExpress.ui.notify("Missing attachment id", "warning", 2000);
+            
+            const $item = $("<div>").addClass("att-item");
 
-            try {
-              // TODO: đổi delete API cho đúng của bạn
-              const delUrl = `/api/Attachment/Delete?id=${encodeURIComponent(id)}`;
-              const delRes = await fetch(delUrl, { method: "DELETE" });
-              if (!delRes.ok) throw new Error("Delete failed");
+            $("<div>")
+                .addClass("att-ico")
+                .text(getIconByExt(ext))
+                .appendTo($item);
 
-              DevExpress.ui.notify("Deleted", "success", 1200);
-              loadAttachmentList_MKT();
-            } catch (err) {
-              DevExpress.ui.notify(err.message || "Delete error", "error", 2500);
-            }
-          }
-        }).appendTo($actions);
+            const $meta = $("<div>").addClass("att-meta").appendTo($item);
 
-        // click vào item cũng mở file
-        $item.css("cursor", downloadUrl ? "pointer" : "default");
-        $item.on("click", function (ev) {
-          // tránh click vào button bị trigger open 2 lần
-          if ($(ev.target).closest(".dx-button").length) return;
-          if (downloadUrl) window.open(downloadUrl, "_blank");
+            $("<div>")
+                .addClass("att-name")
+                .attr("title", fileName)
+                .text(fileName)
+                .appendTo($meta);
+
+            $("<div>")
+                .addClass("att-sub")
+                .text((ext ? ext.toUpperCase() : "FILE") + " • " + formatBytes(size))
+                .appendTo($meta);
+
+            const $actions = $("<div>").addClass("att-actions").appendTo($item);
+
+            $("<div>").dxButton({
+                icon: "download",
+                hint: "Download",
+                stylingMode: "contained",
+                onClick: function (ev) {
+                    ev.event?.stopPropagation?.();
+                    if (downloadUrl) {
+                        window.open(downloadUrl, "_blank");
+                    } else {
+                        DevExpress.ui.notify("No download url", "warning", 2000);
+                    }
+                }
+            }).appendTo($actions);
+
+            $("<div>").dxButton({
+                icon: "trash",
+                hint: "Delete",
+                stylingMode: "outlined",
+                onClick: async function (ev) {
+                    ev.event?.stopPropagation?.();
+                    if (!id) {
+                        DevExpress.ui.notify("Missing id", "warning", 2000);
+                        return;
+                    }
+
+                    try {
+                        const res = await fetch(`/api/Document/DeleteDocumentData?id=${encodeURIComponent(id)}`, {
+                            method: "GET"
+                        });
+
+                        if (!res.ok) throw new Error("Delete failed");
+
+                        DevExpress.ui.notify("Deleted", "success", 1200);
+                        loadAttachmentList_MKT();
+                    } catch (err) {
+                        DevExpress.ui.notify(err.message || "Delete error", "error", 2500);
+                    }
+                }
+            }).appendTo($actions);
+
+            $item.css("cursor", downloadUrl ? "pointer" : "default");
+            $item.on("click", function (ev) {
+                if ($(ev.target).closest(".dx-button").length) return;
+                if (downloadUrl) window.open(downloadUrl, "_blank");
+            });
+
+            attListMKT_Host.append($item);
         });
-
-        $host.append($item);
-      });
     }
 
     $("#formMKT").dxForm({
     items: [
-        // {itemType: "group", caption: "Attachment",colCount: 1, items: [      {
-        //   itemType: "simple",
-        //   label: { visible: false },
 
-        //   // host nằm trong form item này
-        //   template: function (data, itemElement) {
-
-        //     // tạo host div trong item
-        //     const $host = $("<div class='att-host'>").appendTo(itemElement);
-        //     debugger
-        //     // init attachment util vào đúng host
-        //     const attApi = AttachmentUtil.init({
-        //       formSelector: "#formMKT",
-        //       hostElement: $host,     // ✅ quan trọng: dùng hostElement, không cần div ngoài
-        //       keyField: "id",
-
-        //       apis: {
-        //         insertUrl: "/api/Attachment/InsertData",
-        //         listUrl: (key) => `/api/Attachment/GetSingle?id=${encodeURIComponent(key)}`,
-        //         deleteUrl: (id) => `/api/Attachment/Delete?id=${encodeURIComponent(id)}`
-        //       },
-
-        //       map: {
-        //         id: (x) => x.id ?? x.Id ?? x.attachmentId,
-        //         fileName: (x) => x.fileName ?? x.FileName ?? x.name,
-        //         extension: (x) => x.extension ?? x.Extension,
-        //         size: (x) => x.size ?? x.FileSize ?? x.fileSize,
-        //         downloadUrl: (x) => x.downloadUrl ?? x.DownloadUrl ?? x.url
-        //       },
-
-        //       uploader: {
-        //         multiple: true,
-        //         uploadMode: "useButtons",
-        //         maxFileSize: 50 * 1024 * 1024,
-        //         allowedFileExtensions: [
-        //           ".pdf", ".xlsx", ".xls", ".csv",
-        //           ".doc", ".docx",
-        //           ".ppt", ".pptx",
-        //           ".msg", ".eml",
-        //           ".xml", ".json",
-        //           ".zip", ".rar", ".7z",
-        //           ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"
-        //         ]
-        //       },
-
-        //       // values = JSON.stringify(formData) đã xử lý trong util
-        //       extraFormData: () => ({
-        //         module: "Quotation",
-        //         screen: "MKT"
-        //       })
-        //     });
-
-        //     // (optional) lưu lại để khi đổi formData.id có thể reload
-        //     window.__attMKT = attApi;
-        //   }
-        // }
          {itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
             ,
             editorOptions: {
-            name: "files",
-            labelText: "",
-            accept: "*/*",
-            selectButtonText: `Upload files`,
-            uploadMode: "instantly",
-            uploadUrl: `/api/Attachment/AsyncUploadFile`,
-            uploadHeaders: {
-                // "Record-Guid": object.guid,
-                "Folder": "MKT",
-                // "RowOrder": 1
-            },
-            multiple: false,
-            showFileList: true,
-            onDropZoneEnter: function (e) {
-                //$(e.dropZoneElement).addClass("highlight-drop-zone");
-            },
-            onDropZoneLeave: function (e) {
-                //$(e.dropZoneElement).removeClass("highlight-drop-zone");
-            },
-            onUploadStarted: function (e) {
-                // $(previewId1).css("position", "relative"); // đảm bảo relative
-                // $(`${previewId1} .previewLoader`).remove(); // nếu có rồi
-                // $("<div>").addClass("previewLoader").appendTo(previewId1)
-                //     .dxLoadPanel({
-                //         message: "Image loading...",
-                //         visible: true,
-                //         shading: true,
-                //         shadingColor: "rgba(255,255,255,0.7)",
-                //         showPane: true,
-                //         closeOnOutsideClick: false,
-                //         position: { of: previewId1 }
-                //     });
-            },
-              onInitialized: async function (e) {
-                  setTimeout(() => loadAttachmentList_MKT(),2000);
-                },
-            onUploaded: async function (e) {
-                await loadAttachmentList_MKT();
-                // var fr = new FileReader();
-                // fr.readAsArrayBuffer(e.file);
-                // fr.onload = function (event) {
-                //     var arrayBuffer = fr.result;
-                //     var byteArray = new Uint8Array(arrayBuffer);
-                //     var blob = new Blob([byteArray], { type: e.file.type });
-                //     var url = URL.createObjectURL(blob);
-                //     // if (e.file && e.file.type.startsWith("image/")) {
-                //     //     const img = new Image();
-                //     //     img.src = url;
-                //     //     img.onload = function () {
-                //     //         e.file.width = img.width;
-                //     //         e.file.height = img.height;
-                //     //     };
-                //     //     e.url = url;
-                //     //     e.fileData = fr.result;
-                //     //     makeLCPreviewPictureObject(e, imgContainerSizeObject, imgSizeObject, $imagePreview1, $imagePreview2)
-                //     //     $(`${previewId1} .previewLoader`).remove();
-                //     // }
-
-                // }
+            name: "files"
+        }
+        ,template: function (data, itemElement) {
+            setTimeout(function () {
+                var item = new Object();
+                item.editorType = "dxFileUploader";
+                 var form = $("#formMKT").dxForm("instance");
+                var formData = form?.option("formData") || {};
+                var key = formData.id; // đúng ý bạn: lấy id từ formData
+               this.refFieldId = key;
+               this.guid = formData.guid;
+               this.folder = "MKT";
+               this.SectionName = "MKT";
+                createEditor(item, itemElement, $("<div>"), this);
+                loadAttachmentList_MKT();
+                }, 1000);
             }
-        }}
+            
+        }
         ]},
                  { dataField:"clientName", label:{text:"Client Name"}, isRequired:true },
                  { dataField:"requestType", editorType:"dxSelectBox", label:{text:"Request Type"}, editorOptions:{ items:["New","Renewal","Endorsement"] } },

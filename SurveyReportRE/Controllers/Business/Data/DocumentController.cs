@@ -119,7 +119,7 @@ public class DocumentController : BaseControllerApi<Document>
 
         // Lấy toàn bộ rồi filter (vì repo bạn đang có GetAll)
         // Nếu repo có method GetListObject(predicate) thì thay bằng query trực tiếp sẽ nhanh hơn
-        var all = await _BaseRepository.GetAll();
+        var all = await _BaseRepository.GetListObject(l => l.RecordGuid == recordGuid);
 
         var docs = all
             .Where(d => (d.Deleted == null || d.Deleted == false)
