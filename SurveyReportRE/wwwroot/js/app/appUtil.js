@@ -6221,7 +6221,7 @@ window.AttachmentUtil = (function () {
                         await reload();
                     }
 
-                    DevExpress.ui.notify("Uploaded: " + file.name, "success", 1500);
+                    DevExpress.ui.notify("Uploaded: " + file.name, "success", 1000);
                 } catch (e) {
                     DevExpress.ui.notify(e.message || ("Upload error: " + file.name), "error", 3500);
                     throw e;
@@ -7008,4 +7008,62 @@ function getDefaultPicByDept(deptKey, dataForm) {
     if (!dataForm.pIC) return null;
     PIC_MAP = JSON.parse(dataForm.pIC || "{}");
     return PIC_MAP[deptKey] || null;
+}
+
+function initDepartmentAssignees() {
+
+    setTimeout(() => {
+        var formItems = $("#formLMKT").dxForm("instance")?.option("formData") || {};
+        renderDepartmentAssigneeBox("#lmktAssigneeBox", {
+            groupName: "LMKT",
+            dataForm: formItems,
+            value: formItems.mktAssigneeId || null,
+            onChanged: function (item, editor) {
+            }
+        });
+    }, 1000);
+    setTimeout(() => {
+        var formItems = $("#formMKT").dxForm("instance")?.option("formData") || {};
+        renderDepartmentAssigneeBox("#mktAssigneeBox", {
+            groupName: "MKT",
+            dataForm: formItems,
+            value: formItems.mktAssigneeId || null,
+            onChanged: function (item, editor) {
+            }
+        });
+    }, 1000);
+
+    setTimeout(() => {
+        var formItems = $("#formPM").dxForm("instance")?.option("formData") || {};
+        renderDepartmentAssigneeBox("#pmAssigneeBox", {
+            groupName: "PM",
+            dataForm: formItems,
+            value: formItems.PMAssigneeId || null,
+            onChanged: function (item, editor) {
+            }
+        });
+    }, 1000);
+
+    setTimeout(() => {
+        var formItems = $("#formTS").dxForm("instance")?.option("formData") || {};
+        renderDepartmentAssigneeBox("#tsAssigneeBox", {
+            groupName: "TS",
+            dataForm: formItems,
+            value: formItems.TSAssigneeId || null,
+            onChanged: function (item, editor) {
+            }
+        });
+    }, 1000);
+
+    setTimeout(() => {
+        var formItems = $("#formUW").dxForm("instance")?.option("formData") || {};
+        renderDepartmentAssigneeBox("#uwAssigneeBox", {
+            groupName: "UW",
+            dataForm: formItems,
+            value: formItems.UWAssigneeId || null,
+            onChanged: function (item, editor) {
+            }
+        });
+    }, 1000);
+
 }
