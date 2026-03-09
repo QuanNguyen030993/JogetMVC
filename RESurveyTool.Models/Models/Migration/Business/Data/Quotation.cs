@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using ERPCore.Models.Migration.Base;
 using ERPCore.Models.Migration.Business.MasterData;
+using ERPCore.Models.Migration.Config;
 
 public class Quotation : BaseModel
 {
@@ -276,7 +277,8 @@ public class Quotation : BaseModel
     public long? ProductId { get; set; }
     public Product? ProductFK { get; set; }
     public string? ProductCode { get; set; } = "";
-
+    public long? ReinsurranceId { get; set; }
+    public EnumData? ReinsurranceEnum { get; set; }
     // =========================================================
     // Ý 9 — Attachment/email fields (commented-out + TODO)
     // =========================================================

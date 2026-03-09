@@ -300,7 +300,6 @@ Note:
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 8px 10px;
         border-bottom: 1px solid rgba(17,24,39,.08);
     }
 
@@ -345,11 +344,38 @@ Note:
         transform: rotate(-90deg);
     }
 
+    .dept-form-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+        padding: 8px 0;
+    }
+
+    .dept-form-header__title {
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+
+    .dept-form-header__assign {
+        min-width: 320px;
+        max-width: 420px;
+        width: 100%;
+    }
 </style>
 
 <script type="text/javascript">
     $(function () {
-        $('[data-toggle="push-menu"]').click();
+          // var PIC_JSON = `{"MKT":"thao.bp","TS":"hien.ttt","UW":"thanh.pp","LKMT":"thao.np"}`;
+          var PIC_JSON = `{}`;
+        var pICs = [];
+        var isToggleMenu = false;
+        if (!isToggleMenu) 
+        {$('[data-toggle="push-menu"]').click();
+        isToggleMenu = true;
+        }
         // =========================
         // 0) Data load
         // =========================
@@ -659,7 +685,42 @@ Note:
                 });
             });
         }
+            function initDepartmentAssignees() {
+        renderDepartmentAssigneeBox("#assignMKT", {
+            group: "MKT",
+            onChanged: function (item, editor) {
+                console.log("MKT assignee:", item);
+            }
+        });
 
+        renderDepartmentAssigneeBox("#assignTS", {
+            group: "TS",
+            onChanged: function (item, editor) {
+                console.log("TS assignee:", item);
+            }
+        });
+
+        renderDepartmentAssigneeBox("#assignUW", {
+            group: "UW",
+            onChanged: function (item, editor) {
+                console.log("UW assignee:", item);
+            }
+        });
+
+        renderDepartmentAssigneeBox("#assignLMKT", {
+            group: "LMKT",
+            onChanged: function (item, editor) {
+                console.log("LMKT assignee:", item);
+            }
+        });
+
+        renderDepartmentAssigneeBox("#assignPM", {
+            group: "PM",
+            onChanged: function (item, editor) {
+                console.log("PM assignee:", item);
+            }
+        });
+    }
         // =========================
         // 6) Comments panel module (giữ theo style bạn)
         // =========================
@@ -779,9 +840,10 @@ Note:
             applySectionFocusHighlight();
             updateHints();
             updateSectionUpdatedTime(q);
-
+            initDepartmentAssignees();
             scrollToDept(focusDept);
         }
+
 
         function renderList() {
             var data = applyFilter(quotes);
@@ -791,7 +853,6 @@ Note:
                 $root.append(`<div style="color:#6b7280;padding:10px;">No quotations found.</div>`);
                 return;
             }
-
             data.forEach(q => {
                 var isSel = q.id === selectedId;
                 $root.append(`
@@ -822,17 +883,21 @@ Note:
                         </div>
                     </div>
                 `);
+
+                pICs.push({quotationCode: q.quotationCode, pIC: q.pIC});
             });
 
             $(".quoteCard").off("click").on("click", function () {
                 selectedId = Number($(this).attr("data-id"));
                 selectedCodeNo = $(this).attr("data-codeno");
                 stageDept = $(this).attr("data-stagedept");
-
+                PIC_JSON = pICs.find(f => f.quotationCode ==  selectedCodeNo ).pIC;
+                renderDeptCallouts(PIC_JSON);
                 // focus ring về đúng role hiện tại
                 focusDept = currentUserRole;
                 renderList();
                 renderDetail();
+                initDepartmentAssignees();
                 if (commentPanelOpened) HoverAjax.loadComments(selectedCodeNo, selectedId);
             });
         }
@@ -1001,11 +1066,11 @@ Note:
         // =========================
         // 9) PIC callouts
         // =========================
-        const PIC_JSON = `{"MKT":"thao.bp","TS":"hien.ttt","UW":"thanh.nt","LKMT":"thao.np"}`;
-
+      
+        // const PIC_MAP = JSON.parse(PIC_JSON || "{}");
         function normalizeDeptKey(k) {
             const x = String(k || "").trim().toUpperCase();
-            return x === "LKMT" ? "LMKT" : x;
+            return x;
         }
 
         function parsePicMap(picJson) {
@@ -1061,7 +1126,7 @@ Note:
         applyNodeHighlights();
         applySectionFocusHighlight();
         updateHints();
-
+        PIC_JSON = pICs.find(f => f.quotationCode ==  selectedCodeNo ).pIC;
         renderDeptCallouts(PIC_JSON);
 
         setTimeout(layoutTreeLine, 0);
@@ -1160,12 +1225,7 @@ Note:
                     <!-- MKT -->
                     <section id="secMKT" class="dept-section">
                         <div class="dept-header">
-                            <div class="dept-title">MKT</div>
-                            <div class="dept-hint-wrap">
-                                <div class="dept-hint" id="hintMKT"></div>
-                                <div class="dept-updated" id="updMKT" title="Last updated">—</div>
-                                <div class="dept-toggle-icon" aria-hidden="true">▾</div>
-                            </div>
+                            @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_MKT_Form_Header")
                         </div>
                         <div class="dept-body">
                             @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_MKT_Form")
@@ -1175,12 +1235,7 @@ Note:
                     <!-- TS -->
                     <section id="secTS" class="dept-section">
                         <div class="dept-header">
-                            <div class="dept-title">TS</div>
-                            <div class="dept-hint-wrap">
-                                <div class="dept-hint" id="hintTS"></div>
-                                <div class="dept-updated" id="updTS" title="Last updated">—</div>
-                                <div class="dept-toggle-icon" aria-hidden="true">▾</div>
-                            </div>
+                            @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_TS_Form_Header")
                         </div>
                         <div class="dept-body">
                             @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_TS_Form")
@@ -1190,12 +1245,7 @@ Note:
                     <!-- UW -->
                     <section id="secUW" class="dept-section">
                         <div class="dept-header">
-                            <div class="dept-title">UW</div>
-                            <div class="dept-hint-wrap">
-                                <div class="dept-hint" id="hintUW"></div>
-                                <div class="dept-updated" id="updUW" title="Last updated">—</div>
-                                <div class="dept-toggle-icon" aria-hidden="true">▾</div>
-                            </div>
+                            @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_UW_Form_Header")
                         </div>
                         <div class="dept-body">
                             @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_UW_Form")
@@ -1205,12 +1255,7 @@ Note:
                     <!-- LMKT -->
                     <section id="secLMKT" class="dept-section">
                         <div class="dept-header">
-                            <div class="dept-title">Leader MKT</div>
-                            <div class="dept-hint-wrap">
-                                <div class="dept-hint" id="hintLMKT"></div>
-                                <div class="dept-updated" id="updLMKT" title="Last updated">—</div>
-                                <div class="dept-toggle-icon" aria-hidden="true">▾</div>
-                            </div>
+                            @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_LMKT_Form_Header")
                         </div>
                         <div class="dept-body">
                             @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_LMKT_Form")
@@ -1220,12 +1265,7 @@ Note:
                     <!-- PM -->
                     <section id="secPM" class="dept-section">
                         <div class="dept-header">
-                            <div class="dept-title">PM</div>
-                            <div class="dept-hint-wrap">
-                                <div class="dept-hint" id="hintPM"></div>
-                                <div class="dept-updated" id="updPM" title="Last updated">—</div>
-                                <div class="dept-toggle-icon" aria-hidden="true">▾</div>
-                            </div>
+                            @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_PM_Form_Header")
                         </div>
                         <div class="dept-body">
                             @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_PM_Form")

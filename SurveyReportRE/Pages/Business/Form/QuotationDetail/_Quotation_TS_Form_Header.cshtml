@@ -1,0 +1,24 @@
+﻿<div class="dept-title">TS</div>
+<div class="dept-form-header">
+    <div class="dept-form-header__assign">
+        <div id="tsAssigneeBox"></div>
+    </div>
+</div>
+<div class="dept-hint-wrap">
+    <div class="dept-hint" id="hintTS"></div>
+    <div class="dept-updated" id="updTS" title="Last updated">—</div>
+    <div class="dept-toggle-icon" aria-hidden="true">▾</div>
+</div>
+<script>
+    setTimeout( () => {
+    var formItems = $("#formTS").dxForm("instance")?.option("formData") || {};
+    renderDepartmentAssigneeBox("#tsAssigneeBox", {
+        groupName: "TS",
+        dataForm: formItems,
+        value: formItems.TSAssigneeId || null,
+        onChanged: function (item, editor) {
+        }
+    });
+    }, 1500);
+
+</script>

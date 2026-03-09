@@ -1,0 +1,24 @@
+﻿<div class="dept-title">UW</div>
+<div class="dept-form-header">
+    <div class="dept-form-header__assign">
+        <div id="uwAssigneeBox"></div>
+    </div>
+</div>
+<div class="dept-hint-wrap">
+    <div class="dept-hint" id="hintUW"></div>
+    <div class="dept-updated" id="updUW" title="Last updated">—</div>
+    <div class="dept-toggle-icon" aria-hidden="true">▾</div>
+</div>
+<script>
+    setTimeout( () => {
+    var formItems = $("#formUW").dxForm("instance")?.option("formData") || {};
+    renderDepartmentAssigneeBox("#uwAssigneeBox", {
+        groupName: "UW",
+        dataForm: formItems,
+        value: formItems.UWAssigneeId || null,
+        onChanged: function (item, editor) {
+        }
+    });
+    }, 1500);
+
+</script>

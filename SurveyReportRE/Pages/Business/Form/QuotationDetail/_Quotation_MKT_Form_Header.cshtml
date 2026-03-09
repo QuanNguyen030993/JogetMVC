@@ -1,0 +1,24 @@
+﻿<div class="dept-title">MKT</div>
+<div class="dept-form-header">
+    <div class="dept-form-header__assign">
+        <div id="mktAssigneeBox"></div>
+    </div>
+</div>
+<div class="dept-hint-wrap">
+    <div class="dept-hint" id="hintMKT"></div>
+    <div class="dept-updated" id="updMKT" title="Last updated">—</div>
+    <div class="dept-toggle-icon" aria-hidden="true">▾</div>
+</div>
+<script>
+    setTimeout( () => {
+    var formItems = $("#formMKT").dxForm("instance")?.option("formData") || {};
+    renderDepartmentAssigneeBox("#mktAssigneeBox", {
+        groupName: "MKT",
+        dataForm: formItems,
+        value: formItems.mktAssigneeId || null,
+        onChanged: function (item, editor) {
+        }
+    });
+    }, 1500);
+
+</script>
