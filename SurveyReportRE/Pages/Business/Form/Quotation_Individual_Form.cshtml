@@ -371,10 +371,9 @@ Note:
           // var PIC_JSON = `{"MKT":"thao.bp","TS":"hien.ttt","UW":"thanh.pp","LKMT":"thao.np"}`;
           var PIC_JSON = `{}`;
         var pICs = [];
-        var isToggleMenu = false;
-        if (!isToggleMenu) 
-        {$('[data-toggle="push-menu"]').click();
-        isToggleMenu = true;
+        if ($('[data-toggle="push-menu"]').hasClass("sidebar-collapse")) {
+            $('[data-toggle="push-menu"]').click();
+            isToggleMenu = true;
         }
         // =========================
         // 0) Data load
@@ -751,6 +750,18 @@ Note:
 
       // ✅ bind giữ nguyên – chỉ còn việc gắn event như cũ
             function bind() {
+                 $("#btnCollapseAllTab").dxButton({
+                    text: "Collapse All Sections",
+                    type: "normal",
+                    stylingMode: "contained",
+                     onClick: () => {
+                      setSectionCollapsed("MKT", true);
+                      setSectionCollapsed("TS",true);
+                      setSectionCollapsed("LMKT",true);
+                      setSectionCollapsed("UW",true);
+                      setSectionCollapsed("PM",true);
+                     }
+                 });
                 $("#btnToggleComment").dxButton({
                     text: "Audit logs",
                     icon: "comment",
@@ -765,6 +776,7 @@ Note:
                         }
                     }
                 });
+
 
         $("#btnCloseRightComment").off("click").on("click", function () {
           closeRightCommentPanel();
@@ -1124,6 +1136,7 @@ Note:
                     <div class="h">Overview</div>
                     <span id="detailStatus" class="statusTag">-</span>
                 </div>
+                <div id="btnCollapseAllTab"></div>
                 <div id="btnToggleComment"></div>
             </div>
 

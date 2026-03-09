@@ -137,7 +137,8 @@
             ],
             reqType: ["Endorsement", "Revise Quotation", "Renew Quotation", "New Quotation"],
             lineName: ["Fire & Property, BI", "Liability", "Cargo", "Engineering", "Motor"],
-            businessChannel: ["Inward", "Direct (DIR)", "Agent (AGY)", "Broker (BRK)"]
+            businessChannel: ["Inward", "Direct (DIR)", "Agent (AGY)", "Broker (BRK)"],
+            reinsurance: ["FACOUT", "NO FACOUT", "Ichigenka"]
           };
        
           // ===== mock options =====
@@ -285,6 +286,7 @@
                         } },
                   { dataField: "dueDate", editorType: "dxDateBox", editorOptions: { displayFormat: "dd-MM-yyyy" } },
                   { dataField: "businessChannel", editorType: "dxSelectBox", editorOptions: { items: options.businessChannel } },
+                  { dataField: "reinsurranceId", caption: "Reinsurrance", editorType: "dxSelectBox", editorOptions: { items: options.businessChannel } },
                    {
           // ✅ Field element custom
           itemType: "simple",
