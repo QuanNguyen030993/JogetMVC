@@ -6470,58 +6470,29 @@ function renderDxFileUploader(sectionName, $container, options) {
             uploadUrl: options.uploadUrl || `/api/Attachment/AsyncUploadFile`,
             showFileList: false,
             uploadHeaders: {
-                //RecordGuid: currentOptions.guid || "",
-                //Folder: currentOptions.sectionName || sectionName
+               //Only use for static string
             },
             onInitialized: function (e) {
                 updateDxFileUploaderHeaders(sectionName);
             },
             onUploadStarted: function (e) {
-                //const latestOptions = getCurrentEditorOptions(sectionName);
-                //debugger
-                //e.component.option("uploadHeaders", {
-                //    RecordGuid: latestOptions?.guid || "",
-                //    Folder: (latestOptions?.sectionName || sectionName) +
-                //        (latestOptions?.code ? `\\${latestOptions.code}` : ""),
-                //});
-
                 showUploaderLoader(idControlElement, "File loading...");
             },
-            onBeforeSend: function (e, ajaxOptions) {
-                e.request.setRequestHeader("RecordGuid", null); // Fix
-                e.request.setRequestHeader("Folder", null);
-                const latestOptions = getCurrentEditorOptions(sectionName) || {};
-                const guid = latestOptions.guid || "";
-                const folder = buildFolder(latestOptions, sectionName);
-                // set thẳng vào request thật
-                //e.request.setRequestHeader("RecordGuid", guid);
-
-                //e.request.setRequestHeader("Folder", folder);
-                ajaxOptions.headers = {
-                    RecordGuid: guid,
-                    Folder: folder
-                }; 
+            uploadFile: function (file) {
+                const opts = resolveUploadOptions(sectionName);
+                return uploadFileAjax(file, {
+                    url: "/api/Attachment/AsyncUploadFile",
+                    guid: opts.guid,
+                    folder: opts.folder
+                });
+               
             },
             onUploaded: function (e) {
                 hideUploaderLoader(idControlElement);
                 loadDxFileUploaderAttachments(sectionName, controllerName)
-                //renderAttachmentListLazy(currentOptions, $preview, {
-                //    batchSize: 6,
-                //    delay: 16,
-                //    onDeleted: function () {
-                //        loadDxFileUploaderAttachments(sectionName, controllerName);
-                //    }
-                //});
             }
         });
     loadDxFileUploaderAttachments(sectionName, controllerName);
-    //renderAttachmentListLazy(currentOptions, $preview, {
-    //    batchSize: 6,
-    //    delay: 16,
-    //    onDeleted: function () {
-    //        loadDxFileUploaderAttachments(sectionName, controllerName);
-    //    }
-    //});
 }
 
 function updateDxFileUploaderHeaders(sectionName) {
@@ -6754,4 +6725,48 @@ function loadDxFileUploaderAttachments(sectionName, controllerName) {
 function buildFolder(latestOptions, sectionName) {
     return (latestOptions?.sectionName || sectionName) +
         (latestOptions?.code ? `\\${latestOptions.code}` : "");
+}
+function uploadFileAjax(file, options) {
+
+    const url = options.url;
+    const guid = options.guid || "";
+    const folder = options.folder || "";
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    return $.ajax({
+        url: url,
+        method: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        beforeSend: function (xhr) {
+
+            if (guid) {
+                xhr.setRequestHeader("RecordGuid", guid);
+            }
+
+            if (folder) {
+                xhr.setRequestHeader("Folder", folder);
+            }
+
+            if (window.appToken) {
+                xhr.setRequestHeader("Authorization", "Bearer " + window.appToken);
+            }
+
+        }
+    });
+
+}
+
+function resolveUploadOptions(sectionName) {
+
+    const latestOptions = getCurrentEditorOptions(sectionName) || {};
+
+    return {
+        guid: latestOptions.guid || "",
+        folder: buildFolder(latestOptions, sectionName) || ""
+    };
+
 }
