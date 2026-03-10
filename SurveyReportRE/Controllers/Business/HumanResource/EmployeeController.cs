@@ -52,9 +52,8 @@ public class EmployeeController : BaseControllerApi<Employee>
     {
         var loginName = (User?.Identity?.Name ?? "").Trim().ToLower();
 
-        List<Employee> data = await _BaseRepository.GetListObject(x =>
-
-                       (x.AccountName ?? "").ToLower() == id 
+        Employee data = await _BaseRepository.GetSingleObject(x =>
+                       x.AccountName == id 
                    );
         //var emp = await _db.Employee
         //    .AsNoTracking()

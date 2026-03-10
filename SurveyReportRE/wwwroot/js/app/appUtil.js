@@ -4740,9 +4740,10 @@ function makeTheClientLocationGrid(instanceItems, dropdownControl, instanceProps
             { dataField: "clientCode", caption: "Client Code" },
             //{ dataField: "clientName", caption: "Client Name" },
             { dataField: "englishName", caption: "English Name" },
-            { dataField: "vietnameseName", caption: "Vietnamese Name" }//,
+            { dataField: "vietnameseName", caption: "Vietnamese Name" },
             //{ dataField: "clientAddress", caption: "Client Address" },
             //{ dataField: "locationAddressName", caption: "Location Address Name" }
+            { dataField: "clientType", caption: "Client Type" }
         ],
         filterRow: { visible: true },
         selectionMode: 'all',
@@ -5358,6 +5359,8 @@ function newQuotationForm() {
                     quotationData.SurveyNeeded = submitSummaryData.surveyNeeded;
                     quotationData.DueDate = submitSummaryData.dueDate;
                     quotationData.RequestedDate = submitSummaryData.createDate;
+                    quotationData.ReinsuranceId = submitSummaryData.reinsuranceId;
+                    debugger
                     //quotationData.LineId = submitSummaryData.lineId;  
                     //quotationData.ProductId = submitSummaryData.productId;
                     ajaxPost('/api/Quotation/CreateQuotation', quotationData, {
@@ -5744,7 +5747,7 @@ function stretchColumnsEvenly(e, opts) {
 
     const renderedWidth = getRenderedGridWidth(grid);
 
-    const targetWidth = opts?.targetWidth ?? 1600;
+    const targetWidth = opts?.targetWidth ?? window.innerWidth - _widthMenuWidth - _rightWindowPadding;
     const minWidthEach = opts?.minWidthEach ?? 120;
     const excludeFields = new Set(opts?.excludeFields ?? []); // vd ["_command", "Select", "Buttons"]
 
@@ -5801,11 +5804,10 @@ function createAssigneeSelector(options) {
         assignee: initialValue
     };
 
-    const wrapper = $("<div  class='assignee-selector'/>").appendTo(container);
-
-    $("<div id='assigneeSelectBox'>").dxSelectBox({
+    //const wrapper = $("<div class='assignee-selector'/>").appendTo(container);
+    container.dxSelectBox({
         label: "Assign To",
-        labelMode: "floating",
+        //labelMode: "floating",
         searchEnabled: true,
         valueExpr: "accountName",
         displayExpr: "fullName",
@@ -5821,7 +5823,7 @@ function createAssigneeSelector(options) {
             state.assignee = e.value;
             onChanged(e.value);
         }
-    }).appendTo(wrapper);
+    });
 
     return {
         getValue() {

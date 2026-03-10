@@ -428,7 +428,7 @@ var MGridOption = class MGridOption {
         //    grid.updateDimensions();
         //}
         stretchColumnsEvenly(e, {
-            targetWidth: 1600,
+            targetWidth: window.innerWidth - _widthMenuWidth - _rightWindowPadding,
             minWidthEach: 120,
             excludeFields: [
                 // nếu bạn có cột action/checkbox riêng và muốn giữ nguyên

@@ -105,7 +105,7 @@
     const _defaultGridFieldHeight = 50;
     const _defaultTextAreaHeight = 50;
     const _defaultTextAreaWidth = "100%";
-    const _defaultDropDownWidth = 500;
+    const _defaultDropDownWidth = 800;
     const _defaultDropDownHeight = 500;
     const _defaultGridMinHeight = 350;
     const _defaultHtmlEditorHeight = 300;
@@ -118,6 +118,9 @@
     const _timeoutPopup = 15000;
     const _swalPopupDelayTime = 20000;
     const _surveyFormAutoSavedInterval = 120000;
+    const _delaySequenceQuery = 500;
+    const _rightWindowPadding = 45;
+    const _widthMenuWidth = 197;
     // const _reduceDataGridMaxOverFlow  = 300;
     var _menus = [];
     var _isAllowDraft = 0;
@@ -172,7 +175,6 @@
     const dateFormatter = "dd MMM yyyy";
     const datetimeFormatter = "dd MMM yyyy hh:mm";
     const timeFormatter = "hh:mm";
-
     const variableMapping = {
         currencyFormatter,
         currency4Formatter,
@@ -184,6 +186,7 @@
         datetimeFormatter,
         timeFormatter
     };
+    var _windowWidth = 0;
         // Write your JavaScript code.
     var _connectionId = null;//generateGUID();
     // const connectionSignR = new signalR.HubConnectionBuilder()
@@ -202,8 +205,12 @@
           //     }, 3000);
           // }
       });
-
+        
       var globalLoadPanelInstance = globalLoadPanel.dxLoadPanel("instance");
-
+    // window.addEventListener("resize", function () {
+    //     const w = window.innerWidth;
+    //     const h = window.innerHeight;
+    //     _windowWidth = w;
+    // }); // Zoom event handle
 </script>
 <script src="~/js/defined/signalR.js"></script>

@@ -41,7 +41,15 @@
         }
         ]},
                  { dataField:"clientName", label:{text:"Client Name"}, isRequired:true },
-                 { dataField:"requestType", editorType:"dxSelectBox", label:{text:"Request Type"}, editorOptions:{ items:["New","Renewal","Endorsement"] } },
+                 { dataField:"requestType", editorType:"dxSelectBox", label:{text:"Request Type"}, editorOptions:{ items:["New","Renewal","Endorsement"] },displayExpr: "value",
+                      valueExpr: "id"
+                 },
+                 { dataField:"reinsuranceId", editorType:"dxSelectBox", label:{text:"Reinsurance"}, 
+                     editorOptions:{ 
+                     items:[{id: 143, value: "FACOUT"}, {id: 144, value: "NO FACOUT"}, {id: 145, value: "Ichigenka"}] ,
+                     displayExpr: "value",
+                      valueExpr: "id"}
+                 },
                  { dataField:"notes", label:{text:"Notes"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 80 } }, 
                  { dataField:"surveyNeeded", label:{text:"Survey Needed"}, editorType:"dxSwitch" ,editorOptions:{ switchedOnText: "Yes", switchedOffText: "No"} },
                  {itemType: "group",

@@ -802,7 +802,7 @@ Note:
                 .attr("class", `statusTag ${statusClass(st)}`);
 
             // stage/focus pills
-            $("#stageDeptPill").text(`Quotation progress flow: ${stageDept}`);
+            $("#stageDeptPill").text(`Quotation pending at: ${stageDept}`);
             $("#focusDeptPill").text(`Focus: ${focusDept}`);
 
             deptData.MKT = { ...q, sectionName: "MKT", code: q.quotationCode };
@@ -1135,6 +1135,7 @@ Note:
                 <div style="display:flex;align-items:center;gap:10px;">
                     <div class="h">Overview</div>
                     <span id="detailStatus" class="statusTag">-</span>
+                    <span id="stageDeptPill" class="pill">Quotation pending at: </span>
                 </div>
                 <div id="btnCollapseAllTab"></div>
                 <div id="btnToggleComment"></div>
@@ -1261,7 +1262,7 @@ Note:
         <div class="actionLeft">
             <span class="pill">Record: <b id="recordNo">Qu-10030</b></span>
             <span class="pill">Login role: <b id="loginRoleLabel"></b></span>
-            <span id="stageDeptPill" class="pill">Quotation status: </span>
+            
             <span id="focusDeptPill" class="pill">Focus section: </span>
         </div>
         <div class="actionRight">

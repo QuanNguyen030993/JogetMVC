@@ -135,10 +135,10 @@
               // { accountName: "hien.ttt", fullName: "To Thi Thu Hien" },
               // { accountName: "accpentest", fullName: "accpentest test" }
             ],
-            reqType: ["Endorsement", "Revise Quotation", "Renew Quotation", "New Quotation"],
+            reqType: ["New Quotation", "Renew Quotation","Endorsement", "Revise Quotation" ],
             lineName: ["Fire & Property, BI", "Liability", "Cargo", "Engineering", "Motor"],
             businessChannel: ["Inward", "Direct (DIR)", "Agent (AGY)", "Broker (BRK)"],
-            reinsurance: ["FACOUT", "NO FACOUT", "Ichigenka"]
+            reinsurance: [{id: 143, value: "FACOUT"}, {id: 144, value: "NO FACOUT"}, {id: 145, value: "Ichigenka"}]
           };
        
           // ===== mock options =====
@@ -286,7 +286,7 @@
                         } },
                   { dataField: "dueDate", editorType: "dxDateBox", editorOptions: { displayFormat: "dd-MM-yyyy" } },
                   { dataField: "businessChannel", editorType: "dxSelectBox", editorOptions: { items: options.businessChannel } },
-                  { dataField: "reinsurranceId", caption: "Reinsurrance", editorType: "dxSelectBox", editorOptions: { items: options.businessChannel } },
+                  { dataField: "reinsuranceId", caption: "Reinsurance", editorType: "dxSelectBox", editorOptions: { valueExpr: "id", displayExpr: "value",items: options.reinsurance } },
                    {
           // ✅ Field element custom
           itemType: "simple",
@@ -577,7 +577,7 @@
 
          
 
-        
+        var selector;
 
           $("#assigneePopup").dxPopup({
             width: 920,
@@ -594,22 +594,65 @@
               //   labelMode: "floating",
               //   items: popupFormItems
               // });
-                  const selector = createAssigneeSelector({
-                        container: content,
-                        dept: vm.assignedTeamOrRole,
-                        onChanged(value) {
-                            currentEntry.to = value;
-                        }
-                    });
 
-                    $("<div/>").dxTextArea({
-                        label: "Notes",
-                        labelMode: "floating",
-                        minHeight: 90,
-                        onValueChanged(e) {
+                    // selector = createAssigneeSelector({
+                    //     container: content,
+                    //     dept: vm.assignedTeamOrRole,
+                    //     onChanged(value) {
+                    //         currentEntry.to = value;
+                    //     }
+                    // });
+
+                     ajaxGet("/api/Employee/AssigneeList", vm.assignedTeamOrRole)
+                .then(list => {
+                    
+                  $(`<div id="requestQuotation">`).dxForm(
+                     {items : 
+                         [
+                             {
+                    dataField: "to",
+                    colSpan: 2,
+                    editorType: "dxSelectBox",
+                    editorOptions: {
+                      dataSource: list,
+                      displayExpr: "fullName",
+                      valueExpr: "accountName"//,
+                      // onValueChanged(e) {
+                      //   vm.assignmentMode = e.value;
+                      //   refreshAssignmentUI();
+                      //   buildSummary();
+                      // }
+                    }
+                  },
+
+                    //          { dataField: "to", editorType: "dxTextBox", editorOptions: { template: createAssigneeSelector({
+                    //         container: $(`<div id='assigneeSelectBox>`),
+                    //         dept: vm.assignedTeamOrRole,
+                    //         onChanged(value) {
+                    //         currentEntry.to = value;
+                    //     }
+                    // })}
+                    //          },
+                         { dataField: "notes", editorType: "dxTextArea", caption: "Notes",
+                         editorOptions: { 
+                             onValueChanged(e) {
                             currentEntry.notes = e.value;
-                        }
-                    }).appendTo(content);
+                        }}}
+                         ]
+                  })
+                  .appendTo(content);
+                });
+
+             
+
+                   //  $(`<div id="pICRemark">`).dxTextArea({
+                   //      label: "Notes",
+                   //      labelMode: "floating",
+                   //      minHeight: 90,
+                   //      onValueChanged(e) {
+                   //          currentEntry.notes = e.value;
+                   //      }
+                   //  }).appendTo(content);
             },
             toolbarItems: [
               {
@@ -618,7 +661,8 @@
                   text: "Save",
                   type: "default",
                   onClick: function () {
-                    const form = $("#assigneeEntryForm").dxForm("instance");
+                      
+                    const form = $("#requestQuotation").dxForm("instance");
                     const result = form.validate();
                     if (!result.isValid) {
                       DevExpress.ui.notify("Please fill required fields.", "error", 1500);
@@ -626,7 +670,7 @@
                     }
 
                     const data = form.option("formData");
-
+                    data._key = data.to;
                     if (popupMode === "new") {
                       vm.assignees.push({ ...data });
                     } else {
