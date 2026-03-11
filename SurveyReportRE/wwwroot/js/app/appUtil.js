@@ -5274,13 +5274,14 @@ function newQuotationForm() {
                     //quotationData.SurveyNeeded = submitSummaryData.surveyNeeded;
                     //quotationData.DueDate = submitSummaryData.dueDate;
                     //quotationData.ReinsuranceId = submitSummaryData.reinsuranceId;
-                    quotationData.RequestedDate = submitSummaryData.createDate;
                     quotationData = ObjectPopulateKey(submitSummaryData, true, false);
+                    //Overwrite Object
+                    quotationData.RequestedDate = submitSummaryData.createDate;
+                    quotationData.PIC = `{"MKT":"","TS":"","UW":"","LKMT":""}`;
                     quotationData.StageAccount = submitData.to;
                     quotationData.StageDept = submitSummaryData.assignedTeamOrRole;
                     quotationData.QuotationStatus = "New";
                     quotationData.WorkflowStatus = "Pending";
-                    debugger
                     //quotationData.LineId = submitSummaryData.lineId;  
                     //quotationData.ProductId = submitSummaryData.productId;
                     ajaxPost('/api/Quotation/CreateQuotation', quotationData, {
@@ -6991,7 +6992,6 @@ function initDepartmentAssignees() {
 }
 
 function makeSelectBoxEditorOptions(dataSource, acceptCustomValue = false ,gridInstance = null, dataSourceLookup = null) {
-    debugger
     return {
         editorType: "dxSelectBox",
         //dropDownOptions : { minWidth: 200 },

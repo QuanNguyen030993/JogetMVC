@@ -824,6 +824,7 @@ Note:
             }
 
             const loadComments = debounce(function (quoteNo, quoteId) {
+                var style = "position: absolute";
                 $("#rightCommentSub").text(quoteNo || "-");
                 $("#rightCommentList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
 
@@ -841,19 +842,43 @@ Note:
                 });
             }, 180);
 
-      function openRightCommentPanel() {
+      // function openRightCommentPanel() {
+      //   commentPanelOpened = true;
+      //   document.body.classList.add("hasRightPanel");
+      //   $("#rightCommentDock").show();
+      //   // document.documentElement.style.setProperty("--collapsed-form-mr", "-2%");
+      // }
+
+      // function closeRightCommentPanel() {
+      //   commentPanelOpened = false;
+      //   document.body.classList.remove("hasRightPanel");
+      //   $("#rightCommentDock").hide();
+      //   // document.documentElement.style.setProperty("--collapsed-form-mr", "-26%");
+      // }
+
+          function openRightCommentPanel() {
+        const $dock = $("#rightCommentDock");
+
         commentPanelOpened = true;
         document.body.classList.add("hasRightPanel");
-        $("#rightCommentDock").show();
-        document.documentElement.style.setProperty("--collapsed-form-mr", "-2%");
-      }
 
-      function closeRightCommentPanel() {
-        commentPanelOpened = false;
-        document.body.classList.remove("hasRightPanel");
-        $("#rightCommentDock").hide();
-        document.documentElement.style.setProperty("--collapsed-form-mr", "-26%");
-      }
+        $dock.removeClass("is-closing").addClass("is-open");
+        // document.documentElement.style.setProperty("--collapsed-form-mr", "-2%");
+        }
+
+        function closeRightCommentPanel() {
+            const $dock = $("#rightCommentDock");
+
+            commentPanelOpened = false;
+            document.body.classList.remove("hasRightPanel");
+
+            $dock.removeClass("is-open").addClass("is-closing");
+            // document.documentElement.style.setProperty("--collapsed-form-mr", "-26%");
+
+            setTimeout(() => {
+                $dock.removeClass("is-closing");
+            }, 300);
+        }
 
       // ✅ bind giữ nguyên – chỉ còn việc gắn event như cũ
             function bind() {
@@ -886,7 +911,7 @@ Note:
 
 
         $("#btnCloseRightComment").off("click").on("click", function () {
-          closeRightCommentPanel();
+            closeRightCommentPanel();
                 });
             }
 

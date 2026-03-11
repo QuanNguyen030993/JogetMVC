@@ -653,7 +653,7 @@ a {
     -o-transition: -o-transform .3s ease-in-out, width .3s ease-in-out;
     transition: transform .3s ease-in-out, width .3s ease-in-out
 }
-.main-sidebar-right {
+/*.main-sidebar-right {
     position: absolute;
     top: 40px;
     display:none;
@@ -661,13 +661,13 @@ a {
     margin-right:1%;
     padding-top: 50px;
     min-height: 110%;
-    width: 14%;
+    width: 14%;*/
     /*z-index: 10000;*/
-    -webkit-transition: -webkit-transform .3s ease-in-out, width .3s ease-in-out;
+    /*-webkit-transition: -webkit-transform .3s ease-in-out, width .3s ease-in-out;
     -moz-transition: -moz-transform .3s ease-in-out, width .3s ease-in-out;
     -o-transition: -o-transform .3s ease-in-out, width .3s ease-in-out;
     transition: transform .3s ease-in-out, width .3s ease-in-out
-}
+}*/
 
 @media (max-width:767px) {
     .main-sidebar {

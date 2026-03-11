@@ -38,18 +38,17 @@
             <main role="main" class="container pb-3">
                 @RenderBody()
             </main>
-                <aside id="rightCommentDock" class="rightDock main-sidebar-right">
+                <aside id="rightCommentDock" class="rightDock">
                     <div class="dockCard">
-                <div class="dockHeader">
-                    <div>
-                        <span class="dockTitle">Audit Log</span>
-                        <span id="rightCommentSub" class="dockSub">-</span>
+                    <div class="dockHeader">
+                        <div>
+                        <a href="javascript:void(0)" id="btnCloseRightComment" class="fa fa-times close-tab-btn"></a>
+                            <span class="dockTitle">Audit Log</span>
+                            <span id="rightCommentSub" class="dockSub">-</span>
+                        </div>
                     </div>
-                    <a href="javascript:void(0)" id="btnCloseRightComment" class="dockClose">✕</a>
-                </div>
-
-                <div id="rightCommentList" class="dockBody">
-                    <div style="color:#6b7280;font-size:12px;padding:6px 4px;">Click “Comments” to load…</div>
+                    <div id="rightCommentList">
+                    @* <div style="color:#6b7280;font-size:12px;padding:6px 4px;">Click “Comments” to load…</div> *@
                 </div>
             </div>
         </aside>
