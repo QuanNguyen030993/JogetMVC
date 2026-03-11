@@ -364,6 +364,113 @@ Note:
         max-width: 420px;
         width: 100%;
     }
+
+    .contentGrid {
+        height: calc(100vh - 56px);
+        margin-right: var(--collapsed-form-mr);
+        display: grid;
+        grid-template-columns: minmax(260px, 420px) 10px minmax(620px, 1fr);
+        gap: 0;
+        padding: 12px;
+        box-sizing: border-box;
+        min-height: 0;
+        min-width: 0;
+    }
+
+    /* Pane trái / phải */
+    .pane {
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .pane-left {
+        padding-right: 6px;
+    }
+
+    .pane-right {
+        padding-left: 6px;
+    }
+
+    /* Splitter giống Outlook */
+    .pane-splitter {
+        position: relative;
+        width: 10px;
+        cursor: col-resize;
+        user-select: none;
+        touch-action: none;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .pane-splitter::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 1px;
+            transform: translateX(-50%);
+            background: rgba(17,24,39,.10);
+        }
+
+        .pane-splitter::after {
+            content: "";
+            width: 4px;
+            height: 64px;
+            border-radius: 999px;
+            background: rgba(107,114,128,.35);
+            box-shadow: 0 0 0 1px rgba(17,24,39,.05);
+            transition: background .15s ease, transform .15s ease;
+            z-index: 2;
+        }
+
+        .pane-splitter:hover::after,
+        .pane-splitter.dragging::after {
+            background: rgba(37,99,235,.55);
+            transform: scaleY(1.08);
+        }
+
+    /* Card trong pane */
+    .pane .card {
+        height: 100%;
+        min-height: 0;
+    }
+
+    /* Left list scroll đẹp hơn */
+    .quote-pane-scroll {
+        height: 100%;
+        overflow: auto;
+        min-height: 0;
+    }
+
+    /* Trạng thái collapse trái */
+    .contentGrid.left-collapsed {
+        grid-template-columns: 56px 10px minmax(620px, 1fr);
+    }
+
+        .contentGrid.left-collapsed .pane-left .cardBody,
+        .contentGrid.left-collapsed .pane-left .cardHeader > *:not(.collapse-toggle-wrap) {
+            display: none !important;
+        }
+
+        .contentGrid.left-collapsed .pane-left .cardHeader {
+            justify-content: center;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+    .collapse-toggle-wrap {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    #btnToggleLeftPane {
+        min-width: 36px;
+    }
 </style>
 
 <script type="text/javascript">
@@ -1071,7 +1178,81 @@ Note:
                 $co.css({ color: "rgba(17,24,39,.85)" });
             });
         }
+            function initMainPaneSplitter() {
+        const grid = document.getElementById("mainContentGrid");
+        const splitter = document.getElementById("mainSplitter");
+        if (!grid || !splitter) return;
 
+        const MIN_LEFT = 260;
+        const MAX_LEFT = 520;
+        const COLLAPSED_LEFT = 0;
+        const SPLITTER_W = 10;
+
+        let isDragging = false;
+
+        function setLeftWidth(px) {
+            const total = grid.clientWidth;
+            const maxAllowed = Math.min(MAX_LEFT, total - 620 - SPLITTER_W);
+            const left = Math.max(MIN_LEFT, Math.min(px, maxAllowed));
+
+            grid.classList.remove("left-collapsed");
+            grid.style.gridTemplateColumns = `${left}px ${SPLITTER_W}px minmax(620px, 1fr)`;
+        }
+
+        function collapseLeft() {
+            grid.classList.add("left-collapsed");
+            grid.style.gridTemplateColumns = `${COLLAPSED_LEFT}px ${SPLITTER_W}px minmax(620px, 1fr)`;
+        }
+
+        function expandLeftDefault() {
+            setLeftWidth(360);
+        }
+
+        splitter.addEventListener("mousedown", function (e) {
+            e.preventDefault();
+            isDragging = true;
+            splitter.classList.add("dragging");
+            document.body.style.cursor = "col-resize";
+            document.body.style.userSelect = "none";
+        });
+
+        window.addEventListener("mousemove", function (e) {
+            if (!isDragging) return;
+            const rect = grid.getBoundingClientRect();
+            const nextLeft = e.clientX - rect.left;
+            setLeftWidth(nextLeft);
+        });
+
+        window.addEventListener("mouseup", function () {
+            if (!isDragging) return;
+            isDragging = false;
+            splitter.classList.remove("dragging");
+            document.body.style.cursor = "";
+            document.body.style.userSelect = "";
+        });
+
+        $("#btnToggleLeftPane").dxButton({
+            icon: "pin",
+            hint: "Thu gọn / mở rộng danh sách quotation",
+            stylingMode: "text",
+            onClick: function () {
+                if (grid.classList.contains("left-collapsed")) {
+                    expandLeftDefault();
+                } else {
+                    collapseLeft();
+                }
+            }
+        });
+
+        window.addEventListener("resize", function () {
+            if (grid.classList.contains("left-collapsed")) {
+                grid.style.gridTemplateColumns = `${COLLAPSED_LEFT}px ${SPLITTER_W}px minmax(620px, 1fr)`;
+            } else {
+                const first = parseInt((grid.style.gridTemplateColumns || "").split(" ")[0], 10);
+                if (!isNaN(first)) setLeftWidth(first);
+            }
+        });
+    }
         // =========================
         // 10) Controls init
         // =========================
@@ -1108,6 +1289,7 @@ Note:
 
         setTimeout(layoutTreeLine, 0);
         window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
+        initMainPaneSplitter();
     });
 </script>
 
@@ -1116,7 +1298,7 @@ Note:
         @* header removed *@
     </div>
 
-    <div class="contentGrid">
+    @* <div class="contentGrid">
 
         <!-- List -->
         <section class="card" style="height:100%;overflow: scroll;">
@@ -1255,6 +1437,148 @@ Note:
             </div>
 
         </section>
+    </div> *@
+    <div class="contentGrid" id="mainContentGrid">
+
+        <!-- Left pane -->
+        <div class="pane pane-left">
+            <section class="card">
+                <div class="cardHeader">
+                    <div class="collapse-toggle-wrap">
+                        <div id="btnToggleLeftPane"></div>
+                        <div class="h" id="listTitle">Your Quotations</div>
+                    </div>
+                    <div id="searchBox" style="width: 210px;"></div>
+                </div>
+                <div class="cardBody quote-pane-scroll">
+                    <div id="quoteList"></div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Splitter -->
+        <div id="mainSplitter" class="pane-splitter" title="Kéo để thay đổi kích thước"></div>
+
+        <!-- Right pane -->
+        <div class="pane pane-right">
+            <section class="card">
+                <div class="cardHeader">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div class="h">Overview</div>
+                        <span id="detailStatus" class="statusTag">-</span>
+                        <span id="stageDeptPill" class="pill">Quotation pending at: </span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <div id="btnCollapseAllTab"></div>
+                        <div id="btnToggleComment"></div>
+                    </div>
+                </div>
+
+                <div class="cardBody overview-wrap" style="padding:0">
+                    <!-- giữ nguyên toàn bộ phần bên trong của bạn -->
+                    <div id="flowHistoryPanel" class="flow-history-panel">
+                        <div class="fh-title">
+                            <span>Flow History</span>
+                            <span id="flowSummary" class="fh-sub">-</span>
+                        </div>
+                        <div id="flowHistoryBody" class="fh-flow">
+                            <div style="color:#6b7280;font-size:12px;padding:6px 4px;">Hover tree to load…</div>
+                        </div>
+                    </div>
+
+                    <div id="commentPanel" class="comment-tooltip" style="display:none;">
+                        <div class="ct-title">
+                            <span>Audit Log</span>
+                            <span id="commentPanelSub" class="ct-sub">-</span>
+                            <span class="ct-actions">
+                                <a href="javascript:void(0)" id="btnCloseCommentPanel" class="ct-close">✕</a>
+                            </span>
+                        </div>
+                        <div id="commentPanelList" class="ct-list">
+                            <div style="color:#6b7280;font-size:12px;padding:6px 4px;">Click “Comments” to load…</div>
+                        </div>
+                    </div>
+
+                    <div id="deptTree" class="dept-tree">
+                        <div class="treeStack" id="treeStack">
+                            <div class="vline" id="treeVLine"></div>
+
+                            <div class="dept-node" data-key="MKT" data-target="#secMKT">
+                                <div class="dept-callout" data-pic-for="MKT"><span class="co-icon"></span><span class="co-text">-</span></div>
+                                <div class="dept-circle">MKT</div>
+                            </div>
+
+                            <div class="dept-node" data-key="TS" data-target="#secTS">
+                                <div class="dept-callout" data-pic-for="TS"><span class="co-icon"></span><span class="co-text">-</span></div>
+                                <div class="dept-circle">TS</div>
+                            </div>
+
+                            <div class="dept-node" data-key="UW" data-target="#secUW">
+                                <div class="dept-callout" data-pic-for="UW"><span class="co-icon"></span><span class="co-text">-</span></div>
+                                <div class="dept-circle">UW</div>
+                            </div>
+
+                            <div class="dept-node" data-key="LMKT" data-target="#secLMKT">
+                                <div class="dept-callout" data-pic-for="LMKT"><span class="co-icon"></span><span class="co-text">-</span></div>
+                                <div class="dept-circle">LMKT</div>
+                            </div>
+
+                            <div class="dept-node" data-key="PM" data-target="#secPM">
+                                <div class="dept-callout" data-pic-for="PM"><span class="co-icon"></span><span class="co-text">-</span></div>
+                                <div class="dept-circle">PM</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="overviewScroll" class="overview-scroll">
+                        <section id="secMKT" class="dept-section">
+                            <div class="dept-header">
+                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_MKT_Form_Header")
+                            </div>
+                            <div class="dept-body">
+                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_MKT_Form")
+                            </div>
+                        </section>
+
+                        <section id="secTS" class="dept-section">
+                            <div class="dept-header">
+                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_TS_Form_Header")
+                            </div>
+                            <div class="dept-body">
+                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_TS_Form")
+                            </div>
+                        </section>
+
+                        <section id="secUW" class="dept-section">
+                            <div class="dept-header">
+                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_UW_Form_Header")
+                            </div>
+                            <div class="dept-body">
+                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_UW_Form")
+                            </div>
+                        </section>
+
+                        <section id="secLMKT" class="dept-section">
+                            <div class="dept-header">
+                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_LMKT_Form_Header")
+                            </div>
+                            <div class="dept-body">
+                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_LMKT_Form")
+                            </div>
+                        </section>
+
+                        <section id="secPM" class="dept-section">
+                            <div class="dept-header">
+                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_PM_Form_Header")
+                            </div>
+                            <div class="dept-body">
+                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_PM_Form")
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </section>
+        </div>
     </div>
 
     <!-- Bottom action bar -->
