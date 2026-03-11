@@ -66,6 +66,14 @@
 
     <script>
         (function () {
+            const clientQuery = `SELECT
+                                        c.Id,
+                                        c.ClientCode,
+                                        JSON_VALUE(c.ClientName, '$.Eng')  AS EnglishName,
+                                        JSON_VALUE(c.ClientName, '$.Viet') AS VietnameseName,
+                                        c.BranchId AS BranchId
+                                    FROM Client c
+                                    WHERE c.Deleted = 0;`
                     // const DEPTS = ["MKT","RE","TS","UW","LMKT","PM"];
                     const DEPTS = ["RE"];
                     const REMEMS = ["quan.nh","huan.lt","minh.lh"];
@@ -120,26 +128,26 @@
         }
 
           DevExpress.localization.locale("en");
-           var options = {
-            assignmentMode: [
-              // { id: "auto", text: "Auto route (recommended)" },
-              { id: "later", text: "Assign later" },
-              { id: "manual", text: "Manual assign" }
-            ],
-            teamOrRole: [
-              { id: "TS", text: "Marketing TS" },
-              { id: "UW", text: "Underwriting" }
-            ],
-            assignee: [
-              // { accountName: "admin", fullName: "Admin admin" },
-              // { accountName: "hien.ttt", fullName: "To Thi Thu Hien" },
-              // { accountName: "accpentest", fullName: "accpentest test" }
-            ],
-            reqType: ["New Quotation", "Renew Quotation","Endorsement", "Revise Quotation" ],
-            lineName: ["Fire & Property, BI", "Liability", "Cargo", "Engineering", "Motor"],
-            businessChannel: ["Inward", "Direct (DIR)", "Agent (AGY)", "Broker (BRK)"],
-            reinsurance: [{id: 143, value: "FACOUT"}, {id: 144, value: "NO FACOUT"}, {id: 145, value: "Ichigenka"}]
-          };
+          //  var options = {
+          //   assignmentMode: [
+          //     // { id: "auto", text: "Auto route (recommended)" },
+          //     { id: "later", text: "Assign later" },
+          //     { id: "manual", text: "Manual assign" }
+          //   ],
+          //   teamOrRole: [
+          //     { id: "TS", text: "Marketing TS" },
+          //     { id: "UW", text: "Underwriting" }
+          //   ],
+          //   assignee: [
+          //     // { accountName: "admin", fullName: "Admin admin" },
+          //     // { accountName: "hien.ttt", fullName: "To Thi Thu Hien" },
+          //     // { accountName: "accpentest", fullName: "accpentest test" }
+          //   ],
+          //   reqType: [{id: 149 ,value: "New Quotation"}, {id: 146 ,value:"Renew Quotation"},{id: 147 ,value:"Endorsement"}, {id: 148 ,value:"Revise Quotation"} ],
+          //   lineName: ["Fire & Property, BI", "Liability", "Cargo", "Engineering", "Motor"],
+          //   businessChannel: ["Inward", "Direct (DIR)", "Agent (AGY)", "Broker (BRK)"],
+          //   reinsurance: [{id: 143, value: "FACOUT"}, {id: 144, value: "NO FACOUT"}, {id: 145, value: "Ichigenka"}]
+          // };
        
           // ===== mock options =====
          
@@ -186,7 +194,7 @@
                   // },
                   { dataField: "PIC", editorType: "dxTextBox", editorOptions: { readOnly: true, value: _loginUser } },
                   { dataField: "createDate", editorType: "dxDateBox", editorOptions: { readOnly: true, displayFormat: "dd-MM-yyyy", value: new Date() } },
-                  { dataField: "reqType", editorType: "dxSelectBox", isRequired: true, editorOptions: { items: options.reqType } },
+                  { dataField: "requestTypeId", label : {text : "Request Type"} , editorType: "dxSelectBox", isRequired: true, editorOptions: makeSelectBoxEditorOptions(_enums.reqType) },
                   { dataField: "clientName", editorType: "dxTextBox", visible: false, editorOptions: { readOnly: true } },
                   { dataField: "clientId", editorType: "dxDropDownBox", isRequired: true , label: { text: "Client"} ,
                     editorOptions:  {
@@ -205,13 +213,7 @@
                                 url: `/api/Client/ExecuteCustomQuery`,
                                 method: "POST",
                                 contentType: "application/json",
-                                data: JSON.stringify(`SELECT
-                                    c.Id,
-                                    c.ClientCode,
-                                    JSON_VALUE(c.ClientName, '$.Eng')  AS EnglishName,
-                                    JSON_VALUE(c.ClientName, '$.Viet') AS VietnameseName
-                                FROM Client c
-                                WHERE c.Deleted = 0;`)
+                                data: JSON.stringify(clientQuery)
                             });
                         }, byKey: function (key) {
                             //return $.ajax({
@@ -225,13 +227,7 @@
                                     url: `/api/Client/DropDownLookupCustomQuery?key=${encodeURIComponent(key)}`,
                                     method: "POST",
                                     contentType: "application/json",
-                                    data: JSON.stringify(`SELECT
-                                        c.Id,
-                                        c.ClientCode,
-                                        JSON_VALUE(c.ClientName, '$.Eng')  AS EnglishName,
-                                        JSON_VALUE(c.ClientName, '$.Viet') AS VietnameseName
-                                    FROM Client c
-                                    WHERE c.Deleted = 0;`)
+                                    data: JSON.stringify(clientQuery)
                                 }).then(function (result) {
                                     return Array.isArray(result) ? result[0] : result;
                                 });
@@ -263,7 +259,7 @@
                     editorOptions: { minHeight: 90 },
                     validationRules: [{ type: "required" }]
                   },
-                  { dataField: "lineName", editorType: "dxSelectBox", editorOptions: { items: options.lineName, searchEnabled: true } },
+                  { dataField: "lineName", editorType: "dxSelectBox", editorOptions: { items: _enums.lineName, searchEnabled: true } },
                   { dataField: "productName", editorType: "dxTextBox", visible:false, editorOptions: { readOnly: true } },
                       { dataField: "productId", editorType: "dxSelectBox", editorOptions: {
                             label: {text: "Product Name"},
@@ -285,8 +281,8 @@
                             }
                         } },
                   { dataField: "dueDate", editorType: "dxDateBox", editorOptions: { displayFormat: "dd-MM-yyyy" } },
-                  { dataField: "businessChannel", editorType: "dxSelectBox", editorOptions: { items: options.businessChannel } },
-                  { dataField: "reinsuranceId", caption: "Reinsurance", editorType: "dxSelectBox", editorOptions: { valueExpr: "id", displayExpr: "value",items: options.reinsurance } },
+                  { dataField: "businessChannel", editorType: "dxSelectBox", editorOptions: { items: _enums.businessChannel } },
+                  { dataField: "reinsuranceId", label: {text: "Reinsurance"}, editorType: "dxSelectBox", editorOptions: { valueExpr: "id", displayExpr: "value",items: _enums.reinsurance } },
                    {
           // ✅ Field element custom
           itemType: "simple",
@@ -432,7 +428,7 @@
                     colSpan: 2,
                     editorType: "dxSelectBox",
                     editorOptions: {
-                      dataSource: options.assignmentMode,
+                      dataSource: _enums.assignmentMode,
                       displayExpr: "text",
                       valueExpr: "id",
                       onValueChanged(e) {
@@ -448,7 +444,7 @@
                     editorType: "dxSelectBox",
                     colSpan: 2,
                     editorOptions: {
-                      dataSource: options.teamOrRole,
+                      dataSource: _enums.teamOrRole,
                       displayExpr: "text",
                       valueExpr: "id",
                       onValueChanged(e){
@@ -509,7 +505,7 @@
               {
                 dataField: "to",
                 caption: "Assignee",
-                lookup: { dataSource: options.assignee, valueExpr: "accountName", displayExpr: "fullName" }
+                lookup: { dataSource: _enums.assignee, valueExpr: "accountName", displayExpr: "fullName" }
               },
               {
                 dataField: "notes",
@@ -539,7 +535,7 @@
               dataField: "to",
               editorType: "dxSelectBox",
               isRequired: true,
-              editorOptions: { dataSource: options.assignee, displayExpr: "fullName", valueExpr: "accountName", searchEnabled: true }
+              editorOptions: { dataSource: _enums.assignee, displayExpr: "fullName", valueExpr: "accountName", searchEnabled: true }
             },
             { dataField: "notes", colSpan: 2, editorType: "dxTextArea", editorOptions: { minHeight: 90 } }
           ];
@@ -699,13 +695,13 @@
               currentEntry = entryTemplate();
                  ajaxGet("/api/Employee/AssigneeList", "TS")
                     .then(list => {
-                        options.assignee.push(...list);
+                        _enums.assignee.push(...list);
                          const popup = $("#assigneePopup").dxPopup("instance");
                          popup.option("title", "New Assignee Entry");
                          popup.show();
                          setTimeout(() => $("#assigneeEntryForm").dxForm("instance").option("formData", currentEntry), 2000);
                         console.log("then:", list);
-                        console.log("then:", options.assignee);
+                        console.log("then:", _enums.assignee);
                     })
                     .fail(err => { // jQuery way (an toàn)
                         console.log("fail:", err);

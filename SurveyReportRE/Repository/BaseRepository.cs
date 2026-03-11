@@ -584,16 +584,16 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
         {
             var sql = $@"SELECT EnumData.* FROM EnumData WITH (NOLOCK) 
                         INNER JOIN SysTable ON SysTable.Id = EnumData.SysTableId
-                        WHERE SysTable.Name = '{typeof(T).Name}' AND EnumData.[Name] = '{refField}' ORDER BY EnumOrder ASC";
+                        WHERE SysTable.Name = '{typeof(T).Name}' AND EnumData.[Name] = '{refField}' ";
 
             if (!string.IsNullOrEmpty(enumName))
                 sql = $@"SELECT EnumData.* FROM EnumData WITH (NOLOCK) 
                         INNER JOIN SysTable ON SysTable.Id = EnumData.SysTableId
-                        WHERE EnumData.Name = '{enumName}' ORDER BY EnumOrder ASC";
+                        WHERE EnumData.Name = '{enumName}'";
 
             if (isSameUsing)
                 sql = $@"SELECT EnumData.* FROM EnumData WITH (NOLOCK) 
-                        WHERE EnumData.Name = '{enumName}' ORDER BY EnumOrder ASC";
+                        WHERE EnumData.Name = '{enumName}' ";
 
             var result = await connection.QueryAsync<dynamic>(sql);
             Util.QueryLogs(_connectionString, "sp_Querylogs",

@@ -41,7 +41,7 @@
         }
         ]},
                  { dataField:"clientName", label:{text:"Client Name"}, isRequired:true },
-                 { dataField:"requestType", editorType:"dxSelectBox", label:{text:"Request Type"}, editorOptions:{ items:["New","Renewal","Endorsement"] },displayExpr: "value",
+                 { dataField:"requestTypeId", editorType:"dxSelectBox", label:{text:"Request Type"}, editorOptions: makeSelectBoxEditorOptions(_enums.reqType),displayExpr: "value",
                       valueExpr: "id"
                  },
                  { dataField:"reinsuranceId", editorType:"dxSelectBox", label:{text:"Reinsurance"}, 

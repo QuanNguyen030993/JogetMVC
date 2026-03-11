@@ -3291,86 +3291,8 @@ function selectBoxRemakeOption(item, gridInstance, index, addtionalOptions) {
     //};
 
     item.editorType = "dxSelectBox";
-    item.editorOptions = {
-        editorType: "dxSelectBox",
-        //dropDownOptions : { minWidth: 200 },
-        dataSource: dataSource,
-        valueExpr: 'id',
-        displayExpr: 'key',
-        searchEnabled: true,
-        width: 300,
-        acceptCustomValue: true,
-        onValueChanged: function (e) { // handle after select
-            if (gridInstance.moreActionFromSelectedChangeSelectBox)
-                gridInstance.moreActionFromSelectedChangeSelectBox(e, item, gridInstance);
-            else {
-                if (e.value) {
-                    // Cập nhật giá trị vào cell
-                    gridInstance.component.cellValue(
-                        gridInstance.row.rowIndex,
-                        item.dataField,
-                        e.value
-                    );
-                } else {
-                    // Xóa giá trị trong cell
-                    gridInstance.component.cellValue(
-                        gridInstance.row.rowIndex,
-                        item.dataField,
-                        null
-                    );
-                }
-                //gridInstance.component.saveEditData();
-            }
-        },
-        onCustomItemCreating: function (e) {
-            //var dataSource = dataSourceLookup;
-            e.customItem = {}; //Avoid lib error
-            e.text = $.trim(e.text);
-            var itemSearch = $try(function () { return dataSource._items.find(x => x.key === e.text) });
-            if (itemSearch != null) {
-                var selectedItem = $try(function () { return e.component.option("selectedItem") });
-                if (selectedItem != null) {
-                    e.customItem = itemSearch.key;
-                    gridInstance.component.cellValue(gridInstance.row.rowIndex, item.dataField, itemSearch.id);
-                    return e.customItem;
-                }
-            } else {
-                const newValue = e.text;
-                if (newValue) {
-                    $(function () {
-                        var dialog = DevExpress.ui.dialog.confirm("No selection matching your search, do you want to add new it?");
-                        dialog.done(function (confirm) {
-                            if (confirm == true) {
-                                const newItem = { key: newValue, mappingField: item.dataField, sysTableId: item.sysTableId };
-                                //e.customItem = dataSource.store().insert(newItem)
-                                //    .then(() => dataSource.load())
-                                //    .then(() => newItem)
-                                //    .catch((error) => {
-                                //        throw error;
-                                //    });
-                                if (dataSourceLookup != null) {
-                                    e.customItem = dataSourceLookup.insert(newItem).then(dataSourceLookup.load().done(function (data) {
-                                        itemArr = data.map(item => {
-                                            return {
-                                                id: item.id,
-                                                key: `${item.key}`
-                                            }
-                                        });
-                                        dataSource._items = itemArr;
-                                        dataSource._store._array = itemArr;
-                                        dataSource.reload();
-                                        gridInstance.component.refresh();
-                                    }));
-
-                                }
-                            }
-                        });
-                    })
-                }
-            }
-            return e.customItem;
-        },
-    };
+    item.editorOptions = makeSelectBoxEditorOptions(dataSource,true, gridInstance, dataSourceLookup);
+    
     if (addtionalOptions) {
         item.editorOptions.acceptCustomValue = (addtionalOptions.acceptCustomValue != undefined || addtionalOptions.acceptCustomValue != null) ? addtionalOptions.acceptCustomValue : true;
         item.editorOptions.searchEnabled = (addtionalOptions.searchEnabled != undefined || addtionalOptions.searchEnabled != null) ? addtionalOptions.searchEnabled : true;
@@ -4544,11 +4466,19 @@ function fieldPictureFeature($fieldContainer, itemElement, object, info, folder)
     return itemElement;
 }
 
-function ObjectPopulateKey(item) {
+function ObjectPopulateKey(item, caseConvert = false, fromSource = false) {
     var cloneItems = {};
     Object.keys(item).forEach(key => {
         if (key in item) {
-            cloneItems[key] = item[key];
+            if (!caseConvert)
+                cloneItems[key] = item[key];
+            else {
+                if (!fromSource)
+                    cloneItems[convertToTitleCase(key)] = item[key];
+                else {
+                    cloneItems[key] = item[convertToTitleCase(key)];
+                }
+            }
         }
     });
     return cloneItems;
@@ -4763,25 +4693,14 @@ function makeTheClientLocationGrid(instanceItems, dropdownControl, instanceProps
 
     var divBranchCode = $(`<div style="display:flex;padding:10px">`)
     $(`<div style="padding-top: 10px; padding-right: 10px;">Branch code: </div>`).appendTo(divBranchCode);
-    //$(`<div>`).dxSelectBox({
-    //    dataSource: [{ id: 89, key: "Ha Noi" }, { id: 88, key: "Ho Chi Minh" }],
-    //    valueExpr: 'id',
-    //    displayExpr: 'key',
-    //    searchEnabled: true,
-    //    width: 300,
-    //    onValueChanged: function (e) { // handle after select
-    //        var DS = grid.dxDataGrid("instance").getDataSource();
-    //        DS.filter(["areaId", "=", e.value]);
-    //        DS.load();
-    //    },
-    //}).appendTo(divBranchCode);
+
     $("<div>").dxRadioGroup({
-        dataSource: [{ id: 89, key: "Ha Noi" }, { id: 88, key: "Ho Chi Minh" }],
+        dataSource: [{ id: 20, key: "Ha Noi" }, { id: 10, key: "Ho Chi Minh" }],
         valueExpr: 'id',
         displayExpr: 'key',
         onValueChanged: function (e) { // handle after select
             var DS = grid.dxDataGrid("instance").getDataSource();
-            DS.filter(["areaId", "=", e.value]);
+            DS.filter(["branchId", "=", e.value]);
             DS.load();
         },
         //itemTemplate: function (itemData) {
@@ -5350,16 +5269,17 @@ function newQuotationForm() {
                     var submitData = entryForm.option("formData");
                     var submitSummaryData = entrySummaryForm.option("formData");
                     var quotationData = new Object();
+                    //quotationData.ClientName = submitSummaryData.clientName;
+                    //quotationData.ClientId = submitSummaryData.clientId;
+                    //quotationData.SurveyNeeded = submitSummaryData.surveyNeeded;
+                    //quotationData.DueDate = submitSummaryData.dueDate;
+                    //quotationData.ReinsuranceId = submitSummaryData.reinsuranceId;
+                    quotationData.RequestedDate = submitSummaryData.createDate;
+                    quotationData = ObjectPopulateKey(submitSummaryData, true, false);
                     quotationData.StageAccount = submitData.to;
-                    quotationData.ClientName = submitSummaryData.clientName;
-                    quotationData.ClientId = submitSummaryData.clientId;
                     quotationData.StageDept = submitSummaryData.assignedTeamOrRole;
                     quotationData.QuotationStatus = "New";
                     quotationData.WorkflowStatus = "Pending";
-                    quotationData.SurveyNeeded = submitSummaryData.surveyNeeded;
-                    quotationData.DueDate = submitSummaryData.dueDate;
-                    quotationData.RequestedDate = submitSummaryData.createDate;
-                    quotationData.ReinsuranceId = submitSummaryData.reinsuranceId;
                     debugger
                     //quotationData.LineId = submitSummaryData.lineId;  
                     //quotationData.ProductId = submitSummaryData.productId;
@@ -7068,4 +6988,91 @@ function initDepartmentAssignees() {
         });
     }, 1000);
 
+}
+
+function makeSelectBoxEditorOptions(dataSource, acceptCustomValue = false ,gridInstance = null, dataSourceLookup = null) {
+    debugger
+    return {
+        editorType: "dxSelectBox",
+        //dropDownOptions : { minWidth: 200 },
+        //items: dataSource,
+        dataSource: dataSource,
+        valueExpr: 'id',
+        displayExpr: 'value',
+        searchEnabled: true,
+        width: 300,
+        acceptCustomValue: acceptCustomValue,
+        onValueChanged: function (e) { // handle after select
+            if (gridInstance != null) {
+                if (gridInstance.moreActionFromSelectedChangeSelectBox)
+                    gridInstance.moreActionFromSelectedChangeSelectBox(e, item, gridInstance);
+                else {
+                    if (e.value) {
+                        // Cập nhật giá trị vào cell
+                        gridInstance.component.cellValue(
+                            gridInstance.row.rowIndex,
+                            item.dataField,
+                            e.value
+                        );
+                    } else {
+                        // Xóa giá trị trong cell
+                        gridInstance.component.cellValue(
+                            gridInstance.row.rowIndex,
+                            item.dataField,
+                            null
+                        );
+                    }
+                    //gridInstance.component.saveEditData();
+                }
+            }
+                                    },
+        onCustomItemCreating: function (e) {
+            //var dataSource = dataSourceLookup;
+            e.customItem = {}; //Avoid lib error
+            e.text = $.trim(e.text);
+            var itemSearch = $try(function () { return dataSource._items.find(x => x.key === e.text) });
+            if (itemSearch != null) {
+                var selectedItem = $try(function () { return e.component.option("selectedItem") });
+                if (selectedItem != null) {
+                    e.customItem = itemSearch.key;
+                    gridInstance.component.cellValue(gridInstance.row.rowIndex, item.dataField, itemSearch.id);
+                    return e.customItem;
+                }
+            } else {
+                const newValue = e.text;
+                if (newValue) {
+                    $(function () {
+                        var dialog = DevExpress.ui.dialog.confirm("No selection matching your search, do you want to add new it?");
+                        dialog.done(function (confirm) {
+                            if (confirm == true) {
+                                const newItem = { key: newValue, mappingField: item.dataField, sysTableId: item.sysTableId };
+                                //e.customItem = dataSource.store().insert(newItem)
+                                //    .then(() => dataSource.load())
+                                //    .then(() => newItem)
+                                //    .catch((error) => {
+                                //        throw error;
+                                //    });
+                                if (dataSourceLookup != null) {
+                                    e.customItem = dataSourceLookup.insert(newItem).then(dataSourceLookup.load().done(function (data) {
+                                        itemArr = data.map(item => {
+                                            return {
+                                                id: item.id,
+                                                key: `${item.key}`
+                                            }
+                                        });
+                                        dataSource._items = itemArr;
+                                        dataSource._store._array = itemArr;
+                                        dataSource.reload();
+                                        gridInstance.component.refresh();
+                                    }));
+
+                                }
+                            }
+                        });
+                    })
+                }
+            }
+            return e.customItem;
+        },
+    }
 }

@@ -21,6 +21,8 @@ public class Quotation : BaseModel
     public DateTime? DueDate { get; set; }                 // c_dueDate
 
     public string? RequestType { get; set; } = "";               // c_reqType
+    public long? RequestTypeId { get; set; } = 0;
+    public EnumData? RequestTypeEnum { get; set; }
     public string? QuotationType { get; set; } = "";             // c_typeOfQT
 
     public string? BusinessChannelName { get; set; } = "";        // c_businessChannel
