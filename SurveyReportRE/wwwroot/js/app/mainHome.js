@@ -549,8 +549,8 @@ var nativeRemoveTab = function($tabDivId){
             $("#" + panelId).remove();
             $(`#${panelId}_content_wrapper`).remove();
             document.body.classList.remove("hasRightPanel");
-            $("#rightCommentDock").hide();
-            document.documentElement.style.setProperty("--collapsed-form-mr", "-26%");
+            $("#btnCloseRightComment").click();
+            //document.documentElement.style.setProperty("--collapsed-form-mr", "-26%");
         }
         $("#tablist").tabs("refresh");
     }, 150); // === duration animate

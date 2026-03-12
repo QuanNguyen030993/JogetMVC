@@ -1594,13 +1594,13 @@ aside {
     right: 12px;
     bottom: 70px;
     width: 420px;
-    z-index: 9998;
+    z-index: 1200;
     pointer-events: none;
     overflow: visible;
 }
 
     .rightDock .dockCard {
-        z-index: 9999;
+        /*z-index: 1000;*/
         pointer-events: auto;
         position: absolute;
         inset: 0;

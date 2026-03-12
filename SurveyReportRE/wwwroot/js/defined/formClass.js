@@ -3062,3 +3062,174 @@ var QuotationForm = class QuotationForm extends MForm {
     //}
 
 }
+
+
+
+var ReferenceQuotationForm = class ReferenceQuotationForm extends MForm {
+    constructor(id, childGridConfig, formConfig, mFormOption) {
+        super(id, childGridConfig, formConfig, mFormOption)
+        //this.parentQuotationId = 0;
+        //if (formConfig.parentQuotationId)
+        //    this.parentQuotationId = formConfig.parentQuotationId;
+    }
+
+    groupingLayout(_formConfig, itemsArray, formInstance) {
+        super.groupingLayout(_formConfig, itemsArray, formInstance)
+        itemsArray = [
+            {
+                itemType: "group",
+                caption: "FO/TS Reference",
+                colCount: 1,
+                items: [
+                    { dataField: "reinsuranceId", label: {text:"Reinsurance" }, editorType: "dxSelectBox", editorOptions: { width: 200,  valueExpr: "id", displayExpr: "value", items: _enums.reinsurance } }
+                ]
+            },
+            {
+                itemType: "group",
+                caption: "PM Reference",
+                colCount: 1,
+                items: [
+                    { dataField: "inceptionDate", label: { text: "Inception Date" } ,editorType: "dxDateBox", editorOptions: { width: 200, displayFormat: "dd/MM/yyyy" } }  
+                ]
+            }
+        ];
+        this.decorateItemsWithLockButton(itemsArray);
+        return itemsArray;
+    }
+
+    initFormToolbar(formInstance) {
+    }
+
+
+    decorateItemsWithLockButton(items) { 
+        const that = this;
+        if (!Array.isArray(items)) return;
+
+        items.forEach(function (item) {
+            if (item.items && Array.isArray(item.items)) {
+                that.decorateItemsWithLockButton(item.items);
+                return;
+            }
+
+            if (!item.dataField) return;
+            if (item.itemType === "button" || item.itemType === "empty" || item.itemType === "group" ) return;
+
+            that.wrapItemWithLockButton(item);
+        });
+    }
+
+    wrapItemWithLockButton(item) {
+        const that = this;
+        const originalEditorType = item.editorType || "dxTextBox";
+        const originalEditorOptions = $.extend(true, {}, item.editorOptions || {});
+        const dataField = item.dataField;
+        const dataFieldCaption = item.label.text;
+        // label vẫn để dxForm render bình thường
+        // chỉ thay phần editor bằng template custom
+        item.template = function (data, $container) {
+            const formData = data.component.option("formData") || {};
+            let fieldValue = formData[dataField];
+
+            if (originalEditorType === "dxDateBox" && fieldValue) {
+                fieldValue = new Date(fieldValue);
+            }
+
+            const $row = $("<div>").addClass("field-lock-wrap");
+            const $editorHost = $("<div>").addClass("field-lock-editor").appendTo($row);
+            const $btnHost = $("<div>").addClass("field-lock-btn").appendTo($row);
+
+            const editorOptions = $.extend(true, {}, originalEditorOptions, {
+                value: fieldValue,
+                onInitialized: function (e) {
+                    setTimeout(() => {
+                        e.component.option("value", data.component.option("formData")[dataField]);
+                        var lockRefFields = JSON.parse(data.component.option("formData")["lockedReferenceFields"]);
+                        var titleCaseObject = ObjectPopulateKey(lockRefFields, true);
+                        that.lockedReferenceFields = { ...titleCaseObject };
+                        data.component.option("formData")[dataField];
+                        $btnHost.dxButton({
+                            icon: "fa fa-lock",
+                            hint: "Lock field",
+                            stylingMode: "outlined",
+                            onClick: function () {
+                                that.toggleFieldLock(dataField, dataFieldCaption, originalEditorType);
+                            }
+                        });
+
+                    },100);
+                },
+
+                onValueChanged: function (e) {
+                    const currentData = data.component.option("formData") || {};
+                    currentData[dataField] = e.value;
+                    data.component.option("formData", currentData);
+                }
+            });
+
+            that.renderEditor($editorHost, originalEditorType, editorOptions);
+
+        
+            $container.append($row);
+        };
+    }
+
+    renderEditor($host, editorType, editorOptions) {
+        if (typeof $host[editorType] === "function") {
+            $host[editorType](editorOptions);
+        } else {
+            $host.dxTextBox(editorOptions);
+        }
+    }
+
+    toggleFieldLock(dataField, dataFieldCaption, editorType) {
+        const that = this;
+        const isLocked = !!that.lockedReferenceFields[dataField];
+        const nextLocked = !isLocked;
+
+        const msg = nextLocked
+            ? `Are you sure to lock field "${dataFieldCaption}"?`
+            : `Are you sure to unlock field "${dataFieldCaption}"?`;
+
+        DevExpress.ui.dialog.confirm(msg, "Confirm").done(function (ok) {
+            if (!ok) return;
+
+            that.lockedReferenceFields[dataField] = nextLocked;
+            that.applyFieldLockState(dataField, editorType, nextLocked);
+        });
+    }
+
+    applyFieldLockState(dataField, editorType, isLocked) {
+        if (!this.formInstance) return;
+
+        const editor = this.formInstance.getEditor(dataField);
+        if (!editor) return;
+
+        if (this.useDisabled(editorType)) {
+            editor.option("disabled", isLocked);
+        } else {
+            editor.option("readOnly", isLocked);
+        }
+
+        if (editorType === "dxDateBox") {
+            editor.option("openOnFieldClick", !isLocked);
+            editor.option("showDropDownButton", !isLocked);
+        }
+
+        this.formInstance.repaint();
+    }
+
+    useDisabled(editorType) {
+        const disabledEditors = [
+            "dxCheckBox",
+            "dxSwitch",
+            "dxRadioGroup",
+            "dxTagBox",
+            "dxLookup",
+            "dxDropDownBox",
+            "dxFileUploader",
+            "dxHtmlEditor"
+        ];
+        return disabledEditors.includes(editorType);
+    }
+
+}
