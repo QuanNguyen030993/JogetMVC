@@ -3078,7 +3078,7 @@ var ReferenceQuotationForm = class ReferenceQuotationForm extends MForm {
         itemsArray = [
             {
                 itemType: "group",
-                caption: "FO/TS Reference",
+                caption: "FO / TS Section",
                 colCount: 1,
                 items: [
                     { dataField: "reinsuranceId", label: {text:"Reinsurance" }, editorType: "dxSelectBox", editorOptions: { width: 200,  valueExpr: "id", displayExpr: "value", items: _enums.reinsurance } }
@@ -3086,7 +3086,7 @@ var ReferenceQuotationForm = class ReferenceQuotationForm extends MForm {
             },
             {
                 itemType: "group",
-                caption: "PM Reference",
+                caption: "PM Section",
                 colCount: 1,
                 items: [
                     { dataField: "inceptionDate", label: { text: "Inception Date" } ,editorType: "dxDateBox", editorOptions: { width: 200, displayFormat: "dd/MM/yyyy" } }  
@@ -3144,12 +3144,10 @@ var ReferenceQuotationForm = class ReferenceQuotationForm extends MForm {
                     setTimeout(() => {
                         e.component.option("value", data.component.option("formData")[dataField]);
                         var lockRefFields = JSON.parse(data.component.option("formData")["lockedReferenceFields"]);
-                        var titleCaseObject = ObjectPopulateKey(lockRefFields, true);
-                        that.lockedReferenceFields = { ...titleCaseObject };
-                        data.component.option("formData")[dataField];
+                        that.lockedReferenceFields = { ...lockRefFields };
                         $btnHost.dxButton({
-                            icon: "fa fa-lock",
-                            hint: "Lock field",
+                            icon: "fa fa-" + (data.component.option("formData")[dataField] ? "lock" : "unlock") ,
+                            hint: (data.component.option("formData")[dataField] ? "Unlock" : "Lock") + " this field",
                             stylingMode: "outlined",
                             onClick: function () {
                                 that.toggleFieldLock(dataField, dataFieldCaption, originalEditorType);
@@ -3194,6 +3192,7 @@ var ReferenceQuotationForm = class ReferenceQuotationForm extends MForm {
             if (!ok) return;
 
             that.lockedReferenceFields[dataField] = nextLocked;
+            that.syncLockedReferenceFieldsToFormData();
             that.applyFieldLockState(dataField, editorType, nextLocked);
         });
     }
@@ -3217,6 +3216,33 @@ var ReferenceQuotationForm = class ReferenceQuotationForm extends MForm {
 
         this.formInstance.repaint();
     }
+
+    toPascalKey(key) {
+        if (!key) return key;
+        return key.charAt(0).toUpperCase() + key.slice(1);
+    }
+
+    syncLockedReferenceFieldsToFormData() {
+        if (!this.formInstance) return;
+        const formData = this.formInstance.option("formData") || {};
+        const output = {};
+
+        Object.keys(this.lockedReferenceFields || {}).forEach(k => {
+            output[k] = !!this.lockedReferenceFields[k];
+        });
+
+        formData.lockedReferenceFields = JSON.stringify(output);
+        console.log(JSON.stringify(output));
+        this.formInstance.option("formData", formData);
+        this.formInstance.updateData("lockedReferenceFields", JSON.stringify(output));
+        ajaxPut('/api/Quotation/UpdateData', { key: formData.id, values: JSON.stringify({ lockedReferenceFields: JSON.stringify(output) }) }, {
+            onSuccess: function (response) {
+            },
+            onError: function (err) {
+            }
+        });
+    }
+
 
     useDisabled(editorType) {
         const disabledEditors = [
