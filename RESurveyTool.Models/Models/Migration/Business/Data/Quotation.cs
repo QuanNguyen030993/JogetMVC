@@ -28,6 +28,8 @@ public class Quotation : BaseModel
     public string? BusinessChannelName { get; set; } = "";        // c_businessChannel
     public string? SourceOfBusinessName { get; set; } = "";       // c_sourceOfBusiness
     public string? BusinessChannelDisplayName { get; set; } = ""; // c_nameOfBizChannel
+    public DateTime? InceptionDate { get; set; }
+    public string? LockedReferenceFields { get; set; } = "";
 
     // =========================================================
     // Ý 2 — PolicyHolder/Insured/Client
