@@ -471,6 +471,14 @@ Note:
     #btnToggleLeftPane {
         min-width: 36px;
     }
+
+    .field-lock-wrap{
+        display: flex;
+    }
+
+    .field-lock-btn{
+        margin-left: 10px;
+    }
 </style>
 
 <script type="text/javascript">
@@ -843,7 +851,7 @@ Note:
             }, 180);
 
             const loadReferenceFields = debounce(function (quoteNo, quoteId) {
-                $("#rightCommentSub").text(`Reference fields for ${quoteNo}`);
+                $("#rightCommentSub").text(`General fields for ${quoteNo}`);
                  var _formConfig = new MFormOption();
                             _formConfig.originModelName = "Quotation";
                             _formConfig.formElementName = "Quotation";
@@ -943,7 +951,7 @@ Note:
                 });
 
                  $("#btnToggleReferenceFields").dxButton({
-                    text: "Quotation properties",
+                    text: "General fields",
                     icon: "fas fa-sliders-h",
                     type: "normal",
                     stylingMode: "contained",

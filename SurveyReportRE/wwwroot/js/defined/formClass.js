@@ -3078,7 +3078,7 @@ var ReferenceQuotationForm = class ReferenceQuotationForm extends MForm {
         itemsArray = [
             {
                 itemType: "group",
-                caption: "FO / TS Section",
+                caption: "UW Follow Fields",
                 colCount: 1,
                 items: [
                     { dataField: "reinsuranceId", label: {text:"Reinsurance" }, editorType: "dxSelectBox", editorOptions: { width: 200,  valueExpr: "id", displayExpr: "value", items: _enums.reinsurance } }
@@ -3086,7 +3086,7 @@ var ReferenceQuotationForm = class ReferenceQuotationForm extends MForm {
             },
             {
                 itemType: "group",
-                caption: "PM Section",
+                caption: "PM Follow Fields",
                 colCount: 1,
                 items: [
                     { dataField: "inceptionDate", label: { text: "Inception Date" } ,editorType: "dxDateBox", editorOptions: { width: 200, displayFormat: "dd/MM/yyyy" } }  
@@ -3137,7 +3137,7 @@ var ReferenceQuotationForm = class ReferenceQuotationForm extends MForm {
             const $row = $("<div>").addClass("field-lock-wrap");
             const $editorHost = $("<div>").addClass("field-lock-editor").appendTo($row);
             const $btnHost = $("<div>").addClass("field-lock-btn").appendTo($row);
-
+            const $msgHost = $("<div>").addClass("field-lock-msg").appendTo($container);
             const editorOptions = $.extend(true, {}, originalEditorOptions, {
                 value: fieldValue,
                 onInitialized: function (e) {
@@ -3146,14 +3146,14 @@ var ReferenceQuotationForm = class ReferenceQuotationForm extends MForm {
                         var lockRefFields = JSON.parse(data.component.option("formData")["lockedReferenceFields"]);
                         that.lockedReferenceFields = { ...lockRefFields };
                         $btnHost.dxButton({
-                            icon: "fa fa-" + (data.component.option("formData")[dataField] ? "lock" : "unlock") ,
-                            hint: (data.component.option("formData")[dataField] ? "Unlock" : "Lock") + " this field",
+                            icon: "fa fa-" + (that.lockedReferenceFields[dataField].isLock ? "lock" : "unlock") ,
+                            hint: (that.lockedReferenceFields[dataField].isLock ? "Unlock" : "Lock") + " this field",
                             stylingMode: "outlined",
                             onClick: function () {
-                                that.toggleFieldLock(dataField, dataFieldCaption, originalEditorType);
+                                that.toggleFieldLock(dataField, dataFieldCaption, originalEditorType, e, $btnHost);
                             }
                         });
-
+                        that.applyFieldLockState(dataField, originalEditorType, that.lockedReferenceFields[dataField].isLock, e, $btnHost, $msgHost  );
                     },100);
                 },
 
@@ -3179,9 +3179,9 @@ var ReferenceQuotationForm = class ReferenceQuotationForm extends MForm {
         }
     }
 
-    toggleFieldLock(dataField, dataFieldCaption, editorType) {
+    toggleFieldLock(dataField, dataFieldCaption, editorType, $scope = null, $btnHost = null, $msgHost = null) {
         const that = this;
-        const isLocked = !!that.lockedReferenceFields[dataField];
+        const isLocked = !!that.lockedReferenceFields[dataField].isLock;
         const nextLocked = !isLocked;
 
         const msg = nextLocked
@@ -3191,56 +3191,120 @@ var ReferenceQuotationForm = class ReferenceQuotationForm extends MForm {
         DevExpress.ui.dialog.confirm(msg, "Confirm").done(function (ok) {
             if (!ok) return;
 
-            that.lockedReferenceFields[dataField] = nextLocked;
+            that.lockedReferenceFields[dataField].isLock = nextLocked;
             that.syncLockedReferenceFieldsToFormData();
-            that.applyFieldLockState(dataField, editorType, nextLocked);
+            that.applyFieldLockState(dataField, editorType, nextLocked, $scope, $btnHost, $msgHost);
         });
     }
 
-    applyFieldLockState(dataField, editorType, isLocked) {
-        if (!this.formInstance) return;
+    applyFieldLockState(dataField, editorType, isLocked, $scope = null, $btnHost = null, $msgHost  =null) {
+        var that = this;
+        //let $editorHost = null;
 
-        const editor = this.formInstance.getEditor(dataField);
-        if (!editor) return;
-
-        if (this.useDisabled(editorType)) {
-            editor.option("disabled", isLocked);
-        } else {
-            editor.option("readOnly", isLocked);
+        // ưu tiên tìm trong scope gần nhất
+        if ($scope ) {
+            $scope.component.option("readOnly", isLocked);
+            $btnHost.dxButton("instance").option("icon", "fa fa-" + (that.lockedReferenceFields[dataField].isLock ? "lock" : "unlock"));
+            $btnHost.dxButton("instance").option("hint", (that.lockedReferenceFields[dataField].isLock ? "Unlock" : "Lock") + " this field");
+            $msgHost.text(that.lockedReferenceFields[dataField].message);
+            return;
         }
 
-        if (editorType === "dxDateBox") {
-            editor.option("openOnFieldClick", !isLocked);
-            editor.option("showDropDownButton", !isLocked);
-        }
+        //// fallback tìm toàn form ----> Not Working
+        //if ((!$editorHost || !$editorHost.length) && that.formInstance && that.formInstance.element) {
+        //    const $form = $(that.formInstance.element());
+        //    $editorHost = $form.find(`.field-lock-editor[data-field='${dataField}']`).first();
+        //}
 
-        this.formInstance.repaint();
+        //if (!$editorHost || !$editorHost.length) return;
+
+        //let editor = null;
+
+        //try {
+        //    if (typeof $editorHost[editorType] === "function") {
+        //        editor = $editorHost[editorType]("instance");
+        //    }
+        //} catch { }
+
+        //if (!editor) return;
+
+        //if (that.useDisabled(editorType)) {
+        //    editor.option("disabled", isLocked);
+        //} else {
+        //    editor.option("readOnly", isLocked);
+        //}
+
+        //if (editorType === "dxDateBox") {
+        //    editor.option("openOnFieldClick", !isLocked);
+        //    editor.option("showDropDownButton", !isLocked);
+        //}
     }
 
-    toPascalKey(key) {
-        if (!key) return key;
-        return key.charAt(0).toUpperCase() + key.slice(1);
-    }
+
+    //syncLockedReferenceFieldsToFormData() {
+    //    if (!this.formInstance) return;
+    //    const formData = this.formInstance.option("formData") || {};
+    //    const output = {};
+
+    //    Object.keys(this.lockedReferenceFields || {}).forEach(k => {
+    //        output[k] = !!this.lockedReferenceFields[k];
+    //    });
+
+    //    formData.lockedReferenceFields = JSON.stringify(output);
+    //    this.formInstance.option("formData", formData);
+    //    this.formInstance.updateData("lockedReferenceFields", JSON.stringify(output));
+    //    ajaxPut('/api/Quotation/UpdateData', { key: formData.id, values: JSON.stringify({ lockedReferenceFields: JSON.stringify(output) }) }, {
+    //        onSuccess: function (response) {
+    //        },
+    //        onError: function (err) {
+    //        }
+    //    });
+    //}
 
     syncLockedReferenceFieldsToFormData() {
-        if (!this.formInstance) return;
-        const formData = this.formInstance.option("formData") || {};
+        const that = this;
+        if (!that.formInstance) return;
+        const formData = that.formInstance.option("formData") || {};
         const output = {};
+        const now = new Date();
+        const timeString =
+            String(now.getDate()).padStart(2, '0') + '/' +
+            String(now.getMonth() + 1).padStart(2, '0') + '/' +
+            now.getFullYear() + ' ' +
+            String(now.getHours()).padStart(2, '0') + ':' +
+            String(now.getMinutes()).padStart(2, '0');
 
-        Object.keys(this.lockedReferenceFields || {}).forEach(k => {
-            output[k] = !!this.lockedReferenceFields[k];
+        Object.keys(that.lockedReferenceFields || {}).forEach(k => {
+            debugger
+            const isLock = !!that.lockedReferenceFields[k].isLock;
+
+            output[k] = {
+                isLock: isLock,
+                message: isLock
+                    ? ` is locked by ${_loginUser} at ${timeString}`
+                    : ""
+            };
         });
 
-        formData.lockedReferenceFields = JSON.stringify(output);
-        console.log(JSON.stringify(output));
-        this.formInstance.option("formData", formData);
-        this.formInstance.updateData("lockedReferenceFields", JSON.stringify(output));
-        ajaxPut('/api/Quotation/UpdateData', { key: formData.id, values: JSON.stringify({ lockedReferenceFields: JSON.stringify(output) }) }, {
-            onSuccess: function (response) {
+        const json = JSON.stringify(output);
+
+        formData.lockedReferenceFields = json;
+
+        that.formInstance.option("formData", formData);
+        that.formInstance.updateData("lockedReferenceFields", json);
+
+        ajaxPut('/api/Quotation/UpdateData',
+            {
+                key: formData.id,
+                values: JSON.stringify({
+                    lockedReferenceFields: json
+                })
             },
-            onError: function (err) {
+            {
+                onSuccess: function (response) { },
+                onError: function (err) { }
             }
-        });
+        );
     }
 
 
