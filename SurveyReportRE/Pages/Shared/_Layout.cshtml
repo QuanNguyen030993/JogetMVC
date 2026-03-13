@@ -6,11 +6,6 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>@ViewData["Title"] - Quotation Management</title>
-        @*     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" /> *@
-
-        @* <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script> *@
-        @* <script src="~/js/site.js" asp-append-version="true"></script> *@
     </head>
 }
 <body>
@@ -42,13 +37,17 @@
                     <div class="dockCard">
                     <div class="dockHeader">
                         <div>
-                        <a href="javascript:void(0)" id="btnCloseRightComment" class="fa fa-times close-tab-btn"></a>
+                            <div style="display:flex; position: relative; float: right;">
+                            <span id="headerWidgetsPanel" style="margin-top: -5px;"></span>
+                            <a href="javascript:void(0)" id="btnCloseRightComment" style="margin-left: 10px;" class="fa fa-times close-tab-btn"></a>
+
+                            </div>
                             <span class="dockTitle"></span>
                             <span id="rightCommentSub" class="dockSub">-</span>
                         </div>
                     </div>
                     <div id="rightCommentList">
-                    @* <div style="color:#6b7280;font-size:12px;padding:6px 4px;">Click “Comments” to load…</div> *@
+
                 </div>
             </div>
         </aside>

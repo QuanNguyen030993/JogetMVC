@@ -833,7 +833,7 @@ Note:
 
 
             const loadComments = debounce(function (quoteNo, quoteId) {
-                $("#rightCommentSub").text(quoteNo || "-");
+                 $("#rightCommentSub").text(`Audit log - ${quoteNo}` || "-");
                 $("#rightCommentList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
 
                 const q = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${quoteId}`;
@@ -851,7 +851,7 @@ Note:
             }, 180);
 
             const loadReferenceFields = debounce(function (quoteNo, quoteId) {
-                $("#rightCommentSub").text(`General fields for ${quoteNo}`);
+                $("#rightCommentSub").text(`Common fields - ${quoteNo}`);
                  var _formConfig = new MFormOption();
                             _formConfig.originModelName = "Quotation";
                             _formConfig.formElementName = "Quotation";
@@ -859,26 +859,7 @@ Note:
                             _formConfig.container = $(`<div id = "form_Quotation_${quoteId}" style="padding: 10px" >`);
                             var form =  new ReferenceQuotationForm(quoteId, null, _formConfig, _formConfig);
                             form.container.appendTo($("#rightCommentList"));
-              
-            }, 180);
-
-
-             const loadResForms = debounce(function (quoteNo, quoteId) {
-                $("#rightCommentSub").text(quoteNo || "-");
-                $("#rightCommentList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
-
-                // const q = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${quoteId}`;
-                // $.ajax({
-                //     url: `/api/QuotationCommentLog/ExecuteCustomQuery`,
-                //     method: "POST",
-                //     async: true,
-                //     contentType: "application/json",
-                //     data: JSON.stringify(q),
-                //     success: function (data) { $("#rightCommentList").html(renderResForms(data)); },
-                //     error: function () {
-                //         $("#rightCommentList").html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load audit logs</div>`);
-                //     }
-                // });
+                
             }, 180);
 
 
@@ -909,6 +890,28 @@ Note:
 
       // ✅ bind giữ nguyên – chỉ còn việc gắn event như cũ
             function bind() {
+                $("#headerWidgetsPanel").empty();
+                 
+                 $(`<div id="btnToggleReferenceFieldsMini">`).dxButton({
+                    icon: "fas fa-sliders-h",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {                         
+                     openRightCommentPanel();
+                     loadReferenceFields(selectedCodeNo, selectedId);
+                      } 
+                    }).appendTo($("#headerWidgetsPanel"));
+
+                $(`<div id="btnToggleCommentMini" style="margin-left: 10px">`).dxButton({
+                    icon: "comment",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                     openRightCommentPanel();
+                      loadComments(selectedCodeNo, selectedId);
+                            } 
+                    }).appendTo($("#headerWidgetsPanel"));
+
                  $("#btnCollapseAllTab").dxButton({
                     text: "Collapse All Sections",
                     type: "normal",
@@ -927,43 +930,29 @@ Note:
                     type: "normal",
                     stylingMode: "contained",
                     onClick: () => {
-            if (!commentPanelOpened) {
-              openRightCommentPanel();
-                            loadComments(selectedCodeNo, selectedId);
-                        } else {
-              closeRightCommentPanel();
+                if (!commentPanelOpened) {
+                  openRightCommentPanel();
+                                loadComments(selectedCodeNo, selectedId);
+                            } else {
+                  closeRightCommentPanel();
+                            }
                         }
-                    }
-                });
-                 $("#btnToggleResForm").dxButton({
-                    text: "Res Form",
-                    icon: "file",
-                    type: "normal",
-                    stylingMode: "contained",
-                    onClick: () => {
-            if (!commentPanelOpened) {
-              openRightCommentPanel();
-                            loadResForms(selectedCodeNo, selectedId);
-                        } else {
-              closeRightCommentPanel();
-                        }
-                    }
-                });
-
+                    });
+       
                  $("#btnToggleReferenceFields").dxButton({
-                    text: "General fields",
+                    text: "Common fields",
                     icon: "fas fa-sliders-h",
                     type: "normal",
                     stylingMode: "contained",
                     onClick: () => {
-            if (!commentPanelOpened) {
-              openRightCommentPanel();
-                            loadReferenceFields(selectedCodeNo, selectedId);
-                        } else {
-              closeRightCommentPanel();
+                if (!commentPanelOpened) {
+                  openRightCommentPanel();
+                                loadReferenceFields(selectedCodeNo, selectedId);
+                            } else {
+                  closeRightCommentPanel();
+                            }
                         }
-                    }
-                });
+                    });
 
 
         $("#btnCloseRightComment").off("click").on("click", function () {
@@ -972,7 +961,7 @@ Note:
             }
 
       // ✅ expose để gọi trực tiếp mà không cần bind
-      return { bind, loadComments, openRightCommentPanel, closeRightCommentPanel };
+      return { bind, loadComments, loadReferenceFields, openRightCommentPanel, closeRightCommentPanel };
         })();
 
         // =========================
@@ -1063,7 +1052,12 @@ Note:
                 renderList();
                 renderDetail();
                 initDepartmentAssignees();
-                if (commentPanelOpened) HoverAjax.loadComments(selectedCodeNo, selectedId);
+                if (commentPanelOpened) 
+                {
+                   $("#btnCloseRightComment").click();
+                    // HoverAjax.loadComments(selectedCodeNo, selectedId);
+                    // HoverAjax.loadReferenceFields(selectedCodeNo, selectedId);
+                }
             });
         }
 
@@ -1412,7 +1406,6 @@ Note:
                     </div>
                     <div style="display:flex;align-items:center;gap:8px;">
                         <div id="btnCollapseAllTab"></div>
-                        <div id="btnToggleResForm"></div>
                         <div id="btnToggleReferenceFields"></div>
                         <div id="btnToggleComment"></div>
                     </div>

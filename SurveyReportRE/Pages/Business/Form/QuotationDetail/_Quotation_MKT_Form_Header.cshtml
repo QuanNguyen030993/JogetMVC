@@ -3,6 +3,7 @@
     <div class="dept-form-header__assign">
         <div id="mktAssigneeBox"></div>
     </div>
+    <div id="btnToggleResForm"></div>
 </div>
 <div class="dept-hint-wrap">
     <div class="dept-hint" id="hintMKT"></div>
@@ -20,5 +21,12 @@
         }
     });
     }, 1500);
-
+     $("#btnToggleResForm").dxButton({
+                    text: "Res Form",
+                    icon: "file",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+             alert("Open RES Form");
+                    }});
 </script>
