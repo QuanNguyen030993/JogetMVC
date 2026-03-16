@@ -27,6 +27,269 @@
                     type: "normal",
                     stylingMode: "contained",
                     onClick: () => {
-             alert("Open RES Form");
-                    }});
+                            var resItems = [
+
+                                 {itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
+            ,
+            editorOptions: {
+            name: "files"
+        }
+        ,template: function (data, itemElement) {
+            setTimeout(function () {
+                var item = new Object();
+                item.editorType = "dxFileUploader";
+                item.sectionName = "MKT-RES";
+                createEditor(item, itemElement, $("<div>"), null);
+                // loadAttachmentList("MKT");
+                }, 1000);
+            }
+
+        }
+        ]},
+        // =========================================================
+        // I. Request Linking
+        // =========================================================
+        {
+            itemType: "group",
+            caption: "I. Request Linking",
+            colCount: 2,
+            items: [
+                { dataField: "ResRequestNo", label: { text: "RES Request No" } },
+                { dataField: "DocumentId", label: { text: "Document Id" } },
+                { dataField: "AttachmentId", label: { text: "Attachment Id" } },
+                { dataField: "QuotationId", label: { text: "Quotation Id" } },
+                { dataField: "QuotationCodeView", label: { text: "Quotation Code View" } } // todo
+            ]
+        },
+
+        // =========================================================
+        // II. TMI Reference
+        // =========================================================
+        {
+            itemType: "group",
+            caption: "II. TMI Reference",
+            colCount: 2,
+            items: [
+                { dataField: "TmiCode", label: { text: "TMI Code" } }
+            ]
+        },
+
+        // =========================================================
+        // IV. UW / Referral / Comment
+        // =========================================================
+        {
+            itemType: "group",
+            caption: "IV. UW / Referral / Comment",
+            colCount: 2,
+            items: [
+                { dataField: "Reason", label: { text: "Reason" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 80 } },
+                { dataField: "IsReferralRequired", label: { text: "Referral Required" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
+                { dataField: "ReferralReason", label: { text: "Referral Reason" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 80 } },
+                { dataField: "UwAuthorityCondition", label: { text: "UW Authority Condition" } },
+                { dataField: "UwAuthorityForm", label: { text: "UW Authority Form" } },
+                { dataField: "RiskGrade", label: { text: "Risk Grade" } },
+                { dataField: "ShowRiskGrade", label: { text: "Show Risk Grade" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
+                { dataField: "MktProposalComment", label: { text: "MKT Proposal Comment" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 100 } },
+                { dataField: "UwComment", label: { text: "UW Comment" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 100 } },
+                {
+                    itemType: "group",
+                    caption: "UW Comment Attachment",
+                    colCount: 1,
+                    colSpan: 2,
+                    items: [
+                        {
+                            dataField: "UwCommentAttachment",
+                            label: { text: "UW Comment Attachment" },
+                            editorType: "dxFileUploader",
+                            editorOptions: {
+                                name: "files"
+                            },
+                            template: function (data, itemElement) {
+                                setTimeout(function () {
+                                    var item = new Object();
+                                    item.editorType = "dxFileUploader";
+                                    item.sectionName = "UwCommentAttachment";
+                                    createEditor(item, itemElement, $("<div>"), null);
+                                }, 300);
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+
+        // =========================================================
+        // V. Sum Insured / Retention / Financial
+        // =========================================================
+        {
+            itemType: "group",
+            caption: "V. Sum Insured / Retention / Financial",
+            colCount: 2,
+            items: [
+                { dataField: "TotalSumInsured", label: { text: "Total Sum Insured" }, editorType: "dxNumberBox" },
+                { dataField: "IsTsiCalculated", label: { text: "TSI Calculated" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
+
+                { dataField: "TsiPropertyDamage", label: { text: "TSI Property Damage" }, editorType: "dxNumberBox" },
+                { dataField: "TopRiskAmount", label: { text: "Top Risk Amount" }, editorType: "dxNumberBox" },
+
+                { dataField: "TopRiskPropertyDamage", label: { text: "Top Risk Property Damage" }, editorType: "dxNumberBox" },
+                { dataField: "IsTopRiskCalculated", label: { text: "Top Risk Calculated" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
+
+                { dataField: "Exposure", label: { text: "Exposure" }, editorType: "dxNumberBox" },
+                { dataField: "Deductible", label: { text: "Deductible" }, editorType: "dxNumberBox" },
+
+                { dataField: "VoluntaryDeductible", label: { text: "Voluntary Deductible" }, editorType: "dxNumberBox" },
+                { dataField: "TmivShare", label: { text: "TMIV Share" }, editorType: "dxNumberBox" },
+
+                { dataField: "Retention", label: { text: "Retention" }, editorType: "dxNumberBox" },
+                { dataField: "NetRetention", label: { text: "Net Retention" }, editorType: "dxNumberBox" },
+
+                { dataField: "NetRetentionType", label: { text: "Net Retention Type" } },
+                { dataField: "NetRetentionValue", label: { text: "Net Retention Value" }, editorType: "dxNumberBox" },
+
+                { dataField: "TreatySurplus", label: { text: "Treaty Surplus" }, editorType: "dxNumberBox" },
+                { dataField: "CoInsuranceOutward", label: { text: "Co-Insurance Outward" }, editorType: "dxNumberBox" },
+
+                { dataField: "SumAssuredType", label: { text: "Sum Assured Type" } },
+                { dataField: "SumAssuredValue", label: { text: "Sum Assured Value" }, editorType: "dxNumberBox" }
+            ]
+        },
+
+        // =========================================================
+        // VI. Risk Information / Survey
+        // =========================================================
+        {
+            itemType: "group",
+            caption: "VI. Risk Information / Survey",
+            colCount: 2,
+            items: [
+                { dataField: "PropertyTypeList", label: { text: "Property Type List" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 80 } },
+                { dataField: "Protection", label: { text: "Protection" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 80 } },
+                { dataField: "MoreInfo", label: { text: "More Info" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 80 } },
+                { dataField: "NonAppetiteRisk", label: { text: "Non-Appetite Risk" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 80 } },
+
+                { dataField: "IsNonAppetiteRisk", label: { text: "Is Non-Appetite Risk" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
+                { dataField: "Capacity", label: { text: "Capacity" }, editorType: "dxTextArea", editorOptions: { height: 80 } },
+
+                { dataField: "HasCapacity", label: { text: "Has Capacity" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
+                { dataField: "Construction", label: { text: "Construction" } },
+
+                { dataField: "Management", label: { text: "Management" } },
+                { dataField: "OperationYearOfRisk", label: { text: "Operation Year Of Risk" }, editorType: "dxNumberBox" },
+
+                { dataField: "CurrentInsurer", label: { text: "Current Insurer" } },
+                { dataField: "SurveyResult", label: { text: "Survey Result" }, editorType: "dxTextArea", editorOptions: { height: 80 } },
+
+                { dataField: "HasSurveyResult", label: { text: "Has Survey Result" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
+
+                {
+                    itemType: "group",
+                    caption: "Survey Result Attachment",
+                    colCount: 1,
+                    colSpan: 2,
+                    items: [
+                        {
+                            dataField: "SurveyResultAttachment",
+                            label: { text: "Survey Result Attachment" },
+                            editorType: "dxFileUploader",
+                            editorOptions: {
+                                name: "files"
+                            },
+                            template: function (data, itemElement) {
+                                setTimeout(function () {
+                                    var item = new Object();
+                                    item.editorType = "dxFileUploader";
+                                    item.sectionName = "SurveyResultAttachment";
+                                    createEditor(item, itemElement, $("<div>"), null);
+                                }, 300);
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+
+        // =========================================================
+        // VII. Loss History / RI Arrangement
+        // =========================================================
+        {
+            itemType: "group",
+            caption: "VII. Loss History / RI Arrangement",
+            colCount: 2,
+            items: [
+                { dataField: "LossHistoryAcc", label: { text: "Loss History Accumulated" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 80 } },
+                { dataField: "LossHistoryAccNoClaim", label: { text: "Loss History No Claim" }, editorType: "dxNumberBox" },
+                { dataField: "LossHistoryAccPremium", label: { text: "Loss History Premium" }, editorType: "dxNumberBox" },
+                { dataField: "LossHistoryAccLossAmount", label: { text: "Loss History Loss Amount" }, editorType: "dxNumberBox" },
+                { dataField: "LossHistoryAccRatio", label: { text: "Loss History Ratio" }, editorType: "dxNumberBox" },
+                { dataField: "RiArrangement", label: { text: "RI Arrangement" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 80 } },
+
+                {
+                    itemType: "group",
+                    caption: "RI Arrangement Attachment",
+                    colCount: 1,
+                    colSpan: 2,
+                    items: [
+                        {
+                            dataField: "RiArrangementAttachment",
+                            label: { text: "RI Arrangement Attachment" },
+                            editorType: "dxFileUploader",
+                            editorOptions: {
+                                name: "files"
+                            },
+                            template: function (data, itemElement) {
+                                setTimeout(function () {
+                                    var item = new Object();
+                                    item.editorType = "dxFileUploader";
+                                    item.sectionName = "RiArrangementAttachment";
+                                    createEditor(item, itemElement, $("<div>"), null);
+                                }, 300);
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+
+        // =========================================================
+        // VIII. Others / BI
+        // =========================================================
+        {
+            itemType: "group",
+            caption: "VIII. Others / BI",
+            colCount: 2,
+            items: [
+                { dataField: "IsOthers", label: { text: "Is Others" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
+                { dataField: "IsOthersForm", label: { text: "Is Others Form" } },
+                { dataField: "ShowNameBizForm", label: { text: "Show Name Biz Form" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
+                { dataField: "BiQuotation", label: { text: "BI Quotation" } },
+                { dataField: "TsiFromBiForm", label: { text: "TSI From BI Form" }, editorType: "dxNumberBox" }
+            ]
+        }
+    ];
+   
+                       var popupInstance = makePopup("large", "Res");
+                        popupInstance.option("contentTemplate", function (container) {
+     
+                       var _formConfig = new MFormOption();
+                            _formConfig.originModelName = "Res";
+                            _formConfig.colCount = 1;
+                            _formConfig.container = $(`<div id = "form_${_formConfig.originModelName}_${0}" style="padding: 10px; margin-right: 0px" >`);
+
+                            var form =  new ResFormQuotationForm(0, null, _formConfig, _formConfig);
+                            // var scrollView = $(`<div>`);
+                            // scrollView.dxScrollView({
+                            //     width: "100%",
+                            //     height: "100%",
+                            //     useNative: false 
+                            // });
+                            var scrollView = popupStandardContentByScroll(form.container);
+                            scrollView.appendTo(container);
+                            form.formInstance.option("items", resItems);
+
+                    });
+                    popupInstance.show();
+
+                    }
+                    });
 </script>

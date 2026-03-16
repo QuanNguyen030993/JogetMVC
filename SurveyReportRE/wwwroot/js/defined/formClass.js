@@ -3063,7 +3063,14 @@ var QuotationForm = class QuotationForm extends MForm {
 
 }
 
-
+var ResFormQuotationForm = class ResFormQuotationForm extends MForm {
+    constructor(id, childGridConfig, formConfig, mFormOption) {
+        super(id, childGridConfig, formConfig, mFormOption)
+        //this.parentQuotationId = 0;
+        //if (formConfig.parentQuotationId)
+        //    this.parentQuotationId = formConfig.parentQuotationId;
+    }
+}
 
 var ReferenceQuotationForm = class ReferenceQuotationForm extends MForm {
     constructor(id, childGridConfig, formConfig, mFormOption) {
