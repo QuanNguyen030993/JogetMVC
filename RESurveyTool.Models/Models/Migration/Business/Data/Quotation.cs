@@ -283,6 +283,8 @@ public class Quotation : BaseModel
     public string? ProductCode { get; set; } = "";
     public long? ReinsuranceId { get; set; }
     public EnumData? ReinsuranceEnum { get; set; }
+    public long? LocationId { get; set; }
+    public Location? LocationFK { get; set; }
     // =========================================================
     // Ý 9 — Attachment/email fields (commented-out + TODO)
     // =========================================================
