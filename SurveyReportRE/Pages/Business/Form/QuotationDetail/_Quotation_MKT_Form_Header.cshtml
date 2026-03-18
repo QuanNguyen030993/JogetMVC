@@ -13,6 +13,7 @@
 <script>
     setTimeout( () => {
     var formItems = $("#formMKT").dxForm("instance")?.option("formData") || {};
+
     renderDepartmentAssigneeBox("#mktAssigneeBox", {
         groupName: "MKT",
         dataForm: formItems,
@@ -54,11 +55,11 @@
             caption: "I. Request Linking",
             colCount: 2,
             items: [
-                { dataField: "ResRequestNo", label: { text: "RES Request No" } },
-                { dataField: "DocumentId", label: { text: "Document Id" } },
-                { dataField: "AttachmentId", label: { text: "Attachment Id" } },
-                { dataField: "QuotationId", label: { text: "Quotation Id" } },
-                { dataField: "QuotationCodeView", label: { text: "Quotation Code View" } } // todo
+                { dataField: "resRequestNo", label: { text: "RES Request No" } },
+                { dataField: "documentId", label: { text: "Document Id" } },
+                { dataField: "attachmentId", label: { text: "Attachment Id" } },
+                { dataField: "quotationId", label: { text: "Quotation Id" } },
+                { dataField: "quotationCodeView", label: { text: "Quotation Code View" } } // todo
             ]
         },
 
@@ -70,7 +71,7 @@
             caption: "II. TMI Reference",
             colCount: 2,
             items: [
-                { dataField: "TmiCode", label: { text: "TMI Code" } }
+                { dataField: "tmiCode", label: { text: "TMI Code" } }
             ]
         },
 
@@ -82,15 +83,15 @@
             caption: "IV. UW / Referral / Comment",
             colCount: 2,
             items: [
-                { dataField: "Reason", label: { text: "Reason" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 80 } },
-                { dataField: "IsReferralRequired", label: { text: "Referral Required" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
-                { dataField: "ReferralReason", label: { text: "Referral Reason" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 80 } },
-                { dataField: "UwAuthorityCondition", label: { text: "UW Authority Condition" } },
-                { dataField: "UwAuthorityForm", label: { text: "UW Authority Form" } },
-                { dataField: "RiskGrade", label: { text: "Risk Grade" } },
-                { dataField: "ShowRiskGrade", label: { text: "Show Risk Grade" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
-                { dataField: "MktProposalComment", label: { text: "MKT Proposal Comment" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 100 } },
-                { dataField: "UwComment", label: { text: "UW Comment" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 100 } },
+                { dataField: "reason", label: { text: "Reason" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 80 } },
+                { dataField: "isReferralRequired", label: { text: "Referral Required" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
+                { dataField: "referralReason", label: { text: "Referral Reason" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 80 } },
+                { dataField: "uwAuthorityCondition", label: { text: "UW Authority Condition" } },
+                { dataField: "uwAuthorityForm", label: { text: "UW Authority Form" } },
+                { dataField: "riskGrade", label: { text: "Risk Grade" } },
+                { dataField: "showRiskGrade", label: { text: "Show Risk Grade" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
+                { dataField: "mktProposalComment", label: { text: "MKT Proposal Comment" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 100 } },
+                { dataField: "uwComment", label: { text: "UW Comment" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 100 } },
                 {
                     itemType: "group",
                     caption: "UW Comment Attachment",
@@ -126,32 +127,32 @@
             caption: "V. Sum Insured / Retention / Financial",
             colCount: 2,
             items: [
-                { dataField: "TotalSumInsured", label: { text: "Total Sum Insured" }, editorType: "dxNumberBox" },
-                { dataField: "IsTsiCalculated", label: { text: "TSI Calculated" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
+                { dataField: "totalSumInsured", label: { text: "Total Sum Insured" }, editorType: "dxNumberBox" },
+                { dataField: "isTsiCalculated", label: { text: "TSI Calculated" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
 
-                { dataField: "TsiPropertyDamage", label: { text: "TSI Property Damage" }, editorType: "dxNumberBox" },
-                { dataField: "TopRiskAmount", label: { text: "Top Risk Amount" }, editorType: "dxNumberBox" },
+                { dataField: "tsiPropertyDamage", label: { text: "TSI Property Damage" }, editorType: "dxNumberBox" },
+                { dataField: "topRiskAmount", label: { text: "Top Risk Amount" }, editorType: "dxNumberBox" },
 
-                { dataField: "TopRiskPropertyDamage", label: { text: "Top Risk Property Damage" }, editorType: "dxNumberBox" },
-                { dataField: "IsTopRiskCalculated", label: { text: "Top Risk Calculated" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
+                { dataField: "topRiskPropertyDamage", label: { text: "Top Risk Property Damage" }, editorType: "dxNumberBox" },
+                { dataField: "isTopRiskCalculated", label: { text: "Top Risk Calculated" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
 
-                { dataField: "Exposure", label: { text: "Exposure" }, editorType: "dxNumberBox" },
-                { dataField: "Deductible", label: { text: "Deductible" }, editorType: "dxNumberBox" },
+                { dataField: "exposure", label: { text: "Exposure" }, editorType: "dxNumberBox" },
+                { dataField: "deductible", label: { text: "Deductible" }, editorType: "dxNumberBox" },
 
-                { dataField: "VoluntaryDeductible", label: { text: "Voluntary Deductible" }, editorType: "dxNumberBox" },
-                { dataField: "TmivShare", label: { text: "TMIV Share" }, editorType: "dxNumberBox" },
+                { dataField: "voluntaryDeductible", label: { text: "Voluntary Deductible" }, editorType: "dxNumberBox" },
+                { dataField: "tmivShare", label: { text: "TMIV Share" }, editorType: "dxNumberBox" },
 
-                { dataField: "Retention", label: { text: "Retention" }, editorType: "dxNumberBox" },
-                { dataField: "NetRetention", label: { text: "Net Retention" }, editorType: "dxNumberBox" },
+                { dataField: "retention", label: { text: "Retention" }, editorType: "dxNumberBox" },
+                { dataField: "netRetention", label: { text: "Net Retention" }, editorType: "dxNumberBox" },
 
-                { dataField: "NetRetentionType", label: { text: "Net Retention Type" } },
-                { dataField: "NetRetentionValue", label: { text: "Net Retention Value" }, editorType: "dxNumberBox" },
+                { dataField: "netRetentionType", label: { text: "Net Retention Type" } },
+                { dataField: "netRetentionValue", label: { text: "Net Retention Value" }, editorType: "dxNumberBox" },
 
-                { dataField: "TreatySurplus", label: { text: "Treaty Surplus" }, editorType: "dxNumberBox" },
-                { dataField: "CoInsuranceOutward", label: { text: "Co-Insurance Outward" }, editorType: "dxNumberBox" },
+                { dataField: "treatySurplus", label: { text: "Treaty Surplus" }, editorType: "dxNumberBox" },
+                { dataField: "coInsuranceOutward", label: { text: "Co-Insurance Outward" }, editorType: "dxNumberBox" },
 
-                { dataField: "SumAssuredType", label: { text: "Sum Assured Type" } },
-                { dataField: "SumAssuredValue", label: { text: "Sum Assured Value" }, editorType: "dxNumberBox" }
+                { dataField: "sumAssuredType", label: { text: "Sum Assured Type" } },
+                { dataField: "sumAssuredValue", label: { text: "Sum Assured Value" }, editorType: "dxNumberBox" }
             ]
         },
 
@@ -163,24 +164,24 @@
             caption: "VI. Risk Information / Survey",
             colCount: 2,
             items: [
-                { dataField: "PropertyTypeList", label: { text: "Property Type List" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 80 } },
-                { dataField: "Protection", label: { text: "Protection" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 80 } },
-                { dataField: "MoreInfo", label: { text: "More Info" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 80 } },
-                { dataField: "NonAppetiteRisk", label: { text: "Non-Appetite Risk" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 80 } },
+                { dataField: "propertyTypeList", label: { text: "Property Type List" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 80 } },
+                { dataField: "protection", label: { text: "Protection" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 80 } },
+                { dataField: "moreInfo", label: { text: "More Info" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 80 } },
+                { dataField: "nonAppetiteRisk", label: { text: "Non-Appetite Risk" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 80 } },
 
-                { dataField: "IsNonAppetiteRisk", label: { text: "Is Non-Appetite Risk" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
-                { dataField: "Capacity", label: { text: "Capacity" }, editorType: "dxTextArea", editorOptions: { height: 80 } },
+                { dataField: "isNonAppetiteRisk", label: { text: "Is Non-Appetite Risk" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
+                { dataField: "capacity", label: { text: "Capacity" }, editorType: "dxTextArea", editorOptions: { height: 80 } },
 
-                { dataField: "HasCapacity", label: { text: "Has Capacity" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
-                { dataField: "Construction", label: { text: "Construction" } },
+                { dataField: "hasCapacity", label: { text: "Has Capacity" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
+                { dataField: "construction", label: { text: "Construction" } },
 
-                { dataField: "Management", label: { text: "Management" } },
-                { dataField: "OperationYearOfRisk", label: { text: "Operation Year Of Risk" }, editorType: "dxNumberBox" },
+                { dataField: "management", label: { text: "Management" } },
+                { dataField: "operationYearOfRisk", label: { text: "Operation Year Of Risk" }, editorType: "dxNumberBox" },
 
-                { dataField: "CurrentInsurer", label: { text: "Current Insurer" } },
-                { dataField: "SurveyResult", label: { text: "Survey Result" }, editorType: "dxTextArea", editorOptions: { height: 80 } },
+                { dataField: "currentInsurer", label: { text: "Current Insurer" } },
+                { dataField: "surveyResult", label: { text: "Survey Result" }, editorType: "dxTextArea", editorOptions: { height: 80 } },
 
-                { dataField: "HasSurveyResult", label: { text: "Has Survey Result" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
+                { dataField: "hasSurveyResult", label: { text: "Has Survey Result" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
 
                 {
                     itemType: "group",
@@ -217,12 +218,12 @@
             caption: "VII. Loss History / RI Arrangement",
             colCount: 2,
             items: [
-                { dataField: "LossHistoryAcc", label: { text: "Loss History Accumulated" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 80 } },
-                { dataField: "LossHistoryAccNoClaim", label: { text: "Loss History No Claim" }, editorType: "dxNumberBox" },
-                { dataField: "LossHistoryAccPremium", label: { text: "Loss History Premium" }, editorType: "dxNumberBox" },
-                { dataField: "LossHistoryAccLossAmount", label: { text: "Loss History Loss Amount" }, editorType: "dxNumberBox" },
-                { dataField: "LossHistoryAccRatio", label: { text: "Loss History Ratio" }, editorType: "dxNumberBox" },
-                { dataField: "RiArrangement", label: { text: "RI Arrangement" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 80 } },
+                { dataField: "lossHistoryAcc", label: { text: "Loss History Accumulated" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 80 } },
+                { dataField: "lossHistoryAccNoClaim", label: { text: "Loss History No Claim" }, editorType: "dxNumberBox" },
+                { dataField: "lossHistoryAccPremium", label: { text: "Loss History Premium" }, editorType: "dxNumberBox" },
+                { dataField: "lossHistoryAccLossAmount", label: { text: "Loss History Loss Amount" }, editorType: "dxNumberBox" },
+                { dataField: "lossHistoryAccRatio", label: { text: "Loss History Ratio" }, editorType: "dxNumberBox" },
+                { dataField: "riArrangement", label: { text: "RI Arrangement" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 80 } },
 
                 {
                     itemType: "group",
@@ -259,29 +260,31 @@
             caption: "VIII. Others / BI",
             colCount: 2,
             items: [
-                { dataField: "IsOthers", label: { text: "Is Others" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
-                { dataField: "IsOthersForm", label: { text: "Is Others Form" } },
-                { dataField: "ShowNameBizForm", label: { text: "Show Name Biz Form" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
-                { dataField: "BiQuotation", label: { text: "BI Quotation" } },
-                { dataField: "TsiFromBiForm", label: { text: "TSI From BI Form" }, editorType: "dxNumberBox" }
+                { dataField: "isOthers", label: { text: "Is Others" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
+                { dataField: "isOthersForm", label: { text: "Is Others Form" } },
+                { dataField: "showNameBizForm", label: { text: "Show Name Biz Form" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
+                { dataField: "biQuotation", label: { text: "BI Quotation" } },
+                { dataField: "tsiFromBiForm", label: { text: "TSI From BI Form" }, editorType: "dxNumberBox" }
             ]
         }
     ];
-   
+
                        var popupInstance = makePopup("large", "Res");
                         popupInstance.option("contentTemplate", function (container) {
-     
+
                        var _formConfig = new MFormOption();
                             _formConfig.originModelName = "Res";
+                            _formConfig.formElementName = "Res";
                             _formConfig.colCount = 1;
-                            _formConfig.container = $(`<div id = "form_${_formConfig.originModelName}_${0}" style="padding: 10px; margin-right: 0px" >`);
-
-                            var form =  new ResFormQuotationForm(0, null, _formConfig, _formConfig);
+                            var parentFormData = $("#formMKT").dxForm("instance")?.option("formData");
+                            console.log(parentFormData);
+                            _formConfig.container = $(`<div id = "form_${_formConfig.originModelName}_${parentFormData.resId}" style="padding: 10px; margin-right: 0px" >`);
+                            var form =  new ResFormQuotationForm(parentFormData.resId, null, _formConfig, _formConfig);
                             // var scrollView = $(`<div>`);
                             // scrollView.dxScrollView({
                             //     width: "100%",
                             //     height: "100%",
-                            //     useNative: false 
+                            //     useNative: false
                             // });
                             var scrollView = popupStandardContentByScroll(form.container);
                             scrollView.appendTo(container);

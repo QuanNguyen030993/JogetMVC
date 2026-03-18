@@ -523,8 +523,9 @@ Note:
         var selectedCodeNo = quotes[0]?.quotationCode;
 
         var commentPanelOpened = false;
+        let stageDept = quotes[0]?.stageDept;        
 
-        let stageDept = quotes[0]?.stageDept;                 // status ring
+        let stageAccount = "";                 // status ring
         let focusDept = _role == "IT" ? "MKT" : _role;        // focus ring
 
         function money(n) { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(n || 0); }
@@ -693,19 +694,41 @@ Note:
         // =========================
         // 3) Updated time per section
         // =========================
-        function updateSectionUpdatedTime(q) {
-            // Nếu bạn có field thật, map vào đây.
-            const map = {
-                MKT: q?.mktUpdatedAt || q?.modifiedDate || q?.updatedAt,
-                TS: q?.tsUpdatedAt,
-                UW: q?.uwUpdatedAt,
-                LMKT: q?.lmktUpdatedAt,
-                PM: q?.pmUpdatedAt
-            };
-            Object.keys(map).forEach(dept => {
-                $(`#upd${dept}`).text("Updated: " + fmtTimeLocal(map[dept]));
-            });
+        // function updateSectionUpdatedTime(q) {
+        //     // Nếu bạn có field thật, map vào đây.
+        //     const map = {
+        //         MKT: q?.mktUpdatedAt || q?.modifiedDate || q?.updatedAt,
+        //         TS: q?.tsUpdatedAt,
+        //         UW: q?.uwUpdatedAt,
+        //         LMKT: q?.lmktUpdatedAt,
+        //         PM: q?.pmUpdatedAt
+        //     };
+        //     Object.keys(map).forEach(dept => {
+        //         $(`#upd${dept}`).text("Updated: " + fmtTimeLocal(map[dept]));
+        //     });
+        // }
+
+           function updateSectionUpdatedTime(q) {
+        let tat = {};
+
+        try {
+            tat = JSON.parse(q?.turnAroundTimeAttributes || "{}");
+        } catch (e) {
+            tat = {};
         }
+
+        const map = {
+            MKT: tat?.MKT?.completeDate || null,
+            TS: tat?.TS?.completeDate || null,
+            UW: tat?.UW?.completeDate || null,
+            LMKT: tat?.LMKT?.completeDate || null,
+            PM: tat?.PM?.completeDate || null
+        };
+
+        Object.keys(map).forEach(dept => {
+            $(`#upd${dept}`).text("Updated: " + fmtTimeLocal(map[dept]));
+        });
+    }
 
         // =========================
         // 4) Tree highlight + scroll
@@ -853,12 +876,12 @@ Note:
             const loadReferenceFields = debounce(function (quoteNo, quoteId) {
                 $("#rightCommentSub").text(`Common fields - ${quoteNo}`);
                  var _formConfig = new MFormOption();
-                            _formConfig.originModelName = "Quotation";
-                            _formConfig.formElementName = "Quotation";
-                            _formConfig.colCount = 1;
-                            _formConfig.container = $(`<div id = "form_Quotation_${quoteId}" style="padding: 10px" >`);
-                            var form =  new ReferenceQuotationForm(quoteId, null, _formConfig, _formConfig);
-                            form.container.appendTo($("#rightCommentList"));
+                 _formConfig.originModelName = "Quotation";
+                 _formConfig.formElementName = "Quotation";
+                 _formConfig.colCount = 1;
+                 _formConfig.container = $(`<div id = "form_Quotation_${quoteId}" style="padding: 10px" >`);
+                 var form =  new ReferenceQuotationForm(quoteId, null, _formConfig, _formConfig);
+                 form.container.appendTo($("#rightCommentList"));
                 
             }, 180);
 
@@ -979,7 +1002,7 @@ Note:
                 .attr("class", `statusTag ${statusClass(st)}`);
 
             // stage/focus pills
-            $("#stageDeptPill").text(`Quotation pending at: ${stageDept}`);
+            $("#stageDeptPill").text(`Quotation pending at: ${stageDept} - ${stageAccount}`);
             $("#focusDeptPill").text(`Focus: ${focusDept}`);
 
             deptData.MKT = { ...q, sectionName: "MKT", code: q.quotationCode };
@@ -1009,8 +1032,10 @@ Note:
             }
             data.forEach(q => {
                 var isSel = q.id === selectedId;
+
+                pICs.push({quotationCode: q.quotationCode, pIC: q.pIC});
                 $root.append(`
-                    <div class="quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-codeno="${q.quotationCode}" data-stagedept="${q.stageDept}">
+                    <div class="quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-codeno="${q.quotationCode}" data-stagedept="${q.stageDept}" data-stageaccount="${parsePicMap(q.pIC)[q.stageDept]}">
                         <div class="quoteTop">
                             <div>
                                 <div class="quoteClient">${q.clientName || ""}</div>
@@ -1038,7 +1063,6 @@ Note:
                     </div>
                 `);
 
-                pICs.push({quotationCode: q.quotationCode, pIC: q.pIC});
             });
 
             $(".quoteCard").off("click").on("click", function () {
@@ -1046,6 +1070,8 @@ Note:
                 selectedCodeNo = $(this).attr("data-codeno");
                 stageDept = $(this).attr("data-stagedept");
                 PIC_JSON = pICs.find(f => f.quotationCode ==  selectedCodeNo ).pIC;
+                stageAccount = $(this).attr("data-stageaccount");
+
                 renderDeptCallouts(PIC_JSON);
                 // focus ring về đúng role hiện tại
                 focusDept = currentUserRole;
@@ -1353,13 +1379,15 @@ Note:
         bindSectionHeaderToggle();
 
         renderList();
+        PIC_JSON = pICs.find(f => f.quotationCode ==  selectedCodeNo).pIC;
+        stageAccount = PIC_JSON[stageDept];                 // status ring
         renderDetail();
         setupDeptTree();
 
         applyNodeHighlights();
         applySectionFocusHighlight();
         updateHints();
-        PIC_JSON = pICs.find(f => f.quotationCode ==  selectedCodeNo ).pIC;
+
         renderDeptCallouts(PIC_JSON);
 
         setTimeout(layoutTreeLine, 0);

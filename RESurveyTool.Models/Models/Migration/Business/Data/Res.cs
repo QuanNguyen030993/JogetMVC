@@ -6,8 +6,6 @@ public class Res : BaseModel
     // I — Header / Request / Linkage
     // =========================
     public string? ResRequestNo { get; set; }        // c_reqResNo
-    public string? QuotationId { get; set; }         // c_jogetQuoNum
-    public Quotation? QuotationFK { get; set; }
     public string? DocumentId { get; set; }          // from c_atId
     public Document? DocumentFK { get; set; }   
     public string? AttachmentId { get; set; }        // from c_atId
