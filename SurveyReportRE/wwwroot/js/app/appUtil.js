@@ -266,8 +266,13 @@ var appErrorHandling = function (message, err) {
 
                     break;
                 default:
-                    message = `${err.responseText}. ${err.stack}`;
-                    break;
+                    {
+                        if (err.responseText)
+                            message = `${message} ${err.responseText}. ${err.stack}`;
+                        else
+                            message = `${message} ${err}`;
+                        break;
+                    }
             }
         }
         console.log(err);
@@ -640,28 +645,38 @@ function RenderGridElement(_gridConfig, gridInstance) {
 }
 
 function getModelConfig(model, isFilter = true) {
-    var modelConfig = [];
-    if (_sysTables.length == 0)
-        $.ajax({
-            url: `/api/SysTable/GetAll`,
-            type: 'GET',
-            async: false,
-            success: function (response) {
-                modelConfig = response;
-                if (_sysTables.length == 0) {
-                    _sysTables = response;
+    var modelConfig = null;
+
+    $.ajax({
+        url: `/api/Utility/GetSTConfig/${model}`,
+        type: 'GET',
+        async: false,
+        success: function (response) {
+
+            // Case 1: response là ARRAY
+            if (Array.isArray(response)) {
+                if (isFilter) {
+                    modelConfig = response.find(f => f.name === model) || null;
+                } else {
+                    modelConfig = response;
                 }
-            },
-            error: function () {
-                appErrorHandling(" Table is not defined!");
             }
-        });
-    else
-        modelConfig = _sysTables;
-    if (isFilter)
-        return modelConfig.find(f => f.name == model);
-    else
-        return modelConfig;
+            // Case 2: response là OBJECT
+            else if (typeof response === "object" && response !== null) {
+                modelConfig = response;
+            }
+            // Case fallback
+            else {
+                modelConfig = null;
+            }
+        },
+        error: function (error) {
+            _genericExceptionMessage = error.responseText;
+            modelConfig = null;
+        }
+    });
+
+    return modelConfig;
 }
 
 //function getSchemeConfig() {
@@ -2182,42 +2197,65 @@ function fetchConfigurationData(model, typeScheme = null) {
 }
 
 function makeBasicDataSource(instance, isForm = false) {
-    var checkCustomQueryByModel = null;
-    if (_sysTables) {
-        checkCustomQueryByModel = _sysTables.find(f => f.name == instance.ModelName);
-    }
-    if (!isForm) {
-
-        let filter = null;
-        if (instance.filterRefId != null && instance.filterRefField != null) {
-            filter = [instance.filterRefField, "=", instance.filterRefId];
-        }
-
-        if (instance.filterRefField2 != null) {
-            if (filter) {
-                if (instance.filterRefId2 == null)
-                    filter = [
-                        filter, "and", [instance.filterRefField2, "=", null]
-                    ];
-                else
-                    filter = [
-                        filter, "and", [instance.filterRefField2, "=", instance.filterRefId2]
-                    ];
+    try {
+        var checkCustomQueryByModel = null;
+        checkCustomQueryByModel = getModelConfig(instance.ModelName);
+        if (checkCustomQueryByModel == null) throw _genericExceptionMessage;
+        if (!isForm) {
+            let filter = null;
+            if (instance.filterRefId != null && instance.filterRefField != null) {
+                filter = [instance.filterRefField, "=", instance.filterRefId];
             }
-        }
 
-        if (checkCustomQueryByModel != null || checkCustomQueryByModel != undefined) {
-            if (checkCustomQueryByModel.customQuery != "" && checkCustomQueryByModel.customQuery != null && checkCustomQueryByModel.customQuery != undefined) {
-                return new DevExpress.data.DataSource({
-                    load: function () {
-                        return $.ajax({
-                            url: `/api/${instance.ModelName}/ExecuteCustomQuery`,
-                            method: "POST",
-                            contentType: "application/json",
-                            data: JSON.stringify(checkCustomQueryByModel.customQuery)
-                        });
-                    }
-                });
+            if (instance.filterRefField2 != null) {
+                if (filter) {
+                    if (instance.filterRefId2 == null)
+                        filter = [
+                            filter, "and", [instance.filterRefField2, "=", null]
+                        ];
+                    else
+                        filter = [
+                            filter, "and", [instance.filterRefField2, "=", instance.filterRefId2]
+                        ];
+                }
+            }
+
+            if (checkCustomQueryByModel != null || checkCustomQueryByModel != undefined) {
+                if (checkCustomQueryByModel.customQuery == "OnSystem") {
+                    return new DevExpress.data.DataSource({
+                        load: function () {
+                            return $.ajax({
+                                url: `/api/${instance.ModelName}/ExecuteCustomQuery`,
+                                method: "POST",
+                                contentType: "application/json",
+                                data: JSON.stringify(checkCustomQueryByModel.customQuery)
+                            });
+                        }
+                    });
+                }
+                else {
+                    return new DevExpress.data.DataSource({
+                        filter: filter,
+                        store: DevExpress.data.AspNet.createStore({
+                            key: "id",
+                            loadUrl: `/api/${instance.ModelName}/GetAll`,
+                            onBeforeSend: function (method, ajaxOptions) {
+                                if (method === "load") {
+                                    ajaxOptions.data = ajaxOptions.data || {};
+                                    ajaxOptions.headers = {
+                                        "filterField": instance?.filterRefField ?? "",
+                                        "filterField2": instance?.filterRefField2 ?? "",
+                                        "filterValue": instance?.filterRefId ?? "",
+                                        "filterValue2": instance?.filterRefId2 ?? ""
+                                    };
+                                }
+                            },
+                            updateUrl: `/api/${instance.ModelName}/UpdateData`,
+                            insertUrl: `/api/${instance.ModelName}/InsertData`,
+                            deleteUrl: `/api/${instance.ModelName}/DeleteData`
+                        })
+                    });
+                }
             }
             else {
                 return new DevExpress.data.DataSource({
@@ -2225,17 +2263,6 @@ function makeBasicDataSource(instance, isForm = false) {
                     store: DevExpress.data.AspNet.createStore({
                         key: "id",
                         loadUrl: `/api/${instance.ModelName}/GetAll`,
-                        onBeforeSend: function (method, ajaxOptions) {
-                            if (method === "load") {
-                                ajaxOptions.data = ajaxOptions.data || {};
-                                ajaxOptions.headers = {
-                                    "filterField": instance?.filterRefField ?? "",
-                                    "filterField2": instance?.filterRefField2 ?? "",
-                                    "filterValue": instance?.filterRefId ?? "",
-                                    "filterValue2": instance?.filterRefId2 ?? ""
-                                };
-                            }
-                        },
                         updateUrl: `/api/${instance.ModelName}/UpdateData`,
                         insertUrl: `/api/${instance.ModelName}/InsertData`,
                         deleteUrl: `/api/${instance.ModelName}/DeleteData`
@@ -2244,50 +2271,41 @@ function makeBasicDataSource(instance, isForm = false) {
             }
         }
         else {
-            return new DevExpress.data.DataSource({
-                filter: filter,
-                store: DevExpress.data.AspNet.createStore({
-                    key: "id",
-                    loadUrl: `/api/${instance.ModelName}/GetAll`,
-                    updateUrl: `/api/${instance.ModelName}/UpdateData`,
-                    insertUrl: `/api/${instance.ModelName}/InsertData`,
-                    deleteUrl: `/api/${instance.ModelName}/DeleteData`
-                })
-            });
+            let filter = null;
+            filter = ["id", "=", instance.id];
+            if (checkCustomQueryByModel != null || checkCustomQueryByModel != undefined) {
+                if (checkCustomQueryByModel.customQuery == "" || checkCustomQueryByModel.customQuery == null || checkCustomQueryByModel.customQuery == undefined) {
+                    return new DevExpress.data.CustomStore({
+                        load: function () {
+                            if (instance.isQuery) {
+                                if (instance.refFieldName && !instance.isChildForeignKey)
+                                    instance.callApi('GetFKMany', null, null);
+                                else
+                                    instance.callApi('GetSingle', null, null);
+
+                            }
+                        }
+                    });
+                }
+                else {
+                    checkCustomQueryByModel.filter = filter;
+                    return new DevExpress.data.CustomStore({
+                        load: function (loadOptions) {
+                            instance.callApi('CustomQuery', checkCustomQueryByModel, null);
+                            //return $.ajax({
+                            //    url: `/api/${instance.ModelName}/ExecuteCustomQuery`,
+                            //    method: "POST",
+                            //    contentType: "application/json",
+                            //    data: JSON.stringify(checkCustomQueryByModel.customQuery)
+                            //});
+                        }
+                    });
+                }
+            }
         }
     }
-    else {
-        let filter = null;
-        filter = ["id", "=", instance.id];
-        if (checkCustomQueryByModel != null || checkCustomQueryByModel != undefined) {
-            if (checkCustomQueryByModel.customQuery == "" || checkCustomQueryByModel.customQuery == null || checkCustomQueryByModel.customQuery == undefined) {
-                return new DevExpress.data.CustomStore({
-                    load: function () {
-                        if (instance.isQuery) {
-                            if (instance.refFieldName && !instance.isChildForeignKey)
-                                instance.callApi('GetFKMany', null, null);
-                            else
-                                instance.callApi('GetSingle', null, null);
-
-                        }
-                    }
-                });
-            }
-            else {
-                checkCustomQueryByModel.filter = filter;
-                return new DevExpress.data.CustomStore({
-                    load: function (loadOptions) {
-                        instance.callApi('CustomQuery', checkCustomQueryByModel, null);
-                        //return $.ajax({
-                        //    url: `/api/${instance.ModelName}/ExecuteCustomQuery`,
-                        //    method: "POST",
-                        //    contentType: "application/json",
-                        //    data: JSON.stringify(checkCustomQueryByModel.customQuery)
-                        //});
-                    }
-                });
-            }
-        }
+    catch (error) {
+        throw error;
     }
 }
 

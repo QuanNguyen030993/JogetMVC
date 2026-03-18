@@ -23,6 +23,8 @@ using System.Security.Claims;
 using System.Security.Principal;
 using ERPCore.ControllerUtil;
 using MimeMapping;
+using ERPCore.Models.Models.Parsing;
+using ERPCore.Models.Migration.Business.Config;
 
 
 namespace ERPCore.Controllers.Base
@@ -482,6 +484,54 @@ namespace ERPCore.Controllers.Base
             }
         }
 
+        [HttpGet("{ModelName}")]
+        public virtual async Task<ActionResult<SysTable>> GetSTConfig(string ModelName)
+        {
+            BaseRepository<SysTable> sysTableRepo = new BaseRepository<SysTable>(_BaseRepository._baseConfiguration, _httpContextAccessor);
+            dynamic obj = await sysTableRepo.GetSingleObject( s => s.Name == ModelName);
+            if (ModelName == nameof(SysTable)
+                )
+            {
+                obj = await sysTableRepo.GetAll();
+            }
+            if (obj == null && (
+                ModelName == nameof(Constant)
+                || ModelName == nameof(DataGridConfig)
+                || ModelName == nameof(EnumData)
+                || ModelName == nameof(FormatCodeNo)
+                || ModelName == nameof(Roles)
+                || ModelName == nameof(UserRoles)
+                || ModelName == nameof(Users)
+                || ModelName == nameof(Menu)
+                || ModelName == nameof(UsersCache)
+                ))
+            {
+                return Ok(new { Name = ModelName });
+            }
+            if (obj != null)
+            {
+                try
+                {
+                    if (obj is List<SysTable>)
+                    {
+
+                    }
+                    if (obj is IDictionary<string, object> dict && dict.ContainsKey("CustomQuery"))
+                        obj.CustomQuery = "OnSystem";
+                }
+                catch
+                {
+
+                }
+                //string objString = JsonConvert.SerializeObject(obj.Result);
+
+                return Ok(obj);
+            }
+            else
+            {
+                return StatusCode(500,"Model Name is not allowed !!");
+            }
+        }
 
 
         [HttpGet("{id}")]
@@ -544,7 +594,15 @@ namespace ERPCore.Controllers.Base
         [HttpPost]
         public virtual async Task<object> ExecuteCustomQuery([FromBody] string query)
         {
-            object obj = await _BaseRepository.ExecuteCustomQuery(query);
+            object obj = null;
+            if (query == "OnSystem")
+            {
+                var controllerName = ControllerContext.RouteData.Values["controller"]?.ToString();
+                BaseRepository<SysTable> sysTableRepo = new BaseRepository<SysTable>(_BaseRepository._baseConfiguration, _httpContextAccessor);
+                obj = sysTableRepo.GetSingleObject(s => s.Name == controllerName);
+            }                
+            else
+                obj = await _BaseRepository.ExecuteCustomQuery(query);
             return obj;
         }
 

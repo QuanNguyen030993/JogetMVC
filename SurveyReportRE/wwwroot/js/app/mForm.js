@@ -172,10 +172,9 @@
             var that = this;
             var store = makeBasicDataSource(that, true);
             store.load();
-
-
         } catch (err) {
             appErrorHandling('Library error: call MForm.loadData() was failed.', err);
+            this.formInstance = null;
             return;
         }
     }
@@ -454,8 +453,8 @@
         
             
             //$formElement.find(".dx-tabpanel-container").css("height", `100%`);
-            if (that.id > 0)
-                this.loadData();
+            if (that.id > 0) 
+                    this.loadData();
             else
                 this.initDataNewForm();
         } catch (err) {
@@ -551,7 +550,6 @@
     }
 
     //get item from customizeItemLayout()
-    //build form items with scraffold
     buildFormItem() {
         try {
             var that = this;

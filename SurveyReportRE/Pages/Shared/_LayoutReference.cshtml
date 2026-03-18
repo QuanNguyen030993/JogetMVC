@@ -147,25 +147,25 @@
 
 
 
-    var _sysTables = [];
-    $.ajax({
-        url: `/api/SysTable/GetAll`,
-        type: 'GET',
-        async: false,
-        success: function (response) {
-            modelConfig = response;
-            if (_sysTables.length == 0) {
-                _sysTables = response;
-            }
-        },
-        error: function () {
-            appErrorHandling("Load SysTables fail!");
-        }
-    });
+    // var _sysTables = [];
+    // $.ajax({
+    //     url: `/api/SysTable/GetAll`,
+    //     type: 'GET',
+    //     async: false,
+    //     success: function (response) {
+    //         if (_sysTables.length == 0) {
+    //             _sysTables = response;
+    //         }
+    //     },
+    //     error: function () {
+    //         appErrorHandling("Load SysTables fail!");
+    //     }
+    // });
     var _role = "";
     var _loginUser = "";
     var _isSuperUser = "false";
     var _isDebugMode = "false";
+    var _genericExceptionMessage = "";
     const currencyFormatter = "#,##0.## VNĐ";
     const currency4Formatter = "#,##0.#### VNĐ";
     const percentageFormatter = "#,###.## %";

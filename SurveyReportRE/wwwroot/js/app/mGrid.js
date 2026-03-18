@@ -503,6 +503,9 @@ var MGridOption = class MGridOption {
             }
             this.buildGridColumn(fetchConfig.getScheme);
             this.columns = fetchConfig.getScheme;
+
+
+
             this.GridConfig = getModelConfig(that.ModelName, false);
             if (that.gridType == "User")
                 this.GridConfig = getModelConfig(that.ModelName);
