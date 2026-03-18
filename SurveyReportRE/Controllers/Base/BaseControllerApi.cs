@@ -494,7 +494,7 @@ namespace ERPCore.Controllers.Base
             {
                 obj = await sysTableRepo.GetAll();
             }
-            if (obj == null && (
+            if (obj != null && (
                 ModelName == nameof(Constant)
                 || ModelName == nameof(DataGridConfig)
                 || ModelName == nameof(EnumData)
@@ -599,7 +599,8 @@ namespace ERPCore.Controllers.Base
             {
                 var controllerName = ControllerContext.RouteData.Values["controller"]?.ToString();
                 BaseRepository<SysTable> sysTableRepo = new BaseRepository<SysTable>(_BaseRepository._baseConfiguration, _httpContextAccessor);
-                obj = sysTableRepo.GetSingleObject(s => s.Name == controllerName);
+                SysTable sysTable = await sysTableRepo.GetSingleObject(s => s.Name == controllerName);
+                obj = await _BaseRepository.ExecuteCustomQuery(sysTable.CustomQuery);
             }                
             else
                 obj = await _BaseRepository.ExecuteCustomQuery(query);
