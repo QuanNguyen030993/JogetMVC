@@ -7094,3 +7094,80 @@ function makeSelectBoxEditorOptions(dataSource, acceptCustomValue = false ,gridI
         },
     }
 }
+function renderBranchOverlay(currentDept) {
+    const formState = buildFormState();
+    const choices = getNextChoices(currentDept, formState);
+
+    if (!choices.length) {
+        DevExpress.ui.notify("No valid route - please complete required fields", "warning", 1600);
+        return;
+    }
+
+    const $canvas = $("#branchOverlay .branchCanvas");
+    const $svg = $canvas.find("svg").first();
+
+    // clear
+    $svg.find("path").remove();
+    $canvas.find(".bnode").remove();
+
+    const nodeSize = 52;
+    const xRootNode = 14;
+    const xChoiceNode = 182;
+
+    const xRootLine = 40;
+    const xJ = 110;
+    const xRightLine = 200;
+
+    const canvasH = Math.max(140, choices.length * 70);
+    $canvas.css("height", canvasH + "px");
+    $svg.attr("viewBox", `0 0 260 ${canvasH}`);
+
+    const yJ = canvasH / 2;
+    const rootTop = Math.round(yJ - nodeSize / 2);
+
+    $canvas.append(
+        `<div class="bnode root current"
+                      style="left:${xRootNode}px; top:${rootTop}px;"
+                      title="Current role: ${currentDept}">
+                    ${currentDept}
+                 </div>`
+    );
+
+    const topPad = 14;
+    const bottomPad = 14;
+    const yMin = topPad + nodeSize / 2;
+    const yMax = canvasH - bottomPad - nodeSize / 2;
+
+    let ys;
+    if (choices.length === 1) ys = [yJ];
+    else if (choices.length === 2) ys = [yJ - 30, yJ + 30];
+    else ys = choices.map((_, i) => yMin + i * ((yMax - yMin) / (choices.length - 1)));
+
+    const addPath = (d) => $svg.append(`<path d="${d}" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />`);
+
+    if (choices.length === 1) {
+        addPath(`M${xRootLine} ${yJ} L${xRightLine} ${yJ}`);
+    } else {
+        addPath(`M${xRootLine} ${yJ} L${xJ} ${yJ}`);
+        addPath(`M${xJ} ${ys[0]} L${xJ} ${ys[ys.length - 1]}`);
+        ys.forEach(y => addPath(`M${xJ} ${y} L${xRightLine} ${y}`));
+    }
+
+    choices.forEach((dept, i) => {
+        const yChoice = ys[i];
+        const top = Math.round(yChoice - nodeSize / 2);
+        const id = `route_${dept}`;
+
+        $canvas.append(
+            `<div id="${id}" class="bnode choice" style="left:${xChoiceNode}px; top:${top}px;" title="Route to ${dept}">${dept}</div>`
+        );
+
+        $(`#${id}`).off("click").on("click", () => routeTo(dept));
+    });
+}
+
+function openBranchOverlay() {
+    const currentDept = stageDept || focusDept || "MKT";
+    renderBranchOverlay(currentDept);
+    $("#branchOverlay").show();
+}

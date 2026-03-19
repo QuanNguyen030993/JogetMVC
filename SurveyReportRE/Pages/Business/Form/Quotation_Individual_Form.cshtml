@@ -1368,7 +1368,7 @@ Note:
         $("#btnMore").dxDropDownButton({ text: "More", icon: "overflow", items: ["Export", "Print", "Email"], onItemClick: (e) => DevExpress.ui.notify("Mock: " + e.itemData, "info", 1200) });
 
         $("#btnSaveDraft").dxButton({ text: "Save Draft", icon: "save", type: "normal", onClick: () => DevExpress.ui.notify("Mock: saved draft", "success", 1200) });
-        $("#btnSubmitBranch").dxButton({ text: "Submit", icon: "check", type: "success", onClick: openBranchOverlay });
+        $("#btnSubmitBranch").dxButton({ text: "Route To", icon: "check", type: "success", onClick: openBranchOverlay });
 
         $("#branchOverlay .backdrop").on("click", closeBranchOverlay);
 
@@ -1503,6 +1503,9 @@ Note:
                             <div class="dept-body">
                                 @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_MKT_Form")
                             </div>
+                            <div class="dept-header">
+                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_MKT_Form_Footer")
+                            </div>
                         </section>
 
                         <section id="secTS" class="dept-section">
@@ -1511,6 +1514,9 @@ Note:
                             </div>
                             <div class="dept-body">
                                 @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_TS_Form")
+                            </div>
+                            <div class="dept-header">
+                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_TS_Form_Footer")
                             </div>
                         </section>
 
@@ -1521,6 +1527,9 @@ Note:
                             <div class="dept-body">
                                 @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_UW_Form")
                             </div>
+                            <div class="dept-header">
+                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_UW_Form_Footer")
+                            </div>
                         </section>
 
                         <section id="secLMKT" class="dept-section">
@@ -1530,6 +1539,9 @@ Note:
                             <div class="dept-body">
                                 @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_LMKT_Form")
                             </div>
+                            <div class="dept-header">
+                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_LMKT_Form_Footer")
+                            </div>
                         </section>
 
                         <section id="secPM" class="dept-section">
@@ -1538,6 +1550,9 @@ Note:
                             </div>
                             <div class="dept-body">
                                 @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_PM_Form")
+                            </div>
+                            <div class="dept-header">
+                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_PM_Form_Footer")
                             </div>
                         </section>
                     </div>

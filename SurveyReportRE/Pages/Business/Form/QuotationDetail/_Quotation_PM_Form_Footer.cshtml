@@ -1,0 +1,23 @@
+﻿<div class="dept-form-header">
+    <div class="dept-form-header__assign">
+        <div id="pmAssigneeBox"></div>
+    </div>
+</div>
+<div class="dept-hint-wrap">
+    <div class="dept-hint" id="hintPM"></div>
+    <div class="dept-updated" id="updPM" title="Last updated">—</div>
+    <div class="dept-toggle-icon" aria-hidden="true">▾</div>
+</div>
+<script>
+    setTimeout( () => {
+    var formItems = $("#formPM").dxForm("instance")?.option("formData") || {};
+    renderDepartmentAssigneeBox("#pmAssigneeBox", {
+        groupName: "PM",
+        dataForm: formItems,
+        value: formItems.PMAssigneeId || null,
+        onChanged: function (item, editor) {
+        }
+    });
+    }, 1500);
+
+</script>

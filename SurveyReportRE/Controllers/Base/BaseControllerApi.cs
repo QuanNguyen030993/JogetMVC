@@ -494,17 +494,18 @@ namespace ERPCore.Controllers.Base
             {
                 obj = await sysTableRepo.GetAll();
             }
-            if (obj != null && (
+            if ((obj != null && (
+                ModelName == nameof(Roles)
+                || ModelName == nameof(Users)
+                ))  || (obj == null && (
                 ModelName == nameof(Constant)
                 || ModelName == nameof(DataGridConfig)
                 || ModelName == nameof(EnumData)
                 || ModelName == nameof(FormatCodeNo)
-                || ModelName == nameof(Roles)
-                || ModelName == nameof(UserRoles)
-                || ModelName == nameof(Users)
                 || ModelName == nameof(Menu)
                 || ModelName == nameof(UsersCache)
                 ))
+                )
             {
                 return Ok(new { Name = ModelName });
             }
