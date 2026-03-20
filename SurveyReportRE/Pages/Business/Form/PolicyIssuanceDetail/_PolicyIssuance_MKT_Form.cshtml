@@ -1,0 +1,117 @@
+﻿@* @page "{pageNum:int?}"
+@using Newtonsoft.Json *@
+@* @model Quotation_MKT_FormModel *@
+@* @{
+   
+    ViewBag.Title = "Quotation";
+    ViewData["Id"] = 0;
+} *@
+<style>
+    .dx-tabpanel .dx-tabpanel-tabs .dx-tab {
+        width: auto;
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+   
+
+</style>
+<div id="formMKT">
+</div>
+<script type="text/javascript">
+
+
+    $("#formMKT").dxForm({
+    items: [
+
+         {itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
+            ,
+            editorOptions: {
+            name: "files"
+        }
+        ,template: function (data, itemElement) {
+            setTimeout(function () {
+                var item = new Object();
+                item.editorType = "dxFileUploader";
+                item.sectionName = "MKT";
+                createEditor(item, itemElement, $("<div>"), null);
+                // loadAttachmentList("MKT");
+                }, 1000);
+            }
+            
+        }
+        ]},
+                 { dataField:"clientName", label:{text:"Client Name"}, isRequired:true },
+                 { dataField:"requestTypeId", editorType:"dxSelectBox", label:{text:"Request Type"}, editorOptions: makeSelectBoxEditorOptions(_enums.reqType),displayExpr: "value",
+                      valueExpr: "id"
+                 },
+                 { dataField:"reinsuranceId", editorType:"dxSelectBox", label:{text:"Reinsurance"}, 
+                     editorOptions:{ 
+                     items:[{id: 143, value: "FACOUT"}, {id: 144, value: "NO FACOUT"}, {id: 145, value: "Ichigenka"}] ,
+                     displayExpr: "value",
+                      valueExpr: "id"}
+                 },
+                 { dataField:"notes", label:{text:"Notes"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 80 } }, 
+                 { dataField:"surveyNeeded", label:{text:"Survey Needed"}, editorType:"dxSwitch" ,editorOptions:{ switchedOnText: "Yes", switchedOffText: "No"} },
+                 {itemType: "group",
+                caption: "Header  Request",
+                colCount: 3,
+                items: [
+                    { dataField: "requestNo", label: { template: labelTpl("RequestNo - Mã Quotation Request") } },
+                    { dataField: "requestRefNo", label: { template: labelTpl("RequestRefNo - Refversion của request") } },
+                    { dataField: "quotationCode", label: { template: labelTpl("QuotationCode - Mã quotation khi request vào xử lý (Joget)") } },
+                    // ✅ DATE: requestedDate
+                    {
+                      dataField: "requestedDate",
+                      editorType: "dxDateBox",
+                      editorOptions: { displayFormat: "dd/MM/yyyy" },
+                      label: { template: labelTpl("RequestedDate - Ngày yêu cầu") }
+                    },
+
+                    // ✅ DATE: dueDate
+                    {
+                      dataField: "dueDate",
+                      editorType: "dxDateBox",
+                      editorOptions: { displayFormat: "dd/MM/yyyy" },
+                      label: { template: labelTpl("DueDate - Due date") }
+                    },
+                    { dataField: "requestType", label: { template: labelTpl("RequestType - Loại request (ví dụ: New Quotation)") } },
+                    { dataField: "quotationType", label: { template: labelTpl("QuotationType - Loại đơn quotation type (ví dụ: New)") } },
+                    { dataField: "businessChannelName", label: { template: labelTpl("BusinessChannelName - Kênh kinh doanh (name)") } },
+                    { dataField: "sourceOfBusinessName", label: { template: labelTpl("SourceOfBusinessName - Nguồn business (name)") } },
+                    { dataField: "businessChannelDisplayName", label: { template: labelTpl("BusinessChannelDisplayName - Tên hiển thị kênh (name of biz)") } }
+                    ]},{
+        itemType: "group",
+        caption: "Products",
+        colCount: 2,
+        cssClass: "group-readonly",
+        items: [
+            { dataField: "lineName", label: { template: labelTpl("Line") }, editorOptions: { readOnly: true } },
+            { dataField: "productName", label: { template: labelTpl("Product") }, editorOptions: { readOnly: true } },
+        ]
+        },// =========================================================
+    // Client / Policy Holder / Insured (From Quotation - Read only)
+    // =========================================================
+    {
+        itemType: "group",
+        caption: "Client / Policy Holder / Insured",
+        colCount: 3,
+        cssClass: "group-readonly",
+        items: [
+            { dataField: "policyHolder", label: { template: labelTpl("Policy Holder ID") }, editorOptions: { readOnly: true } },
+            { dataField: "insuredId", label: { template: labelTpl("Insured ID") }, editorOptions: { readOnly: true } },
+
+            { dataField: "clientCodePA", label: { template: labelTpl("Client Code (PA)") }, editorOptions: { readOnly: true } },
+            { dataField: "clientCodeJG", label: { template: labelTpl("Client Code (JG)") }, editorOptions: { readOnly: true } },
+
+            { dataField: "clientNameViet", label: { template: labelTpl("Client Name (VI)") }, editorOptions: { readOnly: true } },
+            { dataField: "clientNameEng", label: { template: labelTpl("Client Name (EN)") }, editorOptions: { readOnly: true } },
+
+            { dataField: "businessAddressViet", label: { template: labelTpl("Business Address (VI)") }, editorOptions: { readOnly: true } },
+            { dataField: "businessAddressEng", label: { template: labelTpl("Business Address (EN)") }, editorOptions: { readOnly: true } }
+        ]
+    }
+
+               ]
+    
+    });
+</script>

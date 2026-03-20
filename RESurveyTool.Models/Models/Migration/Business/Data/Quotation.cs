@@ -287,6 +287,7 @@ public class Quotation : BaseModel
     public Location? LocationFK { get; set; }
     public long? ResId { get; set; }
     public Res? ResFK { get; set; }
+    public string? PolicyNo { get; set; } = "";
 
     // =========================================================
     // Ý 9 — Attachment/email fields (commented-out + TODO)

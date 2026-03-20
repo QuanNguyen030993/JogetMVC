@@ -1,0 +1,206 @@
+﻿@* @page "{pageNum:int?}"
+@using Newtonsoft.Json *@
+@* @model Quotation_PM_FormModel *@
+@* @{
+   
+    ViewBag.Title = "Quotation";
+    ViewData["Id"] = 0;
+} *@
+<style>
+    .dx-tabpanel .dx-tabpanel-tabs .dx-tab {
+        width: auto;
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+</style>
+<div id="formPM">
+</div>
+<script type="text/javascript">
+
+    $(`#formPM`).dxForm({
+                 items: [
+                         {itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
+            ,
+            editorOptions: {
+            name: "files"
+        }
+        ,template: function (data, itemElement) {
+            setTimeout(function () {
+                var item = new Object();
+                item.editorType = "dxFileUploader";
+                item.sectionName = "PM";
+                createEditor(item, itemElement, $("<div>"), null);
+                // loadAttachmentList("PM");
+                }, 1000);
+            }
+
+        }
+        ]}
+            
+            ,
+                 { dataField:"approve", label:{text:"PM Status"}, editorType:"dxRadioGroup", editorOptions:{ items:[{text:"Accept",value:true},{text:"Assign",value:false}], layout:"horizontal" }, isRequired:true },
+      // =========================================================
+      // A. Header / Request
+      // =========================================================
+      // {
+      //   itemType: "group",
+      //   caption: "Header / Request",
+      //   colCount: 4,
+      //   items: [
+      //     { dataField: "piRefNum", label: { template: labelTpl("IssueReqNo - Issuance Request Number") } },
+      //     { dataField: "refNum", label: { template: labelTpl("IssueReqRefNo - Reference number") } },
+      //     { dataField: "parent_id", label: { template: labelTpl("ParentRequestId - Parent record id") } },
+
+      //     { dataField: "reqType", label: { template: labelTpl("RequestType - Request type") } },
+      //     { dataField: "piType", label: { template: labelTpl("IssueRequestCategory - PI category") } },
+      //     { dataField: "reqDate", label: { template: labelTpl("RequestDate - Request date") } },
+      //     { dataField: "dueDate", label: { template: labelTpl("DueDate - Due date") } },
+
+      //     { dataField: "jogetQuoNum", label: { template: labelTpl("QuotationCode - Link to quotation") } },
+      //     { dataField: "jogetQuoNum1", label: { template: labelTpl("QuotationCodeAlt - Alternate quotation code") } }
+      //   ]
+      // },
+
+      // =========================================================
+      // B. Policy / PolicyHolder / Product / Line
+      // =========================================================
+      {
+        itemType: "group",
+        caption: "Policy / PolicyHolder / Product / Line",
+        colCount: 2,
+        items: [
+          { dataField: "policyNo", label: { template: labelTpl("PolicyNo - Policy number") } },
+          { dataField: "policyHolder", label: { template: labelTpl("PolicyHolderId - Policy holder") } },
+          { dataField: "policyType", label: { template: labelTpl("PolicyType - Policy type") } },
+
+          { dataField: "productName", label: { template: labelTpl("ProductCode - Product code") } },
+          { dataField: "productType", label: { template: labelTpl("ProductType - Product type") } },
+
+          { dataField: "periodInsStart", label: { template: labelTpl("PolicyPeriodStartDate - Period start") } },
+          { dataField: "dateInsured", label: { template: labelTpl("InsuredDate - Effective date") } },
+
+          { dataField: "quantityOfPolicy", label: { template: labelTpl("PolicyQuantity - Quantity of policy") } }
+
+          // { dataField: "numOfPolicy", ... } // dropped
+        ]
+      },
+
+      // =========================================================
+      // C. PIC / Assignee / Routing (REMOVED)
+      // =========================================================
+      {
+        itemType: "group",
+        caption: "PIC / Assignee / Routing (Removed by design)",
+        colCount: 2,
+        items: [
+          // { dataField: "PM", label: { template: labelTpl("PM") } },
+          // { dataField: "TSIncharged", label: { template: labelTpl("TS Incharged") } },
+          // { dataField: "FOIncharged", label: { template: labelTpl("FO Incharged") } },
+          // { dataField: "assignee", label: { template: labelTpl("Assignee") } },
+          // { dataField: "prePIC", label: { template: labelTpl("Previous PIC") } }
+        ]
+      },
+
+      // =========================================================
+      // D. Status / Timeline
+      // =========================================================
+      {
+        itemType: "group",
+        caption: "Status / Timeline",
+        colCount: 2,
+        items: [
+          { dataField: "piStatus", label: { template: labelTpl("IssueStatusCode - PI status") } },
+          { dataField: "piStatusLabel", label: { template: labelTpl("IssueStatusLabel - PI status label") } },
+          { dataField: "status", label: { template: labelTpl("OverallStatusCode - Overall status") } },
+
+          { dataField: "acceptedDate", label: { template: labelTpl("AcceptedDate - Accepted date") } },
+          { dataField: "dateFOTS", label: { template: labelTpl("FoTsActionDate - FO→TS date") } },
+
+          { dataField: "piNumByPm", label: { template: labelTpl("PiNoByPm - PI number by PM") } },
+          { dataField: "piNumByTs", label: { template: labelTpl("PiNoByTs - PI number by TS") } },
+          { dataField: "piNumByFo", label: { template: labelTpl("PiNoByFo - PI number by FO") } }
+
+          // SLA fields dropped
+        ]
+      },
+
+      // =========================================================
+      // E. Remarks / Notes / Follow-up
+      // =========================================================
+      {
+        itemType: "group",
+        caption: "Remarks / Notes / Follow-up",
+        colCount: 2,
+        items: [
+          { dataField: "remarks", label: { template: labelTpl("Remarks - Current remarks") } },
+          { dataField: "preRemarks", label: { template: labelTpl("PrevRemarks - Previous remarks") } },
+          { dataField: "pmRemarks", label: { template: labelTpl("PmRemarks - PM remarks") } },
+          { dataField: "followUp", label: { template: labelTpl("FollowUpNote - Follow-up") } }
+        ]
+      },
+
+      // =========================================================
+      // F. RI / Co-insurance / Premium
+      // =========================================================
+      {
+        itemType: "group",
+        caption: "RI / Co-insurance / Premium",
+        colCount: 2,
+        items: [
+          { dataField: "RIScheme", label: { template: labelTpl("RI Scheme") } },
+          { dataField: "RIClosings", label: { template: labelTpl("RI Closings") } },
+          { dataField: "finalPremium", label: { template: labelTpl("Final Premium") } },
+          { dataField: "premiumBreakdown", label: { template: labelTpl("Premium Breakdown") } }
+        ]
+      },
+
+      // =========================================================
+      // G. KYC / Compliance / Declaration
+      // =========================================================
+      {
+        itemType: "group",
+        caption: "KYC / Compliance / Declaration",
+        colCount: 2,
+        items: [
+          { dataField: "KYCChecked", label: { template: labelTpl("KYC Checked") } },
+          { dataField: "declaration", label: { template: labelTpl("Declaration") } },
+          { dataField: "URF", label: { template: labelTpl("URF") } },
+          { dataField: "BODApproved", label: { template: labelTpl("BOD Approved") } },
+          { dataField: "holdCover", label: { template: labelTpl("Hold Cover Type") } }
+        ]
+      },
+
+      // =========================================================
+      // H. Asset / Property / Machinery Lists
+      // =========================================================
+      {
+        itemType: "group",
+        caption: "Asset / Property / Machinery Lists",
+        colCount: 2,
+        items: [
+          { dataField: "listOfMachineries", label: { template: labelTpl("List of Machineries") } },
+          { dataField: "typeOfPropertyList", label: { template: labelTpl("Property Type List") } },
+          { dataField: "operationYearofFactories", label: { template: labelTpl("Factory Operation Years") } },
+          { dataField: "global", label: { template: labelTpl("Global Cover") } },
+          { dataField: "piLocation", label: { template: labelTpl("Policy Location") } }
+        ]
+      },
+       { dataField:"follow", label:{text:"Follow"}, editorType:"dxCheckBox"},
+
+      // =========================================================
+      // I. Email / Attachments (TODO)
+      // =========================================================
+      // {
+      //   itemType: "group",
+      //   caption: "Email / Attachments (TODO)",
+      //   colCount: 2,
+      //   items: [
+      //     { dataField: "titleEmail", label: { template: labelTpl("Email Title") } },
+      //     { dataField: "emailCC", label: { template: labelTpl("Email CC") } },
+      //     { dataField: "piAttach", label: { template: labelTpl("PI Attachment") } },
+      //     { dataField: "addiAttachments", label: { template: labelTpl("Additional Attachments") } }
+      //   ]
+      // }
+    ]
+       });
+</script>

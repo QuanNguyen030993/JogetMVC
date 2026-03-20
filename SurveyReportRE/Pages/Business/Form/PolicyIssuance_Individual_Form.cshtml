@@ -1,6 +1,6 @@
 ﻿@page "{pageNum:int?}"
 @using Newtonsoft.Json
-@model Quotation_Individual_FormModel
+@model PolicyIssuance_Individual_FormModel
 @{
 }
 @*
@@ -493,7 +493,7 @@ Note:
         // =========================
         // 0) Data load
         // =========================
-        window.QuotationPage = window.QuotationPage || {
+        window.PolicyIssuancePage = window.PolicyIssuancePage || {
             state: {
                 quotes: [],
                 selectedId: null,
@@ -508,15 +508,18 @@ Note:
             },
             actions: {}
         };
-        const page = window.QuotationPage;
+        const page = window.PolicyIssuancePage;
         const state = page.state;
 
         state.currentUserRole = _role;
         state.focusDept = _role == "IT" ? "MKT" : _role;
         // var quotes = [];
-        var query = "SELECT * FROM Quotation WITH (NOLOCK) ORDER BY CreatedDate DESC"; // Remove this query
+            var query = `SELECT JSON_VALUE(c.ClientName,'$.Eng') AS ClientName,p.*
+    FROM PolicyIssuance p WITH (NOLOCK)
+    LEFT JOIN Client c ON c.Id = p.ClientId
+    ORDER BY CreatedDate DESC`; // Remove this query
         $.ajax({
-            url: `/api/Quotation/ExecuteCustomQuery`,
+            url: `/api/PolicyIssuance/ExecuteCustomQuery`,
             method: "POST",
             async: false,
             contentType: "application/json",
@@ -536,14 +539,15 @@ Note:
 
         // // ===== UI state =====
 
-        var Roles = ["MKT", "TS", "UW", "LMKT", "PM"];
+        // var Roles = ["MKT", "TS", "UW", "LMKT", "PM"];
+        var Roles = ["MKT", "TS", "PM"];
         // var currentUserRole = _role;
         $("#loginRoleLabel").text(state.currentUserRole);
 
         var filter = "all";
         let searchText = "";
         let selectedId = state.quotes[0]?.id;
-        var selectedCodeNo = state.quotes[0]?.quotationCode;
+        var selectedCodeNo = state.quotes[0]?.policyIssuanceCode;
 
         var commentPanelOpened = false;
         let stageDept = state.quotes[0]?.stageDept;
@@ -599,7 +603,7 @@ Note:
             if (searchText) {
                 var t = searchText.toLowerCase();
                 arr = arr.filter(x =>
-                    (x.quotationCode || "").toLowerCase().includes(t) ||
+                    (x.policyIssuanceCode || "").toLowerCase().includes(t) ||
                     (x.clientName || "").toLowerCase().includes(t) ||
                     String(x.requestNo || "").includes(t)
                 );
@@ -645,13 +649,13 @@ Note:
             //Data render to partial
             $("#formMKT").dxForm({ formData: deptData.MKT, readOnly: true, colCount: 1 });
             $("#formTS").dxForm({ formData: deptData.TS, readOnly: true, colCount: 1 });
-            $("#formUW").dxForm({ formData: deptData.UW, readOnly: true, colCount: 1 });
-            $("#formLMKT").dxForm({ formData: deptData.LMKT, readOnly: true, colCount: 1 });
+            // $("#formUW").dxForm({ formData: deptData.UW, readOnly: true, colCount: 1 });
+            // $("#formLMKT").dxForm({ formData: deptData.LMKT, readOnly: true, colCount: 1 });
             $("#formPM").dxForm({ formData: deptData.PM, readOnly: true, colCount: 1 });
             loadDxFileUploaderAttachments("MKT","Document");
             loadDxFileUploaderAttachments("TS","Document");
-            loadDxFileUploaderAttachments("UW","Document");
-            loadDxFileUploaderAttachments("LMKT","Document");
+            // loadDxFileUploaderAttachments("UW","Document");
+            // loadDxFileUploaderAttachments("LMKT","Document");
             loadDxFileUploaderAttachments("PM","Document");
             applyEditLock();
             updateHints();
@@ -1025,14 +1029,14 @@ Note:
                 .attr("class", `statusTag ${statusClass(st)}`);
 
             // stage/focus pills
-            $("#stageDeptPill").text(`Quotation pending at: ${stageDept} - ${stageAccount}`);
+            $("#stageDeptPill").text(`Request pending at: ${stageDept} - ${stageAccount}`);
             $("#focusDeptPill").text(`Focus: ${state.focusDept}`);
 
-            deptData.MKT = { ...q, sectionName: "MKT", code: q.quotationCode };
-            deptData.TS = { ...q, sectionName: "TS", code: q.quotationCode };
-            deptData.UW = { ...q, sectionName: "UW", code: q.quotationCode };
-            deptData.LMKT = { ...q, sectionName: "LMKT", code: q.quotationCode };
-            deptData.PM = { ...q, sectionName: "PM", code: q.quotationCode };
+            deptData.MKT = { ...q, sectionName: "MKT", code: q.policyIssuanceCode };
+            deptData.TS = { ...q, sectionName: "TS", code: q.policyIssuanceCode };
+            deptData.UW = { ...q, sectionName: "UW", code: q.policyIssuanceCode };
+            deptData.LMKT = { ...q, sectionName: "LMKT", code: q.policyIssuanceCode };
+            deptData.PM = { ...q, sectionName: "PM", code: q.policyIssuanceCode };
 
             renderDeptForms();
 
@@ -1056,22 +1060,22 @@ Note:
             data.forEach(q => {
                 var isSel = q.id === selectedId;
 
-                pICs.push({quotationCode: q.quotationCode, pIC: q.pIC});
+                pICs.push({policyIssuanceCode: q.policyIssuanceCode, pIC: q.pIC});
                 $root.append(`
-                    <div class="quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-codeno="${q.quotationCode}" data-stagedept="${q.stageDept}" data-stageaccount="${parsePicMap(q.pIC)[q.stageDept]}">
+                    <div class="quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-codeno="${q.policyIssuanceCode}" data-stagedept="${q.stageDept}" data-stageaccount="${parsePicMap(q.pIC)[q.stageDept]}">
                         <div class="quoteTop">
                             <div>
                                 <div class="quoteClient">${q.clientName || ""}</div>
-                                <div>${q.productName || ""}</div>
+                                <div>${q.policyNo || ""}</div>
                             </div>
-                            <div class="statusTag ${statusClass(q.quotationStatus)}">${statusText(q.quotationStatus)}</div>
+                            <div class="statusTag ${statusClass(q.policyIssuanceStatus)}">${statusText(q.policyIssuanceStatus)}</div>
                         </div>
                         <div class="quoteMeta">
-                            <div class="quotationCode">${q.quotationCode || ""}</div>
+                            <div class="policyIssuanceCode">${q.policyIssuanceCode || ""}</div>
                             <div>${q.lineName || ""}</div>
-                            <div>${(typeof formatDate === "function") ? formatDate(q.requestedDate, "dd-mm-yyyy") : (q.requestedDate || "")}</div>
+                            <div>${(typeof formatDate === "function") ? formatDate(q.requestDate, "dd-mm-yyyy") : (q.requestDate || "")}</div>
                         </div>
-                        <div class="quoteMeta">
+                        @*<div class="quoteMeta">
                             <div>Total Sum Insured</div>
                             <div class="quoteAmount">${money(q.sumInsuredTotal)}</div>
                         </div>
@@ -1082,7 +1086,7 @@ Note:
                         <div class="quoteMeta">
                             <div>Total Due</div>
                             <div class="quoteAmount">${money(q.totalDue)}</div>
-                        </div>
+                        </div>*@
                     </div>
                 `);
 
@@ -1092,7 +1096,7 @@ Note:
                 selectedId = Number($(this).attr("data-id"));
                 selectedCodeNo = $(this).attr("data-codeno");
                 stageDept = $(this).attr("data-stagedept");
-                PIC_JSON = pICs.find(f => f.quotationCode ==  selectedCodeNo ).pIC;
+                PIC_JSON = pICs.find(f => f.policyIssuanceCode ==  selectedCodeNo ).pIC;
                 stageAccount = $(this).attr("data-stageaccount");
 
                 renderDeptCallouts(PIC_JSON);
@@ -1357,7 +1361,7 @@ Note:
 
         $("#btnToggleLeftPane").dxButton({
             icon: "pin",
-            hint: "Thu gọn / mở rộng danh sách quotation",
+            hint: "Thu gọn / mở rộng danh sách items",
             stylingMode: "text",
             onClick: function () {
                 if (grid.classList.contains("left-collapsed")) {
@@ -1381,7 +1385,7 @@ Note:
         // 10) Controls init
         // =========================
         $("#searchBox").dxTextBox({
-            placeholder: "Search quotations...",
+            placeholder: "Search items...",
             stylingMode: "outlined",
             mode: "search",
             onValueChanged: (e) => { searchText = e.value || ""; renderList(); }
@@ -1392,33 +1396,6 @@ Note:
 
         $("#btnSaveDraft").dxButton({ text: "Save Draft", icon: "save", type: "normal", onClick: () => DevExpress.ui.notify("Mock: saved draft", "success", 1200) });
         $("#btnSubmitBranch").dxButton({ text: "Route To", icon: "check", type: "success", onClick: openBranchOverlay });
-        $("#btnClientConfirm").dxButton({ text: "Client Confirm", icon: "check", type: "success", onClick: function (e) {
-                    var quotationConvert = state.quotes.find(x => x.id == selectedId);
-                  
-              
-                    var policyIssuance = new Object();
-                    //quotationData.ClientName = submitSummaryData.clientName;
-                    //quotationData.ClientId = submitSummaryData.clientId;
-                    //quotationData.SurveyNeeded = submitSummaryData.surveyNeeded;
-                    //quotationData.DueDate = submitSummaryData.dueDate;
-                    //quotationData.ReinsuranceId = submitSummaryData.reinsuranceId;
-                    policyIssuance = ObjectPopulateKey(quotationConvert, true, false);
-                    policyIssuance.RequestDate = new Date();
-                    policyIssuance.PIC = `{"MKT":"","TS":"","PM":""}`;
-                    // policyIssuance.StageAccount = submitData.to;
-                    policyIssuance.StageDept = "MKT";
-                    policyIssuance.PolicyIssuanceStatus = "New";
-                    policyIssuance.WorkflowStatus = "Pending";
-
-                        ajaxPost('api/PolicyIssuance/CreatePolicyIssuance', policyIssuance, {
-                            onSuccess: function (response) {
-                                DevExpress.ui.notify("Quotation submitted!", "info", 1200);
-                            },
-                            onError: function (err) {
-                            }
-                        });
-        
-        } });
 
         $("#branchOverlay .backdrop").on("click", closeBranchOverlay);
 
@@ -1429,7 +1406,7 @@ Note:
         bindSectionHeaderToggle();
 
         renderList();
-        PIC_JSON = pICs.find(f => f.quotationCode ==  selectedCodeNo).pIC;
+        PIC_JSON = pICs.find(f => f.policyIssuanceCode ==  selectedCodeNo).pIC;
         stageAccount = PIC_JSON[stageDept];                 // status ring
         renderDetail();
         setupDeptTree();
@@ -1460,7 +1437,7 @@ Note:
                 <div class="cardHeader">
                     <div class="collapse-toggle-wrap">
                         <div id="btnToggleLeftPane"></div>
-                        <div class="h" id="listTitle">Your Quotations</div>
+                        <div class="h" id="listTitle">Your Requests</div>
                     </div>
                     <div id="searchBox" style="width: 210px;"></div>
                 </div>
@@ -1480,7 +1457,7 @@ Note:
                     <div style="display:flex;align-items:center;gap:10px;">
                         <div class="h">Overview</div>
                         <span id="detailStatus" class="statusTag">-</span>
-                        <span id="stageDeptPill" class="pill">Quotation pending at: </span>
+                        <span id="stageDeptPill" class="pill">Request pending at: </span>
                     </div>
                     <div style="display:flex;align-items:center;gap:8px;">
                         <div id="btnCollapseAllTab"></div>
@@ -1527,7 +1504,7 @@ Note:
                                 <div class="dept-callout" data-pic-for="TS"><span class="co-icon"></span><span class="co-text">-</span></div>
                                 <div class="dept-circle">TS</div>
                             </div>
-
+@* 
                             <div class="dept-node" data-key="UW" data-target="#secUW">
                                 <div class="dept-callout" data-pic-for="UW"><span class="co-icon"></span><span class="co-text">-</span></div>
                                 <div class="dept-circle">UW</div>
@@ -1536,7 +1513,7 @@ Note:
                             <div class="dept-node" data-key="LMKT" data-target="#secLMKT">
                                 <div class="dept-callout" data-pic-for="LMKT"><span class="co-icon"></span><span class="co-text">-</span></div>
                                 <div class="dept-circle">LMKT</div>
-                            </div>
+                            </div> *@
 
                             <div class="dept-node" data-key="PM" data-target="#secPM">
                                 <div class="dept-callout" data-pic-for="PM"><span class="co-icon"></span><span class="co-text">-</span></div>
@@ -1548,61 +1525,61 @@ Note:
                     <div id="overviewScroll" class="overview-scroll">
                         <section id="secMKT" class="dept-section">
                             <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_MKT_Form_Header")
+                                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_MKT_Form_Header")
                             </div>
                             <div class="dept-body">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_MKT_Form")
+                                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_MKT_Form")
                             </div>
                             <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_MKT_Form_Footer")
+                                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_MKT_Form_Footer")
                             </div>
                         </section>
 
                         <section id="secTS" class="dept-section">
                             <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_TS_Form_Header")
+                                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_TS_Form_Header")
                             </div>
                             <div class="dept-body">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_TS_Form")
+                                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_TS_Form")
                             </div>
                             <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_TS_Form_Footer")
+                                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_TS_Form_Footer")
                             </div>
                         </section>
 
-                        <section id="secUW" class="dept-section">
-                            <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_UW_Form_Header")
-                            </div>
-                            <div class="dept-body">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_UW_Form")
-                            </div>
-                            <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_UW_Form_Footer")
-                            </div>
-                        </section>
+                        @*       <section id="secUW" class="dept-section">
+                           <div class="dept-header">
+                               @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_UW_Form_Header")
+                           </div>
+                           <div class="dept-body">
+                               @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_UW_Form")
+                           </div>
+                           <div class="dept-header">
+                               @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_UW_Form_Footer")
+                           </div>
+                       </section>
 
-                        <section id="secLMKT" class="dept-section">
-                            <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_LMKT_Form_Header")
-                            </div>
-                            <div class="dept-body">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_LMKT_Form")
-                            </div>
-                            <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_LMKT_Form_Footer")
-                            </div>
-                        </section>
-
+                       <section id="secLMKT" class="dept-section">
+                           <div class="dept-header">
+                               @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_LMKT_Form_Header")
+                           </div>
+                           <div class="dept-body">
+                               @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_LMKT_Form")
+                           </div>
+                           <div class="dept-header">
+                               @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_LMKT_Form_Footer")
+                           </div>
+                       </section>
+*@
                         <section id="secPM" class="dept-section">
                             <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_PM_Form_Header")
+                                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_PM_Form_Header")
                             </div>
                             <div class="dept-body">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_PM_Form")
+                                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_PM_Form")
                             </div>
                             <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_PM_Form_Footer")
+                                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_PM_Form_Footer")
                             </div>
                         </section>
                     </div>
@@ -1622,7 +1599,6 @@ Note:
         <div class="actionRight">
             <div id="btnSaveDraft"></div>
             <div id="btnSubmitBranch"></div>
-            <div id="btnClientConfirm"></div>
         </div>
     </div>
 

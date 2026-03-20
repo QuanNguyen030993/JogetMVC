@@ -1,0 +1,38 @@
+﻿@* 
+<style>
+    .dx-tabpanel .dx-tabpanel-tabs .dx-tab {
+        width: auto;
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+</style>
+<script type="text/javascript">
+
+
+    $(`#formLMKT`).dxForm({
+               items: [ 
+                        {itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
+            ,
+            editorOptions: {
+            name: "files"
+        }
+        ,template: function (data, itemElement) {
+            setTimeout(function () {
+                var item = new Object();
+                item.editorType = "dxFileUploader";
+                item.sectionName = "LMKT";
+                createEditor(item, itemElement, $("<div>"), null);
+                // loadAttachmentList("LMKT");
+                }, 1000);
+            }
+
+        }
+        ]}
+        ,
+             { dataField:"approve", label:{text:"Approval"}, editorType:"dxRadioGroup", editorOptions:{ items:[{text:"Approve",value:true},{text:"Reject",value:false}], layout:"horizontal" }, isRequired:true },
+             { dataField:"comment", label:{text:"Comment"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 80 } }
+           ]
+    });
+</script>
+<div id="formLMKT">
+</div> *@
