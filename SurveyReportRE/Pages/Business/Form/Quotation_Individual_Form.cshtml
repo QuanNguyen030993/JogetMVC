@@ -493,8 +493,28 @@ Note:
         // =========================
         // 0) Data load
         // =========================
-        var quotes = [];
-        var query = "SELECT * FROM Quotation WITH (NOLOCK) ORDER BY CreatedDate DESC";
+        window.QuotationPage = window.QuotationPage || {
+            state: {
+                quotes: [],
+                selectedId: null,
+                selectedCodeNo: null,
+                stageDept: null,
+                stageAccount: "",
+                focusDept: null,
+                currentUserRole: null,
+                picJson: "{}",
+                commentPanelOpened: false,
+                deptData: { MKT: {}, TS: {}, UW: {}, LMKT: {}, PM: {} }
+            },
+            actions: {}
+        };
+        const page = window.QuotationPage;
+        const state = page.state;
+
+        state.currentUserRole = _role;
+        state.focusDept = _role == "IT" ? "MKT" : _role;
+        // var quotes = [];
+        var query = "SELECT * FROM Quotation WITH (NOLOCK) ORDER BY CreatedDate DESC"; // Remove this query
         $.ajax({
             url: `/api/Quotation/ExecuteCustomQuery`,
             method: "POST",
@@ -502,31 +522,34 @@ Note:
             contentType: "application/json",
             data: JSON.stringify(query),
             success: function(data) {
-                  quotes = data;
-
+                  // quotes = data;
+                   state.quotes = Array.isArray(data) ? data : [];
+                    state.selectedId = state.quotes[0]?.id ?? null;
+                    state.selectedCodeNo = state.quotes[0]?.quotationCode ?? null;
+                    state.stageDept = state.quotes[0]?.stageDept ?? null;
             }
         });
 
          if (_isSuperUser)
-       
+
 
 
         // // ===== UI state =====
 
         var Roles = ["MKT", "TS", "UW", "LMKT", "PM"];
-        var currentUserRole = _role;
-        $("#loginRoleLabel").text(currentUserRole);
+        // var currentUserRole = _role;
+        $("#loginRoleLabel").text(state.currentUserRole);
 
         var filter = "all";
         let searchText = "";
-        let selectedId = quotes[0]?.id;
-        var selectedCodeNo = quotes[0]?.quotationCode;
+        let selectedId = state.quotes[0]?.id;
+        var selectedCodeNo = state.quotes[0]?.quotationCode;
 
         var commentPanelOpened = false;
-        let stageDept = quotes[0]?.stageDept;        
+        let stageDept = state.quotes[0]?.stageDept;
 
         let stageAccount = "";                 // status ring
-        let focusDept = _role == "IT" ? "MKT" : _role;        // focus ring
+        // let state.focusDept = _role == "IT" ? "MKT" : _role;        // focus ring
 
         function money(n) { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(n || 0); }
 
@@ -566,7 +589,7 @@ Note:
         function statusText(raw) { return normalizeStatus(raw).text; }
 
         function getSelectedModel() {
-            const q = quotes.find(x => x.id === selectedId) || quotes[0];
+            const q = state.quotes.find(x => x.id === selectedId) || state.quotes[0];
             return q || null;
         }
 
@@ -634,13 +657,13 @@ Note:
             updateHints();
         }
 
-        function applyEditLock() {
+              function applyEditLock() {
             // demo rule: chỉ edit khi login đúng dept
-            const roMKT = !(currentUserRole === "MKT");
-            const roTS = !(currentUserRole === "TS");
-            const roUW = !(currentUserRole === "UW");
-            const roLMKT = !(currentUserRole === "LMKT");
-            const roPM = !(currentUserRole === "PM");
+            const roMKT = !(state.currentUserRole === "MKT");
+            const roTS = !(state.currentUserRole === "TS");
+            const roUW = !(state.currentUserRole === "UW");
+            const roLMKT = !(state.currentUserRole === "LMKT");
+            const roPM = !(state.currentUserRole === "PM");
 
             $("#formMKT").dxForm("instance")?.option("readOnly", roMKT);
             $("#formTS").dxForm("instance")?.option("readOnly", roTS);
@@ -649,22 +672,22 @@ Note:
             $("#formPM").dxForm("instance")?.option("readOnly", roPM);
 
             $("#roleSelect").dxSelectBox({
-          items: Roles, value: currentUserRole, stylingMode:"outlined",
+          items: Roles, value: state.currentUserRole, stylingMode:"outlined",
           onValueChanged: (e) => {
-            currentUserRole = e.value;
-            $("#loginRoleLabel").text(currentUserRole);
+            state.currentUserRole = e.value;
+            $("#loginRoleLabel").text(state.currentUserRole);
             applyEditLock();
             updateHints();
-            DevExpress.ui.notify("Role switched: " + currentUserRole, "info", 1200);
+            DevExpress.ui.notify("Role switched: " + state.currentUserRole, "info", 1200);
           }
         });
         }
 
         function updateHints() {
-            $("#focusDeptPill").text(`Focus: ${focusDept}`);
+            $("#focusDeptPill").text(`Focus: ${state.focusDept}`);
 
             Roles.forEach(k => {
-                const canEdit = (currentUserRole === k);
+                const canEdit = (state.currentUserRole === k);
                 const icon = canEdit
                     ? `<span class="lock editable" title="Editable">
                          <svg xmlns="http://www.w3.org/2000/svg" width="27" height="24" viewBox="0 0 27 24" aria-hidden="true">
@@ -736,12 +759,12 @@ Note:
         function applyNodeHighlights() {
             $(".dept-node").removeClass("status focus");
             $(`.dept-node[data-key='${stageDept}']`).addClass("status");
-            $(`.dept-node[data-key='${focusDept}']`).addClass("focus");
+            $(`.dept-node[data-key='${state.focusDept}']`).addClass("focus");
         }
 
         function applySectionFocusHighlight() {
             $(".dept-section").removeClass("focused");
-            $(`#sec${focusDept}`).addClass("focused");
+            $(`#sec${state.focusDept}`).addClass("focused");
         }
 
         function scrollToDept(dept) {
@@ -754,16 +777,16 @@ Note:
         function setupDeptTree() {
             $(".dept-node").off("click.tree").on("click.tree", function () {
                 const key = $(this).data("key");
-                focusDept = key;
+                state.focusDept = key;
 
                 applyNodeHighlights();
                 applySectionFocusHighlight();
                 applyEditLock();
                 updateHints();
-                scrollToDept(focusDept);
+                scrollToDept(state.focusDept);
 
                 // optional: auto expand focused dept
-                setSectionCollapsed(focusDept, false);
+                setSectionCollapsed(state.focusDept, false);
             });
         }
 
@@ -822,7 +845,7 @@ Note:
                 });
             });
         }
-          
+
         // =========================
         // 6) Comments panel module (giữ theo style bạn)
         // =========================
@@ -882,7 +905,7 @@ Note:
                  _formConfig.container = $(`<div id = "form_Quotation_${quoteId}" style="padding: 10px" >`);
                  var form =  new ReferenceQuotationForm(quoteId, null, _formConfig, _formConfig);
                  form.container.appendTo($("#rightCommentList"));
-                
+
             }, 180);
 
 
@@ -914,15 +937,15 @@ Note:
       // ✅ bind giữ nguyên – chỉ còn việc gắn event như cũ
             function bind() {
                 $("#headerWidgetsPanel").empty();
-                 
+
                  $(`<div id="btnToggleReferenceFieldsMini">`).dxButton({
                     icon: "fas fa-sliders-h",
                     type: "normal",
                     stylingMode: "contained",
-                    onClick: () => {                         
+                    onClick: () => {
                      openRightCommentPanel();
                      loadReferenceFields(selectedCodeNo, selectedId);
-                      } 
+                      }
                     }).appendTo($("#headerWidgetsPanel"));
 
                 $(`<div id="btnToggleCommentMini" style="margin-left: 10px">`).dxButton({
@@ -932,7 +955,7 @@ Note:
                     onClick: () => {
                      openRightCommentPanel();
                       loadComments(selectedCodeNo, selectedId);
-                            } 
+                            }
                     }).appendTo($("#headerWidgetsPanel"));
 
                  $("#btnCollapseAllTab").dxButton({
@@ -961,7 +984,7 @@ Note:
                             }
                         }
                     });
-       
+
                  $("#btnToggleReferenceFields").dxButton({
                     text: "Common fields",
                     icon: "fas fa-sliders-h",
@@ -991,7 +1014,7 @@ Note:
         // 7) Render list/detail
         // =========================
         function renderDetail() {
-            var q = quotes.find(x => x.id === selectedId) || quotes[0];
+            var q = state.quotes.find(x => x.id === selectedId) || state.quotes[0];
             if (!q) return;
 
             $("#recordNo").text(q.quotationCode);
@@ -1003,7 +1026,7 @@ Note:
 
             // stage/focus pills
             $("#stageDeptPill").text(`Quotation pending at: ${stageDept} - ${stageAccount}`);
-            $("#focusDeptPill").text(`Focus: ${focusDept}`);
+            $("#focusDeptPill").text(`Focus: ${state.focusDept}`);
 
             deptData.MKT = { ...q, sectionName: "MKT", code: q.quotationCode };
             deptData.TS = { ...q, sectionName: "TS", code: q.quotationCode };
@@ -1018,12 +1041,12 @@ Note:
             updateHints();
             updateSectionUpdatedTime(q);
             initDepartmentAssignees();
-            scrollToDept(focusDept);
+            scrollToDept(state.focusDept);
         }
 
 
         function renderList() {
-            var data = applyFilter(quotes);
+            var data = applyFilter(state.quotes);
             var $root = $("#quoteList").empty();
 
             if (!data.length) {
@@ -1074,11 +1097,11 @@ Note:
 
                 renderDeptCallouts(PIC_JSON);
                 // focus ring về đúng role hiện tại
-                focusDept = currentUserRole;
+                state.focusDept = state.currentUserRole;
                 renderList();
                 renderDetail();
                 initDepartmentAssignees();
-                if (commentPanelOpened) 
+                if (commentPanelOpened)
                 {
                    $("#btnCloseRightComment").click();
                     // HoverAjax.loadComments(selectedCodeNo, selectedId);
@@ -1221,7 +1244,7 @@ Note:
         }
 
         function openBranchOverlay() {
-            const currentDept = stageDept || focusDept || "MKT";
+            const currentDept = stageDept || state.focusDept || "MKT";
             renderBranchOverlay(currentDept);
             $("#branchOverlay").show();
         }
@@ -1235,12 +1258,12 @@ Note:
             $("#branchOverlay .bnode.choice").removeClass("active");
             $(`#route_${dept}`).addClass("active");
 
-            focusDept = dept;
+            state.focusDept = dept;
             applyNodeHighlights();
             applySectionFocusHighlight();
             applyEditLock();
             updateHints();
-            scrollToDept(focusDept);
+            scrollToDept(state.focusDept);
 
             // popup remark (giữ code bạn, chỉ không đụng tới vì bạn đang dùng nhiều helper)
             DevExpress.ui.notify(`Mock submit routed to ${dept}`, "success", 1200);
@@ -1251,7 +1274,7 @@ Note:
         // =========================
         // 9) PIC callouts
         // =========================
-      
+
         // const PIC_MAP = JSON.parse(PIC_JSON || "{}");
         function normalizeDeptKey(k) {
             const x = String(k || "").trim().toUpperCase();
@@ -1401,7 +1424,7 @@ Note:
         @* header removed *@
     </div>
 
-   
+
     <div class="contentGrid" id="mainContentGrid">
 
         <!-- Left pane -->
@@ -1566,7 +1589,7 @@ Note:
         <div class="actionLeft">
             <span class="pill">Record: <b id="recordNo">Qu-10030</b></span>
             <span class="pill">Login role: <b id="loginRoleLabel"></b></span>
-            
+
             <span id="focusDeptPill" class="pill">Focus section: </span>
         </div>
         <div class="actionRight">

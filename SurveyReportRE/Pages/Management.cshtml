@@ -134,6 +134,10 @@
         });
 
         var loginUser = `@Html.Raw(ViewData["LoginUser"])`;
+
+        var loginDept = "";
+        var loginDisplayName = "";
+
         _isSuperUser =  `@Html.Raw(ViewData["IsSuperUser"])`;
         _isDebugMode = `@Html.Raw(ViewData["IsDebugMode"])`;
         var _notifyEnv = `@Html.Raw(ViewData["NotifyEnv"])`;

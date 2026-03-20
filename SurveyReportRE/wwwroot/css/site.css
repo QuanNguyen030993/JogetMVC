@@ -743,28 +743,7 @@ aside {
 
 
 /* Bottom action bar */
-/*.actionBar {
-    position: fixed;
-    left: var(--sidebar-w);
-    right: 0;
-    bottom: 0;
-    z-index: 60;
-    background: rgba(255,255,255,.92);
-    border-top: 1px solid var(--border);
-    backdrop-filter: blur(6px);
-    padding: 10px 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
 
-.actionLeft {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: #374151;
-}*/
 
 /* Branch overlay */
 /*.branchOverlay {
@@ -1723,4 +1702,37 @@ aside {
 
     .rightDock .ct-list::-webkit-scrollbar-track {
         background: transparent;
+    }
+.actionBarDept {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    background: rgba(255,255,255,.94);
+    border-top: 1px solid var(--border);
+    backdrop-filter: blur(6px);
+    padding: 10px 14px;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    gap: 12px;
+}
+
+    .actionBarDept .actionLeft {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .actionBarDept .actionRight {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 0 0 auto;
+        margin-left: auto;
+        justify-content: flex-end;
     }

@@ -25,22 +25,30 @@ connectionSignR.start().then(async function () {
             }
         }
     });
-
-    connectionSignR.on(`LCSubmitRecallVisible_${_connectionId}`, function (responseData) {
-        if (responseData.connectionId == _connectionId) {
-            if (responseData.buttonType == "Submit") {
-                $(`#submitLossControlForm_${responseData.responseData.id}`).dxButton("instance").option("visible", responseData.visibleStatus);
-                $(`#submitLossControlForm_${responseData.responseData.id}`).dxButton("instance").option("text", responseData.buttonText);
-            }
-            if (responseData.buttonType == "Recall") {
-                $(`#recallLossControlForm_${responseData.responseData.id}`).dxButton("instance").option("visible", responseData.visibleStatus);
-            }
-        }
-    });
     connectionSignR.on("onlineUsersChanged", (users) => {
         userRender(users);
     });
+    connectionSignR.on(`sectionRender_${_connectionId}`, (responseData) => {
+        
+        const idx = window.QuotationPage.state.quotes.findIndex(x => x.id === responseData.data.id);
+        window.QuotationPage.state.quotes[idx] = { ...responseData.data };
 
+        var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
+            shadingColor: "rgba(0,0,0,0.4)",
+            visible: false,
+            showIndicator: true,
+            showPane: false,
+            shading: true,
+            closeOnOutsideClick: false,
+            position: { of: `#form${_role}` }
+            // onShown: function () {
+            //     setTimeout(function () {
+            //         appLoadPanel.hide();
+            //     }, 3000);
+            // }
+        });
+        globalLoadPanel.dxLoadPanel("instance").hide();
+    });
 
 
 }).catch(function (err) {

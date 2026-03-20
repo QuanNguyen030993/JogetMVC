@@ -19,6 +19,11 @@ using Newtonsoft.Json;
 using ERPCore.Models.Business.Migration.Config;
 using ERPCore.Models.Migration.Business.HumanResource;
 using ERPCore.Repository;
+using ERPCore.Models.Request;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.SharePoint.WebControls;
+using RESurveyTool.Models.Models.Parsing;
+using Microsoft.AspNetCore.Http;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -33,6 +38,7 @@ public class QuotationController : BaseControllerApi<Quotation>
     private readonly IBaseRepository<Employee> _employeeRepository;
     private readonly IBaseRepository<UserRoles> _userRolesRepository;
     private readonly IBaseRepository<Roles> _rolesRepository;
+    private readonly IHubContext<FileProcessingHub> _hubContext;
     private readonly IConfigurationSection path;
     public static string MANAGER_APP = "";
     public static string APPROVER_APP = "";
@@ -51,6 +57,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         , IHttpContextAccessor httpContextAccessor
         , ILogger<Quotation> logger
         , Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> blobStorageSettings
+         , IHubContext<FileProcessingHub> hubContext
         ) : base(BaseRepository, httpContextAccessor
             )
     {
@@ -63,6 +70,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         _employeeRepository = new BaseRepository<Employee>(configuration, _httpContextAccessor);
         _userRolesRepository = new BaseRepository<UserRoles>(configuration, _httpContextAccessor);
         _rolesRepository = new BaseRepository<Roles>(configuration, _httpContextAccessor);
+        _hubContext = hubContext;
         MANAGER_APP = configuration.GetSection("BusinessConfig:ManagerAppKey").Value;
         APPROVER_APP = configuration.GetSection("BusinessConfig:ApproverAppKey").Value;
         CHECKER_APP = configuration.GetSection("BusinessConfig:CheckerAppKey").Value;
@@ -389,7 +397,36 @@ public class QuotationController : BaseControllerApi<Quotation>
 
         return filteredBase;
     }
+    [HttpPut]
+    public override HttpResponseMessage UpdateData([FromForm] UpdateFormCollection form)
+    {
+        var entity = new Quotation();
+        JsonConvert.PopulateObject(form.values, entity);
+        _BaseRepository.UpdateData(entity, form.values, form.key, "Id");
 
+   
+
+
+        Task.Run(async () =>
+        {
+            string connectionId = "";
+            IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
+            OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(DOMAIN_NAME, "") == CURRENT_USER);
+            if (onlineUser != null)
+            {
+            connectionId = onlineUser.ConnectionId;
+                if (!string.IsNullOrEmpty(connectionId))
+                    await _hubContext.Clients.Client(connectionId).SendAsync($"sectionRender_{connectionId}", new
+                    {
+                        data = entity,
+                        connectionId = connectionId
+                    });
+
+            }
+        });
+
+        return new HttpResponseMessage(HttpStatusCode.OK);
+    }
     public async Task BulkInsertQuotationAsync(List<Quotation> data)
     {
         var dt = new DataTable();
@@ -424,38 +461,6 @@ public class QuotationController : BaseControllerApi<Quotation>
     }
 
 
-    public static List<Quotation> ConvertToQuotationList(List<Dictionary<string, object>> rawData)
-    {
-        var result = new List<Quotation>();
-
-        foreach (var dict in rawData)
-        {
-            var obj = new Quotation();
-            foreach (var prop in typeof(Quotation).GetProperties())
-            {
-                var key = prop.Name;
-                if (key == "Id") continue;
-                if (key == "Guid") continue;
-                if (key == "CreatedBy") continue;
-                if (key == "CreatedDate") continue;
-                if (key == "ModifiedBy") continue;
-                if (key == "ModifiedDate") continue;
-                if (key == "Deleted") continue;
-                if (key == "DeletedBy") continue;
-                if (key == "DeletedDate") continue;
-                if (key == "RowOrder") continue;
-                if (key == "CopyFromGuid") continue;
-                if (key == "DraftGuid") continue;
-
-                if (dict.TryGetValue(key, out var value) && value != null)
-                {
-                    prop.SetValue(obj, value.ToString());
-                }
-            }
-            result.Add(obj);
-        }
-
-        return result;
-    }
+  
 
 }

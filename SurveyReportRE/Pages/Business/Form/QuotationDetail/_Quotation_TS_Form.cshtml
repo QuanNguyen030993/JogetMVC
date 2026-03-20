@@ -45,58 +45,62 @@
          caption: "Premium / Rate / VAT / Discount / Currency",
          colCount: 2,
          items: [
-             { dataField: "premiumTotal", editorType:"dxNumberBox", editorOptions: {format: '#,##0', onValueChanged: function (et) {
+             { dataField: "premiumTotal", editorType:"dxNumberBox", editorOptions: {format: '#,##0'
+             // , onValueChanged: function (et) {
 
-             if (et.previousValue != et.value && et.previousValue != 0){
+             // if (et.previousValue != et.value && et.previousValue != 0){
                 
-                     // $.ajax({
-                     //     url: `/api/Quotation/UpdateData`,
-                     //     type: "PUT",
-                     //     data: { key: formItems.id, values: JSON.stringify({ sumInsuredTotal: e.value })},
-                     //     processData: true,
-                     //     success: function (data) {
-                     //     },
-                     //     error: function (error) {
-                     //         console.error("Error loading data:", error);
-                     //     }
-                     // });
-             }
-             } ,onFocusOut: function (et) {
-                var formItems = $("#formTS").dxForm().dxForm("instance").option("formData");
-                  ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ premiumTotal: formItems.premiumTotal })} , {
-                         onSuccess: function (response) {
-                         },
-                         onError: function (err) {
-                         }
-                   });
-             }} },
+             //         // $.ajax({
+             //         //     url: `/api/Quotation/UpdateData`,
+             //         //     type: "PUT",
+             //         //     data: { key: formItems.id, values: JSON.stringify({ sumInsuredTotal: e.value })},
+             //         //     processData: true,
+             //         //     success: function (data) {
+             //         //     },
+             //         //     error: function (error) {
+             //         //         console.error("Error loading data:", error);
+             //         //     }
+             //         // });
+             // }
+             // } ,onFocusOut: function (et) {
+             //    var formItems = $("#formTS").dxForm().dxForm("instance").option("formData");
+             //      ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ premiumTotal: formItems.premiumTotal })} , {
+             //             onSuccess: function (response) {
+             //             },
+             //             onError: function (err) {
+             //             }
+             //       });
+             // }
+             
+         } },
              { dataField: "premiumTotalBeforeVat", label: { template: labelTpl("PremiumTotalBeforeVat - Tổng premium trước VAT") } },
-             { dataField: "totalDue", editorType:"dxNumberBox", editorOptions: {format: '#,##0', onValueChanged: function (ed) {
+             { dataField: "totalDue", editorType:"dxNumberBox", editorOptions: {format: '#,##0'
+             // , onValueChanged: function (ed) {
 
-             if (ed.previousValue != ed.value && ed.previousValue != 0){
+             // if (ed.previousValue != ed.value && ed.previousValue != 0){
                 
-                     // $.ajax({
-                     //     url: `/api/Quotation/UpdateData`,
-                     //     type: "PUT",
-                     //     data: { key: formItems.id, values: JSON.stringify({ sumInsuredTotal: e.value })},
-                     //     processData: true,
-                     //     success: function (data) {
-                     //     },
-                     //     error: function (error) {
-                     //         console.error("Error loading data:", error);
-                     //     }
-                     // });
-             }
-             }
-             ,onFocusOut: function (ed) {
-               var formItems = $("#formTS").dxForm().dxForm("instance").option("formData");
-                  ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ totalDue: formItems.totalDue })} , {
-                         onSuccess: function (response) {
-                         },
-                         onError: function (err) {
-                         }
-                   });
-             }
+             //         // $.ajax({
+             //         //     url: `/api/Quotation/UpdateData`,
+             //         //     type: "PUT",
+             //         //     data: { key: formItems.id, values: JSON.stringify({ sumInsuredTotal: e.value })},
+             //         //     processData: true,
+             //         //     success: function (data) {
+             //         //     },
+             //         //     error: function (error) {
+             //         //         console.error("Error loading data:", error);
+             //         //     }
+             //         // });
+             // }
+             // }
+             // ,onFocusOut: function (ed) {
+             //   var formItems = $("#formTS").dxForm().dxForm("instance").option("formData");
+             //      ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ totalDue: formItems.totalDue })} , {
+             //             onSuccess: function (response) {
+             //             },
+             //             onError: function (err) {
+             //             }
+             //       });
+             // }
          
                     
          } },
@@ -156,31 +160,34 @@
          caption: "Location / TSI / Sum Insured",
          colCount: 2,
          items: [
-             { dataField: "sumInsuredTotal", editorType:"dxNumberBox", editorOptions: {format: '#,##0', onValueChanged: function (e) {
+             { dataField: "sumInsuredTotal", editorType:"dxNumberBox", editorOptions: {format: '#,##0'
+             // , onValueChanged: function (e) {
 
-             if (e.previousValue != e.value && e.previousValue != 0){
+             // if (e.previousValue != e.value && e.previousValue != 0){
 
-                     // $.ajax({
-                     //     url: `/api/Quotation/UpdateData`,
-                     //     type: "PUT",
-                     //     data: { key: formItems.id, values: JSON.stringify({ sumInsuredTotal: e.value })},
-                     //     processData: true,
-                     //     success: function (data) {
-                     //     },
-                     //     error: function (error) {
-                     //         console.error("Error loading data:", error);
-                     //     }
-                     // });
-             }
-             } ,onFocusOut: function (e) {
-               var formItems = $("#formTS").dxForm().dxForm("instance").option("formData");
-                  ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ sumInsuredTotal: formItems.sumInsuredTotal })} , {
-                         onSuccess: function (response) {
-                         },
-                         onError: function (err) {
-                         }
-                   });
-             }} },
+             //         // $.ajax({
+             //         //     url: `/api/Quotation/UpdateData`,
+             //         //     type: "PUT",
+             //         //     data: { key: formItems.id, values: JSON.stringify({ sumInsuredTotal: e.value })},
+             //         //     processData: true,
+             //         //     success: function (data) {
+             //         //     },
+             //         //     error: function (error) {
+             //         //         console.error("Error loading data:", error);
+             //         //     }
+             //         // });
+             // }
+             // } ,onFocusOut: function (e) {
+             //   var formItems = $("#formTS").dxForm().dxForm("instance").option("formData");
+             //      ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ sumInsuredTotal: formItems.sumInsuredTotal })} , {
+             //             onSuccess: function (response) {
+             //             },
+             //             onError: function (err) {
+             //             }
+             //       });
+             // }
+             
+         } },
              { dataField: "locationCountDeclared", label: { template: labelTpl("LocationCountDeclared - Số location khai báo") } },
              { dataField: "locationCountLegacy", label: { template: labelTpl("LocationCountLegacy - Số location (legacy)") } },
              { dataField: "locationCountAnnual", label: { template: labelTpl("LocationCountAnnual - Số location annual") } },
@@ -207,16 +214,19 @@
           { site:"HN",  address:"Cau Giay",   category:"Office",    sumInsured: 350000  },
         ];
 
-          $("#gridTSLocations").dxDataGrid({
-            dataSource: tsLocations, height: 220, showBorders: true,
-            editing: { mode:"cell", allowUpdating:false, allowAdding:false, allowDeleting:false },
-            columns: [
-              { dataField:"site", caption:"Site", width: 90 },
-              { dataField:"address", caption:"Address" },
-              { dataField:"category", caption:"Occupancy", width: 140 },
-              // { dataField:"sumInsured", caption:"Sum Insured", dataType:"number", format:"#0" }
-            ]
-          });
+
+        var gridOptions = new LocationGridOption("Location", "User");
+        new MGrid(null, $("#gridTSLocations"), gridOptions, null);
+          // $("#gridTSLocations").dxDataGrid({
+          //   dataSource: tsLocations, height: 220, showBorders: true,
+          //   editing: { mode:"cell", allowUpdating:false, allowAdding:false, allowDeleting:false },
+          //   columns: [
+          //     { dataField:"site", caption:"Site", width: 90 },
+          //     { dataField:"address", caption:"Address" },
+          //     { dataField:"category", caption:"Occupancy", width: 140 },
+          //     // { dataField:"sumInsured", caption:"Sum Insured", dataType:"number", format:"#0" }
+          //   ]
+          // });
           //       $("#gridTSLocations").dxDataGrid("instance").option("editing", {
           //   mode:"cell", allowUpdating: !roTS, allowAdding: !roTS, allowDeleting: !roTS
           // });

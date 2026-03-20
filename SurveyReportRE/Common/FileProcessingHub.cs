@@ -4,7 +4,7 @@ using ERPCore.Models.Migration.Config;
 
 public class FileProcessingHub : Hub
 {
-    private static MemoryPresenceStore _store;
+    public static MemoryPresenceStore _store;
 
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IConfiguration _configuration;

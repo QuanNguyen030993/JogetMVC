@@ -1,16 +1,57 @@
-﻿
-<div class="dept-form-header">
-    <div class="actionBarDept">
-        <div class="actionRight">
-            <div id="btnSaveDraft_MKT"></div>
-            <div id="btnSubmitBranch_MKT"></div>
-        </div>
+﻿@{
+    string dept = "MKT";  
+
+}
+
+
+<div class="actionBarDept" id="actionBarDept@dept">
+    <div class="actionLeft">
+        <span class="dept-title">Actions</span>
+    </div>
+    <div class="actionRight">
+        <div id="btnSave_@dept"></div>
+        <div id="btnSubmitBranch_@dept"></div>
     </div>
 </div>
 
 <script>
     setTimeout( () => {
-    var formItems = $("#formMKT").dxForm("instance")?.option("formData") || {};
-     $("#btnSubmitBranch_MKT").dxButton({ text: "Route To", icon: "check", type: "info", onClick: openBranchOverlay });
+   debugger
+    var dept = "@dept";
+     $("#btnSubmitBranch_@dept").dxButton({ text: "Route To", icon: "check", type: "info", onClick: openBranchOverlay });
+    $("#btnSave_@dept").dxButton({ text: "Save", icon: "save", type: "default", onClick: 
+        function (e) {
+              var formItems = $(`#form${dept}`).dxForm("instance")?.option("formData") || {};
+              var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
+                  shadingColor: "rgba(0,0,0,0.4)",
+                  visible: false,
+                  showIndicator: true,
+                  showPane: false,
+                  shading: true,
+                  closeOnOutsideClick: false,
+                   position: { of: `#form${dept}`}
+                  // onShown: function () {
+                  //     setTimeout(function () {
+                  //         appLoadPanel.hide();
+                  //     }, 3000);
+                  // }
+              });
+             globalLoadPanel.dxLoadPanel("instance").show();
+
+            ajaxPut('/api/Quotation/UpdateData',
+            {
+                key: formItems.id,
+                values: JSON.stringify(
+                    formItems
+                )
+            },
+            {
+                onSuccess: function (response) { 
+                },
+                onError: function (err) { }
+            }
+        );
+        }
+    });
     }, 500);
 </script>
