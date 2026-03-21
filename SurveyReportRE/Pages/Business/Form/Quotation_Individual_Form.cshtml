@@ -547,7 +547,7 @@ Note:
 
         var Roles = ["MKT", "TS", "UW", "LMKT", "PM"];
         // var currentUserRole = _role;
-        $("#loginRoleLabel").text(state.currentUserRole);
+        $(`#${formModuleKeyQt}-loginRoleLabel`).text(state.currentUserRole);
 
         var filter = "all";
         let searchText = "";
@@ -680,11 +680,11 @@ Note:
             $(`#${formModuleKeyQt}-formLMKT`).dxForm("instance")?.option("readOnly", roLMKT);
             $(`#${formModuleKeyQt}-formPM`).dxForm("instance")?.option("readOnly", roPM);
 
-            $("#roleSelect").dxSelectBox({
+           $(`#${formModuleKeyQt}-roleSelect`).dxSelectBox({
           items: Roles, value: state.currentUserRole, stylingMode:"outlined",
           onValueChanged: (e) => {
             state.currentUserRole = e.value;
-            $("#loginRoleLabel").text(state.currentUserRole);
+            $(`#${formModuleKeyQt}-loginRoleLabel`).text(state.currentUserRole);
             applyEditLock();
             updateHints();
             DevExpress.ui.notify("Role switched: " + state.currentUserRole, "info", 1200);
@@ -693,7 +693,7 @@ Note:
         }
 
         function updateHints() {
-            $("#focusDeptPill").text(`Focus: ${state.focusDept}`);
+             $(`#${formModuleKeyQt}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
 
             Roles.forEach(k => {
                 const canEdit = (state.currentUserRole === k);
@@ -1008,16 +1008,16 @@ Note:
             var q = state.quotes.find(x => x.id === selectedId) || state.quotes[0];
             if (!q) return;
 
-            $("#recordNo").text(q.quotationCode);
+            $(`#${formModuleKeyQt}-recordNo`).text(q.quotationCode);
 
             const st = q.quotationStatus ?? q.status;
-            $("#detailStatus")
+            $(`#${formModuleKeyQt}-detailStatus`)
                 .text(statusText(st))
                 .attr("class", `statusTag ${statusClass(st)}`);
 
             // stage/focus pills
-            $("#stageDeptPill").text(`Quotation pending at: ${stageDept} - ${stageAccount}`);
-            $("#focusDeptPill").text(`Focus: ${state.focusDept}`);
+            $(`#${formModuleKeyQt}-stageDeptPill`).text(`Pending at: ${stageDept} - ${stageAccount ?? ""}`);
+            $(`#${formModuleKeyQt}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
 
             deptData.MKT = { ...q, sectionName: "MKT", code: q.quotationCode };
             deptData.TS = { ...q, sectionName: "TS", code: q.quotationCode };
@@ -1381,9 +1381,9 @@ Note:
         $("#btnEdit").dxButton({ text: "Edit", icon: "edit", type: "normal", onClick: () => DevExpress.ui.notify("Mock: Edit selected", "info", 1200) });
         $("#btnMore").dxDropDownButton({ text: "More", icon: "overflow", items: ["Export", "Print", "Email"], onItemClick: (e) => DevExpress.ui.notify("Mock: " + e.itemData, "info", 1200) });
 
-        $("#btnSaveDraft").dxButton({ text: "Save Draft", icon: "save", type: "normal", onClick: () => DevExpress.ui.notify("Mock: saved draft", "success", 1200) });
-        $("#btnSubmitBranch").dxButton({ text: "Route To", icon: "check", type: "success", onClick: openBranchOverlay });
-        $("#btnClientConfirm").dxButton({ text: "Client Confirm", icon: "check", type: "success", onClick: function (e) {
+        // $("#btnSaveDraft").dxButton({ text: "Save Draft", icon: "save", type: "normal", onClick: () => DevExpress.ui.notify("Mock: saved draft", "success", 1200) });
+        // $("#btnSubmitBranch").dxButton({ text: "Route To", icon: "check", type: "success", onClick: openBranchOverlay });
+        $(`#${formModuleKeyQt}-btnClientConfirm`).dxButton({ text: "Client Confirm", icon: "check", type: "success", onClick: function (e) {
                     var quotationConvert = state.quotes.find(x => x.id == selectedId);
                   
               
@@ -1451,22 +1451,7 @@ Note:
        SearchWidth = "210px",
        SearchPlaceholder = "Search quotation..."
    })
-        <!-- Left pane -->
-@*         <div class="pane pane-left">
-            <section class="card">
-                <div class="cardHeader">
-                    <div class="collapse-toggle-wrap">
-                        <div id="btnToggleLeftPane"></div>
-                        <div class="h" id="listTitle">Your Quotations</div>
-                    </div>
-                    <div id="searchBox" style="width: 210px;"></div>
-                </div>
-                <div class="cardBody quote-pane-scroll">
-                    <div id="quoteList"></div>
-                </div>
-            </section>
-        </div>
- *@
+       
         <!-- Splitter -->
         <div id="mainSplitter" class="pane-splitter" title="Kéo để thay đổi kích thước"></div>
         @await Html.PartialAsync("_OverviewPane", new OverviewPanePartialModel
@@ -1475,75 +1460,20 @@ Note:
             ModuleCode = moduleCode,
             Title = title
         })
-        @* <!-- Right pane -->
-        <div class="pane pane-right">
-            <section class="card">
-                <div class="cardHeader">
-                    <div style="display:flex;align-items:center;gap:10px;">
-                        <div class="h">Overview</div>
-                        <span id="detailStatus" class="statusTag">-</span>
-                        <span id="stageDeptPill" class="pill">Quotation pending at: </span>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:8px;">
-                        <div id="btnCollapseAllTab"></div>
-                        <div id="btnToggleReferenceFields"></div>
-                        <div id="btnToggleComment"></div>
-                    </div>
-                </div>
-
-                <div class="cardBody overview-wrap" style="padding:0">
-                    <!-- giữ nguyên toàn bộ phần bên trong của bạn -->
-                    <div id="flowHistoryPanel" class="flow-history-panel">
-                        <div class="fh-title">
-                            <span>Flow History</span>
-                            <span id="flowSummary" class="fh-sub">-</span>
-                        </div>
-                        <div id="flowHistoryBody" class="fh-flow">
-                            <div style="color:#6b7280;font-size:12px;padding:6px 4px;">Hover tree to load…</div>
-                        </div>
-                    </div>
-
-                    <div id="commentPanel" class="comment-tooltip" style="display:none;">
-                        <div class="ct-title">
-                            <span>Audit Log</span>
-                            <span id="commentPanelSub" class="ct-sub">-</span>
-                            <span class="ct-actions">
-                                <a href="javascript:void(0)" id="btnCloseCommentPanel" class="ct-close">✕</a>
-                            </span>
-                        </div>
-                        <div id="commentPanelList" class="ct-list">
-                            <div style="color:#6b7280;font-size:12px;padding:6px 4px;">Click “Comments” to load…</div>
-                        </div>
-                    </div>
-
-
-                    @await Html.PartialAsync("_DeptTree", new DeptTreePartialModel
-{
-    Prefix = "qt",
-    ModuleCode = "qt"
-})
-                    @await Html.PartialAsync("_OverviewScroll", new OverviewScrollPartialModel
-               {
-                   Prefix = "qt",
-                   ModuleCode = "qt"
-               })
-                </div>
-            </section>
-        </div> *@
     </div>
 
     <!-- Bottom action bar -->
     <div class="actionBar">
         <div class="actionLeft">
-            <span class="pill">Record: <b id="recordNo">Qu-10030</b></span>
-            <span class="pill">Login role: <b id="loginRoleLabel"></b></span>
+            <span class="pill">Record: <b id="qt-recordNo">Qu-10030</b></span>
+            <span class="pill">Login role: <b id="qt-loginRoleLabel"></b></span>
 
-            <span id="focusDeptPill" class="pill">Focus section: </span>
+            <span id="qt-focusDeptPill" class="pill">Focus section: </span>
         </div>
         <div class="actionRight">
-            <div id="btnSaveDraft"></div>
-            <div id="btnSubmitBranch"></div>
-            <div id="btnClientConfirm"></div>
+            @* <div id="btnSaveDraft"></div>
+            <div id="btnSubmitBranch"></div> *@
+            <div id="qt-btnClientConfirm"></div>
         </div>
     </div>
 

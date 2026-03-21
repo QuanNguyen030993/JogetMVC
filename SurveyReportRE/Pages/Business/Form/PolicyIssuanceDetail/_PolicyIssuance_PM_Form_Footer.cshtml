@@ -9,16 +9,16 @@
         <span class="dept-title">Actions</span>
     </div>
     <div class="actionRight">
-        <div id="btnSave_@dept"></div>
-        <div id="btnSubmitBranch_@dept"></div>
+        <div id="pi-btnSave_@dept"></div>
+        <div id="pi-btnSubmitBranch_@dept"></div>
     </div>
 </div>
 
 <script>
      setTimeout( () => {
      var depst = "@dept";
-      $("#btnSubmitBranch_@dept").dxButton({ text: "Route To", icon: "check", type: "info", onClick: openBranchOverlay });
-     $("#btnSave_@dept").dxButton({ text: "Save", icon: "save", type: "default", onClick:
+      $("#pi-btnSubmitBranch_@dept").dxButton({ text: "Route To", icon: "check", type: "info", onClick: openBranchOverlay });
+     $("#pi-btnSave_@dept").dxButton({ text: "Save", icon: "save", type: "default", onClick:
          function (e) {
                var formItems = $(`#pi-form${dept}`).dxForm("instance")?.option("formData") || {};
                var globalLoadPanel = $("#loadingPopup").dxLoadPanel({

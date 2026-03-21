@@ -1015,16 +1015,16 @@ Note:
             var q = state.quotes.find(x => x.id === selectedId) || state.quotes[0];
             if (!q) return;
 
-            $("#recordNo").text(q.quotationCode);
+          $(`#${formModuleKeyPi}-recordNo`).text(q.quotationCode);
 
             const st = q.quotationStatus ?? q.status;
-            $("#detailStatus")
+            $(`#${formModuleKeyPi}-detailStatus`)
                 .text(statusText(st))
                 .attr("class", `statusTag ${statusClass(st)}`);
 
             // stage/focus pills
-            $("#stageDeptPill").text(`Request pending at: ${stageDept} - ${stageAccount}`);
-            $("#focusDeptPill").text(`Focus: ${state.focusDept}`);
+            $(`#${formModuleKeyPi}-stageDeptPill`).text(`Pending at: ${stageDept} - ${stageAccount ?? ""}`);
+            $(`#${formModuleKeyPi}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
 
             deptData.MKT = { ...q, sectionName: "MKT", code: q.policyIssuanceCode };
             deptData.TS = { ...q, sectionName: "TS", code: q.policyIssuanceCode };
@@ -1431,22 +1431,7 @@ Note:
        SearchWidth = "210px",
        SearchPlaceholder = "Search items..."
    })
-     @*    <!-- Left pane -->
-        <div class="pane pane-left">
-            <section class="card">
-                <div class="cardHeader">
-                    <div class="collapse-toggle-wrap">
-                        <div id="btnToggleLeftPane"></div>
-                        <div class="h" id="listTitle">Your Requests</div>
-                    </div>
-                    <div id="searchBox" style="width: 210px;"></div>
-                </div>
-                <div class="cardBody quote-pane-scroll">
-                    <div id="quoteList"></div>
-                </div>
-            </section>
-        </div>
- *@
+     
         <!-- Splitter -->
         <div id="mainSplitter" class="pane-splitter" title="Kéo để thay đổi kích thước"></div>
           @await Html.PartialAsync("_OverviewPane", new OverviewPanePartialModel
@@ -1456,60 +1441,7 @@ Note:
             Title = title
         })
         <!-- Right pane -->
-       @*  <div class="pane pane-right">
-            <section class="card">
-                <div class="cardHeader">
-                    <div style="display:flex;align-items:center;gap:10px;">
-                        <div class="h">Overview</div>
-                        <span id="detailStatus" class="statusTag">-</span>
-                        <span id="stageDeptPill" class="pill">Request pending at: </span>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:8px;">
-                        <div id="btnCollapseAllTab"></div>
-                        <div id="btnToggleReferenceFields"></div>
-                        <div id="btnToggleComment"></div>
-                    </div>
-                </div>
-
-                <div class="cardBody overview-wrap" style="padding:0">
-                    <!-- giữ nguyên toàn bộ phần bên trong của bạn -->
-                    <div id="flowHistoryPanel" class="flow-history-panel">
-                        <div class="fh-title">
-                            <span>Flow History</span>
-                            <span id="flowSummary" class="fh-sub">-</span>
-                        </div>
-                        <div id="flowHistoryBody" class="fh-flow">
-                            <div style="color:#6b7280;font-size:12px;padding:6px 4px;">Hover tree to load…</div>
-                        </div>
-                    </div>
-
-                    <div id="commentPanel" class="comment-tooltip" style="display:none;">
-                        <div class="ct-title">
-                            <span>Audit Log</span>
-                            <span id="commentPanelSub" class="ct-sub">-</span>
-                            <span class="ct-actions">
-                                <a href="javascript:void(0)" id="btnCloseCommentPanel" class="ct-close">✕</a>
-                            </span>
-                        </div>
-                        <div id="commentPanelList" class="ct-list">
-                            <div style="color:#6b7280;font-size:12px;padding:6px 4px;">Click “Comments” to load…</div>
-                        </div>
-                    </div>
-
-                         @await Html.PartialAsync("_DeptTree", new DeptTreePartialModel
-                    {
-                        Prefix = "pi",
-                        ModuleCode = "pi"
-                    })
-
-                    @await Html.PartialAsync("_OverviewScroll", new OverviewScrollPartialModel
-                       {
-                           Prefix = "pi",
-                           ModuleCode = "pi"
-                       })
-                </div>
-            </section>
-        </div> *@
+       
     </div>
 
     <!-- Bottom action bar -->

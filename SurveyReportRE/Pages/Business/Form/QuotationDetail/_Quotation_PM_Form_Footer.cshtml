@@ -9,16 +9,16 @@
         <span class="dept-title">Actions</span>
     </div>
     <div class="actionRight">
-        <div id="btnSave_@dept"></div>
-        <div id="btnSubmitBranch_@dept"></div>
+        <div id="qt-btnSave_@dept"></div>
+        <div id="qt-btnSubmitBranch_@dept"></div>
     </div>
 </div>
 
 <script>
      setTimeout( () => {
      var depst = "@dept";
-      $("#btnSubmitBranch_@dept").dxButton({ text: "Route To", icon: "check", type: "info", onClick: openBranchOverlay });
-     $("#btnSave_@dept").dxButton({ text: "Save", icon: "save", type: "default", onClick:
+      $("#qt-btnSubmitBranch_@dept").dxButton({ text: "Route To", icon: "check", type: "info", onClick: openBranchOverlay });
+     $("#qt-btnSave_@dept").dxButton({ text: "Save", icon: "save", type: "default", onClick:
          function (e) {
                var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
                var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
