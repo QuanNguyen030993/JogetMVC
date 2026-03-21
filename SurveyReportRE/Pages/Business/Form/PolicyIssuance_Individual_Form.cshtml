@@ -1,4 +1,5 @@
 ﻿@page "{pageNum:int?}"
+@using JogetMVC.Model
 @using Newtonsoft.Json
 @model PolicyIssuance_Individual_FormModel
 @{
@@ -468,7 +469,7 @@ Note:
         gap: 6px;
     }
 
-    #btnToggleLeftPane {
+    #pi-btnToggleLeftPane {
         min-width: 36px;
     }
 
@@ -1051,7 +1052,7 @@ Note:
 
         function renderList() {
             var data = applyFilter(state.quotes);
-            var $root = $("#quoteList").empty();
+            var $root = $("#pi-quoteList").empty();
 
             if (!data.length) {
                 $root.append(`<div style="color:#6b7280;padding:10px;">No quotations found.</div>`);
@@ -1359,7 +1360,7 @@ Note:
             document.body.style.userSelect = "";
         });
 
-        $("#btnToggleLeftPane").dxButton({
+        $("#pi-btnToggleLeftPane").dxButton({
             icon: "pin",
             hint: "Thu gọn / mở rộng danh sách items",
             stylingMode: "text",
@@ -1384,7 +1385,7 @@ Note:
         // =========================
         // 10) Controls init
         // =========================
-        $("#searchBox").dxTextBox({
+        $("#pi-searchBox").dxTextBox({
             placeholder: "Search items...",
             stylingMode: "outlined",
             mode: "search",
@@ -1430,8 +1431,14 @@ Note:
 
 
     <div class="contentGrid" id="mainContentGrid">
-
-        <!-- Left pane -->
+        @await Html.PartialAsync("_LeftPane", new LeftPanePartialModel
+   {
+       Prefix = "pi",
+       Title = "Your Items",
+       SearchWidth = "210px",
+       SearchPlaceholder = "Search items..."
+   })
+     @*    <!-- Left pane -->
         <div class="pane pane-left">
             <section class="card">
                 <div class="cardHeader">
@@ -1446,7 +1453,7 @@ Note:
                 </div>
             </section>
         </div>
-
+ *@
         <!-- Splitter -->
         <div id="mainSplitter" class="pane-splitter" title="Kéo để thay đổi kích thước"></div>
 

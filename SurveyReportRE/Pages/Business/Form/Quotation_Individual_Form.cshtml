@@ -1,4 +1,5 @@
 ﻿@page "{pageNum:int?}"
+@using JogetMVC.Model
 @using Newtonsoft.Json
 @model Quotation_Individual_FormModel
 @{
@@ -468,7 +469,7 @@ Note:
         gap: 6px;
     }
 
-    #btnToggleLeftPane {
+    #qt-btnToggleLeftPane {
         min-width: 36px;
     }
 
@@ -514,14 +515,16 @@ Note:
         state.currentUserRole = _role;
         state.focusDept = _role == "IT" ? "MKT" : _role;
         // var quotes = [];
-        var query = "SELECT * FROM Quotation WITH (NOLOCK) ORDER BY CreatedDate DESC"; // Remove this query
+        // var query = "SELECT * FROM Quotation WITH (NOLOCK) ORDER BY CreatedDate DESC"; // Remove this query
+        
         $.ajax({
             url: `/api/Quotation/ExecuteCustomQuery`,
             method: "POST",
             async: false,
             contentType: "application/json",
-            data: JSON.stringify(query),
+            data: JSON.stringify("OnSystem"),
             success: function(data) {
+                
                   // quotes = data;
                    state.quotes = Array.isArray(data) ? data : [];
                     state.selectedId = state.quotes[0]?.id ?? null;
@@ -1047,7 +1050,7 @@ Note:
 
         function renderList() {
             var data = applyFilter(state.quotes);
-            var $root = $("#quoteList").empty();
+            var $root = $("#qt-quoteList").empty();
 
             if (!data.length) {
                 $root.append(`<div style="color:#6b7280;padding:10px;">No quotations found.</div>`);
@@ -1055,7 +1058,6 @@ Note:
             }
             data.forEach(q => {
                 var isSel = q.id === selectedId;
-
                 pICs.push({quotationCode: q.quotationCode, pIC: q.pIC});
                 $root.append(`
                     <div class="quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-codeno="${q.quotationCode}" data-stagedept="${q.stageDept}" data-stageaccount="${parsePicMap(q.pIC)[q.stageDept]}">
@@ -1092,6 +1094,7 @@ Note:
                 selectedId = Number($(this).attr("data-id"));
                 selectedCodeNo = $(this).attr("data-codeno");
                 stageDept = $(this).attr("data-stagedept");
+                
                 PIC_JSON = pICs.find(f => f.quotationCode ==  selectedCodeNo ).pIC;
                 stageAccount = $(this).attr("data-stageaccount");
 
@@ -1355,7 +1358,7 @@ Note:
             document.body.style.userSelect = "";
         });
 
-        $("#btnToggleLeftPane").dxButton({
+        $("#qt-btnToggleLeftPane").dxButton({
             icon: "pin",
             hint: "Thu gọn / mở rộng danh sách quotation",
             stylingMode: "text",
@@ -1380,7 +1383,7 @@ Note:
         // =========================
         // 10) Controls init
         // =========================
-        $("#searchBox").dxTextBox({
+        $("#qt-searchBox").dxTextBox({
             placeholder: "Search quotations...",
             stylingMode: "outlined",
             mode: "search",
@@ -1427,7 +1430,7 @@ Note:
         // =========================
         HoverAjax.bind();
         bindSectionHeaderToggle();
-
+        
         renderList();
         PIC_JSON = pICs.find(f => f.quotationCode ==  selectedCodeNo).pIC;
         stageAccount = PIC_JSON[stageDept];                 // status ring
@@ -1453,9 +1456,15 @@ Note:
 
 
     <div class="contentGrid" id="mainContentGrid">
-
+        @await Html.PartialAsync("_LeftPane", new LeftPanePartialModel
+   {
+       Prefix = "qt",
+       Title = "Your Quotations",
+       SearchWidth = "210px",
+       SearchPlaceholder = "Search quotation..."
+   })
         <!-- Left pane -->
-        <div class="pane pane-left">
+@*         <div class="pane pane-left">
             <section class="card">
                 <div class="cardHeader">
                     <div class="collapse-toggle-wrap">
@@ -1469,7 +1478,7 @@ Note:
                 </div>
             </section>
         </div>
-
+ *@
         <!-- Splitter -->
         <div id="mainSplitter" class="pane-splitter" title="Kéo để thay đổi kích thước"></div>
 

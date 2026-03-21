@@ -312,7 +312,10 @@ public class QuotationController : BaseControllerApi<Quotation>
 
         ////query = "EXEC usp_fd_policy_issuance_request";
         //List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomQuery(query);
-        var Base = await _BaseRepository.ExecuteCustomQuery(query);
+        var controllerName = ControllerContext.RouteData.Values["controller"]?.ToString();
+        BaseRepository<SysTable> sysTableRepo = new BaseRepository<SysTable>(_BaseRepository._baseConfiguration, _httpContextAccessor);
+        SysTable sysTable = await sysTableRepo.GetSingleObject(s => s.Name == controllerName);
+        var Base = await _BaseRepository.ExecuteCustomQuery(sysTable.CustomQuery);
         //return obj;
         string userName = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration);
         Users user = await _usersRepository.GetSingleObject(s => s.username == userName);

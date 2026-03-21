@@ -1,0 +1,21 @@
+﻿@using JogetMVC.Model
+@model LeftPanePartialModel
+
+@{
+    string Id(string name) => $"{Model.Prefix}-{name}";
+}
+
+<div class="pane pane-left">
+    <section class="card">
+        <div class="cardHeader">
+            <div class="collapse-toggle-wrap">
+                <div id="@Id("btnToggleLeftPane")"></div>
+                <div class="h" id="@Id("listTitle")">@Model.Title</div>
+            </div>
+            <div id="@Id("searchBox")" style="width: @Model.SearchWidth;"></div>
+        </div>
+        <div class="cardBody quote-pane-scroll">
+            <div id="@Id("quoteList")"></div>
+        </div>
+    </section>
+</div>
