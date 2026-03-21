@@ -7171,3 +7171,10 @@ function openBranchOverlay() {
     renderBranchOverlay(currentDept);
     $("#branchOverlay").show();
 }
+function scrollToDept(module, dept) {
+    console.log(module);
+    const container = document.getElementById(`${module}-overviewScroll`);
+    const el = document.getElementById(`${module}-sec` + dept);
+    if (!container || !el) return;
+    container.scrollTo({ top: el.offsetTop - 8, behavior: "smooth" });
+}

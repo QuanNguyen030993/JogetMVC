@@ -487,7 +487,7 @@ Note:
           // var PIC_JSON = `{"MKT":"thao.bp","TS":"hien.ttt","UW":"thanh.pp","LKMT":"thao.np"}`;
           var PIC_JSON = `{}`;
 
-          var formModuleKey = "qt";
+          var formModuleKeyQt = "qt";
 
         var pICs = [];
         if ($('[data-toggle="push-menu"]').hasClass("sidebar-collapse")) {
@@ -649,11 +649,11 @@ Note:
 
         function renderDeptForms() {
             //Data render to partial
-            $(`#${formModuleKey}-formMKT`).dxForm({ formData: deptData.MKT, readOnly: true, colCount: 1 });
-            $(`#${formModuleKey}-formTS`).dxForm({ formData: deptData.TS, readOnly: true, colCount: 1 });
-            $(`#${formModuleKey}-formUW`).dxForm({ formData: deptData.UW, readOnly: true, colCount: 1 });
-            $(`#${formModuleKey}-formLMKT`).dxForm({ formData: deptData.LMKT, readOnly: true, colCount: 1 });
-            $(`#${formModuleKey}-formPM`).dxForm({ formData: deptData.PM, readOnly: true, colCount: 1 });
+            $(`#${formModuleKeyQt}-formMKT`).dxForm({ formData: deptData.MKT, readOnly: true, colCount: 1 });
+            $(`#${formModuleKeyQt}-formTS`).dxForm({ formData: deptData.TS, readOnly: true, colCount: 1 });
+            $(`#${formModuleKeyQt}-formUW`).dxForm({ formData: deptData.UW, readOnly: true, colCount: 1 });
+            $(`#${formModuleKeyQt}-formLMKT`).dxForm({ formData: deptData.LMKT, readOnly: true, colCount: 1 });
+            $(`#${formModuleKeyQt}-formPM`).dxForm({ formData: deptData.PM, readOnly: true, colCount: 1 });
             loadDxFileUploaderAttachments("MKT","Document");
             loadDxFileUploaderAttachments("TS","Document");
             loadDxFileUploaderAttachments("UW","Document");
@@ -671,11 +671,11 @@ Note:
             const roLMKT = !(state.currentUserRole === "LMKT");
             const roPM = !(state.currentUserRole === "PM");
 
-            $(`#${formModuleKey}-formMKT`).dxForm("instance")?.option("readOnly", roMKT);
-            $(`#${formModuleKey}-formTS`).dxForm("instance")?.option("readOnly", roTS);
-            $(`#${formModuleKey}-formUW`).dxForm("instance")?.option("readOnly", roUW);
-            $(`#${formModuleKey}-formLMKT`).dxForm("instance")?.option("readOnly", roLMKT);
-            $(`#${formModuleKey}-formPM`).dxForm("instance")?.option("readOnly", roPM);
+            $(`#${formModuleKeyQt}-formMKT`).dxForm("instance")?.option("readOnly", roMKT);
+            $(`#${formModuleKeyQt}-formTS`).dxForm("instance")?.option("readOnly", roTS);
+            $(`#${formModuleKeyQt}-formUW`).dxForm("instance")?.option("readOnly", roUW);
+            $(`#${formModuleKeyQt}-formLMKT`).dxForm("instance")?.option("readOnly", roLMKT);
+            $(`#${formModuleKeyQt}-formPM`).dxForm("instance")?.option("readOnly", roPM);
 
             $("#roleSelect").dxSelectBox({
           items: Roles, value: state.currentUserRole, stylingMode:"outlined",
@@ -770,18 +770,13 @@ Note:
 
         function applySectionFocusHighlight() {
             $(".dept-section").removeClass("focused");
-            $(`#${formModuleKey}-sec${state.focusDept}`).addClass("focused");
+            $(`#${formModuleKeyQt}-sec${state.focusDept}`).addClass("focused");
         }
 
-        function scrollToDept(dept) {
-            const container = document.getElementById(`${formModuleKey}-overviewScroll`);
-            const el = document.getElementById(`${formModuleKey}-sec` + dept);
-            if (!container || !el) return;
-            container.scrollTo({ top: el.offsetTop - 8, behavior: "smooth" });
-        }
+
 
         function setupDeptTree() {
-            $(".dept-node").off("click.tree").on("click.tree", function () {
+            $(`.${formModuleKeyQt}-dept-tree.dept-node`).off("click.tree").on("click.tree", function () {
                 const key = $(this).data("key");
                 state.focusDept = key;
 
@@ -789,7 +784,7 @@ Note:
                 applySectionFocusHighlight();
                 applyEditLock();
                 updateHints();
-                scrollToDept(state.focusDept);
+                scrollToDept(formModuleKeyQt,state.focusDept);
 
                 // optional: auto expand focused dept
                 setSectionCollapsed(state.focusDept, false);
@@ -797,9 +792,9 @@ Note:
         }
 
         function layoutTreeLine() {
-            const $stack = $("#treeStack");
+            const $stack = $(`#${formModuleKeyQt}-treeStack`);
             const $nodes = $stack.find(".dept-node");
-            const $line = $("#treeVLine");
+            const $line = $(`#${formModuleKeyQt}-treeVLine`);
             if (!$nodes.length) return;
 
             const stackRect = $stack[0].getBoundingClientRect();
@@ -816,7 +811,7 @@ Note:
         // 5) Expand / Collapse sections by clicking header
         // =========================
         function setSectionCollapsed(dept, collapsed) {
-            const $sec = $(`#${formModuleKey}-sec${dept}`);
+            const $sec = $(`#${formModuleKeyQt}-sec${dept}`);
             if (!$sec.length) return;
             const body = $sec.find(".dept-body")[0];
 
@@ -836,13 +831,13 @@ Note:
         }
 
         function toggleSection(dept) {
-            const $sec = $(`#${formModuleKey}-sec${dept}`);
+            const $sec = $(`#${formModuleKeyQt}-sec${dept}`);
             setSectionCollapsed(dept, !$sec.hasClass("collapsed"));
         }
 
         function bindSectionHeaderToggle() {
             ["MKT", "TS", "UW", "LMKT", "PM"].forEach(dept => {
-                const $sec = $(`#${formModuleKey}-sec${dept}`);
+                const $sec = $(`#${formModuleKeyQt}-sec${dept}`);
                 if (!$sec.length) return;
 
                 $sec.find(".dept-header").off("click.sec").on("click.sec", function (e) {
@@ -1047,7 +1042,7 @@ Note:
             updateHints();
             updateSectionUpdatedTime(q);
             initDepartmentAssignees();
-            scrollToDept(state.focusDept);
+            scrollToDept(formModuleKeyQt,state.focusDept);
         }
 
 
@@ -1269,7 +1264,7 @@ Note:
             applySectionFocusHighlight();
             applyEditLock();
             updateHints();
-            scrollToDept(state.focusDept);
+            scrollToDept(formModuleKeyQt,state.focusDept);
 
             // popup remark (giữ code bạn, chỉ không đụng tới vì bạn đang dùng nhiều helper)
             DevExpress.ui.notify(`Mock submit routed to ${dept}`, "success", 1200);
@@ -1526,37 +1521,12 @@ Note:
                         </div>
                     </div>
 
-                    <div id="deptTree" class="dept-tree">
-                        <div class="treeStack" id="treeStack">
-                            <div class="vline" id="treeVLine"></div>
 
-                            <div class="dept-node" data-key="MKT" data-target="#qt-secMKT">
-                                <div class="dept-callout" data-pic-for="MKT"><span class="co-icon"></span><span class="co-text">-</span></div>
-                                <div class="dept-circle">MKT</div>
-                            </div>
-
-                            <div class="dept-node" data-key="TS" data-target="#qt-secTS">
-                                <div class="dept-callout" data-pic-for="TS"><span class="co-icon"></span><span class="co-text">-</span></div>
-                                <div class="dept-circle">TS</div>
-                            </div>
-
-                            <div class="dept-node" data-key="UW" data-target="#qt-secUW">
-                                <div class="dept-callout" data-pic-for="UW"><span class="co-icon"></span><span class="co-text">-</span></div>
-                                <div class="dept-circle">UW</div>
-                            </div>
-
-                            <div class="dept-node" data-key="LMKT" data-target="#qt-secLMKT">
-                                <div class="dept-callout" data-pic-for="LMKT"><span class="co-icon"></span><span class="co-text">-</span></div>
-                                <div class="dept-circle">LMKT</div>
-                            </div>
-
-                            <div class="dept-node" data-key="PM" data-target="#qt-secPM">
-                                <div class="dept-callout" data-pic-for="PM"><span class="co-icon"></span><span class="co-text">-</span></div>
-                                <div class="dept-circle">PM</div>
-                            </div>
-                        </div>
-                    </div>
-
+                    @await Html.PartialAsync("_DeptTree", new DeptTreePartialModel
+{
+    Prefix = "qt",
+    ModuleCode = "qt"
+})
                     @await Html.PartialAsync("_OverviewScroll", new OverviewScrollPartialModel
                {
                    Prefix = "qt",
