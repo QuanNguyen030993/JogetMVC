@@ -1529,67 +1529,11 @@ Note:
                         </div>
                     </div>
 
-                    <div id="overviewScroll" class="overview-scroll">
-                        <section id="secMKT" class="dept-section">
-                            <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_MKT_Form_Header")
-                            </div>
-                            <div class="dept-body">
-                                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_MKT_Form")
-                            </div>
-                            <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_MKT_Form_Footer")
-                            </div>
-                        </section>
-
-                        <section id="secTS" class="dept-section">
-                            <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_TS_Form_Header")
-                            </div>
-                            <div class="dept-body">
-                                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_TS_Form")
-                            </div>
-                            <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_TS_Form_Footer")
-                            </div>
-                        </section>
-
-                        @*       <section id="secUW" class="dept-section">
-                           <div class="dept-header">
-                               @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_UW_Form_Header")
-                           </div>
-                           <div class="dept-body">
-                               @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_UW_Form")
-                           </div>
-                           <div class="dept-header">
-                               @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_UW_Form_Footer")
-                           </div>
-                       </section>
-
-                       <section id="secLMKT" class="dept-section">
-                           <div class="dept-header">
-                               @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_LMKT_Form_Header")
-                           </div>
-                           <div class="dept-body">
-                               @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_LMKT_Form")
-                           </div>
-                           <div class="dept-header">
-                               @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_LMKT_Form_Footer")
-                           </div>
-                       </section>
-*@
-                        <section id="secPM" class="dept-section">
-                            <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_PM_Form_Header")
-                            </div>
-                            <div class="dept-body">
-                                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_PM_Form")
-                            </div>
-                            <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_PM_Form_Footer")
-                            </div>
-                        </section>
-                    </div>
+                    @await Html.PartialAsync("_OverviewScroll", new OverviewScrollPartialModel
+                       {
+                           Prefix = "pi",
+                           ModuleCode = "pi"
+                       })
                 </div>
             </section>
         </div>

@@ -486,6 +486,9 @@ Note:
     $(function () {
           // var PIC_JSON = `{"MKT":"thao.bp","TS":"hien.ttt","UW":"thanh.pp","LKMT":"thao.np"}`;
           var PIC_JSON = `{}`;
+
+          var formModuleKey = "qt";
+
         var pICs = [];
         if ($('[data-toggle="push-menu"]').hasClass("sidebar-collapse")) {
             $('[data-toggle="push-menu"]').click();
@@ -645,12 +648,13 @@ Note:
     // }
 
         function renderDeptForms() {
+            debugger
             //Data render to partial
-            $("#formMKT").dxForm({ formData: deptData.MKT, readOnly: true, colCount: 1 });
-            $("#formTS").dxForm({ formData: deptData.TS, readOnly: true, colCount: 1 });
-            $("#formUW").dxForm({ formData: deptData.UW, readOnly: true, colCount: 1 });
-            $("#formLMKT").dxForm({ formData: deptData.LMKT, readOnly: true, colCount: 1 });
-            $("#formPM").dxForm({ formData: deptData.PM, readOnly: true, colCount: 1 });
+            $(`#${formModuleKey}-formMKT`).dxForm({ formData: deptData.MKT, readOnly: true, colCount: 1 });
+            $(`#${formModuleKey}-formTS`).dxForm({ formData: deptData.TS, readOnly: true, colCount: 1 });
+            $(`#${formModuleKey}-formUW`).dxForm({ formData: deptData.UW, readOnly: true, colCount: 1 });
+            $(`#${formModuleKey}-formLMKT`).dxForm({ formData: deptData.LMKT, readOnly: true, colCount: 1 });
+            $(`#${formModuleKey}-formPM`).dxForm({ formData: deptData.PM, readOnly: true, colCount: 1 });
             loadDxFileUploaderAttachments("MKT","Document");
             loadDxFileUploaderAttachments("TS","Document");
             loadDxFileUploaderAttachments("UW","Document");
@@ -668,11 +672,11 @@ Note:
             const roLMKT = !(state.currentUserRole === "LMKT");
             const roPM = !(state.currentUserRole === "PM");
 
-            $("#formMKT").dxForm("instance")?.option("readOnly", roMKT);
-            $("#formTS").dxForm("instance")?.option("readOnly", roTS);
-            $("#formUW").dxForm("instance")?.option("readOnly", roUW);
-            $("#formLMKT").dxForm("instance")?.option("readOnly", roLMKT);
-            $("#formPM").dxForm("instance")?.option("readOnly", roPM);
+            $(`#${formModuleKey}-formMKT`).dxForm("instance")?.option("readOnly", roMKT);
+            $(`#${formModuleKey}-formTS`).dxForm("instance")?.option("readOnly", roTS);
+            $(`#${formModuleKey}-formUW`).dxForm("instance")?.option("readOnly", roUW);
+            $(`#${formModuleKey}-formLMKT`).dxForm("instance")?.option("readOnly", roLMKT);
+            $(`#${formModuleKey}-formPM`).dxForm("instance")?.option("readOnly", roPM);
 
             $("#roleSelect").dxSelectBox({
           items: Roles, value: state.currentUserRole, stylingMode:"outlined",
@@ -767,7 +771,7 @@ Note:
 
         function applySectionFocusHighlight() {
             $(".dept-section").removeClass("focused");
-            $(`#sec${state.focusDept}`).addClass("focused");
+            $(`#${formModuleKey}-sec${state.focusDept}`).addClass("focused");
         }
 
         function scrollToDept(dept) {
@@ -813,7 +817,7 @@ Note:
         // 5) Expand / Collapse sections by clicking header
         // =========================
         function setSectionCollapsed(dept, collapsed) {
-            const $sec = $(`#sec${dept}`);
+            const $sec = $(`#${formModuleKey}-sec${dept}`);
             if (!$sec.length) return;
             const body = $sec.find(".dept-body")[0];
 
@@ -833,13 +837,13 @@ Note:
         }
 
         function toggleSection(dept) {
-            const $sec = $(`#sec${dept}`);
+            const $sec = $(`#${formModuleKey}-sec${dept}`);
             setSectionCollapsed(dept, !$sec.hasClass("collapsed"));
         }
 
         function bindSectionHeaderToggle() {
             ["MKT", "TS", "UW", "LMKT", "PM"].forEach(dept => {
-                const $sec = $(`#sec${dept}`);
+                const $sec = $(`#${formModuleKey}-sec${dept}`);
                 if (!$sec.length) return;
 
                 $sec.find(".dept-header").off("click.sec").on("click.sec", function (e) {
@@ -1554,67 +1558,11 @@ Note:
                         </div>
                     </div>
 
-                    <div id="overviewScroll" class="overview-scroll">
-                        <section id="secMKT" class="dept-section">
-                            <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_MKT_Form_Header")
-                            </div>
-                            <div class="dept-body">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_MKT_Form")
-                            </div>
-                            <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_MKT_Form_Footer")
-                            </div>
-                        </section>
-
-                        <section id="secTS" class="dept-section">
-                            <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_TS_Form_Header")
-                            </div>
-                            <div class="dept-body">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_TS_Form")
-                            </div>
-                            <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_TS_Form_Footer")
-                            </div>
-                        </section>
-
-                        <section id="secUW" class="dept-section">
-                            <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_UW_Form_Header")
-                            </div>
-                            <div class="dept-body">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_UW_Form")
-                            </div>
-                            <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_UW_Form_Footer")
-                            </div>
-                        </section>
-
-                        <section id="secLMKT" class="dept-section">
-                            <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_LMKT_Form_Header")
-                            </div>
-                            <div class="dept-body">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_LMKT_Form")
-                            </div>
-                            <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_LMKT_Form_Footer")
-                            </div>
-                        </section>
-
-                        <section id="secPM" class="dept-section">
-                            <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_PM_Form_Header")
-                            </div>
-                            <div class="dept-body">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_PM_Form")
-                            </div>
-                            <div class="dept-header">
-                                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_PM_Form_Footer")
-                            </div>
-                        </section>
-                    </div>
+                    @await Html.PartialAsync("_OverviewScroll", new OverviewScrollPartialModel
+               {
+                   Prefix = "qt",
+                   ModuleCode = "qt"
+               })
                 </div>
             </section>
         </div>

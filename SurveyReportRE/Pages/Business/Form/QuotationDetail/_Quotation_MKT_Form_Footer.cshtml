@@ -20,7 +20,7 @@
      $("#btnSubmitBranch_@dept").dxButton({ text: "Route To", icon: "check", type: "info", onClick: openBranchOverlay });
     $("#btnSave_@dept").dxButton({ text: "Save", icon: "save", type: "default", onClick: 
         function (e) {
-              var formItems = $(`#form${dept}`).dxForm("instance")?.option("formData") || {};
+              var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
               var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
                   shadingColor: "rgba(0,0,0,0.4)",
                   visible: false,
@@ -28,7 +28,7 @@
                   showPane: false,
                   shading: true,
                   closeOnOutsideClick: false,
-                   position: { of: `#form${dept}`}
+                   position: { of: `#qt-form${dept}`}
                   // onShown: function () {
                   //     setTimeout(function () {
                   //         appLoadPanel.hide();

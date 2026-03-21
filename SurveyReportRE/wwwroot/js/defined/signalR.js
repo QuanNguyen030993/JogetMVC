@@ -40,7 +40,7 @@ connectionSignR.start().then(async function () {
             showPane: false,
             shading: true,
             closeOnOutsideClick: false,
-            position: { of: `#form${_role}` }
+            position: { of: `#qt-form${_role}` }
             // onShown: function () {
             //     setTimeout(function () {
             //         appLoadPanel.hide();

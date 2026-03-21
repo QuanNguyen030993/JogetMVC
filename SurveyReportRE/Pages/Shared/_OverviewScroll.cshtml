@@ -1,0 +1,111 @@
+﻿@model OverviewScrollPartialModel
+
+@{
+    string Id(string name) => $"{Model.Prefix}-{name}";
+    var moduleCode = (Model.ModuleCode ?? "").Trim().ToLower();
+}
+
+<div id="@Id("overviewScroll")" class="overview-scroll">
+
+    @if (moduleCode == "qt")
+    {
+        <section id="@Id("secMKT")" class="dept-section">
+            <div class="dept-header">
+                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_MKT_Form_Header")
+            </div>
+            <div class="dept-body">
+                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_MKT_Form")
+            </div>
+            <div class="dept-header">
+                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_MKT_Form_Footer")
+            </div>
+        </section>
+
+        <section id="@Id("secTS")" class="dept-section">
+            <div class="dept-header">
+                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_TS_Form_Header")
+            </div>
+            <div class="dept-body">
+                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_TS_Form")
+            </div>
+            <div class="dept-header">
+                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_TS_Form_Footer")
+            </div>
+        </section>
+
+        <section id="@Id("secUW")" class="dept-section">
+            <div class="dept-header">
+                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_UW_Form_Header")
+            </div>
+            <div class="dept-body">
+                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_UW_Form")
+            </div>
+            <div class="dept-header">
+                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_UW_Form_Footer")
+            </div>
+        </section>
+
+        <section id="@Id("secLMKT")" class="dept-section">
+            <div class="dept-header">
+                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_LMKT_Form_Header")
+            </div>
+            <div class="dept-body">
+                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_LMKT_Form")
+            </div>
+            <div class="dept-header">
+                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_LMKT_Form_Footer")
+            </div>
+        </section>
+
+        <section id="@Id("secPM")" class="dept-section">
+            <div class="dept-header">
+                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_PM_Form_Header")
+            </div>
+            <div class="dept-body">
+                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_PM_Form")
+            </div>
+            <div class="dept-header">
+                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_PM_Form_Footer")
+            </div>
+        </section>
+    }
+    else if (moduleCode == "pi")
+    {
+        <section id="@Id("secMKT")" class="dept-section">
+            <div class="dept-header">
+                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_MKT_Form_Header")
+            </div>
+            <div class="dept-body">
+                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_MKT_Form")
+            </div>
+            <div class="dept-header">
+                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_MKT_Form_Footer")
+            </div>
+        </section>
+
+        <section id="@Id("secTS")" class="dept-section">
+            <div class="dept-header">
+                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_TS_Form_Header")
+            </div>
+            <div class="dept-body">
+                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_TS_Form")
+            </div>
+            <div class="dept-header">
+                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_TS_Form_Footer")
+            </div>
+        </section>
+
+        <section id="@Id("secPM")" class="dept-section">
+            <div class="dept-header">
+                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_PM_Form_Header")
+            </div>
+            <div class="dept-body">
+                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_PM_Form")
+            </div>
+            <div class="dept-header">
+                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_PM_Form_Footer")
+            </div>
+        </section>
+    }
+
+</div>
