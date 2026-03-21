@@ -1,0 +1,63 @@
+﻿@model OverviewPanePartialModel
+
+@{
+    string Id(string name) => $"{Model.Prefix}-{name}";
+    var moduleCode = (Model.ModuleCode ?? "").Trim().ToLower();
+}
+
+<div id="@Id("overviewRoot")" class="pane pane-right">
+    <section class="card">
+        <div class="cardHeader">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <div class="h">@Model.Title</div>
+                <span id="@Id("detailStatus")" class="statusTag">-</span>
+                <span id="@Id("stageDeptPill")" class="pill">Request pending at: </span>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:8px;">
+                <div id="@Id("btnCollapseAllTab")"></div>
+                <div id="@Id("btnToggleReferenceFields")"></div>
+                <div id="@Id("btnToggleComment")"></div>
+            </div>
+        </div>
+
+        <div class="cardBody overview-wrap" style="padding:0">
+
+            <div id="@Id("flowHistoryPanel")" class="flow-history-panel">
+                <div class="fh-title">
+                    <span>Flow History</span>
+                    <span id="@Id("flowSummary")" class="fh-sub">-</span>
+                </div>
+                <div id="@Id("flowHistoryBody")" class="fh-flow">
+                    <div style="color:#6b7280;font-size:12px;padding:6px 4px;">Hover tree to load…</div>
+                </div>
+            </div>
+
+            <div id="@Id("commentPanel")" class="comment-tooltip" style="display:none;">
+                <div class="ct-title">
+                    <span>Audit Log</span>
+                    <span id="@Id("commentPanelSub")" class="ct-sub">-</span>
+                    <span class="ct-actions">
+                        <a href="javascript:void(0)" id="@Id("btnCloseCommentPanel")" class="ct-close">✕</a>
+                    </span>
+                </div>
+                <div id="@Id("commentPanelList")" class="ct-list">
+                    <div style="color:#6b7280;font-size:12px;padding:6px 4px;">Click “Comments” to load…</div>
+                </div>
+            </div>
+
+            @await Html.PartialAsync("_DeptTree", new DeptTreePartialModel
+       {
+           Prefix = Model.Prefix,
+           ModuleCode = Model.ModuleCode
+       })
+
+            @await Html.PartialAsync("_OverviewScroll", new OverviewScrollPartialModel
+       {
+           Prefix = Model.Prefix,
+           ModuleCode = Model.ModuleCode
+       })
+
+        </div>
+    </section>
+</div>

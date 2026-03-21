@@ -3,6 +3,9 @@
 @using Newtonsoft.Json
 @model Quotation_Individual_FormModel
 @{
+        var moduleCode = "qt";   // hoặc "qt"
+    var prefix = moduleCode; // thường cho prefix = luôn qt / pi
+    var title = moduleCode == "qt" ? "Quotation Overview" : "Policy Issuance Overview";
 }
 @*
 Note: 
@@ -716,27 +719,14 @@ Note:
                          </svg> LOCK
                        </span>`;
 
-                $(`#hint${k}`).html(icon);
+                $(`#${formModuleKeyQt}-hint${k}`).html(icon);
             });
         }
 
         // =========================
         // 3) Updated time per section
         // =========================
-        // function updateSectionUpdatedTime(q) {
-        //     // Nếu bạn có field thật, map vào đây.
-        //     const map = {
-        //         MKT: q?.mktUpdatedAt || q?.modifiedDate || q?.updatedAt,
-        //         TS: q?.tsUpdatedAt,
-        //         UW: q?.uwUpdatedAt,
-        //         LMKT: q?.lmktUpdatedAt,
-        //         PM: q?.pmUpdatedAt
-        //     };
-        //     Object.keys(map).forEach(dept => {
-        //         $(`#upd${dept}`).text("Updated: " + fmtTimeLocal(map[dept]));
-        //     });
-        // }
-
+   
            function updateSectionUpdatedTime(q) {
         let tat = {};
 
@@ -755,7 +745,7 @@ Note:
         };
 
         Object.keys(map).forEach(dept => {
-            $(`#upd${dept}`).text("Updated: " + fmtTimeLocal(map[dept]));
+            $(`#${formModuleKeyQt}-upd${dept}`).text("Updated: " + fmtTimeLocal(map[dept]));
         });
     }
 
@@ -939,7 +929,7 @@ Note:
             function bind() {
                 $("#headerWidgetsPanel").empty();
 
-                 $(`<div id="btnToggleReferenceFieldsMini">`).dxButton({
+                 $(`<div id="${formModuleKeyQt}-btnToggleReferenceFieldsMini">`).dxButton({
                     icon: "fas fa-sliders-h",
                     type: "normal",
                     stylingMode: "contained",
@@ -949,7 +939,7 @@ Note:
                       }
                     }).appendTo($("#headerWidgetsPanel"));
 
-                $(`<div id="btnToggleCommentMini" style="margin-left: 10px">`).dxButton({
+                $(`<div id="${formModuleKeyQt}-btnToggleCommentMini" style="margin-left: 10px">`).dxButton({
                     icon: "comment",
                     type: "normal",
                     stylingMode: "contained",
@@ -959,7 +949,7 @@ Note:
                             }
                     }).appendTo($("#headerWidgetsPanel"));
 
-                 $("#btnCollapseAllTab").dxButton({
+                 $(`#${formModuleKeyQt}-btnCollapseAllTab`).dxButton({
                     text: "Collapse All Sections",
                     type: "normal",
                     stylingMode: "contained",
@@ -971,7 +961,7 @@ Note:
                       setSectionCollapsed("PM",true);
                      }
                  });
-                $("#btnToggleComment").dxButton({
+                $(`#${formModuleKeyQt}-btnToggleComment`).dxButton({
                     text: "Audit logs",
                     icon: "comment",
                     type: "normal",
@@ -986,7 +976,7 @@ Note:
                         }
                     });
 
-                 $("#btnToggleReferenceFields").dxButton({
+                 $(`#${formModuleKeyQt}-btnToggleReferenceFields`).dxButton({
                     text: "Common fields",
                     icon: "fas fa-sliders-h",
                     type: "normal",
@@ -1479,8 +1469,13 @@ Note:
  *@
         <!-- Splitter -->
         <div id="mainSplitter" class="pane-splitter" title="Kéo để thay đổi kích thước"></div>
-
-        <!-- Right pane -->
+        @await Html.PartialAsync("_OverviewPane", new OverviewPanePartialModel
+        {
+            Prefix = prefix,
+            ModuleCode = moduleCode,
+            Title = title
+        })
+        @* <!-- Right pane -->
         <div class="pane pane-right">
             <section class="card">
                 <div class="cardHeader">
@@ -1534,7 +1529,7 @@ Note:
                })
                 </div>
             </section>
-        </div>
+        </div> *@
     </div>
 
     <!-- Bottom action bar -->
