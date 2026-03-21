@@ -15,7 +15,7 @@
 </style>
 <script type="text/javascript">
 
-    $("#formTS").dxForm({
+    $("#pi-formTS").dxForm({
          items: [
 
          {itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
@@ -63,7 +63,7 @@
              //         // });
              // }
              // } ,onFocusOut: function (et) {
-             //    var formItems = $("#formTS").dxForm().dxForm("instance").option("formData");
+             //    var formItems = $("#pi-formTS").dxForm().dxForm("instance").option("formData");
              //      ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ premiumTotal: formItems.premiumTotal })} , {
              //             onSuccess: function (response) {
              //             },
@@ -93,7 +93,7 @@
              // }
              // }
              // ,onFocusOut: function (ed) {
-             //   var formItems = $("#formTS").dxForm().dxForm("instance").option("formData");
+             //   var formItems = $("#pi-formTS").dxForm().dxForm("instance").option("formData");
              //      ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ totalDue: formItems.totalDue })} , {
              //             onSuccess: function (response) {
              //             },
@@ -178,7 +178,7 @@
              //         // });
              // }
              // } ,onFocusOut: function (e) {
-             //   var formItems = $("#formTS").dxForm().dxForm("instance").option("formData");
+             //   var formItems = $("#pi-formTS").dxForm().dxForm("instance").option("formData");
              //      ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ sumInsuredTotal: formItems.sumInsuredTotal })} , {
              //             onSuccess: function (response) {
              //             },
@@ -233,7 +233,7 @@
 </script>
 
 
-<div id="formTS">
+<div id="pi-formTS">
 </div>
 <div style="margin-top:10px;font-weight:800;font-size:12px;">Locations</div>
 <div id="gridTSLocations" style="margin-top:8px;"></div>

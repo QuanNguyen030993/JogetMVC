@@ -486,6 +486,12 @@ Note:
     $(function () {
           // var PIC_JSON = `{"MKT":"thao.bp","TS":"hien.ttt","UW":"thanh.pp","LKMT":"thao.np"}`;
           var PIC_JSON = `{}`;
+
+          
+          var formModuleKey = "pi";
+
+
+
         var pICs = [];
         if ($('[data-toggle="push-menu"]').hasClass("sidebar-collapse")) {
             $('[data-toggle="push-menu"]').click();
@@ -636,11 +642,11 @@ Note:
     // }
 
     //     function renderDeptForms() {
-    //     recreateForm("#formMKT", deptData.MKT, getMKTItems(), true);
-    //     recreateForm("#formTS", deptData.TS, getTSItems(), true);
-    //     recreateForm("#formUW", deptData.UW, getUWItems(), true);
-    //     recreateForm("#formLMKT", deptData.LMKT, getLMKTItems(), true);
-    //     recreateForm("#formPM", deptData.PM, getPMItems(), true);
+    //     recreateForm("#pi-formMKT", deptData.MKT, getMKTItems(), true);
+    //     recreateForm("#pi-formTS", deptData.TS, getTSItems(), true);
+    //     recreateForm("#pi-formUW", deptData.UW, getUWItems(), true);
+    //     recreateForm("#pi-formLMKT", deptData.LMKT, getLMKTItems(), true);
+    //     recreateForm("#pi-formPM", deptData.PM, getPMItems(), true);
 
     //     applyEditLock();
     //     updateHints();
@@ -648,11 +654,12 @@ Note:
 
         function renderDeptForms() {
             //Data render to partial
-            $("#formMKT").dxForm({ formData: deptData.MKT, readOnly: true, colCount: 1 });
-            $("#formTS").dxForm({ formData: deptData.TS, readOnly: true, colCount: 1 });
-            // $("#formUW").dxForm({ formData: deptData.UW, readOnly: true, colCount: 1 });
-            // $("#formLMKT").dxForm({ formData: deptData.LMKT, readOnly: true, colCount: 1 });
-            $("#formPM").dxForm({ formData: deptData.PM, readOnly: true, colCount: 1 });
+           $(`#${formModuleKey}-formMKT`).dxForm({ formData: deptData.MKT, readOnly: true, colCount: 1 });
+            $(`#${formModuleKey}-formTS`).dxForm({ formData: deptData.TS, readOnly: true, colCount: 1 });
+            // $(`#${formModuleKey}-formUW`).dxForm({ formData: deptData.UW, readOnly: true, colCount: 1 });
+            // $(`#${formModuleKey}-formLMKT`).dxForm({ formData: deptData.LMKT, readOnly: true, colCount: 1 });
+            $(`#${formModuleKey}-formPM`).dxForm({ formData: deptData.PM, readOnly: true, colCount: 1 });
+
             loadDxFileUploaderAttachments("MKT","Document");
             loadDxFileUploaderAttachments("TS","Document");
             // loadDxFileUploaderAttachments("UW","Document");
@@ -669,12 +676,11 @@ Note:
             const roUW = !(state.currentUserRole === "UW");
             const roLMKT = !(state.currentUserRole === "LMKT");
             const roPM = !(state.currentUserRole === "PM");
-
-            $("#formMKT").dxForm("instance")?.option("readOnly", roMKT);
-            $("#formTS").dxForm("instance")?.option("readOnly", roTS);
-            $("#formUW").dxForm("instance")?.option("readOnly", roUW);
-            $("#formLMKT").dxForm("instance")?.option("readOnly", roLMKT);
-            $("#formPM").dxForm("instance")?.option("readOnly", roPM);
+            $(`#${formModuleKey}-formMKT`).dxForm("instance")?.option("readOnly", roMKT);
+            $(`#${formModuleKey}-formTS`).dxForm("instance")?.option("readOnly", roTS);
+            // $(`#${formModuleKey}-formUW`).dxForm("instance")?.option("readOnly", roUW);
+            // $(`#${formModuleKey}-formLMKT`).dxForm("instance")?.option("readOnly", roLMKT);
+            $(`#${formModuleKey}-formPM`).dxForm("instance")?.option("readOnly", roPM);
 
             $("#roleSelect").dxSelectBox({
           items: Roles, value: state.currentUserRole, stylingMode:"outlined",
@@ -769,7 +775,7 @@ Note:
 
         function applySectionFocusHighlight() {
             $(".dept-section").removeClass("focused");
-            $(`#sec${state.focusDept}`).addClass("focused");
+            $(`#${formModuleKey}-sec${state.focusDept}`).addClass("focused");
         }
 
         function scrollToDept(dept) {
@@ -815,7 +821,7 @@ Note:
         // 5) Expand / Collapse sections by clicking header
         // =========================
         function setSectionCollapsed(dept, collapsed) {
-            const $sec = $(`#sec${dept}`);
+            const $sec = $(`#${formModuleKey}-sec${dept}`);
             if (!$sec.length) return;
             const body = $sec.find(".dept-body")[0];
 
@@ -834,14 +840,14 @@ Note:
             }
         }
 
-        function toggleSection(dept) {
-            const $sec = $(`#sec${dept}`);
+           function toggleSection(dept) {
+            const $sec = $(`#${formModuleKey}-sec${dept}`);
             setSectionCollapsed(dept, !$sec.hasClass("collapsed"));
         }
 
         function bindSectionHeaderToggle() {
-            ["MKT", "TS", "UW", "LMKT", "PM"].forEach(dept => {
-                const $sec = $(`#sec${dept}`);
+            ["MKT", "TS", "PM"].forEach(dept => {
+                const $sec = $(`#${formModuleKey}-sec${dept}`);
                 if (!$sec.length) return;
 
                 $sec.find(".dept-header").off("click.sec").on("click.sec", function (e) {

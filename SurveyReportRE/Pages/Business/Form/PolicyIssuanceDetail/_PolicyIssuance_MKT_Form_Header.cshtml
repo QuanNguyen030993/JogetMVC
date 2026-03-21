@@ -12,7 +12,7 @@
 </div>
 <script>
     setTimeout( () => {
-    var formItems = $("#formMKT").dxForm("instance")?.option("formData") || {};
+    var formItems = $("#pi-formMKT").dxForm("instance")?.option("formData") || {};
 
     renderDepartmentAssigneeBox("#mktAssigneeBox", {
         groupName: "MKT",
@@ -276,7 +276,7 @@
                             _formConfig.originModelName = "Res";
                             _formConfig.formElementName = "Res";
                             _formConfig.colCount = 1;
-                            var parentFormData = $("#formMKT").dxForm("instance")?.option("formData");
+                            var parentFormData = $("#pi-formMKT").dxForm("instance")?.option("formData");
                             console.log(parentFormData);
                             _formConfig.container = $(`<div id = "form_${_formConfig.originModelName}_${parentFormData.resId}" style="padding: 10px; margin-right: 0px" >`);
                             var form =  new ResFormQuotationForm(parentFormData.resId, null, _formConfig, _formConfig);
