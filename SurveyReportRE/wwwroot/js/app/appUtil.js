@@ -6382,7 +6382,6 @@ function hideUploaderLoader(idControlElement) {
     $(`${idControlElement} .previewLoader`).remove();
 }
 function renderDxFileUploader(editorOptions, $container, options) {
-    console.log(editorOptions);
     const controlId = `${editorOptions.moduleName}_${editorOptions.sectionName}`;
     options = options || {};
     const controllerName = options.controllerName || "Document";
@@ -6468,7 +6467,6 @@ function createAttachmentItem(x, onDeleted) {
     const size = x.size || x.fileSize || x.FileSize || 0;
     const downloadUrl = x.downloadUrl || x.DownloadUrl || x.url;
     const id = x.id || x.Id || x.attachmentId;
-    console.log(x);
     const $item = $("<div>")
         .addClass("att-item")
         .css({
@@ -6542,7 +6540,12 @@ function createAttachmentItem(x, onDeleted) {
 
     $item.css("cursor", downloadUrl ? "pointer" : "default");
     $item.on("click", async function (ev) {
-        openExcelPreviewPopup(id);
+        if (ext === "xlsx" || ext === "xls" )
+            openExcelPreviewPopup(id);
+        if (ext === "docx" || ext === "doc")
+            openWordPreviewPopup(id);
+        //if (ext === "docx")
+        //    openWordMammothPopup(id);
     });
 
     return $item;
@@ -7199,31 +7202,7 @@ async function openExcelPreviewPopup(id) {
             (async function () {
                 try {
                     const fileRes = await fetch(`/api/Document/StreamDocument?id=${id}`);
-                    //if (!metaRes.ok) throw new Error("Không lấy được danh sách file");
-
-                    //const files = await metaRes.json();
-                    //if (!files || !files.length) {
-                    //    $body.html("<div style='padding:20px;color:#999'>Không có file</div>");
-                    //    return;
-                    //}
-
-                    //// 2. chọn file excel mới nhất
-                    //const excelFiles = files.filter(x =>
-                    //    (x.extension || "").toLowerCase() === "xlsx" ||
-                    //    (x.extension || "").toLowerCase() === "xls"
-                    //);
-
-                    //if (!excelFiles.length) {
-                    //    $body.html("<div style='padding:20px;color:#999'>Không tìm thấy file Excel</div>");
-                    //    return;
-                    //}
-
-                    //const file = excelFiles[0];
-
-                    //// 3. fetch binary
-                    //const fileRes = await fetch(file.downloadUrl);
-                    //if (!fileRes.ok) throw new Error("Không tải được file Excel");
-
+                   
                     const arrayBuffer = await fileRes.arrayBuffer();
 
                     // 4. đọc workbook
@@ -7290,4 +7269,104 @@ async function openExcelPreviewPopup(id) {
     });
 
     popupInstance.show();
+}
+async function openWordPreviewPopup(id) {
+    const popup = makePopup("large", "Res");
+
+    popup.option({
+        width: "80vw",
+        height: "90vh",
+        title: "Word Preview",
+        contentTemplate(container) {
+            const $host = $("<div>")
+                .css({
+                    width: "100%",
+                    height: "100%",
+                    overflow: "auto",
+                    padding: 20,
+                    background: "#f5f6f8"
+                })
+                .html("Loading...")
+                .appendTo(container);
+
+            fetch(`/api/Document/StreamDocument?id=${id}`)
+                .then(r => {
+                    if (!r.ok) throw new Error(`Load file thất bại: ${r.status}`);
+                    return r.blob();
+                })
+                .then(blob => {
+                    const docEl = $("<div>")
+                        .css({
+                            background: "#fff",
+                            padding: 40,
+                            margin: "0 auto",
+                            maxWidth: 900,
+                            boxShadow: "0 4px 20px rgba(0,0,0,0.1)"
+                        })[0];
+
+                    $host.empty().append(docEl);
+
+                    return docx.renderAsync(blob, docEl, null, {
+                        className: "docx",
+                        inWrapper: true,
+                        breakPages: true
+                    });
+                })
+                .catch(err => {
+                    console.error(err);
+                    $host.html(`<div style="padding:20px;color:red;">${err.message}</div>`);
+                });
+        }
+    });
+
+    popup.show();
+}
+
+async function openWordMammothPopup(id) {
+    const popup = makePopup("large", "Res");
+
+    popup.option({
+        width: "70vw",
+        height: "85vh",
+        title: "Word Text Preview",
+        contentTemplate(container) {
+
+            const $host = $("<div>").css({
+                width: "100%",
+                height: "100%",
+                overflow: "auto",
+                padding: "20px",
+                background: "#fff",
+                lineHeight: "1.6",
+                fontFamily: "Calibri, Arial"
+            }).html("Loading...").appendTo(container);
+
+            (async () => {
+                try {
+                    // 1. fetch binary từ API của bạn
+                    const res = await fetch(`/api/Document/StreamDocument?id=${id}`);
+                    if (!res.ok) throw new Error(`Load file thất bại: ${res.status}`);
+
+                    const arrayBuffer = await res.arrayBuffer();
+
+                    // 2. convert docx → HTML
+                    const result = await mammoth.convertToHtml({ arrayBuffer });
+
+                    // 3. render HTML
+                    $host.html(result.value);
+
+                    // 4. log warning nếu có
+                    if (result.messages && result.messages.length) {
+                        console.warn("Mammoth warnings:", result.messages);
+                    }
+
+                } catch (err) {
+                    console.error(err);
+                    $host.html(`<div style="color:red;">${err.message}</div>`);
+                }
+            })();
+        }
+    });
+
+    popup.show();
 }
