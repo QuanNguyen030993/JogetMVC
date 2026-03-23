@@ -1031,8 +1031,10 @@ function createEditor(item, $container, $element, editorOptions) {
             break;
         case "dxFileUploader":
             {
-                const sectionName = editorOptions?.sectionName || item.sectionName;
-                renderDxFileUploader(sectionName, $container, {
+                var items = new Object();
+                items.sectionName =  editorOptions?.sectionName || item.sectionName;
+                items.moduleName = editorOptions?.moduleName || item.moduleName;
+                renderDxFileUploader(items, $container, {
                     controllerName: "Document",
                     uploadTitle: "Files",
                     uploadUrl: "/api/Attachment/AsyncUploadFile",
@@ -6337,8 +6339,8 @@ function formatBytes(bytes) {
 //        attList_Host.append($item);
 //    });
 //}
-function getCurrentEditorOptions(sectionName) {
-    const form = $(`#form${sectionName}`).dxForm("instance");
+function getCurrentEditorOptions(editorOptions) {
+    const form = $(`#${editorOptions.moduleName}-form${editorOptions.sectionName}`).dxForm("instance");
     if (!form) return null;
     return form.option("formData");
 }
@@ -6379,12 +6381,14 @@ function showUploaderLoader(idControlElement, message) {
 function hideUploaderLoader(idControlElement) {
     $(`${idControlElement} .previewLoader`).remove();
 }
-function renderDxFileUploader(sectionName, $container, options) {
+function renderDxFileUploader(editorOptions, $container, options) {
+    console.log(editorOptions);
+    const controlId = `${editorOptions.moduleName}_${editorOptions.sectionName}`;
     options = options || {};
     const controllerName = options.controllerName || "Document";
-    const currentOptions = getCurrentEditorOptions(sectionName) || {};
+    const currentOptions = getCurrentEditorOptions(editorOptions) || {};
 
-    const ids = getDxFileUploaderIds(sectionName);
+    const ids = getDxFileUploaderIds(controlId);
     const uploaderId = ids.uploaderId;
     const previewId = ids.previewId;
     const idControlElement = `#${uploaderId}`;
@@ -6393,11 +6397,10 @@ function renderDxFileUploader(sectionName, $container, options) {
 
     $(`#${previewId}`).remove();
     $(`#${uploaderId}`).remove();
-
+    
     //const $preview =  $(`<div id="${previewId}" style="display:flex;flex-wrap:wrap;gap:25px;top:10px"></div>`)
     const $preview = $(`<div id="${previewId}" class="att-preview"></div>`)
         .appendTo($container);
-
     $(`<div id="${uploaderId}"></div>`)
         .appendTo($container)
         .dxFileUploader({
@@ -6414,13 +6417,13 @@ function renderDxFileUploader(sectionName, $container, options) {
                //Only use for static string
             },
             onInitialized: function (e) {
-                updateDxFileUploaderHeaders(sectionName);
+                updateDxFileUploaderHeaders(editorOptions);
             },
             onUploadStarted: function (e) {
                 showUploaderLoader(idControlElement, "File loading...");
             },
             uploadFile: function (file) {
-                const opts = resolveUploadOptions(sectionName);
+                const opts = resolveUploadOptions(controlId, editorOptions);
                 return uploadFileAjax(file, {
                     url: "/api/Attachment/AsyncUploadFile",
                     guid: opts.guid,
@@ -6430,57 +6433,34 @@ function renderDxFileUploader(sectionName, $container, options) {
             },
             onUploaded: function (e) {
                 hideUploaderLoader(idControlElement);
-                loadDxFileUploaderAttachments(sectionName, controllerName)
+
+                loadDxFileUploaderAttachments(controlId, controllerName, editorOptions)
             }
         });
-    loadDxFileUploaderAttachments(sectionName, controllerName);
+
+    loadDxFileUploaderAttachments(controlId, controllerName, editorOptions);
 }
 
-function updateDxFileUploaderHeaders(sectionName) {
-    const currentOptions = getCurrentEditorOptions(sectionName);
+function updateDxFileUploaderHeaders(editorOptions) {
+    
+    const controlIdIn = `${editorOptions.moduleName}_${editorOptions.sectionName}`;
+    const currentOptions = getCurrentEditorOptions(editorOptions);
     if (!currentOptions) return;
 
-    const { uploaderId } = getDxFileUploaderIds(sectionName);
+    const { uploaderId } = getDxFileUploaderIds(controlIdIn);
     const uploader = $(`#${uploaderId}`).dxFileUploader("instance");
     if (!uploader) return;
 
     uploader.option("uploadHeaders", {
         RecordGuid: currentOptions.guid || "",
-        Folder: currentOptions.sectionName || sectionName
+        Folder: editorOptions.sectionName || sectionName
     });
 
     uploader.option("readOnly", !!currentOptions.isReadOnly);
     uploader.option("selectButtonText", `Upload ${currentOptions.uploadTitle || "Files"}`);
 }
 
-//function loadDxFileUploaderAttachments(sectionName, controllerName) {
-//    const currentOptions = getCurrentEditorOptions(sectionName);
-//    if (!currentOptions || !currentOptions.guid) return;
 
-//    const { uploaderId, previewId } = getDxFileUploaderIds(sectionName);
-//    const idControlElement = `#${uploaderId}`;
-
-//    showUploaderLoader(idControlElement, "File loading...");
-
-//    $.ajax({
-//        url: `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${currentOptions.sectionName}`,
-//        method: "GET",
-//        success: function (data) {
-//            const $preview = $(`#${previewId}`);
-//            $preview.empty();
-
-//            if (Array.isArray(data) && data.length > 0) {
-//                data.forEach(itemFile => {
-//                });
-//            }
-
-//            hideUploaderLoader(idControlElement);
-//        },
-//        error: function () {
-//            hideUploaderLoader(idControlElement);
-//        }
-//    });
-//}
 
 function createAttachmentItem(x, onDeleted) {
     const fileName = x.fileName || x.FileName || x.name || "Unnamed";
@@ -6488,7 +6468,7 @@ function createAttachmentItem(x, onDeleted) {
     const size = x.size || x.fileSize || x.FileSize || 0;
     const downloadUrl = x.downloadUrl || x.DownloadUrl || x.url;
     const id = x.id || x.Id || x.attachmentId;
-
+    console.log(x);
     const $item = $("<div>")
         .addClass("att-item")
         .css({
@@ -6561,9 +6541,8 @@ function createAttachmentItem(x, onDeleted) {
     }).appendTo($actions);
 
     $item.css("cursor", downloadUrl ? "pointer" : "default");
-    $item.on("click", function (ev) {
-        if ($(ev.target).closest(".dx-button").length) return;
-        if (downloadUrl) window.open(downloadUrl, "_blank");
+    $item.on("click", async function (ev) {
+        openExcelPreviewPopup(id);
     });
 
     return $item;
@@ -6633,15 +6612,13 @@ function renderAttachmentListLazy(list, attList_Host, options) {
         }
     };
 }
-function loadDxFileUploaderAttachments(sectionName, controllerName) {
-    const currentOptions = getCurrentEditorOptions(sectionName);
+function loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions) {
+    const currentOptions = getCurrentEditorOptions(editorOptions);
     if (!currentOptions || !currentOptions.guid) return;
-
-    const { uploaderId, previewId } = getDxFileUploaderIds(sectionName);
+    var controllId = `${editorOptions.moduleName}_${editorOptions.sectionName}`;
+    const { uploaderId, previewId } = getDxFileUploaderIds(controllId);
     const idControlElement = `#${uploaderId}`;
-
     showUploaderLoader(idControlElement, "File loading...");
-
     $.ajax({
         url: `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${currentOptions.sectionName}`,
         method: "GET",
@@ -6651,7 +6628,7 @@ function loadDxFileUploaderAttachments(sectionName, controllerName) {
                 batchSize: 6,
                 delay: 16,
                 onDeleted: function () {
-                    loadDxFileUploaderAttachments(sectionName, controllerName);
+                    loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions);
                 }
             });
 
@@ -6701,9 +6678,9 @@ function uploadFileAjax(file, options) {
 
 }
 
-function resolveUploadOptions(sectionName) {
+function resolveUploadOptions(sectionName,editorOptions) {
 
-    const latestOptions = getCurrentEditorOptions(sectionName) || {};
+    const latestOptions = getCurrentEditorOptions(editorOptions) || {};
 
     return {
         guid: latestOptions.guid || "",
@@ -7172,9 +7149,145 @@ function openBranchOverlay() {
     $("#branchOverlay").show();
 }
 function scrollToDept(module, dept) {
-    console.log(module);
     const container = document.getElementById(`${module}-overviewScroll`);
     const el = document.getElementById(`${module}-sec` + dept);
     if (!container || !el) return;
     container.scrollTo({ top: el.offsetTop - 8, behavior: "smooth" });
+}
+async function openExcelPreviewPopup(id) {
+    var popupInstance = makePopup("large", "Res");
+    popupInstance.option({
+        width: "90vw",
+        height: "90vh",
+        showTitle: true,
+        title: "Excel Preview",
+        dragEnabled: true,
+        resizeEnabled: true,
+        contentTemplate: function (container) {
+            const $container = $(container);
+
+            const $wrapper = $("<div>").css({
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden"
+            }).appendTo($container);
+
+            const $toolbar = $("<div>").css({
+                padding: "8px 12px",
+                borderBottom: "1px solid #ddd",
+                display: "flex",
+                gap: "8px",
+                alignItems: "center",
+                flexShrink: 0
+            }).appendTo($wrapper);
+
+            const $sheetSelect = $("<div>").css({
+                width: "260px"
+            }).appendTo($toolbar);
+
+            const $body = $("<div>").attr("id", "excelPreviewBody").css({
+                flex: 1,
+                overflow: "auto",
+                padding: "12px",
+                background: "#fff"
+            }).appendTo($wrapper);
+
+            $body.html("<div style='padding:20px'>Loading...</div>");
+
+            (async function () {
+                try {
+                    const fileRes = await fetch(`/api/Document/StreamDocument?id=${id}`);
+                    //if (!metaRes.ok) throw new Error("Không lấy được danh sách file");
+
+                    //const files = await metaRes.json();
+                    //if (!files || !files.length) {
+                    //    $body.html("<div style='padding:20px;color:#999'>Không có file</div>");
+                    //    return;
+                    //}
+
+                    //// 2. chọn file excel mới nhất
+                    //const excelFiles = files.filter(x =>
+                    //    (x.extension || "").toLowerCase() === "xlsx" ||
+                    //    (x.extension || "").toLowerCase() === "xls"
+                    //);
+
+                    //if (!excelFiles.length) {
+                    //    $body.html("<div style='padding:20px;color:#999'>Không tìm thấy file Excel</div>");
+                    //    return;
+                    //}
+
+                    //const file = excelFiles[0];
+
+                    //// 3. fetch binary
+                    //const fileRes = await fetch(file.downloadUrl);
+                    //if (!fileRes.ok) throw new Error("Không tải được file Excel");
+
+                    const arrayBuffer = await fileRes.arrayBuffer();
+
+                    // 4. đọc workbook
+                    const workbook = XLSX.read(arrayBuffer, {
+                        type: "array",
+                        cellStyles: true,
+                        cellDates: true
+                    });
+
+                    function renderSheet(sheetName) {
+                        const sheet = workbook.Sheets[sheetName];
+                        if (!sheet) return;
+
+                        // HTML cơ bản từ SheetJS
+                        let html = XLSX.utils.sheet_to_html(sheet, {
+                            editable: false
+                        });
+
+                        $body.html(`
+                            <div class="excel-html-wrap" style="overflow:auto;width:100%;height:100%">
+                                ${html}
+                            </div>
+                        `);
+
+                        // style tăng trải nghiệm nhìn giống grid hơn
+                        $body.find("table").css({
+                            borderCollapse: "collapse",
+                            width: "max-content",
+                            minWidth: "100%",
+                            background: "#fff"
+                        });
+
+                        $body.find("th, td").css({
+                            border: "1px solid #dcdcdc",
+                            padding: "6px 10px",
+                            whiteSpace: "nowrap",
+                            verticalAlign: "middle"
+                        });
+
+                        $body.find("tr:nth-child(even)").css({
+                            background: "#fafafa"
+                        });
+                    }
+
+                    // 5. dropdown chọn sheet
+                    $sheetSelect.dxSelectBox({
+                        dataSource: workbook.SheetNames,
+                        value: workbook.SheetNames[0],
+                        placeholder: "Select sheet",
+                        onValueChanged: function (e) {
+                            renderSheet(e.value);
+                        }
+                    });
+
+                    // render sheet đầu tiên
+                    renderSheet(workbook.SheetNames[0]);
+
+                } catch (err) {
+                    console.error(err);
+                    $body.html(`<div style="padding:20px;color:red;">${err.message}</div>`);
+                }
+            })();
+        }
+    });
+
+    popupInstance.show();
 }

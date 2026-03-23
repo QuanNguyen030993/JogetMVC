@@ -534,7 +534,7 @@ Note:
                   // quotes = data;
                    state.quotes = Array.isArray(data) ? data : [];
                     state.selectedId = state.quotes[0]?.id ?? null;
-                    state.documentId = stats.quotes[0]?.documentId ?? null;
+                    state.documentId = state.quotes[0]?.documentId ?? null;
                     state.selectedCodeNo = state.quotes[0]?.quotationCode ?? null;
                     state.stageDept = state.quotes[0]?.stageDept ?? null;
             }
@@ -658,11 +658,26 @@ Note:
             $(`#${formModuleKeyQt}-formUW`).dxForm({ formData: deptData.UW, readOnly: true, colCount: 1 });
             $(`#${formModuleKeyQt}-formLMKT`).dxForm({ formData: deptData.LMKT, readOnly: true, colCount: 1 });
             $(`#${formModuleKeyQt}-formPM`).dxForm({ formData: deptData.PM, readOnly: true, colCount: 1 });
-            loadDxFileUploaderAttachments("MKT","Document");
-            loadDxFileUploaderAttachments("TS","Document");
-            loadDxFileUploaderAttachments("UW","Document");
-            loadDxFileUploaderAttachments("LMKT","Document");
-            loadDxFileUploaderAttachments("PM","Document");
+            var itemsMKT = new Object();
+            itemsMKT.moduleName = "qt";
+             itemsMKT.sectionName = "MKT";
+            loadDxFileUploaderAttachments("MKT","Document",itemsMKT );
+                  var itemsTS = new Object();
+            itemsTS.moduleName = "qt";
+             itemsTS.sectionName = "TS";
+            loadDxFileUploaderAttachments("TS","Document", itemsTS);
+                  var itemsUW = new Object();
+            itemsUW.moduleName = "qt";
+             itemsUW.sectionName = "UW";
+            loadDxFileUploaderAttachments("UW","Document", itemsUW);
+                  var itemsLMKT = new Object();
+            itemsLMKT.moduleName = "qt";
+             itemsLMKT.sectionName = "LMKT";
+            loadDxFileUploaderAttachments("LMKT","Document", itemsLMKT);
+                  var itemsPM = new Object();
+            itemsPM.moduleName = "qt";
+             itemsPM.sectionName = "PM";
+            loadDxFileUploaderAttachments("PM","Document", itemsPM);
             applyEditLock();
             updateHints();
         }

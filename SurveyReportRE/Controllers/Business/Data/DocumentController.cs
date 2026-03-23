@@ -53,9 +53,6 @@ public class DocumentController : BaseControllerApi<Document>
     }
 
 
-
-
-
     [HttpGet]
     public async Task<IActionResult> DeleteDocumentData(long id)
     {
