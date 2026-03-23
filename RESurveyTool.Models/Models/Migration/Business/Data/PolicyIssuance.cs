@@ -1,7 +1,7 @@
 using ERPCore.Models.Migration.Base;
+using ERPCore.Models.Migration.Business.Data;
 using System;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 public class PolicyIssuance : BaseModel 
 {
@@ -141,6 +141,10 @@ public class PolicyIssuance : BaseModel
     public long? ResId { get; set; } // backup
     public string? PolicyIssuanceCode { get; set; }
     public long? ClientId { get; set; }
+    public long? AttachmentId { get; set; }
+    public Attachment? AttachmentFK { get; set; }   
+    public long? DocumentId { get; set; }
+    public Document? DocumentFK { get; set; }
 
     // TODO: Asset list attachments – move to Attachment module
     // public string? MachineryListAttachment { get; set; }       // c_listOfMachineriesAtt

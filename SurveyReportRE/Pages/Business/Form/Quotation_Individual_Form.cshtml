@@ -534,6 +534,7 @@ Note:
                   // quotes = data;
                    state.quotes = Array.isArray(data) ? data : [];
                     state.selectedId = state.quotes[0]?.id ?? null;
+                    state.documentId = stats.quotes[0]?.documentId ?? null;
                     state.selectedCodeNo = state.quotes[0]?.quotationCode ?? null;
                     state.stageDept = state.quotes[0]?.stageDept ?? null;
             }
@@ -551,6 +552,7 @@ Note:
         var filter = "all";
         let searchText = "";
         let selectedId = state.quotes[0]?.id;
+        let selectedAttachmentId = state.quotes[0]?.documentId;
         var selectedCodeNo = state.quotes[0]?.quotationCode;
 
         var commentPanelOpened = false;
@@ -915,7 +917,6 @@ Note:
             }, 180);
 
              const previewQuotation = debounce(function (quoteNo, quoteId, attachmentId) {
-                 attachmentId = 74; // Change
                  document.documentElement.style.setProperty("--rightdock-width", "70%");
                  $("#rightCommentSub").text(`Preview quotation - ${quoteNo}`);
                  $("<iframe>")
@@ -1041,7 +1042,7 @@ Note:
                     onClick: () => {
                 if (!commentPanelOpened) {
                   openRightCommentPanel();
-                                previewQuotation(selectedCodeNo, selectedId);
+                                previewQuotation(selectedCodeNo, selectedId, selectedAttachmentId);
                             } else {
                   closeRightCommentPanel();
                             }
@@ -1105,7 +1106,7 @@ Note:
                 var isSel = q.id === selectedId;
                 pICs.push({quotationCode: q.quotationCode, pIC: q.pIC ?? "{}"});
                 $root.append(`
-                    <div class="${formModuleKeyQt}-quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-codeno="${q.quotationCode}" data-stagedept="${q.stageDept}" data-stageaccount="${parsePicMap(q.pIC)[q.stageDept]}">
+                    <div class="${formModuleKeyQt}-quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-attachmentid="${q.documentId}" data-codeno="${q.quotationCode}" data-stagedept="${q.stageDept}" data-stageaccount="${parsePicMap(q.pIC)[q.stageDept]}">
                         <div class="quoteTop">
                             <div>
                                 <div class="quoteClient">${q.clientName || ""}</div>
@@ -1137,6 +1138,7 @@ Note:
 
             $(`.${formModuleKeyQt}-quoteCard`).off("click").on("click", function () {
                 selectedId = Number($(this).attr("data-id"));
+                selectedAttachmentId = Number($(this).attr("data-attachmentid"));
                 selectedCodeNo = $(this).attr("data-codeno");
                 stageDept = $(this).attr("data-stagedept");
                 

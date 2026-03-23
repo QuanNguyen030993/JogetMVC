@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using ERPCore.Models.Migration.Base;
+using ERPCore.Models.Migration.Business.Data;
 using ERPCore.Models.Migration.Business.MasterData;
 using ERPCore.Models.Migration.Config;
 
@@ -288,7 +289,10 @@ public class Quotation : BaseModel
     public long? ResId { get; set; }
     public Res? ResFK { get; set; }
     public string? PolicyNo { get; set; } = "";
-
+    public long? AttachmentId { get; set; }
+    public Attachment? AttachmentFK { get; set; }
+    public long? DocumentId { get; set; }
+    public Document? DocumentFK { get; set; }
     // =========================================================
     // Ý 9 — Attachment/email fields (commented-out + TODO)
     // =========================================================
