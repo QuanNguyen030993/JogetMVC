@@ -25,6 +25,7 @@ using ERPCore.ControllerUtil;
 using MimeMapping;
 using ERPCore.Models.Models.Parsing;
 using ERPCore.Models.Migration.Business.Config;
+using Serilog;
 
 
 namespace ERPCore.Controllers.Base
@@ -291,7 +292,56 @@ namespace ERPCore.Controllers.Base
 
             return Ok(Base);
         }
-
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetPdfFile(long id)
+        {
+            string typeError = "InternalError";
+            try
+            {
+                BaseRepository<Document> _attachmentRepository = new BaseRepository<Document>(_BaseRepository._baseConfiguration, _httpContextAccessor);
+                Document attachment = await _attachmentRepository.GetObjectByIdAsync(id);
+                if (attachment != null)
+                {
+                     string fullPath = System.IO.Path.Combine(BLOB_PATH, attachment.SubDirectory);
+                    try
+                    {
+                        if (attachment == null)
+                        {
+                            typeError = "FileNotFound";
+                            throw new Exception($"PDF attachment not found.");
+                        }
+                        
+                        if (System.IO.File.Exists(fullPath))
+                        {
+                            var fileStream = System.IO.File.OpenRead(fullPath);
+                            return File(fileStream, "application/pdf", Path.GetFileName(fullPath));
+                        }
+                        else
+                        {
+                            typeError = "FileNotFound";
+                            throw new Exception($"{fullPath} not found.");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        typeError = "InternalError";
+                        Response.Headers.Add("X-Error-Message", ex.Message);
+                        Response.Headers.Add("X-Error-Type", typeError);
+                    }
+                }
+                typeError = "UserGuide";
+                Response.Headers.Add("X-Error-Message", $"Attachment not found!");
+                Response.Headers.Add("X-Error-Type", typeError);
+                return StatusCode(404);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+                Response.Headers.Add("X-Error-Message", ex.Message);
+                Response.Headers.Add("X-Error-Type", typeError);
+                return StatusCode(500); // Internal Server Error
+            }
+        }
         [HttpPost]
         public virtual async Task<object> DropDownLookupCustomQuery([FromBody] string query)
         {

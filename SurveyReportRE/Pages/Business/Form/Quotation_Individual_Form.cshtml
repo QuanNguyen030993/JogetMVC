@@ -883,6 +883,7 @@ Note:
 
 
             const loadComments = debounce(function (quoteNo, quoteId) {
+                 document.documentElement.style.setProperty("--rightdock-width", "20%");
                  $("#rightCommentSub").text(`Audit log - ${quoteNo}` || "-");
                 $("#rightCommentList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
 
@@ -901,6 +902,7 @@ Note:
             }, 180);
 
             const loadReferenceFields = debounce(function (quoteNo, quoteId) {
+                 document.documentElement.style.setProperty("--rightdock-width", "20%");
                 $("#rightCommentSub").text(`Common fields - ${quoteNo}`);
                  var _formConfig = new MFormOption();
                  _formConfig.originModelName = "Quotation";
@@ -912,7 +914,34 @@ Note:
 
             }, 180);
 
-
+             const previewQuotation = debounce(function (quoteNo, quoteId, attachmentId) {
+                 attachmentId = 74; // Change
+                 document.documentElement.style.setProperty("--rightdock-width", "70%");
+                 $("#rightCommentSub").text(`Preview quotation - ${quoteNo}`);
+                 $("<iframe>")
+                        .attr("id", `${formModuleKeyQt}-pdfViewer_${quoteId}`)
+                        .attr("src", "")
+                        .css({
+                            width: "100%",
+                            height: "600px",
+                            border: "1px solid #ccc"
+                        })
+                        .appendTo($("#rightCommentList"));
+                 $.ajax({
+                   url: `/api/Utility/GetPdfFile/${attachmentId}`,
+                   method: "GET",
+                   xhrFields: {
+                       responseType: "blob"
+                   },
+                   success: function (blob) {
+                       const fileURL = URL.createObjectURL(blob);
+                       $(`#${formModuleKeyQt}-pdfViewer_${quoteId}`).attr("src", fileURL);
+                   },
+                   error: function (xhr, status, error) {
+                       console.error("Error loading PDF:", error);
+                   }
+               });
+            }, 180);
           function openRightCommentPanel() {
         const $dock = $("#rightCommentDock");
 
@@ -998,6 +1027,21 @@ Note:
                 if (!commentPanelOpened) {
                   openRightCommentPanel();
                                 loadReferenceFields(selectedCodeNo, selectedId);
+                            } else {
+                  closeRightCommentPanel();
+                            }
+                        }
+                    });
+
+                     $(`#${formModuleKeyQt}-btnPreview`).dxButton({
+                    text: "Preview",
+                    icon: "fas fa-eye",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                if (!commentPanelOpened) {
+                  openRightCommentPanel();
+                                previewQuotation(selectedCodeNo, selectedId);
                             } else {
                   closeRightCommentPanel();
                             }
@@ -1396,7 +1440,7 @@ Note:
 
         // $("#btnSaveDraft").dxButton({ text: "Save Draft", icon: "save", type: "normal", onClick: () => DevExpress.ui.notify("Mock: saved draft", "success", 1200) });
         // $("#btnSubmitBranch").dxButton({ text: "Route To", icon: "check", type: "success", onClick: openBranchOverlay });
-        $(`#${formModuleKeyQt}-btnClientConfirm`).dxButton({ text: "Client Confirm", icon: "check", type: "success", onClick: function (e) {
+        $(`#${formModuleKeyQt}-btnClientConfirm`).dxButton({ text: "Submit To Policy Issuance", icon: "check", type: "success", onClick: function (e) {
                     var quotationConvert = state.quotes.find(x => x.id == selectedId);
                   
               
