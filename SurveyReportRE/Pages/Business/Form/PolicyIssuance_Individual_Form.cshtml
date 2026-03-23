@@ -676,16 +676,29 @@ Note:
             // demo rule: chỉ edit khi login đúng dept
             const roMKT = !(state.currentUserRole === "MKT");
             const roTS = !(state.currentUserRole === "TS");
-            const roUW = !(state.currentUserRole === "UW");
-            const roLMKT = !(state.currentUserRole === "LMKT");
+            // const roUW = !(state.currentUserRole === "UW");
+            // const roLMKT = !(state.currentUserRole === "LMKT");
             const roPM = !(state.currentUserRole === "PM");
+
+             setTimeout(() => {
+                $(`#${formModuleKeyPi}-btnSave_MKT`).dxButton("instance")?.option("visible", !roMKT);
+                $(`#${formModuleKeyPi}-btnSave_TS`).dxButton("instance")?.option("visible", !roTS);
+                $(`#${formModuleKeyPi}-btnSave_PM`).dxButton("instance")?.option("visible", !roPM);
+                                   
+                $(`#${formModuleKeyPi}-btnSubmitBranch_MKT`).dxButton("instance")?.option("visible", !roMKT);
+                $(`#${formModuleKeyPi}-btnSubmitBranch_TS`).dxButton("instance")?.option("visible", !roTS);
+                $(`#${formModuleKeyPi}-btnSubmitBranch_PM`).dxButton("instance")?.option("visible", !roPM);
+            }, 250);
+
+
+
             $(`#${formModuleKeyPi}-formMKT`).dxForm("instance")?.option("readOnly", roMKT);
             $(`#${formModuleKeyPi}-formTS`).dxForm("instance")?.option("readOnly", roTS);
             // $(`#${formModuleKeyPi}-formUW`).dxForm("instance")?.option("readOnly", roUW);
             // $(`#${formModuleKeyPi}-formLMKT`).dxForm("instance")?.option("readOnly", roLMKT);
             $(`#${formModuleKeyPi}-formPM`).dxForm("instance")?.option("readOnly", roPM);
 
-            $("#roleSelect").dxSelectBox({
+            $(`#${formModuleKeyPi}-roleSelect`).dxSelectBox({
           items: Roles, value: state.currentUserRole, stylingMode:"outlined",
           onValueChanged: (e) => {
             state.currentUserRole = e.value;
@@ -1056,7 +1069,7 @@ Note:
 
                 pICs.push({policyIssuanceCode: q.policyIssuanceCode, pIC: q.pIC});
                 $root.append(`
-                    <div class="quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-codeno="${q.policyIssuanceCode}" data-stagedept="${q.stageDept}" data-stageaccount="${parsePicMap(q.pIC)[q.stageDept]}">
+                    <div class="${formModuleKeyPi}-quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-codeno="${q.policyIssuanceCode}" data-stagedept="${q.stageDept}" data-stageaccount="${parsePicMap(q.pIC)[q.stageDept]}">
                         <div class="quoteTop">
                             <div>
                                 <div class="quoteClient">${q.clientName || ""}</div>
@@ -1086,7 +1099,7 @@ Note:
 
             });
 
-            $(".quoteCard").off("click").on("click", function () {
+            $(`.${formModuleKeyPi}-quoteCard`).off("click").on("click", function () {
                 selectedId = Number($(this).attr("data-id"));
                 selectedCodeNo = $(this).attr("data-codeno");
                 stageDept = $(this).attr("data-stagedept");

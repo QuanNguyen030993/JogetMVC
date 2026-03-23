@@ -539,13 +539,12 @@ Note:
             }
         });
 
-         if (_isSuperUser)
 
 
 
         // // ===== UI state =====
 
-        var Roles = ["MKT", "TS", "UW", "LMKT", "PM"];
+        const QtRoles = ["MKT", "TS", "UW", "LMKT", "PM"];
         // var currentUserRole = _role;
         $(`#${formModuleKeyQt}-loginRoleLabel`).text(state.currentUserRole);
 
@@ -674,14 +673,28 @@ Note:
             const roLMKT = !(state.currentUserRole === "LMKT");
             const roPM = !(state.currentUserRole === "PM");
 
+            setTimeout(() => {
+                $(`#${formModuleKeyQt}-btnSave_MKT`).dxButton("instance")?.option("visible", !roMKT);
+                $(`#${formModuleKeyQt}-btnSave_TS`).dxButton("instance")?.option("visible", !roTS);
+                $(`#${formModuleKeyQt}-btnSave_UW`).dxButton("instance")?.option("visible", !roUW);
+                $(`#${formModuleKeyQt}-btnSave_LMKT`).dxButton("instance")?.option("visible", !roLMKT);
+                $(`#${formModuleKeyQt}-btnSave_PM`).dxButton("instance")?.option("visible", !roPM);
+
+                $(`#${formModuleKeyQt}-btnSubmitBranch_MKT`).dxButton("instance")?.option("visible", !roMKT);
+                $(`#${formModuleKeyQt}-btnSubmitBranch_TS`).dxButton("instance")?.option("visible", !roTS);
+                $(`#${formModuleKeyQt}-btnSubmitBranch_UW`).dxButton("instance")?.option("visible", !roUW);
+                $(`#${formModuleKeyQt}-btnSubmitBranch_LMKT`).dxButton("instance")?.option("visible", !roLMKT);
+                $(`#${formModuleKeyQt}-btnSubmitBranch_PM`).dxButton("instance")?.option("visible", !roPM);
+            }, 250);
+
             $(`#${formModuleKeyQt}-formMKT`).dxForm("instance")?.option("readOnly", roMKT);
             $(`#${formModuleKeyQt}-formTS`).dxForm("instance")?.option("readOnly", roTS);
             $(`#${formModuleKeyQt}-formUW`).dxForm("instance")?.option("readOnly", roUW);
             $(`#${formModuleKeyQt}-formLMKT`).dxForm("instance")?.option("readOnly", roLMKT);
             $(`#${formModuleKeyQt}-formPM`).dxForm("instance")?.option("readOnly", roPM);
-
+         // if (_isSuperUser)
            $(`#${formModuleKeyQt}-roleSelect`).dxSelectBox({
-          items: Roles, value: state.currentUserRole, stylingMode:"outlined",
+          items: QtRoles, value: state.currentUserRole, stylingMode:"outlined",
           onValueChanged: (e) => {
             state.currentUserRole = e.value;
             $(`#${formModuleKeyQt}-loginRoleLabel`).text(state.currentUserRole);
@@ -695,7 +708,7 @@ Note:
         function updateHints() {
              $(`#${formModuleKeyQt}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
 
-            Roles.forEach(k => {
+            QtRoles.forEach(k => {
                 const canEdit = (state.currentUserRole === k);
                 const icon = canEdit
                     ? `<span class="lock editable" title="Editable">
@@ -1046,9 +1059,9 @@ Note:
             }
             data.forEach(q => {
                 var isSel = q.id === selectedId;
-                pICs.push({quotationCode: q.quotationCode, pIC: q.pIC});
+                pICs.push({quotationCode: q.quotationCode, pIC: q.pIC ?? "{}"});
                 $root.append(`
-                    <div class="quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-codeno="${q.quotationCode}" data-stagedept="${q.stageDept}" data-stageaccount="${parsePicMap(q.pIC)[q.stageDept]}">
+                    <div class="${formModuleKeyQt}-quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-codeno="${q.quotationCode}" data-stagedept="${q.stageDept}" data-stageaccount="${parsePicMap(q.pIC)[q.stageDept]}">
                         <div class="quoteTop">
                             <div>
                                 <div class="quoteClient">${q.clientName || ""}</div>
@@ -1078,12 +1091,12 @@ Note:
 
             });
 
-            $(".quoteCard").off("click").on("click", function () {
+            $(`.${formModuleKeyQt}-quoteCard`).off("click").on("click", function () {
                 selectedId = Number($(this).attr("data-id"));
                 selectedCodeNo = $(this).attr("data-codeno");
                 stageDept = $(this).attr("data-stagedept");
                 
-                PIC_JSON = pICs.find(f => f.quotationCode ==  selectedCodeNo ).pIC;
+                PIC_JSON = pICs.find(f => f.quotationCode ==  selectedCodeNo )?.pIC ?? "{}";
                 stageAccount = $(this).attr("data-stageaccount");
 
                 renderDeptCallouts(PIC_JSON);
@@ -1420,7 +1433,7 @@ Note:
         bindSectionHeaderToggle();
         
         renderList();
-        PIC_JSON = pICs.find(f => f.quotationCode ==  selectedCodeNo).pIC;
+        PIC_JSON = pICs.find(f => f.quotationCode ==  selectedCodeNo)?.pIC ?? "{}";
         stageAccount = PIC_JSON[stageDept];                 // status ring
         renderDetail();
         setupDeptTree();

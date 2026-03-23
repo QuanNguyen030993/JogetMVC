@@ -677,194 +677,6 @@ aside {
     padding: 12px;
 }*/
 
-/* Quote list */
-/*.quoteCard {
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 10px 10px;
-    margin-bottom: 10px;
-    cursor: pointer;
-    transition: .12s ease;
-    background: #fff;
-}
-
-    .quoteCard:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 8px 18px rgba(0,0,0,.06);
-    }
-
-    .quoteCard.selected {
-        border-color: rgba(232,74,95,.55);
-        box-shadow: 0 0 0 3px rgba(232,74,95,.12);
-    }
-
-.quoteTop {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 8px;
-}
-
-.quotationCode {
-    font-weight: 900;
-}
-
-.quoteClient {
-    color: var(--brand);
-    font-size: 12px;
-    margin-top: 2px;
-}
-
-.quoteMeta {
-    margin-top: 10px;
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
-    font-size: 12px;
-    color: var(--muted);
-}
-
-.quoteAmount {
-    font-weight: 800;
-    color: #111827;
-}
-/* ===== Overview scroll + sections ===== */
-/*.overview-wrap {
-    position: relative;
-}
-
-.overview-scroll {
-    position: relative;
-    height: calc(100vh - 140px);
-    overflow: auto;
-    padding: 14px 78px 18px 14px;*/ /* chừa phải cho tree */
-    /*scroll-behavior: smooth;
-}
-
-
-/* Bottom action bar */
-
-
-/* Branch overlay */
-/*.branchOverlay {
-    position: fixed;
-    inset: 0;
-    z-index: 80;
-    display: none;
-}
-
-    .branchOverlay .backdrop {
-        position: absolute;
-        inset: 0;
-        background: rgba(0,0,0,.08);
-    }
-
-.branchPopup {
-    position: absolute;
-    right: 22px;
-    bottom: 78px;
-    width: 260px;
-    height: 190px;
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    box-shadow: 0 14px 40px rgba(0,0,0,.18);
-    padding: 10px;
-}
-
-.branchTitle {
-    font-weight: 900;
-    font-size: 12px;
-    margin: 4px 6px 8px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.branchHint {
-    font-weight: 600;
-    font-size: 11px;
-    color: var(--muted);
-}
-
-.branchCanvas {
-    position: relative;
-    width: 100%;
-    height: 140px;
-    border-radius: 12px;
-    background: #fafbff;
-    border: 1px dashed rgba(0,0,0,.10);
-    overflow: hidden;
-}
-
-.bnode {
-    position: absolute;
-    width: 52px;
-    height: 52px;
-    border-radius: 999px;
-    background: #fff;
-    border: 2px solid rgba(31,41,55,.26);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 900;
-    cursor: pointer;
-    user-select: none;
-    transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
-}
-
-    .bnode:hover {
-        transform: scale(1.06);
-    }
-
-    .bnode.root {
-        width: 56px;
-        height: 56px;
-        border-color: var(--brand);
-        box-shadow: 0 0 0 4px rgba(232,74,95,.18);
-    }
-
-    .bnode.choice.active {
-        border-color: var(--focus);
-        box-shadow: 0 0 0 4px rgba(37,99,235,.18);
-    }
-
-@media (max-width: 1200px) {
-    .contentGrid {
-        grid-template-columns: 1fr;
-    }
-
-    .overview-scroll {
-        height: auto;
-        max-height: 70vh;
-    }
-
-    .actionBar {
-        left: 0;
-    }
-}*/
-/*
-.topbar {
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 14px;
-    background: var(--card);
-    border-bottom: 1px solid var(--border);
-    position: sticky;
-    top: 0;
-    z-index: 50;
-}
-
-    .topbar .title {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-weight: 700;
-        font-size: 16px;
-    }
-*/
 .pill {
     display: inline-flex;
     align-items: center;
@@ -887,32 +699,7 @@ aside {
     display: grid;
     grid-template-columns: var(--sidebar-w) 1fr;
 }
-/*
-.sidebar {
-    background: #111827;
-    color: #e5e7eb;
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid #0b1220;
-}
 
-.sidebarHeader {
-    padding: 14px 14px 10px;
-    border-bottom: 1px solid rgba(255,255,255,.08);
-    background: linear-gradient(0deg, rgba(232,74,95,.08), rgba(232,74,95,.08));
-}
-
-    .sidebarHeader .appName {
-        font-weight: 800;
-        font-size: 14px;
-    }
-
-    .sidebarHeader .sub {
-        margin-top: 4px;
-        font-size: 12px;
-        opacity: .75;
-    }
-*/
 .nav {
     padding: 10px 8px;
     overflow: auto;
@@ -979,29 +766,52 @@ aside {
     overflow: hidden;
 }
 
-.cardHeader {
+.qt-cardHeader {
     padding: 12px 12px 10px;
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    background: #fff;
+    /*background: #fff;*/
     position: sticky;
     top: 0;
     z-index: 2;
+    background: linear-gradient(135deg, #2A7B9B 0%, #57C785 50%, #EDDD53 100%);
 }
 
-    .cardHeader .h {
+    .qt-cardHeader .h {
         font-weight: 800;
         font-size: 13px;
     }
+
+
+.pi-cardHeader {
+    padding: 12px 12px 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    /*background: #fff;*/
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: linear-gradient(135deg, #F5CCA4 0%, #EBBDAE 50%,#FFFFFF 100%);
+}
+
+    .pi-cardHeader .h {
+        font-weight: 800;
+        font-size: 13px;
+    }
+
+
 
 .cardBody {
     padding: 12px;
 }
 
-.quoteCard {
+.qt-quoteCard {
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 10px 10px;
@@ -1011,15 +821,36 @@ aside {
     background: #fff;
 }
 
-    .quoteCard:hover {
+    .qt-quoteCard:hover {
         transform: translateY(-1px);
         box-shadow: 0 8px 18px rgba(0,0,0,.06);
     }
 
-    .quoteCard.selected {
+    .qt-quoteCard.selected {
         border-color: rgba(232,74,95,.55);
         box-shadow: 0 0 0 3px rgba(232,74,95,.12);
     }
+
+.pi-quoteCard {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: .12s ease;
+    background: #fff;
+}
+
+    .pi-quoteCard:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px rgba(0,0,0,.06);
+    }
+
+    .pi-quoteCard.selected {
+        border-color: rgba(232,74,95,.55);
+        box-shadow: 0 0 0 3px rgba(232,74,95,.12);
+    }
+
 
 .quoteTop {
     display: flex;
@@ -1070,13 +901,13 @@ aside {
     /* Pending / New */
     .statusTag.pending,
     .statusTag.new {
-        background: rgba(107,114,128,.14);
-        color: #374151;
+        background: rgba(107,114,128);
+        color: #FFFFFF;
     }
 
     /* In Progress */
     .statusTag.in-progress {
-        background: rgba(59,130,246,.14);
+        background: rgba(59,130,246);
         color: #1e3a8a;
     }
 
@@ -1084,7 +915,7 @@ aside {
     .statusTag.accepted,
     .statusTag.approve,
     .statusTag.client-accept {
-        background: rgba(16,185,129,.14);
+        background: rgba(16,185,129);
         color: #065f46;
     }
 
@@ -1092,7 +923,7 @@ aside {
     .statusTag.rejected,
     .statusTag.declined,
     .statusTag.client-refuse {
-        background: rgba(239,68,68,.14);
+        background: rgba(239,68,68);
         color: #7f1d1d;
     }
 
@@ -1101,7 +932,7 @@ aside {
     .statusTag.complete,
     .statusTag.dispose,
     .statusTag.archive {
-        background: rgba(139,92,246,.14);
+        background: rgba(139,92,246);
         color: #4c1d95;
     }
 
@@ -1695,7 +1526,7 @@ aside {
     }
 
     .rightDock .ct-list::-webkit-scrollbar-thumb {
-        background: rgba(15,23,42,.14);
+        background: rgba(15,23,42);
         border-radius: 999px;
         border: 3px solid #fff;
     }
