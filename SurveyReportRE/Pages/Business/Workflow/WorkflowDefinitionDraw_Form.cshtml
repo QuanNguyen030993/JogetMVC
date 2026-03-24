@@ -415,218 +415,224 @@
     </div>
 
     <script>
-        // var sampleJson = {
-        //   workflowDefinition: {
-        //     workflowCode: "WF_TMIV_MAIN",
-        //     workflowName: "TMIV Main Workflow",
-        //     flowType: "Quotation",
-        //     versionNo: 1,
-        //     isActive: true
-        //   },
-        //   workflowNodes: [
-        //     {
-        //       id: "FO",
-        //       parentId: null,
-        //       nodeName: "FO",
-        //       nodeType: "",
-        //       nodeCode: "",
-        //       orderNo: 1,
-        //       stepRole: "",
-        //       departmentName: "",
-        //       levelNo: 1,
-        //       flowType: "Both",
-        //       allowLoop: false,
-        //       loopGroup: "",
-        //       x: null,
-        //       y: null
-        //     },
-        //     {
-        //       id: "TS",
-        //       parentId: "FO",
-        //       nodeName: "TS",
-        //       nodeType: "",
-        //       nodeCode: "",
-        //       orderNo: 2,
-        //       stepRole: "",
-        //       departmentName: "",
-        //       levelNo: 1,
-        //       flowType: "Both",
-        //       allowLoop: false,
-        //       loopGroup: "",
-        //       x: null,
-        //       y: null
-        //     },
-        //     {
-        //       id: "UW",
-        //       parentId: "TS",
-        //       nodeName: "UW",
-        //       nodeType: "",
-        //       nodeCode: "",
-        //       orderNo: 3,
-        //       stepRole: "",
-        //       departmentName: "",
-        //       levelNo: 1,
-        //       flowType: "Both",
-        //       allowLoop: false,
-        //       loopGroup: "",
-        //       x: null,
-        //       y: null
-        //     },
-        //     {
-        //       id: "CLIENT",
-        //       parentId: "FO",
-        //       nodeName: "Client",
-        //       nodeType: "",
-        //       nodeCode: "",
-        //       orderNo: 4,
-        //       stepRole: "",
-        //       departmentName: "",
-        //       levelNo: 1,
-        //       flowType: "Both",
-        //       allowLoop: true,
-        //       loopGroup: "CLIENT_REVIEW",
-        //       x: null,
-        //       y: null
-        //     },
-        //     {
-        //       id: "PM",
-        //       parentId: "CLIENT",
-        //       nodeName: "PM",
-        //       nodeType: "",
-        //       nodeCode: "",
-        //       orderNo: 5,
-        //       stepRole: "",
-        //       departmentName: "",
-        //       levelNo: 1,
-        //       flowType: "Both",
-        //       allowLoop: false,
-        //       loopGroup: "",
-        //       x: null,
-        //       y: null
-        //     },
-        //     {
-        //       id: "NODE_1774258352695",
-        //       parentId: null,
-        //       nodeName: "New Root",
-        //       nodeType: "",
-        //       nodeCode: "",
-        //       orderNo: 6,
-        //       stepRole: "",
-        //       departmentName: "",
-        //       levelNo: 1,
-        //       flowType: "Both",
-        //       allowLoop: false,
-        //       loopGroup: "",
-        //       x: null,
-        //       y: null
-        //     }
-        //   ],
-        //   workflowTransitions: [
-        //     {
-        //       fromNodeId: "FO",
-        //       toNodeId: "TS",
-        //       actionCode: "SUBMIT_TS",
-        //       actionName: "Submit To TS",
-        //       flowType: "Quotation",
-        //       isReturn: false,
-        //       isLoop: false,
-        //       loopGroup: "",
-        //       loopExitMode: "None",
-        //       maxLoopCount: null,
-        //       isExitTransition: false,
-        //       userDecisionLabel: "",
-        //       conditionJson: ""
-        //     },
-        //     {
-        //       fromNodeId: "TS",
-        //       toNodeId: "UW",
-        //       actionCode: "SUBMIT_UW",
-        //       actionName: "Submit To UW",
-        //       flowType: "Quotation",
-        //       isReturn: false,
-        //       isLoop: false,
-        //       loopGroup: "",
-        //       loopExitMode: "None",
-        //       maxLoopCount: null,
-        //       isExitTransition: false,
-        //       userDecisionLabel: "",
-        //       conditionJson: ""
-        //     },
-        //     {
-        //       fromNodeId: "UW",
-        //       toNodeId: "FO",
-        //       actionCode: "RETURN_FO",
-        //       actionName: "Return To FO",
-        //       flowType: "Quotation",
-        //       isReturn: true,
-        //       isLoop: false,
-        //       loopGroup: "",
-        //       loopExitMode: "None",
-        //       maxLoopCount: null,
-        //       isExitTransition: false,
-        //       userDecisionLabel: "",
-        //       conditionJson: ""
-        //     },
-        //     {
-        //       fromNodeId: "FO",
-        //       toNodeId: "CLIENT",
-        //       actionCode: "SUBMIT_CLIENT",
-        //       actionName: "Submit To Client",
-        //       flowType: "Both",
-        //       isReturn: false,
-        //       isLoop: false,
-        //       loopGroup: "",
-        //       loopExitMode: "None",
-        //       maxLoopCount: null,
-        //       isExitTransition: false,
-        //       userDecisionLabel: "",
-        //       conditionJson: ""
-        //     },
-        //     {
-        //       fromNodeId: "CLIENT",
-        //       toNodeId: "CLIENT",
-        //       actionCode: "REVISE_AGAIN",
-        //       actionName: "Revise Again",
-        //       flowType: "Both",
-        //       isReturn: false,
-        //       isLoop: true,
-        //       loopGroup: "CLIENT_REVIEW",
-        //       loopExitMode: "UserDecision",
-        //       maxLoopCount: null,
-        //       isExitTransition: false,
-        //       userDecisionLabel: "Continue Revision",
-        //       conditionJson: ""
-        //     },
-        //     {
-        //       fromNodeId: "CLIENT",
-        //       toNodeId: "PM",
-        //       actionCode: "EXIT_LOOP_AND_SUBMIT_PM",
-        //       actionName: "Approve And Exit",
-        //       flowType: "PolicyIssuance",
-        //       isReturn: false,
-        //       isLoop: true,
-        //       loopGroup: "CLIENT_REVIEW",
-        //       loopExitMode: "UserDecision",
-        //       maxLoopCount: null,
-        //       isExitTransition: true,
-        //       userDecisionLabel: "Approve And Exit",
-        //       conditionJson: ""
-        //     }
-        //   ],
-        //   runtimeState: {
-        //     activeNodeId: "CLIENT",
-        //     compvaredNodeIds: ["FO", "TS", "UW"],
-        //     pendingNodeIds: ["PM", "NODE_1774258352695"]
-        //   }
-        // };
-
          var _id = @Convert.ToInt32(ViewData["Id"]);
 
-        ajaxGet(`/api/WorkflowDefinition/GetSingle/${_id}`)
+                ajaxGet(`/api/WorkflowDefinition/GetSingle/${_id}`)
                       .then(data => {
                           console.log(data);
-                          data.workflowNodes = JSON.parse(data.workflowNodes);
-        var sampleJson = data;
+        var sampleJson = {
+          workflowDefinition: {
+            workflowCode: "WF_TMIV_MAIN",
+            workflowName: "TMIV Main Workflow",
+            flowType: "Quotation",
+            versionNo: 1,
+            isActive: true
+          },
+          workflowNodes: [
+            {
+              id: "FO",
+              parentId: null,
+              nodeName: "FO",
+              nodeType: "",
+              nodeCode: "",
+              orderNo: 1,
+              stepRole: "",
+              departmentName: "",
+              levelNo: 1,
+              flowType: "Both",
+              allowLoop: false,
+              loopGroup: "",
+              x: null,
+              y: null
+            },
+            {
+              id: "TS",
+              parentId: "FO",
+              nodeName: "TS",
+              nodeType: "",
+              nodeCode: "",
+              orderNo: 2,
+              stepRole: "",
+              departmentName: "",
+              levelNo: 1,
+              flowType: "Both",
+              allowLoop: false,
+              loopGroup: "",
+              x: null,
+              y: null
+            },
+            {
+              id: "UW",
+              parentId: "TS",
+              nodeName: "UW",
+              nodeType: "",
+              nodeCode: "",
+              orderNo: 3,
+              stepRole: "",
+              departmentName: "",
+              levelNo: 1,
+              flowType: "Both",
+              allowLoop: false,
+              loopGroup: "",
+              x: null,
+              y: null
+            },
+            {
+              id: "CLIENT",
+              parentId: "FO",
+              nodeName: "Client",
+              nodeType: "",
+              nodeCode: "",
+              orderNo: 4,
+              stepRole: "",
+              departmentName: "",
+              levelNo: 1,
+              flowType: "Both",
+              allowLoop: true,
+              loopGroup: "CLIENT_REVIEW",
+              x: null,
+              y: null
+            },
+            {
+              id: "PM",
+              parentId: "CLIENT",
+              nodeName: "PM",
+              nodeType: "",
+              nodeCode: "",
+              orderNo: 5,
+              stepRole: "",
+              departmentName: "",
+              levelNo: 1,
+              flowType: "Both",
+              allowLoop: false,
+              loopGroup: "",
+              x: null,
+              y: null
+            },
+            {
+              id: "NODE_1774258352695",
+              parentId: null,
+              nodeName: "New Root",
+              nodeType: "",
+              nodeCode: "",
+              orderNo: 6,
+              stepRole: "",
+              departmentName: "",
+              levelNo: 1,
+              flowType: "Both",
+              allowLoop: false,
+              loopGroup: "",
+              x: null,
+              y: null
+            }
+          ],
+          workflowTransitions: [
+            {
+              fromNodeId: "FO",
+              toNodeId: "TS",
+              actionCode: "SUBMIT_TS",
+              actionName: "Submit To TS",
+              flowType: "Quotation",
+              isReturn: false,
+              isLoop: false,
+              loopGroup: "",
+              loopExitMode: "None",
+              maxLoopCount: null,
+              isExitTransition: false,
+              userDecisionLabel: "",
+              conditionJson: ""
+            },
+            {
+              fromNodeId: "TS",
+              toNodeId: "UW",
+              actionCode: "SUBMIT_UW",
+              actionName: "Submit To UW",
+              flowType: "Quotation",
+              isReturn: false,
+              isLoop: false,
+              loopGroup: "",
+              loopExitMode: "None",
+              maxLoopCount: null,
+              isExitTransition: false,
+              userDecisionLabel: "",
+              conditionJson: ""
+            },
+            {
+              fromNodeId: "UW",
+              toNodeId: "FO",
+              actionCode: "RETURN_FO",
+              actionName: "Return To FO",
+              flowType: "Quotation",
+              isReturn: true,
+              isLoop: false,
+              loopGroup: "",
+              loopExitMode: "None",
+              maxLoopCount: null,
+              isExitTransition: false,
+              userDecisionLabel: "",
+              conditionJson: ""
+            },
+            {
+              fromNodeId: "FO",
+              toNodeId: "CLIENT",
+              actionCode: "SUBMIT_CLIENT",
+              actionName: "Submit To Client",
+              flowType: "Both",
+              isReturn: false,
+              isLoop: false,
+              loopGroup: "",
+              loopExitMode: "None",
+              maxLoopCount: null,
+              isExitTransition: false,
+              userDecisionLabel: "",
+              conditionJson: ""
+            },
+            {
+              fromNodeId: "CLIENT",
+              toNodeId: "CLIENT",
+              actionCode: "REVISE_AGAIN",
+              actionName: "Revise Again",
+              flowType: "Both",
+              isReturn: false,
+              isLoop: true,
+              loopGroup: "CLIENT_REVIEW",
+              loopExitMode: "UserDecision",
+              maxLoopCount: null,
+              isExitTransition: false,
+              userDecisionLabel: "Continue Revision",
+              conditionJson: ""
+            },
+            {
+              fromNodeId: "CLIENT",
+              toNodeId: "PM",
+              actionCode: "EXIT_LOOP_AND_SUBMIT_PM",
+              actionName: "Approve And Exit",
+              flowType: "PolicyIssuance",
+              isReturn: false,
+              isLoop: true,
+              loopGroup: "CLIENT_REVIEW",
+              loopExitMode: "UserDecision",
+              maxLoopCount: null,
+              isExitTransition: true,
+              userDecisionLabel: "Approve And Exit",
+              conditionJson: ""
+            }
+          ],
+          runtimeState: {
+            activeNodeId: "CLIENT",
+            compvaredNodeIds: ["FO", "TS", "UW"],
+            pendingNodeIds: ["PM", "NODE_1774258352695"]
+          }
+        };
+
+         // var passingObject = new Object();
+         // passingObject.workflowDefinition = new Object();
+         // passingObject.workflowDefinition = data;
+         // data.workflowNodes =  JSON.parse(data.workflowNodes);
+         // passingObject.workflowNodes  = new Object();
+         // passingObject.workflowNodes = data.workflowNodes ;
+         // sampleJson = data;
+           sampleJson = JSON.parse(data.workflowNodes);
         var jsonInput = document.getElementById("jsonInput");
         var canvas = document.getElementById("canvas");
         var errorBox = document.getElementById("errorBox");
@@ -700,7 +706,20 @@
           updateNodeCoordinateUi(nodeId, x, y);
           syncJsonToTextarea();
         }
+        function buildConnectionsFromNodes(nodes) {
+            const edges = [];
 
+            nodes.forEach(n => {
+                if (n.parentId) {
+                    edges.push({
+                        source: n.parentId,
+                        target: n.id
+                    });
+                }
+            });
+
+            return edges;
+        }
         function buildAutoLayout(json) {
           var nodes = json.workflowNodes || [];
           var transitions = json.workflowTransitions || [];
@@ -938,6 +957,7 @@
             });
           });
         }
+
 
         function renderWorkflow(options = {}) {
           try {

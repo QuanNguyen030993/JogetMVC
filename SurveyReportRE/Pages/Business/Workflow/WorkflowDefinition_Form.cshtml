@@ -522,7 +522,11 @@
         var transitionFormInstance = null;
         var nodeGridInstance = null;
         var dragToolData = null;
-
+                var runtimeState = {
+            activeNodeId: "CLIENT",
+            completedNodeIds: ["FO", "TS", "UW"],
+            pendingNodeIds: ["PM", "NODE_1774258352695"]
+        };
         var workflowHeader = {
             workflowCode: "WF_TMIV_MAIN",
             workflowName: "TMIV Main Workflow",
@@ -694,6 +698,15 @@
                     {
                         dataField: "loopGroup",
                         label: { text: "Loop Group" }
+                    },{
+                        dataField: "x",
+                        label: { text: "Pos X" },
+                        editorType: "dxNumberBox"
+                    },
+                    {
+                        dataField: "y",
+                        label: { text: "Pos Y" },
+                        editorType: "dxNumberBox"
                     }
                 ],
                 onInitialized: function (e) {
@@ -1044,7 +1057,9 @@
                 levelNo: parentNode ? ((parentNode.original.levelNo || 1) + 1) : 1,
                 flowType: currentWorkflowFlow === "Both" ? "Both" : currentWorkflowFlow,
                 allowLoop: false,
-                loopGroup: ""
+                loopGroup: "",
+                        x: 0,
+        y: 0
             };
 
             tree.create_node(parentId, {
@@ -1091,7 +1106,7 @@
             var json = JSON.parse($("#payloadBox").text() || "{}");
             var workflowData = new Object();
             workflowData = json.workflowDefinition;
-            workflowData.workflowNodes = JSON.stringify(json.workflowNodes);
+            workflowData.workflowNodes = JSON.stringify(json);
             var dataGrid = $(`#dataGrid_WorkflowDefinition`).dxDataGrid().dxDataGrid("instance");
             var ds  = dataGrid.option("dataSource");
             var store = ds.store();
@@ -1126,7 +1141,8 @@
             node.original.flowType = fd.flowType || "Both";
             node.original.allowLoop = !!fd.allowLoop;
             node.original.loopGroup = fd.loopGroup || "";
-
+            node.original.x = fd.x ?? 0;
+            node.original.y = fd.y ?? 0;
             var newHtml = buildTreeNodeHtml({
                 text: fd.text || extractPlainTextFromNode(selectedNodeId),
                 flowType: fd.flowType || "Both",
@@ -1156,7 +1172,8 @@
                 node.original.flowType = json.flowType || "Both";
                 node.original.allowLoop = !!json.allowLoop;
                 node.original.loopGroup = json.loopGroup || "";
-
+                node.original.x = json.x ?? 0;
+                 node.original.y = json.y ?? 0;
                 var plainText = json.text || extractPlainTextFromNode(selectedNodeId);
                 tree.rename_node(node, buildTreeNodeHtml({
                     text: plainText,
@@ -1297,8 +1314,54 @@
             }
         }
 
-        function buildPayloadPreview() {
+        // function buildPayloadPreview() {
+        //     syncWorkflowHeader();
+
+        //     var payload = {
+        //         workflowDefinition: {
+        //             workflowCode: workflowHeader.workflowCode,
+        //             workflowName: workflowHeader.workflowName,
+        //             flowType: workflowHeader.flowType,
+        //             versionNo: workflowHeader.versionNo,
+        //             isActive: workflowHeader.isActive
+        //         },
+        //         workflowNodes: workflowTreeData.map((x, index) => ({
+        //             id: x.id,
+        //             parentId: x.parent === "#" ? null : x.parent,
+        //             nodeName: x.text,
+        //             nodeType: x.type,
+        //             nodeCode: x.code,
+        //             orderNo: x.orderNo ?? (index + 1),
+        //             stepRole: x.stepRole,
+        //             departmentName: x.departmentName,
+        //             levelNo: x.levelNo,
+        //             flowType: x.flowType || "Both",
+        //             allowLoop: !!x.allowLoop,
+        //             loopGroup: x.loopGroup || ""
+        //         })),
+        //         workflowTransitions: transitions.map(x => ({
+        //             fromNodeId: x.fromNodeId,
+        //             toNodeId: x.toNodeId,
+        //             actionCode: x.actionCode,
+        //             actionName: x.actionName,
+        //             flowType: x.flowType || "Both",
+        //             isReturn: !!x.isReturn,
+        //             isLoop: !!x.isLoop,
+        //             loopGroup: x.loopGroup || "",
+        //             loopExitMode: x.loopExitMode || "None",
+        //             maxLoopCount: x.maxLoopCount,
+        //             isExitTransition: !!x.isExitTransition,
+        //             userDecisionLabel: x.userDecisionLabel || "",
+        //             conditionJson: x.conditionJson || ""
+        //         }))
+        //     };
+
+        //     $("#payloadBox").text(JSON.stringify(payload, null, 2));
+        //     refreshGrid();
+        // }
+                function buildPayloadPreview() {
             syncWorkflowHeader();
+            syncRuntimeState();
 
             var payload = {
                 workflowDefinition: {
@@ -1312,37 +1375,43 @@
                     id: x.id,
                     parentId: x.parent === "#" ? null : x.parent,
                     nodeName: x.text,
-                    nodeType: x.type,
-                    nodeCode: x.code,
+                    nodeType: x.type || "",
+                    nodeCode: x.code || "",
                     orderNo: x.orderNo ?? (index + 1),
-                    stepRole: x.stepRole,
-                    departmentName: x.departmentName,
-                    levelNo: x.levelNo,
+                    stepRole: x.stepRole || "",
+                    departmentName: x.departmentName || "",
+                    levelNo: x.levelNo ?? 1,
                     flowType: x.flowType || "Both",
                     allowLoop: !!x.allowLoop,
-                    loopGroup: x.loopGroup || ""
+                    loopGroup: x.loopGroup || "",
+                    x: x.x ?? null,
+                    y: x.y ?? null
                 })),
                 workflowTransitions: transitions.map(x => ({
                     fromNodeId: x.fromNodeId,
                     toNodeId: x.toNodeId,
-                    actionCode: x.actionCode,
-                    actionName: x.actionName,
+                    actionCode: x.actionCode || "",
+                    actionName: x.actionName || "",
                     flowType: x.flowType || "Both",
                     isReturn: !!x.isReturn,
                     isLoop: !!x.isLoop,
                     loopGroup: x.loopGroup || "",
                     loopExitMode: x.loopExitMode || "None",
-                    maxLoopCount: x.maxLoopCount,
+                    maxLoopCount: x.maxLoopCount ?? null,
                     isExitTransition: !!x.isExitTransition,
                     userDecisionLabel: x.userDecisionLabel || "",
                     conditionJson: x.conditionJson || ""
-                }))
+                })),
+                runtimeState: {
+                    activeNodeId: runtimeState.activeNodeId || null,
+                    completedNodeIds: runtimeState.completedNodeIds || [],
+                    pendingNodeIds: runtimeState.pendingNodeIds || []
+                }
             };
 
             $("#payloadBox").text(JSON.stringify(payload, null, 2));
             refreshGrid();
         }
-
         function refreshTransitionNodeLookup() {
             if (!transitionFormInstance) return;
             var ds = workflowTreeData.map(x => ({ id: x.id, text: x.text }));
@@ -1361,17 +1430,85 @@
                 searchEnabled: true
             });
         }
+        function syncRuntimeState() {
+            var ids = workflowTreeData.map(x => x.id);
 
+            if (!runtimeState.activeNodeId || !ids.includes(runtimeState.activeNodeId)) {
+                runtimeState.activeNodeId = ids.length ? ids[0] : null;
+            }
+
+            runtimeState.completedNodeIds = (runtimeState.completedNodeIds || []).filter(x => ids.includes(x));
+            runtimeState.pendingNodeIds = (runtimeState.pendingNodeIds || []).filter(x => ids.includes(x));
+
+            var used = new Set([
+                runtimeState.activeNodeId,
+                ...runtimeState.completedNodeIds
+            ]);
+
+            runtimeState.pendingNodeIds = ids.filter(x => !used.has(x));
+        }
         function syncWorkflowHeader() {
             workflowHeader = workflowFormInstance.option("formData") || workflowHeader;
         }
 
-        function syncTreeDataFromJsTree(overrideTextForSelected) {
+        // function syncTreeDataFromJsTree(overrideTextForSelected) {
+        //     var tree = $("#treeWorkflow").jstree(true);
+        //     var flat = tree.get_json("#", { flat: true });
+
+        //     workflowTreeData = flat.map((x, index) => {
+        //         var plainText = extractTextFromHtml(x.text);
+        //         if (overrideTextForSelected && x.id === selectedNodeId) {
+        //             plainText = overrideTextForSelected;
+        //         }
+
+        //         return {
+        //             id: x.id,
+        //             parent: x.parent,
+        //             text: plainText,
+        //             type: x.original?.type || "",
+        //             code: x.original?.code || "",
+        //             orderNo: x.original?.orderNo ?? (index + 1),
+        //             stepRole: x.original?.stepRole || "",
+        //             departmentName: x.original?.departmentName || "",
+        //             levelNo: x.original?.levelNo || 1,
+        //             flowType: x.original?.flowType || "Both",
+        //             allowLoop: !!x.original?.allowLoop,
+        //             loopGroup: x.original?.loopGroup || ""
+        //         };
+        //     });
+
+        //     refreshTransitionNodeLookup();
+        //     refreshGrid();
+        //     buildPayloadPreview();
+
+        //     if (selectedNodeId) {
+        //         var cur = workflowTreeData.find(x => x.id === selectedNodeId);
+        //         if (cur) {
+        //             $("#nodeJsonEditor").val(JSON.stringify({
+        //                 id: cur.id,
+        //                 parent: cur.parent === "#" ? null : cur.parent,
+        //                 text: cur.text,
+        //                 type: cur.type,
+        //                 code: cur.code,
+        //                 orderNo: cur.orderNo,
+        //                 stepRole: cur.stepRole,
+        //                 departmentName: cur.departmentName,
+        //                 levelNo: cur.levelNo,
+        //                 flowType: cur.flowType,
+        //                 allowLoop: cur.allowLoop,
+        //                 loopGroup: cur.loopGroup
+        //             }, null, 2));
+        //         }
+        //     }
+        // }
+                function syncTreeDataFromJsTree(overrideTextForSelected) {
             var tree = $("#treeWorkflow").jstree(true);
             var flat = tree.get_json("#", { flat: true });
 
             workflowTreeData = flat.map((x, index) => {
+                var oldNode = workflowTreeData.find(n => n.id === x.id) || {};
                 var plainText = extractTextFromHtml(x.text);
+
                 if (overrideTextForSelected && x.id === selectedNodeId) {
                     plainText = overrideTextForSelected;
                 }
@@ -1380,15 +1517,17 @@
                     id: x.id,
                     parent: x.parent,
                     text: plainText,
-                    type: x.original?.type || "",
-                    code: x.original?.code || "",
-                    orderNo: x.original?.orderNo ?? (index + 1),
-                    stepRole: x.original?.stepRole || "",
-                    departmentName: x.original?.departmentName || "",
-                    levelNo: x.original?.levelNo || 1,
-                    flowType: x.original?.flowType || "Both",
-                    allowLoop: !!x.original?.allowLoop,
-                    loopGroup: x.original?.loopGroup || ""
+                    type: x.original?.type || oldNode.type || "",
+                    code: x.original?.code || oldNode.code || "",
+                    orderNo: x.original?.orderNo ?? oldNode.orderNo ?? (index + 1),
+                    stepRole: x.original?.stepRole || oldNode.stepRole || "",
+                    departmentName: x.original?.departmentName || oldNode.departmentName || "",
+                    levelNo: x.original?.levelNo ?? oldNode.levelNo ?? 1,
+                    flowType: x.original?.flowType || oldNode.flowType || "Both",
+                    allowLoop: !!(x.original?.allowLoop ?? oldNode.allowLoop),
+                    loopGroup: x.original?.loopGroup || oldNode.loopGroup || "",
+                    x: oldNode.x ?? null,
+                    y: oldNode.y ?? null
                 };
             });
 
@@ -1411,7 +1550,9 @@
                         levelNo: cur.levelNo,
                         flowType: cur.flowType,
                         allowLoop: cur.allowLoop,
-                        loopGroup: cur.loopGroup
+                        loopGroup: cur.loopGroup,
+                        x: cur.x,
+                        y: cur.y
                     }, null, 2));
                 }
             }
@@ -1568,6 +1709,127 @@
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
+                }
+                
+        function loadExactSampleJson() {
+            workflowHeader = {
+                workflowCode: "WF_TMIV_MAIN",
+                workflowName: "TMIV Main Workflow",
+                flowType: "Quotation",
+                versionNo: 1,
+                isActive: true
+            };
+
+            workflowTreeData = [
+                { id: "FO", parent: "#", text: "FO", type: "", code: "", orderNo: 1, stepRole: "", departmentName: "", levelNo: 1, flowType: "Both", allowLoop: false, loopGroup: "", x: 336, y: 192 },
+                { id: "TS", parent: "FO", text: "TS", type: "", code: "", orderNo: 2, stepRole: "", departmentName: "", levelNo: 1, flowType: "Both", allowLoop: false, loopGroup: "", x: 648, y: 192 },
+                { id: "UW", parent: "TS", text: "UW", type: "", code: "", orderNo: 3, stepRole: "", departmentName: "", levelNo: 1, flowType: "Both", allowLoop: false, loopGroup: "", x: 984, y: 192 },
+                { id: "CLIENT", parent: "FO", text: "Client", type: "", code: "", orderNo: 4, stepRole: "", departmentName: "", levelNo: 1, flowType: "Both", allowLoop: true, loopGroup: "CLIENT_REVIEW", x: 648, y: 624 },
+                { id: "PM", parent: "CLIENT", text: "PM", type: "", code: "", orderNo: 5, stepRole: "", departmentName: "", levelNo: 1, flowType: "Both", allowLoop: false, loopGroup: "", x: 1128, y: 624 },
+                { id: "NODE_1774258352695", parent: "#", text: "New Root", type: "", code: "", orderNo: 6, stepRole: "", departmentName: "", levelNo: 1, flowType: "Both", allowLoop: false, loopGroup: "", x: 96, y: 192 }
+            ];
+
+            transitions = [
+                {
+                    fromNodeId: "FO",
+                    toNodeId: "TS",
+                    actionCode: "SUBMIT_TS",
+                    actionName: "Submit To TS",
+                    flowType: "Quotation",
+                    isReturn: false,
+                    isLoop: false,
+                    loopGroup: "",
+                    loopExitMode: "None",
+                    maxLoopCount: null,
+                    isExitTransition: false,
+                    userDecisionLabel: "",
+                    conditionJson: ""
+                },
+                {
+                    fromNodeId: "TS",
+                    toNodeId: "UW",
+                    actionCode: "SUBMIT_UW",
+                    actionName: "Submit To UW",
+                    flowType: "Quotation",
+                    isReturn: false,
+                    isLoop: false,
+                    loopGroup: "",
+                    loopExitMode: "None",
+                    maxLoopCount: null,
+                    isExitTransition: false,
+                    userDecisionLabel: "",
+                    conditionJson: ""
+                },
+                {
+                    fromNodeId: "UW",
+                    toNodeId: "FO",
+                    actionCode: "RETURN_FO",
+                    actionName: "Return To FO",
+                    flowType: "Quotation",
+                    isReturn: true,
+                    isLoop: false,
+                    loopGroup: "",
+                    loopExitMode: "None",
+                    maxLoopCount: null,
+                    isExitTransition: false,
+                    userDecisionLabel: "",
+                    conditionJson: ""
+                },
+                {
+                    fromNodeId: "FO",
+                    toNodeId: "CLIENT",
+                    actionCode: "SUBMIT_CLIENT",
+                    actionName: "Submit To Client",
+                    flowType: "Both",
+                    isReturn: false,
+                    isLoop: false,
+                    loopGroup: "",
+                    loopExitMode: "None",
+                    maxLoopCount: null,
+                    isExitTransition: false,
+                    userDecisionLabel: "",
+                    conditionJson: ""
+                },
+                {
+                    fromNodeId: "CLIENT",
+                    toNodeId: "CLIENT",
+                    actionCode: "REVISE_AGAIN",
+                    actionName: "Revise Again",
+                    flowType: "Both",
+                    isReturn: false,
+                    isLoop: true,
+                    loopGroup: "CLIENT_REVIEW",
+                    loopExitMode: "UserDecision",
+                    maxLoopCount: null,
+                    isExitTransition: false,
+                    userDecisionLabel: "Continue Revision",
+                    conditionJson: ""
+                },
+                {
+                    fromNodeId: "CLIENT",
+                    toNodeId: "PM",
+                    actionCode: "EXIT_LOOP_AND_SUBMIT_PM",
+                    actionName: "Approve And Exit",
+                    flowType: "PolicyIssuance",
+                    isReturn: false,
+                    isLoop: true,
+                    loopGroup: "CLIENT_REVIEW",
+                    loopExitMode: "UserDecision",
+                    maxLoopCount: null,
+                    isExitTransition: true,
+                    userDecisionLabel: "Approve And Exit",
+                    conditionJson: ""
+                }
+            ];
+
+            runtimeState = {
+                activeNodeId: "CLIENT",
+                completedNodeIds: ["FO", "TS", "UW"],
+                pendingNodeIds: ["PM", "NODE_1774258352695"]
+            };
+
+            reloadAll();
         }
+        loadExactSampleJson();
     </script>
 </body>
