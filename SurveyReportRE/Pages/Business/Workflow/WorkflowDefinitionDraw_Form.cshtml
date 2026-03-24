@@ -1,0 +1,1057 @@
+﻿ @page "{pageNum:int?}"
+@model WorkflowDefinitionDraw_FormModel
+@{
+
+
+}
+@* <script>
+    $(function () {
+        var _id = @Convert.ToInt32(ViewData["Id"]);
+
+        var _formConfig = new MFormOption();
+        _formConfig.cloneUrl = '/Business/MasterData/WorkflowDefinition_Form/' + _id;
+        _formConfig.tabCode = `form_WorkflowDefinition_Form_${_id}`;
+        _formConfig.tabName = '@HttpContext.Request.Query["Caption"].ToString()';
+        _formConfig.originModelName = "@WorkflowDefinition_FormModel.ModelName";
+        _formConfig.formElementName = "@WorkflowDefinition_FormModel.ModelName";
+        _formConfig.schemeBasedOn = `@(WorkflowDefinition_FormModel.SchemeModelName)`;
+        _formConfig.allowFormActionButton = true;
+        _formConfig.colCount = 4;
+        _formConfig.isCustomQuery = true;
+        new WorkflowDefinitionForm(_id, null, _formConfig);
+    });
+</script>
+<div id="form_@(WorkflowDefinition_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])" class="dExForm"></div>
+ *@
+
+    <style>
+        :root {
+            --bg: #f4f7fb;
+            --panel: #ffffff;
+            --border: #dbe2ea;
+            --text: #243447;
+            --muted: #6b7c93;
+            --quotation: #2563eb;
+            --policy: #16a34a;
+            --both: #7c3aed;
+            --return: #ef4444;
+            --loop: #f59e0b;
+            --active: #f59e0b;
+            --done: #10b981;
+            --pending: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--text);
+            background: var(--bg);
+        }
+
+        .app {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            background: #fff;
+            border-right: 1px solid var(--border);
+            padding: 16px;
+            overflow: auto;
+        }
+
+        .main {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .toolbar {
+            min-height: 60px;
+            border-bottom: 1px solid var(--border);
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-left, .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 0 6px 0;
+        }
+
+        .sub {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.5;
+            margin-bottom: 14px;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+            .card h3 {
+                margin: 0 0 10px 0;
+                font-size: 14px;
+            }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 10px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: #fff;
+            font-size: 12px;
+            color: #334155;
+        }
+
+        .legend-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 999px;
+            flex: 0 0 14px;
+        }
+
+            .dot.quotation {
+                background: var(--quotation)
+            }
+
+            .dot.policy {
+                background: var(--policy)
+            }
+
+            .dot.both {
+                background: var(--both)
+            }
+
+            .dot.active {
+                background: var(--active)
+            }
+
+            .dot.done {
+                background: var(--done)
+            }
+
+            .dot.pending {
+                background: var(--pending)
+            }
+
+        .line {
+            width: 28px;
+            border-top: 3px solid #64748b;
+            flex: 0 0 28px;
+        }
+
+            .line.return {
+                border-top-color: var(--return);
+                border-top-style: dashed;
+            }
+
+            .line.loop {
+                border-top-color: var(--loop);
+            }
+
+        textarea {
+            width: 100%;
+            min-height: 390px;
+            resize: vertical;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            font-family: Consolas, monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            outline: none;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        button {
+            border: none;
+            background: #2563eb;
+            color: #fff;
+            padding: 9px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+            button.secondary {
+                background: #475569;
+            }
+
+            button.success {
+                background: #16a34a;
+            }
+
+            button.warning {
+                background: #f59e0b;
+                color: #1f2937;
+            }
+
+        .error {
+            margin-top: 10px;
+            display: none;
+            white-space: pre-wrap;
+            background: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 12px;
+        }
+
+        .canvas-wrap {
+            flex: 1;
+            min-height: 0;
+            padding: 16px;
+            overflow: auto;
+        }
+
+        #canvas {
+            position: relative;
+            min-width: 1400px;
+            min-height: 760px;
+            background: linear-gradient(to right, rgba(203,213,225,.35) 1px, transparent 1px), linear-gradient(to bottom, rgba(203,213,225,.35) 1px, transparent 1px);
+            background-size: 24px 24px;
+            background-color: #fff;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: 0 10px 28px rgba(15,23,42,0.06);
+            overflow: auto;
+        }
+
+        .node {
+            position: absolute;
+            width: 180px;
+            min-height: 88px;
+            border-radius: 14px;
+            border: 2px solid #cfd8e3;
+            background: #fff;
+            padding: 10px 12px;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+            text-align: center;
+            z-index: 2;
+            transition: .15s ease;
+            cursor: move;
+            user-select: none;
+        }
+
+            .node .node-title {
+                font-size: 16px;
+                font-weight: 700;
+                margin-bottom: 6px;
+            }
+
+            .node .node-meta {
+                font-size: 12px;
+                line-height: 1.45;
+                color: #64748b;
+            }
+
+            .node.flow-quotation {
+                border-color: var(--quotation)
+            }
+
+            .node.flow-policy {
+                border-color: var(--policy)
+            }
+
+            .node.flow-both {
+                border-color: var(--both)
+            }
+
+            .node.active {
+                border-color: var(--active);
+                background: #fffaf0;
+                box-shadow: 0 0 0 4px rgba(245,158,11,0.15), 0 12px 22px rgba(245,158,11,0.18);
+            }
+
+            .node.done {
+                background: #f0fdf4;
+            }
+
+            .node.pending {
+                opacity: .94;
+            }
+
+        .layer-label {
+            position: absolute;
+            top: 14px;
+            font-size: 12px;
+            color: #64748b;
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 4px 10px;
+            z-index: 1;
+        }
+
+        .jtk-overlay {
+            font-size: 11px !important;
+            color: #334155 !important;
+            background: rgba(255,255,255,0.96);
+            border: 1px solid #dbe2ea;
+            padding: 4px 8px;
+            border-radius: 999px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+        }
+
+        .note {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .status-ok {
+            color: #15803d;
+        }
+
+        code {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 6px;
+        }
+    </style>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="title">TMIV Workflow</div>
+            <div class="sub">
+                jsPlumb bản auto layout + drag save. Kéo node xong, <b>JSON bên trái sẽ tự cập nhật ngay</b>.
+            </div>
+
+            <div class="card">
+                <h3>Legend</h3>
+                <div class="legend-row"><span class="dot quotation"></span> Quotation</div>
+                <div class="legend-row"><span class="dot policy"></span> Policy Issuance</div>
+                <div class="legend-row"><span class="dot both"></span> Both</div>
+                <div class="legend-row"><span class="dot active"></span> Current node</div>
+                <div class="legend-row"><span class="dot done"></span> Done</div>
+                <div class="legend-row"><span class="dot pending"></span> Pending</div>
+                <div class="legend-row"><span class="line"></span> Normal transition</div>
+                <div class="legend-row"><span class="line return"></span> Return transition</div>
+                <div class="legend-row"><span class="line loop"></span> Loop transition</div>
+            </div>
+
+            <div class="card">
+                <h3>Workflow JSON</h3>
+                <textarea id="jsonInput"></textarea>
+                <div class="btn-row">
+                    <button id="btnRender">Render</button>
+                    <button class="secondary" id="btnReset">Reset sample</button>
+                    <button class="warning" id="btnAutoLayout">Force Auto Layout</button>
+                    <button class="success" id="btnExport">Export JSON</button>
+                </div>
+                <div id="errorBox" class="error"></div>
+            </div>
+
+            <div class="card note">
+                Mỗi node có thể thêm:
+                <br><br>
+                <code>{ "id":"FO", "x":120, "y":264 }</code>
+                <br><br>
+                Nếu có <code>x</code>, <code>y</code> thì render theo tọa độ đó. Nếu không có thì auto layout.
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <span class="badge">Read-only + Drag Layout</span>
+                    <span class="badge">jsPlumb</span>
+                    <span class="badge" id="wfCode">Workflow: -</span>
+                    <span class="badge" id="flowType">Flow: -</span>
+                    <span class="badge" id="currentStep">Current: -</span>
+                </div>
+                <div class="toolbar-right">
+                    <span class="badge" id="layoutMode">Layout: -</span>
+                    <span class="badge" id="saveHint">Position: draggable</span>
+                </div>
+            </div>
+
+            <div class="canvas-wrap">
+                <div id="canvas"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // var sampleJson = {
+        //   workflowDefinition: {
+        //     workflowCode: "WF_TMIV_MAIN",
+        //     workflowName: "TMIV Main Workflow",
+        //     flowType: "Quotation",
+        //     versionNo: 1,
+        //     isActive: true
+        //   },
+        //   workflowNodes: [
+        //     {
+        //       id: "FO",
+        //       parentId: null,
+        //       nodeName: "FO",
+        //       nodeType: "",
+        //       nodeCode: "",
+        //       orderNo: 1,
+        //       stepRole: "",
+        //       departmentName: "",
+        //       levelNo: 1,
+        //       flowType: "Both",
+        //       allowLoop: false,
+        //       loopGroup: "",
+        //       x: null,
+        //       y: null
+        //     },
+        //     {
+        //       id: "TS",
+        //       parentId: "FO",
+        //       nodeName: "TS",
+        //       nodeType: "",
+        //       nodeCode: "",
+        //       orderNo: 2,
+        //       stepRole: "",
+        //       departmentName: "",
+        //       levelNo: 1,
+        //       flowType: "Both",
+        //       allowLoop: false,
+        //       loopGroup: "",
+        //       x: null,
+        //       y: null
+        //     },
+        //     {
+        //       id: "UW",
+        //       parentId: "TS",
+        //       nodeName: "UW",
+        //       nodeType: "",
+        //       nodeCode: "",
+        //       orderNo: 3,
+        //       stepRole: "",
+        //       departmentName: "",
+        //       levelNo: 1,
+        //       flowType: "Both",
+        //       allowLoop: false,
+        //       loopGroup: "",
+        //       x: null,
+        //       y: null
+        //     },
+        //     {
+        //       id: "CLIENT",
+        //       parentId: "FO",
+        //       nodeName: "Client",
+        //       nodeType: "",
+        //       nodeCode: "",
+        //       orderNo: 4,
+        //       stepRole: "",
+        //       departmentName: "",
+        //       levelNo: 1,
+        //       flowType: "Both",
+        //       allowLoop: true,
+        //       loopGroup: "CLIENT_REVIEW",
+        //       x: null,
+        //       y: null
+        //     },
+        //     {
+        //       id: "PM",
+        //       parentId: "CLIENT",
+        //       nodeName: "PM",
+        //       nodeType: "",
+        //       nodeCode: "",
+        //       orderNo: 5,
+        //       stepRole: "",
+        //       departmentName: "",
+        //       levelNo: 1,
+        //       flowType: "Both",
+        //       allowLoop: false,
+        //       loopGroup: "",
+        //       x: null,
+        //       y: null
+        //     },
+        //     {
+        //       id: "NODE_1774258352695",
+        //       parentId: null,
+        //       nodeName: "New Root",
+        //       nodeType: "",
+        //       nodeCode: "",
+        //       orderNo: 6,
+        //       stepRole: "",
+        //       departmentName: "",
+        //       levelNo: 1,
+        //       flowType: "Both",
+        //       allowLoop: false,
+        //       loopGroup: "",
+        //       x: null,
+        //       y: null
+        //     }
+        //   ],
+        //   workflowTransitions: [
+        //     {
+        //       fromNodeId: "FO",
+        //       toNodeId: "TS",
+        //       actionCode: "SUBMIT_TS",
+        //       actionName: "Submit To TS",
+        //       flowType: "Quotation",
+        //       isReturn: false,
+        //       isLoop: false,
+        //       loopGroup: "",
+        //       loopExitMode: "None",
+        //       maxLoopCount: null,
+        //       isExitTransition: false,
+        //       userDecisionLabel: "",
+        //       conditionJson: ""
+        //     },
+        //     {
+        //       fromNodeId: "TS",
+        //       toNodeId: "UW",
+        //       actionCode: "SUBMIT_UW",
+        //       actionName: "Submit To UW",
+        //       flowType: "Quotation",
+        //       isReturn: false,
+        //       isLoop: false,
+        //       loopGroup: "",
+        //       loopExitMode: "None",
+        //       maxLoopCount: null,
+        //       isExitTransition: false,
+        //       userDecisionLabel: "",
+        //       conditionJson: ""
+        //     },
+        //     {
+        //       fromNodeId: "UW",
+        //       toNodeId: "FO",
+        //       actionCode: "RETURN_FO",
+        //       actionName: "Return To FO",
+        //       flowType: "Quotation",
+        //       isReturn: true,
+        //       isLoop: false,
+        //       loopGroup: "",
+        //       loopExitMode: "None",
+        //       maxLoopCount: null,
+        //       isExitTransition: false,
+        //       userDecisionLabel: "",
+        //       conditionJson: ""
+        //     },
+        //     {
+        //       fromNodeId: "FO",
+        //       toNodeId: "CLIENT",
+        //       actionCode: "SUBMIT_CLIENT",
+        //       actionName: "Submit To Client",
+        //       flowType: "Both",
+        //       isReturn: false,
+        //       isLoop: false,
+        //       loopGroup: "",
+        //       loopExitMode: "None",
+        //       maxLoopCount: null,
+        //       isExitTransition: false,
+        //       userDecisionLabel: "",
+        //       conditionJson: ""
+        //     },
+        //     {
+        //       fromNodeId: "CLIENT",
+        //       toNodeId: "CLIENT",
+        //       actionCode: "REVISE_AGAIN",
+        //       actionName: "Revise Again",
+        //       flowType: "Both",
+        //       isReturn: false,
+        //       isLoop: true,
+        //       loopGroup: "CLIENT_REVIEW",
+        //       loopExitMode: "UserDecision",
+        //       maxLoopCount: null,
+        //       isExitTransition: false,
+        //       userDecisionLabel: "Continue Revision",
+        //       conditionJson: ""
+        //     },
+        //     {
+        //       fromNodeId: "CLIENT",
+        //       toNodeId: "PM",
+        //       actionCode: "EXIT_LOOP_AND_SUBMIT_PM",
+        //       actionName: "Approve And Exit",
+        //       flowType: "PolicyIssuance",
+        //       isReturn: false,
+        //       isLoop: true,
+        //       loopGroup: "CLIENT_REVIEW",
+        //       loopExitMode: "UserDecision",
+        //       maxLoopCount: null,
+        //       isExitTransition: true,
+        //       userDecisionLabel: "Approve And Exit",
+        //       conditionJson: ""
+        //     }
+        //   ],
+        //   runtimeState: {
+        //     activeNodeId: "CLIENT",
+        //     compvaredNodeIds: ["FO", "TS", "UW"],
+        //     pendingNodeIds: ["PM", "NODE_1774258352695"]
+        //   }
+        // };
+
+         var _id = @Convert.ToInt32(ViewData["Id"]);
+
+        ajaxGet(`/api/WorkflowDefinition/GetSingle/${_id}`)
+                      .then(data => {
+                          console.log(data);
+                          data.workflowNodes = JSON.parse(data.workflowNodes);
+        var sampleJson = data;
+        var jsonInput = document.getElementById("jsonInput");
+        var canvas = document.getElementById("canvas");
+        var errorBox = document.getElementById("errorBox");
+        var wfCode = document.getElementById("wfCode");
+        var flowType = document.getElementById("flowType");
+        var currentStep = document.getElementById("currentStep");
+        var layoutMode = document.getElementById("layoutMode");
+        var saveHint = document.getElementById("saveHint");
+
+        var instance = null;
+        var currentJson = null;
+
+        jsonInput.value = JSON.stringify(sampleJson, null, 2);
+
+        function safe(v) {
+          return String(v == null ? "" : v);
+        }
+
+        function hasNumber(v) {
+          return typeof v === "number" && !Number.isNaN(v);
+        }
+
+        function snap(n, grid = 24) {
+          return Math.round(n / grid) * grid;
+        }
+
+        function cloneJson(obj) {
+          return JSON.parse(JSON.stringify(obj));
+        }
+
+        function getNodeFlowClass(flowType) {
+          if (flowType === "Quotation") return "flow-quotation";
+          if (flowType === "PolicyIssuance") return "flow-policy";
+          return "flow-both";
+        }
+
+        function getNodeStateClass(nodeId, runtimeState) {
+          var active = runtimeState?.activeNodeId;
+          var done = runtimeState?.compvaredNodeIds || [];
+          var pending = runtimeState?.pendingNodeIds || [];
+          if (nodeId === active) return "active";
+          if (done.includes(nodeId)) return "done";
+          if (pending.includes(nodeId)) return "pending";
+          return "pending";
+        }
+
+        function getNodesWithSavedPosition(nodes) {
+          return (nodes || []).filter(n => hasNumber(n.x) && hasNumber(n.y));
+        }
+
+        function syncJsonToTextarea() {
+          if (!currentJson) return;
+          jsonInput.value = JSON.stringify(currentJson, null, 2);
+        }
+
+        function updateNodeCoordinateUi(nodeId, x, y) {
+          var xEl = document.querySelector(`[data-x="${nodeId}"]`);
+          var yEl = document.querySelector(`[data-y="${nodeId}"]`);
+          if (xEl) xEl.textContent = x;
+          if (yEl) yEl.textContent = y;
+        }
+
+        function updateNodePosition(nodeId, x, y) {
+          if (!currentJson || !currentJson.workflowNodes) return;
+          var node = currentJson.workflowNodes.find(n => n.id === nodeId);
+          if (!node) return;
+
+          node.x = x;
+          node.y = y;
+
+          updateNodeCoordinateUi(nodeId, x, y);
+          syncJsonToTextarea();
+        }
+
+        function buildAutoLayout(json) {
+          var nodes = json.workflowNodes || [];
+          var transitions = json.workflowTransitions || [];
+
+          var nodeMap = new Map(nodes.map(n => [n.id, n]));
+          var indegree = new Map();
+          var graph = new Map();
+
+          nodes.forEach(n => {
+            indegree.set(n.id, 0);
+            graph.set(n.id, []);
+          });
+
+          transitions.forEach(t => {
+            if (!nodeMap.has(t.fromNodeId) || !nodeMap.has(t.toNodeId)) return;
+            if (t.fromNodeId === t.toNodeId) return;
+            graph.get(t.fromNodeId).push(t.toNodeId);
+            indegree.set(t.toNodeId, (indegree.get(t.toNodeId) || 0) + 1);
+          });
+
+          var roots = nodes
+            .filter(n => (indegree.get(n.id) || 0) === 0)
+            .sort((a, b) => (a.orderNo || 9999) - (b.orderNo || 9999));
+
+          if (roots.length === 0 && nodes.length) {
+            roots = [nodes.slice().sort((a, b) => (a.orderNo || 9999) - (b.orderNo || 9999))[0]];
+          }
+
+          var layerMap = new Map();
+          var queue = [];
+
+          roots.forEach(r => {
+            layerMap.set(r.id, 0);
+            queue.push(r.id);
+          });
+
+          while (queue.length) {
+            var current = queue.shift();
+            var currentLayer = layerMap.get(current) || 0;
+            var nexts = graph.get(current) || [];
+
+            nexts.forEach(to => {
+              var candidate = currentLayer + 1;
+              if (!layerMap.has(to) || candidate > layerMap.get(to)) {
+                layerMap.set(to, candidate);
+                queue.push(to);
+              }
+            });
+          }
+
+          nodes.forEach(n => {
+            if (!layerMap.has(n.id)) {
+              var maxLayer = Math.max(0, ...Array.from(layerMap.values(), v => v || 0));
+              layerMap.set(n.id, maxLayer + 1);
+            }
+          });
+
+          var grouped = {};
+          nodes.forEach(n => {
+            var layer = layerMap.get(n.id) || 0;
+            if (!grouped[layer]) grouped[layer] = [];
+            grouped[layer].push(n);
+          });
+
+          Object.keys(grouped).forEach(layer => {
+            grouped[layer].sort((a, b) => {
+              var ao = a.orderNo || 9999;
+              var bo = b.orderNo || 9999;
+              if (ao !== bo) return ao - bo;
+              return safe(a.nodeName).localeCompare(safe(b.nodeName));
+            });
+          });
+
+          var startX = 96;
+          var startY = 110;
+          var colGap = 280;
+          var rowGap = 150;
+          var positions = {};
+
+          Object.keys(grouped)
+            .map(Number)
+            .sort((a, b) => a - b)
+            .forEach(layer => {
+              var arr = grouped[layer];
+              var totalHeight = (arr.length - 1) * rowGap;
+              var baseY = Math.max(startY, 200 - totalHeight / 2);
+
+              arr.forEach((n, index) => {
+                positions[n.id] = {
+                  x: snap(startX + layer * colGap),
+                  y: snap(baseY + index * rowGap),
+                  layer
+                };
+              });
+            });
+
+          var maxLayer = Math.max(...Object.keys(grouped).map(Number));
+          var maxCount = Math.max(...Object.values(grouped).map(a => a.length));
+          var canvasWidth = startX + (maxLayer + 1) * colGap + 300;
+          var canvasHeight = Math.max(760, startY + maxCount * rowGap + 260);
+
+          return { positions, grouped, canvasWidth, canvasHeight };
+        }
+
+        function buildSavedLayout(json) {
+          var nodes = json.workflowNodes || [];
+          var positions = {};
+          var maxX = 0;
+          var maxY = 0;
+
+          nodes.forEach(n => {
+            var x = snap(Number(n.x || 0));
+            var y = snap(Number(n.y || 0));
+            positions[n.id] = { x, y, layer: null };
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+          });
+
+          return {
+            positions,
+            grouped: {},
+            canvasWidth: Math.max(1400, maxX + 420),
+            canvasHeight: Math.max(760, maxY + 260)
+          };
+        }
+
+        function createNodeEl(node, pos, runtimeState) {
+          var el = document.createElement("div");
+          el.id = node.id;
+          el.className = "node " + getNodeFlowClass(node.flowType) + " " + getNodeStateClass(node.id, runtimeState);
+          el.style.left = pos.x + "px";
+          el.style.top = pos.y + "px";
+          el.innerHTML = `
+            <div class="node-title">${safe(node.nodeName || node.id)}</div>
+            <div class="node-meta">
+              <div>Order: ${safe(node.orderNo)}</div>
+              <div>Level: ${safe(node.levelNo)}</div>
+              <div>Flow: ${safe(node.flowType || "Both")}</div>
+              <div>X: <span data-x="${node.id}">${safe(node.x)}</span> | Y: <span data-y="${node.id}">${safe(node.y)}</span></div>
+            </div>
+          `;
+          return el;
+        }
+
+        function createLayerLabel(layer, x) {
+          var el = document.createElement("div");
+          el.className = "layer-label";
+          el.style.left = x + "px";
+          el.textContent = "Layer " + layer;
+          return el;
+        }
+
+        function colorForEdge(t) {
+          if (t.isReturn) return "var(--return)";
+          if (t.isLoop) return "var(--loop)";
+          if (t.flowType === "Quotation") return "var(--quotation)";
+          if (t.flowType === "PolicyIssuance") return "var(--policy)";
+          return "var(--both)";
+        }
+
+        function chooseAnchors(t) {
+          if (t.isReturn) return ["Top", "Top"];
+          return ["Right", "Left"];
+        }
+
+        function connectEdge(t) {
+          var color = colorForEdge(t);
+          var label = safe(t.actionName || t.userDecisionLabel || t.actionCode || "");
+          var isSelfLoop = t.fromNodeId === t.toNodeId;
+
+          var overlays = [
+            ["Arrow", { location: 1, width: 10, length: 10 }]
+          ];
+
+          if (label) {
+            overlays.unshift(["Label", {
+              label,
+              location: 0.5,
+              cssClass: "edge-label"
+            }]);
+          }
+
+          if (isSelfLoop) {
+            instance.connect({
+              source: t.fromNodeId,
+              target: t.toNodeId,
+              anchors: ["Top", "Right"],
+              connector: ["StateMachine", { margin: 12, curviness: 45, loopbackRadius: 32 }],
+              endpoint: "Blank",
+              paintStyle: {
+                stroke: color,
+                strokeWidth: 3,
+                dashstyle: t.isReturn ? "4 4" : ""
+              },
+              overlays
+            });
+            return;
+          }
+
+          instance.connect({
+            source: t.fromNodeId,
+            target: t.toNodeId,
+            anchors: chooseAnchors(t),
+            connector: ["Bezier", { curviness: t.isReturn ? 95 : 60 }],
+            endpoint: "Blank",
+            paintStyle: {
+              stroke: color,
+              strokeWidth: (t.isReturn || t.isLoop) ? 3 : 2.5,
+              dashstyle: t.isReturn ? "4 4" : ""
+            },
+            overlays
+          });
+        }
+
+        function attachDrag() {
+          (currentJson.workflowNodes || []).forEach(node => {
+            instance.draggable(node.id, {
+              grid: [24, 24],
+              containment: true,
+              stop: function() {
+                var el = document.getElementById(node.id);
+                if (!el) return;
+
+                var left = snap(parseInt(el.style.left || "0", 10));
+                var top = snap(parseInt(el.style.top || "0", 10));
+
+                el.style.left = left + "px";
+                el.style.top = top + "px";
+
+                updateNodePosition(node.id, left, top);
+                instance.revalidate(node.id);
+
+                saveHint.innerHTML = `Position: <span class="status-ok">updated ${node.id} (${left}, ${top})</span>`;
+              }
+            });
+          });
+        }
+
+        function renderWorkflow(options = {}) {
+          try {
+            errorBox.style.display = "none";
+            errorBox.textContent = "";
+
+            currentJson = JSON.parse(jsonInput.value);
+
+            if (instance) {
+              instance.devareEveryConnection();
+              instance.reset();
+            }
+
+            canvas.innerHTML = "";
+
+            var useSavedLayout =
+              !options.forceAuto &&
+              getNodesWithSavedPosition(currentJson.workflowNodes).length > 0;
+
+            var layout = useSavedLayout
+              ? buildSavedLayout(currentJson)
+              : buildAutoLayout(currentJson);
+
+            var { positions, grouped, canvasWidth, canvasHeight } = layout;
+
+            canvas.style.width = canvasWidth + "px";
+            canvas.style.height = canvasHeight + "px";
+
+            if (!useSavedLayout) {
+              Object.keys(grouped).map(Number).sort((a, b) => a - b).forEach(layer => {
+                var arr = grouped[layer];
+                if (arr.length) {
+                  canvas.appendChild(createLayerLabel(layer, positions[arr[0].id].x));
+                }
+              });
+            }
+
+            (currentJson.workflowNodes || []).forEach(node => {
+              var pos = positions[node.id];
+              if (!pos) return;
+
+              if (!useSavedLayout || !hasNumber(node.x) || !hasNumber(node.y)) {
+                node.x = pos.x;
+                node.y = pos.y;
+              }
+
+              canvas.appendChild(createNodeEl(node, pos, currentJson.runtimeState || {}));
+            });
+
+            instance = jsPlumb.getInstance({
+              Container: canvas
+            });
+
+            instance.importDefaults({
+              ConnectionsDetachable: false,
+              ReattachConnections: false,
+              Endpoint: "Blank",
+              PaintStyle: { stroke: "#64748b", strokeWidth: 2 },
+              HoverPaintStyle: { stroke: "#334155", strokeWidth: 3 }
+            });
+
+            (currentJson.workflowTransitions || []).forEach(connectEdge);
+            attachDrag();
+
+            var def = currentJson.workflowDefinition || {};
+            wfCode.textContent = "Workflow: " + safe(def.workflowCode || "-");
+            flowType.textContent = "Flow: " + safe(def.flowType || "-");
+            currentStep.textContent = "Current: " + safe(currentJson.runtimeState?.activeNodeId || "-");
+            layoutMode.textContent = "Layout: " + (useSavedLayout ? "saved x,y" : "auto layout");
+
+            syncJsonToTextarea();
+          } catch (err) {
+            errorBox.style.display = "block";
+            errorBox.textContent = err && err.stack ? err.stack : String(err);
+          }
+        }
+
+        function exportJson() {
+          try {
+            syncJsonToTextarea();
+            navigator.clipboard?.writeText(jsonInput.value).catch(() => {});
+            saveHint.innerHTML = `Position: <span class="status-ok">JSON exported</span>`;
+          } catch (err) {
+            errorBox.style.display = "block";
+            errorBox.textContent = err && err.stack ? err.stack : String(err);
+          }
+        }
+
+        function resetSample() {
+          jsonInput.value = JSON.stringify(cloneJson(sampleJson), null, 2);
+          renderWorkflow();
+        }
+
+        document.getElementById("btnRender").addEventListener("click", () => renderWorkflow());
+        document.getElementById("btnReset").addEventListener("click", resetSample);
+        document.getElementById("btnExport").addEventListener("click", exportJson);
+        document.getElementById("btnAutoLayout").addEventListener("click", () => {
+          try {
+            var tmp = JSON.parse(jsonInput.value);
+            (tmp.workflowNodes || []).forEach(n => {
+              n.x = null;
+              n.y = null;
+            });
+            jsonInput.value = JSON.stringify(tmp, null, 2);
+            renderWorkflow({ forceAuto: true });
+          } catch (err) {
+            errorBox.style.display = "block";
+            errorBox.textContent = err && err.stack ? err.stack : String(err);
+          }
+        });
+
+        renderWorkflow();
+                      });
+
+    </script>
+</body>
+</html>

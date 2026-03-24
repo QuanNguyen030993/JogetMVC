@@ -1,0 +1,11 @@
+﻿@page
+@model WorkflowDefinitionModel
+@{
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@WorkflowDefinitionModel.ModelName`), new WorkflowDefinitionGridOption('@WorkflowDefinitionModel.ModelName'), null);
+    });
+</script>
+<div id="dataGrid_@WorkflowDefinitionModel.ModelName"></div>

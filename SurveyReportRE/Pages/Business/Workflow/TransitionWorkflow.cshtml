@@ -1,0 +1,11 @@
+﻿@page
+@model TransitionWorkflowModel
+@{
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@TransitionWorkflowModel.ModelName`), new TransitionWorkflowGridOption('@TransitionWorkflowModel.ModelName'), null);
+    });
+</script>
+<div id="dataGrid_@TransitionWorkflowModel.ModelName"></div>

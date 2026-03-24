@@ -1,0 +1,1573 @@
+﻿ @page "{pageNum:int?}"
+@model WorkflowDefinition_FormModel
+@{
+
+
+}
+@* <script>
+    $(function () {
+        var _id = @Convert.ToInt32(ViewData["Id"]);
+
+        var _formConfig = new MFormOption();
+        _formConfig.cloneUrl = '/Business/MasterData/WorkflowDefinition_Form/' + _id;
+        _formConfig.tabCode = `form_WorkflowDefinition_Form_${_id}`;
+        _formConfig.tabName = '@HttpContext.Request.Query["Caption"].ToString()';
+        _formConfig.originModelName = "@WorkflowDefinition_FormModel.ModelName";
+        _formConfig.formElementName = "@WorkflowDefinition_FormModel.ModelName";
+        _formConfig.schemeBasedOn = `@(WorkflowDefinition_FormModel.SchemeModelName)`;
+        _formConfig.allowFormActionButton = true;
+        _formConfig.colCount = 4;
+        _formConfig.isCustomQuery = true;
+        new WorkflowDefinitionForm(_id, null, _formConfig);
+    });
+</script>
+<div id="form_@(WorkflowDefinition_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])" class="dExForm"></div>
+ *@
+
+
+    
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #f4f6fb;
+            color: #1f2937;
+        }
+
+        .page {
+            padding: 14px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .sub {
+            color: #6b7280;
+            margin-bottom: 14px;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 270px 380px 430px 1fr;
+            gap: 14px;
+            min-height: calc(100vh - 90px);
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            box-shadow: 0 8px 24px rgba(0,0,0,.06);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .card-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid #edf0f5;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .card-sub {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .card-body {
+            padding: 14px;
+            flex: 1;
+            overflow: auto;
+            min-height: 0;
+        }
+
+        .toolbox {
+            display: grid;
+            gap: 10px;
+        }
+
+        .tool-item {
+            border: 1px dashed #9db7ff;
+            background: #f4f8ff;
+            color: #264b96;
+            border-radius: 12px;
+            padding: 12px;
+            cursor: grab;
+            user-select: none;
+            transition: .2s ease;
+        }
+
+        .tool-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(59,130,246,.12);
+        }
+
+        .tool-item .name {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .tool-item .desc {
+            font-size: 12px;
+            color: #52627d;
+        }
+
+        .toolbar, .mini-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        #treeWorkflow {
+            border: 1px solid #dbe1ea;
+            border-radius: 12px;
+            background: #fcfdff;
+            min-height: 600px;
+            padding: 8px;
+        }
+
+        .drop-hint {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #6b7280;
+            background: #f9fafb;
+            border: 1px solid #eceff5;
+            padding: 10px;
+            border-radius: 10px;
+            line-height: 1.5;
+        }
+
+        .section-title {
+            margin: 14px 0 8px 0;
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .json-box {
+            min-height: 200px;
+            max-height: 300px;
+            overflow: auto;
+            border-radius: 12px;
+            background: #0f172a;
+            color: #dbeafe;
+            padding: 12px;
+            font-family: Consolas, monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .node-json-editor {
+            width: 100%;
+            min-height: 160px;
+            resize: vertical;
+            border: 1px solid #d8dfeb;
+            border-radius: 12px;
+            padding: 10px;
+            font-family: Consolas, monospace;
+            font-size: 12px;
+            outline: none;
+        }
+
+        .transition-list {
+            display: grid;
+            gap: 8px;
+        }
+
+        .transition-item {
+            border: 1px solid #e5e7eb;
+            background: #fafbff;
+            border-radius: 12px;
+            padding: 10px 12px;
+        }
+
+        .transition-route {
+            font-weight: 700;
+            color: #1d4ed8;
+            margin-bottom: 6px;
+        }
+
+        .transition-meta {
+            font-size: 12px;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            border: 1px solid transparent;
+        }
+
+        .badge.q {
+            background: #eef4ff;
+            color: #1d4ed8;
+            border-color: #bfdbfe;
+        }
+
+        .badge.pi {
+            background: #fff7ed;
+            color: #c2410c;
+            border-color: #fdba74;
+        }
+
+        .badge.both {
+            background: #f3f4f6;
+            color: #374151;
+            border-color: #d1d5db;
+        }
+
+        .badge.return {
+            background: #fee2e2;
+            color: #b91c1c;
+            border-color: #fecaca;
+        }
+
+        .badge.loop {
+            background: #ede9fe;
+            color: #6d28d9;
+            border-color: #c4b5fd;
+        }
+
+        .badge.exit {
+            background: #dcfce7;
+            color: #15803d;
+            border-color: #86efac;
+        }
+
+        .badge.user {
+            background: #ecfeff;
+            color: #0f766e;
+            border-color: #99f6e4;
+        }
+
+        .legend-box {
+            display: grid;
+            gap: 6px;
+        }
+
+        .legend-item {
+            font-size: 12px;
+            color: #475569;
+        }
+
+        .loop-box {
+            border: 1px dashed #c4b5fd;
+            background: #faf5ff;
+            border-radius: 12px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #5b21b6;
+        }
+
+        .jstree-anchor {
+            border-radius: 6px;
+            display: inline-flex !important;
+            align-items: center;
+            gap: 6px;
+            max-width: 100%;
+        }
+
+        .jstree-clicked {
+            background: #dbeafe !important;
+            color: #111827 !important;
+        }
+
+        .tree-node-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .tree-node-text {
+            font-weight: 600;
+        }
+
+        .tree-node-mini {
+            font-size: 10px;
+            border-radius: 999px;
+            padding: 2px 6px;
+            border: 1px solid #ddd;
+            background: #fff;
+            line-height: 1;
+        }
+
+        .tree-node-mini.q {
+            color: #1d4ed8;
+            border-color: #bfdbfe;
+            background: #eff6ff;
+        }
+
+        .tree-node-mini.pi {
+            color: #c2410c;
+            border-color: #fdba74;
+            background: #fff7ed;
+        }
+
+        .tree-node-mini.both {
+            color: #374151;
+            border-color: #d1d5db;
+            background: #f9fafb;
+        }
+
+        .tree-node-mini.loop {
+            color: #6d28d9;
+            border-color: #c4b5fd;
+            background: #f5f3ff;
+        }
+
+        .drag-over-zone {
+            outline: 2px dashed #60a5fa;
+            outline-offset: 2px;
+        }
+
+        @@media (max-width: 1680px) {
+            .layout {
+                grid-template-columns: 270px 380px 1fr;
+            }
+            .card-last {
+                grid-column: 2;
+            }
+        }
+
+        @@media (max-width: 1280px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+<body>
+    <div class="page">
+        <div class="title">Workflow Designer</div>
+        <div class="sub">
+            Toolbox + jsTree + Flow Type + Transition + Loop/Exit/User Decision để bạn review trước khi chốt thiết kế bảng lưu data.
+        </div>
+
+        <div class="layout">
+            <!-- TOOLBOX -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Toolbox</div>
+                    <div class="card-sub">Kéo object vào tree để tạo node</div>
+                </div>
+                <div class="card-body">
+                    <div class="toolbox">
+                        <div class="tool-item" draggable="true" data-type="department" data-text="New Department">
+                            <div class="name">Department</div>
+                            <div class="desc">Ví dụ FO / TS / UW / LMKT / PM</div>
+                        </div>
+                        <div class="tool-item" draggable="true" data-type="actor" data-text="New Actor">
+                            <div class="name">Actor</div>
+                            <div class="desc">Ví dụ Client / External / Approver</div>
+                        </div>
+                        <div class="tool-item" draggable="true" data-type="condition" data-text="New Condition">
+                            <div class="name">Condition</div>
+                            <div class="desc">Rule node / branching / decision</div>
+                        </div>
+                        <div class="tool-item" draggable="true" data-type="system" data-text="New System">
+                            <div class="name">System</div>
+                            <div class="desc">Auto process / service / scheduler</div>
+                        </div>
+                    </div>
+
+                    <div class="section-title">Load Sample</div>
+                    <div class="mini-row">
+                        <div id="btnSampleQuotation"></div>
+                        <div id="btnSamplePolicy"></div>
+                        <div id="btnSampleLoop"></div>
+                    </div>
+
+                    <div class="section-title">Legend</div>
+                    <div class="legend-box">
+                        <div class="legend-item"><span class="badge q">Quotation</span> node/flow dùng cho quotation</div>
+                        <div class="legend-item"><span class="badge pi">PolicyIssuance</span> node/flow dùng cho policy issuance</div>
+                        <div class="legend-item"><span class="badge both">Both</span> dùng chung</div>
+                        <div class="legend-item"><span class="badge return">RETURN</span> flow trả về</div>
+                        <div class="legend-item"><span class="badge loop">LOOP</span> flow lặp</div>
+                        <div class="legend-item"><span class="badge exit">EXIT</span> flow thoát loop</div>
+                        <div class="legend-item"><span class="badge user">UserDecision</span> user tự quyết định thoát loop</div>
+                    </div>
+
+                    <div class="loop-box">
+                        Mockup này chưa vẽ line graph thật.
+                        <br>Phần “vòng tròn” đang thể hiện qua:
+                        <br>- transition `From -> To`
+                        <br>- badge `LOOP`
+                        <br>- self-loop hoặc loop-group
+                        <br>- nút thoát `EXIT`
+                    </div>
+
+                    <div class="drop-hint">
+                        Cách test nhanh:
+                        <br>1. Chọn Workflow Flow Type ở panel giữa
+                        <br>2. Kéo object từ toolbox sang tree
+                        <br>3. Click node để sửa data / flow type
+                        <br>4. Tạo transition ở panel bên phải
+                        <br>5. Thử case loop với UserDecision
+                        <br>6. Xem payload JSON cuối màn hình
+                    </div>
+                </div>
+            </div>
+
+            <!-- TREE -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Tree Designer</div>
+                    <div class="card-sub">jsTree để dựng node hierarchy</div>
+                </div>
+                <div class="card-body">
+                    <div class="section-title">Workflow Header</div>
+                    <div id="workflowForm"></div>
+
+                    <div class="toolbar" style="margin-top:12px;">
+                        <div id="btnAddRoot"></div>
+                        <div id="btnAddChild"></div>
+                        <div id="btnRename"></div>
+                        <div id="btnDevare"></div>
+                        <div id="btnExpand"></div>
+                        <div id="btnCollapse"></div>
+                    </div>
+
+                    <div id="treeWorkflow"></div>
+                </div>
+            </div>
+
+            <!-- NODE EDITOR -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Node Review</div>
+                    <div class="card-sub">Sửa node bằng form hoặc JSON raw</div>
+                </div>
+                <div class="card-body">
+                    <div id="nodeForm"></div>
+
+                    <div class="section-title">Node JSON Raw</div>
+                    <textarea id="nodeJsonEditor" class="node-json-editor" placeholder="Select node to edit raw JSON..."></textarea>
+
+                    <div class="mini-row">
+                        <div id="btnApplyNodeForm"></div>
+                        <div id="btnApplyNodeJson"></div>
+                        <div id="btnRefreshNodeJson"></div>
+                        <div id="btnCreateflow"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TRANSITION + PAYLOAD -->
+            <div class="card card-last" style="width: 1200px;">
+                <div class="card-header">
+                    <div class="card-title">Transition / Loop / Payload Review</div>
+                    <div class="card-sub">Mockup để review trước khi trích xuất DB tables</div>
+                </div>
+                <div class="card-body">
+                    <div style="display:grid;grid-template-columns:420px 1fr;gap:14px;">
+                        <div>
+                            <div class="section-title">Transition Editor</div>
+                            <div id="transitionForm"></div>
+                            <div class="mini-row" style="margin-top:10px;">
+                                <div id="btnAddTransition"></div>
+                                <div id="btnResetTransitionForm"></div>
+                            </div>
+                        </div>
+
+                        <!--  <div>
+                             <div class="section-title">Transition Preview</div>
+                             <div id="transitionPreview" class="transition-list"></div>
+                         </div> -->
+
+                        <div>
+                            <div class="section-title">Payload Preview</div>
+                            <div id="payloadBox" class="json-box"></div>
+                        </div>
+                    </div>
+
+                    <div class="section-title">Flat Node Preview</div>
+                    <div id="nodeGrid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var selectedNodeId = null;
+        var nodeFormInstance = null;
+        var workflowFormInstance = null;
+        var transitionFormInstance = null;
+        var nodeGridInstance = null;
+        var dragToolData = null;
+
+        var workflowHeader = {
+            workflowCode: "WF_TMIV_MAIN",
+            workflowName: "TMIV Main Workflow",
+            flowType: "Quotation",
+            versionNo: 1,
+            isActive: true
+        };
+
+        var workflowTreeData = [
+            { id: "FO", parent: "#", text: "FO", type: "department", code: "FO", orderNo: 1, stepRole: "Front Office", departmentName: "FO", levelNo: 1, flowType: "Both", allowLoop: false, loopGroup: "" },
+            { id: "TS", parent: "FO", text: "TS", type: "department", code: "TS", orderNo: 1, stepRole: "Technical Support", departmentName: "TS", levelNo: 2, flowType: "Quotation", allowLoop: false, loopGroup: "" },
+            { id: "UW", parent: "TS", text: "UW", type: "department", code: "UW", orderNo: 1, stepRole: "Underwriting", departmentName: "UW", levelNo: 3, flowType: "Quotation", allowLoop: false, loopGroup: "" },
+            { id: "CLIENT", parent: "FO", text: "Client", type: "actor", code: "CLIENT", orderNo: 2, stepRole: "Client", departmentName: "External", levelNo: 2, flowType: "Both", allowLoop: true, loopGroup: "CLIENT_REVIEW" },
+            { id: "PM", parent: "CLIENT", text: "PM", type: "department", code: "PM", orderNo: 1, stepRole: "Policy Management", departmentName: "PM", levelNo: 3, flowType: "PolicyIssuance", allowLoop: false, loopGroup: "" }
+        ];
+
+        var transitions = [
+            {
+                fromNodeId: "FO",
+                toNodeId: "TS",
+                actionCode: "SUBMIT_TS",
+                actionName: "Submit To TS",
+                flowType: "Quotation",
+                isReturn: false,
+                isLoop: false,
+                loopGroup: "",
+                loopExitMode: "None",
+                maxLoopCount: null,
+                isExitTransition: false,
+                userDecisionLabel: "",
+                conditionJson: ""
+            },
+            {
+                fromNodeId: "CLIENT",
+                toNodeId: "CLIENT",
+                actionCode: "REVISE_AGAIN",
+                actionName: "Revise Again",
+                flowType: "Both",
+                isReturn: false,
+                isLoop: true,
+                loopGroup: "CLIENT_REVIEW",
+                loopExitMode: "UserDecision",
+                maxLoopCount: null,
+                isExitTransition: false,
+                userDecisionLabel: "Continue Revision",
+                conditionJson: ""
+            },
+            {
+                fromNodeId: "CLIENT",
+                toNodeId: "PM",
+                actionCode: "EXIT_LOOP_AND_SUBMIT_PM",
+                actionName: "Approve And Exit",
+                flowType: "PolicyIssuance",
+                isReturn: false,
+                isLoop: true,
+                loopGroup: "CLIENT_REVIEW",
+                loopExitMode: "UserDecision",
+                maxLoopCount: null,
+                isExitTransition: true,
+                userDecisionLabel: "Approve And Exit",
+                conditionJson: ""
+            }
+        ];
+
+        $(function () {
+            initWorkflowForm();
+            initNodeForm();
+            initTransitionForm();
+            initButtons();
+            initTree();
+            initToolboxDrag();
+            initGrid();
+            renderTransitionPreview();
+            buildPayloadPreview();
+        });
+
+        function initWorkflowForm() {
+            $("#workflowForm").dxForm({
+                formData: workflowHeader,
+                labelLocation: "top",
+                colCount: 2,
+                items: [
+                    { dataField: "workflowCode", label: { text: "Workflow Code" } },
+                    { dataField: "workflowName", label: { text: "Workflow Name" } },
+                    {
+                        dataField: "flowType",
+                        label: { text: "Workflow Flow Type" },
+                        editorType: "dxSelectBox",
+                        editorOptions: {
+                            dataSource: ["Quotation", "PolicyIssuance", "Both"],
+                            onValueChanged: function () {
+                                syncWorkflowHeader();
+                            }
+                        }
+                    },
+                    {
+                        dataField: "versionNo",
+                        label: { text: "Version No" },
+                        editorType: "dxNumberBox",
+                        editorOptions: {
+                            min: 1,
+                            onValueChanged: function () {
+                                syncWorkflowHeader();
+                            }
+                        }
+                    },
+                    {
+                        dataField: "isActive",
+                        label: { text: "Active" },
+                        editorType: "dxSwitch",
+                        editorOptions: {
+                            onValueChanged: function () {
+                                syncWorkflowHeader();
+                            }
+                        }
+                    }
+                ],
+                onInitialized: function (e) {
+                    workflowFormInstance = e.component;
+                }
+            });
+        }
+
+        function initNodeForm() {
+            $("#nodeForm").dxForm({
+                formData: {},
+                labelLocation: "top",
+                colCount: 2,
+                items: [
+                    { dataField: "id", label: { text: "Id" }, editorOptions: { readOnly: true } },
+                    { dataField: "parent", label: { text: "Parent" }, editorOptions: { readOnly: true } },
+                    { dataField: "text", label: { text: "Display Text" } },
+                    { dataField: "code", label: { text: "Code" } },
+                    {
+                        dataField: "type",
+                        label: { text: "Type" },
+                        editorType: "dxSelectBox",
+                        editorOptions: {
+                            dataSource: ["department", "actor", "condition", "system"]
+                        }
+                    },
+                    {
+                        dataField: "flowType",
+                        label: { text: "Node Flow Type" },
+                        editorType: "dxSelectBox",
+                        editorOptions: {
+                            dataSource: ["Quotation", "PolicyIssuance", "Both"]
+                        }
+                    },
+                    {
+                        dataField: "orderNo",
+                        label: { text: "Order No" },
+                        editorType: "dxNumberBox",
+                        editorOptions: { min: 0 }
+                    },
+                    { dataField: "stepRole", label: { text: "Step Role" } },
+                    { dataField: "departmentName", label: { text: "Department Name" } },
+                    {
+                        dataField: "levelNo",
+                        label: { text: "Level No" },
+                        editorType: "dxNumberBox",
+                        editorOptions: { min: 1 }
+                    },
+                    {
+                        dataField: "allowLoop",
+                        label: { text: "Allow Loop" },
+                        editorType: "dxSwitch"
+                    },
+                    {
+                        dataField: "loopGroup",
+                        label: { text: "Loop Group" }
+                    }
+                ],
+                onInitialized: function (e) {
+                    nodeFormInstance = e.component;
+                }
+            });
+        }
+
+        function initTransitionForm() {
+            $("#transitionForm").dxForm({
+                formData: getEmptyTransition(),
+                labelLocation: "top",
+                colCount: 2,
+                items: [
+                    {
+                        dataField: "fromNodeId",
+                        label: { text: "From Node" },
+                        editorType: "dxSelectBox",
+                        editorOptions: {
+                            dataSource: [],
+                            valueExpr: "id",
+                            displayExpr: "text",
+                            searchEnabled: true
+                        }
+                    },
+                    {
+                        dataField: "toNodeId",
+                        label: { text: "To Node" },
+                        editorType: "dxSelectBox",
+                        editorOptions: {
+                            dataSource: [],
+                            valueExpr: "id",
+                            displayExpr: "text",
+                            searchEnabled: true
+                        }
+                    },
+                    {
+                        dataField: "actionCode",
+                        label: { text: "Action Code" }
+                    },
+                    {
+                        dataField: "actionName",
+                        label: { text: "Action Name" }
+                    },
+                    {
+                        dataField: "flowType",
+                        label: { text: "Transition Flow Type" },
+                        editorType: "dxSelectBox",
+                        editorOptions: {
+                            dataSource: ["Quotation", "PolicyIssuance", "Both"]
+                        }
+                    },
+                    {
+                        dataField: "isReturn",
+                        label: { text: "Return Flow" },
+                        editorType: "dxSwitch"
+                    },
+                    {
+                        dataField: "isLoop",
+                        label: { text: "Loop Flow" },
+                        editorType: "dxSwitch"
+                    },
+                    {
+                        dataField: "loopGroup",
+                        label: { text: "Loop Group" }
+                    },
+                    {
+                        dataField: "loopExitMode",
+                        label: { text: "Loop Exit Mode" },
+                        editorType: "dxSelectBox",
+                        editorOptions: {
+                            dataSource: ["None", "UserDecision", "Condition", "MaxIteration"]
+                        }
+                    },
+                    {
+                        dataField: "maxLoopCount",
+                        label: { text: "Max Loop Count" },
+                        editorType: "dxNumberBox",
+                        editorOptions: { min: 1 }
+                    },
+                    {
+                        dataField: "isExitTransition",
+                        label: { text: "Exit Transition" },
+                        editorType: "dxSwitch"
+                    },
+                    {
+                        dataField: "userDecisionLabel",
+                        label: { text: "User Decision Label" }
+                    },
+                    {
+                        dataField: "conditionJson",
+                        label: { text: "Condition JSON" },
+                        editorType: "dxTextArea",
+                        editorOptions: { minHeight: 100 },
+                        colSpan: 2
+                    }
+                ],
+                onInitialized: function (e) {
+                    transitionFormInstance = e.component;
+                    refreshTransitionNodeLookup();
+                }
+            });
+        }
+
+        function initButtons() {
+            $("#btnAddRoot").dxButton({
+                text: "Add Root",
+                icon: "add",
+                onClick: function () {
+                    createNodeFromTool({ type: "department", text: "New Root" }, "#");
+                }
+            });
+
+            $("#btnAddChild").dxButton({
+                text: "Add Child",
+                icon: "plus",
+                onClick: function () {
+                    if (!selectedNodeId) return notify("Please select parent node first", "warning");
+                    createNodeFromTool({ type: "department", text: "New Child" }, selectedNodeId);
+                }
+            });
+
+            $("#btnRename").dxButton({
+                text: "Rename",
+                icon: "edit",
+                onClick: function () {
+                    var tree = $("#treeWorkflow").jstree(true);
+                    if (!selectedNodeId) return notify("Please select node first", "warning");
+                    tree.edit(selectedNodeId);
+                }
+            });
+
+            $("#btnDevare").dxButton({
+                text: "Devare",
+                icon: "trash",
+                type: "danger",
+                onClick: function () {
+                    var tree = $("#treeWorkflow").jstree(true);
+                    if (!selectedNodeId) return notify("Please select node first", "warning");
+
+                    DevExpress.ui.dialog.confirm("Devare selected node and all children?", "Confirm")
+                        .done(function(ok) {
+                            if (!ok) return;
+
+                            var devaringIds = collectDescendantIds(tree, selectedNodeId);
+                            devaringIds.push(selectedNodeId);
+
+                            tree.devare_node(selectedNodeId);
+                            transitions = transitions.filter(x =>
+                                !devaringIds.includes(x.fromNodeId) &&
+                                !devaringIds.includes(x.toNodeId)
+                            );
+
+                            selectedNodeId = null;
+                            nodeFormInstance.option("formData", {});
+                            $("#nodeJsonEditor").val("");
+
+                            syncTreeDataFromJsTree();
+                            renderTransitionPreview();
+                            buildPayloadPreview();
+                        });
+                }
+            });
+
+            $("#btnExpand").dxButton({
+                text: "Expand All",
+                icon: "chevrondown",
+                onClick: function () {
+                    $("#treeWorkflow").jstree(true).open_all();
+                }
+            });
+
+            $("#btnCollapse").dxButton({
+                text: "Collapse All",
+                icon: "chevronup",
+                onClick: function () {
+                    $("#treeWorkflow").jstree(true).close_all();
+                }
+            });
+
+            $("#btnApplyNodeForm").dxButton({
+                text: "Apply Form",
+                type: "success",
+                icon: "save",
+                onClick: applyFormToSelectedNode
+            }); 
+            
+            $("#btnCreateflow").dxButton({
+                text: "Create Flow",
+                type: "success",
+                icon: "save",
+                onClick: saveFlow
+            });
+
+            $("#btnApplyNodeJson").dxButton({
+                text: "Apply JSON",
+                icon: "codeblock",
+                onClick: applyJsonToSelectedNode
+            });
+
+            $("#btnRefreshNodeJson").dxButton({
+                text: "Refresh JSON",
+                icon: "refresh",
+                onClick: refreshNodeJson
+            });
+
+            $("#btnAddTransition").dxButton({
+                text: "Add Transition",
+                type: "default",
+                icon: "arrowright",
+                onClick: addTransition
+            });
+
+            $("#btnResetTransitionForm").dxButton({
+                text: "Reset Transition Form",
+                icon: "refresh",
+                onClick: function () {
+                    transitionFormInstance.option("formData", getEmptyTransition(selectedNodeId || ""));
+                }
+            });
+
+            $("#btnSampleQuotation").dxButton({
+                text: "Sample Quotation",
+                onClick: loadSampleQuotation
+            });
+
+            $("#btnSamplePolicy").dxButton({
+                text: "Sample Policy",
+                onClick: loadSamplePolicy
+            });
+
+            $("#btnSampleLoop").dxButton({
+                text: "Sample Loop",
+                onClick: loadSampleLoop
+            });
+        }
+
+        function initTree() {
+            if ($("#treeWorkflow").jstree(true)) {
+                $("#treeWorkflow").jstree(true).destroy();
+            }
+
+            $("#treeWorkflow")
+                .off("changed.jstree")
+                .off("dblclick.jstree")
+                .on("changed.jstree", function (e, data) {
+                    if (!data || !data.selected || !data.selected.length) return;
+                    selectedNodeId = data.selected[0];
+                    var node = data.instance.get_node(selectedNodeId);
+                    bindNodeToEditors(node);
+                })
+                .on("dblclick.jstree", ".jstree-anchor", function () {
+                    var tree = $("#treeWorkflow").jstree(true);
+                    var nodeId = $(this).closest("li").attr("id");
+                    if (nodeId) tree.edit(nodeId);
+                })
+                .jstree({
+                    core: {
+                        check_callback: true,
+                        data: workflowTreeData.map(x => ({
+                            ...x,
+                            text: buildTreeNodeHtml(x)
+                        })),
+                        themes: { stripes: true }
+                    },
+                    plugins: ["dnd", "contextmenu", "wholerow"]
+                });
+
+            setTimeout(function () {
+                var tree = $("#treeWorkflow").jstree(true);
+                tree.open_all();
+                if (workflowTreeData.length) tree.select_node(workflowTreeData[0].id);
+                initDropZoneForTree();
+            }, 200);
+        }
+
+        function buildTreeNodeHtml(x) {
+            var flowClass = x.flowType === "Quotation" ? "q" :
+                              x.flowType === "PolicyIssuance" ? "pi" : "both";
+
+            var loopBadge = x.allowLoop ? `<span class="tree-node-mini loop">LOOP</span>` : "";
+
+            return `
+                <span class="tree-node-wrap">
+                    <span class="tree-node-text">${escapeHtml(x.text)}</span>
+                    <span class="tree-node-mini ${flowClass}">${escapeHtml(x.flowType || "Both")}</span>
+                    ${loopBadge}
+                </span>
+            `;
+        }
+
+        function initToolboxDrag() {
+            $(".tool-item").on("dragstart", function (e) {
+                dragToolData = {
+                    type: $(this).data("type"),
+                    text: $(this).data("text")
+                };
+                e.originalEvent.dataTransfer.setData("text/plain", JSON.stringify(dragToolData));
+            });
+        }
+
+        function initDropZoneForTree() {
+            var treeContainer = document.getElementById("treeWorkflow");
+
+            treeContainer.addEventListener("dragover", function (e) {
+                e.preventDefault();
+                treeContainer.classList.add("drag-over-zone");
+            });
+
+            treeContainer.addEventListener("dragleave", function () {
+                treeContainer.classList.remove("drag-over-zone");
+            });
+
+            treeContainer.addEventListener("drop", function (e) {
+                e.preventDefault();
+                treeContainer.classList.remove("drag-over-zone");
+
+                var data = dragToolData;
+                try {
+                    var raw = e.dataTransfer.getData("text/plain");
+                    if (raw) data = JSON.parse(raw);
+                } catch (ex) { }
+
+                if (!data) return;
+
+                var targetLi = $(e.target).closest("li");
+                var parentId = targetLi.length ? targetLi.attr("id") : "#";
+
+                createNodeFromTool(data, parentId);
+            });
+        }
+
+        function createNodeFromTool(tool, parentId) {
+            var tree = $("#treeWorkflow").jstree(true);
+            var newId = generateNodeId();
+            var parentNode = parentId === "#" ? null : tree.get_node(parentId);
+
+            var currentWorkflowFlow = workflowFormInstance.option("formData").flowType || "Both";
+
+            var nodeData = {
+                id: newId,
+                text: tool.text || "New Node",
+                type: tool.type || "department",
+                code: "",
+                orderNo: getNextOrderNo(parentId),
+                stepRole: "",
+                departmentName: "",
+                levelNo: parentNode ? ((parentNode.original.levelNo || 1) + 1) : 1,
+                flowType: currentWorkflowFlow === "Both" ? "Both" : currentWorkflowFlow,
+                allowLoop: false,
+                loopGroup: ""
+            };
+
+            tree.create_node(parentId, {
+                ...nodeData,
+                text: buildTreeNodeHtml(nodeData)
+            }, "last", function (node) {
+                tree.open_node(parentId);
+                tree.deselect_all();
+                tree.select_node(node);
+                syncTreeDataFromJsTree();
+            });
+        }
+
+        function bindNodeToEditors(node) {
+            var original = node.original || {};
+            var formData = {
+                id: node.id,
+                parent: node.parent === "#" ? null : node.parent,
+                text: extractPlainTextFromNode(node.id),
+                type: original.type || "",
+                code: original.code || "",
+                orderNo: original.orderNo || 0,
+                stepRole: original.stepRole || "",
+                departmentName: original.departmentName || "",
+                levelNo: original.levelNo || 1,
+                flowType: original.flowType || "Both",
+                allowLoop: !!original.allowLoop,
+                loopGroup: original.loopGroup || ""
+            };
+
+            nodeFormInstance.option("formData", formData);
+            $("#nodeJsonEditor").val(JSON.stringify(formData, null, 2));
+
+            var tf = transitionFormInstance.option("formData") || {};
+            if (!tf.fromNodeId) {
+                transitionFormInstance.option("formData", {
+                    ...getEmptyTransition(node.id),
+                    flowType: formData.flowType || "Both"
+                });
+            }
+        }
+
+        function saveFlow(){
+            var json = JSON.parse($("#payloadBox").text() || "{}");
+            var workflowData = new Object();
+            workflowData = json.workflowDefinition;
+            workflowData.workflowNodes = JSON.stringify(json.workflowNodes);
+            var dataGrid = $(`#dataGrid_WorkflowDefinition`).dxDataGrid().dxDataGrid("instance");
+            var ds  = dataGrid.option("dataSource");
+            var store = ds.store();
+
+            store.insert(workflowData)
+                .done(function (result) {
+                    ds.reload();
+                    DevExpress.ui.notify("Saved successfully", "success", 2000);
+                })
+                .fail(function (error) {
+                    console.error(error);
+                    DevExpress.ui.notify("Save failed", "error", 2000);
+                });
+
+        }
+
+
+        function applyFormToSelectedNode() {
+            var tree = $("#treeWorkflow").jstree(true);
+            if (!selectedNodeId) return notify("Please select node first", "warning");
+
+            var fd = nodeFormInstance.option("formData");
+            var node = tree.get_node(selectedNodeId);
+            if (!node) return;
+
+            node.original.type = fd.type || "";
+            node.original.code = fd.code || "";
+            node.original.orderNo = fd.orderNo || 0;
+            node.original.stepRole = fd.stepRole || "";
+            node.original.departmentName = fd.departmentName || "";
+            node.original.levelNo = fd.levelNo || 1;
+            node.original.flowType = fd.flowType || "Both";
+            node.original.allowLoop = !!fd.allowLoop;
+            node.original.loopGroup = fd.loopGroup || "";
+
+            var newHtml = buildTreeNodeHtml({
+                text: fd.text || extractPlainTextFromNode(selectedNodeId),
+                flowType: fd.flowType || "Both",
+                allowLoop: !!fd.allowLoop
+            });
+
+            tree.rename_node(node, newHtml);
+            syncTreeDataFromJsTree(fd.text || extractPlainTextFromNode(selectedNodeId));
+            notify("Node updated", "success");
+        }
+
+        function applyJsonToSelectedNode() {
+            var tree = $("#treeWorkflow").jstree(true);
+            if (!selectedNodeId) return notify("Please select node first", "warning");
+
+            try {
+                var json = JSON.parse($("#nodeJsonEditor").val() || "{}");
+                var node = tree.get_node(selectedNodeId);
+                if (!node) return;
+
+                node.original.type = json.type || "";
+                node.original.code = json.code || "";
+                node.original.orderNo = json.orderNo || 0;
+                node.original.stepRole = json.stepRole || "";
+                node.original.departmentName = json.departmentName || "";
+                node.original.levelNo = json.levelNo || 1;
+                node.original.flowType = json.flowType || "Both";
+                node.original.allowLoop = !!json.allowLoop;
+                node.original.loopGroup = json.loopGroup || "";
+
+                var plainText = json.text || extractPlainTextFromNode(selectedNodeId);
+                tree.rename_node(node, buildTreeNodeHtml({
+                    text: plainText,
+                    flowType: json.flowType || "Both",
+                    allowLoop: !!json.allowLoop
+                }));
+
+                syncTreeDataFromJsTree(plainText);
+                notify("Node JSON applied", "success");
+            } catch (err) {
+                notify("Invalid JSON", "error");
+            }
+        }
+
+        function refreshNodeJson() {
+            var tree = $("#treeWorkflow").jstree(true);
+            if (!selectedNodeId) return notify("Please select node first", "warning");
+            var node = tree.get_node(selectedNodeId);
+            bindNodeToEditors(node);
+            notify("Node JSON refreshed", "success");
+        }
+
+        function addTransition() {
+            var fd = transitionFormInstance.option("formData");
+
+            if (!fd.fromNodeId || !fd.toNodeId) {
+                return notify("Please choose From Node and To Node", "warning");
+            }
+            if (!fd.actionCode) {
+                return notify("Action Code is required", "warning");
+            }
+
+            transitions.push({
+                fromNodeId: fd.fromNodeId,
+                toNodeId: fd.toNodeId,
+                actionCode: fd.actionCode,
+                actionName: fd.actionName || fd.actionCode,
+                flowType: fd.flowType || "Both",
+                isReturn: !!fd.isReturn,
+                isLoop: !!fd.isLoop,
+                loopGroup: fd.loopGroup || "",
+                loopExitMode: fd.loopExitMode || "None",
+                maxLoopCount: fd.maxLoopCount || null,
+                isExitTransition: !!fd.isExitTransition,
+                userDecisionLabel: fd.userDecisionLabel || "",
+                conditionJson: fd.conditionJson || ""
+            });
+
+            renderTransitionPreview();
+            buildPayloadPreview();
+            transitionFormInstance.option("formData", getEmptyTransition(selectedNodeId || ""));
+            notify("Transition added", "success");
+        }
+
+        function renderTransitionPreview() {
+            var $box = $("#transitionPreview");
+            $box.empty();
+
+            if (!transitions.length) {
+                $box.html(`<div class="transition-item"><div class="transition-meta">No transitions</div></div>`);
+                return;
+            }
+
+            transitions.forEach((x, index) => {
+                var flowClass = x.flowType === "Quotation" ? "q" :
+                                  x.flowType === "PolicyIssuance" ? "pi" : "both";
+
+                var badges = `<span class="badge ${flowClass === 'q' ? 'q' : flowClass === 'pi' ? 'pi' : 'both'}">${escapeHtml(x.flowType || "Both")}</span>`;
+                if (x.isReturn) badges += `<span class="badge return">RETURN</span>`;
+                if (x.isLoop) badges += `<span class="badge loop">LOOP</span>`;
+                if (x.isExitTransition) badges += `<span class="badge exit">EXIT</span>`;
+                if ((x.loopExitMode || "") === "UserDecision") badges += `<span class="badge user">UserDecision</span>`;
+
+                var selfLoopNote = x.fromNodeId === x.toNodeId ? "Self loop / vòng lặp tại chính node này" : "";
+
+                $box.append(`
+                    <div class="transition-item">
+                        <div class="transition-route">${escapeHtml(x.fromNodeId)} → ${escapeHtml(x.toNodeId)}</div>
+                        <div class="badge-row">${badges}</div>
+                        <div class="transition-meta">
+                            ActionCode: <b>${escapeHtml(x.actionCode || "")}</b><br>
+                            ActionName: ${escapeHtml(x.actionName || "")}<br>
+                            LoopGroup: ${escapeHtml(x.loopGroup || "-")}<br>
+                            LoopExitMode: ${escapeHtml(x.loopExitMode || "-")}<br>
+                            UserDecisionLabel: ${escapeHtml(x.userDecisionLabel || "-")}<br>
+                            MaxLoopCount: ${x.maxLoopCount == null ? "-" : x.maxLoopCount}<br>
+                            ConditionJson: ${escapeHtml(x.conditionJson || "-")}
+                        </div>
+                        ${selfLoopNote ? `<div class="transition-meta" style="margin-top:6px;color:#6d28d9;font-weight:700;">${escapeHtml(selfLoopNote)}</div>` : ""}
+                        <div style="margin-top:8px;">
+                            <button onclick="removeTransition(${index})"
+                                style="border:1px solid #fecaca;background:#fff1f2;color:#b91c1c;border-radius:8px;padding:6px 10px;cursor:pointer;">
+                                Devare
+                            </button>
+                        </div>
+                    </div>
+                `);
+            });
+        }
+
+        window.removeTransition = function(index) {
+            transitions.splice(index, 1);
+            renderTransitionPreview();
+            buildPayloadPreview();
+            notify("Transition devared", "success");
+        };
+
+        function initGrid() {
+            $("#nodeGrid").dxDataGrid({
+                dataSource: workflowTreeData,
+                keyExpr: "id",
+                showBorders: true,
+                height: 280,
+                paging: { enabled: false },
+                columnAutoWidth: true,
+                columns: [
+                    { dataField: "id", caption: "Id" },
+                    { dataField: "parent", caption: "Parent" },
+                    { dataField: "text", caption: "Text" },
+                    { dataField: "type", caption: "Type" },
+                    { dataField: "flowType", caption: "FlowType" },
+                    { dataField: "allowLoop", caption: "AllowLoop" },
+                    { dataField: "loopGroup", caption: "LoopGroup" },
+                    { dataField: "code", caption: "Code" },
+                    { dataField: "stepRole", caption: "StepRole" },
+                    { dataField: "departmentName", caption: "Department" },
+                    { dataField: "levelNo", caption: "Level" }
+                ],
+                onInitialized: function(e) {
+                    nodeGridInstance = e.component;
+                }
+            });
+        }
+
+        function refreshGrid() {
+            if (nodeGridInstance) {
+                nodeGridInstance.option("dataSource", workflowTreeData);
+            }
+        }
+
+        function buildPayloadPreview() {
+            syncWorkflowHeader();
+
+            var payload = {
+                workflowDefinition: {
+                    workflowCode: workflowHeader.workflowCode,
+                    workflowName: workflowHeader.workflowName,
+                    flowType: workflowHeader.flowType,
+                    versionNo: workflowHeader.versionNo,
+                    isActive: workflowHeader.isActive
+                },
+                workflowNodes: workflowTreeData.map((x, index) => ({
+                    id: x.id,
+                    parentId: x.parent === "#" ? null : x.parent,
+                    nodeName: x.text,
+                    nodeType: x.type,
+                    nodeCode: x.code,
+                    orderNo: x.orderNo ?? (index + 1),
+                    stepRole: x.stepRole,
+                    departmentName: x.departmentName,
+                    levelNo: x.levelNo,
+                    flowType: x.flowType || "Both",
+                    allowLoop: !!x.allowLoop,
+                    loopGroup: x.loopGroup || ""
+                })),
+                workflowTransitions: transitions.map(x => ({
+                    fromNodeId: x.fromNodeId,
+                    toNodeId: x.toNodeId,
+                    actionCode: x.actionCode,
+                    actionName: x.actionName,
+                    flowType: x.flowType || "Both",
+                    isReturn: !!x.isReturn,
+                    isLoop: !!x.isLoop,
+                    loopGroup: x.loopGroup || "",
+                    loopExitMode: x.loopExitMode || "None",
+                    maxLoopCount: x.maxLoopCount,
+                    isExitTransition: !!x.isExitTransition,
+                    userDecisionLabel: x.userDecisionLabel || "",
+                    conditionJson: x.conditionJson || ""
+                }))
+            };
+
+            $("#payloadBox").text(JSON.stringify(payload, null, 2));
+            refreshGrid();
+        }
+
+        function refreshTransitionNodeLookup() {
+            if (!transitionFormInstance) return;
+            var ds = workflowTreeData.map(x => ({ id: x.id, text: x.text }));
+
+            transitionFormInstance.itemOption("fromNodeId", "editorOptions", {
+                dataSource: ds,
+                valueExpr: "id",
+                displayExpr: "text",
+                searchEnabled: true
+            });
+
+            transitionFormInstance.itemOption("toNodeId", "editorOptions", {
+                dataSource: ds,
+                valueExpr: "id",
+                displayExpr: "text",
+                searchEnabled: true
+            });
+        }
+
+        function syncWorkflowHeader() {
+            workflowHeader = workflowFormInstance.option("formData") || workflowHeader;
+        }
+
+        function syncTreeDataFromJsTree(overrideTextForSelected) {
+            var tree = $("#treeWorkflow").jstree(true);
+            var flat = tree.get_json("#", { flat: true });
+
+            workflowTreeData = flat.map((x, index) => {
+                var plainText = extractTextFromHtml(x.text);
+                if (overrideTextForSelected && x.id === selectedNodeId) {
+                    plainText = overrideTextForSelected;
+                }
+
+                return {
+                    id: x.id,
+                    parent: x.parent,
+                    text: plainText,
+                    type: x.original?.type || "",
+                    code: x.original?.code || "",
+                    orderNo: x.original?.orderNo ?? (index + 1),
+                    stepRole: x.original?.stepRole || "",
+                    departmentName: x.original?.departmentName || "",
+                    levelNo: x.original?.levelNo || 1,
+                    flowType: x.original?.flowType || "Both",
+                    allowLoop: !!x.original?.allowLoop,
+                    loopGroup: x.original?.loopGroup || ""
+                };
+            });
+
+            refreshTransitionNodeLookup();
+            refreshGrid();
+            buildPayloadPreview();
+
+            if (selectedNodeId) {
+                var cur = workflowTreeData.find(x => x.id === selectedNodeId);
+                if (cur) {
+                    $("#nodeJsonEditor").val(JSON.stringify({
+                        id: cur.id,
+                        parent: cur.parent === "#" ? null : cur.parent,
+                        text: cur.text,
+                        type: cur.type,
+                        code: cur.code,
+                        orderNo: cur.orderNo,
+                        stepRole: cur.stepRole,
+                        departmentName: cur.departmentName,
+                        levelNo: cur.levelNo,
+                        flowType: cur.flowType,
+                        allowLoop: cur.allowLoop,
+                        loopGroup: cur.loopGroup
+                    }, null, 2));
+                }
+            }
+        }
+
+        function loadSampleQuotation() {
+            workflowHeader = {
+                workflowCode: "WF_QUOTATION",
+                workflowName: "Quotation Workflow",
+                flowType: "Quotation",
+                versionNo: 1,
+                isActive: true
+            };
+
+            workflowTreeData = [
+                { id: "FO", parent: "#", text: "FO", type: "department", code: "FO", orderNo: 1, stepRole: "Front Office", departmentName: "FO", levelNo: 1, flowType: "Both", allowLoop: false, loopGroup: "" },
+                { id: "TS", parent: "FO", text: "TS", type: "department", code: "TS", orderNo: 1, stepRole: "Technical Support", departmentName: "TS", levelNo: 2, flowType: "Quotation", allowLoop: false, loopGroup: "" },
+                { id: "UW", parent: "TS", text: "UW", type: "department", code: "UW", orderNo: 1, stepRole: "Underwriting", departmentName: "UW", levelNo: 3, flowType: "Quotation", allowLoop: false, loopGroup: "" },
+                { id: "LMKT", parent: "FO", text: "LMKT", type: "department", code: "LMKT", orderNo: 2, stepRole: "Local Market", departmentName: "LMKT", levelNo: 2, flowType: "Quotation", allowLoop: false, loopGroup: "" }
+            ];
+
+            transitions = [
+                { fromNodeId: "FO", toNodeId: "TS", actionCode: "SUBMIT_TS", actionName: "Submit To TS", flowType: "Quotation", isReturn: false, isLoop: false, loopGroup: "", loopExitMode: "None", maxLoopCount: null, isExitTransition: false, userDecisionLabel: "", conditionJson: "" },
+                { fromNodeId: "TS", toNodeId: "UW", actionCode: "SUBMIT_UW", actionName: "Submit To UW", flowType: "Quotation", isReturn: false, isLoop: false, loopGroup: "", loopExitMode: "None", maxLoopCount: null, isExitTransition: false, userDecisionLabel: "", conditionJson: "" },
+                { fromNodeId: "UW", toNodeId: "FO", actionCode: "RETURN_FO", actionName: "Return To FO", flowType: "Quotation", isReturn: true, isLoop: false, loopGroup: "", loopExitMode: "None", maxLoopCount: null, isExitTransition: false, userDecisionLabel: "", conditionJson: "" }
+            ];
+
+            reloadAll();
+        }
+
+        function loadSamplePolicy() {
+            workflowHeader = {
+                workflowCode: "WF_POLICY_ISSUANCE",
+                workflowName: "Policy Issuance Workflow",
+                flowType: "PolicyIssuance",
+                versionNo: 1,
+                isActive: true
+            };
+
+            workflowTreeData = [
+                { id: "FO", parent: "#", text: "FO", type: "department", code: "FO", orderNo: 1, stepRole: "Front Office", departmentName: "FO", levelNo: 1, flowType: "Both", allowLoop: false, loopGroup: "" },
+                { id: "CLIENT", parent: "FO", text: "Client", type: "actor", code: "CLIENT", orderNo: 1, stepRole: "Client", departmentName: "External", levelNo: 2, flowType: "Both", allowLoop: true, loopGroup: "CLIENT_APPROVAL" },
+                { id: "PM", parent: "CLIENT", text: "PM", type: "department", code: "PM", orderNo: 1, stepRole: "Policy Management", departmentName: "PM", levelNo: 3, flowType: "PolicyIssuance", allowLoop: false, loopGroup: "" }
+            ];
+
+            transitions = [
+                { fromNodeId: "FO", toNodeId: "CLIENT", actionCode: "SEND_CLIENT", actionName: "Send To Client", flowType: "PolicyIssuance", isReturn: false, isLoop: false, loopGroup: "", loopExitMode: "None", maxLoopCount: null, isExitTransition: false, userDecisionLabel: "", conditionJson: "" },
+                { fromNodeId: "CLIENT", toNodeId: "CLIENT", actionCode: "REVISE_AGAIN", actionName: "Revise Again", flowType: "Both", isReturn: false, isLoop: true, loopGroup: "CLIENT_APPROVAL", loopExitMode: "UserDecision", maxLoopCount: null, isExitTransition: false, userDecisionLabel: "Continue Revision", conditionJson: "" },
+                { fromNodeId: "CLIENT", toNodeId: "PM", actionCode: "APPROVE_AND_EXIT", actionName: "Approve And Exit", flowType: "PolicyIssuance", isReturn: false, isLoop: true, loopGroup: "CLIENT_APPROVAL", loopExitMode: "UserDecision", maxLoopCount: null, isExitTransition: true, userDecisionLabel: "Approve And Exit", conditionJson: "" }
+            ];
+
+            reloadAll();
+        }
+
+        function loadSampleLoop() {
+            workflowHeader = {
+                workflowCode: "WF_LOOP_DEMO",
+                workflowName: "Loop Demo Workflow",
+                flowType: "Both",
+                versionNo: 1,
+                isActive: true
+            };
+
+            workflowTreeData = [
+                { id: "FO", parent: "#", text: "FO", type: "department", code: "FO", orderNo: 1, stepRole: "Front Office", departmentName: "FO", levelNo: 1, flowType: "Both", allowLoop: false, loopGroup: "" },
+                { id: "CLIENT_REVIEW", parent: "FO", text: "Client Review", type: "actor", code: "CLIENT_REVIEW", orderNo: 1, stepRole: "Client", departmentName: "External", levelNo: 2, flowType: "Both", allowLoop: true, loopGroup: "CLIENT_REVISION" },
+                { id: "PM", parent: "CLIENT_REVIEW", text: "PM", type: "department", code: "PM", orderNo: 1, stepRole: "Policy Management", departmentName: "PM", levelNo: 3, flowType: "PolicyIssuance", allowLoop: false, loopGroup: "" }
+            ];
+
+            transitions = [
+                { fromNodeId: "FO", toNodeId: "CLIENT_REVIEW", actionCode: "SEND_TO_CLIENT", actionName: "Send To Client", flowType: "Both", isReturn: false, isLoop: false, loopGroup: "", loopExitMode: "None", maxLoopCount: null, isExitTransition: false, userDecisionLabel: "", conditionJson: "" },
+                { fromNodeId: "CLIENT_REVIEW", toNodeId: "CLIENT_REVIEW", actionCode: "REVISE_AGAIN", actionName: "Revise Again", flowType: "Both", isReturn: false, isLoop: true, loopGroup: "CLIENT_REVISION", loopExitMode: "UserDecision", maxLoopCount: null, isExitTransition: false, userDecisionLabel: "Continue Revision", conditionJson: "" },
+                { fromNodeId: "CLIENT_REVIEW", toNodeId: "PM", actionCode: "EXIT_LOOP_AND_SUBMIT_PM", actionName: "Approve And Exit", flowType: "PolicyIssuance", isReturn: false, isLoop: true, loopGroup: "CLIENT_REVISION", loopExitMode: "UserDecision", maxLoopCount: null, isExitTransition: true, userDecisionLabel: "Approve And Exit", conditionJson: "" }
+            ];
+
+            reloadAll();
+        }
+
+        function reloadAll() {
+            selectedNodeId = null;
+            if (workflowFormInstance) workflowFormInstance.option("formData", workflowHeader);
+            if (nodeFormInstance) nodeFormInstance.option("formData", {});
+            if (transitionFormInstance) transitionFormInstance.option("formData", getEmptyTransition(""));
+            $("#nodeJsonEditor").val("");
+            initTree();
+            refreshTransitionNodeLookup();
+            renderTransitionPreview();
+            buildPayloadPreview();
+            refreshGrid();
+            notify("Sample loaded", "success");
+        }
+
+        function getEmptyTransition(fromNodeId) {
+            return {
+                fromNodeId: fromNodeId || "",
+                toNodeId: "",
+                actionCode: "",
+                actionName: "",
+                flowType: "Both",
+                isReturn: false,
+                isLoop: false,
+                loopGroup: "",
+                loopExitMode: "None",
+                maxLoopCount: null,
+                isExitTransition: false,
+                userDecisionLabel: "",
+                conditionJson: ""
+            };
+        }
+
+        function getNextOrderNo(parentId) {
+            var tree = $("#treeWorkflow").jstree(true);
+            if (!tree) return 1;
+
+            if (parentId === "#") {
+                var roots = tree.get_json("#");
+                return roots.length + 1;
+            }
+
+            var parent = tree.get_node(parentId);
+            return (parent && parent.children) ? (parent.children.length + 1) : 1;
+        }
+
+        function collectDescendantIds(tree, nodeId) {
+            var node = tree.get_node(nodeId);
+            return node && node.children_d ? node.children_d.slice() : [];
+        }
+
+        function extractPlainTextFromNode(nodeId) {
+            var found = workflowTreeData.find(x => x.id === nodeId);
+            return found ? found.text : nodeId;
+        }
+
+        function extractTextFromHtml(html) {
+            var div = document.createElement("div");
+            div.innerHTML = html || "";
+            var nodeText = div.querySelector(".tree-node-text");
+            if (nodeText) return nodeText.textContent.trim();
+            return div.textContent.trim();
+        }
+
+        function generateNodeId() {
+            return "NODE_" + Date.now();
+        }
+
+        function notify(message, type) {
+            DevExpress.ui.notify(message, type || "info", 1800);
+        }
+
+        function escapeHtml(str) {
+            return String(str ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
