@@ -600,7 +600,7 @@ var MGridOption = class MGridOption {
                 },
                 filterRow: { visible: true },
                 headerFilter: { visible: true, allowSearch: true },
-                remoteOperations: { paging: true, sorting: true, filtering: true },
+                remoteOperations: fetchConfig.sysTableConfig.customQuery == "OnSystem" ? {} : { paging: true, sorting: true, filtering: true },
                 filterPanel: { visible: true },
                 groupPanel: { visible: true, allowColumnDragging: true, emptyPanelText: "" },
                 grouping: {

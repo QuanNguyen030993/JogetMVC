@@ -2065,7 +2065,7 @@
         onEditingStart(e) {
             super.onEditingStart(e);
             e.cancel = true;
-            callElementView(`/Business/Workflow/WorkflowDefinitionDraw_Form/${e.key}`, `form_WorkflowDefinitionDraw_Form_${e.key}`, `WorkflowDefinitionDraw   ${e.data.workflowCode}`);
+            callElementView(`/Business/Workflow/WorkflowDefinitionDraw_Form/${e.data.id}`, `form_WorkflowDefinitionDraw_Form_${e.data.id}`, `WorkflowDefinitionDraw   ${e.data.workflowCode}`);
            
         }
     }

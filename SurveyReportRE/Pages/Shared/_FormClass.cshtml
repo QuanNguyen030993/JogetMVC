@@ -3340,6 +3340,107 @@ var ReferenceQuotationForm = class ReferenceQuotationForm extends MForm {
         return disabledEditors.includes(editorType);
     }
 
+
 }
+            var WorkflowDefinitionForm = class WorkflowDefinitionForm extends MForm {
+            constructor(id, childGridConfig, formConfig, mFormOption) {
+                super(id, childGridConfig, formConfig, mFormOption)
+                //this.parentQuotationId = 0;
+                //if (formConfig.parentQuotationId)
+                //    this.parentQuotationId = formConfig.parentQuotationId;
+            }
+
+
+
+                
+       callApi(apiMethod, dataInput, isClose) {
+           try {
+               var that = this;
+               var efName = this.ModelName;
+
+               var thatOnScheme = { ...that };
+
+               thatOnScheme.ModelName = "WorkflowDefinition";
+               var url = buildApiUrl(apiMethod, thatOnScheme);
+
+               var dataVar = null;
+               //var httpMethod = this.buildHttpMethod(apiMethod);
+               if (dataInput) {
+                   dataVar = { values: dataInput.values };
+                   if (dataInput.key) {
+                       dataVar = { key: dataInput.key, values: dataInput.values };
+                   }
+                   if (apiMethod == "CustomQuery") {
+                       dataVar = JSON.stringify(dataInput.customQuery);
+                   }
+               }
+
+
+               var ajaxOptions = {
+                   url: url,
+                   headers: {
+                       'Content-Type': apiMethod == "CustomQuery" ? "application/json" : 'application/x-www-form-urlencoded; charset=UTF-8'
+                   },
+                   type: (apiMethod == "GetSingle") || (apiMethod == "GetFKMany") ? "GET" : (apiMethod == "CustomQuery" ? "POST" : apiMethod),
+                   data: dataVar,
+                   async: false,
+                   error: function (e) {
+                       if (e.responseText) {
+                           if (apiMethod != "GetFKMany")
+                               appErrorHandling(e.responseText, e);
+                           else
+                               console.warn(` FormCallApiException: ${url} endpoint not exist`);
+                       }
+                       else
+                           appErrorHandling("callApi Form fail!", e);
+                   },
+                   complete: function (e) {
+                       //không chèn thông báo tại đây
+                       //appLoadingPanel.hide(); // hide loading...
+                   }
+               };
+
+               apiMethod = (apiMethod == "GetSingle") || (apiMethod == "GetFKMany" || (apiMethod == "CustomQuery")) ? "GET" : apiMethod;
+               var onSuccess = null;
+               switch (apiMethod) {
+                   case 'GET':
+                       onSuccess = that.getSuccess.bind(this);
+                       break;
+                   case 'POST':
+                       onSuccess = that.postSuccess.bind(this);
+                       break;
+                   case 'PUT':
+                       onSuccess = that.putSuccess.bind(this);
+                       break;
+                   case 'DELETE':
+                       onSuccess = that.deleteSuccess.bind(this);
+                       break;
+                   case 'CLONE':
+                       onSuccess = that.cloneSuccess.bind(this);
+                       break;
+               }
+
+               ajaxOptions.success = function (data) {
+                   if (dataInput.customQuery)
+                       data = data.find(f => f.id == that.id);
+                   onSuccess(data);
+
+
+                   if (isClose) {
+                       that.closeForm(efName);
+                   }
+
+               };
+
+
+               $.ajax(ajaxOptions).fail(function (jqXHR, statusText, errorThrown) {
+                   appNotify({ message: `${errorThrown}. ${jqXHR.responseText}`, type: 'warning' });
+               });
+           } catch (err) {
+               appErrorHandling('Library error: call MForm.callApi() was failed.', err);
+               return;
+           }
+       }
+        }
 </script>
 

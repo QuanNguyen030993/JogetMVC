@@ -185,14 +185,14 @@
         font-size: 12px;
     }
 
-    .canvas-wrap {
+    .canvas-view-wrap {
         flex: 1;
         min-height: 0;
         padding: 16px;
         overflow: auto;
     }
 
-    #canvas {
+    #canvas-view {
         position: relative;
         min-width: 1400px;
         min-height: 760px;
@@ -300,8 +300,8 @@
         </aside> *@
 
         <main class="main">
-            <div class="canvas-wrap">
-                <div id="canvas"></div>
+            <div class="canvas-view-wrap">
+                <div id="canvas-view"></div>
             </div>
         </main>
     </div>
@@ -318,7 +318,7 @@
          
            sampleJson = JSON.parse(data.workflowNodes);
          var jsonInput = {};
-        var canvas = document.getElementById("canvas");
+        var canvas = document.getElementById("canvas-view");
         var wfCode = document.getElementById("wfCode");
         var flowType = document.getElementById("flowType");
         var currentStep = document.getElementById("currentStep");
@@ -648,7 +648,6 @@
             currentJson = JSON.parse(jsonInput.value);
 
             if (instance) {
-              instance.devareEveryConnection();
               instance.reset();
             }
 

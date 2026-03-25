@@ -567,7 +567,7 @@ namespace ERPCore.Controllers.Base
                     {
 
                     }
-                    if (obj is IDictionary<string, object> dict && dict.ContainsKey("CustomQuery"))
+                    if (obj is SysTable && !string.IsNullOrEmpty(obj.CustomQuery))
                         obj.CustomQuery = "OnSystem";
                 }
                 catch
