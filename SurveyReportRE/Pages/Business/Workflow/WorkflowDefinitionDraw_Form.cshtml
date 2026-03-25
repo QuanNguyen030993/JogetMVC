@@ -103,7 +103,7 @@
             line-height: 1.5;
             margin-bottom: 14px;
         }
-
+/* 
         .card {
             background: var(--panel);
             border: 1px solid var(--border);
@@ -115,7 +115,23 @@
             .card h3 {
                 margin: 0 0 10px 0;
                 font-size: 14px;
-            }
+            } */
+
+
+        .card-in-frame {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+
+            
+        .card-in-frame .header-in-frame {
+        margin: 0 0 10px 0;
+        font-size: 14px;
+    }
+
 
         .badge {
             display: inline-flex;
@@ -359,8 +375,8 @@
                 jsPlumb bản auto layout + drag save. Kéo node xong, <b>JSON bên trái sẽ tự cập nhật ngay</b>.
             </div>
 
-            <div class="card">
-                <h3>Legend</h3>
+            <div class="card-in-frame">
+                <div class="header-in-frame">Legend</div>
                 <div class="legend-row"><span class="dot quotation"></span> Quotation</div>
                 <div class="legend-row"><span class="dot policy"></span> Policy Issuance</div>
                 <div class="legend-row"><span class="dot both"></span> Both</div>
@@ -372,8 +388,8 @@
                 <div class="legend-row"><span class="line loop"></span> Loop transition</div>
             </div>
 
-            <div class="card">
-                <h3>Workflow JSON</h3>
+            <div class="card-in-frame">
+                <div class="header-in-frame">Workflow JSON</div>
                 <textarea id="jsonInput"></textarea>
                 <div class="btn-row">
                     <button id="btnRender">Render</button>
@@ -419,7 +435,6 @@
 
                 ajaxGet(`/api/WorkflowDefinition/GetSingle/${_id}`)
                       .then(data => {
-                          console.log(data);
         var sampleJson = {
           workflowDefinition: {
             workflowCode: "WF_TMIV_MAIN",
@@ -1074,4 +1089,3 @@
 
     </script>
 </body>
-</html>

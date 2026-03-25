@@ -5289,19 +5289,21 @@ function newQuotationForm() {
                     var submitData = entryForm.option("formData");
                     var submitSummaryData = entrySummaryForm.option("formData");
                     var quotationData = new Object();
+                    quotationData.Quotation = new Object();
                     //quotationData.ClientName = submitSummaryData.clientName;
                     //quotationData.ClientId = submitSummaryData.clientId;
                     //quotationData.SurveyNeeded = submitSummaryData.surveyNeeded;
                     //quotationData.DueDate = submitSummaryData.dueDate;
                     //quotationData.ReinsuranceId = submitSummaryData.reinsuranceId;
-                    quotationData = ObjectPopulateKey(submitSummaryData, true, false);
+                    quotationData.Quotation = ObjectPopulateKey(submitSummaryData, true, false);
                     //Overwrite Object
-                    quotationData.RequestedDate = submitSummaryData.createDate;
-                    quotationData.PIC = `{"MKT":"","TS":"","UW":"","LKMT":""}`;
-                    quotationData.StageAccount = submitData.to;
-                    quotationData.StageDept = submitSummaryData.assignedTeamOrRole;
-                    quotationData.QuotationStatus = "New";
-                    quotationData.WorkflowStatus = "Pending";
+                    quotationData.Quotation.RequestedDate = submitSummaryData.createDate;
+                    quotationData.Quotation.PIC = `{"MKT":"","TS":"","UW":"","LKMT":""}`;
+                    quotationData.Quotation.StageAccount = submitData.to;
+                    quotationData.Quotation.StageDept = submitSummaryData.assignedTeamOrRole;
+                    quotationData.Quotation.QuotationStatus = "New";
+                    quotationData.Quotation.WorkflowStatus = "Pending";
+                    quotationData.WorkflowDefinitionId = "E0281B6C-7986-4193-8F95-398889C8ECF3";
                     //quotationData.LineId = submitSummaryData.lineId;  
                     //quotationData.ProductId = submitSummaryData.productId;
                     ajaxPost('/api/Quotation/CreateQuotation', quotationData, {

@@ -240,23 +240,29 @@ var appendElementViewInsideAsync = function (url, params, container, code, typeC
                     }
 
                     // Tìm và tạo dxForm instance sau khi script thực thi
-                    const formInstance = $(`#form_${code}`).dxForm().dxForm("instance");
-                    formInstance.option("container", containerDiv);
-                    if (formInstance) {
-                        resolve(formInstance); // Trả về instance
-                    } else {
-                        const customError = {
-                            status: 500,
-                            statusText: "Form Not Found",
-                            responseText: `dxForm instance với id "form_${code}" không tìm thấy.`,
-                            readyState: 4,
-                            responseJSON: {
-                                typeMsg: ["popup"],
-                                message: [`Không tìm thấy form: form_${code}`]
-                            }
-                        };
-                        reject(customError);
-                        //throw new Error("dxForm instance không tìm thấy!");
+                    try {
+                        const formInstance = $(`#form_${code}`).dxForm().dxForm("instance");
+                        formInstance.option("container", containerDiv);
+                        if (formInstance) {
+                            resolve(formInstance); // Trả về instance
+                        } else {
+                            const customError = {
+                                status: 500,
+                                statusText: "Form Not Found",
+                                responseText: `dxForm instance với id "form_${code}" không tìm thấy.`,
+                                readyState: 4,
+                                responseJSON: {
+                                    typeMsg: ["popup"],
+                                    message: [`Không tìm thấy form: form_${code}`]
+                                }
+                            };
+                            reject(customError);
+                            //throw new Error("dxForm instance không tìm thấy!");
+                        }
+
+                    }
+                    catch (exx) {
+                        resolve(null); 
                     }
                     //resolve(data); // Trả về dữ liệu từ AJAX
                 }

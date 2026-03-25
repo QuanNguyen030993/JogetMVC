@@ -487,7 +487,6 @@ Note:
 
 <script type="text/javascript">
     $(function () {
-          // var PIC_JSON = `{"MKT":"thao.bp","TS":"hien.ttt","UW":"thanh.pp","LKMT":"thao.np"}`;
           var PIC_JSON = `{}`;
 
           var formModuleKeyQt = "qt";
@@ -504,6 +503,7 @@ Note:
             state: {
                 quotes: [],
                 selectedId: null,
+                 selectedGuid: null,
                 selectedCodeNo: null,
                 stageDept: null,
                 stageAccount: "",
@@ -531,10 +531,9 @@ Note:
             data: JSON.stringify("OnSystem"),
             success: function(data) {
                 
-                  // quotes = data;
-                   state.quotes = Array.isArray(data) ? data : [];
+                     state.quotes = Array.isArray(data) ? data : [];
                     state.selectedId = state.quotes[0]?.id ?? null;
-                    state.documentId = state.quotes[0]?.documentId ?? null;
+                    state.selectedGuid = state.quotes[0]?.guid ?? null;
                     state.selectedCodeNo = state.quotes[0]?.quotationCode ?? null;
                     state.stageDept = state.quotes[0]?.stageDept ?? null;
             }
@@ -552,6 +551,7 @@ Note:
         var filter = "all";
         let searchText = "";
         let selectedId = state.quotes[0]?.id;
+        let selectedGuid = state.quotes[0]?.guid;
         let selectedAttachmentId = state.quotes[0]?.documentId;
         var selectedCodeNo = state.quotes[0]?.quotationCode;
 
@@ -623,34 +623,7 @@ Note:
         var deptData = { MKT: {}, TS: {}, UW: {}, LMKT: {}, PM: {} };
 
 
-    //         function recreateForm(selector, formData, items, readOnly = true) {
-    //     const $el = $(selector);
-    //     const instance = $el.dxForm("instance");
-
-    //     if (instance) {
-    //         instance.dispose();
-    //         $el.empty();
-    //     }
-
-    //     $el.dxForm({
-    //         formData: formData || {},
-    //         items: items || [],
-    //         readOnly: readOnly,
-    //         colCount: 1
-    //     });
-    // }
-
-    //     function renderDeptForms() {
-    //     recreateForm("#formMKT", deptData.MKT, getMKTItems(), true);
-    //     recreateForm("#formTS", deptData.TS, getTSItems(), true);
-    //     recreateForm("#formUW", deptData.UW, getUWItems(), true);
-    //     recreateForm("#formLMKT", deptData.LMKT, getLMKTItems(), true);
-    //     recreateForm("#formPM", deptData.PM, getPMItems(), true);
-
-    //     applyEditLock();
-    //     updateHints();
-    // }
-
+ 
         function renderDeptForms() {
             //Data render to partial
             $(`#${formModuleKeyQt}-formMKT`).dxForm({ formData: deptData.MKT, readOnly: true, colCount: 1 });
@@ -1064,11 +1037,40 @@ Note:
                         }
                     });
 
+   
 
-        $("#btnCloseRightComment").off("click").on("click", function () {
-            closeRightCommentPanel();
-                });
-            }
+                var toggleHideWorkflow = false;
+
+                    $(`#${formModuleKeyQt}-panelHoverInFlow`).dxButton({
+                    text: "Workflow",
+                    readOnly: true,
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                        if (!toggleHideWorkflow)
+                        {
+                            $(`#${formModuleKeyQt}-flowPanel`).empty();
+                             ajaxGet(`/api/Quotation/GetQuotationWorkflow/${selectedGuid}`, null)
+                            .then(id => {
+                            var passingParams = { UITabId: `form_DrawCanvas_Form_${id}`, pageNum: id};
+                            appendElementViewInside(`/Business/Workflow/DrawCanvas_Form/${id}`, passingParams, $(`#${formModuleKeyQt}-flowPanel`), `${formModuleKeyQt}-form_DrawCanvas_Form`, "appendTo");
+                                  $(`#${formModuleKeyQt}-flowHistoryPanel`).show();
+                                 $(`#${formModuleKeyQt}-flowPanel`).show();
+                                  toggleHideWorkflow = true;
+
+                                });
+                        }
+                        else {
+                              $(`#${formModuleKeyQt}-flowHistoryPanel`).hide();
+                              $(`#${formModuleKeyQt}-flowPanel`).hide();
+                               toggleHideWorkflow = false;
+                        }
+                    }});
+
+                    $("#btnCloseRightComment").off("click").on("click", function () {
+                        closeRightCommentPanel();
+                            });
+                    }
 
       // ✅ expose để gọi trực tiếp mà không cần bind
       return { bind, loadComments, loadReferenceFields, openRightCommentPanel, closeRightCommentPanel };
@@ -1121,7 +1123,7 @@ Note:
                 var isSel = q.id === selectedId;
                 pICs.push({quotationCode: q.quotationCode, pIC: q.pIC ?? "{}"});
                 $root.append(`
-                    <div class="${formModuleKeyQt}-quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-attachmentid="${q.documentId}" data-codeno="${q.quotationCode}" data-stagedept="${q.stageDept}" data-stageaccount="${parsePicMap(q.pIC)[q.stageDept]}">
+                    <div class="${formModuleKeyQt}-quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-guid="${q.guid}" data-attachmentid="${q.documentId}" data-codeno="${q.quotationCode}" data-stagedept="${q.stageDept}" data-stageaccount="${parsePicMap(q.pIC)[q.stageDept]}">
                         <div class="quoteTop">
                             <div>
                                 <div class="quoteClient">${q.clientName || ""}</div>
@@ -1153,6 +1155,7 @@ Note:
 
             $(`.${formModuleKeyQt}-quoteCard`).off("click").on("click", function () {
                 selectedId = Number($(this).attr("data-id"));
+                 selectedGuid = $(this).attr("data-guid");
                 selectedAttachmentId = Number($(this).attr("data-attachmentid"));
                 selectedCodeNo = $(this).attr("data-codeno");
                 stageDept = $(this).attr("data-stagedept");

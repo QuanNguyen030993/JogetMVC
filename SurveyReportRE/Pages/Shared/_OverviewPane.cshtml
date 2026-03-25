@@ -13,7 +13,9 @@
                 <span id="@Id("detailStatus")" class="statusTag">-</span>
                 <span id="@Id("stageDeptPill")" class="pill">Request pending at: </span>
             </div>
-
+            <div style="display:flex;align-items:center;gap:8px;">
+                <div id="@Id("panelHoverInFlow")" ></div>
+            </div>
             <div style="display:flex;align-items:center;gap:8px;">
                 <div id="@Id("btnCollapseAllTab")"></div>
                 <div id="@Id("btnToggleReferenceFields")"></div>
@@ -24,6 +26,8 @@
 
         <div class="cardBody overview-wrap" style="padding:0">
 
+            <div id="@Id("flowPanel")" class="flow-panel">
+             </div>
             <div id="@Id("flowHistoryPanel")" class="flow-history-panel">
                 <div class="fh-title">
                     <span>Flow History</span>

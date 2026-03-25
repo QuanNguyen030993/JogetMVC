@@ -24,6 +24,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.SharePoint.WebControls;
 using RESurveyTool.Models.Models.Parsing;
 using Microsoft.AspNetCore.Http;
+using ERPCore.Models.Migration.Business.Workflow;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -32,6 +33,8 @@ public class QuotationController : BaseControllerApi<Quotation>
     private readonly IBaseRepository<Quotation> _BaseRepository;
     private readonly IConfiguration configuration;
     private readonly IBaseRepository<Survey> _surveyRepository;
+    private readonly IBaseRepository<InstanceWorkflow> _instanceWorkflowRepository;
+    private readonly IBaseRepository<WorkflowDefinition> _workflowDefinitionRepository;
     private readonly IBaseRepository<ERPCore.Models.Migration.Business.Data.Attachment> _attachmentRepository;
     private readonly IBaseRepository<FormatCodeNo> _formatCodeNoRepository;
     private readonly IBaseRepository<Users> _usersRepository;
@@ -64,12 +67,15 @@ public class QuotationController : BaseControllerApi<Quotation>
         configuration = config;
         _BaseRepository = BaseRepository;
         _surveyRepository = new BaseRepository<Survey>(configuration, _httpContextAccessor);
+        _surveyRepository = new BaseRepository<Survey>(configuration, _httpContextAccessor);
         _attachmentRepository = new BaseRepository<ERPCore.Models.Migration.Business.Data.Attachment>(configuration, _httpContextAccessor);
         _formatCodeNoRepository = new BaseRepository<FormatCodeNo>(configuration, _httpContextAccessor);
         _usersRepository = new BaseRepository<Users>(configuration, _httpContextAccessor);
         _employeeRepository = new BaseRepository<Employee>(configuration, _httpContextAccessor);
         _userRolesRepository = new BaseRepository<UserRoles>(configuration, _httpContextAccessor);
         _rolesRepository = new BaseRepository<Roles>(configuration, _httpContextAccessor);
+        _instanceWorkflowRepository = new BaseRepository<InstanceWorkflow>(configuration, _httpContextAccessor);
+        _workflowDefinitionRepository = new BaseRepository<WorkflowDefinition>(configuration, _httpContextAccessor);
         _hubContext = hubContext;
         MANAGER_APP = configuration.GetSection("BusinessConfig:ManagerAppKey").Value;
         APPROVER_APP = configuration.GetSection("BusinessConfig:ApproverAppKey").Value;
@@ -104,15 +110,39 @@ public class QuotationController : BaseControllerApi<Quotation>
 
 
     [HttpPost]
-    public async Task<IActionResult> CreateQuotation([FromBody] Quotation quotationData)
+    public async Task<IActionResult> CreateQuotation([FromBody] QuotationRequest quotationData)
     {
         Quotation quotation = new Quotation();
         List<FormatCodeNo> tableConfig = new List<FormatCodeNo>();
         tableConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(Quotation)+"Code");
-        JsonConvert.PopulateObject(JsonConvert.SerializeObject(quotationData), quotation);
+        JsonConvert.PopulateObject(JsonConvert.SerializeObject(quotationData.Quotation), quotation);
         quotation.QuotationCode = ControllerUtil.GenerateNumberSeq(tableConfig, _formatCodeNoRepository, nameof(Quotation));
         quotation = await _BaseRepository.InsertData(quotation);
+        InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
+        instanceWorkflow.RecordGuid = quotation.Guid;
+        instanceWorkflow.WorkflowDefinitionId = quotationData.WorkflowDefinitionId ?? Guid.Empty;
+        await _instanceWorkflowRepository.InsertData(instanceWorkflow);
         return Ok(quotation);
+    }
+
+
+    [HttpGet("{guid}")]
+    public async Task<IActionResult> GetQuotationWorkflow(Guid guid)
+    {
+        InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
+        instanceWorkflow = await _instanceWorkflowRepository.GetSingleObject(s => s.RecordGuid == guid);
+        if (instanceWorkflow != null)
+        {
+            WorkflowDefinition workflowDefinition = new WorkflowDefinition();
+            Guid workflowDef = instanceWorkflow.WorkflowDefinitionId;
+            workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(s => s.Guid == workflowDef);
+            return Ok(workflowDefinition.Id);
+
+        }
+        return Ok(0);
+        
+
+
     }
 
 

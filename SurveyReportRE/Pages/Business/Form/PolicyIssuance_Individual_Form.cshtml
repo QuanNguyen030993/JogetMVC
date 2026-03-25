@@ -507,6 +507,7 @@ Note:
             state: {
                 quotes: [],
                 selectedId: null,
+                selectedGuid: null,
                 selectedCodeNo: null,
                 stageDept: null,
                 stageAccount: "",
@@ -538,6 +539,7 @@ Note:
                   // quotes = data;
                    state.quotes = Array.isArray(data) ? data : [];
                     state.selectedId = state.quotes[0]?.id ?? null;
+                    state.selectedGuid = state.quotes[0]?.guid ?? null;
                     state.selectedCodeNo = state.quotes[0]?.quotationCode ?? null;
                     state.stageDept = state.quotes[0]?.stageDept ?? null;
             }
@@ -557,6 +559,7 @@ Note:
         var filter = "all";
         let searchText = "";
         let selectedId = state.quotes[0]?.id;
+        let selectedGuid = state.quotes[0]?.guid;
         var selectedCodeNo = state.quotes[0]?.policyIssuanceCode;
 
         var commentPanelOpened = false;
@@ -627,33 +630,6 @@ Note:
         var deptData = { MKT: {}, TS: {}, UW: {}, LMKT: {}, PM: {} };
 
 
-    //         function recreateForm(selector, formData, items, readOnly = true) {
-    //     const $el = $(selector);
-    //     const instance = $el.dxForm("instance");
-
-    //     if (instance) {
-    //         instance.dispose();
-    //         $el.empty();
-    //     }
-
-    //     $el.dxForm({
-    //         formData: formData || {},
-    //         items: items || [],
-    //         readOnly: readOnly,
-    //         colCount: 1
-    //     });
-    // }
-
-    //     function renderDeptForms() {
-    //     recreateForm("#pi-formMKT", deptData.MKT, getMKTItems(), true);
-    //     recreateForm("#pi-formTS", deptData.TS, getTSItems(), true);
-    //     recreateForm("#pi-formUW", deptData.UW, getUWItems(), true);
-    //     recreateForm("#pi-formLMKT", deptData.LMKT, getLMKTItems(), true);
-    //     recreateForm("#pi-formPM", deptData.PM, getPMItems(), true);
-
-    //     applyEditLock();
-    //     updateHints();
-    // }
 
         function renderDeptForms() {
             //Data render to partial
@@ -1069,7 +1045,7 @@ Note:
 
                 pICs.push({policyIssuanceCode: q.policyIssuanceCode, pIC: q.pIC});
                 $root.append(`
-                    <div class="${formModuleKeyPi}-quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-codeno="${q.policyIssuanceCode}" data-stagedept="${q.stageDept}" data-stageaccount="${parsePicMap(q.pIC)[q.stageDept]}">
+                    <div class="${formModuleKeyPi}-quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-guid="${q.guid}" data-codeno="${q.policyIssuanceCode}" data-stagedept="${q.stageDept}" data-stageaccount="${parsePicMap(q.pIC)[q.stageDept]}">
                         <div class="quoteTop">
                             <div>
                                 <div class="quoteClient">${q.clientName || ""}</div>
@@ -1101,7 +1077,9 @@ Note:
 
             $(`.${formModuleKeyPi}-quoteCard`).off("click").on("click", function () {
                 selectedId = Number($(this).attr("data-id"));
+                selectedGuid = $(this).attr("data-guid");
                 selectedCodeNo = $(this).attr("data-codeno");
+
                 stageDept = $(this).attr("data-stagedept");
                 PIC_JSON = pICs.find(f => f.policyIssuanceCode ==  selectedCodeNo ).pIC;
                 stageAccount = $(this).attr("data-stageaccount");
