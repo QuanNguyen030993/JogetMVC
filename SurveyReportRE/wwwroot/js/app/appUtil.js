@@ -6566,8 +6566,10 @@ function createAttachmentItem(x, onDeleted) {
 
     $item.css("cursor", downloadUrl ? "pointer" : "default");
     $item.on("click", async function (ev) {
-        if (ext === "xlsx" || ext === "xls" )
-            openExcelPreviewPopup(id);
+        if (ext === "xlsx" || ext === "xls") {
+            libreConvert(id);
+            //openExcelPreviewPopup(id);
+        }
         if (ext === "docx" || ext === "doc")
             openWordPreviewPopup(id);
         //if (ext === "docx")
@@ -7183,6 +7185,38 @@ function scrollToDept(module, dept) {
     if (!container || !el) return;
     container.scrollTo({ top: el.offsetTop - 8, behavior: "smooth" });
 }
+
+async function libreConvert(id) {
+    const fileRes = await fetch(`/api/Document/LibreConvert/${id}`);
+    //get file 
+    //$.ajax({
+    //    url: `https://svrappit-sgn01.tokiomarine.com.vn:7254/api/SurveyWorkflow/UnderwritingRefer?id=62&surveyPremises=Location1`,
+    //    method: "GET",
+    //    xhrFields: {
+    //        withCredentials: true,
+    //        responseType: "blob"
+    //    },
+    //    success: function (blob) {
+    //        const url = window.URL.createObjectURL(blob);
+    //        const tabName = `pdfPreviewTab_13`;
+    //        const existingTab = window.open('', tabName);
+
+    //        if (existingTab) {
+    //            existingTab.location.href = url;
+    //        } else {
+    //            window.open(url, tabName);
+    //        }
+
+    //        window.URL.revokeObjectURL(url);
+    //    },
+    //    error: function (xhr, status, error) {
+    //        appNotifyWarning("File is not exists.");
+    //    }
+    //});
+
+    console.log();
+}
+
 async function openExcelPreviewPopup(id) {
     var popupInstance = makePopup("large", "Res");
     popupInstance.option({
@@ -7370,6 +7404,7 @@ async function openWordMammothPopup(id) {
             (async () => {
                 try {
                     // 1. fetch binary từ API của bạn
+
                     const res = await fetch(`/api/Document/StreamDocument?id=${id}`);
                     if (!res.ok) throw new Error(`Load file thất bại: ${res.status}`);
 
