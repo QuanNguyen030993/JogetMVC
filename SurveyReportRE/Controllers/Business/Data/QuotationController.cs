@@ -136,8 +136,10 @@ public class QuotationController : BaseControllerApi<Quotation>
             WorkflowDefinition workflowDefinition = new WorkflowDefinition();
             Guid workflowDef = instanceWorkflow.WorkflowDefinitionId;
             workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(s => s.Guid == workflowDef);
-            return Ok(workflowDefinition.Id);
-
+            if (workflowDefinition != null)
+                return Ok(workflowDefinition.Id);
+            else
+                return Ok(0);
         }
         return Ok(0);
         

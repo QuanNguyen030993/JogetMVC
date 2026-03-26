@@ -2232,6 +2232,18 @@ function makeBasicDataSource(instance, isForm = false) {
                                 contentType: "application/json",
                                 data: JSON.stringify(checkCustomQueryByModel.customQuery)
                             });
+                        },
+                        remove: function (key) {
+                            const formData = new FormData();
+                            formData.append("key", key.id);
+
+                            return $.ajax({
+                                url: `/api/${instance.ModelName}/DeleteData`,
+                                method: "DELETE",
+                                data: formData,
+                                processData: false,
+                                contentType: false
+                            });
                         }
                     });
                 }
@@ -2300,6 +2312,18 @@ function makeBasicDataSource(instance, isForm = false) {
                             //    contentType: "application/json",
                             //    data: JSON.stringify(checkCustomQueryByModel.customQuery)
                             //});
+                        },
+                        remove: function (key) {
+                            const formData = new FormData();
+                            formData.append("key", key.id);
+
+                            return $.ajax({
+                                url: `/api/${instance.ModelName}/DeleteData`,
+                                method: "DELETE",
+                                data: formData,
+                                processData: false,
+                                contentType: false
+                            });
                         }
                     });
                 }

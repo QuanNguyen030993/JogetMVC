@@ -366,11 +366,384 @@
             padding: 2px 6px;
             border-radius: 6px;
         }
+
+    .page {
+        display: grid;
+        grid-template-columns: 240px 1fr 430px;
+        height: 100vh;
+    }
+
+    .sidebar {
+        border-right: 1px solid #dbe2ea;
+        background: #fff;
+        padding: 14px;
+        overflow: auto;
+    }
+
+        .sidebar h3 {
+            margin: 0 0 12px;
+            font-size: 16px;
+        }
+
+    .sidebarHint {
+        font-size: 12px;
+        color: #64748b;
+        line-height: 1.5;
+        margin-bottom: 12px;
+    }
+
+    .palette {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .paletteItem {
+        border: 1px solid #dbe2ea;
+        border-radius: 12px;
+        background: #fff;
+        padding: 12px;
+        cursor: grab;
+        user-select: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,.05);
+        transition: all .15s ease;
+    }
+
+        .paletteItem:hover {
+            background: #f8fafc;
+            transform: translateY(-1px);
+        }
+
+    .paletteTitle {
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .paletteMeta {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .mainPane {
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .toolbar {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+
+    .btn {
+        border: 1px solid #cfd6df;
+        background: #fff;
+        border-radius: 10px;
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 13px;
+    }
+
+        .btn:hover {
+            background: #f8fafc;
+        }
+
+    .legend {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+
+    .tag {
+        display: inline-flex;
+        align-items: center;
+        height: 24px;
+        padding: 0 9px;
+        border-radius: 999px;
+        border: 1px solid #dbe2ea;
+        background: #fff;
+        font-size: 11px;
+        color: #334155;
+    }
+
+        .tag.active {
+            background: #dbeafe;
+            border-color: #93c5fd;
+            color: #1d4ed8;
+        }
+
+        .tag.done {
+            background: #dcfce7;
+            border-color: #86efac;
+            color: #166534;
+        }
+
+        .tag.pending {
+            background: #fef3c7;
+            border-color: #fcd34d;
+            color: #92400e;
+        }
+
+        .tag.loop {
+            background: #ffedd5;
+            border-color: #fdba74;
+            color: #9a3412;
+        }
+
+        .tag.return {
+            background: #fee2e2;
+            border-color: #fca5a5;
+            color: #991b1b;
+        }
+
+        .tag.exit {
+            background: #ede9fe;
+            border-color: #c4b5fd;
+            color: #6d28d9;
+        }
+
+    #canvas {
+        position: relative;
+        flex: 1;
+        border: 1px solid #dbe2ea;
+        border-radius: 16px;
+        background: linear-gradient(to right, rgba(0,0,0,.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,.04) 1px, transparent 1px), #fff;
+        background-size: 24px 24px;
+        overflow: hidden;
+        min-height: 420px;
+    }
+
+        #canvas.dragOver {
+            background: linear-gradient(to right, rgba(59,130,246,.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(59,130,246,.08) 1px, transparent 1px), #eff6ff;
+            background-size: 24px 24px;
+        }
+
+    .rightPane {
+        border-left: 1px solid #dbe2ea;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .panelHeader {
+        padding: 14px 16px;
+        border-bottom: 1px solid #eef2f7;
+        font-weight: 700;
+    }
+
+    .panelBody {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-height: 0;
+        flex: 1;
+    }
+
+    .statusBar {
+        font-size: 12px;
+        color: #475569;
+    }
+
+    .sectionTitle {
+        font-size: 12px;
+        font-weight: 700;
+        color: #475569;
+        margin-top: 4px;
+    }
+
+    .infoBox {
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 12px;
+        background: #fafafa;
+        font-size: 12px;
+        line-height: 1.5;
+        max-height: 220px;
+        overflow: auto;
+        white-space: pre-wrap;
+    }
+
+    textarea {
+        width: 100%;
+        flex: 1;
+        resize: none;
+        border: 1px solid #dbe2ea;
+        border-radius: 12px;
+        padding: 12px;
+        font-family: Consolas, monospace;
+        font-size: 12px;
+        line-height: 1.45;
+        outline: none;
+    }
+
+    .node {
+        position: absolute;
+        width: 200px;
+        min-height: 80px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: #fff;
+        border: 2px solid #cbd5e1;
+        box-shadow: 0 8px 18px rgba(0,0,0,.08);
+        cursor: move;
+        user-select: none;
+        transition: all .15s ease;
+    }
+
+        .node:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 22px rgba(0,0,0,.12);
+        }
+
+        .node.selected {
+            box-shadow: 0 0 0 4px rgba(37,99,235,.12), 0 10px 24px rgba(0,0,0,.12);
+            border-color: #2563eb;
+        }
+
+        .node.activeNode {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+
+        .node.completedNode {
+            border-color: #16a34a;
+            background: #f0fdf4;
+        }
+
+        .node.pendingNode {
+            border-color: #d97706;
+            background: #fff7ed;
+        }
+
+        .node.allowLoopNode::after {
+            content: "↻";
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 24px;
+            height: 24px;
+            border-radius: 999px;
+            background: #fb923c;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            box-shadow: 0 4px 10px rgba(0,0,0,.15);
+        }
+
+    .nodeTitle {
+        font-size: 15px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .nodeMeta {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .meta {
+        display: inline-flex;
+        align-items: center;
+        height: 22px;
+        padding: 0 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        border: 1px solid #dbe2ea;
+        background: #f8fafc;
+        color: #334155;
+    }
+
+    .flow-both {
+        background: #f8fafc;
+    }
+
+    .flow-quotation {
+        background: #ecfeff;
+        border-color: #a5f3fc;
+        color: #155e75;
+    }
+
+    .flow-policy {
+        background: #f5f3ff;
+        border-color: #c4b5fd;
+        color: #5b21b6;
+    }
+
+    .jtk-connector {
+        z-index: 4;
+    }
+
+    .jtk-endpoint {
+        z-index: 5;
+    }
+
+    .jtk-overlay {
+        z-index: 6;
+    }
+
+    .aLabel {
+        background: rgba(255,255,255,.94);
+        border: 1px solid #e5e7eb;
+        border-radius: 999px;
+        padding: 2px 8px;
+        font-size: 11px;
+        color: #334155;
+    }
     </style>
 <body>
     <div class="app">
+
         <aside class="sidebar">
+            
             <div class="title">TMIV Workflow</div>
+            <div class="palette">
+                <div class="paletteItem" draggable="true" data-template='{"nodeName":"FO","flowType":"Both","allowLoop":false,"loopGroup":"","nodeType":"","nodeCode":"","stepRole":"","departmentName":"","levelNo":1}'>
+                    <div class="paletteTitle">FO</div>
+                    <div class="paletteMeta">
+                        <span class="tag">Both</span>
+                    </div>
+                </div>
+
+                <div class="paletteItem" draggable="true" data-template='{"nodeName":"TS","flowType":"Quotation","allowLoop":false,"loopGroup":"","nodeType":"","nodeCode":"","stepRole":"","departmentName":"","levelNo":1}'>
+                    <div class="paletteTitle">TS</div>
+                    <div class="paletteMeta">
+                        <span class="tag">Quotation</span>
+                    </div>
+                </div>
+
+                <div class="paletteItem" draggable="true" data-template='{"nodeName":"UW","flowType":"Both","allowLoop":false,"loopGroup":"","nodeType":"","nodeCode":"","stepRole":"","departmentName":"","levelNo":1}'>
+                    <div class="paletteTitle">UW</div>
+                    <div class="paletteMeta">
+                        <span class="tag">Both</span>
+                    </div>
+                </div>
+
+                <div class="paletteItem" draggable="true" data-template='{"nodeName":"Client","flowType":"Both","allowLoop":true,"loopGroup":"CLIENT_REVIEW","nodeType":"","nodeCode":"","stepRole":"","departmentName":"","levelNo":1}'>
+                    <div class="paletteTitle">Client</div>
+                    <div class="paletteMeta">
+                        <span class="tag">Both</span>
+                        <span class="tag loop">Loop</span>
+                    </div>
+                </div>
+
+                <div class="paletteItem" draggable="true" data-template='{"nodeName":"PM","flowType":"Both","allowLoop":false,"loopGroup":"","nodeType":"","nodeCode":"","stepRole":"","departmentName":"","levelNo":1}'>
+                    <div class="paletteTitle">PM</div>
+                    <div class="paletteMeta">
+                        <span class="tag">Both</span>
+                    </div>
+                </div>
+            </div>
             <div class="sub">
                 jsPlumb
             </div>
@@ -1106,7 +1479,498 @@
         // });
 
         renderWorkflow();
-                      });
+        // const jsonInput = document.getElementById("jsonInput");
+        // const canvas = document.getElementById("canvas");
+        var statusBar = document.getElementById("statusBar");
+        var infoBox = document.getElementById("infoBox");
+
+        // let instance = null;
+        let selectedNodeId = null;
+        let selectedTransitionKey = null;
+
+        function setStatus(text) {
+            statusBar.textContent = text;
+        }
+
+        function setInfo(obj, title) {
+            infoBox.textContent = title + "\n\n" + JSON.stringify(obj, null, 2);
+        }
+
+        function ensureSeed() {
+            if (!jsonInput.value.trim()) {
+                jsonInput.value = JSON.stringify(sampleData, null, 2);
+            }
+        }
+
+        function getData() {
+            return JSON.parse(jsonInput.value || "{}");
+        }
+
+        function setData(data) {
+            jsonInput.value = JSON.stringify(data, null, 2);
+        }
+
+        function normalizeFlowClass(flowType) {
+            if (flowType === "Quotation") return "flow-quotation";
+            if (flowType === "PolicyIssuance" || flowType === "Policy Issuance") return "flow-policy";
+            return "flow-both";
+        }
+
+        function createNodeElement(node, runtimeState) {
+            const el = document.createElement("div");
+            el.id = node.id;
+            el.className = "node";
+
+            if (node.allowLoop) el.classList.add("allowLoopNode");
+            if (runtimeState?.activeNodeId === node.id) el.classList.add("activeNode");
+            if ((runtimeState?.completedNodeIds || []).includes(node.id)) el.classList.add("completedNode");
+            if ((runtimeState?.pendingNodeIds || []).includes(node.id)) el.classList.add("pendingNode");
+
+            el.style.left = (node.x ?? 0) + "px";
+            el.style.top = (node.y ?? 0) + "px";
+
+            el.innerHTML = `
+                <div class="nodeTitle">${node.nodeName || node.id}</div>
+                <div class="nodeMeta">
+                    <span class="meta">#${node.orderNo ?? ""}</span>
+                    <span class="meta ${normalizeFlowClass(node.flowType)}">${node.flowType || "Both"}</span>
+                    ${node.levelNo != null ? `<span class="meta">L${node.levelNo}</span>` : ""}
+                    ${node.loopGroup ? `<span class="meta">Loop:${node.loopGroup}</span>` : ""}
+                </div>
+            `;
+
+            el.addEventListener("click", function (ev) {
+                ev.stopPropagation();
+                clearNodeSelection();
+                el.classList.add("selected");
+                selectedNodeId = node.id;
+                selectedTransitionKey = null;
+                setInfo(node, "NODE");
+            });
+
+            return el;
+        }
+
+        function clearNodeSelection() {
+            document.querySelectorAll(".node.selected").forEach(x => x.classList.remove("selected"));
+        }
+
+        function clearSelections() {
+            clearNodeSelection();
+            selectedNodeId = null;
+            selectedTransitionKey = null;
+        }
+
+        function registerEndpoints(nodeId) {
+            instance.makeSource(nodeId, {
+                filter: ".nodeTitle",
+                anchor: "Continuous",
+                connector: ["Flowchart", { cornerRadius: 10, stub: 24 }],
+                connectorStyle: { stroke: "#64748b", strokeWidth: 2 },
+                maxConnections: -1
+            });
+
+            instance.makeTarget(nodeId, {
+                anchor: "Continuous",
+                allowLoopback: true
+            });
+
+            instance.draggable(nodeId, {
+                grid: [12, 12],
+                stop: function () {
+                    savePositions();
+                }
+            });
+        }
+
+        function getTransitionStyle(t) {
+            if (t.isExitTransition) {
+                return { stroke: "#7c3aed", strokeWidth: 3, dashstyle: "2 0" };
+            }
+            if (t.isLoop) {
+                return { stroke: "#ea580c", strokeWidth: 3, dashstyle: "4 2" };
+            }
+            if (t.isReturn) {
+                return { stroke: "#dc2626", strokeWidth: 2, dashstyle: "6 3" };
+            }
+            return { stroke: "#64748b", strokeWidth: 2, dashstyle: "2 0" };
+        }
+
+        function getConnectorConfig(t) {
+            if (t.fromNodeId === t.toNodeId) {
+                return ["StateMachine", { margin: 6, curviness: 40 }];
+            }
+            if (t.isReturn) {
+                return ["Bezier", { curviness: 90 }];
+            }
+            if (t.isLoop) {
+                return ["Bezier", { curviness: 70 }];
+            }
+            return ["Flowchart", { cornerRadius: 10, stub: 24 }];
+        }
+
+        function getTransitionLabel(t) {
+            return t.userDecisionLabel || t.actionName || t.actionCode || "";
+        }
+
+        function makeTransitionKey(t) {
+            return [t.fromNodeId, t.toNodeId, t.actionCode || "", t.actionName || ""].join("||");
+        }
+
+        function renderTransitions(data) {
+            (data.workflowTransitions || []).forEach(function (t) {
+                const style = getTransitionStyle(t);
+
+                const conn = instance.connect({
+                    source: t.fromNodeId,
+                    target: t.toNodeId,
+                    anchors: t.fromNodeId === t.toNodeId ? ["Top", "Right"] : ["Continuous", "Continuous"],
+                    connector: getConnectorConfig(t),
+                    paintStyle: style,
+                    endpoint: "Dot",
+                    endpointStyle: { radius: 4, fill: style.stroke },
+                    overlays: [
+                        ["Arrow", { width: 10, length: 10, location: 1, foldback: 0.8 }],
+                        ["Label", {
+                            label: getTransitionLabel(t),
+                            location: 0.5,
+                            cssClass: "aLabel"
+                        }]
+                    ]
+                });
+
+                conn.__transitionData = t;
+                conn.__transitionKey = makeTransitionKey(t);
+
+                conn.bind("click", function (connection, ev) {
+                    if (ev) ev.stopPropagation();
+                    selectedTransitionKey = conn.__transitionKey;
+                    selectedNodeId = null;
+                    clearNodeSelection();
+                    setInfo(t, "TRANSITION");
+                    setStatus("Selected transition: " + (t.actionCode || ""));
+                });
+            });
+        }
+
+        function savePositions() {
+            const data = getData();
+            (data.workflowNodes || []).forEach(function (n) {
+                const el = document.getElementById(n.id);
+                if (!el) return;
+                n.x = parseInt(el.style.left, 10) || 0;
+                n.y = parseInt(el.style.top, 10) || 0;
+            });
+            setData(data);
+            setStatus("Saved x,y back to workflowNodes.");
+        }
+
+        function generateUniqueNodeId(data, baseName) {
+            const rawBase = (baseName || "NODE").toUpperCase().replace(/[^A-Z0-9]+/g, "_");
+            let candidate = rawBase;
+            const existing = new Set((data.workflowNodes || []).map(x => x.id));
+
+            if (!existing.has(candidate)) return candidate;
+
+            candidate = rawBase + "_" + Date.now();
+            while (existing.has(candidate)) {
+                candidate = rawBase + "_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+            }
+            return candidate;
+        }
+
+        function addNodeFromPalette(template, x, y) {
+            const data = getData();
+
+            const id = generateUniqueNodeId(data, template.nodeName);
+            const nextOrder = ((data.workflowNodes || []).reduce((m, n) => Math.max(m, n.orderNo || 0), 0)) + 1;
+
+            const node = {
+                id: id,
+                parentId: null,
+                nodeName: template.nodeName || id,
+                nodeType: template.nodeType || "",
+                nodeCode: template.nodeCode || "",
+                orderNo: nextOrder,
+                stepRole: template.stepRole || "",
+                departmentName: template.departmentName || "",
+                levelNo: template.levelNo != null ? template.levelNo : 1,
+                flowType: template.flowType || "Both",
+                allowLoop: !!template.allowLoop,
+                loopGroup: template.loopGroup || "",
+                x: x,
+                y: y
+            };
+
+            data.workflowNodes.push(node);
+
+            if (!data.runtimeState) {
+                data.runtimeState = {
+                    activeNodeId: "",
+                    completedNodeIds: [],
+                    pendingNodeIds: []
+                };
+            }
+
+            if (!Array.isArray(data.runtimeState.pendingNodeIds)) {
+                data.runtimeState.pendingNodeIds = [];
+            }
+
+            if (!data.runtimeState.pendingNodeIds.includes(node.id)) {
+                data.runtimeState.pendingNodeIds.push(node.id);
+            }
+
+            setData(data);
+            // renderWorkflow();
+            renderWorkflow();
+            setStatus("Added node: " + node.id);
+        }
+
+        function removeSelectedNode() {
+            if (!selectedNodeId) {
+                setStatus("No node selected.");
+                return;
+            }
+
+            const data = getData();
+            data.workflowNodes = (data.workflowNodes || []).filter(n => n.id !== selectedNodeId);
+            data.workflowTransitions = (data.workflowTransitions || []).filter(t =>
+                t.fromNodeId !== selectedNodeId && t.toNodeId !== selectedNodeId
+            );
+
+            if (data.runtimeState) {
+                if (data.runtimeState.activeNodeId === selectedNodeId) {
+                    data.runtimeState.activeNodeId = "";
+                }
+                data.runtimeState.completedNodeIds = (data.runtimeState.completedNodeIds || []).filter(x => x !== selectedNodeId);
+                data.runtimeState.pendingNodeIds = (data.runtimeState.pendingNodeIds || []).filter(x => x !== selectedNodeId);
+            }
+
+            setData(data);
+            clearSelections();
+            renderWorkflow();
+            setStatus("Deleted node: " + selectedNodeId);
+        }
+
+        function removeSelectedTransition() {
+            if (!selectedTransitionKey) {
+                setStatus("No transition selected.");
+                return;
+            }
+
+            const data = getData();
+            data.workflowTransitions = (data.workflowTransitions || []).filter(t => makeTransitionKey(t) !== selectedTransitionKey);
+            setData(data);
+            const deletedKey = selectedTransitionKey;
+            clearSelections();
+            renderWorkflow();
+            setStatus("Deleted transition: " + deletedKey);
+        }
+
+        function simpleAutoLayout(data) {
+            const map = {};
+            const childrenMap = {};
+
+            (data.workflowNodes || []).forEach(n => {
+                map[n.id] = n;
+                childrenMap[n.id] = [];
+            });
+
+            (data.workflowNodes || []).forEach(n => {
+                if (n.parentId && childrenMap[n.parentId]) {
+                    childrenMap[n.parentId].push(n);
+                }
+            });
+
+            const roots = (data.workflowNodes || []).filter(n => !n.parentId);
+            const levels = [];
+            const visited = new Set();
+
+            function dfs(node, level) {
+                if (!node || visited.has(node.id)) return;
+                visited.add(node.id);
+                if (!levels[level]) levels[level] = [];
+                levels[level].push(node);
+                (childrenMap[node.id] || []).forEach(child => dfs(child, level + 1));
+            }
+
+            roots.forEach(r => dfs(r, 0));
+
+            levels.forEach((arr, level) => {
+                arr.forEach((node, i) => {
+                    node.x = 120 + level * 300;
+                    node.y = 120 + i * 180;
+                });
+            });
+
+            const remain = (data.workflowNodes || []).filter(n => !visited.has(n.id));
+            remain.forEach((n, i) => {
+                n.x = 120;
+                n.y = 120 + (levels.flat().length + i) * 140;
+            });
+        }
+
+        function bindConnectionEvent() {
+            instance.bind("connection", function (info, originalEvent) {
+                if (!originalEvent) return;
+
+                const sourceId = info.sourceId;
+                const targetId = info.targetId;
+                const data = getData();
+
+                const exists = (data.workflowTransitions || []).some(t =>
+                    t.fromNodeId === sourceId &&
+                    t.toNodeId === targetId
+                );
+
+                if (exists) {
+                    setStatus("Transition already exists: " + sourceId + " -> " + targetId);
+                    return;
+                }
+
+                const sourceNode = (data.workflowNodes || []).find(n => n.id === sourceId);
+                const targetNode = (data.workflowNodes || []).find(n => n.id === targetId);
+
+                const actionCode = "ACTION_" + ((data.workflowTransitions || []).length + 1);
+                const actionName = sourceNode && targetNode
+                    ? (sourceNode.nodeName + " To " + targetNode.nodeName)
+                    : "New Transition";
+
+                const transition = {
+                    fromNodeId: sourceId,
+                    toNodeId: targetId,
+                    actionCode: actionCode,
+                    actionName: actionName,
+                    flowType: (targetNode && targetNode.flowType) || "Both",
+                    isReturn: false,
+                    isLoop: sourceId === targetId,
+                    loopGroup: sourceId === targetId ? ((sourceNode && sourceNode.loopGroup) || "") : "",
+                    loopExitMode: sourceId === targetId ? "UserDecision" : "None",
+                    maxLoopCount: null,
+                    isExitTransition: false,
+                    userDecisionLabel: sourceId === targetId ? "Loop" : "",
+                    conditionJson: ""
+                };
+
+                data.workflowTransitions.push(transition);
+                setData(data);
+
+                setStatus("Added transition: " + sourceId + " -> " + targetId);
+                renderWorkflow();
+            });
+        }
+
+        function render() {
+            const data = getData();
+
+            canvas.innerHTML = "";
+
+            if (instance) instance.reset();
+
+            instance = jsPlumb.getInstance({
+                Container: canvas
+            });
+
+            instance.importDefaults({
+                ConnectionsDetachable: false,
+                ReattachConnections: true
+            });
+
+            bindConnectionEvent();
+
+            (data.workflowNodes || []).forEach(function (node) {
+                const el = createNodeElement(node, data.runtimeState || {});
+                canvas.appendChild(el);
+            });
+
+            (data.workflowNodes || []).forEach(function (node) {
+                registerEndpoints(node.id);
+            });
+
+            renderTransitions(data);
+
+            setStatus(
+                "Rendered " +
+                (data.workflowNodes || []).length +
+                " nodes / " +
+                (data.workflowTransitions || []).length +
+                " transitions."
+            );
+        }
+
+        // document.getElementById("btnRender").addEventListener("click", function () {
+        //     renderWorkflow();
+        // });
+
+        // document.getElementById("btnSavePositions").addEventListener("click", function () {
+        //     savePositions();
+        // });
+
+        // document.getElementById("btnReloadJson").addEventListener("click", function () {
+        //     renderWorkflow();
+        // });
+
+        // document.getElementById("btnAutoLayout").addEventListener("click", function () {
+        //     const data = getData();
+        //     simpleAutoLayout(data);
+        //     setData(data);
+        //     renderWorkflow();
+        //     setStatus("Auto layout applied.");
+        // });
+
+        // document.getElementById("btnDeleteNode").addEventListener("click", function () {
+        //     removeSelectedNode();
+        // });
+
+        // document.getElementById("btnDeleteTransition").addEventListener("click", function () {
+        //     removeSelectedTransition();
+        // });
+
+        document.querySelectorAll(".paletteItem").forEach(item => {
+            item.addEventListener("dragstart", function (e) {
+                e.dataTransfer.setData("text/plain", item.getAttribute("data-template"));
+            });
+        });
+
+        canvas.addEventListener("dragover", function (e) {
+            e.preventDefault();
+            canvas.classList.add("dragOver");
+        });
+
+        canvas.addEventListener("dragleave", function () {
+            canvas.classList.remove("dragOver");
+        });
+
+        canvas.addEventListener("drop", function (e) {
+            e.preventDefault();
+            canvas.classList.remove("dragOver");
+
+            const raw = e.dataTransfer.getData("text/plain");
+            if (!raw) return;
+
+            let template = null;
+            try {
+                template = JSON.parse(raw);
+            } catch {
+                setStatus("Invalid palette template.");
+                return;
+            }
+
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.max(20, Math.round((e.clientX - rect.left - 100) / 12) * 12);
+            const y = Math.max(20, Math.round((e.clientY - rect.top - 35) / 12) * 12);
+
+            addNodeFromPalette(template, x, y);
+        });
+
+        canvas.addEventListener("click", function () {
+            clearSelections();
+            infoBox.textContent = "Click node hoặc line để xem chi tiết.";
+        });
+
+        ensureSeed();
+        renderWorkflow();
+        });
 
     </script>
 </body>

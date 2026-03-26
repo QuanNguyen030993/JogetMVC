@@ -3350,7 +3350,12 @@ var ReferenceQuotationForm = class ReferenceQuotationForm extends MForm {
                 //    this.parentQuotationId = formConfig.parentQuotationId;
             }
 
-
+                onRowRemoving (e) {
+                
+                console.log(e);
+                
+                
+                }
 
                 
        callApi(apiMethod, dataInput, isClose) {
