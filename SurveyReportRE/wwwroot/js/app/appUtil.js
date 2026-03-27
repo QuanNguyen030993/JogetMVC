@@ -2233,6 +2233,19 @@ function makeBasicDataSource(instance, isForm = false) {
                                 data: JSON.stringify(checkCustomQueryByModel.customQuery)
                             });
                         },
+                        insert: function (values) {
+                            const formData = new FormData();
+                            formData.append("values", JSON.stringify(values));
+
+                            return $.ajax({
+                                url: `/api/${instance.ModelName}/InsertData`,
+                                method: "POST",
+                                data: formData,
+                                processData: false,
+                                contentType: false
+                            }).done(function () {
+                            });
+                        },
                         remove: function (key) {
                             const formData = new FormData();
                             formData.append("key", key.id);
@@ -2298,6 +2311,31 @@ function makeBasicDataSource(instance, isForm = false) {
                                     instance.callApi('GetSingle', null, null);
 
                             }
+                        },
+                        insert: function (values) {
+                            const formData = new FormData();
+                            formData.append("values", JSON.stringify(values));
+
+                            return $.ajax({
+                                url: `/api/${instance.ModelName}/InsertData`,
+                                method: "POST",
+                                data: formData,
+                                processData: false,
+                                contentType: false
+                            }).done(function () {
+                            });
+                        },
+                        remove: function (key) {
+                            const formData = new FormData();
+                            formData.append("key", key.id);
+
+                            return $.ajax({
+                                url: `/api/${instance.ModelName}/DeleteData`,
+                                method: "DELETE",
+                                data: formData,
+                                processData: false,
+                                contentType: false
+                            });
                         }
                     });
                 }
@@ -2312,6 +2350,19 @@ function makeBasicDataSource(instance, isForm = false) {
                             //    contentType: "application/json",
                             //    data: JSON.stringify(checkCustomQueryByModel.customQuery)
                             //});
+                        },
+                        insert: function (values) {
+                            const formData = new FormData();
+                            formData.append("values", JSON.stringify(values));
+
+                            return $.ajax({
+                                url: `/api/${instance.ModelName}/InsertData`,
+                                method: "POST",
+                                data: formData,
+                                processData: false,
+                                contentType: false
+                            }).done(function () {
+                            });
                         },
                         remove: function (key) {
                             const formData = new FormData();
@@ -4669,134 +4720,422 @@ function fieldMultiplePictureFeature($fieldContainer, itemElement, object, info,
     $container.appendTo(itemElement);
     return itemElement;
 }
+function makeLookupGrid(config) {
+    const {
+        container,
+        dropdownControl = null,
+        instanceProps = null,
+        dataSource = [],
+        columns = [],
 
-function makeTheClientLocationGrid(instanceItems, dropdownControl, instanceProps, container, onSelectionChanged = null) {
-    var divContainer = container;
-    divContainer.css({
-        width: "100%", height: "100%"
+        width = "100%",
+        height = "100%",
+        gridHeight = "85%",
+        scrollHeight = "100%",
+        scrollWidth = "100%",
+
+        keyExpr = "id",
+        selectionMode = "single",
+        showSelectionControls = true,
+        filterRowVisible = true,
+        pagingEnabled = true,
+        pageSize = 10,
+        pagerVisible = true,
+        columnAutoWidth = true,
+
+        topPanelBuilder = null,
+        onSelectionChanged = null,
+        onValueChanged = null,
+        onGridReady = null,
+        gridOptions = {},
+
+        closeDropdownOnValueChanged = true,
+        closeDropdownOnSelect = true,
+        defaultSelectionHandler = null
+    } = config || {};
+
+    const $host = container.empty();
+    $host.css({
+        width,
+        height,
+        overflow: "hidden"
     });
 
-    function defaultSelectionHandler(selectedItems) {
-        var hasSelection = selectedItems.selectedRowKeys.length > 0;
+    const $scrollView = $("<div>").css({
+        width: scrollWidth,
+        height: scrollHeight
+    });
+
+    const $content = $("<div>").css({
+        width: "100%",
+        height: "100%"
+    });
+
+    const context = {
+        container: $host,
+        content: $content,
+        dropdownControl,
+        instanceProps,
+        dataSource,
+        columns,
+        keyExpr,
+        config
+    };
+
+    function internalDefaultSelectionHandler(e) {
+        const hasSelection = e?.selectedRowKeys?.length > 0;
         if (!hasSelection) return;
 
-        const selectedRow = selectedItems.selectedRowsData[0];
-        dropdownControl.component.option("value", selectedItems.selectedRowKeys[0]);
-        //instanceProps.formInstance.updateData("clientName", selectedRow.clientName || "");
-        //instanceProps.formInstance.updateData("locationAddress", selectedRow.clientAddress || "");
-        //instanceProps.formInstance.updateData("clientCode", selectedRow.clientCode || "");
-        //instanceProps.formInstance.updateData("locationId", selectedRow.locationId || 0);
+        const selectedKey = e.selectedRowKeys[0];
+        const selectedRow = e.selectedRowsData?.[0] || null;
 
-        dropdownControl.component.close();
+        if (typeof defaultSelectionHandler === "function") {
+            defaultSelectionHandler(e, {
+                ...context,
+                selectedKey,
+                selectedRow
+            });
+        } else if (dropdownControl?.component) {
+            dropdownControl.component.option("value", selectedKey);
+            if (closeDropdownOnSelect) dropdownControl.component.close();
+        }
     }
 
-    // Wrapper: custom có thể chặn default bằng cách return false
     function selectionHandlerWrapper(e) {
-        // Nếu có custom callback
         if (typeof onSelectionChanged === "function") {
             const result = onSelectionChanged(e, {
-                defaultHandler: defaultSelectionHandler,
-                dropdownControl,
-                instanceProps
+                ...context,
+                defaultHandler: internalDefaultSelectionHandler
             });
-
-            // Nếu callback trả về false -> không chạy default
             if (result === false) return;
         }
 
-        // Mặc định vẫn chạy default
-        defaultSelectionHandler(e);
+        internalDefaultSelectionHandler(e);
     }
 
-    var grid = $("<div>").dxDataGrid({
-        dataSource: instanceItems.editorOptions.dataSource,
-        columns: [
-            { dataField: "clientCode", caption: "Client Code" },
-            //{ dataField: "clientName", caption: "Client Name" },
-            { dataField: "englishName", caption: "English Name" },
-            { dataField: "vietnameseName", caption: "Vietnamese Name" },
-            //{ dataField: "clientAddress", caption: "Client Address" },
-            //{ dataField: "locationAddressName", caption: "Location Address Name" }
-            { dataField: "clientType", caption: "Client Type" }
-        ],
-        filterRow: { visible: true },
-        selectionMode: 'all',
-        selection: {
-            mode: "single" // Chọn một dòng duy nhất
-        },
-        width: "100%",
-        height: "85%",
-        allowItemDeleting: false,
-        showSelectionControls: true,
-        paging: { enabled: true, pageSize: 10 },
-        pager: { visible: true },
-        onSelectionChanged: selectionHandlerWrapper,
-        columnAutoWidth: true,
+    let $topPanel = null;
+    if (typeof topPanelBuilder === "function") {
+        $topPanel = topPanelBuilder(context);
+        if ($topPanel) $content.append($topPanel);
+    }
 
+    const $grid = $("<div>");
+    $content.append($grid);
+
+    $scrollView.append($content);
+    $host.append($scrollView);
+
+    $scrollView.dxScrollView({
+        width: scrollWidth,
+        height: scrollHeight,
+        useNative: false
     });
 
-    var divBranchCode = $(`<div style="display:flex;padding:10px">`)
-    $(`<div style="padding-top: 10px; padding-right: 10px;">Branch code: </div>`).appendTo(divBranchCode);
+    const scrollInstance = $scrollView.dxScrollView("instance");
 
-    $("<div>").dxRadioGroup({
-        dataSource: [{ id: 20, key: "Ha Noi" }, { id: 10, key: "Ho Chi Minh" }],
-        valueExpr: 'id',
-        displayExpr: 'key',
-        onValueChanged: function (e) { // handle after select
-            var DS = grid.dxDataGrid("instance").getDataSource();
-            DS.filter(["branchId", "=", e.value]);
-            DS.load();
+    const baseGridOptions = {
+        dataSource,
+        keyExpr,
+        columns,
+        filterRow: { visible: filterRowVisible },
+        selection: { mode: selectionMode },
+        showSelectionControls,
+        width: "100%",
+        height: gridHeight,
+        paging: { enabled: pagingEnabled, pageSize },
+        pager: { visible: pagerVisible },
+        onSelectionChanged: selectionHandlerWrapper,
+        columnAutoWidth
+    };
+
+    $grid.dxDataGrid($.extend(true, {}, baseGridOptions, gridOptions));
+    const gridInstance = $grid.dxDataGrid("instance");
+
+    const result = {
+        container: $host,
+        content: $content,
+        topPanel: $topPanel,
+        scrollView: scrollInstance,
+        scrollElement: $scrollView,
+        component: $grid,
+        grid: gridInstance,
+
+        reload: function () {
+            gridInstance.getDataSource().reload();
         },
-        //itemTemplate: function (itemData) {
-        ////    const isBold = (item.key === "Overall");
-        ////    var divContainer = $("<div>");
-        ////    $(`.dx-field-item-label-text:contains('Overall')`).first().attr("style", "font-weight: bold;");
-        ////    return divContainer
-        ////        .text(itemData.key)
-        ////        .css({ "font-weight": isBold ? "bold" : "normal" }, { "disabled": _surveyData.isReadOnly });
-        //},
-        layout: "horizontal" // or "vertical"
-    }).appendTo(divBranchCode);
+        load: function () {
+            gridInstance.getDataSource().load();
+        },
+        setFilter: function (filterExpr) {
+            const ds = gridInstance.getDataSource();
+            ds.filter(filterExpr);
+            ds.load();
+        },
+        clearFilter: function () {
+            const ds = gridInstance.getDataSource();
+            ds.filter(null);
+            ds.load();
+        },
+        setGridHeight: function (newHeight) {
+            gridInstance.option("height", newHeight);
+            gridInstance.updateDimensions();
+            scrollInstance.update();
+        },
+        setContainerHeight: function (newHeight) {
+            $host.css("height", newHeight);
+            scrollInstance.update();
+            gridInstance.updateDimensions();
+        }
+    };
 
-    divBranchCode.appendTo(divContainer);
+    if (dropdownControl?.component) {
+        dropdownControl.component.on("valueChanged", function (args) {
+            if (typeof onValueChanged === "function") {
+                onValueChanged(args, {
+                    ...context,
+                    grid: gridInstance,
+                    result
+                });
+            }
 
-    dropdownControl.component.on("valueChanged", function (args) {
-        if (args.value != null) {
-            dropdownControl.component.close();
+            if (closeDropdownOnValueChanged && args.value != null) {
+                dropdownControl.component.close();
+            }
+        });
+    }
+
+    if (typeof onGridReady === "function") {
+        onGridReady({
+            ...context,
+            grid: gridInstance,
+            result
+        });
+    }
+
+    return result;
+}
+
+//Dropdown config
+function makeTheWorkflowGrid(instanceItems, dropdownControl, instanceProps, container, onSelectionChanged = null, sizeOptions = {}) {
+    return makeLookupGrid({
+        container: container,
+        dropdownControl: dropdownControl,
+        instanceProps: instanceProps,
+        dataSource: instanceItems.editorOptions.dataSource,
+        keyExpr: "id",
+
+        width: sizeOptions.width || "100%",
+        height: sizeOptions.height || "100%",
+        gridHeight: sizeOptions.gridHeight || "85%",
+        scrollHeight: sizeOptions.scrollHeight || "100%",
+
+        columns: [
+            { dataField: "workflowCode", caption: "Workflow Code", width: 160 },
+            { dataField: "workflowName", caption: "Workflow Name", minWidth: 220 },
+            {
+                caption: "Preview",
+                width: 120,
+                alignment: "center",
+                allowFiltering: false,
+                allowSorting: false,
+                cellTemplate: function (cellElement, cellInfo) {
+                    const row = cellInfo.data || {};
+                    const previewId = "wfPreview_" + row.id;
+
+                    const $badge = $("<div>")
+                        .attr("id", previewId)
+                        .text("Hover preview")
+                        .css({
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "6px 10px",
+                            borderRadius: "999px",
+                            background: "#eff6ff",
+                            color: "#1d4ed8",
+                            border: "1px solid #bfdbfe",
+                            cursor: "pointer",
+                            fontSize: "12px",
+                            fontWeight: 600
+                        });
+
+                    $(cellElement).append($badge);
+
+                    const $popoverContent = $("<div>").css({
+                        width: "440px",
+                        height: "280px",
+                        padding: "8px"
+                    });
+
+                    const $popover = $("<div>").appendTo(cellElement).dxPopover({
+                        target: "#" + previewId,
+                        showEvent: "mouseenter",
+                        hideEvent: "mouseleave",
+                        width: 460,
+                        height: 320,
+                        position: "right",
+                        shading: false,
+                        closeOnOutsideClick: false,
+                        contentTemplate: function (contentEl) {
+                            $(contentEl).append($popoverContent);
+                        },
+                        onShowing: function () {
+                            renderWorkflowMiniPreview(
+                                $popoverContent,
+                                row
+                            );
+                        }
+                    }).dxPopover("instance");
+
+                    // giữ popover khi rê chuột sang vùng popup
+                    $badge.on("mouseenter", function () {
+                        $popover.show();
+                    });
+                }
+            }
+        ],
+
+        defaultSelectionHandler: function (e, ctx) {
+            if (!ctx.selectedRow) return;
+            ctx.dropdownControl.component.option("value", ctx.selectedKey);
+            ctx.dropdownControl.component.close();
+        },
+
+        onSelectionChanged: function (e, ctx) {
+            if (typeof onSelectionChanged === "function") {
+                return onSelectionChanged(e, ctx);
+            }
+        },
+
+        gridOptions: {
+            allowItemDeleting: false,
+            hoverStateEnabled: true
         }
     });
-    grid.appendTo(divContainer);
-
-    var objectInstance = new Object();
-
-    var scrollView = $(`<div>`);
-    scrollView.dxScrollView({
-        width: "100%",
-        height: "100%",
-        useNative: false // Sử dụng thanh cuộn tùy chỉnh của DevExtreme
-    });
-    divContainer.appendTo(scrollView);
-
-    //var form = new GoodPracticesForm(_id, null, _formConfig, _formConfig);
-
-
-
-    //form.container.appendTo(scrollView);
-    //scrollView.appendTo(container);
-    //scrollView.dxScrollView({
-    //    width: "100%",
-    //    height: "100%",
-    //    useNative: false // Sử dụng thanh cuộn tùy chỉnh của DevExtreme
-    //});
-
-
-
-    objectInstance.container = divContainer;
-    objectInstance.component = grid;
-
-
-    return objectInstance;
 }
+
+function renderWorkflowMiniPreview(container, rowData) {
+    const $container = $(container);
+    $container.empty();
+    let nodes = [];
+
+    try {
+        //if (typeof workflowNodesJson === "string") {
+        //    nodes = JSON.parse(workflowNodesJson || "[]");
+        //} else if (Array.isArray(workflowNodesJson)) {
+        //    nodes = workflowNodesJson;
+        //}
+
+    } catch (e) {
+        $container.html(`<div style="padding:10px;color:#b91c1c;">Invalid workflow JSON</div>`);
+        return;
+    }
+
+    //if (!Array.isArray(nodes) || nodes.length === 0) {
+    //    $container.html(`<div style="padding:10px;color:#64748b;">No workflow nodes</div>`);
+    //    return;
+    //}
+
+
+    const $wrap = $(`<div></div>`).css({
+        position: "relative",
+        width: "1000" + "px",
+        height: "1000" + "px",
+        background: "#fff",
+        border: "1px solid #dbe2ea",
+        borderRadius: "10px",
+        overflow: "hidden"
+    //    position: "absolute",
+    //    right:"25%",
+    //    top: "110px",
+    //    bottom: "14px",
+    //    width: "70%",
+    //    background: "#fff",
+    //    border: "1px solid var(--border)",
+    //    borderRadius:"16px",
+    //boxShadow: "0 14px 40px rgba(0, 0, 0, .18)",
+    //padding: "10px 10px 8px",
+    //zIndex: "35"
+
+    });
+    var passingParams = { UITabId: `form_DrawCanvas_Form_${rowData.id}`, pageNum: rowData.id };
+        appendElementViewInside(`/Business/Workflow/DrawCanvas_Form/${rowData.id}`, passingParams, $wrap, `form_DrawCanvas_Form`, "appendTo");
+
+
+    $container.append($wrap);
+}
+function makeTheClientLocationGrid(instanceItems, dropdownControl, instanceProps, container, onSelectionChanged = null, sizeOptions = {}) {
+    return makeLookupGrid({
+        container: container,
+        dropdownControl: dropdownControl,
+        instanceProps: instanceProps,
+        dataSource: instanceItems.editorOptions.dataSource,
+        keyExpr: "id",
+
+        width: sizeOptions.width || "100%",
+        height: sizeOptions.height || "100%",
+        gridHeight: sizeOptions.gridHeight || "85%",
+        scrollHeight: sizeOptions.scrollHeight || "100%",
+
+        columns: [
+            { dataField: "clientCode", caption: "Client Code" },
+            { dataField: "englishName", caption: "English Name" },
+            { dataField: "vietnameseName", caption: "Vietnamese Name" },
+            { dataField: "clientType", caption: "Client Type" }
+        ],
+
+        topPanelBuilder: function () {
+            const $panel = $('<div style="display:flex;padding:10px;align-items:center;gap:10px;"></div>');
+            $('<div style="padding-right:10px;">Branch code:</div>').appendTo($panel);
+            $('<div class="branch-radio-host"></div>').appendTo($panel);
+            return $panel;
+        },
+
+        onGridReady: function (ctx) {
+            const $radioHost = ctx.result.topPanel.find(".branch-radio-host");
+
+            $radioHost.dxRadioGroup({
+                dataSource: [
+                    { id: 20, key: "Ha Noi" },
+                    { id: 10, key: "Ho Chi Minh" }
+                ],
+                valueExpr: "id",
+                displayExpr: "key",
+                layout: "horizontal",
+                onValueChanged: function (e) {
+                    const ds = ctx.grid.getDataSource();
+                    ds.filter(["branchId", "=", e.value]);
+                    ds.load();
+                }
+            });
+        },
+
+        defaultSelectionHandler: function (e, ctx) {
+            if (!ctx.selectedRow) return;
+
+            ctx.dropdownControl.component.option("value", ctx.selectedKey);
+
+            // ctx.instanceProps.formInstance.updateData("clientName", ctx.selectedRow.clientName || "");
+            // ctx.instanceProps.formInstance.updateData("locationAddress", ctx.selectedRow.clientAddress || "");
+            // ctx.instanceProps.formInstance.updateData("clientCode", ctx.selectedRow.clientCode || "");
+            // ctx.instanceProps.formInstance.updateData("locationId", ctx.selectedRow.locationId || 0);
+
+            ctx.dropdownControl.component.close();
+        },
+
+        onSelectionChanged: function (e, ctx) {
+            if (typeof onSelectionChanged === "function") {
+                return onSelectionChanged(e, ctx);
+            }
+        },
+
+        gridOptions: {
+            allowItemDeleting: false
+        }
+    });
+}
+
+
 function makeLCPreviewPictureObject(imageInstance, imgContainerSizeObject, imgSizeObject, $imagePreview1, $imagePreview2, defaultMargin = "0%") {
     // Use .then() to handle the result asynchronously
     var arrayBuffer = imageInstance.fileData;
@@ -7187,34 +7526,58 @@ function scrollToDept(module, dept) {
 }
 
 async function libreConvert(id) {
-    const fileRes = await fetch(`/api/Document/LibreConvert/${id}`);
-    //get file 
-    //$.ajax({
-    //    url: `https://svrappit-sgn01.tokiomarine.com.vn:7254/api/SurveyWorkflow/UnderwritingRefer?id=62&surveyPremises=Location1`,
-    //    method: "GET",
-    //    xhrFields: {
-    //        withCredentials: true,
-    //        responseType: "blob"
-    //    },
-    //    success: function (blob) {
-    //        const url = window.URL.createObjectURL(blob);
-    //        const tabName = `pdfPreviewTab_13`;
-    //        const existingTab = window.open('', tabName);
+    //const fileRes = await fetch(`/api/Document/LibreConvert/${id}`);
+    //get file
+    $.ajax({
+        url: `/api/Document/LibreConvert/${id}`,
+        method: "GET",
+        xhrFields: {
+            withCredentials: true,
+            responseType: "blob"
+        },
+        success: function (blob) {
+            const popup = makePopup("large", "Res");
 
-    //        if (existingTab) {
-    //            existingTab.location.href = url;
-    //        } else {
-    //            window.open(url, tabName);
-    //        }
+            popup.option({
+                width: "80vw",
+                height: "90vh",
+                title: "Word Preview",
+                contentTemplate(container) {
+                   
+                    $("<iframe>")
+                        .attr("id", `pdfViewer_${id}`)
+                        .attr("src", "")
+                        .css({
+                            width: "100%",
+                            height: "600px",
+                            border: "1px solid #ccc"
+                        })
+                        .appendTo(container);
+                    const fileURL = URL.createObjectURL(blob);
+                    $(`#pdfViewer_${id}`).attr("src", fileURL);
+                   
+                }
+            });
 
-    //        window.URL.revokeObjectURL(url);
-    //    },
-    //    error: function (xhr, status, error) {
-    //        appNotifyWarning("File is not exists.");
-    //    }
-    //});
+            popup.show();
+            
+            //const url = window.URL.createObjectURL(blob);
+            //const tabName = `pdfPreviewTab_${id}`;
+            //const existingTab = window.open('', tabName);
 
-    console.log();
+            //if (existingTab) {
+            //    existingTab.location.href = url;
+            //} else {
+            //    window.open(url, tabName);
+            //}
+
+            //window.URL.revokeObjectURL(url);
+        },
+        error: function (xhr, status, error) {
+            appNotifyWarning("File is not exists.");
+        }
+    });
+
 }
 
 async function openExcelPreviewPopup(id) {

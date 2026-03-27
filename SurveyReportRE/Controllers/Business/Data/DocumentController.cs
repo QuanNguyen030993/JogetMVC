@@ -70,13 +70,14 @@ public class DocumentController : BaseControllerApi<Document>
             {
                 Directory.CreateDirectory(path.Value + "\\CallBack");
             }
-            System.IO.File.WriteAllBytes(path.Value + "\\CallBack\\" + convertResult.FileName, Encoding.UTF8.GetBytes(convertResult.FileBase64));
+            System.IO.File.WriteAllBytes(path.Value + "\\CallBack\\" + convertResult.FileName, Convert.FromBase64String(convertResult.FileBase64));
             return Ok();
 
         }
-        catch
+        catch (Exception ex)
         {
-            return StatusCode(500);
+            Log.Error(ex, ex.Message);
+            return StatusCode(500, ex.Message);
         }
     }
 
@@ -145,10 +146,26 @@ public class DocumentController : BaseControllerApi<Document>
                     detail = responseText
                 });
             }
-
+            
             // Nếu server convert trả thẳng file đã convert về
             var outputFileName = Path.GetFileNameWithoutExtension(filePath) + ".pdf";
-            return File(responseBytes, "application/pdf", outputFileName);
+
+            string getStreamHost = _BaseRepository._baseConfiguration.GetSection("UrlConfig:GetStreamHost").Value + $"?fileName={outputFileName}";
+            var responseGet = await client.GetAsync(getStreamHost);
+            var responseBytesGet = await responseGet.Content.ReadAsByteArrayAsync();
+            var responseTextGet = await responseGet.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return StatusCode((int)response.StatusCode, new
+                {
+                    message = "Convert server returned error.",
+                    detail = responseText
+                });
+            }
+
+
+            return File(responseBytesGet, "application/pdf", outputFileName);
 
             // Nếu bạn chỉ muốn lưu xuống disk rồi return ok thì dùng đoạn này thay thế:
             // var outputPath = Path.Combine(Path.GetDirectoryName(filePath)!, outputFileName);
@@ -160,6 +177,7 @@ public class DocumentController : BaseControllerApi<Document>
             return StatusCode(500, new
             {
                 message = "Convert failed",
+
                 detail = ex.Message
             });
         }
