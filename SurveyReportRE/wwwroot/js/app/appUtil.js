@@ -2225,6 +2225,7 @@ function makeBasicDataSource(instance, isForm = false) {
             if (checkCustomQueryByModel != null || checkCustomQueryByModel != undefined) {
                 if (checkCustomQueryByModel.customQuery == "OnSystem") {
                     return new DevExpress.data.DataSource({
+                        key: "id",
                         load: function () {
                             return $.ajax({
                                 url: `/api/${instance.ModelName}/ExecuteCustomQuery`,
@@ -2232,7 +2233,20 @@ function makeBasicDataSource(instance, isForm = false) {
                                 contentType: "application/json",
                                 data: JSON.stringify(checkCustomQueryByModel.customQuery)
                             });
-                        },
+                        }, byKey: function (key) {
+                            if (key)
+                                return $.ajax({
+                                    url: `/api/${instance.ModelName}/DropDownLookupCustomQuery?key=${encodeURIComponent(key)}`,
+                                    method: "POST",
+                                    contentType: "application/json",
+                                    data: JSON.stringify(checkCustomQueryByModel.customQuery)
+                                }).then(function (result) {
+                                    return Array.isArray(result) ? result[0] : result;
+                                });
+                            else
+                                return new Array();
+                        }
+                        ,
                         insert: function (values) {
                             const formData = new FormData();
                             formData.append("values", JSON.stringify(values));
@@ -2303,6 +2317,7 @@ function makeBasicDataSource(instance, isForm = false) {
             if (checkCustomQueryByModel != null || checkCustomQueryByModel != undefined) {
                 if (checkCustomQueryByModel.customQuery == "" || checkCustomQueryByModel.customQuery == null || checkCustomQueryByModel.customQuery == undefined) {
                     return new DevExpress.data.CustomStore({
+                        key: "id",
                         load: function () {
                             if (instance.isQuery) {
                                 if (instance.refFieldName && !instance.isChildForeignKey)
@@ -2311,6 +2326,18 @@ function makeBasicDataSource(instance, isForm = false) {
                                     instance.callApi('GetSingle', null, null);
 
                             }
+                        }, byKey: function (key) {
+                            if (key)
+                                return $.ajax({
+                                    url: `/api/${instance.ModelName}/DropDownLookupCustomQuery?key=${encodeURIComponent(key)}`,
+                                    method: "POST",
+                                    contentType: "application/json",
+                                    data: JSON.stringify(checkCustomQueryByModel.customQuery)
+                                }).then(function (result) {
+                                    return Array.isArray(result) ? result[0] : result;
+                                });
+                            else
+                                return new Array();
                         },
                         insert: function (values) {
                             const formData = new FormData();
@@ -2342,6 +2369,7 @@ function makeBasicDataSource(instance, isForm = false) {
                 else {
                     checkCustomQueryByModel.filter = filter;
                     return new DevExpress.data.CustomStore({
+                        key: "id",
                         load: function (loadOptions) {
                             instance.callApi('CustomQuery', checkCustomQueryByModel, null);
                             //return $.ajax({
@@ -2350,6 +2378,18 @@ function makeBasicDataSource(instance, isForm = false) {
                             //    contentType: "application/json",
                             //    data: JSON.stringify(checkCustomQueryByModel.customQuery)
                             //});
+                        }, byKey: function (key) {
+                            if (key)
+                                return $.ajax({
+                                    url: `/api/${instance.ModelName}/DropDownLookupCustomQuery?key=${encodeURIComponent(key)}`,
+                                    method: "POST",
+                                    contentType: "application/json",
+                                    data: JSON.stringify(checkCustomQueryByModel.customQuery)
+                                }).then(function (result) {
+                                    return Array.isArray(result) ? result[0] : result;
+                                });
+                            else
+                                return new Array();
                         },
                         insert: function (values) {
                             const formData = new FormData();

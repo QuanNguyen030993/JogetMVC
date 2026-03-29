@@ -345,7 +345,15 @@ namespace ERPCore.Controllers.Base
         [HttpPost]
         public virtual async Task<object> DropDownLookupCustomQuery([FromBody] string query)
         {
-            object Base = await _BaseRepository.ExecuteCustomQuery(query);
+            object Base = null;
+            if (query == "OnSystem")
+            {
+                var controllerName = ControllerContext.RouteData.Values["controller"]?.ToString();
+                BaseRepository<SysTable> sysTableRepo = new BaseRepository<SysTable>(_BaseRepository._baseConfiguration, _httpContextAccessor);
+                SysTable sysTable = await sysTableRepo.GetSingleObject(s => s.Name == controllerName);
+                Base = await _BaseRepository.ExecuteCustomQuery(sysTable.CustomQuery);
+            }
+            else Base = await _BaseRepository.ExecuteCustomQuery(query);
             var requestParams = HttpContext.Request.Query.ToList();
             IDictionary<string, object> dynamicObj = new ExpandoObject { };
             foreach (var item in requestParams)
@@ -378,7 +386,7 @@ namespace ERPCore.Controllers.Base
 
             if (Base == null)
             {
-                return NotFound();
+                return StatusCode(500, "Null Object");
             }
 
             return Ok(Base);
