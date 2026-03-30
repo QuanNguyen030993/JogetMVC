@@ -1106,7 +1106,7 @@ Note:
             applySectionFocusHighlight();
             updateHints();
             updateSectionUpdatedTime(q);
-            initDepartmentAssignees();
+            initDepartmentAssignees(formModuleKeyQt);
             scrollToDept(formModuleKeyQt,state.focusDept);
         }
 
@@ -1168,7 +1168,7 @@ Note:
                 state.focusDept = state.currentUserRole;
                 renderList();
                 renderDetail();
-                initDepartmentAssignees();
+                initDepartmentAssignees(formModuleKeyQt);
                 if (commentPanelOpened)
                 {
                    $("#btnCloseRightComment").click();

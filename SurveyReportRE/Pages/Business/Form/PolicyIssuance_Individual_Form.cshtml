@@ -1027,7 +1027,7 @@ Note:
             applySectionFocusHighlight();
             updateHints();
             updateSectionUpdatedTime(q);
-            initDepartmentAssignees();
+            initDepartmentAssignees(formModuleKeyPi);
             scrollToDept(formModuleKeyPi,state.focusDept);
         }
 
@@ -1089,7 +1089,7 @@ Note:
                 state.focusDept = state.currentUserRole;
                 renderList();
                 renderDetail();
-                initDepartmentAssignees();
+                initDepartmentAssignees(formModuleKeyPi);
                 if (commentPanelOpened)
                 {
                    $("#btnCloseRightComment").click();

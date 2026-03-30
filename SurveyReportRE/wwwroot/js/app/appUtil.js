@@ -2446,7 +2446,7 @@ function makeBasicDataSource(instance, isForm = false) {
                             else
                                 return new Array();
                         }, update: function (key, values) {
-                            debugger
+                           
                             const formData = new FormData();
 
                             // DevExtreme thường truyền key riêng và values riêng
@@ -5808,7 +5808,6 @@ function newQuotationForm() {
                     var entrySummaryForm = $(`#quotationRequestForm`).dxForm().dxForm("instance");
                     var submitData = entryForm.option("formData");
                     var submitSummaryData = entrySummaryForm.option("formData");
-                    console.log(submitSummaryData);
                     var quotationData = new Object();
                     quotationData.Quotation = new Object();
                     quotationData.Quotation = ObjectPopulateKey(submitSummaryData, true, false);
@@ -7455,10 +7454,10 @@ function getDefaultPicByDept(deptKey, dataForm) {
     return PIC_MAP[deptKey] || null;
 }
 
-function initDepartmentAssignees() {
+function initDepartmentAssignees(moduleKey) {
 
     setTimeout(() => {
-        var formItems = $("#formLMKT").dxForm("instance")?.option("formData") || {};
+        var formItems = $(`#${moduleKey}-formLMKT`).dxForm("instance")?.option("formData") || {};
         renderDepartmentAssigneeBox("#lmktAssigneeBox", {
             groupName: "LMKT",
             dataForm: formItems,
@@ -7468,7 +7467,7 @@ function initDepartmentAssignees() {
         });
     }, 1000);
     setTimeout(() => {
-        var formItems = $("#formMKT").dxForm("instance")?.option("formData") || {};
+        var formItems = $(`#${moduleKey}-formMKT`).dxForm("instance")?.option("formData") || {};
         renderDepartmentAssigneeBox("#mktAssigneeBox", {
             groupName: "MKT",
             dataForm: formItems,
@@ -7479,7 +7478,7 @@ function initDepartmentAssignees() {
     }, 1000);
 
     setTimeout(() => {
-        var formItems = $("#formPM").dxForm("instance")?.option("formData") || {};
+        var formItems = $(`#${moduleKey}-formPM`).dxForm("instance")?.option("formData") || {};
         renderDepartmentAssigneeBox("#pmAssigneeBox", {
             groupName: "PM",
             dataForm: formItems,
@@ -7490,7 +7489,7 @@ function initDepartmentAssignees() {
     }, 1000);
 
     setTimeout(() => {
-        var formItems = $("#formTS").dxForm("instance")?.option("formData") || {};
+        var formItems = $(`#${moduleKey}-formTS`).dxForm("instance")?.option("formData") || {};
         renderDepartmentAssigneeBox("#tsAssigneeBox", {
             groupName: "TS",
             dataForm: formItems,
@@ -7501,7 +7500,7 @@ function initDepartmentAssignees() {
     }, 1000);
 
     setTimeout(() => {
-        var formItems = $("#formUW").dxForm("instance")?.option("formData") || {};
+        var formItems = $(`#${moduleKey}-formUW`).dxForm("instance")?.option("formData") || {};
         renderDepartmentAssigneeBox("#uwAssigneeBox", {
             groupName: "UW",
             dataForm: formItems,
