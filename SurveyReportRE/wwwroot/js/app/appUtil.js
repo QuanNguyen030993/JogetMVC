@@ -2246,7 +2246,33 @@ function makeBasicDataSource(instance, isForm = false) {
                             else
                                 return new Array();
                         }
-                        ,
+                        , update: function (key, values) {
+                            const formData = new FormData();
+
+                            // DevExtreme thường truyền key riêng và values riêng
+                            // gộp lại thành object hoàn chỉnh để API dễ xử lý
+                            const payload = Object.assign({}, values);
+
+                            if (typeof key === "object" && key !== null) {
+                                if (payload.id == null && key.id != null) {
+                                    payload.id = key.id;
+                                }
+                            } else {
+                                if (payload.id == null) {
+                                    payload.id = key;
+                                }
+                            }
+                            formData.append("key", key);
+                            formData.append("values", JSON.stringify(payload));
+
+                            return $.ajax({
+                                url: `/api/${instance.ModelName}/UpdateData`,
+                                method: "PUT",
+                                data: formData,
+                                processData: false,
+                                contentType: false
+                            });
+                        },
                         insert: function (values) {
                             const formData = new FormData();
                             formData.append("values", JSON.stringify(values));
@@ -2262,8 +2288,11 @@ function makeBasicDataSource(instance, isForm = false) {
                         },
                         remove: function (key) {
                             const formData = new FormData();
-                            formData.append("key", key.id);
-
+                            if (key.id)
+                                formData.append("key", key.id);
+                            else 
+                                formData.append("key", key);
+                            
                             return $.ajax({
                                 url: `/api/${instance.ModelName}/DeleteData`,
                                 method: "DELETE",
@@ -2338,6 +2367,29 @@ function makeBasicDataSource(instance, isForm = false) {
                                 });
                             else
                                 return new Array();
+                        }, update: function (key, values) {
+                            const formData = new FormData();
+                            const payload = Object.assign({}, values);
+
+                            if (typeof key === "object" && key !== null) {
+                                if (payload.id == null && key.id != null) {
+                                    payload.id = key.id;
+                                }
+                            } else {
+                                if (payload.id == null) {
+                                    payload.id = key;
+                                }
+                            }
+                            formData.append("key", key);
+                            formData.append("values", JSON.stringify(payload));
+
+                            return $.ajax({
+                                url: `/api/${instance.ModelName}/UpdateData`,
+                                method: "PUT",
+                                data: formData,
+                                processData: false,
+                                contentType: false
+                            });
                         },
                         insert: function (values) {
                             const formData = new FormData();
@@ -2354,7 +2406,10 @@ function makeBasicDataSource(instance, isForm = false) {
                         },
                         remove: function (key) {
                             const formData = new FormData();
-                            formData.append("key", key.id);
+                            if (key.id)
+                                formData.append("key", key.id);
+                            else
+                                formData.append("key", key);
 
                             return $.ajax({
                                 url: `/api/${instance.ModelName}/DeleteData`,
@@ -2390,6 +2445,34 @@ function makeBasicDataSource(instance, isForm = false) {
                                 });
                             else
                                 return new Array();
+                        }, update: function (key, values) {
+                            debugger
+                            const formData = new FormData();
+
+                            // DevExtreme thường truyền key riêng và values riêng
+                            // gộp lại thành object hoàn chỉnh để API dễ xử lý
+                            const payload = Object.assign({}, values);
+
+                            if (typeof key === "object" && key !== null) {
+                                if (payload.id == null && key.id != null) {
+                                    payload.id = key.id;
+                                }
+                            } else {
+                                if (payload.id == null) {
+                                    payload.id = key;
+                                }
+                            }
+
+                            formData.append("key", key);
+                            formData.append("values", JSON.stringify(payload));
+
+                            return $.ajax({
+                                url: `/api/${instance.ModelName}/UpdateData`,
+                                method: "PUT",
+                                data: formData,
+                                processData: false,
+                                contentType: false
+                            });
                         },
                         insert: function (values) {
                             const formData = new FormData();
@@ -2406,7 +2489,10 @@ function makeBasicDataSource(instance, isForm = false) {
                         },
                         remove: function (key) {
                             const formData = new FormData();
-                            formData.append("key", key.id);
+                            if (key.id)
+                                formData.append("key", key.id);
+                            else
+                                formData.append("key", key);
 
                             return $.ajax({
                                 url: `/api/${instance.ModelName}/DeleteData`,
@@ -4028,28 +4114,26 @@ function LCparticipantListColRemake(col, gridInstance, that) {
     };
 }
 
-function addMoveButtonsToCell(e) {
-    // Tạo nút Move Up
-    $("<a>")
-        .addClass("fa fa-arrow-up")
+function customCommandButtonCell(e) {
+    $(`<a class="dx-link dx-link-edit">`)
+       //.addClass("fa fa-arrow-up")
+        .text("Edit JSON")
         .css({ marginRight: "5px", cursor: "pointer", color: "#337ab7" })
         .on("click", function () {
-            const groupIndex = findPreviousGroupIndex(e.cellElement);
-            dataSourceMoveRow(e, e.rowIndex - 1, groupIndex, "up", e.component, true);
-            e.component.refresh();
+            callElementView(`/Business/Workflow/WorkflowDefinition_Form/${e.key}`, `WorkflowDenifition_Form_${e.key}`, `WorkflowDenifition ${e.key}`);
         })
         .appendTo(e.cellElement);
 
-    // Tạo nút Move Down
-    $("<a>")
-        .addClass("fa fa-arrow-down")
-        .css({ marginRight: "35%", cursor: "pointer", color: "#337ab7" })
-        .on("click", function () {
-            const groupIndex = findPreviousGroupIndex(e.cellElement);
-            dataSourceMoveRow(e, e.rowIndex - 1, groupIndex, "down", e.component, true);
-            e.component.refresh();
-        })
-        .appendTo(e.cellElement);
+    //// Tạo nút Move Down
+    //$("<a>")
+    //    .addClass("fa fa-arrow-down")
+    //    .css({ marginRight: "35%", cursor: "pointer", color: "#337ab7" })
+    //    .on("click", function () {
+    //        const groupIndex = findPreviousGroupIndex(e.cellElement);
+    //        dataSourceMoveRow(e, e.rowIndex - 1, groupIndex, "down", e.component, true);
+    //        e.component.refresh();
+    //    })
+    //    .appendTo(e.cellElement);
 }
 function jsonToTable(jsonData, fieldsToShow = []) {
     const table = $("<table>").css({
@@ -5700,8 +5784,12 @@ function newQuotationForm() {
                     //quotationData.ReinsuranceId = submitSummaryData.reinsuranceId;
                     quotationData.Quotation = ObjectPopulateKey(submitSummaryData, true, false);
                     //Overwrite Object
+                    //var makeRequestAccount = _loginUser;
+                    var makeRequestAccount = "thao.bp";
+
+
                     quotationData.Quotation.RequestedDate = submitSummaryData.createDate;
-                    quotationData.Quotation.PIC = `{"MKT":"","TS":"","UW":"","LKMT":""}`;
+                    quotationData.Quotation.PIC = `{"MKT":"${makeRequestAccount}","TS":"","UW":"","LKMT":""}`;
                     quotationData.Quotation.StageAccount = submitData.to;
                     quotationData.Quotation.StageDept = submitSummaryData.assignedTeamOrRole;
                     quotationData.Quotation.QuotationStatus = "New";

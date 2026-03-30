@@ -2061,7 +2061,11 @@
         constructor(modelName, gridType, params) {
             super(modelName, gridType, params);
         };
-
+        onCellPrepared(e) {
+            if (e.rowType === "data" && e.column.command  && e.column.command != "drag") {
+                customCommandButtonCell(e);
+            }
+        }
         onEditingStart(e) {
             super.onEditingStart(e);
             e.cancel = true;

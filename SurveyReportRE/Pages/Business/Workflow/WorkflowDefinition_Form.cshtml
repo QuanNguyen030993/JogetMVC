@@ -349,6 +349,7 @@
     }
 </style>
 <body>
+    <div id="form_@(WorkflowDefinitionDraw_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])" class="dExForm"></div>
     <div class="page">
         <div class="title">Workflow Designer</div>
         <div class="sub">
@@ -502,6 +503,19 @@
 
     <script>
         var _id = @Convert.ToInt32(ViewData["Id"]);
+
+          var _formConfig = new MFormOption();
+        _formConfig.cloneUrl = '/Business/Workflow/WorkflowDefinition_Form/' + _id;
+        _formConfig.tabCode = `form_WorkflowDefinition_Form_${_id}`;
+        _formConfig.tabName = '@HttpContext.Request.Query["Caption"].ToString()';
+        _formConfig.originModelName = "@WorkflowDefinitionDraw_FormModel.ModelName";
+        _formConfig.formElementName = "@WorkflowDefinitionDraw_FormModel.ModelName";
+        _formConfig.schemeBasedOn = `@(WorkflowDefinitionDraw_FormModel.SchemeModelName)`;
+        _formConfig.allowFormActionButton = true;
+        _formConfig.colCount = 1;
+        _formConfig.isCustomQuery = true;
+        new WorkflowDefinitionForm(_id, null, _formConfig);
+
         var selectedNodeId = null;
         var nodeFormInstance = null;
         var workflowFormInstance = null;
@@ -1112,6 +1126,7 @@
                         DevExpress.ui.notify("Save failed", "error", 2000);
                     });
             } else {
+                debugger
                 store.update(_id, workflowData)
                     .done(function () {
                         ds.reload();
@@ -1315,11 +1330,51 @@
                 nodeGridInstance.option("dataSource", workflowTreeData);
             }
         }
-
+         
 
                 function  buildPayloadPreview() {
             syncWorkflowHeader();
             syncRuntimeState();
+            var payload = {
+                workflowDefinition: {
+                    workflowCode: workflowHeader.workflowCode,
+                    workflowName: workflowHeader.workflowName,
+                    flowType: workflowHeader.flowType,
+                    versionNo: workflowHeader.versionNo,
+                    isActive: workflowHeader.isActive
+                },
+                workflowNodes: workflowTreeData.map((x, index) => ({
+                    id: x.id,
+                    parentId: x.parent === "#" ? null : x.parent,
+                    nodeName: x.text,
+                    nodeType: x.type,
+                    nodeCode: x.code,
+                    orderNo: x.orderNo ?? (index + 1),
+                    stepRole: x.stepRole,
+                    departmentName: x.departmentName,
+                    levelNo: x.levelNo,
+                    flowType: x.flowType || "Both",
+                    allowLoop: !!x.allowLoop,
+                    loopGroup: x.loopGroup || ""
+                })),
+                workflowTransitions: transitions.map(x => ({
+                    fromNodeId: x.fromNodeId,
+                    toNodeId: x.toNodeId,
+                    actionCode: x.actionCode,
+                    actionName: x.actionName,
+                    flowType: x.flowType || "Both",
+                    isReturn: !!x.isReturn,
+                    isLoop: !!x.isLoop,
+                    loopGroup: x.loopGroup || "",
+                    loopExitMode: x.loopExitMode || "None",
+                    maxLoopCount: x.maxLoopCount,
+                    isExitTransition: !!x.isExitTransition,
+                    userDecisionLabel: x.userDecisionLabel || "",
+                    conditionJson: x.conditionJson || ""
+                }))
+            };
+
+            $("#payloadBox").text(JSON.stringify(payload, null, 2));
 
             refreshGrid();
         }

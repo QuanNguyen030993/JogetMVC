@@ -3342,20 +3342,19 @@ var ReferenceQuotationForm = class ReferenceQuotationForm extends MForm {
 
 
 }
-            var WorkflowDefinitionForm = class WorkflowDefinitionForm extends MForm {
-            constructor(id, childGridConfig, formConfig, mFormOption) {
-                super(id, childGridConfig, formConfig, mFormOption)
-                //this.parentQuotationId = 0;
-                //if (formConfig.parentQuotationId)
-                //    this.parentQuotationId = formConfig.parentQuotationId;
-            }
+var WorkflowDefinitionForm = class WorkflowDefinitionForm extends MForm {
+    constructor(id, childGridConfig, formConfig, mFormOption) {
+        super(id, childGridConfig, formConfig, mFormOption)
+        //this.parentQuotationId = 0;
+        //if (formConfig.parentQuotationId)
+        //    this.parentQuotationId = formConfig.parentQuotationId;
+    }
 
-                onRowRemoving (e) {
-                
-                console.log(e);
-                
-                
-                }
+    onRowRemoving (e) {
+        
+        
+        
+    }
 
                 
        callApi(apiMethod, dataInput, isClose) {
