@@ -5706,7 +5706,7 @@ function newQuotationForm() {
                     quotationData.Quotation.StageDept = submitSummaryData.assignedTeamOrRole;
                     quotationData.Quotation.QuotationStatus = "New";
                     quotationData.Quotation.WorkflowStatus = "Pending";
-                    quotationData.WorkflowDefinitionId = "E0281B6C-7986-4193-8F95-398889C8ECF3";
+                    quotationData.WorkflowDefinitionId = submitSummaryData.workflowDefinitionId;
                     //quotationData.LineId = submitSummaryData.lineId;  
                     //quotationData.ProductId = submitSummaryData.productId;
                     ajaxPost('/api/Quotation/CreateQuotation', quotationData, {

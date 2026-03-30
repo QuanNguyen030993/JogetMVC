@@ -255,7 +255,7 @@
                             if (!hasSelection) return;
                             const selectedRow = selectedItems.selectedRowsData[0];
                             e.component.option("value", selectedItems.selectedRowKeys[0]);
-                            // that.formInstance.updateData("clientName" , selectedRow.englishName);
+                            that.formInstance.updateData("clientName" , selectedRow.englishName);
                             e.component.close();
                         });
                         return dataGrid.container;

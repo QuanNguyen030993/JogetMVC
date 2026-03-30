@@ -118,9 +118,15 @@ public class QuotationController : BaseControllerApi<Quotation>
         JsonConvert.PopulateObject(JsonConvert.SerializeObject(quotationData.Quotation), quotation);
         quotation.QuotationCode = ControllerUtil.GenerateNumberSeq(tableConfig, _formatCodeNoRepository, nameof(Quotation));
         quotation = await _BaseRepository.InsertData(quotation);
+
+        WorkflowDefinition workflowDefinition = new WorkflowDefinition();
+        workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(s => s.Id == quotationData.WorkflowDefinitionId);
+
+
         InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
         instanceWorkflow.RecordGuid = quotation.Guid;
-        instanceWorkflow.WorkflowDefinitionId = quotationData.WorkflowDefinitionId ?? Guid.Empty;
+        instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
+        instanceWorkflow.CurrentStep = 2;
         await _instanceWorkflowRepository.InsertData(instanceWorkflow);
         return Ok(quotation);
     }
