@@ -133,7 +133,7 @@ public class QuotationController : BaseControllerApi<Quotation>
 
 
     [HttpGet("{guid}")]
-    public async Task<IActionResult> GetQuotationWorkflow(Guid guid)
+    public async Task<IActionResult> GetQuotationWorkflowDefinition(Guid guid)
     {
         InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
         instanceWorkflow = await _instanceWorkflowRepository.GetSingleObject(s => s.RecordGuid == guid);
@@ -143,14 +143,22 @@ public class QuotationController : BaseControllerApi<Quotation>
             Guid workflowDef = instanceWorkflow.WorkflowDefinitionId;
             workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(s => s.Guid == workflowDef);
             if (workflowDefinition != null)
-                return Ok(workflowDefinition.Id);
+                return Ok(workflowDefinition);
             else
                 return Ok(0);
         }
         return Ok(0);
-        
-
-
+    }
+    [HttpGet("{guid}")]
+    public async Task<IActionResult> GetQuotationWorkflow(Guid guid)
+    {
+        InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
+        instanceWorkflow = await _instanceWorkflowRepository.GetSingleObject(s => s.RecordGuid == guid);
+        if (instanceWorkflow != null)
+        {
+           return Ok(instanceWorkflow);
+        }
+        return Ok(null);
     }
 
 

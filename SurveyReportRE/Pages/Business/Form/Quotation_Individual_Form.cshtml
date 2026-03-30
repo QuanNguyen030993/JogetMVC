@@ -522,7 +522,6 @@ Note:
         state.focusDept = _role == "IT" ? "MKT" : _role;
         // var quotes = [];
         // var query = "SELECT * FROM Quotation WITH (NOLOCK) ORDER BY CreatedDate DESC"; // Remove this query
-        
         $.ajax({
             url: `/api/Quotation/ExecuteCustomQuery`,
             method: "POST",
@@ -538,8 +537,9 @@ Note:
                     state.stageDept = state.quotes[0]?.stageDept ?? null;
             }
         });
+        
 
-
+      
 
 
         // // ===== UI state =====
@@ -557,9 +557,19 @@ Note:
 
         var commentPanelOpened = false;
         let stageDept = state.quotes[0]?.stageDept;
-
+        debugger
         let stageAccount = "";                 // status ring
         // let state.focusDept = _role == "IT" ? "MKT" : _role;        // focus ring
+        var nextStep = {};
+           ajaxGet(`/api/Quotation/GetQuotationWorkflow/${selectedGuid}`, null)
+                            .then(instance => {
+                                  ajaxGet(`/api/StepsWorkflow/GetNextStep/${instance.workflowDefinitionId}/${instance.currentStep}`, null)
+                            .then(data => {
+                                nextStep = data;
+                  });
+            });
+
+
 
         function money(n) { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(n || 0); }
 
@@ -1050,10 +1060,10 @@ Note:
                         if (!toggleHideWorkflow)
                         {
                             $(`#${formModuleKeyQt}-flowPanel`).empty();
-                             ajaxGet(`/api/Quotation/GetQuotationWorkflow/${selectedGuid}`, null)
-                            .then(id => {
-                            var passingParams = { UITabId: `form_DrawCanvas_Form_${id}`, pageNum: id};
-                            appendElementViewInside(`/Business/Workflow/DrawCanvas_Form/${id}`, passingParams, $(`#${formModuleKeyQt}-flowPanel`), `${formModuleKeyQt}-form_DrawCanvas_Form`, "appendTo");
+                             ajaxGet(`/api/Quotation/GetQuotationWorkflowDefinition/${selectedGuid}`, null)
+                            .then(instance => {
+                            var passingParams = { UITabId: `form_DrawCanvas_Form_${instance.id}`, pageNum: instance.id};
+                            appendElementViewInside(`/Business/Workflow/DrawCanvas_Form/${instance.id}`, passingParams, $(`#${formModuleKeyQt}-flowPanel`), `${formModuleKeyQt}-form_DrawCanvas_Form`, "appendTo");
                                   $(`#${formModuleKeyQt}-flowHistoryPanel`).show();
                                  $(`#${formModuleKeyQt}-flowPanel`).show();
                                   toggleHideWorkflow = true;

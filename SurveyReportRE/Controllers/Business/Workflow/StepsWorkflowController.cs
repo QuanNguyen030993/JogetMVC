@@ -23,5 +23,15 @@ public class StepsWorkflowController : BaseControllerApi<StepsWorkflow>
         _BaseRepository = BaseRepository;
 
     }
+
+    [HttpGet("{flowGuid}/{currentStepNo}")]
+    public async Task<IActionResult> GetNextStep(Guid flowGuid, long currentStepNo)
+    {//current is next at currnt 
+            List<StepsWorkflow> stepsWorkflow = new List<StepsWorkflow>();
+            stepsWorkflow = await _BaseRepository.GetListObject(l => l.WorkflowDefinitionId == flowGuid);
+            if (currentStepNo < stepsWorkflow.Count)
+            stepsWorkflow = stepsWorkflow.Skip((int)currentStepNo - 1).Take((int)currentStepNo).ToList();
+        return Ok(stepsWorkflow);
+    }
 }
 
