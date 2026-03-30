@@ -5756,6 +5756,38 @@ function newQuotationForm() {
             options: {
                 stylingMode: 'contained',
                 type: 'normal',
+                text: "Fill Data",
+                onClick() {
+                    var form = $(`#quotationRequestForm`).dxForm().dxForm("instance");
+                    form.option("formData", {
+                        PIC: "quan.nh",
+                        assignedTeamOrRole: "TS",
+                        assignees: {},
+                        assignmentMode: "manual",
+                        businessChannel: "Direct (DIR)",
+                        clientId: 1124,
+                        clientName: "NGUYEN MANH CUONG",
+                        createDate: new Date(),
+                        dueDate: new Date(),
+                        lineName: "Liability",
+                        productId: 2,
+                        productName: "Industrial All Risks",
+                        reinsuranceId: 143,
+                        reqDate: new Date(),
+                        reqPerson: "quan.nh",
+                        requestTypeId: 149,
+                        subject: "Subject báo giá",
+                        workflowDefinitionId: 5,
+                    });
+                },
+            },
+        },{
+            widget: 'dxButton',
+            toolbar: 'bottom',
+            location: 'after',
+            options: {
+                stylingMode: 'contained',
+                type: 'normal',
                 text: "Save As Draft",
                 onClick() {
                     
@@ -5771,25 +5803,22 @@ function newQuotationForm() {
                 type: 'info',
                 text: "Complete",
                 onClick() {
-                    var entryForm = $(`#assigneeEntryForm`).dxForm().dxForm("instance");
+                    //var entryForm = $(`#assigneeEntryForm`).dxForm().dxForm("instance");
+                    var entryForm = $(`#assignBox`).dxForm().dxForm("instance");
                     var entrySummaryForm = $(`#quotationRequestForm`).dxForm().dxForm("instance");
                     var submitData = entryForm.option("formData");
                     var submitSummaryData = entrySummaryForm.option("formData");
+                    console.log(submitSummaryData);
                     var quotationData = new Object();
                     quotationData.Quotation = new Object();
-                    //quotationData.ClientName = submitSummaryData.clientName;
-                    //quotationData.ClientId = submitSummaryData.clientId;
-                    //quotationData.SurveyNeeded = submitSummaryData.surveyNeeded;
-                    //quotationData.DueDate = submitSummaryData.dueDate;
-                    //quotationData.ReinsuranceId = submitSummaryData.reinsuranceId;
                     quotationData.Quotation = ObjectPopulateKey(submitSummaryData, true, false);
-                    //Overwrite Object
                     //var makeRequestAccount = _loginUser;
                     var makeRequestAccount = "thao.bp";
-
-
+                    
                     quotationData.Quotation.RequestedDate = submitSummaryData.createDate;
-                    quotationData.Quotation.PIC = `{"MKT":"${makeRequestAccount}","TS":"","UW":"","LKMT":""}`;
+                    quotationData.Quotation.PIC = { MKT: makeRequestAccount, TS : "", UW: "", LKMT: "" };
+                    quotationData.Quotation.PIC[submitData.deptTarget] = submitData.to;
+                    quotationData.Quotation.PIC = JSON.stringify(quotationData.Quotation.PIC);
                     quotationData.Quotation.StageAccount = submitData.to;
                     quotationData.Quotation.StageDept = submitSummaryData.assignedTeamOrRole;
                     quotationData.Quotation.QuotationStatus = "New";

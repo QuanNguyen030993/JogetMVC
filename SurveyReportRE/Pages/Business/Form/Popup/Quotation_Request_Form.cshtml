@@ -138,26 +138,7 @@
         }
 
           DevExpress.localization.locale("en");
-          //  var options = {
-          //   assignmentMode: [
-          //     // { id: "auto", text: "Auto route (recommended)" },
-          //     { id: "later", text: "Assign later" },
-          //     { id: "manual", text: "Manual assign" }
-          //   ],
-          //   teamOrRole: [
-          //     { id: "TS", text: "Marketing TS" },
-          //     { id: "UW", text: "Underwriting" }
-          //   ],
-          //   assignee: [
-          //     // { accountName: "admin", fullName: "Admin admin" },
-          //     // { accountName: "hien.ttt", fullName: "To Thi Thu Hien" },
-          //     // { accountName: "accpentest", fullName: "accpentest test" }
-          //   ],
-          //   reqType: [{id: 149 ,value: "New Quotation"}, {id: 146 ,value:"Renew Quotation"},{id: 147 ,value:"Endorsement"}, {id: 148 ,value:"Revise Quotation"} ],
-          //   lineName: ["Fire & Property, BI", "Liability", "Cargo", "Engineering", "Motor"],
-          //   businessChannel: ["Inward", "Direct (DIR)", "Agent (AGY)", "Broker (BRK)"],
-          //   reinsurance: [{id: 143, value: "FACOUT"}, {id: 144, value: "NO FACOUT"}, {id: 145, value: "Ichigenka"}]
-          // };
+       
        
           // ===== mock options =====
          
@@ -193,6 +174,7 @@
             items: [
               {
                 itemType: "group", colSpan: 2, caption: "Quotation Request",
+           
                 items: [
                     // Create or clone will be move to header web status
                   // {
@@ -226,12 +208,6 @@
                                 data: JSON.stringify(clientQuery)
                             });
                         }, byKey: function (key) {
-                            //return $.ajax({
-                            //    url: `/api/Client/ExecuteCustomQuery`,
-                            //    method: "POST",
-                            //    contentType: "application/json",
-                            //    data: JSON.stringify(checkCustomQueryByModel.customQuery)
-                            //});
                             if (key)
                                 return $.ajax({
                                     url: `/api/Client/DropDownLookupCustomQuery?key=${encodeURIComponent(key)}`,
@@ -398,22 +374,6 @@
                   label: "RE Title",
                   labelMode: "static"
                 });
-                // $btn.dxButton({
-                //   text: "Add/Update PIC",
-                //   type: "success",
-                //   onClick: () => {
-                //     const dept = $dept.dxSelectBox("instance").option("value");
-                //     const account = $accText.dxTextBox("instance").option("value");
-
-                //     if (!dept) return DevExpress.ui.notify("Select department", "warning", 1500);
-                //     if (!account) return DevExpress.ui.notify("Enter PIC account", "warning", 1500);
-
-                //     updatePic(dept, account);
-
-                //     DevExpress.ui.notify(`Updated PIC.${dept} = ${account}`, "success", 1200);
-                //     $preview.dxTextArea("instance").option("value", form.option("formData.PIC"));
-                //   }
-                // });
 
 
 
@@ -450,7 +410,16 @@
                             if (!hasSelection) return;
                             const selectedRow = selectedItems.selectedRowsData[0];
                             e.component.option("value", selectedItems.selectedRowKeys[0].id);
-                            // that.formInstance.updateData("guid" , selectedRow.guid);
+
+
+                            ajaxGet(`/api/WorkflowDefinition/GetStepsList/${selectedRow.guid}`)
+                            .then(data => {
+                            var roleInStep = data.find(f => f.stepNo == 1);
+                            var selectBoxIns = that.formInstance.getEditor("assignedTeamOrRole");
+                            selectBoxIns.option("value", roleInStep.toNodeId);
+                            vm.assignedTeamOrRole = roleInStep.toNodeId;
+                            });
+
                             e.component.close();
                         });
                         return dataGrid.container;
@@ -496,35 +465,6 @@
                       }
                     }
                   },
-                  // {
-                  //   dataField: "surveyNeeded",
-                  //   label: { text: "Need Survey" },
-                  //   editorType: "dxSwitch",
-                  //   colSpan: 1,
-                  //     editorOptions: {
-                  //     switchedOnText: "Yes",
-                  //     switchedOffText: "No",
-                  //     onValueChanged: function(e) {
-                  //       const form = that.dxForm("instance");
-
-                  //       if (e.value === true) {
-                  //         initPicIfEmpty(form);
-                  //         showSurveyAccordion(true);
-
-                  //         // refresh preview trong accordion (nếu đã render)
-                  //         const picStr = form.option("formData.PIC");
-                  //         $("#surveyPicPreview").dxTextArea?.("instance")?.option("value", picStr);
-                  //       } else {
-                  //         showSurveyAccordion(false);
-
-                  //         // tuỳ nghiệp vụ: bạn muốn clear PIC hay giữ lại?
-                  //         // Option 1: giữ lại PIC (không làm gì)
-                  //         // Option 2: clear PIC khi tắt:
-                  //         // form.option("formData.PIC", "");
-                  //       }
-                  //     }
-                  //   }
-                  //     },
                      
                 ]
               }
@@ -645,8 +585,9 @@
                      ajaxGet("/api/Employee/AssigneeList", vm.assignedTeamOrRole)
                 .then(list => {
                     
-                  $(`<div id="requestQuotation">`).dxForm(
-                     {items : 
+                  $(`<div id="assignBox">`).dxForm(
+                     {formData: {deptTarget : vm.assignedTeamOrRole}
+                         ,items :
                          [
                              {
                     dataField: "to",
@@ -655,12 +596,8 @@
                     editorOptions: {
                       dataSource: list,
                       displayExpr: "fullName",
-                      valueExpr: "accountName"//,
-                      // onValueChanged(e) {
-                      //   vm.assignmentMode = e.value;
-                      //   refreshAssignmentUI();
-                      //   buildSummary();
-                      // }
+                      valueExpr: "accountName",
+                      
                     }
                   },
 
@@ -701,7 +638,7 @@
                   type: "default",
                   onClick: function () {
                       
-                    const form = $("#requestQuotation").dxForm("instance");
+                    const form = $("#assignBox").dxForm("instance");
                     const result = form.validate();
                     if (!result.isValid) {
                       DevExpress.ui.notify("Please fill required fields.", "error", 1500);

@@ -53,5 +53,14 @@ namespace ERPCore.Models.Migration.Business.Workflow
 
         public Guid? ParentStepId { get; set; }
 
+        public long? StepNo { get; set; }
+        public string? NodeId { get; set; } = "";
+        public string? FromNodeId { get; set; } = "";
+        public string? ToNodeId { get; set; } = "";
+        public string? ActionCode { get; set; } = "";
+        [MaxLength(8000)]
+        public string? Data { get; set; } = "";
+
+
     }
 }
