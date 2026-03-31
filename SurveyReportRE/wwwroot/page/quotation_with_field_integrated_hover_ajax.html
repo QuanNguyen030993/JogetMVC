@@ -1645,7 +1645,7 @@
             $("#btnDuplicate").dxButton({ text: "Duplicate", icon: "copy", type: "normal", onClick: () => DevExpress.ui.notify("Mock: Duplicated", "success", 1200) });
 
             $("#btnSaveDraft").dxButton({ text: "Save Draft", icon: "save", type: "normal", onClick: () => DevExpress.ui.notify("Mock: saved draft", "success", 1200) });
-            $("#btnSubmitBranch").dxButton({ text: "Submit", icon: "check", type: "success", onClick: openBranchOverlay });
+            $("#btnSubmitBranch").dxButton({ text: "Submit", icon: "check", type: "success", onClick: function (e) { var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {}; submitNextStep("@dept", _nextStep, findRoute, formItems); } });
 
             $("#roleSelect").dxSelectBox({
                 items: Roles, value: currentUserRole, stylingMode: "outlined",

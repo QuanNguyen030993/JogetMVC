@@ -1380,7 +1380,7 @@ Note:
         $("#btnMore").dxDropDownButton({ text: "More", icon: "overflow", items: ["Export", "Print", "Email"], onItemClick: (e) => DevExpress.ui.notify("Mock: " + e.itemData, "info", 1200) });
 
         $("#btnSaveDraft").dxButton({ text: "Save Draft", icon: "save", type: "normal", onClick: () => DevExpress.ui.notify("Mock: saved draft", "success", 1200) });
-        $("#btnSubmitBranch").dxButton({ text: "Route To", icon: "check", type: "success", onClick: openBranchOverlay });
+        // $("#btnSubmitBranch").dxButton({ text: "Route To", icon: "check", type: "success", onClick: function (e) { var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {}; submitNextStep("", _nextStep, findRoute, formItems); } });
 
         $("#branchOverlay .backdrop").on("click", closeBranchOverlay);
 
