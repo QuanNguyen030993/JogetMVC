@@ -3731,7 +3731,6 @@ function convertKeysToLowerFirstChar(obj) {
 }
 function convertToTitleCase(str) {
     if (!str) return ""; // Kiểm tra nếu chuỗi rỗng
-    console.log(str);
     return str
         .toLowerCase() // Chuyển toàn bộ chuỗi về chữ thường
         .split(" ")    // Tách chuỗi thành mảng các từ

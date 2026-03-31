@@ -686,7 +686,7 @@ Note:
                 $(`#${formModuleKeyQt}-btnSubmitBranch_UW`).dxButton("instance")?.option("visible", !roUW);
                 $(`#${formModuleKeyQt}-btnSubmitBranch_LMKT`).dxButton("instance")?.option("visible", !roLMKT);
                 $(`#${formModuleKeyQt}-btnSubmitBranch_PM`).dxButton("instance")?.option("visible", !roPM);
-            }, 250);
+            }, _delayRenderSubmitButton);
 
             $(`#${formModuleKeyQt}-formFO`).dxForm("instance")?.option("readOnly", roMKT);
             $(`#${formModuleKeyQt}-formTS`).dxForm("instance")?.option("readOnly", roTS);
