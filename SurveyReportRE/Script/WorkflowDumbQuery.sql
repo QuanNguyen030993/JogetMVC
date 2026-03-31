@@ -38,3 +38,26 @@ VALUES
 ),(
       @WorkflowDefinitionId,    'MKTMGR_COMPLETE',    N'MKT Manager Complete',    9,    'MKT_MGR',    4,    0,    1,    1,    0,    1,    0,    N'Completed',    'ReadOnly',    3,    'Quotation',    0,    NULL,    4,    'MKT_MGR',    'MKT_MGR',    NULL,    'COMPLETE',    N'{"fromNodeId":"MKT_MGR",toNodeId":null,actionName":"Complete"}'
 );
+
+
+
+UPDATE Quotation SET StageDept = 'FO' WHERE Id = 125
+UPDATE InstanceWorkflow SET CurrentStep = 3 WHERE Id = 36
+UPDATE Quotation SET PIC = REPLACE(PIC,'"MKT"', '"FO"')
+UPDATE PolicyIssuance SET PIC = REPLACE(PIC,'"MKT"', '"FO"')
+UPDATE Quotation SET TurnAroundTimeAttributes = REPLACE(TurnAroundTimeAttributes,'"MKT"', '"FO"')
+UPDATE PolicyIssuance SET TurnAroundTimeAttributes = REPLACE(TurnAroundTimeAttributes,'"MKT"', '"FO"')
+UPDATE PolicyIssuance SET TurnAroundTimeAttributes = N'{
+  "FO": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 10:30:00" },
+  "TS": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 09:15:00" },
+  "UW": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 09:15:00" },
+  "LMKT": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 09:15:00" },
+  "PM": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 09:15:00" }
+}'
+
+UPDATE PolicyIssuance SET PIC = '{"FO":"thao.bp","TS":"hien.ttt","PM":"nguyen.dt"}'
+UPDATE PolicyIssuance SET StageDept = 'FO'
+UPDATE StepsWorkflow SET RoleCode = 'LMKT' WHERE RoleCode = 'MKT_MGR'
+UPDATE StepsWorkflow SET FromNodeId = 'LMKT' WHERE FromNodeId = 'MKT_MGR'
+UPDATE StepsWorkflow SET ToNodeId = 'LMKT' WHERE ToNodeId = 'MKT_MGR'
+UPDATE StepsWorkflow SET NodeId = 'LMKT' WHERE NodeId = 'MKT_MGR'
