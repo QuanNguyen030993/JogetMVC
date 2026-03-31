@@ -760,7 +760,7 @@
                             <div class="treeStack" id="treeStack">
                                 <div class="vline" id="treeVLine"></div>
 
-                                <div class="dept-node" data-key="MKT" title="MKT">mkt</div>
+                                <div class="dept-node" data-key="FO" title="FO">FO</div>
                                 <div class="dept-node" data-key="TS" title="TS">ts</div>
                                 <div class="dept-node" data-key="UW" title="UW">uw</div>
                                 <div class="dept-node" data-key="LMKT" title="Leader MKT">lm</div>
@@ -824,7 +824,7 @@
     <!-- Bottom action bar -->
     <div class="actionBar">
         <div class="actionLeft">
-            <span class="pill">Login role: <b id="loginRoleLabel">MKT</b></span>
+            <span class="pill">Login role: <b id="loginRoleLabel">FO</b></span>
             <span class="pill">RequestNo: <b id="reqNoLabel">-</b></span>
             <span class="pill">QuotationCode: <b id="quoCodeLabel">-</b></span>
         </div>
@@ -1010,8 +1010,8 @@
             amount: q.PremiumTotal || 0
         }));
 
-        const Roles = ["MKT", "TS", "UW", "LMKT", "PM"];
-        let currentUserRole = "MKT";
+        const Roles = ["FO", "TS", "UW", "LMKT", "PM"];
+        let currentUserRole = "FO";
         let searchText = "";
         let selectedId = quotes[0]?.id;
 
@@ -1293,7 +1293,7 @@
 
         function applyEditLock() {
             // demo rule: only edit when focusDept == currentUserRole
-            const roMKT = !(currentUserRole === "MKT" && focusDept === "MKT");
+            const roMKT = !(currentUserRole === "FO" && focusDept === "FO");
             const roTS = !(currentUserRole === "TS" && focusDept === "TS");
             const roUW = !(currentUserRole === "UW" && focusDept === "UW");
             const roLMKT = !(currentUserRole === "LMKT" && focusDept === "LMKT");
@@ -1499,7 +1499,7 @@
                 var constItems = [
                     {
                         order: 900,
-                        dept: "MKT",
+                        dept: "FO",
                         user: "Static Demo User",
                         time: "2024-01-05 10:30",
                         comment: "[STATIC] Demo comment injected after AJAX"
@@ -1559,10 +1559,10 @@
 
                 // Demo data: always available even when API is not ready
                 const staticFlow = [
-                    { dept: "MKT", time: "2024-01-02 09:15", note: "Submitted to TS" },
+                    { dept: "FO", time: "2024-01-02 09:15", note: "Submitted to TS" },
                     { dept: "TS", time: "2024-01-02 11:02", note: "Checked location / forwarded" },
                     { dept: "UW", time: "2024-01-03 15:40", note: "Adjusted premium / returned" },
-                    { dept: "MKT", time: "2024-01-03 16:05", note: "Client confirmation" },
+                    { dept: "FO", time: "2024-01-03 16:05", note: "Client confirmation" },
                     { dept: "LMKT", time: "2024-01-03 17:10", note: "Leader approved" },
                     { dept: "PM", time: "2024-01-04 09:00", note: "Proceed issuance" }
                 ];

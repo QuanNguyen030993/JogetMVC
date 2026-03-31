@@ -83,7 +83,7 @@
 		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
 		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 		</Content>
-		<Content Update="Pages\Business\Form\QuotationDetail\_Quotation_MKT_Form_Header.cshtml">
+		<Content Update="Pages\Business\Form\QuotationDetail\_Quotation_FO_Form_Header.cshtml">
 		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
 		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 		</Content>

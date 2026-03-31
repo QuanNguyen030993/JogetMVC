@@ -487,7 +487,7 @@ Note:
 
 <script type="text/javascript">
     $(function () {
-          // var PIC_JSON = `{"MKT":"thao.bp","TS":"hien.ttt","UW":"thanh.pp","LKMT":"thao.np"}`;
+          // var PIC_JSON = `{"FO":"thao.bp","TS":"hien.ttt","UW":"thanh.pp","LKMT":"thao.np"}`;
           var PIC_JSON = `{}`;
 
           
@@ -523,7 +523,7 @@ Note:
         const state = page.state;
 
         state.currentUserRole = _role;
-        state.focusDept = _role == "IT" ? "MKT" : _role;
+        state.focusDept = _role == "IT" ? "FO" : _role;
         // var quotes = [];
             var query = `SELECT JSON_VALUE(c.ClientName,'$.Eng') AS ClientName,p.*
     FROM PolicyIssuance p WITH (NOLOCK)
@@ -551,8 +551,8 @@ Note:
 
         // // ===== UI state =====
 
-        // var Roles = ["MKT", "TS", "UW", "LMKT", "PM"];
-        var Roles = ["MKT", "TS", "PM"];
+        // var Roles = ["FO", "TS", "UW", "LMKT", "PM"];
+        var Roles = ["FO", "TS", "PM"];
         // var currentUserRole = _role;
         $("#loginRoleLabel").text(state.currentUserRole);
 
@@ -566,7 +566,7 @@ Note:
         let stageDept = state.quotes[0]?.stageDept;
 
         let stageAccount = "";                 // status ring
-        // let state.focusDept = _role == "IT" ? "MKT" : _role;        // focus ring
+        // let state.focusDept = _role == "IT" ? "FO" : _role;        // focus ring
 
         function money(n) { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(n || 0); }
 
@@ -633,13 +633,13 @@ Note:
 
         function renderDeptForms() {
             //Data render to partial
-           $(`#${formModuleKeyPi}-formMKT`).dxForm({ formData: deptData.MKT, readOnly: true, colCount: 1 });
+           $(`#${formModuleKeyPi}-formFO`).dxForm({ formData: deptData.MKT, readOnly: true, colCount: 1 });
             $(`#${formModuleKeyPi}-formTS`).dxForm({ formData: deptData.TS, readOnly: true, colCount: 1 });
             // $(`#${formModuleKeyPi}-formUW`).dxForm({ formData: deptData.UW, readOnly: true, colCount: 1 });
             // $(`#${formModuleKeyPi}-formLMKT`).dxForm({ formData: deptData.LMKT, readOnly: true, colCount: 1 });
             $(`#${formModuleKeyPi}-formPM`).dxForm({ formData: deptData.PM, readOnly: true, colCount: 1 });
 
-            loadDxFileUploaderAttachments("MKT","Document");
+            loadDxFileUploaderAttachments("FO","Document");
             loadDxFileUploaderAttachments("TS","Document");
             // loadDxFileUploaderAttachments("UW","Document");
             // loadDxFileUploaderAttachments("LMKT","Document");
@@ -650,25 +650,25 @@ Note:
 
               function applyEditLock() {
             // demo rule: chỉ edit khi login đúng dept
-            const roMKT = !(state.currentUserRole === "MKT");
+            const roMKT = !(state.currentUserRole === "FO");
             const roTS = !(state.currentUserRole === "TS");
             // const roUW = !(state.currentUserRole === "UW");
             // const roLMKT = !(state.currentUserRole === "LMKT");
             const roPM = !(state.currentUserRole === "PM");
 
              setTimeout(() => {
-                $(`#${formModuleKeyPi}-btnSave_MKT`).dxButton("instance")?.option("visible", !roMKT);
+                $(`#${formModuleKeyPi}-btnSave_FO`).dxButton("instance")?.option("visible", !roMKT);
                 $(`#${formModuleKeyPi}-btnSave_TS`).dxButton("instance")?.option("visible", !roTS);
                 $(`#${formModuleKeyPi}-btnSave_PM`).dxButton("instance")?.option("visible", !roPM);
                                    
-                $(`#${formModuleKeyPi}-btnSubmitBranch_MKT`).dxButton("instance")?.option("visible", !roMKT);
+                $(`#${formModuleKeyPi}-btnSubmitBranch_FO`).dxButton("instance")?.option("visible", !roMKT);
                 $(`#${formModuleKeyPi}-btnSubmitBranch_TS`).dxButton("instance")?.option("visible", !roTS);
                 $(`#${formModuleKeyPi}-btnSubmitBranch_PM`).dxButton("instance")?.option("visible", !roPM);
             }, 250);
 
 
 
-            $(`#${formModuleKeyPi}-formMKT`).dxForm("instance")?.option("readOnly", roMKT);
+            $(`#${formModuleKeyPi}-formFO`).dxForm("instance")?.option("readOnly", roMKT);
             $(`#${formModuleKeyPi}-formTS`).dxForm("instance")?.option("readOnly", roTS);
             // $(`#${formModuleKeyPi}-formUW`).dxForm("instance")?.option("readOnly", roUW);
             // $(`#${formModuleKeyPi}-formLMKT`).dxForm("instance")?.option("readOnly", roLMKT);
@@ -823,7 +823,7 @@ Note:
         }
 
         function bindSectionHeaderToggle() {
-            ["MKT", "TS", "PM"].forEach(dept => {
+            ["FO", "TS", "PM"].forEach(dept => {
                 const $sec = $(`#${formModuleKeyPi}-sec${dept}`);
                 if (!$sec.length) return;
 
@@ -951,7 +951,7 @@ Note:
                     type: "normal",
                     stylingMode: "contained",
                      onClick: () => {
-                      setSectionCollapsed("MKT", true);
+                      setSectionCollapsed("FO", true);
                       setSectionCollapsed("TS",true);
                       setSectionCollapsed("LMKT",true);
                       setSectionCollapsed("UW",true);
@@ -1015,7 +1015,7 @@ Note:
             $(`#${formModuleKeyPi}-stageDeptPill`).text(`Pending at: ${stageDept} - ${stageAccount ?? ""}`);
             $(`#${formModuleKeyPi}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
 
-            deptData.MKT = { ...q, sectionName: "MKT", code: q.policyIssuanceCode };
+            deptData.MKT = { ...q, sectionName: "FO", code: q.policyIssuanceCode };
             deptData.TS = { ...q, sectionName: "TS", code: q.policyIssuanceCode };
             deptData.UW = { ...q, sectionName: "UW", code: q.policyIssuanceCode };
             deptData.LMKT = { ...q, sectionName: "LMKT", code: q.policyIssuanceCode };
@@ -1111,15 +1111,15 @@ Note:
             ],
             TS: [
                 { to: "UW", rule: "TS_to_UW" },
-                { to: "MKT", rule: "TS_to_MKT" },
+                { to: "FO", rule: "TS_to_FO" },
             ],
             UW: [
                 { to: "LMKT", rule: "UW_to_LMKT" },
-                { to: "MKT", rule: "UW_to_MKT" },
+                { to: "FO", rule: "UW_to_FO" },
             ],
             LMKT: [
                 { to: "PM", rule: "LMKT_to_PM" },
-                { to: "MKT", rule: "LMKT_to_MKT" },
+                { to: "FO", rule: "LMKT_to_FO" },
             ],
             PM: []
         };
@@ -1144,13 +1144,13 @@ Note:
             MKT_to_PM: (s) => s.flags.needPolicyManager && s.requiredDone.MKT,
 
             TS_to_UW: (s) => s.requiredDone.TS && s.flags.needUnderwriting,
-            TS_to_MKT: (s) => !s.requiredDone.TS,
+            TS_to_FO: (s) => !s.requiredDone.TS,
 
             UW_to_LMKT: (s) => s.requiredDone.UW && s.flags.needLeaderMarketing,
-            UW_to_MKT: (s) => !s.requiredDone.UW,
+            UW_to_FO: (s) => !s.requiredDone.UW,
 
             LMKT_to_PM: (s) => s.requiredDone.LMKT,
-            LMKT_to_MKT: (s) => !s.requiredDone.LMKT,
+            LMKT_to_FO: (s) => !s.requiredDone.LMKT,
         };
 
         function getNextChoices(currentDept, formState) {
@@ -1233,7 +1233,7 @@ Note:
         }
 
         function openBranchOverlay() {
-            const currentDept = stageDept || state.focusDept || "MKT";
+            const currentDept = stageDept || state.focusDept || "FO";
             renderBranchOverlay(currentDept);
             $("#branchOverlay").show();
         }

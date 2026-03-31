@@ -204,7 +204,7 @@ public class DocumentController : BaseControllerApi<Document>
     [HttpGet]
     public async Task<IActionResult> GetByKey(Guid recordGuid, string? folder = null)
     {
-        // folder: "MKT" => filter SubDirectory start with "MKT\"
+        // folder: "FO" => filter SubDirectory start with "MKT\"
         folder = string.IsNullOrWhiteSpace(folder) ? null : folder.Trim();
 
         // Lấy toàn bộ rồi filter (vì repo bạn đang có GetAll)

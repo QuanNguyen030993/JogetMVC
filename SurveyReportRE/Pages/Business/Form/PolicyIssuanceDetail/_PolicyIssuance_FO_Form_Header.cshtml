@@ -1,23 +1,23 @@
-﻿<div class="dept-title">MKT</div>
+﻿<div class="dept-title">FO</div>
 <div class="dept-form-header">
     <div class="dept-form-header__assign">
-        <div id="mktAssigneeBox"></div>
+        <div id="foAssigneeBox"></div>
     </div>
     <div id="btnToggleResForm"></div>
 </div>
 <div class="dept-hint-wrap">
-    <div class="dept-hint" id="pi-hintMKT"></div>
-    <div class="dept-updated" id="pi-updMKT" title="Last updated">—</div>
+    <div class="dept-hint" id="pi-hintfo"></div>
+    <div class="dept-updated" id="pi-updfo" title="Last updated">—</div>
     <div class="dept-toggle-icon" aria-hidden="true">▾</div>
 </div>
 <script>
     setTimeout( () => {
-    var formItems = $("#pi-formMKT").dxForm("instance")?.option("formData") || {};
+    var formItems = $("#pi-formFO").dxForm("instance")?.option("formData") || {};
 
-    renderDepartmentAssigneeBox("#mktAssigneeBox", {
-        groupName: "MKT",
+    renderDepartmentAssigneeBox("#foAssigneeBox", {
+        groupName: "FO",
         dataForm: formItems,
-        value: formItems.mktAssigneeId || null,
+        value: formItems.foAssigneeId || null,
         onChanged: function (item, editor) {
         }
     });
@@ -39,9 +39,9 @@
             setTimeout(function () {
                 var item = new Object();
                 item.editorType = "dxFileUploader";
-                item.moduleName = "pi"; item.sectionName = "MKT-RES";
+                item.moduleName = "pi"; item.sectionName = "fo-RES";
                 createEditor(item, itemElement, $("<div>"), null);
-                // loadAttachmentList("MKT");
+                // loadAttachmentList("fo");
                 }, 1000);
             }
 
@@ -90,7 +90,7 @@
                 { dataField: "uwAuthorityForm", label: { text: "UW Authority Form" } },
                 { dataField: "riskGrade", label: { text: "Risk Grade" } },
                 { dataField: "showRiskGrade", label: { text: "Show Risk Grade" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
-                { dataField: "mktProposalComment", label: { text: "MKT Proposal Comment" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 100 } },
+                { dataField: "foProposalComment", label: { text: "fo Proposal Comment" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 100 } },
                 { dataField: "uwComment", label: { text: "UW Comment" }, editorType: "dxTextArea", colSpan: 2, editorOptions: { height: 100 } },
                 {
                     itemType: "group",
@@ -276,7 +276,7 @@
                             _formConfig.originModelName = "Res";
                             _formConfig.formElementName = "Res";
                             _formConfig.colCount = 1;
-                            var parentFormData = $("#pi-formMKT").dxForm("instance")?.option("formData");
+                            var parentFormData = $("#pi-formFO").dxForm("instance")?.option("formData");
                             _formConfig.container = $(`<div id = "form_${_formConfig.originModelName}_${parentFormData.resId}" style="padding: 10px; margin-right: 0px" >`);
                             var form =  new ResFormQuotationForm(parentFormData.resId, null, _formConfig, _formConfig);
                             // var scrollView = $(`<div>`);

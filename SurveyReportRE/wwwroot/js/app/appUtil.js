@@ -6170,7 +6170,7 @@ function popupStandardContentByScroll(customContainer) {
 // =========================
 // Usage đúng theo ví dụ của bạn
 // =========================
-// quotationData.StageDept = "MKT";
+// quotationData.StageDept = "FO";
 // ajaxPost("/api/Quotation/CreateQuotation", quotationData, {
 //     onSuccess: (response) => { console.log("OK", response); },
 //     onError: (err) => { console.log("ERR", err); },
@@ -7461,17 +7461,17 @@ function initDepartmentAssignees(moduleKey) {
         renderDepartmentAssigneeBox("#lmktAssigneeBox", {
             groupName: "LMKT",
             dataForm: formItems,
-            value: formItems.mktAssigneeId || null,
+            value: formItems.lmktAssigneeId || null,
             onChanged: function (item, editor) {
             }
         });
     }, 1000);
     setTimeout(() => {
-        var formItems = $(`#${moduleKey}-formMKT`).dxForm("instance")?.option("formData") || {};
-        renderDepartmentAssigneeBox("#mktAssigneeBox", {
-            groupName: "MKT",
+        var formItems = $(`#${moduleKey}-formFO`).dxForm("instance")?.option("formData") || {};
+        renderDepartmentAssigneeBox("#foAssigneeBox", {
+            groupName: "FO",
             dataForm: formItems,
-            value: formItems.mktAssigneeId || null,
+            value: formItems.foAssigneeId || null,
             onChanged: function (item, editor) {
             }
         });
@@ -7686,7 +7686,7 @@ function submitNextStep(dept, _nextStep, findRoute, formItems) {
 
 
 function openBranchOverlay(currentDept) {
-    //const currentDept = stageDept || focusDept || "MKT";
+    //const currentDept = stageDept || focusDept || "FO";
     renderBranchOverlay(currentDept);
     $("#branchOverlay").show();
 }

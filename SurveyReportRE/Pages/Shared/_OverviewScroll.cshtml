@@ -9,15 +9,15 @@
 
     @if (moduleCode == "qt")
     {
-        <section id="@Id("secMKT")" class="dept-section">
+        <section id="@Id("secFO")" class="dept-section">
             <div class="dept-header">
-                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_MKT_Form_Header")
+                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_FO_Form_Header")
             </div>
             <div class="dept-body">
-                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_MKT_Form")
+                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_FO_Form")
             </div>
             <div class="dept-header">
-                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_MKT_Form_Footer")
+                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_FO_Form_Footer")
             </div>
         </section>
 
@@ -71,15 +71,15 @@
     }
     else if (moduleCode == "pi")
     {
-        <section id="@Id("secMKT")" class="dept-section">
+        <section id="@Id("secFO")" class="dept-section">
             <div class="dept-header">
-                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_MKT_Form_Header")
+                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_FO_Form_Header")
             </div>
             <div class="dept-body">
-                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_MKT_Form")
+                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_FO_Form")
             </div>
             <div class="dept-header">
-                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_MKT_Form_Footer")
+                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_FO_Form_Footer")
             </div>
         </section>
 

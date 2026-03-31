@@ -5,8 +5,8 @@
     var moduleCode = (Model.ModuleCode ?? "").Trim().ToLower();
 
     var deptCodes = moduleCode == "qt"
-        ? new[] { "MKT", "TS", "UW", "LMKT", "PM" }
-        : new[] { "MKT", "TS", "PM" };
+        ? new[] { "FO", "TS", "UW", "LMKT", "PM" }
+        : new[] { "FO", "TS", "PM" };
 }
 
 <div id="@Id("deptTree")" class="dept-tree">

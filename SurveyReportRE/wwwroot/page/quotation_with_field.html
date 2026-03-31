@@ -395,7 +395,7 @@
               <div class="treeStack" id="treeStack">
                 <div class="vline" id="treeVLine"></div>
 
-                <div class="dept-node" data-key="MKT"  title="MKT">mkt</div>
+                <div class="dept-node" data-key="FO"  title="FO">FO</div>
                 <div class="dept-node" data-key="TS"   title="TS">ts</div>
                 <div class="dept-node" data-key="UW"   title="UW">uw</div>
                 <div class="dept-node" data-key="LMKT" title="Leader MKT">lm</div>
@@ -459,7 +459,7 @@
   <!-- Bottom action bar -->
   <div class="actionBar">
     <div class="actionLeft">
-      <span class="pill">Login role: <b id="loginRoleLabel">MKT</b></span>
+      <span class="pill">Login role: <b id="loginRoleLabel">FO</b></span>
       <span class="pill">RequestNo: <b id="reqNoLabel">-</b></span>
       <span class="pill">QuotationCode: <b id="quoCodeLabel">-</b></span>
     </div>
@@ -645,8 +645,8 @@
     amount: q.PremiumTotal || 0
   }));
 
-  const Roles = ["MKT","TS","UW","LMKT","PM"];
-  let currentUserRole = "MKT";
+  const Roles = ["FO","TS","UW","LMKT","PM"];
+  let currentUserRole = "FO";
   let searchText = "";
   let selectedId = quotes[0]?.id;
 
@@ -907,7 +907,7 @@
 
   function applyEditLock(){
     // demo rule: only edit when focusDept == currentUserRole
-    const roMKT  = !(currentUserRole === "MKT"  && focusDept === "MKT");
+    const roMKT  = !(currentUserRole === "FO"  && focusDept === "FO");
     const roTS   = !(currentUserRole === "TS"   && focusDept === "TS");
     const roUW   = !(currentUserRole === "UW"   && focusDept === "UW");
     const roLMKT = !(currentUserRole === "LMKT" && focusDept === "LMKT");

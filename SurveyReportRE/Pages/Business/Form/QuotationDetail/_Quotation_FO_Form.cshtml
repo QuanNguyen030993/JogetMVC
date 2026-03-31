@@ -1,11 +1,4 @@
-﻿@* @page "{pageNum:int?}"
-@using Newtonsoft.Json *@
-@* @model Quotation_MKT_FormModel *@
-@* @{
-   
-    ViewBag.Title = "Quotation";
-    ViewData["Id"] = 0;
-} *@
+﻿
 <style>
     .dx-tabpanel .dx-tabpanel-tabs .dx-tab {
         width: auto;
@@ -15,12 +8,12 @@
    
 
 </style>
-<div id="pi-formMKT">
+<div id="qt-formFO">
 </div>
 <script type="text/javascript">
 
 
-    $("#pi-formMKT").dxForm({
+    $("#qt-formFO").dxForm({
     items: [
 
          {itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
@@ -32,9 +25,9 @@
             setTimeout(function () {
                 var item = new Object();
                 item.editorType = "dxFileUploader";
-                item.moduleName = "pi"; item.sectionName = "MKT";
+                item.moduleName = "qt"; item.sectionName = "FO";
                 createEditor(item, itemElement, $("<div>"), null);
-                // loadAttachmentList("MKT");
+                // loadAttachmentList("FO");
                 }, 1000);
             }
             
