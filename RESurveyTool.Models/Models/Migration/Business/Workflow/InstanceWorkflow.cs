@@ -14,8 +14,8 @@ namespace ERPCore.Models.Migration.Business.Workflow
         public long? RuleNo {get;set;}
         public Guid WorkflowDefinitionId { get; set; }
         [MaxLength(100)]
-        public string RecordType { get; set; } = null!;     // Quotation / Policy / Survey
-        public Guid CurrentStepId { get; set; }
+        public string? RecordType { get; set; } = null!;     // Quotation / Policy / Survey
+        public Guid? CurrentStepId { get; set; }
         [MaxLength(50)]
         public string? CurrentOwnerRoleCode { get; set; }
         public Guid? CurrentOwnerUserId { get; set; }
@@ -25,9 +25,9 @@ namespace ERPCore.Models.Migration.Business.Workflow
         public Guid? LastToStepId { get; set; }
         public Guid? ReturnFromStepId { get; set; }
         public Guid? ResumeToStepId { get; set; }
-        public DateTime StartedDate { get; set; } = DateTime.UtcNow;
+        public DateTime? StartedDate { get; set; } = DateTime.UtcNow;
         public DateTime? CompletedDate { get; set; }
-        public bool IsCompleted { get; set; }
-        public bool IsCancelled { get; set; }
+        public bool? IsCompleted { get; set; }
+        public bool? IsCancelled { get; set; }
     }
 }

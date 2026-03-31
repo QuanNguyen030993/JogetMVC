@@ -557,15 +557,16 @@ Note:
 
         var commentPanelOpened = false;
         let stageDept = state.quotes[0]?.stageDept;
-        debugger
         let stageAccount = "";                 // status ring
         // let state.focusDept = _role == "IT" ? "MKT" : _role;        // focus ring
-        var nextStep = {};
            ajaxGet(`/api/Quotation/GetQuotationWorkflow/${selectedGuid}`, null)
                             .then(instance => {
+                                _nextStep.instanceWorkflow = instance;
                                   ajaxGet(`/api/StepsWorkflow/GetNextStep/${instance.workflowDefinitionId}/${instance.currentStep}`, null)
                             .then(data => {
-                                nextStep = data;
+                                _nextStep.flowSteps = data;
+                                
+                                _nextStep.currentStep = instance.currentStep;
                   });
             });
 
@@ -1191,163 +1192,163 @@ Note:
         // =========================
         // 8) Route overlay (fix bug getNextChoices + addPath append)
         // =========================
-        const ROUTE_GRAPH = {
-            MKT: [
-                { to: "TS", rule: "MKT_to_TS" },
-                { to: "UW", rule: "MKT_to_UW" },
-                { to: "LMKT", rule: "MKT_to_LMKT" },
-                { to: "PM", rule: "MKT_to_PM" },
-            ],
-            TS: [
-                { to: "UW", rule: "TS_to_UW" },
-                { to: "MKT", rule: "TS_to_MKT" },
-            ],
-            UW: [
-                { to: "LMKT", rule: "UW_to_LMKT" },
-                { to: "MKT", rule: "UW_to_MKT" },
-            ],
-            LMKT: [
-                { to: "PM", rule: "LMKT_to_PM" },
-                { to: "MKT", rule: "LMKT_to_MKT" },
-            ],
-            PM: []
-        };
+        // const ROUTE_GRAPH = {
+        //     MKT: [
+        //         { to: "TS", rule: "MKT_to_TS" },
+        //         { to: "UW", rule: "MKT_to_UW" },
+        //         { to: "LMKT", rule: "MKT_to_LMKT" },
+        //         { to: "PM", rule: "MKT_to_PM" },
+        //     ],
+        //     TS: [
+        //         { to: "UW", rule: "TS_to_UW" },
+        //         { to: "MKT", rule: "TS_to_MKT" },
+        //     ],
+        //     UW: [
+        //         { to: "LMKT", rule: "UW_to_LMKT" },
+        //         { to: "MKT", rule: "UW_to_MKT" },
+        //     ],
+        //     LMKT: [
+        //         { to: "PM", rule: "LMKT_to_PM" },
+        //         { to: "MKT", rule: "LMKT_to_MKT" },
+        //     ],
+        //     PM: []
+        // };
 
-        function buildFormState() {
-            return {
-                requiredDone: { MKT: false, TS: false, UW: true, LMKT: false, PM: false },
-                flags: {
-                    needTechnicalSurvey: false,
-                    needUnderwriting: false,
-                    needLeaderMarketing: true,
-                    needPolicyManager: true,
-                    hasBlockingErrors: true
-                }
-            };
-        }
+        // function buildFormState() {
+        //     return {
+        //         requiredDone: { MKT: false, TS: false, UW: true, LMKT: false, PM: false },
+        //         flags: {
+        //             needTechnicalSurvey: false,
+        //             needUnderwriting: false,
+        //             needLeaderMarketing: true,
+        //             needPolicyManager: true,
+        //             hasBlockingErrors: true
+        //         }
+        //     };
+        // }
 
-        const RULES = {
-            MKT_to_TS: (s) => s.flags.needTechnicalSurvey && s.requiredDone.MKT && !s.flags.hasBlockingErrors,
-            MKT_to_UW: (s) => s.flags.needUnderwriting && s.requiredDone.MKT && !s.flags.hasBlockingErrors,
-            MKT_to_LMKT: (s) => s.flags.needLeaderMarketing && s.requiredDone.MKT,
-            MKT_to_PM: (s) => s.flags.needPolicyManager && s.requiredDone.MKT,
+        // const RULES = {
+        //     MKT_to_TS: (s) => s.flags.needTechnicalSurvey && s.requiredDone.MKT && !s.flags.hasBlockingErrors,
+        //     MKT_to_UW: (s) => s.flags.needUnderwriting && s.requiredDone.MKT && !s.flags.hasBlockingErrors,
+        //     MKT_to_LMKT: (s) => s.flags.needLeaderMarketing && s.requiredDone.MKT,
+        //     MKT_to_PM: (s) => s.flags.needPolicyManager && s.requiredDone.MKT,
 
-            TS_to_UW: (s) => s.requiredDone.TS && s.flags.needUnderwriting,
-            TS_to_MKT: (s) => !s.requiredDone.TS,
+        //     TS_to_UW: (s) => s.requiredDone.TS && s.flags.needUnderwriting,
+        //     TS_to_MKT: (s) => !s.requiredDone.TS,
 
-            UW_to_LMKT: (s) => s.requiredDone.UW && s.flags.needLeaderMarketing,
-            UW_to_MKT: (s) => !s.requiredDone.UW,
+        //     UW_to_LMKT: (s) => s.requiredDone.UW && s.flags.needLeaderMarketing,
+        //     UW_to_MKT: (s) => !s.requiredDone.UW,
 
-            LMKT_to_PM: (s) => s.requiredDone.LMKT,
-            LMKT_to_MKT: (s) => !s.requiredDone.LMKT,
-        };
+        //     LMKT_to_PM: (s) => s.requiredDone.LMKT,
+        //     LMKT_to_MKT: (s) => !s.requiredDone.LMKT,
+        // };
 
-        function getNextChoices(currentDept, formState) {
-            const edges = ROUTE_GRAPH[currentDept] ?? [];
-            return edges
-                .filter(e => (RULES[e.rule]?.(formState) ?? true))
-                .map(e => e.to);
-        }
+        // function getNextChoices(currentDept, formState) {
+        //     const edges = ROUTE_GRAPH[currentDept] ?? [];
+        //     return edges
+        //         .filter(e => (RULES[e.rule]?.(formState) ?? true))
+        //         .map(e => e.to);
+        // }
 
-        function renderBranchOverlay(currentDept) {
-            const formState = buildFormState();
-            const choices = getNextChoices(currentDept, formState);
+        // function renderBranchOverlay(currentDept) {
+        //     const formState = buildFormState();
+        //     const choices = getNextChoices(currentDept, formState);
 
-            if (!choices.length) {
-                DevExpress.ui.notify("No valid route - please complete required fields", "warning", 1600);
-                return;
-            }
+        //     if (!choices.length) {
+        //         DevExpress.ui.notify("No valid route - please complete required fields", "warning", 1600);
+        //         return;
+        //     }
 
-            const $canvas = $("#branchOverlay .branchCanvas");
-            const $svg = $canvas.find("svg").first();
+        //     const $canvas = $("#branchOverlay .branchCanvas");
+        //     const $svg = $canvas.find("svg").first();
 
-            // clear
-            $svg.find("path").remove();
-            $canvas.find(".bnode").remove();
+        //     // clear
+        //     $svg.find("path").remove();
+        //     $canvas.find(".bnode").remove();
 
-            const nodeSize = 52;
-            const xRootNode = 14;
-            const xChoiceNode = 182;
+        //     const nodeSize = 52;
+        //     const xRootNode = 14;
+        //     const xChoiceNode = 182;
 
-            const xRootLine = 40;
-            const xJ = 110;
-            const xRightLine = 200;
+        //     const xRootLine = 40;
+        //     const xJ = 110;
+        //     const xRightLine = 200;
 
-            const canvasH = Math.max(140, choices.length * 70);
-            $canvas.css("height", canvasH + "px");
-            $svg.attr("viewBox", `0 0 260 ${canvasH}`);
+        //     const canvasH = Math.max(140, choices.length * 70);
+        //     $canvas.css("height", canvasH + "px");
+        //     $svg.attr("viewBox", `0 0 260 ${canvasH}`);
 
-            const yJ = canvasH / 2;
-            const rootTop = Math.round(yJ - nodeSize / 2);
+        //     const yJ = canvasH / 2;
+        //     const rootTop = Math.round(yJ - nodeSize / 2);
 
-            $canvas.append(
-                `<div class="bnode root current"
-                      style="left:${xRootNode}px; top:${rootTop}px;"
-                      title="Current role: ${currentDept}">
-                    ${currentDept}
-                 </div>`
-            );
+        //     $canvas.append(
+        //         `<div class="bnode root current"
+        //               style="left:${xRootNode}px; top:${rootTop}px;"
+        //               title="Current role: ${currentDept}">
+        //             ${currentDept}
+        //          </div>`
+        //     );
 
-            const topPad = 14;
-            const bottomPad = 14;
-            const yMin = topPad + nodeSize / 2;
-            const yMax = canvasH - bottomPad - nodeSize / 2;
+        //     const topPad = 14;
+        //     const bottomPad = 14;
+        //     const yMin = topPad + nodeSize / 2;
+        //     const yMax = canvasH - bottomPad - nodeSize / 2;
 
-            let ys;
-            if (choices.length === 1) ys = [yJ];
-            else if (choices.length === 2) ys = [yJ - 30, yJ + 30];
-            else ys = choices.map((_, i) => yMin + i * ((yMax - yMin) / (choices.length - 1)));
+        //     let ys;
+        //     if (choices.length === 1) ys = [yJ];
+        //     else if (choices.length === 2) ys = [yJ - 30, yJ + 30];
+        //     else ys = choices.map((_, i) => yMin + i * ((yMax - yMin) / (choices.length - 1)));
 
-            const addPath = (d) => $svg.append(`<path d="${d}" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />`);
+        //     const addPath = (d) => $svg.append(`<path d="${d}" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />`);
 
-            if (choices.length === 1) {
-                addPath(`M${xRootLine} ${yJ} L${xRightLine} ${yJ}`);
-            } else {
-                addPath(`M${xRootLine} ${yJ} L${xJ} ${yJ}`);
-                addPath(`M${xJ} ${ys[0]} L${xJ} ${ys[ys.length - 1]}`);
-                ys.forEach(y => addPath(`M${xJ} ${y} L${xRightLine} ${y}`));
-            }
+        //     if (choices.length === 1) {
+        //         addPath(`M${xRootLine} ${yJ} L${xRightLine} ${yJ}`);
+        //     } else {
+        //         addPath(`M${xRootLine} ${yJ} L${xJ} ${yJ}`);
+        //         addPath(`M${xJ} ${ys[0]} L${xJ} ${ys[ys.length - 1]}`);
+        //         ys.forEach(y => addPath(`M${xJ} ${y} L${xRightLine} ${y}`));
+        //     }
 
-            choices.forEach((dept, i) => {
-                const yChoice = ys[i];
-                const top = Math.round(yChoice - nodeSize / 2);
-                const id = `route_${dept}`;
+        //     choices.forEach((dept, i) => {
+        //         const yChoice = ys[i];
+        //         const top = Math.round(yChoice - nodeSize / 2);
+        //         const id = `route_${dept}`;
 
-                $canvas.append(
-                    `<div id="${id}" class="bnode choice" style="left:${xChoiceNode}px; top:${top}px;" title="Route to ${dept}">${dept}</div>`
-                );
+        //         $canvas.append(
+        //             `<div id="${id}" class="bnode choice" style="left:${xChoiceNode}px; top:${top}px;" title="Route to ${dept}">${dept}</div>`
+        //         );
 
-                $(`#${id}`).off("click").on("click", () => routeTo(dept));
-            });
-        }
+        //         $(`#${id}`).off("click").on("click", () => routeTo(dept));
+        //     });
+        // }
 
-        function openBranchOverlay() {
-            const currentDept = stageDept || state.focusDept || "MKT";
-            renderBranchOverlay(currentDept);
-            $("#branchOverlay").show();
-        }
+        // function openBranchOverlay() {
+        //     const currentDept = stageDept || state.focusDept || "MKT";
+        //     renderBranchOverlay(currentDept);
+        //     $("#branchOverlay").show();
+        // }
 
         function closeBranchOverlay() {
             $("#branchOverlay").hide();
             $("#branchOverlay .bnode.choice").removeClass("active");
         }
 
-        function routeTo(dept) {
-            $("#branchOverlay .bnode.choice").removeClass("active");
-            $(`#route_${dept}`).addClass("active");
+        // function routeTo(dept) {
+        //     $("#branchOverlay .bnode.choice").removeClass("active");
+        //     $(`#route_${dept}`).addClass("active");
 
-            state.focusDept = dept;
-            applyNodeHighlights();
-            applySectionFocusHighlight();
-            applyEditLock();
-            updateHints();
-            scrollToDept(formModuleKeyQt,state.focusDept);
+        //     state.focusDept = dept;
+        //     applyNodeHighlights();
+        //     applySectionFocusHighlight();
+        //     applyEditLock();
+        //     updateHints();
+        //     scrollToDept(formModuleKeyQt,state.focusDept);
 
-            // popup remark (giữ code bạn, chỉ không đụng tới vì bạn đang dùng nhiều helper)
-            DevExpress.ui.notify(`Mock submit routed to ${dept}`, "success", 1200);
+        //     // popup remark (giữ code bạn, chỉ không đụng tới vì bạn đang dùng nhiều helper)
+        //     DevExpress.ui.notify(`Mock submit routed to ${dept}`, "success", 1200);
 
-            setTimeout(closeBranchOverlay, 350);
-        }
+        //     setTimeout(closeBranchOverlay, 350);
+        // }
 
         // =========================
         // 9) PIC callouts

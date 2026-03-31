@@ -3731,7 +3731,7 @@ function convertKeysToLowerFirstChar(obj) {
 }
 function convertToTitleCase(str) {
     if (!str) return ""; // Kiểm tra nếu chuỗi rỗng
-
+    console.log(str);
     return str
         .toLowerCase() // Chuyển toàn bộ chuỗi về chữ thường
         .split(" ")    // Tách chuỗi thành mảng các từ
@@ -7508,7 +7508,7 @@ function initDepartmentAssignees(moduleKey) {
             onChanged: function (item, editor) {
             }
         });
-    }, 1000);
+    }, 3000);
 
 }
 
@@ -7669,8 +7669,24 @@ function renderBranchOverlay(currentDept) {
     });
 }
 
-function openBranchOverlay() {
-    const currentDept = stageDept || focusDept || "MKT";
+
+function submitNextStep(dept, _nextStep, findRoute, formItems) {
+    var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
+    var sendData = new Object();
+    sendData.InstanceWorkflow = convertKeysToUpperFirstChar(_nextStep.instanceWorkflow);
+    sendData.StepsWorkflow = convertKeysToUpperFirstChar(findRoute);
+    sendData.QuotationId = formItems.id;
+    ajaxPost('/api/InstanceWorkflow/SubmitNextStep', sendData, {
+        onSuccess: function (response) {
+        },
+        onError: function (err) {
+        }
+    });
+}
+
+
+function openBranchOverlay(currentDept) {
+    //const currentDept = stageDept || focusDept || "MKT";
     renderBranchOverlay(currentDept);
     $("#branchOverlay").show();
 }

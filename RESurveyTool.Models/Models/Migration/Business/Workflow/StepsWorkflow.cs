@@ -9,10 +9,10 @@ namespace ERPCore.Models.Migration.Business.Workflow
     {
         public Guid WorkflowDefinitionId { get; set; }
         [MaxLength(100)]
-        public string StepCode { get; set; } = null!;   // FO_REVIEW_AND_ROUTE
+        public string? StepCode { get; set; } = null!;   // FO_REVIEW_AND_ROUTE
 
         [MaxLength(255)]
-        public string StepName { get; set; } = null!;
+        public string? StepName { get; set; } = null!;
 
         public long? StepType { get; set; } 
 
@@ -24,13 +24,13 @@ namespace ERPCore.Models.Migration.Business.Workflow
 
         public int? SortOrder { get; set; }
 
-        public bool IsStart { get; set; }
-        public bool IsEnd { get; set; }
-        public bool IsActive { get; set; } = true;
-
-        public bool CanEdit { get; set; }
-        public bool CanComment { get; set; } = true;
-        public bool CanUpload { get; set; }
+        public bool? IsStart { get; set; }
+        public bool? IsEnd { get; set; }
+        public bool? IsActive { get; set; } = true;
+         
+        public bool? CanEdit { get; set; }
+        public bool? CanComment { get; set; } = true;
+        public bool? CanUpload { get; set; }
 
         [MaxLength(255)]
         public string? DisplayStatus { get; set; }
@@ -43,7 +43,7 @@ namespace ERPCore.Models.Migration.Business.Workflow
         [MaxLength(100)]
         public string? FlowType { get; set; }
 
-        public bool AllowLoop { get; set; }
+        public bool? AllowLoop { get; set; }
 
         [MaxLength(100)]
         public string? LoopGroup { get; set; }

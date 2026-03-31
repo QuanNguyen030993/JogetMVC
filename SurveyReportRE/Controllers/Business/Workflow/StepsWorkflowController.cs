@@ -30,7 +30,7 @@ public class StepsWorkflowController : BaseControllerApi<StepsWorkflow>
             List<StepsWorkflow> stepsWorkflow = new List<StepsWorkflow>();
             stepsWorkflow = await _BaseRepository.GetListObject(l => l.WorkflowDefinitionId == flowGuid);
             if (currentStepNo < stepsWorkflow.Count)
-            stepsWorkflow = stepsWorkflow.Skip((int)currentStepNo - 1).Take((int)currentStepNo).ToList();
+            stepsWorkflow = stepsWorkflow.Skip((int)currentStepNo - 2).Take(3).ToList();
         return Ok(stepsWorkflow);
     }
 }

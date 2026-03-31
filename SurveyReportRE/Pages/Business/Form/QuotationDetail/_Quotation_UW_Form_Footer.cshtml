@@ -15,10 +15,27 @@
 </div>
 
 <script>
-     setTimeout( () => {
      var dept = "@dept";
-      $("#qt-btnSubmitBranch_@dept").dxButton({ text: "Route To", icon: "check", type: "info", onClick: openBranchOverlay });
-     $("#qt-btnSave_@dept").dxButton({ text: "Save", icon: "save", type: "default", onClick:
+     setTimeout( () => {
+    var findRoute = _nextStep.flowSteps.find(f => f.fromNodeId == dept && f.stepNo == _nextStep.currentStep); 
+    $("#qt-btnSubmitBranch_@dept").dxButton({ text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", 
+    onClick: function (e) {
+        var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
+        submitNextStep("@dept", _nextStep, findRoute, formItems);
+        //  var sendData = new Object();
+        // sendData.InstanceWorkflow = convertKeysToUpperFirstChar(_nextStep.instanceWorkflow);
+        // sendData.StepsWorkflow = convertKeysToUpperFirstChar(findRoute);
+        // sendData.QuotationId = formItems.id;
+        // ajaxPost('/api/InstanceWorkflow/SubmitNextStep', sendData, {
+        //     onSuccess: function (response) {
+        //     },
+        //     onError: function (err) {
+        //     }
+        // });
+    }
+
+    });
+    $("#qt-btnSave_@dept").dxButton({ text: "Save", icon: "save", type: "default", onClick:
          function (e) {
                var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
                var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
@@ -52,5 +69,5 @@
          );
          }
      });
-     }, 500);
+     }, _delayRenderSubmitButton);
 </script>

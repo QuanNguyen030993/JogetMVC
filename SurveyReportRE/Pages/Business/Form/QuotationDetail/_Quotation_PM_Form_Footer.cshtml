@@ -16,8 +16,8 @@
 
 <script>
      setTimeout( () => {
-     var depst = "@dept";
-      $("#qt-btnSubmitBranch_@dept").dxButton({ text: "Route To", icon: "check", type: "info", onClick: openBranchOverlay });
+     var dept = "@dept";
+      var findRoute = _nextStep.flowSteps.find(f => f.fromNodeId == dept); $("#qt-btnSubmitBranch_@dept").dxButton({ text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick: openBranchOverlay });
      $("#qt-btnSave_@dept").dxButton({ text: "Save", icon: "save", type: "default", onClick:
          function (e) {
                var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
@@ -52,5 +52,5 @@
          );
          }
      });
-     }, 500);
+     }, _delayRenderSubmitButton);
 </script>

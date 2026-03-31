@@ -129,6 +129,10 @@
     const _delaySequenceQuery = 500;
     const _rightWindowPadding = 45;
     const _widthMenuWidth = 197;
+    var _nextStep = new Object();
+    _nextStep.flowSteps = [];
+    _nextStep.currentStep = 1;
+    _nextStep.instanceWorkflow = new Object();
     // const _reduceDataGridMaxOverFlow  = 300;
     var _menus = [];
     var _isAllowDraft = 0;
@@ -220,5 +224,8 @@
     //     const h = window.innerHeight;
     //     _windowWidth = w;
     // }); // Zoom event handle
+    //Delay config 
+    var _delayRenderSubmitButton = 3000;
+    var _delayLoadDataSubmitButton = 3000;
 </script>
 <script src="~/js/defined/signalR.js"></script>

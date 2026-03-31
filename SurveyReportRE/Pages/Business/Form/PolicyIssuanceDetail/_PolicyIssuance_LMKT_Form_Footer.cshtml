@@ -17,7 +17,7 @@
 <script>
      setTimeout( () => {
      var dept = "@dept";
-      $("#pi-btnSubmitBranch_@dept").dxButton({ text: "Route To", icon: "check", type: "info", onClick: openBranchOverlay });
+      var findRoute = _nextStep.find(f => f.fromNodeId == dept); $("#pi-btnSubmitBranch_@dept").dxButton({ text: findRoute.displayStatus, icon: "check", type: "info", onClick: openBranchOverlay });
      $("#pi-btnSave_@dept").dxButton({ text: "Save", icon: "save", type: "default", onClick:
          function (e) {
                var formItems = $(`#pi-form${dept}`).dxForm("instance")?.option("formData") || {};
@@ -52,5 +52,5 @@
          );
          }
      });
-     }, 500);
+     }, _delayRenderSubmitButton);
 </script> *@
