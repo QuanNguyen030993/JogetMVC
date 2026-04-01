@@ -43,20 +43,20 @@
     }
 
     /*    .card {
-                background: #fff;
-                border: 1px solid #e5e7eb;
-                border-radius: 14px;
-                box-shadow: 0 8px 24px rgba(0,0,0,.06);
-                overflow: hidden;
-                display: flex;
-                flex-direction: column;
-                min-height: 0;
-            }
+                    background: #fff;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 14px;
+                    box-shadow: 0 8px 24px rgba(0,0,0,.06);
+                    overflow: hidden;
+                    display: flex;
+                    flex-direction: column;
+                    min-height: 0;
+                }
 
-            .card-header {
-                padding: 14px 16px;
-                border-bottom: 1px solid #edf0f5;
-            } */
+                .card-header {
+                    padding: 14px 16px;
+                    border-bottom: 1px solid #edf0f5;
+                } */
 
     .card-title {
         font-size: 16px;
@@ -350,8 +350,8 @@
     }
 </style>
 <body>
-        <div class="title">Workflow Designer</div>
-    <div id="form_@(WorkflowDefinitionDraw_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])" class="dExForm"></div>
+    <div class="title">Workflow Designer</div>
+    <div id="form_@(WorkflowDefinitionDraw_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])" class="dExForm_@Convert.ToInt32(ViewData["Id"])"></div>
     <div class="page">
         <div class="sub">
         </div>
@@ -369,7 +369,7 @@
                             <div class="name">Department</div>
                             <div class="desc">Ví dụ FO / TS / UW / LMKT / PM</div>
                         </div>
-                       @*  <div class="tool-item" draggable="true" data-type="actor" data-text="New Actor">
+                        @*  <div class="tool-item" draggable="true" data-type="actor" data-text="New Actor">
                             <div class="name">Actor</div>
                             <div class="desc">Ví dụ Client / External / Approver</div>
                         </div>
@@ -385,13 +385,13 @@
 
                     <div class="section-title">Load Sample</div>
                     <div class="mini-row">
-                        <div id="btnSampleQuotation"></div>
-                        <div id="btnSamplePolicy"></div>
-                        @* <div id="btnSampleLoop"></div> *@
+                        <div id="btnSampleQuotation_@Convert.ToInt32(ViewData["Id"])"></div>
+                        <div id="btnSamplePolicy_@Convert.ToInt32(ViewData["Id"])"></div>
+                        @* <div id="btnSampleLoop_@Convert.ToInt32(ViewData["Id"])"></div> *@
                     </div>
                     <div>
                         <div class="section-title">Payload Preview</div>
-                        <div id="payloadBox" class="json-box"></div>
+                        <div id="payloadBox" class="json-box_@Convert.ToInt32(ViewData["Id"])"></div>
                     </div>
                     @* <div class="section-title">Legend</div> 
                     <div class="legend-box">
@@ -433,18 +433,18 @@
                 </div>
                 <div class="card-body">
                     <div class="section-title">Workflow Header</div>
-                    <div id="workflowForm"></div>
+                    <div id="workflowForm_@Convert.ToInt32(ViewData["Id"])"></div>
 
                     <div class="toolbar" style="margin-top:12px;">
-                        <div id="btnAddRoot"></div>
-                        <div id="btnAddChild"></div>
-                        @* <div id="btnRename"></div> *@
-                        <div id="btnDelete"></div>
-                        <div id="btnExpand"></div>
-                        <div id="btnCollapse"></div>
+                        <div id="btnAddRoot_@Convert.ToInt32(ViewData["Id"])"></div>
+                        <div id="btnAddChild_@Convert.ToInt32(ViewData["Id"])"></div>
+                        @* <div id="btnRename_@Convert.ToInt32(ViewData["Id"])"></div> *@
+                        <div id="btnDelete_@Convert.ToInt32(ViewData["Id"])"></div>
+                        <div id="btnExpand_@Convert.ToInt32(ViewData["Id"])"></div>
+                        <div id="btnCollapse_@Convert.ToInt32(ViewData["Id"])"></div>
                     </div>
 
-                    <div id="treeWorkflow"></div>
+                    <div id="treeWorkflow_@Convert.ToInt32(ViewData["Id"])"></div>
                 </div>
             </div>
 
@@ -455,20 +455,20 @@
                     <div class="card-sub">Change node properties</div>
                 </div>
                 <div class="card-body">
-                    <div id="nodeForm"></div>
+                    <div id="nodeForm_@Convert.ToInt32(ViewData["Id"])"></div>
 
                     <div class="section-title">Node JSON Raw</div>
-                    <textarea id="nodeJsonEditor" class="node-json-editor" placeholder="Select node to edit raw JSON..."></textarea>
+                    <textarea id="nodeJsonEditor" class="node-json-editor" placeholder="Select node to edit raw JSON..._@Convert.ToInt32(ViewData["Id"])"></textarea>
 
                     <div class="mini-row">
-                        <div id="btnRefreshNodeJson"></div>
-                        <div id="btnApplyNodeJson"></div>
-                        <div id="btnApplyNodeForm"></div>
-                        <div id="btnCreateflow"></div>
+                        <div id="btnRefreshNodeJson_@Convert.ToInt32(ViewData["Id"])"></div>
+                        <div id="btnApplyNodeJson_@Convert.ToInt32(ViewData["Id"])"></div>
+                        <div id="btnApplyNodeForm_@Convert.ToInt32(ViewData["Id"])"></div>
+                        <div id="btnCreateflow_@Convert.ToInt32(ViewData["Id"])"></div>
                     </div>
                 </div>
             </div>
-        </div> 
+        </div>
         <div class="page">
             <!-- TRANSITION + PAYLOAD -->
             <div class="card card-last" style="width: 1200px;">
@@ -480,24 +480,24 @@
                     <div style="display:grid;grid-template-columns:420px 1fr;gap:14px;">
                         <div>
                             <div class="section-title">Transition Editor</div>
-                            <div id="transitionForm"></div>
+                            <div id="transitionForm_@Convert.ToInt32(ViewData["Id"])"></div>
                             <div class="mini-row" style="margin-top:10px;">
-                                <div id="btnAddTransition"></div>
-                                <div id="btnResetTransitionForm"></div>
+                                <div id="btnAddTransition_@Convert.ToInt32(ViewData["Id"])"></div>
+                                <div id="btnResetTransitionForm_@Convert.ToInt32(ViewData["Id"])"></div>
                             </div>
                         </div>
 
                         <!--  <div>
                              <div class="section-title">Transition Preview</div>
-                             <div id="transitionPreview" class="transition-list"></div>
+                             <div id="transitionPreview" class="transition-list_@Convert.ToInt32(ViewData["Id"])"></div>
                          </div> -->
 
-                   
+
                     </div>
 
                     <div class="section-title">Flat Node Preview</div>
-                    <div id="nodeGrid"></div>
-                    <div id="transitionGrid"></div>
+                    <div id="nodeGrid_@Convert.ToInt32(ViewData["Id"])"></div>
+                    <div id="transitionGrid_@Convert.ToInt32(ViewData["Id"])"></div>
                 </div>
             </div>
         </div>
@@ -598,7 +598,7 @@
 
 
         function initWorkflowForm() {
-            $("#workflowForm").dxForm({
+            $("#workflowForm_@Convert.ToInt32(ViewData["Id"])").dxForm({
                 formData: workflowHeader,
                 labelLocation: "top",
                 colCount: 2,
@@ -645,7 +645,7 @@
         }
 
         function initNodeForm() {
-            $("#nodeForm").dxForm({
+            $("#nodeForm_@Convert.ToInt32(ViewData["Id"])").dxForm({
                 formData: {},
                 labelLocation: "top",
                 colCount: 2,
@@ -710,7 +710,7 @@
         }
 
         function initTransitionForm() {
-            $("#transitionForm").dxForm({
+            $("#transitionForm_@Convert.ToInt32(ViewData["Id"])").dxForm({
                 formData: getEmptyTransition(),
                 labelLocation: "top",
                 colCount: 2,
@@ -806,7 +806,7 @@
         }
 
         function initButtons() {
-            $("#btnAddRoot").dxButton({
+            $("#btnAddRoot_@Convert.ToInt32(ViewData["Id"])").dxButton({
                 text: "Add Root",
                 icon: "add",
                 onClick: function () {
@@ -814,7 +814,7 @@
                 }
             });
 
-            $("#btnAddChild").dxButton({
+            $("#btnAddChild_@Convert.ToInt32(ViewData["Id"])").dxButton({
                 text: "Add Child",
                 icon: "plus",
                 onClick: function () {
@@ -823,22 +823,22 @@
                 }
             });
 
-            // $("#btnRename").dxButton({
+            // $("#btnRename_@Convert.ToInt32(ViewData["Id"])").dxButton({
             //     text: "Rename",
             //     icon: "edit",
             //     onClick: function () {
-            //         var tree = $("#treeWorkflow").jstree(true);
+            //         var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
             //         if (!selectedNodeId) return notify("Please select node first", "warning");
             //         tree.edit(selectedNodeId);
             //     }
             // });
 
-            $("#btnDelete").dxButton({
+            $("#btnDelete_@Convert.ToInt32(ViewData["Id"])").dxButton({
                 text: "Delete",
                 icon: "trash",
                 type: "danger",
                 onClick: function () {
-                    var tree = $("#treeWorkflow").jstree(true);
+                    var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
                     if (!selectedNodeId) return notify("Please select node first", "warning");
 
                     DevExpress.ui.dialog.confirm("Delete selected node and all children?", "Confirm")
@@ -856,7 +856,7 @@
 
                             selectedNodeId = null;
                             nodeFormInstance.option("formData", {});
-                            $("#nodeJsonEditor").val("");
+                            $("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val("");
 
                             syncTreeDataFromJsTree();
                             renderTransitionPreview();
@@ -865,56 +865,56 @@
                 }
             });
 
-            $("#btnExpand").dxButton({
+            $("#btnExpand_@Convert.ToInt32(ViewData["Id"])").dxButton({
                 text: "Expand All",
                 icon: "chevrondown",
                 onClick: function () {
-                    $("#treeWorkflow").jstree(true).open_all();
+                    $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true).open_all();
                 }
             });
 
-            $("#btnCollapse").dxButton({
+            $("#btnCollapse_@Convert.ToInt32(ViewData["Id"])").dxButton({
                 text: "Collapse All",
                 icon: "chevronup",
                 onClick: function () {
-                    $("#treeWorkflow").jstree(true).close_all();
+                    $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true).close_all();
                 }
             });
 
-            $("#btnApplyNodeForm").dxButton({
+            $("#btnApplyNodeForm_@Convert.ToInt32(ViewData["Id"])").dxButton({
                 text: "Apply To Payload",
                 type: "success",
                 icon: "save",
                 onClick: function () {applyFormToSelectedNode();}
             });
 
-            $("#btnCreateflow").dxButton({
+            $("#btnCreateflow_@Convert.ToInt32(ViewData["Id"])").dxButton({
                 text: _id == 0 ? "Create Flow" : "Save Flow",
                 type: "success",
                 icon: "save",
                 onClick: function () { saveFlow(); }
             });
 
-            $("#btnApplyNodeJson").dxButton({
+            $("#btnApplyNodeJson_@Convert.ToInt32(ViewData["Id"])").dxButton({
                 text: "Apply JSON",
                 icon: "codeblock",
                 onClick: function () {applyJsonToSelectedNode();}
             });
 
-            $("#btnRefreshNodeJson").dxButton({
+            $("#btnRefreshNodeJson_@Convert.ToInt32(ViewData["Id"])").dxButton({
                 text: "Refresh JSON",
                 icon: "refresh",
                 onClick: refreshNodeJson
             });
 
-            $("#btnAddTransition").dxButton({
+            $("#btnAddTransition_@Convert.ToInt32(ViewData["Id"])").dxButton({
                 text: "Add Transition",
                 type: "default",
                 icon: "arrowright",
                 onClick: addTransition
             });
 
-            $("#btnResetTransitionForm").dxButton({
+            $("#btnResetTransitionForm_@Convert.ToInt32(ViewData["Id"])").dxButton({
                 text: "Reset Transition Form",
                 icon: "refresh",
                 onClick: function () {
@@ -922,28 +922,28 @@
                 }
             });
 
-            $("#btnSampleQuotation").dxButton({
+            $("#btnSampleQuotation_@Convert.ToInt32(ViewData["Id"])").dxButton({
                 text: "Sample Quotation",
                 onClick: loadSampleQuotation
             });
 
-            $("#btnSamplePolicy").dxButton({
+            $("#btnSamplePolicy_@Convert.ToInt32(ViewData["Id"])").dxButton({
                 text: "Sample Policy",
                 onClick: loadSamplePolicy
             });
 
-            // $("#btnSampleLoop").dxButton({
+            // $("#btnSampleLoop_@Convert.ToInt32(ViewData["Id"])").dxButton({
             //     text: "Sample Loop",
             //     onClick: loadSampleLoop
             // });
         }
 
         function initTree() {
-            if ($("#treeWorkflow").jstree(true)) {
-                $("#treeWorkflow").jstree(true).destroy();
+            if ($("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true)) {
+                $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true).destroy();
             }
 
-            $("#treeWorkflow")
+            $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])")
                 .off("changed.jstree")
                 .off("dblclick.jstree")
                 .on("changed.jstree", function (e, data) {
@@ -953,7 +953,7 @@
                     bindNodeToEditors(node);
                 })
                 .on("dblclick.jstree", ".jstree-anchor", function () {
-                    var tree = $("#treeWorkflow").jstree(true);
+                    var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
                     var nodeId = $(this).closest("li").attr("id");
                     if (nodeId) tree.edit(nodeId);
                 })
@@ -970,7 +970,7 @@
                 });
 
             setTimeout(function () {
-                var tree = $("#treeWorkflow").jstree(true);
+                var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
                 tree.open_all();
                 if (workflowTreeData.length) tree.select_node(workflowTreeData[0].id);
                 initDropZoneForTree();
@@ -1003,7 +1003,7 @@
         }
 
         function initDropZoneForTree() {
-            var treeContainer = document.getElementById("treeWorkflow");
+            var treeContainer = document.getElementById("treeWorkflow_@(Convert.ToInt32(ViewData["Id"]))");
 
             treeContainer.addEventListener("dragover", function (e) {
                 e.preventDefault();
@@ -1034,7 +1034,7 @@
         }
 
         function createNodeFromTool(tool, parentId) {
-            var tree = $("#treeWorkflow").jstree(true);
+            var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
             var newId = generateNodeId();
             var parentNode = parentId === "#" ? null : tree.get_node(parentId);
 
@@ -1087,7 +1087,7 @@
             };
 
             nodeFormInstance.option("formData", formData);
-            $("#nodeJsonEditor").val(JSON.stringify(formData, null, 2));
+            $("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val(JSON.stringify(formData, null, 2));
 
             var tf = transitionFormInstance.option("formData") || {};
             if (!tf.fromNodeId) {
@@ -1144,9 +1144,8 @@
 
 
         function applyFormToSelectedNode() {
-            debugger
-            var tree = $("#treeWorkflow").jstree(true);
-            var json = JSON.parse($("#nodeJsonEditor").val() || "{}");
+            var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
+            var json = JSON.parse($("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val() || "{}");
                 var node = tree.get_node(selectedNodeId);
                 if (!node) return;
 
@@ -1172,10 +1171,10 @@
 
 
 
-             tree = $("#treeWorkflow").jstree(true);
+             tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
             if (!selectedNodeId) return notify("Please select node first", "warning");
 
-            var fd = JSON.parse($("#nodeJsonEditor").val() || "{}");
+            var fd = JSON.parse($("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val() || "{}");
             var node = tree.get_node(selectedNodeId);
             if (!node) return;
 
@@ -1197,18 +1196,18 @@
             });
 
             tree.rename_node(node, newHtml);
-            syncTreeDataFromJsTree(fd.text || extractPlainTextFromNode(selectedNodeId),JSON.parse($("#nodeJsonEditor").val()) );
+            syncTreeDataFromJsTree(fd.text || extractPlainTextFromNode(selectedNodeId),JSON.parse($("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val()) );
             notify("Node updated", "success");
         }
 
         function applyJsonToSelectedNode() {
-            var tree = $("#treeWorkflow").jstree(true);
+            var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
             if (!selectedNodeId) return notify("Please select node first", "warning");
 
             try {
 
-                
-                // var json = JSON.parse($("#nodeJsonEditor").val() || "{}");
+
+                // var json = JSON.parse($("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val() || "{}");
                 // var node = tree.get_node(selectedNodeId);
                 // if (!node) return;
 
@@ -1232,7 +1231,7 @@
 
                 // syncTreeDataFromJsTree(plainText);
                 var formData = JSON.stringify(nodeFormInstance.option("formData"));
-                $("#nodeJsonEditor").val(JSON.stringify(nodeFormInstance.option("formData")));
+                $("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val(JSON.stringify(nodeFormInstance.option("formData")));
                 notify("Node JSON applied", "success");
             } catch (err) {
                 notify("Invalid JSON", "error");
@@ -1240,7 +1239,7 @@
         }
 
         function refreshNodeJson() {
-            var tree = $("#treeWorkflow").jstree(true);
+            var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
             if (!selectedNodeId) return notify("Please select node first", "warning");
             var node = tree.get_node(selectedNodeId);
             bindNodeToEditors(node);
@@ -1281,7 +1280,7 @@
         }
 
         function renderTransitionPreview() {
-            var $box = $("#transitionPreview");
+            var $box = $("#transitionPreview_@Convert.ToInt32(ViewData["Id"])");
             $box.empty();
 
             if (!transitions.length) {
@@ -1334,7 +1333,7 @@
         };
 
         function initGrid() {
-            $("#nodeGrid").dxDataGrid({
+            $("#nodeGrid_@Convert.ToInt32(ViewData["Id"])").dxDataGrid({
                 dataSource: workflowTreeData,
                 keyExpr: "id",
                 showBorders: true,
@@ -1365,7 +1364,7 @@
                 nodeGridInstance.option("dataSource", workflowTreeData);
             }
         }
-         
+
 
                 function buildPayloadPreview() {
             syncWorkflowHeader();
@@ -1409,7 +1408,7 @@
                 }))
             };
 
-            $("#payloadBox").text(JSON.stringify(payload, null, 2));
+            $("#payloadBox_@Convert.ToInt32(ViewData["Id"])").text(JSON.stringify(payload, null, 2));
 
             refreshGrid();
         }
@@ -1454,12 +1453,11 @@
 
 
                 function syncTreeDataFromJsTree(overrideTextForSelected, newObject) {
-            var tree = $("#treeWorkflow").jstree(true);
+            var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
             var oldData = workflowTreeData || [];
             var flat = tree.get_json("#", { flat: true });
 
             workflowTreeData = flat.map((x, index) => {
-                debugger
                 var oldNode = oldData.find(n => n.id === x.id) || {};
                 var plainText = extractTextFromHtml(x.text);
 
@@ -1509,7 +1507,7 @@
             if (selectedNodeId) {
                 var cur = workflowTreeData.find(x => x.id === selectedNodeId);
                 if (cur) {
-                    $("#nodeJsonEditor").val(JSON.stringify({
+                    $("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val(JSON.stringify({
                         id: cur.id,
                         parent: cur.parent === "#" ? null : cur.parent,
                         text: cur.text,
@@ -1607,7 +1605,7 @@
             if (workflowFormInstance) workflowFormInstance.option("formData", workflowHeader);
             if (nodeFormInstance) nodeFormInstance.option("formData", {});
             if (transitionFormInstance) transitionFormInstance.option("formData", getEmptyTransition(""));
-            $("#nodeJsonEditor").val("");
+            $("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val("");
             initTree();
             refreshTransitionNodeLookup();
             renderTransitionPreview();
@@ -1635,7 +1633,7 @@
         }
 
         function getNextOrderNo(parentId) {
-            var tree = $("#treeWorkflow").jstree(true);
+            var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
             if (!tree) return 1;
 
             if (parentId === "#") {
@@ -1683,8 +1681,8 @@
         //         }
 
                 function initTransitionGrid() {
-                    
-            $("#transitionGrid").dxDataGrid({
+
+            $("#transitionGrid_@Convert.ToInt32(ViewData["Id"])").dxDataGrid({
                 dataSource: transitions,
                 keyExpr: function (row, index) {
                     return `${row.fromNodeId}_${row.toNodeId}_${row.actionCode}_${index}`;
@@ -1789,7 +1787,7 @@
                 function refreshTransitionGrid() {
 
 
-                    hydrateStateFromPayload($("#payloadBox").text());
+                    hydrateStateFromPayload($("#payloadBox_@Convert.ToInt32(ViewData["Id"])").text());
             if (transitionGridInstance) {
                 transitionGridInstance.option("dataSource", [...transitions]);
                 transitionGridInstance.refresh();
@@ -1807,12 +1805,12 @@
         }
 
         function getPayloadBoxObject() {
-            var raw = ($("#payloadBox").text() || "").trim();
+            var raw = ($("#payloadBox_@Convert.ToInt32(ViewData["Id"])").text() || "").trim();
             return safeParseJson(raw, null);
         }
 
         function setPayloadBoxObject(obj) {
-            $("#payloadBox").text(JSON.stringify(obj, null, 2));
+            $("#payloadBox_@Convert.ToInt32(ViewData["Id"])").text(JSON.stringify(obj, null, 2));
         }
 
         function buildPayloadObjectFromState() {
@@ -1957,7 +1955,7 @@
 
             return d.promise();
         }
-            
+
         function syncPayloadBoxFromCurrentState() {
             if (!payloadInitialized) return;
 
@@ -1976,8 +1974,8 @@
             initWorkflowForm();
             initNodeForm();
             initTransitionForm();
-           
-            
+
+
             initButtons();
             initTree();
             initToolboxDrag();
