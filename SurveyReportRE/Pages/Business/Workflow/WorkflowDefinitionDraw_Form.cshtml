@@ -6,101 +6,101 @@
 }
 
 
-    <style>
-        :root {
-            --bg: #f4f7fb;
-            --panel: #ffffff;
-            --border: #dbe2ea;
-            --text: #243447;
-            --muted: #6b7c93;
-            --quotation: #2563eb;
-            --policy: #16a34a;
-            --both: #7c3aed;
-            --return: #ef4444;
-            --loop: #f59e0b;
-            --active: #f59e0b;
-            --done: #10b981;
-            --pending: #94a3b8;
-        }
+<style>
+    :root {
+        --bg: #f4f7fb;
+        --panel: #ffffff;
+        --border: #dbe2ea;
+        --text: #243447;
+        --muted: #6b7c93;
+        --quotation: #2563eb;
+        --policy: #16a34a;
+        --both: #7c3aed;
+        --return: #ef4444;
+        --loop: #f59e0b;
+        --active: #f59e0b;
+        --done: #10b981;
+        --pending: #94a3b8;
+    }
 
-        * {
-            box-sizing: border-box
-        }
+    * {
+        box-sizing: border-box
+    }
 
-        body {
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            color: var(--text);
-            background: var(--bg);
-        }
+    body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        color: var(--text);
+        background: var(--bg);
+    }
 
-        .app {
-            display: grid;
-            grid-template-columns: 380px 1fr;
-            height: 100vh;
-            overflow: hidden;
-        }
+    .app {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        height: 100vh;
+        overflow: hidden;
+    }
 
-        .sidebar {
-            background: #fff;
-            border-right: 1px solid var(--border);
-            padding: 16px;
-            overflow: auto;
-        }
+    .sidebar {
+        background: #fff;
+        border-right: 1px solid var(--border);
+        padding: 16px;
+        overflow: auto;
+    }
 
-        .main {
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-        }
+    .main {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
 
-        .toolbar {
-            min-height: 60px;
-            border-bottom: 1px solid var(--border);
-            background: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 16px;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
+    .toolbar {
+        min-height: 60px;
+        border-bottom: 1px solid var(--border);
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 16px;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
 
-        .toolbar-left, .toolbar-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
+    .toolbar-left, .toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
 
-        .title {
-            font-size: 20px;
-            font-weight: 700;
-            margin: 0 0 6px 0;
-        }
+    .title {
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0 0 6px 0;
+    }
 
-        .sub {
-            font-size: 13px;
-            color: var(--muted);
-            line-height: 1.5;
-            margin-bottom: 14px;
-        }
-/* 
-        .card {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 12px;
-            margin-bottom: 12px;
-        }
+    .sub {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.5;
+        margin-bottom: 14px;
+    }
+    /*
+            .card {
+                background: var(--panel);
+                border: 1px solid var(--border);
+                border-radius: 14px;
+                padding: 12px;
+                margin-bottom: 12px;
+            }
 
-            .card h3 {
-                margin: 0 0 10px 0;
-                font-size: 14px;
-            } */
+                .card h3 {
+                    margin: 0 0 10px 0;
+                    font-size: 14px;
+                } */
 
 
-        .card-in-frame {
+    .card-in-frame {
         background: var(--panel);
         border: 1px solid var(--border);
         border-radius: 14px;
@@ -108,246 +108,246 @@
         margin-bottom: 12px;
     }
 
-            
+
         .card-in-frame .header-in-frame {
-        margin: 0 0 10px 0;
-        font-size: 14px;
+            margin: 0 0 10px 0;
+            font-size: 14px;
+        }
+
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 10px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: #fff;
+        font-size: 12px;
+        color: #334155;
     }
 
+    .legend-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        font-size: 13px;
+    }
 
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 7px 10px;
-            border: 1px solid var(--border);
-            border-radius: 999px;
-            background: #fff;
+    .dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 999px;
+        flex: 0 0 14px;
+    }
+
+        .dot.quotation {
+            background: var(--quotation)
+        }
+
+        .dot.policy {
+            background: var(--policy)
+        }
+
+        .dot.both {
+            background: var(--both)
+        }
+
+        .dot.active {
+            background: var(--active)
+        }
+
+        .dot.done {
+            background: var(--done)
+        }
+
+        .dot.pending {
+            background: var(--pending)
+        }
+
+    .line {
+        width: 28px;
+        border-top: 3px solid #64748b;
+        flex: 0 0 28px;
+    }
+
+        .line.return {
+            border-top-color: var(--return);
+            border-top-style: dashed;
+        }
+
+        .line.loop {
+            border-top-color: var(--loop);
+        }
+
+    textarea {
+        width: 100%;
+        min-height: 390px;
+        resize: vertical;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        font-family: Consolas, monospace;
+        font-size: 12px;
+        line-height: 1.5;
+        outline: none;
+    }
+
+    .btn-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+    }
+
+    button {
+        border: none;
+        background: #2563eb;
+        color: #fff;
+        padding: 9px 12px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+        button.secondary {
+            background: #475569;
+        }
+
+        button.success {
+            background: #16a34a;
+        }
+
+        button.warning {
+            background: #f59e0b;
+            color: #1f2937;
+        }
+
+    .error {
+        margin-top: 10px;
+        display: none;
+        white-space: pre-wrap;
+        background: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+
+    .canvas-wrap {
+        flex: 1;
+        min-height: 0;
+        padding: 16px;
+        overflow: auto;
+    }
+
+   /*  #canvas {
+        position: relative;
+        min-width: 1400px;
+        min-height: 760px;
+        background: linear-gradient(to right, rgba(203,213,225,.35) 1px, transparent 1px), linear-gradient(to bottom, rgba(203,213,225,.35) 1px, transparent 1px);
+        background-size: 24px 24px;
+        background-color: #fff;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 10px 28px rgba(15,23,42,0.06);
+        overflow:  auto;
+        }*/
+
+    .node {
+        position: absolute;
+        width: 180px;
+        min-height: 88px;
+        border-radius: 14px;
+        border: 2px solid #cfd8e3;
+        background: #fff;
+        padding: 10px 12px;
+        box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+        text-align: center;
+        z-index: 2;
+        transition: .15s ease;
+        cursor: move;
+        user-select: none;
+    }
+
+        .node .node-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .node .node-meta {
             font-size: 12px;
-            color: #334155;
-        }
-
-        .legend-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-            font-size: 13px;
-        }
-
-        .dot {
-            width: 14px;
-            height: 14px;
-            border-radius: 999px;
-            flex: 0 0 14px;
-        }
-
-            .dot.quotation {
-                background: var(--quotation)
-            }
-
-            .dot.policy {
-                background: var(--policy)
-            }
-
-            .dot.both {
-                background: var(--both)
-            }
-
-            .dot.active {
-                background: var(--active)
-            }
-
-            .dot.done {
-                background: var(--done)
-            }
-
-            .dot.pending {
-                background: var(--pending)
-            }
-
-        .line {
-            width: 28px;
-            border-top: 3px solid #64748b;
-            flex: 0 0 28px;
-        }
-
-            .line.return {
-                border-top-color: var(--return);
-                border-top-style: dashed;
-            }
-
-            .line.loop {
-                border-top-color: var(--loop);
-            }
-
-        textarea {
-            width: 100%;
-            min-height: 390px;
-            resize: vertical;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px;
-            font-family: Consolas, monospace;
-            font-size: 12px;
-            line-height: 1.5;
-            outline: none;
-        }
-
-        .btn-row {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 10px;
-        }
-
-        button {
-            border: none;
-            background: #2563eb;
-            color: #fff;
-            padding: 9px 12px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-            button.secondary {
-                background: #475569;
-            }
-
-            button.success {
-                background: #16a34a;
-            }
-
-            button.warning {
-                background: #f59e0b;
-                color: #1f2937;
-            }
-
-        .error {
-            margin-top: 10px;
-            display: none;
-            white-space: pre-wrap;
-            background: #fef2f2;
-            color: #b91c1c;
-            border: 1px solid #fecaca;
-            border-radius: 10px;
-            padding: 10px 12px;
-            font-size: 12px;
-        }
-
-        .canvas-wrap {
-            flex: 1;
-            min-height: 0;
-            padding: 16px;
-            overflow: auto;
-        }
-
-        #canvas {
-            position: relative;
-            min-width: 1400px;
-            min-height: 760px;
-            background: linear-gradient(to right, rgba(203,213,225,.35) 1px, transparent 1px), linear-gradient(to bottom, rgba(203,213,225,.35) 1px, transparent 1px);
-            background-size: 24px 24px;
-            background-color: #fff;
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            box-shadow: 0 10px 28px rgba(15,23,42,0.06);
-            overflow: auto;
-        }
-
-        .node {
-            position: absolute;
-            width: 180px;
-            min-height: 88px;
-            border-radius: 14px;
-            border: 2px solid #cfd8e3;
-            background: #fff;
-            padding: 10px 12px;
-            box-shadow: 0 8px 18px rgba(0,0,0,0.08);
-            text-align: center;
-            z-index: 2;
-            transition: .15s ease;
-            cursor: move;
-            user-select: none;
-        }
-
-            .node .node-title {
-                font-size: 16px;
-                font-weight: 700;
-                margin-bottom: 6px;
-            }
-
-            .node .node-meta {
-                font-size: 12px;
-                line-height: 1.45;
-                color: #64748b;
-            }
-
-            .node.flow-quotation {
-                border-color: var(--quotation)
-            }
-
-            .node.flow-policy {
-                border-color: var(--policy)
-            }
-
-            .node.flow-both {
-                border-color: var(--both)
-            }
-
-            .node.active {
-                border-color: var(--active);
-                background: #fffaf0;
-                box-shadow: 0 0 0 4px rgba(245,158,11,0.15), 0 12px 22px rgba(245,158,11,0.18);
-            }
-
-            .node.done {
-                background: #f0fdf4;
-            }
-
-            .node.pending {
-                opacity: .94;
-            }
-
-        .layer-label {
-            position: absolute;
-            top: 14px;
-            font-size: 12px;
+            line-height: 1.45;
             color: #64748b;
-            background: #f8fafc;
-            border: 1px solid var(--border);
-            border-radius: 999px;
-            padding: 4px 10px;
-            z-index: 1;
         }
 
-        .jtk-overlay {
-            font-size: 11px !important;
-            color: #334155 !important;
-            background: rgba(255,255,255,0.96);
-            border: 1px solid #dbe2ea;
-            padding: 4px 8px;
-            border-radius: 999px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+        .node.flow-quotation {
+            border-color: var(--quotation)
         }
 
-        .note {
-            font-size: 12px;
-            color: var(--muted);
-            line-height: 1.5;
+        .node.flow-policy {
+            border-color: var(--policy)
         }
 
-        .status-ok {
-            color: #15803d;
+        .node.flow-both {
+            border-color: var(--both)
         }
 
-        code {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            padding: 2px 6px;
-            border-radius: 6px;
+        .node.active {
+            border-color: var(--active);
+            background: #fffaf0;
+            box-shadow: 0 0 0 4px rgba(245,158,11,0.15), 0 12px 22px rgba(245,158,11,0.18);
         }
+
+        .node.done {
+            background: #f0fdf4;
+        }
+
+        .node.pending {
+            opacity: .94;
+        }
+
+    .layer-label {
+        position: absolute;
+        top: 14px;
+        font-size: 12px;
+        color: #64748b;
+        background: #f8fafc;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 4px 10px;
+        z-index: 1;
+    }
+
+    .jtk-overlay {
+        font-size: 11px !important;
+        color: #334155 !important;
+        background: rgba(255,255,255,0.96);
+        border: 1px solid #dbe2ea;
+        padding: 4px 8px;
+        border-radius: 999px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    }
+
+    .note {
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.5;
+    }
+
+    .status-ok {
+        color: #15803d;
+    }
+
+    code {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        padding: 2px 6px;
+        border-radius: 6px;
+    }
 
     .page {
         display: grid;
@@ -490,7 +490,7 @@
             color: #6d28d9;
         }
 
-    #canvas {
+    .canvas {
         position: relative;
         flex: 1;
         border: 1px solid #dbe2ea;
@@ -501,7 +501,7 @@
         min-height: 420px;
     }
 
-        #canvas.dragOver {
+        .canvas.dragOver {
             background: linear-gradient(to right, rgba(59,130,246,.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(59,130,246,.08) 1px, transparent 1px), #eff6ff;
             background-size: 24px 24px;
         }
@@ -682,7 +682,7 @@
         font-size: 11px;
         color: #334155;
     }
-    </style>
+</style>
 <body>
     <div class="app">
         <aside class="sidebar">
@@ -743,17 +743,17 @@
 
             <div class="card-in-frame">
                 <div class="header-in-frame">Workflow JSON</div>
-                <textarea id="jsonInput"></textarea>
+                <textarea id="jsonInput_@Convert.ToInt32(ViewData["Id"])"></textarea>
                 <div class="btn-row">
-                    <button id="btnRender">Render</button>
-                    <button class="secondary" id="btnUpdate">Update</button>
-                    @* <button class="warning" id="btnAutoLayout">Force Auto Layout</button> *@
-                    <button class="success" id="btnExport">Export JSON</button>
+                    <button id="btnRender_@Convert.ToInt32(ViewData["Id"])">Render</button>
+                    <button class="secondary" id="btnUpdate_@Convert.ToInt32(ViewData["Id"])">Update</button>
+                    @* <button class="warning" id="btnAutoLayout_@Convert.ToInt32(ViewData["Id"])">Force Auto Layout</button> *@
+                    <button class="success" id="btnExport_@Convert.ToInt32(ViewData["Id"])">Export JSON</button>
                 </div>
-                <div id="errorBox" class="error"></div>
+                <div id="errorBox_@Convert.ToInt32(ViewData["Id"])" class="error"></div>
             </div>
 
-           
+
         </aside>
 
         <main class="main">
@@ -762,21 +762,20 @@
                     <span class="badge">Workflow coordinate</span>
                 </div>
                 <div class="toolbar-right">
-
                 </div>
             </div>
 
             <div class="canvas-wrap">
-                <div id="canvas"></div>
+                <div id="canvas_@Convert.ToInt32(ViewData["Id"])" class="canvas"></div>
             </div>
         </main>
     </div>
 
-    
+
     <script>
          var _id = @Convert.ToInt32(ViewData["Id"]);
 
-      
+
 
 
         ajaxGet(`/api/WorkflowDefinition/GetSingle/${_id}`)
@@ -994,14 +993,14 @@
          // passingObject.workflowNodes = data.workflowNodes ;
          // sampleJson = data;
            sampleJson = JSON.parse(data.workflowNodes);
-        var jsonInput = document.getElementById("jsonInput");
-        var canvas = document.getElementById("canvas");
-        var errorBox = document.getElementById("errorBox");
-        var wfCode = document.getElementById("wfCode");
-        var flowType = document.getElementById("flowType");
-        var currentStep = document.getElementById("currentStep");
-        var layoutMode = document.getElementById("layoutMode");
-        var saveHint = document.getElementById("saveHint");
+        var jsonInput = document.getElementById("jsonInput_@Convert.ToInt32(ViewData["Id"])");
+        var canvas = document.getElementById("canvas_@Convert.ToInt32(ViewData["Id"])");
+        var errorBox = document.getElementById("errorBox_@Convert.ToInt32(ViewData["Id"])");;
+        var wfCode = document.getElementById("wfCode_@Convert.ToInt32(ViewData["Id"])");
+        var flowType = document.getElementById("flowType_@Convert.ToInt32(ViewData["Id"])");
+        var currentStep = document.getElementById("currentStep_@Convert.ToInt32(ViewData["Id"])");
+        var layoutMode = document.getElementById("layoutMode_@Convert.ToInt32(ViewData["Id"])");
+        var saveHint = document.getElementById("saveHint_@Convert.ToInt32(ViewData["Id"])");
 
         var instance = null;
         var currentJson = null;
@@ -1424,9 +1423,9 @@
              );
         }
 
-        document.getElementById("btnRender").addEventListener("click", () => renderWorkflow());
-        document.getElementById("btnUpdate").addEventListener("click", updateData);
-        document.getElementById("btnExport").addEventListener("click", exportJson);
+        document.getElementById("btnRender_@Convert.ToInt32(ViewData["Id"])").addEventListener("click", () => renderWorkflow());
+        document.getElementById("btnUpdate_@Convert.ToInt32(ViewData["Id"])").addEventListener("click", updateData);
+        document.getElementById("btnExport_@Convert.ToInt32(ViewData["Id"])").addEventListener("click", exportJson);
         // document.getElementById("btnAutoLayout").addEventListener("click", () => {
         //   try {
         //     var tmp = JSON.parse(jsonInput.value);
@@ -1445,8 +1444,8 @@
         renderWorkflow();
         // const jsonInput = document.getElementById("jsonInput");
         // const canvas = document.getElementById("canvas");
-        var statusBar = document.getElementById("statusBar");
-        var infoBox = document.getElementById("infoBox");
+        var statusBar = document.getElementById("statusBar_@Convert.ToInt32(ViewData["Id"])");
+        var infoBox = document.getElementById("infoBox_@Convert.ToInt32(ViewData["Id"])");
 
         // let instance = null;
         let selectedNodeId = null;

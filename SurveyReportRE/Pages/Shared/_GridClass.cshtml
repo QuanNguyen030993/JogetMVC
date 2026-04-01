@@ -2072,6 +2072,9 @@
             callElementView(`/Business/Workflow/WorkflowDefinitionDraw_Form/${e.data.id}`, `form_WorkflowDefinitionDraw_Form_${e.data.id}`, `WorkflowDefinitionDraw   ${e.data.workflowCode}`);
            
         }
+        onContentReady(e) {
+            e.component.columnOption("command:edit", "visibleIndex", -1);
+        }
     }
 
 

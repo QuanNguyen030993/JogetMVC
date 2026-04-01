@@ -351,7 +351,7 @@
 </style>
 <body>
     <div class="title">Workflow Designer</div>
-    <div id="form_@(WorkflowDefinitionDraw_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])" class="dExForm_@Convert.ToInt32(ViewData["Id"])"></div>
+    <div id="form_@(WorkflowDefinitionDraw_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])" class="dExForm"></div>
     <div class="page">
         <div class="sub">
         </div>
@@ -391,7 +391,7 @@
                     </div>
                     <div>
                         <div class="section-title">Payload Preview</div>
-                        <div id="payloadBox" class="json-box_@Convert.ToInt32(ViewData["Id"])"></div>
+                        <div id="payloadBox_@Convert.ToInt32(ViewData["Id"])" class="json-box"></div>
                     </div>
                     @* <div class="section-title">Legend</div> 
                     <div class="legend-box">
@@ -458,7 +458,7 @@
                     <div id="nodeForm_@Convert.ToInt32(ViewData["Id"])"></div>
 
                     <div class="section-title">Node JSON Raw</div>
-                    <textarea id="nodeJsonEditor" class="node-json-editor" placeholder="Select node to edit raw JSON..._@Convert.ToInt32(ViewData["Id"])"></textarea>
+                    <textarea id="nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])" class="node-json-editor" placeholder="Select node to edit raw JSON..."></textarea>
 
                     <div class="mini-row">
                         <div id="btnRefreshNodeJson_@Convert.ToInt32(ViewData["Id"])"></div>
@@ -505,14 +505,14 @@
 
     <script>
         var _id = @Convert.ToInt32(ViewData["Id"]);
-
+        debugger
           var _formConfig = new MFormOption();
         _formConfig.cloneUrl = '/Business/Workflow/WorkflowDefinition_Form/' + _id;
         _formConfig.tabCode = `form_WorkflowDefinition_Form_${_id}`;
         _formConfig.tabName = '@HttpContext.Request.Query["Caption"].ToString()';
-        _formConfig.originModelName = "@WorkflowDefinitionDraw_FormModel.ModelName";
-        _formConfig.formElementName = "@WorkflowDefinitionDraw_FormModel.ModelName";
-        _formConfig.schemeBasedOn = `@(WorkflowDefinitionDraw_FormModel.SchemeModelName)`;
+        _formConfig.originModelName = "@WorkflowDefinition_FormModel.ModelName";
+        _formConfig.formElementName = "@WorkflowDefinition_FormModel.ModelName";
+        _formConfig.schemeBasedOn = `@(WorkflowDefinition_FormModel.SchemeModelName)`;
         _formConfig.allowFormActionButton = true;
         _formConfig.colCount = 1;
         _formConfig.isCustomQuery = true;
