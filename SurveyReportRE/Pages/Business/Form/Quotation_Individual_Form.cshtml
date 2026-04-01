@@ -520,8 +520,6 @@ Note:
 
         state.currentUserRole = _role;
         state.focusDept = _role == "IT" ? "FO" : _role;
-        // var quotes = [];
-        // var query = "SELECT * FROM Quotation WITH (NOLOCK) ORDER BY CreatedDate DESC"; // Remove this query
         $.ajax({
             url: `/api/Quotation/ExecuteCustomQuery`,
             method: "POST",

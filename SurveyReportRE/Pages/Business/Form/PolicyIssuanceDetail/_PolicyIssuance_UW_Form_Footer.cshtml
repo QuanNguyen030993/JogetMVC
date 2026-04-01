@@ -6,7 +6,7 @@
 
 <div class="actionBarDept" id="actionBarDept@dept">
     <div class="actionLeft">
-        <span class="dept-title">Actions</span>
+        <span class="dept-title">Actions</span> <div id="pi-submitBox_@dept"></div>
     </div>
     <div class="actionRight">
         <div id="pi-btnSave_@dept"></div>
@@ -17,7 +17,7 @@
 <script>
      setTimeout( () => {
      var dept = "@dept";
-      var findRoute = _nextStep.flowSteps.find(f => f.fromNodeId == dept); $("#pi-btnSubmitBranch_@dept").dxButton({ text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick: function (e) { var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {}; submitNextStep("@dept", _nextStep, findRoute, formItems); } });
+      $("#pi-submitBox_@dept").dxTextArea({width: _defaultFormFieldWidth,height: _defaultFormFieldHeight}); var findRoute = _nextStep.flowSteps.find(f => f.fromNodeId == dept); $("#pi-btnSubmitBranch_@dept").dxButton({ text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick: function (e) { var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {}; submitNextStep("@dept", _nextStep, findRoute, formItems); } });
      $("#pi-btnSave_@dept").dxButton({ text: "Save", icon: "save", type: "default", onClick:
          function (e) {
                var formItems = $(`#pi-form${dept}`).dxForm("instance")?.option("formData") || {};
