@@ -142,8 +142,9 @@
     }
 
     .json-box {
+        height: 1000px;
         min-height: 200px;
-        max-height: 300px;
+        max-height: 800px;
         overflow: auto;
         border-radius: 12px;
         background: #0f172a;
@@ -349,11 +350,10 @@
     }
 </style>
 <body>
+        <div class="title">Workflow Designer</div>
     <div id="form_@(WorkflowDefinitionDraw_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])" class="dExForm"></div>
     <div class="page">
-        <div class="title">Workflow Designer</div>
         <div class="sub">
-            Toolbox + jsTree + Flow Type + Transition + Loop/Exit/User Decision để bạn review trước khi chốt thiết kế bảng lưu data.
         </div>
 
         <div class="layout">
@@ -369,7 +369,7 @@
                             <div class="name">Department</div>
                             <div class="desc">Ví dụ FO / TS / UW / LMKT / PM</div>
                         </div>
-                        <div class="tool-item" draggable="true" data-type="actor" data-text="New Actor">
+                       @*  <div class="tool-item" draggable="true" data-type="actor" data-text="New Actor">
                             <div class="name">Actor</div>
                             <div class="desc">Ví dụ Client / External / Approver</div>
                         </div>
@@ -380,16 +380,19 @@
                         <div class="tool-item" draggable="true" data-type="system" data-text="New System">
                             <div class="name">System</div>
                             <div class="desc">Auto process / service / scheduler</div>
-                        </div>
+                        </div> *@
                     </div>
 
                     <div class="section-title">Load Sample</div>
                     <div class="mini-row">
                         <div id="btnSampleQuotation"></div>
                         <div id="btnSamplePolicy"></div>
-                        <div id="btnSampleLoop"></div>
+                        @* <div id="btnSampleLoop"></div> *@
                     </div>
-
+                    <div>
+                        <div class="section-title">Payload Preview</div>
+                        <div id="payloadBox" class="json-box"></div>
+                    </div>
                     @* <div class="section-title">Legend</div> 
                     <div class="legend-box">
                         <div class="legend-item"><span class="badge q">Quotation</span> node/flow dùng cho quotation</div>
@@ -435,7 +438,7 @@
                     <div class="toolbar" style="margin-top:12px;">
                         <div id="btnAddRoot"></div>
                         <div id="btnAddChild"></div>
-                        <div id="btnRename"></div>
+                        @* <div id="btnRename"></div> *@
                         <div id="btnDelete"></div>
                         <div id="btnExpand"></div>
                         <div id="btnCollapse"></div>
@@ -458,14 +461,15 @@
                     <textarea id="nodeJsonEditor" class="node-json-editor" placeholder="Select node to edit raw JSON..."></textarea>
 
                     <div class="mini-row">
-                        <div id="btnApplyNodeForm"></div>
-                        <div id="btnApplyNodeJson"></div>
                         <div id="btnRefreshNodeJson"></div>
+                        <div id="btnApplyNodeJson"></div>
+                        <div id="btnApplyNodeForm"></div>
                         <div id="btnCreateflow"></div>
                     </div>
                 </div>
             </div>
-
+        </div> 
+        <div class="page">
             <!-- TRANSITION + PAYLOAD -->
             <div class="card card-last" style="width: 1200px;">
                 <div class="card-header">
@@ -488,10 +492,7 @@
                              <div id="transitionPreview" class="transition-list"></div>
                          </div> -->
 
-                        <div>
-                            <div class="section-title">Payload Preview</div>
-                            <div id="payloadBox" class="json-box"></div>
-                        </div>
+                   
                     </div>
 
                     <div class="section-title">Flat Node Preview</div>
@@ -819,15 +820,15 @@
                 }
             });
 
-            $("#btnRename").dxButton({
-                text: "Rename",
-                icon: "edit",
-                onClick: function () {
-                    var tree = $("#treeWorkflow").jstree(true);
-                    if (!selectedNodeId) return notify("Please select node first", "warning");
-                    tree.edit(selectedNodeId);
-                }
-            });
+            // $("#btnRename").dxButton({
+            //     text: "Rename",
+            //     icon: "edit",
+            //     onClick: function () {
+            //         var tree = $("#treeWorkflow").jstree(true);
+            //         if (!selectedNodeId) return notify("Please select node first", "warning");
+            //         tree.edit(selectedNodeId);
+            //     }
+            // });
 
             $("#btnDelete").dxButton({
                 text: "Delete",
@@ -878,23 +879,23 @@
             });
 
             $("#btnApplyNodeForm").dxButton({
-                text: "Apply Form",
+                text: "Apply To Payload",
                 type: "success",
                 icon: "save",
-                onClick: applyFormToSelectedNode
+                onClick: function () {applyFormToSelectedNode();}
             });
 
             $("#btnCreateflow").dxButton({
                 text: _id == 0 ? "Create Flow" : "Save Flow",
                 type: "success",
                 icon: "save",
-                onClick: saveFlow
+                onClick: function () { saveFlow(); }
             });
 
             $("#btnApplyNodeJson").dxButton({
                 text: "Apply JSON",
                 icon: "codeblock",
-                onClick: applyJsonToSelectedNode
+                onClick: function () {applyJsonToSelectedNode();}
             });
 
             $("#btnRefreshNodeJson").dxButton({
@@ -928,10 +929,10 @@
                 onClick: loadSamplePolicy
             });
 
-            $("#btnSampleLoop").dxButton({
-                text: "Sample Loop",
-                onClick: loadSampleLoop
-            });
+            // $("#btnSampleLoop").dxButton({
+            //     text: "Sample Loop",
+            //     onClick: loadSampleLoop
+            // });
         }
 
         function initTree() {
@@ -1140,41 +1141,9 @@
 
 
         function applyFormToSelectedNode() {
+            debugger
             var tree = $("#treeWorkflow").jstree(true);
-            if (!selectedNodeId) return notify("Please select node first", "warning");
-
-            var fd = nodeFormInstance.option("formData");
-            var node = tree.get_node(selectedNodeId);
-            if (!node) return;
-
-            node.original.type = fd.type || "";
-            node.original.code = fd.code || "";
-            node.original.orderNo = fd.orderNo || 0;
-            node.original.stepRole = fd.stepRole || "";
-            node.original.departmentName = fd.departmentName || "";
-            node.original.levelNo = fd.levelNo || 1;
-            node.original.flowType = fd.flowType || "Both";
-            node.original.allowLoop = !!fd.allowLoop;
-            node.original.loopGroup = fd.loopGroup || "";
-            node.original.x = fd.x ?? 0;
-            node.original.y = fd.y ?? 0;
-            var newHtml = buildTreeNodeHtml({
-                text: fd.text || extractPlainTextFromNode(selectedNodeId),
-                flowType: fd.flowType || "Both",
-                allowLoop: !!fd.allowLoop
-            });
-
-            tree.rename_node(node, newHtml);
-            syncTreeDataFromJsTree(fd.text || extractPlainTextFromNode(selectedNodeId));
-            notify("Node updated", "success");
-        }
-
-        function applyJsonToSelectedNode() {
-            var tree = $("#treeWorkflow").jstree(true);
-            if (!selectedNodeId) return notify("Please select node first", "warning");
-
-            try {
-                var json = JSON.parse($("#nodeJsonEditor").val() || "{}");
+            var json = JSON.parse($("#nodeJsonEditor").val() || "{}");
                 var node = tree.get_node(selectedNodeId);
                 if (!node) return;
 
@@ -1196,7 +1165,71 @@
                     allowLoop: !!json.allowLoop
                 }));
 
-                syncTreeDataFromJsTree(plainText);
+                // syncTreeDataFromJsTree(plainText);
+
+
+
+             tree = $("#treeWorkflow").jstree(true);
+            if (!selectedNodeId) return notify("Please select node first", "warning");
+
+            var fd = JSON.parse($("#nodeJsonEditor").val() || "{}");
+            var node = tree.get_node(selectedNodeId);
+            if (!node) return;
+
+            // node.original.type = fd.type || "";
+            // node.original.code = fd.code || "";
+            // node.original.orderNo = fd.orderNo || 0;
+            // node.original.stepRole = fd.stepRole || "";
+            // node.original.departmentName = fd.departmentName || "";
+            // node.original.levelNo = fd.levelNo || 1;
+            // node.original.flowType = fd.flowType || "Both";
+            // node.original.allowLoop = !!fd.allowLoop;
+            // node.original.loopGroup = fd.loopGroup || "";
+            // node.original.x = fd.x ?? 0;
+            // node.original.y = fd.y ?? 0;
+            var newHtml = buildTreeNodeHtml({
+                text: fd.text || extractPlainTextFromNode(selectedNodeId),
+                flowType: fd.flowType || "Both",
+                allowLoop: !!fd.allowLoop
+            });
+
+            tree.rename_node(node, newHtml);
+            syncTreeDataFromJsTree(fd.text || extractPlainTextFromNode(selectedNodeId),JSON.parse($("#nodeJsonEditor").val()) );
+            notify("Node updated", "success");
+        }
+
+        function applyJsonToSelectedNode() {
+            var tree = $("#treeWorkflow").jstree(true);
+            if (!selectedNodeId) return notify("Please select node first", "warning");
+
+            try {
+
+                
+                // var json = JSON.parse($("#nodeJsonEditor").val() || "{}");
+                // var node = tree.get_node(selectedNodeId);
+                // if (!node) return;
+
+                // node.original.type = json.type || "";
+                // node.original.code = json.code || "";
+                // node.original.orderNo = json.orderNo || 0;
+                // node.original.stepRole = json.stepRole || "";
+                // node.original.departmentName = json.departmentName || "";
+                // node.original.levelNo = json.levelNo || 1;
+                // node.original.flowType = json.flowType || "Both";
+                // node.original.allowLoop = !!json.allowLoop;
+                // node.original.loopGroup = json.loopGroup || "";
+                // node.original.x = json.x ?? 0;
+                //  node.original.y = json.y ?? 0;
+                // var plainText = json.text || extractPlainTextFromNode(selectedNodeId);
+                // tree.rename_node(node, buildTreeNodeHtml({
+                //     text: plainText,
+                //     flowType: json.flowType || "Both",
+                //     allowLoop: !!json.allowLoop
+                // }));
+
+                // syncTreeDataFromJsTree(plainText);
+                var formData = JSON.stringify(nodeFormInstance.option("formData"));
+                $("#nodeJsonEditor").val(JSON.stringify(nodeFormInstance.option("formData")));
                 notify("Node JSON applied", "success");
             } catch (err) {
                 notify("Invalid JSON", "error");
@@ -1331,7 +1364,7 @@
         }
          
 
-                function  buildPayloadPreview() {
+                function buildPayloadPreview() {
             syncWorkflowHeader();
             syncRuntimeState();
             var payload = {
@@ -1417,19 +1450,37 @@
         }
 
 
-                function syncTreeDataFromJsTree(overrideTextForSelected) {
+                function syncTreeDataFromJsTree(overrideTextForSelected, newObject) {
             var tree = $("#treeWorkflow").jstree(true);
             var oldData = workflowTreeData || [];
             var flat = tree.get_json("#", { flat: true });
 
             workflowTreeData = flat.map((x, index) => {
+                debugger
                 var oldNode = oldData.find(n => n.id === x.id) || {};
                 var plainText = extractTextFromHtml(x.text);
 
                 if (overrideTextForSelected && x.id === selectedNodeId) {
                     plainText = overrideTextForSelected;
                 }
-
+                if (newObject.id == oldNode?.id && newObject && oldNode)
+                 return {
+                           id: x.id,
+                            parent: x.parent,
+                            text: plainText,
+                            type: newObject.type || oldNode.type || "",
+                            code: newObject.code || "",
+                            orderNo: newObject.orderNo ?? oldNode.orderNo ?? (index + 1),
+                            stepRole: newObject.stepRole || oldNode.stepRole || "",
+                            departmentName: newObject.departmentName || oldNode.departmentName || "",
+                            levelNo: newObject.levelNo ?? oldNode.levelNo ?? 1,
+                            flowType: newObject.flowType || oldNode.flowType || "Both",
+                            allowLoop: !!(newObject.allowLoop ?? oldNode.allowLoop),
+                            loopGroup: newObject.loopGroup || oldNode.loopGroup || "",
+                            x: newObject.x ?? oldNode.x ?? null,
+                            y: newObject.y ?? oldNode.y ?? null
+                };
+                else
                 return {
                     id: x.id,
                     parent: x.parent,
