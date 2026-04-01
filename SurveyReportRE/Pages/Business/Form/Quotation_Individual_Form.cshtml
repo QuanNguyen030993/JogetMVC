@@ -555,7 +555,7 @@ Note:
 
         var commentPanelOpened = false;
         let stageDept = state.quotes[0]?.stageDept;
-        let stageAccount = "";                 // status ring
+        var stageAccount = "";                 // status ring
         // let state.focusDept = _role == "IT" ? "FO" : _role;        // focus ring
            ajaxGet(`/api/Quotation/GetQuotationWorkflow/${selectedGuid}`, null)
                             .then(instance => {
@@ -1175,7 +1175,7 @@ Note:
                 var isSel = q.id === selectedId;
                 pICs.push({quotationCode: q.quotationCode, pIC: q.pIC ?? "{}"});
                 $root.append(`
-                    <div class="${formModuleKeyQt}-quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-guid="${q.guid}" data-attachmentid="${q.documentId}" data-codeno="${q.quotationCode}" data-stagedept="${q.stageDept}" data-stageaccount="${parsePicMap(q.pIC)[q.stageDept]}">
+                    <div class="${formModuleKeyQt}-quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-guid="${q.guid}" data-attachmentid="${q.documentId}" data-codeno="${q.quotationCode}" data-stagedept="${q.stageDept}" data-stageaccount="${parsePicMap(q.pIC)[q.stageDept] ? parsePicMap(q.pIC)[q.stageDept] : "(Unassigned)" }">
                         <div class="quoteTop">
                             <div>
                                 <div class="quoteClient">${q.clientName || ""}</div>
@@ -1213,8 +1213,7 @@ Note:
                 stageDept = $(this).attr("data-stagedept");
                 
                 PIC_JSON = pICs.find(f => f.quotationCode ==  selectedCodeNo )?.pIC ?? "{}";
-                stageAccount = $(this).attr("data-stageaccount");
-
+                stageAccount = $(this).attr("data-stageaccount") ? $(this).attr("data-stageaccount") : "(Unassigned)";
                 renderDeptCallouts(PIC_JSON);
                 // focus ring về đúng role hiện tại
                 state.focusDept = state.currentUserRole;
@@ -1550,7 +1549,8 @@ Note:
         
         renderList();
         PIC_JSON = pICs.find(f => f.quotationCode ==  selectedCodeNo)?.pIC ?? "{}";
-        stageAccount = PIC_JSON[stageDept];                 // status ring
+        stageAccount = PIC_JSON[stageDept] ? PIC_JSON[stageDept] : "(Unassigned)";  
+        // status ring
         renderDetail();
         setupDeptTree();
 
