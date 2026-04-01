@@ -465,6 +465,7 @@
                         <div id="btnApplyNodeJson_@Convert.ToInt32(ViewData["Id"])"></div>
                         <div id="btnApplyNodeForm_@Convert.ToInt32(ViewData["Id"])"></div>
                         <div id="btnCreateflow_@Convert.ToInt32(ViewData["Id"])"></div>
+                        <div id="btnBuild_@Convert.ToInt32(ViewData["Id"])"></div>
                     </div>
                 </div>
             </div>
@@ -505,8 +506,7 @@
 
     <script>
         var _id = @Convert.ToInt32(ViewData["Id"]);
-        debugger
-          var _formConfig = new MFormOption();
+        var _formConfig = new MFormOption();
         _formConfig.cloneUrl = '/Business/Workflow/WorkflowDefinition_Form/' + _id;
         _formConfig.tabCode = `form_WorkflowDefinition_Form_${_id}`;
         _formConfig.tabName = '@HttpContext.Request.Query["Caption"].ToString()';
@@ -931,13 +931,136 @@
                 text: "Sample Policy",
                 onClick: loadSamplePolicy
             });
+            $(`#btnBuild_@Convert.ToInt32(ViewData["Id"])`).dxButton(
+            {
+            text: "Build",
+            width: 300,
+            height:50,
+            onClick: function (e){
+                  const workflowDefinitionId = workflowHeader?.id || null;
 
+                    // 2. Build payload từ UI
+                    const payload = {
+                        workflowDefinitionId: workflowDefinitionId,
+                        nodes: buildWorkflowNodesForSave(workflowDefinitionId),
+                        steps: buildStepsWorkflowForSave(workflowDefinitionId)
+                    };
+                 ajaxPost('api/StepsWorkflow/BuildSteps', payload, {
+                            onSuccess: function (response) {
+
+                 },
+                 onError: function (err) {
+                 }
+                 });
+                }
+            });
             // $("#btnSampleLoop_@Convert.ToInt32(ViewData["Id"])").dxButton({
             //     text: "Sample Loop",
             //     onClick: loadSampleLoop
             // });
         }
+                function buildWorkflowNodesForSave(workflowDefinitionId) {
+            return workflowTreeData.map(function (x, index) {
+                return {
+                    workflowDefinitionId: workflowDefinitionId,
+                    nodeId: x.id,
+                    parentNodeId: x.parent === "#" ? null : x.parent,
+                    nodeName: x.text || "",
+                    nodeType: x.type || "",
+                    flowType: x.flowType || "Both",
+                    allowLoop: !!x.allowLoop,
+                    loopGroup: x.loopGroup || null,
+                    nodeCode: x.code || null,
+                    stepRole: x.stepRole || null,
+                    departmentCode: x.departmentName || null,
+                    levelNo: x.levelNo || null,
+                    posX: x.x || null,
+                    posY: x.y || null,
+                    sortOrder: x.orderNo || (index + 1),
+                    isActive: true,
+                    data: JSON.stringify({
+                        rawNode: x
+                    })
+                };
+            });
+        }
 
+
+                function buildStepsWorkflowForSave(workflowDefinitionId) {
+            const nodeMap = {};
+            workflowTreeData.forEach(function (n) {
+                nodeMap[n.id] = n;
+            });
+
+            return transitions.map(function (t, index) {
+                const fromNode = nodeMap[t.fromNodeId] || {};
+                const toNode = t.toNodeId ? (nodeMap[t.toNodeId] || {}) : null;
+
+                const isStart = fromNode.parent === "#" || fromNode.parent == null;
+                const isEnd = !t.toNodeId || !!t.isExitTransition;
+
+                let uiMode = "ReadOnly";
+                if ((t.actionCode || "").startsWith("SUBMIT")) uiMode = "EditQuotation";
+                else if ((t.actionCode || "").startsWith("RETURN")) uiMode = "Approval";
+                else if ((t.actionCode || "").startsWith("COMPLETE")) uiMode = "ReadOnly";
+
+                return {
+                    sortOrder: index + 1,
+                    stepNo: index + 1,
+                    workflowDefinitionId: workflowDefinitionId,
+
+                    stepType: isEnd ? 9 : (t.isLoop ? 3 : 2),
+                    allowLoop: !!t.isLoop,
+                    canComment: true,
+                    canEdit: !isEnd,
+                    canUpload: !isEnd,
+
+                    departmentCode: fromNode.departmentName || null,
+                    displayStatus: t.actionName || null,
+                    flowType: t.flowType || "Both",
+                    isActive: true,
+                    isEnd: isEnd,
+                    isStart: isStart,
+
+                    levelNo: fromNode.levelNo || null,
+                    loopGroup: t.loopGroup || null,
+                    parentStepId: null,
+                    posX: fromNode.x || null,
+                    posY: fromNode.y || null,
+
+                    roleCode: fromNode.code || fromNode.text || fromNode.id,
+                    stepCode: `${t.fromNodeId}_${t.actionCode}`,
+                    stepName: `${fromNode.text || t.fromNodeId} ${t.actionName || t.actionCode}`,
+                    uiMode: uiMode,
+
+                    actionCode: t.actionCode || null,
+                    data: JSON.stringify({
+                        fromNodeId: t.fromNodeId,
+                        toNodeId: t.toNodeId,
+                        actionName: t.actionName || null,
+                        isReturn: !!t.isReturn,
+                        isLoop: !!t.isLoop,
+                        loopGroup: t.loopGroup || null,
+                        loopExitMode: t.loopExitMode || null,
+                        maxLoopCount: t.maxLoopCount || null,
+                        isExitTransition: !!t.isExitTransition,
+                        userDecisionLabel: t.userDecisionLabel || null,
+                        conditionJson: t.conditionJson || null
+                    }),
+
+                    fromNodeId: t.fromNodeId || null,
+                    nodeId: t.fromNodeId || null,
+                    toNodeId: t.toNodeId || null
+                };
+            });
+        }
+                function buildWorkflowSavePayload(workflowDefinitionId) {
+            return {
+                workflowDefinitionId: workflowDefinitionId,
+                nodes: buildWorkflowNodesForSave(workflowDefinitionId),
+                steps: buildStepsWorkflowForSave(workflowDefinitionId)
+            };
+        }
         function initTree() {
             if ($("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true)) {
                 $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true).destroy();

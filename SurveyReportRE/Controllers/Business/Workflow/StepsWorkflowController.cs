@@ -9,6 +9,7 @@ using ERPCore.Models.Migration.Business.Form;
 using ERPCore.Models.Migration.Business.Workflow;
 using Syncfusion.Pdf.Graphics;
 using System.Data;
+using ERPCore.Models.Request;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -33,5 +34,13 @@ public class StepsWorkflowController : BaseControllerApi<StepsWorkflow>
             stepsWorkflow = stepsWorkflow.Skip((int)currentStepNo - 2).Take(3).ToList();
         return Ok(stepsWorkflow);
     }
+
+    [HttpPost]
+    public async Task<IActionResult> BuildSteps([FromBody]WorkflowSavePayload workflowDefinition )
+    {//current is next at currnt 
+        
+        return Ok();
+    }
+
 }
 

@@ -749,6 +749,7 @@
                     <button class="secondary" id="btnUpdate_@Convert.ToInt32(ViewData["Id"])">Update</button>
                     @* <button class="warning" id="btnAutoLayout_@Convert.ToInt32(ViewData["Id"])">Force Auto Layout</button> *@
                     <button class="success" id="btnExport_@Convert.ToInt32(ViewData["Id"])">Export JSON</button>
+                    
                 </div>
                 <div id="errorBox_@Convert.ToInt32(ViewData["Id"])" class="error"></div>
             </div>
@@ -1426,6 +1427,7 @@
         document.getElementById("btnRender_@Convert.ToInt32(ViewData["Id"])").addEventListener("click", () => renderWorkflow());
         document.getElementById("btnUpdate_@Convert.ToInt32(ViewData["Id"])").addEventListener("click", updateData);
         document.getElementById("btnExport_@Convert.ToInt32(ViewData["Id"])").addEventListener("click", exportJson);
+     
         // document.getElementById("btnAutoLayout").addEventListener("click", () => {
         //   try {
         //     var tmp = JSON.parse(jsonInput.value);
