@@ -497,6 +497,7 @@
 
                     <div class="section-title">Flat Node Preview</div>
                     <div id="nodeGrid"></div>
+                    <div id="transitionGrid"></div>
                 </div>
             </div>
         </div>
@@ -521,6 +522,7 @@
         var nodeFormInstance = null;
         var workflowFormInstance = null;
         var transitionFormInstance = null;
+        var transitionGridInstance = null;
         var nodeGridInstance = null;
         var dragToolData = null;
                 var runtimeState = {
@@ -536,61 +538,62 @@
             isActive: true
         };
 
-        var workflowTreeData = [
-            { id: "FO", parent: "#", text: "FO", type: "department", code: "FO", orderNo: 1, stepRole: "Front Office", departmentName: "FO", levelNo: 1, flowType: "Both", allowLoop: false, loopGroup: "" },
-            { id: "TS", parent: "FO", text: "TS", type: "department", code: "TS", orderNo: 1, stepRole: "Technical Support", departmentName: "TS", levelNo: 2, flowType: "Quotation", allowLoop: false, loopGroup: "" },
-            { id: "UW", parent: "TS", text: "UW", type: "department", code: "UW", orderNo: 1, stepRole: "Underwriting", departmentName: "UW", levelNo: 3, flowType: "Quotation", allowLoop: false, loopGroup: "" },
-            { id: "CLIENT", parent: "FO", text: "Client", type: "actor", code: "CLIENT", orderNo: 2, stepRole: "Client", departmentName: "External", levelNo: 2, flowType: "Both", allowLoop: true, loopGroup: "CLIENT_REVIEW" },
-            { id: "PM", parent: "CLIENT", text: "PM", type: "department", code: "PM", orderNo: 1, stepRole: "Policy Management", departmentName: "PM", levelNo: 3, flowType: "PolicyIssuance", allowLoop: false, loopGroup: "" }
-        ];
-
-        var transitions = [
-            {
-                fromNodeId: "FO",
-                toNodeId: "TS",
-                actionCode: "SUBMIT_TS",
-                actionName: "Submit To TS",
-                flowType: "Quotation",
-                isReturn: false,
-                isLoop: false,
-                loopGroup: "",
-                loopExitMode: "None",
-                maxLoopCount: null,
-                isExitTransition: false,
-                userDecisionLabel: "",
-                conditionJson: ""
-            },
-            {
-                fromNodeId: "CLIENT",
-                toNodeId: "CLIENT",
-                actionCode: "REVISE_AGAIN",
-                actionName: "Revise Again",
-                flowType: "Both",
-                isReturn: false,
-                isLoop: true,
-                loopGroup: "CLIENT_REVIEW",
-                loopExitMode: "UserDecision",
-                maxLoopCount: null,
-                isExitTransition: false,
-                userDecisionLabel: "Continue Revision",
-                conditionJson: ""
-            },
-            {
-                fromNodeId: "CLIENT",
-                toNodeId: "PM",
-                actionCode: "EXIT_LOOP_AND_SUBMIT_PM",
-                actionName: "Approve And Exit",
-                flowType: "PolicyIssuance",
-                isReturn: false,
-                isLoop: true,
-                loopGroup: "CLIENT_REVIEW",
-                loopExitMode: "UserDecision",
-                maxLoopCount: null,
-                isExitTransition: true,
-                userDecisionLabel: "Approve And Exit",
-                conditionJson: ""
-            }
-        ];
+        // var workflowTreeData = [
+        //     { id: "FO", parent: "#", text: "FO", type: "department", code: "FO", orderNo: 1, stepRole: "Front Office", departmentName: "FO", levelNo: 1, flowType: "Both", allowLoop: false, loopGroup: "" },
+        //     { id: "TS", parent: "FO", text: "TS", type: "department", code: "TS", orderNo: 1, stepRole: "Technical Support", departmentName: "TS", levelNo: 2, flowType: "Quotation", allowLoop: false, loopGroup: "" },
+        //     { id: "UW", parent: "TS", text: "UW", type: "department", code: "UW", orderNo: 1, stepRole: "Underwriting", departmentName: "UW", levelNo: 3, flowType: "Quotation", allowLoop: false, loopGroup: "" },
+        //     { id: "CLIENT", parent: "FO", text: "Client", type: "actor", code: "CLIENT", orderNo: 2, stepRole: "Client", departmentName: "External", levelNo: 2, flowType: "Both", allowLoop: true, loopGroup: "CLIENT_REVIEW" },
+        //     { id: "PM", parent: "CLIENT", text: "PM", type: "department", code: "PM", orderNo: 1, stepRole: "Policy Management", departmentName: "PM", levelNo: 3, flowType: "PolicyIssuance", allowLoop: false, loopGroup: "" }
+        // ];
+        var workflowTreeData = [];
+        var transitions = [];
+        // var transitions = [
+        //     {
+        //         fromNodeId: "FO",
+        //         toNodeId: "TS",
+        //         actionCode: "SUBMIT_TS",
+        //         actionName: "Submit To TS",
+        //         flowType: "Quotation",
+        //         isReturn: false,
+        //         isLoop: false,
+        //         loopGroup: "",
+        //         loopExitMode: "None",
+        //         maxLoopCount: null,
+        //         isExitTransition: false,
+        //         userDecisionLabel: "",
+        //         conditionJson: ""
+        //     },
+        //     {
+        //         fromNodeId: "CLIENT",
+        //         toNodeId: "CLIENT",
+        //         actionCode: "REVISE_AGAIN",
+        //         actionName: "Revise Again",
+        //         flowType: "Both",
+        //         isReturn: false,
+        //         isLoop: true,
+        //         loopGroup: "CLIENT_REVIEW",
+        //         loopExitMode: "UserDecision",
+        //         maxLoopCount: null,
+        //         isExitTransition: false,
+        //         userDecisionLabel: "Continue Revision",
+        //         conditionJson: ""
+        //     },
+        //     {
+        //         fromNodeId: "CLIENT",
+        //         toNodeId: "PM",
+        //         actionCode: "EXIT_LOOP_AND_SUBMIT_PM",
+        //         actionName: "Approve And Exit",
+        //         flowType: "PolicyIssuance",
+        //         isReturn: false,
+        //         isLoop: true,
+        //         loopGroup: "CLIENT_REVIEW",
+        //         loopExitMode: "UserDecision",
+        //         maxLoopCount: null,
+        //         isExitTransition: true,
+        //         userDecisionLabel: "Approve And Exit",
+        //         conditionJson: ""
+        //     }
+        // ];
 
 
 
@@ -1412,7 +1415,7 @@
         }
         function refreshTransitionNodeLookup() {
             if (!transitionFormInstance) return;
-            var ds = workflowTreeData.map(x => ({ id: x.id, text: x.text }));
+            var ds = workflowTreeData.map(x => ({ id: x.id, text:`${x.text} (${x.id})` }));
 
             transitionFormInstance.itemOption("fromNodeId", "editorOptions", {
                 dataSource: ds,
@@ -1679,7 +1682,119 @@
         //         .replace(/'/g, "&#039;");
         //         }
 
-        
+                function initTransitionGrid() {
+                    
+            $("#transitionGrid").dxDataGrid({
+                dataSource: transitions,
+                keyExpr: function (row, index) {
+                    return `${row.fromNodeId}_${row.toNodeId}_${row.actionCode}_${index}`;
+                },
+                showBorders: true,
+                height: 420,
+                paging: { enabled: false },
+                filterRow: { visible: true },
+                searchPanel: { visible: true, width: 260, placeholder: "Search transition..." },
+                headerFilter: { visible: true },
+                columnAutoWidth: true,
+                allowColumnResizing: true,
+                rowAlternationEnabled: true,
+                editing: {
+                    mode: "row",
+                    allowUpdating: false,
+                    allowAdding: false,
+                    allowDeleting: true,
+                    useIcons: true
+                },
+                columns: [
+                    {
+                        caption: "#",
+                        width: 60,
+                        cellTemplate: function (container, options) {
+                            container.text(options.rowIndex + 1);
+                        }
+                    },
+                    { dataField: "fromNodeId", caption: "From Node" },
+                    { dataField: "toNodeId", caption: "To Node" },
+                    { dataField: "actionCode", caption: "Action Code" },
+                    { dataField: "actionName", caption: "Action Name" },
+                    {
+                        dataField: "flowType",
+                        caption: "Flow Type",
+                        lookup: {
+                            dataSource: ["Quotation", "PolicyIssuance", "Both"]
+                        }
+                    },
+                    { dataField: "isReturn", caption: "Is Return", dataType: "boolean", width: 90 },
+                    { dataField: "isLoop", caption: "Is Loop", dataType: "boolean", width: 80 },
+                    { dataField: "loopGroup", caption: "Loop Group" },
+                    { dataField: "loopExitMode", caption: "Loop Exit Mode" },
+                    { dataField: "maxLoopCount", caption: "Max Loop Count", dataType: "number" },
+                    { dataField: "isExitTransition", caption: "Is Exit", dataType: "boolean", width: 80 },
+                    { dataField: "userDecisionLabel", caption: "User Decision Label" },
+                    {
+                        dataField: "conditionJson",
+                        caption: "Condition JSON",
+                        minWidth: 220,
+                        cellTemplate: function (container, options) {
+                            const text = options.value || "";
+                            $("<div>")
+                                .css({
+                                    whiteSpace: "pre-wrap",
+                                    wordBreak: "break-word",
+                                    maxHeight: "90px",
+                                    overflow: "auto"
+                                })
+                                .text(text)
+                                .appendTo(container);
+                        }
+                    }
+                ],
+                onRowRemoving: function (e) {
+                    const rowIndex = transitions.findIndex(x =>
+                        x.fromNodeId === e.data.fromNodeId &&
+                        x.toNodeId === e.data.toNodeId &&
+                        x.actionCode === e.data.actionCode &&
+                        x.actionName === e.data.actionName &&
+                        x.flowType === e.data.flowType &&
+                        x.isReturn === e.data.isReturn &&
+                        x.isLoop === e.data.isLoop &&
+                        x.loopGroup === e.data.loopGroup &&
+                        x.loopExitMode === e.data.loopExitMode &&
+                        x.maxLoopCount === e.data.maxLoopCount &&
+                        x.isExitTransition === e.data.isExitTransition &&
+                        x.userDecisionLabel === e.data.userDecisionLabel &&
+                        x.conditionJson === e.data.conditionJson
+                    );
+
+                    if (rowIndex >= 0) {
+                        transitions.splice(rowIndex, 1);
+                        refreshTransitionGrid();
+                        buildPayloadPreview();
+                        notify("Transition deleted", "success");
+                    }
+
+                    e.cancel = true;
+                },
+                onRowDblClick: function (e) {
+                    if (!transitionFormInstance || !e.data) return;
+                    transitionFormInstance.option("formData", { ...e.data });
+                    notify("Transition loaded to editor", "success");
+                },
+                onInitialized: function (e) {
+                    transitionGridInstance = e.component;
+                }
+            });
+        }
+
+                function refreshTransitionGrid() {
+
+
+                    hydrateStateFromPayload($("#payloadBox").text());
+            if (transitionGridInstance) {
+                transitionGridInstance.option("dataSource", [...transitions]);
+                transitionGridInstance.refresh();
+            }
+        }
 
                 var payloadInitialized = false;
 
@@ -1861,6 +1976,8 @@
             initWorkflowForm();
             initNodeForm();
             initTransitionForm();
+           
+            
             initButtons();
             initTree();
             initToolboxDrag();
@@ -1868,7 +1985,7 @@
             renderTransitionPreview();
 
             initPayloadBoxOnce().then(function () {
-                console.log("Payload initialized");
+                initTransitionGrid();
             });
         });
     </script>
