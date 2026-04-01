@@ -93,38 +93,5 @@ public class QuotationCommentLogController : BaseControllerApi<QuotationCommentL
     }
 
 
-    //public static List<QuotationCommentLog> ConvertToQuotationCommentLogList(List<Dictionary<string, object>> rawData)
-    //{
-    //    var result = new List<QuotationCommentLog>();
-
-    //    foreach (var dict in rawData)
-    //    {
-    //        var obj = new QuotationCommentLog();
-    //        foreach (var prop in typeof(QuotationCommentLog).GetProperties())
-    //        {
-    //            var key = prop.Name;
-    //            if (key == "Id") continue;
-    //            if (key == "Guid") continue;
-    //            if (key == "CreatedBy") continue;
-    //            if (key == "CreatedDate") continue;
-    //            if (key == "ModifiedBy") continue;
-    //            if (key == "ModifiedDate") continue;
-    //            if (key == "Deleted") continue;
-    //            if (key == "DeletedBy") continue;
-    //            if (key == "DeletedDate") continue;
-    //            if (key == "RowOrder") continue;
-    //            if (key == "CopyFromGuid") continue;
-    //            if (key == "DraftGuid") continue;
-
-    //            if (dict.TryGetValue(key, out var value) && value != null)
-    //            {
-    //                prop.SetValue(obj, value.ToString());
-    //            }
-    //        }
-    //        result.Add(obj);
-    //    }
-
-    //    return result;
-    //}
 
 }

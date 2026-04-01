@@ -293,6 +293,9 @@ public class Quotation : BaseModel
     public Attachment? AttachmentFK { get; set; }
     public long? DocumentId { get; set; }
     public Document? DocumentFK { get; set; }
+    public string? TurnAroundTimeAttributes { get; set; }
+    public TurnAroundAttributes? TurnAroundAttributes { get; set; }
+
     // =========================================================
     // Ý 9 — Attachment/email fields (commented-out + TODO)
     // =========================================================
@@ -330,4 +333,19 @@ public class Quotation : BaseModel
     // public string? ShowBiQuotationForm { get; set; } = "";         // c_showBiQuotForm
     // public string? ShowQuotation { get; set; } = "";               // c_showQuot
     // public string? ShowBiQuotation { get; set; } = "";             // c_showBiQuot
+}
+
+public class TurnAroundAttributes
+{
+    //{    "FO": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 10:30:00" },    "TS": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 09:15:00" },    "UW": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 09:15:00" },    "LMKT": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 09:15:00" },    "PM": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 09:15:00" }  }
+    public TurnAroundItem? FO { get; set; }
+    public TurnAroundItem? TS { get; set; }
+    public TurnAroundItem? UW { get; set; }
+    public TurnAroundItem? LMKT { get; set; }
+    public TurnAroundItem? PM { get; set; }
+}
+public class TurnAroundItem
+{
+    public DateTime? AcceptDate { get; set; }
+    public DateTime? CompleteDate { get; set; }
 }

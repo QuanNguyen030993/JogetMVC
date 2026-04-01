@@ -3,25 +3,29 @@
 @{
     string Id(string name) => $"{Model.Prefix}-{name}";
     var moduleCode = (Model.ModuleCode ?? "").Trim().ToLower();
+    string[] qtDeptModuleCode = new string[] { "FO", "TS", "UW", "LMKT", "PM" };
+    string[] piDeptModuleCode = new string[] { "FO", "TS", "PM" };
 }
 
 <div id="@Id("overviewScroll")" class="overview-scroll">
 
     @if (moduleCode == "qt")
     {
-        <section id="@Id("secFO")" class="dept-section">
-            <div class="dept-header">
-                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_FO_Form_Header")
+        @foreach (string item in qtDeptModuleCode)
+        {
+            <section id="@Id($"sec{item}")" class="dept-section">
+                <div class="dept-header">
+                @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form_Header")
             </div>
             <div class="dept-body">
-                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_FO_Form")
+                    @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form")
             </div>
-            <div class="dept-header">
-                @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_FO_Form_Footer")
+            <div class="dept-footer">
+                    @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form_Footer")
             </div>
         </section>
-
-        <section id="@Id("secTS")" class="dept-section">
+        }
+        @* <section id="@Id("secTS")" class="dept-section">
             <div class="dept-header">
                 @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_TS_Form_Header")
             </div>
@@ -40,7 +44,7 @@
             <div class="dept-body">
                 @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_UW_Form")
             </div>
-            <div class="dept-header">
+            <div class="dept-footer">
                 @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_UW_Form_Footer")
             </div>
         </section>
@@ -67,23 +71,28 @@
             <div class="dept-header">
                 @await Html.PartialAsync("Business/Form/QuotationDetail/_Quotation_PM_Form_Footer")
             </div>
-        </section>
+        </section> *@
     }
     else if (moduleCode == "pi")
     {
-        <section id="@Id("secFO")" class="dept-section">
-            <div class="dept-header">
-                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_FO_Form_Header")
-            </div>
-            <div class="dept-body">
-                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_FO_Form")
-            </div>
-            <div class="dept-header">
-                @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_FO_Form_Footer")
-            </div>
-        </section>
+        @foreach (string item in piDeptModuleCode)
+        {
+            <section id="@Id($"sec{item}")" class="dept-section">
+                <div class="dept-header">
+                    @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_Header")
+                </div>
+                <div class="dept-body">
+                    @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form")
+                </div>
+                <div class="dept-footer">
+                    @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_Footer")
+                </div>
+            </section>
+        }
 
-        <section id="@Id("secTS")" class="dept-section">
+ 
+
+       @*  <section id="@Id("secTS")" class="dept-section">
             <div class="dept-header">
                 @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_TS_Form_Header")
             </div>
@@ -105,7 +114,7 @@
             <div class="dept-header">
                 @await Html.PartialAsync("Business/Form/PolicyIssuanceDetail/_PolicyIssuance_PM_Form_Footer")
             </div>
-        </section>
+        </section> *@
     }
 
 </div>

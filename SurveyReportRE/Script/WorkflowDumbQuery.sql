@@ -47,17 +47,22 @@ UPDATE Quotation SET PIC = REPLACE(PIC,'"MKT"', '"FO"')
 UPDATE PolicyIssuance SET PIC = REPLACE(PIC,'"MKT"', '"FO"')
 UPDATE Quotation SET TurnAroundTimeAttributes = REPLACE(TurnAroundTimeAttributes,'"MKT"', '"FO"')
 UPDATE PolicyIssuance SET TurnAroundTimeAttributes = REPLACE(TurnAroundTimeAttributes,'"MKT"', '"FO"')
-UPDATE PolicyIssuance SET TurnAroundTimeAttributes = N'{
-  "FO": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 10:30:00" },
-  "TS": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 09:15:00" },
-  "UW": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 09:15:00" },
-  "LMKT": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 09:15:00" },
-  "PM": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 09:15:00" }
+UPDATE Quotation SET TurnAroundTimeAttributes = N'{
+  "FO": { "AcceptDate": "2026-03-16 09:15:00", "CompleteDate": "2026-03-16 10:30:00" },
+  "TS": { "AcceptDate": "2026-03-16 09:15:00", "CompleteDate": "2026-03-16 09:15:00" },
+  "UW": { "AcceptDate": "2026-03-16 09:15:00", "CompleteDate": "2026-03-16 09:15:00" },
+  "LMKT": { "AcceptDate": "2026-03-16 09:15:00", "CompleteDate": "2026-03-16 09:15:00" },
+  "PM": { "AcceptDate": "2026-03-16 09:15:00", "CompleteDate": "2026-03-16 09:15:00" }
 }'
-
 UPDATE PolicyIssuance SET PIC = '{"FO":"thao.bp","TS":"hien.ttt","PM":"nguyen.dt"}'
 UPDATE PolicyIssuance SET StageDept = 'FO'
 UPDATE StepsWorkflow SET RoleCode = 'LMKT' WHERE RoleCode = 'MKT_MGR'
 UPDATE StepsWorkflow SET FromNodeId = 'LMKT' WHERE FromNodeId = 'MKT_MGR'
 UPDATE StepsWorkflow SET ToNodeId = 'LMKT' WHERE ToNodeId = 'MKT_MGR'
 UPDATE StepsWorkflow SET NodeId = 'LMKT' WHERE NodeId = 'MKT_MGR'
+UPDATE Document SET SubDirectory = REPLACE(SubDirectory,'MKT\','FO\') WHERE SubDirectory LIKE 'MKT'
+
+UPDATE QuotationWorkflowHistory SET DeptCode = 'FO', FromDeptCode = 'FO', ToDeptCode = 'UW', ActionNote = 'Submit To UW' WHERE HistoryId = 1
+
+INSERT INTO QuotationCommentLog (QuotationId,DeptCode,CommentOrder,CommentBy,CommentTime,CommentText,SourceSystem)
+            VALUES (125,'UW',0,'Nguyen Hong Quan IT','2026-04-01 10:40:58',N'Return to FO','WEB')

@@ -6,8 +6,9 @@ namespace ERPCore.Models.Request
 {
 	public class SubmitRequest
 	{
-         public InstanceWorkflow? InstanceWorkflow { get; set; }
+        public InstanceWorkflow? InstanceWorkflow { get; set; }
         public StepsWorkflow? StepsWorkflow { get; set; }
         public long? QuotationId { get; set; }  
+        public string? Comment { get; set; }
     }
 }

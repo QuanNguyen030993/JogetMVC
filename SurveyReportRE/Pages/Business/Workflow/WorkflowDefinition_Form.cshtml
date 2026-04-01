@@ -1126,7 +1126,6 @@
                         DevExpress.ui.notify("Save failed", "error", 2000);
                     });
             } else {
-                debugger
                 store.update(_id, workflowData)
                     .done(function () {
                         ds.reload();

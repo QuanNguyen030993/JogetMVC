@@ -570,14 +570,7 @@ Note:
 
         function money(n) { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(n || 0); }
 
-        function fmtTimeLocal(isoOrDate) {
-            if (!isoOrDate) return "—";
-            const d = (isoOrDate instanceof Date) ? isoOrDate : new Date(isoOrDate);
-            if (isNaN(d.getTime())) return "—";
-            const pad = (n) => String(n).padStart(2, "0");
-            return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-        }
-
+     
         function normalizeStatus(raw) {
             const s = String(raw ?? "").trim();
             const k = s.toLowerCase().replace(/\s+/g, " ");
@@ -737,11 +730,11 @@ Note:
         }
 
         const map = {
-            FO: tat?.FO?.completeDate || null,
-            TS: tat?.TS?.completeDate || null,
-            UW: tat?.UW?.completeDate || null,
-            LMKT: tat?.LMKT?.completeDate || null,
-            PM: tat?.PM?.completeDate || null
+            FO: tat?.FO?.CompleteDate || null,
+            TS: tat?.TS?.CompleteDate || null,
+            UW: tat?.UW?.CompleteDate || null,
+            LMKT: tat?.LMKT?.CompleteDate || null,
+            PM: tat?.PM?.CompleteDate || null
         };
 
         Object.keys(map).forEach(dept => {

@@ -574,13 +574,6 @@ Note:
 
         function money(n) { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(n || 0); }
 
-        function fmtTimeLocal(isoOrDate) {
-            if (!isoOrDate) return "—";
-            const d = (isoOrDate instanceof Date) ? isoOrDate : new Date(isoOrDate);
-            if (isNaN(d.getTime())) return "—";
-            const pad = (n) => String(n).padStart(2, "0");
-            return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-        }
 
         function normalizeStatus(raw) {
             const s = String(raw ?? "").trim();
@@ -751,11 +744,11 @@ Note:
         }
 
         const map = {
-            FO: tat?.FO?.completeDate || null,
-            TS: tat?.TS?.completeDate || null,
-            UW: tat?.UW?.completeDate || null,
-            LMKT: tat?.LMKT?.completeDate || null,
-            PM: tat?.PM?.completeDate || null
+            FO: tat?.FO?.CompleteDate || null,
+            TS: tat?.TS?.CompleteDate || null,
+            UW: tat?.UW?.CompleteDate || null,
+            LMKT: tat?.LMKT?.CompleteDate || null,
+            PM: tat?.PM?.CompleteDate || null
         };
 
         Object.keys(map).forEach(dept => {
@@ -1070,12 +1063,62 @@ Note:
                                   toggleHideWorkflow = true;
 
                                 });
-                        }
-                        else {
-                              $(`#${formModuleKeyQt}-flowHistoryPanel`).hide();
-                              $(`#${formModuleKeyQt}-flowPanel`).hide();
-                               toggleHideWorkflow = false;
-                        }
+                               const q = `SELECT DeptCode AS 'dept',ActionTime AS 'time',ActionNote AS 'note' FROM QuotationWorkflowHistory WHERE QuotationId = ${selectedId}`;
+                                $.ajax({
+                                    url: `/api/QuotationWorkflowHistory/ExecuteCustomQuery`,
+                                    method: "POST",
+                                    async: false,
+                                    contentType: "application/json",
+                                    data: JSON.stringify(q),
+                                    success: function (data) { 
+                                        staticFlow = data;
+                                    },
+                                    error: function () {
+                                    }
+                                });
+
+                             var key = `flow:${selectedCodeNo}`;
+                              function renderFlow(items) {
+                            if (!Array.isArray(items) || items.length === 0) {
+                                return { summary: "-", html: `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No history</div>` };
+                            }
+                            // const summary = items.map(x => x.dept).join(" → ");
+                            const summary = "";
+                            const arrow = `
+                            <div class="fh-arrow" aria-hidden="true">
+                              <svg viewBox="0 0 24 24" fill="none" width="12" height="18">
+                                <path d="M12 4v12" stroke="black" stroke-width="2" stroke-linecap="round"/>
+                                <path d="M7 13l5 5 5-5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                              </svg>
+                            </div>
+                          `;
+                            const html = items.map((x, idx) => {
+                                const isCur = (x.dept === stageDept); // stageDept already exists in your mock
+                                return `
+                          <div>
+                            <div class="fh-row">
+                              <div class="fh-node ${isCur ? "cur" : ""}">${escapeHtml(x.dept)}</div>
+                              <div class="fh-meta">
+                                <div class="fh-note">${escapeHtml(x.note || "")}</div>
+                                <div class="fh-time">${escapeHtml(x.time || "")}</div>
+                              </div>
+                            </div>
+                          </div>
+                          ${idx < items.length - 1 ? arrow : ""}
+                        `;
+                                }).join("");
+                                return { summary, html };
+                            }
+                                 var getData = renderFlow(staticFlow);
+                                 $(`#${formModuleKeyQt}-flowSummary`).text(getData.summary);
+                                 $(`#${formModuleKeyQt}-flowHistoryBody`).html(getData.html);
+
+                            }
+                            else {
+                                  $(`#${formModuleKeyQt}-flowHistoryPanel`).hide();
+                                  $(`#${formModuleKeyQt}-flowPanel`).hide();
+                                  toggleHideWorkflow = false;
+                            }
                     }});
 
                     $("#btnCloseRightComment").off("click").on("click", function () {

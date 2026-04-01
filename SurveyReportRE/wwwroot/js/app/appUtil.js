@@ -7675,8 +7675,11 @@ function submitNextStep(dept, _nextStep, findRoute, formItems) {
     sendData.InstanceWorkflow = convertKeysToUpperFirstChar(_nextStep.instanceWorkflow);
     sendData.StepsWorkflow = convertKeysToUpperFirstChar(findRoute);
     sendData.QuotationId = formItems.id;
+    sendData.Comment = formItems.comment;
+    console.log(sendData);
     ajaxPost('/api/InstanceWorkflow/SubmitNextStep', sendData, {
         onSuccess: function (response) {
+            appNotifySuccess(`Submitted to ${findRoute.toNodeId}`, false);
         },
         onError: function (err) {
         }
@@ -7964,4 +7967,26 @@ async function openWordMammothPopup(id) {
     });
 
     popup.show();
+}
+
+function fmtTimeLocal(input) {
+    if (!input) return "—";
+    let d;
+
+    if (input instanceof Date) {
+        d = input;
+    } else if (typeof input === "string") {
+        // normalize: nếu không có timezone → thêm Z để tránh parse lệch
+        const hasTZ = /[zZ]|[+-]\d{2}:\d{2}$/.test(input);
+
+        d = new Date(hasTZ ? input : input + "Z");
+    } else {
+        return "—";
+    }
+
+    if (isNaN(d.getTime())) return "—";
+
+    const pad = (n) => String(n).padStart(2, "0");
+
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
