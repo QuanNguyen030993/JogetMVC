@@ -7462,60 +7462,32 @@ function getDefaultPicByDept(deptKey, dataForm) {
 }
 
 function initDepartmentAssignees(moduleKey) {
-
-    setTimeout(() => {
-        var formItems = $(`#${moduleKey}-formLMKT`).dxForm("instance")?.option("formData") || {};
-        renderDepartmentAssigneeBox("#lmktAssigneeBox", {
-            groupName: "LMKT",
-            dataForm: formItems,
-            value: formItems.lmktAssigneeId || null,
-            onChanged: function (item, editor) {
-            }
+    if (moduleKey == "qt") 
+        $.each(qtDeptModuleCode, function (itemIndex, item) {
+            setTimeout(() => {
+                var formItems = $(`#${moduleKey}-form${item}`).dxForm("instance")?.option("formData") || {};
+                renderDepartmentAssigneeBox("#lmktAssigneeBox", {
+                    groupName: item,
+                    dataForm: formItems,
+                    value: formItems.lmktAssigneeId || null,
+                    onChanged: function (item, editor) {
+                    }
+                });
+            });
         });
-    }, 1000);
-    setTimeout(() => {
-        var formItems = $(`#${moduleKey}-formFO`).dxForm("instance")?.option("formData") || {};
-        renderDepartmentAssigneeBox("#foAssigneeBox", {
-            groupName: "FO",
-            dataForm: formItems,
-            value: formItems.foAssigneeId || null,
-            onChanged: function (item, editor) {
-            }
+    if (moduleKey == "pi") 
+        $.each(piDeptModuleCode, function (itemIndex, item) {
+            setTimeout(() => {
+                var formItems = $(`#${moduleKey}-form${item}`).dxForm("instance")?.option("formData") || {};
+                renderDepartmentAssigneeBox("#lmktAssigneeBox", {
+                    groupName: item,
+                    dataForm: formItems,
+                    value: formItems.lmktAssigneeId || null,
+                    onChanged: function (item, editor) {
+                    }
+                });
+            });
         });
-    }, 1000);
-
-    setTimeout(() => {
-        var formItems = $(`#${moduleKey}-formPM`).dxForm("instance")?.option("formData") || {};
-        renderDepartmentAssigneeBox("#pmAssigneeBox", {
-            groupName: "PM",
-            dataForm: formItems,
-            value: formItems.PMAssigneeId || null,
-            onChanged: function (item, editor) {
-            }
-        });
-    }, 1000);
-
-    setTimeout(() => {
-        var formItems = $(`#${moduleKey}-formTS`).dxForm("instance")?.option("formData") || {};
-        renderDepartmentAssigneeBox("#tsAssigneeBox", {
-            groupName: "TS",
-            dataForm: formItems,
-            value: formItems.TSAssigneeId || null,
-            onChanged: function (item, editor) {
-            }
-        });
-    }, 1000);
-
-    setTimeout(() => {
-        var formItems = $(`#${moduleKey}-formUW`).dxForm("instance")?.option("formData") || {};
-        renderDepartmentAssigneeBox("#uwAssigneeBox", {
-            groupName: "UW",
-            dataForm: formItems,
-            value: formItems.UWAssigneeId || null,
-            onChanged: function (item, editor) {
-            }
-        });
-    }, 3000);
 
 }
 

@@ -8,7 +8,7 @@
 <!--Only use 1 CSS-->
 @* <link href="~/css/devextreme-20.1.4/dx.material.blue.light.css" rel="stylesheet" type="text/css" /> *@
 <link href="~/css/jquery/top-panel.min.css" rel="stylesheet" type="text/css" />
- <link href="~/css/fonts/css/all.min.css" rel="stylesheet" type="text/css" />
+<link href="~/css/fonts/css/all.min.css" rel="stylesheet" type="text/css" />
 
 <!--App CSS: customized-->
 <link href="~/css/devextreme/dx-diagram.min.css" rel="stylesheet">
@@ -72,7 +72,7 @@
 <script src="~/lib/devextreme-diagram/2.0.45/dx-diagram.min.js"></script>
 <script src="~/lib/devextreme-gantt/2.0.40/dx-gantt.min.js"></script>
 @* <script src="~/lib/devextreme-22.2.15/dx.all.js"></script>  *@
- <script src="~/lib/devextreme-20.2.13/dx.all.js"></script>  
+<script src="~/lib/devextreme-20.2.13/dx.all.js"></script>  
 <script src="~/lib/devextreme-20.1.4/aspnet/dx.aspnet.data.js"></script>
 <script src="~/lib/devextreme-20.1.4/aspnet/dx.aspnet.mvc.js"></script>
 <!-- Xtrareport-->
@@ -134,30 +134,30 @@
     _nextStep.currentStep = 1;
     _nextStep.instanceWorkflow = new Object();
     window.QuotationPage = window.QuotationPage || {
-        state: {
-            quotes: [],
-            selectedId: null,
-            selectedGuid: null,
-            selectedCodeNo: null,
-            stageDept: null,
-            stageAccount: "",
-            focusDept: null,
-            currentUserRole: null,
-            picJson: "{}",
-            commentPanelOpened: false,
-            deptData: { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} },
-            nextStep: {}
-        },
-        actions: {}
+    state: {
+    quotes: [],
+    selectedId: null,
+    selectedGuid: null,
+    selectedCodeNo: null,
+    stageDept: null,
+    stageAccount: "",
+    focusDept: null,
+    currentUserRole: null,
+    picJson: "{}",
+    commentPanelOpened: false,
+    deptData: { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} },
+    nextStep: {}
+    },
+    actions: {}
     };
     // const _reduceDataGridMaxOverFlow  = 300;
     var _menus = [];
     var _isAllowDraft = 0;
     var _cacheModels = [];
-    
+
     // function getDataFromIndexedDB() {
     //     if (_db) {
-           
+
     //     }
     // }
     // getDataFromIndexedDB();
@@ -165,13 +165,13 @@
 
 
     $.ajax({
-        url: `api/DataGridConfig/CacheUsingModel`,
-        async: false,
-        success: function (response) {
-            _cacheModels = response;
-        },
-        error: function (exception) {
-        }
+    url: `api/DataGridConfig/CacheUsingModel`,
+    async: false,
+    success: function (response) {
+    _cacheModels = response;
+    },
+    error: function (exception) {
+    }
     });
 
     var _role = "";
@@ -189,37 +189,37 @@
     const datetimeFormatter = "dd MMM yyyy hh:mm";
     const timeFormatter = "hh:mm";
     const variableMapping = {
-        currencyFormatter,
-        currency4Formatter,
-        percentageFormatter,
-        decimalFormatter,
-        decimal3Formatter,
-        decimal4Formatter,
-        dateFormatter,
-        datetimeFormatter,
-        timeFormatter
+    currencyFormatter,
+    currency4Formatter,
+    percentageFormatter,
+    decimalFormatter,
+    decimal3Formatter,
+    decimal4Formatter,
+    dateFormatter,
+    datetimeFormatter,
+    timeFormatter
     };
     var _windowWidth = 0;
-        // Write your JavaScript code.
+    // Write your JavaScript code.
     var _connectionId = null;//generateGUID();
     // const connectionSignR = new signalR.HubConnectionBuilder()
     //     .withUrl("/fileProcessingHub").build(); //
 
-     var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
-          shadingColor: "rgba(0,0,0,0.4)",
-          visible: false,
-          showIndicator: true,
-          showPane: false,
-          shading: true,
-          closeOnOutsideClick: false//,
-          // onShown: function () {
-          //     setTimeout(function () {
-          //         appLoadPanel.hide();
-          //     }, 3000);
-          // }
-      });
-        
-      var globalLoadPanelInstance = globalLoadPanel.dxLoadPanel("instance");
+    var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
+    shadingColor: "rgba(0,0,0,0.4)",
+    visible: false,
+    showIndicator: true,
+    showPane: false,
+    shading: true,
+    closeOnOutsideClick: false//,
+    // onShown: function () {
+    //     setTimeout(function () {
+    //         appLoadPanel.hide();
+    //     }, 3000);
+    // }
+    });
+
+    var globalLoadPanelInstance = globalLoadPanel.dxLoadPanel("instance");
     // window.addEventListener("resize", function () {
     //     const w = window.innerWidth;
     //     const h = window.innerHeight;
@@ -228,7 +228,19 @@
     //Delay config 
     var _delayQuotationsLoad = 300;
     var _delayNextStepLoading = 500;
+    var _delayRenderAssigneeBox = 1000;
     var _delayRenderSubmitButton = 3000;
     var _delayLoadDataSubmitButton = 5000;
+
+</script>
+<script>
+    @using System.Text.Json;
+    @{
+        
+    string[] qtDeptModuleCode = new string[] { "FO", "TS", "UW", "LMKT", "PM" }; 
+    string[] piDeptModuleCode = new string[] { "FO", "TS", "PM" }; 
+    }
+    var qtDeptModuleCode = @Html.Raw(JsonSerializer.Serialize(qtDeptModuleCode));
+    var piDeptModuleCode = @Html.Raw(JsonSerializer.Serialize(piDeptModuleCode));
 </script>
 <script src="~/js/defined/signalR.js"></script>

@@ -534,7 +534,7 @@ Note:
         setTimeout(() => {
         
 
-        const QtRoles = ["FO", "TS", "UW", "LMKT", "PM"];
+        const QtRoles = qtDeptModuleCode;
         // var currentUserRole = _role;
         $(`#${formModuleKeyQt}-loginRoleLabel`).text(state.currentUserRole);
 
@@ -626,26 +626,36 @@ Note:
             $(`#${formModuleKeyQt}-formUW`).dxForm({ formData: deptData.UW, readOnly: true, colCount: 1 });
             $(`#${formModuleKeyQt}-formLMKT`).dxForm({ formData: deptData.LMKT, readOnly: true, colCount: 1 });
             $(`#${formModuleKeyQt}-formPM`).dxForm({ formData: deptData.PM, readOnly: true, colCount: 1 });
-            var itemsMKT = new Object();
-            itemsMKT.moduleName = "qt";
-             itemsMKT.sectionName = "FO";
-            loadDxFileUploaderAttachments("FO","Document",itemsMKT );
-                  var itemsTS = new Object();
-            itemsTS.moduleName = "qt";
-             itemsTS.sectionName = "TS";
-            loadDxFileUploaderAttachments("TS","Document", itemsTS);
-                  var itemsUW = new Object();
-            itemsUW.moduleName = "qt";
-             itemsUW.sectionName = "UW";
-            loadDxFileUploaderAttachments("UW","Document", itemsUW);
-                  var itemsLMKT = new Object();
-            itemsLMKT.moduleName = "qt";
-             itemsLMKT.sectionName = "LMKT";
-            loadDxFileUploaderAttachments("LMKT","Document", itemsLMKT);
-                  var itemsPM = new Object();
-            itemsPM.moduleName = "qt";
-             itemsPM.sectionName = "PM";
-            loadDxFileUploaderAttachments("PM","Document", itemsPM);
+
+            $.each(qtDeptModuleCode, function (itemIndex, item) {
+                setTimeout(() => {
+                     var items = new Object();
+                     items.moduleName = "qt";
+                     items.sectionName = item;
+                    loadDxFileUploaderAttachments(item,"Document",items );
+                });
+            });
+
+            // var itemsMKT = new Object();
+            // itemsMKT.moduleName = "qt";
+            //  itemsMKT.sectionName = "FO";
+            // loadDxFileUploaderAttachments("FO","Document",itemsMKT );
+            //       var itemsTS = new Object();
+            // itemsTS.moduleName = "qt";
+            //  itemsTS.sectionName = "TS";
+            // loadDxFileUploaderAttachments("TS","Document", itemsTS);
+            //       var itemsUW = new Object();
+            // itemsUW.moduleName = "qt";
+            //  itemsUW.sectionName = "UW";
+            // loadDxFileUploaderAttachments("UW","Document", itemsUW);
+            //       var itemsLMKT = new Object();
+            // itemsLMKT.moduleName = "qt";
+            //  itemsLMKT.sectionName = "LMKT";
+            // loadDxFileUploaderAttachments("LMKT","Document", itemsLMKT);
+            //       var itemsPM = new Object();
+            // itemsPM.moduleName = "qt";
+            //  itemsPM.sectionName = "PM";
+            // loadDxFileUploaderAttachments("PM","Document", itemsPM);
             applyEditLock();
             updateHints();
         }
@@ -824,7 +834,7 @@ Note:
         }
 
         function bindSectionHeaderToggle() {
-            ["FO", "TS", "UW", "LMKT", "PM"].forEach(dept => {
+            qtDeptModuleCode.forEach(dept => {
                 const $sec = $(`#${formModuleKeyQt}-sec${dept}`);
                 if (!$sec.length) return;
 
@@ -980,11 +990,15 @@ Note:
                     type: "normal",
                     stylingMode: "contained",
                      onClick: () => {
-                      setSectionCollapsed("FO", true);
-                      setSectionCollapsed("TS",true);
-                      setSectionCollapsed("LMKT",true);
-                      setSectionCollapsed("UW",true);
-                      setSectionCollapsed("PM",true);
+                      $.each(qtDeptModuleCode, function (itemIndex, item) {
+                           setSectionCollapsed(item, true);
+                     });
+
+                      // setSectionCollapsed("FO", true);
+                      // setSectionCollapsed("TS",true);
+                      // setSectionCollapsed("LMKT",true);
+                      // setSectionCollapsed("UW",true);
+                      // setSectionCollapsed("PM",true);
                      }
                  });
                 $(`#${formModuleKeyQt}-btnToggleComment`).dxButton({
@@ -1200,7 +1214,7 @@ Note:
 
             $(`.${formModuleKeyQt}-quoteCard`).off("click").on("click", function () {
                 selectedId = Number($(this).attr("data-id"));
-                 selectedGuid = $(this).attr("data-guid");
+                selectedGuid = $(this).attr("data-guid");
                 selectedAttachmentId = Number($(this).attr("data-attachmentid"));
                 selectedCodeNo = $(this).attr("data-codeno");
                 stageDept = $(this).attr("data-stagedept");
