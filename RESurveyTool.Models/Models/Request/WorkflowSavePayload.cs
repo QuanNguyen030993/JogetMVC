@@ -4,14 +4,14 @@ namespace ERPCore.Models.Request
 {
     public class WorkflowSavePayload
     {
-        public Guid WorkflowDefinitionId { get; set; }
+        public Guid? WorkflowDefinitionId { get; set; }
         public List<WorkflowNodeDto> Nodes { get; set; } = new();
         public List<StepsWorkflowDto> Steps { get; set; } = new();
     }
 
     public class WorkflowNodeDto
     {
-        public Guid WorkflowDefinitionId { get; set; }
+        public Guid? WorkflowDefinitionId { get; set; }
         public string? NodeId { get; set; }
         public string? ParentNodeId { get; set; }
         public string? NodeName { get; set; }
@@ -32,7 +32,7 @@ namespace ERPCore.Models.Request
 
     public class StepsWorkflowDto
     {
-        public Guid WorkflowDefinitionId { get; set; }
+        public Guid? WorkflowDefinitionId { get; set; }
         public int SortOrder { get; set; }
         public int StepNo { get; set; }
         public int StepType { get; set; }

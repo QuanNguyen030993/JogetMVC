@@ -7,15 +7,18 @@ namespace ERPCore.Models.Migration.Business.Workflow
 {
     public class WorkflowInstanceNode : BaseModel
     {
-        public Guid InstanceWorkflowId { get; set; }
-        public Guid StepWorkflowId { get; set; }
+        public string Code { get; set; } = "";
+        public Guid? InstanceWorkflowId { get; set; }
+        public InstanceWorkflow? InstanceWorkflowFK { get; set; }
+        public Guid? WorkflowDefinitionId { get; set; }
+        public WorkflowDefinition? WorkflowDefinitionFK { get; set; } 
         [MaxLength(50)]
         public string NodeStatus { get; set; } = "Pending"; // Pending / Active / Completed / Skipped / Returned
         public DateTime? ActivatedDate { get; set; }
         public DateTime? CompletedDate { get; set; }
         public int LoopCount { get; set; }
         [MaxLength(100)]
-        public string? LastActionCode { get; set; } = "";
+        public string LastActionCode { get; set; } = "";
 
     }
 }
