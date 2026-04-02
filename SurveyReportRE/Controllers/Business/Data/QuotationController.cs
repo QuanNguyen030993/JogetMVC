@@ -127,6 +127,9 @@ public class QuotationController : BaseControllerApi<Quotation>
         instanceWorkflow.RecordGuid = quotation.Guid;
         instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
         instanceWorkflow.CurrentStep = 2;
+        instanceWorkflow.CurrentStepId = new Guid();
+        instanceWorkflow.IsCancelled = false;
+        instanceWorkflow.IsCompleted = false;
         await _instanceWorkflowRepository.InsertData(instanceWorkflow);
         return Ok(quotation);
     }

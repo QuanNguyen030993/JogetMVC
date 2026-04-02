@@ -499,24 +499,14 @@ Note:
         // =========================
         // 0) Data load
         // =========================
-        window.QuotationPage = window.QuotationPage || {
-            state: {
-                quotes: [],
-                selectedId: null,
-                 selectedGuid: null,
-                selectedCodeNo: null,
-                stageDept: null,
-                stageAccount: "",
-                focusDept: null,
-                currentUserRole: null,
-                picJson: "{}",
-                commentPanelOpened: false,
-                deptData: { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} }
-            },
-            actions: {}
-        };
+
         const page = window.QuotationPage;
         const state = page.state;
+
+        state.nextStep = new Object();
+        state.nextStep.flowSteps = [];
+        state.nextStep.currentStep = 1;
+        state.nextStep.instanceWorkflow = new Object();
 
         state.currentUserRole = _role;
         state.focusDept = _role == "IT" ? "FO" : _role;
@@ -541,6 +531,8 @@ Note:
 
 
         // // ===== UI state =====
+        setTimeout(() => {
+        
 
         const QtRoles = ["FO", "TS", "UW", "LMKT", "PM"];
         // var currentUserRole = _role;
@@ -549,7 +541,7 @@ Note:
         var filter = "all";
         let searchText = "";
         let selectedId = state.quotes[0]?.id;
-        let selectedGuid = state.quotes[0]?.guid;
+        var selectedGuid = state.quotes[0]?.guid;
         let selectedAttachmentId = state.quotes[0]?.documentId;
         var selectedCodeNo = state.quotes[0]?.quotationCode;
 
@@ -557,14 +549,15 @@ Note:
         let stageDept = state.quotes[0]?.stageDept;
         var stageAccount = "";                 // status ring
         // let state.focusDept = _role == "IT" ? "FO" : _role;        // focus ring
-           ajaxGet(`/api/Quotation/GetQuotationWorkflow/${selectedGuid}`, null)
-                            .then(instance => {
-                                _nextStep.instanceWorkflow = instance;
+           ajaxGet(`/api/Quotation/GetQuotationWorkflow/${state.selectedGuid}`, null)
+                             .then(instance => {
                                   ajaxGet(`/api/StepsWorkflow/GetNextStep/${instance.workflowDefinitionId}/${instance.currentStep}`, null)
                             .then(data => {
-                                _nextStep.flowSteps = data;
-                                
-                                _nextStep.currentStep = instance.currentStep;
+                                // setTimeout(() => {
+                                state.nextStep.instanceWorkflow = instance;
+                                state.nextStep.flowSteps = data;
+                                state.nextStep.currentStep = instance.currentStep;
+                                // },_delayNextStepLoading );
                   });
             });
 
@@ -1214,6 +1207,18 @@ Note:
                 
                 PIC_JSON = pICs.find(f => f.quotationCode ==  selectedCodeNo )?.pIC ?? "{}";
                 stageAccount = $(this).attr("data-stageaccount") ? $(this).attr("data-stageaccount") : "(Unassigned)";
+                ajaxGet(`/api/Quotation/GetQuotationWorkflow/${selectedGuid}`, null)
+                            .then(instance => {
+                                  ajaxGet(`/api/StepsWorkflow/GetNextStep/${instance.workflowDefinitionId}/${instance.currentStep}`, null)
+                            .then(data => {
+                                setTimeout(() => {
+                                state.nextStep.instanceWorkflow = instance;
+                                state.nextStep.flowSteps = data;
+
+                                state.nextStep.currentStep = instance.currentStep;
+                                },_delayNextStepLoading );
+                  });
+                });
                 renderDeptCallouts(PIC_JSON);
                 // focus ring về đúng role hiện tại
                 state.focusDept = state.currentUserRole;
@@ -1510,7 +1515,7 @@ Note:
         $("#btnMore").dxDropDownButton({ text: "More", icon: "overflow", items: ["Export", "Print", "Email"], onItemClick: (e) => DevExpress.ui.notify("Mock: " + e.itemData, "info", 1200) });
 
         // $("#btnSaveDraft").dxButton({ text: "Save Draft", icon: "save", type: "normal", onClick: () => DevExpress.ui.notify("Mock: saved draft", "success", 1200) });
-        // $("#btnSubmitBranch").dxButton({ text: "Route To", icon: "check", type: "success", onClick: function (e) { var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {}; submitNextStep("", _nextStep, findRoute, formItems); } });
+        // $("#btnSubmitBranch").dxButton({ text: "Route To", icon: "check", type: "success", onClick: function (e) { var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {}; submitNextStep("", state.nextStep, findRoute, formItems); } });
         $(`#${formModuleKeyQt}-btnClientConfirm`).dxButton({ text: "Submit To Policy Issuance", icon: "check", type: "success", onClick: function (e) {
                     var quotationConvert = state.quotes.find(x => x.id == selectedId);
                   
@@ -1563,6 +1568,7 @@ Note:
         setTimeout(layoutTreeLine, 0);
         window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
         initMainPaneSplitter();
+                }, _delayQuotationsLoad);
     });
 </script>
 

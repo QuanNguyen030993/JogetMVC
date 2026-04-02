@@ -133,6 +133,23 @@
     _nextStep.flowSteps = [];
     _nextStep.currentStep = 1;
     _nextStep.instanceWorkflow = new Object();
+    window.QuotationPage = window.QuotationPage || {
+        state: {
+            quotes: [],
+            selectedId: null,
+            selectedGuid: null,
+            selectedCodeNo: null,
+            stageDept: null,
+            stageAccount: "",
+            focusDept: null,
+            currentUserRole: null,
+            picJson: "{}",
+            commentPanelOpened: false,
+            deptData: { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} },
+            nextStep: {}
+        },
+        actions: {}
+    };
     // const _reduceDataGridMaxOverFlow  = 300;
     var _menus = [];
     var _isAllowDraft = 0;
@@ -209,7 +226,9 @@
     //     _windowWidth = w;
     // }); // Zoom event handle
     //Delay config 
+    var _delayQuotationsLoad = 300;
+    var _delayNextStepLoading = 500;
     var _delayRenderSubmitButton = 3000;
-    var _delayLoadDataSubmitButton = 3000;
+    var _delayLoadDataSubmitButton = 5000;
 </script>
 <script src="~/js/defined/signalR.js"></script>

@@ -5814,7 +5814,15 @@ function newQuotationForm() {
                     var makeRequestAccount = "thao.bp";
                     
                     quotationData.Quotation.RequestedDate = submitSummaryData.createDate;
-                    quotationData.Quotation.PIC = { MKT: makeRequestAccount, TS : "", UW: "", LKMT: "" };
+                    quotationData.Quotation.PIC = { FO: makeRequestAccount, TS: "", UW: "", LKMT: "" };
+                    quotationData.Quotation.TurnAroundTimeAttributes = {
+                                FO: { AcceptDate: new Date(), "CompleteDate": new Date() }
+                                , TS: { AcceptDate: "", CompleteDate: "" }
+                                , UW: { AcceptDate: "", CompleteDate: "" }
+                                , LMKT: { AcceptDate: "", CompleteDate: "" }
+                                , PM: { AcceptDate: "", CompleteDate: "" }
+                        };
+                        quotationData.Quotation.TurnAroundTimeAttributes = JSON.stringify(quotationData.Quotation.TurnAroundTimeAttributes);
                     quotationData.Quotation.PIC[submitData.deptTarget] = submitData.to;
                     quotationData.Quotation.PIC = JSON.stringify(quotationData.Quotation.PIC);
                     quotationData.Quotation.StageAccount = submitData.to;

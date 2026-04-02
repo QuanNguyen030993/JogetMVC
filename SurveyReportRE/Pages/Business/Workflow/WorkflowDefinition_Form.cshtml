@@ -351,7 +351,7 @@
 </style>
 <body>
     <div class="title">Workflow Designer</div>
-    <div id="form_@(WorkflowDefinitionDraw_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])" class="dExForm"></div>
+    <div id="form_@(WorkflowDefinition_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])" class="dExForm"></div>
     <div class="page">
         <div class="sub">
         </div>
@@ -516,7 +516,7 @@
         _formConfig.allowFormActionButton = true;
         _formConfig.colCount = 1;
         _formConfig.isCustomQuery = true;
-        new WorkflowDefinitionForm(_id, null, _formConfig);
+       var mainForm = new WorkflowDefinitionForm(_id, null, _formConfig);
 
         var selectedNodeId = null;
         var nodeFormInstance = null;
@@ -937,7 +937,8 @@
             width: 300,
             height:50,
             onClick: function (e){
-                  const workflowDefinitionId = workflowHeader?.id || null;
+                   var mainFormData = mainForm.formInstance.option("formData");
+                   const workflowDefinitionId = mainFormData.guid || null;
 
                     // 2. Build payload từ UI
                     const payload = {
@@ -1537,7 +1538,7 @@
         }
         function refreshTransitionNodeLookup() {
             if (!transitionFormInstance) return;
-            var ds = workflowTreeData.map(x => ({ id: x.id, text:`${x.text} (${x.id})` }));
+            var ds = workflowTreeData.map(x => ({ id: x.id, text:`${x.text} (${x.id} - ${x.orderNo})` }));
 
             transitionFormInstance.itemOption("fromNodeId", "editorOptions", {
                 dataSource: ds,

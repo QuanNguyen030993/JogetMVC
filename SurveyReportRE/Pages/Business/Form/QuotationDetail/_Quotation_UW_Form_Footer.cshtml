@@ -17,10 +17,11 @@
 <script>
      var dept = "@dept";
      setTimeout( () => {
-
-    $("#qt-submitBox_@dept").dxTextArea({width: _defaultFormFieldWidth,height: _defaultFormFieldHeight}); var findRoute = _nextStep.flowSteps.find(f => f.fromNodeId == dept && f.stepNo == _nextStep.currentStep); 
+         var pageLayout = window.QuotationPage;
+        var stateLayout = pageLayout.state;
+    $("#qt-submitBox_@dept").dxTextArea({width: _defaultFormFieldWidth,height: _defaultFormFieldHeight}); var findRoute = stateLayout.nextStep.flowSteps.find(f => f.fromNodeId == dept && f.stepNo == stateLayout.nextStep.currentStep); 
     $("#qt-btnSubmitBranch_@dept").dxButton({ text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", 
-    onClick: function (e) { var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {}; var commentBox = $(`#qt-submitBox_@dept`).dxTextArea().dxTextArea("instance"); var comment=commentBox.option("value"); formItems.comment = comment; submitNextStep("@dept", _nextStep, findRoute, formItems); }
+    onClick: function (e) { var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {}; var commentBox = $(`#qt-submitBox_@dept`).dxTextArea().dxTextArea("instance"); var comment=commentBox.option("value"); formItems.comment = comment; submitNextStep("@dept", stateLayout.nextStep, findRoute, formItems); }
 
     });
 
