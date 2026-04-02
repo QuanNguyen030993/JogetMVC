@@ -1,28 +1,6 @@
 ﻿ @page "{pageNum:int?}"
 @model WorkflowDefinitionDraw_FormModel
-@{
 
-
-}
-@* <script>
-    $(function () {
-        var _id = @Convert.ToInt32(ViewData["Id"]);
-
-        var _formConfig = new MFormOption();
-        _formConfig.cloneUrl = '/Business/MasterData/WorkflowDefinition_Form/' + _id;
-        _formConfig.tabCode = `form_WorkflowDefinition_Form_${_id}`;
-        _formConfig.tabName = '@HttpContext.Request.Query["Caption"].ToString()';
-        _formConfig.originModelName = "@WorkflowDefinition_FormModel.ModelName";
-        _formConfig.formElementName = "@WorkflowDefinition_FormModel.ModelName";
-        _formConfig.schemeBasedOn = `@(WorkflowDefinition_FormModel.SchemeModelName)`;
-        _formConfig.allowFormActionButton = true;
-        _formConfig.colCount = 4;
-        _formConfig.isCustomQuery = true;
-        new WorkflowDefinitionForm(_id, null, _formConfig);
-    });
-</script>
-<div id="form_@(WorkflowDefinition_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])" class="dExForm"></div>
- *@
 
 <style>
     :root {
@@ -192,10 +170,10 @@
         overflow: auto;
     }
 
-    #canvas-view {
+    .canvas-view {
         position: relative;
-        min-width: 1400px;
-        min-height: 760px;
+  /*       min-width: 1400px;
+        min-height: 760px; */
         background: linear-gradient(to right, rgba(203,213,225,.35) 1px, transparent 1px), linear-gradient(to bottom, rgba(203,213,225,.35) 1px, transparent 1px);
         background-size: 24px 24px;
         background-color: #fff;
@@ -245,6 +223,9 @@
             border-color: var(--both)
         }
 
+        .node.focus {
+            border-color: red;
+        }
         .node.active {
             border-color: var(--active);
             background: #fffaf0;
@@ -258,6 +239,8 @@
         .node.pending {
             opacity: .94;
         }
+
+      
 
     .layer-label {
         position: absolute;
@@ -301,15 +284,20 @@
 
         <main class="main">
             <div class="canvas-view-wrap">
-                <div id="canvas-view"></div>
+                <div id="canvas-view-unique" class="canvas-view"></div>
             </div>
         </main>
     </div>
 
     <script>
          var _id = @Convert.ToInt32(ViewData["Id"]);
+         var page = window.QuotationPage;
+        var state = page.state;
 
-                ajaxGet(`/api/WorkflowDefinition/GetSingle/${_id}`)
+
+
+          var lastObject  = state.nextStep.flowSteps[state.nextStep.flowSteps.length - 1];
+       ajaxGet(`/api/WorkflowDefinition/GetSingle/${_id}`)
                       .then(data => {
         var sampleJson = {
           
@@ -318,7 +306,7 @@
          
            sampleJson = JSON.parse(data.workflowNodes);
          var jsonInput = {};
-        var canvas = document.getElementById("canvas-view");
+         var canvas = document.getElementById("canvas-view-unique");
         var wfCode = document.getElementById("wfCode");
         var flowType = document.getElementById("flowType");
         var currentStep = document.getElementById("currentStep");
@@ -532,7 +520,7 @@
         function createNodeEl(node, pos, runtimeState) {
           var el = document.createElement("div");
           el.id = node.id;
-          el.className = "node " + getNodeFlowClass(node.flowType) + " " + getNodeStateClass(node.id, runtimeState);
+          el.className = "node " + (node.id === lastObject.tNodeId ? "focus" : getNodeFlowClass(node.flowType)) + " " + getNodeStateClass(node.id, runtimeState);
           el.style.left = pos.x + "px";
           el.style.top = pos.y + "px";
           el.innerHTML = `
@@ -544,6 +532,7 @@
               <div>X: <span data-x="${node.id}">${safe(node.x)}</span> | Y: <span data-y="${node.id}">${safe(node.y)}</span></div>
             </div>
           `;
+
           return el;
         }
 
@@ -644,7 +633,6 @@
 
         function renderWorkflow(options = {}) {
           try {
-
             currentJson = JSON.parse(jsonInput.value);
 
             if (instance) {
@@ -712,8 +700,6 @@
           } catch (err) {
           }
         }
-
-    
 
         renderWorkflow();
                       });

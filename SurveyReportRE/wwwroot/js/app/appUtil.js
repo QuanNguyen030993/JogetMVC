@@ -7466,27 +7466,27 @@ function initDepartmentAssignees(moduleKey) {
         $.each(qtDeptModuleCode, function (itemIndex, item) {
             setTimeout(() => {
                 var formItems = $(`#${moduleKey}-form${item}`).dxForm("instance")?.option("formData") || {};
-                renderDepartmentAssigneeBox("#lmktAssigneeBox", {
+                renderDepartmentAssigneeBox(`#${moduleKey}-${item.toLowerCase()}AssigneeBox`, {
                     groupName: item,
                     dataForm: formItems,
                     value: formItems.lmktAssigneeId || null,
                     onChanged: function (item, editor) {
                     }
                 });
-            });
+            }, _delayRenderAssigneeBox);
         });
     if (moduleKey == "pi") 
         $.each(piDeptModuleCode, function (itemIndex, item) {
             setTimeout(() => {
                 var formItems = $(`#${moduleKey}-form${item}`).dxForm("instance")?.option("formData") || {};
-                renderDepartmentAssigneeBox("#lmktAssigneeBox", {
+                renderDepartmentAssigneeBox(`#${moduleKey}-${item.toLowerCase()}AssigneeBox`, {
                     groupName: item,
                     dataForm: formItems,
                     value: formItems.lmktAssigneeId || null,
                     onChanged: function (item, editor) {
                     }
                 });
-            });
+            }, _delayRenderAssigneeBox);
         });
 
 }

@@ -767,7 +767,7 @@
             </div>
 
             <div class="canvas-wrap">
-                <div id="canvas_@Convert.ToInt32(ViewData["Id"])" class="canvas"></div>
+                <div id="canvas_@Convert.ToInt32(ViewData["Guid"])" class="canvas"></div>
             </div>
         </main>
     </div>
@@ -775,8 +775,6 @@
 
     <script>
          var _id = @Convert.ToInt32(ViewData["Id"]);
-
-
 
 
         ajaxGet(`/api/WorkflowDefinition/GetSingle/${_id}`)
@@ -995,7 +993,7 @@
          // sampleJson = data;
            sampleJson = JSON.parse(data.workflowNodes);
         var jsonInput = document.getElementById("jsonInput_@Convert.ToInt32(ViewData["Id"])");
-        var canvas = document.getElementById("canvas_@Convert.ToInt32(ViewData["Id"])");
+        var canvas = document.getElementById("canvas_@Convert.ToInt32(ViewData["Guid"])");
         var errorBox = document.getElementById("errorBox_@Convert.ToInt32(ViewData["Id"])");;
         var wfCode = document.getElementById("wfCode_@Convert.ToInt32(ViewData["Id"])");
         var flowType = document.getElementById("flowType_@Convert.ToInt32(ViewData["Id"])");

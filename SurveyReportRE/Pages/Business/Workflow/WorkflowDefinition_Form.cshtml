@@ -443,8 +443,10 @@
                         <div id="btnExpand_@Convert.ToInt32(ViewData["Id"])"></div>
                         <div id="btnCollapse_@Convert.ToInt32(ViewData["Id"])"></div>
                     </div>
-
+                    <div style="background-color: antiquewhite; min-height:500px;">
                     <div id="treeWorkflow_@Convert.ToInt32(ViewData["Id"])"></div>
+
+                    </div>
                 </div>
             </div>
 
@@ -911,7 +913,7 @@
                 text: "Add Transition",
                 type: "default",
                 icon: "arrowright",
-                onClick: addTransition
+                onClick: function() {addTransition();} 
             });
 
             $("#btnResetTransitionForm_@Convert.ToInt32(ViewData["Id"])").dxButton({
@@ -1050,7 +1052,8 @@
                     }),
 
                     fromNodeId: t.fromNodeId || null,
-                    nodeId: t.fromNodeId || null,
+                    fnodeId: t.fromNodeId || null,
+                    tnodeId: t.toNodeId || null,
                     toNodeId: t.toNodeId || null
                 };
             });
@@ -1084,16 +1087,18 @@
                 .jstree({
                     core: {
                         check_callback: true,
-                        data: workflowTreeData.map(x => ({
+                        data: _id ? workflowTreeData.map(x => ({
                             ...x,
                             text: buildTreeNodeHtml(x)
-                        })),
+                        })) : [],
                         themes: { stripes: true }
                     },
                     plugins: ["dnd", "contextmenu", "wholerow"]
                 });
 
             setTimeout(function () {
+                // $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").css({backgroundColor: "red"})
+
                 var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
                 tree.open_all();
                 if (workflowTreeData.length) tree.select_node(workflowTreeData[0].id);
@@ -1397,9 +1402,9 @@
             });
 
             renderTransitionPreview();
-            console.log("addTransition");
             buildPayloadPreview();
             transitionFormInstance.option("formData", getEmptyTransition(selectedNodeId || ""));
+             transitionGridInstance.refresh();
             notify("Transition added", "success");
         }
 

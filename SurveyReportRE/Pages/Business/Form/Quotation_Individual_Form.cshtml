@@ -522,6 +522,7 @@ Note:
                     state.selectedId = state.quotes[0]?.id ?? null;
                     state.selectedGuid = state.quotes[0]?.guid ?? null;
                     state.selectedCodeNo = state.quotes[0]?.quotationCode ?? null;
+                    state.selectedAttachmentId = state.quotes[0]?.documentId ?? null;
                     state.stageDept = state.quotes[0]?.stageDept ?? null;
             }
         });
@@ -628,12 +629,12 @@ Note:
             $(`#${formModuleKeyQt}-formPM`).dxForm({ formData: deptData.PM, readOnly: true, colCount: 1 });
 
             $.each(qtDeptModuleCode, function (itemIndex, item) {
-                setTimeout(() => {
+                
                      var items = new Object();
                      items.moduleName = "qt";
                      items.sectionName = item;
                     loadDxFileUploaderAttachments(item,"Document",items );
-                });
+           
             });
 
             // var itemsMKT = new Object();
@@ -1039,7 +1040,7 @@ Note:
                     onClick: () => {
                 if (!commentPanelOpened) {
                   openRightCommentPanel();
-                                previewQuotation(selectedCodeNo, selectedId, selectedAttachmentId);
+                                previewQuotation(selectedCodeNo, selectedId, state.selectedAttachmentId);
                             } else {
                   closeRightCommentPanel();
                             }
@@ -1218,8 +1219,17 @@ Note:
                 selectedAttachmentId = Number($(this).attr("data-attachmentid"));
                 selectedCodeNo = $(this).attr("data-codeno");
                 stageDept = $(this).attr("data-stagedept");
-                
+
+
+                state.selectedId =Number($(this).attr("data-id"));
+                state.selectedGuid = $(this).attr("data-guid");
+                state.selectedAttachmentId = Number($(this).attr("data-attachmentid"));
+                state.selectedCodeNo = $(this).attr("data-codeno");
+                state.stageDept =  $(this).attr("data-stagedept");
+
+
                 PIC_JSON = pICs.find(f => f.quotationCode ==  selectedCodeNo )?.pIC ?? "{}";
+                renderDeptCallouts(PIC_JSON);
                 stageAccount = $(this).attr("data-stageaccount") ? $(this).attr("data-stageaccount") : "(Unassigned)";
                 ajaxGet(`/api/Quotation/GetQuotationWorkflow/${selectedGuid}`, null)
                             .then(instance => {
@@ -1233,7 +1243,6 @@ Note:
                                 },_delayNextStepLoading );
                   });
                 });
-                renderDeptCallouts(PIC_JSON);
                 // focus ring về đúng role hiện tại
                 state.focusDept = state.currentUserRole;
                 renderList();

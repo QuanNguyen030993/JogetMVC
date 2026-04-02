@@ -1,7 +1,7 @@
 ﻿<div class="dept-title">PM</div>
 <div class="dept-form-header">
     <div class="dept-form-header__assign">
-        <div id="pmAssigneeBox"></div>
+        <div id="qt-pmAssigneeBox"></div>
     </div>
 </div>
 <div class="dept-hint-wrap">
@@ -12,13 +12,13 @@
 <script>
     setTimeout( () => {
     var formItems = $("#qt-formPM").dxForm("instance")?.option("formData") || {};
-    renderDepartmentAssigneeBox("#pmAssigneeBox", {
+    renderDepartmentAssigneeBox("#qt-pmAssigneeBox", {
         groupName: "PM",
         dataForm: formItems,
         value: formItems.PMAssigneeId || null,
         onChanged: function (item, editor) {
         }
     });
-    }, 1500);
+    }, _delayRenderAssigneeBox);
 
 </script>

@@ -1,7 +1,7 @@
 ﻿<div class="dept-title">UW</div>
 <div class="dept-form-header">
     <div class="dept-form-header__assign">
-        <div id="uwAssigneeBox"></div>
+        <div id="qt-uwAssigneeBox"></div>
     </div>
 </div>
 <div class="dept-hint-wrap">
@@ -12,7 +12,7 @@
 <script>
     setTimeout( () => {
     var formItems = $("#qt-formUW").dxForm("instance")?.option("formData") || {};
-    renderDepartmentAssigneeBox("#uwAssigneeBox", {
+    renderDepartmentAssigneeBox("#qt-uwAssigneeBox", {
         groupName: "UW",
         dataForm: formItems,
         value: formItems.UWAssigneeId || null,
@@ -20,7 +20,7 @@
         }
     });
 
-    }, 1500);
+    }, _delayRenderAssigneeBox);
      
 
 </script>

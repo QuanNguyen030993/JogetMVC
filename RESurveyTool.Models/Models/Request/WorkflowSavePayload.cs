@@ -55,7 +55,8 @@ namespace ERPCore.Models.Request
         public string? ActionCode { get; set; }
         public string? Data { get; set; }
         public string? FromNodeId { get; set; }
-        public string? NodeId { get; set; }
+        public string? FNodeId { get; set; }
+        public string? TNodeId { get; set; }
         public string? ToNodeId { get; set; }
     }
 }

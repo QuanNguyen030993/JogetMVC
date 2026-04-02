@@ -1,7 +1,7 @@
 ﻿<div class="dept-title">TS</div>
 <div class="dept-form-header">
     <div class="dept-form-header__assign">
-        <div id="tsAssigneeBox"></div>
+        <div id="pi-tsAssigneeBox"></div>
     </div>
 </div>
 <div class="dept-hint-wrap">
@@ -12,13 +12,13 @@
 <script>
     setTimeout( () => {
     var formItems = $("#pi-formTS").dxForm("instance")?.option("formData") || {};
-    renderDepartmentAssigneeBox("#tsAssigneeBox", {
+    renderDepartmentAssigneeBox("#pi-tsAssigneeBox", {
         groupName: "TS",
         dataForm: formItems,
         value: formItems.TSAssigneeId || null,
         onChanged: function (item, editor) {
         }
     });
-    }, 1500);
+    }, _delayRenderAssigneeBox);
 
 </script>

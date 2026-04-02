@@ -1226,9 +1226,10 @@ aside {
 
 .flow-history-panel {
     position: absolute;
-    right: 78px; /* sits left of the tree (tree is right:14px, width:54px) */
-    top: 110px;
-    bottom: 14px;
+    right: 5%; /* sits left of the tree (tree is right:14px, width:54px) */
+/*    top: 110px;*/
+top:  1%;
+    bottom: 10%;
     width: 280px;
     background: #fff;
     border: 1px solid var(--border);
@@ -1269,8 +1270,8 @@ aside {
 .flow-panel {
     position: absolute;
     right: 25%;
-    top: 110px;
-    bottom: 14px;
+    top: 1%;
+    bottom: 10%;
     width: 70%;
     background: #fff;
     border: 1px solid var(--border);

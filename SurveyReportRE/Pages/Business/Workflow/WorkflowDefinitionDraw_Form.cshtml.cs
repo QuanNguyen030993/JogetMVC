@@ -9,6 +9,7 @@ public class WorkflowDefinitionDraw_FormModel : PageModel
     public static string FKModelName { get; set; } = "";
     public static string SchemeModelName { get; set; } = "";
     private static int Id { get; set; }
+    private static Guid GuidId { get; set; }  
     private static int FKId { get; set; }
     private static string JsonConfig { get; set; } = "";
 
@@ -25,5 +26,6 @@ public class WorkflowDefinitionDraw_FormModel : PageModel
         ModelName = nameof(WorkflowDefinition);
         SchemeModelName = nameof(WorkflowDefinition);
         ViewData[nameof(Id)] = pageNum ?? 0;
+        ViewData[nameof(GuidId)] = (new Guid()).ToString();
     }
 }

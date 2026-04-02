@@ -1,7 +1,7 @@
 ﻿<div class="dept-title">FO</div>
 <div class="dept-form-header">
     <div class="dept-form-header__assign">
-        <div id="foAssigneeBox"></div>
+        <div id="pi-foAssigneeBox"></div>
     </div>
     <div id="btnToggleResForm"></div>
 </div>
@@ -14,14 +14,14 @@
     setTimeout( () => {
     var formItems = $("#pi-formFO").dxForm("instance")?.option("formData") || {};
 
-    renderDepartmentAssigneeBox("#foAssigneeBox", {
+    renderDepartmentAssigneeBox("#pi-foAssigneeBox", {
         groupName: "FO",
         dataForm: formItems,
         value: formItems.foAssigneeId || null,
         onChanged: function (item, editor) {
         }
     });
-    }, 1500);
+    }, _delayRenderAssigneeBox);
      $("#btnToggleResForm").dxButton({
                     text: "Res Form",
                     icon: "file",

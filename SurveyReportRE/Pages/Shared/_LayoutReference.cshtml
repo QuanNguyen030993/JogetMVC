@@ -129,16 +129,42 @@
     const _delaySequenceQuery = 500;
     const _rightWindowPadding = 45;
     const _widthMenuWidth = 197;
-    var _nextStep = new Object();
-    _nextStep.flowSteps = [];
-    _nextStep.currentStep = 1;
-    _nextStep.instanceWorkflow = new Object();
+    const currencyFormatter = "#,##0.## VNĐ";
+    const currency4Formatter = "#,##0.#### VNĐ";
+    const percentageFormatter = "#,###.## %";
+    const decimalFormatter = "#,##0.##";
+    const decimal3Formatter = "#,##0.###";
+    const decimal4Formatter = "#,##0.####";
+    const dateFormatter = "dd MMM yyyy";
+    const datetimeFormatter = "dd MMM yyyy hh:mm";
+    const timeFormatter = "hh:mm";
+    const variableMapping = {
+    currencyFormatter,
+    currency4Formatter,
+    percentageFormatter,
+    decimalFormatter,
+    decimal3Formatter,
+    decimal4Formatter,
+    dateFormatter,
+    datetimeFormatter,
+    timeFormatter
+    };
+    const _delayQuotationsLoad = 300;
+    const _delayNextStepLoading = 500;
+    const _delayRenderAssigneeBox = 1500;
+    const _delayRenderSubmitButton = 3000;
+    const _delayLoadDataSubmitButton = 5000;
+    // var _nextStep = new Object();
+    // _nextStep.flowSteps = [];
+    // _nextStep.currentStep = 1;
+    // _nextStep.instanceWorkflow = new Object();
     window.QuotationPage = window.QuotationPage || {
     state: {
     quotes: [],
     selectedId: null,
     selectedGuid: null,
     selectedCodeNo: null,
+    selectedAttachmentId: null,
     stageDept: null,
     stageAccount: "",
     focusDept: null,
@@ -179,26 +205,7 @@
     var _isSuperUser = "false";
     var _isDebugMode = "false";
     var _genericExceptionMessage = "";
-    const currencyFormatter = "#,##0.## VNĐ";
-    const currency4Formatter = "#,##0.#### VNĐ";
-    const percentageFormatter = "#,###.## %";
-    const decimalFormatter = "#,##0.##";
-    const decimal3Formatter = "#,##0.###";
-    const decimal4Formatter = "#,##0.####";
-    const dateFormatter = "dd MMM yyyy";
-    const datetimeFormatter = "dd MMM yyyy hh:mm";
-    const timeFormatter = "hh:mm";
-    const variableMapping = {
-    currencyFormatter,
-    currency4Formatter,
-    percentageFormatter,
-    decimalFormatter,
-    decimal3Formatter,
-    decimal4Formatter,
-    dateFormatter,
-    datetimeFormatter,
-    timeFormatter
-    };
+    
     var _windowWidth = 0;
     // Write your JavaScript code.
     var _connectionId = null;//generateGUID();
@@ -226,11 +233,7 @@
     //     _windowWidth = w;
     // }); // Zoom event handle
     //Delay config 
-    var _delayQuotationsLoad = 300;
-    var _delayNextStepLoading = 500;
-    var _delayRenderAssigneeBox = 1000;
-    var _delayRenderSubmitButton = 3000;
-    var _delayLoadDataSubmitButton = 5000;
+
 
 </script>
 <script>
