@@ -637,26 +637,7 @@ Note:
            
             });
 
-            // var itemsMKT = new Object();
-            // itemsMKT.moduleName = "qt";
-            //  itemsMKT.sectionName = "FO";
-            // loadDxFileUploaderAttachments("FO","Document",itemsMKT );
-            //       var itemsTS = new Object();
-            // itemsTS.moduleName = "qt";
-            //  itemsTS.sectionName = "TS";
-            // loadDxFileUploaderAttachments("TS","Document", itemsTS);
-            //       var itemsUW = new Object();
-            // itemsUW.moduleName = "qt";
-            //  itemsUW.sectionName = "UW";
-            // loadDxFileUploaderAttachments("UW","Document", itemsUW);
-            //       var itemsLMKT = new Object();
-            // itemsLMKT.moduleName = "qt";
-            //  itemsLMKT.sectionName = "LMKT";
-            // loadDxFileUploaderAttachments("LMKT","Document", itemsLMKT);
-            //       var itemsPM = new Object();
-            // itemsPM.moduleName = "qt";
-            //  itemsPM.sectionName = "PM";
-            // loadDxFileUploaderAttachments("PM","Document", itemsPM);
+           
             applyEditLock();
             updateHints();
         }
@@ -1060,65 +1041,10 @@ Note:
                         if (!toggleHideWorkflow)
                         {
                             $(`#${formModuleKeyQt}-flowPanel`).empty();
-                             ajaxGet(`/api/Quotation/GetQuotationWorkflowDefinition/${selectedGuid}`, null)
-                            .then(instance => {
-                            var passingParams = { UITabId: `form_DrawCanvas_Form_${instance.id}`, pageNum: instance.id};
-                            appendElementViewInside(`/Business/Workflow/DrawCanvas_Form/${instance.id}`, passingParams, $(`#${formModuleKeyQt}-flowPanel`), `${formModuleKeyQt}-form_DrawCanvas_Form`, "appendTo");
                                   $(`#${formModuleKeyQt}-flowHistoryPanel`).show();
                                  $(`#${formModuleKeyQt}-flowPanel`).show();
-                                  toggleHideWorkflow = true;
-
-                                });
-                               const q = `SELECT DeptCode AS 'dept',ActionTime AS 'time',ActionNote AS 'note' FROM QuotationWorkflowHistory WHERE QuotationId = ${selectedId}`;
-                                $.ajax({
-                                    url: `/api/QuotationWorkflowHistory/ExecuteCustomQuery`,
-                                    method: "POST",
-                                    async: false,
-                                    contentType: "application/json",
-                                    data: JSON.stringify(q),
-                                    success: function (data) { 
-                                        staticFlow = data;
-                                    },
-                                    error: function () {
-                                    }
-                                });
-
-                             var key = `flow:${selectedCodeNo}`;
-                              function renderFlow(items) {
-                            if (!Array.isArray(items) || items.length === 0) {
-                                return { summary: "-", html: `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No history</div>` };
-                            }
-                            // const summary = items.map(x => x.dept).join(" → ");
-                            const summary = "";
-                            const arrow = `
-                            <div class="fh-arrow" aria-hidden="true">
-                              <svg viewBox="0 0 24 24" fill="none" width="12" height="18">
-                                <path d="M12 4v12" stroke="black" stroke-width="2" stroke-linecap="round"/>
-                                <path d="M7 13l5 5 5-5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                              </svg>
-                            </div>
-                          `;
-                            const html = items.map((x, idx) => {
-                                const isCur = (x.dept === stageDept); // stageDept already exists in your mock
-                                return `
-                          <div>
-                            <div class="fh-row">
-                              <div class="fh-node ${isCur ? "cur" : ""}">${escapeHtml(x.dept)}</div>
-                              <div class="fh-meta">
-                                <div class="fh-note">${escapeHtml(x.note || "")}</div>
-                                <div class="fh-time">${escapeHtml(x.time || "")}</div>
-                              </div>
-                            </div>
-                          </div>
-                          ${idx < items.length - 1 ? arrow : ""}
-                        `;
-                                }).join("");
-                                return { summary, html };
-                            }
-                                 var getData = renderFlow(staticFlow);
-                                 $(`#${formModuleKeyQt}-flowSummary`).text(getData.summary);
-                                 $(`#${formModuleKeyQt}-flowHistoryBody`).html(getData.html);
-
+                                    toggleHideWorkflow = true;
+                                    reloadWorkflow(state.selectedGuid, state.selectedId, state.stageDept, formModuleKeyQt)
                             }
                             else {
                                   $(`#${formModuleKeyQt}-flowHistoryPanel`).hide();
@@ -1231,15 +1157,15 @@ Note:
                 PIC_JSON = pICs.find(f => f.quotationCode ==  selectedCodeNo )?.pIC ?? "{}";
                 renderDeptCallouts(PIC_JSON);
                 stageAccount = $(this).attr("data-stageaccount") ? $(this).attr("data-stageaccount") : "(Unassigned)";
-                ajaxGet(`/api/Quotation/GetQuotationWorkflow/${selectedGuid}`, null)
+                ajaxGet(`/api/Quotation/GetQuotationWorkflow/${state.selectedGuid}`, null)
                             .then(instance => {
                                   ajaxGet(`/api/StepsWorkflow/GetNextStep/${instance.workflowDefinitionId}/${instance.currentStep}`, null)
                             .then(data => {
                                 setTimeout(() => {
                                 state.nextStep.instanceWorkflow = instance;
                                 state.nextStep.flowSteps = data;
-
                                 state.nextStep.currentStep = instance.currentStep;
+                            reloadWorkflow(state.selectedGuid , state.selectedId, state.stageDept, formModuleKeyQt)
                                 },_delayNextStepLoading );
                   });
                 });
@@ -1544,14 +1470,16 @@ Note:
                   
               
                     var policyIssuance = new Object();
-                    //quotationData.ClientName = submitSummaryData.clientName;
-                    //quotationData.ClientId = submitSummaryData.clientId;
-                    //quotationData.SurveyNeeded = submitSummaryData.surveyNeeded;
-                    //quotationData.DueDate = submitSummaryData.dueDate;
-                    //quotationData.ReinsuranceId = submitSummaryData.reinsuranceId;
                     policyIssuance = ObjectPopulateKey(quotationConvert, true, false);
                     policyIssuance.RequestDate = new Date();
-                    policyIssuance.PIC = `{"FO":"","TS":"","PM":""}`;
+                    policyIssuance.PIC = //`{"FO":"","TS":"","PM":""}`;
+                     {
+                                FO: ""
+                                , TS: ""
+                                , PM: ""
+                        };
+
+                    policyIssuance.PIC = JSON.stringify(policyIssuance.PIC);
                     // policyIssuance.StageAccount = submitData.to;
                     policyIssuance.StageDept = "FO";
                     policyIssuance.PolicyIssuanceStatus = "New";
