@@ -7533,7 +7533,19 @@ function initDepartmentAssignees(moduleKey) {
                     groupName: item,
                     dataForm: formItems,
                     //value: formItems.lmktAssigneeId || null,
-                    onChanged: function (item, editor) {
+                    onChanged: function (itemChild, editor) {
+                        var ds = $(`#${moduleKey}-form${item}`).dxForm("instance").option("dataSource");
+                        var store = ds;
+                        var PICs = JSON.parse(formItems.pIC);
+                        if (!itemChild?.accountName) return;
+                        PICs[item] = itemChild.accountName;
+                        var data = new Object();
+                        data.pIC = JSON.stringify(PICs);
+                        store.update(formItems.id, data)
+                            .done(function () {
+                                DevExpress.ui.notify(`Assigned To ${itemChild.fullName}`, "success", 2000);
+                            });
+
                     }
                 });
             }, _delayRenderAssigneeBox);
