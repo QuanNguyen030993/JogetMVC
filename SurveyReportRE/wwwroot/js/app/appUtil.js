@@ -618,6 +618,7 @@ function RenderGridElement(_gridConfig, gridInstance) {
                                     e.component.selectedItem = selectedItems.selectedRowsData;
                                     e.component.option("displayValue", selectedItems.selectedRowsData[0][gridConfig.config.displayExp]);
                                     e.component.option("value", keys[0]);
+                                    //e.component.option("selectedItem", selectedItems.selectedRowsData);
                                 }
                             },
                             columnAutoWidth: true,
@@ -6297,48 +6298,48 @@ function stretchColumnsEvenly(e, opts) {
         grid.updateDimensions();
     }
 }
-function createAssigneeSelector(options) {
-    const {
-        container,
-        dept,
-        initialValue = null,
-        onChanged = function () { }
-    } = options;
+//function createAssigneeSelector(options) {
+//    const {
+//        container,
+//        dept,
+//        initialValue = null,
+//        onChanged = function () { }
+//    } = options;
 
-    const state = {
-        assignee: initialValue
-    };
+//    const state = {
+//        assignee: initialValue
+//    };
 
-    //const wrapper = $("<div class='assignee-selector'/>").appendTo(container);
-    container.dxSelectBox({
-        label: "Assign To",
-        //labelMode: "floating",
-        searchEnabled: true,
-        valueExpr: "accountName",
-        displayExpr: "fullName",
-        dataSource: [],
-        value: initialValue,
-        onInitialized(e) {
-            ajaxGet("/api/Employee/AssigneeList", dept)
-                .then(list => {
-                    e.component.option("dataSource", list);
-                });
-        },
-        onValueChanged(e) {
-            state.assignee = e.value;
-            onChanged(e.value);
-        }
-    });
+//    //const wrapper = $("<div class='assignee-selector'/>").appendTo(container);
+//    container.dxSelectBox({
+//        label: "Assign To",
+//        //labelMode: "floating",
+//        searchEnabled: true,
+//        valueExpr: "accountName",
+//        displayExpr: "fullName",
+//        dataSource: [],
+//        value: initialValue,
+//        onInitialized(e) {
+//            ajaxGet("/api/Employee/AssigneeList", dept)
+//                .then(list => {
+//                    e.component.option("dataSource", list);
+//                });
+//        },
+//        onValueChanged(e) {
+//            state.assignee = e.value;
+//            onChanged(e.value);
+//        }
+//    });
 
-    return {
-        getValue() {
-            return state.assignee;
-        },
-        setValue(v) {
-            state.assignee = v;
-        }
-    };
-}
+//    return {
+//        getValue() {
+//            return state.assignee;
+//        },
+//        setValue(v) {
+//            state.assignee = v;
+//        }
+//    };
+//}
 
 
 function newKey() {
@@ -7422,6 +7423,7 @@ function renderDepartmentAssigneeBox(selector, options) {
                     keyword: loadOptions.searchValue || ""
                 }
             }).then(function (res) {
+                console.log(res);
                 return res && res.success ? res.data : [];
             });
         },
@@ -7433,6 +7435,7 @@ function renderDepartmentAssigneeBox(selector, options) {
                 type: "GET",
                 dataType: "json"
             }).then(function (res) {
+                console.log(res);
                 return res && res.success ? res.data : null;
             });
         }
@@ -7502,11 +7505,19 @@ function initDepartmentAssignees(moduleKey) {
         $.each(qtDeptModuleCode, function (itemIndex, item) {
             setTimeout(() => {
                 var formItems = $(`#${moduleKey}-form${item}`).dxForm("instance")?.option("formData") || {};
+                //console.log(formItems.lmktAssigneeId);
                 renderDepartmentAssigneeBox(`#${moduleKey}-${item.toLowerCase()}AssigneeBox`, {
                     groupName: item,
                     dataForm: formItems,
-                    value: formItems.lmktAssigneeId || null,
+                    //value: formItems.lmktAssigneeId || null,
                     onChanged: function (item, editor) {
+                        var PICs = JSON.parse(formItems.pIC);   
+                        console.log(item.accountName);
+                        //console.log(PICs);
+                        //console.log(formItems);
+                        //alert("assigned");
+                        //console.log(item);
+                        //console.log(editor);
                     }
                 });
             }, _delayRenderAssigneeBox);
@@ -7518,7 +7529,7 @@ function initDepartmentAssignees(moduleKey) {
                 renderDepartmentAssigneeBox(`#${moduleKey}-${item.toLowerCase()}AssigneeBox`, {
                     groupName: item,
                     dataForm: formItems,
-                    value: formItems.lmktAssigneeId || null,
+                    //value: formItems.lmktAssigneeId || null,
                     onChanged: function (item, editor) {
                     }
                 });

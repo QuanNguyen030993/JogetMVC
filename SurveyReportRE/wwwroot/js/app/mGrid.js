@@ -97,6 +97,7 @@ var MGridOption = class MGridOption {
             //            var columnNames = gConfig.Columns;
             //            var columns = [];
             var populateDropDownConfigs = that.populateCellValueFromDropDownBox();
+            console.log(populateDropDownConfigs);
             var populateDataConfigs = [];
             $.each(fieldConfigs, function (i, fc) {
 
@@ -137,7 +138,6 @@ var MGridOption = class MGridOption {
                     }
                 }
                 if (fieldConfigs == null) return;
-
                 //apply populate cell value from DropDown
                 if (populateDataConfigs != null) {
                     var populateDataConfig = populateDataConfigs.find(x => x.srcFieldName == fc.dataField);
@@ -149,11 +149,11 @@ var MGridOption = class MGridOption {
                             editor = that.editors[this.srcFieldName];
                             if (editor != null) {
                                 // drop down box
-                                if (editor.value != null && value != null) {
-                                    if (editor.seletedData != null) {
-                                        var seleteddata = editor.seletedData[0];
+                                if (editor.NAME == "dxDropDownBox" && value != null) {
+                                    if (editor.selectedItem != null) {
+                                        var selectedData = editor.selectedItem[0];
                                         $.each(this.desFieldNames, function (i, dFieldName) {
-                                            var selectedValue = seleteddata[dFieldName.DrFieldName];
+                                            var selectedValue = selectedData[dFieldName.DrFieldName];
                                             //if (selectedValue == undefined)
                                             //    selectedValue = dFieldName.DrFieldName;
                                             newData[dFieldName.FieldName] = selectedValue;
@@ -161,7 +161,7 @@ var MGridOption = class MGridOption {
                                     }
                                 }
                                 // select box
-                                else if (editor.option("displayValue") != null && value != null) {
+                                else if (editor.NAME == "dxSelectBox" && editor.option("displayValue") != null && value != null) {
                                     $.each(this.desFieldNames, function (i, dFieldName) {
                                         newData[dFieldName.FieldName] = editor.option("displayValue");
                                     });
