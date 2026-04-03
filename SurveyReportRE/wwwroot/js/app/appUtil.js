@@ -7499,20 +7499,26 @@ function getDefaultPicByDept(deptKey, dataForm) {
 }
 
 function initDepartmentAssignees(moduleKey) {
+    
+    var pageLayout = window.QuotationPage;
+    var stateLayout = pageLayout.state;
+    stateLayout.isAssigneeBoxRender = false;
     if (moduleKey == "qt") 
         $.each(qtDeptModuleCode, function (itemIndex, item) {
             setTimeout(() => {
                 var formItems = $(`#${moduleKey}-form${item}`).dxForm("instance")?.option("formData") || {};
-               
+                var currentPic = getDefaultPicByDept(item, formItems);
                 renderDepartmentAssigneeBox(`#${moduleKey}-${item.toLowerCase()}AssigneeBox`, {
                     groupName: item,
                     dataForm: formItems,
                     //value: formItems.lmktAssigneeId || null,
                     onChanged: function (itemChild, editor) {
+                        if (!stateLayout.isAssigneeBoxRender) return;
                         var ds = $(`#${moduleKey}-form${item}`).dxForm("instance").option("dataSource");
                         var store = ds;
                         var PICs = JSON.parse(formItems.pIC);
                         if (!itemChild?.accountName) return;
+                        if (currentPic == itemChild?.accountName) return;
                         PICs[item] = itemChild.accountName;
                         var data = new Object();
                         data.pIC = JSON.stringify(PICs);
@@ -7529,6 +7535,7 @@ function initDepartmentAssignees(moduleKey) {
         $.each(piDeptModuleCode, function (itemIndex, item) {
             setTimeout(() => {
                 var formItems = $(`#${moduleKey}-form${item}`).dxForm("instance")?.option("formData") || {};
+                var currentPic = getDefaultPicByDept(item,formItems);
                 renderDepartmentAssigneeBox(`#${moduleKey}-${item.toLowerCase()}AssigneeBox`, {
                     groupName: item,
                     dataForm: formItems,
@@ -7538,6 +7545,7 @@ function initDepartmentAssignees(moduleKey) {
                         var store = ds;
                         var PICs = JSON.parse(formItems.pIC);
                         if (!itemChild?.accountName) return;
+                        if (currentPic == itemChild?.accountName) return;
                         PICs[item] = itemChild.accountName;
                         var data = new Object();
                         data.pIC = JSON.stringify(PICs);
@@ -7550,7 +7558,7 @@ function initDepartmentAssignees(moduleKey) {
                 });
             }, _delayRenderAssigneeBox);
         });
-
+    stateLayout.isAssigneeBoxRender = true;
 }
 
 function makeSelectBoxEditorOptions(dataSource, acceptCustomValue = false ,gridInstance = null, dataSourceLookup = null) {
