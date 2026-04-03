@@ -12,13 +12,13 @@
 <script>
     setTimeout( () => {
     var formItems = $("#qt-formTS").dxForm("instance")?.option("formData") || {};
-    renderDepartmentAssigneeBox("#qt-tsAssigneeBox", {
-        groupName: "TS",
-        dataForm: formItems,
-        value: formItems.TSAssigneeId || null,
-        onChanged: function (item, editor) {
-        }
-    });
+    // renderDepartmentAssigneeBox("#qt-tsAssigneeBox", {
+    //     groupName: "TS",
+    //     dataForm: formItems,
+    //     value: formItems.TSAssigneeId || null,
+    //     onChanged: function (item, editor) {
+    //     }
+    // });
     }, _delayRenderAssigneeBox);
 
 </script>

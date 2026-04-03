@@ -16,8 +16,10 @@
 <div id="qt-formPM">
 </div>
 <script type="text/javascript">
-
+        var that = new Object();
+    that.ModelName = "Quotation";
     $(`#qt-formPM`).dxForm({
+        dataSource: makeBasicDataSource(that, true),
                  items: [
                          {itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
             ,

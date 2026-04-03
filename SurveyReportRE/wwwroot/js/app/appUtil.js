@@ -7423,7 +7423,6 @@ function renderDepartmentAssigneeBox(selector, options) {
                     keyword: loadOptions.searchValue || ""
                 }
             }).then(function (res) {
-                console.log(res);
                 return res && res.success ? res.data : [];
             });
         },
@@ -7435,7 +7434,6 @@ function renderDepartmentAssigneeBox(selector, options) {
                 type: "GET",
                 dataType: "json"
             }).then(function (res) {
-                console.log(res);
                 return res && res.success ? res.data : null;
             });
         }
@@ -7505,19 +7503,24 @@ function initDepartmentAssignees(moduleKey) {
         $.each(qtDeptModuleCode, function (itemIndex, item) {
             setTimeout(() => {
                 var formItems = $(`#${moduleKey}-form${item}`).dxForm("instance")?.option("formData") || {};
-                //console.log(formItems.lmktAssigneeId);
+               
                 renderDepartmentAssigneeBox(`#${moduleKey}-${item.toLowerCase()}AssigneeBox`, {
                     groupName: item,
                     dataForm: formItems,
                     //value: formItems.lmktAssigneeId || null,
-                    onChanged: function (item, editor) {
-                        var PICs = JSON.parse(formItems.pIC);   
-                        console.log(item.accountName);
-                        //console.log(PICs);
-                        //console.log(formItems);
-                        //alert("assigned");
-                        //console.log(item);
-                        //console.log(editor);
+                    onChanged: function (itemChild, editor) {
+                        var ds = $(`#${moduleKey}-form${item}`).dxForm("instance").option("dataSource");
+                        var store = ds;
+                        var PICs = JSON.parse(formItems.pIC);
+                        if (!itemChild?.accountName) return;
+                        PICs[item] = itemChild.accountName;
+                        var data = new Object();
+                        data.pIC = JSON.stringify(PICs);
+                        store.update(formItems.id, data)
+                            .done(function () {
+                                DevExpress.ui.notify(`Assigned To ${itemChild.fullName}`, "success", 2000);
+                            });
+               
                     }
                 });
             }, _delayRenderAssigneeBox);

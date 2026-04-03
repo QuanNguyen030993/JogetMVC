@@ -14,13 +14,13 @@
     setTimeout( () => {
     var formItems = $("#qt-formFO").dxForm("instance")?.option("formData") || {};
 
-    renderDepartmentAssigneeBox("#qt-foAssigneeBox", {
-        groupName: "FO",
-        dataForm: formItems,
-        value: formItems.foAssigneeId || null,
-        onChanged: function (item, editor) {
-        }
-    });
+    // renderDepartmentAssigneeBox("#qt-foAssigneeBox", {
+    //     groupName: "FO",
+    //     dataForm: formItems,
+    //     value: formItems.foAssigneeId || null,
+    //     onChanged: function (item, editor) {
+    //     }
+    // });
     }, _delayRenderAssigneeBox);
      $("#btnToggleResForm").dxButton({
                     text: "Res Form",

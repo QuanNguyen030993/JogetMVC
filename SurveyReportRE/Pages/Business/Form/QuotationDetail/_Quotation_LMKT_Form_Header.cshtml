@@ -12,13 +12,13 @@
 <script>
     setTimeout( () => {
     var formItems = $("#qt-formLMKT").dxForm("instance")?.option("formData") || {};
-    renderDepartmentAssigneeBox("#qt-lmktAssigneeBox", {
-        groupName: "LMKT",
-        dataForm: formItems,
-        value: formItems.lmktAssigneeId || null,
-        onChanged: function (item, editor) {
-        }
-    });
+    // renderDepartmentAssigneeBox("#qt-lmktAssigneeBox", {
+    //     groupName: "LMKT",
+    //     dataForm: formItems,
+    //     value: formItems.lmktAssigneeId || null,
+    //     onChanged: function (item, editor) {
+    //     }
+    // });
     }, _delayRenderAssigneeBox);
 
 </script>

@@ -97,7 +97,6 @@ var MGridOption = class MGridOption {
             //            var columnNames = gConfig.Columns;
             //            var columns = [];
             var populateDropDownConfigs = that.populateCellValueFromDropDownBox();
-            console.log(populateDropDownConfigs);
             var populateDataConfigs = [];
             $.each(fieldConfigs, function (i, fc) {
 

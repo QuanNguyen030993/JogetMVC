@@ -14,9 +14,11 @@
     }
 </style>
 <script type="text/javascript">
-
+        var that = new Object();
+    that.ModelName = "Quotation";
 
     $(`#qt-formLMKT`).dxForm({
+        dataSource: makeBasicDataSource(that, true),
                items: [ 
                         {itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
             ,

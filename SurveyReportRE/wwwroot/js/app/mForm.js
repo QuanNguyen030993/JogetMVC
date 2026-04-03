@@ -170,8 +170,11 @@
     loadData() {
         try {
             var that = this;
-            var store = makeBasicDataSource(that, true);
+            //var store = makeBasicDataSource(that, true);
+            //store.load();
+            var store = that.formInstance.option("dataSource");
             store.load();
+            
         } catch (err) {
             appErrorHandling('Library error: call MForm.loadData() was failed.', err);
             this.formInstance = null;
@@ -391,6 +394,7 @@
             var itemsConfig = this.buildFormItem(); //should not do the same time.
             formElement.addClass("fade-slide-up");
             this.formInstance = formElement.dxForm({
+                dataSource: makeBasicDataSource(that, true),
                 colCount: this.colCount,
                 items: itemsConfig,
                 height: "inherit",
