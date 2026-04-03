@@ -486,7 +486,8 @@ var MGridOption = class MGridOption {
             var summary = new Object();
             var gridEditorOptions = {};
             var fetchConfig = fetchConfigurationData(that.ModelName, that.gridType);
-            var gridDataSource = makeBasicDataSource(that);
+            that.customQuery = fetchConfig?.sysTableConfig?.customQuery ?? "";
+            var gridDataSource = makeBasicDataSource(that, false, that.customQuery != "" ? true : false);
             if (that.mGridDetailOption != null || that.mGridDetailOption != undefined) {
                 if (that.mGridDetailOption.visibleColumns != null || that.mGridDetailOption.visibleColumns != undefined) {
                     fetchConfig.getScheme = fetchConfig.getScheme.filter(field =>
@@ -505,10 +506,9 @@ var MGridOption = class MGridOption {
             this.columns = fetchConfig.getScheme;
 
 
-
-            this.GridConfig = getModelConfig(that.ModelName, false);
+            this.GridConfig = fetchConfig;//getModelConfig(that.ModelName, false);
             if (that.gridType == "User")
-                this.GridConfig = getModelConfig(that.ModelName);
+                this.GridConfig = fetchConfig;// getModelConfig(that.ModelName);
             RenderGridElement(fetchConfig.getScheme, that);
             if (mGridConfigInstance) {
                 if (mGridConfigInstance.gridEditorOptions != null || mGridConfigInstance.gridEditorOptions != undefined)
@@ -523,7 +523,7 @@ var MGridOption = class MGridOption {
                 }
             }
             if (this.gridEditorOptions != null || this.gridEditorOptions != undefined)
-                  gridEditorOptions = this.gridEditorOptions;
+                gridEditorOptions = this.gridEditorOptions;
             var defaultEditing = new Object();
             var exportConfig = new Object();
             if (fetchConfig.sysTableConfig) {
@@ -590,7 +590,7 @@ var MGridOption = class MGridOption {
                         });
                     }
                 },
-                keyExpr: "id",
+                keyExpr: (gridDataSource instanceof DevExpress.data.DataSource || gridDataSource instanceof DevExpress.data.CustomStore) ? null : (fetchConfig?.keyExpr ?? "id"),
                 //scrolling: { mode: 'infinite', showScrollbar: 'always' },
                 scrolling: {
                     mode: 'virtual',
@@ -600,7 +600,7 @@ var MGridOption = class MGridOption {
                 },
                 filterRow: { visible: true },
                 headerFilter: { visible: true, allowSearch: true },
-                remoteOperations: fetchConfig.sysTableConfig.customQuery == "OnSystem" ? {} : { paging: true, sorting: true, filtering: true },
+                remoteOperations: fetchConfig?.sysTableConfig?.customQuery == "OnSystem" ? { paging: false, sorting: false, filtering: false } : null,
                 filterPanel: { visible: true },
                 groupPanel: { visible: true, allowColumnDragging: true, emptyPanelText: "" },
                 grouping: {
@@ -668,6 +668,7 @@ var MGridOption = class MGridOption {
                 //...(Object.keys(gridEditorOptions).length > 0 ? gridEditorOptions : {})
                 ...((Object.keys(gridEditorOptions).length > 0) ? gridEditorOptions : defaultEditing)
             };
+
             if (!properties.editing.allowAdding && !properties.editing.allowUpdating && !properties.editing.allowDeleting)
                 this.isAllowRowMenu = false;
             else
@@ -677,7 +678,6 @@ var MGridOption = class MGridOption {
             if (that.Params)
                 if (that.Params.isAllowRowMenu)
                     this.isAllowRowMenu = that.Params.isAllowRowMenu;
-
             return properties;
         } catch (err) {
             appErrorHandling('Library error: call GetGridOptions was failed.', err);

@@ -596,6 +596,7 @@ function RenderGridElement(_gridConfig, gridInstance) {
                             // remoteOperations: { paging: true, filtering: true, sorting: true, grouping: true, summary: true, groupPaging: true },
                             filterRow: { visible: true },
                             dataSource: e.component.option("dataSource"),
+                            displayExpr: gridConfig.config.displayExpr,
                             columns: e.component.option("columns"),
                             selection: { mode: "single" },
                             scrolling: {
@@ -645,6 +646,7 @@ function RenderGridElement(_gridConfig, gridInstance) {
 }
 
 function getModelConfig(model, isFilter = true) {
+    //Parent method fetchConfigurationData
     var modelConfig = null;
 
     $.ajax({
@@ -2189,19 +2191,30 @@ function fetchConfigurationData(model, typeScheme = null) {
     if (itemConfig != null || itemConfig != undefined) {
         if (itemConfig.displayExpr)
             displayExp = itemConfig.displayExpr;
+        if (!itemConfig.keyExpr)
+            keyExpr = "id";
+        if (!sysTableConfig.customQuery)
+            sysTableConfig.customQuery = "";
     }
 
     return {
         sysTableConfig,
         getScheme,
-        displayExp
+        displayExp,
+        keyExpr
     };
 }
 
-function makeBasicDataSource(instance, isForm = false) {
+function makeBasicDataSource(instance, isForm = false, configBefore = false) {
     try {
+        
         var checkCustomQueryByModel = null;
-        checkCustomQueryByModel = getModelConfig(instance.ModelName);
+        if (!configBefore)
+            checkCustomQueryByModel = getModelConfig(instance.ModelName);
+        else
+            checkCustomQueryByModel = instance.customQuery;
+
+ 
         if (checkCustomQueryByModel == null) throw _genericExceptionMessage;
         if (!isForm) {
             let filter = null;
@@ -2290,9 +2303,9 @@ function makeBasicDataSource(instance, isForm = false) {
                             const formData = new FormData();
                             if (key.id)
                                 formData.append("key", key.id);
-                            else 
+                            else
                                 formData.append("key", key);
-                            
+
                             return $.ajax({
                                 url: `/api/${instance.ModelName}/DeleteData`,
                                 method: "DELETE",
@@ -2576,7 +2589,29 @@ function groupItemsByFormGroupNameNonChild(items) {
     };
 }
 
+function getDxKind(obj) {
+    if (!obj) return "null";
 
+    if (obj instanceof DevExpress.data.DataSource) {
+        const store = obj.store?.();
+        return `DataSource`;
+    }
+    if (obj instanceof DevExpress.data.CustomStore) {
+        const store = obj.store?.();
+        return `CustomStore`;
+    }
+
+    if (Array.isArray(obj)) return "Array";
+
+    const name = obj?.constructor?.name || "Unknown";
+
+    if (name === "CustomStore") return "CustomStore";
+    if (name === "ArrayStore") return "ArrayStore";
+    if (name === "LocalStore") return "LocalStore";
+    if (name === "ODataStore") return "ODataStore";
+
+    return name;
+}
 
 function makeFieldFeatures(item, obj, type) {
     var model = item.dataField.replace(/\b(\w+)Id\b/g, (match, p1) => {
@@ -2590,7 +2625,8 @@ function makeFieldFeatures(item, obj, type) {
     var dataSource = null;
     if (type == "grid") {
         config = fetchConfigurationData(model, obj.gridType);
-        dataSource = makeBasicDataSource(obj);
+        obj.customQuery = config.sysTableConfig.customQuery;
+        dataSource = makeBasicDataSource(obj, false, true);
     }
     if (type == "form") {
         config = fetchConfigurationData(model);

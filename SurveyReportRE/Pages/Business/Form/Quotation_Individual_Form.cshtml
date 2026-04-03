@@ -1158,7 +1158,7 @@ Note:
                 renderDeptCallouts(PIC_JSON);
                 stageAccount = $(this).attr("data-stageaccount") ? $(this).attr("data-stageaccount") : "(Unassigned)";
                 ajaxGet(`/api/Quotation/GetQuotationWorkflow/${state.selectedGuid}`, null)
-                            .then(instance => {
+                     .then(instance => {
                                   ajaxGet(`/api/StepsWorkflow/GetNextStep/${instance.workflowDefinitionId}/${instance.currentStep}`, null)
                             .then(data => {
                                 setTimeout(() => {
@@ -1167,7 +1167,7 @@ Note:
                                 state.nextStep.currentStep = instance.currentStep;
                             reloadWorkflow(state.selectedGuid , state.selectedId, state.stageDept, formModuleKeyQt)
                                 },_delayNextStepLoading );
-                  });
+                    });
                 });
                 // focus ring về đúng role hiện tại
                 state.focusDept = state.currentUserRole;
@@ -1461,7 +1461,7 @@ Note:
         });
 
         $("#btnEdit").dxButton({ text: "Edit", icon: "edit", type: "normal", onClick: () => DevExpress.ui.notify("Mock: Edit selected", "info", 1200) });
-        $("#btnMore").dxDropDownButton({ text: "More", icon: "overflow", items: ["Export", "Print", "Email"], onItemClick: (e) => DevExpress.ui.notify("Mock: " + e.itemData, "info", 1200) });
+        // $("#btnMore").dxDropDownButton({ text: "More", icon: "overflow", items: ["Export", "Print", "Email"], onItemClick: (e) => DevExpress.ui.notify("Mock: " + e.itemData, "info", 1200) });
 
         // $("#btnSaveDraft").dxButton({ text: "Save Draft", icon: "save", type: "normal", onClick: () => DevExpress.ui.notify("Mock: saved draft", "success", 1200) });
         // $("#btnSubmitBranch").dxButton({ text: "Route To", icon: "check", type: "success", onClick: function (e) { var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {}; submitNextStep("", state.nextStep, findRoute, formItems); } });
@@ -1502,7 +1502,6 @@ Note:
         // =========================
         HoverAjax.bind();
         bindSectionHeaderToggle();
-        
         renderList();
         PIC_JSON = pICs.find(f => f.quotationCode ==  selectedCodeNo)?.pIC ?? "{}";
         stageAccount = PIC_JSON[stageDept] ? PIC_JSON[stageDept] : "(Unassigned)";  
