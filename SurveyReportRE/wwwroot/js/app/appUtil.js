@@ -24,7 +24,7 @@ const _dbName = "CompanyDataDB";
 const _storeName = "CompanyData";
 var _cacheOutlines = [];
 var _allScheme = [];
-var fetchTables = ["Client", "Outline", "DataGridConfig"];
+var fetchTables = ["Outline", "DataGridConfig"];
 
 function initIndexedDB() {
     const request = indexedDB.open(_dbName, 1);
@@ -561,16 +561,19 @@ function RenderGridElement(_gridConfig, gridInstance) {
         }
         else if (item.dataType == "table") {
             var gridConfig = makeFieldFeatures(item, gridInstance, "grid");
+            var mDropDownDS = new MDropDownDataSource();
+            var DS = mDropDownDS.getDropDownDS('id', `api/${gridConfig.model}/DropDownLookUp`);
             if (gridConfig.config.displayExp) {
                 item.lookup = {
-                    dataSource: {
-                        key: 'id',
-                        store: DevExpress.data.AspNet.createStore({
-                            key: "id",
-                            loadUrl: `/api/${gridConfig.model}/GetAll`
-                        }),
-                        paginate: true,
-                    },
+                    //dataSource: {
+                    //    key: 'id',
+                    //    store: DevExpress.data.AspNet.createStore({
+                    //        key: "id",
+                    //        loadUrl: `/api/${gridConfig.model}/GetAll`
+                    //    }),
+                    //    paginate: true,
+                    //},
+                    dataSource: DS,
                     displayExpr: gridConfig.config.displayExp,
                     valueExpr: 'id'
                 };
@@ -584,11 +587,7 @@ function RenderGridElement(_gridConfig, gridInstance) {
                         height: _defaultDropDownHeight,
                     },
                     showClearButton: true,
-                    dataSource: DevExpress.data.AspNet.createStore({
-                        key: 'id',
-                        loadUrl: `api/${gridConfig.model}/GetAll`,
-                        paginate: true
-                    }),
+                    dataSource: DS,
                     columns: gridConfig.config.getScheme,
                     contentTemplate: function (e) {
                         const $dataGrid = $("<div>").dxDataGrid({
@@ -1683,7 +1682,7 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
         else if (item.editorType == "dxMultiDataGrid") {
             var model = "Users";
             var mDropDownDS = new MDropDownDataSource();
-            dataSource = mDropDownDS.getDropDownDS('id', `api/${model}/DropDownLookUp`);
+            dataSource = mDropDownDS.getDropDownDS('Id', `api/${model}/DropDownLookUp`);
             itemOptions = {
                 validationRules: item.validationRules,
                 formGroupName: item.formGroupName,
@@ -2208,7 +2207,6 @@ function fetchConfigurationData(model, typeScheme = null) {
 
 function makeBasicDataSource(instance, isForm = false, configBefore = false) {
     try {
-        
         var checkCustomQueryByModel = null;
         if (!configBefore)
             checkCustomQueryByModel = getModelConfig(instance.ModelName);
@@ -5572,57 +5570,9 @@ function RenderElementV2(_viewConfig, searchFormControls, objectIds, callback) {
                 }
             });
         }
-        if (item.Type == "Entity") {
-            var mDropDownDS = new MDropDownDataSource();
-            var dataSource = mDropDownDS.getDropDownDS('Id', `api/${item.FilterField}Api/GetLookup`);
-            searchFormControls.push({
-                dataField: item.ElementName,
-                editorType: "dxDropDownBox",
-                label: { location: "left", text: item.Caption },
-                editorOptions: {
-                    width: _filterWidth,
-                    dropDownOptions: {
-                        width: _entityWidth
-                    },
-                    valueExpr: item.ValueExpr,
-                    displayExpr: item.DisplayExpr,
-                    dataSource: dataSource,
-                    columns: item.ShowColumns,
-                    contentTemplate: function (e) {
-                        const $dataGrid = $("<div>").dxDataGrid({
-                            selectionMode: 'all',
-                            // remoteOperations: { paging: true, filtering: true, sorting: true, grouping: true, summary: true, groupPaging: true },
-                            filterRow: { visible: true },
-                            dataSource: e.component.option("dataSource"),
-                            columns: e.component.option("columns"),
-                            selection: { mode: "multiple" },
-                            scrolling: {
-                                mode: 'virtual',
-                                preloadEnabled: false,
-                                showScrollbar: 'always'
-                            },
-                            width: "100%",
-                            height: "100%",
-                            allowItemDeleting: false,
-                            showSelectionControls: true,
-                            sorting: {
-                                mode: 'multiple',
-                            },
-                            onSelectionChanged: function (selectedItems) {
-                                e.component.selectedItem = selectedItems.selectedRowsData;
-                                const keys = selectedItems.selectedRowKeys;
-                                e.component.option("value", keys);
-                                e.component.option("value", selectedItems.selectedRowsData.map(obj => obj.Id).join(','));
-                            },
-                            columnAutoWidth: true,
-                            customizeColumns: function (columns) {
-                            },
-                        });
-                        return $dataGrid;
-                    }
-                }
-            });
-        }
+        //if (item.Type == "table") {
+       
+        //}
         if (item.Type == "dxTextBox") {
             searchFormControls.push({
                 dataField: item.ElementName,
@@ -7106,8 +7056,8 @@ function createAttachmentItem(x, onDeleted) {
     $item.css("cursor", downloadUrl ? "pointer" : "default");
     $item.on("click", async function (ev) {
         if (ext === "xlsx" || ext === "xls") {
-            libreConvert(id);
-            //openExcelPreviewPopup(id);
+            //libreConvert(id);
+            openExcelPreviewPopup(id);
         }
         if (ext === "docx" || ext === "doc")
             openWordPreviewPopup(id);
@@ -7798,7 +7748,7 @@ async function libreConvert(id) {
             //window.URL.revokeObjectURL(url);
         },
         error: function (xhr, status, error) {
-            appNotifyWarning("File is not exists.");
+            appNotifyWarning("Call Libre fail!.");
         }
     });
 

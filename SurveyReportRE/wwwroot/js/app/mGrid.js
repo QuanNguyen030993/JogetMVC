@@ -711,18 +711,16 @@ var MDropDownDataSource = class MDropDownDataSource {
     constructor() {
         this.queryParams = null;
     }
-    set setQueryParams(queryParams) {
+    setQueryParams(queryParams) {
         this.queryParams = queryParams;
     }
+
     getDropDownDS(key, ApiMethod, customOptions) {
         var that = this;
-        return new DevExpress.data.DataSource({
+
+        return new DevExpress.data.CustomStore({
             key: key,
-            store: new DevExpress.data.CustomStore({
-                loadMode: "raw",
-                key: key,
-                cacheRawData: true
-            }),
+            loadMode: "raw",
             load: function (loadOptions) {
                 var d = $.Deferred();
                 var params = {};
@@ -735,70 +733,80 @@ var MDropDownDataSource = class MDropDownDataSource {
                 params.group = loadOptions.group ? JSON.stringify(loadOptions.group) : "";
                 params.groupSummary = loadOptions.groupSummary ? JSON.stringify(loadOptions.groupSummary) : "";
                 params.requireTotalCount = loadOptions.requireTotalCount;
+
                 if (loadOptions.filter != undefined) {
                     filter[0] = loadOptions.filter;
-                    params.filter = JSON.stringify(loadOptions.filter);
+                    params.key = JSON.stringify(loadOptions.filter);
                 }
+
                 if (that.queryParams != null) {
                     params.queryParams = that.queryParams;
                 }
-                //If a user typed something in dxAutocomplete, dxSelectBox or dxLookup
+
                 if (loadOptions.searchValue) {
                     if (filter[0] != undefined) {
                         filter[1] = "and";
                         filter[2] = [loadOptions.searchExpr, loadOptions.searchOperation, loadOptions.searchValue];
-                    } else if (loadOptions.searchValue) {
+                    } else {
                         filter[0] = [loadOptions.searchExpr, loadOptions.searchOperation, loadOptions.searchValue];
                     }
                 }
+
                 if (filter.length > 0) {
                     params.filter = JSON.stringify(filter);
                 }
-                $.ajaxSetup({
-                    async: true
-                });
-                $.getJSON(`${ApiMethod}`, params).done(function (result) {
-                    if (result != undefined) {
-                        if (result.data != null) {
-                            d.resolve(result.data
-                                , {
+                console.log(params);
+                $.getJSON(ApiMethod.replace("DropDownLookUp","GetAll"), params)
+                    .done(function (result) {
+                        if (result != undefined) {
+                            if (result.data != null) {
+                                d.resolve(result.data, {
                                     totalCount: result.totalCount,
                                     summary: result.summary
-                                }
-                            );
+                                });
+                            } else {
+                                d.resolve(result);
+                            }
+                        } else {
+                            d.resolve([]);
                         }
-                        else {
-                            d.resolve(result);
-                        }
-                    } else {
-                        d.resolve();
-                    }
-                });
+                    })
+                    .fail(function (xhr) {
+                        d.reject(xhr);
+                    });
+
                 return d.promise();
             },
 
-            byKey: function (key, ex) {
+            byKey: function (value) {
                 var url = null;
-                if (typeof key === "object") {
-                    key = JSON.stringify(key);
+                if (typeof value === "object") {
+                    value = JSON.stringify(value);
                 }
+
                 if (ApiMethod.indexOf("?") > 0)
-                    url = `${ApiMethod}&key=${key.toString()}`;
+                    url = `${ApiMethod}&key=${encodeURIComponent(value)}`;
                 else
-                    url = `${ApiMethod}?key=${key.toString()}`;
+                    url = `${ApiMethod}?key=${encodeURIComponent(value)}`;
 
                 var d = $.Deferred();
+
                 $.get(url)
                     .done(function (result) {
                         if (result != undefined && result.data != null)
                             d.resolve(result.data[0]);
+                        else if (Array.isArray(result))
+                            d.resolve(result[0]);
                         else
                             d.resolve(result);
+                            //return Array.isArray(result) ? result[0] : result;
+                    })
+                    .fail(function (xhr) {
+                        d.reject(xhr);
                     });
-                return d.promise();
 
+                return d.promise();
             }
-        }
-        );
+        });
     }
 }

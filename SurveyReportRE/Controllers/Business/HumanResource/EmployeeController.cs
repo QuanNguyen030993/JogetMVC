@@ -167,7 +167,6 @@ public class EmployeeController : BaseControllerApi<Employee>
         List<Users> users = new List<Users>();
         users = await _usersRepository.GetAll();
         //users = users.Where(w => Regex.IsMatch(w.name, @"\sRE$")).ToList();
-        users = users.Where(w => w.department == "RE").ToList();
 
         List<Employee> employees = new List<Employee>();
         employees = await _BaseRepository.GetAll();

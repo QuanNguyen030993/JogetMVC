@@ -174,7 +174,14 @@
     deptData: { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} },
     nextStep: {}
     },
-    actions: {}
+    actions: {},
+    quotePaging : {
+        skip: 0,
+        take: 20,
+        loading: false,
+        done: false,
+        firstLoadDone: false
+    }
     };
     // const _reduceDataGridMaxOverFlow  = 300;
     var _menus = [];

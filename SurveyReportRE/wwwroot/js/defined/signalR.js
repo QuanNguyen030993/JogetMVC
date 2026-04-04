@@ -56,7 +56,7 @@ connectionSignR.start().then(async function () {
 });
 connectionSignR.serverTimeoutInMilliseconds = 28800000; // 60s
 connectionSignR.keepAliveIntervalInMilliseconds = 10000; // gửi keepalive mỗi 15s
-var _fetchTables = ["Client", "Outline", "DataGridConfig"];
+var _fetchTables = [ "Outline", "DataGridConfig"];
 var _cacheDataGridConfigs = [];
 
 $.ajax({
