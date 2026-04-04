@@ -13,6 +13,10 @@ using ERPCore.Models.Request;
 using Microsoft.SharePoint.WebControls;
 using ERPCore.Models;
 using ERPCore.ControllerUtil;
+using ERPCore.Models.Migration.Business.HumanResource;
+using ERPCore.Models.Migration.Business.MasterData;
+using ERPCore.Repository;
+using ERPCore.Models.Migration.Business.Config;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -25,7 +29,12 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     private readonly IConfigurationSection path;
     private readonly ILogger<QuotationCommentLog> _logger;
     private readonly IOptionsMonitor<BlobStorageSettings> _optionsMonitor;
+    private readonly IBaseRepository<MailTemplate> _mailTemplateRepository;
+    private readonly IBaseRepository<MailQueue> _mailQueueRepository;
+    private readonly IBaseRepository<Users> _usersRepository;
+    private readonly IBaseRepository<Employee> _employeeRepository;
     private string DOMAIN_NAME = "";
+    private MailConfig _emailSettings;
     public InstanceWorkflowController(IBaseRepository<InstanceWorkflow> BaseRepository, IConfiguration config, IHttpContextAccessor httpContextAccessor, ILogger<QuotationCommentLog> logger, IOptionsMonitor<BlobStorageSettings> optionsMonitor) : base(BaseRepository, httpContextAccessor)
     {
         configuration = config;
@@ -35,6 +44,8 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         _BaseRepository = BaseRepository;
         _quotationRepository = new BaseRepository<Quotation>(configuration, _httpContextAccessor);
         _quotationCommentLogRepository = new BaseRepository<QuotationCommentLog>(configuration, _httpContextAccessor);
+        _mailQueueRepository = new BaseRepository<MailQueue>(configuration, _httpContextAccessor);
+        _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
         DOMAIN_NAME = configuration.GetSection("Domain:DCServer").Value;
     }
 
@@ -106,6 +117,34 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         var quotationCommentLogApiController = new QuotationCommentLogController(_quotationCommentLogRepository, configuration, _httpContextAccessor, _logger, _optionsMonitor);
         await quotationCommentLogApiController.ExecuteCustomQuery(logQuery);
         await quotationCommentLogApiController.ExecuteCustomQuery(logFlowQuery);
+
+
+        MailTemplate mailTemplate = new MailTemplate();
+        mailTemplate = await _mailTemplateRepository.GetSingleObject(s => s.TemplateName == "Submit Mail");
+        Users flowUser = new Users();
+        PICAttributes pICAttributes = new PICAttributes();
+        pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
+        string accountName = submitRequest.StepsWorkflow.ToNodeId switch
+        {
+            "FO" => pICAttributes.FO,
+            "TS" => pICAttributes.TS,
+            "UW" => pICAttributes.UW,
+            "LMKT" => pICAttributes.LMKT,
+            "PM" => pICAttributes.PM,
+            _ => null
+        };
+        Employee employee = new Employee();
+        flowUser = await _usersRepository.GetSingleObject(s => s.username == accountName);
+        employee = await _employeeRepository.GetSingleObject(s => s.UsersId == flowUser.Id);
+        DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
+        Dictionary<string, object> flowDictionaryData = new Dictionary<string, object>();
+        if (query.Rows.Count > 0)
+
+            flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
+        MailQueue mailQueue = new MailQueue();
+        //mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
+        await _mailQueueRepository.InsertData(mailQueue);
+
         return Ok();
     }
     public static int UpStep(InstanceWorkflow instanceWorkflow)

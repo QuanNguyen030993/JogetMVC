@@ -25,6 +25,9 @@ using Microsoft.SharePoint.WebControls;
 using RESurveyTool.Models.Models.Parsing;
 using Microsoft.AspNetCore.Http;
 using ERPCore.Models.Migration.Business.Workflow;
+using ERPCore.Models.Migration.Business.MasterData;
+using ERPCore.Models.Migration.Business.Data;
+using System.Reflection;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -41,8 +44,11 @@ public class QuotationController : BaseControllerApi<Quotation>
     private readonly IBaseRepository<Employee> _employeeRepository;
     private readonly IBaseRepository<UserRoles> _userRolesRepository;
     private readonly IBaseRepository<Roles> _rolesRepository;
+    private readonly IBaseRepository<MailTemplate> _mailTemplateRepository;
+    private readonly IBaseRepository<MailQueue> _mailQueueRepository;
     private readonly IHubContext<FileProcessingHub> _hubContext;
     private readonly IConfigurationSection path;
+    private MailConfig _emailSettings;
     public static string MANAGER_APP = "";
     public static string APPROVER_APP = "";
     public static string CHECKER_APP = "";
@@ -67,7 +73,6 @@ public class QuotationController : BaseControllerApi<Quotation>
         configuration = config;
         _BaseRepository = BaseRepository;
         _surveyRepository = new BaseRepository<Survey>(configuration, _httpContextAccessor);
-        _surveyRepository = new BaseRepository<Survey>(configuration, _httpContextAccessor);
         _attachmentRepository = new BaseRepository<ERPCore.Models.Migration.Business.Data.Attachment>(configuration, _httpContextAccessor);
         _formatCodeNoRepository = new BaseRepository<FormatCodeNo>(configuration, _httpContextAccessor);
         _usersRepository = new BaseRepository<Users>(configuration, _httpContextAccessor);
@@ -76,6 +81,10 @@ public class QuotationController : BaseControllerApi<Quotation>
         _rolesRepository = new BaseRepository<Roles>(configuration, _httpContextAccessor);
         _instanceWorkflowRepository = new BaseRepository<InstanceWorkflow>(configuration, _httpContextAccessor);
         _workflowDefinitionRepository = new BaseRepository<WorkflowDefinition>(configuration, _httpContextAccessor);
+        _mailTemplateRepository = new BaseRepository<MailTemplate>(configuration, _httpContextAccessor);
+        _mailQueueRepository = new BaseRepository<MailQueue>(configuration, _httpContextAccessor);
+        _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
+
         _hubContext = hubContext;
         MANAGER_APP = configuration.GetSection("BusinessConfig:ManagerAppKey").Value;
         APPROVER_APP = configuration.GetSection("BusinessConfig:ApproverAppKey").Value;
@@ -164,6 +173,38 @@ public class QuotationController : BaseControllerApi<Quotation>
         return Ok(null);
     }
 
+    [HttpGet("{id}/{toDept}")]
+    public async Task<IActionResult> AssignTask(long id, string toDept)
+    {
+        MailTemplate mailTemplate = new MailTemplate();
+        mailTemplate = await _mailTemplateRepository.GetSingleObject(s => s.TemplateName == "Assign Mail");
+        Quotation quotation = new Quotation();
+        quotation = await _BaseRepository.GetSingleObject(s => s.Id == id);
+        Users flowUser = new Users();
+        PICAttributes pICAttributes = new PICAttributes();
+        pICAttributes = JsonConvert.DeserializeObject<PICAttributes> (quotation.PIC);
+        string accountName = toDept switch
+        {
+            "FO" => pICAttributes.FO,
+            "TS" => pICAttributes.TS,
+            "UW" => pICAttributes.UW,
+            "LMKT" => pICAttributes.LMKT,
+            "PM" => pICAttributes.PM,
+            _ => null
+        };
+        Employee employee = new Employee();
+        flowUser = await _usersRepository.GetSingleObject(s => s.username == accountName);
+        employee = await _employeeRepository.GetSingleObject(s => s.UsersId == flowUser.Id);
+        DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
+        Dictionary<string, object> flowDictionaryData = new Dictionary<string, object>();
+        if (query.Rows.Count > 0)
+
+            flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
+        MailQueue mailQueue = new MailQueue();
+        mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
+        await _mailQueueRepository.InsertData(mailQueue);
+        return Ok();
+    }
 
     [HttpGet("{listIds}/{jsessionId}")]
     public async Task<ActionResult<Quotation>> PullDataBySession(string listIds,string jsessionId)

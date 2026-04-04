@@ -709,17 +709,17 @@ namespace ERPCore.Common
         public static MailQueue MakeMailQueueItem(MailItem mailItem, MailConfig emailSettings, List<string> attachments = null, string type = "")
         {
             MailQueue mailQueue = new MailQueue();
-            //mailQueue.ToName = mailItem.ToName;
-            //mailQueue.ToEmail = mailItem.ToEmail;
-            //mailQueue.Subject = mailItem.Subject;
-            //mailQueue.TextBody = mailItem.TextBody;
-            //mailQueue.HtmlBody = mailItem.HtmlBody;
-            //mailQueue.CC = mailItem.CC;
-            //mailQueue.BCC = mailItem.BCC;
-            //mailQueue.FromAccount = emailSettings.User;
-            //mailQueue.Type = type;
-            //mailQueue.Attachments = attachments != null ? string.Join(',', attachments) : "";
-            //mailQueue.IsSend = false;
+            mailQueue.ToName = mailItem.ToName;
+            mailQueue.ToEmail = mailItem.ToEmail;
+            mailQueue.Subject = mailItem.Subject;
+            mailQueue.TextBody = mailItem.TextBody;
+            mailQueue.HtmlBody = mailItem.HtmlBody;
+            mailQueue.CC = mailItem.CC;
+            mailQueue.BCC = mailItem.BCC;
+            mailQueue.FromAccount = emailSettings.User;
+            mailQueue.Type = type;
+            mailQueue.Attachments = attachments != null ? string.Join(',', attachments) : "";
+            mailQueue.IsSend = false;
             return mailQueue;
         }
 
@@ -728,7 +728,7 @@ namespace ERPCore.Common
             return Regex.Replace(input, @"@@[a-zA-Z0-9]+", "");
         }
 
-        public static MailQueue NotifySession(Employee staff, Models.Migration.Business.Config.Users notifyUser, MailTemplate mailTemplate, MailConfig emailSettings, Dictionary<string, object> dictionary, string FOLLOW_CC, List<string> attachments = null)
+        public static MailQueue NotifySession(Employee staff, MailTemplate mailTemplate, MailConfig emailSettings, Dictionary<string, object> dictionary, string FOLLOW_CC, List<string> attachments = null)
         {
             string contentHandle = MailUtil.BodyContentHandle(mailTemplate.TemplateContent, dictionary);
             mailTemplate.TemplateMailTitle = MailUtil.TitleContentHandle(mailTemplate.TemplateMailTitle, dictionary);
@@ -738,8 +738,8 @@ namespace ERPCore.Common
                 if (mailTemplate.IsActive ?? false)
                 {
                     MailItem mailItem = new MailItem();
-                    mailItem.ToName = !string.IsNullOrEmpty(notifyUser.mail) ? notifyUser.name : mailTemplate.To;
-                    mailItem.ToEmail = !string.IsNullOrEmpty(notifyUser.mail) ? notifyUser.mail : mailTemplate.To;
+                    mailItem.ToName = !string.IsNullOrEmpty(staff.FullName) ? staff.FullName : mailTemplate.To;
+                    mailItem.ToEmail = !string.IsNullOrEmpty(staff.Email) ? staff.Email : mailTemplate.To;
                     mailItem.Subject = $"{mailTemplate.PrefixTitleMail} {mailTemplate.TemplateMailTitle}";
                     mailItem.HtmlBody = contentHandle;
                     mailItem.TextBody = "";

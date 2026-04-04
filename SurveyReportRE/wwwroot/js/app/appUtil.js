@@ -7363,7 +7363,11 @@ function initDepartmentAssignees(moduleKey) {
                             .done(function () {
                                 DevExpress.ui.notify(`Assigned To ${itemChild.fullName}`, "success", 2000);
                             });
-               
+                        ajaxGet(`/api/Quotation/AssignTask/${formItems.id}/${item}`,null )
+                            .then(list => {
+
+
+                            });
                     }
                 });
             }, _delayRenderAssigneeBox);

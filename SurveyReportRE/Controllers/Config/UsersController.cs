@@ -15,6 +15,7 @@ using System.Security.Claims;
 using System.Security.Principal;
 using ERPCore.Models.Migration.Business.HumanResource;
 using ERPCore.Common;
+using ERPCore.Models.Migration.Business.MasterData;
 
 namespace ERPCore.Controllers.Config
 {
@@ -102,6 +103,9 @@ namespace ERPCore.Controllers.Config
 
             return Ok(Base);
         }
+
+
+
 
         [HttpGet]
         public override async Task<ActionResult<Users>> DropDownLookup()

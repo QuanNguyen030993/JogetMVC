@@ -344,6 +344,15 @@ public class TurnAroundAttributes
     public TurnAroundItem? LMKT { get; set; }
     public TurnAroundItem? PM { get; set; }
 }
+public class PICAttributes
+{
+    //{    "FO": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 10:30:00" },    "TS": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 09:15:00" },    "UW": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 09:15:00" },    "LMKT": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 09:15:00" },    "PM": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 09:15:00" }  }
+    public string? FO { get; set; }
+    public string? TS { get; set; }
+    public string? UW { get; set; }
+    public string? LMKT { get; set; }
+    public string? PM { get; set; }
+}
 public class TurnAroundItem
 {
     public DateTime? AcceptDate { get; set; }
