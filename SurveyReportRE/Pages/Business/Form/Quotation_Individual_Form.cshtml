@@ -694,6 +694,9 @@ Note:
                     //     `);
                     var isSel = q.id === selectedId;
                     pICs.push({ quotationCode: q.quotationCode, pIC: q.pIC ?? "{}" });
+                    console.log(pICs);
+
+
                     $root.append(`
                         <div class="${formModuleKeyQt}-quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-guid="${q.guid}" data-attachmentid="${q.documentId}" data-codeno="${q.quotationCode}" data-stagedept="${q.stageDept}" data-stageaccount="${parsePicMap(q.pIC)[q.stageDept] ? parsePicMap(q.pIC)[q.stageDept] : "(Unassigned)"}">
                             <div class="quoteTop">
@@ -786,11 +789,13 @@ Note:
                 showListLoader(true);
 
                 try {
-                    const data = await $.ajax({
+                    var data = await $.ajax({
                         url: buildListUrl(),
                         method: "GET",
                         contentType: "application/json"
                     });
+
+                    data = data.map(m => { m.pIC = m.pic; return m; });
 
                     const rows = Array.isArray(data) ? data : [];
 
@@ -1255,19 +1260,60 @@ Note:
                 scrollToDept(formModuleKeyQt, state.focusDept);
             }
 
+            // function bindQuoteCardClick() {
+            //     $("#qt-quoteList")
+            //         .off("click.quoteCard", ".qt-quoteCard")
+            //         .on("click.quoteCard", ".qt-quoteCard", function () {
+            //             const id = Number($(this).attr("data-id"));
+            //             const q = state.quotes.find(x => Number(x.id) === id);
+            //             if (!q) return;
+
+            //             syncSelectedState(q);
+            //             state.focusDept = state.currentUserRole;
+
+            //             loadSelectedWorkflow().then(() => {
+            //                 rerenderCurrentSelectionOnly();
+            //                 renderDetail();
+            //                 initDepartmentAssignees(formModuleKeyQt);
+
+            //                 if (commentPanelOpened) {
+            //                     $("#btnCloseRightComment").click();
+            //                 }
+            //             });
+            //         });
+            // }
             function bindQuoteCardClick() {
                 $("#qt-quoteList")
                     .off("click.quoteCard", ".qt-quoteCard")
                     .on("click.quoteCard", ".qt-quoteCard", function () {
                         const id = Number($(this).attr("data-id"));
-                        const q = state.quotes.find(x => Number(x.id) === id);
+                        const source = state.isSearching ? (state.displayQuotes || []) : (state.quotes || []);
+                        const q = source.find(x => Number(x.id) === id);
                         if (!q) return;
 
-                        syncSelectedState(q);
+                        selectedId = q.id ?? null;
+                        selectedGuid = q.guid ?? null;
+                        selectedAttachmentId = q.documentId ?? null;
+                        selectedCodeNo = q.quotationCode ?? null;
+                        stageDept = q.stageDept ?? null;
+
+                        state.selectedId = selectedId;
+                        state.selectedGuid = selectedGuid;
+                        state.selectedAttachmentId = selectedAttachmentId;
+                        state.selectedCodeNo = selectedCodeNo;
+                        state.stageDept = stageDept;
                         state.focusDept = state.currentUserRole;
 
+                        PIC_JSON = pICs.find(f => f.quotationCode == selectedCodeNo)?.pIC ?? q.pIC ?? "{}";
+                        renderDeptCallouts(PIC_JSON);
+
+                        var map = parsePicMap(PIC_JSON);
+                        stageAccount = map[stageDept] ? map[stageDept] : "(Unassigned)";
+
+                        $(".qt-quoteCard").removeClass("selected");
+                        $(this).addClass("selected");
+
                         loadSelectedWorkflow().then(() => {
-                            rerenderCurrentSelectionOnly();
                             renderDetail();
                             initDepartmentAssignees(formModuleKeyQt);
 
@@ -1372,14 +1418,121 @@ Note:
                 };
             }
 
+            // $("#qt-searchBox").dxTextBox({
+            //     placeholder: "Search quotations...",
+            //     stylingMode: "outlined",
+            //     mode: "search",
+            //     onValueChanged: debounce((e) => {
+            //         searchText = e.value || "";
+            //         loadQuotePage(true);
+            //     }, 350)
+            // });
+       
+
+            function filterLocalQuotes(keyword) {
+                const t = String(keyword || "").trim().toLowerCase();
+                if (!t) return state.quotes.slice();
+
+                return state.quotes.filter(x =>
+                    (x.quotationCode || "").toLowerCase().includes(t) ||
+                    (x.clientName || "").toLowerCase().includes(t) ||
+                    (x.productName || "").toLowerCase().includes(t) ||
+                    (x.lineName || "").toLowerCase().includes(t) ||
+                    String(x.requestNo || "").toLowerCase().includes(t)
+                );
+            }
+
+            function renderQuoteList(data) {
+                $("#qt-quoteList").empty();
+
+                const rows = Array.isArray(data) ? data : [];
+                if (!rows.length) {
+                    showListEmpty(true);
+                    return;
+                }
+
+                showListEmpty(false);
+                appendQuoteCards(rows);
+
+                if (!state.isSearching && state.quotePaging.done) showListEnd(true);
+                else showListEnd(false);
+            }
+
+            async function searchQuoteFromServer(keyword) {
+                const token = ++state.searchRequestToken;
+                state.serverSearchMode = true;
+                state.isSearching = true;
+
+                showListLoader(true);
+
+                try {
+                    const params = new URLSearchParams();
+                    params.set("skip", 0);
+                    params.set("take", 50);
+                    if (keyword) params.set("searchText", keyword);
+
+                    const data = await $.ajax({
+                        url: `/api/Quotation/GetAll?${params.toString()}`,
+                        method: "GET",
+                        contentType: "application/json"
+                    });
+
+                    if (token !== state.searchRequestToken) return;
+
+                    state.displayQuotes = Array.isArray(data) ? data : [];
+                    renderQuoteList(state.displayQuotes);
+                } catch (err) {
+                    console.error(err);
+                } finally {
+                    if (token === state.searchRequestToken) showListLoader(false);
+                }
+            }
+
+            function clearSearchMode() {
+                state.isSearching = false;
+                state.serverSearchMode = false;
+                state.displayQuotes = [];
+                state.searchRequestToken++;
+                renderQuoteList(state.quotes);
+            }
+
+            const triggerServerSearch = debounce(function (keyword) {
+                searchQuoteFromServer(keyword);
+            }, 700);
+
             $("#qt-searchBox").dxTextBox({
                 placeholder: "Search quotations...",
                 stylingMode: "outlined",
                 mode: "search",
                 onValueChanged: debounce((e) => {
-                    searchText = e.value || "";
-                    loadQuotePage(true);
-                }, 350)
+                    state.displayQuotes = [];
+                    state.isSearching = false;
+                    state.serverSearchMode = false;
+                    state.searchRequestToken = 0;
+                    searchText = (e.value || "").trim();
+
+                    if (!searchText) {
+                        clearSearchMode();
+                        return;
+                    }
+
+                    state.isSearching = true;
+
+                    const localRows = filterLocalQuotes(searchText);
+
+                    if (localRows.length > 0) {
+                        state.serverSearchMode = false;
+                        state.displayQuotes = localRows;
+                        renderQuoteList(localRows);
+                        // triggerServerSearch(searchText);
+                        state.isSearching = false;
+                    } else {
+                        state.displayQuotes = [];
+                        renderQuoteList([]);
+                        triggerServerSearch(searchText);
+                        state.isSearching = false;
+                    }
+                }, 250)
             });
 
             $(`#${formModuleKeyQt}-btnClientConfirm`).dxButton({

@@ -9,6 +9,7 @@ using System.Net.Http.Headers;
 using ERPCore.Models.Models.Parsing;
 using Microsoft.AspNetCore.Authorization;
 using System.Text;
+using Microsoft.SharePoint.WebControls;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -238,7 +239,7 @@ public class DocumentController : BaseControllerApi<Document>
                 var ext = Path.GetExtension(fileName ?? "")
                     .TrimStart('.')
                     .ToLowerInvariant();
-
+                if (!System.IO.File.Exists(Path.Combine(path.Value,d.SubDirectory))) ext = "Not Found On Server";
                 return new
                 {
                     id = d.Id,

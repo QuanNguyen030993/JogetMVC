@@ -6350,33 +6350,35 @@ window.AttachmentUtil = (function () {
         return idx >= 0 ? s.substring(idx + 1).toLowerCase() : "";
     }
 
-    function iconByExt(ext) {
-        ext = (ext || "").toLowerCase();
-        switch (ext) {
-            case "pdf": return "📕";
-            case "xls":
-            case "xlsx":
-            case "csv": return "📗";
-            case "doc":
-            case "docx": return "📘";
-            case "ppt":
-            case "pptx": return "📙";
-            case "msg":
-            case "eml": return "✉️";
-            case "xml":
-            case "json": return "🧾";
-            case "zip":
-            case "rar":
-            case "7z": return "🗜️";
-            case "png":
-            case "jpg":
-            case "jpeg":
-            case "gif":
-            case "bmp":
-            case "webp": return "🖼️";
-            default: return "📎";
-        }
-    }
+    //function iconByExt(ext) {
+    //    ext = (ext || "").toLowerCase();
+    //        console.log(ext);
+    //    switch (ext) {
+    //        case "not found": return "Not Found";
+    //        case "pdf": return "📕";
+    //        case "xls":
+    //        case "xlsx":
+    //        case "csv": return "📗";
+    //        case "doc":
+    //        case "docx": return "📘";
+    //        case "ppt":
+    //        case "pptx": return "📙";
+    //        case "msg":
+    //        case "eml": return "✉️";
+    //        case "xml":
+    //        case "json": return "🧾";
+    //        case "zip":
+    //        case "rar":
+    //        case "7z": return "🗜️";
+    //        case "png":
+    //        case "jpg":
+    //        case "jpeg":
+    //        case "gif":
+    //        case "bmp":
+    //        case "webp": return "🖼️";
+    //        default: return "📎";
+    //    }
+    //}
 
     function formatBytes(bytes) {
         const n = Number(bytes || 0);
@@ -6485,7 +6487,7 @@ window.AttachmentUtil = (function () {
                 const $item = $("<div style='display:flex;align-items:center;gap:10px;padding:6px 4px;'>");
 
                 $("<div style='width:32px;font-size:20px;text-align:center;'>")
-                    .text(iconByExt(ext))
+                    .text(getIconByExt(ext))
                     .appendTo($item);
 
                 const $mid = $("<div style='flex:1;min-width:0;'>").appendTo($item);
@@ -6710,6 +6712,7 @@ window.AttachmentUtil = (function () {
 
 function getIconByExt(ext) {
     ext = (ext || "").toLowerCase();
+    if (ext === "not found on server") return "!";
     if (ext === "pdf") return "📕";
     if (ext === "xls" || ext === "xlsx" || ext === "csv") return "📗";
     if (ext === "doc" || ext === "docx") return "📘";
@@ -6738,122 +6741,6 @@ function formatBytes(bytes) {
     return gb.toFixed(1) + " GB";
 }
 
-// ✅ Load list attachments theo id trong formData
-//async function loadAttachmentList(sectionName) {
-//    var form = $(`#form${sectionName}`).dxForm("instance");
-//    var formData = form?.option("formData") || {};
-//    var key = formData.guid; // đúng ý bạn: lấy id từ formData
-
-//    //var $host = $(`#attList_${sectionName}_${formData.id}_${formData.attachmentId}`);
-//    var $host = $(`#attList_${sectionName}`);
-//    if ($host.length === 0) return;
-
-//    if (!key) {
-//        $host.html("<div style='opacity:.7;padding:6px 2px;'>No record id yet</div>");
-//        return;
-//    }
-
-//    try {
-//        // TODO: đổi API list cho đúng hệ thống của bạn
-//        var url = `/api/Document/GetByKey?recordGuid=${encodeURIComponent(key)}&folder=${sectionName}`;
-//        var res = await fetch(url, { method: "GET" });
-//        var data = res.ok ? (await res.json().catch(() => [])) : [];
-
-//        renderAttachmentList(data || [], $host);
-//    } catch (e) {
-//        $host.html("<div style='color:#b91c1c;padding:6px 2px;'>Cannot load attachments</div>");
-//    }
-//}
-
-
-//function renderAttachmentList(list, attList_Host) {
-//    if (!attList_Host || attList_Host.length === 0) return;
-
-//    attList_Host.empty();
-
-//    if (!list || list.length === 0) {
-//        attList_Host.html("<div style='opacity:.7;padding:6px 2px;'>No attachments</div>");
-//        return;
-//    }
-
-//    list.forEach(function (x) {
-//        const fileName = x.fileName || x.FileName || x.name || "Unnamed";
-//        const ext = (x.extension || x.Extension || getExt(fileName)).toLowerCase();
-//        const size = x.size || x.fileSize || x.FileSize || 0;
-//        const downloadUrl = x.downloadUrl || x.DownloadUrl || x.url;
-//        const id = x.id || x.Id || x.attachmentId;
-
-//        const $item = $("<div>").addClass("att-item");
-
-//        $("<div>")
-//            .addClass("att-ico")
-//            .text(getIconByExt(ext))
-//            .appendTo($item);
-
-//        const $meta = $("<div>").addClass("att-meta").appendTo($item);
-
-//        $("<div>")
-//            .addClass("att-name")
-//            .attr("title", fileName)
-//            .text(fileName)
-//            .appendTo($meta);
-
-//        $("<div>")
-//            .addClass("att-sub")
-//            .text((ext ? ext.toUpperCase() : "FILE") + " • " + formatBytes(size))
-//            .appendTo($meta);
-
-//        const $actions = $("<div>").addClass("att-actions").appendTo($item);
-
-//        $("<div>").dxButton({
-//            icon: "download",
-//            hint: "Download",
-//            stylingMode: "contained",
-//            onClick: function (ev) {
-//                ev.event?.stopPropagation?.();
-//                if (downloadUrl) {
-//                    window.open(downloadUrl, "_blank");
-//                } else {
-//                    DevExpress.ui.notify("No download url", "warning", 2000);
-//                }
-//            }
-//        }).appendTo($actions);
-
-//        $("<div>").dxButton({
-//            icon: "trash",
-//            hint: "Delete",
-//            stylingMode: "outlined",
-//            onClick: async function (ev) {
-//                ev.event?.stopPropagation?.();
-//                if (!id) {
-//                    DevExpress.ui.notify("Missing id", "warning", 2000);
-//                    return;
-//                }
-
-//                try {
-//                    const res = await fetch(`/api/Document/DeleteDocumentData?id=${encodeURIComponent(id)}`, {
-//                        method: "GET"
-//                    });
-
-//                    if (!res.ok) throw new Error("Delete failed");
-
-//                    DevExpress.ui.notify("Deleted", "success", 1200);
-//                    loadAttachmentList();
-//                } catch (err) {
-//                    DevExpress.ui.notify(err.message || "Delete error", "error", 2500);
-//                }
-//            }
-//        }).appendTo($actions);
-
-//        $item.css("cursor", downloadUrl ? "pointer" : "default");
-//        $item.on("click", function (ev) {
-//            if ($(ev.target).closest(".dx-button").length) return;
-//            if (downloadUrl) window.open(downloadUrl, "_blank");
-//        });
-
-//        attList_Host.append($item);
-//    });
-//}
 function getCurrentEditorOptions(editorOptions) {
     const form = $(`#${editorOptions.moduleName}-form${editorOptions.sectionName}`).dxForm("instance");
     if (!form) return null;
