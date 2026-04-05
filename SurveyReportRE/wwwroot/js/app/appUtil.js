@@ -6704,7 +6704,7 @@ window.AttachmentUtil = (function () {
 
     return {
         init,
-        iconByExt,
+        //iconByExt,
         formatBytes,
         getKeyAndValues
     };
