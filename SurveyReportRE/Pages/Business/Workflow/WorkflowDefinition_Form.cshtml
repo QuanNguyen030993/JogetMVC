@@ -43,20 +43,20 @@
     }
 
     /*    .card {
-                    background: #fff;
-                    border: 1px solid #e5e7eb;
-                    border-radius: 14px;
-                    box-shadow: 0 8px 24px rgba(0,0,0,.06);
-                    overflow: hidden;
-                    display: flex;
-                    flex-direction: column;
-                    min-height: 0;
-                }
+                        background: #fff;
+                        border: 1px solid #e5e7eb;
+                        border-radius: 14px;
+                        box-shadow: 0 8px 24px rgba(0,0,0,.06);
+                        overflow: hidden;
+                        display: flex;
+                        flex-direction: column;
+                        min-height: 0;
+                    }
 
-                .card-header {
-                    padding: 14px 16px;
-                    border-bottom: 1px solid #edf0f5;
-                } */
+                    .card-header {
+                        padding: 14px 16px;
+                        border-bottom: 1px solid #edf0f5;
+                    } */
 
     .card-title {
         font-size: 16px;
@@ -333,6 +333,37 @@
         outline-offset: 2px;
     }
 
+
+    .condition-builder-card {
+        border: 1px solid #e5e7eb;
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 12px;
+        margin-bottom: 12px;
+        box-shadow: 0 4px 14px rgba(0,0,0,.04);
+    }
+
+    .condition-builder-preview {
+        min-height: 180px;
+        max-height: 260px;
+        overflow: auto;
+        border-radius: 12px;
+        background: #0f172a;
+        color: #dbeafe;
+        padding: 12px;
+        font-family: Consolas, monospace;
+        font-size: 12px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        border: 1px solid #1e293b;
+    }
+
+    .condition-builder-note {
+        font-size: 12px;
+        color: #64748b;
+        margin-top: 6px;
+    }
+
     @@media (max-width: 1680px) {
         .layout {
             grid-template-columns: 270px 380px 1fr;
@@ -370,16 +401,16 @@
                             <div class="desc">Ví dụ FO / TS / UW / LMKT / PM</div>
                         </div>
                         @*  <div class="tool-item" draggable="true" data-type="actor" data-text="New Actor">
-                            <div class="name">Actor</div>
-                            <div class="desc">Ví dụ Client / External / Approver</div>
+                        <div class="name">Actor</div>
+                        <div class="desc">Ví dụ Client / External / Approver</div>
                         </div>
                         <div class="tool-item" draggable="true" data-type="condition" data-text="New Condition">
-                            <div class="name">Condition</div>
-                            <div class="desc">Rule node / branching / decision</div>
+                        <div class="name">Condition</div>
+                        <div class="desc">Rule node / branching / decision</div>
                         </div>
                         <div class="tool-item" draggable="true" data-type="system" data-text="New System">
-                            <div class="name">System</div>
-                            <div class="desc">Auto process / service / scheduler</div>
+                        <div class="name">System</div>
+                        <div class="desc">Auto process / service / scheduler</div>
                         </div> *@
                     </div>
 
@@ -393,34 +424,34 @@
                         <div class="section-title">Payload Preview</div>
                         <div id="payloadBox_@Convert.ToInt32(ViewData["Id"])" class="json-box"></div>
                     </div>
-                    @* <div class="section-title">Legend</div> 
+                    @* <div class="section-title">Legend</div>
                     <div class="legend-box">
-                        <div class="legend-item"><span class="badge q">Quotation</span> node/flow dùng cho quotation</div>
-                        <div class="legend-item"><span class="badge pi">PolicyIssuance</span> node/flow dùng cho policy issuance</div>
-                        <div class="legend-item"><span class="badge both">Both</span> dùng chung</div>
-                        <div class="legend-item"><span class="badge return">RETURN</span> flow trả về</div>
-                        <div class="legend-item"><span class="badge loop">LOOP</span> flow lặp</div>
-                        <div class="legend-item"><span class="badge exit">EXIT</span> flow thoát loop</div>
-                        <div class="legend-item"><span class="badge user">UserDecision</span> user tự quyết định thoát loop</div>
+                    <div class="legend-item"><span class="badge q">Quotation</span> node/flow dùng cho quotation</div>
+                    <div class="legend-item"><span class="badge pi">PolicyIssuance</span> node/flow dùng cho policy issuance</div>
+                    <div class="legend-item"><span class="badge both">Both</span> dùng chung</div>
+                    <div class="legend-item"><span class="badge return">RETURN</span> flow trả về</div>
+                    <div class="legend-item"><span class="badge loop">LOOP</span> flow lặp</div>
+                    <div class="legend-item"><span class="badge exit">EXIT</span> flow thoát loop</div>
+                    <div class="legend-item"><span class="badge user">UserDecision</span> user tự quyết định thoát loop</div>
                     </div> *@
 
                     @* <div class="loop-box">
-                        Mockup này chưa vẽ line graph thật.
-                        <br>Phần “vòng tròn” đang thể hiện qua:
-                        <br>- transition `From -> To`
-                        <br>- badge `LOOP`
-                        <br>- self-loop hoặc loop-group
-                        <br>- nút thoát `EXIT`
+                    Mockup này chưa vẽ line graph thật.
+                    <br>Phần “vòng tròn” đang thể hiện qua:
+                    <br>- transition `From -> To`
+                    <br>- badge `LOOP`
+                    <br>- self-loop hoặc loop-group
+                    <br>- nút thoát `EXIT`
                     </div>
 
                     <div class="drop-hint">
-                        Cách test nhanh:
-                        <br>1. Chọn Workflow Flow Type ở panel giữa
-                        <br>2. Kéo object từ toolbox sang tree
-                        <br>3. Click node để sửa data / flow type
-                        <br>4. Tạo transition ở panel bên phải
-                        <br>5. Thử case loop với UserDecision
-                        <br>6. Xem payload JSON cuối màn hình
+                    Cách test nhanh:
+                    <br>1. Chọn Workflow Flow Type ở panel giữa
+                    <br>2. Kéo object từ toolbox sang tree
+                    <br>3. Click node để sửa data / flow type
+                    <br>4. Tạo transition ở panel bên phải
+                    <br>5. Thử case loop với UserDecision
+                    <br>6. Xem payload JSON cuối màn hình
                     </div> *@
                 </div>
             </div>
@@ -444,7 +475,7 @@
                         <div id="btnCollapse_@Convert.ToInt32(ViewData["Id"])"></div>
                     </div>
                     <div style="background-color: antiquewhite; min-height:500px;">
-                    <div id="treeWorkflow_@Convert.ToInt32(ViewData["Id"])"></div>
+                        <div id="treeWorkflow_@Convert.ToInt32(ViewData["Id"])"></div>
 
                     </div>
                 </div>
@@ -483,6 +514,25 @@
                     <div style="display:grid;grid-template-columns:420px 1fr;gap:14px;">
                         <div>
                             <div class="section-title">Transition Editor</div>
+
+                            <div class="condition-builder-card">
+                                <div class="section-title">Mini Condition Builder</div>
+                                <div id="conditionBuilderForm_@Convert.ToInt32(ViewData["Id"])"></div>
+
+                                <div class="mini-row" style="margin-top:10px;">
+                                    <div id="btnAddConditionRule_@Convert.ToInt32(ViewData["Id"])"></div>
+                                    <div id="btnGenerateConditionJson_@Convert.ToInt32(ViewData["Id"])"></div>
+                                    <div id="btnWrapNotCondition_@Convert.ToInt32(ViewData["Id"])"></div>
+                                    <div id="btnClearConditionBuilder_@Convert.ToInt32(ViewData["Id"])"></div>
+                                </div>
+
+                                <div class="section-title" style="margin-top:10px;">Condition Preview</div>
+                                <div id="conditionPreviewBox_@Convert.ToInt32(ViewData["Id"])" class="condition-builder-preview">{}</div>
+                                <div class="condition-builder-note">
+                                    Chọn field/operator/value ở form mini, bấm Add Rule hoặc Generate JSON rồi review lại tại ô Condition JSON bên dưới trước khi Add Transition.
+                                </div>
+                            </div>
+
                             <div id="transitionForm_@Convert.ToInt32(ViewData["Id"])"></div>
                             <div class="mini-row" style="margin-top:10px;">
                                 <div id="btnAddTransition_@Convert.ToInt32(ViewData["Id"])"></div>
@@ -518,7 +568,7 @@
         _formConfig.allowFormActionButton = true;
         _formConfig.colCount = 1;
         _formConfig.isCustomQuery = true;
-       var mainForm = new WorkflowDefinitionForm(_id, null, _formConfig);
+        var mainForm = new WorkflowDefinitionForm(_id, null, _formConfig);
 
         var selectedNodeId = null;
         var nodeFormInstance = null;
@@ -527,7 +577,12 @@
         var transitionGridInstance = null;
         var nodeGridInstance = null;
         var dragToolData = null;
-                var runtimeState = {
+        var conditionBuilderInstance = null;
+        var conditionRuleState = {
+            rootOperator: "AND",
+            rules: []
+        };
+        var runtimeState = {
             activeNodeId: "CLIENT",
             completedNodeIds: ["FO", "TS", "UW"],
             pendingNodeIds: ["PM", "NODE_1774258352695"]
@@ -694,7 +749,7 @@
                     {
                         dataField: "loopGroup",
                         label: { text: "Loop Group" }
-                    },{
+                    }, {
                         dataField: "x",
                         label: { text: "Pos X" },
                         editorType: "dxNumberBox"
@@ -807,6 +862,255 @@
             });
         }
 
+
+        function getDefaultConditionBuilderData() {
+            return {
+                rootOperator: "AND",
+                source: "payload",
+                field: "totalPremiumTotal",
+                dataType: "number",
+                operator: ">",
+                value: "0",
+                customHandler: "",
+                customArgs: "{\n  \"folder\": \"FO\"\n}"
+            };
+        }
+
+        function safeParseJson(json, fallbackValue) {
+            try {
+                if (json == null || json === "") return fallbackValue;
+                return JSON.parse(json);
+            } catch (err) {
+                return fallbackValue;
+            }
+        }
+
+        function parseConditionValueByType(dataType, value) {
+            if (dataType === "number") {
+                var n = Number(value);
+                return isNaN(n) ? 0 : n;
+            }
+
+            if (dataType === "boolean") {
+                if (value === true || value === "true" || value === "1" || value === 1) return true;
+                return false;
+            }
+
+            if (dataType === "array") {
+                if (!value) return [];
+                try {
+                    var parsed = JSON.parse(value);
+                    return Array.isArray(parsed) ? parsed : [parsed];
+                } catch (err) {
+                    return String(value)
+                        .split(",")
+                        .map(x => x.trim())
+                        .filter(Boolean);
+                }
+            }
+
+            return value ?? "";
+        }
+
+        function mapBuilderRuleToJson(rule) {
+            if ((rule.source || "") === "custom") {
+                return {
+                    type: "rule",
+                    source: "custom",
+                    handler: rule.customHandler || "",
+                    args: safeParseJson(rule.customArgs, {}) || {},
+                    operator: rule.operator || "=",
+                    value: parseConditionValueByType(rule.dataType, rule.value)
+                };
+            }
+
+            return {
+                type: "rule",
+                source: rule.source || "payload",
+                field: rule.field || "",
+                dataType: rule.dataType || "string",
+                operator: rule.operator || "=",
+                value: parseConditionValueByType(rule.dataType, rule.value)
+            };
+        }
+
+        function buildConditionJsonFromState() {
+            if (!conditionRuleState.rules.length) return "";
+
+            if (conditionRuleState.rules.length === 1) {
+                return JSON.stringify(mapBuilderRuleToJson(conditionRuleState.rules[0]), null, 2);
+            }
+
+            return JSON.stringify({
+                type: "group",
+                operator: conditionRuleState.rootOperator || "AND",
+                children: conditionRuleState.rules.map(mapBuilderRuleToJson)
+            }, null, 2);
+        }
+
+        function refreshConditionPreviewBox() {
+            var preview = buildConditionJsonFromState();
+            $("#conditionPreviewBox_@Convert.ToInt32(ViewData["Id"])").text(preview || "{}");
+        }
+
+        function syncConditionJsonToTransitionForm() {
+            if (!transitionFormInstance) return;
+            var fd = transitionFormInstance.option("formData") || {};
+            fd.conditionJson = buildConditionJsonFromState() || "";
+            transitionFormInstance.option("formData", fd);
+        }
+
+        function toggleConditionBuilderFields(source) {
+            if (!conditionBuilderInstance) return;
+            var isCustom = source === "custom";
+
+            conditionBuilderInstance.itemOption("field", "visible", !isCustom);
+            conditionBuilderInstance.itemOption("customHandler", "visible", isCustom);
+            conditionBuilderInstance.itemOption("customArgs", "visible", isCustom);
+        }
+
+        function clearConditionBuilder() {
+            conditionRuleState = {
+                rootOperator: "AND",
+                rules: []
+            };
+
+            if (conditionBuilderInstance) {
+                conditionBuilderInstance.option("formData", getDefaultConditionBuilderData());
+                toggleConditionBuilderFields("payload");
+            }
+
+            $("#conditionPreviewBox_@Convert.ToInt32(ViewData["Id"])").text("{}");
+
+            if (transitionFormInstance) {
+                var tf = transitionFormInstance.option("formData") || {};
+                tf.conditionJson = "";
+                transitionFormInstance.option("formData", tf);
+            }
+        }
+
+        function pushCurrentBuilderRule() {
+            if (!conditionBuilderInstance) return;
+
+            var fd = conditionBuilderInstance.option("formData") || {};
+            conditionRuleState.rootOperator = fd.rootOperator || "AND";
+            conditionRuleState.rules.push({
+                source: fd.source || "payload",
+                field: fd.field || "",
+                dataType: fd.dataType || "string",
+                operator: fd.operator || "=",
+                value: fd.value ?? "",
+                customHandler: fd.customHandler || "",
+                customArgs: fd.customArgs || ""
+            });
+
+            refreshConditionPreviewBox();
+        }
+
+        function wrapLastRuleAsNotGroup() {
+            if (!conditionBuilderInstance) return;
+
+            var fd = conditionBuilderInstance.option("formData") || {};
+            var wrapped = {
+                type: "group",
+                operator: "NOT",
+                children: [mapBuilderRuleToJson(fd)]
+            };
+
+            $("#conditionPreviewBox_@Convert.ToInt32(ViewData["Id"])").text(JSON.stringify(wrapped, null, 2));
+
+            if (transitionFormInstance) {
+                var tf = transitionFormInstance.option("formData") || {};
+                tf.conditionJson = JSON.stringify(wrapped, null, 2);
+                transitionFormInstance.option("formData", tf);
+            }
+        }
+
+        function initConditionBuilderForm() {
+            $("#conditionBuilderForm_@Convert.ToInt32(ViewData["Id"])").dxForm({
+                formData: getDefaultConditionBuilderData(),
+                labelLocation: "top",
+                colCount: 2,
+                items: [
+                    {
+                        dataField: "rootOperator",
+                        label: { text: "Group Operator" },
+                        editorType: "dxSelectBox",
+                        editorOptions: {
+                            dataSource: ["AND", "OR", "XOR"]
+                        }
+                    },
+                    {
+                        dataField: "source",
+                        label: { text: "Source" },
+                        editorType: "dxSelectBox",
+                        editorOptions: {
+                            dataSource: ["payload", "system", "context", "custom"],
+                            onValueChanged: function (e) {
+                                toggleConditionBuilderFields(e.value);
+                            }
+                        }
+                    },
+                    {
+                        dataField: "field",
+                        label: { text: "Field" },
+                        editorType: "dxSelectBox",
+                        editorOptions: {
+                            searchEnabled: true,
+                            acceptCustomValue: true,
+                            dataSource: [
+                                "totalPremiumTotal",
+                                "quotationStatus",
+                                "clientName",
+                                "hasAttachment",
+                                "attachmentCount",
+                                "manualOverride",
+                                "currentUserRole"
+                            ]
+                        }
+                    },
+                    {
+                        dataField: "dataType",
+                        label: { text: "Data Type" },
+                        editorType: "dxSelectBox",
+                        editorOptions: {
+                            dataSource: ["number", "string", "boolean", "date", "array"]
+                        }
+                    },
+                    {
+                        dataField: "operator",
+                        label: { text: "Operator" },
+                        editorType: "dxSelectBox",
+                        editorOptions: {
+                            dataSource: ["=", "!=", ">", ">=", "<", "<=", "IN", "NOT_IN", "CONTAINS", "IS_NULL", "IS_NOT_NULL", "IS_EMPTY", "IS_NOT_EMPTY"]
+                        }
+                    },
+                    {
+                        dataField: "value",
+                        label: { text: "Value" }
+                    },
+                    {
+                        dataField: "customHandler",
+                        label: { text: "Custom Handler" }
+                    },
+                    {
+                        dataField: "customArgs",
+                        label: { text: "Custom Args JSON" },
+                        editorType: "dxTextArea",
+                        editorOptions: {
+                            minHeight: 80
+                        }
+                    }
+                ],
+                onInitialized: function (e) {
+                    conditionBuilderInstance = e.component;
+                    toggleConditionBuilderFields("payload");
+                    refreshConditionPreviewBox();
+                }
+            });
+        }
+
+
         function initButtons() {
             $("#btnAddRoot_@Convert.ToInt32(ViewData["Id"])").dxButton({
                 text: "Add Root",
@@ -844,7 +1148,7 @@
                     if (!selectedNodeId) return notify("Please select node first", "warning");
 
                     DevExpress.ui.dialog.confirm("Delete selected node and all children?", "Confirm")
-                        .done(function(ok) {
+                        .done(function (ok) {
                             if (!ok) return;
 
                             var deletingIds = collectDescendantIds(tree, selectedNodeId);
@@ -887,7 +1191,7 @@
                 text: "Apply To Payload",
                 type: "success",
                 icon: "save",
-                onClick: function () {applyFormToSelectedNode();}
+                onClick: function () { applyFormToSelectedNode(); }
             });
 
             $("#btnCreateflow_@Convert.ToInt32(ViewData["Id"])").dxButton({
@@ -900,7 +1204,7 @@
             $("#btnApplyNodeJson_@Convert.ToInt32(ViewData["Id"])").dxButton({
                 text: "Apply JSON",
                 icon: "codeblock",
-                onClick: function () {applyJsonToSelectedNode();}
+                onClick: function () { applyJsonToSelectedNode(); }
             });
 
             $("#btnRefreshNodeJson_@Convert.ToInt32(ViewData["Id"])").dxButton({
@@ -909,11 +1213,50 @@
                 onClick: refreshNodeJson
             });
 
+            $("#btnAddConditionRule_@Convert.ToInt32(ViewData["Id"])").dxButton({
+                text: "Add Rule",
+                icon: "plus",
+                onClick: function () {
+                    pushCurrentBuilderRule();
+                    notify("Rule added to preview", "success");
+                }
+            });
+
+            $("#btnGenerateConditionJson_@Convert.ToInt32(ViewData["Id"])").dxButton({
+                text: "Generate JSON",
+                icon: "codeblock",
+                type: "normal",
+                onClick: function () {
+                    debugger
+                    syncConditionJsonToTransitionForm();
+                    refreshConditionPreviewBox();
+                    notify("Condition JSON generated", "success");
+                }
+            });
+
+            $("#btnWrapNotCondition_@Convert.ToInt32(ViewData["Id"])").dxButton({
+                text: "Wrap NOT",
+                icon: "hierarchy",
+                onClick: function () {
+                    wrapLastRuleAsNotGroup();
+                    notify("NOT group generated", "success");
+                }
+            });
+
+            $("#btnClearConditionBuilder_@Convert.ToInt32(ViewData["Id"])").dxButton({
+                text: "Clear Builder",
+                icon: "clear",
+                onClick: function () {
+                    clearConditionBuilder();
+                    notify("Condition builder cleared", "warning");
+                }
+            });
+
             $("#btnAddTransition_@Convert.ToInt32(ViewData["Id"])").dxButton({
                 text: "Add Transition",
                 type: "default",
                 icon: "arrowright",
-                onClick: function() {addTransition();} 
+                onClick: function () { addTransition(); }
             });
 
             $("#btnResetTransitionForm_@Convert.ToInt32(ViewData["Id"])").dxButton({
@@ -921,6 +1264,7 @@
                 icon: "refresh",
                 onClick: function () {
                     transitionFormInstance.option("formData", getEmptyTransition(selectedNodeId || ""));
+                    clearConditionBuilder();
                 }
             });
 
@@ -934,35 +1278,35 @@
                 onClick: loadSamplePolicy
             });
             $(`#btnBuild_@Convert.ToInt32(ViewData["Id"])`).dxButton(
-            {
-            text: "Build",
-            width: 300,
-            height:50,
-            onClick: function (e){
-                   var mainFormData = mainForm.formInstance.option("formData");
-                   const workflowDefinitionId = mainFormData.guid || null;
+                {
+                    text: "Build",
+                    width: 300,
+                    height: 50,
+                    onClick: function (e) {
+                        var mainFormData = mainForm.formInstance.option("formData");
+                        const workflowDefinitionId = mainFormData.guid || null;
 
-                    // 2. Build payload từ UI
-                    const payload = {
-                        workflowDefinitionId: workflowDefinitionId,
-                        nodes: buildWorkflowNodesForSave(workflowDefinitionId),
-                        steps: buildStepsWorkflowForSave(workflowDefinitionId)
-                    };
-                 ajaxPost('api/StepsWorkflow/BuildSteps', payload, {
+                        // 2. Build payload từ UI
+                        const payload = {
+                            workflowDefinitionId: workflowDefinitionId,
+                            nodes: buildWorkflowNodesForSave(workflowDefinitionId),
+                            steps: buildStepsWorkflowForSave(workflowDefinitionId)
+                        };
+                        ajaxPost('api/StepsWorkflow/BuildSteps', payload, {
                             onSuccess: function (response) {
 
-                 },
-                 onError: function (err) {
-                 }
-                 });
-                }
-            });
+                            },
+                            onError: function (err) {
+                            }
+                        });
+                    }
+                });
             // $("#btnSampleLoop_@Convert.ToInt32(ViewData["Id"])").dxButton({
             //     text: "Sample Loop",
             //     onClick: loadSampleLoop
             // });
         }
-                function buildWorkflowNodesForSave(workflowDefinitionId) {
+        function buildWorkflowNodesForSave(workflowDefinitionId) {
             return workflowTreeData.map(function (x, index) {
                 return {
                     workflowDefinitionId: workflowDefinitionId,
@@ -989,7 +1333,7 @@
         }
 
 
-                function buildStepsWorkflowForSave(workflowDefinitionId) {
+        function buildStepsWorkflowForSave(workflowDefinitionId) {
             const nodeMap = {};
             workflowTreeData.forEach(function (n) {
                 nodeMap[n.id] = n;
@@ -1058,7 +1402,7 @@
                 };
             });
         }
-                function buildWorkflowSavePayload(workflowDefinitionId) {
+        function buildWorkflowSavePayload(workflowDefinitionId) {
             return {
                 workflowDefinitionId: workflowDefinitionId,
                 nodes: buildWorkflowNodesForSave(workflowDefinitionId),
@@ -1108,17 +1452,17 @@
 
         function buildTreeNodeHtml(x) {
             var flowClass = x.flowType === "Quotation" ? "q" :
-                              x.flowType === "PolicyIssuance" ? "pi" : "both";
+                x.flowType === "PolicyIssuance" ? "pi" : "both";
 
             var loopBadge = x.allowLoop ? `<span class="tree-node-mini loop">LOOP</span>` : "";
 
             return `
-                <span class="tree-node-wrap">
-                    <span class="tree-node-text">${escapeHtml(x.text)}</span>
-                    <span class="tree-node-mini ${flowClass}">${escapeHtml(x.flowType || "Both")}</span>
-                    ${loopBadge}
-                </span>
-            `;
+                        <span class="tree-node-wrap">
+                            <span class="tree-node-text">${escapeHtml(x.text)}</span>
+                            <span class="tree-node-mini ${flowClass}">${escapeHtml(x.flowType || "Both")}</span>
+                            ${loopBadge}
+                        </span>
+                    `;
         }
 
         function initToolboxDrag() {
@@ -1181,8 +1525,8 @@
                 flowType: currentWorkflowFlow === "Both" ? "Both" : currentWorkflowFlow,
                 allowLoop: false,
                 loopGroup: "",
-                        x: 0,
-        y: 0
+                x: 0,
+                y: 0
             };
 
             tree.create_node(parentId, {
@@ -1275,32 +1619,32 @@
         function applyFormToSelectedNode() {
             var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
             var json = JSON.parse($("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val() || "{}");
-                var node = tree.get_node(selectedNodeId);
-                if (!node) return;
+            var node = tree.get_node(selectedNodeId);
+            if (!node) return;
 
-                node.original.type = json.type || "";
-                node.original.code = json.code || "";
-                node.original.orderNo = json.orderNo || 0;
-                node.original.stepRole = json.stepRole || "";
-                node.original.departmentName = json.departmentName || "";
-                node.original.levelNo = json.levelNo || 1;
-                node.original.flowType = json.flowType || "Both";
-                node.original.allowLoop = !!json.allowLoop;
-                node.original.loopGroup = json.loopGroup || "";
-                node.original.x = json.x ?? 0;
-                 node.original.y = json.y ?? 0;
-                var plainText = json.text || extractPlainTextFromNode(selectedNodeId);
-                tree.rename_node(node, buildTreeNodeHtml({
-                    text: plainText,
-                    flowType: json.flowType || "Both",
-                    allowLoop: !!json.allowLoop
-                }));
+            node.original.type = json.type || "";
+            node.original.code = json.code || "";
+            node.original.orderNo = json.orderNo || 0;
+            node.original.stepRole = json.stepRole || "";
+            node.original.departmentName = json.departmentName || "";
+            node.original.levelNo = json.levelNo || 1;
+            node.original.flowType = json.flowType || "Both";
+            node.original.allowLoop = !!json.allowLoop;
+            node.original.loopGroup = json.loopGroup || "";
+            node.original.x = json.x ?? 0;
+            node.original.y = json.y ?? 0;
+            var plainText = json.text || extractPlainTextFromNode(selectedNodeId);
+            tree.rename_node(node, buildTreeNodeHtml({
+                text: plainText,
+                flowType: json.flowType || "Both",
+                allowLoop: !!json.allowLoop
+            }));
 
-                // syncTreeDataFromJsTree(plainText);
+            // syncTreeDataFromJsTree(plainText);
 
 
 
-             tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
+            tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
             if (!selectedNodeId) return notify("Please select node first", "warning");
 
             var fd = JSON.parse($("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val() || "{}");
@@ -1325,7 +1669,7 @@
             });
 
             tree.rename_node(node, newHtml);
-            syncTreeDataFromJsTree(fd.text || extractPlainTextFromNode(selectedNodeId),JSON.parse($("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val()) );
+            syncTreeDataFromJsTree(fd.text || extractPlainTextFromNode(selectedNodeId), JSON.parse($("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val()));
             notify("Node updated", "success");
         }
 
@@ -1404,7 +1748,10 @@
             renderTransitionPreview();
             buildPayloadPreview();
             transitionFormInstance.option("formData", getEmptyTransition(selectedNodeId || ""));
-             transitionGridInstance.refresh();
+            clearConditionBuilder();
+            if (transitionGridInstance) {
+                transitionGridInstance.refresh();
+            }
             notify("Transition added", "success");
         }
 
@@ -1419,7 +1766,7 @@
 
             transitions.forEach((x, index) => {
                 var flowClass = x.flowType === "Quotation" ? "q" :
-                                  x.flowType === "PolicyIssuance" ? "pi" : "both";
+                    x.flowType === "PolicyIssuance" ? "pi" : "both";
 
                 var badges = `<span class="badge ${flowClass === 'q' ? 'q' : flowClass === 'pi' ? 'pi' : 'both'}">${escapeHtml(x.flowType || "Both")}</span>`;
                 if (x.isReturn) badges += `<span class="badge return">RETURN</span>`;
@@ -1430,35 +1777,35 @@
                 var selfLoopNote = x.fromNodeId === x.toNodeId ? "Self loop / vòng lặp tại chính node này" : "";
 
                 $box.append(`
-                    <div class="transition-item">
-                        <div class="transition-route">${escapeHtml(x.fromNodeId)} → ${escapeHtml(x.toNodeId)}</div>
-                        <div class="badge-row">${badges}</div>
-                        <div class="transition-meta">
-                            ActionCode: <b>${escapeHtml(x.actionCode || "")}</b><br>
-                            ActionName: ${escapeHtml(x.actionName || "")}<br>
-                            LoopGroup: ${escapeHtml(x.loopGroup || "-")}<br>
-                            LoopExitMode: ${escapeHtml(x.loopExitMode || "-")}<br>
-                            UserDecisionLabel: ${escapeHtml(x.userDecisionLabel || "-")}<br>
-                            MaxLoopCount: ${x.maxLoopCount == null ? "-" : x.maxLoopCount}<br>
-                            ConditionJson: ${escapeHtml(x.conditionJson || "-")}
-                        </div>
-                        ${selfLoopNote ? `<div class="transition-meta" style="margin-top:6px;color:#6d28d9;font-weight:700;">${escapeHtml(selfLoopNote)}</div>` : ""}
-                        <div style="margin-top:8px;">
-                            <button onclick="removeTransition(${index})"
-                                style="border:1px solid #fecaca;background:#fff1f2;color:#b91c1c;border-radius:8px;padding:6px 10px;cursor:pointer;">
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                `);
+                            <div class="transition-item">
+                                <div class="transition-route">${escapeHtml(x.fromNodeId)} → ${escapeHtml(x.toNodeId)}</div>
+                                <div class="badge-row">${badges}</div>
+                                <div class="transition-meta">
+                                    ActionCode: <b>${escapeHtml(x.actionCode || "")}</b><br>
+                                    ActionName: ${escapeHtml(x.actionName || "")}<br>
+                                    LoopGroup: ${escapeHtml(x.loopGroup || "-")}<br>
+                                    LoopExitMode: ${escapeHtml(x.loopExitMode || "-")}<br>
+                                    UserDecisionLabel: ${escapeHtml(x.userDecisionLabel || "-")}<br>
+                                    MaxLoopCount: ${x.maxLoopCount == null ? "-" : x.maxLoopCount}<br>
+                                    ConditionJson: ${escapeHtml(x.conditionJson || "-")}
+                                </div>
+                                ${selfLoopNote ? `<div class="transition-meta" style="margin-top:6px;color:#6d28d9;font-weight:700;">${escapeHtml(selfLoopNote)}</div>` : ""}
+                                <div style="margin-top:8px;">
+                                    <button onclick="removeTransition(${index})"
+                                        style="border:1px solid #fecaca;background:#fff1f2;color:#b91c1c;border-radius:8px;padding:6px 10px;cursor:pointer;">
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                        `);
             });
         }
 
-        window.removeTransition = function(index) {
+        window.removeTransition = function (index) {
             transitions.splice(index, 1);
             renderTransitionPreview();
             // console.log("removeTransition");
-             buildPayloadPreview();
+            buildPayloadPreview();
         };
 
         function initGrid() {
@@ -1482,7 +1829,7 @@
                     { dataField: "departmentName", caption: "Department" },
                     { dataField: "levelNo", caption: "Level" }
                 ],
-                onInitialized: function(e) {
+                onInitialized: function (e) {
                     nodeGridInstance = e.component;
                 }
             });
@@ -1495,7 +1842,7 @@
         }
 
 
-                function buildPayloadPreview() {
+        function buildPayloadPreview() {
             syncWorkflowHeader();
             syncRuntimeState();
             var payload = {
@@ -1543,7 +1890,7 @@
         }
         function refreshTransitionNodeLookup() {
             if (!transitionFormInstance) return;
-            var ds = workflowTreeData.map(x => ({ id: x.id, text:`${x.text} (${x.id} - ${x.orderNo})` }));
+            var ds = workflowTreeData.map(x => ({ id: x.id, text: `${x.text} (${x.id} - ${x.orderNo})` }));
 
             transitionFormInstance.itemOption("fromNodeId", "editorOptions", {
                 dataSource: ds,
@@ -1581,7 +1928,7 @@
         }
 
 
-                function syncTreeDataFromJsTree(overrideTextForSelected, newObject) {
+        function syncTreeDataFromJsTree(overrideTextForSelected, newObject) {
             var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
             var oldData = workflowTreeData || [];
             var flat = tree.get_json("#", { flat: true });
@@ -1594,39 +1941,39 @@
                     plainText = overrideTextForSelected;
                 }
                 if (newObject.id == oldNode?.id && newObject && oldNode)
-                 return {
-                           id: x.id,
-                            parent: x.parent,
-                            text: plainText,
-                            type: newObject.type || oldNode.type || "",
-                            code: newObject.code || "",
-                            orderNo: newObject.orderNo ?? oldNode.orderNo ?? (index + 1),
-                            stepRole: newObject.stepRole || oldNode.stepRole || "",
-                            departmentName: newObject.departmentName || oldNode.departmentName || "",
-                            levelNo: newObject.levelNo ?? oldNode.levelNo ?? 1,
-                            flowType: newObject.flowType || oldNode.flowType || "Both",
-                            allowLoop: !!(newObject.allowLoop ?? oldNode.allowLoop),
-                            loopGroup: newObject.loopGroup || oldNode.loopGroup || "",
-                            x: newObject.x ?? oldNode.x ?? null,
-                            y: newObject.y ?? oldNode.y ?? null
-                };
+                    return {
+                        id: x.id,
+                        parent: x.parent,
+                        text: plainText,
+                        type: newObject.type || oldNode.type || "",
+                        code: newObject.code || "",
+                        orderNo: newObject.orderNo ?? oldNode.orderNo ?? (index + 1),
+                        stepRole: newObject.stepRole || oldNode.stepRole || "",
+                        departmentName: newObject.departmentName || oldNode.departmentName || "",
+                        levelNo: newObject.levelNo ?? oldNode.levelNo ?? 1,
+                        flowType: newObject.flowType || oldNode.flowType || "Both",
+                        allowLoop: !!(newObject.allowLoop ?? oldNode.allowLoop),
+                        loopGroup: newObject.loopGroup || oldNode.loopGroup || "",
+                        x: newObject.x ?? oldNode.x ?? null,
+                        y: newObject.y ?? oldNode.y ?? null
+                    };
                 else
-                return {
-                    id: x.id,
-                    parent: x.parent,
-                    text: plainText,
-                    type: x.original?.type || oldNode.type || "",
-                    code: x.original?.code || oldNode.code || "",
-                    orderNo: x.original?.orderNo ?? oldNode.orderNo ?? (index + 1),
-                    stepRole: x.original?.stepRole || oldNode.stepRole || "",
-                    departmentName: x.original?.departmentName || oldNode.departmentName || "",
-                    levelNo: x.original?.levelNo ?? oldNode.levelNo ?? 1,
-                    flowType: x.original?.flowType || oldNode.flowType || "Both",
-                    allowLoop: !!(x.original?.allowLoop ?? oldNode.allowLoop),
-                    loopGroup: x.original?.loopGroup || oldNode.loopGroup || "",
-                    x: x.original?.x ?? oldNode.x ?? null,
-                    y: x.original?.y ?? oldNode.y ?? null
-                };
+                    return {
+                        id: x.id,
+                        parent: x.parent,
+                        text: plainText,
+                        type: x.original?.type || oldNode.type || "",
+                        code: x.original?.code || oldNode.code || "",
+                        orderNo: x.original?.orderNo ?? oldNode.orderNo ?? (index + 1),
+                        stepRole: x.original?.stepRole || oldNode.stepRole || "",
+                        departmentName: x.original?.departmentName || oldNode.departmentName || "",
+                        levelNo: x.original?.levelNo ?? oldNode.levelNo ?? 1,
+                        flowType: x.original?.flowType || oldNode.flowType || "Both",
+                        allowLoop: !!(x.original?.allowLoop ?? oldNode.allowLoop),
+                        loopGroup: x.original?.loopGroup || oldNode.loopGroup || "",
+                        x: x.original?.x ?? oldNode.x ?? null,
+                        y: x.original?.y ?? oldNode.y ?? null
+                    };
             });
 
             refreshTransitionNodeLookup();
@@ -1809,7 +2156,7 @@
         //         .replace(/'/g, "&#039;");
         //         }
 
-                function initTransitionGrid() {
+        function initTransitionGrid() {
 
             $("#transitionGrid_@Convert.ToInt32(ViewData["Id"])").dxDataGrid({
                 dataSource: transitions,
@@ -1913,17 +2260,17 @@
             });
         }
 
-                function refreshTransitionGrid() {
+        function refreshTransitionGrid() {
 
 
-                    hydrateStateFromPayload($("#payloadBox_@Convert.ToInt32(ViewData["Id"])").text());
+            hydrateStateFromPayload($("#payloadBox_@Convert.ToInt32(ViewData["Id"])").text());
             if (transitionGridInstance) {
                 transitionGridInstance.option("dataSource", [...transitions]);
                 transitionGridInstance.refresh();
             }
         }
 
-                var payloadInitialized = false;
+        var payloadInitialized = false;
 
         function safeParseJson(text, fallback = null) {
             try {
@@ -1994,7 +2341,7 @@
             };
         }
 
-            function hydrateStateFromPayload(payload) {
+        function hydrateStateFromPayload(payload) {
             if (!payload) return;
 
             workflowHeader = payload.workflowDefinition || workflowHeader;
@@ -2043,7 +2390,7 @@
             refreshGrid();
         }
 
-                function initPayloadBoxOnce() {
+        function initPayloadBoxOnce() {
             if (payloadInitialized) return $.Deferred().resolve().promise();
 
             var d = $.Deferred();
@@ -2099,9 +2446,10 @@
             setPayloadBoxObject(current);
             refreshGrid();
         }
-                $(function () {
+        $(function () {
             initWorkflowForm();
             initNodeForm();
+            initConditionBuilderForm();
             initTransitionForm();
 
 
