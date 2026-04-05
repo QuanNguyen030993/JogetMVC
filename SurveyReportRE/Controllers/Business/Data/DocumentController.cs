@@ -200,7 +200,19 @@ public class DocumentController : BaseControllerApi<Document>
         }
         return Ok(Document);
     }
+    [HttpGet("{recordGuid}/{folder}")]
+    public async Task<IActionResult> AttachmentSummary(Guid recordGuid, string folder)
+    {
+        var count = await _BaseRepository.GetListObject(x =>
+            x.RecordGuid == recordGuid &&
+            x.SubDirectory.Contains(folder));
 
+        return Ok(new
+        {
+            hasAttachment = count.Count > 0,
+            attachmentCount = count
+        });
+    }
 
     [HttpGet]
     public async Task<IActionResult> GetByKey(Guid recordGuid, string? folder = null)

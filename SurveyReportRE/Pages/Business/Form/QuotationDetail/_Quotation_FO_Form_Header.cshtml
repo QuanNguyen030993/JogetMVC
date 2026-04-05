@@ -277,9 +277,24 @@
                             _formConfig.formElementName = "Res";
                             _formConfig.colCount = 1;
                             var parentFormData = $("#qt-formFO").dxForm("instance")?.option("formData");
+                            
                             // _formConfig.container = $(`<div id = "form_${_formConfig.originModelName}_${parentFormData.resId}" style="padding: 10px; margin-right: 0px" >`);
                             _formConfig.container = $(`<div id = "qt-formRES" style="padding: 10px; margin-right: 0px" >`);
                             var form =  new ResFormQuotationForm(parentFormData.resId, null, _formConfig, _formConfig);
+                            var encodedFolder = encodeURIComponent(`RES\\${ parentFormData.quotationCode }`);
+                            setTimeout(() => {
+                            $.get(`/api/Document/AttachmentSummary/${form.formInstance.option("formData").guid}/${encodedFolder}`, null
+                    // {
+                    //              recordGuid: form.formInstance.option("formData").guid,
+                    //             folder: `RES\\${parentFormData.quotationCode}`
+                    //         }
+                            ).done(function (res) {
+                                debugger
+                                $("#qt-formFO").dxForm("instance").updateData("resAttachmentCount", res.attachmentCount);
+                                $("#qt-formFO").dxForm("instance").updateData("hasResAttachment", res.hasAttachment);
+                            });
+                             }, 500);
+                            
                             // var scrollView = $(`<div>`);
                             // scrollView.dxScrollView({
                             //     width: "100%",

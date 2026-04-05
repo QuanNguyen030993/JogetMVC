@@ -7568,13 +7568,20 @@ function submitNextStep(dept, _nextStep, findRoute, formItems) {
     sendData.QuotationId = formItems.id;
     sendData.Comment = formItems.comment;
 
-    ajaxPost('/api/InstanceWorkflow/SubmitNextStep', sendData, {
-        onSuccess: function (response) {
-            appNotifySuccess(`Submitted to ${findRoute.toNodeId}`, false);
-        },
-        onError: function (err) {
-        }
-    });
+    //Lam tiep cho nay findRoute chưa ổn định
+    if (dept == "FO") {
+        var formItemsRes = $(`#qt-formRES`).dxForm("instance")?.option("formData") || {};
+        console.log(formItems);
+        console.log(JSON.parse(findRoute.data));
+    }
+    
+    //ajaxPost('/api/InstanceWorkflow/SubmitNextStep', sendData, {
+    //    onSuccess: function (response) {
+    //        appNotifySuccess(`Submitted to ${findRoute.toNodeId}`, false);
+    //    },
+    //    onError: function (err) {
+    //    }
+    //});
 }
 
 
