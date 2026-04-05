@@ -39,8 +39,8 @@
             setTimeout(function () {
                 var item = new Object();
                 item.editorType = "dxFileUploader";
-                item.moduleName = "qt"; item.sectionName = "fo-RES";
-                createEditor(item, itemElement, $("<div>"), null);
+                 item.moduleName = "qt"; item.sectionName = "RES";
+                 createEditor(item, itemElement, $("<div>"), null);
                 // loadAttachmentList("FO");
                 }, 1000);
             }
@@ -277,7 +277,8 @@
                             _formConfig.formElementName = "Res";
                             _formConfig.colCount = 1;
                             var parentFormData = $("#qt-formFO").dxForm("instance")?.option("formData");
-                            _formConfig.container = $(`<div id = "form_${_formConfig.originModelName}_${parentFormData.resId}" style="padding: 10px; margin-right: 0px" >`);
+                            // _formConfig.container = $(`<div id = "form_${_formConfig.originModelName}_${parentFormData.resId}" style="padding: 10px; margin-right: 0px" >`);
+                            _formConfig.container = $(`<div id = "qt-formRES" style="padding: 10px; margin-right: 0px" >`);
                             var form =  new ResFormQuotationForm(parentFormData.resId, null, _formConfig, _formConfig);
                             // var scrollView = $(`<div>`);
                             // scrollView.dxScrollView({
@@ -288,6 +289,8 @@
                             var scrollView = popupStandardContentByScroll(form.container);
                             scrollView.appendTo(container);
                             form.formInstance.option("items", resItems);
+                            form.formInstance.updateData("sectionName", "RES");
+                            form.formInstance.updateData("specificFolder", `RES\\${parentFormData.quotationCode}`);
 
                     });
                     popupInstance.show();

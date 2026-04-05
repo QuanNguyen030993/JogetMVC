@@ -1294,9 +1294,10 @@
                         };
                         ajaxPost('api/StepsWorkflow/BuildSteps', payload, {
                             onSuccess: function (response) {
-
+                                notify("Workflow build success!", "success");
                             },
                             onError: function (err) {
+                                notify("Workflow build fail!", "error");
                             }
                         });
                     }
@@ -1381,19 +1382,9 @@
                     uiMode: uiMode,
 
                     actionCode: t.actionCode || null,
-                    data: JSON.stringify({
-                        fromNodeId: t.fromNodeId,
-                        toNodeId: t.toNodeId,
-                        actionName: t.actionName || null,
-                        isReturn: !!t.isReturn,
-                        isLoop: !!t.isLoop,
-                        loopGroup: t.loopGroup || null,
-                        loopExitMode: t.loopExitMode || null,
-                        maxLoopCount: t.maxLoopCount || null,
-                        isExitTransition: !!t.isExitTransition,
-                        userDecisionLabel: t.userDecisionLabel || null,
-                        conditionJson: t.conditionJson || null
-                    }),
+                    data: JSON.stringify(
+                        t.conditionJson || null
+                    ),
 
                     fromNodeId: t.fromNodeId || null,
                     fnodeId: t.fromNodeId || null,

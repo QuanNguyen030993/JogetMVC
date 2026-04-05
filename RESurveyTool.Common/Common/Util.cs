@@ -733,7 +733,7 @@ namespace ERPCore.Common
             string contentHandle = MailUtil.BodyContentHandle(mailTemplate.TemplateContent, dictionary);
             mailTemplate.TemplateMailTitle = MailUtil.TitleContentHandle(mailTemplate.TemplateMailTitle, dictionary);
             mailTemplate.PrefixTitleMail = MailUtil.TitleContentHandle(mailTemplate.PrefixTitleMail, dictionary);
-            if (notifyUser != null && mailTemplate != null)
+            if  (mailTemplate != null && staff != null)
             {
                 if (mailTemplate.IsActive ?? false)
                 {

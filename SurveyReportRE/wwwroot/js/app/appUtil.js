@@ -5792,7 +5792,7 @@ function newQuotationForm() {
                     //var entryForm = $(`#assigneeEntryForm`).dxForm().dxForm("instance");
                     var entryForm = $(`#assignBox`).dxForm().dxForm("instance");
                     var entrySummaryForm = $(`#quotationRequestForm`).dxForm().dxForm("instance");
-                    var submitData = entryForm.option("formData");
+                    var submitData = entryForm?.option("formData") || {};
                     var submitSummaryData = entrySummaryForm.option("formData");
                     var quotationData = new Object();
                     quotationData.Quotation = new Object();
@@ -5810,9 +5810,9 @@ function newQuotationForm() {
                                 , PM: { AcceptDate: "", CompleteDate: "" }
                         };
                         quotationData.Quotation.TurnAroundTimeAttributes = JSON.stringify(quotationData.Quotation.TurnAroundTimeAttributes);
-                    quotationData.Quotation.PIC[submitData.deptTarget] = submitData.to;
+                    quotationData.Quotation.PIC[submitData?.deptTarget] = submitData?.to || "";
                     quotationData.Quotation.PIC = JSON.stringify(quotationData.Quotation.PIC);
-                    quotationData.Quotation.StageAccount = submitData.to;
+                    quotationData.Quotation.StageAccount = submitData?.to || "";
                     quotationData.Quotation.StageDept = submitSummaryData.assignedTeamOrRole;
                     quotationData.Quotation.QuotationStatus = "New";
                     quotationData.Quotation.WorkflowStatus = "Pending";
@@ -6851,7 +6851,6 @@ function updateDxFileUploaderHeaders(editorOptions) {
     const { uploaderId } = getDxFileUploaderIds(controlIdIn);
     const uploader = $(`#${uploaderId}`).dxFileUploader("instance");
     if (!uploader) return;
-
     uploader.option("uploadHeaders", {
         RecordGuid: currentOptions.guid || "",
         Folder: editorOptions.sectionName || sectionName
@@ -7027,9 +7026,10 @@ function loadDxFileUploaderAttachments(sectionName, controllerName, editorOption
     const idControlElement = `#${uploaderId}`;
     showUploaderLoader(idControlElement, "File loading...");
     $.ajax({
-        url: `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${currentOptions.sectionName}`,
+        url: `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${currentOptions.sectionName ? currentOptions.sectionName : sectionName}`,
         method: "GET",
         success: function (data) {
+            console.log(data);
             const $preview = $(`#${previewId}`);
             renderAttachmentListLazy(data, $preview, {
                 batchSize: 6,
@@ -7088,10 +7088,10 @@ function uploadFileAjax(file, options) {
 function resolveUploadOptions(sectionName,editorOptions) {
 
     const latestOptions = getCurrentEditorOptions(editorOptions) || {};
-
     return {
         guid: latestOptions.guid || "",
-        folder: buildFolder(latestOptions, sectionName) || ""
+        folder: buildFolder(latestOptions, latestOptions?.specificFolder ? latestOptions.specificFolder  : sectionName) || ""
+        //folder: buildFolder(latestOptions,sectionName) || ""
     };
 
 }
@@ -7567,7 +7567,7 @@ function submitNextStep(dept, _nextStep, findRoute, formItems) {
     sendData.StepsWorkflow = convertKeysToUpperFirstChar(findRoute);
     sendData.QuotationId = formItems.id;
     sendData.Comment = formItems.comment;
-    console.log(sendData);
+
     ajaxPost('/api/InstanceWorkflow/SubmitNextStep', sendData, {
         onSuccess: function (response) {
             appNotifySuccess(`Submitted to ${findRoute.toNodeId}`, false);

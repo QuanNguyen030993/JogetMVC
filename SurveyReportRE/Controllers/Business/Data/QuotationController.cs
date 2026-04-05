@@ -46,6 +46,7 @@ public class QuotationController : BaseControllerApi<Quotation>
     private readonly IBaseRepository<Roles> _rolesRepository;
     private readonly IBaseRepository<MailTemplate> _mailTemplateRepository;
     private readonly IBaseRepository<MailQueue> _mailQueueRepository;
+    private readonly IBaseRepository<Res> _resRepository;
     private readonly IHubContext<FileProcessingHub> _hubContext;
     private readonly IConfigurationSection path;
     private MailConfig _emailSettings;
@@ -83,6 +84,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         _workflowDefinitionRepository = new BaseRepository<WorkflowDefinition>(configuration, _httpContextAccessor);
         _mailTemplateRepository = new BaseRepository<MailTemplate>(configuration, _httpContextAccessor);
         _mailQueueRepository = new BaseRepository<MailQueue>(configuration, _httpContextAccessor);
+        _resRepository = new BaseRepository<Res>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
 
         _hubContext = hubContext;
@@ -121,13 +123,23 @@ public class QuotationController : BaseControllerApi<Quotation>
     [HttpPost]
     public async Task<IActionResult> CreateQuotation([FromBody] QuotationRequest quotationData)
     {
+
+        //Before insert quotation
         Quotation quotation = new Quotation();
         List<FormatCodeNo> tableConfig = new List<FormatCodeNo>();
         tableConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(Quotation)+"Code");
+
+        Res res = new Res();
+        res = await _resRepository.InsertData(res);
+
+
         JsonConvert.PopulateObject(JsonConvert.SerializeObject(quotationData.Quotation), quotation);
         quotation.QuotationCode = ControllerUtil.GenerateNumberSeq(tableConfig, _formatCodeNoRepository, nameof(Quotation));
+        quotation.ResId = res.Id;
         quotation = await _BaseRepository.InsertData(quotation);
 
+
+        //After insert quotation
         WorkflowDefinition workflowDefinition = new WorkflowDefinition();
         workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(s => s.Id == quotationData.WorkflowDefinitionId);
 
@@ -140,6 +152,10 @@ public class QuotationController : BaseControllerApi<Quotation>
         instanceWorkflow.IsCancelled = false;
         instanceWorkflow.IsCompleted = false;
         await _instanceWorkflowRepository.InsertData(instanceWorkflow);
+
+
+
+
         return Ok(quotation);
     }
 

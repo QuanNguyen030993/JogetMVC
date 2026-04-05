@@ -90,7 +90,7 @@
             if (this.formOptions.container != null || this.formOptions.container != undefined) 
                 this.container = this.formOptions.container;
                 else 
-            this.container = formElement;
+                this.container = formElement;
             if (formConfig != null || formConfig != undefined) {
                 this.tabCode = formConfig.tabCode ? formConfig.tabCode : 'form_' + this.ModelName + `_Form_${this.id}`;;
                 this.cloneUrl = formConfig.cloneUrl ? formConfig.cloneUrl : "";
@@ -400,7 +400,7 @@
                 height: "inherit",
                 elementAttr: {
                     class: "dExForm",
-                    id: `${this.ModelName}_${this.id}`
+                    id: formElement[0] ? formElement[0].id : `${this.ModelName}_${this.id}`,
                 },
                 readOnly: this.isReadOnly,
                 changedFields: {},
