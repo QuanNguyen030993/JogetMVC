@@ -45,6 +45,9 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         _quotationRepository = new BaseRepository<Quotation>(configuration, _httpContextAccessor);
         _quotationCommentLogRepository = new BaseRepository<QuotationCommentLog>(configuration, _httpContextAccessor);
         _mailQueueRepository = new BaseRepository<MailQueue>(configuration, _httpContextAccessor);
+        _mailTemplateRepository = new BaseRepository<MailTemplate>(configuration, _httpContextAccessor);
+        _usersRepository = new BaseRepository<Users>(configuration, _httpContextAccessor);
+        _employeeRepository = new BaseRepository<Employee>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
         DOMAIN_NAME = configuration.GetSection("Domain:DCServer").Value;
     }
@@ -138,11 +141,11 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         employee = await _employeeRepository.GetSingleObject(s => s.UsersId == flowUser.Id);
         DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
         Dictionary<string, object> flowDictionaryData = new Dictionary<string, object>();
-        if (query.Rows.Count > 0)
+        if (query.Rows.Count > 0)  
 
             flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
         MailQueue mailQueue = new MailQueue();
-        //mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
+       mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
         await _mailQueueRepository.InsertData(mailQueue);
 
         return Ok();

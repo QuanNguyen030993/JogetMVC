@@ -150,7 +150,7 @@
     timeFormatter
     };
     const _delayQuotationsLoad = 300;
-    const _delayNextStepLoading = 500;
+    const _delayNextStepLoading = 1000;
     const _delayRenderAssigneeBox = 1000;
     const _delayRenderSubmitButton = 3000;
     const _delayLoadDataSubmitButton = 5000;
@@ -173,7 +173,8 @@
     picJson: "{}",
     commentPanelOpened: false,
     deptData: { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} },
-    nextStep: {}
+    nextStep: {},
+    resFK: {}
     },
     actions: {},
     quotePaging : {
@@ -188,7 +189,7 @@
     var _menus = [];
     var _isAllowDraft = 0;
     var _cacheModels = [];
-
+    const _stateLayout = window.QuotationPage.state;
     // function getDataFromIndexedDB() {
     //     if (_db) {
 

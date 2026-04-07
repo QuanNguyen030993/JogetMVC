@@ -28,6 +28,7 @@ using ERPCore.Models.Migration.Business.Workflow;
 using ERPCore.Models.Migration.Business.MasterData;
 using ERPCore.Models.Migration.Business.Data;
 using System.Reflection;
+using System.Dynamic;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -119,6 +120,69 @@ public class QuotationController : BaseControllerApi<Quotation>
         return Ok();
     }
 
+    [HttpGet]
+    public override async Task<ActionResult<Quotation>> GetAll()
+    {
+        var queryParams = HttpContext.Request.Query;
+
+
+
+        // ===== PAGING =====
+        int skip = 0;
+        int take = 50;
+
+        if (queryParams.ContainsKey("skip"))
+            int.TryParse(queryParams["skip"], out skip);
+
+        if (queryParams.ContainsKey("take"))
+            int.TryParse(queryParams["take"], out take);
+
+        take = Math.Clamp(take, 1, 200);
+
+        var requestParams = HttpContext.Request.Query.ToList();
+        IDictionary<string, object> dynamicObj = new ExpandoObject { };
+        foreach (var item in requestParams)
+        {
+            dynamicObj[item.Key] = item.Value;
+        }
+        var Base = new List<Quotation>();
+
+        if (requestParams.Count > 1)
+        {
+
+        }
+
+        if (dynamicObj.ContainsKey("key"))
+        {
+            var obj = dynamicObj["key"];
+            int result = 0;
+            int.TryParse(obj.ToString(), out result);
+            if (result != 0)
+            {
+
+                Base = await _BaseRepository.GetManyObjectByIdAsync(int.Parse(obj.ToString()));
+                Base.ForEach( f =>
+                            f =  _BaseRepository.ObjectSpecificIncludeSync(f, f => f.ResFK)
+                        );
+                
+            }
+        }
+        else
+        {
+            Base = await _BaseRepository.GetAll(requestParams);
+            Base.ForEach( f =>
+                        f =  _BaseRepository.ObjectSpecificIncludeSync(f, f => f.ResFK)
+                    );
+        }
+
+        //var Base = await _BaseRepository.GetAll();
+        if (Base == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(Base);
+    }
 
     [HttpPost]
     public async Task<IActionResult> CreateQuotation([FromBody] QuotationRequest quotationData)

@@ -7085,148 +7085,16 @@ function uploadFileAjax(file, options) {
 }
 
 function resolveUploadOptions(sectionName,editorOptions) {
-
     const latestOptions = getCurrentEditorOptions(editorOptions) || {};
+    if (latestOptions?.specificFolder)
+        latestOptions.sectionName = latestOptions?.specificFolder;
     return {
         guid: latestOptions.guid || "",
-        folder: buildFolder(latestOptions, latestOptions?.specificFolder ? latestOptions.specificFolder  : sectionName) || ""
-        //folder: buildFolder(latestOptions,sectionName) || ""
+        folder: buildFolder(latestOptions, sectionName) || ""
     };
 
 }
-//function createDepartmentAssigneeSelectBox(selector, options) {
-//    const settings = $.extend(true, {
-//        group: "",
-//        value: null,
-//        readOnly: false,
-//        placeholder: "Select assignee...",
-//        onChanged: null
-//    }, options || {});
 
-//    const store = new DevExpress.data.CustomStore({
-//        key: "Id",
-//        loadMode: "raw",
-//        load: function (loadOptions) {
-//            const keyword = loadOptions.searchValue || "";
-//            return getJson("api/Employee/GetAssignableByGroup", {
-//                group: settings.group,
-//                excludeCurrent: true,
-//                keyword: keyword
-//            }).then(res => {
-//                return res && res.success ? res.data : [];
-//            });
-//        },
-//        byKey: function (key) {
-//            if (key == null) return null;
-
-//            return getJson("api/Employee/GetAssignableByGroup", {
-//                group: settings.group,
-//                excludeCurrent: false
-//            }).then(res => {
-//                if (!res || !res.success || !res.data) return null;
-//                return res.data.find(x => x.Id == key) || null;
-//            });
-//        }
-//    });
-
-//    $(selector).dxSelectBox({
-//        dataSource: store,
-//        valueExpr: "Id",
-//        displayExpr: "DisplayName",
-//        searchEnabled: true,
-//        searchExpr: ["FullName", "DisplayName"],
-//        minSearchLength: 0,
-//        showClearButton: true,
-//        placeholder: settings.placeholder,
-//        value: settings.value,
-//        readOnly: settings.readOnly,
-//        deferRendering: false,
-//        noDataText: "No available employee",
-//        dropDownOptions: {
-//            width: 420
-//        },
-//        buttons: [
-//            "dropDown",
-//            "clear",
-//            {
-//                name: "assignMe",
-//                location: "after",
-//                options: {
-//                    type: "success",
-//                    hint: "Assign to me",
-//                    stylingMode: "text",
-//                    onClick: function () {
-//                        const selectBox = $(selector).dxSelectBox("instance");
-
-//                        getJson("/api/Employee/GetMyAssigneeProfile")
-//                            .done(function (res) {
-//                                if (!res || !res.success || !res.data) {
-//                                    DevExpress.ui.notify("Cannot get current login user", "warning", 2000);
-//                                    return;
-//                                }
-
-//                                const me = res.data;
-
-//                                // Dù không có trong dropdown vẫn cho set value bằng item object
-//                                selectBox.option("dataSource", new DevExpress.data.DataSource({
-//                                    store: new DevExpress.data.ArrayStore({
-//                                        key: "Id",
-//                                        data: [me]
-//                                    })
-//                                }));
-
-//                                selectBox.option("valueExpr", "accountName");
-//                                selectBox.option("displayExpr", "fullName");
-//                                selectBox.option("value", me.accountName);
-
-//                                // Sau khi set value xong, trả lại store chuẩn
-//                                setTimeout(() => {
-//                                    selectBox.option("dataSource", store);
-//                                }, 0);
-
-//                                if (typeof settings.onChanged === "function") {
-//                                    settings.onChanged(me, selectBox);
-//                                }
-//                            });
-//                    }
-//                }
-//            }
-//        ],
-//        itemTemplate: function (itemData) {
-//            if (!itemData) return $("<div>").text("");
-
-//            return $(`
-//                <div style="display:flex;flex-direction:column;line-height:1.35;padding:4px 0;">
-//                    <div style="font-weight:600;">${DevExpress.localization.formatMessage ? itemData.FullName : itemData.FullName}</div>
-//                    <div style="font-size:12px;color:#777;">
-//                        ${itemData.EmployeeCode || ""}${itemData.Group ? " - " + itemData.Group : ""}
-//                    </div>
-//                </div>
-//            `);
-//        },
-//        fieldTemplate: function (selectedItem, fieldElement) {
-//            const text = selectedItem
-//                ? (selectedItem.DisplayName || `${selectedItem.FullName} (${selectedItem.EmployeeCode})`)
-//                : "";
-
-//            $("<div>")
-//                .addClass("dx-texteditor-input")
-//                .css({
-//                    paddingTop: "8px",
-//                    paddingBottom: "8px"
-//                })
-//                .text(text)
-//                .appendTo(fieldElement);
-//        },
-//        onValueChanged: function (e) {
-//            const item = e.component.option("selectedItem");
-
-//            if (typeof settings.onChanged === "function") {
-//                settings.onChanged(item, e.component);
-//            }
-//        }
-//    });
-//}
 function getJson(url, data) {
     return $.ajax({
         url: url,
@@ -7557,9 +7425,150 @@ function renderBranchOverlay(currentDept) {
         $(`#${id}`).off("click").on("click", () => routeTo(dept));
     });
 }
+function getValueByPath(obj, path) {
+    if (!obj || !path) return undefined;
+    return path.split(".").reduce((acc, key) => acc?.[key], obj);
+}
 
+function normalizeValueByDataType(value, dataType) {
+    switch ((dataType || "").toLowerCase()) {
+        case "boolean":
+            if (typeof value === "boolean") return value;
+            if (typeof value === "string") {
+                const v = value.trim().toLowerCase();
+                if (v === "true") return true;
+                if (v === "false") return false;
+            }
+            return Boolean(value);
+
+        case "number":
+        case "int":
+        case "decimal":
+            if (value === null || value === undefined || value === "") return null;
+            return Number(value);
+
+        case "string":
+            if (value === null || value === undefined) return "";
+            return String(value);
+
+        case "date":
+        case "datetime":
+            if (!value) return null;
+            const d = new Date(value);
+            return isNaN(d.getTime()) ? null : d;
+
+        default:
+            return value;
+    }
+}
+
+function compareValues(left, operator, right, dataType) {
+    const op = (operator || "").trim();
+
+    if (dataType === "date" || dataType === "datetime") {
+        const leftTime = left instanceof Date ? left.getTime() : null;
+        const rightTime = right instanceof Date ? right.getTime() : null;
+
+        switch (op) {
+            case "=":
+            case "==":
+                return leftTime === rightTime;
+            case "!=":
+            case "<>":
+                return leftTime !== rightTime;
+            case ">":
+                return leftTime > rightTime;
+            case "<":
+                return leftTime < rightTime;
+            case ">=":
+                return leftTime >= rightTime;
+            case "<=":
+                return leftTime <= rightTime;
+            default:
+                return false;
+        }
+    }
+
+    switch (op) {
+        case "=":
+        case "==":
+            return left === right;
+
+        case "!=":
+        case "<>":
+            return left !== right;
+
+        case ">":
+            return left > right;
+
+        case "<":
+            return left < right;
+
+        case ">=":
+            return left >= right;
+
+        case "<=":
+            return left <= right;
+
+        case "contains":
+            if (Array.isArray(left)) return left.includes(right);
+            return String(left ?? "").toLowerCase().includes(String(right ?? "").toLowerCase());
+
+        case "notcontains":
+            if (Array.isArray(left)) return !left.includes(right);
+            return !String(left ?? "").toLowerCase().includes(String(right ?? "").toLowerCase());
+
+        case "startswith":
+            return String(left ?? "").toLowerCase().startsWith(String(right ?? "").toLowerCase());
+
+        case "endswith":
+            return String(left ?? "").toLowerCase().endsWith(String(right ?? "").toLowerCase());
+
+        case "in":
+            if (!Array.isArray(right)) return false;
+            return right.includes(left);
+
+        case "notin":
+            if (!Array.isArray(right)) return false;
+            return !right.includes(left);
+
+        case "isnull":
+            return left === null || left === undefined || left === "";
+
+        case "isnotnull":
+            return !(left === null || left === undefined || left === "");
+
+        default:
+            return false;
+    }
+}
+
+function evaluateConditionRule(condition, formData) {
+    if (!condition || typeof condition !== "object") return false;
+
+    const type = (condition.type || "").toLowerCase();
+    const source = (condition.source || "").toLowerCase();
+
+    //if (type !== "rule") return false;
+    //if (source !== "payload") return false;
+
+    const field = condition.field;
+    const operator = condition.operator;
+    const dataType = (condition.dataType || "").toLowerCase();
+    const expectedValueRaw = condition.value;
+    var actualValueRaw = null;
+ 
+        actualValueRaw = getValueByPath(formData, field);
+
+
+    const actualValue = normalizeValueByDataType(actualValueRaw, dataType);
+    const expectedValue = normalizeValueByDataType(expectedValueRaw, dataType);
+
+    return compareValues(actualValue, operator, expectedValue, dataType);
+}
 
 function submitNextStep(dept, _nextStep, findRoute, formItems) {
+    //Vi nam trong partial con nen step khong 
     var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
     var sendData = new Object();
     sendData.InstanceWorkflow = convertKeysToUpperFirstChar(_nextStep.instanceWorkflow);
@@ -7567,20 +7576,25 @@ function submitNextStep(dept, _nextStep, findRoute, formItems) {
     sendData.QuotationId = formItems.id;
     sendData.Comment = formItems.comment;
 
-    //Lam tiep cho nay findRoute chưa ổn định
-    if (dept == "FO") {
-        var formItemsRes = $(`#qt-formRES`).dxForm("instance")?.option("formData") || {};
-        console.log(formItems);
-        console.log(JSON.parse(findRoute.data));
+    //var formItemsRes = $(`#qt-formRES`).dxForm("instance")?.option("formData") || {};
+    var condition = JSON.parse(JSON.parse(findRoute.data));
+    if (condition.source == "form") {
+        formItems = $(`#${condition.staticValue}`).dxForm("instance").option("formData");
+    }
+    if (evaluateConditionRule(condition, formItems)) {
+        ajaxPost('/api/InstanceWorkflow/SubmitNextStep', sendData, {
+            onSuccess: function (response) {
+                appNotifySuccess(`Submitted to ${findRoute.toNodeId}`, false);
+            },
+            onError: function (err) {
+            }
+        });
+    }
+    else {
+        DevExpress.ui.notify(condition.message, condition.validateType);
     }
     
-    //ajaxPost('/api/InstanceWorkflow/SubmitNextStep', sendData, {
-    //    onSuccess: function (response) {
-    //        appNotifySuccess(`Submitted to ${findRoute.toNodeId}`, false);
-    //    },
-    //    onError: function (err) {
-    //    }
-    //});
+  
 }
 
 

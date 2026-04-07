@@ -916,7 +916,10 @@
             if ((rule.source || "") === "custom") {
                 return {
                     type: "rule",
-                    source: "custom",
+                    validateStyle: rule.validateStyle,
+                    staticValue:  rule.staticValue,
+                    message: rule.message,
+                    source: rule.source,
                     handler: rule.customHandler || "",
                     args: safeParseJson(rule.customArgs, {}) || {},
                     operator: rule.operator || "=",
@@ -925,7 +928,10 @@
             }
 
             return {
-                type: "rule",
+                type: rule.type,
+                validateStyle: rule.validateStyle,
+                staticValue:  rule.staticValue,
+                message: rule.message,
                 source: rule.source || "payload",
                 field: rule.field || "",
                 dataType: rule.dataType || "string",
@@ -995,6 +1001,10 @@
             var fd = conditionBuilderInstance.option("formData") || {};
             conditionRuleState.rootOperator = fd.rootOperator || "AND";
             conditionRuleState.rules.push({
+                type: fd.type,
+                validateStyle: fd.validateStyle,
+                staticValue:  fd.staticValue,
+                message: fd.message,
                 source: fd.source || "payload",
                 field: fd.field || "",
                 dataType: fd.dataType || "string",
@@ -1039,16 +1049,58 @@
                         editorOptions: {
                             dataSource: ["AND", "OR", "XOR"]
                         }
+                    }, {
+                        dataField: "type",
+                        label: { text: "Type" },
+                        editorType: "dxSelectBox",
+                        editorOptions: {
+                            dataSource: ["rule","compare"],
+                            value: "compare",
+                            disabled: false,
+                        },
+                        validationRules: [
+                            { type: "required", message: "Type is required" }
+                        ]
+                    },
+                    {
+                        dataField: "validateStyle",
+                        label: { text: "Validate Stype" },
+                        editorType: "dxSelectBox",
+                        editorOptions: {
+                            dataSource: ["success", "error", "warning", "info"]
+                        },
+                        validationRules: [
+                            { type: "required", message: "Validate Type is required" }
+                        ]
+                    },
+                    {
+                        dataField: "message",
+                        label: { text: "Message" },
+                        editorType: "dxTextArea",
+                        colSpan: 2,
+                        editorOptions: {
+                            minHeight: 70,
+                            maxLength: 1000
+                        }
                     },
                     {
                         dataField: "source",
                         label: { text: "Source" },
                         editorType: "dxSelectBox",
                         editorOptions: {
-                            dataSource: ["payload", "system", "context", "custom"],
+                            dataSource: ["form", "payload", "server","ui" ,"custom"],
                             onValueChanged: function (e) {
                                 toggleConditionBuilderFields(e.value);
                             }
+                        }
+                    },
+                    {
+                        dataField: "staticValue",
+                        label: { text: "Static value" },
+                        editorType: "dxTextArea",
+                        editorOptions: {
+                            minHeight: 70,
+                            maxLength: 1000
                         }
                     },
                     {
@@ -1063,6 +1115,7 @@
                                 "quotationStatus",
                                 "clientName",
                                 "hasAttachment",
+                                "hasResAttachment",
                                 "attachmentCount",
                                 "manualOverride",
                                 "currentUserRole"
@@ -1227,7 +1280,6 @@
                 icon: "codeblock",
                 type: "normal",
                 onClick: function () {
-                    debugger
                     syncConditionJsonToTransitionForm();
                     refreshConditionPreviewBox();
                     notify("Condition JSON generated", "success");
@@ -1282,10 +1334,10 @@
                     text: "Build",
                     width: 300,
                     height: 50,
+                    type:"info",
                     onClick: function (e) {
                         var mainFormData = mainForm.formInstance.option("formData");
                         const workflowDefinitionId = mainFormData.guid || null;
-
                         // 2. Build payload từ UI
                         const payload = {
                             workflowDefinitionId: workflowDefinitionId,
@@ -1383,7 +1435,7 @@
 
                     actionCode: t.actionCode || null,
                     data: JSON.stringify(
-                        t.conditionJson || null
+                        t.conditionJson || "{}"
                     ),
 
                     fromNodeId: t.fromNodeId || null,
@@ -1721,6 +1773,7 @@
             }
 
             transitions.push({
+                __rowKey:  crypto.randomUUID ? crypto.randomUUID() : `tr_${Date.now()}_${i}_${Math.random()}`,
                 fromNodeId: fd.fromNodeId,
                 toNodeId: fd.toNodeId,
                 actionCode: fd.actionCode,
@@ -1798,7 +1851,13 @@
             // console.log("removeTransition");
             buildPayloadPreview();
         };
-
+                function ensureTransitionKeys() {
+            transitions.forEach((x, i) => {
+                if (!x.__rowKey) {
+                    x.__rowKey = crypto.randomUUID ? crypto.randomUUID() : `tr_${Date.now()}_${i}_${Math.random()}`;
+                }
+            });
+        }
         function initGrid() {
             $("#nodeGrid_@Convert.ToInt32(ViewData["Id"])").dxDataGrid({
                 dataSource: workflowTreeData,
@@ -2147,13 +2206,115 @@
         //         .replace(/'/g, "&#039;");
         //         }
 
-        function initTransitionGrid() {
+        // function initTransitionGrid() {
+
+        //     $("#transitionGrid_@Convert.ToInt32(ViewData["Id"])").dxDataGrid({
+        //         dataSource: transitions,
+        //         keyExpr: function (row, index) {
+        //             return `${row.fromNodeId}_${row.toNodeId}_${row.actionCode}_${index}`;
+        //         },
+        //         showBorders: true,
+        //         height: 420,
+        //         paging: { enabled: false },
+        //         filterRow: { visible: true },
+        //         searchPanel: { visible: true, width: 260, placeholder: "Search transition..." },
+        //         headerFilter: { visible: true },
+        //         columnAutoWidth: true,
+        //         allowColumnResizing: true,
+        //         rowAlternationEnabled: true,
+        //         editing: {
+        //             mode: "row",
+        //             allowUpdating: false,
+        //             allowAdding: false,
+        //             allowDeleting: true,
+        //             useIcons: true
+        //         },
+        //         columns: [
+        //             {
+        //                 caption: "#",
+        //                 width: 60,
+        //                 cellTemplate: function (container, options) {
+        //                     container.text(options.rowIndex + 1);
+        //                 }
+        //             },
+        //             { dataField: "fromNodeId", caption: "From Node" },
+        //             { dataField: "toNodeId", caption: "To Node" },
+        //             { dataField: "actionCode", caption: "Action Code" },
+        //             { dataField: "actionName", caption: "Action Name" },
+        //             {
+        //                 dataField: "flowType",
+        //                 caption: "Flow Type",
+        //                 lookup: {
+        //                     dataSource: ["Quotation", "PolicyIssuance", "Both"]
+        //                 }
+        //             },
+        //             { dataField: "isReturn", caption: "Is Return", dataType: "boolean", width: 90 },
+        //             { dataField: "isLoop", caption: "Is Loop", dataType: "boolean", width: 80 },
+        //             { dataField: "loopGroup", caption: "Loop Group" },
+        //             { dataField: "loopExitMode", caption: "Loop Exit Mode" },
+        //             { dataField: "maxLoopCount", caption: "Max Loop Count", dataType: "number" },
+        //             { dataField: "isExitTransition", caption: "Is Exit", dataType: "boolean", width: 80 },
+        //             { dataField: "userDecisionLabel", caption: "User Decision Label" },
+        //             {
+        //                 dataField: "conditionJson",
+        //                 caption: "Condition JSON",
+        //                 minWidth: 220,
+        //                 cellTemplate: function (container, options) {
+        //                     const text = options.value || "";
+        //                     $("<div>")
+        //                         .css({
+        //                             whiteSpace: "pre-wrap",
+        //                             wordBreak: "break-word",
+        //                             maxHeight: "90px",
+        //                             overflow: "auto"
+        //                         })
+        //                         .text(text)
+        //                         .appendTo(container);
+        //                 }
+        //             }
+        //         ],
+        //         onRowRemoving: function (e) {
+        //             const rowIndex = transitions.findIndex(x =>
+        //                 x.fromNodeId === e.data.fromNodeId &&
+        //                 x.toNodeId === e.data.toNodeId &&
+        //                 x.actionCode === e.data.actionCode &&
+        //                 x.actionName === e.data.actionName &&
+        //                 x.flowType === e.data.flowType &&
+        //                 x.isReturn === e.data.isReturn &&
+        //                 x.isLoop === e.data.isLoop &&
+        //                 x.loopGroup === e.data.loopGroup &&
+        //                 x.loopExitMode === e.data.loopExitMode &&
+        //                 x.maxLoopCount === e.data.maxLoopCount &&
+        //                 x.isExitTransition === e.data.isExitTransition &&
+        //                 x.userDecisionLabel === e.data.userDecisionLabel &&
+        //                 x.conditionJson === e.data.conditionJson
+        //             );
+
+        //             if (rowIndex >= 0) {
+        //                 transitions.splice(rowIndex, 1);
+        //                 refreshTransitionGrid();
+        //                 // buildPayloadPreview();
+        //                 notify("Transition deleted", "success");
+        //             }
+
+        //             e.cancel = true;
+        //         },
+        //         onRowDblClick: function (e) {
+        //             if (!transitionFormInstance || !e.data) return;
+        //             transitionFormInstance.option("formData", { ...e.data });
+        //             notify("Transition loaded to editor", "success");
+        //         },
+        //         onInitialized: function (e) {
+        //             transitionGridInstance = e.component;
+        //         }
+        //     });
+        // }
+                function initTransitionGrid() {
+            ensureTransitionKeys();
 
             $("#transitionGrid_@Convert.ToInt32(ViewData["Id"])").dxDataGrid({
                 dataSource: transitions,
-                keyExpr: function (row, index) {
-                    return `${row.fromNodeId}_${row.toNodeId}_${row.actionCode}_${index}`;
-                },
+                keyExpr: "__rowKey",
                 showBorders: true,
                 height: 420,
                 paging: { enabled: false },
@@ -2215,25 +2376,12 @@
                     }
                 ],
                 onRowRemoving: function (e) {
-                    const rowIndex = transitions.findIndex(x =>
-                        x.fromNodeId === e.data.fromNodeId &&
-                        x.toNodeId === e.data.toNodeId &&
-                        x.actionCode === e.data.actionCode &&
-                        x.actionName === e.data.actionName &&
-                        x.flowType === e.data.flowType &&
-                        x.isReturn === e.data.isReturn &&
-                        x.isLoop === e.data.isLoop &&
-                        x.loopGroup === e.data.loopGroup &&
-                        x.loopExitMode === e.data.loopExitMode &&
-                        x.maxLoopCount === e.data.maxLoopCount &&
-                        x.isExitTransition === e.data.isExitTransition &&
-                        x.userDecisionLabel === e.data.userDecisionLabel &&
-                        x.conditionJson === e.data.conditionJson
-                    );
+                    const rowIndex = transitions.findIndex(x => x.__rowKey === e.data.__rowKey);
 
                     if (rowIndex >= 0) {
                         transitions.splice(rowIndex, 1);
-                        refreshTransitionGrid();
+
+                        e.component.option("dataSource", [...transitions]);
                         buildPayloadPreview();
                         notify("Transition deleted", "success");
                     }

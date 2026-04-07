@@ -1,4 +1,4 @@
-﻿@{
+﻿ @{
     string dept = "FO";  
 
 }
@@ -16,11 +16,22 @@
 
 <script>
     setTimeout( () => {
+
+    setTimeout( () => {
+    var formItems = $("#qt-formFO").dxForm("instance")?.option("formData") || {};
+    var encodedFolder = encodeURIComponent(`RES\\${ formItems.quotationCode }`);
+       $.get(`/api/Document/AttachmentSummary/${formItems.resFK.guid}/${encodedFolder}`, null
+       ).done(function (res) {
+           $("#qt-formFO").dxForm("instance").updateData("resAttachmentCount", res.attachmentCount);
+           $("#qt-formFO").dxForm("instance").updateData("hasResAttachment", res.hasAttachment);
+           $("#btnToggleResForm").dxButton("instance").option("type", res.hasAttachment ? "info" : "normal");
+       });
+    }, 200);
     var dept = "@dept";
          var pageLayout = window.QuotationPage;
         var stateLayout = pageLayout.state;
              $("#qt-submitBox_@dept").dxTextArea({width: _defaultFormFieldWidth,height: _defaultFormFieldHeight}); var findRoute = stateLayout.nextStep.flowSteps.find(f => f.fromNodeId == dept && f.stepNo == stateLayout.nextStep.currentStep); $("#qt-btnSubmitBranch_@dept").dxButton({ text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick: function (e) { var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {}; submitNextStep("@dept", stateLayout.nextStep, findRoute, formItems); } });  
-    $("#qt-btnSave_@dept").dxButton({ text: "Save", icon: "save", type: "default", onClick:
+        $("#qt-btnSave_@dept").dxButton({ text: "Save", icon: "save", type: "default", onClick:
         function (e) {
               var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
               var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
@@ -55,4 +66,88 @@
         }
     });
     }, _delayRenderSubmitButton);
-</script>
+</script> 
+
+@* <script>
+    setTimeout(() => {
+        const dept = "@dept";
+        const pageLayout = window.QuotationPage;
+        const stateLayout = pageLayout.state;
+
+        $("#qt-submitBox_@dept").dxTextArea({
+            width: _defaultFormFieldWidth,
+            height: _defaultFormFieldHeight
+        });
+
+        $("#qt-btnSubmitBranch_@dept").dxButton({
+            text: "",
+            icon: "check",
+            type: "info",
+            onClick: function (e) {
+                const state = window.QuotationPage.state;
+                const nextStep = state.nextStep || {};
+                const flowSteps = nextStep.flowSteps || [];
+
+                const findRoute = flowSteps.find(f =>
+                    f.fromNodeId == dept &&
+                    f.stepNo == nextStep.currentStep
+                );
+                const formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
+                submitNextStep(dept, nextStep, findRoute, formItems);
+            }
+        });
+
+        $("#qt-btnSave_@dept").dxButton({
+            text: "Save",
+            icon: "save",
+            type: "default",
+            onClick: function () {
+                const formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
+                const globalLoadPanel = $("#loadingPopup").dxLoadPanel({
+                    shadingColor: "rgba(0,0,0,0.4)",
+                    visible: false,
+                    showIndicator: true,
+                    showPane: false,
+                    shading: true,
+                    closeOnOutsideClick: false,
+                    position: { of: `#qt-form${dept}` }
+                });
+
+                globalLoadPanel.dxLoadPanel("instance").show();
+
+                ajaxPut('/api/Quotation/UpdateData',
+                    {
+                        key: formItems.id,
+                        values: JSON.stringify(formItems)
+                    },
+                    {
+                        onSuccess: function (response) {},
+                        onError: function (err) {}
+                    }
+                );
+            }
+        });
+
+        function refreshActionBar(state) {
+            const nextStep = state.nextStep || {};
+            const flowSteps = nextStep.flowSteps || [];
+
+            const findRoute = flowSteps.find(f =>
+                f.fromNodeId == dept &&
+                f.stepNo == nextStep.currentStep
+            );
+
+            const btnSubmit = $("#qt-btnSubmitBranch_@dept").dxButton("instance");
+            if (btnSubmit) {
+                btnSubmit.option("text", findRoute ? findRoute.displayStatus : "");
+                btnSubmit.option("disabled", !findRoute);
+            }
+        }
+
+        // chạy lần đầu
+        refreshActionBar(stateLayout);
+
+
+
+    }, _delayRenderSubmitButton);
+</script> *@

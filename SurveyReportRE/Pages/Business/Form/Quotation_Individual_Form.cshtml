@@ -509,7 +509,7 @@ Note:
             done: false,
             firstLoadDone: false
         };
-
+        var firstRender = true;
         setTimeout(() => {
             const QtRoles = qtDeptModuleCode;
             $(`#${formModuleKeyQt}-loginRoleLabel`).text(state.currentUserRole);
@@ -747,7 +747,6 @@ Note:
 
                 PIC_JSON = pICs.find(f => f.quotationCode == state.selectedCodeNo)?.pIC ?? q.pIC ?? "{}";
                 renderDeptCallouts(PIC_JSON);
-
                 var map = parsePicMap(PIC_JSON);
                 stageAccount = map[stageDept] ? map[stageDept] : "(Unassigned)";
 
@@ -765,6 +764,15 @@ Note:
                                 state.nextStep.instanceWorkflow = instance;
                                 state.nextStep.flowSteps = data;
                                 state.nextStep.currentStep = instance?.currentStep ?? 0;
+
+                                // setNextStep(state.nextStep);
+                                 $.each(qtDeptModuleCode, function (itemIndex, item) {
+                                 $(`#qt-submitBox_${item}`).dxTextArea({width: _defaultFormFieldWidth,height: _defaultFormFieldHeight});
+                                     var findRoute = state.nextStep.flowSteps.find(f => f.fromNodeId == item && f.stepNo == state.nextStep.instanceWorkflow.currentStep);
+                                 $(`#qt-btnSubmitBranch_${item}`).dxButton({ text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
+                                 function (e) { var formItems = $(`#qt-form${item}`).dxForm("instance")?.option("formData") || {};
+                                 submitNextStep(`${item}`, state.nextStep, findRoute, formItems); } });
+                                 });
                             });
                     });
             }
@@ -860,25 +868,39 @@ Note:
                 const roLMKT = !(state.currentUserRole === "LMKT");
                 const roPM = !(state.currentUserRole === "PM");
 
-                setTimeout(() => {
-                    $(`#${formModuleKeyQt}-btnSave_FO`).dxButton("instance")?.option("visible", !roMKT);
-                    $(`#${formModuleKeyQt}-btnSave_TS`).dxButton("instance")?.option("visible", !roTS);
-                    $(`#${formModuleKeyQt}-btnSave_UW`).dxButton("instance")?.option("visible", !roUW);
-                    $(`#${formModuleKeyQt}-btnSave_LMKT`).dxButton("instance")?.option("visible", !roLMKT);
-                    $(`#${formModuleKeyQt}-btnSave_PM`).dxButton("instance")?.option("visible", !roPM);
+                 setTimeout(() => {
+                    $(`#${formModuleKeyQt}-btnSave_FO`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roMKT );
+                    $(`#${formModuleKeyQt}-btnSave_TS`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roTS);
+                    $(`#${formModuleKeyQt}-btnSave_UW`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roUW);
+                    $(`#${formModuleKeyQt}-btnSave_LMKT`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roLMKT);
+                    $(`#${formModuleKeyQt}-btnSave_PM`).dxButton("instance")?.option("visible",  _isSuperUser ? true :!roPM);
 
-                    $(`#${formModuleKeyQt}-btnSubmitBranch_FO`).dxButton("instance")?.option("visible", !roMKT);
-                    $(`#${formModuleKeyQt}-btnSubmitBranch_TS`).dxButton("instance")?.option("visible", !roTS);
-                    $(`#${formModuleKeyQt}-btnSubmitBranch_UW`).dxButton("instance")?.option("visible", !roUW);
-                    $(`#${formModuleKeyQt}-btnSubmitBranch_LMKT`).dxButton("instance")?.option("visible", !roLMKT);
-                    $(`#${formModuleKeyQt}-btnSubmitBranch_PM`).dxButton("instance")?.option("visible", !roPM);
-                }, _delayRenderSubmitButton);
+                    $(`#${formModuleKeyQt}-btnSubmitBranch_FO`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roMKT);
+                    $(`#${formModuleKeyQt}-btnSubmitBranch_TS`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roTS);
+                    $(`#${formModuleKeyQt}-btnSubmitBranch_UW`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roUW);
+                    $(`#${formModuleKeyQt}-btnSubmitBranch_LMKT`).dxButton("instance")?.option("visible",  _isSuperUser ? true :!roLMKT);
+                    $(`#${formModuleKeyQt}-btnSubmitBranch_PM`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roPM); 
+                    
+                    // $(`#${formModuleKeyQt}-btnSave_FO`).dxButton("instance")?.option("visible", !roMKT );
+                    // $(`#${formModuleKeyQt}-btnSave_TS`).dxButton("instance")?.option("visible", !roTS);
+                    // $(`#${formModuleKeyQt}-btnSave_UW`).dxButton("instance")?.option("visible", !roUW);
+                    // $(`#${formModuleKeyQt}-btnSave_LMKT`).dxButton("instance")?.option("visible", !roLMKT);
+                    // $(`#${formModuleKeyQt}-btnSave_PM`).dxButton("instance")?.option("visible", !roPM);
 
+                    // $(`#${formModuleKeyQt}-btnSubmitBranch_FO`).dxButton("instance")?.option("visible", !roMKT);
+                    // $(`#${formModuleKeyQt}-btnSubmitBranch_TS`).dxButton("instance")?.option("visible", !roTS);
+                    // $(`#${formModuleKeyQt}-btnSubmitBranch_UW`).dxButton("instance")?.option("visible", !roUW);
+                    // $(`#${formModuleKeyQt}-btnSubmitBranch_LMKT`).dxButton("instance")?.option("visible", !roLMKT);
+                    // $(`#${formModuleKeyQt}-btnSubmitBranch_PM`).dxButton("instance")?.option("visible", !roPM);
+                 }, 1);
+
+                  setTimeout(() => {
                 $(`#${formModuleKeyQt}-formFO`).dxForm("instance")?.option("readOnly", roMKT);
                 $(`#${formModuleKeyQt}-formTS`).dxForm("instance")?.option("readOnly", roTS);
                 $(`#${formModuleKeyQt}-formUW`).dxForm("instance")?.option("readOnly", roUW);
                 $(`#${formModuleKeyQt}-formLMKT`).dxForm("instance")?.option("readOnly", roLMKT);
                 $(`#${formModuleKeyQt}-formPM`).dxForm("instance")?.option("readOnly", roPM);
+                 }, 1);
 
                 $(`#${formModuleKeyQt}-roleSelect`).dxSelectBox({
                     items: QtRoles,
@@ -923,6 +945,16 @@ Note:
 
                     $(`#${formModuleKeyQt}-hint${k}`).html(icon);
                 });
+            }
+
+                function updateCurrentStep(stepNo) {
+                    var pageLayout = window.QuotationPage;
+                    pageLayout.state.nextStep.currentStep = stepNo;
+                }
+
+                    function setNextStep(nextStep) {
+                var pageLayout = window.QuotationPage;
+                pageLayout.state.nextStep = nextStep;
             }
 
             function updateSectionUpdatedTime(q) {
@@ -1255,7 +1287,7 @@ Note:
                 applySectionFocusHighlight();
                 updateHints();
                 updateSectionUpdatedTime(q);
-                initDepartmentAssignees(formModuleKeyQt);
+                initDepartmentAssignees(formModuleKeyQt, firstRender ? null : 0  );
                 scrollToDept(formModuleKeyQt, state.focusDept);
             }
 
@@ -1302,6 +1334,7 @@ Note:
                         state.selectedCodeNo = selectedCodeNo;
                         state.stageDept = stageDept;
                         state.focusDept = state.currentUserRole;
+                        state.resFK = q.resFK;
 
                         PIC_JSON = pICs.find(f => f.quotationCode == selectedCodeNo)?.pIC ?? q.pIC ?? "{}";
                         renderDeptCallouts(PIC_JSON);
@@ -1311,15 +1344,23 @@ Note:
 
                         $(".qt-quoteCard").removeClass("selected");
                         $(this).addClass("selected");
-
+                       var encodedFolder = encodeURIComponent(`RES\\${ state.selectedCodeNo }`);
                         loadSelectedWorkflow().then(() => {
                             renderDetail();
-                            initDepartmentAssignees(formModuleKeyQt);
+                            // initDepartmentAssignees(formModuleKeyQt,0);
 
                             if (commentPanelOpened) {
                                 $("#btnCloseRightComment").click();
                             }
                         });
+                        $.get(`/api/Document/AttachmentSummary/${state.resFK.guid}/${encodedFolder}`, null
+                        ).done(function (res) {
+                            $("#qt-formFO").dxForm("instance").updateData("resAttachmentCount", res.attachmentCount);
+                            $("#qt-formFO").dxForm("instance").updateData("hasResAttachment", res.hasAttachment);
+                            $("#btnToggleResForm").dxButton("instance").option("type", res.hasAttachment ? "info" : "normal");
+                        });
+
+
                     });
             }
 
@@ -1585,6 +1626,7 @@ Note:
                 applySectionFocusHighlight();
                 updateHints();
                 renderDeptCallouts(PIC_JSON);
+                firstRender = false;
             });
         }, _delayQuotationsLoad);
     });
