@@ -655,17 +655,48 @@ namespace ERPCore.Controllers.Base
         {
             object obj = null;
             if (query == "OnSystem")
-            {
+            { 
                 var controllerName = ControllerContext.RouteData.Values["controller"]?.ToString();
                 BaseRepository<SysTable> sysTableRepo = new BaseRepository<SysTable>(_BaseRepository._baseConfiguration, _httpContextAccessor);
                 SysTable sysTable = await sysTableRepo.GetSingleObject(s => s.Name == controllerName);
+
+                var requestParams = HttpContext.Request.Query.ToList();
+                IDictionary<string, object> dynamicObj = new ExpandoObject { };
+                foreach (var item in requestParams)
+                {
+                    dynamicObj[item.Key] = item.Value;
+                }
+                var Base = new List<T>();
+                if (requestParams != null && requestParams.Count > 0)
+                {
+                    if (dynamicObj.ContainsKey("key"))
+                    {
+                        var built = Util.LoadParamsBuildCustomQuery<object>(
+                            baseQuery: sysTable.CustomQuery,
+                            loadParams: requestParams,
+                            defaultOrderBy: "Id",
+                            defaultOrderDir: "DESC",
+                            pkTieBreaker: "Id",
+                            mainTableAlias: "s",
+                            allowedColumns: new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                            {
+                                "Id",
+                                "Guid",
+                                "CreatedBy",
+                                "CreatedDate",
+                                "Deleted"
+                            }
+                        );
+                        sysTable.CustomQuery = built.Sql;
+                        return obj = await _BaseRepository.ExecuteCustomQuery(sysTable.CustomQuery, built.Parameters);
+                    }
+                }
                 obj = await _BaseRepository.ExecuteCustomQuery(sysTable.CustomQuery);
-            }                
+            }
             else
                 obj = await _BaseRepository.ExecuteCustomQuery(query);
             return obj;
         }
-
 
 
         [HttpPost]

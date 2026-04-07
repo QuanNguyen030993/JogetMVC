@@ -7029,7 +7029,6 @@ function loadDxFileUploaderAttachments(sectionName, controllerName, editorOption
         url: `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${currentOptions.sectionName ? currentOptions.sectionName : sectionName}`,
         method: "GET",
         success: function (data) {
-            console.log(data);
             const $preview = $(`#${previewId}`);
             renderAttachmentListLazy(data, $preview, {
                 batchSize: 6,
@@ -7335,7 +7334,7 @@ function getDefaultPicByDept(deptKey, dataForm) {
     return PIC_MAP[deptKey] || null;
 }
 
-function initDepartmentAssignees(moduleKey) {
+function initDepartmentAssignees(moduleKey, timeout = _delayRenderAssigneeBox) {
     
     var pageLayout = window.QuotationPage;
     var stateLayout = pageLayout.state;
@@ -7370,7 +7369,7 @@ function initDepartmentAssignees(moduleKey) {
                             });
                     }
                 });
-            }, _delayRenderAssigneeBox);
+            }, timeout);
         });
     if (moduleKey == "pi") 
         $.each(piDeptModuleCode, function (itemIndex, item) {
@@ -7397,7 +7396,7 @@ function initDepartmentAssignees(moduleKey) {
 
                     }
                 });
-            }, _delayRenderAssigneeBox);
+            }, timeout);
         });
     stateLayout.isAssigneeBoxRender = true;
 }

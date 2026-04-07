@@ -34,7 +34,7 @@ public interface IBaseRepository<T> where T : class
     Task<List<T>> GetFKMany(int fkId, string fkField);
     Task<List<T>> GetManyObjectByIdAsync(int id);
     Task<List<T>> EnumData(string name);
-    Task<List<Dictionary<string, object>>> ExecuteCustomQuery(string query);
+    Task<List<Dictionary<string, object>>> ExecuteCustomQuery(string query, Dictionary<string, object>? parameters = null);
     Task<List<Dictionary<string, object>>> ExecuteCustomJogetQuery(string query);
     Task<List<Dictionary<string, object>>> ExecuteCustomLogQuery(string query);
     Task<List<dynamic>> EnumLookup(string refField, string enumName = null, bool isSameUsing = false);
@@ -926,7 +926,68 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
         }
     }
 
-    public async Task<List<Dictionary<string, object>>> ExecuteCustomQuery(string query)
+    //public async Task<List<Dictionary<string, object>>> ExecuteCustomQuery(string query)
+    //{
+    //    try
+    //    {
+    //        var resultList = new List<Dictionary<string, object>>();
+
+    //        using (SqlConnection connection = new SqlConnection(_connectionString))
+    //        {
+    //            await connection.OpenAsync();
+
+    //            using (SqlCommand command = new SqlCommand(query, connection))
+    //            {
+    //                //using (var reader = await command.ExecuteReaderAsync())
+    //                //    {
+    //                //        // Đọc dữ liệu từ DataReader
+    //                //        while (await reader.ReadAsync())
+    //                //        {
+    //                //            var row = new Dictionary<string, object>();
+
+    //                //            for (int i = 0; i < reader.FieldCount; i++)
+    //                //            {
+    //                //                var columnName = Char.ToLowerInvariant(reader.GetName(i)[0]) + reader.GetName(i).Substring(1);
+
+    //                //                //var columnName = reader.GetName(i); // Tên cột
+    //                //                var value = reader.IsDBNull(i) ? null : reader.GetValue(i); // Giá trị cột
+    //                //                row[columnName] = value; // Thêm vào dictionary
+    //                //            }
+
+    //                //            resultList.Add(row);
+    //                //        }
+    //                //    }
+    //                //}
+    //                using var reader = await command.ExecuteReaderAsync();
+
+    //                var dt = new DataTable();
+    //                dt.Load(reader); // <-- không cần while
+    //                resultList = dt.AsEnumerable()
+    //                            .Select(row => dt.Columns.Cast<DataColumn>()
+    //                                .ToDictionary(
+    //                                    col => Char.ToLowerInvariant(col.ColumnName[0]) + col.ColumnName[1..],
+    //                                    col => row[col] == DBNull.Value ? null : row[col]
+    //                                ))
+    //                            .ToList();
+    //            }
+
+    //            Util.QueryLogs(_connectionString, "sp_Querylogs",
+    //                   ("@QueryString", $"ExecuteCustomQuery: {query}")
+    //                   , ("@Duration", "")
+    //                   , ("@User", userName));
+    //        }
+
+    //        return resultList;
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        Serilog.Log.Error(ex, ex.Message);
+    //        return null;
+    //    }
+    //}
+    public async Task<List<Dictionary<string, object>>> ExecuteCustomQuery(
+    string query,
+    Dictionary<string, object>? parameters = null)
     {
         try
         {
@@ -938,43 +999,38 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
 
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    //using (var reader = await command.ExecuteReaderAsync())
-                    //    {
-                    //        // Đọc dữ liệu từ DataReader
-                    //        while (await reader.ReadAsync())
-                    //        {
-                    //            var row = new Dictionary<string, object>();
+                    if (parameters != null && parameters.Count > 0)
+                    {
+                        foreach (var kv in parameters)
+                        {
+                            command.Parameters.AddWithValue(
+                                kv.Key,
+                                kv.Value ?? DBNull.Value
+                            );
+                        }
+                    }
 
-                    //            for (int i = 0; i < reader.FieldCount; i++)
-                    //            {
-                    //                var columnName = Char.ToLowerInvariant(reader.GetName(i)[0]) + reader.GetName(i).Substring(1);
-
-                    //                //var columnName = reader.GetName(i); // Tên cột
-                    //                var value = reader.IsDBNull(i) ? null : reader.GetValue(i); // Giá trị cột
-                    //                row[columnName] = value; // Thêm vào dictionary
-                    //            }
-
-                    //            resultList.Add(row);
-                    //        }
-                    //    }
-                    //}
                     using var reader = await command.ExecuteReaderAsync();
 
                     var dt = new DataTable();
-                    dt.Load(reader); // <-- không cần while
+                    dt.Load(reader);
+
                     resultList = dt.AsEnumerable()
-                                .Select(row => dt.Columns.Cast<DataColumn>()
-                                    .ToDictionary(
-                                        col => Char.ToLowerInvariant(col.ColumnName[0]) + col.ColumnName[1..],
-                                        col => row[col] == DBNull.Value ? null : row[col]
-                                    ))
-                                .ToList();
+                        .Select(row => dt.Columns.Cast<DataColumn>()
+                            .ToDictionary(
+                                col => Char.ToLowerInvariant(col.ColumnName[0]) + col.ColumnName[1..],
+                                col => row[col] == DBNull.Value ? null : row[col]
+                            ))
+                        .ToList();
                 }
 
-                Util.QueryLogs(_connectionString, "sp_Querylogs",
-                       ("@QueryString", $"ExecuteCustomQuery: {query}")
-                       , ("@Duration", "")
-                       , ("@User", userName));
+                Util.QueryLogs(
+                    _connectionString,
+                    "sp_Querylogs",
+                    ("@QueryString", $"ExecuteCustomQuery: {query}"),
+                    ("@Duration", ""),
+                    ("@User", userName)
+                );
             }
 
             return resultList;
@@ -985,7 +1041,6 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
             return null;
         }
     }
-
     public async Task<List<Dictionary<string, object>>> ExecuteCustomJogetQuery(string query)
     {
         try
