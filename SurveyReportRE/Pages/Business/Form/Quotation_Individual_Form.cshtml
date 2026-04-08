@@ -475,7 +475,6 @@ Note:
 </style>
 
 <script type="text/javascript">
-    $(function () {
         var PIC_JSON = `{}`;
         var formModuleKeyQt = "qt";
         var pICs = [];
@@ -484,8 +483,8 @@ Note:
             isToggleMenu = true;
         }
 
-        const page = window.QuotationPage;
-        const state = page.state;
+        var page = window.QuotationPage;
+        var state = page.state;
 
         state.nextStep = new Object();
         state.nextStep.flowSteps = [];
@@ -1355,9 +1354,13 @@ Note:
                         });
                         $.get(`/api/Document/AttachmentSummary/${state.resFK.guid}/${encodedFolder}`, null
                         ).done(function (res) {
-                            $("#qt-formFO").dxForm("instance").updateData("resAttachmentCount", res.attachmentCount);
-                            $("#qt-formFO").dxForm("instance").updateData("hasResAttachment", res.hasAttachment);
-                            $("#btnToggleResForm").dxButton("instance").option("type", res.hasAttachment ? "info" : "normal");
+                            window.QuotationPage.state.formFO.dxForm("instance").updateData("resAttachmentCount", res.attachmentCount);
+                            window.QuotationPage.state.formFO.dxForm("instance").updateData("hasResAttachment", res.hasAttachment);
+                        window.QuotationPage.state.hasResAttachment = res.hasAttachment;
+                            if (res.hasAttachment)
+                             $("#btnToggleResForm").addClass("hasResAttachment");
+                            else 
+                             $("#btnToggleResForm").removeClass("hasResAttachment");
                         });
 
 
@@ -1629,7 +1632,6 @@ Note:
                 firstRender = false;
             });
         }, _delayQuotationsLoad);
-    });
 </script>
 
 <body>

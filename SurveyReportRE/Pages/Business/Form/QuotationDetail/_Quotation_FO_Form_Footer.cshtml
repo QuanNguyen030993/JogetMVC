@@ -22,9 +22,13 @@
     var encodedFolder = encodeURIComponent(`RES\\${ formItems.quotationCode }`);
        $.get(`/api/Document/AttachmentSummary/${formItems.resFK.guid}/${encodedFolder}`, null
        ).done(function (res) {
-           $("#qt-formFO").dxForm("instance").updateData("resAttachmentCount", res.attachmentCount);
-           $("#qt-formFO").dxForm("instance").updateData("hasResAttachment", res.hasAttachment);
-           $("#btnToggleResForm").dxButton("instance").option("type", res.hasAttachment ? "info" : "normal");
+            window.QuotationPage.state.formFO.dxForm("instance").updateData("resAttachmentCount", res.attachmentCount);
+            window.QuotationPage.state.formFO.dxForm("instance").updateData("hasResAttachment", res.hasAttachment);
+            window.QuotationPage.state.hasResAttachment = res.hasAttachment;
+            if (res.hasAttachment)
+            $("#btnToggleResForm").addClass("hasResAttachment");
+           else
+            $("#btnToggleResForm").removeClass("hasResAttachment");
        });
     }, 200);
     var dept = "@dept";
@@ -34,6 +38,7 @@
         $("#qt-btnSave_@dept").dxButton({ text: "Save", icon: "save", type: "default", onClick:
         function (e) {
               var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
+              
               var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
                   shadingColor: "rgba(0,0,0,0.4)",
                   visible: false,

@@ -7568,7 +7568,6 @@ function evaluateConditionRule(condition, formData) {
 }
 
 function submitNextStep(dept, _nextStep, findRoute, formItems) {
-    //Vi nam trong partial con nen step khong 
     var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
     var sendData = new Object();
     sendData.InstanceWorkflow = convertKeysToUpperFirstChar(_nextStep.instanceWorkflow);
@@ -7579,7 +7578,8 @@ function submitNextStep(dept, _nextStep, findRoute, formItems) {
     //var formItemsRes = $(`#qt-formRES`).dxForm("instance")?.option("formData") || {};
     var condition = JSON.parse(JSON.parse(findRoute.data));
     if (condition.source == "form") {
-        formItems = $(`#${condition.staticValue}`).dxForm("instance").option("formData");
+        formItems = window.QuotationPage.state.formFO.dxForm("instance").option("formData");
+        formItems.hasResAttachment = window.QuotationPage.state.hasResAttachment;
     }
     if (evaluateConditionRule(condition, formItems)) {
         ajaxPost('/api/InstanceWorkflow/SubmitNextStep', sendData, {
@@ -7589,6 +7589,7 @@ function submitNextStep(dept, _nextStep, findRoute, formItems) {
             onError: function (err) {
             }
         });
+        DevExpress.ui.notify("Submitted !", "Success");
     }
     else {
         DevExpress.ui.notify(condition.message, condition.validateType);
