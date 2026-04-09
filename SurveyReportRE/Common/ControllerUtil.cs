@@ -11,6 +11,11 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.Data.SqlClient;
 using TMIVHashing;
+using ERPCore.Models.Request;
+using Microsoft.Extensions.Options;
+using ERPCore.Models;
+using ERPCore.Models.Base;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ERPCore.ControllerUtil
 {
@@ -68,7 +73,50 @@ namespace ERPCore.ControllerUtil
                
             }
         }
+        public static async Task<IActionResult> LogAction(IBaseRepository<QuotationCommentLog> _quotationCommentLogRepository
+            , IHttpContextAccessor httpContextAccessor
+            , IConfiguration configuration
+            , string DOMAIN_NAME
+            , dynamic entity
+            , dynamic workflowEntity
+            , IOptionsMonitor<BlobStorageSettings> optionsMonitor
+            ) 
+        {
+            var userInfo = await ControllerHelper.FetchUserRoles(httpContextAccessor, configuration, DOMAIN_NAME);
+              string logQuery = $@"INSERT INTO QuotationCommentLog (QuotationId
+            ,DeptCode,CommentOrder,CommentBy,CommentTime,CommentText,SourceSystem)
+                        VALUES ({entity.Id},'{workflowEntity.StepsWorkflow.FromNodeId}'
+            ,{0}
+            ,'{userInfo.Users.name}'
+            ,'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}'
+            ,N'{workflowEntity.Comment}'
+            ,'WEB')
+                    ";
 
+
+                        string logFlowQuery = $@"INSERT INTO QuotationWorkflowHistory(QuotationId
+            ,StepNo,DeptCode,ActionTime,ActionNote,FromDeptCode,ToDeptCode,ActionCode,Actor,SourceSystem)
+                        VALUES ({entity.Id},{workflowEntity.InstanceWorkflow.CurrentStep}
+            ,'{workflowEntity.StepsWorkflow.FromNodeId}'
+            ,'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}'
+            ,'{workflowEntity.StepsWorkflow.DisplayStatus}'
+            ,'{workflowEntity.StepsWorkflow.FromNodeId}'
+            ,'{workflowEntity.StepsWorkflow.ToNodeId}'
+            ,'{workflowEntity.StepsWorkflow.ActionCode}'
+            ,'{userInfo.Users.name}','WEB')
+                    ";
+
+            using var loggerFactory = LoggerFactory.Create(loggingBuilder => loggingBuilder
+          .SetMinimumLevel(LogLevel.Trace)
+          .AddConsole());
+
+            var logger = loggerFactory.CreateLogger<QuotationCommentLog>();
+            var quotationCommentLogApiController = new QuotationCommentLogController(_quotationCommentLogRepository, configuration, httpContextAccessor, logger, optionsMonitor);
+                        await quotationCommentLogApiController.ExecuteCustomQuery(logQuery);
+                        await quotationCommentLogApiController.ExecuteCustomQuery(logFlowQuery);
+
+            return null; 
+        }
 
         public static string GenerateNumberSeq(List<FormatCodeNo> tableConfigs, IBaseRepository<FormatCodeNo> baseRepository, string tableName = "")
         {

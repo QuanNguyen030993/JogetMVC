@@ -29,6 +29,7 @@ using ERPCore.Models.Migration.Business.MasterData;
 using ERPCore.Models.Migration.Business.Data;
 using System.Reflection;
 using System.Dynamic;
+using ERPCore.Models;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -48,8 +49,12 @@ public class QuotationController : BaseControllerApi<Quotation>
     private readonly IBaseRepository<MailTemplate> _mailTemplateRepository;
     private readonly IBaseRepository<MailQueue> _mailQueueRepository;
     private readonly IBaseRepository<Res> _resRepository;
+    private readonly IBaseRepository<QuotationCommentLog> _quotationCommentLogRepository;
+    private readonly IBaseRepository<StepsWorkflow> _stepsWorkflowRepository;
     private readonly IHubContext<FileProcessingHub> _hubContext;
+    private readonly ILogger<Quotation> _logger;
     private readonly IConfigurationSection path;
+    private readonly IHttpContextAccessor _httpContextAccessor; 
     private MailConfig _emailSettings;
     public static string MANAGER_APP = "";
     public static string APPROVER_APP = "";
@@ -74,6 +79,7 @@ public class QuotationController : BaseControllerApi<Quotation>
     {
         configuration = config;
         _BaseRepository = BaseRepository;
+        _httpContextAccessor = httpContextAccessor;
         _surveyRepository = new BaseRepository<Survey>(configuration, _httpContextAccessor);
         _attachmentRepository = new BaseRepository<ERPCore.Models.Migration.Business.Data.Attachment>(configuration, _httpContextAccessor);
         _formatCodeNoRepository = new BaseRepository<FormatCodeNo>(configuration, _httpContextAccessor);
@@ -86,6 +92,8 @@ public class QuotationController : BaseControllerApi<Quotation>
         _mailTemplateRepository = new BaseRepository<MailTemplate>(configuration, _httpContextAccessor);
         _mailQueueRepository = new BaseRepository<MailQueue>(configuration, _httpContextAccessor);
         _resRepository = new BaseRepository<Res>(configuration, _httpContextAccessor);
+        _quotationCommentLogRepository = new BaseRepository<QuotationCommentLog>(configuration, _httpContextAccessor);
+        _stepsWorkflowRepository = new BaseRepository<StepsWorkflow>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
 
         _hubContext = hubContext;
@@ -102,6 +110,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         spUserName = configuration.GetSection("SharePoint:Username").Value;
         spPassword = configuration.GetSection("SharePoint:Password").Value;
         _blobStorageSettings = blobStorageSettings;
+        _logger = logger;
     }
 
     public async Task<IActionResult> GetIdsList()
@@ -215,8 +224,19 @@ public class QuotationController : BaseControllerApi<Quotation>
         instanceWorkflow.CurrentStepId = new Guid();
         instanceWorkflow.IsCancelled = false;
         instanceWorkflow.IsCompleted = false;
-        await _instanceWorkflowRepository.InsertData(instanceWorkflow);
+        instanceWorkflow = await _instanceWorkflowRepository.InsertData(instanceWorkflow);
 
+
+
+
+        StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.StepNo == 1 && s.FromNodeId == quotationData.StartingDept);
+
+        SubmitRequest submitRequest = new SubmitRequest();
+        submitRequest.StepsWorkflow = stepsWorkflow;
+        submitRequest.Comment = $"{quotation.QuotationCode} created!";
+        submitRequest.InstanceWorkflow = instanceWorkflow;
+
+        await ControllerUtil.LogAction(_quotationCommentLogRepository,_httpContextAccessor,configuration,DOMAIN_NAME,quotation, submitRequest, _blobStorageSettings);
 
 
 
@@ -275,15 +295,22 @@ public class QuotationController : BaseControllerApi<Quotation>
         Employee employee = new Employee();
         flowUser = await _usersRepository.GetSingleObject(s => s.username == accountName);
         employee = await _employeeRepository.GetSingleObject(s => s.UsersId == flowUser.Id);
-        DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
-        Dictionary<string, object> flowDictionaryData = new Dictionary<string, object>();
-        if (query.Rows.Count > 0)
+        try
+        {
+            DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
+            Dictionary<string, object> flowDictionaryData = new Dictionary<string, object>();
+            if (query.Rows.Count > 0)
 
-            flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
-        MailQueue mailQueue = new MailQueue();
-        mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
-        await _mailQueueRepository.InsertData(mailQueue);
-        return Ok();
+                flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
+            MailQueue mailQueue = new MailQueue();
+            mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
+            await _mailQueueRepository.InsertData(mailQueue);
+            return Ok();
+        } 
+        catch (Exception exception)
+        {
+            throw exception;
+        }
     }
 
     [HttpGet("{listIds}/{jsessionId}")]

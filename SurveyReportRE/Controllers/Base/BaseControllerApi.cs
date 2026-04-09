@@ -34,11 +34,18 @@ namespace ERPCore.Controllers.Base
     {
         private readonly IBaseRepository<T> _BaseRepository;
         internal IHttpContextAccessor _httpContextAccessor { get; set; }
+        internal ILogger<T> _loggerT { get; set; }
         private static string DOMAIN_NAME = "";
         private static string BLOB_PATH = "";
 
         public BaseControllerApi(IBaseRepository<T> BaseRepository, IHttpContextAccessor httpContextAccessor)
         {
+            using var loggerFactory = LoggerFactory.Create(loggingBuilder => loggingBuilder
+            .SetMinimumLevel(LogLevel.Trace)
+            .AddConsole());
+
+            _loggerT = loggerFactory.CreateLogger<T>();
+            _httpContextAccessor = httpContextAccessor;
             _BaseRepository = BaseRepository;
             var domainName = _BaseRepository._baseConfiguration.GetSection("Domain:DCServer").Value;
             DOMAIN_NAME = domainName;
@@ -56,8 +63,8 @@ namespace ERPCore.Controllers.Base
             //    }
             //}
 
-            _httpContextAccessor = httpContextAccessor;
-            //var httpContext = _httpContextAccessor.HttpContext;
+
+                //var httpContext = _httpContextAccessor.HttpContext;
             //if (httpContext.User == null || !httpContext.User.Identity.IsAuthenticated)
             //if (httpContext.User != null)
             //{

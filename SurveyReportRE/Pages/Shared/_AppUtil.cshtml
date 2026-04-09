@@ -1,7 +1,5 @@
 ﻿<script>
 
-
-
     function makeBasicDataSource(instance, isForm = false, configBefore = false) {
         try {
             var checkCustomQueryByModel = null;
@@ -324,6 +322,7 @@
 
 
     function newQuotationForm() {
+        
         var divMainPopup = $(`#mainPopup`);
         var popupInstance = divMainPopup.dxPopup({
             width: "60%",
@@ -423,7 +422,7 @@
                                     , LMKT: { AcceptDate: "", CompleteDate: "" }
                                     , PM: { AcceptDate: "", CompleteDate: "" }
                             };
-                            quotationData.Quotation.TurnAroundTimeAttributes = JSON.stringify(quotationData.Quotation.TurnAroundTimeAttributes);
+                        quotationData.Quotation.TurnAroundTimeAttributes = JSON.stringify(quotationData.Quotation.TurnAroundTimeAttributes);
                         quotationData.Quotation.PIC[submitData?.deptTarget] = submitData?.to || "";
                         quotationData.Quotation.PIC = JSON.stringify(quotationData.Quotation.PIC);
                         quotationData.Quotation.StageAccount = submitData?.to || "";
@@ -431,6 +430,7 @@
                         quotationData.Quotation.QuotationStatus = "New";
                         quotationData.Quotation.WorkflowStatus = "Pending";
                         quotationData.WorkflowDefinitionId = submitSummaryData.workflowDefinitionId;
+                        quotationData.StartingDept = "FO";
                         //quotationData.LineId = submitSummaryData.lineId;
                         //quotationData.ProductId = submitSummaryData.productId;
                         ajaxPost('/api/Quotation/CreateQuotation', quotationData, {

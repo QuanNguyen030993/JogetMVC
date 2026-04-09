@@ -7,5 +7,6 @@ namespace ERPCore.Models.Request
 	{
          public Quotation? Quotation { get; set; }
         public long? WorkflowDefinitionId { get; set; }
+        public string StartingDept { get; set; }
     }
 }

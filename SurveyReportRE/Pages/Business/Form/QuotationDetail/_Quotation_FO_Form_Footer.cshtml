@@ -5,6 +5,46 @@
 
 
 <div class="actionBarDept" id="actionBarDept@dept">
+    <!-- COMPOSER -->
+    <div class="composer">
+        <div class="composer-grid">
+            <div class="field">
+                <label>From Section</label>
+                <select>
+                    <option>FO</option>
+                    <option>TS</option>
+                    <option>UW</option>
+                    <option>PM</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>To Section</label>
+                <select>
+                    <option>TS</option>
+                    <option>FO</option>
+                    <option>UW</option>
+                    <option>PM</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Type</label>
+                <select>
+                    <option selected>Discussion</option>
+                    <option>Request</option>
+                    <option>Blocker</option>
+                    <option>Pinned Note</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Comment / Note</label>
+                    <textarea placeholder="Write a comment... If this is an important cross-section reminder, choose Pinned Note to stick it on top of the target section."></textarea>
+            </div>
+            <div class="composer-actions">
+                <div id="qt-btnChatSend_@dept"> </div>
+            </div>
+        </div>
+    </div>
+
     <div class="actionLeft">
         <span class="dept-title">Remarks</span> <div id="qt-submitBox_@dept"></div>
     </div>
@@ -71,88 +111,11 @@
         }
     });
     }, _delayRenderSubmitButton);
+    $(`#qt-btnChatSend_@dept`).dxButton({
+        text: "Send",
+        onClick: function (e){
+            alert("Send chat");
+        }
+    });
 </script> 
 
-@* <script>
-    setTimeout(() => {
-        const dept = "@dept";
-        const pageLayout = window.QuotationPage;
-        const stateLayout = pageLayout.state;
-
-        $("#qt-submitBox_@dept").dxTextArea({
-            width: _defaultFormFieldWidth,
-            height: _defaultFormFieldHeight
-        });
-
-        $("#qt-btnSubmitBranch_@dept").dxButton({
-            text: "",
-            icon: "check",
-            type: "info",
-            onClick: function (e) {
-                const state = window.QuotationPage.state;
-                const nextStep = state.nextStep || {};
-                const flowSteps = nextStep.flowSteps || [];
-
-                const findRoute = flowSteps.find(f =>
-                    f.fromNodeId == dept &&
-                    f.stepNo == nextStep.currentStep
-                );
-                const formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
-                submitNextStep(dept, nextStep, findRoute, formItems);
-            }
-        });
-
-        $("#qt-btnSave_@dept").dxButton({
-            text: "Save",
-            icon: "save",
-            type: "default",
-            onClick: function () {
-                const formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
-                const globalLoadPanel = $("#loadingPopup").dxLoadPanel({
-                    shadingColor: "rgba(0,0,0,0.4)",
-                    visible: false,
-                    showIndicator: true,
-                    showPane: false,
-                    shading: true,
-                    closeOnOutsideClick: false,
-                    position: { of: `#qt-form${dept}` }
-                });
-
-                globalLoadPanel.dxLoadPanel("instance").show();
-
-                ajaxPut('/api/Quotation/UpdateData',
-                    {
-                        key: formItems.id,
-                        values: JSON.stringify(formItems)
-                    },
-                    {
-                        onSuccess: function (response) {},
-                        onError: function (err) {}
-                    }
-                );
-            }
-        });
-
-        function refreshActionBar(state) {
-            const nextStep = state.nextStep || {};
-            const flowSteps = nextStep.flowSteps || [];
-
-            const findRoute = flowSteps.find(f =>
-                f.fromNodeId == dept &&
-                f.stepNo == nextStep.currentStep
-            );
-
-            const btnSubmit = $("#qt-btnSubmitBranch_@dept").dxButton("instance");
-            if (btnSubmit) {
-                btnSubmit.option("text", findRoute ? findRoute.displayStatus : "");
-                btnSubmit.option("disabled", !findRoute);
-            }
-        }
-
-        // chạy lần đầu
-        refreshActionBar(stateLayout);
-
-
-
-    }, _delayRenderSubmitButton);
-</script> *@
