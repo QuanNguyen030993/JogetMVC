@@ -5,24 +5,21 @@
 }
 @await Html.PartialAsync("_LayoutReference")
 @await Html.PartialAsync("_EnumConstant")
+@await Html.PartialAsync("_AppUtil")
 <script src="~/js/app/appUtil.js"></script>
 <script src="~/js/app/mainHome.js"></script>
 <link href="~/favicon_new.ico" rel="icon" type="image/x-icon" />
 <script src="~/lib/AdminLTE/adminlte.min.js"></script>
-
-<body class="sidebar-mini skin-re" style="height: auto; min-height: 100%;width: 100%;">
-       
+<body class="sidebar-mini skin-re" style="height: auto; min-height: 100%; width: 100%;">
     <header>
         <div class="main-header wrapper" style="display:flex;">
-            <!--Logo-->
+            <!-- LOGO -->
             <div class="pull-left" style="width:14%">
                 <a href="#" class="logo" data-toggle="push-menu" role="button">
                     <div class="logo-lg"><b>Quotation Management</b></div>
-                    <div class="logo-mini">
-                        @* <b>QM</b> *@
-                    </div>
                 </a>
             </div>
+            <!-- ROLE -->
             <div class="admin-float-swicher">
                 <p id="returnToSuperUser" />
                 <div id="qt-roleSelect"> </div>
@@ -51,7 +48,7 @@
                     <div>
 
                         <input id="rolename" type="hidden" />
-                    </div>
+            </div>
                 </div>
                 @* <p id="onlineState" class="status-button"> </p> *@
 
@@ -66,7 +63,7 @@
             <div id="notificationPopup"></div>
             <div id="notificationPopOver"></div>
             <div id="assigneeEntryForm"></div>
-
+            <div id="moduleLauncherPopup"></div>
 
         </div>
     </header>
@@ -79,8 +76,7 @@
      <div id="dashboard" style="margin-left: 40%;margin-top: 12%;">
                 <img src="~/img/TMIV_Logo.jpg" 
                  aria-hidden="true" alt="Icon image"   style="opacity:0.5">
-     </div>
-
+    </div>
 </body>
 <script type="text/javascript">
     //Chrome popup => allow site setting, allow windows chrome app notifications
@@ -132,7 +128,7 @@
         $("#tablist").on("click", "span.fa.fa-times", function () {
             var $tabDivId = $(this).closest("[id$='_li_tab']");
             nativeRemoveTab($tabDivId);
-        });
+    });
 
         var loginUser = `@Html.Raw(ViewData["LoginUser"])`;
 
@@ -448,10 +444,10 @@
                                   <div style="margin-top:8px; display:flex; gap:8px;">
                                     <a href="javascript:void(0)" class="notif-open">Open</a>
                                     <a href="javascript:void(0)" class="notif-mark">${isUnread ? "Mark read" : "Read"}</a>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
+    </div>
+    </div>
+    </div>
+    </div>
                         `)
                         .data("item", itemData)
                         .on("click", ".notif-open", async function (e) {
@@ -465,8 +461,8 @@
                                 itemData.isRead = true;
                                 refreshNotifUI();
                             }
-                        });
-                    }
+                   });
+               }
                 }).dxList("instance");
             }
         }).dxPopover("instance");
@@ -502,18 +498,6 @@
             DevExpress.ui.notify("No target action for this notification", "warning", 1500);
         }
     }
-
-    // ====== reload + refresh UI ======
-    async function reloadNotifications(take = 30) {
-        try {
-            const res = await apiGetNotifications(take);
-            _notif.items = res.items || [];
-            refreshNotifUI();
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
     function refreshNotifUI() {
         _notif.unreadCount = (_notif.items || []).filter(x => !x.isRead).length;
         setNotifCount(_notif.unreadCount);
@@ -526,11 +510,11 @@
 
     // ====== public function you already call ======
     function updateNotification(intervalMs = 10000) {
-        reloadNotifications();
+        // reloadNotifications();
 
         // polling
         setInterval(() => {
-            reloadNotifications();
+            // reloadNotifications();
         }, intervalMs);
     }
 
@@ -574,16 +558,55 @@
             }, 0); 
         });
     });
-     $("#btnNew").dxButton({ text:"New", icon:"plus", onClick:()=> 
-     
-     {
-            newQuotationForm() 
-        
-                      
-     
+
+    let moduleLauncherPopup;
+    function openModuleLauncherPopup(){
+       if(!moduleLauncherPopup){
+           moduleLauncherPopup = $("#moduleLauncherPopup").dxPopup({
+               title: "Create New",
+               width: "35vw",
+               height: "45vh",
+               showTitle: false,
+               showCloseButton: true,
+               hideOnOutsideClick: true,
+               contentTemplate: function(container){
+                   const html = `
+    <div class="launcher-wrap">
+    <div class="launcher-title">
+                           Choose your type of request
+                           </div>
+    <div class="launcher-grid">
+    <div class="launcher-item" id="btnQuotation">
+    <div class="icon">📄</div>
+    <div>Quotation</div>
+    </div>
+    <div class="launcher-item" id="btnPolicy">
+    <div class="icon">🛡️</div>
+    <div>Policy Issuance</div>
+    </div>
+    </div>
+    </div>`;
+                   $(container).append(html);
+                   $("#btnQuotation").on("click", function(){
+                        newQuotationForm();
+                         moduleLauncherPopup.hide();
+                   });
+                   $("#btnPolicy").on("click", function(){
+                       newPolicyIssuanceForm();
+                       moduleLauncherPopup.hide();
+                   });
+               }
+           }).dxPopup("instance");
+            }
+     moduleLauncherPopup.show();
      }
-     
+     $("#btnNew").dxButton({
+        text: "New",
+        icon: "plus",
+        onClick: () => openModuleLauncherPopup()
      });
+      // ================= MODULE POPUP =================
+   
 
 </script>
 <style>
@@ -607,7 +630,7 @@
         .square-btn:hover {
             background: #f5f7fb;
             box-shadow: 0 6px 14px rgba(0,0,0,.12);
-        }
+    }
 
         /* icon */
         .square-btn .notif-icon {
@@ -627,5 +650,48 @@
             border-radius: 50%;
             display: none; /* bật khi có notification */
         }
+    /* ================= POPUP ================= */
+    .launcher-wrap {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
 
+    .launcher-title {
+        text-align: center;
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+
+    .launcher-grid {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+    }
+
+    .launcher-item {
+        width: 10vw;
+        height: 10vw;
+        min-width: 150px;
+        min-height: 150px;
+        border-radius: 20px;
+        background: #fff;
+        box-shadow: 0 10px 25px rgba(0,0,0,.1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        cursor: pointer;
+        transition: .2s;
+    }
+
+        .launcher-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .launcher-item .icon {
+            font-size: 40px;
+        }
 </style>

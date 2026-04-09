@@ -1,9 +1,9 @@
 ﻿@page "{pageNum:int?}"
 @using Newtonsoft.Json 
- @model Quotation_Request_FormModel 
+ @model PolicyIssuance_Request_FormModel 
  @{
    
-    ViewBag.Title = "Quotation";
+    ViewBag.Title = "PolicyIssuance";
     ViewData["Id"] = 0;
 }
 
@@ -40,13 +40,13 @@
 
 <body>
    
-        <div id="form_Quotation_Request_Form"></div>
+        <div id="form_PolicyIssuance_Request_Form"></div>
     <div id="qrPage">
         @* <div id="qrSummary" style="margin-bottom:12px;"></div> *@
-        <div id="quotationRequestForm"></div>
+        <div id="PolicyIssuanceRequestForm"></div>
 
         <div class="toolbarRow">
-            <div class="sectionTitle" style="margin:0;">Quotation PIC</div>
+            <div class="sectionTitle" style="margin:0;">PolicyIssuance PIC</div>
             <div style="display:flex; gap:8px;">
                 <div id="btnNewAssignee"></div>
                 <div id="btnClearAssignee"></div>
@@ -165,14 +165,14 @@
           }
 
           // ===== Main Form =====
-          var that = $("#quotationRequestForm").dxForm({
+          var that = $("#PolicyIssuanceRequestForm").dxForm({
             formData: vm,
             colCount: 2,
             labelMode: "floating",
             showColonAfterLabel: false,
             items: [
               {
-                itemType: "group", colSpan: 2, caption: "Quotation Request",
+                itemType: "group", colSpan: 2, caption: "PolicyIssuance Request",
            
                 items: [
                     // Create or clone will be move to header web status
@@ -180,7 +180,7 @@
                   //   dataField: "typeOfQR",
                   //   editorType: "dxRadioGroup",
                   //   colSpan: 2,
-                  //   editorOptions: { items: ["New", "Clone Quotation Request"], layout: "horizontal" },
+                  //   editorOptions: { items: ["New", "Clone PolicyIssuance Request"], layout: "horizontal" },
                   //   validationRules: [{ type: "required" }]
                   // },
                   { dataField: "PIC", editorType: "dxTextBox", editorOptions: { readOnly: true, value: _loginUser } },
