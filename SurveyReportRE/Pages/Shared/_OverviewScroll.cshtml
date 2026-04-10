@@ -17,9 +17,15 @@
                 <div class="dept-header">
                 @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form_Header")
             </div>
+                <div class="dept-subbody">
+                    @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form_UpperBody")
+                </div>
             <div class="dept-body">
                     @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form")
             </div>
+                <div class="dept-subbody">
+                    @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form_LowerBody")
+                </div>
             <div class="dept-footer">
                     @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form_Footer")
             </div>
@@ -35,8 +41,14 @@
                 <div class="dept-header">
                     @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_Header")
                 </div>
+                <div class="dept-subbody">
+                    @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_UpperBody")
+                </div>
                 <div class="dept-body">
                     @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form")
+                </div>
+                <div class="dept-subbody">
+                    @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_LowerBody")
                 </div>
                 <div class="dept-footer">
                     @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_Footer")

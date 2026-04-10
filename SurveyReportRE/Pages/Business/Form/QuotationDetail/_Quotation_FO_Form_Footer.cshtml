@@ -5,46 +5,6 @@
 
 
 <div class="actionBarDept" id="actionBarDept@dept">
-    <!-- COMPOSER -->
-    <div class="composer">
-        <div class="composer-grid">
-            <div class="field">
-                <label>From Section</label>
-                <select>
-                    <option>FO</option>
-                    <option>TS</option>
-                    <option>UW</option>
-                    <option>PM</option>
-                </select>
-            </div>
-            <div class="field">
-                <label>To Section</label>
-                <select>
-                    <option>TS</option>
-                    <option>FO</option>
-                    <option>UW</option>
-                    <option>PM</option>
-                </select>
-            </div>
-            <div class="field">
-                <label>Type</label>
-                <select>
-                    <option selected>Discussion</option>
-                    <option>Request</option>
-                    <option>Blocker</option>
-                    <option>Pinned Note</option>
-                </select>
-            </div>
-            <div class="field">
-                <label>Comment / Note</label>
-                    <textarea placeholder="Write a comment... If this is an important cross-section reminder, choose Pinned Note to stick it on top of the target section."></textarea>
-            </div>
-            <div class="composer-actions">
-                <div id="qt-btnChatSend_@dept"> </div>
-            </div>
-        </div>
-    </div>
-
     <div class="actionLeft">
         <span class="dept-title">Remarks</span> <div id="qt-submitBox_@dept"></div>
     </div>
@@ -111,11 +71,5 @@
         }
     });
     }, _delayRenderSubmitButton);
-    $(`#qt-btnChatSend_@dept`).dxButton({
-        text: "Send",
-        onClick: function (e){
-            alert("Send chat");
-        }
-    });
 </script> 
 

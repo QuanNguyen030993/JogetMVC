@@ -755,7 +755,6 @@ var MDropDownDataSource = class MDropDownDataSource {
                 if (filter.length > 0) {
                     params.filter = JSON.stringify(filter);
                 }
-                console.log(params);
                 $.getJSON(ApiMethod.replace("DropDownLookUp","GetAll"), params)
                     .done(function (result) {
                         if (result != undefined) {

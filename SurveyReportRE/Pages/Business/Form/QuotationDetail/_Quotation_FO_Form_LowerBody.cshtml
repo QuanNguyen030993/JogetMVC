@@ -1,0 +1,478 @@
+﻿ @{
+    string dept = "FO";  
+
+}
+<div class="actionBarDept" id="actionBarDept@dept">
+    <!-- COMPOSER -->
+    <div class="composer">
+
+
+        <div class="dept-title">Comments</div>
+
+        <div class="composer-grid">
+            <div class="field">
+                <label>From Department</label>
+                <select>
+                    <option>@dept</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>To Department</label>
+                <select>
+                    <option>TS</option>
+                    <option>UW</option>
+                    <option>PM</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Type</label>
+                <select>
+                    <option selected>Discussion</option>
+                    <option>Pinned Note</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Comment / Note</label>
+                <div id="qt-commentTextArea_@dept"></div>
+                    @* <textarea placeholder=""></textarea> *@
+            </div>
+            <div class="composer-actions">
+                <div id="qt-btnChatSend_@dept"> </div>
+            </div>
+        </div>
+        <div>
+
+        <div class="filter-bar">
+            <div class="filter-left">
+                    <div id="filterTypeSelect"></div>
+               <div id="filterUnreadCheckbox"></div>
+                <div id="btnFilterAll"></div>
+                <div id="btnFilterRequest"></div>
+                <div id="btnFilterBlocker"></div>
+                <div id="btnFilterDiscussion"></div>
+                <div id="btnFilterInternal"></div>
+            </div>
+            <div class="filter-note">
+                Comment dài mặc định hiển thị 4 dòng. Bấm Read more để bung toàn bộ.
+            </div>
+            <div class="comment-wrap" id="commentWrap"></div>
+        </div>
+    </div>
+    
+</div>
+</div>
+<script>
+        var currentSection = "@dept";
+    var filterType = "All";
+    var unreadOnly = false;
+    var urgentPinsOnly = false;
+    var popupInstance = null;
+     var sections = [
+      { code: "@dept", name: "Section A · FO", pic: "thao.bp", commentCount: 12, pinCount: 2, blockerCount: 1, status: "Waiting" },
+      // { code: "TS", name: "Section B · TS", pic: "hien.ttt", commentCount: 8, pinCount: 2, blockerCount: 1, status: "In Progress" },
+      // { code: "UW", name: "Section C · UW", pic: "thanh.nt", commentCount: 17, pinCount: 4, blockerCount: 2, status: "Reviewing" },
+      // { code: "PM", name: "Section D · PM", pic: "phuong.tt", commentCount: 4, pinCount: 0, blockerCount: 0, status: "Done" }
+    ];
+
+          var comments = [
+          {
+            id: 11,
+            section: "FO", // main target
+            fromSection: "FO",
+            toSection: "TS",
+            author: "Nguyen A",
+            type: "Request",
+            unread: true,
+            time: "09 Apr 2026 · 15:20",
+            replies: 3,
+            linkedPin: true,
+            body: `Nhờ TS kiểm tra lại wording phần deductible và endorsement số 03. Nếu có thay đổi thì update lại quotation note trước khi chuyển qua UW.
+
+    Ngoài ra client đang hỏi thêm việc áp dụng limit cho branch phụ, nên nếu team thấy wording hiện tại chưa đủ chặt thì comment ngược lại giúp FO để team chốt lại mail trả lời.
+
+    Điểm này khá quan trọng vì client muốn confirm trong ngày và có thể ảnh hưởng đến bước phê duyệt tiếp theo.`
+          },
+          {
+            id: 12,
+            section: "FO", // main target
+            fromSection: "TS",
+            toSection: "FO",
+            author: "Tran B",
+            type: "Blocker",
+            unread: false,
+            time: "09 Apr 2026 · 15:48",
+            replies: 1,
+            linkedPin: false,
+            body: `TS chưa thể chốt tiếp vì file wording đính kèm hiện đang là version cũ. Nhờ FO upload lại bản final hoặc xác nhận dùng bản ngày 08/04/2026.
+
+    Nếu chưa có file final thì TS chỉ review tạm theo summary và có rủi ro lệch wording ở bước submit.`
+          },
+          {
+            id: 13,
+            section: "FO", // main target
+            fromSection: "UW",
+            toSection: "TS",
+            author: "Le C",
+            type: "Discussion",
+            unread: false,
+            time: "09 Apr 2026 · 14:05",
+            replies: 0,
+            linkedPin: false,
+            body: `Khi TS review xong phần wording thì ping lại UW giúp để team xem tiếp impact tới referral note. Có thể chưa cần formal submit, chỉ cần note nhanh các thay đổi chính là được.`
+          },
+          {
+            id: 14,
+            section: "FO", // main target
+            fromSection: "TS",
+            toSection: "TS",
+            author: "Pham D",
+            type: "Internal",
+            unread: false,
+            time: "09 Apr 2026 · 13:30",
+            replies: 0,
+            linkedPin: false,
+            body: `Team lưu ý giữ riêng phần trao đổi technical trong section TS để tránh làm loãng luồng giao việc chính từ FO/UW. Chỉ những việc cần action liên section mới nên đẩy ra pinned note hoặc request tag.`
+          },
+          {
+            id: 15,
+            section: "UW", // main target
+            fromSection: "FO",
+            toSection: "UW",
+            author: "Bui E",
+            type: "Request",
+            unread: true,
+            time: "09 Apr 2026 · 11:00",
+            replies: 2,
+            linkedPin: true,
+            body: `Nhờ UW xem nhanh referral note vì client đang đợi xác nhận. Nếu có điều kiện loại trừ thêm, note lại giúp FO để trả lời trong email cùng ngày.`
+          }
+        ];
+
+    $(`#qt-btnChatSend_@dept`).dxButton({
+        text: "Send",
+        onClick: function (e){
+            alert("Send chat");
+        }
+    });
+
+
+    $(`#qt-commentTextArea_@dept`).dxTextArea({
+         width: "100%",
+         placeholder: "Write a comment... If this is an important cross-section reminder, choose Pinned Note to stick it on top of the target section."
+    });
+
+      $("#btnFilterAll").dxButton({
+        text: "All",
+        type: "default",
+        stylingMode: "outlined",
+        onClick: function() {
+          filterType = "All";
+          $("#filterTypeSelect").dxSelectBox("instance").option("value", "All");
+          renderComments();
+        }
+      });
+
+      $("#btnFilterRequest").dxButton({
+        text: "Request",
+        stylingMode: "outlined",
+        onClick: function() {
+          filterType = "Request";
+          $("#filterTypeSelect").dxSelectBox("instance").option("value", "Request");
+          renderComments();
+        }
+      });
+
+      $("#btnFilterBlocker").dxButton({
+        text: "Blocker",
+        stylingMode: "outlined",
+        onClick: function() {
+          filterType = "Blocker";
+          $("#filterTypeSelect").dxSelectBox("instance").option("value", "Blocker");
+          renderComments();
+        }
+      });
+
+      $("#btnFilterDiscussion").dxButton({
+        text: "Discussion",
+        stylingMode: "outlined",
+        onClick: function() {
+          filterType = "Discussion";
+          $("#filterTypeSelect").dxSelectBox("instance").option("value", "Discussion");
+          renderComments();
+        }
+      });
+
+      $("#btnFilterInternal").dxButton({
+        text: "Internal",
+        stylingMode: "outlined",
+        onClick: function() {
+          filterType = "Internal";
+          $("#filterTypeSelect").dxSelectBox("instance").option("value", "Internal");
+          renderComments();
+        }
+      });
+
+      function getCurrentComments() {
+          var res = comments.filter(x => x.section === currentSection);
+          if (filterType !== "All") res = res.filter(x => x.type === filterType);
+          if (unreadOnly) res = res.filter(x => x.unread);
+          return res;
+        }
+
+    function renderComments() {
+      const wrap = $("#commentWrap");
+      wrap.empty();
+
+      const items = getCurrentComments();
+      if (!items.length) {
+        wrap.append(`<div class="empty-state">Không có comment phù hợp với bộ lọc hiện tại.</div>`);
+        return;
+      }
+
+      items.forEach(item => {
+        const cls = (item.type || "").toLowerCase();
+        const unreadBadge = item.unread
+          ? `<span class="mini-badge badge-soft-red">Unread</span>`
+          : `<span class="mini-badge badge-soft-gray">Read</span>`;
+        const linkedPin = item.linkedPin
+          ? `<span class="mini-badge badge-soft-yellow">Pinned related</span>`
+          : "";
+
+        wrap.append(`
+          <div class="comment-card ${cls}">
+            <div class="comment-head">
+              <div class="comment-head-left">
+                <div class="comment-avatar">${item.fromSection}</div>
+                <div class="comment-meta">
+                  <div class="comment-author-row">
+                    <span class="comment-author">${item.fromSection} → ${item.toSection}</span>
+                    <span class="mini-badge ${badgeClassByType(item.type)}">${item.type}</span>
+                    ${linkedPin}
+                  </div>
+                  <div class="comment-sub">${escapeHtml(item.author)} · ${item.time}</div>
+                </div>
+              </div>
+              <div>${unreadBadge}</div>
+            </div>
+
+            <div class="comment-body clamp" id="comment-body-${item.id}">${escapeHtml(item.body)}</div>
+
+            <div class="comment-actions">
+              <div class="btn-read-${item.id}"></div>
+              <div class="btn-reply-${item.id}"></div>
+              <div class="btn-pin-${item.id}"></div>
+              <div class="btn-resolve-${item.id}"></div>
+              <span class="mini-badge badge-soft-gray">${item.replies} replies</span>
+            </div>
+          </div>
+        `);
+      });
+
+      items.forEach(item => {
+        $(`.btn-read-${item.id}`).dxButton({
+          text: "Read more",
+          stylingMode: "text",
+          onClick: function(e) {
+            const el = $(`#comment-body-${item.id}`);
+            el.toggleClass("clamp");
+            e.component.option("text", el.hasClass("clamp") ? "Read more" : "Collapse");
+          }
+        });
+        $(`.btn-reply-${item.id}`).dxButton({
+          text: "Reply",
+          stylingMode: "text",
+          onClick: function() { popupInstance.show(); }
+        });
+        $(`.btn-pin-${item.id}`).dxButton({
+          text: "Pin to top",
+          stylingMode: "text"
+        });
+        $(`.btn-resolve-${item.id}`).dxButton({
+          text: item.type === "Blocker" ? "Mark resolved" : "Mark done",
+          stylingMode: "text",
+          type: "success"
+        });
+      });
+    }
+
+
+    function badgeClassByType(type) {
+      switch ((type || "").toLowerCase()) {
+        case "request": return "badge-soft-blue";
+        case "blocker": return "badge-soft-red";
+        case "discussion": return "badge-soft-gray";
+        case "internal": return "badge-soft-green";
+        default: return "badge-soft-yellow";
+      }
+    }
+   
+
+    function buildFilters() {
+      $("#filterTypeSelect").dxSelectBox({
+        width: 180,
+        dataSource: ["All", "Request", "Blocker", "Discussion", "Internal"],
+        value: "All",
+        onValueChanged: function(e) {
+          filterType = e.value;
+          renderComments();
+        }
+      });
+
+      $("#filterUnreadCheckbox").dxCheckBox({
+        text: "Unread only",
+        value: false,
+        onValueChanged: function(e) {
+          unreadOnly = e.value;
+          renderComments();
+        }
+      });
+
+      $("#btnFilterAll").dxButton({
+        text: "All",
+        type: "default",
+        stylingMode: "outlined",
+        onClick: function() {
+          filterType = "All";
+          $("#filterTypeSelect").dxSelectBox("instance").option("value", "All");
+          renderComments();
+        }
+      });
+
+      $("#btnFilterRequest").dxButton({
+        text: "Request",
+        stylingMode: "outlined",
+        onClick: function() {
+          filterType = "Request";
+          $("#filterTypeSelect").dxSelectBox("instance").option("value", "Request");
+          renderComments();
+        }
+      });
+
+      $("#btnFilterBlocker").dxButton({
+        text: "Blocker",
+        stylingMode: "outlined",
+        onClick: function() {
+          filterType = "Blocker";
+          $("#filterTypeSelect").dxSelectBox("instance").option("value", "Blocker");
+          renderComments();
+        }
+      });
+
+      $("#btnFilterDiscussion").dxButton({
+        text: "Discussion",
+        stylingMode: "outlined",
+        onClick: function() {
+          filterType = "Discussion";
+          $("#filterTypeSelect").dxSelectBox("instance").option("value", "Discussion");
+          renderComments();
+        }
+      });
+
+      $("#btnFilterInternal").dxButton({
+        text: "Internal",
+        stylingMode: "outlined",
+        onClick: function() {
+          filterType = "Internal";
+          $("#filterTypeSelect").dxSelectBox("instance").option("value", "Internal");
+          renderComments();
+        }
+      });
+    }
+      
+    function buildPopup() {
+      popupInstance = $("#detailPopup").dxPopup({
+        title: "Add Comment / Pinned Note",
+        width: Math.min(window.innerWidth - 24, 860),
+        height: Math.min(window.innerHeight - 24, 620),
+        showCloseButton: true,
+        dragEnabled: true,
+        resizeEnabled: true,
+        visible: false,
+        contentTemplate: function(contentElement) {
+          const formWrap = $("<div>").css({ padding: "10px" });
+          contentElement.append(formWrap);
+
+          const formData = {
+            fromSection: "FO",
+            toSection: currentSection,
+            type: "Request",
+            isPinned: true,
+            isUrgent: false,
+            message: ""
+          };
+
+          formWrap.dxForm({
+            formData: formData,
+            labelLocation: "top",
+            colCount: 2,
+            items: [
+              {
+                dataField: "fromSection",
+                label: { text: "From Section" },
+                editorType: "dxSelectBox",
+                editorOptions: { dataSource: sections.map(x => x.code) }
+              },
+              {
+                dataField: "toSection",
+                label: { text: "To Section" },
+                editorType: "dxSelectBox",
+                editorOptions: { dataSource: sections.map(x => x.code) }
+              },
+              {
+                dataField: "type",
+                label: { text: "Type" },
+                editorType: "dxSelectBox",
+                editorOptions: { dataSource: ["Discussion", "Request", "Blocker", "Internal"] }
+              },
+              {
+                itemType: "group",
+                colCount: 2,
+                colSpan: 2,
+                items: [
+                  {
+                    dataField: "isPinned",
+                    label: { visible: false },
+                    editorType: "dxCheckBox",
+                    editorOptions: { text: "Pin note to target section" }
+                  },
+                  {
+                    dataField: "isUrgent",
+                    label: { visible: false },
+                    editorType: "dxCheckBox",
+                    editorOptions: { text: "Mark as urgent" }
+                  }
+                ]
+              },
+              {
+                dataField: "message",
+                colSpan: 2,
+                label: { text: "Comment / Note" },
+                editorType: "dxTextArea",
+                editorOptions: {
+                  height: 240,
+                  placeholder: "Write a long comment here. The list view will clamp long text and allow expand/collapse."
+                }
+              },
+              {
+                itemType: "button",
+                horizontalAlignment: "right",
+                buttonOptions: {
+                  text: "Submit",
+                  type: "default",
+                  onClick: function() {
+                    DevExpress.ui.notify("Mockup only: submitted", "success", 1200);
+                    popupInstance.hide();
+                  }
+                }
+              }
+            ]
+          });
+        }
+      }).dxPopup("instance");
+    }
+
+    buildPopup();
+    buildFilters();
+    renderComments();
+</script> 
+
