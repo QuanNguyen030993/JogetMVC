@@ -161,56 +161,6 @@
          placeholder: "Write a comment... If this is an important cross-section reminder, choose Pinned Note to stick it on top of the target section."
     });
 
-      $("#btnFilterAll").dxButton({
-        text: "All",
-        type: "default",
-        stylingMode: "outlined",
-        onClick: function() {
-          filterType = "All";
-          $("#filterTypeSelect").dxSelectBox("instance").option("value", "All");
-          renderComments();
-        }
-      });
-
-      $("#btnFilterRequest").dxButton({
-        text: "Request",
-        stylingMode: "outlined",
-        onClick: function() {
-          filterType = "Request";
-          $("#filterTypeSelect").dxSelectBox("instance").option("value", "Request");
-          renderComments();
-        }
-      });
-
-      $("#btnFilterBlocker").dxButton({
-        text: "Blocker",
-        stylingMode: "outlined",
-        onClick: function() {
-          filterType = "Blocker";
-          $("#filterTypeSelect").dxSelectBox("instance").option("value", "Blocker");
-          renderComments();
-        }
-      });
-
-      $("#btnFilterDiscussion").dxButton({
-        text: "Discussion",
-        stylingMode: "outlined",
-        onClick: function() {
-          filterType = "Discussion";
-          $("#filterTypeSelect").dxSelectBox("instance").option("value", "Discussion");
-          renderComments();
-        }
-      });
-
-      $("#btnFilterInternal").dxButton({
-        text: "Internal",
-        stylingMode: "outlined",
-        onClick: function() {
-          filterType = "Internal";
-          $("#filterTypeSelect").dxSelectBox("instance").option("value", "Internal");
-          renderComments();
-        }
-      });
 
       function getCurrentComments() {
           var res = comments.filter(x => x.section === currentSection);
@@ -242,14 +192,12 @@
           <div class="comment-card ${cls}">
             <div class="comment-head">
               <div class="comment-head-left">
-                <div class="comment-avatar">${item.fromSection}</div>
                 <div class="comment-meta">
                   <div class="comment-author-row">
-                    <span class="comment-author">${item.fromSection} → ${item.toSection}</span>
+                    <span class="comment-author">${item.fromSection} - ${escapeHtml(item.author)} Added a comment - ${item.time} </span>
                     <span class="mini-badge ${badgeClassByType(item.type)}">${item.type}</span>
                     ${linkedPin}
                   </div>
-                  <div class="comment-sub">${escapeHtml(item.author)} · ${item.time}</div>
                 </div>
               </div>
               <div>${unreadBadge}</div>
@@ -385,7 +333,6 @@
         width: Math.min(window.innerWidth - 24, 860),
         height: Math.min(window.innerHeight - 24, 620),
         showCloseButton: true,
-        dragEnabled: true,
         resizeEnabled: true,
         visible: false,
         contentTemplate: function(contentElement) {
