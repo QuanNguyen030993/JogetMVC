@@ -1,1 +1,75 @@
-﻿
+﻿@{
+    string dept = "LMKT";
+
+}
+<div class="actionBarDept" id="actionBarDept_@dept">
+    <!-- COMPOSER -->
+    <div class="composer">
+
+
+        <div class="dept-title">Comments</div>
+
+        <div class="composer-grid">
+            <div class="field">
+                <label>From Department</label>
+                <select>
+                    <option>@dept</option>
+                </select>
+            </div>
+            <div id="qt-toDepartment_@dept" class="field">
+                <label>To Department</label>
+                <select>
+                </select>
+            </div>
+            <div class="field">
+                <label>Type</label>
+                <select>
+                    <option selected>Discussion</option>
+                    <option>Pinned Note</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Comment / Note</label>
+                <div id="qt-commentTextArea_@dept"></div>
+                @* <textarea placeholder=""></textarea> *@
+            </div>
+            <div class="composer-actions">
+                <div id="qt-btnChatSend_@dept"> </div>
+            </div>
+        </div>
+        <div>
+
+            <div class="filter-bar">
+                <div class="filter-left">
+                    <div id="qt-filterTypeSelect_@dept"></div>
+                    <div id="qt-filterUnreadCheckbox_@dept"></div>
+                    <div id="qt-btnFilterAll_@dept"></div>
+                    <div id="qt-btnFilterRequest_@dept"></div>
+                    <div id="qt-btnFilterBlocker_@dept"></div>
+                    <div id="qt-btnFilterDiscussion_@dept"></div>
+                    <div id="qt-btnFilterInternal_@dept"></div>
+                </div>
+                <div class="filter-note">
+                    Comment dài mặc định hiển thị 4 dòng. Bấm Read more để bung toàn bộ.
+                </div>
+                <div class="comment-wrap" id="qt-commentWrap_@dept"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<script>
+
+    $(`#qt-toDepartment_@dept select `).each(function () {
+        var $root = $(this);
+        $.each(qtDeptModuleCode, function (itemIndex, item) {
+            if (item != `@dept`)
+            $root.append(`<option>
+                ${item}
+            </option>`);
+        });
+    });
+    commentModule('qt' , '@dept');
+
+</script>
+

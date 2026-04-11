@@ -236,7 +236,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         submitRequest.Comment = $"{quotation.QuotationCode} created!";
         submitRequest.InstanceWorkflow = instanceWorkflow;
 
-        await ControllerUtil.LogAction(_quotationCommentLogRepository,_httpContextAccessor,configuration,DOMAIN_NAME,quotation, submitRequest, _blobStorageSettings);
+        await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
 
 
 

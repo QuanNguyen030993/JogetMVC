@@ -518,8 +518,8 @@ Note:
             },
             actions: {}
         };
-        const page = window.PolicyIssuancePage;
-        const state = page.state;
+        var page = window.PolicyIssuancePage;
+        var state = page.state;
 
         state.currentUserRole = _role;
         state.focusDept = _role == "IT" ? "FO" : _role;
