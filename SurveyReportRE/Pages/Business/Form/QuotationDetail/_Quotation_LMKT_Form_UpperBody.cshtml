@@ -1,1 +1,28 @@
-﻿
+﻿@{
+    string dept = "LMKT";
+
+}
+<div class="actionBarDept" id="actionBarDept_@dept">
+    <!-- COMPOSER -->
+    <div class="composer">
+        <div class="pinned-zone">
+            <div class="pinned-zone-header">
+                <div class="pinned-zone-title">Pinned notes for this section</div>
+                <div class="pinned-toolbar">
+                    <div id="qt-btnExpandAllPins_@dept"></div>
+                    <div id="qt-btnCollapseAllPins_@dept"></div>
+                    <div id="qt-btnUrgentPins_@dept"></div>
+                </div>
+            </div>
+            <div class="pin-list" id="qt-pinList_@dept"></div>
+        </div>
+
+    </div>
+
+</div>
+<script>
+ 
+    commentPinModule('qt', '@dept')
+
+</script>
+

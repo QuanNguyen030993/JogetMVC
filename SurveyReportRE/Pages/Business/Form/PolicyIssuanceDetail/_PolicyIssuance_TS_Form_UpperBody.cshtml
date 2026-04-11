@@ -1,1 +1,28 @@
-﻿
+﻿@{
+    string dept = "TS";
+
+}
+<div class="actionBarDept" id="actionBarDept_@dept">
+    <!-- COMPOSER -->
+    <div class="composer">
+        <div class="pinned-zone">
+            <div class="pinned-zone-header">
+                <div class="pinned-zone-title">Pinned notes for this section</div>
+                <div class="pinned-toolbar">
+                    <div id="pi-btnExpandAllPins_@dept"></div>
+                    <div id="pi-btnCollapseAllPins_@dept"></div>
+                    <div id="pi-btnUrgentPins_@dept"></div>
+                </div>
+            </div>
+            <div class="pin-list" id="pi-pinList_@dept"></div>
+        </div>
+
+    </div>
+
+</div>
+<script>
+
+    commentPinModule('pi', '@dept')
+
+</script>
+
