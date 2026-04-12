@@ -406,8 +406,6 @@ namespace ERPCore.Controllers.Base
         {
             var queryParams = HttpContext.Request.Query;
 
-
-
             // ===== PAGING =====
             int skip = 0;
             int take = 50;
@@ -426,6 +424,14 @@ namespace ERPCore.Controllers.Base
             {
                 dynamicObj[item.Key] = item.Value;
             }
+
+            var rawParams = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in queryParams)
+            {
+                if (item.Key == "_") continue;
+                rawParams[item.Key] = item.Value.ToString() ?? "";
+            }
+
             var Base = new List<T>();
 
             if (requestParams.Count > 1)
@@ -433,13 +439,25 @@ namespace ERPCore.Controllers.Base
 
             }
 
-            if (dynamicObj.ContainsKey("key"))
+            if (dynamicObj.ContainsKey("key") )
             {
-                var obj = dynamicObj["key"];
-                int result = 0;
-                int.TryParse(obj.ToString(), out result);
-                if (result != 0)
-                    Base = await _BaseRepository.GetManyObjectByIdAsync(int.Parse(obj.ToString()));
+
+                    var obj = dynamicObj["key"];
+                    int result = 0;
+                    int.TryParse(obj.ToString(), out result);
+                    if (result != 0)
+                        Base = await _BaseRepository.GetManyObjectByIdAsync(int.Parse(obj.ToString()));
+
+
+            }
+            else if (
+                rawParams.TryGetValue("refField", out var refField) &&
+                rawParams.TryGetValue("refKey", out var refKey) &&
+                !string.IsNullOrWhiteSpace(refField) &&
+                !string.IsNullOrWhiteSpace(refKey)
+            )
+            {
+                Base = await _BaseRepository.GetByDynamicField(refField, refKey, rawParams);
             }
             else
             {

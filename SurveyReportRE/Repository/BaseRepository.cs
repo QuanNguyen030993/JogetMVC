@@ -32,6 +32,7 @@ public interface IBaseRepository<T> where T : class
     Task<List<T>> GetListObjectToClone(string connectionString, Expression<Func<T, bool>> predicate);
     Task<List<T>> GetListObjectFullInclude(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includeProperties);
     Task<List<T>> GetFKMany(int fkId, string fkField);
+    Task<List<T>> GetByDynamicField(string fieldName, object fieldValue, IDictionary<string, string>? requestParams = null);
     Task<List<T>> GetManyObjectByIdAsync(int id);
     Task<List<T>> EnumData(string name);
     Task<List<Dictionary<string, object>>> ExecuteCustomQuery(string query, Dictionary<string, object>? parameters = null);
@@ -1163,6 +1164,42 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
         return entity;
     }
 
+    public async Task<List<T>> GetByDynamicField(
+    string fieldName,
+    object fieldValue,
+    IDictionary<string, string>? requestParams = null)
+    {
+        var build = Util.BuildSelectQueryByDynamicField<T>(
+            tableName: typeof(T).Name,
+            fieldName: fieldName,
+            fieldValue: fieldValue,
+            requestParams: requestParams,
+            useNoLock: true
+        );
+
+        try
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var result = await connection.QueryAsync<T>(build.Sql, build.Parameters);
+
+                Util.QueryLogs(
+                    _connectionString,
+                    "sp_Querylogs",
+                    ("@QueryString", $"GetByDynamicField: {build.Sql}"),
+                    ("@Duration", ""),
+                    ("@User", userName)
+                );
+
+                return result.ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Error(ex, ex.Message);
+            throw new Exception($"GetByDynamicField Exception Query: {build.Sql}. Details: {ex.Message}");
+        }
+    }
 
     //Last change date: 2025-02-21
     public async Task<List<T>> GetListObjectFullInclude(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includeProperties)

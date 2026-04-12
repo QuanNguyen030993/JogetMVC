@@ -2011,7 +2011,205 @@ VALUES
             public string Sql { get; set; } = "";
             public Dictionary<string, object> Parameters { get; set; } = new();
         }
+        public static SqlQueryBuildResult BuildSelectQueryByDynamicField<T>(
+    string tableName,
+    string fieldName,
+    object fieldValue,
+    IDictionary<string, string>? requestParams = null,
+    string defaultOrderBy = "Id",
+    string defaultOrderDir = "DESC",
+    int maxTake = 200,
+    int maxAll = 5000,
+    string? pkTieBreaker = "Id",
+    bool useNoLock = true
+)
+        {
+            tableName ??= typeof(T).Name;
 
+            var allParams = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            if (requestParams != null)
+            {
+                foreach (var kv in requestParams)
+                {
+                    if (kv.Key == "_") continue;
+                    allParams[kv.Key] = kv.Value ?? "";
+                }
+            }
+
+            int skip = ParseInt(Get(allParams, "skip"), 0);
+            int take = ParseInt(Get(allParams, "take"), ParseInt(Get(allParams, "pageSize"), 50));
+
+            skip = Math.Max(skip, 0);
+            take = Math.Clamp(take, 1, maxTake);
+
+            var mode = Get(allParams, "mode");
+            var pagingFlag = Get(allParams, "paging");
+            bool paging =
+                string.Equals(mode, "page", StringComparison.OrdinalIgnoreCase)
+                || pagingFlag == "1"
+                || string.Equals(pagingFlag, "true", StringComparison.OrdinalIgnoreCase)
+                || allParams.ContainsKey("skip")
+                || allParams.ContainsKey("take");
+
+            var sql = new StringBuilder();
+            var parameters = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            int pIndex = 0;
+
+            sql.Append("SELECT * FROM ");
+            sql.Append(QuoteName(tableName));
+            if (useNoLock) sql.Append(" WITH (NOLOCK)");
+            sql.AppendLine();
+            sql.AppendLine("WHERE Deleted = 0");
+
+            // main dynamic field condition
+            if (!string.IsNullOrWhiteSpace(fieldName))
+            {
+                var pName = "@p" + (++pIndex);
+                sql.Append(" AND ");
+                sql.Append(QuoteName(fieldName));
+                sql.Append(" = ");
+                sql.AppendLine(pName);
+
+                parameters[pName] = NormalizeToDbValue(fieldValue);
+            }
+
+            // DevExtreme filter JSON
+            var filterJson = Get(allParams, "filter");
+            if (!string.IsNullOrWhiteSpace(filterJson))
+            {
+                var filterSql = ParseDevExtremeFilter(filterJson!, _reservedKeys, ref pIndex, parameters);
+                if (!string.IsNullOrWhiteSpace(filterSql))
+                {
+                    sql.Append(" AND ");
+                    sql.AppendLine(filterSql);
+                }
+            }
+
+            // custom query-string filters
+            foreach (var kv in allParams)
+            {
+                var key = kv.Key;
+                var value = kv.Value;
+
+                if (_reservedKeys.Contains(key)) continue;      // ✅ chỉ bỏ ở đây
+                if (string.IsNullOrWhiteSpace(value)) continue;
+                if (!_reservedKeys.Contains(key)) continue;    // ✅ chống inject column
+
+                AppendSmartCondition(sql, parameters, key, value, ref pIndex);
+            }
+
+            var sortJson = Get(allParams, "sort");
+            var orderBySql = BuildOrderByFromSort(sortJson, _reservedKeys);
+
+            if (string.IsNullOrWhiteSpace(orderBySql))
+            {
+                string orderBy = Get(allParams, "orderBy") ?? defaultOrderBy;
+                string orderDir = (Get(allParams, "orderDir") ?? defaultOrderDir);
+                orderDir = string.Equals(orderDir, "asc", StringComparison.OrdinalIgnoreCase) ? "ASC" : "DESC";
+
+                if (!_reservedKeys.Contains(orderBy)) orderBy = defaultOrderBy;
+                if (!_reservedKeys.Contains(orderBy)) orderBy = pkTieBreaker ?? "Id";
+
+                orderBySql = $"{QuoteName(orderBy)} {orderDir}";
+            }
+
+            if (!string.IsNullOrWhiteSpace(pkTieBreaker) && _reservedKeys.Contains(pkTieBreaker))
+            {
+                var tie = QuoteName(pkTieBreaker);
+                if (!orderBySql.Contains(tie, StringComparison.OrdinalIgnoreCase))
+                    orderBySql += $", {tie} DESC";
+            }
+
+            sql.Append("ORDER BY ");
+            sql.AppendLine(orderBySql);
+
+            if (paging)
+            {
+                sql.AppendLine("OFFSET @skip ROWS FETCH NEXT @take ROWS ONLY;");
+                parameters["@skip"] = skip;
+                parameters["@take"] = take;
+            }
+            else
+            {
+                sql.AppendLine($"OFFSET 0 ROWS FETCH NEXT {maxAll} ROWS ONLY;");
+            }
+
+            return new SqlQueryBuildResult
+            {
+                Sql = sql.ToString(),
+                Parameters = parameters
+            };
+        }
+
+        private static void AppendSmartCondition(
+    StringBuilder sql,
+    Dictionary<string, object> parameters,
+    string key,
+    string value,
+    ref int pIndex)
+        {
+            if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(value)) return;
+
+            // xxxFrom
+            if (key.EndsWith("From", StringComparison.OrdinalIgnoreCase))
+            {
+                var actualField = key.Substring(0, key.Length - 4);
+                if (_reservedKeys.Contains(actualField) && DateTime.TryParse(value, out var fromDate))
+                {
+                    var pName = "@p" + (++pIndex);
+                    sql.Append(" AND ");
+                    sql.Append(QuoteName(actualField));
+                    sql.Append(" >= ");
+                    sql.AppendLine(pName);
+                    parameters[pName] = fromDate;
+                }
+                return;
+            }
+
+            // xxxTo
+            if (key.EndsWith("To", StringComparison.OrdinalIgnoreCase))
+            {
+                var actualField = key.Substring(0, key.Length - 2);
+                if (_reservedKeys.Contains(actualField) && DateTime.TryParse(value, out var toDate))
+                {
+                    var pName = "@p" + (++pIndex);
+                    sql.Append(" AND ");
+                    sql.Append(QuoteName(actualField));
+                    sql.Append(" < DATEADD(DAY, 1, ");
+                    sql.Append(pName);
+                    sql.AppendLine(")");
+                    parameters[pName] = toDate.Date;
+                }
+                return;
+            }
+
+            var p = "@p" + (++pIndex);
+            var normalized = NormalizeToDbValue(value);
+
+            sql.Append(" AND ");
+            sql.Append(QuoteName(key));
+
+            switch (normalized)
+            {
+                case bool:
+                case int:
+                case long:
+                case decimal:
+                case Guid:
+                case DateTime:
+                    sql.Append(" = ");
+                    sql.AppendLine(p);
+                    parameters[p] = normalized;
+                    break;
+
+                default:
+                    sql.Append(" LIKE '%' + ");
+                    sql.Append(p);
+                    sql.AppendLine(" + '%'");
+                    parameters[p] = normalized.ToString() ?? "";
+                    break;
+            }
+        }
         public static SqlQueryBuildResult LoadParamsBuildSelectAllQuery<T>(
     string tableName,
     List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> loadParams,

@@ -664,117 +664,24 @@
         ];
 
         var comments = [
-            {
-                id: 11,
-                section: "FO", // main target
-                fromSection: "FO",
-                toSection: "TS",
-                author: "Nguyen A",
-                type: "Request",
-                unread: true,
-                time: "09 Apr 2026 · 15:20",
-                replies: 3,
-                linkedPin: true,
-                body: `Nhờ TS kiểm tra lại wording phần deductible và endorsement số 03. Nếu có thay đổi thì update lại quotation note trước khi chuyển qua UW.
-
-        Ngoài ra client đang hỏi thêm việc áp dụng limit cho branch phụ, nên nếu team thấy wording hiện tại chưa đủ chặt thì comment ngược lại giúp FO để team chốt lại mail trả lời.
-
-        Điểm này khá quan trọng vì client muốn confirm trong ngày và có thể ảnh hưởng đến bước phê duyệt tiếp theo.`
-            },
-            {
-                id: 12,
-                section: "FO", // main target
-                fromSection: "TS",
-                toSection: "FO",
-                author: "Tran B",
-                type: "Blocker",
-                unread: false,
-                time: "09 Apr 2026 · 15:48",
-                replies: 1,
-                linkedPin: false,
-                body: `TS chưa thể chốt tiếp vì file wording đính kèm hiện đang là version cũ. Nhờ FO upload lại bản final hoặc xác nhận dùng bản ngày 08/04/2026.
-
-        Nếu chưa có file final thì TS chỉ review tạm theo summary và có rủi ro lệch wording ở bước submit.`
-            },
-            {
-                id: 13,
-                section: "FO", // main target
-                fromSection: "UW",
-                toSection: "TS",
-                author: "Le C",
-                type: "Discussion",
-                unread: false,
-                time: "09 Apr 2026 · 14:05",
-                replies: 0,
-                linkedPin: false,
-                body: `Khi TS review xong phần wording thì ping lại UW giúp để team xem tiếp impact tới referral note. Có thể chưa cần formal submit, chỉ cần note nhanh các thay đổi chính là được.`
-            },
-            {
-                id: 14,
-                section: "FO", // main target
-                fromSection: "TS",
-                toSection: "TS",
-                author: "Pham D",
-                type: "Internal",
-                unread: false,
-                time: "09 Apr 2026 · 13:30",
-                replies: 0,
-                linkedPin: false,
-                body: `Team lưu ý giữ riêng phần trao đổi technical trong section TS để tránh làm loãng luồng giao việc chính từ FO/UW. Chỉ những việc cần action liên section mới nên đẩy ra pinned note hoặc request tag.`
-            },
-            {
-                id: 15,
-                section: "UW", // main target
-                fromSection: "FO",
-                toSection: "UW",
-                author: "Bui E",
-                type: "Request",
-                unread: true,
-                time: "09 Apr 2026 · 11:00",
-                replies: 2,
-                linkedPin: true,
-                body: `Nhờ UW xem nhanh referral note vì client đang đợi xác nhận. Nếu có điều kiện loại trừ thêm, note lại giúp FO để trả lời trong email cùng ngày.`
-            },
-            {
-                id: 16,
-                section: "PM", // main target
-                fromSection: "FO",
-                toSection: "UW",
-                author: "Bui E",
-                type: "Request",
-                unread: true,
-                time: "09 Apr 2026 · 11:00",
-                replies: 2,
-                linkedPin: true,
-                body: `Nhờ PM xem nhanh referral note vì client đang đợi xác nhận. Nếu có điều kiện loại trừ thêm, note lại giúp FO để trả lời trong email cùng ngày.`
-            },
-            {
-                id: 17,
-                section: "LMKT", // main target
-                fromSection: "FO",
-                toSection: "UW",
-                author: "Bui E",
-                type: "Request",
-                unread: true,
-                time: "09 Apr 2026 · 11:00",
-                replies: 2,
-                linkedPin: true,
-                body: `Nhờ LMKT xem nhanh referral note vì client đang đợi xác nhận. Nếu có điều kiện loại trừ thêm, note lại giúp FO để trả lời trong email cùng ngày.`
-            },
-            {
-                id: 18,
-                section: "TS", // main target
-                fromSection: "FO",
-                toSection: "UW",
-                author: "Bui E",
-                type: "Request",
-                unread: true,
-                time: "09 Apr 2026 · 11:00",
-                replies: 2,
-                linkedPin: true,
-                body: `Nhờ TS xem nhanh referral note vì client đang đợi xác nhận. Nếu có điều kiện loại trừ thêm, note lại giúp FO để trả lời trong email cùng ngày.`
-            }
         ];
+        const params = new URLSearchParams();
+        params.set("refKey", 'FB6EC2DB-67F1-415F-85AD-05D2FD05D921');
+        params.set("refField", 'RecordGuid');
+        ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null)
+            .then(res => {
+                comments = (res || []).map(x => ({
+                    id: x.id,
+                    section: x.currentDepartment,
+                    fromSection: x.fromDepartment,
+                    toSection: x.toDepartment,
+                    type: x.type,
+                    unread: !x.isRead,
+                    linkedPin: x.isPinned,
+                    body: x.content,
+                    replies: 0, // nếu chưa có thread
+                    time: fmtTimeLocal(x.createdDate)
+                }));
 
         $(`#${moduleKey}-btnChatSend_${dept}`).dxButton({
             text: "Send",
@@ -1049,6 +956,8 @@
         buildPopup();
         buildFilters();
         renderComments();
+            });
+
     }
 
     function commentPinModule(moduleKey, dept) {
@@ -1066,65 +975,45 @@
 
 
         var pinnedNotes = [
-            {
-                id: 1,
-                toSection: "FO", // main target
-                fromSection: "FO",
-                type: "Request",
-                unread: true,
-                urgent: true,
-                time: "09 Apr 2026 · 15:20",
-                text: "Nhờ TS kiểm tra lại wording phần deductible và endorsement số 03 trước khi submit UW. Client đang hỏi khá sát nên cần confirm rõ trong ngày.",
-                fullText: `Nhờ TS kiểm tra lại wording phần deductible và endorsement số 03. Nếu có thay đổi thì update lại quotation note trước khi chuyển qua UW.
-
-        Client đang hỏi khá sát phần này nên nhờ ưu tiên giúp trong ngày. Nếu wording hiện tại chưa ổn thì note ngược về FO để team cập nhật mail phản hồi.`
-            },
-            {
-                id: 2,
-                toSection: "FO", // main target
-                fromSection: "UW",
-                type: "Reminder",
-                unread: false,
-                urgent: false,
-                time: "09 Apr 2026 · 14:05",
-                text: "Sau khi TS review xong wording thì ping lại UW để review impact tới referral note.",
-                fullText: `Sau khi TS review xong wording thì ping lại UW giúp để team xem tiếp impact tới referral note.
-
-        Chưa cần formal submit, chỉ cần summary nhanh các thay đổi chính là được.`
-            },
-            {
-                id: 3,
-                toSection: "UW", // main target
-                fromSection: "FO",
-                type: "Request",
-                unread: true,
-                urgent: false,
-                time: "09 Apr 2026 · 11:00",
-                text: "Nhờ UW xem lại phần referral note trước khi chốt premium với client.",
-                fullText: `Nhờ UW xem lại phần referral note trước khi chốt premium với client.
-
-        Nếu có điểm cần làm rõ thêm từ TS thì vui lòng để lại blocker để FO theo dõi trong cùng màn hình comment.`
-            }
         ];
 
 
+        const params = new URLSearchParams();
+        params.set("refKey", 'FB6EC2DB-67F1-415F-85AD-05D2FD05D921');
+        params.set("refField", 'RecordGuid');
+        params.set("refKey2", '1');
+        params.set("refField2", 'IsPinned');
+        ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null)
+            .then(res => {
+                pinnedNotes = (res || []).map(x => ({
+                    id: x.id,
+                    section: x.currentDepartment,
+                    fromSection: x.fromDepartment,
+                    toSection: x.toDepartment,
+                    type: x.type,
+                    unread: !x.isRead,
+                    linkedPin: x.isPinned,
+                    text: x.content,
+                    fullText: x.content,
+                    urgent: false,
+                    time: fmtTimeLocal(x.createdDate)
+                }));
 
 
+                function renderPins() {
+                    const wrap = $(`#${moduleKey}-pinList_${dept}`);
+                    wrap.empty();
 
-        function renderPins() {
-            const wrap = $(`#${moduleKey}-pinList_${dept}`);
-            wrap.empty();
+                    const items = getCurrentPins();
+                    if (!items.length) {
+                        wrap.append(`<div class="empty-state">Không có pinned note cho section này.</div>`);
+                        return;
+                    }
 
-            const items = getCurrentPins();
-            if (!items.length) {
-                wrap.append(`<div class="empty-state">Không có pinned note cho section này.</div>`);
-                return;
-            }
-
-            items.forEach(pin => {
-                const urgentBadge = pin.urgent ? `<span class="mini-badge badge-soft-yellow">Urgent</span>` : "";
-                const unreadBadge = pin.unread ? `<span class="mini-badge badge-soft-red">Unread</span>` : "";
-                wrap.append(`
+                    items.forEach(pin => {
+                        const urgentBadge = pin.urgent ? `<span class="mini-badge badge-soft-yellow">Urgent</span>` : "";
+                        const unreadBadge = pin.unread ? `<span class="mini-badge badge-soft-red">Unread</span>` : "";
+                        wrap.append(`
               <div class="pin-card" data-pin-id="${pin.id}">
                 <div class="pin-mini">
                   <div class="pin-mini-left">
@@ -1147,81 +1036,82 @@
                 </div>
               </div>
             `);
-            });
+                    });
 
-            wrap.find(".pin-mini").on("click", function () {
-                $(this).closest(".pin-card").toggleClass("expanded");
-            });
+                    wrap.find(".pin-mini").on("click", function () {
+                        $(this).closest(".pin-card").toggleClass("expanded");
+                    });
 
-            // items.forEach(pin => {
-            //   $(`.btn-collapse-pin-${pin.id}`).dxButton({
-            //     text: "Collapse",
-            //     stylingMode: "text",
-            //     onClick: function() {
-            //       $(`[data-pin-id="${pin.id}"]`).removeClass("expanded");
-            //     }
-            //   });
-            //   $(`.btn-reply-pin-${pin.id}`).dxButton({
-            //     text: "Reply",
-            //     stylingMode: "text",
-            //     onClick: function() {
-            //       popupInstance.show();
-            //     }
-            //   });
-            //   $(`.btn-done-pin-${pin.id}`).dxButton({
-            //     text: "Mark done",
-            //     stylingMode: "text",
-            //     type: "success"
-            //   });
-            //   $(`.btn-unpin-pin-${pin.id}`).dxButton({
-            //     text: "Unpin",
-            //     stylingMode: "text",
-            //     type: "danger"
-            //   });
-            // });
-        }
-        function buildTopButtons() {
-
-
-            $(`#${moduleKey}-btnExpandAllPins_${dept}`).dxButton({
-                text: "Expand Pins",
-                icon: "chevrondown",
-                stylingMode: "outlined",
-                onClick: function () {
-                    $(".pin-card").addClass("expanded");
+                    // items.forEach(pin => {
+                    //   $(`.btn-collapse-pin-${pin.id}`).dxButton({
+                    //     text: "Collapse",
+                    //     stylingMode: "text",
+                    //     onClick: function() {
+                    //       $(`[data-pin-id="${pin.id}"]`).removeClass("expanded");
+                    //     }
+                    //   });
+                    //   $(`.btn-reply-pin-${pin.id}`).dxButton({
+                    //     text: "Reply",
+                    //     stylingMode: "text",
+                    //     onClick: function() {
+                    //       popupInstance.show();
+                    //     }
+                    //   });
+                    //   $(`.btn-done-pin-${pin.id}`).dxButton({
+                    //     text: "Mark done",
+                    //     stylingMode: "text",
+                    //     type: "success"
+                    //   });
+                    //   $(`.btn-unpin-pin-${pin.id}`).dxButton({
+                    //     text: "Unpin",
+                    //     stylingMode: "text",
+                    //     type: "danger"
+                    //   });
+                    // });
                 }
-            });
+                function buildTopButtons() {
 
-            $(`#${moduleKey}-btnCollapseAllPins_${dept}`).dxButton({
-                text: "Collapse Pins",
-                icon: "chevronup",
-                stylingMode: "outlined",
-                onClick: function () {
-                    $(".pin-card").removeClass("expanded");
+
+                    $(`#${moduleKey}-btnExpandAllPins_${dept}`).dxButton({
+                        text: "Expand Pins",
+                        icon: "chevrondown",
+                        stylingMode: "outlined",
+                        onClick: function () {
+                            $(".pin-card").addClass("expanded");
+                        }
+                    });
+
+                    $(`#${moduleKey}-btnCollapseAllPins_${dept}`).dxButton({
+                        text: "Collapse Pins",
+                        icon: "chevronup",
+                        stylingMode: "outlined",
+                        onClick: function () {
+                            $(".pin-card").removeClass("expanded");
+                        }
+                    });
+
+                    $(`#${moduleKey}-btnUrgentPins_${dept}`).dxButton({
+                        text: "Urgent only",
+                        stylingMode: "outlined",
+                        onClick: function (e) {
+                            urgentPinsOnly = !urgentPinsOnly;
+                            e.component.option("type", urgentPinsOnly ? "default" : "normal");
+                            renderPins();
+                        }
+                    });
                 }
-            });
 
-            $(`#${moduleKey}-btnUrgentPins_${dept}`).dxButton({
-                text: "Urgent only",
-                stylingMode: "outlined",
-                onClick: function (e) {
-                    urgentPinsOnly = !urgentPinsOnly;
-                    e.component.option("type", urgentPinsOnly ? "default" : "normal");
-                    renderPins();
+                function getCurrentPins() {
+                    let res = pinnedNotes.filter(x => x.toSection === currentSection);
+                    if (urgentPinsOnly) res = res.filter(x => x.urgent);
+                    return res;
                 }
+
+
+
+                buildTopButtons();
+                renderPins();
             });
-        }
-
-        function getCurrentPins() {
-            let res = pinnedNotes.filter(x => x.toSection === currentSection);
-            if (urgentPinsOnly) res = res.filter(x => x.urgent);
-            return res;
-        }
-
-
-
-        buildTopButtons();
-        renderPins();
     }
 
 
