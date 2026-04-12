@@ -988,7 +988,7 @@
                 pinnedNotes = (res || []).map(x => ({
                     id: x.id,
                     section: x.currentDepartment,
-                    fromSection: x.fromDepartment,
+                    fromSection: x.fromDepartment,//target
                     toSection: x.toDepartment,
                     type: x.type,
                     unread: !x.isRead,

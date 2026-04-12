@@ -21,6 +21,7 @@ using System.Drawing.Text;
 using Core.Arango.Linq;
 using ERPCore.ControllerUtil;
 using TMIVHashing;
+using ERPCore.Models.Models.Parsing;
 public interface IBaseRepository<T> where T : class
 {
     Task<T> GetObjectByIdAsync(long id); //Use for Base processing 
@@ -32,7 +33,7 @@ public interface IBaseRepository<T> where T : class
     Task<List<T>> GetListObjectToClone(string connectionString, Expression<Func<T, bool>> predicate);
     Task<List<T>> GetListObjectFullInclude(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includeProperties);
     Task<List<T>> GetFKMany(int fkId, string fkField);
-    Task<List<T>> GetByDynamicField(string fieldName, object fieldValue, IDictionary<string, string>? requestParams = null);
+    Task<List<T>> GetByDynamicField(List<DynamicFieldFilter> filters, IDictionary<string, string>? requestParams = null);
     Task<List<T>> GetManyObjectByIdAsync(int id);
     Task<List<T>> EnumData(string name);
     Task<List<Dictionary<string, object>>> ExecuteCustomQuery(string query, Dictionary<string, object>? parameters = null);
@@ -1165,14 +1166,12 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
     }
 
     public async Task<List<T>> GetByDynamicField(
-    string fieldName,
-    object fieldValue,
-    IDictionary<string, string>? requestParams = null)
+        List<DynamicFieldFilter> filters,
+        IDictionary<string, string>? requestParams = null)
     {
         var build = Util.BuildSelectQueryByDynamicField<T>(
             tableName: typeof(T).Name,
-            fieldName: fieldName,
-            fieldValue: fieldValue,
+            //filters: filters,
             requestParams: requestParams,
             useNoLock: true
         );
@@ -1186,7 +1185,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
                 Util.QueryLogs(
                     _connectionString,
                     "sp_Querylogs",
-                    ("@QueryString", $"GetByDynamicField: {build.Sql}"),
+                    ("@QueryString", $"GetByDynamicFieldFilters: {build.Sql}"),
                     ("@Duration", ""),
                     ("@User", userName)
                 );
@@ -1197,7 +1196,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, ex.Message);
-            throw new Exception($"GetByDynamicField Exception Query: {build.Sql}. Details: {ex.Message}");
+            throw new Exception($"GetByDynamicFieldFilters Exception Query: {build.Sql}. Details: {ex.Message}");
         }
     }
 

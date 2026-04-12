@@ -5,6 +5,7 @@ namespace ERPCore.Models.Migration.Business.Social;
 
 public class SectionCommentNote : BaseModel
 {
+    public override DateTime? CreatedDate { get => base.CreatedDate; set => base.CreatedDate = value; }
     public Guid RecordGuid { get; set; }
     public string? FromDepartment { get; set; }
     public string? ToDepartment { get; set; }

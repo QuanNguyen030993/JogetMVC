@@ -21,6 +21,8 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using System.Text.Json;
 using System.Configuration;
 using TMIVHashing;
+using ERPCore.Models.Models.Parsing;
+using BitMiracle.LibTiff.Classic;
 namespace ERPCore.Common
 {
     public static class Util
@@ -2004,7 +2006,7 @@ VALUES
             => "[" + name.Replace("]", "]]") + "]";
         private static readonly HashSet<string> _reservedKeys = new(StringComparer.OrdinalIgnoreCase)
         {
-            "mode","paging","skip","take","pageSize","orderBy","orderDir","key","_", "requireTotalCount"
+            "mode","paging","skip","take","pageSize","orderBy","orderDir","key","_", "requireTotalCount", "refField", "refKey"
         };
         public sealed class SqlQueryBuildResult
         {
@@ -2013,8 +2015,6 @@ VALUES
         }
         public static SqlQueryBuildResult BuildSelectQueryByDynamicField<T>(
     string tableName,
-    string fieldName,
-    object fieldValue,
     IDictionary<string, string>? requestParams = null,
     string defaultOrderBy = "Id",
     string defaultOrderDir = "DESC",
@@ -2026,7 +2026,11 @@ VALUES
         {
             tableName ??= typeof(T).Name;
 
+            // =========================
+            // 1) Merge params
+            // =========================
             var allParams = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
             if (requestParams != null)
             {
                 foreach (var kv in requestParams)
@@ -2036,6 +2040,9 @@ VALUES
                 }
             }
 
+            // =========================
+            // 2) Parse paging
+            // =========================
             int skip = ParseInt(Get(allParams, "skip"), 0);
             int take = ParseInt(Get(allParams, "take"), ParseInt(Get(allParams, "pageSize"), 50));
 
@@ -2044,6 +2051,7 @@ VALUES
 
             var mode = Get(allParams, "mode");
             var pagingFlag = Get(allParams, "paging");
+
             bool paging =
                 string.Equals(mode, "page", StringComparison.OrdinalIgnoreCase)
                 || pagingFlag == "1"
@@ -2051,8 +2059,12 @@ VALUES
                 || allParams.ContainsKey("skip")
                 || allParams.ContainsKey("take");
 
+            // =========================
+            // 3) Build base SQL
+            // =========================
             var sql = new StringBuilder();
-            var parameters = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            var parameters = new Dictionary<string,Dictionary<string, object>>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, object> parameterProcess = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
             int pIndex = 0;
 
             sql.Append("SELECT * FROM ");
@@ -2061,54 +2073,93 @@ VALUES
             sql.AppendLine();
             sql.AppendLine("WHERE Deleted = 0");
 
-            // main dynamic field condition
-            if (!string.IsNullOrWhiteSpace(fieldName))
+            // =========================
+            // 4) Apply refField/refKey AND N lần
+            // refField + refKey
+            // refField2 + refKey2
+            // refField3 + refKey3 ...
+            // =========================
+
+            // cặp đầu tiên
+            if (allParams.TryGetValue("refField", out var refField) &&
+                allParams.TryGetValue("refKey", out var refKey))
             {
                 var pName = "@p" + (++pIndex);
-                sql.Append(" AND ");
-                sql.Append(QuoteName(fieldName));
-                sql.Append(" = ");
-                sql.AppendLine(pName);
-
-                parameters[pName] = NormalizeToDbValue(fieldValue);
+                Dictionary<string, object> parameter = new Dictionary<string, object>();
+                parameter[pName] = NormalizeToDbValue(refKey);
+                parameters[refField] = parameter;
+                parameterProcess[pName] = NormalizeToDbValue(refKey);
             }
 
-            // DevExtreme filter JSON
-            var filterJson = Get(allParams, "filter");
-            if (!string.IsNullOrWhiteSpace(filterJson))
+            // các cặp tiếp theo
+            for (int i = 2; i <= 50; i++)
             {
-                var filterSql = ParseDevExtremeFilter(filterJson!, _reservedKeys, ref pIndex, parameters);
-                if (!string.IsNullOrWhiteSpace(filterSql))
+                string fieldParam = $"refField{i}";
+                string keyParam = $"refKey{i}";
+
+                if (allParams.TryGetValue(fieldParam, out var fieldName) &&
+                    allParams.TryGetValue(keyParam, out var fieldValue))
                 {
-                    sql.Append(" AND ");
-                    sql.AppendLine(filterSql);
+                    var pName = "@p" + (++pIndex);
+                    Dictionary<string, object> parameter = new Dictionary<string, object>();
+                    parameter[pName] = NormalizeToDbValue(fieldValue);
+                    parameters[fieldName] = parameter;
+                    parameterProcess[pName] = NormalizeToDbValue(fieldValue);
                 }
             }
+           
+            // =========================
+            // 5) DevExtreme filter JSON (nếu cần giữ)
+            // =========================
+            //var filterJson = Get(allParams, "filter");
+            //if (!string.IsNullOrWhiteSpace(filterJson))
+            //{
+            //    var filterSql = ParseDevExtremeFilter(filterJson!, _reservedKeys, ref pIndex, parameters);
+            //    if (!string.IsNullOrWhiteSpace(filterSql))
+            //    {
+            //        sql.Append(" AND ");
+            //        sql.AppendLine(filterSql);
+            //    }
+            //}
 
-            // custom query-string filters
-            foreach (var kv in allParams)
+            // =========================
+            // 6) Custom query params thường
+            // Ví dụ: ?Type=Request&IsRead=false
+            // KHÔNG xử lý refField/refKey ở đây nữa
+            // =========================
+            foreach (KeyValuePair<string,Dictionary<string,object>> kv in parameters)
             {
                 var key = kv.Key;
-                var value = kv.Value;
+                foreach (var item in kv.Value)
+                {
+                    var value = item;
+                    if (_reservedKeys.Contains(key)) continue;
+                    AppendNormalCondition(sql, key, value);
+                }
+             
 
-                if (_reservedKeys.Contains(key)) continue;      // ✅ chỉ bỏ ở đây
-                if (string.IsNullOrWhiteSpace(value)) continue;
-                if (!_reservedKeys.Contains(key)) continue;    // ✅ chống inject column
-
-                AppendSmartCondition(sql, parameters, key, value, ref pIndex);
             }
 
+            // =========================
+            // 7) ORDER BY
+            // =========================
             var sortJson = Get(allParams, "sort");
             var orderBySql = BuildOrderByFromSort(sortJson, _reservedKeys);
 
             if (string.IsNullOrWhiteSpace(orderBySql))
             {
                 string orderBy = Get(allParams, "orderBy") ?? defaultOrderBy;
-                string orderDir = (Get(allParams, "orderDir") ?? defaultOrderDir);
-                orderDir = string.Equals(orderDir, "asc", StringComparison.OrdinalIgnoreCase) ? "ASC" : "DESC";
+                string orderDir = Get(allParams, "orderDir") ?? defaultOrderDir;
 
-                if (!_reservedKeys.Contains(orderBy)) orderBy = defaultOrderBy;
-                if (!_reservedKeys.Contains(orderBy)) orderBy = pkTieBreaker ?? "Id";
+                orderDir = string.Equals(orderDir, "asc", StringComparison.OrdinalIgnoreCase)
+                    ? "ASC"
+                    : "DESC";
+
+                if (!_reservedKeys.Contains(orderBy))
+                    orderBy = defaultOrderBy;
+
+                if (!_reservedKeys.Contains(orderBy))
+                    orderBy = pkTieBreaker ?? "Id";
 
                 orderBySql = $"{QuoteName(orderBy)} {orderDir}";
             }
@@ -2117,96 +2168,123 @@ VALUES
             {
                 var tie = QuoteName(pkTieBreaker);
                 if (!orderBySql.Contains(tie, StringComparison.OrdinalIgnoreCase))
+                {
                     orderBySql += $", {tie} DESC";
+                }
             }
 
             sql.Append("ORDER BY ");
             sql.AppendLine(orderBySql);
 
-            if (paging)
-            {
-                sql.AppendLine("OFFSET @skip ROWS FETCH NEXT @take ROWS ONLY;");
-                parameters["@skip"] = skip;
-                parameters["@take"] = take;
-            }
-            else
-            {
-                sql.AppendLine($"OFFSET 0 ROWS FETCH NEXT {maxAll} ROWS ONLY;");
-            }
+            // =========================
+            // 8) Paging
+            // =========================
+            //if (paging)
+            //{
+            //    sql.AppendLine("OFFSET @skip ROWS FETCH NEXT @take ROWS ONLY;");
+            //    parameters["@skip"] = skip;
+            //    parameters["@take"] = take;
+            //}
+            //else
+            //{
+            //    sql.AppendLine($"OFFSET 0 ROWS FETCH NEXT {maxAll} ROWS ONLY;");
+            //}
 
             return new SqlQueryBuildResult
             {
                 Sql = sql.ToString(),
-                Parameters = parameters
+                Parameters = parameterProcess
             };
         }
-
-        private static void AppendSmartCondition(
-    StringBuilder sql,
-    Dictionary<string, object> parameters,
-    string key,
-    string value,
-    ref int pIndex)
+        private static void AppendRefCondition(
+     StringBuilder sql,
+     Dictionary<string, object> parameters,
+     string fieldName,
+     string fieldValue,
+     ref int pIndex)
         {
-            if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(value)) return;
+            if (string.IsNullOrWhiteSpace(fieldName)) return;
+            if (string.IsNullOrWhiteSpace(fieldValue)) return;
 
-            // xxxFrom
-            if (key.EndsWith("From", StringComparison.OrdinalIgnoreCase))
+            // chống inject tên cột
+            if (_reservedKeys.Contains(fieldName)) return;
+
+            var pName = "@p" + (++pIndex);
+
+            sql.Append(" AND ");
+            sql.Append(QuoteName(fieldName));
+            sql.Append(" = ");
+            sql.AppendLine(pName);
+
+            parameters[pName] = NormalizeToDbValue(fieldValue);
+        }
+        public static List<DynamicFieldFilter> ExtractDynamicFilters(Dictionary<string, string> rawParams)
+        {
+            var result = new List<DynamicFieldFilter>();
+
+            // cặp đầu tiên: refField + refKey
+            if (
+                rawParams.TryGetValue("refField", out var refField) &&
+                rawParams.TryGetValue("refKey", out var refKey) &&
+                !string.IsNullOrWhiteSpace(refField)
+            )
             {
-                var actualField = key.Substring(0, key.Length - 4);
-                if (_reservedKeys.Contains(actualField) && DateTime.TryParse(value, out var fromDate))
+                result.Add(new DynamicFieldFilter
                 {
-                    var pName = "@p" + (++pIndex);
-                    sql.Append(" AND ");
-                    sql.Append(QuoteName(actualField));
-                    sql.Append(" >= ");
-                    sql.AppendLine(pName);
-                    parameters[pName] = fromDate;
-                }
-                return;
+                    FieldName = refField,
+                    FieldValue = NormalizeToDbValue(refKey)
+                });
             }
 
-            // xxxTo
-            if (key.EndsWith("To", StringComparison.OrdinalIgnoreCase))
+            // các cặp tiếp theo: refField2/refKey2, refField3/refKey3...
+            for (int i = 2; i <= 20; i++)
             {
-                var actualField = key.Substring(0, key.Length - 2);
-                if (_reservedKeys.Contains(actualField) && DateTime.TryParse(value, out var toDate))
+                var fieldKey = $"refField{i}";
+                var valueKey = $"refKey{i}";
+
+                if (
+                    rawParams.TryGetValue(fieldKey, out var fieldName) &&
+                    rawParams.TryGetValue(valueKey, out var fieldValue) &&
+                    !string.IsNullOrWhiteSpace(fieldName)
+                )
                 {
-                    var pName = "@p" + (++pIndex);
-                    sql.Append(" AND ");
-                    sql.Append(QuoteName(actualField));
-                    sql.Append(" < DATEADD(DAY, 1, ");
-                    sql.Append(pName);
-                    sql.AppendLine(")");
-                    parameters[pName] = toDate.Date;
+                    result.Add(new DynamicFieldFilter
+                    {
+                        FieldName = fieldName,
+                        FieldValue = NormalizeToDbValue(fieldValue)
+                    });
                 }
-                return;
             }
 
-            var p = "@p" + (++pIndex);
-            var normalized = NormalizeToDbValue(value);
+            return result;
+        }
+        private static void AppendNormalCondition(
+    StringBuilder sql,
+    string key,
+    KeyValuePair<string,object> value)
+        {
 
             sql.Append(" AND ");
             sql.Append(QuoteName(key));
 
-            switch (normalized)
+            switch (value.Value)
             {
                 case bool:
                 case int:
                 case long:
                 case decimal:
+                case double:
+                case float:
                 case Guid:
                 case DateTime:
                     sql.Append(" = ");
-                    sql.AppendLine(p);
-                    parameters[p] = normalized;
+                    sql.AppendLine(value.Key);
                     break;
 
                 default:
                     sql.Append(" LIKE '%' + ");
-                    sql.Append(p);
+                    sql.Append(value.Key);
                     sql.AppendLine(" + '%'");
-                    parameters[p] = normalized.ToString() ?? "";
                     break;
             }
         }

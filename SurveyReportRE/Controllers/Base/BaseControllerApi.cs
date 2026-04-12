@@ -457,7 +457,12 @@ namespace ERPCore.Controllers.Base
                 !string.IsNullOrWhiteSpace(refKey)
             )
             {
-                Base = await _BaseRepository.GetByDynamicField(refField, refKey, rawParams);
+                var filters = Util.ExtractDynamicFilters(rawParams);
+
+                if (filters.Count > 0)
+                    Base = await _BaseRepository.GetByDynamicField(filters, rawParams);
+                //else
+                //Base = await _BaseRepository.GetByDynamicField(refField, refKey, rawParams);
             }
             else
             {
