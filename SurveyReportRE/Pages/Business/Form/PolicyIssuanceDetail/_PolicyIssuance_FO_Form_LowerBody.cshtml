@@ -6,70 +6,33 @@
     <!-- COMPOSER -->
     <div class="composer">
 
-
         <div class="dept-title">Comments</div>
 
-        <div class="composer-grid">
-            <div class="field">
-                <label>From Department</label>
-                <select>
-                    <option>@dept</option>
-                </select>
-            </div>
-            <div id="pi-toDepartment_@dept" class="field">
-                <label>To Department</label>
-                <select>
-                </select>
-            </div>
-            <div class="field">
-                <label>Type</label>
-                <select>
-                    <option selected>Discussion</option>
-                    <option>Pinned Note</option>
-                </select>
-            </div>
-            <div class="field">
-                <label>Comment / Note</label>
-                <div id="pi-commentTextArea_@dept"></div>
-                @* <textarea placeholder=""></textarea> *@
-            </div>
-            <div class="composer-actions">
-                <div id="pi-btnChatSend_@dept"> </div>
-            </div>
+        <div id="pi-commentPanelControl_@dept"></div>
+        <div class="composer-actions">
+            <div id="pi-btnChatSend_@dept"> </div>
         </div>
-        <div>
-
-            <div class="filter-bar">
-                <div class="filter-left">
-                    <div id="pi-filterTypeSelect_@dept"></div>
-                    <div id="pi-filterUnreadCheckbox_@dept"></div>
-                    <div id="pi-btnFilterAll_@dept"></div>
-                    <div id="pi-btnFilterRequest_@dept"></div>
-                    <div id="pi-btnFilterBlocker_@dept"></div>
-                    <div id="pi-btnFilterDiscussion_@dept"></div>
-                    <div id="pi-btnFilterInternal_@dept"></div>
-                </div>
-                <div class="filter-note">
-                    Comment dài mặc định hiển thị 4 dòng. Bấm Read more để bung toàn bộ.
-                </div>
-                <div class="comment-wrap" id="pi-commentWrap_@dept"></div>
+        <div class="filter-bar">
+            <div class="filter-left">
+                <div id="pi-filterTypeSelect_@dept"></div>
+                <div id="pi-filterUnreadCheckbox_@dept"></div>
+                <div id="pi-btnFilterAll_@dept"></div>
+                <div id="pi-btnFilterRequest_@dept"></div>
+                <div id="pi-btnFilterBlocker_@dept"></div>
+                <div id="pi-btnFilterDiscussion_@dept"></div>
+                <div id="pi-btnFilterInternal_@dept"></div>
             </div>
+            <div class="filter-note">
+            </div>
+            <div class="comment-wrap" id="pi-commentWrap_@dept"></div>
         </div>
-
     </div>
+
 </div>
 <script>
-
-    $(`#pi-toDepartment_@dept select `).each(function () {
-        var $root = $(this);
-        $.each(piDeptModuleCode, function (itemIndex, item) {
-            if (item != `@dept`)
-            $root.append(`<option>
-                ${item}
-            </option>`);
-        });
-    });
-    commentModule('pi' , '@dept');
-
+    setTimeout(() => {
+        renderFormComment(`pi-commentPanelControl_@dept`,`@dept`);
+        commentModule('pi' , '@dept', null);
+    },1);
 </script>
 

@@ -647,50 +647,6 @@ Note:
                 var $root = $("#qt-quoteList");
 
                 data.forEach(q => {
-                    // var isSel = q.id === selectedId;
-                    // var picMap = parsePicMap(q.pIC);
-                    // var stageAcc = picMap[q.stageDept] ? picMap[q.stageDept] : "(Unassigned)";
-
-                    // if (!pICs.some(x => x.quotationCode === q.quotationCode)) {
-                    //     pICs.push({ quotationCode: q.quotationCode, pIC: q.pIC ?? "{}" });
-                    // }
-
-                    // $root.find(".quoteListLoader, .quoteListEnd, .quoteListEmpty").remove();
-
-                    // $root.append(`
-                    //         <div class="${formModuleKeyQt}-quoteCard qt-quoteCard ${isSel ? "selected" : ""}"
-                    //              data-id="${q.id}"
-                    //              data-guid="${q.guid ?? ""}"
-                    //              data-attachmentid="${q.documentId ?? ""}"
-                    //              data-codeno="${q.quotationCode ?? ""}"
-                    //              data-stagedept="${q.stageDept ?? ""}"
-                    //              data-stageaccount="${stageAcc}">
-                    //             <div class="quoteTop">
-                    //                 <div>
-                    //                     <div class="quoteClient">${q.clientName || ""}</div>
-                    //                     <div>${q.productName || ""}</div>
-                    //                 </div>
-                    //                 <div class="statusTag ${statusClass(q.quotationStatus)}">${statusText(q.quotationStatus)}</div>
-                    //             </div>
-                    //             <div class="quoteMeta">
-                    //                 <div class="quotationCode">${q.quotationCode || ""}</div>
-                    //                 <div>${q.lineName || ""}</div>
-                    //                 <div>${(typeof formatDate === "function") ? formatDate(q.requestedDate, "dd-mm-yyyy") : (q.requestedDate || "")}</div>
-                    //             </div>
-                    //             <div class="quoteMeta">
-                    //                 <div>Total Sum Insured</div>
-                    //                 <div class="quoteAmount">${money(q.sumInsuredTotal)}</div>
-                    //             </div>
-                    //             <div class="quoteMeta">
-                    //                 <div>Total Premium</div>
-                    //                 <div class="quoteAmount">${money(q.premiumTotal)}</div>
-                    //             </div>
-                    //             <div class="quoteMeta">
-                    //                 <div>Total Due</div>
-                    //                 <div class="quoteAmount">${money(q.totalDue)}</div>
-                    //             </div>
-                    //         </div>
-                    //     `);
                     var isSel = q.id === selectedId;
                     pICs.push({ quotationCode: q.quotationCode, pIC: q.pIC ?? "{}" });
 
@@ -854,11 +810,13 @@ Note:
                     items.moduleName = "qt";
                     items.sectionName = item;
                     loadDxFileUploaderAttachments(item, "Document", items);
+                    commentModule('qt', item, state.selectedGuid );
                 });
 
                 applyEditLock();
                 updateHints();
-            }
+
+        }
 
             function applyEditLock() {
                 const roMKT = !(state.currentUserRole === "FO");

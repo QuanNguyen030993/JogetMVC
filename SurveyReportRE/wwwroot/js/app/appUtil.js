@@ -3449,7 +3449,7 @@ function convertKeysToLowerFirstChar(obj) {
 function convertToTitleCase(str) {
     if (!str) return ""; // Kiểm tra nếu chuỗi rỗng
     return str
-        .toLowerCase() // Chuyển toàn bộ chuỗi về chữ thường
+        //.toLowerCase() // Chuyển toàn bộ chuỗi về chữ thường
         .split(" ")    // Tách chuỗi thành mảng các từ
         .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Viết hoa chữ cái đầu mỗi từ
         .join(" ");    // Ghép lại thành chuỗi

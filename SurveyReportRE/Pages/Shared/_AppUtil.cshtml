@@ -650,7 +650,8 @@
         popupInstance.show();
     }
 
-    function commentModule(moduleKey, dept) {
+    function commentModule(moduleKey, dept, guid) {
+        console.log(guid);
         var currentSection = `${dept}`;
         var filterType = "All";
         var unreadOnly = false;
@@ -665,29 +666,9 @@
 
         var comments = [
         ];
-        const params = new URLSearchParams();
-        params.set("refKey", 'FB6EC2DB-67F1-415F-85AD-05D2FD05D921');
-        params.set("refField", 'RecordGuid');
-        ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null)
-            .then(res => {
-                comments = (res || []).map(x => ({
-                    id: x.id,
-                    section: x.currentDepartment,
-                    fromSection: x.fromDepartment,
-                    toSection: x.toDepartment,
-                    type: x.type,
-                    unread: !x.isRead,
-                    linkedPin: x.isPinned,
-                    body: x.content,
-                    replies: 0, // nếu chưa có thread
-                    time: fmtTimeLocal(x.createdDate)
-                }));
-
+     
         $(`#${moduleKey}-btnChatSend_${dept}`).dxButton({
-            text: "Send",
-            onClick: function (e) {
-                alert("Send chat");
-            }
+            text: "Send"
         });
 
 
@@ -704,7 +685,10 @@
             return res;
         }
 
-        function renderComments() {
+
+
+
+        function renderComments(comments) {
             const wrap = $(`#${moduleKey}-commentWrap_${dept}`);
             wrap.empty();
 
@@ -797,7 +781,7 @@
                 value: "All",
                 onValueChanged: function (e) {
                     filterType = e.value;
-                    renderComments();
+                    renderComments(comments);
                 }
             });
 
@@ -806,7 +790,7 @@
                 value: false,
                 onValueChanged: function (e) {
                     unreadOnly = e.value;
-                    renderComments();
+                    renderComments(comments);
                 }
             });
 
@@ -817,7 +801,7 @@
                 onClick: function () {
                     filterType = "All";
                     $(`#${moduleKey}-filterTypeSelect_${dept}`).dxSelectBox("instance").option("value", "All");
-                    renderComments();
+                    renderComments(comments);
                 }
             });
 
@@ -827,7 +811,7 @@
                 onClick: function () {
                     filterType = "Request";
                     $(`#${moduleKey}-filterTypeSelect_${dept}`).dxSelectBox("instance").option("value", "Request");
-                    renderComments();
+                    renderComments(comments);
                 }
             });
 
@@ -837,7 +821,7 @@
                 onClick: function () {
                     filterType = "Blocker";
                     $(`#${moduleKey}-filterTypeSelect_${dept}`).dxSelectBox("instance").option("value", "Blocker");
-                    renderComments();
+                    renderComments(comments);
                 }
             });
 
@@ -847,7 +831,7 @@
                 onClick: function () {
                     filterType = "Discussion";
                     $(`#${moduleKey}-filterTypeSelect_${dept}`).dxSelectBox("instance").option("value", "Discussion");
-                    renderComments();
+                    renderComments(comments);
                 }
             });
 
@@ -857,7 +841,7 @@
                 onClick: function () {
                     filterType = "Internal";
                     $(`#${moduleKey}-filterTypeSelect_${dept}`).dxSelectBox("instance").option("value", "Internal");
-                    renderComments();
+                    renderComments(comments);
                 }
             });
         }
@@ -875,7 +859,7 @@
                     contentElement.append(formWrap);
 
                     const formData = {
-                        fromSection: "FO",
+                        fromSection: dept,
                         toSection: currentSection,
                         type: "Request",
                         isPinned: true,
@@ -955,8 +939,54 @@
 
         buildPopup();
         buildFilters();
-        renderComments();
+       
+         if (guid)
+        {
+          var params = new URLSearchParams();
+        params.set("refKey", guid);
+        params.set("refField", 'RecordGuid');
+        ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null)
+            .then(res => {
+                comments = (res || []).map(x => ({
+                    id: x.id,
+                    section: x.currentDepartment,
+                    fromSection: x.fromDepartment,
+                    toSection: x.toDepartment,
+                    type: x.type,
+                    unread: !x.isRead,
+                    linkedPin: x.isPinned,
+                    body: x.content,
+                    replies: 0, // nếu chưa có thread
+                    time: fmtTimeLocal(x.createdDate)
+                }));
+
+                var that = new Object();
+                that.ModelName = "SectionCommentNote";
+                var dataSource = makeBasicDataSource(that, false);
+                var store = dataSource.store();
+                 renderComments(comments);
+                 $(`#${moduleKey}-btnChatSend_${dept}`).dxButton({
+                    text: "Send",
+                    onClick: function (e) {
+                       var commentDataForm = $(`#qt-commentPanelControl_${dept}`).dxForm("instance").option("formData");
+                        var commentData = new Object();
+                        commentData = ObjectPopulateKey(commentDataForm, true, false);
+                        commentData.CurrentDepartment = commentData.ToDepartment;
+                        commentData.RecordGuid = guid;
+                        commentData.IsPinned = commentData.Type == "Pinned" ? true :  false;
+                             store.insert(commentData)
+                            .done(function () {
+                                DevExpress.ui.notify("Send message successfully", "success", 2000);
+                            })
+                            .fail(function (error) {
+                                console.error(error);
+                                DevExpress.ui.notify("Send message failed", "error", 2000);
+                            });
+                    }
+                });
+
             });
+            }
 
     }
 
@@ -1113,7 +1143,44 @@
                 renderPins();
             });
     }
-
+           function renderFormComment(idForm, dept) {
+         $(`#${idForm}`).dxForm({
+             width:"100%",
+             height: "10%",
+             labelLocation: "top",
+             colCount: 4,
+             items:
+             [
+                 {  dataField: "fromDepartment"  ,label:{text:"From Department"}, editorType: "dxSelectBox", editorOptions: {
+                    dataSource: [dept],
+                    value:[dept][0],
+                 }, elementAttr: {
+                    class: "dExForm",
+                    id: `qt-fromDepartment_${dept}`,
+                 }},
+                 {  dataField: "toDepartment", value: qtDeptModuleCode.filter(m => m != dept)[0] , label:{text:"To Department"}, editorType: "dxSelectBox", editorOptions: {
+                    dataSource: qtDeptModuleCode.filter(m => m != dept) ,
+                    value: qtDeptModuleCode.filter(m => m != dept)[0],
+                 } ,elementAttr: {
+                    class: "dExForm",
+                    id: `qt-toDepartment_${dept}`,
+                 }},
+                 {  dataField: "type", label:{text:"Type"}, editorType: "dxSelectBox", editorOptions: {
+                    valueExpr: "id",
+                    displayExpr: "value",
+                    value:"Discussion",
+                    dataSource: [{id: 'Discussion' ,value: 'Discussion'},{id: 'Pinned' , value: 'Pinned Note'} ]
+                 }, elementAttr: {
+                    class: "dExForm",
+                    id: `qt-sectionType_${dept}`,
+                 }},
+                 {  dataField: "content", label:{text:"Comment Note"}, elementAttr: {
+                    class: "dExForm",
+                    id: `qt-commentContent_${dept}`,
+                 }}
+             ]
+         });
+    }
 
 </script>
 
