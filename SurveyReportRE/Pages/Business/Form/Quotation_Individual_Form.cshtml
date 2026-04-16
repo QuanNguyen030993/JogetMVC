@@ -328,21 +328,6 @@ Note:
         transition: transform .15s ease;
     }
 
-    .dept-body {
-        overflow: hidden;
-        max-height: 2000px;
-        transition: max-height .18s ease, opacity .18s ease;
-        opacity: 1;
-        min-height: 0;
-        padding: 10px;
-    }
-
-    .dept-section.collapsed .dept-body {
-        max-height: 0px;
-        opacity: 0;
-        padding-top: 0;
-        padding-bottom: 0;
-    }
 
     .dept-section.collapsed .dept-toggle-icon {
         transform: rotate(-90deg);
@@ -977,34 +962,60 @@ Note:
             }
 
             function setSectionCollapsed(dept, collapsed) {
-                const $sec = $(`#${formModuleKeyQt}-sec${dept}`);
+                var $sec = $(`#${formModuleKeyQt}-sec${dept}`);
                 if (!$sec.length) return;
-                const body = $sec.find(".dept-body")[0];
-
+                var body = $sec.find(".dept-body")[0];
+                var bodyUpper = $sec.find(".dept-upperbody")[0];
+                var bodyLower = $sec.find(".dept-lowerbody")[0];
+                debugger
                 if (collapsed) {
                     $sec.addClass("collapsed");
                     if (body) {
-                        body.style.maxHeight = body.scrollHeight + "px";
-                        setTimeout(() => { body.style.maxHeight = "0px"; }, 220);
+                         body.style.maxHeight = body.scrollHeight + "px";
+                         setTimeout(() => { body.style.maxHeight = "0px"; }, 220);
+                    }
+                    if (bodyUpper) {
+                         bodyUpper.style.maxHeight = bodyUpper.scrollHeight + "px";
+                         setTimeout(() => { bodyUpper.style.maxHeight = "0px"; }, 220);
+                    }
+                    if (bodyLower) {
+                         bodyLower.style.maxHeight = bodyLower.scrollHeight + "px";
+                         setTimeout(() => { bodyLower.style.maxHeight = "0px"; }, 220);
                     }
                 } else {
                     $sec.removeClass("collapsed");
                     if (body) {
-                        body.style.maxHeight = body.scrollHeight + "px";
-                        setTimeout(() => { body.style.maxHeight = "2000px"; }, 220);
+                         body.style.maxHeight = body.scrollHeight + "px";
+                         setTimeout(() => { body.style.maxHeight = "2000px"; }, 220);
+                    }
+                    if (bodyUpper) {
+                     bodyUpper.style.maxHeight = bodyUpper.scrollHeight + "px";
+                     setTimeout(() => { bodyUpper.style.maxHeight = "2000px"; }, 220);
+                    }
+                        if (bodyLower) {
+                         bodyLower.style.maxHeight = bodyLower.scrollHeight + "px";
+                     setTimeout(() => { bodyLower.style.maxHeight = "2000px"; }, 220);
                     }
                 }
             }
 
             function bindSectionHeaderToggle() {
-                qtDeptModuleCode.forEach(dept => {
-                    const $sec = $(`#${formModuleKeyQt}-sec${dept}`);
+                $.each(qtDeptModuleCode, function(deptIndex, dept) {
+                    var $sec = $(`#${formModuleKeyQt}-sec${dept}`);
                     if (!$sec.length) return;
 
                     $sec.find(".dept-header").off("click.sec").on("click.sec", function (e) {
                         if ($(e.target).closest("a,button,.dx-button").length) return;
-                        const isCollapsed = $sec.hasClass("collapsed");
+                        var isCollapsed = $sec.hasClass("collapsed");
                         setSectionCollapsed(dept, !isCollapsed);
+                    });
+
+                    $(`#${formModuleKeyQt}-expandCollapsedBtn_${dept}`).dxButton({
+                         onClick: function () {
+                              var isCollapsed = $sec.hasClass("collapsed");
+                              setSectionCollapsed(dept, !isCollapsed);
+                         
+                         }
                     });
                 });
             }
