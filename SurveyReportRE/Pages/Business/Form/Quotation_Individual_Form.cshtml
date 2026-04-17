@@ -679,11 +679,39 @@ Note:
                 selectedCodeNo = q.quotationCode ?? null;
                 stageDept = q.stageDept ?? null;
 
+            
+
                 state.selectedId = selectedId;
                 state.selectedGuid = selectedGuid;
                 state.selectedAttachmentId = selectedAttachmentId;
                 state.selectedCodeNo = selectedCodeNo;
                 state.stageDept = stageDept;
+                const params = new URLSearchParams();
+                params.set("refKey", state.selectedGuid);
+                params.set("refField", 'RecordGuid');
+                ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null)
+                .then(res => {
+                  var pinnedNotes = (res || []).map(x => ({
+                                id: x.id,
+                                section: x.currentDepartment,//target main
+                                fromSection: x.fromDepartment,//target pin
+                                toSection: x.toDepartment,
+                                type: x.type,
+                                unread: !x.isRead,
+                                isRead: !x.isRead,
+                                linkedPin: x.isPinned,
+                                isPinned: x.isPinned,
+                                body: x.content,
+                                text: x.content,
+                                replies: 0,
+                                fullText: x.content,
+                                urgent: false,
+                                time: fmtTimeLocal(x.createdDate)
+                            }));
+                            state.comments = pinnedNotes;
+                        state.pinNotes = pinnedNotes.filter(f => f.isPinned);
+                });
+
 
                 PIC_JSON = pICs.find(f => f.quotationCode == state.selectedCodeNo)?.pIC ?? q.pIC ?? "{}";
                 renderDeptCallouts(PIC_JSON);
@@ -790,8 +818,8 @@ Note:
                     items.moduleName = "qt";
                     items.sectionName = item;
                     loadDxFileUploaderAttachments(item, "Document", items);
-                    commentPinModule(formModuleKeyQt,item,state.selectedGuid);
-                    commentModule(formModuleKeyQt,item,state.selectedGuid);
+                    commentPinModule(formModuleKeyQt,item,state.selectedGuid, state.pinNotes);
+                    commentModule(formModuleKeyQt,item,state.selectedGuid, state.comments);
                 });
             }
 
@@ -1263,29 +1291,6 @@ Note:
                 scrollToDept(formModuleKeyQt, state.focusDept);
             }
 
-            // function bindQuoteCardClick() {
-            //     $("#qt-quoteList")
-            //         .off("click.quoteCard", ".qt-quoteCard")
-            //         .on("click.quoteCard", ".qt-quoteCard", function () {
-            //             const id = Number($(this).attr("data-id"));
-            //             const q = state.quotes.find(x => Number(x.id) === id);
-            //             if (!q) return;
-
-            //             syncSelectedState(q);
-            //             state.focusDept = state.currentUserRole;
-
-            //             loadSelectedWorkflow().then(() => {
-            //                 rerenderCurrentSelectionOnly();
-            //                 renderDetail();
-            //                 initDepartmentAssignees(formModuleKeyQt);
-
-            //                 if (commentPanelOpened) {
-            //                     $("#btnCloseRightComment").click();
-            //                 }
-            //             });
-            //         });
-            // }
-
             //Select items
             function bindQuoteCardClick() {
                 $("#qt-quoteList")
@@ -1308,6 +1313,34 @@ Note:
                         state.stageDept = stageDept;
                         state.focusDept = state.currentUserRole;
                         state.resFK = q.resFK;
+
+                        const params = new URLSearchParams();
+                        params.set("refKey", state.selectedGuid);
+                        params.set("refField", 'RecordGuid');
+
+                        ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null)
+                        .then(res => {
+                            var pinnedNotes = (res || []).map(x => ({
+                                id: x.id,
+                                section: x.currentDepartment,//target main
+                                fromSection: x.fromDepartment,//target pin
+                                toSection: x.toDepartment,
+                                type: x.type,
+                                unread: !x.isRead,
+                                isRead: !x.isRead,
+                                linkedPin: x.isPinned,
+                                isPinned: x.isPinned,
+                                body: x.content,
+                                text: x.content,
+                                replies: 0,
+                                fullText: x.content,
+                                urgent: false,
+                                time: fmtTimeLocal(x.createdDate)
+                            }));
+                        state.comments = pinnedNotes;
+                        state.pinNotes = pinnedNotes.filter(f => f.isPinned);
+                        });
+
 
                         PIC_JSON = pICs.find(f => f.quotationCode == selectedCodeNo)?.pIC ?? q.pIC ?? "{}";
                         renderDeptCallouts(PIC_JSON);

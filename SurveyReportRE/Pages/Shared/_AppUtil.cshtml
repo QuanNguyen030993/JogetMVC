@@ -650,8 +650,7 @@
         popupInstance.show();
     }
 
-    function  commentModule (moduleKey, dept, guid) {
-        console.log(guid);
+    function  commentModule(moduleKey, dept, guid, commentsIn) {
         var currentSection = `${dept}`;
         var filterType = "All";
         var unreadOnly = false;
@@ -666,7 +665,7 @@
 
         var comments = [
         ];
-     
+       
         $(`#${moduleKey}-btnChatSend_${dept}`).dxButton({
             text: "Send"
         });
@@ -691,7 +690,7 @@
         function renderComments(comments) {
             const wrap = $(`#${moduleKey}-commentWrap_${dept}`);
             wrap.empty();
-
+            debugger
             const items = getCurrentComments();
             if (!items.length) {
                 wrap.append(`<div class="empty-state">Không có comment phù hợp với bộ lọc hiện tại.</div>`);
@@ -939,58 +938,85 @@
 
         buildPopup();
         buildFilters();
-       
-         if (guid)
-        {
-          var params = new URLSearchParams();
-        params.set("refKey", guid);
-        params.set("refField", 'RecordGuid');
-        ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null)
-            .then(res => {
-                comments = (res || []).map(x => ({
-                    id: x.id,
-                    section: x.currentDepartment,
-                    fromSection: x.fromDepartment,
-                    toSection: x.toDepartment,
-                    type: x.type,
-                    unread: !x.isRead,
-                    linkedPin: x.isPinned,
-                    body: x.content,
-                    replies: 0, // nếu chưa có thread
-                    time: fmtTimeLocal(x.createdDate)
-                }));
+         if (commentsIn.length > 0) {
+             comments = commentsIn;
 
-                var that = new Object();
-                that.ModelName = "SectionCommentNote";
-                var dataSource = makeBasicDataSource(that, false);
-                var store = dataSource.store();
-                 renderComments(comments);
-                 $(`#${moduleKey}-btnChatSend_${dept}`).dxButton({
-                    text: "Send",
-                    onClick: function (e) {
-                       var commentDataForm = $(`#qt-commentPanelControl_${dept}`).dxForm("instance").option("formData");
-                        var commentData = new Object();
-                        commentData = ObjectPopulateKey(commentDataForm, true, false);
-                        commentData.CurrentDepartment = commentData.ToDepartment;
-                        commentData.RecordGuid = guid;
-                        commentData.IsPinned = commentData.Type == "Pinned" ? true :  false;
-                             store.insert(commentData)
-                            .done(function () {
-                                DevExpress.ui.notify("Send message successfully", "success", 2000);
-                            })
-                            .fail(function (error) {
-                                console.error(error);
-                                DevExpress.ui.notify("Send message failed", "error", 2000);
-                            });
-                    }
-                });
+             var that = new Object();
+             that.ModelName = "SectionCommentNote";
+             var dataSource = makeBasicDataSource(that, false);
+             var store = dataSource.store();
+              renderComments(comments);
+              $(`#${moduleKey}-btnChatSend_${dept}`).dxButton({
+                 text: "Send",
+                 onClick: function (e) {
+                    var commentDataForm = $(`#qt-commentPanelControl_${dept}`).dxForm("instance").option("formData");
+                     var commentData = new Object();
+                     commentData = ObjectPopulateKey(commentDataForm, true, false);
+                     commentData.CurrentDepartment = commentData.ToDepartment;
+                     commentData.RecordGuid = guid;
+                     commentData.IsPinned = commentData.Type == "Pinned" ? true :  false;
+                          store.insert(commentData)
+                         .done(function () {
+                             DevExpress.ui.notify("Send message successfully", "success", 2000);
+                         })
+                         .fail(function (error) {
+                             console.error(error);
+                             DevExpress.ui.notify("Send message failed", "error", 2000);
+                         });
+                 }
+             });
+         }
+        //  if (guid)
+        // {
+        //   var params = new URLSearchParams();
+        // params.set("refKey", guid);
+        // params.set("refField", 'RecordGuid');
+        // ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null)
+        //     .then(res => {
+        //         comments = (res || []).map(x => ({
+        //             id: x.id,
+        //             section: x.currentDepartment,
+        //             fromSection: x.fromDepartment,
+        //             toSection: x.toDepartment,
+        //             type: x.type,
+        //             unread: !x.isRead,
+        //             linkedPin: x.isPinned,
+        //             body: x.content,
+        //             replies: 0, // nếu chưa có thread
+        //             time: fmtTimeLocal(x.createdDate)
+        //         }));
 
-            });
-            }
+        //         var that = new Object();
+        //         that.ModelName = "SectionCommentNote";
+        //         var dataSource = makeBasicDataSource(that, false);
+        //         var store = dataSource.store();
+        //          renderComments(comments);
+        //          $(`#${moduleKey}-btnChatSend_${dept}`).dxButton({
+        //             text: "Send",
+        //             onClick: function (e) {
+        //                var commentDataForm = $(`#qt-commentPanelControl_${dept}`).dxForm("instance").option("formData");
+        //                 var commentData = new Object();
+        //                 commentData = ObjectPopulateKey(commentDataForm, true, false);
+        //                 commentData.CurrentDepartment = commentData.ToDepartment;
+        //                 commentData.RecordGuid = guid;
+        //                 commentData.IsPinned = commentData.Type == "Pinned" ? true :  false;
+        //                      store.insert(commentData)
+        //                     .done(function () {
+        //                         DevExpress.ui.notify("Send message successfully", "success", 2000);
+        //                     })
+        //                     .fail(function (error) {
+        //                         console.error(error);
+        //                         DevExpress.ui.notify("Send message failed", "error", 2000);
+        //                     });
+        //             }
+        //         });
+
+        //     });
+        //     }
 
     }
 
-    function commentPinModule(moduleKey, dept, guid) {
+    function commentPinModule(moduleKey, dept, guid, commentsIn) {
         var currentSection = `${dept}`;
         var filterType = "All";
         var unreadOnly = false;
@@ -1045,7 +1071,6 @@
                       </div>
                     `);
                     });
-                    console.log(items);
 
                      const groupByFromSection = items.reduce((acc, cur) => {
                        const key = cur.fromSection || "Unknown";
@@ -1161,36 +1186,42 @@
                     if (urgentPinsOnly) res = res.filter(x => x.urgent);
                     return res;
                 }
-
-
-                if (guid) {
-
-                    const params = new URLSearchParams();
-                    params.set("refKey", guid);
-                    params.set("refField", 'RecordGuid');
-                    params.set("refKey2", '1');
-                    params.set("refField2", 'IsPinned');
-                    ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null)
-                    .then(res => {
-                        pinnedNotes = (res || []).map(x => ({
-                            id: x.id,
-                            section: x.currentDepartment,
-                            fromSection: x.fromDepartment,//target
-                            toSection: x.toDepartment,
-                            type: x.type,
-                            unread: !x.isRead,
-                            linkedPin: x.isPinned,
-                            text: x.content,
-                            fullText: x.content,
-                            urgent: false,
-                            time: fmtTimeLocal(x.createdDate)
-                        }));
-                        renderPins();
-                    });
+                if (commentsIn.length > 0)
+                {
+                    pinnedNotes = commentsIn;
+                    renderPins();
                 }
+
+                // if (guid) {
+
+                //     const params = new URLSearchParams();
+                //     params.set("refKey", guid);
+                //     params.set("refField", 'RecordGuid');
+                //     params.set("refKey2", '1');
+                //     params.set("refField2", 'IsPinned');
+                //     ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null)
+                //     .then(res => {
+                //         pinnedNotes = (res || []).map(x => ({
+                //             id: x.id,
+                //             section: x.currentDepartment,
+                //             fromSection: x.fromDepartment,//target
+                //             toSection: x.toDepartment,
+                //             type: x.type,
+                //             unread: !x.isRead,
+                //             linkedPin: x.isPinned,
+                //             text: x.content,
+                //             fullText: x.content,
+                //             urgent: false,
+                //             time: fmtTimeLocal(x.createdDate)
+                //         }));
+                //         renderPins();
+                //     });
+                // }
                 buildTopButtons();
                 renderPins();
                 }
+
+
            function renderFormComment(idForm, dept) {
          $(`#${idForm}`).dxForm({
              width:"100%",
