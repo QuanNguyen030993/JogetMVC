@@ -706,7 +706,7 @@ Note:
                                 replies: 0,
                                 fullText: x.content,
                                 urgent: false,
-                                time: fmtTimeLocal(x.createdDate)
+                                time: parseToGMT7(x.createdDate, 0)
                             }));
                             state.comments = pinnedNotes;
                         state.pinNotes = pinnedNotes.filter(f => f.isPinned);
@@ -949,7 +949,7 @@ Note:
                 };
 
                 Object.keys(map).forEach(dept => {
-                    $(`#${formModuleKeyQt}-upd${dept}`).text("Updated: " + fmtTimeLocal(map[dept]));
+                $(`#${formModuleKeyQt}-upd${dept}`).text("Updated: " + fmtTimeLocal(map[dept]));
                 });
             }
 
@@ -1335,7 +1335,7 @@ Note:
                                 replies: 0,
                                 fullText: x.content,
                                 urgent: false,
-                                time: fmtTimeLocal(x.createdDate)
+                                time: parseToGMT7(x.createdDate, 0)
                             }));
                         state.comments = pinnedNotes;
                         state.pinNotes = pinnedNotes.filter(f => f.isPinned);

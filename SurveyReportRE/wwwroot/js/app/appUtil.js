@@ -4125,19 +4125,19 @@ function buildGroupedData(rawData, groupField, groupSortField) {
 
     return result;
 }
-function stringToUtcDate(stringDate) {
-    const date = new Date(stringDate);
-    var resultDate = date;
-    if (stringDate)
-        if (stringDate.slice(-1) === "Z") {
-            // getTimezoneOffset() returns minutes, so multiply by 60000 for milliseconds
-            const offsetMinutes = date.getTimezoneOffset();
-            const utcDate = new Date(date.getTime() + (-1 * offsetMinutes * 60 * 1000));
-            resultDate = new Date(utcDate.getTime() + (7 * 60 * 60 * 1000));
-        }
-    //return date; // Return the original date if it's not UTC
-    return resultDate;
-}
+//function stringToUtcDate(stringDate) {
+//    const date = new Date(stringDate);
+//    var resultDate = date;
+//    if (stringDate)
+//        if (stringDate.slice(-1) === "Z") {
+//            // getTimezoneOffset() returns minutes, so multiply by 60000 for milliseconds
+//            const offsetMinutes = date.getTimezoneOffset();
+//            const utcDate = new Date(date.getTime() + (-1 * offsetMinutes * 60 * 1000));
+//            resultDate = new Date(utcDate.getTime() + (7 * 60 * 60 * 1000));
+//        }
+//    //return date; // Return the original date if it's not UTC
+//    return resultDate;
+//}
 
 const tabClickEvent = function (e, eTabName, eTab, callback) {
     var eTabNameR = eTabName;
@@ -7399,27 +7399,6 @@ async function openWordMammothPopup(id) {
     popup.show();
 }
 
-function fmtTimeLocal(input) {
-    if (!input) return "—";
-    let d;
-
-    if (input instanceof Date) {
-        d = input;
-    } else if (typeof input === "string") {
-        // normalize: nếu không có timezone → thêm Z để tránh parse lệch
-        const hasTZ = /[zZ]|[+-]\d{2}:\d{2}$/.test(input);
-
-        d = new Date(hasTZ ? input : input + "Z");
-    } else {
-        return "—";
-    }
-
-    if (isNaN(d.getTime())) return "—";
-
-    const pad = (n) => String(n).padStart(2, "0");
-
-    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
 
 function reloadWorkflow(selectedGuid, selectedId, stageDept, moduleKey) {
     $(`#${moduleKey}-flowPanel`).empty();

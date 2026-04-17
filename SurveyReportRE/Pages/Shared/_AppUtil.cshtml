@@ -690,7 +690,6 @@
         function renderComments(comments) {
             const wrap = $(`#${moduleKey}-commentWrap_${dept}`);
             wrap.empty();
-            debugger
             const items = getCurrentComments();
             if (!items.length) {
                 wrap.append(`<div class="empty-state">Không có comment phù hợp với bộ lọc hiện tại.</div>`);
@@ -1188,7 +1187,7 @@
                 }
                 if (commentsIn.length > 0)
                 {
-                    pinnedNotes = commentsIn;
+                    pinnedNotes = commentsIn.filter(f => f.section == dept);
                     renderPins();
                 }
 
@@ -1259,6 +1258,34 @@
                  }}
              ]
          });
+    }
+        function parseToGMT7(dateInput, minusTimeZone = 0 ) {
+             //const offsetMinutes = date.getTimezoneOffset();
+       const d = new Date(dateInput); // JS auto parse ISO / UTC
+       if (isNaN(d)) return null;
+       // +7 tiếng (milliseconds)
+       return new Date(d.getTime() + minusTimeZone * 60 * 60 * 1000);
+    }
+
+        function fmtTimeLocal(input) {
+        if (!input) return "—";
+        var d = parseToGMT7(input);
+
+        if (input instanceof Date) {
+            d = input;
+        } else if (typeof input === "string") {
+            // normalize: nếu không có timezone → thêm Z để tránh parse lệch
+            const hasTZ = /[zZ]|[+-]\d{2}:\d{2}$/.test(input);
+
+            d = parseToGMT7(hasTZ ? input : input + "Z",-7);//  new Date(hasTZ ? input : input + "Z");
+        } else {
+            return "—";
+        }
+
+        if (isNaN(d.getTime())) return "—";
+
+        const pad = (n) => String(n).padStart(2, "0");
+        return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
     }
 
 </script>
