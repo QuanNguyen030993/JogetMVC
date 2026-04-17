@@ -1085,6 +1085,14 @@
                                 Icon này có thể gắn ở header section. Khi section trước có comment hoặc giao việc, chỉ cần bật icon sticky note để tạo điểm nhấn trực quan.
                             </div>`
                             );
+
+                            $(`#${moduleKey}-pinZone_${dept}`).off("click").on("click", () => 
+                                {
+                                    wrapIcon.fadeOut();
+                                }
+                            );
+
+
                     });
                  
 
