@@ -1,4 +1,36 @@
-﻿<div class="dept-title">TS</div>
+﻿@{
+    string dept = "TS";
+}
+
+
+<div class="dept-title">@dept</div>
+<div class="dept-form-header">
+    <div class="dept-form-header__assign">
+        <div id="qt-@dept.ToString().ToLower()AssigneeBox"></div>
+    </div>
+    <div id="btnToggleResForm"></div>
+</div>
+<div id="qt-stickPanel_@dept">
+    @* <div class="sticky-wrap wobble" data-tooltip-toggle>
+    <div class="pin">
+    </div>
+    <div class="sticky-note"></div>
+    <div class="sticky-badge">1</div>
+    <div class="sticky-mini-text">FROM TS</div>
+    <div class="note-tooltip">
+        <strong>Suggested use</strong><br>
+        Icon này có thể gắn ở header section. Khi section trước có comment hoặc giao việc, chỉ cần bật icon sticky note để tạo điểm nhấn trực quan.
+    </div>
+</div> *@
+</div>
+<div class="dept-hint-wrap">
+    <div class="dept-hint" id="qt-hintTS"></div>
+    <div class="dept-updated" id="qt-updTS" title="Last updated">—</div>
+    <div id="qt-expandCollapsedBtn_@dept" class="dept-toggle-icon" aria-hidden="true">▾</div>
+</div>
+
+
+@* <div class="dept-title">TS</div>
 <div class="dept-form-header">
     <div class="dept-form-header__assign">
         <div id="qt-tsAssigneeBox"></div>
@@ -8,7 +40,7 @@
     <div class="dept-hint" id="qt-hintTS"></div>
     <div class="dept-updated" id="qt-updTS" title="Last updated">—</div>
     <div class="dept-toggle-icon" aria-hidden="true">▾</div>
-</div>
+</div> *@
 <script>
     setTimeout( () => {
     var formItems = $("#qt-formTS").dxForm("instance")?.option("formData") || {};

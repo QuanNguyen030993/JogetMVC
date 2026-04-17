@@ -1,26 +1,32 @@
-﻿<div class="dept-title">FO</div>
+﻿@{
+    string dept = "FO";
+}
+
+
+<div class="dept-title">@dept</div>
 <div class="dept-form-header">
     <div class="dept-form-header__assign">
-        <div id="qt-foAssigneeBox"></div>
+        <div id="qt-@dept.ToString().ToLower()AssigneeBox"></div>
     </div>
     <div id="btnToggleResForm"></div>
 </div>
-<div class="sticky-wrap wobble" data-tooltip-toggle>
+<div id="qt-stickPanel_@dept">
+@* <div class="sticky-wrap wobble" data-tooltip-toggle>
     <div class="pin">
-
     </div>
     <div class="sticky-note"></div>
     <div class="sticky-badge">1</div>
-    <div class="sticky-mini-text">FO nhắn check wording</div>
+    <div class="sticky-mini-text">FROM FO</div>
     <div class="note-tooltip">
         <strong>Suggested use</strong><br>
         Icon này có thể gắn ở header section. Khi section trước có comment hoặc giao việc, chỉ cần bật icon sticky note để tạo điểm nhấn trực quan.
     </div>
+</div> *@
 </div>
 <div class="dept-hint-wrap">
     <div class="dept-hint" id="qt-hintFO"></div>
     <div class="dept-updated" id="qt-updFO" title="Last updated">—</div>
-    <div id="qt-expandCollapsedBtn_FO" class="dept-toggle-icon" aria-hidden="true">▾</div>
+    <div id="qt-expandCollapsedBtn_@dept" class="dept-toggle-icon" aria-hidden="true">▾</div>
 </div>
 <script>
 

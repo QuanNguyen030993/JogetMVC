@@ -495,7 +495,7 @@ Note:
         };
         var firstRender = true;
         setTimeout(() => {
-            const QtRoles = qtDeptModuleCode;
+         const QtRoles = qtDeptModuleCode;
             $(`#${formModuleKeyQt}-loginRoleLabel`).text(state.currentUserRole);
 
             var filter = "all";
@@ -783,21 +783,26 @@ Note:
                 $(`.qt-quoteCard[data-id="${selectedId}"]`).addClass("selected");
             }
 
+
+            function reloadState(){
+                  $.each(qtDeptModuleCode, function (itemIndex, item) {
+                    var items = new Object();
+                    items.moduleName = "qt";
+                    items.sectionName = item;
+                    loadDxFileUploaderAttachments(item, "Document", items);
+                    commentPinModule(formModuleKeyQt,item,state.selectedGuid);
+                    commentModule(formModuleKeyQt,item,state.selectedGuid);
+                });
+            }
+
+
             function renderDeptForms() {
                 $(`#${formModuleKeyQt}-formFO`).dxForm({ formData: deptData.FO, readOnly: true, colCount: 1 });
                 $(`#${formModuleKeyQt}-formTS`).dxForm({ formData: deptData.TS, readOnly: true, colCount: 1 });
                 $(`#${formModuleKeyQt}-formUW`).dxForm({ formData: deptData.UW, readOnly: true, colCount: 1 });
                 $(`#${formModuleKeyQt}-formLMKT`).dxForm({ formData: deptData.LMKT, readOnly: true, colCount: 1 });
                 $(`#${formModuleKeyQt}-formPM`).dxForm({ formData: deptData.PM, readOnly: true, colCount: 1 });
-
-                $.each(qtDeptModuleCode, function (itemIndex, item) {
-                    var items = new Object();
-                    items.moduleName = "qt";
-                    items.sectionName = item;
-                    loadDxFileUploaderAttachments(item, "Document", items);
-                    commentModule('qt', item, state.selectedGuid );
-                });
-
+                reloadState();
                 applyEditLock();
                 updateHints();
 
@@ -967,7 +972,6 @@ Note:
                 var body = $sec.find(".dept-body")[0];
                 var bodyUpper = $sec.find(".dept-upperbody")[0];
                 var bodyLower = $sec.find(".dept-lowerbody")[0];
-                debugger
                 if (collapsed) {
                     $sec.addClass("collapsed");
                     if (body) {
@@ -1281,6 +1285,8 @@ Note:
             //             });
             //         });
             // }
+
+            //Select items
             function bindQuoteCardClick() {
                 $("#qt-quoteList")
                     .off("click.quoteCard", ".qt-quoteCard")
@@ -1289,7 +1295,6 @@ Note:
                         const source = state.isSearching ? (state.displayQuotes || []) : (state.quotes || []);
                         const q = source.find(x => Number(x.id) === id);
                         if (!q) return;
-
                         selectedId = q.id ?? null;
                         selectedGuid = q.guid ?? null;
                         selectedAttachmentId = q.documentId ?? null;
@@ -1306,7 +1311,6 @@ Note:
 
                         PIC_JSON = pICs.find(f => f.quotationCode == selectedCodeNo)?.pIC ?? q.pIC ?? "{}";
                         renderDeptCallouts(PIC_JSON);
-
                         var map = parsePicMap(PIC_JSON);
                         stageAccount = map[stageDept] ? map[stageDept] : "(Unassigned)";
 
@@ -1325,7 +1329,7 @@ Note:
                         ).done(function (res) {
                             window.QuotationPage.state.formFO.dxForm("instance").updateData("resAttachmentCount", res.attachmentCount);
                             window.QuotationPage.state.formFO.dxForm("instance").updateData("hasResAttachment", res.hasAttachment);
-                        window.QuotationPage.state.hasResAttachment = res.hasAttachment;
+                            window.QuotationPage.state.hasResAttachment = res.hasAttachment;
                             if (res.hasAttachment)
                              $("#btnToggleResForm").addClass("hasResAttachment");
                             else 

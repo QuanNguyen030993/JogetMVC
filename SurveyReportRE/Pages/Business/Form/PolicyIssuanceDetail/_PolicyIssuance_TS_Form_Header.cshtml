@@ -1,14 +1,23 @@
-﻿<div class="dept-title">TS</div>
+﻿@{
+    string dept = "TS";
+}
+
+
+<div class="dept-title">@dept</div>
 <div class="dept-form-header">
     <div class="dept-form-header__assign">
-        <div id="pi-tsAssigneeBox"></div>
+        <div id="pi-@dept.ToString().ToLower()AssigneeBox"></div>
     </div>
+    <div id="btnToggleResForm"></div>
+</div>
+<div id="pi-stickPanel_@dept">
 </div>
 <div class="dept-hint-wrap">
     <div class="dept-hint" id="pi-hintTS"></div>
     <div class="dept-updated" id="pi-updTS" title="Last updated">—</div>
-    <div class="dept-toggle-icon" aria-hidden="true">▾</div>
+    <div id="pi-expandCollapsedBtn_@dept" class="dept-toggle-icon" aria-hidden="true">▾</div>
 </div>
+
 <script>
     setTimeout( () => {
     var formItems = $("#pi-formTS").dxForm("instance")?.option("formData") || {};
