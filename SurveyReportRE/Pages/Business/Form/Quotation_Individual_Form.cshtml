@@ -499,7 +499,7 @@ Note:
             $(`#${formModuleKeyQt}-loginRoleLabel`).text(state.currentUserRole);
 
             var filter = "all";
-            let searchText = "";
+            var searchText = "";
             let selectedId = null;
             var selectedGuid = null;
             let selectedAttachmentId = null;
@@ -528,8 +528,8 @@ Note:
                 if (k === "approved") return { css: "approved", text: "Approved" };
                 if (k === "reject") return { css: "rejected", text: "Reject" };
                 if (k === "decline" || k === "declined") return { css: "declined", text: "Decline" };
-                if (k === "client accept") return { css: "client-accept", text: "Client accept" };
-                if (k === "client refuse") return { css: "client-refuse", text: "Client refuse" };
+                if (k === "clientaccept") return { css: "client-accept", text: "Client accept" };
+                if (k === "clientrefuse") return { css: "client-refuse", text: "Client refuse" };
                 if (k === "done") return { css: "done", text: "Done" };
                 if (k === "complete") return { css: "complete", text: "Complete" };
                 if (k === "dispose") return { css: "dispose", text: "Dispose" };
@@ -1589,9 +1589,9 @@ Note:
                 icon: "check",
                 type: "success",
                 onClick: function () {
-                    var quotationConvert = state.quotes.find(x => x.id == selectedId);
+                   var quotationConvert = state.quotes.find(x => x.id == selectedId);
                     if (!quotationConvert) return;
-
+ 
                     var policyIssuance = new Object();
                     policyIssuance = ObjectPopulateKey(quotationConvert, true, false);
                     policyIssuance.RequestDate = new Date();
