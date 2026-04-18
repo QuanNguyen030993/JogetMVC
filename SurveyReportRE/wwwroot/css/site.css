@@ -2251,3 +2251,129 @@ top:  1%;
     flex-wrap: wrap;
     margin-top: 10px;
 }
+.col-pic-inline {
+    white-space: normal !important;
+    vertical-align: middle !important;
+}
+.col-pic-rows{
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+
+}
+/* container */
+.pic-inline-wrap {
+    display: flex;
+    white-space: nowrap;
+    overflow: hidden;
+    /*flex-wrap: wrap;*/ /* nếu thiếu chỗ thì xuống dòng */
+    text-overflow: ellipsis;
+    gap: 4px;
+    align-items: center;
+}
+
+/* từng item */
+.pic-inline {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    border-radius: 6px;
+    overflow: hidden;
+    font-size: 10px;
+    font-weight: 600;
+    border: 1px solid #e5e7eb;
+}
+
+/* header (dept) */
+.pic-inline-head {
+    padding: 0 6px;
+    background: #f3f4f6;
+    font-weight: 700;
+    border-right: 1px solid #e5e7eb;
+}
+
+/* value (PIC) */
+.pic-inline-val {
+    padding: 0 6px;
+    max-width: 70px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* màu theo dept */
+.pic-inline--fo {
+    border-color: #bae6fd;
+}
+
+    .pic-inline--fo .pic-inline-head {
+        background: #e0f2fe;
+        color: #075985;
+    }
+
+.pic-inline--ts {
+    border-color: #d9f99d;
+}
+
+    .pic-inline--ts .pic-inline-head {
+        background: #ecfccb;
+        color: #3f6212;
+    }
+
+.pic-inline--uw {
+    border-color: #fde68a;
+}
+
+    .pic-inline--uw .pic-inline-head {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+.pic-inline--lmkt {
+    border-color: #e9d5ff;
+}
+
+    .pic-inline--lmkt .pic-inline-head {
+        background: #f3e8ff;
+        color: #7e22ce;
+    }
+
+.pic-inline--pm {
+    border-color: #fecaca;
+}
+
+    .pic-inline--pm .pic-inline-head {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+.col-pic-inline {
+    white-space: nowrap !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* wrapper phải inline + không xuống dòng */
+
+.pic-inline-wrap {
+    display: inline-flex;
+    overflow: hidden;
+    max-width: 100%;
+}
+
+    .pic-inline-wrap::after {
+        content: '';
+        flex: 0 0 10px;
+    }
+/* từng item không bị co quá */
+.pic-inline {
+    flex: 0 0 auto;
+}
+
+/* truncate text bên trong */
+.pic-inline-val {
+    max-width: 70px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

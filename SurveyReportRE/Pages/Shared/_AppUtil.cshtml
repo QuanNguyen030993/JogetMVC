@@ -1196,6 +1196,73 @@
         const pad = (n) => String(n).padStart(2, "0");
         return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
     }
+    function normalizeStatus(raw) {
+        const s = String(raw ?? "").trim();
+        const k = s.toLowerCase().replace(/\s+/g, " ");
 
+        if (k === "" || k === "new") return { css: "new", text: "New" };
+        if (k === "pending") return { css: "pending", text: "Pending" };
+        if (k === "in progress") return { css: "in-progress", text: "In Progress" };
+        if (k === "accept") return { css: "accepted", text: "Accept" };
+        if (k === "approved") return { css: "approved", text: "Approved" };
+        if (k === "reject") return { css: "rejected", text: "Reject" };
+        if (k === "decline" || k === "declined") return { css: "declined", text: "Decline" };
+        if (k === "clientaccept") return { css: "client-accept", text: "Client accept" };
+        if (k === "clientrefuse") return { css: "client-refuse", text: "Client refuse" };
+        if (k === "done") return { css: "done", text: "Done" };
+        if (k === "complete") return { css: "complete", text: "Complete" };
+        if (k === "dispose") return { css: "dispose", text: "Dispose" };
+        if (k === "archive") return { css: "archive", text: "Archive" };
+        if (k === "?" || k === "unknown") return { css: "unknown", text: "?" };
+        return { css: "unknown", text: s || "?" };
+    }
+    function parsePicObject(picJson) {
+        try {
+            return typeof picJson === "string"
+                ? JSON.parse(picJson || "{}")
+                : (picJson || {});
+        } catch {
+            return {};
+        }
+    }
+
+    function buildPicCategorySearchText(picJson) {
+        const obj = parsePicObject(picJson);
+        const deptOrder = ["FO", "TS", "UW", "LMKT", "PM"];
+        const parts = [];
+
+        deptOrder.forEach(dept => {
+            const user = String(obj[dept] || "").trim();
+            if (!user) {
+                parts.push(dept);
+                return;
+            }
+
+            parts.push(dept);
+            parts.push(`${dept}:${user}`);
+            parts.push(`${dept}: ${user}`);
+            parts.push(`${dept} ${user}`);
+        });
+
+        return parts.join(" ");
+    }
+
+    function renderPicInline(picJson) {
+        const obj = parsePicObject(picJson);
+        const deptOrder = ["FO", "TS", "UW", "LMKT", "PM"];
+
+        return `
+            <div class="pic-inline-wrap">
+                ${deptOrder.map(dept => `
+                    <div class="pic-inline pic-inline--${dept.toLowerCase()}">
+                        <span class="pic-inline-head">${dept}</span>
+                        <span class="pic-inline-val" title="${escapeHtml(obj[dept] || "-")}">
+                            ${escapeHtml(obj[dept] || "-")}
+                        </span>
+                    </div>
+                `).join("")}
+            </div>
+        `;
+    }
 </script>
 

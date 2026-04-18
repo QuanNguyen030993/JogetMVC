@@ -27,17 +27,17 @@ namespace ERPCore.Pages
             }
 
 
-            List<Quotation> quotation = await _quotationRepository.GetAll();
-            if (quotation != null)
-            {
+            //List<Quotation> quotation = await _quotationRepository.GetAll();
+            //if (quotation != null)
+            //{
 
-                object quotationData = quotation.Select(s => s.Id).ToArray();
-                ViewData["Data"] = Newtonsoft.Json.JsonConvert.SerializeObject(quotationData);
+            //    object quotationData = quotation.Select(s => s.Id).ToArray();
+            //    ViewData["Data"] = Newtonsoft.Json.JsonConvert.SerializeObject(quotationData);
 
-                if (quotation != null)
-                {
-                }
-            }
+            //    if (quotation != null)
+            //    {
+            //    }
+            //}
 
             ModelName = nameof(Quotation);
             ViewData[nameof(Id)] = pageNum ?? 0;

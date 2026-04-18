@@ -517,26 +517,7 @@ Note:
                 }).format(n || 0);
             }
 
-            function normalizeStatus(raw) {
-                const s = String(raw ?? "").trim();
-                const k = s.toLowerCase().replace(/\s+/g, " ");
-
-                if (k === "" || k === "new") return { css: "new", text: "New" };
-                if (k === "pending") return { css: "pending", text: "Pending" };
-                if (k === "in progress") return { css: "in-progress", text: "In Progress" };
-                if (k === "accept") return { css: "accepted", text: "Accept" };
-                if (k === "approved") return { css: "approved", text: "Approved" };
-                if (k === "reject") return { css: "rejected", text: "Reject" };
-                if (k === "decline" || k === "declined") return { css: "declined", text: "Decline" };
-                if (k === "clientaccept") return { css: "client-accept", text: "Client accept" };
-                if (k === "clientrefuse") return { css: "client-refuse", text: "Client refuse" };
-                if (k === "done") return { css: "done", text: "Done" };
-                if (k === "complete") return { css: "complete", text: "Complete" };
-                if (k === "dispose") return { css: "dispose", text: "Dispose" };
-                if (k === "archive") return { css: "archive", text: "Archive" };
-                if (k === "?" || k === "unknown") return { css: "unknown", text: "?" };
-                return { css: "unknown", text: s || "?" };
-            }
+            
 
             function statusClass(raw) { return normalizeStatus(raw).css; }
             function statusText(raw) { return normalizeStatus(raw).text; }
