@@ -150,6 +150,7 @@
     timeFormatter
     };
     const _delayQuotationsLoad = 300;
+    const _delayPolicyIssuancesLoad = 300;
     const _delayNextStepLoading = 1000;
     const _delayRenderAssigneeBox = 1000;
     const _delayRenderSubmitButton = 3000;
@@ -178,6 +179,39 @@
         deptData: { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} },
         nextStep: {},
         resFK: {},
+        comments: [],
+        pinNotes: []
+        },
+    actions: {},
+    quotePaging : {
+        skip: 0,
+        take: 20,
+        loading: false,
+        done: false,
+        firstLoadDone: false
+    }
+    };
+
+    window.PolicyIssuancePage = {
+    state: {
+        quotes: [],
+        hasResAttachment: false,
+        formFO: {},
+        resButtonComponent: {},
+        isAssigneeBoxRender: false,
+        selectedId: null,
+        selectedGuid: null,
+        selectCopyGuid: null,
+        selectedCodeNo: null,
+        selectedAttachmentId: null,
+        stageDept: null,
+        stageAccount: "",
+        focusDept: null,
+        currentUserRole: null,
+        picJson: "{}",
+        commentPanelOpened: false,
+        deptData: { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} },
+        nextStep: {},
         comments: [],
         pinNotes: []
         },

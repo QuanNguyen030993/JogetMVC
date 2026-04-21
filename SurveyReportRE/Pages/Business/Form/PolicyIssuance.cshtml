@@ -1,0 +1,16 @@
+﻿@page
+@model PolicyIssuanceModel
+@{
+
+}
+<script>
+    $(function () {
+        var mGridOption = new Object();
+        mGridOption.isAllowRowMenu = true;
+        var mGrid = new MGrid(null, $(`#dataGrid_@PolicyIssuanceModel.ModelName`), new PolicyIssuanceGridOption('@PolicyIssuanceModel.ModelName', "User", mGridOption), null);
+        var DS = mGrid.component.getDataSource();
+        DS.filter(["isArchived", "=", null], "or", ["isArchived", "=", false]);
+        mGrid.component.option("dataSource", DS);
+    });
+</script>
+<div id="dataGrid_@PolicyIssuanceModel.ModelName"></div>

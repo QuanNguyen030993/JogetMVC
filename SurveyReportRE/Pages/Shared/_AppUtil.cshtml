@@ -606,6 +606,7 @@
                               policyIssuance.StageDept = "FO";
                               policyIssuance.PolicyIssuanceStatus = "New";
                               policyIssuance.WorkflowStatus = "Pending";
+                              policyIssuance.CopyFromGuid = item.guid;
                               ajaxPost('api/PolicyIssuance/CreatePolicyIssuance', policyIssuance, {
                                   onSuccess: function () {
                                       // DevExpress.ui.notify("Quotation submitted!", "info", 1200);

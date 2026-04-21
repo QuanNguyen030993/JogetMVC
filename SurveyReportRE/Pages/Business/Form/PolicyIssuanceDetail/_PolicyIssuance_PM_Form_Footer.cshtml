@@ -17,7 +17,7 @@
 <script>
      setTimeout( () => {
      var dept = "@dept";
-             var pageLayout = window.QuotationPage;
+             var pageLayout = window.PolicyIssuancePage;
        var stateLayout = pageLayout.state;
       $("#pi-submitBox_@dept").dxTextArea({width: _defaultFormFieldWidth,height: _defaultFormFieldHeight}); var findRoute = stateLayout.nextStep.flowSteps.find(f => f.fromNodeId == dept  ); $("#pi-btnSubmitBranch_@dept").dxButton({ text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick: function (e) { var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {}; submitNextStep("@dept", stateLayout.nextStep, findRoute, formItems); } });
      $("#pi-btnSave_@dept").dxButton({ text: "Save", icon: "save", type: "default", onClick:
@@ -39,7 +39,7 @@
                });
               globalLoadPanel.dxLoadPanel("instance").show();
 
-             ajaxPut('/api/Quotation/UpdateData',
+             ajaxPut('/api/PolicyIssuance/UpdateData',
              {
                  key: formItems.id,
                  values: JSON.stringify(

@@ -99,6 +99,10 @@
 		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
 		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 		</Content>
+		<Content Update="Pages\Business\Form\PolicyIssuance.cshtml">
+		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
 		<Content Update="Pages\Business\Form\QuotationDetail\_Quotation_LMKT_Form_Footer.cshtml">
 		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
 		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
@@ -108,6 +112,10 @@
 		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 		</Content>
 		<Content Update="Pages\Business\Form\PolicyIssuance_Individual_Form.cshtml">
+		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+		<Content Update="Pages\Business\Form\PolicyIssuance_Form.cshtml">
 		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
 		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 		</Content>

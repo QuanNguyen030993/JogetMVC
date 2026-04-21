@@ -586,27 +586,29 @@
     <div class="launcher-text">Create Quotation Request</div>
     <div  class="launcher-text">(FO)</div>
     </div>
-    <div class="launcher-item survey" id="btnQuotationRequest">
-    <div class="icon">📝</div>
-    <div class="launcher-text">Create Quotation </div>
-    <div  class="launcher-text">(TS)</div>
-    </div>
+
     <div class="launcher-item policy" id="btnPolicy">
-    <div class="icon">🛡️</div>
+    <div class="icon">📝</div>
     <div class="launcher-text">Create Policy Issuance Request </div>
     <div  class="launcher-text">(FO)</div>
     </div>
     </div>
     </div>`;
+
+        // <div class="launcher-item survey" id="btnQuotationRequest">
+    // <div class="icon">📝</div>
+    // <div class="launcher-text">Create Quotation </div>
+    // <div  class="launcher-text">(TS)</div>
+    // </div>
                $(container).append(html);
                $("#btnQuotation").on("click", function () {
                    newQuotationForm();
                    moduleLauncherPopup.hide();
                });
-               $("#btnQuotationRequest").on("click", function () {
-                   // newQuotationRequestForm();
-                   moduleLauncherPopup.hide();
-               });
+               // $("#btnQuotationRequest").on("click", function () {
+               //     // newQuotationRequestForm();
+               //     moduleLauncherPopup.hide();
+               // });
                $("#btnPolicy").on("click", function () {
                    newPolicyIssuanceForm();
                    moduleLauncherPopup.hide();

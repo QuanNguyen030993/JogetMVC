@@ -24,6 +24,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.SharePoint.WebControls;
 using RESurveyTool.Models.Models.Parsing;
 using Microsoft.AspNetCore.Http;
+using ERPCore.Models.Migration.Business.Workflow;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -39,6 +40,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     private readonly IBaseRepository<UserRoles> _userRolesRepository;
     private readonly IBaseRepository<Roles> _rolesRepository;
     private readonly IHubContext<FileProcessingHub> _hubContext;
+    private readonly IBaseRepository<InstanceWorkflow> _instanceWorkflowRepository;
     private readonly IConfigurationSection path;
     public static string MANAGER_APP = "";
     public static string APPROVER_APP = "";
@@ -70,6 +72,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         _employeeRepository = new BaseRepository<Employee>(configuration, _httpContextAccessor);
         _userRolesRepository = new BaseRepository<UserRoles>(configuration, _httpContextAccessor);
         _rolesRepository = new BaseRepository<Roles>(configuration, _httpContextAccessor);
+        _instanceWorkflowRepository = new BaseRepository<InstanceWorkflow>(configuration, _httpContextAccessor);
         _hubContext = hubContext;
         MANAGER_APP = configuration.GetSection("BusinessConfig:ManagerAppKey").Value;
         APPROVER_APP = configuration.GetSection("BusinessConfig:ApproverAppKey").Value;
@@ -101,7 +104,17 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         }
         return Ok();
     }
-
+    [HttpGet("{guid}")]
+    public async Task<IActionResult> GetPolicyIssuanceWorkflow(Guid guid)
+    {
+        InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
+        instanceWorkflow = await _instanceWorkflowRepository.GetSingleObject(s => s.RecordGuid == guid);
+        if (instanceWorkflow != null)
+        {
+            return Ok(instanceWorkflow);
+        }
+        return Ok(null);
+    }
 
     [HttpPost]
     public async Task<IActionResult> CreatePolicyIssuance([FromBody] PolicyIssuance PolicyIssuanceData)

@@ -2142,7 +2142,7 @@
         }
 
     }
-          var QuotationGridOption = class QuotationGridOption extends MGridOption {
+     var QuotationGridOption = class QuotationGridOption extends MGridOption {
         constructor(modelName, gridType, params) {
             super(modelName, gridType, params);
         };
@@ -2207,7 +2207,70 @@
 
     }
 
+         var PolicyIssuanceGridOption = class PolicyIssuanceGridOption extends MGridOption {
+        constructor(modelName, gridType, params) {
+            super(modelName, gridType, params);
+        };
 
+        onCustomizeColumns(columns) {
+            var that = this;
+            super.onCustomizeColumns(columns);
+            super.hyperLinkCode(columns, "Business/Form", "PolicyIssuance", "id", "policyIssuanceCode");
+            $.each(columns, function (colIndex, col) {
+            if (col.dataField === "policyIssuanceStatus")
+            {
+                col.cellTemplate = function (container, options) {
+                var raw = options.value;
+
+                var st = normalizeStatus(raw); // dùng lại hàm bạn đã có
+
+                var html = `
+                    <div class="statusTag ${st.css}">
+                        ${st.text}
+                    </div>
+                `;
+
+                $(container).append(html);
+            };
+                }
+                if (col.dataField === "pic")
+                {
+                    col.cssClass = "col-pic-rows";
+                    col.allowSorting = false;
+                    col.width = 500;
+                    // Cho search / filter contains hoạt động trên chuỗi PIC đã parse
+                    // col.calculateDisplayValue = function (rowData) {
+                    //     return buildPicSearchText(rowData.pic);
+                    // };
+                      // phần này phục vụ search/filter
+                    col.calculateCellValue = function (rowData) {
+                        return buildPicCategorySearchText(rowData.pic);
+                    };
+
+                    // phần này phục vụ render đẹp
+                    col.cellTemplate = function (container, options) {
+                        $(container)
+                            .attr("title", buildPicCategorySearchText(options.data.pic))
+                            .append(renderPicInline(options.data.pic));
+                    };
+                    // Nếu muốn filter row theo contains chắc hơn
+                    // col.calculateFilterExpression = function (filterValue, selectedFilterOperation) {
+                    //     debugger
+                    //     const op = selectedFilterOperation || "contains";
+                    //     return [[this.dataField], op, filterValue];
+                    // };
+
+                    // col.cellTemplate = function (container, options) {
+                    //     $(container).append(renderPicInline(options.value));
+                    // };
+                }
+
+            });
+
+
+        }
+
+    }
 </script>
 
 

@@ -145,6 +145,7 @@ public class PolicyIssuance : BaseModel
     public Attachment? AttachmentFK { get; set; }   
     public long? DocumentId { get; set; }
     public Document? DocumentFK { get; set; }
+    public string? ClientName { get; set; } 
 
     // TODO: Asset list attachments – move to Attachment module
     // public string? MachineryListAttachment { get; set; }       // c_listOfMachineriesAtt
