@@ -716,7 +716,7 @@ Note:
 
                                 // setNextStep(state.nextStep);
                                  $.each(qtDeptModuleCode, function (itemIndex, item) {
-                                 $(`#qt-submitBox_${item}`).dxTextArea({width: _defaultFormFieldWidth,height: _defaultFormFieldHeight});
+                                 $(`#qt-remarkBox_${item}`).dxTextArea({width: _defaultFormFieldWidth,height: _defaultFormFieldHeight});
                                      var findRoute = state.nextStep.flowSteps.find(f => f.fromNodeId == item && f.stepNo == state.nextStep.instanceWorkflow.currentStep);
                                  $(`#qt-btnSubmitBranch_${item}`).dxButton({ text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
                                  function (e) { var formItems = $(`#qt-form${item}`).dxForm("instance")?.option("formData") || {};

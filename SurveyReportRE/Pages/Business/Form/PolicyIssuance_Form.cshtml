@@ -717,7 +717,7 @@ Note:
 
                             // setNextStep(state.nextStep);
                              $.each(piDeptModuleCode, function (itemIndex, item) {
-                             $(`#pi-submitBox_${item}`).dxTextArea({width: _defaultFormFieldWidth,height: _defaultFormFieldHeight});
+                             $(`#pi-remarkBox_${item}`).dxTextArea({width: _defaultFormFieldWidth,height: _defaultFormFieldHeight});
                                  var findRoute = state.nextStep.flowSteps.find(f => f.fromNodeId == item && f.stepNo == state.nextStep.instanceWorkflow.currentStep);
                              $(`#pi-btnSubmitBranch_${item}`).dxButton({ text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
                              function (e) { var formItems = $(`#pi-form${item}`).dxForm("instance")?.option("formData") || {};
