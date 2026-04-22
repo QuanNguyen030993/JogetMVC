@@ -38,7 +38,7 @@ public interface IBaseRepository<T> where T : class
     Task<List<T>> EnumData(string name);
     Task<List<Dictionary<string, object>>> ExecuteCustomQuery(string query, Dictionary<string, object>? parameters = null);
     Task<List<Dictionary<string, object>>> ExecuteCustomJogetQuery(string query);
-    Task<List<Dictionary<string, object>>> ExecuteCustomLogQuery(string query);
+    Task<List<Dictionary<string, object>>> ExecuteCustomLogQuery(string query, Dictionary<string, object>? parameters = null);
     Task<List<dynamic>> EnumLookup(string refField, string enumName = null, bool isSameUsing = false);
     Task UpdateEnum(string refField, string valueKey, long sysTableId);
     Task<List<T>> GetAll(System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> loadParams = null);
@@ -1090,7 +1090,8 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
         }
     }
 
-    public async Task<List<Dictionary<string, object>>> ExecuteCustomLogQuery(string query)
+    public async Task<List<Dictionary<string, object>>> ExecuteCustomLogQuery(string query,
+    Dictionary<string, object>? parameters = null)
     {
         try
         {
@@ -1102,31 +1103,40 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
 
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    using (var reader = await command.ExecuteReaderAsync())
+                    if (parameters != null && parameters.Count > 0)
                     {
-                        // Đọc dữ liệu từ DataReader
-                        while (await reader.ReadAsync())
+                        foreach (var kv in parameters)
                         {
-                            var row = new Dictionary<string, object>();
-
-                            for (int i = 0; i < reader.FieldCount; i++)
-                            {
-                                var columnName = Char.ToLowerInvariant(reader.GetName(i)[0]) + reader.GetName(i).Substring(1);
-
-                                //var columnName = reader.GetName(i); // Tên cột
-                                var value = reader.IsDBNull(i) ? null : reader.GetValue(i); // Giá trị cột
-                                row[columnName] = value; // Thêm vào dictionary
-                            }
-
-                            resultList.Add(row);
+                            command.Parameters.AddWithValue(
+                                kv.Key,
+                                kv.Value ?? DBNull.Value
+                            );
                         }
                     }
+
+                    using var reader = await command.ExecuteReaderAsync();
+
+                    var dt = new DataTable();
+                    dt.Load(reader);
+
+                    resultList = dt.AsEnumerable()
+                        .Select(row => dt.Columns.Cast<DataColumn>()
+                            .ToDictionary(
+                                col => Char.ToLowerInvariant(col.ColumnName[0]) + col.ColumnName[1..],
+                                col => row[col] == DBNull.Value ? null : row[col]
+                            ))
+                        .ToList();
                 }
-                Util.QueryLogs(_connectionString, "sp_Querylogs",
-                       ("@QueryString", $"ExecuteCustomQuery: {query}")
-                       , ("@Duration", "")
-                       , ("@User", userName));
+
+                Util.QueryLogs(
+                    _connectionString,
+                    "sp_Querylogs",
+                    ("@QueryString", $"ExecuteCustomQuery: {query}"),
+                    ("@Duration", ""),
+                    ("@User", userName)
+                );
             }
+
             return resultList;
         }
         catch (Exception ex)
@@ -1134,6 +1144,48 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
             Serilog.Log.Error(ex, ex.Message);
             return null;
         }
+        //try
+        //{
+        //    var resultList = new List<Dictionary<string, object>>();
+
+        //    using (SqlConnection connection = new SqlConnection(_logConnectionString))
+        //    {
+        //        await connection.OpenAsync();
+
+        //        using (SqlCommand command = new SqlCommand(query, connection))
+        //        {
+        //            using (var reader = await command.ExecuteReaderAsync())
+        //            {
+        //                // Đọc dữ liệu từ DataReader
+        //                while (await reader.ReadAsync())
+        //                {
+        //                    var row = new Dictionary<string, object>();
+
+        //                    for (int i = 0; i < reader.FieldCount; i++)
+        //                    {
+        //                        var columnName = Char.ToLowerInvariant(reader.GetName(i)[0]) + reader.GetName(i).Substring(1);
+
+        //                        //var columnName = reader.GetName(i); // Tên cột
+        //                        var value = reader.IsDBNull(i) ? null : reader.GetValue(i); // Giá trị cột
+        //                        row[columnName] = value; // Thêm vào dictionary
+        //                    }
+
+        //                    resultList.Add(row);
+        //                }
+        //            }
+        //        }
+        //        Util.QueryLogs(_connectionString, "sp_Querylogs",
+        //               ("@QueryString", $"ExecuteCustomQuery: {query}")
+        //               , ("@Duration", "")
+        //               , ("@User", userName));
+        //    }
+        //    return resultList;
+        //}
+        //catch (Exception ex)
+        //{
+        //    Serilog.Log.Error(ex, ex.Message);
+        //    return null;
+        //}
     }
 
     public async Task<List<T>> GetAllInclude()

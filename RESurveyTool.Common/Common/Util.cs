@@ -2649,15 +2649,15 @@ VALUES
             return builderStr.ConnectionString;
         }
         public static SqlQueryBuildResult LoadParamsBuildCustomQuery<T>(
-    string baseQuery,
-    List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> loadParams,
-    string defaultOrderBy = "Id",
-    string defaultOrderDir = "DESC",
-    int maxTake = 200,
-    int maxAll = 5000,
-    string? pkTieBreaker = "Id",
-    HashSet<string>? allowedColumns = null,
-    string? mainTableAlias = null
+string baseQuery,
+List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> loadParams,
+string defaultOrderBy = "Id",
+string defaultOrderDir = "DESC",
+int maxTake = 200,
+int maxAll = 5000,
+string? pkTieBreaker = "Id",
+HashSet<string>? allowedColumns = null,
+string? mainTableAlias = null
 )
         {
             if (string.IsNullOrWhiteSpace(baseQuery))
@@ -2689,7 +2689,7 @@ VALUES
 
             var safeColumns = allowedColumns ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        "Id"
+        pkTieBreaker
     };
 
             string QuoteName(string name)
@@ -2845,7 +2845,7 @@ VALUES
 
             if (!hasWhere)
             {
-                sql.AppendLine("WHERE 1 = 1");
+                sql.AppendLine(" WHERE 1 = 1");
             }
 
             // DevExtreme filter
@@ -2878,7 +2878,7 @@ VALUES
                         {
                             string field = arr[0].GetString() ?? "";
                             string op = arr[1].GetString() ?? "";
-                            string actualField = string.Equals(field, "key", StringComparison.OrdinalIgnoreCase) ? "Id" : field;
+                            string actualField = string.Equals(field, "key", StringComparison.OrdinalIgnoreCase) ? pkTieBreaker : field;
 
                             if (!safeColumns.Contains(actualField))
                                 return "";
@@ -2999,7 +2999,7 @@ VALUES
                 if (string.IsNullOrWhiteSpace(value)) continue;
 
                 var actualColumn = string.Equals(key, "key", StringComparison.OrdinalIgnoreCase)
-                    ? "Id"
+                    ? pkTieBreaker
                     : key;
 
                 if (!safeColumns.Contains(actualColumn)) continue;
@@ -3035,7 +3035,7 @@ VALUES
                             if (!item.TryGetProperty("selector", out var selectorEl)) continue;
                             string selector = selectorEl.GetString() ?? "";
                             string actualColumn = string.Equals(selector, "key", StringComparison.OrdinalIgnoreCase)
-                                ? "Id"
+                                ? pkTieBreaker
                                 : selector;
 
                             if (!safeColumns.Contains(actualColumn)) continue;
@@ -3067,7 +3067,7 @@ VALUES
                 if (!string.IsNullOrWhiteSpace(requestedOrderBy))
                 {
                     string actualColumn = string.Equals(requestedOrderBy, "key", StringComparison.OrdinalIgnoreCase)
-                        ? "Id"
+                        ? pkTieBreaker
                         : requestedOrderBy!;
 
                     if (safeColumns.Contains(actualColumn))
@@ -3090,7 +3090,7 @@ VALUES
                 else
                 {
                     string actualDefaultOrderBy = string.Equals(defaultOrderBy, "key", StringComparison.OrdinalIgnoreCase)
-                        ? "Id"
+                        ? defaultOrderBy
                         : defaultOrderBy;
 
                     string orderDir = string.Equals(defaultOrderDir, "asc", StringComparison.OrdinalIgnoreCase)
@@ -3098,10 +3098,10 @@ VALUES
                         : "DESC";
 
                     if (!safeColumns.Contains(actualDefaultOrderBy))
-                        actualDefaultOrderBy = !string.IsNullOrWhiteSpace(pkTieBreaker) ? pkTieBreaker! : "Id";
+                        actualDefaultOrderBy = !string.IsNullOrWhiteSpace(pkTieBreaker) ? pkTieBreaker! : defaultOrderBy;
 
                     if (!safeColumns.Contains(actualDefaultOrderBy))
-                        actualDefaultOrderBy = "Id";
+                        actualDefaultOrderBy = defaultOrderBy;
 
                     orderBySql = $"{BuildColumnSql(actualDefaultOrderBy)} {orderDir}";
                 }
@@ -3136,7 +3136,73 @@ VALUES
                 Parameters = parameters
             };
         }
-
+        public static List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> NormalizeRequestParamsForCustomQuery(
+   List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> requestParams)
+        {
+            var result = new List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>>();
+            if (requestParams == null || requestParams.Count == 0)
+                return result;
+            // Gom các cặp filterRefField / filterRefId theo index
+            // index rỗng = điều kiện đầu tiên
+            var map = new Dictionary<string, (string RefField, string RefId)>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in requestParams)
+            {
+                var key = item.Key?.Trim();
+                var value = item.Value.ToString();
+                if (string.IsNullOrWhiteSpace(key))
+                    continue;
+                if (key.StartsWith("filterRefField", StringComparison.OrdinalIgnoreCase))
+                {
+                    var suffix = key.Replace("filterRefField", "", StringComparison.OrdinalIgnoreCase); // "", "_1", "_2"
+                    if (!map.ContainsKey(suffix))
+                        map[suffix] = (null, null);
+                    var old = map[suffix];
+                    map[suffix] = (value, old.RefId);
+                }
+                else if (key.StartsWith("filterRefId", StringComparison.OrdinalIgnoreCase))
+                {
+                    var suffix = key.Replace("filterRefId", "", StringComparison.OrdinalIgnoreCase); // "", "_1", "_2"
+                    if (!map.ContainsKey(suffix))
+                        map[suffix] = (null, null);
+                    var old = map[suffix];
+                    map[suffix] = (old.RefField, value);
+                }
+                else
+                {
+                    // các param khác giữ nguyên
+                    result.Add(new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>(key, value));
+                }
+            }
+            // Sắp thứ tự: "" trước, rồi _1, _2 ...
+            var orderedKeys = map.Keys
+                .OrderBy(k =>
+                {
+                    if (string.IsNullOrEmpty(k)) return 0;
+                    var raw = k.TrimStart('_');
+                    return int.TryParse(raw, out var n) ? n + 1 : int.MaxValue;
+                })
+                .ToList();
+            bool isFirst = true;
+            foreach (var suffix in orderedKeys)
+            {
+                var pair = map[suffix];
+                if (string.IsNullOrWhiteSpace(pair.RefField) || string.IsNullOrWhiteSpace(pair.RefId))
+                    continue;
+                if (isFirst)
+                {
+                    // điều kiện đầu tiên -> refKey/refField
+                    result.Add(new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>("refField", pair.RefField));
+                    result.Add(new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>("refKey", pair.RefId));
+                    isFirst = false;
+                }
+                else
+                {
+                    // các điều kiện sau -> field = value => AND
+                    result.Add(new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>(pair.RefField, pair.RefId));
+                }
+            }
+            return result;
+        }
     }
     public enum CommandQueryType
     {

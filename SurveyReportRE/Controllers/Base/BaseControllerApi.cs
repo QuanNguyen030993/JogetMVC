@@ -707,7 +707,7 @@ namespace ERPCore.Controllers.Base
                             defaultOrderBy: "Id",
                             defaultOrderDir: "DESC",
                             pkTieBreaker: "Id",
-                            mainTableAlias: "s",
+                            mainTableAlias: null,
                             allowedColumns: new HashSet<string>(StringComparer.OrdinalIgnoreCase)
                             {
                                 "Id",

@@ -14,6 +14,8 @@ using MimeKit;
 using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.SharePoint.Taxonomy.WebServices;
 using ERPCore.Models;
+using ERPCore.Models.Business.Migration.Config;
+using System.Dynamic;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -43,20 +45,110 @@ public class QuotationCommentLogController : BaseControllerApi<QuotationCommentL
         _blobStorageSettings = blobStorageSettings;
     }
 
+    //[HttpPost]
+    //public override async Task<object> ExecuteCustomQuery([FromBody] string query)
+    //{
+    //    List<Dictionary<string, object>> obj = new List<Dictionary<string, object>>();
+    //    if (Query != query && !query.Contains("@"))
+    //    {
+    //        Query = query;
+    //    }
+
+    //    var controllerName = ControllerContext.RouteData.Values["controller"]?.ToString();
+    //    BaseRepository<SysTable> sysTableRepo = new BaseRepository<SysTable>(_BaseRepository._baseConfiguration, _httpContextAccessor);
+    //    SysTable sysTable = await sysTableRepo.GetSingleObject(s => s.Name == controllerName);
+
+    //    var requestParams = HttpContext.Request.Query.ToList();
+    //    IDictionary<string, object> dynamicObj = new ExpandoObject { };
+    //    foreach (var item in requestParams)
+    //    {
+    //        dynamicObj[item.Key] = item.Value;
+    //    }
+    //    var Base = new List<QuotationCommentLog>();
+    //    if (requestParams != null && requestParams.Count > 0)
+    //    {
+    //        if (dynamicObj.ContainsKey("key"))
+    //        {
+    //            var built = Util.LoadParamsBuildCustomQuery<object>(
+    //                baseQuery: sysTable.CustomQuery,
+    //                loadParams: requestParams,
+    //                defaultOrderBy: "CommentId",
+    //                defaultOrderDir: "DESC",
+    //                pkTieBreaker: "CommentId",
+    //                mainTableAlias: null,
+    //                allowedColumns: new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    //                {
+    //                            "Id",
+    //                            "Guid",
+    //                            "CreatedBy",
+    //                            "CreatedDate",
+    //                            "Deleted"
+    //                }
+    //            );
+    //            sysTable.CustomQuery = built.Sql;
+    //            return obj = await _BaseRepository.ExecuteCustomLogQuery(sysTable.CustomQuery, built.Parameters);
+    //        }
+    //    }
+    //    obj = await _BaseRepository.ExecuteCustomLogQuery(sysTable.CustomQuery);
+
+    //    return obj;
+    //}
+
     [HttpPost]
     public override async Task<object> ExecuteCustomQuery([FromBody] string query)
     {
         List<Dictionary<string, object>> obj = new List<Dictionary<string, object>>();
-        if (Query != query && !query.Contains("@"))
+        if (Query != query && !string.IsNullOrWhiteSpace(query) && !query.Contains("@"))
         {
             Query = query;
         }
-        obj = await _BaseRepository.ExecuteCustomLogQuery(Query);
+        var controllerName = ControllerContext.RouteData.Values["controller"]?.ToString();
+        BaseRepository<SysTable> sysTableRepo = new BaseRepository<SysTable>(_BaseRepository._baseConfiguration, _httpContextAccessor);
+        SysTable sysTable = await sysTableRepo.GetSingleObject(s => s.Name == controllerName);
+        var rawRequestParams = HttpContext.Request.Query.ToList();
+        // Chuẩn hóa:
+        // - cặp đầu tiên filterRefField/filterRefId => refField/refKey
+        // - các cặp sau => điều kiện AND
+        var normalizedParams = Util.NormalizeRequestParamsForCustomQuery(rawRequestParams);
+        IDictionary<string, object> dynamicObj = new ExpandoObject();
+        foreach (var item in normalizedParams)
+        {
+            dynamicObj[item.Key] = item.Value;
+        }
+        if (normalizedParams != null && normalizedParams.Count > 0)
+        {
+            if (dynamicObj.ContainsKey("refKey"))
+            {
+                var built = Util.LoadParamsBuildCustomQuery<object>(
+                    baseQuery: sysTable.CustomQuery,
+                    loadParams: normalizedParams,
+                    defaultOrderBy: "CommentId",
+                    defaultOrderDir: "DESC",
+                    pkTieBreaker: "CommentId",
+                    mainTableAlias: null,
+                    allowedColumns: new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                    {
+                   "Id",
+                   "Guid",
+                   "CreatedBy",
+                   "CreatedDate",
+                   "Deleted",
+                   "FromDepartment",
+                   "ToDepartment",
+                   "CommentType",
+                   "CommentBy",
+                   "CommentText",
+                   "QuotationId",
+                   "CommentId"
+                    }
+                );
+                sysTable.CustomQuery = built.Sql;
+                return await _BaseRepository.ExecuteCustomLogQuery(sysTable.CustomQuery, built.Parameters);
+            }
+        }
+        obj = await _BaseRepository.ExecuteCustomLogQuery(sysTable.CustomQuery);
         return obj;
     }
-
-
-
 
 
     public async Task BulkInsertQuotationCommentLogAsync(List<QuotationCommentLog> data)
