@@ -758,14 +758,14 @@
                 }
             });
 
-            $(`#${moduleKey}-filterUnreadCheckbox_${dept}`).dxCheckBox({
-                text: "Unread only",
-                value: false,
-                onValueChanged: function (e) {
-                    unreadOnly = e.value;
-                    renderComments(comments);
-                }
-            });
+            // $(`#${moduleKey}-filterUnreadCheckbox_${dept}`).dxCheckBox({
+            //     text: "Unread only",
+            //     value: false,
+            //     onValueChanged: function (e) {
+            //         unreadOnly = e.value;
+            //         renderComments(comments);
+            //     }
+            // });
 
             $(`#${moduleKey}-btnFilterAll_${dept}`).dxButton({
                 text: "All",
@@ -918,7 +918,6 @@
              var dataSource = makeBasicDataSource(that, false);
              var store = dataSource.store();
          $(`#${moduleKey}-btnChatSend_${dept}`).dxButton({
-                 text: "Send",
                  onClick: function (e) {
                     
                     var commentDataForm = $(`#${moduleKey}-commentPanelControl_${dept}`).dxForm("instance").option("formData");
@@ -976,7 +975,7 @@
 
                     var items = getCurrentPins();
                     if (!items.length) {
-                        wrap.append(`<div class="empty-state">Không có pinned note cho section này.</div>`);
+                        wrap.append(`<div class="empty-state">No pinned note</div>`);
                         return;
                     }
 
@@ -1135,83 +1134,50 @@
 
 
         function renderFormComment(idForm, dept, moduleKey) {
-           
-                 $(`#${idForm}`).dxForm({
+
+      $(`#${idForm}`).dxForm({
        width: "100%",
        labelLocation: "top",
-       colCount: 5,
+       colCount: 1,
        items: [
            {
                dataField: "fromDepartment",
-               label: { text: "From Department" },
-               editorType: "dxSelectBox",
                visible: false,
+               editorType: "dxSelectBox",
                editorOptions: {
                    dataSource: [dept],
                    value: dept
-               },
-               elementAttr: {
-                   id: `${moduleKey}-fromDepartment_${dept}`
                }
            },
-           {
-               dataField: "toDepartment",
-               label: { text: "To Department" },
-               editorType: "dxSelectBox",
-               editorOptions: {
-                   dataSource: qtDeptModuleCode.filter(m => m !== dept),
-                   value: qtDeptModuleCode.filter(m => m !== dept)[0]
-               },
-               elementAttr: {
-                   id: `${moduleKey}-toDepartment_${dept}`
-               }
-           },
-           {
-               dataField: "type",
-               label: { text: "Type" },
-               editorType: "dxSelectBox",
-               editorOptions: {
-                   valueExpr: "id",
-                   displayExpr: "value",
-                   value: "Discussion",
-                   dataSource: [
-                       { id: "Discussion", value: "Discussion" },
-                       { id: "Pinned", value: "Pinned Note" }
-                   ]
-               },
-               elementAttr: {
-                   id: `${moduleKey}-sectionType_${dept}`
-               }
-           },
-           // comment box kiểu Jira
            {
                dataField: "content",
-               label: { text: "Comment Note" },
-               colSpan: 2,
+               label: { visible: false},
                template: function (data, itemElement) {
-                   const formInstance = $(`#${idForm}`).dxForm("instance");
+                   const parentForm = $(`#${idForm}`).dxForm("instance");
                    const wrapper = $(`
-                        <div class="jira-comment-box">
-                        <div id="${moduleKey}-commentEditor_${dept}"></div>
-                        <div class="jira-comment-actions">
-                        <div class="jira-comment-actions-left">
-                        <span class="jira-comment-hint">Ctrl + Enter to send</span>
-                        </div>
-                        <div class="jira-comment-actions-right">
-                        <div id="${moduleKey}-btnChatSend_${dept}"></div>
-                        </div>
-                        </div>
-                        </div>
+    <div class="jira-comment-box">
+    <div class="jira-comment-editor-wrap">
+    <div id="${moduleKey}-commentEditor_${dept}"></div>
+    </div>
+    <div class="jira-comment-footer">
+    <div class="jira-comment-footer-left">
+    <span class="jira-comment-hint">Ctrl + Enter to send</span>
+    </div>
+    <div class="jira-comment-footer-right">
+    <div id="${moduleKey}-actionForm_${dept}"></div>
+    </div>
+    </div>
+    </div>
                    `);
                    itemElement.append(wrapper);
-                   // TextArea
+                   // TextArea comment
                    $(`#${moduleKey}-commentEditor_${dept}`).dxTextArea({
-                       value: data.editorOptions?.value || formInstance.option("formData")?.content || "",
+                       value: parentForm.option("formData")?.content || "",
                        height: 110,
                        placeholder: "Write a comment...",
                        autoResizeEnabled: true,
                        onValueChanged: function (e) {
-                           formInstance.updateData("content", e.value);
+                           parentForm.updateData("content", e.value);
                        },
                        onEnterKey: function (e) {
                            if (e.event && e.event.ctrlKey) {
@@ -1223,21 +1189,90 @@
                            id: `${moduleKey}-commentContent_${dept}`
                        }
                    });
-                   // Button Send
-                   $(`#${moduleKey}-btnChatSend_${dept}`).dxButton({
-                       text: "Send",
-                       type: "default",
-                       stylingMode: "contained",
-                       icon: "email",
-                       onClick: function () {
-                       }
+                   // Mini form phía dưới bên phải
+                   $(`#${moduleKey}-actionForm_${dept}`).dxForm({
+                       formData: parentForm.option("formData"),
+                       labelLocation: "top",
+                       colCount: 3,
+                       width: "auto",
+                       items: [
+                           {
+                               dataField: "toDepartment",
+                               label: { text: "To Department" },
+                               editorType: "dxSelectBox",
+                               editorOptions: {
+                                   dataSource: qtDeptModuleCode.filter(m => m !== dept),
+                                   value: parentForm.option("formData")?.toDepartment || qtDeptModuleCode.filter(m => m !== dept)[0],
+                                   width: 170,
+                                   onValueChanged: function (e) {
+                                       parentForm.updateData("toDepartment", e.value);
+                                   }
+                               }
+                           },
+                           {
+                               dataField: "type",
+                               label: { text: "Type" },
+                               editorType: "dxSelectBox",
+                               editorOptions: {
+                                   valueExpr: "id",
+                                   displayExpr: "value",
+                                   dataSource: [
+                                       { id: "Discussion", value: "Discussion" },
+                                       { id: "Pinned", value: "Pinned Note" }
+                                   ],
+                                   value: parentForm.option("formData")?.type || "Discussion",
+                                   width: 150,
+                                   onValueChanged: function (e) {
+                                       parentForm.updateData("type", e.value);
+                                   }
+                               }
+                           },
+                           {
+                               label: { visible: false },
+                               template: function (_, btnElement) {
+                                   btnElement.addClass("mini-send-wrap");
+                                   $("<div>")
+                                       .attr("id", `${moduleKey}-btnChatSend_${dept}`)
+                                       .appendTo(btnElement);
+                                   $(`#${moduleKey}-btnChatSend_${dept}`).dxButton({
+                                       text: "Send",
+                                       type: "default",
+                                       stylingMode: "contained",
+                                       icon: "far fa-paper-plane",
+                                       onClick: function () {
+                                           sendComment();
+                                       }
+                                   });
+                               }
+                           }
+                       ]
                    });
-
+                   function sendComment() {
+                       const currentFormData = parentForm.option("formData") || {};
+                       const content = (currentFormData.content || "").trim();
+                       if (!content) {
+                           DevExpress.ui.notify("Please enter comment content", "warning", 2000);
+                           return;
+                       }
+                       const payload = {
+                           id: currentFormData.id,
+                           fromDepartment: currentFormData.fromDepartment,
+                           toDepartment: currentFormData.toDepartment,
+                           type: currentFormData.type,
+                           content: currentFormData.content
+                       };
+                       console.log("Send payload:", payload);
+                       // TODO: call api here
+                       DevExpress.ui.notify("Message sent", "success", 1500);
+                       parentForm.updateData("content", "");
+                       $(`#${moduleKey}-commentEditor_${dept}`)
+                           .dxTextArea("instance")
+                           .option("value", "");
+                   }
                }
            }
        ]
-    }
-    );
+    });
 
         }
         function parseToGMT7(dateInput, minusTimeZone = 0 ) {
