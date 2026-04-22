@@ -25,6 +25,7 @@ using Microsoft.SharePoint.WebControls;
 using RESurveyTool.Models.Models.Parsing;
 using Microsoft.AspNetCore.Http;
 using ERPCore.Models.Migration.Business.Workflow;
+using Microsoft.SharePoint.WorkflowActions;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -117,15 +118,18 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreatePolicyIssuance([FromBody] PolicyIssuance PolicyIssuanceData)
+    public async Task<IActionResult> CreatePolicyIssuance([FromBody] PolicyIssuance[] PolicyIssuanceData)
     {
-        PolicyIssuance PolicyIssuance = new PolicyIssuance();
-        List<FormatCodeNo> tableConfig = new List<FormatCodeNo>();
-        tableConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(PolicyIssuance)+"Code");
-        JsonConvert.PopulateObject(JsonConvert.SerializeObject(PolicyIssuanceData), PolicyIssuance);
-        PolicyIssuance.PolicyIssuanceCode = ControllerUtil.GenerateNumberSeq(tableConfig, _formatCodeNoRepository, nameof(PolicyIssuance));
-        PolicyIssuance = await _BaseRepository.InsertData(PolicyIssuance);
-        return Ok(PolicyIssuance);
+        foreach (PolicyIssuance item in PolicyIssuanceData)
+        {
+            PolicyIssuance PolicyIssuance = new PolicyIssuance();
+            List<FormatCodeNo> tableConfig = new List<FormatCodeNo>();
+            tableConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(PolicyIssuance)+"Code");
+            JsonConvert.PopulateObject(JsonConvert.SerializeObject(item), PolicyIssuance);
+            PolicyIssuance.PolicyIssuanceCode = await ControllerUtil.GenerateNumberSeqAsync(tableConfig, _formatCodeNoRepository, nameof(PolicyIssuance));
+            PolicyIssuance = await _BaseRepository.InsertData(PolicyIssuance);
+        }
+        return Ok();
     }
 
 

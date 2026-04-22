@@ -587,7 +587,7 @@
                     onClick() {
                         var gridInstance = $(`#dataGrid_Quotation_Request`).dxDataGrid("instance");
                         var selectedItems = gridInstance.getSelectedRowsData();
-                        // var quotationConvert = state.quotes.find(x => x.id == selectedId);
+                        var policyIssuances = [];
                         // if (!quotationConvert) return;
 
                          $.each(selectedItems, function (itemIndex, item){
@@ -607,7 +607,12 @@
                               policyIssuance.PolicyIssuanceStatus = "New";
                               policyIssuance.WorkflowStatus = "Pending";
                               policyIssuance.CopyFromGuid = item.guid;
-                              ajaxPost('api/PolicyIssuance/CreatePolicyIssuance', policyIssuance, {
+                              policyIssuance.QuotationId = item.id;
+                            
+                            policyIssuances.push(policyIssuance);
+                         });
+                       
+                           ajaxPost('api/PolicyIssuance/CreatePolicyIssuance', policyIssuances, {
                                   onSuccess: function () {
                                       // DevExpress.ui.notify("Quotation submitted!", "info", 1200);
                                   },
