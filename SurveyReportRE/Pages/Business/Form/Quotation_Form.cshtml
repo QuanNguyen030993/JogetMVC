@@ -1070,9 +1070,10 @@ Note:
                 $("#rightCommentSub").text(`Audit log - ${quoteNo}` || "-");
                 $("#rightCommentList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
 
-                const q = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${quoteId}`;
+                // const q = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${quoteId}`;
+                const q = `OnSystem`;
                 $.ajax({
-                    url: `/api/QuotationCommentLog/ExecuteCustomQuery`,
+                    url: `/api/QuotationCommentLog/ExecuteCustomQuery?filterRefField=QuotationId&filterRefId=${quoteId}&key=${quoteId}`,
                     method: "POST",
                     async: true,
                     contentType: "application/json",
