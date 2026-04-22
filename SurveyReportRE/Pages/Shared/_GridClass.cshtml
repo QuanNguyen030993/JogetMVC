@@ -2216,6 +2216,7 @@
             var that = this;
             super.onCustomizeColumns(columns);
             super.hyperLinkCode(columns, "Business/Form", "PolicyIssuance", "id", "policyIssuanceCode");
+            super.hyperLinkCode(columns, "Business/Form", "Quotation", "quotationId", "quotationCode");
             $.each(columns, function (colIndex, col) {
             if (col.dataField === "policyIssuanceStatus")
             {

@@ -588,10 +588,7 @@
                         var gridInstance = $(`#dataGrid_Quotation_Request`).dxDataGrid("instance");
                         var selectedItems = gridInstance.getSelectedRowsData();
                         var policyIssuances = [];
-                        // if (!quotationConvert) return;
-
                          $.each(selectedItems, function (itemIndex, item){
-                             console.log(item);
                             var policyIssuance = new Object();
                              policyIssuance = ObjectPopulateKey(item, true, false);
                              policyIssuance.RequestDate = new Date();
@@ -618,10 +615,6 @@
                                   },
                                   onError: function () { }
                               });
-                         
-                         });
-                       
-
 
 
                         DevExpress.ui.notify("PolicyIssuance created!", "success", 1200);
@@ -651,10 +644,7 @@
         var comments = [
         ];
        
-        $(`#${moduleKey}-btnChatSend_${dept}`).dxButton({
-            text: "Send"
-        });
-
+    
 
         $(`#${moduleKey}-commentTextArea_${dept}`).dxTextArea({
             width: "100%",
@@ -1136,44 +1126,48 @@
                 }
 
 
-           function renderFormComment(idForm, dept) {
-         $(`#${idForm}`).dxForm({
-             width:"100%",
-             height: "10%",
-             labelLocation: "top",
-             colCount: 4,
-             items:
-             [
-                 {  dataField: "fromDepartment"  ,label:{text:"From Department"}, editorType: "dxSelectBox", editorOptions: {
-                    dataSource: [dept],
-                    value:[dept][0],
-                 }, elementAttr: {
-                    class: "dExForm",
-                    id: `qt-fromDepartment_${dept}`,
-                 }},
-                 {  dataField: "toDepartment", value: qtDeptModuleCode.filter(m => m != dept)[0] , label:{text:"To Department"}, editorType: "dxSelectBox", editorOptions: {
-                    dataSource: qtDeptModuleCode.filter(m => m != dept) ,
-                    value: qtDeptModuleCode.filter(m => m != dept)[0],
-                 } ,elementAttr: {
-                    class: "dExForm",
-                    id: `qt-toDepartment_${dept}`,
-                 }},
-                 {  dataField: "type", label:{text:"Type"}, editorType: "dxSelectBox", editorOptions: {
-                    valueExpr: "id",
-                    displayExpr: "value",
-                    value:"Discussion",
-                    dataSource: [{id: 'Discussion' ,value: 'Discussion'},{id: 'Pinned' , value: 'Pinned Note'} ]
-                 }, elementAttr: {
-                    class: "dExForm",
-                    id: `qt-sectionType_${dept}`,
-                 }},
-                 {  dataField: "content", label:{text:"Comment Note"}, elementAttr: {
-                    class: "dExForm",
-                    id: `qt-commentContent_${dept}`,
-                 }}
-             ]
-         });
-    }
+        function renderFormComment(idForm, dept, moduleKey) {
+             $(`#${idForm}`).dxForm({
+                 width:"100%",
+                 height: "10%",
+                 labelLocation: "top",
+                 colCount: 5,
+                 items:
+                 [
+                     {  dataField: "fromDepartment",label:{text:"From Department"}, editorType: "dxSelectBox", editorOptions: {
+                        dataSource: [dept],
+                        value:[dept][0],
+                     }, elementAttr: {
+                        id: `${moduleKey}-fromDepartment_${dept}`,
+                     }},
+                     {  dataField: "toDepartment", value: qtDeptModuleCode.filter(m => m != dept)[0] , label:{text:"To Department"}, editorType: "dxSelectBox", editorOptions: {
+                        dataSource: qtDeptModuleCode.filter(m => m != dept) ,
+                        value: qtDeptModuleCode.filter(m => m != dept)[0],
+                     } ,elementAttr: {
+                        id: `${moduleKey}-toDepartment_${dept}`,
+                     }},
+                     {  dataField: "type", label:{text:"Type"}, editorType: "dxSelectBox", editorOptions: {
+                        valueExpr: "id",
+                        displayExpr: "value",
+                        value:"Discussion",
+                        dataSource: [{id: 'Discussion' ,value: 'Discussion'},{id: 'Pinned' , value: 'Pinned Note'} ]
+                     }, elementAttr: {
+                        id: `${moduleKey}-sectionType_${dept}`,
+                     }},
+                     {  dataField: "content", label:{text:"Comment Note"}, editorOptions: {elementAttr: {
+                        id: `${moduleKey}-commentContent_${dept}`,
+                     }}},
+                     {  dataField: "Action",label:{visible: true}, editorType: "dxButton", editorOptions: {
+                        text: "Send",
+                        elementAttr: {
+                        id: `${moduleKey}-btnChatSend_${dept}` },
+                     
+                         onClick: function(e) { }
+                     }
+                     }
+                 ]
+             });
+        }
         function parseToGMT7(dateInput, minusTimeZone = 0 ) {
              //const offsetMinutes = date.getTimezoneOffset();
        const d = new Date(dateInput); // JS auto parse ISO / UTC

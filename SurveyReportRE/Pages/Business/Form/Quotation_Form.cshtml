@@ -579,7 +579,6 @@ Note:
             if (searchText) params.set("searchText", searchText);
             if (filter && filter !== "all") params.set("quotationStatus", filter);
             params.set("key", @Convert.ToInt32(ViewData["Id"]));
-            console.log(`@Convert.ToInt32(ViewData["Id"])`);
             return `/api/Quotation/GetAll?${params.toString()}`;
         }
 
