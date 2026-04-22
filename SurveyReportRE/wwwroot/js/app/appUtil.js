@@ -562,7 +562,11 @@ function RenderGridElement(_gridConfig, gridInstance) {
         else if (item.dataType == "table") {
             var gridConfig = makeFieldFeatures(item, gridInstance, "grid");
             var mDropDownDS = new MDropDownDataSource();
-            var DS = mDropDownDS.getDropDownDS('id', `api/${gridConfig.model}/DropDownLookUp`);
+            
+            var customOptions = new Object();
+            customOptions.skip = _defaultSkipDropDown;
+            customOptions.take = _defaultTakeDropDown;
+            var DS = mDropDownDS.getDropDownDS('id', `api/${gridConfig.model}/DropDownLookUp`, customOptions);
             if (gridConfig.config.displayExp) {
                 item.lookup = {
                     //dataSource: {

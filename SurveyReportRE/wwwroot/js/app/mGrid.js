@@ -708,6 +708,7 @@ var MGridOption = class MGridOption {
 };
 
 var MDropDownDataSource = class MDropDownDataSource {
+    //Performance check query in need
     constructor() {
         this.queryParams = null;
     }
@@ -725,15 +726,13 @@ var MDropDownDataSource = class MDropDownDataSource {
                 var d = $.Deferred();
                 var params = {};
                 var filter = [];
-
-                params.skip = loadOptions.skip;
-                params.take = loadOptions.take;
+                params.skip = customOptions.skip;
+                params.take = customOptions.take;
                 params.sort = loadOptions.sort ? JSON.stringify(loadOptions.sort) : "";
                 params.totalSummary = loadOptions.totalSummary ? JSON.stringify(loadOptions.totalSummary) : "";
                 params.group = loadOptions.group ? JSON.stringify(loadOptions.group) : "";
                 params.groupSummary = loadOptions.groupSummary ? JSON.stringify(loadOptions.groupSummary) : "";
                 params.requireTotalCount = loadOptions.requireTotalCount;
-
                 if (loadOptions.filter != undefined) {
                     filter[0] = loadOptions.filter;
                     params.key = JSON.stringify(loadOptions.filter);

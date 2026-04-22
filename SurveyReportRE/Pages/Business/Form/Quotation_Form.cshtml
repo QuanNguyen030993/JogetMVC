@@ -1016,26 +1016,26 @@ Note:
             }
         }
 
-        function bindSectionHeaderToggle() {
-            $.each(qtDeptModuleCode, function (deptIndex, dept) {
-                var $sec = $(`#${formModuleKeyQt}-sec${dept}`);
-                if (!$sec.length) return;
+        // function bindSectionHeaderToggle() {
+        //     $.each(qtDeptModuleCode, function (deptIndex, dept) {
+        //         var $sec = $(`#${formModuleKeyQt}-sec${dept}`);
+        //         if (!$sec.length) return;
 
-                $sec.find(".dept-header").off("click.sec").on("click.sec", function (e) {
-                    if ($(e.target).closest("a,button,.dx-button").length) return;
-                    var isCollapsed = $sec.hasClass("collapsed");
-                    setSectionCollapsed(dept, !isCollapsed);
-                });
+        //         $sec.find(".dept-header").off("click.sec").on("click.sec", function (e) {
+        //             if ($(e.target).closest("a,button,.dx-button").length) return;
+        //             var isCollapsed = $sec.hasClass("collapsed");
+        //             setSectionCollapsed(dept, !isCollapsed);
+        //         });
 
-                $(`#${formModuleKeyQt}-expandCollapsedBtn_${dept}`).dxButton({
-                    onClick: function () {
-                        var isCollapsed = $sec.hasClass("collapsed");
-                        setSectionCollapsed(dept, !isCollapsed);
+        //         $(`#${formModuleKeyQt}-expandCollapsedBtn_${dept}`).dxButton({
+        //             onClick: function () {
+        //                 var isCollapsed = $sec.hasClass("collapsed");
+        //                 setSectionCollapsed(dept, !isCollapsed);
 
-                    }
-                });
-            });
-        }
+        //             }
+        //         });
+        //     });
+        // }
 
         const HoverAjax = (function () {
             function debounce(fn, wait) {
@@ -1278,172 +1278,172 @@ Note:
         }
 
         //Select items
-        function bindQuoteCardClick() {
-            $("#qt-quoteList")
-                .off("click.quoteCard", ".qt-quoteCard")
-                .on("click.quoteCard", ".qt-quoteCard", function () {
-                    const id = Number($(this).attr("data-id"));
-                    const source = state.isSearching ? (state.displayQuotes || []) : (state.quotes || []);
-                    const q = source.find(x => Number(x.id) === id);
-                    if (!q) return;
-                    selectedId = q.id ?? null;
-                    selectedGuid = q.guid ?? null;
-                    selectedAttachmentId = q.documentId ?? null;
-                    selectedCodeNo = q.quotationCode ?? null;
-                    stageDept = q.stageDept ?? null;
+        // function bindQuoteCardClick() {
+        //     $("#qt-quoteList")
+        //         .off("click.quoteCard", ".qt-quoteCard")
+        //         .on("click.quoteCard", ".qt-quoteCard", function () {
+        //             const id = Number($(this).attr("data-id"));
+        //             const source = state.isSearching ? (state.displayQuotes || []) : (state.quotes || []);
+        //             const q = source.find(x => Number(x.id) === id);
+        //             if (!q) return;
+        //             selectedId = q.id ?? null;
+        //             selectedGuid = q.guid ?? null;
+        //             selectedAttachmentId = q.documentId ?? null;
+        //             selectedCodeNo = q.quotationCode ?? null;
+        //             stageDept = q.stageDept ?? null;
 
-                    state.selectedId = selectedId;
-                    state.selectedGuid = selectedGuid;
-                    state.selectedAttachmentId = selectedAttachmentId;
-                    state.selectedCodeNo = selectedCodeNo;
-                    state.stageDept = stageDept;
-                    state.focusDept = state.currentUserRole;
-                    state.resFK = q.resFK;
+        //             state.selectedId = selectedId;
+        //             state.selectedGuid = selectedGuid;
+        //             state.selectedAttachmentId = selectedAttachmentId;
+        //             state.selectedCodeNo = selectedCodeNo;
+        //             state.stageDept = stageDept;
+        //             state.focusDept = state.currentUserRole;
+        //             state.resFK = q.resFK;
 
-                    const params = new URLSearchParams();
-                    params.set("refKey", state.selectedGuid);
-                    params.set("refField", 'RecordGuid');
+        //             const params = new URLSearchParams();
+        //             params.set("refKey", state.selectedGuid);
+        //             params.set("refField", 'RecordGuid');
 
-                    ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null)
-                        .then(res => {
-                            var pinnedNotes = (res || []).map(x => ({
-                                id: x.id,
-                                section: x.currentDepartment,//target main
-                                fromSection: x.fromDepartment,//target pin
-                                toSection: x.toDepartment,
-                                type: x.type,
-                                unread: !x.isRead,
-                                isRead: !x.isRead,
-                                linkedPin: x.isPinned,
-                                isPinned: x.isPinned,
-                                body: x.content,
-                                text: x.content,
-                                replies: 0,
-                                fullText: x.content,
-                                urgent: false,
-                                time: parseToGMT7(x.createdDate, 0)
-                            }));
-                            state.comments = pinnedNotes;
-                            state.pinNotes = pinnedNotes.filter(f => f.isPinned);
-                        });
-
-
-                    PIC_JSON = pICs.find(f => f.quotationCode == selectedCodeNo)?.pIC ?? q.pIC ?? "{}";
-                    renderDeptCallouts(PIC_JSON);
-                    var map = parsePicMap(PIC_JSON);
-                    stageAccount = map[stageDept] ? map[stageDept] : "(Unassigned)";
-
-                    $(".qt-quoteCard").removeClass("selected");
-                    $(this).addClass("selected");
-                    var encodedFolder = encodeURIComponent(`RES\\${state.selectedCodeNo}`);
-                    loadSelectedWorkflow().then(() => {
-                        renderDetail();
-                        // initDepartmentAssignees(formModuleKeyQt,0);
-
-                        if (commentPanelOpened) {
-                            $("#btnCloseRightComment").click();
-                        }
-                    });
-                    $.get(`/api/Document/AttachmentSummary/${state.resFK.guid}/${encodedFolder}`, null
-                    ).done(function (res) {
-                        window.QuotationPage.state.formFO.dxForm("instance").updateData("resAttachmentCount", res.attachmentCount);
-                        window.QuotationPage.state.formFO.dxForm("instance").updateData("hasResAttachment", res.hasAttachment);
-                        window.QuotationPage.state.hasResAttachment = res.hasAttachment;
-                        if (res.hasAttachment)
-                            $("#btnToggleResForm").addClass("hasResAttachment");
-                        else
-                            $("#btnToggleResForm").removeClass("hasResAttachment");
-                    });
+        //             ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null)
+        //                 .then(res => {
+        //                     var pinnedNotes = (res || []).map(x => ({
+        //                         id: x.id,
+        //                         section: x.currentDepartment,//target main
+        //                         fromSection: x.fromDepartment,//target pin
+        //                         toSection: x.toDepartment,
+        //                         type: x.type,
+        //                         unread: !x.isRead,
+        //                         isRead: !x.isRead,
+        //                         linkedPin: x.isPinned,
+        //                         isPinned: x.isPinned,
+        //                         body: x.content,
+        //                         text: x.content,
+        //                         replies: 0,
+        //                         fullText: x.content,
+        //                         urgent: false,
+        //                         time: parseToGMT7(x.createdDate, 0)
+        //                     }));
+        //                     state.comments = pinnedNotes;
+        //                     state.pinNotes = pinnedNotes.filter(f => f.isPinned);
+        //                 });
 
 
-                });
-        }
+        //             PIC_JSON = pICs.find(f => f.quotationCode == selectedCodeNo)?.pIC ?? q.pIC ?? "{}";
+        //             renderDeptCallouts(PIC_JSON);
+        //             var map = parsePicMap(PIC_JSON);
+        //             stageAccount = map[stageDept] ? map[stageDept] : "(Unassigned)";
 
-        function bindInfiniteScroll() {
-            const $scroller = $(".quote-pane-scroll");
+        //             $(".qt-quoteCard").removeClass("selected");
+        //             $(this).addClass("selected");
+        //             var encodedFolder = encodeURIComponent(`RES\\${state.selectedCodeNo}`);
+        //             loadSelectedWorkflow().then(() => {
+        //                 renderDetail();
+        //                 // initDepartmentAssignees(formModuleKeyQt,0);
 
-            $scroller.off("scroll.quote").on("scroll.quote", function () {
-                const el = this;
-                const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 120;
-                if (nearBottom) {
-                    loadQuotePage(false);
-                }
-            });
-        }
+        //                 if (commentPanelOpened) {
+        //                     $("#btnCloseRightComment").click();
+        //                 }
+        //             });
+        //             $.get(`/api/Document/AttachmentSummary/${state.resFK.guid}/${encodedFolder}`, null
+        //             ).done(function (res) {
+        //                 window.QuotationPage.state.formFO.dxForm("instance").updateData("resAttachmentCount", res.attachmentCount);
+        //                 window.QuotationPage.state.formFO.dxForm("instance").updateData("hasResAttachment", res.hasAttachment);
+        //                 window.QuotationPage.state.hasResAttachment = res.hasAttachment;
+        //                 if (res.hasAttachment)
+        //                     $("#btnToggleResForm").addClass("hasResAttachment");
+        //                 else
+        //                     $("#btnToggleResForm").removeClass("hasResAttachment");
+        //             });
 
-        function initMainPaneSplitter() {
-            const grid = document.getElementById("mainContentGrid");
-            const splitter = document.getElementById("mainSplitter");
-            if (!grid || !splitter) return;
 
-            const MIN_LEFT = 260;
-            const MAX_LEFT = 520;
-            const COLLAPSED_LEFT = 0;
-            const SPLITTER_W = 10;
-            let isDragging = false;
+        //         });
+        // }
 
-            function setLeftWidth(px) {
-                const total = grid.clientWidth;
-                const maxAllowed = Math.min(MAX_LEFT, total - 620 - SPLITTER_W);
-                const left = Math.max(MIN_LEFT, Math.min(px, maxAllowed));
-                grid.classList.remove("left-collapsed");
-                grid.style.gridTemplateColumns = `${left}px ${SPLITTER_W}px minmax(620px, 1fr)`;
-            }
+        // function bindInfiniteScroll() {
+        //     const $scroller = $(".quote-pane-scroll");
 
-            function collapseLeft() {
-                grid.classList.add("left-collapsed");
-                grid.style.gridTemplateColumns = `${COLLAPSED_LEFT}px ${SPLITTER_W}px minmax(620px, 1fr)`;
-            }
+        //     $scroller.off("scroll.quote").on("scroll.quote", function () {
+        //         const el = this;
+        //         const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 120;
+        //         if (nearBottom) {
+        //             loadQuotePage(false);
+        //         }
+        //     });
+        // }
 
-            function expandLeftDefault() {
-                setLeftWidth(360);
-            }
+        // function initMainPaneSplitter() {
+        //     const grid = document.getElementById("mainContentGrid");
+        //     const splitter = document.getElementById("mainSplitter");
+        //     if (!grid || !splitter) return;
 
-            splitter.addEventListener("mousedown", function (e) {
-                e.preventDefault();
-                isDragging = true;
-                splitter.classList.add("dragging");
-                document.body.style.cursor = "col-resize";
-                document.body.style.userSelect = "none";
-            });
+        //     const MIN_LEFT = 260;
+        //     const MAX_LEFT = 520;
+        //     const COLLAPSED_LEFT = 0;
+        //     const SPLITTER_W = 10;
+        //     let isDragging = false;
 
-            window.addEventListener("mousemove", function (e) {
-                if (!isDragging) return;
-                const rect = grid.getBoundingClientRect();
-                const nextLeft = e.clientX - rect.left;
-                setLeftWidth(nextLeft);
-            });
+        //     function setLeftWidth(px) {
+        //         const total = grid.clientWidth;
+        //         const maxAllowed = Math.min(MAX_LEFT, total - 620 - SPLITTER_W);
+        //         const left = Math.max(MIN_LEFT, Math.min(px, maxAllowed));
+        //         grid.classList.remove("left-collapsed");
+        //         grid.style.gridTemplateColumns = `${left}px ${SPLITTER_W}px minmax(620px, 1fr)`;
+        //     }
 
-            window.addEventListener("mouseup", function () {
-                if (!isDragging) return;
-                isDragging = false;
-                splitter.classList.remove("dragging");
-                document.body.style.cursor = "";
-                document.body.style.userSelect = "";
-            });
+        //     function collapseLeft() {
+        //         grid.classList.add("left-collapsed");
+        //         grid.style.gridTemplateColumns = `${COLLAPSED_LEFT}px ${SPLITTER_W}px minmax(620px, 1fr)`;
+        //     }
 
-            $("#qt-btnToggleLeftPane").dxButton({
-                icon: "pin",
-                hint: "Thu gọn / mở rộng danh sách quotation",
-                stylingMode: "text",
-                onClick: function () {
-                    if (grid.classList.contains("left-collapsed")) {
-                        expandLeftDefault();
-                    } else {
-                        collapseLeft();
-                    }
-                }
-            });
+        //     function expandLeftDefault() {
+        //         setLeftWidth(360);
+        //     }
 
-            window.addEventListener("resize", function () {
-                if (grid.classList.contains("left-collapsed")) {
-                    grid.style.gridTemplateColumns = `${COLLAPSED_LEFT}px ${SPLITTER_W}px minmax(620px, 1fr)`;
-                } else {
-                    const first = parseInt((grid.style.gridTemplateColumns || "").split(" ")[0], 10);
-                    if (!isNaN(first)) setLeftWidth(first);
-                }
-            });
-        }
+        //     splitter.addEventListener("mousedown", function (e) {
+        //         e.preventDefault();
+        //         isDragging = true;
+        //         splitter.classList.add("dragging");
+        //         document.body.style.cursor = "col-resize";
+        //         document.body.style.userSelect = "none";
+        //     });
+
+        //     window.addEventListener("mousemove", function (e) {
+        //         if (!isDragging) return;
+        //         const rect = grid.getBoundingClientRect();
+        //         const nextLeft = e.clientX - rect.left;
+        //         setLeftWidth(nextLeft);
+        //     });
+
+        //     window.addEventListener("mouseup", function () {
+        //         if (!isDragging) return;
+        //         isDragging = false;
+        //         splitter.classList.remove("dragging");
+        //         document.body.style.cursor = "";
+        //         document.body.style.userSelect = "";
+        //     });
+
+        //     $("#qt-btnToggleLeftPane").dxButton({
+        //         icon: "pin",
+        //         hint: "Thu gọn / mở rộng danh sách quotation",
+        //         stylingMode: "text",
+        //         onClick: function () {
+        //             if (grid.classList.contains("left-collapsed")) {
+        //                 expandLeftDefault();
+        //             } else {
+        //                 collapseLeft();
+        //             }
+        //         }
+        //     });
+
+        //     window.addEventListener("resize", function () {
+        //         if (grid.classList.contains("left-collapsed")) {
+        //             grid.style.gridTemplateColumns = `${COLLAPSED_LEFT}px ${SPLITTER_W}px minmax(620px, 1fr)`;
+        //         } else {
+        //             const first = parseInt((grid.style.gridTemplateColumns || "").split(" ")[0], 10);
+        //             if (!isNaN(first)) setLeftWidth(first);
+        //         }
+        //     });
+        // }
 
         function debounce(fn, delay) {
             let t = null;
@@ -1464,111 +1464,111 @@ Note:
         // });
 
 
-        function filterLocalQuotes(keyword) {
-            const t = String(keyword || "").trim().toLowerCase();
-            if (!t) return state.quotes.slice();
+        // function filterLocalQuotes(keyword) {
+        //     const t = String(keyword || "").trim().toLowerCase();
+        //     if (!t) return state.quotes.slice();
 
-            return state.quotes.filter(x =>
-                (x.quotationCode || "").toLowerCase().includes(t) ||
-                (x.clientName || "").toLowerCase().includes(t) ||
-                (x.productName || "").toLowerCase().includes(t) ||
-                (x.lineName || "").toLowerCase().includes(t) ||
-                String(x.requestNo || "").toLowerCase().includes(t)
-            );
-        }
+        //     return state.quotes.filter(x =>
+        //         (x.quotationCode || "").toLowerCase().includes(t) ||
+        //         (x.clientName || "").toLowerCase().includes(t) ||
+        //         (x.productName || "").toLowerCase().includes(t) ||
+        //         (x.lineName || "").toLowerCase().includes(t) ||
+        //         String(x.requestNo || "").toLowerCase().includes(t)
+        //     );
+        // }
 
-        function renderQuoteList(data) {
-            $("#qt-quoteList").empty();
+        // function renderQuoteList(data) {
+        //     $("#qt-quoteList").empty();
 
-            const rows = Array.isArray(data) ? data : [];
-            if (!rows.length) {
-                showListEmpty(true);
-                return;
-            }
+        //     const rows = Array.isArray(data) ? data : [];
+        //     if (!rows.length) {
+        //         showListEmpty(true);
+        //         return;
+        //     }
 
-            showListEmpty(false);
-            appendQuoteCards(rows);
+        //     showListEmpty(false);
+        //     appendQuoteCards(rows);
 
-            if (!state.isSearching && state.quotePaging.done) showListEnd(true);
-            else showListEnd(false);
-        }
+        //     if (!state.isSearching && state.quotePaging.done) showListEnd(true);
+        //     else showListEnd(false);
+        // }
 
-        async function searchQuoteFromServer(keyword) {
-            const token = ++state.searchRequestToken;
-            state.serverSearchMode = true;
-            state.isSearching = true;
+        // async function searchQuoteFromServer(keyword) {
+        //     const token = ++state.searchRequestToken;
+        //     state.serverSearchMode = true;
+        //     state.isSearching = true;
 
-            showListLoader(true);
+        //     showListLoader(true);
 
-            try {
-                const params = new URLSearchParams();
-                params.set("skip", 0);
-                params.set("take", 50);
-                if (keyword) params.set("searchText", keyword);
+        //     try {
+        //         const params = new URLSearchParams();
+        //         params.set("skip", 0);
+        //         params.set("take", 50);
+        //         if (keyword) params.set("searchText", keyword);
 
-                const data = await $.ajax({
-                    url: `/api/Quotation/GetAll?${params.toString()}`,
-                    method: "GET",
-                    contentType: "application/json"
-                });
+        //         const data = await $.ajax({
+        //             url: `/api/Quotation/GetAll?${params.toString()}`,
+        //             method: "GET",
+        //             contentType: "application/json"
+        //         });
 
-                if (token !== state.searchRequestToken) return;
+        //         if (token !== state.searchRequestToken) return;
 
-                state.displayQuotes = Array.isArray(data) ? data : [];
-                renderQuoteList(state.displayQuotes);
-            } catch (err) {
-                console.error(err);
-            } finally {
-                if (token === state.searchRequestToken) showListLoader(false);
-            }
-        }
+        //         state.displayQuotes = Array.isArray(data) ? data : [];
+        //         renderQuoteList(state.displayQuotes);
+        //     } catch (err) {
+        //         console.error(err);
+        //     } finally {
+        //         if (token === state.searchRequestToken) showListLoader(false);
+        //     }
+        // }
 
-        function clearSearchMode() {
-            state.isSearching = false;
-            state.serverSearchMode = false;
-            state.displayQuotes = [];
-            state.searchRequestToken++;
-            renderQuoteList(state.quotes);
-        }
+        // function clearSearchMode() {
+        //     state.isSearching = false;
+        //     state.serverSearchMode = false;
+        //     state.displayQuotes = [];
+        //     state.searchRequestToken++;
+        //     renderQuoteList(state.quotes);
+        // }
 
-        const triggerServerSearch = debounce(function (keyword) {
-            searchQuoteFromServer(keyword);
-        }, 700);
+        // const triggerServerSearch = debounce(function (keyword) {
+        //     searchQuoteFromServer(keyword);
+        // }, 700);
 
-        $("#qt-searchBox").dxTextBox({
-            placeholder: "Search quotations...",
-            stylingMode: "outlined",
-            mode: "search",
-            onValueChanged: debounce((e) => {
-                state.displayQuotes = [];
-                state.isSearching = false;
-                state.serverSearchMode = false;
-                state.searchRequestToken = 0;
-                searchText = (e.value || "").trim();
+        // $("#qt-searchBox").dxTextBox({
+        //     placeholder: "Search quotations...",
+        //     stylingMode: "outlined",
+        //     mode: "search",
+        //     onValueChanged: debounce((e) => {
+        //         state.displayQuotes = [];
+        //         state.isSearching = false;
+        //         state.serverSearchMode = false;
+        //         state.searchRequestToken = 0;
+        //         searchText = (e.value || "").trim();
 
-                if (!searchText) {
-                    clearSearchMode();
-                    return;
-                }
+        //         if (!searchText) {
+        //             clearSearchMode();
+        //             return;
+        //         }
 
-                state.isSearching = true;
+        //         state.isSearching = true;
 
-                const localRows = filterLocalQuotes(searchText);
+        //         const localRows = filterLocalQuotes(searchText);
 
-                if (localRows.length > 0) {
-                    state.serverSearchMode = false;
-                    state.displayQuotes = localRows;
-                    renderQuoteList(localRows);
-                    // triggerServerSearch(searchText);
-                    state.isSearching = false;
-                } else {
-                    state.displayQuotes = [];
-                    renderQuoteList([]);
-                    triggerServerSearch(searchText);
-                    state.isSearching = false;
-                }
-            }, 250)
-        });
+        //         if (localRows.length > 0) {
+        //             state.serverSearchMode = false;
+        //             state.displayQuotes = localRows;
+        //             renderQuoteList(localRows);
+        //             // triggerServerSearch(searchText);
+        //             state.isSearching = false;
+        //         } else {
+        //             state.displayQuotes = [];
+        //             renderQuoteList([]);
+        //             triggerServerSearch(searchText);
+        //             state.isSearching = false;
+        //         }
+        //     }, 250)
+        // });
 
         $(`#${formModuleKeyQt}-btnClientConfirm`).dxButton({
             text: "Submit To Policy Issuance",
@@ -1607,11 +1607,11 @@ Note:
         });
 
         HoverAjax.bind();
-        bindSectionHeaderToggle();
-        bindQuoteCardClick();
-        bindInfiniteScroll();
+        // bindSectionHeaderToggle();
+        // bindQuoteCardClick();
+        // bindInfiniteScroll();
         setupDeptTree();
-        initMainPaneSplitter();
+        // initMainPaneSplitter();
 
         setTimeout(layoutTreeLine, 0);
         window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
@@ -1623,7 +1623,7 @@ Note:
             renderDeptCallouts(PIC_JSON);
             firstRender = false;
         });
-    }, _delayQuotationsLoad);
+    }, _delayQuotationsLoadForm);
 </script>
 
 <body>
