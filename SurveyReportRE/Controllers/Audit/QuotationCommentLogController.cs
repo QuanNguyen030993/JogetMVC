@@ -102,14 +102,16 @@ public class QuotationCommentLogController : BaseControllerApi<QuotationCommentL
         {
             Query = query;
         }
-        var controllerName = ControllerContext.RouteData.Values["controller"]?.ToString();
+        var controllerName = ControllerContext.RouteData?.Values["controller"]?.ToString() ?? "QuotationCommentLog";
         BaseRepository<SysTable> sysTableRepo = new BaseRepository<SysTable>(_BaseRepository._baseConfiguration, _httpContextAccessor);
         SysTable sysTable = await sysTableRepo.GetSingleObject(s => s.Name == controllerName);
-        var rawRequestParams = HttpContext.Request.Query.ToList();
+      
+
+        var rawRequestParams = _httpContextAccessor.HttpContext.Request.Query.ToList();
         // Chuẩn hóa:
         // - cặp đầu tiên filterRefField/filterRefId => refField/refKey
         // - các cặp sau => điều kiện AND
-        var normalizedParams = Util.NormalizeRequestParamsForCustomQuery(rawRequestParams);
+        var normalizedParams = Util.NormalizeRefParams(rawRequestParams);
         IDictionary<string, object> dynamicObj = new ExpandoObject();
         foreach (var item in normalizedParams)
         {
@@ -117,10 +119,10 @@ public class QuotationCommentLogController : BaseControllerApi<QuotationCommentL
         }
         if (normalizedParams != null && normalizedParams.Count > 0)
         {
-            if (dynamicObj.ContainsKey("refKey"))
+            if (dynamicObj.ContainsKey("filterRefId") || dynamicObj.ContainsKey("key"))
             {
                 var built = Util.LoadParamsBuildCustomQuery<object>(
-                    baseQuery: sysTable.CustomQuery,
+                    baseQuery: query == "OnSystem" ? sysTable.CustomQuery : Query,
                     loadParams: normalizedParams,
                     defaultOrderBy: "CommentId",
                     defaultOrderDir: "DESC",
@@ -146,7 +148,7 @@ public class QuotationCommentLogController : BaseControllerApi<QuotationCommentL
                 return await _BaseRepository.ExecuteCustomLogQuery(sysTable.CustomQuery, built.Parameters);
             }
         }
-        obj = await _BaseRepository.ExecuteCustomLogQuery(sysTable.CustomQuery);
+        obj = await _BaseRepository.ExecuteCustomLogQuery(query == "OnSystem" ? sysTable.CustomQuery : Query);
         return obj;
     }
 

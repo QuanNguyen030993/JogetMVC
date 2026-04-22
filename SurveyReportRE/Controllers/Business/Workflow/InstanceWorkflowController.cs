@@ -99,7 +99,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 ,DeptCode,CommentOrder,CommentBy,CommentTime,CommentText,SourceSystem)
             VALUES ({quotation.Id},'{submitRequest.StepsWorkflow.FromNodeId}'
 ,{0}
-,'{userInfo.Users.name}'
+,'{userInfo.Users?.name ?? "Anonymous"}'
 ,'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}'
 ,N'{submitRequest.Comment}'
 ,'WEB')
@@ -115,7 +115,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 ,'{submitRequest.StepsWorkflow.FromNodeId}'
 ,'{submitRequest.StepsWorkflow.ToNodeId}'
 ,'{submitRequest.StepsWorkflow.ActionCode}'
-,'{userInfo.Users.name}','WEB')
+,'{userInfo.Users?.name ?? "Anonymous"}','WEB')
         ";
         var quotationCommentLogApiController = new QuotationCommentLogController(_quotationCommentLogRepository, configuration, _httpContextAccessor, _logger, _optionsMonitor);
         await quotationCommentLogApiController.ExecuteCustomQuery(logQuery);

@@ -2713,14 +2713,63 @@ string? mainTableAlias = null
             {
                 return dict.TryGetValue(key, out var value) ? value : null;
             }
-
             var allParams = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
             if (loadParams != null)
             {
-                foreach (var kv in loadParams)
+                var dict = loadParams.ToDictionary(x => x.Key, x => x.Value.ToString(), StringComparer.OrdinalIgnoreCase);
+
+                bool hasRefPair = dict.Keys.Any(k => k.StartsWith("filterRefField", StringComparison.OrdinalIgnoreCase));
+
+                // =========================
+                // 1. build refField/refId
+                // =========================
+                var refIndexes = new List<string>();
+
+                foreach (var key in dict.Keys)
                 {
-                    if (kv.Key == "_") continue;
-                    allParams[kv.Key] = kv.Value.ToString() ?? "";
+                    if (key.StartsWith("filterRefField", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var suffix = key.Substring("filterRefField".Length); // "", "2", "3"
+                        refIndexes.Add(suffix);
+                    }
+                }
+
+                refIndexes = refIndexes
+                    .Distinct()
+                    .OrderBy(x => string.IsNullOrEmpty(x) ? 0 : int.TryParse(x, out var n) ? n : int.MaxValue)
+                    .ToList();
+
+                foreach (var suffix in refIndexes)
+                {
+                    var fieldKey = "filterRefField" + suffix;
+                    var valueKey = "filterRefId" + suffix;
+
+                    if (!dict.TryGetValue(fieldKey, out var field)) continue;
+                    if (!dict.TryGetValue(valueKey, out var value)) continue;
+
+                    if (string.IsNullOrWhiteSpace(field) || string.IsNullOrWhiteSpace(value))
+                        continue;
+
+                    allParams[field] = value;
+                }
+
+                // =========================
+                // 2. add params thường
+                // =========================
+                foreach (var kv in dict)
+                {
+                    var key = kv.Key;
+
+                    if (key.StartsWith("filterRefField", StringComparison.OrdinalIgnoreCase) ||
+                        key.StartsWith("filterRefId", StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    // nếu có refField thì bỏ key
+                    if (hasRefPair && string.Equals(key, "key", StringComparison.OrdinalIgnoreCase))
+                    { allParams["key"] = kv.Value;  continue; }
+
+                    allParams[key] = kv.Value;
                 }
             }
 
@@ -2845,7 +2894,7 @@ string? mainTableAlias = null
 
             if (!hasWhere)
             {
-                sql.AppendLine(" WHERE 1 = 1");
+                sql.AppendLine(" WHERE 1 = 1 ");
             }
 
             // DevExtreme filter
@@ -2989,7 +3038,6 @@ string? mainTableAlias = null
                 }
             }
 
-            // simple query params
             foreach (var kv in allParams)
             {
                 var key = kv.Key;
@@ -3014,6 +3062,7 @@ string? mainTableAlias = null
 
                 parameters[pName] = value;
             }
+
 
             // ORDER BY
             string? orderBySql = null;
@@ -3073,8 +3122,8 @@ string? mainTableAlias = null
                     if (safeColumns.Contains(actualColumn))
                     {
                         string orderDir = string.Equals(requestedOrderDir, "asc", StringComparison.OrdinalIgnoreCase)
-                            ? "ASC"
-                            : "DESC";
+                            ? " ASC"
+                            : " DESC";
 
                         orderBySql = $"{BuildColumnSql(actualColumn)} {orderDir}";
                     }
@@ -3116,18 +3165,18 @@ string? mainTableAlias = null
                 }
             }
 
-            sql.Append("ORDER BY ");
+            sql.Append(" ORDER BY ");
             sql.AppendLine(orderBySql);
 
             if (paging)
             {
-                sql.AppendLine("OFFSET @skip ROWS FETCH NEXT @take ROWS ONLY;");
+                sql.AppendLine(" OFFSET @skip ROWS FETCH NEXT @take ROWS ONLY;");
                 parameters["@skip"] = skip;
                 parameters["@take"] = take;
             }
             else
             {
-                sql.AppendLine($"OFFSET 0 ROWS FETCH NEXT {maxAll} ROWS ONLY;");
+                sql.AppendLine($" OFFSET 0 ROWS FETCH NEXT {maxAll} ROWS ONLY;");
             }
 
             return new SqlQueryBuildResult
@@ -3136,71 +3185,82 @@ string? mainTableAlias = null
                 Parameters = parameters
             };
         }
-        public static List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> NormalizeRequestParamsForCustomQuery(
-   List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> requestParams)
+        public static List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>>
+NormalizeRefParams(
+    List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> requestParams,
+    string? pkTieBreaker = "Id")
         {
             var result = new List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>>();
-            if (requestParams == null || requestParams.Count == 0)
-                return result;
-            // Gom các cặp filterRefField / filterRefId theo index
-            // index rỗng = điều kiện đầu tiên
-            var map = new Dictionary<string, (string RefField, string RefId)>(StringComparer.OrdinalIgnoreCase);
-            foreach (var item in requestParams)
+            if (requestParams == null || requestParams.Count == 0) return result;
+
+            var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var kv in requestParams)
             {
-                var key = item.Key?.Trim();
-                var value = item.Value.ToString();
-                if (string.IsNullOrWhiteSpace(key))
-                    continue;
-                if (key.StartsWith("filterRefField", StringComparison.OrdinalIgnoreCase))
+                dict[kv.Key] = kv.Value.ToString();
+            }
+
+            // Giữ lại các param thường như skip/take/filter/sort...
+            foreach (var kv in requestParams)
+            {
+                var key = kv.Key ?? "";
+                if (!key.StartsWith("refField", StringComparison.OrdinalIgnoreCase) &&
+                    !key.StartsWith("refKey", StringComparison.OrdinalIgnoreCase))
                 {
-                    var suffix = key.Replace("filterRefField", "", StringComparison.OrdinalIgnoreCase); // "", "_1", "_2"
-                    if (!map.ContainsKey(suffix))
-                        map[suffix] = (null, null);
-                    var old = map[suffix];
-                    map[suffix] = (value, old.RefId);
-                }
-                else if (key.StartsWith("filterRefId", StringComparison.OrdinalIgnoreCase))
-                {
-                    var suffix = key.Replace("filterRefId", "", StringComparison.OrdinalIgnoreCase); // "", "_1", "_2"
-                    if (!map.ContainsKey(suffix))
-                        map[suffix] = (null, null);
-                    var old = map[suffix];
-                    map[suffix] = (old.RefField, value);
-                }
-                else
-                {
-                    // các param khác giữ nguyên
-                    result.Add(new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>(key, value));
+                    result.Add(new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>(
+                        kv.Key,
+                        kv.Value
+                    ));
                 }
             }
-            // Sắp thứ tự: "" trước, rồi _1, _2 ...
-            var orderedKeys = map.Keys
-                .OrderBy(k =>
+
+            // Cặp đầu tiên: refField + refKey
+            // Cặp sau: refField2/refKey2, refField3/refKey3...
+            var indexes = new List<string> { "" };
+
+            foreach (var key in dict.Keys)
+            {
+                if (key.StartsWith("refField", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (string.IsNullOrEmpty(k)) return 0;
-                    var raw = k.TrimStart('_');
-                    return int.TryParse(raw, out var n) ? n + 1 : int.MaxValue;
-                })
+                    var suffix = key.Substring("refField".Length); // "", "2", "3"...
+                    if (!indexes.Contains(suffix, StringComparer.OrdinalIgnoreCase))
+                        indexes.Add(suffix);
+                }
+            }
+
+            // sort: "" trước, rồi 2,3,4...
+            indexes = indexes
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(x => string.IsNullOrEmpty(x) ? 0 : int.TryParse(x, out var n) ? n : int.MaxValue)
                 .ToList();
-            bool isFirst = true;
-            foreach (var suffix in orderedKeys)
+
+            foreach (var suffix in indexes)
             {
-                var pair = map[suffix];
-                if (string.IsNullOrWhiteSpace(pair.RefField) || string.IsNullOrWhiteSpace(pair.RefId))
+                var refFieldKey = "refField" + suffix;
+                var refValueKey = "refKey" + suffix;
+
+                if (!dict.TryGetValue(refFieldKey, out var field)) continue;
+                if (!dict.TryGetValue(refValueKey, out var value)) continue;
+
+                field = field?.Trim();
+                value = value?.Trim();
+
+                if (string.IsNullOrWhiteSpace(field) || string.IsNullOrWhiteSpace(value))
                     continue;
-                if (isFirst)
+
+                // optional: nếu muốn refField=key thì map qua pkTieBreaker
+                if (string.Equals(field, "key", StringComparison.OrdinalIgnoreCase) &&
+                    !string.IsNullOrWhiteSpace(pkTieBreaker))
                 {
-                    // điều kiện đầu tiên -> refKey/refField
-                    result.Add(new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>("refField", pair.RefField));
-                    result.Add(new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>("refKey", pair.RefId));
-                    isFirst = false;
+                    field = pkTieBreaker;
                 }
-                else
-                {
-                    // các điều kiện sau -> field = value => AND
-                    result.Add(new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>(pair.RefField, pair.RefId));
-                }
+
+                result.Add(new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>(
+                    field,
+                    value
+                ));
             }
+
             return result;
         }
     }
