@@ -1,27 +1,27 @@
 ﻿
-var ListFormat = Quill.import('formats/list');
+//var ListFormat = Quill.import('formats/list');
 
-class CustomList extends ListFormat {
-    static formats(domNode) {
-        let format = super.formats(domNode);
-        //format.class = domNode.getAttribute('class') || '';
-        return format;
-    }
+//class CustomList extends ListFormat {
+//    static formats(domNode) {
+//        let format = super.formats(domNode);
+//        //format.class = domNode.getAttribute('class') || '';
+//        return format;
+//    }
 
-    format(name, value) {
-        super.format(name, value);
-        if (name === 'class' && value) {
-            this.domNode.setAttribute('class', value);
-        }
-    }
-}
+//    format(name, value) {
+//        super.format(name, value);
+//        if (name === 'class' && value) {
+//            this.domNode.setAttribute('class', value);
+//        }
+//    }
+//}
 
-Quill.register(CustomList, true);
+//Quill.register(CustomList, true);
 
 var _db;
 var _cacheCompanyData = null;
-const _dbName = "CompanyDataDB";
-const _storeName = "CompanyData";
+    const _dbName = "CompanyDataDB";
+    const _storeName = "CompanyData";
 var _cacheOutlines = [];
 var _allScheme = [];
 var fetchTables = ["Outline", "DataGridConfig"];
