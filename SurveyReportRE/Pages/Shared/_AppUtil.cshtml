@@ -1371,5 +1371,18 @@
             </div>
         `;
     }
+
+    function TinyMCEElementMaker(idform)
+    {
+        tinymce.init({
+         selector: `#${idform}`,
+          width: _defaultEditorFieldWidth,height: _defaultEditorFieldHeight,
+          menubar: false,
+          plugins: "lists link image table code",
+          toolbar:
+              "undo redo | bold italic underline | bullist numlist | link image | code"
+         });
+    }
+
 </script>
 

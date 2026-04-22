@@ -14,16 +14,13 @@
 </div>
 
 <script>
+            if (tinymce.get(`qt-remarkBox_@dept`))
+        tinymce.get(`qt-remarkBox_@dept`).remove();
+        TinyMCEElementMaker(`qt-remarkBox_@dept`);
      var dept = "@dept";
      setTimeout( () => {
          var pageLayout = window.QuotationPage;
         var stateLayout = pageLayout.state;
-    var findRoute = stateLayout.nextStep.flowSteps.find(f => f.fromNodeId == dept && f.stepNo == stateLayout.nextStep.currentStep); 
-    $("#qt-btnSubmitBranch_@dept").dxButton({ text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", 
-    onClick: function (e) { var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {}; var commentBox = $(`#qt-remarkBox_@dept`).dxTextArea().dxTextArea("instance"); var comment=commentBox.option("value"); formItems.comment = comment; submitNextStep("@dept", stateLayout.nextStep, findRoute, formItems); }
-
-    });
-
 
     $("#qt-btnSave_@dept").dxButton({ text: "Save", icon: "save", type: "default", onClick:
          function (e) {

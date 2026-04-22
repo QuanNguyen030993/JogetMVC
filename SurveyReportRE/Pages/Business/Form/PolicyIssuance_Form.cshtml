@@ -714,15 +714,17 @@ Note:
                             state.nextStep.instanceWorkflow = instance;
                             state.nextStep.flowSteps = data;
                             state.nextStep.currentStep = instance?.currentStep ?? 0;
-
-                            // setNextStep(state.nextStep);
-                             $.each(piDeptModuleCode, function (itemIndex, item) {
-                             $(`#pi-remarkBox_${item}`).dxTextArea({width: _defaultFormFieldWidth,height: _defaultFormFieldHeight});
-                                 var findRoute = state.nextStep.flowSteps.find(f => f.fromNodeId == item && f.stepNo == state.nextStep.instanceWorkflow.currentStep);
-                             $(`#pi-btnSubmitBranch_${item}`).dxButton({ text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
-                             function (e) { var formItems = $(`#pi-form${item}`).dxForm("instance")?.option("formData") || {};
-                             submitNextStep(`${item}`, state.nextStep, findRoute, formItems); } });
-                             });
+                                       var findRoute = state.nextStep.flowSteps.find(f => f.fromNodeId == item && f.stepNo == state.nextStep.instanceWorkflow.currentStep);
+                                        $(`#pi-btnSubmitBranch_${item}`).dxButton({
+                                            text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
+                                                function (e) {
+                                                    var content = tinymce.get(`pi-remarkBox_${item}`).getContent();
+                                                    var formItems = $(`#pi-form${item}`).dxForm("instance")?.option("formData") || {};
+                                                    formItems.comment = content;
+                                                    submitNextStep(`${item}`, state.nextStep, findRoute, formItems);
+                                                }
+                                        });
+                                   }, 100);
                         });
                 });
         }

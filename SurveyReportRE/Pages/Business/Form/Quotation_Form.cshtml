@@ -616,33 +616,33 @@ Note:
 
 
                 $root.append(`
-                            <div class="${formModuleKeyQt}-quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-guid="${q.guid}" data-attachmentid="${q.documentId}" data-codeno="${q.quotationCode}" data-stagedept="${q.stageDept}" data-stageaccount="${parsePicMap(q.pIC)[q.stageDept] ? parsePicMap(q.pIC)[q.stageDept] : "(Unassigned)"}">
-                                <div class="quoteTop">
-                                    <div>
-                                        <div class="quoteClient">${q.clientName || ""}</div>
-                                        <div>${q.productName || ""}</div>
-                                    </div>
-                                    <div class="statusTag ${statusClass(q.quotationStatus)}">${statusText(q.quotationStatus)}</div>
+                        <div class="${formModuleKeyQt}-quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-guid="${q.guid}" data-attachmentid="${q.documentId}" data-codeno="${q.quotationCode}" data-stagedept="${q.stageDept}" data-stageaccount="${parsePicMap(q.pIC)[q.stageDept] ? parsePicMap(q.pIC)[q.stageDept] : "(Unassigned)"}">
+                            <div class="quoteTop">
+                                <div>
+                                    <div class="quoteClient">${q.clientName || ""}</div>
+                                    <div>${q.productName || ""}</div>
                                 </div>
-                                <div class="quoteMeta">
-                                    <div class="quotationCode">${q.quotationCode || ""}</div>
-                                    <div>${q.lineName || ""}</div>
-                                    <div>${(typeof formatDate === "function") ? formatDate(q.requestedDate, "dd-mm-yyyy") : (q.requestedDate || "")}</div>
-                                </div>
-                                <div class="quoteMeta">
-                                    <div>Total Sum Insured</div>
-                                    <div class="quoteAmount">${money(q.sumInsuredTotal)}</div>
-                                </div>
-                                <div class="quoteMeta">
-                                    <div>Total Premium</div>
-                                    <div class="quoteAmount">${money(q.premiumTotal)}</div>
-                                </div>
-                                <div class="quoteMeta">
-                                    <div>Total Due</div>
-                                    <div class="quoteAmount">${money(q.totalDue)}</div>
-                                </div>
+                                <div class="statusTag ${statusClass(q.quotationStatus)}">${statusText(q.quotationStatus)}</div>
                             </div>
-                        `);
+                            <div class="quoteMeta">
+                                <div class="quotationCode">${q.quotationCode || ""}</div>
+                                <div>${q.lineName || ""}</div>
+                                <div>${(typeof formatDate === "function") ? formatDate(q.requestedDate, "dd-mm-yyyy") : (q.requestedDate || "")}</div>
+                            </div>
+                            <div class="quoteMeta">
+                                <div>Total Sum Insured</div>
+                                <div class="quoteAmount">${money(q.sumInsuredTotal)}</div>
+                            </div>
+                            <div class="quoteMeta">
+                                <div>Total Premium</div>
+                                <div class="quoteAmount">${money(q.premiumTotal)}</div>
+                            </div>
+                            <div class="quoteMeta">
+                                <div>Total Due</div>
+                                <div class="quoteAmount">${money(q.totalDue)}</div>
+                            </div>
+                        </div>
+                    `);
             });
 
             showListLoader(false);
@@ -711,32 +711,20 @@ Note:
                             state.nextStep.instanceWorkflow = instance;
                             state.nextStep.flowSteps = data;
                             state.nextStep.currentStep = instance?.currentStep ?? 0;
-
                             // setNextStep(state.nextStep);
                             $.each(qtDeptModuleCode, function (itemIndex, item) {
                                     setTimeout(() => {
-                                        tinymce.init({
-                                            selector: "#" + `qt-remarkBox_${item}`,
-                                            width: _defaultEditorFieldWidth,height: _defaultEditorFieldHeight,
-                                            menubar: false,
-                                            plugins: "lists link image table code",
-                                            toolbar:
-                                                "undo redo | bold italic underline | bullist numlist | link image | code"
-                                          
+                                        var findRoute = state.nextStep.flowSteps.find(f => f.fromNodeId == item && f.stepNo == state.nextStep.instanceWorkflow.currentStep);
+                                        $(`#qt-btnSubmitBranch_${item}`).dxButton({
+                                            text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
+                                                function (e) {
+                                                    var content = tinymce.get(`qt-remarkBox_${item}`).getContent();
+                                                    var formItems = $(`#qt-form${item}`).dxForm("instance")?.option("formData") || {};
+                                                    formItems.comment = content;
+                                                    submitNextStep(`${item}`, state.nextStep, findRoute, formItems);
+                                                }
                                         });
-                                    }, 0);
-
-
-
-                                //     $(`#qt-remarkBox_${item}`).dxTextArea({ width: _defaultFormFieldWidth, height: _defaultFormFieldHeight });
-                                // var findRoute = state.nextStep.flowSteps.find(f => f.fromNodeId == item && f.stepNo == state.nextStep.instanceWorkflow.currentStep);
-                                // $(`#qt-btnSubmitBranch_${item}`).dxButton({
-                                //     text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
-                                //         function (e) {
-                                //             var formItems = $(`#qt-form${item}`).dxForm("instance")?.option("formData") || {};
-                                //             submitNextStep(`${item}`, state.nextStep, findRoute, formItems);
-                                //         }
-                                // });
+                                   }, 100);
                             });
                         });
                 });
@@ -1072,7 +1060,7 @@ Note:
                                 <div class="ct-item">
                                     <div class="ct-user">${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}</div>
                                     <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
-                                    <div class="ct-text">${escapeHtml(c.commentText || "")}</div>
+                                    <div class="ct-text">${c.commentText}</div>
                                 </div>
                             `).join("");
             }

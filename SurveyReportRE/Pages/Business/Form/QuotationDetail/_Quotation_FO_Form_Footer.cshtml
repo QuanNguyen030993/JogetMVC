@@ -15,9 +15,13 @@
 </div>
 
 <script>
+        if (tinymce.get(`qt-remarkBox_@dept`))
+        tinymce.get(`qt-remarkBox_@dept`).remove();
+        TinyMCEElementMaker(`qt-remarkBox_@dept`);
     setTimeout( () => {
 
     setTimeout( () => {
+
     var formItems = $("#qt-formFO").dxForm("instance")?.option("formData") || {};
     var encodedFolder = encodeURIComponent(`RES\\${ formItems.quotationCode }`);
        $.get(`/api/Document/AttachmentSummary/${formItems.resFK.guid}/${encodedFolder}`, null
@@ -34,7 +38,6 @@
     var dept = "@dept";
          var pageLayout = window.QuotationPage;
         var stateLayout = pageLayout.state;
-             var findRoute = stateLayout.nextStep.flowSteps.find(f => f.fromNodeId == dept && f.stepNo == stateLayout.nextStep.currentStep); $("#qt-btnSubmitBranch_@dept").dxButton({ text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick: function (e) { var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {}; submitNextStep("@dept", stateLayout.nextStep, findRoute, formItems); } });  
         $("#qt-btnSave_@dept").dxButton({ text: "Save", icon: "save", type: "default", onClick:
         function (e) {
               var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};

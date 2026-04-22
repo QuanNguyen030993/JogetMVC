@@ -15,11 +15,13 @@
 </div>
 
 <script>
+                    if (tinymce.get(`pi-remarkBox_@dept`))
+     tinymce.get(`pi-remarkBox_@dept`).remove();
+     TinyMCEElementMaker(`pi-remarkBox_@dept`);
      setTimeout( () => {
      var dept = "@dept";
              var pageLayout = window.PolicyIssuancePage;
        var stateLayout = pageLayout.state;
-      var findRoute = stateLayout.nextStep.flowSteps.find(f => f.fromNodeId == dept  ); $("#pi-btnSubmitBranch_@dept").dxButton({ text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick: function (e) { var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {}; submitNextStep("@dept", stateLayout.nextStep, findRoute, formItems); } });
      $("#pi-btnSave_@dept").dxButton({ text: "Save", icon: "save", type: "default", onClick:
          function (e) {
                var formItems = $(`#pi-form${dept}`).dxForm("instance")?.option("formData") || {};
