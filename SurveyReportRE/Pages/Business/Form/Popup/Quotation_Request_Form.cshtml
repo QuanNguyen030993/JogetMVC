@@ -579,13 +579,14 @@
                 }
             });
 
-            const attachmentStore = new DevExpress.data.ArrayStore({
-                key: "_key",
-                data: vm.attachments
-            });
+            // var attachmentStore = new DevExpress.data.ArrayStore({
+            //     key: "_key",
+            //     data: vm.attachments
+            // });
 
             $("#attachmentGrid").dxDataGrid({
-                dataSource: attachmentStore,
+                dataSource: [],
+                width:"100%",
                 keyExpr: "_key",
                 showBorders: true,
                 columnAutoWidth: true,
@@ -594,88 +595,96 @@
                 noDataText: "No attachment. Click 'Add row' to insert.",
                 paging: false,
                 editing: {
-                    mode: "row",
+                    mode: "cell",
                     allowAdding: true,
-                    allowUpdating: true,
-                    allowDeleting: true,
+                    allowUpdating: false,
+                    allowDeleting: false,
                     useIcons: true
-                },
-                onInitNewRow: function (e) {
-                    Object.assign(e.data, attachmentTemplate());
-                },
-                onRowInserted: function (e) {
-                    if (!e.data._key) e.data._key = generateGUID();
-                    vm.attachments = $("#attachmentGrid").dxDataGrid("instance").option("dataSource").items();
-                    syncAttachmentToForm();
-                },
-                onRowUpdated: function (e) {
-                    vm.attachments = $("#attachmentGrid").dxDataGrid("instance").option("dataSource").items();
-                    syncAttachmentToForm();
-                },
-                onRowRemoved: function (e) {
-                    vm.attachments = $("#attachmentGrid").dxDataGrid("instance").option("dataSource").items();
-                    syncAttachmentToForm();
                 },
                 columns: [
                     {
                         caption: "Upload File",
-                        width: 240,
+                        width: 500,
                         allowSorting: false,
                         allowFiltering: false,
                         cellTemplate: function (container, options) {
-                            const row = options.data;
-
-                            const $wrap = $("<div>").css({
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: "6px"
-                            });
-
-                            const $uploader = $("<div>").appendTo($wrap);
-                            const $meta = $("<div>").addClass("att-file-meta").appendTo($wrap);
-
-                            $uploader.dxFileUploader({
-                                multiple: false,
-                                accept: "*",
-                                uploadMode: "useButtons",
-                                selectButtonText: row.fileName ? "Change File" : "Choose File",
-                                uploadButtonText: "Set File",
-                                labelText: "",
-                                showFileList: false,
-                                onValueChanged: function (e) {
-                                    const file = e.value && e.value.length ? e.value[0] : null;
-                                    if (!file) return;
-
-                                    row.file = file;
-                                    row.fileName = file.name || "";
-                                    row.fileSize = file.size || 0;
-                                    row.fileType = file.type || "";
-
-                                    $meta.text(`${row.fileName} (${formatFileSize(row.fileSize)})`);
-
-                                    const grid = $("#attachmentGrid").dxDataGrid("instance");
-                                    grid.refresh();
-
-                                    vm.attachments = grid.option("dataSource").items();
-                                    syncAttachmentToForm();
-                                },
-                                onUploaded: function (e) {
+                                const row = options.data;
+                                const rowIndex = options.rowIndex;
+                                const newGuid = generateGUID();
+                                const $wrap = $("<div>").css({
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "6px"
+                                });
+                                const uploadId = "uploadFile_" + rowIndex;
+                                const $uploader = $("<div>").attr("id", uploadId).appendTo($wrap);
+                                const $meta = $("<div>").addClass("att-file-meta").appendTo($wrap);
+                                var item = {};
+                                item.editorType = "dxFileUploader";
+                                item.moduleName = "qt";
+                                item.sectionName = "Quotation";
+                                const opts = resolveUploadOptions("uploadFile", item);
+                                $uploader.dxFileUploader({
+                                    multiple: false,
+                                    accept: options.accept || "*/*",
+                                    selectButtonText: "Upload File",
+                                    dropZone: "#" + uploadId,
+                                    labelText: "",
+                                    uploadMode: "instantly",
+                                    uploadUrl: "/api/Document/AsyncUploadFile",
+                                    name: "files",
+                                    showFileList: true,
+                                    uploadHeaders: {
+                                        Folder: opts.folder,
+                                        Guid: newGuid
+                                    },
+                                    onUploadStarted: function (e) {
+                                        $uploader.css("position", "relative");
+                                        $("#" + uploadId + " .previewLoader").remove();
+                                        $("<div>")
+                                            .addClass("previewLoader")
+                                            .appendTo("#" + uploadId)
+                                            .dxLoadPanel({
+                                                message: "File loading...",
+                                                visible: true,
+                                                shading: true,
+                                                shadingColor: "rgba(255,255,255,0.7)",
+                                                showPane: true,
+                                                closeOnOutsideClick: false,
+                                                position: { of: "#" + uploadId }
+                                            });
+                                    },
+                                    onUploaded: function (e) {
+                                        $("#" + uploadId + " .previewLoader").remove();
+                                        let responseObject = {};
+                                        try {
+                                            responseObject = JSON.parse(e.request.response || "{}");
+                                        } catch (ex) {
+                                            console.error("Response parse error", ex);
+                                        }
+                                        row.fileGuid = newGuid;
+                                        row.fileName = e.file.name;
+                                        row.fileSize = e.file.size;
+                                        row.fileType = e.file.type;
+                                        row.uploadResponse = responseObject;
+                                        $meta.text(`${row.fileName} (${formatFileSize(row.fileSize)})`);
+                                    },
+                                    onUploadError: function (e) {
+                                        $("#" + uploadId + " .previewLoader").remove();
+                                        $meta.text("Upload failed");
+                                        console.error(e);
+                                    }
+                                });
+                                if (row.fileName) {
+                                    $meta.text(`${row.fileName} (${formatFileSize(row.fileSize || 0)})`);
                                 }
-                            });
-
-                            if (row.fileName) {
-                                $meta.text(`${row.fileName} (${formatFileSize(row.fileSize)})`);
-                            } else {
-                                $meta.text("No file selected");
-                            }
-
-                            $(container).append($wrap);
+                                $(container).append($wrap);
                         }
                     },
                     {
                         dataField: "attachmentType",
                         caption: "Document Type",
-                        width: 220,
+                        width: 240,
                         lookup: {
                             dataSource: ATTACHMENT_TYPES,
                             valueExpr: "id",
@@ -684,26 +693,6 @@
                         validationRules: [
                             { type: "required", message: "Document Type is required" }
                         ]
-                    },
-                    {
-                        dataField: "fileName",
-                        caption: "File Name",
-                        allowEditing: false,
-                        minWidth: 220
-                    },
-                    {
-                        dataField: "fileSize",
-                        caption: "Size",
-                        width: 110,
-                        allowEditing: false,
-                        calculateDisplayValue: function (rowData) {
-                            return formatFileSize(rowData.fileSize);
-                        }
-                    },
-                    {
-                        dataField: "note",
-                        caption: "Note",
-                        minWidth: 180
                     }
                 ],
                 toolbar: {

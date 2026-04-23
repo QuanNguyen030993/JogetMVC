@@ -433,12 +433,38 @@
                         quotationData.StartingDept = "FO";
                         //quotationData.LineId = submitSummaryData.lineId;
                         //quotationData.ProductId = submitSummaryData.productId;
-                        ajaxPost('/api/Quotation/CreateQuotation', quotationData, {
-                            onSuccess: function (response) {
+                        var uploader = $("#uploadFile").dxFileUploader("instance");
+                        var files = uploader.option("value");
+
+          
+
+                        // ajaxPost('/api/Quotation/CreateQuotation', quotationData, {
+                        //     onSuccess: function (response) {
+                        //     },
+                        //     onError: function (err) {
+                        //     }
+                        // });
+
+
+                        var formData = new FormData();
+                        formData.append("QuotationData",JSON.stringify(quotationData));
+                        for (var i = 0; i < files.length; i++) {
+                            formData.append("Files", files[i]);
+                        }
+                        $.ajax({
+                            url: "/api/Quotation/CreateQuotation",
+                            type: "POST",
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                            success: function (res) {
+                                console.log("Quotation created successfully", res);
                             },
-                            onError: function (err) {
+                            error: function (xhr) {
+                                console.error("CreateQuotation failed", xhr.responseText);
                             }
                         });
+
                         if (submitSummaryData.surveyNeeded) {
                             var notificationData = new Object();
                             notificationData.Notification = new Object();

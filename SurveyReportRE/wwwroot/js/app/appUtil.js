@@ -6469,6 +6469,9 @@ function createAttachmentItem(x, onDeleted) {
         }
         if (ext === "docx" || ext === "doc")
             openWordPreviewPopup(id);
+        if (ext === "jpg" || ext === "jpeg" || ext === "png")
+            openImagePreviewPopup(id);
+
         //if (ext === "docx")
         //    openWordMammothPopup(id);
     });
@@ -7353,15 +7356,31 @@ async function openWordPreviewPopup(id) {
     popup.show();
 }
 
+async function openImagePreviewPopup(id) {
+    const popup = makePopup("large", "Res");
+    popup.option({
+        width: "80vw",
+        height: "90vh",
+        title: "Image Preview",
+        contentTemplate(container) {
+            var scrollContent = popupStandardContentByScroll($("<img>")
+                .attr("src", `/api/Document/StreamDocument?id=${id}`)
+                .css({ width: '100%', height: 'auto', objectFit: 'cover', borderRadius: '5px' }));
+            scrollContent.appendTo(container);
+        }
+    });
+
+    popup.show();
+}
+
+
 async function openWordMammothPopup(id) {
     const popup = makePopup("large", "Res");
-
     popup.option({
         width: "70vw",
         height: "85vh",
         title: "Word Text Preview",
         contentTemplate(container) {
-
             const $host = $("<div>").css({
                 width: "100%",
                 height: "100%",

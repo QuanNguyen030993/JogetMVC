@@ -194,8 +194,15 @@ public class QuotationController : BaseControllerApi<Quotation>
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateQuotation([FromBody] QuotationRequest quotationData)
+    public async Task<IActionResult> CreateQuotation([FromForm] QuotationRequest quotationData)
     {
+
+        IFormFileCollection files = null;
+        files = ((FormCollection)(Request.Form)).Files;
+        quotationData.QuotationData = JsonConvert.DeserializeObject<QuotationData>(Request.Form["QuotationData"]);
+
+
+     
 
         //Before insert quotation
         Quotation quotation = new Quotation();
@@ -206,15 +213,23 @@ public class QuotationController : BaseControllerApi<Quotation>
         res = await _resRepository.InsertData(res);
 
 
-        JsonConvert.PopulateObject(JsonConvert.SerializeObject(quotationData.Quotation), quotation);
+        JsonConvert.PopulateObject(JsonConvert.SerializeObject(quotationData.QuotationData.Quotation), quotation);
         quotation.QuotationCode = ControllerUtil.GenerateNumberSeq(tableConfig, _formatCodeNoRepository, nameof(Quotation));
         quotation.ResId = res.Id;
         quotation = await _BaseRepository.InsertData(quotation);
 
 
+        if (files != null)
+        {
+            Request.Headers["Folder"] = $@"FO\{quotation.QuotationCode}";
+            Request.Headers["RecordGuid"] = quotation.Guid.ToString();
+            await AsyncUploadFile();
+        }
+
+
         //After insert quotation
         WorkflowDefinition workflowDefinition = new WorkflowDefinition();
-        workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(s => s.Id == quotationData.WorkflowDefinitionId);
+        workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(s => s.Id == quotationData.QuotationData.WorkflowDefinitionId);
 
 
         InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
@@ -229,7 +244,7 @@ public class QuotationController : BaseControllerApi<Quotation>
 
 
 
-        StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.StepNo == 1 && s.FromNodeId == quotationData.StartingDept);
+        StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.StepNo == 1 && s.FromNodeId == quotationData.QuotationData.StartingDept);
 
         SubmitRequest submitRequest = new SubmitRequest();
         submitRequest.StepsWorkflow = stepsWorkflow;

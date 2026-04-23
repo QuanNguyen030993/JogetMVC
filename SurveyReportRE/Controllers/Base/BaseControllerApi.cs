@@ -665,7 +665,7 @@ namespace ERPCore.Controllers.Base
                     Document attachment = new Document();
                     Attachment attachmentForm = new Attachment();
                     attachment.SubDirectory = Path.Combine(folder, $"{unixMilliseconds}_{file.FileName}") ;
-                    attachment.RecordGuid = Guid.Parse(guid);
+                    attachment.RecordGuid = guid != null ? Guid.Parse(guid) : null;
                     attachment.FileName = file.FileName;
                     attachment.FileType = System.IO.Path.GetExtension(file.FileName);
                     attachment.Size = file.Length;

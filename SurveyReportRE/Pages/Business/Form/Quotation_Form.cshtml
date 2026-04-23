@@ -1016,26 +1016,26 @@ Note:
             }
         }
 
-        // function bindSectionHeaderToggle() {
-        //     $.each(qtDeptModuleCode, function (deptIndex, dept) {
-        //         var $sec = $(`#${formModuleKeyQt}-sec${dept}`);
-        //         if (!$sec.length) return;
+        function bindSectionHeaderToggle() {
+            $.each(qtDeptModuleCode, function (deptIndex, dept) {
+                var $sec = $(`#${formModuleKeyQt}-sec${dept}`);
+                if (!$sec.length) return;
 
-        //         $sec.find(".dept-header").off("click.sec").on("click.sec", function (e) {
-        //             if ($(e.target).closest("a,button,.dx-button").length) return;
-        //             var isCollapsed = $sec.hasClass("collapsed");
-        //             setSectionCollapsed(dept, !isCollapsed);
-        //         });
+                $sec.find(".dept-header").off("click.sec").on("click.sec", function (e) {
+                    if ($(e.target).closest("a,button,.dx-button").length) return;
+                    var isCollapsed = $sec.hasClass("collapsed");
+                    setSectionCollapsed(dept, !isCollapsed);
+                });
 
-        //         $(`#${formModuleKeyQt}-expandCollapsedBtn_${dept}`).dxButton({
-        //             onClick: function () {
-        //                 var isCollapsed = $sec.hasClass("collapsed");
-        //                 setSectionCollapsed(dept, !isCollapsed);
+                $(`#${formModuleKeyQt}-expandCollapsedBtn_${dept}`).dxButton({
+                    onClick: function () {
+                        var isCollapsed = $sec.hasClass("collapsed");
+                        setSectionCollapsed(dept, !isCollapsed);
 
-        //             }
-        //         });
-        //     });
-        // }
+                    }
+                });
+            });
+        }
 
         const HoverAjax = (function () {
             function debounce(fn, wait) {
@@ -1607,7 +1607,7 @@ Note:
         });
 
         HoverAjax.bind();
-        // bindSectionHeaderToggle();
+        bindSectionHeaderToggle();
         // bindQuoteCardClick();
         // bindInfiniteScroll();
         setupDeptTree();
