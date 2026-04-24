@@ -30,6 +30,7 @@ using ERPCore.Models.Migration.Business.Data;
 using System.Reflection;
 using System.Dynamic;
 using ERPCore.Models;
+using Document = ERPCore.Models.Migration.Business.Data.Document;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -51,6 +52,7 @@ public class QuotationController : BaseControllerApi<Quotation>
     private readonly IBaseRepository<Res> _resRepository;
     private readonly IBaseRepository<QuotationCommentLog> _quotationCommentLogRepository;
     private readonly IBaseRepository<StepsWorkflow> _stepsWorkflowRepository;
+    private readonly IBaseRepository<Document> _documentRepository;
     private readonly IHubContext<FileProcessingHub> _hubContext;
     private readonly ILogger<Quotation> _logger;
     private readonly IConfigurationSection path;
@@ -94,6 +96,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         _resRepository = new BaseRepository<Res>(configuration, _httpContextAccessor);
         _quotationCommentLogRepository = new BaseRepository<QuotationCommentLog>(configuration, _httpContextAccessor);
         _stepsWorkflowRepository = new BaseRepository<StepsWorkflow>(configuration, _httpContextAccessor);
+        _documentRepository = new BaseRepository<Document>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
 
         _hubContext = hubContext;
@@ -231,16 +234,16 @@ public class QuotationController : BaseControllerApi<Quotation>
         WorkflowDefinition workflowDefinition = new WorkflowDefinition();
         workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(s => s.Id == quotationData.QuotationData.WorkflowDefinitionId);
 
-
-        InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
-        instanceWorkflow.RecordGuid = quotation.Guid;
-        instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
-        instanceWorkflow.CurrentStep = 2;
-        instanceWorkflow.CurrentStepId = new Guid();
-        instanceWorkflow.IsCancelled = false;
-        instanceWorkflow.IsCompleted = false;
-        instanceWorkflow = await _instanceWorkflowRepository.InsertData(instanceWorkflow);
-
+        if (workflowDefinition != null)
+        {
+            InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
+            instanceWorkflow.RecordGuid = quotation.Guid;
+            instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
+            instanceWorkflow.CurrentStep = 2;
+            instanceWorkflow.CurrentStepId = new Guid();
+            instanceWorkflow.IsCancelled = false;
+            instanceWorkflow.IsCompleted = false;
+            instanceWorkflow = await _instanceWorkflowRepository.InsertData(instanceWorkflow);
 
 
 
@@ -253,11 +256,86 @@ public class QuotationController : BaseControllerApi<Quotation>
 
         await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
 
-
+        }
 
         return Ok(quotation);
     }
+    [HttpPost]
+    public async Task<IActionResult> CloneQuotation([FromForm] QuotationRequest quotationData)
+    {
 
+        quotationData.QuotationData = JsonConvert.DeserializeObject<QuotationData>(Request.Form["QuotationData"]);
+
+        QuotationTmp quotationTmp = new QuotationTmp();
+        quotationTmp = quotationData.QuotationData.QuotationTmp;
+        if (quotationData.QuotationData.QuotationTmp != null)
+        {
+            //Before insert quotation
+            Quotation quotation = new Quotation();
+            long? oldQuotationId = quotationData.QuotationData.QuotationTmp.OldQuotationId;
+            quotation = await _BaseRepository.GetSingleObjectFullInclude(s => s.Id == oldQuotationId);
+            quotation = await _BaseRepository.IncludeListsOnly(quotation);
+            Res res = new Res();
+            res = await _resRepository.InsertData(quotation?.ResFK);
+
+            quotation.PIC = quotationData.QuotationData.QuotationTmp.PIC;
+            quotation.QuotationCode = quotationData.QuotationData.QuotationTmp.QuotationCode;
+            quotation.Id = 0;
+
+            //Backup case for update header quotation -> consider
+            //JsonConvert.PopulateObject(JsonConvert.SerializeObject(quotationData.QuotationData.QuotationTmp), quotation);
+            quotation.ResId = res.Id;
+
+            quotation = await _BaseRepository.InsertData(quotation);
+
+            foreach (Document document in quotation.Documents) 
+            {
+                Document doc = new Document();
+                JsonConvert.PopulateObject(JsonConvert.SerializeObject(document), doc);
+                
+                doc.RecordGuid = quotation.Guid;
+                doc.Guid = new Guid();
+                doc.SubDirectory = $"Quotation\\{quotation.QuotationCode}";
+
+                await CloneFileAndData(doc, $"Quotation\\{quotationTmp.OldQuotationCode}", document.Guid.ToString(), document.FileType);
+
+            }
+            
+
+
+
+            //After insert quotation
+            WorkflowDefinition workflowDefinition = new WorkflowDefinition();
+            workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(s => s.Id == quotationData.QuotationData.WorkflowDefinitionId); //!!!!!
+
+            if (workflowDefinition != null)
+            {
+                InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
+                instanceWorkflow.RecordGuid = quotation.Guid;
+                instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
+                instanceWorkflow.CurrentStep = 2;
+                instanceWorkflow.CurrentStepId = new Guid();
+                instanceWorkflow.IsCancelled = false;
+                instanceWorkflow.IsCompleted = false;
+                instanceWorkflow = await _instanceWorkflowRepository.InsertData(instanceWorkflow);
+
+
+
+            StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.StepNo == 1 && s.FromNodeId == quotationData.QuotationData.StartingDept);
+
+            SubmitRequest submitRequest = new SubmitRequest();
+            submitRequest.StepsWorkflow = stepsWorkflow;
+            submitRequest.Comment = $"{quotation.QuotationCode} created!";
+            submitRequest.InstanceWorkflow = instanceWorkflow;
+                await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
+            }
+
+
+            return Ok();
+        }
+
+        return Ok();
+    }
 
     [HttpGet("{guid}")]
     public async Task<IActionResult> GetQuotationWorkflowDefinition(Guid guid)

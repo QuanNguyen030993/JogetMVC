@@ -559,36 +559,37 @@ var MGridOption = class MGridOption {
                 columnChooser: { allowSearch: true, enabled: true },
                 columnFixing: { enabled: true },
                 sorting: { mode: 'multiple' },
-                rowDragging: {
-                    allowReordering: false,
-                    onReorder: function (e) {
-                        const gridInstance = e.component;
-                        const dataSource = gridInstance.getDataSource();
+                //rowDragging: {
+                //    allowReordering: false,
+                //    onReorder: function (e) {
+                //        const gridInstance = e.component;
+                //        const dataSource = gridInstance.getDataSource();
 
-                        let visibleRows = gridInstance.getVisibleRows();
+                //        let visibleRows = gridInstance.getVisibleRows();
 
-                        const fromIndex = dataSource._items.findIndex((item) => item.id === e.itemData.id);
-                        const toIndex = dataSource._items.findIndex((item) => item.id === visibleRows[e.toIndex].data.id);
+                //        const fromIndex = dataSource._items.findIndex((item) => item.id === e.itemData.id);
+                //        const toIndex = dataSource._items.findIndex((item) => item.id === visibleRows[e.toIndex].data.id);
 
-                        const movedItem = dataSource._items.splice(fromIndex, 1)[0];
-                        dataSource._items.splice(toIndex, 0, movedItem);
+                //        const movedItem = dataSource._items.splice(fromIndex, 1)[0];
+                //        dataSource._items.splice(toIndex, 0, movedItem);
 
-                        const updatedData = dataSource._items.map((item, index) => ({
-                            id: item.id,
-                            rowOrder: index + 1
-                        }));
-                        $.each(updatedData, function (_, row) {
-                            dataSource.store().update(row.id, { rowOrder: row.rowOrder })
-                                .then(() => {
-                                })
-                                .catch(error => console.error("Error updating rowOrder:", error));
-                        });
+                //        const updatedData = dataSource._items.map((item, index) => ({
+                //            id: item.id,
+                //            rowOrder: index + 1
+                //        }));
+                //        $.each(updatedData, function (_, row) {
+                //            dataSource.store().update(row.id, { rowOrder: row.rowOrder })
+                //                .then(() => {
+                //                })
+                //                .catch(error => console.error("Error updating rowOrder:", error));
+                //        });
 
-                        dataSource.reload().then(() => {
-                            gridInstance.refresh();
-                        });
-                    }
-                },
+                //        dataSource.reload().then(() => {
+                //            gridInstance.refresh();
+                //        });
+                //    }
+                //},
+                rowDragging: null,
                 keyExpr: (gridDataSource instanceof DevExpress.data.DataSource || gridDataSource instanceof DevExpress.data.CustomStore) ? null : (fetchConfig?.keyExpr ?? "id"),
                 //scrolling: { mode: 'infinite', showScrollbar: 'always' },
                 scrolling: {
@@ -651,6 +652,7 @@ var MGridOption = class MGridOption {
                 onContextMenuPreparing: tryExecute(this.onContextMenuPreparing.bind(this)),
                 //onDataErrorOccurred: tryExecute(this.onDataErrorOccurred.bind(this))
                 onCellPrepared: tryExecute(this.onCellPrepared.bind(this)),
+                selection: { mode: "single" },
                 //onCellHoverChanged: tryExecute(this.onCellHoverChanged.bind(this)),
                  //,onRowClick: function (e) {
                 //    if (e.rowType == 'group') {
@@ -670,8 +672,8 @@ var MGridOption = class MGridOption {
 
             if (!properties.editing.allowAdding && !properties.editing.allowUpdating && !properties.editing.allowDeleting)
                 this.isAllowRowMenu = false;
-            else
-                properties.rowDragging.allowReordering = true;
+            //else
+            //    properties.rowDragging.allowReordering = true;
 
 
             if (that.Params)

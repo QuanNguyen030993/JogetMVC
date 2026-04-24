@@ -886,7 +886,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
         {
             var entityType = typeof(T);
             var properties = entityType.GetProperties();
-
+            bool isSuccess = false;
             foreach (var property in properties)
             {
                 if (property.PropertyType.IsGenericType &&
@@ -911,6 +911,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
                         var list = (IList)Activator.CreateInstance(listType);
                         foreach (var item in result)
                         {
+                            isSuccess = true;
                             list.Add(item);
                         }
 
@@ -920,6 +921,47 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
                           ("@QueryString", $"IncludeListsOnly: {sql}")
                           , ("@Duration", "")
                           , ("@User", userName));
+                    }
+                }
+            }
+
+            if (!isSuccess )
+            {
+                foreach (var property in properties)
+                {
+                    if (property.PropertyType.IsGenericType &&
+                        property.PropertyType.GetGenericTypeDefinition() == typeof(List<>))
+                    {
+                        var listItemType = property.PropertyType.GetGenericArguments()[0];
+
+                        var foreignKeyProperty = listItemType.GetProperty($"RecordGuid");
+                        if (foreignKeyProperty != null)
+                        {
+                            var tableName = listItemType.Name;
+                            var parentId = entity.GetType().GetProperty("Guid")?.GetValue(entity);
+                            string parentField = $"RecordGuid";
+                            var sql = Util.BuildSelectQuery<T>(tableName, parentField);
+
+                            var result = await connection.QueryAsync(listItemType, sql, new { Id = parentId });
+
+
+
+                            // Khởi tạo List mới và gán các kết quả truy vấn vào List này
+                            var listType = typeof(List<>).MakeGenericType(listItemType);
+                            var list = (IList)Activator.CreateInstance(listType);
+                            foreach (var item in result)
+                            {
+                                isSuccess = true;
+                                list.Add(item);
+                            }
+
+                            // Gán lại List vào thuộc tính của entity
+                            property.SetValue(entity, list);
+                            Util.QueryLogs(_connectionString, "sp_Querylogs",
+                              ("@QueryString", $"IncludeListsOnly: {sql}")
+                              , ("@Duration", "")
+                              , ("@User", userName));
+                        }
                     }
                 }
             }

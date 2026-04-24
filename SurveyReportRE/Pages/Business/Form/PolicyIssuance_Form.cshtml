@@ -710,7 +710,6 @@ Note:
                 .then(instance => {
                     return ajaxGet(`/api/StepsWorkflow/GetNextStep/${instance?.workflowDefinitionId ?? "00000000-0000-0000-0000-000000000000"}/${instance?.currentStep ?? 0}`, null)
                         .then(data => {
-                            debugger
                             state.nextStep.instanceWorkflow = instance;
                             state.nextStep.flowSteps = data;
                             state.nextStep.currentStep = instance?.currentStep ?? 0;
@@ -1285,7 +1284,6 @@ Note:
                     if (!q) return;
                     selectedId = q.id ?? null;
                     selectedGuid = q.guid ?? null;
-                    debugger
                     selectedFromGuid = q.copyFromGuid ?? null;
                     selectedAttachmentId = q.documentId ?? null;
                     selectedCodeNo = q.policyIssuanceCode ?? null;

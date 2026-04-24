@@ -8,7 +8,8 @@ public class QuotationTmp : BaseModel
     public string? RequestNo { get; set; } = "";                 // c_qrNum
     public string? RequestRefNo { get; set; } = "";              // c_refNum
     public string? QuotationCode { get; set; } = "";             // c_jogetQuoNum
-
+    public string? OldQuotationCode { get; set; } = "";             // c_jogetQuoNum
+    public long? OldQuotationId { get; set; } = 0;
     public DateTime? RequestedDate { get; set; }           // c_reqDate
     public DateTime? DueDate { get; set; }                 // c_dueDate
 
@@ -270,7 +271,11 @@ public class QuotationTmp : BaseModel
     public string? WorkflowStatus { get; set; } = "";
     public string? QuotationStatus { get; set; } = "";
     public string? PIC { get; set; } = "";
-
+    public string? PICFO { get; set; } = "";
+    public string? PICTS { get; set; } = "";
+    public string? PICUW { get; set; } = "";
+    public string? PICLMKT { get; set; } = "";
+    public string? PICPM { get; set; } = "";
     public long? ProductId { get; set; }
     public string? ProductCode { get; set; } = "";
     public long? LineId { get; set; }

@@ -33,20 +33,21 @@ using ERPCore.Models;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
-public class QuotationTmpController : BaseControllerApi<Quotation>
+public class QuotationTmpController : BaseControllerApi<QuotationTmp>
 {
-    private readonly IBaseRepository<Quotation> _BaseRepository;
+    private readonly IBaseRepository<QuotationTmp> _BaseRepository;
+    private readonly IBaseRepository<FormatCodeNo> _formatCodeNoRepository;
     private readonly IConfiguration configuration;
     private readonly IHubContext<FileProcessingHub> _hubContext;
-    private readonly ILogger<Quotation> _logger;
+    private readonly ILogger<QuotationTmp> _logger;
     private readonly IConfigurationSection path;
     private readonly IHttpContextAccessor _httpContextAccessor; 
     private MailConfig _emailSettings;
     private readonly Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> _blobStorageSettings;
-    public QuotationTmpController(IBaseRepository<Quotation> BaseRepository
+    public QuotationTmpController(IBaseRepository<QuotationTmp> BaseRepository
         , IConfiguration config
         , IHttpContextAccessor httpContextAccessor
-        , ILogger<Quotation> logger
+        , ILogger<QuotationTmp> logger
         , Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> blobStorageSettings
          , IHubContext<FileProcessingHub> hubContext
         ) : base(BaseRepository, httpContextAccessor
@@ -59,7 +60,28 @@ public class QuotationTmpController : BaseControllerApi<Quotation>
         _hubContext = hubContext;
         _blobStorageSettings = blobStorageSettings;
         _logger = logger;
+        _formatCodeNoRepository = new BaseRepository<FormatCodeNo>(configuration, httpContextAccessor);
     }
 
 
+    [HttpPost]
+    public override async Task<IActionResult> InsertData([FromForm] InsertFormCollection form)
+    {
+        var entity = new QuotationTmp();
+        JsonConvert.PopulateObject(form.values, entity);
+        PICAttributes pICAttributes = new PICAttributes();
+        pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(entity.PIC);
+        List<FormatCodeNo> tableConfig = new List<FormatCodeNo>();
+        tableConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(Quotation) + "Code");
+        entity.OldQuotationCode = entity.QuotationCode;
+        entity.OldQuotationId = entity.Id;
+        entity.QuotationCode = ControllerUtil.GenerateNumberSeq(tableConfig, _formatCodeNoRepository, nameof(Quotation));
+        entity.PICFO   = pICAttributes?.FO  ?? ""  ;
+        entity.PICTS   = pICAttributes?.TS ?? "";
+        entity.PICUW   = pICAttributes?.UW ?? "";
+        entity.PICLMKT = pICAttributes?.LMKT ?? "";
+        entity.PICPM = pICAttributes?.PM ?? "";
+        entity = await _BaseRepository.InsertData(entity);
+        return Ok(entity);
+    }
 }

@@ -2145,6 +2145,7 @@
      var QuotationGridOption = class QuotationGridOption extends MGridOption {
         constructor(modelName, gridType, params) {
             super(modelName, gridType, params);
+            this.Params = params;
         };
 
         onCustomizeColumns(columns) {
@@ -2204,7 +2205,186 @@
           
            
         }
+         onToolbarPreparing(e) {
+            var that = this 
+            if (that.Params.isAllowRowMenu ?? false)
+            {
+                super.onToolbarPreparing(e);
+            }
+            if (that.Params.isShowingRenewButton ?? false)
+            {
+                e.toolbarOptions.items.unshift({
+                    location: "after",
+                    widget: "dxButton",
+                    options: {
+                        text: "Renew List",
+                        onClick: function (e) {
+                            var mGridOption = new Object();
+                            mGridOption.isAllowRowMenu = false;
+                            mGridOption.isShowingRenewButton = false;
 
+                            var mGrid = new MGrid(null, $(`#dataGrid_@QuotationModel.ModelName`), new QuotationGridOption('@QuotationModel.ModelName', "User", mGridOption), null);
+                            var DS = mGrid.component.getDataSource();
+                                // 👉 Tính ngày hiện tại + 2 tháng
+                            var today = new Date();
+                            var twoMonthsLater = new Date(today);
+                            twoMonthsLater.setMonth(today.getMonth() + 2);
+                            // 👉 Apply filter
+
+
+                             DS.filter([["inceptionDate", ">=", today] ,["inceptionDate", "<=", twoMonthsLater]]);
+                              mGrid.component.option("selection", { mode: "multiple"});
+                              mGrid.component.option("editing",   {
+                                allowUpdating: false,
+                                allowAdding: false,
+                                allowDeleting: false
+                            });
+                            mGrid.component.option("dataSource", DS);
+                            var popupInstance = makePopupWithScroll(
+                                mGrid.container
+                                ,"medium", "Renew quotation list");
+                                popupInstance.option("toolbarItems[0].options.onClick", function () {
+                                    popupInstance.hide();
+                                var that = new Object();
+                                 that.ModelName = "QuotationTmp";
+                                var TmpDataSource = makeBasicDataSource(that,true);
+                            
+                                var store = TmpDataSource;
+                                var seletedRows =  mGrid.component.getSelectedRowsData();
+                                $.each(seletedRows , function(itemIndex, item) {
+                                         store.insert(item)
+                                        .done(function () {
+                                        })
+                                        .fail(function (error) {
+                                        });
+                                });
+                                });
+                            popupInstance.show();
+                        },
+                        onInitialized: function (args) {
+                            this.btnExportInstance = args.component;
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+     var PrepareListGridOption = class PrepareListGridOption extends MGridOption {
+        constructor(modelName, gridType, params) {
+            super(modelName, gridType, params); 
+        };
+
+        onCustomizeColumns(columns) {
+            var that = this;
+            super.onCustomizeColumns(columns);
+
+
+            super.hyperLinkCode(columns, "Business/Form", "Quotation", "id", "quotationCode");
+            $.each(columns, function (colIndex, col) {
+                $.each(qtDeptModuleCode,function (itemInd, item){
+                     if (col.dataField === `pic${item}`) {
+                    col.cellTemplate = function (container, options) {
+                    return $(`<div>`).text(JSON.parse(options.data.pic)[item]).appendTo(container);
+                }
+            }
+                });
+
+
+            if (col.dataField === "quotationStatus")
+            {
+                col.cellTemplate = function (container, options) {
+                var raw = options.value;
+
+                var st = normalizeStatus(raw); // dùng lại hàm bạn đã có
+
+                var html = `
+                    <div class="statusTag ${st.css}">
+                        ${st.text}
+                    </div>
+                `;
+
+                $(container).append(html);
+            };
+                }
+                if (col.dataField === "pic")
+                {
+                    col.cssClass = "col-pic-rows";
+                    col.allowSorting = false;
+                    col.width = 500;
+                    // Cho search / filter contains hoạt động trên chuỗi PIC đã parse
+                    // col.calculateDisplayValue = function (rowData) {
+                    //     return buildPicSearchText(rowData.pic);
+                    // };
+                      // phần này phục vụ search/filter
+                    col.calculateCellValue = function (rowData) {
+                        return buildPicCategorySearchText(rowData.pic);
+                    };
+
+                    // phần này phục vụ render đẹp
+                    col.cellTemplate = function (container, options) {
+                        $(container)
+                            .attr("title", buildPicCategorySearchText(options.data.pic))
+                            .append(renderPicInline(options.data.pic));
+                    };
+                    // Nếu muốn filter row theo contains chắc hơn
+                    // col.calculateFilterExpression = function (filterValue, selectedFilterOperation) {
+                    //     debugger
+                    //     const op = selectedFilterOperation || "contains";
+                    //     return [[this.dataField], op, filterValue];
+                    // };
+
+                    // col.cellTemplate = function (container, options) {
+                    //     $(container).append(renderPicInline(options.value));
+                    // };
+                }
+
+            });
+
+
+        }
+        onToolbarPreparing(e) {
+            var that = this
+            super.onToolbarPreparing(e);
+            e.toolbarOptions.items.unshift({
+                location: "after",
+                widget: "dxButton",
+                options: {
+                    text: "Prepare Quotation",
+                    onClick: function (e) {
+                        debugger
+                        var seletedRows =  that.component.getSelectedRowsData();
+                        $.each(seletedRows, function(rowIndex, row) {
+                        
+                        var quotationData = new Object();
+                        quotationData.QuotationTmp = new Object();
+                        quotationData.QuotationTmp = row;
+
+                        var formData = new FormData();
+                        formData.append("QuotationData",JSON.stringify(quotationData));
+
+                            $.ajax({
+                                url: "/api/Quotation/CloneQuotation",
+                                type: "POST",
+                                data: formData,
+                                processData: false,
+                                contentType: false,
+                                success: function (res) {
+                                    // console.log("Quotation created successfully", res);
+                                },
+                                error: function (xhr) {
+                                    console.error("Clone Quotation failed", xhr.responseText);
+                                }
+                            });
+                        });
+
+                    },
+                    onInitialized: function (args) {
+                        this.btnExportInstance = args.component;
+                    }
+                }
+            });
+        }
     }
 
          var PolicyIssuanceGridOption = class PolicyIssuanceGridOption extends MGridOption {

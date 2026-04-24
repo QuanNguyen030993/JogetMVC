@@ -13,7 +13,7 @@ namespace ERPCore.Models.Request
     public class QuotationData
     {
         public Quotation? Quotation { get; set; }
-       
+        public QuotationTmp? QuotationTmp { get; set; }
         public long? WorkflowDefinitionId { get; set; }
         public string StartingDept { get; set; }
     }

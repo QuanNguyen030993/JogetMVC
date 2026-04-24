@@ -636,43 +636,25 @@ namespace ERPCore.Controllers.Base
 
 
         [HttpPost]
-        public virtual async Task<IActionResult> CloneFileAndData(Document cloneDocument)
+        public virtual async Task<IActionResult> CloneFileAndData(Document cloneDocument, string sourceFolder, string oldGuid,string oldFileType)
         {// Use blog settings while override this method instead
             var path = BLOB_PATH;
             IBaseRepository<Document> _documentRepository = new BaseRepository<Document>(_BaseRepository._baseConfiguration, _httpContextAccessor);
-            //var storageFolder = _blobStorageSettings.CurrentValue.Path;
-            IFormFileCollection files = null;
-            files = ((FormCollection)(Request.Form)).Files;
-            string folder = Request.Headers["Folder"];
-            string guid = Request.Headers["RecordGuid"];
-            IFormFile file = null;
-            file = files.FirstOrDefault();
-            if (file != null && file.Length > 0)
+            string folder = sourceFolder;
+            string guid = cloneDocument.RecordGuid.ToString();
+            if (System.IO.File.Exists(Path.Combine(path, folder, $"{oldGuid}{oldFileType}")))
             {
-                using (var ms = new MemoryStream())
-                {
-                    file.CopyTo(ms);
-                    var fileBytes = ms.ToArray();
+                    var fileBytes = System.IO.File.ReadAllBytes(Path.Combine(path, folder, $"{oldGuid}{oldFileType}"));
                     var unixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                     string s = Convert.ToBase64String(fileBytes);
                     if (!System.IO.Directory.Exists(BLOB_PATH))
                         Directory.CreateDirectory(BLOB_PATH);
-                    if (!System.IO.Directory.Exists(Path.Combine(BLOB_PATH, folder)))
-                        Directory.CreateDirectory(Path.Combine(BLOB_PATH, folder));
+                    if (!System.IO.Directory.Exists(Path.Combine(BLOB_PATH, cloneDocument.SubDirectory)))
+                        Directory.CreateDirectory(Path.Combine(BLOB_PATH, cloneDocument.SubDirectory));
+                cloneDocument = await _documentRepository.InsertData(cloneDocument);
+                System.IO.File.WriteAllBytes(Path.Combine(path, cloneDocument.SubDirectory, $"{cloneDocument.Guid}{cloneDocument.FileType}"), fileBytes);
 
-                    Document document = new Document();
-                    Attachment attachmentForm = new Attachment();
-                    document.SubDirectory = Path.Combine(folder);
-                    document.RecordGuid = guid != null ? Guid.Parse(guid) : null;
-                    document.FileName = file.FileName;
-                    document.FileType = System.IO.Path.GetExtension(file.FileName);
-                    document.Size = file.Length;
-                    document = await _documentRepository.InsertData(document);
-                    //AttachmentForm attachmentForm = ControllerHelper.BindingAttachmentForm(attachment, BLOB_PATH);
-                    System.IO.File.WriteAllBytes(Path.Combine(path, folder, $"{document.Guid}{document.FileType}"), fileBytes);
-
-                    return Ok(new { success = true, message = "File uploaded successfully", attachment = attachmentForm });
-                }
+                    return Ok(new { success = true, message = "File uploaded successfully", attachment = cloneDocument });
             }
             else
                 return Ok(new { success = false, message = "No file uploaded" });
