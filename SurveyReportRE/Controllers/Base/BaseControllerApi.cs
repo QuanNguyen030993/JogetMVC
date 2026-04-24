@@ -309,7 +309,7 @@ namespace ERPCore.Controllers.Base
                 Document attachment = await _attachmentRepository.GetObjectByIdAsync(id);
                 if (attachment != null)
                 {
-                     string fullPath = System.IO.Path.Combine(BLOB_PATH, attachment.SubDirectory);
+                     string fullPath = System.IO.Path.Combine(BLOB_PATH, attachment.SubDirectory, attachment.Guid.ToString()+ attachment.FileType);
                     try
                     {
                         if (attachment == null)
@@ -633,15 +633,13 @@ namespace ERPCore.Controllers.Base
             var pathToFile = ControllerUtil.ControllerUtil.GetWebFile(env, folder, filename);
             return JsonConvert.DeserializeObject<IEnumerable<T>>(Util.GetJsonString(pathToFile)).ToList();
         }
-        #endregion
 
-        #region POST API 
 
         [HttpPost]
-        public virtual async Task<IActionResult> AsyncUploadFile()
+        public virtual async Task<IActionResult> CloneFileAndData(Document cloneDocument)
         {// Use blog settings while override this method instead
             var path = BLOB_PATH;
-            IBaseRepository<Document> _attachmentRepository = new BaseRepository<Document>(_BaseRepository._baseConfiguration, _httpContextAccessor);
+            IBaseRepository<Document> _documentRepository = new BaseRepository<Document>(_BaseRepository._baseConfiguration, _httpContextAccessor);
             //var storageFolder = _blobStorageSettings.CurrentValue.Path;
             IFormFileCollection files = null;
             files = ((FormCollection)(Request.Form)).Files;
@@ -662,16 +660,16 @@ namespace ERPCore.Controllers.Base
                     if (!System.IO.Directory.Exists(Path.Combine(BLOB_PATH, folder)))
                         Directory.CreateDirectory(Path.Combine(BLOB_PATH, folder));
 
-                    Document attachment = new Document();
+                    Document document = new Document();
                     Attachment attachmentForm = new Attachment();
-                    attachment.SubDirectory = Path.Combine(folder, $"{unixMilliseconds}_{file.FileName}") ;
-                    attachment.RecordGuid = guid != null ? Guid.Parse(guid) : null;
-                    attachment.FileName = file.FileName;
-                    attachment.FileType = System.IO.Path.GetExtension(file.FileName);
-                    attachment.Size = file.Length;
-                    attachment = await _attachmentRepository.InsertData(attachment);
+                    document.SubDirectory = Path.Combine(folder);
+                    document.RecordGuid = guid != null ? Guid.Parse(guid) : null;
+                    document.FileName = file.FileName;
+                    document.FileType = System.IO.Path.GetExtension(file.FileName);
+                    document.Size = file.Length;
+                    document = await _documentRepository.InsertData(document);
                     //AttachmentForm attachmentForm = ControllerHelper.BindingAttachmentForm(attachment, BLOB_PATH);
-                    System.IO.File.WriteAllBytes(Path.Combine(path, folder, $"{unixMilliseconds}_{file.FileName}"), fileBytes);
+                    System.IO.File.WriteAllBytes(Path.Combine(path, folder, $"{document.Guid}{document.FileType}"), fileBytes);
 
                     return Ok(new { success = true, message = "File uploaded successfully", attachment = attachmentForm });
                 }
@@ -679,6 +677,62 @@ namespace ERPCore.Controllers.Base
             else
                 return Ok(new { success = false, message = "No file uploaded" });
         }
+
+
+        #endregion
+
+        #region POST API 
+
+        [HttpPost]
+        public virtual async Task<IActionResult> AsyncUploadFile()
+        {// Use blog settings while override this method instead
+            var path = BLOB_PATH;
+            IBaseRepository<Document> _documentRepository = new BaseRepository<Document>(_BaseRepository._baseConfiguration, _httpContextAccessor);
+            //var storageFolder = _blobStorageSettings.CurrentValue.Path;
+            IFormFileCollection files = null;
+            files = ((FormCollection)(Request.Form)).Files;
+            string folder = Request.Headers["Folder"];
+            string guid = Request.Headers["RecordGuid"];
+            string sectionName = Request.Headers["SectionName"];
+            IFormFile file = null;
+            file = files.FirstOrDefault();
+            if (file != null && file.Length > 0)
+            {
+                using (var ms = new MemoryStream())
+                {
+                    file.CopyTo(ms);
+                    var fileBytes = ms.ToArray();
+                    var unixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                    string s = Convert.ToBase64String(fileBytes);
+                    if (!System.IO.Directory.Exists(BLOB_PATH))
+                        Directory.CreateDirectory(BLOB_PATH);
+                    if (!System.IO.Directory.Exists(Path.Combine(BLOB_PATH, folder)))
+                        Directory.CreateDirectory(Path.Combine(BLOB_PATH, folder));
+
+                    Document document = new Document();
+                    //Attachment attachmentForm = new Attachment();
+                    //document.SubDirectory = Path.Combine(folder, $"{unixMilliseconds}_{file.FileName}") ;
+                    document.SubDirectory = Path.Combine(folder) ;
+                    document.RecordGuid = guid != null ? Guid.Parse(guid) : null;
+                    document.FileName = file.FileName;
+                    document.FileType = System.IO.Path.GetExtension(file.FileName);
+                    document.Size = file.Length;
+                    document.Attributes = JsonConvert.SerializeObject((object)(new { SectionName = sectionName } ));
+                    document = await _documentRepository.InsertData(document);
+                    //AttachmentForm attachmentForm = ControllerHelper.BindingAttachmentForm(attachment, BLOB_PATH);
+                    //System.IO.File.WriteAllBytes(Path.Combine(path, folder, $"{unixMilliseconds}_{file.FileName}"), fileBytes);
+                    System.IO.File.WriteAllBytes(Path.Combine(path, folder, $"{document.Guid}{document.FileType}"), fileBytes);
+
+                    return Ok(new { success = true, message = "File uploaded successfully", attachment = document });
+                }
+            }
+            else
+                return Ok(new { success = false, message = "No file uploaded" });
+        }
+
+
+
+
 
         [HttpPost]
         public virtual async Task<object> ExecuteCustomQuery([FromBody] string query)

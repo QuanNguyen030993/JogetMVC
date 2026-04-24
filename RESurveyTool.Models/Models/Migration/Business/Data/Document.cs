@@ -23,6 +23,7 @@ namespace ERPCore.Models.Migration.Business.Data
         public string SubThumbnailDirectory { get; set; } = "";
         public string AttachmentNote { get; set; } = "";
         public bool? IsPrimary { get; set; } = false;
+        public string Attributes { get; set; } = "";
     }
 
 }

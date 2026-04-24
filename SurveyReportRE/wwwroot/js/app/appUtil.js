@@ -6349,8 +6349,7 @@ function renderDxFileUploader(editorOptions, $container, options) {
                 const opts = resolveUploadOptions(controlId, editorOptions);
                 return uploadFileAjax(file, {
                     url: "/api/Attachment/AsyncUploadFile",
-                    guid: opts.guid,
-                    folder: opts.folder
+                    ...opts
                 });
                
             },
@@ -6572,14 +6571,16 @@ function loadDxFileUploaderAttachments(sectionName, controllerName, editorOption
 }
 
 function buildFolder(latestOptions, sectionName) {
-    return (latestOptions?.sectionName || sectionName) +
+    //return (latestOptions?.sectionName || sectionName) +
+    return (`Quotation`) +
         (latestOptions?.code ? `\\${latestOptions.code}` : "");
 }
 function uploadFileAjax(file, options) {
-
+    debugger
     const url = options.url;
     const guid = options.guid || "";
     const folder = options.folder || "";
+    const sectionName = options.section || "";
 
     const formData = new FormData();
     formData.append("file", file);
@@ -6603,6 +6604,9 @@ function uploadFileAjax(file, options) {
             if (window.appToken) {
                 xhr.setRequestHeader("Authorization", "Bearer " + window.appToken);
             }
+            if (sectionName) {
+                xhr.setRequestHeader("SectionName", sectionName);
+            }
 
         }
     });
@@ -6615,7 +6619,8 @@ function resolveUploadOptions(sectionName,editorOptions) {
         latestOptions.sectionName = latestOptions?.specificFolder;
     return {
         guid: latestOptions.guid || "",
-        folder: buildFolder(latestOptions, sectionName) || ""
+        folder: buildFolder(latestOptions, sectionName) || "",
+        section: sectionName
     };
 
 }
@@ -7369,10 +7374,20 @@ async function openImagePreviewPopup(id) {
             scrollContent.appendTo(container);
         }
     });
-
     popup.show();
 }
-
+function makePopupWithScroll($element,$size,$label) {
+    const popup = makePopup($size, $label);
+    popup.option({
+        width: "80vw",
+        height: "90vh",
+        contentTemplate(container) {
+            var scrollContent = popupStandardContentByScroll($element);
+            scrollContent.appendTo(container);
+        }
+    });
+    return popup;
+}
 
 async function openWordMammothPopup(id) {
     const popup = makePopup("large", "Res");

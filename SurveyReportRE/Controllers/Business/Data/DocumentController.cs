@@ -37,12 +37,12 @@ public class DocumentController : BaseControllerApi<Document>
         try
         {
             Document Document = await _BaseRepository.GetObjectByIdAsync(id);
-            string fullPath = System.IO.Path.Combine(path.Value, Document.SubDirectory);
+            string fullPath = System.IO.Path.Combine(path.Value, Document.SubDirectory, Document.Guid.ToString()+ Document.FileType);
             var mimeTypes = Util.GetMimeType(Document.FileName);
             if (System.IO.File.Exists(fullPath))
             {
                 var fileStream = System.IO.File.OpenRead(fullPath);
-                return File(fileStream, mimeTypes, Path.GetFileName(fullPath));
+                return File(fileStream, mimeTypes, Path.GetFileName(Document.FileName));
             }
             else
             {
@@ -193,8 +193,8 @@ public class DocumentController : BaseControllerApi<Document>
         if (Document != null)
         {
             if (Document.SubDirectory != null)
-                if (System.IO.File.Exists(Path.Combine(path.Value, Document.SubDirectory)))
-                    System.IO.File.Delete(Path.Combine(path.Value, Document.SubDirectory));
+                if (System.IO.File.Exists(Path.Combine(path.Value, Document.SubDirectory, Document.Guid.ToString()+ Document.FileType)))
+                    System.IO.File.Delete(Path.Combine(path.Value, Document.SubDirectory, Document.Guid.ToString()+ Document.FileType));
 
             Document = await _BaseRepository.DeleteData(Document, (int)Document.Id, "Id", true);
         }
@@ -222,7 +222,7 @@ public class DocumentController : BaseControllerApi<Document>
 
         // Lấy toàn bộ rồi filter (vì repo bạn đang có GetAll)
         // Nếu repo có method GetListObject(predicate) thì thay bằng query trực tiếp sẽ nhanh hơn
-        var all = await _BaseRepository.GetListObject(l => l.RecordGuid == recordGuid && l.SubDirectory.Contains(folder));
+        var all = await _BaseRepository.GetListObject(l => l.RecordGuid == recordGuid && l.Attributes.Contains(folder));
 
         var docs = all
             .Where(d => (d.Deleted == null || d.Deleted == false)
@@ -230,15 +230,15 @@ public class DocumentController : BaseControllerApi<Document>
                         && d.RecordGuid.Value == recordGuid)
             .ToList();
 
-        if (!string.IsNullOrEmpty(folder))
-        {
-            var prefix = (folder.EndsWith("\\") ? folder : folder + "\\");
-            docs = docs.Where(d =>
-                    !string.IsNullOrEmpty(d.SubDirectory) &&
-                    d.SubDirectory.Replace("/", "\\")
-                        .StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-        }
+        //if (!string.IsNullOrEmpty(folder))
+        //{
+        //    var prefix = (folder.EndsWith("\\") ? folder : folder + "\\");
+        //    docs = docs.Where(d =>
+        //            !string.IsNullOrEmpty(d.SubDirectory) &&
+        //            d.SubDirectory.Replace("/", "\\")
+        //                .StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        //        .ToList();
+        //}
 
         var result = docs
             .OrderByDescending(d => d.CreatedDate)
@@ -248,17 +248,15 @@ public class DocumentController : BaseControllerApi<Document>
                     ? d.FileName
                     : Path.GetFileName(d.SubDirectory ?? "");
 
-                var ext = Path.GetExtension(fileName ?? "")
-                    .TrimStart('.')
-                    .ToLowerInvariant();
-                if (!System.IO.File.Exists(Path.Combine(path.Value,d.SubDirectory))) ext = "Not Found On Server";
+                var ext = d.FileType;
+                if (!System.IO.File.Exists(Path.Combine(path.Value,d.SubDirectory,d.Guid.ToString()+d.FileType))) ext = "Not Found On Server";
                 return new
                 {
                     id = d.Id,
                     recordGuid = d.RecordGuid,
                     fileName = fileName,
                     fileType = d.FileType,
-                    extension = ext,
+                    extension = ext.Replace(".",""),
                     size = d.Size,
                     subDirectory = d.SubDirectory,
                     downloadUrl = Url.Action(nameof(StreamDocument), new { id = d.Id })
