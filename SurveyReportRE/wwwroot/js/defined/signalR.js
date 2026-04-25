@@ -50,7 +50,17 @@ connectionSignR.start().then(async function () {
         globalLoadPanel.dxLoadPanel("instance").hide();
     });
 
-
+    connectionSignR.on("NotificationCountUpdated", function (count) {
+        updateNotification(count);
+    });
+    connectionSignR.on("NotificationUpdated", function (items) {
+        updateNotification(items.length);
+    });
+    connectionSignR.on("NotificationReceive", function (items) {
+        reloadNotifications();
+        showPopupNotification(items.title,
+            items.message);
+    });
 }).catch(function (err) {
     console.error("SignalR connection failed:", err);
 });

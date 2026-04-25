@@ -5,6 +5,7 @@ namespace ERPCore.Models.Migration.Business.Social;
 
 public class Notification : BaseModel
 {
+    public override DateTime? CreatedDate { get => base.CreatedDate; set => base.CreatedDate = value; }
     public string Title { get; set; } = "";
     [MaxLength(8000)]
     public string Message { get; set; } = "";

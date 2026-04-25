@@ -31,6 +31,7 @@ using System.Reflection;
 using System.Dynamic;
 using ERPCore.Models;
 using Document = ERPCore.Models.Migration.Business.Data.Document;
+using ERPCore.Models.Migration.Business.Social;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -53,6 +54,7 @@ public class QuotationController : BaseControllerApi<Quotation>
     private readonly IBaseRepository<QuotationCommentLog> _quotationCommentLogRepository;
     private readonly IBaseRepository<StepsWorkflow> _stepsWorkflowRepository;
     private readonly IBaseRepository<Document> _documentRepository;
+    private readonly IBaseRepository<Notification> _notificationRepository;
     private readonly IHubContext<FileProcessingHub> _hubContext;
     private readonly ILogger<Quotation> _logger;
     private readonly IConfigurationSection path;
@@ -97,6 +99,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         _quotationCommentLogRepository = new BaseRepository<QuotationCommentLog>(configuration, _httpContextAccessor);
         _stepsWorkflowRepository = new BaseRepository<StepsWorkflow>(configuration, _httpContextAccessor);
         _documentRepository = new BaseRepository<Document>(configuration, _httpContextAccessor);
+        _notificationRepository = new BaseRepository<Notification>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
 
         _hubContext = hubContext;
@@ -257,6 +260,31 @@ public class QuotationController : BaseControllerApi<Quotation>
         await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
 
         }
+        PICAttributes pICAttributes = new PICAttributes();
+        pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
+        var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor,_hubContext);
+        NotificationRequest notification = new NotificationRequest();
+        Notification Notification = new Notification();
+        Notification.Title = "Create Quotation";
+        Notification.Message = quotation?.Subject ?? "You have new quotation";
+        Notification.IsRead = false;
+        Notification.Url = "Link URL";
+        Notification.Resource = $"{pICAttributes.TS}_TS";
+        Notification.System = "WM";
+        Notification.RecordGuid = quotation.Guid;
+        
+        Notification.ReceivedBy = pICAttributes.TS;  
+        notification.Notification = Notification;
+        notification.connectionId = pICAttributes.TS;
+        notification.tabPublicUrl = new
+        {
+            url = $"/Business/Form/{nameof(Quotation)}_Form/{quotation.Id}",
+            caption = $"form_{nameof(Quotation)}_Form_{quotation.Id}",
+            name = $"{nameof(Quotation)} {quotation.QuotationCode}",
+            data = ""
+        }; ;
+        NotificationController.Notify(notification);
+
 
         return Ok(quotation);
     }
