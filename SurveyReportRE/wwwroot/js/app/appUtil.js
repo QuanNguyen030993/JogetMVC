@@ -528,7 +528,6 @@ function isNullOrEmpty(str) {
     if (typeof str === "string")
         return !str || str.trim().length === 0;
     else {
-        debugger
     return str === null ? true : false;
     }
 }
