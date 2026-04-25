@@ -1410,5 +1410,96 @@
          });
     }
 
+        function fetchConfigurationData(model, typeScheme = null) {
+        var sysTableConfig = [];
+        var getScheme = [];
+        var displayExp;
+        var itemConfig = new Object();
+        const configState = window.Config;
+        // const configLoaded = configState.loadedConfig;
+        // Fetch toolbarItemsConfig
+        itemConfig = getModelConfig(model);
+        sysTableConfig = itemConfig;
+        //if (_cacheDataGridConfigs.length > 0) ///Đưa cache ngay chỗ này
+        //    getScheme = _cacheDataGridConfigs.filter(f => f.sysTableFK.name == model);
+        //else {
+        var url = `/api/${model}/GetScheme`;
+        if (typeScheme != null || typeScheme != undefined)
+            url = typeScheme == "User" ? `/api/${model}/GetScheme` : `/api/${model}/GetSystemScheme`;
+        // Fetch getScheme
+        if (!(configState.loadedConfig.some(f => f.modelName == model)))
+        $.ajax({
+            url: url,
+            type: 'GET',
+            async: false,
+            success: function (response) {
+                getScheme = response;
+                configState.loadedConfig.push({modelName : model , data : getScheme });
+            },
+            error: function (err) {
+                console.warn(` AppUtilsFetchSchemeException: Scheme is not defined or controller ${model} not exist!`);
+            }
+        });
+        else {
+            getScheme = configState.loadedConfig.find(f => f.modelName == model).data;
+        }
+        //}
+        // Tìm displayExpr dựa vào model trong toolbarItemsConfig
+        var displayExp = "name";
+        if (itemConfig != null || itemConfig != undefined) {
+            if (itemConfig.displayExpr)
+                displayExp = itemConfig.displayExpr;
+            if (!itemConfig.keyExpr)
+                keyExpr = "id";
+            if (!sysTableConfig.customQuery)
+                sysTableConfig.customQuery = "";
+        }
+
+        return {
+            sysTableConfig,
+            getScheme,
+            displayExp,
+            keyExpr
+        };
+
+    }
+        function getModelConfig(model, isFilter = true) {
+        //Parent method fetchConfigurationData
+        var modelConfig = null;
+        const configSTState = window.Config;
+        if (!(configSTState.loadedSTConfig.some(f => f.modelName == model)))
+        $.ajax({
+            url: `/api/Utility/GetSTConfig/${model}`,
+            type: 'GET',
+            async: false,
+            success: function (response) {
+                configSTState.loadedSTConfig.push({modelName : model , data : response });
+                // Case 1: response là ARRAY
+                if (Array.isArray(response)) {
+                    if (isFilter) {
+                        modelConfig = response.find(f => f.name === model) || null;
+                    } else {
+                        modelConfig = response;
+                    }
+                }
+                // Case 2: response là OBJECT
+                else if (typeof response === "object" && response !== null) {
+                    modelConfig = response;
+                }
+                // Case fallback
+                else {
+                    modelConfig = null;
+                }
+            },
+            error: function (error) {
+                _genericExceptionMessage = error.responseText;
+                modelConfig = null;
+            }
+        });
+        else 
+        modelConfig  = configSTState.loadedSTConfig.find(f => f.modelName == model).data;
+         return modelConfig;
+    }
+
 </script>
 

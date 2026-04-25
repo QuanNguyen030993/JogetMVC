@@ -525,7 +525,12 @@ var initFormSubTab = function (entityName, container, tabTitle, instance) {
 }
 
 function isNullOrEmpty(str) {
-    return !str || str.trim().length === 0;
+    if (typeof str === "string")
+        return !str || str.trim().length === 0;
+    else {
+        debugger
+    return str === null ? true : false;
+    }
 }
 
 //function isNullOrEmpty(str) {
@@ -546,7 +551,8 @@ function RenderGridElement(_gridConfig, gridInstance) {
             item.visibleIndex = item.order;
 
         if (item.validationRules != null && item.validationRules != "") {
-            item.validationRules = JSON.parse(item.validationRules);
+            if (typeof item.validationRules === "string")
+                item.validationRules = JSON.parse(item.validationRules);
         }
 
         if (isNullOrEmpty(item.width)) {
@@ -649,41 +655,6 @@ function RenderGridElement(_gridConfig, gridInstance) {
 
 }
 
-function getModelConfig(model, isFilter = true) {
-    //Parent method fetchConfigurationData
-    var modelConfig = null;
-
-    $.ajax({
-        url: `/api/Utility/GetSTConfig/${model}`,
-        type: 'GET',
-        async: false,
-        success: function (response) {
-
-            // Case 1: response là ARRAY
-            if (Array.isArray(response)) {
-                if (isFilter) {
-                    modelConfig = response.find(f => f.name === model) || null;
-                } else {
-                    modelConfig = response;
-                }
-            }
-            // Case 2: response là OBJECT
-            else if (typeof response === "object" && response !== null) {
-                modelConfig = response;
-            }
-            // Case fallback
-            else {
-                modelConfig = null;
-            }
-        },
-        error: function (error) {
-            _genericExceptionMessage = error.responseText;
-            modelConfig = null;
-        }
-    });
-
-    return modelConfig;
-}
 
 //function getSchemeConfig() {
 //    if (_allScheme.length == 0)
@@ -2161,52 +2132,6 @@ async function handlePaste(gridInstance, event, gridInstanceConfig) {
     //        dataRowIndex++;
     //    });
     //});
-}
-
-function fetchConfigurationData(model, typeScheme = null) {
-    var sysTableConfig = [];
-    var getScheme = [];
-    var displayExp;
-    var itemConfig = new Object();
-    // Fetch toolbarItemsConfig
-    itemConfig = getModelConfig(model);
-    sysTableConfig = itemConfig;
-    //if (_cacheDataGridConfigs.length > 0) ///Đưa cache ngay chỗ này
-    //    getScheme = _cacheDataGridConfigs.filter(f => f.sysTableFK.name == model);
-    //else {
-    var url = `/api/${model}/GetScheme`;
-    if (typeScheme != null || typeScheme != undefined)
-        url = typeScheme == "User" ? `/api/${model}/GetScheme` : `/api/${model}/GetSystemScheme`;
-    // Fetch getScheme
-    $.ajax({
-        url: url,
-        type: 'GET',
-        async: false,
-        success: function (response) {
-            getScheme = response;
-        },
-        error: function (err) {
-            console.warn(` AppUtilsFetchSchemeException: Scheme is not defined or controller ${model} not exist!`);
-        }
-    });
-    //}
-    // Tìm displayExpr dựa vào model trong toolbarItemsConfig
-    var displayExp = "name";
-    if (itemConfig != null || itemConfig != undefined) {
-        if (itemConfig.displayExpr)
-            displayExp = itemConfig.displayExpr;
-        if (!itemConfig.keyExpr)
-            keyExpr = "id";
-        if (!sysTableConfig.customQuery)
-            sysTableConfig.customQuery = "";
-    }
-
-    return {
-        sysTableConfig,
-        getScheme,
-        displayExp,
-        keyExpr
-    };
 }
 
 
