@@ -4,12 +4,14 @@ using Serilog;
 using ERPCore.Controllers.Base;
 using ERPCore.Models.Business.Migration.Config;
 using ERPCore.Models.Request;
+using ERPCore.Models.Migration.Business.Social;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
 public class ClientBrowserErrorController : BaseControllerApi<ClientBrowserError>
 {
     private readonly IBaseRepository<ClientBrowserError> _BaseRepository;
+    private readonly IBaseRepository<ErrorBrowserDetails> _errorBrowserDetailsRepository;
     private readonly IConfiguration configuration;
     private readonly IHttpContextAccessor _httpContextAccessor;
     public ClientBrowserErrorController(IBaseRepository<ClientBrowserError> BaseRepository, IConfiguration config, IHttpContextAccessor httpContextAccessor) : base(BaseRepository, httpContextAccessor)
@@ -17,6 +19,7 @@ public class ClientBrowserErrorController : BaseControllerApi<ClientBrowserError
         configuration = config;
         _BaseRepository = BaseRepository;
         _httpContextAccessor = httpContextAccessor;
+        _errorBrowserDetailsRepository = new  BaseRepository<ErrorBrowserDetails>(configuration, _httpContextAccessor);
     }
 
     [HttpPost]
@@ -24,30 +27,24 @@ public class ClientBrowserErrorController : BaseControllerApi<ClientBrowserError
     {
         try
         {
-            model.ErrorDetails = JsonConvert.SerializeObject(model.ErrorBrowserDetails);
+            //model.ErrorDetails = JsonConvert.SerializeObject(model.ErrorBrowserDetails);
             await _BaseRepository.InsertData(model);
-            //var errorLog = new ClientBrowserError
-            //{
-            //    Message = model.Message,
-            //    Url = model.Url,
-            //    UserAgent = model.UserAgent,
-            //    Status = model.ErrorDetails?.Status?.ToString(),
-            //    ResponseText = model.ErrorDetails?.ResponseText,
-            //    StackTrace = model.ErrorDetails?.Stack,
-            //    CreatedAt = DateTime.UtcNow
-            //};
 
-            //_context.ClientErrorLogs.Add(errorLog);
-            //_context.SaveChanges();
-
-            //_logger.LogError($"Client Error at {model.Url}: {model.Message}");
+            if (model?.ErrorBrowserDetails != null )
+            {
+                if (model?.ErrorBrowserDetails?.BreadcrumbTrails != null)
+                    if (model?.ErrorBrowserDetails?.BreadcrumbTrails.Count > 0)
+                    model.ErrorBrowserDetails.BreadcrumbTrail = JsonConvert.SerializeObject(model?.ErrorBrowserDetails?.BreadcrumbTrails);
+            }
+            if (model?.ErrorBrowserDetails?.FileName != null)
+            await _errorBrowserDetailsRepository.InsertData(model?.ErrorBrowserDetails ?? new ErrorBrowserDetails());
 
             return Ok();
         }
         catch (Exception ex)
         {
             Log.Error(ex,ex.Message);
-            return StatusCode(500, "Error saving client log");
+            return Ok();
         }
     }
 }

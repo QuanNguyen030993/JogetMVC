@@ -247,57 +247,6 @@ var appNotifyError = function (message, isConfirm, confirmText, cancelText, dela
     });
 }
 
-var appErrorHandling = function (message, err) {
-    if (err != null) {
-        if (err == "Unauthorized") {
-            window.location = "/Account/Login";
-        } else {
-            switch (err.status) {
-                case 401:
-                    window.location = "/Account/Login";
-                    break;
-                case 400: case 404: case 500:
-                    //Nhat bat custom exception
-                    if (message != err.responseText) {
-                        message = message == null ? err.responseText : message + err.responseText;
-                    } else {
-                        message = err.responseText;
-                    }
-
-                    break;
-                default:
-                    {
-                        if (err.responseText)
-                            message = `${message} ${err.responseText}. ${err.stack}`;
-                        else
-                            message = `${message} ${err}`;
-                        break;
-                    }
-            }
-        }
-        console.log(err);
-        try {
-            sendClientErrorLog(message, err);
-        }
-        catch {
-
-        }
-        console.trace();
-    }
-
-    try {
-        let parsedObject = JSON.parse(message);
-        if (parsedObject.typeMsg != undefined) {
-            if (parsedObject.typeMsg[0] == "popup") {
-                appNotifyWarning(parsedObject.message[0]);
-            }
-        }
-        else
-            appNotifyError(message);
-
-    }
-    catch { appNotifyError(message); }
-}
 
 var appNotifyInfo = function (message, isConfirm) {
     return Swal.fire({
@@ -535,124 +484,6 @@ function isNullOrEmpty(str) {
 //function isNullOrEmpty(str) {
 //    return str === null || str === undefined || (typeof str === 'string' && str.trim().length === 0);
 //}
-
-function RenderGridElement(_gridConfig, gridInstance) {
-    $.each(_gridConfig, function (i, item) {
-        item.lookup = null;
-        item.mLookup = null;
-        if (item.gridVisibleIndex != null || item.gridVisibleIndex != undefined) {
-            item.visibleIndex = item.gridVisibleIndex;
-            if (item.gridVisibleIndex < 0) {
-                item.visible = false;
-            }
-        }
-        else
-            item.visibleIndex = item.order;
-
-        if (item.validationRules != null && item.validationRules != "") {
-            if (typeof item.validationRules === "string")
-                item.validationRules = JSON.parse(item.validationRules);
-        }
-
-        if (isNullOrEmpty(item.width)) {
-            item.width = _defaultGridFieldWidth;
-        }
-        if (isNullOrEmpty(item.height)) {
-            item.height = _defaultGridFieldHeight;
-        }
-        if (item.dataType == "enum") {
-            byteObjectConvert(item, gridInstance);
-            item = selectBoxRemakeOption(item, gridInstance);
-        }
-        else if (item.dataType == "table") {
-            var gridConfig = makeFieldFeatures(item, gridInstance, "grid");
-            var mDropDownDS = new MDropDownDataSource();
-            
-            var customOptions = new Object();
-            customOptions.skip = _defaultSkipDropDown;
-            customOptions.take = _defaultTakeDropDown;
-            var DS = mDropDownDS.getDropDownDS('id', `api/${gridConfig.model}/DropDownLookUp`, customOptions);
-            if (gridConfig.config.displayExp) {
-                item.lookup = {
-                    //dataSource: {
-                    //    key: 'id',
-                    //    store: DevExpress.data.AspNet.createStore({
-                    //        key: "id",
-                    //        loadUrl: `/api/${gridConfig.model}/GetAll`
-                    //    }),
-                    //    paginate: true,
-                    //},
-                    dataSource: DS,
-                    displayExpr: gridConfig.config.displayExp,
-                    valueExpr: 'id'
-                };
-
-                item.editorType = "dxDropDownBox";
-                item.editorOptions = {
-                    editorType: "dxDropDownBox",
-                    width: "100%",
-                    dropDownOptions: {
-                        width: _defaultDropDownWidth,
-                        height: _defaultDropDownHeight,
-                    },
-                    showClearButton: true,
-                    dataSource: DS,
-                    columns: gridConfig.config.getScheme,
-                    contentTemplate: function (e) {
-                        const $dataGrid = $("<div>").dxDataGrid({
-                            selectionMode: 'all',
-                            // remoteOperations: { paging: true, filtering: true, sorting: true, grouping: true, summary: true, groupPaging: true },
-                            filterRow: { visible: true },
-                            dataSource: e.component.option("dataSource"),
-                            displayExpr: gridConfig.config.displayExpr,
-                            columns: e.component.option("columns"),
-                            selection: { mode: "single" },
-                            scrolling: {
-                                mode: 'virtual',
-                                preloadEnabled: false,
-                                showScrollbar: 'always'
-                            },
-                            width: "100%",
-                            height: "100%",
-                            allowItemDeleting: false,
-                            showSelectionControls: true,
-                            sorting: {
-                                mode: 'multiple',
-                            },
-                            onSelectionChanged: function (selectedItems) {
-                                var keys = selectedItems.selectedRowKeys,
-                                    hasSelection = keys.length;
-                                if (hasSelection) {
-                                    e.component.selectedItem = selectedItems.selectedRowsData;
-                                    e.component.option("displayValue", selectedItems.selectedRowsData[0][gridConfig.config.displayExp]);
-                                    e.component.option("value", keys[0]);
-                                    //e.component.option("selectedItem", selectedItems.selectedRowsData);
-                                }
-                            },
-                            columnAutoWidth: true,
-                            customizeColumns: function (columns) {
-                            },
-                        });
-
-                        var dtGrid = $dataGrid.dxDataGrid("instance");
-                        e.component.on("valueChanged", function (args) {
-                            dtGrid.selectRows(args.value, false);
-                            if (args.value != null) {
-                                e.component.close();
-                            }
-                        });
-
-                        return $dataGrid;
-                    }
-                };
-            }
-            else {
-                appErrorHandling(" RenderGridElement Exception: No display Expr defined!");
-            }
-        }
-    });
-
-}
 
 
 //function getSchemeConfig() {
@@ -1908,149 +1739,149 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
         }
     }
 
-    if (formInstanceProps.isAllowAddOutline || formInstanceProps.isAllowAddOutline == null || formInstanceProps.isAllowAddOutline == undefined) {
-        var outlineTitle = "ADD OUTLINE";
-        if (formInstanceProps.formOptions)
-            if (formInstanceProps.formOptions.addOutlineTitle) outlineTitle = formInstanceProps.formOptions.addOutlineTitle;
-        var id = 0;
-        var surveyId = 0;
-        var jsonConfig = {};
-        var dataForm = null;
-        var addOutLine = {
-            itemType: "button",
-            alignment: "left",
-            name: "addOutline",
-            //dataField: "__addOutline__",
-            //editorType: "dxButton",
-            buttonOptions: {
-                height: _defaultButtonHeight,
-                width: "100%",
-                text: outlineTitle,
-                onClick: function (e) {
-                    var popupInstance = $(`#outlinePopup`).dxPopup({
-                        width: "70%",
-                        height: "70%",
-                        showTitle: true,
-                        title: outlineTitle,
-                        dragEnabled: false,
-                        closeOnOutsideClick: true,
-                        contentTemplate: function (container) {
-                            var content = $("<div>").appendTo(container);
-                            if (formInstanceProps?.outlineForm?.surveyTypeId)
-                                jsonConfig.surveyTypeId = formInstanceProps?.outlineForm?.surveyTypeId;
-                            if (formInstanceProps?.id)
-                                jsonConfig.mainId = formInstanceProps?.id;
-                            if (formInstanceProps?.refFieldId) {
-                                surveyId = formInstanceProps?.refFieldId;
-                                jsonConfig.surveyId = formInstanceProps?.refFieldId;
-                            }
-                            if (formInstanceProps?.Outline.length > 0) {
-                                //jsonConfig.parentOutlineId = formInstanceProps?.Outline.find(f => formInstanceProps?.ModelName.toUpperCase() == f.content.replace(' ', '') && f.surveyTypeId == formInstanceProps?.outlineForm?.surveyTypeId).id;
-                            }
-                            if (_cacheOutlines.length > 0)
-                                jsonConfig.parentOutlineId = _cacheOutlines.find(f => formInstanceProps?.ModelName.toLowerCase() == f.placeHolder.toLowerCase() && f.surveyTypeId == formInstanceProps?.outlineForm?.surveyTypeId).id;
-                            var passingParams = { UITabId: `Outline_Form_${surveyId}_${id}`, refPageNum: surveyId, pageNum: id, jsonConfig: JSON.stringify(jsonConfig) };
+    //if (formInstanceProps.isAllowAddOutline || formInstanceProps.isAllowAddOutline == null || formInstanceProps.isAllowAddOutline == undefined) {
+    //    var outlineTitle = "ADD OUTLINE";
+    //    if (formInstanceProps.formOptions)
+    //        if (formInstanceProps.formOptions.addOutlineTitle) outlineTitle = formInstanceProps.formOptions.addOutlineTitle;
+    //    var id = 0;
+    //    var surveyId = 0;
+    //    var jsonConfig = {};
+    //    var dataForm = null;
+    //    var addOutLine = {
+    //        itemType: "button",
+    //        alignment: "left",
+    //        name: "addOutline",
+    //        //dataField: "__addOutline__",
+    //        //editorType: "dxButton",
+    //        buttonOptions: {
+    //            height: _defaultButtonHeight,
+    //            width: "100%",
+    //            text: outlineTitle,
+    //            onClick: function (e) {
+    //                var popupInstance = $(`#outlinePopup`).dxPopup({
+    //                    width: "70%",
+    //                    height: "70%",
+    //                    showTitle: true,
+    //                    title: outlineTitle,
+    //                    dragEnabled: false,
+    //                    closeOnOutsideClick: true,
+    //                    contentTemplate: function (container) {
+    //                        var content = $("<div>").appendTo(container);
+    //                        if (formInstanceProps?.outlineForm?.surveyTypeId)
+    //                            jsonConfig.surveyTypeId = formInstanceProps?.outlineForm?.surveyTypeId;
+    //                        if (formInstanceProps?.id)
+    //                            jsonConfig.mainId = formInstanceProps?.id;
+    //                        if (formInstanceProps?.refFieldId) {
+    //                            surveyId = formInstanceProps?.refFieldId;
+    //                            jsonConfig.surveyId = formInstanceProps?.refFieldId;
+    //                        }
+    //                        if (formInstanceProps?.Outline.length > 0) {
+    //                            //jsonConfig.parentOutlineId = formInstanceProps?.Outline.find(f => formInstanceProps?.ModelName.toUpperCase() == f.content.replace(' ', '') && f.surveyTypeId == formInstanceProps?.outlineForm?.surveyTypeId).id;
+    //                        }
+    //                        if (_cacheOutlines.length > 0)
+    //                            jsonConfig.parentOutlineId = _cacheOutlines.find(f => formInstanceProps?.ModelName.toLowerCase() == f.placeHolder.toLowerCase() && f.surveyTypeId == formInstanceProps?.outlineForm?.surveyTypeId).id;
+    //                        var passingParams = { UITabId: `Outline_Form_${surveyId}_${id}`, refPageNum: surveyId, pageNum: id, jsonConfig: JSON.stringify(jsonConfig) };
 
-                            appendElementViewInsideAsync(`/Business/MasterData/Outline_Form`, passingParams, content, `Outline_Form_${surveyId}_${id}`, "appendTo").then(data => {
-                                dataForm = data;
+    //                        appendElementViewInsideAsync(`/Business/MasterData/Outline_Form`, passingParams, content, `Outline_Form_${surveyId}_${id}`, "appendTo").then(data => {
+    //                            dataForm = data;
 
-                            })
-                                .catch(error => {
-                                    try {
-                                        sendClientErrorLog("Lỗi khi tải dữ liệu:", error);
-                                    }
-                                    catch {
-                                    }
-                                    console.error("Lỗi khi tải dữ liệu:", error);
-                                });
-
-
-                            //$("<div>").dxScrollView({
-                            //    height: "100%",
-                            //    width: "100%",
-                            //    showScrollbar: "always",
-                            //    useNative: false,
-                            //    direction: "both",
-                            //    contentTemplate: function (scrollViewContent) {
-                            //        return scrollViewContent;
-                            //    }
-                            //}).appendTo(container);
+    //                        })
+    //                            .catch(error => {
+    //                                try {
+    //                                    sendClientErrorLog("Lỗi khi tải dữ liệu:", error);
+    //                                }
+    //                                catch {
+    //                                }
+    //                                console.error("Lỗi khi tải dữ liệu:", error);
+    //                            });
 
 
-                            return container;
-                        },
-                        onHiding: function (e) {
-
-                        }
-                        , toolbarItems: [{
-                            widget: 'dxButton',
-                            toolbar: 'bottom',
-                            location: 'after',
-                            options: {
-                                stylingMode: 'contained',
-                                type: 'normal',
-                                text: "Create",
-                                onClick() {
-                                    //var outlineForm = $(`#Outline_Form_${surveyId}_${id}`).dxForm().dxForm("instance");
-                                    var passingParams = {};
-                                    passingParams.Survey = {};
-                                    passingParams.Outline = {};
-                                    passingParams.MasterId = jsonConfig.mainId;
+    //                        //$("<div>").dxScrollView({
+    //                        //    height: "100%",
+    //                        //    width: "100%",
+    //                        //    showScrollbar: "always",
+    //                        //    useNative: false,
+    //                        //    direction: "both",
+    //                        //    contentTemplate: function (scrollViewContent) {
+    //                        //        return scrollViewContent;
+    //                        //    }
+    //                        //}).appendTo(container);
 
 
-                                    var formData = dataForm.option('formData');
-                                    //requestPassingData.Management = formData;
+    //                        return container;
+    //                    },
+    //                    onHiding: function (e) {
 
-                                    if (formData != null)
-                                        passingParams.Outline = formData;
-                                    if (surveyId != 0)
-                                        passingParams.Survey.Id = surveyId;
+    //                    }
+    //                    , toolbarItems: [{
+    //                        widget: 'dxButton',
+    //                        toolbar: 'bottom',
+    //                        location: 'after',
+    //                        options: {
+    //                            stylingMode: 'contained',
+    //                            type: 'normal',
+    //                            text: "Create",
+    //                            onClick() {
+    //                                //var outlineForm = $(`#Outline_Form_${surveyId}_${id}`).dxForm().dxForm("instance");
+    //                                var passingParams = {};
+    //                                passingParams.Survey = {};
+    //                                passingParams.Outline = {};
+    //                                passingParams.MasterId = jsonConfig.mainId;
 
-                                    if (!formData.hasOwnProperty('content') || !formData.content || formData.content.trim() === "") {
-                                        appNotifyWarning("Outline content cannot be empty!");
-                                    }
-                                    else {
-                                        $.ajax({
-                                            url: 'api/Survey/AddCustomOutline',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            type: 'POST',
-                                            data: JSON.stringify(passingParams)
-                                            , success: function (response) {
-                                                appNotifySuccess("Outline created success! Please refresh your survey. ");
-                                            },
-                                            error: function (err) {
-                                                appNotifyError("Outline created fail!");
-                                            }
-                                        });
-                                    }
-                                    popupInstance.hide();
-                                },
-                            },
-                        }, {
-                            widget: 'dxButton',
-                            toolbar: 'bottom',
-                            location: 'after',
-                            options: {
-                                stylingMode: 'contained',
-                                type: 'normal',
-                                text: "Close",
-                                onClick() {
-                                    popupInstance.hide();
-                                },
-                            },
-                        }]
-                    }).dxPopup("instance");
-                    popupInstance.show();
-                }
-            },
-            editorOptions: {
-                height: _defaultButtonHeight,
-                width: "100%"
-            },
-        };
-        if (!formInstanceProps.isReadOnly)
-            itemsArray.push(addOutLine);
-    }
+
+    //                                var formData = dataForm.option('formData');
+    //                                //requestPassingData.Management = formData;
+
+    //                                if (formData != null)
+    //                                    passingParams.Outline = formData;
+    //                                if (surveyId != 0)
+    //                                    passingParams.Survey.Id = surveyId;
+
+    //                                if (!formData.hasOwnProperty('content') || !formData.content || formData.content.trim() === "") {
+    //                                    appNotifyWarning("Outline content cannot be empty!");
+    //                                }
+    //                                else {
+    //                                    $.ajax({
+    //                                        url: 'api/Survey/AddCustomOutline',
+    //                                        headers: { 'Content-Type': 'application/json' },
+    //                                        type: 'POST',
+    //                                        data: JSON.stringify(passingParams)
+    //                                        , success: function (response) {
+    //                                            appNotifySuccess("Outline created success! Please refresh your survey. ");
+    //                                        },
+    //                                        error: function (err) {
+    //                                            appNotifyError("Outline created fail!");
+    //                                        }
+    //                                    });
+    //                                }
+    //                                popupInstance.hide();
+    //                            },
+    //                        },
+    //                    }, {
+    //                        widget: 'dxButton',
+    //                        toolbar: 'bottom',
+    //                        location: 'after',
+    //                        options: {
+    //                            stylingMode: 'contained',
+    //                            type: 'normal',
+    //                            text: "Close",
+    //                            onClick() {
+    //                                popupInstance.hide();
+    //                            },
+    //                        },
+    //                    }]
+    //                }).dxPopup("instance");
+    //                popupInstance.show();
+    //            }
+    //        },
+    //        editorOptions: {
+    //            height: _defaultButtonHeight,
+    //            width: "100%"
+    //        },
+    //    };
+    //    if (!formInstanceProps.isReadOnly)
+    //        itemsArray.push(addOutLine);
+    //}
 
 
     $.each(itemsArray, function (i, item) {
@@ -2361,9 +2192,9 @@ function createAccordionGroup(item, $itemElement, formInstanceProps) {
                             e.stopPropagation();
                         });
 
-                        createDeleteOutline({
-                            title: itemData.title
-                        }, deleteOutlineContainer, outlineObject, formInstanceProps, itemData);
+                        //createDeleteOutline({
+                        //    title: itemData.title
+                        //}, deleteOutlineContainer, outlineObject, formInstanceProps, itemData);
 
                         radioContainer.appendTo(outerContainer);
                         deleteOutlineContainer.appendTo(outerContainer);
@@ -2472,9 +2303,9 @@ function createAccordionField(item, $itemElement, editorOptions, formInstancePro
                                 const deleteOutlineContainer = $("<div style='display:flex;padding-left: 20px;margin-top: -4px;'>").addClass("custom-radio-button").on("click", function (e) {
                                     e.stopPropagation();
                                 });
-                                createDeleteOutline({
-                                    title: itemData.title
-                                }, deleteOutlineContainer, outlineObject, formInstanceProps, itemData);
+                                //createDeleteOutline({
+                                //    title: itemData.title
+                                //}, deleteOutlineContainer, outlineObject, formInstanceProps, itemData);
                                 deleteOutlineContainer.appendTo(outerContainer);
                             }
                         }
@@ -2731,257 +2562,257 @@ function createRadioGroup(titleData, radioContainer, outlineObject, formInstance
 
 
 
-function createDeleteOutline(titleData, deleteContainer, outlineObject, formInstanceProps, itemData) {
-    if (outlineObject.outlineOptions) {
-        if (outlineObject.outlineOptions) {
-            selectedValue = outlineObject.outlineOptions.OptionValue;
-        }
+//function createDeleteOutline(titleData, deleteContainer, outlineObject, formInstanceProps, itemData) {
+//    if (outlineObject.outlineOptions) {
+//        if (outlineObject.outlineOptions) {
+//            selectedValue = outlineObject.outlineOptions.OptionValue;
+//        }
 
-    }
-    else {
-        if (formInstanceProps.outlineForm) {
-            if (formInstanceProps.outlineForm.outlineOptions)
-                if (formInstanceProps.outlineForm.outlineOptions.length > 0) {
-                    selectedValue = formInstanceProps.outlineForm.outlineOptions.find(f => f.outlineId == outlineObject.id).optionValue;
-                }
-        }
-    }
-    //const groupName = `group_${titleData.title}_${outlineObject.id}_${formInstanceProps.id}`;
-
-
-    $(`<div id='renameOutline_${outlineObject.id}_${formInstanceProps.id}'>`).dxButton({
-        icon: "edit", // icon bút chì - biểu tượng rename
-        elementAttr: {
-            title: "Rename" // Tooltip khi hover
-        },
-        height: 30,
-        width: 40,
-        disabled: formInstanceProps.isReadOnly,
-        onContentReady: function (e) {
-            $(e.element).find(".dx-button-content").removeClass("dx-button-content").css({
-                marginTop: "5px",
-            });
-        },
-        onClick: function (e) {
-            var id = 0;
-            var surveyId = 0;
-            var jsonConfig = {};
-            var dataForm = null;
-            var popupInstance = $(`#outlinePopup`).dxPopup({
-                width: "70%",
-                height: "70%",
-                showTitle: true,
-                title: "RENAME OUTLINE",
-                dragEnabled: false,
-                closeOnOutsideClick: true,
-                contentTemplate: function (container) {
-                    var content = $("<div>").appendTo(container);
-                    if (formInstanceProps?.outlineForm?.surveyTypeId)
-                        jsonConfig.surveyTypeId = formInstanceProps?.outlineForm?.surveyTypeId;
-                    if (formInstanceProps?.id)
-                        jsonConfig.mainId = formInstanceProps?.id;
-                    if (formInstanceProps?.refFieldId) {
-                        surveyId = formInstanceProps?.refFieldId;
-                        jsonConfig.surveyId = formInstanceProps?.refFieldId;
-                    }
-                    if (formInstanceProps?.Outline.length > 0) {
-                        //jsonConfig.parentOutlineId = formInstanceProps?.Outline.find(f => formInstanceProps?.ModelName.toUpperCase() == f.content.replace(' ', '') && f.surveyTypeId == formInstanceProps?.outlineForm?.surveyTypeId).id;
-                    }
-                    if (_cacheOutlines.length > 0)
-                        jsonConfig.parentOutlineId = _cacheOutlines.find(f => formInstanceProps?.ModelName.toUpperCase() == f.content.replace(' ', '') && f.surveyTypeId == formInstanceProps?.outlineForm?.surveyTypeId).id;
-                    var passingParams = { UITabId: `Outline_Form_${surveyId}_${id}`, refPageNum: surveyId, pageNum: id, jsonConfig: JSON.stringify(jsonConfig) };
-
-                    appendElementViewInsideAsync(`/Business/MasterData/Outline_Form`, passingParams, content, `Outline_Form_${surveyId}_${id}`, "appendTo").then(data => {
-                        dataForm = data;
-
-                    })
-                        .catch(error => {
-                            try {
-                                sendClientErrorLog("Lỗi khi tải dữ liệu:", error);
-                            }
-                            catch {
-                            }
-                            console.error("Lỗi khi tải dữ liệu:", error);
-                        });
+//    }
+//    else {
+//        if (formInstanceProps.outlineForm) {
+//            if (formInstanceProps.outlineForm.outlineOptions)
+//                if (formInstanceProps.outlineForm.outlineOptions.length > 0) {
+//                    selectedValue = formInstanceProps.outlineForm.outlineOptions.find(f => f.outlineId == outlineObject.id).optionValue;
+//                }
+//        }
+//    }
+//    //const groupName = `group_${titleData.title}_${outlineObject.id}_${formInstanceProps.id}`;
 
 
-                    //$("<div>").dxScrollView({
-                    //    height: "100%",
-                    //    width: "100%",
-                    //    showScrollbar: "always",
-                    //    useNative: false,
-                    //    direction: "both",
-                    //    contentTemplate: function (scrollViewContent) {
-                    //        return scrollViewContent;
-                    //    }
-                    //}).appendTo(container);
+//    $(`<div id='renameOutline_${outlineObject.id}_${formInstanceProps.id}'>`).dxButton({
+//        icon: "edit", // icon bút chì - biểu tượng rename
+//        elementAttr: {
+//            title: "Rename" // Tooltip khi hover
+//        },
+//        height: 30,
+//        width: 40,
+//        disabled: formInstanceProps.isReadOnly,
+//        onContentReady: function (e) {
+//            $(e.element).find(".dx-button-content").removeClass("dx-button-content").css({
+//                marginTop: "5px",
+//            });
+//        },
+//        onClick: function (e) {
+//            var id = 0;
+//            var surveyId = 0;
+//            var jsonConfig = {};
+//            var dataForm = null;
+//            var popupInstance = $(`#outlinePopup`).dxPopup({
+//                width: "70%",
+//                height: "70%",
+//                showTitle: true,
+//                title: "RENAME OUTLINE",
+//                dragEnabled: false,
+//                closeOnOutsideClick: true,
+//                contentTemplate: function (container) {
+//                    var content = $("<div>").appendTo(container);
+//                    if (formInstanceProps?.outlineForm?.surveyTypeId)
+//                        jsonConfig.surveyTypeId = formInstanceProps?.outlineForm?.surveyTypeId;
+//                    if (formInstanceProps?.id)
+//                        jsonConfig.mainId = formInstanceProps?.id;
+//                    if (formInstanceProps?.refFieldId) {
+//                        surveyId = formInstanceProps?.refFieldId;
+//                        jsonConfig.surveyId = formInstanceProps?.refFieldId;
+//                    }
+//                    if (formInstanceProps?.Outline.length > 0) {
+//                        //jsonConfig.parentOutlineId = formInstanceProps?.Outline.find(f => formInstanceProps?.ModelName.toUpperCase() == f.content.replace(' ', '') && f.surveyTypeId == formInstanceProps?.outlineForm?.surveyTypeId).id;
+//                    }
+//                    if (_cacheOutlines.length > 0)
+//                        jsonConfig.parentOutlineId = _cacheOutlines.find(f => formInstanceProps?.ModelName.toUpperCase() == f.content.replace(' ', '') && f.surveyTypeId == formInstanceProps?.outlineForm?.surveyTypeId).id;
+//                    var passingParams = { UITabId: `Outline_Form_${surveyId}_${id}`, refPageNum: surveyId, pageNum: id, jsonConfig: JSON.stringify(jsonConfig) };
+
+//                    appendElementViewInsideAsync(`/Business/MasterData/Outline_Form`, passingParams, content, `Outline_Form_${surveyId}_${id}`, "appendTo").then(data => {
+//                        dataForm = data;
+
+//                    })
+//                        .catch(error => {
+//                            try {
+//                                sendClientErrorLog("Lỗi khi tải dữ liệu:", error);
+//                            }
+//                            catch {
+//                            }
+//                            console.error("Lỗi khi tải dữ liệu:", error);
+//                        });
 
 
-                    return container;
-                },
-                onHiding: function (e) {
-
-                }
-                , toolbarItems: [{
-                    widget: 'dxButton',
-                    toolbar: 'bottom',
-                    location: 'after',
-                    options: {
-                        stylingMode: 'contained',
-                        type: 'normal',
-                        text: "Change",
-                        onClick() {
-                            //var outlineForm = $(`#Outline_Form_${surveyId}_${id}`).dxForm().dxForm("instance");
-                            var passingParams = {};
-                            passingParams.Survey = {};
-                            passingParams.Outline = {};
-                            passingParams.MasterId = jsonConfig.mainId;
-
-                            var formData = dataForm.option('formData');
-                            //requestPassingData.Management = formData;
-
-                            if (formData != null) {
-                                passingParams.Outline = formData;
-                                if (outlineObject) {
-                                    passingParams.Outline.placeHolder = outlineObject.placeHolder;
-                                    passingParams.Outline.id = outlineObject.id;
-                                }
-                            }
-                            if (surveyId != 0)
-                                passingParams.Survey.Id = surveyId;
-
-                            $.ajax({
-                                url: 'api/Survey/RenameCustomOutline',
-                                headers: { 'Content-Type': 'application/json' },
-                                type: 'POST',
-                                data: JSON.stringify(passingParams)
-                                , success: function (response) {
-                                    appNotifySuccess("Outline renamed success! Please refresh your survey. ");
-                                },
-                                error: function (err) {
-                                    appNotifyError("Outline renamed fail!");
-                                }
-                            });
-                            popupInstance.hide();
-                        },
-                    },
-                }, {
-                    widget: 'dxButton',
-                    toolbar: 'bottom',
-                    location: 'after',
-                    options: {
-                        stylingMode: 'contained',
-                        type: 'normal',
-                        text: "Close",
-                        onClick() {
-                            popupInstance.hide();
-                        },
-                    },
-                }]
-            }).dxPopup("instance");
-            popupInstance.show();
+//                    //$("<div>").dxScrollView({
+//                    //    height: "100%",
+//                    //    width: "100%",
+//                    //    showScrollbar: "always",
+//                    //    useNative: false,
+//                    //    direction: "both",
+//                    //    contentTemplate: function (scrollViewContent) {
+//                    //        return scrollViewContent;
+//                    //    }
+//                    //}).appendTo(container);
 
 
-        }
-    }).appendTo(deleteContainer);
+//                    return container;
+//                },
+//                onHiding: function (e) {
+
+//                }
+//                , toolbarItems: [{
+//                    widget: 'dxButton',
+//                    toolbar: 'bottom',
+//                    location: 'after',
+//                    options: {
+//                        stylingMode: 'contained',
+//                        type: 'normal',
+//                        text: "Change",
+//                        onClick() {
+//                            //var outlineForm = $(`#Outline_Form_${surveyId}_${id}`).dxForm().dxForm("instance");
+//                            var passingParams = {};
+//                            passingParams.Survey = {};
+//                            passingParams.Outline = {};
+//                            passingParams.MasterId = jsonConfig.mainId;
+
+//                            var formData = dataForm.option('formData');
+//                            //requestPassingData.Management = formData;
+
+//                            if (formData != null) {
+//                                passingParams.Outline = formData;
+//                                if (outlineObject) {
+//                                    passingParams.Outline.placeHolder = outlineObject.placeHolder;
+//                                    passingParams.Outline.id = outlineObject.id;
+//                                }
+//                            }
+//                            if (surveyId != 0)
+//                                passingParams.Survey.Id = surveyId;
+
+//                            $.ajax({
+//                                url: 'api/Survey/RenameCustomOutline',
+//                                headers: { 'Content-Type': 'application/json' },
+//                                type: 'POST',
+//                                data: JSON.stringify(passingParams)
+//                                , success: function (response) {
+//                                    appNotifySuccess("Outline renamed success! Please refresh your survey. ");
+//                                },
+//                                error: function (err) {
+//                                    appNotifyError("Outline renamed fail!");
+//                                }
+//                            });
+//                            popupInstance.hide();
+//                        },
+//                    },
+//                }, {
+//                    widget: 'dxButton',
+//                    toolbar: 'bottom',
+//                    location: 'after',
+//                    options: {
+//                        stylingMode: 'contained',
+//                        type: 'normal',
+//                        text: "Close",
+//                        onClick() {
+//                            popupInstance.hide();
+//                        },
+//                    },
+//                }]
+//            }).dxPopup("instance");
+//            popupInstance.show();
 
 
-    $(`<div id='deleteOutline_${outlineObject.id}_${formInstanceProps.id}'>`).dxButton({
-        icon: "close", // icon mặc định của DevExtreme (biểu tượng X)
-        elementAttr: {
-            title: "Remove" // Tooltip khi hover vào
-        },
-        height: 30,
-        width: 40,
-        disabled: formInstanceProps.isReadOnly,
-        onContentReady: function (e) {
-            $(e.element).find(".dx-button-content").removeClass("dx-button-content").css({
-                marginTop: "5px",
-            });
-        },
-        onClick: function (e) {
-            var popupBox = appNotifyWarning("Are you sure to remove this outline?", true);
-            e.event.stopPropagation();
-            popupBox.then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: `api/${formInstanceProps.ModelName}/DeleteOutline/${formInstanceProps.id}/${outlineObject.id}`,
-                        type: 'GET',
-                        async: false,
-                        success: function (response) {
-                            appNotifySuccess("Outline removed! Please refresh your survey");
-                        },
-                        error: function () {
-                        }
-                    });
-                }
-                else {
-                }
-            });
+//        }
+//    }).appendTo(deleteContainer);
 
 
-        }
-    }).appendTo(deleteContainer);
+//    $(`<div id='deleteOutline_${outlineObject.id}_${formInstanceProps.id}'>`).dxButton({
+//        icon: "close", // icon mặc định của DevExtreme (biểu tượng X)
+//        elementAttr: {
+//            title: "Remove" // Tooltip khi hover vào
+//        },
+//        height: 30,
+//        width: 40,
+//        disabled: formInstanceProps.isReadOnly,
+//        onContentReady: function (e) {
+//            $(e.element).find(".dx-button-content").removeClass("dx-button-content").css({
+//                marginTop: "5px",
+//            });
+//        },
+//        onClick: function (e) {
+//            var popupBox = appNotifyWarning("Are you sure to remove this outline?", true);
+//            e.event.stopPropagation();
+//            popupBox.then((result) => {
+//                if (result.isConfirmed) {
+//                    $.ajax({
+//                        url: `api/${formInstanceProps.ModelName}/DeleteOutline/${formInstanceProps.id}/${outlineObject.id}`,
+//                        type: 'GET',
+//                        async: false,
+//                        success: function (response) {
+//                            appNotifySuccess("Outline removed! Please refresh your survey");
+//                        },
+//                        error: function () {
+//                        }
+//                    });
+//                }
+//                else {
+//                }
+//            });
 
-    //const inputControl = $("<input>")
-    //    .attr({
-    //        type: "radio",
-    //        id: id,
-    //        name: groupName,
-    //        checked: option.value == selectedValue ? true : false
-    //    })
-    //    //.addClass("custom-radio-button")   
-    //    .ready(function () {
-    //        var outlineOptionsObject = { outlineId: outlineObject.id, optionValue: 1 };
-    //        if (formInstanceProps.OutlineList == null || formInstanceProps.OutlineList == undefined)
-    //            formInstanceProps.OutlineList = [];
-    //        formInstanceProps.OutlineList.push(outlineOptionsObject);
-    //    })
-    //    .on("change", function () {
-    //        var outlineOptionsObject = { outlineId: outlineObject.id, optionValue: option.value };
-    //        var formData = formInstanceProps.formInstance.option("formData");
-    //        var formField = `outlineOptions_${itemData.outline.id}`;
-    //        if (formData[formField] == null || formData[formField] == undefined) {
-    //            formData[formField] = new Object();
-    //        }
-    //        formData[formField] = outlineOptionsObject;
-    //        if (formInstanceProps.id) {
-    //            var formObject = new Object();
-    //            formObject[formField] = formData[formField];
-    //            formInstanceProps.formInstance.option("changedFields", formObject);
-    //        }
-    //        var editor = $(`#dxHtmlEditor_${itemData.fieldInstance.dataField}_${itemData.fieldInstance.id}`).dxHtmlEditor().dxHtmlEditor("instance");
-    //        if (editor != null) {
-    //            if (option.value == -1) {
-    //                editor.option("readOnly", true);
-    //                editor.option("value", "");
-    //            } else if (option.value == 0) {
-    //                editor.option("readOnly", false);
-    //                editor.option("value", "Nil");
-    //            }
-    //            else {
-    //                if (formInstanceProps.isReadOnly)
-    //                    editor.option("readOnly", true);
-    //                else
-    //                    editor.option("readOnly", false);
-    //            }
-    //        }
-    //        else {
-    //            itemData.fieldInstance.isFieldReadOnly = false;
-    //            if (option.value == 0 || option.value == -1) {
-    //                itemData.fieldInstance.isFieldReadOnly = true;
-    //            }
-    //            else {
-    //                if (formInstanceProps.isReadOnly)
-    //                    itemData.fieldInstance.isFieldReadOnly = true;
-    //                else
-    //                    itemData.fieldInstance.isFieldReadOnly = false;
-    //            }
-    //        }
-    //    })
-    //    .appendTo(deleteContainer);
-    return deleteContainer;
-}
+
+//        }
+//    }).appendTo(deleteContainer);
+
+//    //const inputControl = $("<input>")
+//    //    .attr({
+//    //        type: "radio",
+//    //        id: id,
+//    //        name: groupName,
+//    //        checked: option.value == selectedValue ? true : false
+//    //    })
+//    //    //.addClass("custom-radio-button")   
+//    //    .ready(function () {
+//    //        var outlineOptionsObject = { outlineId: outlineObject.id, optionValue: 1 };
+//    //        if (formInstanceProps.OutlineList == null || formInstanceProps.OutlineList == undefined)
+//    //            formInstanceProps.OutlineList = [];
+//    //        formInstanceProps.OutlineList.push(outlineOptionsObject);
+//    //    })
+//    //    .on("change", function () {
+//    //        var outlineOptionsObject = { outlineId: outlineObject.id, optionValue: option.value };
+//    //        var formData = formInstanceProps.formInstance.option("formData");
+//    //        var formField = `outlineOptions_${itemData.outline.id}`;
+//    //        if (formData[formField] == null || formData[formField] == undefined) {
+//    //            formData[formField] = new Object();
+//    //        }
+//    //        formData[formField] = outlineOptionsObject;
+//    //        if (formInstanceProps.id) {
+//    //            var formObject = new Object();
+//    //            formObject[formField] = formData[formField];
+//    //            formInstanceProps.formInstance.option("changedFields", formObject);
+//    //        }
+//    //        var editor = $(`#dxHtmlEditor_${itemData.fieldInstance.dataField}_${itemData.fieldInstance.id}`).dxHtmlEditor().dxHtmlEditor("instance");
+//    //        if (editor != null) {
+//    //            if (option.value == -1) {
+//    //                editor.option("readOnly", true);
+//    //                editor.option("value", "");
+//    //            } else if (option.value == 0) {
+//    //                editor.option("readOnly", false);
+//    //                editor.option("value", "Nil");
+//    //            }
+//    //            else {
+//    //                if (formInstanceProps.isReadOnly)
+//    //                    editor.option("readOnly", true);
+//    //                else
+//    //                    editor.option("readOnly", false);
+//    //            }
+//    //        }
+//    //        else {
+//    //            itemData.fieldInstance.isFieldReadOnly = false;
+//    //            if (option.value == 0 || option.value == -1) {
+//    //                itemData.fieldInstance.isFieldReadOnly = true;
+//    //            }
+//    //            else {
+//    //                if (formInstanceProps.isReadOnly)
+//    //                    itemData.fieldInstance.isFieldReadOnly = true;
+//    //                else
+//    //                    itemData.fieldInstance.isFieldReadOnly = false;
+//    //            }
+//    //        }
+//    //    })
+//    //    .appendTo(deleteContainer);
+//    return deleteContainer;
+//}
 
 
 function isAccordionGroupSupportControls(item, props, formInstanceProps) {
@@ -3877,44 +3708,58 @@ function markupStatusCSS(container, options, control = null) {
 }
 
 function sendClientErrorLog(message, err, additionalDetails = {}) {
-    const errorLog = {
-        message: typeof message === 'string' ? message : JSON.stringify(message),
-        url: window.location.href,
-        userAgent: navigator.userAgent,
-        errorBrowserDetails: err ? {
-            status: err?.status || null,
-            responseText: err?.responseText || null,
-            stack: err?.stack || null,
-            fileName: additionalDetails.fileName || err?.fileName || null,
-            lineNumber: additionalDetails.lineNumber || err?.lineNumber || null,
-            columnNumber: additionalDetails.columnNumber || err?.columnNumber || null,
-            functionName: additionalDetails.functionName || null,
-            errorType: additionalDetails.errorType || 'http_error',
-            context: additionalDetails.context || getPageContext(),
-            breadcrumbTrail: additionalDetails.breadcrumbTrail || getBreadcrumbTrail()
-        } : {
-            errorType: additionalDetails.errorType || 'unknown',
-            fileName: additionalDetails.fileName || null,
-            lineNumber: additionalDetails.lineNumber || null,
-            columnNumber: additionalDetails.columnNumber || null,
-            functionName: additionalDetails.functionName || null,
-            context: additionalDetails.context || getPageContext(),
-            breadcrumbTrail: additionalDetails.breadcrumbTrail || getBreadcrumbTrail()
-        },
-        time: new Date().toISOString()
-    };
-    $.ajax({
-        url: '/api/ClientBrowserError/LogClientError',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify(errorLog),
-        success: function () {
-            console.log("Error logged to server");
-        },
-        error: function () {
-            console.warn("Failed to log error to server");
+    console.log(err);
+    if (window.ErrorFailLogCount <= _errorFailLogCountMax && err?.status != 200) {
+        const errorLog = new Object();
+        errorLog.Message = typeof message === 'string' ? message : JSON.stringify(message),
+            errorLog.Url = window.location.href,
+            errorLog.UserAgent = navigator.userAgent,
+        errorLog.Time = new Date().toISOString();
+            errorLog.ErrorBrowserDetails = new Object();
+        if (err) {
+            errorLog.ErrorBrowserDetails.Status = err?.status || null;
+            errorLog.ErrorBrowserDetails.ResponseText = err?.responseText || null;
+            errorLog.ErrorBrowserDetails.Stack = err?.stack || null;
+            errorLog.ErrorBrowserDetails.FileName = additionalDetails.fileName || err?.fileName || null;
+            errorLog.ErrorBrowserDetails.LineNumber = additionalDetails.lineNumber || err?.lineNumber || null;
+            errorLog.ErrorBrowserDetails.ColumnNumber = additionalDetails.columnNumber || err?.columnNumber || null;
+            errorLog.ErrorBrowserDetails.FunctionName = additionalDetails.functionName || null;
+            errorLog.ErrorBrowserDetails.ErrorType = additionalDetails.errorType || 'http_error';
+            errorLog.ErrorBrowserDetails.Context = JSON.stringify(additionalDetails.context) || JSON.stringify(getPageContext());
+            //errorLog.ErrorBrowserDetails.BreadcrumbTrails = additionalDetails.breadcrumbTrail || getBreadcrumbTrail();
         }
-    });
+        else {
+
+            errorLog.ErrorBrowserDetails.ErrorType = additionalDetails.errorType || 'unknown';
+            errorLog.ErrorBrowserDetails.FileName = additionalDetails.fileName || null;
+            errorLog.ErrorBrowserDetails.LineNumber = additionalDetails.lineNumber || null;
+            errorLog.ErrorBrowserDetails.ColumnNumber = additionalDetails.columnNumber || null;
+            errorLog.ErrorBrowserDetails.FunctionName = additionalDetails.functionName || null;
+            errorLog.ErrorBrowserDetails.Context = JSON.stringify(additionalDetails.context) || JSON.stringify(getPageContext());
+            //errorLog.ErrorBrowserDetails.BreadcrumbTrails = additionalDetails.breadcrumbTrail || getBreadcrumbTrail();
+        }
+
+       
+        ajaxPost('/api/ClientBrowserError/LogClientError', errorLog, {
+            onSuccess: function (response) {
+            },
+            onError: function (err) {
+                    window.ErrorFailLogCount++;
+            }
+        });
+    }
+    //$.ajax({
+    //    url: '/api/ClientBrowserError/LogClientError',
+    //    type: 'POST',
+    //    contentType: 'application/json',
+    //    data: JSON.stringify({ model: JSON.stringify( errorLog )}),
+    //    success: function () {
+    //        console.log("Error logged to server");
+    //    },
+    //    error: function () {
+    //        console.warn("Failed to log error to server");
+    //    }
+    //});
 }
 
 // Helper functions for error context
@@ -6736,6 +6581,19 @@ function renderDepartmentAssigneeBox(selector, options) {
                     }
                 }
             }
+        ],
+        onValueChanged: function (e) {
+            const item = e.component.option("selectedItem");
+            if (typeof settings.onChanged === "function") {
+                settings.onChanged(item, e.component, false);
+            }
+        }
+    });
+    $(select).on("click", function (e) {
+        e.stopPropagation();
+
+    });
+}
 
 // Global error handlers for detailed JavaScript error tracing
 window.addEventListener('error', function(event) {
@@ -6780,19 +6638,7 @@ $(document).on('click', '[id], button, a', function() {
 $(document).on('submit', 'form', function() {
     addBreadcrumb('submit: ' + ($(this).attr('id') || 'form'));
 });
-        ],
-        onValueChanged: function (e) {
-            const item = e.component.option("selectedItem");
-            if (typeof settings.onChanged === "function") {
-                settings.onChanged(item, e.component, false);
-            }
-        }
-    });
-    $(select).on("click", function (e) {
-        e.stopPropagation();
-        
-    });
-}
+       
 
 function getDefaultPicByDept(deptKey, dataForm) {
     if (!deptKey) return null;

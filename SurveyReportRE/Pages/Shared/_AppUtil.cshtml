@@ -340,7 +340,7 @@
                     })
                     .catch(error => {
                         try {
-                            sendClientErrorLog("Lỗi khi tải dữ liệu:", error);
+                           // sendClientErrorLog("Lỗi khi tải dữ liệu:", error);
                         }
                         catch {
                         }
@@ -544,7 +544,7 @@
                                 })
                                 .catch(error => {
                                     try {
-                                        sendClientErrorLog("Lỗi khi tải dữ liệu:", error);
+                                        //sendClientErrorLog("Lỗi khi tải dữ liệu:", error);
                                     }
                                     catch {
                                     }
@@ -1504,5 +1504,208 @@
          return modelConfig;
     }
 
+    function RenderGridElement(_gridConfig, gridInstance) {
+        $.each(_gridConfig, function (i, item) {
+            item.lookup = null;
+            item.mLookup = null;
+            if (item.gridVisibleIndex != null || item.gridVisibleIndex != undefined) {
+                item.visibleIndex = item.gridVisibleIndex;
+                if (item.gridVisibleIndex < 0) {
+                    item.visible = false;
+                }
+            }
+            else
+                item.visibleIndex = item.order;
+
+            if (item.validationRules != null && item.validationRules != "") {
+                if (typeof item.validationRules === "string")
+                    item.validationRules = JSON.parse(item.validationRules);
+            }
+
+            if (isNullOrEmpty(item.width)) {
+                item.width = _defaultGridFieldWidth;
+            }
+            if (isNullOrEmpty(item.height)) {
+                item.height = _defaultGridFieldHeight;
+            }
+            if (item.dataType == "enum") {
+                byteObjectConvert(item, gridInstance);
+                item = selectBoxRemakeOption(item, gridInstance);
+            }
+            else if (item.dataType == "table") {
+                var gridConfig = makeFieldFeatures(item, gridInstance, "grid");
+                var mDropDownDS = new MDropDownDataSource();
+
+                var customOptions = new Object();
+                customOptions.skip = _defaultSkipDropDown;
+                customOptions.take = _defaultTakeDropDown;
+                var DS = mDropDownDS.getDropDownDS('id', `api/${gridConfig.model}/DropDownLookUp`, customOptions);
+                if (gridConfig.config.displayExp) {
+                    item.lookup = {
+                        //dataSource: {
+                        //    key: 'id',
+                        //    store: DevExpress.data.AspNet.createStore({
+                        //        key: "id",
+                        //        loadUrl: `/api/${gridConfig.model}/GetAll`
+                        //    }),
+                        //    paginate: true,
+                        //},
+                        dataSource: DS,
+                        displayExpr: gridConfig.config.displayExp,
+                        valueExpr: 'id'
+                    };
+
+                    item.editorType = "dxDropDownBox";
+                    item.editorOptions = {
+                        editorType: "dxDropDownBox",
+                        width: "100%",
+                        dropDownOptions: {
+                            width: _defaultDropDownWidth,
+                            height: _defaultDropDownHeight,
+                        },
+                        showClearButton: true,
+                        dataSource: DS,
+                        columns: gridConfig.config.getScheme,
+                        contentTemplate: function (e) {
+                            const $dataGrid = $("<div>").dxDataGrid({
+                                selectionMode: 'all',
+                                // remoteOperations: { paging: true, filtering: true, sorting: true, grouping: true, summary: true, groupPaging: true },
+                                filterRow: { visible: true },
+                                dataSource: e.component.option("dataSource"),
+                                displayExpr: gridConfig.config.displayExpr,
+                                columns: e.component.option("columns"),
+                                selection: { mode: "single" },
+                                scrolling: {
+                                    mode: 'virtual',
+                                    preloadEnabled: false,
+                                    showScrollbar: 'always'
+                                },
+                                width: "100%",
+                                height: "100%",
+                                allowItemDeleting: false,
+                                showSelectionControls: true,
+                                sorting: {
+                                    mode: 'multiple',
+                                },
+                                onSelectionChanged: function (selectedItems) {
+                                    var keys = selectedItems.selectedRowKeys,
+                                        hasSelection = keys.length;
+                                    if (hasSelection) {
+                                        e.component.selectedItem = selectedItems.selectedRowsData;
+                                        e.component.option("displayValue", selectedItems.selectedRowsData[0][gridConfig.config.displayExp]);
+                                        e.component.option("value", keys[0]);
+                                        //e.component.option("selectedItem", selectedItems.selectedRowsData);
+                                    }
+                                },
+                                columnAutoWidth: true,
+                                customizeColumns: function (columns) {
+                                },
+                            });
+
+                            var dtGrid = $dataGrid.dxDataGrid("instance");
+                            e.component.on("valueChanged", function (args) {
+                                dtGrid.selectRows(args.value, false);
+                                if (args.value != null) {
+                                    e.component.close();
+                                }
+                            });
+
+                            return $dataGrid;
+                        }
+                    };
+                }
+                else {
+                    appErrorHandling(" RenderGridElement Exception: No display Expr defined!");
+                }
+            }
+        });
+
+    }
+
+    var appErrorHandling = function (message, err) {
+        if (err != null) {
+            if (err == "Unauthorized") {
+                window.location = "/Account/Login";
+            } else {
+                switch (err.status) {
+                    case 401:
+                        window.location = "/Account/Login";
+                        break;
+                    case 400: case 404: case 500:
+                        //Nhat bat custom exception
+                        if (message != err.responseText) {
+                            message = message == null ? err.responseText : message + err.responseText;
+                        } else {
+                            message = err.responseText;
+                        }
+
+                        break;
+                    default:
+                        {
+                            if (err.responseText)
+                                message = `${message} ${err.responseText}. ${err.stack}`;
+                            else
+                                message = `${message} ${err}`;
+                            break;
+                        }
+                }
+            }
+
+            try {
+                if (err?.stack) {
+                    const regex = /:(\d+):(\d+)\)?$/m;
+                    // Tìm dòng "at" thực tế đầu tiên chứa file (bỏ qua <anonymous>)
+                    const lines = err?.stack.split("\n");
+                    const targetLine = lines.find(line => line.includes("https://"));
+
+                    const match = targetLine.match(/:(\d+):(\d+)/);
+
+                    if (match) {
+                        const fullPath = targetLine;
+                        const fileName = fullPath.match(/\/([^\/]+):(\d+):(\d+)/);
+                        const errorLineIndex = lines.filter(line => line.includes(fileName[1])).findIndex(line => line.includes(fileName[1]));
+                        const errorLine = lines.filter(line => line.includes(fileName[1]));
+                        if (errorLineIndex !== -1 && lines[errorLineIndex + 1]) {
+                            const nextLine = errorLine[errorLineIndex + 1] ?? errorLine[errorLineIndex];
+
+                            // Regex lấy tên hàm trước dấu ngoặc đơn
+                            const functionMatch = nextLine.match(/at\s+(.*?)\s+\(/);
+                            const functionName = functionMatch ? functionMatch[1] : "unknown";
+
+                            const lineNumber = match[1];
+                            const columnNumber = match[2];
+                            const errorInfo = {
+                                message: err.message,
+                                fileName: fileName[1],
+                                lineNumber: lineNumber,
+                                columnNumber: columnNumber,
+                                stack: err?.stack,
+                                errorType: 'appErrorHandling',
+                                functionName: functionMatch[1]
+                            };
+                            sendClientErrorLog(message, err, errorInfo);
+                        }
+                    }
+                }
+            }
+            catch {
+
+            }
+            console.trace(); //For dev
+        }
+
+        try {
+            let parsedObject = JSON.parse(message);
+            if (parsedObject.typeMsg != undefined) {
+                if (parsedObject.typeMsg[0] == "popup") {
+                    appNotifyWarning(parsedObject.message[0]);
+                }
+            }
+            else
+                appNotifyError(message);
+
+        }
+        catch { appNotifyError(message); }
+    }
 </script>
 

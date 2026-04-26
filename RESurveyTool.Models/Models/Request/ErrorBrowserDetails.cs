@@ -18,7 +18,8 @@ namespace ERPCore.Models.Request
         public int? ColumnNumber { get; set; }
         public string? FunctionName { get; set; } = "";
         public string? ErrorType { get; set; } = ""; // "uncaught", "promise", "fetch", etc.
-        public Dictionary<string, object>? Context { get; set; } // Page state or additional context
-        public string[]? BreadcrumbTrail { get; set; } // Recent user actions
+        public string? Context { get; set; } // Page state or additional context
+        public List<object>? BreadcrumbTrails { get; set; } // Recent user actions
+        public string? BreadcrumbTrail { get; set; } // Recent user actions
     }
 }

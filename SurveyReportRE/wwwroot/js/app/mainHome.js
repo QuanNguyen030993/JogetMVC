@@ -465,7 +465,6 @@ function initTabs() {
                 var dataGrid = $try(function () {
                     return $tabContent.find("[id^='dataGrid_']").dxDataGrid("instance");
                 });
-
                 if (dataGrid != null) {
                     //dataGrid.option("height", "100%");
                     //dataGrid.refresh();
@@ -569,7 +568,7 @@ var setTabName = function (name, code) {
             var a = li.find("a");
             //set tab name
             if (name == null)
-                a.text("undefine");
+                a.text("undefined");
             else
                 a.text(name);
 
