@@ -3876,7 +3876,7 @@ function markupStatusCSS(container, options, control = null) {
 
 }
 
-function sendClientErrorLog(message, err) {
+function sendClientErrorLog(message, err, additionalDetails = {}) {
     const errorLog = {
         message: typeof message === 'string' ? message : JSON.stringify(message),
         url: window.location.href,
@@ -3884,8 +3884,23 @@ function sendClientErrorLog(message, err) {
         errorBrowserDetails: err ? {
             status: err?.status || null,
             responseText: err?.responseText || null,
-            stack: err?.stack || null
-        } : {},
+            stack: err?.stack || null,
+            fileName: additionalDetails.fileName || err?.fileName || null,
+            lineNumber: additionalDetails.lineNumber || err?.lineNumber || null,
+            columnNumber: additionalDetails.columnNumber || err?.columnNumber || null,
+            functionName: additionalDetails.functionName || null,
+            errorType: additionalDetails.errorType || 'http_error',
+            context: additionalDetails.context || getPageContext(),
+            breadcrumbTrail: additionalDetails.breadcrumbTrail || getBreadcrumbTrail()
+        } : {
+            errorType: additionalDetails.errorType || 'unknown',
+            fileName: additionalDetails.fileName || null,
+            lineNumber: additionalDetails.lineNumber || null,
+            columnNumber: additionalDetails.columnNumber || null,
+            functionName: additionalDetails.functionName || null,
+            context: additionalDetails.context || getPageContext(),
+            breadcrumbTrail: additionalDetails.breadcrumbTrail || getBreadcrumbTrail()
+        },
         time: new Date().toISOString()
     };
     $.ajax({
@@ -3900,6 +3915,50 @@ function sendClientErrorLog(message, err) {
             console.warn("Failed to log error to server");
         }
     });
+}
+
+// Helper functions for error context
+function getPageContext() {
+    try {
+        return {
+            title: document.title,
+            url: window.location.href,
+            referrer: document.referrer,
+            viewport: {
+                width: window.innerWidth,
+                height: window.innerHeight
+            },
+            userAgent: navigator.userAgent,
+            timestamp: new Date().toISOString()
+        };
+    } catch (e) {
+        return { error: 'Failed to get page context: ' + e.message };
+    }
+}
+
+function getBreadcrumbTrail() {
+    try {
+        // Simple breadcrumb based on recent clicks (you can enhance this)
+        const trail = JSON.parse(localStorage.getItem('errorBreadcrumb') || '[]');
+        return trail.slice(-10); // Last 10 actions
+    } catch (e) {
+        return [];
+    }
+}
+
+function addBreadcrumb(action) {
+    try {
+        const trail = JSON.parse(localStorage.getItem('errorBreadcrumb') || '[]');
+        trail.push({
+            action: action,
+            timestamp: new Date().toISOString(),
+            url: window.location.href
+        });
+        if (trail.length > 20) trail.shift(); // Keep only last 20
+        localStorage.setItem('errorBreadcrumb', JSON.stringify(trail));
+    } catch (e) {
+        // Ignore
+    }
 }
 
 function parseDateTime(dateStr) {
@@ -6677,6 +6736,50 @@ function renderDepartmentAssigneeBox(selector, options) {
                     }
                 }
             }
+
+// Global error handlers for detailed JavaScript error tracing
+window.addEventListener('error', function(event) {
+    const errorInfo = {
+        message: event.message,
+        fileName: event.filename,
+        lineNumber: event.lineno,
+        columnNumber: event.colno,
+        stack: event.error?.stack,
+        errorType: 'uncaught'
+    };
+    sendClientErrorLog(event.message, null, errorInfo);
+});
+
+window.addEventListener('unhandledrejection', function(event) {
+    const errorInfo = {
+        message: event.reason?.message || String(event.reason),
+        stack: event.reason?.stack,
+        errorType: 'unhandled_promise'
+    };
+    sendClientErrorLog(event.reason?.message || 'Unhandled promise rejection', null, errorInfo);
+});
+
+// Override console.error to also log to server
+const originalConsoleError = console.error;
+console.error = function(...args) {
+    // Call original
+    originalConsoleError.apply(console, args);
+    
+    // Log to server
+    const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
+    sendClientErrorLog('Console Error: ' + message, null, { errorType: 'console_error' });
+};
+
+// Track user actions for breadcrumb
+$(document).on('click', '[id], button, a', function() {
+    const element = $(this);
+    const id = element.attr('id') || element.attr('class') || element.prop('tagName');
+    addBreadcrumb('click: ' + id);
+});
+
+$(document).on('submit', 'form', function() {
+    addBreadcrumb('submit: ' + ($(this).attr('id') || 'form'));
+});
         ],
         onValueChanged: function (e) {
             const item = e.component.option("selectedItem");

@@ -11,5 +11,14 @@ namespace ERPCore.Models.Request
         public int? Status { get; set; }
         public string? ResponseText { get; set; } = "";
         public string? Stack { get; set; } = "";
+
+        // New fields for detailed error tracing
+        public string? FileName { get; set; } = "";
+        public int? LineNumber { get; set; }
+        public int? ColumnNumber { get; set; }
+        public string? FunctionName { get; set; } = "";
+        public string? ErrorType { get; set; } = ""; // "uncaught", "promise", "fetch", etc.
+        public Dictionary<string, object>? Context { get; set; } // Page state or additional context
+        public string[]? BreadcrumbTrail { get; set; } // Recent user actions
     }
 }
