@@ -2902,6 +2902,7 @@ function flattenItems(items) {
     return result;
 }
 
+
 function selectBoxRemakeOption(item, gridInstance, index, addtionalOptions) {
     var itemArr = [];
     var dataSourceLookup = new Object();
@@ -3708,6 +3709,7 @@ function markupStatusCSS(container, options, control = null) {
 }
 
 function sendClientErrorLog(message, err, additionalDetails = {}) {
+
     if (window.ErrorFailLogCount <= _errorFailLogCountMax && err?.status != 200) {
         const errorLog = new Object();
         errorLog.Message = typeof message === 'string' ? message : JSON.stringify(message),
@@ -5640,48 +5642,6 @@ function stretchColumnsEvenly(e, opts) {
         grid.updateDimensions();
     }
 }
-//function createAssigneeSelector(options) {
-//    const {
-//        container,
-//        dept,
-//        initialValue = null,
-//        onChanged = function () { }
-//    } = options;
-
-//    const state = {
-//        assignee: initialValue
-//    };
-
-//    //const wrapper = $("<div class='assignee-selector'/>").appendTo(container);
-//    container.dxSelectBox({
-//        label: "Assign To",
-//        //labelMode: "floating",
-//        searchEnabled: true,
-//        valueExpr: "accountName",
-//        displayExpr: "fullName",
-//        dataSource: [],
-//        value: initialValue,
-//        onInitialized(e) {
-//            ajaxGet("/api/Employee/AssigneeList", dept)
-//                .then(list => {
-//                    e.component.option("dataSource", list);
-//                });
-//        },
-//        onValueChanged(e) {
-//            state.assignee = e.value;
-//            onChanged(e.value);
-//        }
-//    });
-
-//    return {
-//        getValue() {
-//            return state.assignee;
-//        },
-//        setValue(v) {
-//            state.assignee = v;
-//        }
-//    };
-//}
 
 
 function newKey() {
@@ -6798,6 +6758,11 @@ function makeSelectBoxEditorOptions(dataSource, acceptCustomValue = false ,gridI
         },
     }
 }
+
+
+
+
+
 function renderBranchOverlay(currentDept) {
     const formState = buildFormState();
     const choices = getNextChoices(currentDept, formState);

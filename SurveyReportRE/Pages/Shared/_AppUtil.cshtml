@@ -1548,6 +1548,10 @@
                 byteObjectConvert(item, gridInstance);
                 item = selectBoxRemakeOption(item, gridInstance);
             }
+            else if (item.dataType == "customenum") {
+                byteObjectConvert(item, gridInstance);
+                item = selectBoxCustomFromTableRemakeOption(item, gridInstance);
+            }
             else if (item.dataType == "table") {
                 var gridConfig = makeFieldFeatures(item, gridInstance, "grid");
                 var mDropDownDS = new MDropDownDataSource();
@@ -1722,6 +1726,81 @@
 
         }
         catch { appNotifyError(message); }
+    }
+
+        function selectBoxCustomFromTableRemakeOption(item, gridInstance) {
+        if (item.formItem) {
+            var cfg = item.formItem; // parse từ JSON config
+
+            var store = new DevExpress.data.CustomStore({
+                key: cfg.valueExpr,
+                loadMode: "raw",
+                load: function (loadOptions) {
+                    return $.ajax({
+                        url: cfg.apiUrl,
+                        type: "GET",
+                        dataType: "json",
+                        data: {
+                            group: cfg.group,
+                            excludeCurrent: cfg.excludeCurrent,
+                            keyword: loadOptions.searchValue || ""
+                        }
+                    }).then(function (res) {
+                        return res && res.success ? res.data : [];
+                    });
+                },
+                byKey: function (key) {
+                    if (!key) return null;
+                    return $.ajax({
+                        url: `${cfg.apiByKeyUrl}/${key}`,
+                        type: "GET",
+                        dataType: "json"
+                    }).then(function (res) {
+                        return res && res.success ? res.data : null;
+                    });
+                }
+            });
+
+            item.lookup = {
+                dataSource: store,
+                displayExpr: cfg.displayExpr,
+                valueExpr: cfg.valueExpr,
+                searchEnabled: true,
+                showClearButton: true
+            };
+
+            item.editorType = "dxSelectBox";
+            item.editorOptions = makeCustomSelectBoxEditorOptions(store, cfg);
+        }
+        return item;
+    }
+
+    function makeCustomSelectBoxEditorOptions(dataSource, cfg ) {
+        return {
+            editorType: "dxSelectBox",
+            valueExpr: cfg.editorValueExpr,
+            displayExpr: cfg.editorDisplayExpr,
+            searchEnabled: true,
+            searchExpr: cfg.searchExpr,
+            placeholder: cfg.placeholder,
+            dataSource: dataSource,
+            width: cfg.width,
+            acceptCustomValue: false,
+            onValueChanged: function (e) {
+             // var ds = $(`#${moduleKey}-form${item}`).dxForm("instance").option("dataSource");
+             //            var store = ds;
+             //            var PICs = JSON.parse(formItems.pIC);
+             //            if (!itemChild?.accountName) return;
+             //            if (currentPic == itemChild?.accountName) return;
+             //            PICs[item] = itemChild.accountName;
+             //            var data = new Object();
+             //            data.pIC = JSON.stringify(PICs);
+             //            store.update(formItems.id, data)
+             //                .done(function () {
+             //                    DevExpress.ui.notify(`Assigned To ${itemChild.fullName}`, "success", 2000);
+             // });
+        }
+        };
     }
 </script>
 
