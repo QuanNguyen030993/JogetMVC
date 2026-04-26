@@ -1401,16 +1401,32 @@
         `;
     }
 
-    function TinyMCEElementMaker(idform)
+    function TinyMCEElementMaker(classform)
     {
-        tinymce.init({
-         selector: `#${idform}`,
-          width: _defaultEditorFieldWidth,height: _defaultEditorFieldHeight,
-          menubar: false,
-          plugins: "lists link image table code",
-          toolbar:
-              "undo redo | bold italic underline | bullist numlist | link image | code"
-         });
+        document.querySelectorAll(classform).forEach((el, idx) => {
+            setTimeout(() => {
+          tinymce.init({
+            width: _defaultEditorFieldWidth,height: _defaultEditorFieldHeight,
+            target: el,
+            inline: false,
+            plugins: "lists link image table code",
+            menubar: false,
+            toolbar:
+          "undo redo | bold italic underline | bullist numlist | link image | code"
+          });
+           }, idx * 180);
+        });
+        // tinymce.init({
+        //    selector: `.qt-submit.htmleditor`,
+        //   // selector: `#${idform}`,
+        //    // inline: true,
+        //   // content_css: false,
+        //   width: _defaultEditorFieldWidth,height: _defaultEditorFieldHeight,
+        //   menubar: false,
+        //   plugins: "lists link image table code",
+        //   toolbar:
+        //       "undo redo | bold italic underline | bullist numlist | link image | code"
+        //  });
     }
 
         function fetchConfigurationData(model, typeScheme = null) {

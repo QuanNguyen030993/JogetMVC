@@ -3708,7 +3708,6 @@ function markupStatusCSS(container, options, control = null) {
 }
 
 function sendClientErrorLog(message, err, additionalDetails = {}) {
-    console.log(err);
     if (window.ErrorFailLogCount <= _errorFailLogCountMax && err?.status != 200) {
         const errorLog = new Object();
         errorLog.Message = typeof message === 'string' ? message : JSON.stringify(message),

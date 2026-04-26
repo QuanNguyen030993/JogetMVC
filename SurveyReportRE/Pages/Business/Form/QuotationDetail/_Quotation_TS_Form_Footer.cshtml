@@ -6,7 +6,7 @@
 
 <div class="actionBarDept" id="actionBarDept_@dept">
     <div class="actionLeft">
-        <span class="dept-title">Remarks</span> <div id="qt-remarkBox_@dept"></div>
+        <span class="dept-title">Remarks</span> <div id="qt-remarkBox_@dept" class="htmleditor"></div>
     </div>
     <div class="actionRight">
         <div id="qt-btnSave_@dept"></div>
@@ -15,9 +15,9 @@
 </div>
 
 <script>
-     if (tinymce.get(`qt-remarkBox_@dept`))
-     tinymce.get(`qt-remarkBox_@dept`).remove();
-     TinyMCEElementMaker(`qt-remarkBox_@dept`);
+     // if (tinymce.get(`qt-remarkBox_@dept`))
+     // tinymce.get(`qt-remarkBox_@dept`).remove();
+     // TinyMCEElementMaker(`qt-remarkBox_@dept`);
      setTimeout( () => {
      var dept = "@dept";
       var pageLayout = window.QuotationPage;

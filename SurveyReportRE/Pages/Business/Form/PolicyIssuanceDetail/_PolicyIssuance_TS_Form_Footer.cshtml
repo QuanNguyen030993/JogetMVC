@@ -6,7 +6,7 @@
 
 <div class="actionBarDept" id="actionBarDept_@dept">
     <div class="actionLeft">
-        <span class="dept-title">Remarks</span> <div id="pi-remarkBox_@dept"></div>
+        <span class="dept-title">Remarks</span> <div id="pi-remarkBox_@dept" class="htmleditor"></div>
     </div>
     <div class="actionRight">
         <div id="pi-btnSave_@dept"></div>
@@ -17,7 +17,7 @@
 <script>
                 if (tinymce.get(`pi-remarkBox_@dept`))
       tinymce.get(`pi-remarkBox_@dept`).remove();
-      TinyMCEElementMaker(`pi-remarkBox_@dept`);
+      // TinyMCEElementMaker(`pi-remarkBox_@dept`);
      setTimeout( () => {
      var dept = "@dept";
              var pageLayout = window.PolicyIssuancePage;

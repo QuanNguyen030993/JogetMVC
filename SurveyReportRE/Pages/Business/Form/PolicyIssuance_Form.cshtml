@@ -563,7 +563,7 @@ Note:
     state.selectedCodeNo = null;
     state.selectedAttachmentId = null;
     state.stageDept = null;
-
+    state.quoteDetails = {};
     state.quotePaging = {
         skip: 0,
         take: 20,
@@ -835,6 +835,7 @@ Note:
           }
 
         async function loadQuotePage(reset = false) {
+            debugger
             if (state.quotePaging.loading) return;
             if (!reset && state.quotePaging.done) return;
 
@@ -1395,7 +1396,6 @@ Note:
         function renderDetail() {
             var q = getSelectedModel();
             if (!q) return;
-
             resetOverviewAnimation();
 
             $(`#${formModuleKeyPi}-recordNo`).text(q.policyIssuanceCode);
@@ -1421,6 +1421,7 @@ Note:
             updateSectionUpdatedTime(q);
             initDepartmentAssignees(formModuleKeyPi, firstRender ? null : 0  );
             scrollToDept(formModuleKeyPi, state.focusDept);
+            TinyMCEElementMaker(`.htmleditor`);
 
             animateOverviewSections();
         }

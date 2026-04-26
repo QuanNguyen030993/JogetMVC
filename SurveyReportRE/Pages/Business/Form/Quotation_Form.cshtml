@@ -1403,6 +1403,8 @@ Note:
             initDepartmentAssignees(formModuleKeyQt, firstRender ? null : 0);
             animateOverviewSections(formModuleKeyQt);
             scrollToDept(formModuleKeyQt, state.focusDept);
+            TinyMCEElementMaker(`.htmleditor`);
+            
         }
 
 
@@ -1468,6 +1470,7 @@ Note:
             updateHints();
             renderDeptCallouts(PIC_JSON);
             firstRender = false;
+            
         });
     }, _delayQuotationsLoadForm);
 </script>
