@@ -456,6 +456,41 @@ Note:
         min-width: 36px;
     }
 
+    .dept-section {
+        opacity: 0;
+        transform: translateY(18px);
+        transition: opacity .35s ease, transform .35s ease;
+    }
+
+    .dept-section.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .dept-section .animate-step {
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity .28s ease, transform .28s ease;
+    }
+
+    .dept-section .animate-step.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .dept-callout.animate-step {
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(6px);
+        transition: opacity .28s ease, transform .28s ease, visibility .28s ease;
+    }
+
+    .dept-callout.animate-step.visible {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
 </style>
 
 <script type="text/javascript">
@@ -510,6 +545,8 @@ Note:
 
         var deptData = { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} };
 
+        state.quoteDetails = {};
+
         function money(n) {
             return new Intl.NumberFormat("vi-VN", {
                 style: "currency",
@@ -550,6 +587,9 @@ Note:
         }
 
         function getSelectedModel() {
+            if (selectedId && state.quoteDetails[selectedId]) {
+                return state.quoteDetails[selectedId];
+            }
             const q = state.quotes.find(x => x.id === selectedId) || state.quotes[0];
             return q || null;
         }
@@ -582,6 +622,24 @@ Note:
             if (filter && filter !== "all") params.set("policyIssuanceStatus", filter);
 
             return `/api/PolicyIssuance/GetAll?${params.toString()}`;
+        }
+
+        function loadQuoteDetail(id) {
+            if (!id) return Promise.resolve(null);
+            if (state.quoteDetails[id]) {
+                return Promise.resolve(state.quoteDetails[id]);
+            }
+            return $.ajax({
+                url: `/api/PolicyIssuance/GetAll?key=${id}`,
+                method: "GET",
+                contentType: "application/json"
+            }).then(detail => {
+                var item = Array.isArray(detail) ? detail[0] : detail;
+                if (item) {
+                    state.quoteDetails[id] = item;
+                }
+                return item;
+            });
         }
 
         function showListLoader(show) {
@@ -776,6 +834,7 @@ Note:
                 if (!state.quotePaging.firstLoadDone && state.quotes.length > 0) {
                     state.quotePaging.firstLoadDone = true;
                     syncSelectedState(state.quotes[0]);
+                    await loadQuoteDetail(state.quotes[0].id);
                     await loadSelectedWorkflow();
                     renderDetail();
                 }
@@ -1244,9 +1303,52 @@ Note:
             return { bind, loadComments, loadReferenceFields, openRightCommentPanel, closeRightCommentPanel };
         })();
 
+        function resetOverviewAnimation() {
+            const $sections = $(`#${formModuleKeyQt}-overviewScroll section.dept-section`);
+            $sections.removeClass("visible");
+            $sections.each(function () {
+                const $section = $(this);
+                $section.find(".dept-header, .dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer, .dx-fileuploader, .attachment, .att-preview, .att-list, .att-item")
+                    .removeClass("animate-step visible");
+                $(`#${formModuleKeyQt}-treeStack .dept-node[data-key='${$section.attr('id').replace(formModuleKeyQt + '-sec', '')}'] .dept-callout`)
+                    .removeClass("animate-step visible");
+            });
+        }
+
+        function animateOverviewSections() {
+            const sequence = ["FO", "TS", "UW", "LMKT", "PM"];
+            sequence.forEach((dept, idx) => {
+                const sectionId = `#${formModuleKeyQt}-sec${dept}`;
+                const $section = $(sectionId);
+                if (!$section.length) return;
+
+                setTimeout(() => {
+                    $section.addClass("visible");
+
+                    const $assigneeCallout = $(`#${formModuleKeyQt}-treeStack .dept-node[data-key='${dept}'] .dept-callout`);
+                    $assigneeCallout.addClass("animate-step");
+                    setTimeout(() => {
+                        $assigneeCallout.addClass("visible");
+                    }, 100);
+
+                    const $fields = $section.find(".dept-header, .dept-upperbody, .dept-body, .dept-lowerbody");
+                    setTimeout(() => {
+                        $fields.addClass("visible");
+                    }, 220);
+
+                    const $attachments = $section.find(".dx-fileuploader, .attachment, .att-preview, .att-list, .att-item");
+                    setTimeout(() => {
+                        $attachments.addClass("animate-step visible");
+                    }, 360);
+                }, idx * 180);
+            });
+        }
+
         function renderDetail() {
             var q = getSelectedModel();
             if (!q) return;
+
+            resetOverviewAnimation();
 
             $(`#${formModuleKeyQt}-recordNo`).text(q.policyIssuanceCode);
 
@@ -1271,6 +1373,8 @@ Note:
             updateSectionUpdatedTime(q);
             initDepartmentAssignees(formModuleKeyQt, firstRender ? null : 0  );
             scrollToDept(formModuleKeyQt, state.focusDept);
+
+            animateOverviewSections();
         }
 
         //Select items
