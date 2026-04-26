@@ -7,5 +7,6 @@ namespace RESurveyTool.Models.Models.Parsing
     {
         public Notification? Notification { get; set; }
         public string connectionId { get; set; } = "";
+        public object tabPublicUrl { get; set; }
     }
 }

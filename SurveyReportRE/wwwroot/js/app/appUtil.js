@@ -528,7 +528,6 @@ function isNullOrEmpty(str) {
     if (typeof str === "string")
         return !str || str.trim().length === 0;
     else {
-        debugger
     return str === null ? true : false;
     }
 }
@@ -4086,19 +4085,19 @@ const tabClickEvent = function (e, eTabName, eTab, callback) {
 function formatNumber(num) {
     return num < 10 ? '0' + num : num.toString();
 }
-function formatDate(timeStampString, format) {
-    var d = new Date(timeStampString),
-        month = '' + (d.getMonth() + 1),
-        day = '' + d.getDate(),
-        year = d.getFullYear();
+//function formatDate(timeStampString, format) {
+//    var d = new Date(timeStampString),
+//        month = '' + (d.getMonth() + 1),
+//        day = '' + d.getDate(),
+//        year = d.getFullYear();
 
-    if (month.length < 2)
-        month = '0' + month;
-    if (day.length < 2)
-        day = '0' + day;
+//    if (month.length < 2)
+//        month = '0' + month;
+//    if (day.length < 2)
+//        day = '0' + day;
 
-    return [day, month, year].join('-');
-}
+//    return [day, month, year].join('-');
+//}
 function tabValidationCheck(checkFields, tabs, id, connectionId, entityName) {
     if (id && _cacheDataGridConfigs) {
         $.each(tabs, function (tabIndex, tabItem) {
@@ -5091,6 +5090,59 @@ function updateNotification(count) {
     }
 }
 
+// ====== reload + refresh UI ======
+async function reloadNotifications(take = 30) {
+    const qs = $.param({
+        filter: JSON.stringify(["receivedBy", "=", _loginUser]),
+        paging: 1,
+        skip: 0,
+        take: take,
+        orderBy: "CreatedDate",
+        orderDir: "desc"
+    });
+    ajaxGet("/api/Notification/GetAll", qs)
+        .then(ids => {
+            try {
+                ids = ids.map(id => {
+                    if (id.url != "{}" && id.url != "" && id.url != undefined && id.url != null) {
+                        id.url = JSON.parse(id.url);
+                    }
+                    else {
+                        id.url = "";
+                    }
+
+                    ; return id;
+                });
+                const res = ids;
+                _notif.items = res || [];
+                refreshNotifUI();
+            } catch (e) {
+                console.error(e);
+            }
+
+
+        }).promise();
+
+}
+
+
+
+function showPopupNotification(title, body) {
+    if (Notification.permission !== 'granted') {
+        Notification.requestPermission();
+    } else {
+        const options = {
+            body: body,
+            dir: 'ltr'//,
+            // image: 'image.jpg'
+        };
+        const notification = new Notification(title, options);
+
+        notification.onclick = function () {
+            window.open('https://www.google.com');
+        };
+    }
+}
 
 function flashNotificationDot() {
     const $icon = $("#notificationBtn");
@@ -5427,128 +5479,117 @@ function popupStandardContentByScroll(customContainer) {
     // =========================
     // ajaxCore (base engine)
     // =========================
-    function ajaxCore(method, url, {
-        routeParam = null,   // ví dụ dept cho route: /{dept}
-        query = null,        // object => query string
-        body = null,         // object => JSON body
-        headers = {},        // custom headers (merge)
-        dataType = "json",
-        timeout = 30000,
-        cache = false,
-        processData = false,
-        // callbacks (optional)
-        onSuccess = null,
-        onError = null,
-        onFinally = null,
 
-        // hook (optional)
-        beforeSend = null
-    } = {}) {
-        const fullUrl = (routeParam !== null && routeParam !== undefined)
-            ? `${url}/${encodeURIComponent(routeParam)}`
-            : url;
+function ajaxCore(method, url, {
+    routeParam = null,   // ví dụ dept cho route: /{dept}
+    query = null,        // object => query string
+    body = null,         // object => JSON body
+    headers = {},        // custom headers (merge)
+    dataType = "json",
+    timeout = 30000,
+    cache = false,
+    processData = false,
+    // callbacks (optional)
+    onSuccess = null,
+    onError = null,
+    onFinally = null,
 
-        const m = (method || "GET").toUpperCase();
-        const isGet = m === "GET";
-        const isPut = m === "PUT";
-        // NOTE: theo style bạn đang dùng: set 'Content-Type' trong headers cho POST JSON
-        const finalHeaders = { ...headers };
-        if (!isGet) {
-            // nếu user chưa set thì auto set
-            if (!finalHeaders["Content-Type"] && !finalHeaders["content-type"]) {
-                finalHeaders["Content-Type"] = "application/json";
-            }
+    // hook (optional)
+    beforeSend = null
+} = {}) {
+
+    const fullUrl = (routeParam !== null && routeParam !== undefined)
+        ? `${url}?${routeParam}`
+        : url;
+
+    const m = (method || "GET").toUpperCase();
+    const isGet = m === "GET";
+    const isPut = m === "PUT";
+
+    // NOTE: theo style bạn đang dùng: set 'Content-Type' trong headers cho POST JSON
+    const finalHeaders = { ...headers };
+    if (!isGet) {
+        // nếu user chưa set thì auto set
+        if (!finalHeaders["Content-Type"] && !finalHeaders["content-type"]) {
+            finalHeaders["Content-Type"] = "application/json";
         }
 
-        var ajaxOptions = {
-            url: fullUrl,
-            type: m,
-            dataType,
-            timeout,
-            cache,
-           
-            // GET => query, POST => JSON.stringify(body)
-            data: isGet ? (query || {}) : (body == null ? null : (isPut ? body : JSON.stringify(body))),
 
-
-            //Should not use in PUT method
-            //headers: finalHeaders,
-            //contentType: isGet ? undefined : "application/json; charset=utf-8",
-
-            beforeSend: (xhr) => {
-                try { beforeSend?.(xhr); } catch { }
-            }
-        };
-
-        if (!isPut) {
-
-            // nếu không phải GET thì thêm contentType JSON
-            if (!isGet) {
-                ajaxOptions.contentType = "application/json; charset=utf-8";
-            }
-
-            if (finalHeaders) {
-                ajaxOptions.headers = finalHeaders;
-            }
-        }
-        else {
-            ajaxOptions.processData = processData;
-        }
-
-        const jqxhr = $.ajax(ajaxOptions);
-
-
-        //const jqxhr = $.ajax({
-        //    url: fullUrl,
-        //    type: m,
-        //    dataType,
-        //    timeout,
-        //    cache,
-        //    headers: finalHeaders,
-
-        //    // GET => query, POST => JSON.stringify(body)
-        //    data: isGet ? (query || {}) : (body == null ? null : JSON.stringify(body)),
-
-        //    // nếu bạn muốn giữ đúng style "headers Content-Type" thì contentType có thể bỏ,
-        //    // nhưng để server đọc JSON ổn định thì giữ thêm contentType (không mâu thuẫn).
-        //    contentType: isGet ? undefined : "application/json; charset=utf-8",
-
-        //    beforeSend: (xhr) => {
-        //        try { beforeSend?.(xhr); } catch { }
-        //    }
-        //});
-
-        // callbacks + promise bridge
-        jqxhr
-            .done((res, textStatus, xhr) => {
-                try { onSuccess?.(res, { url: fullUrl, method: m, textStatus, xhr }); } catch (e) {
-                    try { sendClientErrorLog?.("onSuccess callback error", e); } catch { }
-                }
-            })
-            .fail((xhr, textStatus, errorThrown) => {
-                const errInfo = {
-                    url: fullUrl,
-                    method: m,
-                    textStatus,
-                    errorThrown,
-                    status: xhr?.status,
-                    responseText: xhr?.responseText,
-                    xhr
-                };
-
-                try { onError?.(errInfo); } catch (e) {
-                    console.error(errInfo);
-                    try { sendClientErrorLog?.("onError callback error", e); } catch { }
-                }
-
-                try { console.error(errInfo);  sendClientErrorLog?.("AJAX ERROR", errInfo); } catch { }
-            })
-            .always(() => {
-                try { onFinally?.(); } catch { }
-            });
-
-        return jqxhr; // jqXHR = Promise-like
     }
+    else {
+        if (routeParam && typeof routeParam === "object") {
+            for (const [k, v] of Object.entries(query)) {
+                if (v === null || v === undefined) continue;
+                finalHeaders[headerPrefix + k] = String(v);
+            }
+        }
+    }
+
+    var ajaxOptions = {
+        url: fullUrl,
+        type: m,
+        dataType,
+        timeout,
+        cache,
+        processData: processData,
+        // GET => query, POST => JSON.stringify(body)
+        data: isGet ? (query || {}) : (body == null ? null : (isPut ? body : JSON.stringify(body))),
+
+
+        //Should not use in PUT method
+        //headers: finalHeaders,
+        //contentType: isGet ? undefined : "application/json; charset=utf-8",
+
+        beforeSend: (xhr) => {
+            try { beforeSend?.(xhr); } catch { }
+        }
+    };
+
+    if (!isPut) {
+
+        // nếu không phải GET thì thêm contentType JSON
+        if (!isGet) {
+            ajaxOptions.contentType = "application/json; charset=utf-8";
+        }
+
+        if (finalHeaders) {
+            ajaxOptions.headers = finalHeaders;
+        }
+    }
+
+    const jqxhr = $.ajax(ajaxOptions);
+
+    // callbacks + promise bridge
+    jqxhr
+        .done((res, textStatus, xhr) => {
+            try { onSuccess?.(res, { url: fullUrl, method: m, textStatus, xhr }); } catch (e) {
+                try { sendClientErrorLog?.("onSuccess callback error", e); } catch { }
+            }
+        })
+        .fail((xhr, textStatus, errorThrown) => {
+            const errInfo = {
+                url: fullUrl,
+                method: m,
+                textStatus,
+                errorThrown,
+                status: xhr?.status,
+                responseText: xhr?.responseText,
+                xhr
+            };
+
+            try { onError?.(errInfo); } catch (e) {
+                try { sendClientErrorLog?.("onError callback error", e); } catch { }
+            }
+
+            try { sendClientErrorLog?.("AJAX ERROR", errInfo); } catch { }
+        })
+        .always(() => {
+            try { onFinally?.(); } catch { }
+        });
+
+    return jqxhr; // jqXHR = Promise-like
+}
+
 
 
     // =========================
@@ -5567,6 +5608,7 @@ function popupStandardContentByScroll(customContainer) {
 
         return ajaxCore("GET", url, { routeParam, query, ...opt });
     }
+
 
 
     // =========================
@@ -6501,7 +6543,6 @@ function buildFolder(latestOptions, sectionName) {
         (latestOptions?.code ? `\\${latestOptions.code}` : "");
 }
 function uploadFileAjax(file, options) {
-    debugger
     const url = options.url;
     const guid = options.guid || "";
     const folder = options.folder || "";
@@ -7425,4 +7466,23 @@ function reloadWorkflow(selectedGuid, selectedId, stageDept, moduleKey) {
         });
 
 
+}
+
+function openMessageDialog(item) {
+
+    const createdText = fmtTimeLocal(item.createdDate);
+    const title = escapeHtml(item.title || "Message");
+    // ưu tiên message; nếu bạn có field khác như item.body/item.content thì thay ở đây
+    const body = escapeHtml(item.message || "");
+    var popup = makePopup("small", "Title")
+
+    popup.option("contentTemplate", function (container) {
+        return `
+        <div class="msg-meta">
+          ${createdText ? `Subject date: ${createdText}` : ""}
+        </div>
+        <div class="msg-body">${body || "(empty)"}</div>
+      `;
+    });
+    popup.show();
 }

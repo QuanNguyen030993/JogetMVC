@@ -59,17 +59,11 @@ public class NotificationController : BaseControllerApi<Notification>
         //    mKTSurveyRequest = await _mKTSurveyRequestRepository.InsertData(mKTSurveyRequest);
         //    notification.Notification.RecordGuid = mKTSurveyRequest.Guid;
 
-        //    var urlObj = new
-        //    {
-        //        url = $"/Business/Request/{nameof(MKTSurveyRequest)}_Form/{mKTSurveyRequest.Id}",
-        //        caption = $"form_{nameof(MKTSurveyRequest)}_Form_{mKTSurveyRequest.Id}",
-        //        name = $"{nameof(MKTSurveyRequest)} {mKTSurveyRequest.TicketNo}",
-        //        data = ""
-        //    };
+  
 
-        //    //notification.Notification.Url = $"/Business/Request/${nameof(MKTSurveyRequest)}_Form/{mKTSurveyRequest.Id}";
-        //    notification.Notification.Url = JsonSerializer.Serialize(urlObj);
-        //    await _BaseRepository.InsertData(notification.Notification);
+            //notification.Notification.Url = $"/Business/Request/${nameof(MKTSurveyRequest)}_Form/{mKTSurveyRequest.Id}";
+            notification.Notification.Url = JsonSerializer.Serialize(notification.tabPublicUrl);
+           await _BaseRepository.InsertData(notification.Notification);
 
         //}
         if (onlineUser?.ConnectionId != null)

@@ -302,55 +302,55 @@ Note:
         transition: opacity .35s ease, transform .35s ease;
     }
 
-    .dept-section.visible {
-        opacity: 1;
-        transform: translateY(0);
-    }
+        .dept-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
 
-    .dept-section .animate-step {
-        opacity: 0;
-        transform: translateY(10px);
-        transition: opacity .28s ease, transform .28s ease;
-    }
+        .dept-section .animate-step {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity .28s ease, transform .28s ease;
+        }
 
-    .dept-section .animate-step.visible {
-        opacity: 1;
-        transform: translateY(0);
-    }
+            .dept-section .animate-step.visible {
+                opacity: 1;
+                transform: translateY(0);
+            }
 
-    .dept-callout {
-        opacity: 0;
-        visibility: hidden;
-        transform: translateY(6px);
-        transition: opacity .28s ease, transform .28s ease, visibility .28s ease;
-    }
+        /*.dept-callout {
+                opacity: 0;
+                visibility: hidden;
+                transform: translateY(6px);
+                transition: opacity .28s ease, transform .28s ease, visibility .28s ease;
+            }
 
-    .dept-callout.visible {
-        opacity: 1;
-        visibility: visible;
-        transform: translateY(0);
-    }
+                .dept-callout.visible {
+                    opacity: 1;
+                    visibility: visible;
+                    transform: translateY(0);
+                }*/
 
-    .animate-step {
-        opacity: 0;
-        transform: translateY(10px);
-        transition: opacity .28s ease, transform .28s ease;
-    }
+        /*     .animate-step {
+                opacity: 0;
+                transform: translateY(10px);
+                transition: opacity .28s ease, transform .28s ease;
+            }
 
-    .animate-step.visible {
-        opacity: 1;
-        transform: translateY(0);
-    }
+                .animate-step.visible {
+                    opacity: 1;
+                    transform: translateY(0);
+                }  */
 
-    /* ======= NEW: Section header click expand/collapse + updated time ======= */
-    .dept-section .dept-header {
-        cursor: pointer;
-        user-select: none;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        border-bottom: 1px solid rgba(17,24,39,.08);
-    }
+        /* ======= NEW: Section header click expand/collapse + updated time ======= */
+        .dept-section .dept-header {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(17,24,39,.08);
+        }
 
     .dept-hint-wrap {
         display: flex;
@@ -503,6 +503,41 @@ Note:
 
 </style>
 
+<body>
+    <div class="title">
+
+        @await Html.PartialAsync("_OverviewPane", new OverviewPanePartialModel
+   {
+       Prefix = prefix,
+       ModuleCode = moduleCode,
+       Title = title
+   })
+    </div>
+
+    <div class="actionBar">
+        <div class="actionLeft">
+            <span class="pill">Record: <b id="qt-recordNo">Qu-10030</b></span>
+            <span class="pill">Login role: <b id="qt-loginRoleLabel"></b></span>
+            <span id="qt-focusDeptPill" class="pill">Focus section: </span>
+        </div>
+        <div class="actionRight">
+            <div id="qt-btnClientConfirm"></div>
+        </div>
+    </div>
+
+    <div id="branchOverlay" class="branchOverlay">
+        <div class="backdrop"></div>
+        <div class="branchPopup">
+            <div class="branchTitle">
+                <span>Submit Route</span>
+                <span class="branchHint">Choose next dept</span>
+            </div>
+            <div class="branchCanvas">
+                <svg width="100%" height="100%" viewBox="0 0 260 140" style="position:absolute;inset:0;"></svg>
+            </div>
+        </div>
+    </div>
+</body>
 <script type="text/javascript">
     var PIC_JSON = `{}`;
     var formModuleKeyQt = "qt";
@@ -593,32 +628,12 @@ Note:
                 $co.css({ color: "rgba(17,24,39,.85)" });
             });
         }
+    function getSelectedModel() {
+             const q = state.quotes.find(x => x.id === selectedId) || state.quotes[0];
+             return q || null;
+         }
 
-        function getSelectedModel() {
-            if (selectedId && state.quoteDetails[selectedId]) {
-                return state.quoteDetails[selectedId];
-            }
-            return state.quotes.find(x => x.id === selectedId) || state.quotes[0] || null;
-        }
 
-        function applyFilter(data) {
-            var arr = (data || []).slice();
-
-            if (filter !== "all") {
-                arr = arr.filter(x => (x.status || x.quotationStatus) === filter);
-            }
-
-            if (searchText) {
-                var t = searchText.toLowerCase();
-                arr = arr.filter(x =>
-                    (x.quotationCode || "").toLowerCase().includes(t) ||
-                    (x.clientName || "").toLowerCase().includes(t) ||
-                    String(x.requestNo || "").includes(t)
-                );
-            }
-
-            return arr;
-        }
 
         function buildListUrl() {
             const params = new URLSearchParams();
@@ -846,7 +861,7 @@ Note:
                     state.quotePaging.firstLoadDone = true;
                     syncSelectedState(state.quotes[0]);
                     await loadSelectedWorkflow();
-                    await loadQuoteDetail(state.selectedId);
+
                     renderDetail();
                 }
             } catch (err) {
@@ -894,17 +909,17 @@ Note:
             $sections.removeClass("visible");
             $sections.each(function () {
                 const $section = $(this);
-                $section.find(".dept-header, .dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer, .dx-fileuploader, .attachment, .att-preview, .att-list, .att-item")
+                $section.find(".dept-header, .dept-upperbody, .dept-body, .dept-lowerbody, .dx-fileuploader, .attachment, .att-preview, .att-list, .att-item")
                     .addClass("animate-step")
                     .removeClass("visible");
-                $(`#${prefix}-treeStack .dept-node[data-key='${$section.attr('id').replace(prefix + '-sec', '')}'] .dept-callout`)
-                    .addClass("animate-step")
-                    .removeClass("visible");
+                // $(`#${prefix}-treeStack .dept-node[data-key='${$section.attr('id').replace(prefix + '-sec', '')}'] .dept-callout`)
+                //     .addClass("animate-step")
+                //     .removeClass("visible");
             });
         }
 
         function animateOverviewSections(prefix) {
-            const sequence = ["FO", "TS", "UW", "LMKT", "PM"];
+            const sequence = qtDeptModuleCode;
             sequence.forEach((dept, idx) => {
                 const sectionId = `#${prefix}-sec${dept}`;
                 const $section = $(sectionId);
@@ -1386,180 +1401,10 @@ Note:
             updateHints();
             updateSectionUpdatedTime(q);
             initDepartmentAssignees(formModuleKeyQt, firstRender ? null : 0);
-
-            PIC_JSON = pICs.find(f => f.quotationCode == q.quotationCode)?.pIC ?? q.pIC ?? "{}";
-            renderDeptCallouts(PIC_JSON);
             animateOverviewSections(formModuleKeyQt);
             scrollToDept(formModuleKeyQt, state.focusDept);
         }
 
-        //Select items
-        // function bindQuoteCardClick() {
-        //     $("#qt-quoteList")
-        //         .off("click.quoteCard", ".qt-quoteCard")
-        //         .on("click.quoteCard", ".qt-quoteCard", function () {
-        //             const id = Number($(this).attr("data-id"));
-        //             const source = state.isSearching ? (state.displayQuotes || []) : (state.quotes || []);
-        //             const q = source.find(x => Number(x.id) === id);
-        //             if (!q) return;
-        //             selectedId = q.id ?? null;
-        //             selectedGuid = q.guid ?? null;
-        //             selectedAttachmentId = q.documentId ?? null;
-        //             selectedCodeNo = q.quotationCode ?? null;
-        //             stageDept = q.stageDept ?? null;
-
-        //             state.selectedId = selectedId;
-        //             state.selectedGuid = selectedGuid;
-        //             state.selectedAttachmentId = selectedAttachmentId;
-        //             state.selectedCodeNo = selectedCodeNo;
-        //             state.stageDept = stageDept;
-        //             state.focusDept = state.currentUserRole;
-        //             state.resFK = q.resFK;
-
-        //             const params = new URLSearchParams();
-        //             params.set("refKey", state.selectedGuid);
-        //             params.set("refField", 'RecordGuid');
-
-        //             ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null)
-        //                 .then(res => {
-        //                     var pinnedNotes = (res || []).map(x => ({
-        //                         id: x.id,
-        //                         section: x.currentDepartment,//target main
-        //                         fromSection: x.fromDepartment,//target pin
-        //                         toSection: x.toDepartment,
-        //                         type: x.type,
-        //                         unread: !x.isRead,
-        //                         isRead: !x.isRead,
-        //                         linkedPin: x.isPinned,
-        //                         isPinned: x.isPinned,
-        //                         body: x.content,
-        //                         text: x.content,
-        //                         replies: 0,
-        //                         fullText: x.content,
-        //                         urgent: false,
-        //                         time: parseToGMT7(x.createdDate, 0)
-        //                     }));
-        //                     state.comments = pinnedNotes;
-        //                     state.pinNotes = pinnedNotes.filter(f => f.isPinned);
-        //                 });
-
-
-        //             PIC_JSON = pICs.find(f => f.quotationCode == selectedCodeNo)?.pIC ?? q.pIC ?? "{}";
-        //             renderDeptCallouts(PIC_JSON);
-        //             var map = parsePicMap(PIC_JSON);
-        //             stageAccount = map[stageDept] ? map[stageDept] : "(Unassigned)";
-
-        //             $(".qt-quoteCard").removeClass("selected");
-        //             $(this).addClass("selected");
-        //             var encodedFolder = encodeURIComponent(`RES\\${state.selectedCodeNo}`);
-        //             loadSelectedWorkflow().then(() => {
-        //                 renderDetail();
-        //                 // initDepartmentAssignees(formModuleKeyQt,0);
-
-        //                 if (commentPanelOpened) {
-        //                     $("#btnCloseRightComment").click();
-        //                 }
-        //             });
-        //             $.get(`/api/Document/AttachmentSummary/${state.resFK.guid}/${encodedFolder}`, null
-        //             ).done(function (res) {
-        //                 window.QuotationPage.state.formFO.dxForm("instance").updateData("resAttachmentCount", res.attachmentCount);
-        //                 window.QuotationPage.state.formFO.dxForm("instance").updateData("hasResAttachment", res.hasAttachment);
-        //                 window.QuotationPage.state.hasResAttachment = res.hasAttachment;
-        //                 if (res.hasAttachment)
-        //                     $("#btnToggleResForm").addClass("hasResAttachment");
-        //                 else
-        //                     $("#btnToggleResForm").removeClass("hasResAttachment");
-        //             });
-
-
-        //         });
-        // }
-
-        // function bindInfiniteScroll() {
-        //     const $scroller = $(".quote-pane-scroll");
-
-        //     $scroller.off("scroll.quote").on("scroll.quote", function () {
-        //         const el = this;
-        //         const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 120;
-        //         if (nearBottom) {
-        //             loadQuotePage(false);
-        //         }
-        //     });
-        // }
-
-        // function initMainPaneSplitter() {
-        //     const grid = document.getElementById("mainContentGrid");
-        //     const splitter = document.getElementById("mainSplitter");
-        //     if (!grid || !splitter) return;
-
-        //     const MIN_LEFT = 260;
-        //     const MAX_LEFT = 520;
-        //     const COLLAPSED_LEFT = 0;
-        //     const SPLITTER_W = 10;
-        //     let isDragging = false;
-
-        //     function setLeftWidth(px) {
-        //         const total = grid.clientWidth;
-        //         const maxAllowed = Math.min(MAX_LEFT, total - 620 - SPLITTER_W);
-        //         const left = Math.max(MIN_LEFT, Math.min(px, maxAllowed));
-        //         grid.classList.remove("left-collapsed");
-        //         grid.style.gridTemplateColumns = `${left}px ${SPLITTER_W}px minmax(620px, 1fr)`;
-        //     }
-
-        //     function collapseLeft() {
-        //         grid.classList.add("left-collapsed");
-        //         grid.style.gridTemplateColumns = `${COLLAPSED_LEFT}px ${SPLITTER_W}px minmax(620px, 1fr)`;
-        //     }
-
-        //     function expandLeftDefault() {
-        //         setLeftWidth(360);
-        //     }
-
-        //     splitter.addEventListener("mousedown", function (e) {
-        //         e.preventDefault();
-        //         isDragging = true;
-        //         splitter.classList.add("dragging");
-        //         document.body.style.cursor = "col-resize";
-        //         document.body.style.userSelect = "none";
-        //     });
-
-        //     window.addEventListener("mousemove", function (e) {
-        //         if (!isDragging) return;
-        //         const rect = grid.getBoundingClientRect();
-        //         const nextLeft = e.clientX - rect.left;
-        //         setLeftWidth(nextLeft);
-        //     });
-
-        //     window.addEventListener("mouseup", function () {
-        //         if (!isDragging) return;
-        //         isDragging = false;
-        //         splitter.classList.remove("dragging");
-        //         document.body.style.cursor = "";
-        //         document.body.style.userSelect = "";
-        //     });
-
-        //     $("#qt-btnToggleLeftPane").dxButton({
-        //         icon: "pin",
-        //         hint: "Thu gọn / mở rộng danh sách quotation",
-        //         stylingMode: "text",
-        //         onClick: function () {
-        //             if (grid.classList.contains("left-collapsed")) {
-        //                 expandLeftDefault();
-        //             } else {
-        //                 collapseLeft();
-        //             }
-        //         }
-        //     });
-
-        //     window.addEventListener("resize", function () {
-        //         if (grid.classList.contains("left-collapsed")) {
-        //             grid.style.gridTemplateColumns = `${COLLAPSED_LEFT}px ${SPLITTER_W}px minmax(620px, 1fr)`;
-        //         } else {
-        //             const first = parseInt((grid.style.gridTemplateColumns || "").split(" ")[0], 10);
-        //             if (!isNaN(first)) setLeftWidth(first);
-        //         }
-        //     });
-        // }
 
         function debounce(fn, delay) {
             let t = null;
@@ -1569,122 +1414,6 @@ Note:
             };
         }
 
-        // $("#qt-searchBox").dxTextBox({
-        //     placeholder: "Search quotations...",
-        //     stylingMode: "outlined",
-        //     mode: "search",
-        //     onValueChanged: debounce((e) => {
-        //         searchText = e.value || "";
-        //         loadQuotePage(true);
-        //     }, 350)
-        // });
-
-
-        // function filterLocalQuotes(keyword) {
-        //     const t = String(keyword || "").trim().toLowerCase();
-        //     if (!t) return state.quotes.slice();
-
-        //     return state.quotes.filter(x =>
-        //         (x.quotationCode || "").toLowerCase().includes(t) ||
-        //         (x.clientName || "").toLowerCase().includes(t) ||
-        //         (x.productName || "").toLowerCase().includes(t) ||
-        //         (x.lineName || "").toLowerCase().includes(t) ||
-        //         String(x.requestNo || "").toLowerCase().includes(t)
-        //     );
-        // }
-
-        // function renderQuoteList(data) {
-        //     $("#qt-quoteList").empty();
-
-        //     const rows = Array.isArray(data) ? data : [];
-        //     if (!rows.length) {
-        //         showListEmpty(true);
-        //         return;
-        //     }
-
-        //     showListEmpty(false);
-        //     appendQuoteCards(rows);
-
-        //     if (!state.isSearching && state.quotePaging.done) showListEnd(true);
-        //     else showListEnd(false);
-        // }
-
-        // async function searchQuoteFromServer(keyword) {
-        //     const token = ++state.searchRequestToken;
-        //     state.serverSearchMode = true;
-        //     state.isSearching = true;
-
-        //     showListLoader(true);
-
-        //     try {
-        //         const params = new URLSearchParams();
-        //         params.set("skip", 0);
-        //         params.set("take", 50);
-        //         if (keyword) params.set("searchText", keyword);
-
-        //         const data = await $.ajax({
-        //             url: `/api/Quotation/GetAll?${params.toString()}`,
-        //             method: "GET",
-        //             contentType: "application/json"
-        //         });
-
-        //         if (token !== state.searchRequestToken) return;
-
-        //         state.displayQuotes = Array.isArray(data) ? data : [];
-        //         renderQuoteList(state.displayQuotes);
-        //     } catch (err) {
-        //         console.error(err);
-        //     } finally {
-        //         if (token === state.searchRequestToken) showListLoader(false);
-        //     }
-        // }
-
-        // function clearSearchMode() {
-        //     state.isSearching = false;
-        //     state.serverSearchMode = false;
-        //     state.displayQuotes = [];
-        //     state.searchRequestToken++;
-        //     renderQuoteList(state.quotes);
-        // }
-
-        // const triggerServerSearch = debounce(function (keyword) {
-        //     searchQuoteFromServer(keyword);
-        // }, 700);
-
-        // $("#qt-searchBox").dxTextBox({
-        //     placeholder: "Search quotations...",
-        //     stylingMode: "outlined",
-        //     mode: "search",
-        //     onValueChanged: debounce((e) => {
-        //         state.displayQuotes = [];
-        //         state.isSearching = false;
-        //         state.serverSearchMode = false;
-        //         state.searchRequestToken = 0;
-        //         searchText = (e.value || "").trim();
-
-        //         if (!searchText) {
-        //             clearSearchMode();
-        //             return;
-        //         }
-
-        //         state.isSearching = true;
-
-        //         const localRows = filterLocalQuotes(searchText);
-
-        //         if (localRows.length > 0) {
-        //             state.serverSearchMode = false;
-        //             state.displayQuotes = localRows;
-        //             renderQuoteList(localRows);
-        //             // triggerServerSearch(searchText);
-        //             state.isSearching = false;
-        //         } else {
-        //             state.displayQuotes = [];
-        //             renderQuoteList([]);
-        //             triggerServerSearch(searchText);
-        //             state.isSearching = false;
-        //         }
-        //     }, 250)
-        // });
 
         $(`#${formModuleKeyQt}-btnClientConfirm`).dxButton({
             text: "Submit To Policy Issuance",
@@ -1733,6 +1462,7 @@ Note:
         window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
 
         loadQuotePage(true).then(() => {
+            loadQuoteDetail(state.selectedId);
             applyNodeHighlights();
             applySectionFocusHighlight();
             updateHints();
@@ -1741,39 +1471,3 @@ Note:
         });
     }, _delayQuotationsLoadForm);
 </script>
-
-<body>
-    <div class="title">
-
-        @await Html.PartialAsync("_OverviewPane", new OverviewPanePartialModel
-   {
-       Prefix = prefix,
-       ModuleCode = moduleCode,
-       Title = title
-   })
-    </div>
-
-    <div class="actionBar">
-        <div class="actionLeft">
-            <span class="pill">Record: <b id="qt-recordNo">Qu-10030</b></span>
-            <span class="pill">Login role: <b id="qt-loginRoleLabel"></b></span>
-            <span id="qt-focusDeptPill" class="pill">Focus section: </span>
-        </div>
-        <div class="actionRight">
-            <div id="qt-btnClientConfirm"></div>
-        </div>
-    </div>
-
-    <div id="branchOverlay" class="branchOverlay">
-        <div class="backdrop"></div>
-        <div class="branchPopup">
-            <div class="branchTitle">
-                <span>Submit Route</span>
-                <span class="branchHint">Choose next dept</span>
-            </div>
-            <div class="branchCanvas">
-                <svg width="100%" height="100%" viewBox="0 0 260 140" style="position:absolute;inset:0;"></svg>
-            </div>
-        </div>
-    </div>
-</body>

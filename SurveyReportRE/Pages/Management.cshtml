@@ -43,6 +43,7 @@
                     </g>
                     </svg>
                     <span class="notif-dot"></span>
+                    <span class="notif-count" id="notifCount" style="display:none;">0</span>
                 </div>
                 <div class="navbar-nav user user-menu" style="display:contents;margin-right: 15%; margin-left: auto;">
                     <div>
@@ -246,25 +247,32 @@
     }
 
     // ====== API call (mock) ======
-    function apiGetNotifications(take = 30) {
-        // TODO: thay bằng API thật của bạn
-        //Example
-        var objectJson =  {url:"/Business/Form/Survey_Form/67",caption:"form_Survey_Form_67",name:"Survey SVRE.1225.067",data:""}
-        var stringObjectJson = JSON.stringify(objectJson);
-        // Mock demo
-        return $.Deferred().resolve({
-            items: [
-                { id: 101, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
-                { id: 102, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
-                { id: 103, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
-                { id: 104, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
-                { id: 105, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
-                { id: 106, title: "Approval required", message: "Quotation QT-2025-123 needs approval", createdOn: new Date(Date.now() - 3600_000), isRead: true, url: `/Management?loadParams=...` }
-            ]
-        }).promise();
-    }
+    // function apiGetNotifications(take = 30) {
+    //     // TODO: thay bằng API thật của bạn
+    //     //Example
+    //     var objectJson =  {url:"/Business/Form/Survey_Form/67",caption:"form_Survey_Form_67",name:"Survey SVRE.1225.067",data:""}
+    //     var stringObjectJson = JSON.stringify(objectJson);
+    //     // Mock demo
+    //     return $.Deferred().resolve({
+    //         items: [
+    //             { id: 101, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
+    //             { id: 102, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
+    //             { id: 103, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
+    //             { id: 104, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
+    //             { id: 105, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
+    //             { id: 106, title: "Approval required", message: "Quotation QT-2025-123 needs approval", createdOn: new Date(Date.now() - 3600_000), isRead: true, url: `/Management?loadParams=...` }
+    //         ]
+    //     }).promise();
+    // }
 
     function apiMarkRead(id) {
+
+        ajaxPut('/api/Notification/UpdateData', { key: id, values: JSON.stringify({ isRead: true }) }, {
+            onSuccess: function (response) {
+            },
+            onError: function (err) {
+            }
+        });
         // TODO: thay bằng API thật
         // return $.post(`/api/Notifications/MarkRead?id=${id}`);
         return $.Deferred().resolve(true).promise();
@@ -280,104 +288,9 @@
     function ensureNotificationPopup() {
         if (_notif.popup) return;
 
-        // _notif.popup = $("#notificationPopup").dxPopup({
-        //     title: "Notifications",
-        //     width: 420,
-        //     height: 520,
-        //     showCloseButton: true,
-        //     hideOnOutsideClick: true,
-        //     dragEnabled: false,
-        //     wrapperAttr: {
-        //         class: "dx-overlay-shader-custom"
-        //     },
-        //     position: {
-        //         // neo gần bell
-        //         of: $("#notificationBtn"),
-        //         my: "right top",
-        //         at: "right bottom",
-        //         offset: "0 10"
-        //     },
-        //     contentTemplate: function (contentEl) {
-        //         // Header tools
-        //         const $toolbar = $(`
-        //             <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
-        //               <div id="notifMarkAllBtn"></div>
-        //               <div style="margin-left:auto; opacity:.7; font-size:12px;" id="notifHint"></div>
-        //             </div>
-        //             <div id="notifList"></div>
-        //         `);
+        
 
-        //         $(contentEl).append($toolbar);
-
-        //         $("#notifMarkAllBtn").dxButton({
-        //             text: "Mark all as read",
-        //             icon: "check",
-        //             type: "default",
-        //             stylingMode: "outlined",
-        //             onClick: async function () {
-        //                 await apiMarkAllRead();
-        //                 // update local state
-        //                 _notif.items.forEach(x => x.isRead = true);
-        //                 refreshNotifUI();
-        //             }
-        //         });
-
-        //         _notif.list = $("#notifList").dxList({
-        //             dataSource: _notif.items,
-        //             height: 440,
-        //             noDataText: "No notifications",
-        //             searchEnabled: true,
-        //             searchExpr: ["title", "message"],
-        //             itemTemplate: function (itemData) {
-        //                 // item UI
-        //                 const isUnread = !itemData.isRead;
-        //                 const timeText = formatTime(itemData.createdOn);
-
-        //                 return $(`
-        //                     <div style="padding:10px 8px; border-bottom:1px solid rgba(0,0,0,.06);">
-        //                       <div style="display:flex; gap:8px; align-items:flex-start;">
-        //                         <div style="width:10px; margin-top:6px;">
-        //                           <span style="display:${isUnread ? "inline-block" : "none"}; width:8px; height:8px; border-radius:50%; background:#ff3b30;"></span>
-        //                         </div>
-        //                         <div style="flex:1;">
-        //                           <div style="display:flex; justify-content:space-between; gap:8px;">
-        //                             <div style="font-weight:${isUnread ? 700 : 600};">${escapeHtml(itemData.title || "")}</div>
-        //                             <div style="opacity:.6; font-size:12px; white-space:nowrap;">${timeText}</div>
-        //                           </div>
-        //                           <div style="opacity:.85; margin-top:4px; font-size:13px;">
-        //                             ${escapeHtml(itemData.message || "")}
-        //                           </div>
-        //                           <div style="margin-top:8px; display:flex; gap:8px;">
-        //                             <a href="javascript:void(0)" class="notif-open">Open</a>
-        //                             <a href="javascript:void(0)" class="notif-mark">${isUnread ? "Mark read" : "Read"}</a>
-        //                           </div>
-        //                         </div>
-        //                       </div>
-        //                     </div>
-        //                 `)
-        //                 .data("item", itemData)
-        //                 .on("click", ".notif-open", async function (e) {
-        //                     e.stopPropagation();
-        //                     await openNotification(itemData);
-        //                 })
-        //                 .on("click", ".notif-mark", async function (e) {
-        //                     e.stopPropagation();
-        //                     if (!itemData.isRead) {
-        //                         await apiMarkRead(itemData.id);
-        //                         itemData.isRead = true;
-        //                         refreshNotifUI();
-        //                     }
-        //                 });
-        //             }
-        //         }).dxList("instance");
-        //     },
-        //     onShown: function () {
-        //         // khi mở panel thì có thể reload để đảm bảo mới nhất
-        //         reloadNotifications();
-        //     }
-        // }).dxPopup("instance");
-
-            _notif.popover = $("#notificationPopOver").dxPopover({
+           _notif.popover = $("#notificationPopOver").dxPopover({
             target: "#notificationBtn",       // 🔔 neo theo bell
             position: {
                 my: "right top",
@@ -425,7 +338,7 @@
                     itemTemplate: function (itemData) {
                         // item UI
                         const isUnread = !itemData.isRead;
-                        const timeText = formatTime(itemData.createdOn);
+                        const timeText = formatTime(itemData.createdDate);
 
                         return $(`
                             <div style="padding:10px 8px; border-bottom:1px solid rgba(0,0,0,.06);">
@@ -444,10 +357,11 @@
                                   <div style="margin-top:8px; display:flex; gap:8px;">
                                     <a href="javascript:void(0)" class="notif-open">Open</a>
                                     <a href="javascript:void(0)" class="notif-mark">${isUnread ? "Mark read" : "Read"}</a>
-    </div>
-    </div>
-    </div>
-    </div>
+                                    <a href="javascript:void(0)" class="notif-view">View message</a>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
                         `)
                         .data("item", itemData)
                         .on("click", ".notif-open", async function (e) {
@@ -461,25 +375,26 @@
                                 itemData.isRead = true;
                                 refreshNotifUI();
                             }
-                   });
-               }
+                        }).on("click", ".notif-view", async function (e) {
+                            openMessageDialog(itemData);
+                            
+                               e.stopPropagation();
+                            // mở popup đọc nội dung, không ảnh hưởng open/mark read
+                        });
+                    }
                 }).dxList("instance");
             }
         }).dxPopover("instance");
     }
 
     function formatTime(dt) {
-        try {
-            const d = (dt instanceof Date) ? dt : new Date(dt);
-            return d.toLocaleString();
-        } catch { return ""; }
-    }
+           try {
+               const d = (dt instanceof Date) ? dt : new Date(dt);
+               return d.toLocaleString();
+           } catch { return ""; }
+       }
 
-    function escapeHtml(str) {
-        return (str || "").replace(/[&<>"']/g, s => ({
-            "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
-        }[s]));
-    }
+
 
     // ====== open item ======
     async function openNotification(item) {
@@ -493,7 +408,8 @@
         // 2) hành động mở: tùy hệ bạn
         // Nếu bạn có obj.url/caption/name kiểu loadParams -> callElementView(...)
         if (item.url) {
-            invokePageTab(item.url,true);
+            // invokePageTab(item.url,true);
+            callElementView(item.url.url, item.url.caption, item.url.name);
         } else {
             DevExpress.ui.notify("No target action for this notification", "warning", 1500);
         }
@@ -510,11 +426,11 @@
 
     // ====== public function you already call ======
     function updateNotification(intervalMs = 10000) {
-        // reloadNotifications();
+         reloadNotifications();
 
         // polling
         setInterval(() => {
-            // reloadNotifications();
+             // reloadNotifications();
         }, intervalMs);
     }
 

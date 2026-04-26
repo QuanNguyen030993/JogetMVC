@@ -434,8 +434,7 @@
                         //quotationData.LineId = submitSummaryData.lineId;
                         //quotationData.ProductId = submitSummaryData.productId;
                         var uploader = $("#uploadFile").dxFileUploader("instance");
-                        var files = uploader.option("value");
-
+                    
           
 
                         // ajaxPost('/api/Quotation/CreateQuotation', quotationData, {
@@ -448,8 +447,12 @@
 
                         var formData = new FormData();
                         formData.append("QuotationData",JSON.stringify(quotationData));
+                        if (uploader){
+                        var files = uploader.option("value");
+
                         for (var i = 0; i < files.length; i++) {
                             formData.append("Files", files[i]);
+                        }
                         }
                         $.ajax({
                             url: "/api/Quotation/CreateQuotation",
@@ -712,7 +715,7 @@
                   <div class="comment-head-left">
                     <div class="comment-meta">
                       <div class="comment-author-row">
-                        <span class="comment-author">${item.fromSection} - ${escapeHtml(item.author)} Added a comment - ${item.time} </span>
+                        <span class="comment-author">${item.fromSection} - ${escapeHtml(item.author)} Added a comment - ${fmtTimeLocal(item.time)} </span>
                         <span class="mini-badge ${badgeClassByType(item.type)}">${item.type}</span>
                         ${linkedPin}
                       </div>
@@ -1309,7 +1312,7 @@
        return new Date(d.getTime() + minusTimeZone * 60 * 60 * 1000);
     }
 
-        function fmtTimeLocal(input) {
+        function fmtTimeLocal(input) { //SQL date -> dd/mm/yyyy HH:mm, only this date parse, formatTime by default
         if (!input) return "—";
         var d = parseToGMT7(input);
 
