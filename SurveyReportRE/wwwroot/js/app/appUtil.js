@@ -3599,18 +3599,8 @@ function customCommandButtonCell(e) {
             callElementView(`/Business/Workflow/WorkflowDefinition_Form/${e.key}`, `WorkflowDenifition_Form_${e.key}`, `WorkflowDenifition ${e.key}`);
         })
         .appendTo(e.cellElement);
-
-    //// Tạo nút Move Down
-    //$("<a>")
-    //    .addClass("fa fa-arrow-down")
-    //    .css({ marginRight: "35%", cursor: "pointer", color: "#337ab7" })
-    //    .on("click", function () {
-    //        const groupIndex = findPreviousGroupIndex(e.cellElement);
-    //        dataSourceMoveRow(e, e.rowIndex - 1, groupIndex, "down", e.component, true);
-    //        e.component.refresh();
-    //    })
-    //    .appendTo(e.cellElement);
 }
+
 function jsonToTable(jsonData, fieldsToShow = []) {
     const table = $("<table>").css({
         width: "100%",

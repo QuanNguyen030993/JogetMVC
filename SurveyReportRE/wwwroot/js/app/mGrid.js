@@ -654,14 +654,7 @@ var MGridOption = class MGridOption {
                 onCellPrepared: tryExecute(this.onCellPrepared.bind(this)),
                 selection: { mode: "single" },
                 //onCellHoverChanged: tryExecute(this.onCellHoverChanged.bind(this)),
-                 //,onRowClick: function (e) {
-                //    if (e.rowType == 'group') {
-                //        if (e.isExpanded)
-                //            e.component.collapseRow(e.key);
-                //        else
-                //            e.component.expandRow(e.key);
-                //    }
-                //}
+                onRowClick: tryExecute(this.onRowClick.bind(this)), 
                 //editing: {
                 //    ...((Object.keys(gridEditorOptions).length > 0) ? gridEditorOptions.edit : defaultEditing.edit)
                 //},
@@ -706,7 +699,14 @@ var MGridOption = class MGridOption {
         }).dxPopup("instance");
         popupMGridDetail.show();
     }
-
+    onRowClick(e) {
+        if (e.rowType == 'group') {
+            if (e.isExpanded)
+                e.component.collapseRow(e.key);
+            else
+                e.component.expandRow(e.key);
+        }
+    }
 };
 
 var MDropDownDataSource = class MDropDownDataSource {
