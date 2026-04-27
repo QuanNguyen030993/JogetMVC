@@ -745,6 +745,12 @@
                         label: { text: "Action Name" }
                     },
                     {
+                        dataField: "stepNo",
+                        label: { text: "Step No" },
+                        editorType: "dxNumberBox",
+                        editorOptions: { min: 1 }
+                    },
+                    {
                         dataField: "flowType",
                         label: { text: "Transition Flow Type" },
                         editorType: "dxSelectBox",
@@ -1347,7 +1353,7 @@
                 else if ((t.actionCode || "").startsWith("COMPLETE")) uiMode = "ReadOnly";
                 return {
                     sortOrder: index + 1,
-                    stepNo: index + 1,
+                    stepNo: t.stepNo || (index + 1),
                     workflowDefinitionId: workflowDefinitionId,
 
                     stepType: isEnd ? 9 : (t.isLoop ? 3 : 2),
@@ -2088,6 +2094,7 @@
                 toNodeId: "",
                 actionCode: "",
                 actionName: "",
+                stepNo: null,
                 flowType: "Both",
                 isReturn: false,
                 isLoop: false,
