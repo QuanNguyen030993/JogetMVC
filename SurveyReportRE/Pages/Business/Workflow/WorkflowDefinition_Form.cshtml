@@ -13,13 +13,7 @@
         box-sizing: border-box;
     }
 
-    body {
-        margin: 0;
-        font-family: "Segoe UI", Arial, sans-serif;
-        background: #f4f6fb;
-        color: #1f2937;
-    }
-
+  
     .page {
         padding: 14px;
     }
@@ -382,8 +376,8 @@
 </style>
 <body>
     <div class="title">Workflow Designer</div>
-    <div id="form_@(WorkflowDefinition_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])" class="dExForm"></div>
-    <div class="page">
+    @* <div id="form_@(WorkflowDefinition_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])" class="dExForm"></div> *@
+    <div class="dExForm">
         <div class="sub">
         </div>
 
@@ -502,10 +496,10 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="page">
+      @*   </div>
+        <div class="dExForm"> *@
             <!-- TRANSITION + PAYLOAD -->
-            <div class="card card-last" style="width: 1200px;">
+            <div class="card card-last" style="width: 800px;">
                 <div class="card-header">
                     <div class="card-title">Transition / Loop / Payload Review</div>
                     <div class="card-sub">Preview</div>
@@ -558,17 +552,17 @@
 
     <script>
         var _id = @Convert.ToInt32(ViewData["Id"]);
-        var _formConfig = new MFormOption();
-        _formConfig.cloneUrl = '/Business/Workflow/WorkflowDefinition_Form/' + _id;
-        _formConfig.tabCode = `form_WorkflowDefinition_Form_${_id}`;
-        _formConfig.tabName = '@HttpContext.Request.Query["Caption"].ToString()';
-        _formConfig.originModelName = "@WorkflowDefinition_FormModel.ModelName";
-        _formConfig.formElementName = "@WorkflowDefinition_FormModel.ModelName";
-        _formConfig.schemeBasedOn = `@(WorkflowDefinition_FormModel.SchemeModelName)`;
-        _formConfig.allowFormActionButton = true;
-        _formConfig.colCount = 1;
-        _formConfig.isCustomQuery = true;
-        var mainForm = new WorkflowDefinitionForm(_id, null, _formConfig);
+        // var _formConfig = new MFormOption();
+        // _formConfig.cloneUrl = '/Business/Workflow/WorkflowDefinition_Form/' + _id;
+        // _formConfig.tabCode = `form_WorkflowDefinition_Form_${_id}`;
+        // _formConfig.tabName = '@HttpContext.Request.Query["Caption"].ToString()';
+        // _formConfig.originModelName = "@WorkflowDefinition_FormModel.ModelName";
+        // _formConfig.formElementName = "@WorkflowDefinition_FormModel.ModelName";
+        // _formConfig.schemeBasedOn = `@(WorkflowDefinition_FormModel.SchemeModelName)`;
+        // _formConfig.allowFormActionButton = true;
+        // _formConfig.colCount = 1;
+        // _formConfig.isCustomQuery = true;
+        // var mainForm = new WorkflowDefinitionForm(_id, null, _formConfig);
 
         var selectedNodeId = null;
         var nodeFormInstance = null;
@@ -604,53 +598,7 @@
         // ];
         var workflowTreeData = [];
         var transitions = [];
-        // var transitions = [
-        //     {
-        //         fromNodeId: "FO",
-        //         toNodeId: "TS",
-        //         actionCode: "SUBMIT_TS",
-        //         actionName: "Submit To TS",
-        //         flowType: "Quotation",
-        //         isReturn: false,
-        //         isLoop: false,
-        //         loopGroup: "",
-        //         loopExitMode: "None",
-        //         maxLoopCount: null,
-        //         isExitTransition: false,
-        //         userDecisionLabel: "",
-        //         conditionJson: ""
-        //     },
-        //     {
-        //         fromNodeId: "CLIENT",
-        //         toNodeId: "CLIENT",
-        //         actionCode: "REVISE_AGAIN",
-        //         actionName: "Revise Again",
-        //         flowType: "Both",
-        //         isReturn: false,
-        //         isLoop: true,
-        //         loopGroup: "CLIENT_REVIEW",
-        //         loopExitMode: "UserDecision",
-        //         maxLoopCount: null,
-        //         isExitTransition: false,
-        //         userDecisionLabel: "Continue Revision",
-        //         conditionJson: ""
-        //     },
-        //     {
-        //         fromNodeId: "CLIENT",
-        //         toNodeId: "PM",
-        //         actionCode: "EXIT_LOOP_AND_SUBMIT_PM",
-        //         actionName: "Approve And Exit",
-        //         flowType: "PolicyIssuance",
-        //         isReturn: false,
-        //         isLoop: true,
-        //         loopGroup: "CLIENT_REVIEW",
-        //         loopExitMode: "UserDecision",
-        //         maxLoopCount: null,
-        //         isExitTransition: true,
-        //         userDecisionLabel: "Approve And Exit",
-        //         conditionJson: ""
-        //     }
-        // ];
+     
 
 
 

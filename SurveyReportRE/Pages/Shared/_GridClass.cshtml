@@ -2079,9 +2079,10 @@
         //     e.cancel = true;
         // }
         onContentReady(e) {
+            super.onContentReady(e);
              e.component.columnOption("command:edit", "visibleIndex", -1);
              e.component.option("editing.mode", "form");
-             // e.component.option("editing.allowUpdating", true);
+             e.component.option("editing.allowUpdating", true);
         }
     }
 

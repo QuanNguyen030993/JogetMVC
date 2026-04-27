@@ -615,7 +615,7 @@
 //                }).appendTo(gridContainer);
 
 //                var gridInstance = $(`<div id='dataGrid_${itemDataGrid.name}_${itemDataGrid.id}' style="min-height: ${_defaultGridMinHeight}px;">`)
-//                    .dxDataGrid(mGridOption.getGridOptions(itemDataGrid.gridOption))
+//                    .dxDataGrid(mGridOption.makeGridOptions(itemDataGrid.gridOption))
 //                    .appendTo(gridContainer);
 //                var GridDS = gridInstance.dxDataGrid("instance").getDataSource();
 
@@ -2276,7 +2276,7 @@ var ClientForm = class ClientForm extends MForm {
 //                        };
 
 //                    itemDataGrid.gridOption = mGridOption;
-//                    $(`<div id='dataGrid_${elementName}_${itemDataGrid.id}' style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid(mGridOption.getGridOptions(itemDataGrid.gridOption)).appendTo(itemElement);
+//                    $(`<div id='dataGrid_${elementName}_${itemDataGrid.id}' style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid(mGridOption.makeGridOptions(itemDataGrid.gridOption)).appendTo(itemElement);
 //                }
 //            }
 //            item.label.visible = false;
@@ -2350,7 +2350,7 @@ var ClientForm = class ClientForm extends MForm {
 //                    elementName = itemDataGrid.name;
 //                }
 //                createAccordionField(item, itemElement, editorOptions, that);
-//                $(`<div id='dataGrid_${elementName}_${itemDataGrid.id}' style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid(mGridOption.getGridOptions(itemDataGrid.gridOption)).appendTo(itemElement);
+//                $(`<div id='dataGrid_${elementName}_${itemDataGrid.id}' style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid(mGridOption.makeGridOptions(itemDataGrid.gridOption)).appendTo(itemElement);
 
 //            }
 //            item.label.visible = false;
@@ -2609,7 +2609,7 @@ var ClientForm = class ClientForm extends MForm {
 //                        };
 
 //                    itemDataGrid.gridOption = mGridOption;
-//                    $(`<div id='dataGrid_${elementName}_${itemDataGrid.id}' style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid(mGridOption.getGridOptions(itemDataGrid.gridOption)).appendTo(itemElement);
+//                    $(`<div id='dataGrid_${elementName}_${itemDataGrid.id}' style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid(mGridOption.makeGridOptions(itemDataGrid.gridOption)).appendTo(itemElement);
 //                }
 //                createAccordionField(item, itemElement, editorOptions, that);
 //            }
@@ -2803,7 +2803,7 @@ var ClientForm = class ClientForm extends MForm {
 //                                                    allowDeleting: false
 //                                                }
 //                                            };
-//                                        $(`<div id='dataGrid_${elementName}_${childProps.id}' style="min-height: ${minHeight}px;">`).dxDataGrid(mGridOption.getGridOptions(mGridOption)).appendTo($contentElement);
+//                                        $(`<div id='dataGrid_${elementName}_${childProps.id}' style="min-height: ${minHeight}px;">`).dxDataGrid(mGridOption.makeGridOptions(mGridOption)).appendTo($contentElement);
 //                                        break;
 //                                }
 //                            });

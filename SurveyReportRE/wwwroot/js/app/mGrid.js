@@ -44,9 +44,9 @@
         try {
             var that = this;
             if (!that.mGridOption.allowBuildOption)
-                this.component = this.container.dxDataGrid(that.mGridOption.getGridOptions(null)).dxDataGrid("instance");
+                this.component = this.container.dxDataGrid(that.mGridOption.makeGridOptions(null)).dxDataGrid("instance");
             else 
-                this.component = this.container.dxDataGrid(that.mGridOption.getGridOptions(that.mGridOption)).dxDataGrid("instance");
+                this.component = this.container.dxDataGrid(that.mGridOption.makeGridOptions(that.mGridOption)).dxDataGrid("instance");
 
             return this.component;
         } catch (err) {
@@ -478,7 +478,7 @@ var MGridOption = class MGridOption {
             info.data[this.filterRefField2] = this.filterRefId2;
     }
 
-    getGridOptions(mGridConfigInstance = null) {
+    makeGridOptions(mGridConfigInstance = null) {
         try {
             this.isAllowRowMenu = true;
             var that = this;
@@ -648,7 +648,7 @@ var MGridOption = class MGridOption {
                 onInitialized: tryExecute(this.onInitialized.bind(this)),
                 //onRowValidating: tryExecute(this.onRowValidating.bind(this)),
                 onInitNewRow: tryExecute(this.onInitNewRow.bind(this)),
-                getGridOptions: tryExecute(this.getGridOptions.bind(this)),
+                makeGridOptions: tryExecute(this.makeGridOptions.bind(this)),
                 onContextMenuPreparing: tryExecute(this.onContextMenuPreparing.bind(this)),
                 //onDataErrorOccurred: tryExecute(this.onDataErrorOccurred.bind(this))
                 onCellPrepared: tryExecute(this.onCellPrepared.bind(this)),

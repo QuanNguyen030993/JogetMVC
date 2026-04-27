@@ -559,12 +559,6 @@ aside {
     align-items: center;
 }*/
 
-/* Main layout */
-/*.app {
-    height: calc(100% - 56px);
-    display: grid;
-    grid-template-columns: var(--sidebar-w) 1fr;
-}*/
 
 /* Sidebar */
 /*.sidebar {

@@ -27,17 +27,11 @@
         box-sizing: border-box
     }
 
-    body {
-        margin: 0;
-        font-family: Arial, Helvetica, sans-serif;
-        color: var(--text);
-        background: var(--bg);
-    }
 
-    .app {
+    .draw-container {
         display: grid;
         grid-template-columns: 380px 1fr;
-        height: 100vh;
+        height: 80%;
         overflow: hidden;
     }
 
@@ -684,7 +678,7 @@
     }
 </style>
 <body>
-    <div class="app">
+    <div class="draw-container dExForm">
         <aside class="sidebar">
             <div class="title">Design Workflow</div>
             <div class="palette">
@@ -745,8 +739,8 @@
                 <div class="header-in-frame">Workflow JSON</div>
                 <textarea id="jsonInput_@Convert.ToInt32(ViewData["Id"])"></textarea>
                 <div class="btn-row">
-                    <button id="btnRender_@Convert.ToInt32(ViewData["Id"])">Render</button>
-                    <button class="secondary" id="btnUpdate_@Convert.ToInt32(ViewData["Id"])">Update</button>
+                    <button id="btnRender_@Convert.ToInt32(ViewData["Id"])">Draw on diagram</button>
+                    <button class="secondary" id="btnUpdate_@Convert.ToInt32(ViewData["Id"])">Save Data</button>
                     @* <button class="warning" id="btnAutoLayout_@Convert.ToInt32(ViewData["Id"])">Force Auto Layout</button> *@
                     <button class="success" id="btnExport_@Convert.ToInt32(ViewData["Id"])">Export JSON</button>
                     
@@ -779,232 +773,20 @@
 
         ajaxGet(`/api/WorkflowDefinition/GetSingle/${_id}`)
             .then(data => {
-        var sampleJson = {
-          workflowDefinition: {
-            workflowCode: "WF_TMIV_MAIN",
-            workflowName: "TMIV Main Workflow",
-            flowType: "Quotation",
-            versionNo: 1,
-            isActive: true
-          },
-          workflowNodes: [
-            {
-              id: "FO",
-              parentId: null,
-              nodeName: "FO",
-              nodeType: "",
-              nodeCode: "",
-              orderNo: 1,
-              stepRole: "",
-              departmentName: "",
-              levelNo: 1,
-              flowType: "Both",
-              allowLoop: false,
-              loopGroup: "",
-              x: null,
-              y: null
-            },
-            {
-              id: "TS",
-              parentId: "FO",
-              nodeName: "TS",
-              nodeType: "",
-              nodeCode: "",
-              orderNo: 2,
-              stepRole: "",
-              departmentName: "",
-              levelNo: 1,
-              flowType: "Both",
-              allowLoop: false,
-              loopGroup: "",
-              x: null,
-              y: null
-            },
-            {
-              id: "UW",
-              parentId: "TS",
-              nodeName: "UW",
-              nodeType: "",
-              nodeCode: "",
-              orderNo: 3,
-              stepRole: "",
-              departmentName: "",
-              levelNo: 1,
-              flowType: "Both",
-              allowLoop: false,
-              loopGroup: "",
-              x: null,
-              y: null
-            },
-            {
-              id: "CLIENT",
-              parentId: "FO",
-              nodeName: "Client",
-              nodeType: "",
-              nodeCode: "",
-              orderNo: 4,
-              stepRole: "",
-              departmentName: "",
-              levelNo: 1,
-              flowType: "Both",
-              allowLoop: true,
-              loopGroup: "CLIENT_REVIEW",
-              x: null,
-              y: null
-            },
-            {
-              id: "PM",
-              parentId: "CLIENT",
-              nodeName: "PM",
-              nodeType: "",
-              nodeCode: "",
-              orderNo: 5,
-              stepRole: "",
-              departmentName: "",
-              levelNo: 1,
-              flowType: "Both",
-              allowLoop: false,
-              loopGroup: "",
-              x: null,
-              y: null
-            },
-            {
-              id: "NODE_1774258352695",
-              parentId: null,
-              nodeName: "New Root",
-              nodeType: "",
-              nodeCode: "",
-              orderNo: 6,
-              stepRole: "",
-              departmentName: "",
-              levelNo: 1,
-              flowType: "Both",
-              allowLoop: false,
-              loopGroup: "",
-              x: null,
-              y: null
-            }
-          ],
-          workflowTransitions: [
-            {
-              fromNodeId: "FO",
-              toNodeId: "TS",
-              actionCode: "SUBMIT_TS",
-              actionName: "Submit To TS",
-              flowType: "Quotation",
-              isReturn: false,
-              isLoop: false,
-              loopGroup: "",
-              loopExitMode: "None",
-              maxLoopCount: null,
-              isExitTransition: false,
-              userDecisionLabel: "",
-              conditionJson: ""
-            },
-            {
-              fromNodeId: "TS",
-              toNodeId: "UW",
-              actionCode: "SUBMIT_UW",
-              actionName: "Submit To UW",
-              flowType: "Quotation",
-              isReturn: false,
-              isLoop: false,
-              loopGroup: "",
-              loopExitMode: "None",
-              maxLoopCount: null,
-              isExitTransition: false,
-              userDecisionLabel: "",
-              conditionJson: ""
-            },
-            {
-              fromNodeId: "UW",
-              toNodeId: "FO",
-              actionCode: "RETURN_FO",
-              actionName: "Return To FO",
-              flowType: "Quotation",
-              isReturn: true,
-              isLoop: false,
-              loopGroup: "",
-              loopExitMode: "None",
-              maxLoopCount: null,
-              isExitTransition: false,
-              userDecisionLabel: "",
-              conditionJson: ""
-            },
-            {
-              fromNodeId: "FO",
-              toNodeId: "CLIENT",
-              actionCode: "SUBMIT_CLIENT",
-              actionName: "Submit To Client",
-              flowType: "Both",
-              isReturn: false,
-              isLoop: false,
-              loopGroup: "",
-              loopExitMode: "None",
-              maxLoopCount: null,
-              isExitTransition: false,
-              userDecisionLabel: "",
-              conditionJson: ""
-            },
-            {
-              fromNodeId: "CLIENT",
-              toNodeId: "CLIENT",
-              actionCode: "REVISE_AGAIN",
-              actionName: "Revise Again",
-              flowType: "Both",
-              isReturn: false,
-              isLoop: true,
-              loopGroup: "CLIENT_REVIEW",
-              loopExitMode: "UserDecision",
-              maxLoopCount: null,
-              isExitTransition: false,
-              userDecisionLabel: "Continue Revision",
-              conditionJson: ""
-            },
-            {
-              fromNodeId: "CLIENT",
-              toNodeId: "PM",
-              actionCode: "EXIT_LOOP_AND_SUBMIT_PM",
-              actionName: "Approve And Exit",
-              flowType: "PolicyIssuance",
-              isReturn: false,
-              isLoop: true,
-              loopGroup: "CLIENT_REVIEW",
-              loopExitMode: "UserDecision",
-              maxLoopCount: null,
-              isExitTransition: true,
-              userDecisionLabel: "Approve And Exit",
-              conditionJson: ""
-            }
-          ],
-          runtimeState: {
-            activeNodeId: "CLIENT",
-            compvaredNodeIds: ["FO", "TS", "UW"],
-            pendingNodeIds: ["PM", "NODE_1774258352695"]
-          }
-        };
-
-         // var passingObject = new Object();
-         // passingObject.workflowDefinition = new Object();
-         // passingObject.workflowDefinition = data;
-         // data.workflowNodes =  JSON.parse(data.workflowNodes);
-         // passingObject.workflowNodes  = new Object();
-         // passingObject.workflowNodes = data.workflowNodes ;
-         // sampleJson = data;
-           sampleJson = JSON.parse(data.workflowNodes);
+        
         var jsonInput = document.getElementById("jsonInput_@Convert.ToInt32(ViewData["Id"])");
         var canvas = document.getElementById("canvas_@Convert.ToInt32(ViewData["Guid"])");
         var errorBox = document.getElementById("errorBox_@Convert.ToInt32(ViewData["Id"])");;
-        var wfCode = document.getElementById("wfCode_@Convert.ToInt32(ViewData["Id"])");
-        var flowType = document.getElementById("flowType_@Convert.ToInt32(ViewData["Id"])");
-        var currentStep = document.getElementById("currentStep_@Convert.ToInt32(ViewData["Id"])");
-        var layoutMode = document.getElementById("layoutMode_@Convert.ToInt32(ViewData["Id"])");
+        // var wfCode = document.getElementById("wfCode_@Convert.ToInt32(ViewData["Id"])");
+        // var flowType = document.getElementById("flowType_@Convert.ToInt32(ViewData["Id"])");
+        // var currentStep = document.getElementById("currentStep_@Convert.ToInt32(ViewData["Id"])");
+        // var layoutMode = document.getElementById("layoutMode_@Convert.ToInt32(ViewData["Id"])");
         var saveHint = document.getElementById("saveHint_@Convert.ToInt32(ViewData["Id"])");
 
         var instance = null;
         var currentJson = null;
 
-        jsonInput.value = JSON.stringify(sampleJson, null, 2);
+        jsonInput.value = JSON.stringify(JSON.parse(data.workflowNodes), null, 2);
 
         function safe(v) {
           return String(v == null ? "" : v);
@@ -1200,8 +982,8 @@
           return {
             positions,
             grouped: {},
-            canvasWidth: Math.max(1400, maxX + 420),
-            canvasHeight: Math.max(760, maxY + 260)
+            canvasWidth: Math.max(window.innerWidth - (window.innerWidth * 0.1), maxX + 420),
+            canvasHeight: Math.max(window.innerHeight - (window.innerHeight * -0.1), maxY + 260)
           };
         }
 
@@ -1416,6 +1198,7 @@
              },
              {
                  onSuccess: function (response) {
+                      appNotifySuccess("Updated!", false);
                  },
                  onError: function (err) { }
              }
@@ -1445,7 +1228,7 @@
         // const jsonInput = document.getElementById("jsonInput");
         // const canvas = document.getElementById("canvas");
         var statusBar = document.getElementById("statusBar_@Convert.ToInt32(ViewData["Id"])");
-        var infoBox = document.getElementById("infoBox_@Convert.ToInt32(ViewData["Id"])");
+        // var infoBox = document.getElementById("infoBox_@Convert.ToInt32(ViewData["Id"])");
 
         // let instance = null;
         let selectedNodeId = null;
@@ -1928,7 +1711,7 @@
 
         canvas.addEventListener("click", function () {
             clearSelections();
-            infoBox.textContent = "Click node hoặc line để xem chi tiết.";
+            // infoBox.textContent = "Click node hoặc line để xem chi tiết.";
         });
 
         ensureSeed();

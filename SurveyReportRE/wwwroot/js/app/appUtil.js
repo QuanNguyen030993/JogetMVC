@@ -875,14 +875,14 @@ function createEditor(item, $container, $element, editorOptions) {
                         containerId = editorOptions.gridOption.mGridDetailOption?.container
                             ? editorOptions.gridOption.mGridDetailOption.container
                             : `dataGrid_${elementName}_${editorOptions.id}`;
-                        $(`<div id='${containerId}' style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid(editorOptions.gridOption.getGridOptions(editorOptions.gridOption)).appendTo($container);
+                        $(`<div id='${containerId}' style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid(editorOptions.gridOption.makeGridOptions(editorOptions.gridOption)).appendTo($container);
                     }
                 }
                 else
-                    $(`<div id='dataGrid_${elementName}_${editorOptions.id}' style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid(editorOptions.gridOption.getGridOptions()).appendTo($container);
+                    $(`<div id='dataGrid_${elementName}_${editorOptions.id}' style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid(editorOptions.gridOption.makeGridOptions()).appendTo($container);
             }
             else
-                $(`<div id='dataGrid_${elementName}_${editorOptions.id}' style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid(mGridOption.getGridOptions()).appendTo($container);
+                $(`<div id='dataGrid_${elementName}_${editorOptions.id}' style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid(mGridOption.makeGridOptions()).appendTo($container);
             break;
         case "dxHtmlEditor":
             DevExpress.Quill.register({
@@ -3596,7 +3596,7 @@ function customCommandButtonCell(e) {
         .text("Edit JSON")
         .css({ marginRight: "5px", cursor: "pointer", color: "#337ab7" })
         .on("click", function () {
-            callElementView(`/Business/Workflow/WorkflowDefinition_Form/${e.key}`, `WorkflowDenifition_Form_${e.key}`, `WorkflowDenifition ${e.key}`);
+            callElementView(`/Business/Workflow/WorkflowDefinition_Form/${e.key}`, `WorkflowDenifition_Form_${e.key}`, `WorkflowDenifition ${e.data.workflowCode}`);
         })
         .appendTo(e.cellElement);
 }
@@ -5588,6 +5588,8 @@ function stretchColumnsEvenly(e, opts) {
     const renderedWidth = getRenderedGridWidth(grid);
 
     const targetWidth = opts?.targetWidth ?? window.innerWidth - _widthMenuWidth - _rightWindowPadding;
+    console.log(targetWidth);
+    console.log(window.innerWidth);
     const minWidthEach = opts?.minWidthEach ?? 120;
     const excludeFields = new Set(opts?.excludeFields ?? []); // vd ["_command", "Select", "Buttons"]
 

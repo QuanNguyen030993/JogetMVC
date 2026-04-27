@@ -1,4 +1,6 @@
 ﻿var callElementView = function (url, code, caption, data) {
+    //not invoke to the mForm js
+
     try {
         if (url.length === 0) {
             appNotify({ message: "Page request does not exist.", type: 'info' });
@@ -120,7 +122,7 @@ var appendChildGridViewInsideAsync = function (childItem, itemElement, className
                 mGridOption.gridEditorOptions = {
                     editing: childItem.editing
                 };
-                $(`<div id="dataGrid_${childItem.modelName}_${childItem.filterRefId}" style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid(mGridOption.getGridOptions(mGridOption)).appendTo(itemElement);
+                $(`<div id="dataGrid_${childItem.modelName}_${childItem.filterRefId}" style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid(mGridOption.makeGridOptions(mGridOption)).appendTo(itemElement);
                 const dataGrid = $(`<div id="dataGrid_${childItem.modelName}_${childItem.filterRefId}" style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid().dxDataGrid("instance");
 
                 if (dataGrid) {
