@@ -31,7 +31,7 @@
 
     .layout {
         display: grid;
-        grid-template-columns: 270px 380px 430px 1fr;
+        grid-template-columns: 270px 450px 430px 1fr;
         gap: 14px;
         min-height: calc(100vh - 90px);
     }
@@ -376,7 +376,6 @@
 </style>
 <body>
     <div class="title">Workflow Designer</div>
-    @* <div id="form_@(WorkflowDefinition_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])" class="dExForm"></div> *@
     <div class="dExForm">
         <div class="sub">
         </div>
@@ -458,7 +457,9 @@
                 </div>
                 <div class="card-body">
                     <div class="section-title">Workflow Header</div>
-                    <div id="workflowForm_@Convert.ToInt32(ViewData["Id"])"></div>
+                    <div id="form_@(WorkflowDefinition_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])" class="dExForm"></div>
+
+                    @* <div id="workflowForm_@Convert.ToInt32(ViewData["Id"])"></div> *@
 
                     <div class="toolbar" style="margin-top:12px;">
                         <div id="btnAddRoot_@Convert.ToInt32(ViewData["Id"])"></div>
@@ -552,21 +553,21 @@
 
     <script>
         var _id = @Convert.ToInt32(ViewData["Id"]);
-        // var _formConfig = new MFormOption();
-        // _formConfig.cloneUrl = '/Business/Workflow/WorkflowDefinition_Form/' + _id;
-        // _formConfig.tabCode = `form_WorkflowDefinition_Form_${_id}`;
-        // _formConfig.tabName = '@HttpContext.Request.Query["Caption"].ToString()';
-        // _formConfig.originModelName = "@WorkflowDefinition_FormModel.ModelName";
-        // _formConfig.formElementName = "@WorkflowDefinition_FormModel.ModelName";
-        // _formConfig.schemeBasedOn = `@(WorkflowDefinition_FormModel.SchemeModelName)`;
-        // _formConfig.allowFormActionButton = true;
-        // _formConfig.colCount = 1;
-        // _formConfig.isCustomQuery = true;
-        // var mainForm = new WorkflowDefinitionForm(_id, null, _formConfig);
+        var _formConfig = new MFormOption();
+        _formConfig.cloneUrl = '/Business/Workflow/WorkflowDefinition_Form/' + _id;
+        _formConfig.tabCode = `form_WorkflowDefinition_Form_${_id}`;
+        _formConfig.tabName = '@HttpContext.Request.Query["Caption"].ToString()';
+        _formConfig.originModelName = "@WorkflowDefinition_FormModel.ModelName";
+        _formConfig.formElementName = "@WorkflowDefinition_FormModel.ModelName";
+        _formConfig.schemeBasedOn = `@(WorkflowDefinition_FormModel.SchemeModelName)`;
+        _formConfig.allowFormActionButton = false;
+        _formConfig.colCount = 1;
+        _formConfig.isCustomQuery = false;
+        var mainForm = new WorkflowDefinitionForm(_id, null, _formConfig);
 
         var selectedNodeId = null;
         var nodeFormInstance = null;
-        var workflowFormInstance = null;
+        // var workflowFormInstance = null;
         var transitionFormInstance = null;
         var transitionGridInstance = null;
         var nodeGridInstance = null;
@@ -581,14 +582,7 @@
             completedNodeIds: ["FO", "TS", "UW"],
             pendingNodeIds: ["PM", "NODE_1774258352695"]
         };
-        var workflowHeader = {
-            workflowCode: "WF_TMIV_MAIN",
-            workflowName: "TMIV Main Workflow",
-            flowType: "Quotation",
-            versionNo: 1,
-            isActive: true
-        };
-
+        var workflowHeader = mainForm.formInstance.option("formData");
         // var workflowTreeData = [
         //     { id: "FO", parent: "#", text: "FO", type: "department", code: "FO", orderNo: 1, stepRole: "Front Office", departmentName: "FO", levelNo: 1, flowType: "Both", allowLoop: false, loopGroup: "" },
         //     { id: "TS", parent: "FO", text: "TS", type: "department", code: "TS", orderNo: 1, stepRole: "Technical Support", departmentName: "TS", levelNo: 2, flowType: "Quotation", allowLoop: false, loopGroup: "" },
@@ -602,52 +596,52 @@
 
 
 
-        function initWorkflowForm() {
-            $("#workflowForm_@Convert.ToInt32(ViewData["Id"])").dxForm({
-                formData: workflowHeader,
-                labelLocation: "top",
-                colCount: 2,
-                items: [
-                    { dataField: "workflowCode", label: { text: "Workflow Code" } },
-                    { dataField: "workflowName", label: { text: "Workflow Name" } },
-                    {
-                        dataField: "flowType",
-                        label: { text: "Workflow Flow Type" },
-                        editorType: "dxSelectBox",
-                        editorOptions: {
-                            dataSource: ["Quotation", "PolicyIssuance", "Both"],
-                            onValueChanged: function () {
-                                syncWorkflowHeader();
-                            }
-                        }
-                    },
-                    {
-                        dataField: "versionNo",
-                        label: { text: "Version No" },
-                        editorType: "dxNumberBox",
-                        editorOptions: {
-                            min: 1,
-                            onValueChanged: function () {
-                                syncWorkflowHeader();
-                            }
-                        }
-                    },
-                    {
-                        dataField: "isActive",
-                        label: { text: "Active" },
-                        editorType: "dxSwitch",
-                        editorOptions: {
-                            onValueChanged: function () {
-                                syncWorkflowHeader();
-                            }
-                        }
-                    }
-                ],
-                onInitialized: function (e) {
-                    workflowFormInstance = e.component;
-                }
-            });
-        }
+        // function initWorkflowForm() {
+        //     $("#workflowForm_@Convert.ToInt32(ViewData["Id"])").dxForm({
+        //         formData: workflowHeader,
+        //         labelLocation: "top",
+        //         colCount: 2,
+        //         items: [
+        //             { dataField: "workflowCode", label: { text: "Workflow Code" } },
+        //             { dataField: "workflowName", label: { text: "Workflow Name" } },
+        //             {
+        //                 dataField: "flowType",
+        //                 label: { text: "Workflow Flow Type" },
+        //                 editorType: "dxSelectBox",
+        //                 editorOptions: {
+        //                     dataSource: ["Quotation", "PolicyIssuance", "Both"],
+        //                     onValueChanged: function () {
+        //                         syncWorkflowHeader();
+        //                     }
+        //                 }
+        //             },
+        //             {
+        //                 dataField: "versionNo",
+        //                 label: { text: "Version No" },
+        //                 editorType: "dxNumberBox",
+        //                 editorOptions: {
+        //                     min: 1,
+        //                     onValueChanged: function () {
+        //                         syncWorkflowHeader();
+        //                     }
+        //                 }
+        //             },
+        //             {
+        //                 dataField: "isActive",
+        //                 label: { text: "Active" },
+        //                 editorType: "dxSwitch",
+        //                 editorOptions: {
+        //                     onValueChanged: function () {
+        //                         syncWorkflowHeader();
+        //                     }
+        //                 }
+        //             }
+        //         ],
+        //         onInitialized: function (e) {
+        //             workflowFormInstance = e.component;
+        //         }
+        //     });
+        // }
 
         function initNodeForm() {
             $("#nodeForm_@Convert.ToInt32(ViewData["Id"])").dxForm({
@@ -1166,7 +1160,7 @@
                             $("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val("");
 
                             syncTreeDataFromJsTree();
-                            renderTransitionPreview();
+                            // renderTransitionPreview();
                             buildPayloadPreview();
                         });
                 }
@@ -1351,14 +1345,13 @@
                 if ((t.actionCode || "").startsWith("SUBMIT")) uiMode = "EditQuotation";
                 else if ((t.actionCode || "").startsWith("RETURN")) uiMode = "Approval";
                 else if ((t.actionCode || "").startsWith("COMPLETE")) uiMode = "ReadOnly";
-
                 return {
                     sortOrder: index + 1,
                     stepNo: index + 1,
                     workflowDefinitionId: workflowDefinitionId,
 
                     stepType: isEnd ? 9 : (t.isLoop ? 3 : 2),
-                    allowLoop: !!t.isLoop,
+                    allowLoop: t.isLoop,
                     canComment: true,
                     canEdit: !isEnd,
                     canUpload: !isEnd,
@@ -1502,7 +1495,7 @@
             var newId = generateNodeId();
             var parentNode = parentId === "#" ? null : tree.get_node(parentId);
 
-            var currentWorkflowFlow = workflowFormInstance.option("formData").flowType || "Both";
+            var currentWorkflowFlow = mainForm.formInstance.option("formData").flowType || "Both";
 
             var nodeData = {
                 id: newId,
@@ -1719,7 +1712,6 @@
             if (!fd.actionCode) {
                 return notify("Action Code is required", "warning");
             }
-
             transitions.push({
                 __rowKey:  crypto.randomUUID ? crypto.randomUUID() : `tr_${Date.now()}_${i}_${Math.random()}`,
                 fromNodeId: fd.fromNodeId,
@@ -1728,7 +1720,7 @@
                 actionName: fd.actionName || fd.actionCode,
                 flowType: fd.flowType || "Both",
                 isReturn: !!fd.isReturn,
-                isLoop: !!fd.isLoop,
+                isLoop: fd.isLoop,
                 loopGroup: fd.loopGroup || "",
                 loopExitMode: fd.loopExitMode || "None",
                 maxLoopCount: fd.maxLoopCount || null,
@@ -1737,7 +1729,7 @@
                 conditionJson: fd.conditionJson || ""
             });
 
-            renderTransitionPreview();
+            // renderTransitionPreview();
             buildPayloadPreview();
             transitionFormInstance.option("formData", getEmptyTransition(selectedNodeId || ""));
             clearConditionBuilder();
@@ -1747,55 +1739,55 @@
             notify("Transition added", "success");
         }
 
-        function renderTransitionPreview() {
-            var $box = $("#transitionPreview_@Convert.ToInt32(ViewData["Id"])");
-            $box.empty();
+        // function renderTransitionPreview() {
+        //     var $box = $("#transitionPreview_@Convert.ToInt32(ViewData["Id"])");
+        //     $box.empty();
 
-            if (!transitions.length) {
-                $box.html(`<div class="transition-item"><div class="transition-meta">No transitions</div></div>`);
-                return;
-            }
+        //     if (!transitions.length) {
+        //         $box.html(`<div class="transition-item"><div class="transition-meta">No transitions</div></div>`);
+        //         return;
+        //     }
 
-            transitions.forEach((x, index) => {
-                var flowClass = x.flowType === "Quotation" ? "q" :
-                    x.flowType === "PolicyIssuance" ? "pi" : "both";
+        //     transitions.forEach((x, index) => {
+        //         var flowClass = x.flowType === "Quotation" ? "q" :
+        //             x.flowType === "PolicyIssuance" ? "pi" : "both";
 
-                var badges = `<span class="badge ${flowClass === 'q' ? 'q' : flowClass === 'pi' ? 'pi' : 'both'}">${escapeHtml(x.flowType || "Both")}</span>`;
-                if (x.isReturn) badges += `<span class="badge return">RETURN</span>`;
-                if (x.isLoop) badges += `<span class="badge loop">LOOP</span>`;
-                if (x.isExitTransition) badges += `<span class="badge exit">EXIT</span>`;
-                if ((x.loopExitMode || "") === "UserDecision") badges += `<span class="badge user">UserDecision</span>`;
+        //         var badges = `<span class="badge ${flowClass === 'q' ? 'q' : flowClass === 'pi' ? 'pi' : 'both'}">${escapeHtml(x.flowType || "Both")}</span>`;
+        //         if (x.isReturn) badges += `<span class="badge return">RETURN</span>`;
+        //         if (x.isLoop) badges += `<span class="badge loop">LOOP</span>`;
+        //         if (x.isExitTransition) badges += `<span class="badge exit">EXIT</span>`;
+        //         if ((x.loopExitMode || "") === "UserDecision") badges += `<span class="badge user">UserDecision</span>`;
 
-                var selfLoopNote = x.fromNodeId === x.toNodeId ? "Self loop / vòng lặp tại chính node này" : "";
+        //         var selfLoopNote = x.fromNodeId === x.toNodeId ? "Self loop / vòng lặp tại chính node này" : "";
 
-                $box.append(`
-                            <div class="transition-item">
-                                <div class="transition-route">${escapeHtml(x.fromNodeId)} → ${escapeHtml(x.toNodeId)}</div>
-                                <div class="badge-row">${badges}</div>
-                                <div class="transition-meta">
-                                    ActionCode: <b>${escapeHtml(x.actionCode || "")}</b><br>
-                                    ActionName: ${escapeHtml(x.actionName || "")}<br>
-                                    LoopGroup: ${escapeHtml(x.loopGroup || "-")}<br>
-                                    LoopExitMode: ${escapeHtml(x.loopExitMode || "-")}<br>
-                                    UserDecisionLabel: ${escapeHtml(x.userDecisionLabel || "-")}<br>
-                                    MaxLoopCount: ${x.maxLoopCount == null ? "-" : x.maxLoopCount}<br>
-                                    ConditionJson: ${escapeHtml(x.conditionJson || "-")}
-                                </div>
-                                ${selfLoopNote ? `<div class="transition-meta" style="margin-top:6px;color:#6d28d9;font-weight:700;">${escapeHtml(selfLoopNote)}</div>` : ""}
-                                <div style="margin-top:8px;">
-                                    <button onclick="removeTransition(${index})"
-                                        style="border:1px solid #fecaca;background:#fff1f2;color:#b91c1c;border-radius:8px;padding:6px 10px;cursor:pointer;">
-                                        Delete
-                                    </button>
-                                </div>
-                            </div>
-                        `);
-            });
-        }
+        //         $box.append(`
+        //                     <div class="transition-item">
+        //                         <div class="transition-route">${escapeHtml(x.fromNodeId)} → ${escapeHtml(x.toNodeId)}</div>
+        //                         <div class="badge-row">${badges}</div>
+        //                         <div class="transition-meta">
+        //                             ActionCode: <b>${escapeHtml(x.actionCode || "")}</b><br>
+        //                             ActionName: ${escapeHtml(x.actionName || "")}<br>
+        //                             LoopGroup: ${escapeHtml(x.loopGroup || "-")}<br>
+        //                             LoopExitMode: ${escapeHtml(x.loopExitMode || "-")}<br>
+        //                             UserDecisionLabel: ${escapeHtml(x.userDecisionLabel || "-")}<br>
+        //                             MaxLoopCount: ${x.maxLoopCount == null ? "-" : x.maxLoopCount}<br>
+        //                             ConditionJson: ${escapeHtml(x.conditionJson || "-")}
+        //                         </div>
+        //                         ${selfLoopNote ? `<div class="transition-meta" style="margin-top:6px;color:#6d28d9;font-weight:700;">${escapeHtml(selfLoopNote)}</div>` : ""}
+        //                         <div style="margin-top:8px;">
+        //                             <button onclick="removeTransition(${index})"
+        //                                 style="border:1px solid #fecaca;background:#fff1f2;color:#b91c1c;border-radius:8px;padding:6px 10px;cursor:pointer;">
+        //                                 Delete
+        //                             </button>
+        //                         </div>
+        //                     </div>
+        //                 `);
+        //     });
+        // }
 
         window.removeTransition = function (index) {
             transitions.splice(index, 1);
-            renderTransitionPreview();
+            // renderTransitionPreview();
             // console.log("removeTransition");
             buildPayloadPreview();
         };
@@ -1872,7 +1864,7 @@
                     actionName: x.actionName,
                     flowType: x.flowType || "Both",
                     isReturn: !!x.isReturn,
-                    isLoop: !!x.isLoop,
+                    isLoop: x.isLoop,
                     loopGroup: x.loopGroup || "",
                     loopExitMode: x.loopExitMode || "None",
                     maxLoopCount: x.maxLoopCount,
@@ -1922,7 +1914,7 @@
             runtimeState.pendingNodeIds = ids.filter(x => !used.has(x));
         }
         function syncWorkflowHeader() {
-            workflowHeader = workflowFormInstance.option("formData") || workflowHeader;
+             workflowHeader = mainForm.formInstance.option("formData") || workflowHeader;
         }
 
 
@@ -2051,6 +2043,8 @@
         }
 
         function loadSampleLoop() {
+
+
             workflowHeader = {
                 workflowCode: "WF_LOOP_DEMO",
                 workflowName: "Loop Demo Workflow",
@@ -2076,13 +2070,13 @@
 
         function reloadAll() {
             selectedNodeId = null;
-            if (workflowFormInstance) workflowFormInstance.option("formData", workflowHeader);
+            // if (workflowFormInstance) workflowFormInstance.option("formData", workflowHeader);
             if (nodeFormInstance) nodeFormInstance.option("formData", {});
             if (transitionFormInstance) transitionFormInstance.option("formData", getEmptyTransition(""));
             $("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val("");
             initTree();
             refreshTransitionNodeLookup();
-            renderTransitionPreview();
+            // renderTransitionPreview();
             buildPayloadPreview();
 
             refreshGrid();
@@ -2145,118 +2139,7 @@
             DevExpress.ui.notify(message, type || "info", 1800);
         }
 
-        // function escapeHtml(str) {
-        //     return String(str ?? "")
-        //         .replace(/&/g, "&amp;")
-        //         .replace(/</g, "&lt;")
-        //         .replace(/>/g, "&gt;")
-        //         .replace(/"/g, "&quot;")
-        //         .replace(/'/g, "&#039;");
-        //         }
-
-        // function initTransitionGrid() {
-
-        //     $("#transitionGrid_@Convert.ToInt32(ViewData["Id"])").dxDataGrid({
-        //         dataSource: transitions,
-        //         keyExpr: function (row, index) {
-        //             return `${row.fromNodeId}_${row.toNodeId}_${row.actionCode}_${index}`;
-        //         },
-        //         showBorders: true,
-        //         height: 420,
-        //         paging: { enabled: false },
-        //         filterRow: { visible: true },
-        //         searchPanel: { visible: true, width: 260, placeholder: "Search transition..." },
-        //         headerFilter: { visible: true },
-        //         columnAutoWidth: true,
-        //         allowColumnResizing: true,
-        //         rowAlternationEnabled: true,
-        //         editing: {
-        //             mode: "row",
-        //             allowUpdating: false,
-        //             allowAdding: false,
-        //             allowDeleting: true,
-        //             useIcons: true
-        //         },
-        //         columns: [
-        //             {
-        //                 caption: "#",
-        //                 width: 60,
-        //                 cellTemplate: function (container, options) {
-        //                     container.text(options.rowIndex + 1);
-        //                 }
-        //             },
-        //             { dataField: "fromNodeId", caption: "From Node" },
-        //             { dataField: "toNodeId", caption: "To Node" },
-        //             { dataField: "actionCode", caption: "Action Code" },
-        //             { dataField: "actionName", caption: "Action Name" },
-        //             {
-        //                 dataField: "flowType",
-        //                 caption: "Flow Type",
-        //                 lookup: {
-        //                     dataSource: ["Quotation", "PolicyIssuance", "Both"]
-        //                 }
-        //             },
-        //             { dataField: "isReturn", caption: "Is Return", dataType: "boolean", width: 90 },
-        //             { dataField: "isLoop", caption: "Is Loop", dataType: "boolean", width: 80 },
-        //             { dataField: "loopGroup", caption: "Loop Group" },
-        //             { dataField: "loopExitMode", caption: "Loop Exit Mode" },
-        //             { dataField: "maxLoopCount", caption: "Max Loop Count", dataType: "number" },
-        //             { dataField: "isExitTransition", caption: "Is Exit", dataType: "boolean", width: 80 },
-        //             { dataField: "userDecisionLabel", caption: "User Decision Label" },
-        //             {
-        //                 dataField: "conditionJson",
-        //                 caption: "Condition JSON",
-        //                 minWidth: 220,
-        //                 cellTemplate: function (container, options) {
-        //                     const text = options.value || "";
-        //                     $("<div>")
-        //                         .css({
-        //                             whiteSpace: "pre-wrap",
-        //                             wordBreak: "break-word",
-        //                             maxHeight: "90px",
-        //                             overflow: "auto"
-        //                         })
-        //                         .text(text)
-        //                         .appendTo(container);
-        //                 }
-        //             }
-        //         ],
-        //         onRowRemoving: function (e) {
-        //             const rowIndex = transitions.findIndex(x =>
-        //                 x.fromNodeId === e.data.fromNodeId &&
-        //                 x.toNodeId === e.data.toNodeId &&
-        //                 x.actionCode === e.data.actionCode &&
-        //                 x.actionName === e.data.actionName &&
-        //                 x.flowType === e.data.flowType &&
-        //                 x.isReturn === e.data.isReturn &&
-        //                 x.isLoop === e.data.isLoop &&
-        //                 x.loopGroup === e.data.loopGroup &&
-        //                 x.loopExitMode === e.data.loopExitMode &&
-        //                 x.maxLoopCount === e.data.maxLoopCount &&
-        //                 x.isExitTransition === e.data.isExitTransition &&
-        //                 x.userDecisionLabel === e.data.userDecisionLabel &&
-        //                 x.conditionJson === e.data.conditionJson
-        //             );
-
-        //             if (rowIndex >= 0) {
-        //                 transitions.splice(rowIndex, 1);
-        //                 refreshTransitionGrid();
-        //                 // buildPayloadPreview();
-        //                 notify("Transition deleted", "success");
-        //             }
-
-        //             e.cancel = true;
-        //         },
-        //         onRowDblClick: function (e) {
-        //             if (!transitionFormInstance || !e.data) return;
-        //             transitionFormInstance.option("formData", { ...e.data });
-        //             notify("Transition loaded to editor", "success");
-        //         },
-        //         onInitialized: function (e) {
-        //             transitionGridInstance = e.component;
-        //         }
-        //     });
-        // }
+      
                 function initTransitionGrid() {
             ensureTransitionKeys();
 
@@ -2379,7 +2262,6 @@
         function buildPayloadObjectFromState() {
             syncWorkflowHeader();
             syncRuntimeState();
-
             return {
                 workflowDefinition: {
                     id: _id || 0,
@@ -2431,7 +2313,7 @@
         function hydrateStateFromPayload(payload) {
             if (!payload) return;
 
-            workflowHeader = payload.workflowDefinition || workflowHeader;
+            // workflowHeader = payload.workflowDefinition || workflowHeader;
             runtimeState = payload.runtimeState || runtimeState;
 
             workflowTreeData = (payload.workflowNodes || []).map(x => ({
@@ -2467,13 +2349,13 @@
                 conditionJson: x.conditionJson || ""
             }));
 
-            if (workflowFormInstance) workflowFormInstance.option("formData", workflowHeader);
+            // if (workflowFormInstance) workflowFormInstance.option("formData", workflowHeader);
             if (transitionFormInstance) transitionFormInstance.option("formData", getEmptyTransition(""));
             if (nodeFormInstance) nodeFormInstance.option("formData", {});
 
             initTree();
             refreshTransitionNodeLookup();
-            renderTransitionPreview();
+            // renderTransitionPreview();
             refreshGrid();
         }
 
@@ -2486,7 +2368,16 @@
                 ajaxGet(`/api/WorkflowDefinition/GetSingle/${_id}`)
                     .then(function (data) {
                         var dbPayload = safeParseJson(data.workflowNodes, null);
+                        var overWriteHeader = new Object ();
 
+                        overWriteHeader.workflowCode= workflowHeader.workflowCode ;
+                        overWriteHeader.workflowName= workflowHeader.workflowName ;
+                        overWriteHeader.flowType= workflowHeader.flowType ;
+                        overWriteHeader.versionNo= workflowHeader.versionNo;
+                        overWriteHeader.isActive= workflowHeader.isActive;
+
+                        dbPayload.workflowDefinition = overWriteHeader;
+                        debugger
                         if (dbPayload) {
                             setPayloadBoxObject(dbPayload);
 
@@ -2525,29 +2416,31 @@
             var current = getPayloadBoxObject() || {};
             var latest = buildPayloadObjectFromState();
 
-            current.workflowDefinition = latest.workflowDefinition;
+            current.workflowDefinition = workflowHeader;
             current.workflowNodes = latest.workflowNodes;
             current.workflowTransitions = latest.workflowTransitions;
             current.runtimeState = latest.runtimeState;
 
-            setPayloadBoxObject(current);
+            setPayloadBoxObject(current) ;
             refreshGrid();
         }
         $(function () {
-            initWorkflowForm();
-            initNodeForm();
-            initConditionBuilderForm();
-            initTransitionForm();
+            // initWorkflowForm();
 
-
-            initButtons();
-            initTree();
-            initToolboxDrag();
-            initGrid();
-            renderTransitionPreview();
-
-            initPayloadBoxOnce().then(function () {
-                initTransitionGrid();
+            initNodeForm();                         
+                                                    
+            initConditionBuilderForm();             
+            initTransitionForm();                   
+                                                    
+                                                    
+                                                    
+            initButtons();                          
+            initTree();                             
+            initToolboxDrag();                      
+            initGrid();                             
+            // renderTransitionPreview();           
+            initPayloadBoxOnce().then(function () { 
+                initTransitionGrid();               
             });
         });
     </script>
