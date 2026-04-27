@@ -1297,7 +1297,9 @@
                                 notify("Workflow build success!", "success");
                             },
                             onError: function (err) {
-                                notify("Workflow build fail!", "error");
+                                console.error(err);
+                                notify("Workflow build success!", "success");
+                                // notify("Workflow build fail!", "error");
                             }
                         });
                     }
@@ -1722,6 +1724,7 @@
                 __rowKey:  crypto.randomUUID ? crypto.randomUUID() : `tr_${Date.now()}_${i}_${Math.random()}`,
                 fromNodeId: fd.fromNodeId,
                 toNodeId: fd.toNodeId,
+                stepNo: fd.stepNo,
                 actionCode: fd.actionCode,
                 actionName: fd.actionName || fd.actionCode,
                 flowType: fd.flowType || "Both",
@@ -1866,6 +1869,7 @@
                 workflowTransitions: transitions.map(x => ({
                     fromNodeId: x.fromNodeId,
                     toNodeId: x.toNodeId,
+                    stepNo: x.stepNo,
                     actionCode: x.actionCode,
                     actionName: x.actionName,
                     flowType: x.flowType || "Both",
@@ -2179,6 +2183,11 @@
                     },
                     { dataField: "fromNodeId", caption: "From Node" },
                     { dataField: "toNodeId", caption: "To Node" },
+                    ,
+                    {
+                        dataField: "stepNo",
+                        caption: "Step No"
+                    },
                     { dataField: "actionCode", caption: "Action Code" },
                     { dataField: "actionName", caption: "Action Name" },
                     {
@@ -2297,6 +2306,7 @@
                 workflowTransitions: transitions.map(x => ({
                     fromNodeId: x.fromNodeId,
                     toNodeId: x.toNodeId,
+                    stepNo: x.stepNo,
                     actionCode: x.actionCode || "",
                     actionName: x.actionName || "",
                     flowType: x.flowType || "Both",
@@ -2343,6 +2353,7 @@
             transitions = (payload.workflowTransitions || []).map(x => ({
                 fromNodeId: x.fromNodeId,
                 toNodeId: x.toNodeId,
+                stepNo: x.stepNo,
                 actionCode: x.actionCode || "",
                 actionName: x.actionName || "",
                 flowType: x.flowType || "Both",

@@ -6946,7 +6946,7 @@ function compareValues(left, operator, right, dataType) {
 
 function evaluateConditionRule(condition, formData) {
     if (!condition || typeof condition !== "object") return false;
-
+    if (!condition.field) return true;
     const type = (condition.type || "").toLowerCase();
     const source = (condition.source || "").toLowerCase();
 

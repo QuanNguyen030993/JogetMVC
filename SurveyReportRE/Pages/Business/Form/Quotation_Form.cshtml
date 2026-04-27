@@ -796,7 +796,29 @@ Note:
                             // setNextStep(state.nextStep);
                             $.each(qtDeptModuleCode, function (itemIndex, item) {
                                     setTimeout(() => {
-                                        var findRoute = state.nextStep.flowSteps.find(f => f.fromNodeId == item && f.stepNo == state.nextStep.instanceWorkflow.currentStep);
+                                        var findRoute = state.nextStep.flowSteps.find(f => !f.actionCode.includes("BACK_") && f.fromNodeId == item && f.stepNo == state.nextStep.instanceWorkflow.currentStep);
+                                        var findRouteReturn = state.nextStep.flowSteps.find(f => f.actionCode.includes("BACK_") && f.fromNodeId == item && f.stepNo == state.nextStep.instanceWorkflow.currentStep);
+                                        console.log(state.nextStep.flowSteps);
+
+                                         $(`#qt-btnReturnBranch_${item}`).dxButton({
+                                            text: findRouteReturn ? findRouteReturn.displayStatus : "", icon: "check", type: "info", onClick:
+                                                function (e) {
+                                                    debugger
+                                                    var content = tinymce.get(`qt-remarkBox_${item}`).getContent();
+                                                    var formItems = $(`#qt-form${item}`).dxForm("instance")?.option("formData") || {};
+                                                    formItems.comment = content;
+                                                    submitNextStep(`${item}`, state.nextStep, findRouteReturn, formItems);
+                                                }
+                                        });
+                                          $(`#qt-btnSubmitBranch_${item}`).dxButton({
+                                            text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
+                                                function (e) {
+                                                    var content = tinymce.get(`qt-remarkBox_${item}`).getContent();
+                                                    var formItems = $(`#qt-form${item}`).dxForm("instance")?.option("formData") || {};
+                                                    formItems.comment = content;
+                                                    submitNextStep(`${item}`, state.nextStep, findRoute, formItems);
+                                                }
+                                        });
                                         $(`#qt-btnSubmitBranch_${item}`).dxButton({
                                             text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
                                                 function (e) {
