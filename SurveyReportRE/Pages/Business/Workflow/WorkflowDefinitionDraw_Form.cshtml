@@ -885,114 +885,123 @@
 
             return edges;
         }
-        function buildAutoLayout(json) {
-          var nodes = json.workflowNodes || [];
-          var transitions = json.workflowTransitions || [];
+       function buildAutoLayout(json) {
+  const nodes = json.workflowNodes || [];
+  const transitions = json.workflowTransitions || [];
 
-          var nodeMap = new Map(nodes.map(n => [n.id, n]));
-          var indegree = new Map();
-          var graph = new Map();
+  const nodeMap = new Map(nodes.map(n => [n.id, n]));
+  const graph = new Map();
 
-          nodes.forEach(n => {
-            indegree.set(n.id, 0);
-            graph.set(n.id, []);
-          });
+  nodes.forEach(n => graph.set(n.id, []));
 
-          transitions.forEach(t => {
-           
-            if (!nodeMap.has(t.fromNodeId) || !nodeMap.has(t.toNodeId)) return;
-            if (t.fromNodeId === t.toNodeId) return;
-            if (t.isReturn) return; // return transitions may form cycles; ignore for auto layout
-            graph.get(t.fromNodeId).push(t.toNodeId);
-            indegree.set(t.toNodeId, (indegree.get(t.toNodeId) || 0) + 1);
-          });
+  // 🔥 Build graph SAFE (lọc edge gây loop)
+  transitions.forEach(t => {
+    if (!nodeMap.has(t.fromNodeId) || !nodeMap.has(t.toNodeId)) return;
 
-          var roots = nodes
-            .filter(n => (indegree.get(n.id) || 0) === 0)
-            .sort((a, b) => (a.orderNo || 9999) - (b.orderNo || 9999));
+    // ❌ loại self loop
+    if (t.fromNodeId === t.toNodeId) return;
 
-          if (roots.length === 0 && nodes.length) {
-            roots = [nodes.slice().sort((a, b) => (a.orderNo || 9999) - (b.orderNo || 9999))[0]];
-          }
+    // ❌ loại return / loop
+    if (t.isReturn || t.isLoop) return;
 
-          var layerMap = new Map();
-          var queue = [];
-          var updateCount = 0;
-          var maxUpdates = nodes.length * 3;
+    // ❌ loại backward edge (quan trọng)
+    const from = nodeMap.get(t.fromNodeId);
+    const to = nodeMap.get(t.toNodeId);
+    if ((to.orderNo || 0) <= (from.orderNo || 0)) return;
 
-          roots.forEach(r => {
-            layerMap.set(r.id, 0);
-            queue.push(r.id);
-          });
+    graph.get(t.fromNodeId).push(t.toNodeId);
+  });
 
-          while (queue.length && updateCount < maxUpdates) {
-            var current = queue.shift();
-            var currentLayer = layerMap.get(current) || 0;
-            var nexts = graph.get(current) || [];
+  // 🔥 BFS layer (KHÔNG BAO GIỜ LOOP)
+  const layerMap = new Map();
+  const queue = [];
 
-            nexts.forEach(to => {
-              var candidate = currentLayer + 1;
-              if (!layerMap.has(to) || candidate > layerMap.get(to)) {
-                layerMap.set(to, candidate);
-                queue.push(to);
-                updateCount++;
-              }
-            });
-          }
+  // root = node không có parent hoặc indegree = 0
+  const indegree = new Map();
+  nodes.forEach(n => indegree.set(n.id, 0));
 
-          nodes.forEach(n => {
-            if (!layerMap.has(n.id)) {
-              var maxLayer = Math.max(0, ...Array.from(layerMap.values(), v => v || 0));
-              layerMap.set(n.id, maxLayer + 1);
-            }
-          });
+  graph.forEach((tos, from) => {
+    tos.forEach(to => indegree.set(to, indegree.get(to) + 1));
+  });
 
-          var grouped = {};
-          nodes.forEach(n => {
-            var layer = layerMap.get(n.id) || 0;
-            if (!grouped[layer]) grouped[layer] = [];
-            grouped[layer].push(n);
-          });
+  const roots = nodes.filter(n => indegree.get(n.id) === 0);
 
-          Object.keys(grouped).forEach(layer => {
-            grouped[layer].sort((a, b) => {
-              var ao = a.orderNo || 9999;
-              var bo = b.orderNo || 9999;
-              if (ao !== bo) return ao - bo;
-              return safe(a.nodeName).localeCompare(safe(b.nodeName));
-            });
-          });
+  (roots.length ? roots : nodes.slice(0, 1)).forEach(r => {
+    layerMap.set(r.id, 0);
+    queue.push(r.id);
+  });
 
-          var startX = 96;
-          var startY = 110;
-          var colGap = 280;
-          var rowGap = 150;
-          var positions = {};
+  const visited = new Set();
 
-          Object.keys(grouped)
-            .map(Number)
-            .sort((a, b) => a - b)
-            .forEach(layer => {
-              var arr = grouped[layer];
-              var totalHeight = (arr.length - 1) * rowGap;
-              var baseY = Math.max(startY, 200 - totalHeight / 2);
+  while (queue.length) {
+    const current = queue.shift();
+    if (visited.has(current)) continue;
+    visited.add(current);
 
-              arr.forEach((n, index) => {
-                positions[n.id] = {
-                  x: snap(startX + layer * colGap),
-                  y: snap(baseY + index * rowGap),
-                  layer
-                };
-              });
-            });
+    const currentLayer = layerMap.get(current) || 0;
 
-          var maxLayer = Math.max(...Object.keys(grouped).map(Number));
-          var maxCount = Math.max(...Object.values(grouped).map(a => a.length));
-          var canvasWidth = startX + (maxLayer + 1) * colGap + 300;
-          var canvasHeight = Math.max(760, startY + maxCount * rowGap + 260);
+    (graph.get(current) || []).forEach(to => {
+      if (!layerMap.has(to)) {
+        layerMap.set(to, currentLayer + 1);
+        queue.push(to);
+      }
+    });
+  }
 
-          return { positions, grouped, canvasWidth, canvasHeight };
-        }
+  // 🔥 fallback cho node bị cycle / không reachable
+  nodes.forEach(n => {
+    if (!layerMap.has(n.id)) {
+      layerMap.set(n.id, 0); // hoặc max + 1 nếu muốn đẩy xuống cuối
+    }
+  });
+
+  // 🔥 group theo layer
+  const grouped = {};
+  nodes.forEach(n => {
+    const layer = layerMap.get(n.id) || 0;
+    if (!grouped[layer]) grouped[layer] = [];
+    grouped[layer].push(n);
+  });
+
+  Object.keys(grouped).forEach(layer => {
+    grouped[layer].sort((a, b) => (a.orderNo || 9999) - (b.orderNo || 9999));
+  });
+
+  // 🔥 layout position
+  const startX = 96;
+  const startY = 110;
+  const colGap = 280;
+  const rowGap = 150;
+
+  const positions = {};
+
+  Object.keys(grouped)
+    .map(Number)
+    .sort((a, b) => a - b)
+    .forEach(layer => {
+      const arr = grouped[layer];
+      const totalHeight = (arr.length - 1) * rowGap;
+      const baseY = Math.max(startY, 200 - totalHeight / 2);
+
+      arr.forEach((n, index) => {
+        positions[n.id] = {
+          x: startX + layer * colGap,
+          y: baseY + index * rowGap,
+          layer
+        };
+      });
+    });
+
+  const maxLayer = Math.max(...Object.keys(grouped).map(Number));
+  const maxCount = Math.max(...Object.values(grouped).map(a => a.length));
+
+  return {
+    positions,
+    grouped,
+    canvasWidth: startX + (maxLayer + 1) * colGap + 300,
+    canvasHeight: Math.max(760, startY + maxCount * rowGap + 260)
+  };
+}
 
         function buildSavedLayout(json) {
           var nodes = json.workflowNodes || [];
@@ -1142,9 +1151,7 @@
             }
 
             canvas.innerHTML = "";
-
             var useSavedLayout =
-              !options.forceAuto &&
               getNodesWithSavedPosition(currentJson.workflowNodes).length > 0;
 
             var layout = useSavedLayout
