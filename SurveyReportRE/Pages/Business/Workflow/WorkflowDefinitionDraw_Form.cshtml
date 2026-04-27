@@ -786,7 +786,31 @@
         var instance = null;
         var currentJson = null;
 
-        jsonInput.value = JSON.stringify(JSON.parse(data.workflowNodes), null, 2);
+        function parseWorkflowNodes(value) {
+          if (value == null) return null;
+          if (typeof value === "string") {
+            try {
+              return JSON.parse(value);
+            } catch (err) {
+              try {
+                return JSON.parse(value.replace(/\r?\n/g, "\\n"));
+              } catch (err2) {
+                console.warn("Failed to parse workflowNodes", err, err2);
+                return null;
+              }
+            }
+          }
+          return value;
+        }
+
+        var workflowNodesJson = parseWorkflowNodes(data.workflowNodes);
+        if (workflowNodesJson) {
+          jsonInput.value = JSON.stringify(workflowNodesJson, null, 2);
+        } else {
+          errorBox.style.display = "block";
+          errorBox.textContent = "Unable to parse workflowNodes from server response.";
+          jsonInput.value = "{}";
+        }
 
         function safe(v) {
           return String(v == null ? "" : v);
@@ -875,8 +899,10 @@
           });
 
           transitions.forEach(t => {
+           
             if (!nodeMap.has(t.fromNodeId) || !nodeMap.has(t.toNodeId)) return;
             if (t.fromNodeId === t.toNodeId) return;
+            if (t.isReturn) return; // return transitions may form cycles; ignore for auto layout
             graph.get(t.fromNodeId).push(t.toNodeId);
             indegree.set(t.toNodeId, (indegree.get(t.toNodeId) || 0) + 1);
           });
@@ -891,13 +917,15 @@
 
           var layerMap = new Map();
           var queue = [];
+          var updateCount = 0;
+          var maxUpdates = nodes.length * 3;
 
           roots.forEach(r => {
             layerMap.set(r.id, 0);
             queue.push(r.id);
           });
 
-          while (queue.length) {
+          while (queue.length && updateCount < maxUpdates) {
             var current = queue.shift();
             var currentLayer = layerMap.get(current) || 0;
             var nexts = graph.get(current) || [];
@@ -907,6 +935,7 @@
               if (!layerMap.has(to) || candidate > layerMap.get(to)) {
                 layerMap.set(to, candidate);
                 queue.push(to);
+                updateCount++;
               }
             });
           }
