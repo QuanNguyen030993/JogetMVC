@@ -906,6 +906,23 @@ Note:
             });
         }
 
+        // Global function for SignalR to reload quotation components
+        window.reloadQuotationComponents = async function() {
+            // Reload the quotation list
+            await loadQuotePage(true);
+            // Reload the selected detail if any
+            if (state.selectedId) {
+                await loadSelectedWorkflow();
+                renderDetail();
+            }
+            // Reload state for attachments and comments
+            reloadState();
+            // Re-render department forms
+            renderDeptForms();
+            // Update UI hints
+            updateHints();
+        };
+
 
         function renderDeptForms() {
             $(`#${formModuleKeyQt}-formFO`).dxForm({ formData: deptData.FO, readOnly: true, colCount: 1 });
@@ -1489,3 +1506,6 @@ Note:
         });
     }, _delayQuotationsLoadForm);
 </script>
+
+<script src="~/lib/signalr/signalr.min.js"></script>
+<script src="~/js/signalR.js"></script>

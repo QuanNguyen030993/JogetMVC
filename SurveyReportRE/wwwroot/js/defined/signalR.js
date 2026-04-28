@@ -62,7 +62,12 @@ connectionSignR.start().then(async function () {
             items.message);
     });
     connectionSignR.on("ItemSubmitted", function (items) {
-        window.QuotationPage.stageDept = "LMKT";
+                if (data.type === "Quotation") {
+                    // Call the reload function for quotation components
+                    if (window.reloadQuotationComponents) {
+                        window.reloadQuotationComponents();
+                    }
+                }
         //alert("Submitted");
     });
     
