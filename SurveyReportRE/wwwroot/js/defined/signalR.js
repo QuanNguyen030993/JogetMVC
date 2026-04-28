@@ -61,6 +61,11 @@ connectionSignR.start().then(async function () {
         showPopupNotification(items.title,
             items.message);
     });
+    connectionSignR.on("ItemSubmitted", function (items) {
+        debugger
+        alert("Submitted");
+    });
+    
 }).catch(function (err) {
     console.error("SignalR connection failed:", err);
 });

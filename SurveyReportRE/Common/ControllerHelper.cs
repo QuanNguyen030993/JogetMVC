@@ -11,6 +11,9 @@ using ERPCore.Models.Migration.Business.HumanResource;
 using ERPCore.Models.Migration.Business.MasterData;
 using ERPCore.Models.Migration.Business.Workflow;
 using ERPCore.Models.Request;
+using ERPCore.Models.Migration.Business.Social;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.SharePoint.ApplicationPages.Calendar.Exchange;
 
 namespace ERPCore.ControllerUtil
 {
@@ -93,6 +96,20 @@ namespace ERPCore.ControllerUtil
             else return "1";
         }
 
+        public async static Task SignalRResponse(IHubContext<FileProcessingHub> hubContext
+            , string UIMethod
+            , object returnObject
+            , string connectionId
+            , string domainName
+            )
+        {
+
+            IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
+                OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(domainName, "") == connectionId);
+
+                await hubContext.Clients.Client(onlineUser.ConnectionId).SendAsync(UIMethod,
+                returnObject);
+        }
      
     }
 }

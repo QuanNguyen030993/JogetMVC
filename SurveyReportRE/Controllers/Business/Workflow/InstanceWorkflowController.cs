@@ -17,6 +17,9 @@ using ERPCore.Models.Migration.Business.HumanResource;
 using ERPCore.Models.Migration.Business.MasterData;
 using ERPCore.Repository;
 using ERPCore.Models.Migration.Business.Config;
+using ERPCore.Models.Migration.Business.Social;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.SharePoint.Client;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -33,9 +36,16 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     private readonly IBaseRepository<MailQueue> _mailQueueRepository;
     private readonly IBaseRepository<Users> _usersRepository;
     private readonly IBaseRepository<Employee> _employeeRepository;
+    private readonly IHubContext<FileProcessingHub> _hubContext;
     private string DOMAIN_NAME = "";
     private MailConfig _emailSettings;
-    public InstanceWorkflowController(IBaseRepository<InstanceWorkflow> BaseRepository, IConfiguration config, IHttpContextAccessor httpContextAccessor, ILogger<QuotationCommentLog> logger, IOptionsMonitor<BlobStorageSettings> optionsMonitor) : base(BaseRepository, httpContextAccessor)
+    public InstanceWorkflowController(IBaseRepository<InstanceWorkflow> BaseRepository
+        , IConfiguration config
+        , IHttpContextAccessor httpContextAccessor
+        , ILogger<QuotationCommentLog> logger
+        , IOptionsMonitor<BlobStorageSettings> optionsMonitor
+        , IHubContext<FileProcessingHub> hubContext
+        ) : base(BaseRepository, httpContextAccessor)
     {
         configuration = config;
         _httpContextAccessor = httpContextAccessor;
@@ -49,6 +59,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         _usersRepository = new BaseRepository<Users>(configuration, _httpContextAccessor);
         _employeeRepository = new BaseRepository<Employee>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
+        _hubContext = hubContext;
         DOMAIN_NAME = configuration.GetSection("Domain:DCServer").Value;
     }
 
@@ -139,15 +150,18 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         Employee employee = new Employee();
         flowUser = await _usersRepository.GetSingleObject(s => s.username == accountName);
         employee = await _employeeRepository.GetSingleObject(s => s.UsersId == flowUser.Id);
-        DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
-        Dictionary<string, object> flowDictionaryData = new Dictionary<string, object>();
-        if (query.Rows.Count > 0)  
+        if (mailTemplate != null)
+        {
+            DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
+            Dictionary<string, object> flowDictionaryData = new Dictionary<string, object>();
+            if (query.Rows.Count > 0)
 
-            flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
-        MailQueue mailQueue = new MailQueue();
-       mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
-        await _mailQueueRepository.InsertData(mailQueue);
-
+                flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
+            MailQueue mailQueue = new MailQueue();
+            mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
+            if (mailQueue != null) await _mailQueueRepository.InsertData(mailQueue);
+        }
+        ControllerHelper.SignalRResponse(_hubContext, "ItemSubmitted",new { type = "Quotation"}, ControllerUtil.GetCurrentContextUser(_httpContextAccessor,configuration),DOMAIN_NAME);
         return Ok();
     }
 
@@ -238,15 +252,18 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         Employee employee = new Employee();
         flowUser = await _usersRepository.GetSingleObject(s => s.username == accountName);
         employee = await _employeeRepository.GetSingleObject(s => s.UsersId == flowUser.Id);
-        DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
-        Dictionary<string, object> flowDictionaryData = new Dictionary<string, object>();
-        if (query.Rows.Count > 0)
+        if (mailTemplate != null)
+        {
+            DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
+            Dictionary<string, object> flowDictionaryData = new Dictionary<string, object>();
+            if (query.Rows.Count > 0)
 
-            flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
-        MailQueue mailQueue = new MailQueue();
-        mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
-        await _mailQueueRepository.InsertData(mailQueue);
-
+                flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
+            MailQueue mailQueue = new MailQueue();
+            mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
+            if (mailQueue != null) await _mailQueueRepository.InsertData(mailQueue);
+        }
+        ControllerHelper.SignalRResponse(_hubContext, "ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         return Ok();
     }
 
