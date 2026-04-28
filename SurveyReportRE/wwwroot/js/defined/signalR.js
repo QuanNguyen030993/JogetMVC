@@ -62,8 +62,8 @@ connectionSignR.start().then(async function () {
             items.message);
     });
     connectionSignR.on("ItemSubmitted", function (items) {
-        debugger
-        alert("Submitted");
+        window.QuotationPage.stageDept = "LMKT";
+        //alert("Submitted");
     });
     
 }).catch(function (err) {

@@ -5588,8 +5588,6 @@ function stretchColumnsEvenly(e, opts) {
     const renderedWidth = getRenderedGridWidth(grid);
 
     const targetWidth = opts?.targetWidth ?? window.innerWidth - _widthMenuWidth - _rightWindowPadding;
-    console.log(targetWidth);
-    console.log(window.innerWidth);
     const minWidthEach = opts?.minWidthEach ?? 120;
     const excludeFields = new Set(opts?.excludeFields ?? []); // vd ["_command", "Select", "Buttons"]
 

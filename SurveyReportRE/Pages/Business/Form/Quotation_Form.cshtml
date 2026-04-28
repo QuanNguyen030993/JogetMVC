@@ -580,11 +580,9 @@ Note:
         var filter = "all";
         var searchText = "";
         let selectedId = null;
-        var selectedGuid = null;
-        let selectedAttachmentId = null;
         var selectedCodeNo = null;
         var commentPanelOpened = false;
-        let stageDept = null;
+        // let stageDept = null;
         var stageAccount = "";
 
         var deptData = { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} };
@@ -734,19 +732,19 @@ Note:
         function syncSelectedState(q) {
             if (!q) return;
 
-            selectedId = q.id ?? null;
-            selectedGuid = q.guid ?? null;
-            selectedAttachmentId = q.documentId ?? null;
-            selectedCodeNo = q.quotationCode ?? null;
-            stageDept = q.stageDept ?? null;
+            // selectedId = q.id ?? null;
+            // selectedGuid = q.guid ?? null;
+            // selectedAttachmentId = q.documentId ?? null;
+            // selectedCodeNo = q.quotationCode ?? null;
+            // stageDept = q.stageDept ?? null;
 
 
 
-            state.selectedId = selectedId;
-            state.selectedGuid = selectedGuid;
-            state.selectedAttachmentId = selectedAttachmentId;
-            state.selectedCodeNo = selectedCodeNo;
-            state.stageDept = stageDept;
+            state.selectedId =  q.id ?? null;
+            state.selectedGuid = q.guid ?? null;
+            state.selectedAttachmentId = q.documentId ?? null;
+            state.selectedCodeNo = q.quotationCode ?? null;
+            state.stageDept = q.stageDept ?? null;
             const params = new URLSearchParams();
             params.set("refKey", state.selectedGuid);
             params.set("refField", 'RecordGuid');
@@ -777,7 +775,7 @@ Note:
             PIC_JSON = pICs.find(f => f.quotationCode == state.selectedCodeNo)?.pIC ?? q.pIC ?? "{}";
             renderDeptCallouts(PIC_JSON);
             var map = parsePicMap(PIC_JSON);
-            stageAccount = map[stageDept] ? map[stageDept] : "(Unassigned)";
+            stageAccount = map[state.stageDept] ? map[state.stageDept] : "(Unassigned)";
 
             $(".qt-quoteCard").removeClass("selected");
             $(`.qt-quoteCard[data-id="${selectedId}"]`).addClass("selected");
@@ -798,12 +796,10 @@ Note:
                                     setTimeout(() => {
                                         var findRoute = state.nextStep.flowSteps.find(f => !f.actionCode.includes("BACK_") && f.fromNodeId == item && f.stepNo == state.nextStep.instanceWorkflow.currentStep);
                                         var findRouteReturn = state.nextStep.flowSteps.find(f => f.actionCode.includes("BACK_") && f.fromNodeId == item && f.stepNo == state.nextStep.instanceWorkflow.currentStep);
-                                        console.log(state.nextStep.flowSteps);
 
                                          $(`#qt-btnReturnBranch_${item}`).dxButton({
                                             text: findRouteReturn ? findRouteReturn.displayStatus : "", icon: "check", type: "info", onClick:
                                                 function (e) {
-                                                    debugger
                                                     var content = tinymce.get(`qt-remarkBox_${item}`).getContent();
                                                     var formItems = $(`#qt-form${item}`).dxForm("instance")?.option("formData") || {};
                                                     formItems.comment = content;
@@ -896,10 +892,7 @@ Note:
             }
         }
 
-        function rerenderCurrentSelectionOnly() {
-            $(".qt-quoteCard").removeClass("selected");
-            $(`.qt-quoteCard[data-id="${selectedId}"]`).addClass("selected");
-        }
+
 
 
         function reloadState() {
@@ -1088,7 +1081,7 @@ Note:
 
         function applyNodeHighlights() {
             $(".dept-node").removeClass("status focus");
-            $(`.dept-node[data-key='${stageDept}']`).addClass("status");
+            $(`.dept-node[data-key='${state.stageDept}']`).addClass("status");
             $(`.dept-node[data-key='${state.focusDept}']`).addClass("focus");
         }
 
@@ -1407,7 +1400,7 @@ Note:
                 .text(statusText(st))
                 .attr("class", `statusTag ${statusClass(st)}`);
 
-            $(`#${formModuleKeyQt}-stageDeptPill`).text(`Pending at: ${stageDept} - ${stageAccount ?? ""}`);
+            $(`#${formModuleKeyQt}-stageDeptPill`).text(`Pending at: ${state.stageDept} - ${stageAccount ?? ""}`);
             $(`#${formModuleKeyQt}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
 
             deptData.FO = { ...q, sectionName: "FO", code: q.quotationCode };

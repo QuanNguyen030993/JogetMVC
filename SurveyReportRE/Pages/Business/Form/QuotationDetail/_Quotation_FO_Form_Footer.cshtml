@@ -24,6 +24,7 @@
 
     var formItems = $("#qt-formFO").dxForm("instance")?.option("formData") || {};
     var encodedFolder = encodeURIComponent(`RES\\${ formItems.quotationCode }`);
+    if (formItems.resFK)
        $.get(`/api/Document/AttachmentSummary/${formItems.resFK.guid}/${encodedFolder}`, null
        ).done(function (res) {
             window.QuotationPage.state.formFO.dxForm("instance").updateData("resAttachmentCount", res.attachmentCount);
