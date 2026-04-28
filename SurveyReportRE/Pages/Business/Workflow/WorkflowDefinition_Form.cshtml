@@ -747,8 +747,12 @@
                     {
                         dataField: "stepNo",
                         label: { text: "Step No" },
-                        editorType: "dxNumberBox",
-                        editorOptions: { min: 1 }
+                        editorType: "dxTextBox",
+                    },
+                    {
+                        dataField: "jumpStepNo",
+                        label: { text: "Jump Point" },
+                        editorType: "dxTextBox",
                     },
                     {
                         dataField: "flowType",
@@ -1355,7 +1359,8 @@
                 else if ((t.actionCode || "").startsWith("COMPLETE")) uiMode = "ReadOnly";
                 return {
                     sortOrder: index + 1,
-                    stepNo: t.stepNo || (index + 1),
+                    stepNo: t.stepNo,// || (index + 1),
+                    jumpStepNo: t.jumpStepNo,// || (index + 1),
                     workflowDefinitionId: workflowDefinitionId,
 
                     stepType: isEnd ? 9 : (t.isLoop ? 3 : 2),
@@ -2099,6 +2104,7 @@
                 actionCode: "",
                 actionName: "",
                 stepNo: null,
+                jumpStepNo: null,
                 flowType: "Both",
                 isReturn: false,
                 isLoop: false,
@@ -2187,6 +2193,10 @@
                     {
                         dataField: "stepNo",
                         caption: "Step No"
+                    },
+                    {
+                        dataField: "jumpStepNo",
+                        caption: "Jump Point"
                     },
                     { dataField: "actionCode", caption: "Action Code" },
                     { dataField: "actionName", caption: "Action Name" },

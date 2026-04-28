@@ -807,7 +807,7 @@ Note:
                                                     var content = tinymce.get(`qt-remarkBox_${item}`).getContent();
                                                     var formItems = $(`#qt-form${item}`).dxForm("instance")?.option("formData") || {};
                                                     formItems.comment = content;
-                                                    submitNextStep(`${item}`, state.nextStep, findRouteReturn, formItems);
+                                                    returnToStep(`${item}`, state.nextStep, findRouteReturn, formItems);
                                                 }
                                         });
                                           $(`#qt-btnSubmitBranch_${item}`).dxButton({

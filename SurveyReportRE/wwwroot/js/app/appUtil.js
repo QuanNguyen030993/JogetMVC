@@ -6998,7 +6998,36 @@ function submitNextStep(dept, _nextStep, findRoute, formItems) {
     
   
 }
+function returnToStep(dept, _nextStep, findRoute, formItems) {
+    var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
+    var sendData = new Object();
+    sendData.InstanceWorkflow = convertKeysToUpperFirstChar(_nextStep.instanceWorkflow);
+    sendData.StepsWorkflow = convertKeysToUpperFirstChar(findRoute);
+    sendData.QuotationId = formItems.id;
+    sendData.Comment = formItems.comment;
 
+    //var formItemsRes = $(`#qt-formRES`).dxForm("instance")?.option("formData") || {};
+    var condition = JSON.parse(JSON.parse(findRoute.data));
+    if (condition.source == "form") {
+        formItems = window.QuotationPage.state.formFO.dxForm("instance").option("formData");
+        formItems.hasResAttachment = window.QuotationPage.state.hasResAttachment;
+    }
+    if (evaluateConditionRule(condition, formItems)) {
+        ajaxPost('/api/InstanceWorkflow/ReturnToStep', sendData, {
+            onSuccess: function (response) {
+                appNotifySuccess(`Submitted to ${findRoute.toNodeId}`, false);
+            },
+            onError: function (err) {
+            }
+        });
+        DevExpress.ui.notify("Submitted !", "Success");
+    }
+    else {
+        DevExpress.ui.notify(condition.message, condition.validateType);
+    }
+
+
+}
 
 function openBranchOverlay(currentDept) {
     //const currentDept = stageDept || focusDept || "FO";

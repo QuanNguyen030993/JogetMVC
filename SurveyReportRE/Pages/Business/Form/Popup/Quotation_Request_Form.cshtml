@@ -511,7 +511,7 @@
 
                                             ajaxGet(`/api/WorkflowDefinition/GetStepsList/${selectedRow.guid}`)
                                                 .then(data => {
-                                                    var roleInStep = data.find(f => f.stepNo == 1);
+                                                    var roleInStep = data.find(f => f.stepNo == "1");
                                                     var selectBoxIns = that.formInstance.getEditor("assignedTeamOrRole");
                                                     selectBoxIns.option("value", roleInStep.toNodeId);
                                                     vm.assignedTeamOrRole = roleInStep.toNodeId;

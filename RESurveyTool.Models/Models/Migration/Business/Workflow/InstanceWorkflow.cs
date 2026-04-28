@@ -8,7 +8,7 @@ namespace ERPCore.Models.Migration.Business.Workflow
     public class InstanceWorkflow : BaseModel
     {
         public Guid? RecordGuid {get;set;}
-        public int? CurrentStep {get;set;}
+        public string? CurrentStep {get;set;}
         public long? WorkflowStatusId {get;set;}
         public long? UserWorkflowId {get;set;}
         public long? RuleNo {get;set;}
