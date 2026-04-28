@@ -41,7 +41,7 @@ namespace ERPCore.Common.Constant
         public static string _heading1ColorHex = GetConfigValue("_heading1ColorHex", "0070C0");
         public static string[] windingsFonts = GetConfigValue("windingsFonts", "Wingdings,Wingdings 2,Wingdings 3,Webdings").Split(',');
 
-        //public const string _logConnection = "Integrated Security=True;Server=.\\SQLSERVER2022;Database=RESurveyToolLog;uid=sa;pwd=password@123";
+        //public const string _logConnection = "Integrated Security=True;Server=.\\JogetDB;Database=RESurveyToolLog;uid=sa;pwd=password@123";
         public static string _logConnection = ConfigurationManager.ConnectionStrings["LogConnection"].ConnectionString;
 
         private static int GetConfigValue(string key, int defaultValue)

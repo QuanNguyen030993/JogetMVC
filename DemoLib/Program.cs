@@ -16,7 +16,7 @@ using System.Configuration;
 //survey.SurveyNo = "SVRE.0225.259";
 //string PATH_TEMPLATE = "D:\\Source\\MySource\\TMIVReport\\TMIVReport\\ERPCore\\bin\\Debug\\Attachment\\Template\\RE_Survey_Template_20250220.docx";
 //string BLOB_PATH = "D:\\Source\\MySource\\TMIVReport\\TMIVReport\\ERPCore\\bin\\Debug\\Attachment";
-//string ConnectionString = "Persist Security Info=True;Server=.\\SQLSERVER2022;Database=ERPCore;uid=sa;pwd=password@123;Connection Timeout=60;MultipleActiveResultSets=true;TrustServerCertificate=True;";
+//string ConnectionString = "Persist Security Info=True;Server=.\\JogetDB;Database=ERPCore;uid=sa;pwd=password@123;Connection Timeout=60;MultipleActiveResultSets=true;TrustServerCertificate=True;";
 //string NO_IMAGE = "D:\\Source\\MySource\\TMIVReport\\TMIVReport\\ERPCore\\bin\\Debug\\Attachment\\System\\No_Image_Available.jpg";
 
 string path = "D:\\Example\\Reading.docx";
