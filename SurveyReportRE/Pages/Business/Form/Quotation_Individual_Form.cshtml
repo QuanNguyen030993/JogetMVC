@@ -717,7 +717,8 @@ Note:
                                 // setNextStep(state.nextStep);
                                  $.each(qtDeptModuleCode, function (itemIndex, item) {
                                  $(`#qt-remarkBox_${item}`).dxTextArea({width: _defaultFormFieldWidth,height: _defaultFormFieldHeight});
-                                     var findRoute = state.nextStep.flowSteps.find(f => f.fromNodeId == item && f.stepNo == state.nextStep.instanceWorkflow.currentStep);
+                                     // var findRoute = state.nextStep.flowSteps.find(f => f.fromNodeId == item && f.stepNo == state.nextStep.instanceWorkflow.currentStep);
+                                var findRoute = state.nextStep.flowSteps.find(f => f.fromNodeId == item && f.stepNo == state.nextStep.flowSteps.fnodeId);
                                  $(`#qt-btnSubmitBranch_${item}`).dxButton({ text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
                                  function (e) { var formItems = $(`#qt-form${item}`).dxForm("instance")?.option("formData") || {};
                                  submitNextStep(`${item}`, state.nextStep, findRoute, formItems); } });

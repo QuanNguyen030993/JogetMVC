@@ -68,7 +68,10 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     {
 
         if (string.IsNullOrEmpty(submitRequest.StepsWorkflow.FromNodeId) || string.IsNullOrEmpty(submitRequest.StepsWorkflow.ToNodeId)) return StatusCode(500, "Submit problem, please contact IT Admin!!!!");
-        submitRequest.InstanceWorkflow.CurrentStep = ControllerHelper.UpStep(submitRequest.InstanceWorkflow).ToString();
+        //submitRequest.InstanceWorkflow.CurrentStep = ControllerHelper.UpStep(submitRequest.InstanceWorkflow).ToString();
+        //submitRequest.InstanceWorkflow.CurrentStep = submitRequest.StepsWorkflow.JumpStepNo;
+        submitRequest.InstanceWorkflow.CurrentStep = submitRequest.StepsWorkflow.TNodeId;
+
         await _BaseRepository.UpdateData(submitRequest.InstanceWorkflow, JsonConvert.SerializeObject(submitRequest.InstanceWorkflow), submitRequest.InstanceWorkflow?.Id, "Id");
         Quotation quotation = new Quotation();
         quotation = await _quotationRepository.GetSingleObject(s => s.Id == submitRequest.QuotationId);
@@ -147,6 +150,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             "PM" => pICAttributes.PM,
             _ => null
         };
+        ControllerHelper.SignalRResponse(_hubContext, "ItemSubmitted",new { type = "Quotation"}, ControllerUtil.GetCurrentContextUser(_httpContextAccessor,configuration),DOMAIN_NAME);
         Employee employee = new Employee();
         flowUser = await _usersRepository.GetSingleObject(s => s.username == accountName);
         employee = await _employeeRepository.GetSingleObject(s => s.UsersId == flowUser.Id);
@@ -161,7 +165,6 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
             if (mailQueue != null) await _mailQueueRepository.InsertData(mailQueue);
         }
-        ControllerHelper.SignalRResponse(_hubContext, "ItemSubmitted",new { type = "Quotation"}, ControllerUtil.GetCurrentContextUser(_httpContextAccessor,configuration),DOMAIN_NAME);
         return Ok();
     }
 
@@ -170,7 +173,8 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     {
 
         if (string.IsNullOrEmpty(submitRequest.StepsWorkflow.FromNodeId) || string.IsNullOrEmpty(submitRequest.StepsWorkflow.ToNodeId)) return StatusCode(500, "Submit problem, please contact IT Admin!!!!");
-        submitRequest.InstanceWorkflow.CurrentStep = submitRequest.StepsWorkflow.JumpStepNo;
+        //submitRequest.InstanceWorkflow.CurrentStep = submitRequest.StepsWorkflow.JumpStepNo;
+        submitRequest.InstanceWorkflow.CurrentStep = submitRequest.StepsWorkflow.TNodeId;
         await _BaseRepository.UpdateData(submitRequest.InstanceWorkflow, JsonConvert.SerializeObject(submitRequest.InstanceWorkflow), submitRequest.InstanceWorkflow?.Id, "Id");
         Quotation quotation = new Quotation();
         quotation = await _quotationRepository.GetSingleObject(s => s.Id == submitRequest.QuotationId);
@@ -249,6 +253,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             "PM" => pICAttributes.PM,
             _ => null
         };
+        ControllerHelper.SignalRResponse(_hubContext, "ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         Employee employee = new Employee();
         flowUser = await _usersRepository.GetSingleObject(s => s.username == accountName);
         employee = await _employeeRepository.GetSingleObject(s => s.UsersId == flowUser.Id);
@@ -263,7 +268,6 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
             if (mailQueue != null) await _mailQueueRepository.InsertData(mailQueue);
         }
-        ControllerHelper.SignalRResponse(_hubContext, "ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         return Ok();
     }
 

@@ -10,6 +10,7 @@
     </div>
     <div class="actionRight">
         <div id="qt-btnSave_@dept"></div>
+        <div id="qt-btnReturnBranch_@dept"></div>
         <div id="qt-btnSubmitBranch_@dept"></div>
     </div>
 </div>
@@ -24,7 +25,7 @@
 
     var formItems = $("#qt-formFO").dxForm("instance")?.option("formData") || {};
     var encodedFolder = encodeURIComponent(`RES\\${ formItems.quotationCode }`);
-    if (formItems.resFK)
+    if (window.QuotationPage.resFK) // check tiep cho nay
        $.get(`/api/Document/AttachmentSummary/${formItems.resFK.guid}/${encodedFolder}`, null
        ).done(function (res) {
             window.QuotationPage.state.formFO.dxForm("instance").updateData("resAttachmentCount", res.attachmentCount);
@@ -32,7 +33,7 @@
             window.QuotationPage.state.hasResAttachment = res.hasAttachment;
             if (res.hasAttachment)
             $("#btnToggleResForm").addClass("hasResAttachment");
-           else
+            else
             $("#btnToggleResForm").removeClass("hasResAttachment");
        });
     }, 200);

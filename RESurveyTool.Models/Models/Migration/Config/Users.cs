@@ -40,12 +40,6 @@ namespace ERPCore.Models.Migration.Business.Config
             }
         }
 
-        public string username
-        {
-            get
-            {
-                return userPrincipalName.Split('@')[0];
-            }
-        }
+        public string username { get; set; } = "";
     }
 }

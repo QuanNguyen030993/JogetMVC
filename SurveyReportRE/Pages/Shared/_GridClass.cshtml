@@ -2288,7 +2288,6 @@
                  e.editorOptions.onValueChanged = function(ev) {
                 var selectedItem = ev.component.option("selectedItem");
                 if (!selectedItem) return;
-                debugger
                 var currentPIC = JSON.parse(rowData.pic || "{}");
 
                 if (currentPIC[item] === selectedItem.accountName) return;

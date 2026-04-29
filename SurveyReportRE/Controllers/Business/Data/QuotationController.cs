@@ -239,10 +239,12 @@ public class QuotationController : BaseControllerApi<Quotation>
 
         if (workflowDefinition != null)
         {
+            StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.StepNo == "1" && s.FromNodeId == quotationData.QuotationData.StartingDept);
             InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
             instanceWorkflow.RecordGuid = quotation.Guid;
             instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
-            instanceWorkflow.CurrentStep = "2";
+            //instanceWorkflow.CurrentStep = "2";
+            instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
             instanceWorkflow.CurrentStepId = new Guid();
             instanceWorkflow.IsCancelled = false;
             instanceWorkflow.IsCompleted = false;
@@ -250,7 +252,6 @@ public class QuotationController : BaseControllerApi<Quotation>
 
 
 
-        StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.StepNo == "1" && s.FromNodeId == quotationData.QuotationData.StartingDept);
 
         SubmitRequest submitRequest = new SubmitRequest();
         submitRequest.StepsWorkflow = stepsWorkflow;
@@ -338,10 +339,12 @@ public class QuotationController : BaseControllerApi<Quotation>
 
             if (workflowDefinition != null)
             {
+            StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.StepNo == "1" && s.FromNodeId == quotationData.QuotationData.StartingDept);
                 InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
                 instanceWorkflow.RecordGuid = quotation.Guid;
                 instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
-                instanceWorkflow.CurrentStep = "2";
+                //instanceWorkflow.CurrentStep = "2";
+                instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
                 instanceWorkflow.CurrentStepId = new Guid();
                 instanceWorkflow.IsCancelled = false;
                 instanceWorkflow.IsCompleted = false;
@@ -349,7 +352,6 @@ public class QuotationController : BaseControllerApi<Quotation>
 
 
 
-            StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.StepNo == "1" && s.FromNodeId == quotationData.QuotationData.StartingDept);
 
             SubmitRequest submitRequest = new SubmitRequest();
             submitRequest.StepsWorkflow = stepsWorkflow;

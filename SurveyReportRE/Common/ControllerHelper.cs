@@ -86,13 +86,13 @@ namespace ERPCore.ControllerUtil
         public static string UpStep(InstanceWorkflow instanceWorkflow)
         {
             if (instanceWorkflow != null)
-                return (Convert.ToInt32((instanceWorkflow?.CurrentStep ?? "0")) + 1).ToString();
+                return (Util.GetPreviousSegment(instanceWorkflow?.CurrentStep ?? "0") + 1).ToString();
             else return "1";
         }
         public static string DownStep(InstanceWorkflow instanceWorkflow)
         {
             if (instanceWorkflow != null)
-                return (Convert.ToInt32(instanceWorkflow?.CurrentStep ?? "0") - 1) < 1 ? "1": ((Convert.ToInt32(instanceWorkflow?.CurrentStep ?? "0") - 1) - 1).ToString();
+                return (Util.GetPreviousSegment(instanceWorkflow?.CurrentStep ?? "0") - 1) < 1 ? "1": ((Util.GetPreviousSegment(instanceWorkflow?.CurrentStep ?? "0") - 1) - 1).ToString();
             else return "1";
         }
 

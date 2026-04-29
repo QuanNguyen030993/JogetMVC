@@ -1303,7 +1303,7 @@ top:  1%;
     }
 
     .flow-history-panel .fh-flow {
-        max-height: 100%;
+        max-height: 95%;
         overflow: auto;
         padding-right: 4px;
     }

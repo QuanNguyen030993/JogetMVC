@@ -4,6 +4,7 @@ const connectionSignR = new signalR.HubConnectionBuilder()
         transport: signalR.HttpTransportType.WebSockets
     })
     .configureLogging(signalR.LogLevel.Information)
+    .withAutomaticReconnect()
     .build();
 
 connectionSignR.start().then(async function () {
@@ -62,12 +63,12 @@ connectionSignR.start().then(async function () {
             items.message);
     });
     connectionSignR.on("ItemSubmitted", function (items) {
-                if (data.type === "Quotation") {
+        //if (items.data.type === "Quotation") {
                     // Call the reload function for quotation components
                     if (window.reloadQuotationComponents) {
                         window.reloadQuotationComponents();
                     }
-                }
+                //}
         //alert("Submitted");
     });
     

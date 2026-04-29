@@ -1292,9 +1292,9 @@
                         const workflowDefinitionId = mainFormData.guid || null;
                         // 2. Build payload từ UI
                         const payload = {
-                            workflowDefinitionId: workflowDefinitionId,
-                            nodes: buildWorkflowNodesForSave(workflowDefinitionId),
-                            steps: buildStepsWorkflowForSave(workflowDefinitionId)
+                            WorkflowDefinitionId: workflowDefinitionId,
+                            Nodes: buildWorkflowNodesForSave(workflowDefinitionId),
+                            Steps: buildStepsWorkflowForSave(workflowDefinitionId)
                         };
                         ajaxPost('api/StepsWorkflow/BuildSteps', payload, {
                             onSuccess: function (response) {
@@ -1302,8 +1302,7 @@
                             },
                             onError: function (err) {
                                 console.error(err);
-                                notify("Workflow build success!", "success");
-                                // notify("Workflow build fail!", "error");
+                                notify("Workflow build fail!", "error");
                             }
                         });
                     }
@@ -1359,8 +1358,8 @@
                 else if ((t.actionCode || "").startsWith("COMPLETE")) uiMode = "ReadOnly";
                 return {
                     sortOrder: index + 1,
-                    stepNo: t.stepNo,// || (index + 1),
-                    jumpStepNo: t.jumpStepNo,// || (index + 1),
+                    stepNo: t.stepNo?.toString(),// || (index + 1),
+                    jumpStepNo: t.jumpStepNo?.toString(),// || (index + 1),
                     workflowDefinitionId: workflowDefinitionId,
 
                     stepType: isEnd ? 9 : (t.isLoop ? 3 : 2),

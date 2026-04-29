@@ -755,7 +755,27 @@ namespace ERPCore.Common
             return null;
         }
 
+        public static int GetLastSegment(string? stepNo)
+        {
+            if (string.IsNullOrWhiteSpace(stepNo))
+                return 0;
 
+            var parts = stepNo.Split('.');
+
+            return int.TryParse(parts[^1], out int result) ? result : 0;
+        }
+
+
+        public static int GetPreviousSegment(string? stepNo)
+        {
+            if (string.IsNullOrWhiteSpace(stepNo))
+                return 0;
+
+            var parts = stepNo.Split('.');
+            var number = parts[0];
+            return int.Parse(parts[0]);
+            //return int.TryParse(parts[0], out int result) ? result : 0;
+        }
 
         private static int getDecreaseTime(int maxSize, double x)//x is imgWidth or imgHeight
         {

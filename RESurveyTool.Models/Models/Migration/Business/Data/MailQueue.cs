@@ -17,7 +17,6 @@ namespace ERPCore.Models.Migration.Business.Data
         public string from_account { get; set; } = "";
         public string type { get; set; } = "";
         [MaxLength(8000)]
-        public string attachments { get; set; } = "";
         public string is_send { get; set; } = "";
         public string ToName { get; set; } = "";
         public string ToEmail { get; set; } = "";

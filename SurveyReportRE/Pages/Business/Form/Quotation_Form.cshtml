@@ -794,8 +794,8 @@ Note:
                             // setNextStep(state.nextStep);
                             $.each(qtDeptModuleCode, function (itemIndex, item) {
                                     setTimeout(() => {
-                                        var findRoute = state.nextStep.flowSteps.find(f => !f.actionCode.includes("BACK_") && f.fromNodeId == item && f.stepNo == state.nextStep.instanceWorkflow.currentStep);
-                                        var findRouteReturn = state.nextStep.flowSteps.find(f => f.actionCode.includes("BACK_") && f.fromNodeId == item && f.stepNo == state.nextStep.instanceWorkflow.currentStep);
+                                        var findRoute = state.nextStep.flowSteps.find(f => !f.actionCode.includes("BACK_") && f.fromNodeId == item && f.fNodeId == state.nextStep.currentStep);
+                                        var findRouteReturn = state.nextStep.flowSteps.find(f => f.actionCode.includes("BACK_") && f.fromNodeId == item && f.fNodeId == state.nextStep.currentStep);
 
                                          $(`#qt-btnReturnBranch_${item}`).dxButton({
                                             text: findRouteReturn ? findRouteReturn.displayStatus : "", icon: "check", type: "info", onClick:
@@ -1506,6 +1506,3 @@ Note:
         });
     }, _delayQuotationsLoadForm);
 </script>
-
-<script src="~/lib/signalr/signalr.min.js"></script>
-<script src="~/js/signalR.js"></script>

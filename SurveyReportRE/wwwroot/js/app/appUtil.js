@@ -3717,7 +3717,7 @@ function sendClientErrorLog(message, err, additionalDetails = {}) {
             errorLog.ErrorBrowserDetails.FunctionName = additionalDetails.functionName || null;
             errorLog.ErrorBrowserDetails.ErrorType = additionalDetails.errorType || 'http_error';
             errorLog.ErrorBrowserDetails.Context = JSON.stringify(additionalDetails.context) || JSON.stringify(getPageContext());
-            //errorLog.ErrorBrowserDetails.BreadcrumbTrails = additionalDetails.breadcrumbTrail || getBreadcrumbTrail();
+            errorLog.ErrorBrowserDetails.BreadcrumbTrails = additionalDetails?.breadcrumbTrail ?? "";// || getBreadcrumbTrail();
         }
         else {
 
@@ -3727,7 +3727,7 @@ function sendClientErrorLog(message, err, additionalDetails = {}) {
             errorLog.ErrorBrowserDetails.ColumnNumber = additionalDetails.columnNumber || null;
             errorLog.ErrorBrowserDetails.FunctionName = additionalDetails.functionName || null;
             errorLog.ErrorBrowserDetails.Context = JSON.stringify(additionalDetails.context) || JSON.stringify(getPageContext());
-            //errorLog.ErrorBrowserDetails.BreadcrumbTrails = additionalDetails.breadcrumbTrail || getBreadcrumbTrail();
+            errorLog.ErrorBrowserDetails.BreadcrumbTrails = additionalDetails?.breadcrumbTrail ?? "";// || getBreadcrumbTrail();
         }
 
        
@@ -5278,99 +5278,6 @@ function popupStandardContentByScroll(customContainer) {
     });
     return scrollView;
 }
-
-//function ajaxCore(method, url, {
-//    routeParam = null,   // ví dụ dept
-//    query = null,        // object => query string
-//    body = null,         // object => POST JSON
-//    headers = {},
-//    dataType = "json",
-//    timeout = 30000,
-
-//    // callbacks (optional)
-//    onSuccess = null,
-//    onError = null,
-//    onFinally = null,
-
-//    // hooks (optional)
-//    beforeSend = null,
-//} = {}) {
-
-//    const fullUrl = routeParam !== null && routeParam !== undefined
-//        ? `${url}/${encodeURIComponent(routeParam)}`
-//        : url;
-
-//    const isGet = method.toUpperCase() === "GET";
-
-//    const jqxhr = $.ajax({
-//        url: fullUrl,
-//        type: method,
-//        dataType,
-//        timeout,
-//        cache: false,
-//        headers,
-
-//        // GET => query, POST => JSON body
-//        data: isGet ? (query || {}) : (body == null ? null : JSON.stringify(body)),
-//        contentType: isGet ? undefined : "application/json; charset=utf-8",
-
-//        beforeSend: (xhr) => {
-//            try { beforeSend?.(xhr); } catch { }
-//        }
-//    });
-
-//    // bridge callbacks + promise
-//    jqxhr
-//        .done((res, textStatus, xhr) => {
-//            try { onSuccess?.(res, { url: fullUrl, method, textStatus, xhr }); } catch (e) {
-//                // callback lỗi vẫn không làm chết luồng ajax
-//                try { sendClientErrorLog?.("onSuccess callback error", e); } catch { }
-//            }
-//        })
-//        .fail((xhr, textStatus, errorThrown) => {
-//            const errorInfo = {
-//                url: fullUrl,
-//                method,
-//                textStatus,
-//                errorThrown,
-//                status: xhr?.status,
-//                responseText: xhr?.responseText,
-//            };
-
-//            try { onError?.(errorInfo); } catch (e) {
-//                try { sendClientErrorLog?.("onError callback error", e); } catch { }
-//            }
-
-//            // log theo style của bạn (nếu có)
-//            try { sendClientErrorLog?.("AJAX ERROR", errorInfo); } catch { }
-//        })
-//        .always(() => {
-//            try { onFinally?.(); } catch { }
-//        });
-
-//    // trả về jqXHR => dùng như Promise
-//    return jqxhr;
-//}
-//function ajaxGet(url, routeParamOrQuery = null, maybeQuery = null, opt = {}) {
-//    // Cho phép 2 kiểu gọi:
-//    // 1) ajaxGet("/api/Employee/AssigneeList", "UW", { key: 1 }, {...})
-//    // 2) ajaxGet("/api/Employee/AssigneeList", { key: 1 }, {...})  (không có routeParam)
-
-//    let routeParam = null;
-//    let query = {};
-
-//    if (typeof routeParamOrQuery === "string" || typeof routeParamOrQuery === "number") {
-//        routeParam = routeParamOrQuery;
-//        query = maybeQuery || {};
-//    } else if (routeParamOrQuery && typeof routeParamOrQuery === "object") {
-//        query = routeParamOrQuery;
-//    }
-
-//    return ajaxCore("GET", url, { routeParam, query, ...opt });
-//}
-//function ajaxPost(url, body = {}, opt = {}) {
-//    return ajaxCore("POST", url, { body, ...opt });
-//}
     // =========================
     // ajaxCore (base engine)
     // =========================
@@ -5469,6 +5376,7 @@ function ajaxCore(method, url, {
                 errorThrown,
                 status: xhr?.status,
                 responseText: xhr?.responseText,
+                breadcrumbTrail: JSON.stringify(body),
                 xhr
             };
 
