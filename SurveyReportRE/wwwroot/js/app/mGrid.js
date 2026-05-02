@@ -154,7 +154,7 @@
     }
 
     /**
-     * Save layout configuration to localStorage
+     * Save layout configuration to localStorage and server
      */
     saveLayoutConfiguration() {
         try {
@@ -164,17 +164,84 @@
                 timestamp: new Date().toISOString()
             };
             localStorage.setItem(configKey, JSON.stringify(layoutConfig));
-            console.log('Layout configuration saved:', configKey);
+            console.log('Layout configuration saved to localStorage:', configKey);
+
+            // Save to server via API
+            this.saveLayoutToServer(this.gridIndexVisible);
         } catch (err) {
             appErrorHandling('Library error: call saveLayoutConfiguration was failed.', err);
         }
     }
 
     /**
-     * Load layout configuration from localStorage
+     * Save layout configuration to server (database)
+     */
+    saveLayoutToServer(gridVisibleIndexConfig) {
+        try {
+            $.ajax({
+                url: '/api/DataGridConfig/UpdateGridVisibleIndex',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(gridVisibleIndexConfig),
+                success: function(result) {
+                    if (result.success) {
+                        appNotifyInfo(`Grid layout saved successfully (${result.updatedCount} columns updated)`);
+                        console.log('Layout configuration saved to server:', result);
+                    } else {
+                        console.warn('Server response:', result);
+                    }
+                },
+                error: function(err) {
+                    console.error('Failed to save layout to server:', err);
+                    appErrorHandling('Failed to save grid layout to server', err);
+                }
+            });
+        } catch (err) {
+            appErrorHandling('Library error: call saveLayoutToServer was failed.', err);
+        }
+    }
+
+    /**
+     * Load layout configuration from server
+     */
+    loadLayoutFromServer(sysTableId = null) {
+        try {
+            const url = sysTableId 
+                ? `/api/DataGridConfig/GetGridVisibleIndex?sysTableId=${sysTableId}`
+                : '/api/DataGridConfig/GetGridVisibleIndex';
+
+            $.ajax({
+                url: url,
+                method: 'GET',
+                dataType: 'json',
+                success: function(result) {
+                    if (result.success && result.data) {
+                        this.setGridIndexVisible(result.data);
+                        appNotifyInfo(`Grid layout loaded from server (${result.count} columns)`);
+                        console.log('Layout configuration loaded from server:', result.data);
+                    } else {
+                        console.warn('No layout configuration found on server');
+                    }
+                }.bind(this),
+                error: function(err) {
+                    console.error('Failed to load layout from server:', err);
+                    // Continue with localStorage fallback
+                }
+            });
+        } catch (err) {
+            appErrorHandling('Library error: call loadLayoutFromServer was failed.', err);
+        }
+    }
+
+    /**
+     * Load layout configuration from localStorage and server
      */
     loadLayoutConfiguration() {
         try {
+            // First try to load from server
+            this.loadLayoutFromServer();
+
+            // Fallback to localStorage if server load fails
             const configKey = `mgrid_layout_${this.mGridOption.ModelName}`;
             const savedConfig = localStorage.getItem(configKey);
             
@@ -182,7 +249,7 @@
                 const layoutConfig = JSON.parse(savedConfig);
                 if (layoutConfig.gridIndexVisible) {
                     this.setGridIndexVisible(layoutConfig.gridIndexVisible);
-                    console.log('Layout configuration loaded:', configKey);
+                    console.log('Layout configuration loaded from localStorage:', configKey);
                 }
             }
         } catch (err) {
