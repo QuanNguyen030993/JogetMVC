@@ -98,22 +98,26 @@
     }
 
     /**
-     * Update gridIndexVisible based on current visible columns order
+     * Update gridIndexVisible based on current visible columns order from array elements
      */
     updateGridIndexVisible() {
         try {
             if (!this.component) return;
-            
-            const columns = this.component.getVisibleColumns();
+
+            // Get columns from the component's column array (actual order in DOM)
+            const columns = this.component.option('columns');
             this.gridIndexVisible = {};
-            
-            columns.forEach((col, index) => {
-                if (col.dataField) {
-                    this.gridIndexVisible[col.dataField] = index;
+
+            // Filter visible columns and assign index based on their position in the array
+            let visibleIndex = 0;
+            columns.forEach((col, arrayIndex) => {
+                if (col && col.dataField && col.visible !== false) {
+                    this.gridIndexVisible[col.dataField] = visibleIndex;
+                    visibleIndex++;
                 }
             });
-            
-            console.log('Grid Index Visible Updated:', this.gridIndexVisible);
+
+            console.log('Grid Index Visible Updated from array order:', this.gridIndexVisible);
         } catch (err) {
             appErrorHandling('Library error: call updateGridIndexVisible was failed.', err);
         }
