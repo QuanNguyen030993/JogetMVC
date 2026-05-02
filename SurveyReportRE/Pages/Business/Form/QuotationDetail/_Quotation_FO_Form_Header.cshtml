@@ -45,11 +45,18 @@
         }
         ,template: function (data, itemElement) {
             setTimeout(function () {
+
                 var item = new Object();
                 item.editorType = "dxFileUploader";
-                 item.moduleName = "qt"; item.specificFolder = "Quotation\\RES"; item.sectionName = "RES";
-                 item.code = window.QuotationPage.state.quotes[0].quotationCode;
-                 createEditor(item, itemElement, $("<div>"), null);
+                item.moduleName = "qt"; item.sectionName = "FO";
+                 item.code = window.QuotationPage.state.quotes[0].quotationCode; 
+                 item.specificFolder = "RES";
+                createEditor(item, itemElement, $("<div>"), null);
+
+                // var item = new Object();
+                // item.editorType = "dxFileUploader";
+                //  item.moduleName = "qt"; item.sectionName = "RES";
+                //  createEditor(item, itemElement, $("<div>"), null);
                 // loadAttachmentList("FO");
                 }, 1000);
             }

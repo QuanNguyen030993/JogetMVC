@@ -205,7 +205,7 @@ public class DocumentController : BaseControllerApi<Document>
     {
         var count = await _BaseRepository.GetListObject(x =>
             x.RecordGuid == recordGuid &&
-            x.SubDirectory.Contains(folder));
+            x.Attributes.Contains($"\"SectionName\":\"{folder}\""));
 
         return Ok(new
         {
@@ -222,7 +222,7 @@ public class DocumentController : BaseControllerApi<Document>
 
         // Lấy toàn bộ rồi filter (vì repo bạn đang có GetAll)
         // Nếu repo có method GetListObject(predicate) thì thay bằng query trực tiếp sẽ nhanh hơn
-        var all = await _BaseRepository.GetListObject(l => l.RecordGuid == recordGuid && l.Attributes.Contains(folder));
+        var all = await _BaseRepository.GetListObject(l => l.RecordGuid == recordGuid && l.Attributes.Contains($"\"SectionName\":\"{folder}\""));
 
         var docs = all
             .Where(d => (d.Deleted == null || d.Deleted == false)
