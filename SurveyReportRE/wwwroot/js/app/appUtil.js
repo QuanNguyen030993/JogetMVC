@@ -841,6 +841,7 @@ function createEditor(item, $container, $element, editorOptions) {
                 var items = new Object();
                 items.sectionName =  editorOptions?.sectionName || item.sectionName;
                 items.moduleName = editorOptions?.moduleName || item.moduleName;
+                items.code = editorOptions?.code || item.code;
                 renderDxFileUploader(items, $container, {
                     controllerName: "Document",
                     uploadTitle: "Files",
@@ -6068,12 +6069,13 @@ function renderDxFileUploader(editorOptions, $container, options) {
                //Only use for static string
             },
             onInitialized: function (e) {
-                updateDxFileUploaderHeaders(editorOptions);
+                //updateDxFileUploaderHeaders(editorOptions);
             },
             onUploadStarted: function (e) {
                 showUploaderLoader(idControlElement, "File loading...");
             },
             uploadFile: function (file) {
+                debugger
                 const opts = resolveUploadOptions(controlId, editorOptions);
                 return uploadFileAjax(file, {
                     url: "/api/Attachment/AsyncUploadFile",
@@ -6091,23 +6093,23 @@ function renderDxFileUploader(editorOptions, $container, options) {
     loadDxFileUploaderAttachments(controlId, controllerName, editorOptions);
 }
 
-function updateDxFileUploaderHeaders(editorOptions) {
+//function updateDxFileUploaderHeaders(editorOptions) {
     
-    const controlIdIn = `${editorOptions.moduleName}_${editorOptions.sectionName}`;
-    const currentOptions = getCurrentEditorOptions(editorOptions);
-    if (!currentOptions) return;
+//    const controlIdIn = `${editorOptions.moduleName}_${editorOptions.sectionName}`;
+//    const currentOptions = getCurrentEditorOptions(editorOptions);
+//    if (!currentOptions) return;
 
-    const { uploaderId } = getDxFileUploaderIds(controlIdIn);
-    const uploader = $(`#${uploaderId}`).dxFileUploader("instance");
-    if (!uploader) return;
-    uploader.option("uploadHeaders", {
-        RecordGuid: currentOptions.guid || "",
-        Folder: editorOptions.sectionName || sectionName
-    });
+//    const { uploaderId } = getDxFileUploaderIds(controlIdIn);
+//    const uploader = $(`#${uploaderId}`).dxFileUploader("instance");
+//    if (!uploader) return;
+//    uploader.option("uploadHeaders", {
+//        RecordGuid: currentOptions.guid || "",
+//        Folder: editorOptions.sectionName || sectionName
+//    });
 
-    uploader.option("readOnly", !!currentOptions.isReadOnly);
-    uploader.option("selectButtonText", `Upload ${currentOptions.uploadTitle || "Files"}`);
-}
+//    uploader.option("readOnly", !!currentOptions.isReadOnly);
+//    uploader.option("selectButtonText", `Upload ${currentOptions.uploadTitle || "Files"}`);
+//}
 
 
 
@@ -6342,8 +6344,12 @@ function uploadFileAjax(file, options) {
 
 function resolveUploadOptions(sectionName,editorOptions) {
     const latestOptions = getCurrentEditorOptions(editorOptions) || {};
+
+    debugger
     if (latestOptions?.specificFolder)
         latestOptions.sectionName = latestOptions?.specificFolder;
+    if (latestOptions?.code)
+        latestOptions.code = latestOptions?.code;
     return {
         guid: latestOptions.guid || "",
         folder: buildFolder(latestOptions, sectionName) || "",

@@ -25,8 +25,8 @@
 
     var formItems = $("#qt-formFO").dxForm("instance")?.option("formData") || {};
     var encodedFolder = encodeURIComponent(`RES\\${ formItems.quotationCode }`);
-    if (window.QuotationPage.resFK) // check tiep cho nay
-       $.get(`/api/Document/AttachmentSummary/${formItems.resFK.guid}/${encodedFolder}`, null
+    if (window.QuotationPage.state.quotes[0].resFK) // check tiep cho nay
+       $.get(`/api/Document/AttachmentSummary/${window.QuotationPage.state.quotes[0].resFK.guid}/${encodedFolder}`, null
        ).done(function (res) {
             window.QuotationPage.state.formFO.dxForm("instance").updateData("resAttachmentCount", res.attachmentCount);
             window.QuotationPage.state.formFO.dxForm("instance").updateData("hasResAttachment", res.hasAttachment);
