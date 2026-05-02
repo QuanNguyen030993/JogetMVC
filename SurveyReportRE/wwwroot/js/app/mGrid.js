@@ -5,6 +5,12 @@
             this.refId = 0;
             this.refField = "Id";
             this.isAllowRowMenu = true;
+            
+            // Layout editor mode properties
+            this.isEditLayoutMode = false;
+            this.gridIndexVisible = {}; // Stores visible column indexes
+            this.originalColumnOrder = []; // Stores original column order
+            
             //Note: 
             //refField correct in best practices column
             if (mGridOption) {
@@ -24,6 +30,9 @@
                     this.allowBuildOption = mGridOption.allowBuildOption;
                 if (mGridOption.gridEditorOptions != null || mGridOption.gridEditorOptions != undefined)
                     this.gridEditorOptions = mGridOption.gridEditorOptions;
+                if (mGridOption.enableEditLayoutMode != null || mGridOption.enableEditLayoutMode != undefined)
+                    this.enableEditLayoutMode = mGridOption.enableEditLayoutMode;
+                this.enableEditLayoutMode = true;
                 this.mGridOption = mGridOption;
             }
             else
@@ -43,16 +52,161 @@
     renderGrid() {
         try {
             var that = this;
+            // Set reference to MGrid instance for MGridOption to use
+            this.mGridOption.mGridInstance = this;
+            
             if (!that.mGridOption.allowBuildOption)
                 this.component = this.container.dxDataGrid(that.mGridOption.makeGridOptions(null)).dxDataGrid("instance");
             else 
                 this.component = this.container.dxDataGrid(that.mGridOption.makeGridOptions(that.mGridOption)).dxDataGrid("instance");
 
+            // Initialize grid index visible
+            this.updateGridIndexVisible();
             return this.component;
         } catch (err) {
             appErrorHandling('Library error: call renderGrid was failed.', err);
         }
     };
+
+    /**
+     * Toggle edit layout mode - enables/disables column reordering
+     */
+    toggleEditLayoutMode() {
+        try {
+            this.isEditLayoutMode = !this.isEditLayoutMode;
+            
+            if (this.component) {
+                this.component.option('allowColumnReordering', this.isEditLayoutMode);
+                this.component.option('allowColumnResizing', this.isEditLayoutMode);
+                this.component.option('columnResizingMode', this.isEditLayoutMode ? 'widget' : 'nextColumn');
+                
+                // Apply visual style to indicate edit mode
+                if (this.isEditLayoutMode) {
+                    this.container.addClass('mgrid-edit-layout-mode');
+                    appNotifyInfo('Grid layout editing mode enabled');
+                } else {
+                    this.container.removeClass('mgrid-edit-layout-mode');
+                    this.saveLayoutConfiguration();
+                    appNotifyInfo('Grid layout editing mode disabled. Layout saved.');
+                }
+            }
+            
+            return this.isEditLayoutMode;
+        } catch (err) {
+            appErrorHandling('Library error: call toggleEditLayoutMode was failed.', err);
+        }
+    }
+
+    /**
+     * Update gridIndexVisible based on current visible columns order
+     */
+    updateGridIndexVisible() {
+        try {
+            if (!this.component) return;
+            
+            const columns = this.component.getVisibleColumns();
+            this.gridIndexVisible = {};
+            
+            columns.forEach((col, index) => {
+                if (col.dataField) {
+                    this.gridIndexVisible[col.dataField] = index;
+                }
+            });
+            
+            console.log('Grid Index Visible Updated:', this.gridIndexVisible);
+        } catch (err) {
+            appErrorHandling('Library error: call updateGridIndexVisible was failed.', err);
+        }
+    }
+
+    /**
+     * Get current gridIndexVisible configuration
+     */
+    getGridIndexVisible() {
+        return this.gridIndexVisible;
+    }
+
+    /**
+     * Set gridIndexVisible and apply column order
+     */
+    setGridIndexVisible(indexConfig) {
+        try {
+            if (!this.component || !indexConfig) return;
+            
+            this.gridIndexVisible = indexConfig;
+            
+            // Apply the new column order
+            const columns = this.component.getVisibleColumns();
+            const sortedColumns = columns.sort((a, b) => {
+                const indexA = indexConfig[a.dataField] !== undefined ? indexConfig[a.dataField] : 999;
+                const indexB = indexConfig[b.dataField] !== undefined ? indexConfig[b.dataField] : 999;
+                return indexA - indexB;
+            });
+            
+            sortedColumns.forEach((col, index) => {
+                col.visibleIndex = index;
+            });
+            
+            this.component.refresh();
+        } catch (err) {
+            appErrorHandling('Library error: call setGridIndexVisible was failed.', err);
+        }
+    }
+
+    /**
+     * Save layout configuration to localStorage
+     */
+    saveLayoutConfiguration() {
+        try {
+            const configKey = `mgrid_layout_${this.mGridOption.ModelName}`;
+            const layoutConfig = {
+                gridIndexVisible: this.gridIndexVisible,
+                timestamp: new Date().toISOString()
+            };
+            localStorage.setItem(configKey, JSON.stringify(layoutConfig));
+            console.log('Layout configuration saved:', configKey);
+        } catch (err) {
+            appErrorHandling('Library error: call saveLayoutConfiguration was failed.', err);
+        }
+    }
+
+    /**
+     * Load layout configuration from localStorage
+     */
+    loadLayoutConfiguration() {
+        try {
+            const configKey = `mgrid_layout_${this.mGridOption.ModelName}`;
+            const savedConfig = localStorage.getItem(configKey);
+            
+            if (savedConfig) {
+                const layoutConfig = JSON.parse(savedConfig);
+                if (layoutConfig.gridIndexVisible) {
+                    this.setGridIndexVisible(layoutConfig.gridIndexVisible);
+                    console.log('Layout configuration loaded:', configKey);
+                }
+            }
+        } catch (err) {
+            appErrorHandling('Library error: call loadLayoutConfiguration was failed.', err);
+        }
+    }
+
+    /**
+     * Reset layout to default configuration
+     */
+    resetLayoutToDefault() {
+        try {
+            const configKey = `mgrid_layout_${this.mGridOption.ModelName}`;
+            localStorage.removeItem(configKey);
+            
+            if (this.component) {
+                this.component.refresh();
+                this.updateGridIndexVisible();
+                appNotifyInfo('Grid layout reset to default');
+            }
+        } catch (err) {
+            appErrorHandling('Library error: call resetLayoutToDefault was failed.', err);
+        }
+    }
 };
 var MGridOption = class MGridOption {
     constructor(modelName, gridType, gridConfig) {
@@ -261,6 +415,31 @@ var MGridOption = class MGridOption {
                 }
             }
         });
+
+        // Add Edit Layout button (always visible)
+        e.toolbarOptions.items.unshift({
+            location: "after",
+            widget: "dxButton",
+            options: {
+                type: 'default',
+                text: 'Edit Layout',
+                icon: "edit",
+                onClick: function () {
+                    if (that.mGridInstance) {
+                        that.mGridInstance.toggleEditLayoutMode();
+                        // Update button appearance
+                        if (that.mGridInstance.isEditLayoutMode) {
+                            $(this).dxButton('instance').option('type', 'success');
+                            $(this).dxButton('instance').option('text', 'Exit Layout Edit');
+                        } else {
+                            $(this).dxButton('instance').option('type', 'default');
+                            $(this).dxButton('instance').option('text', 'Edit Layout');
+                        }
+                    }
+                }
+            }
+        });
+
         if (this.GridConfig)
             if (this.GridConfig.toolbarItemsConfig) {
                 var gridToolBarConfig = JSON.parse(this.GridConfig.toolbarItemsConfig);
@@ -277,23 +456,6 @@ var MGridOption = class MGridOption {
                     }
                 });
             }
-
-
-
-        // import features
-        //e.toolbarOptions.items.push({
-        //    name: "btnImport",
-        //    location: "after",
-        //    widget: "dxButton",
-        //    options: {
-        //        hint: "Import",
-        //        icon: "upload",
-        //        entityName: that.ModelName,
-        //        importType: that.ImportType,
-        //        onClick: that.showImportPopup.bind(this)
-        //    }
-        //});
-
     }
     onEditorPreparing(e) {
         var that = this;
@@ -434,11 +596,33 @@ var MGridOption = class MGridOption {
                 // ví dụ: "Actions", "Select"
             ]
         });
+        
+        // Load saved layout configuration
+        if (this.loadLayoutConfiguration) {
+            this.loadLayoutConfiguration();
+        }
     }
 
     onInitialized(e) {
         var that = this;
         that.dataGrid = e.component;
+        
+        // Set up column reordering handler
+        var gridInstance = e.component;
+        var originalOnOptionChanged = gridInstance.option('onOptionChanged');
+        
+        gridInstance.on('optionChanged', function (eventArgs) {
+            if (eventArgs.name === 'columns' && that.isEditLayoutMode) {
+                // Delay update to ensure all column movements are processed
+                setTimeout(function () {
+                    that.updateGridIndexVisible();
+                }, 100);
+            }
+            
+            if (typeof originalOnOptionChanged === 'function') {
+                originalOnOptionChanged(eventArgs);
+            }
+        });
     }
 
     //    onRowValidating(e) {
