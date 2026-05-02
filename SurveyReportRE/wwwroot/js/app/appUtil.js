@@ -838,16 +838,19 @@ function createEditor(item, $container, $element, editorOptions) {
             break;
         case "dxFileUploader":
             {
+
                 var items = new Object();
-                items.sectionName =  editorOptions?.sectionName || item.sectionName;
                 items.moduleName = editorOptions?.moduleName || item.moduleName;
+                items.sectionName = editorOptions?.sectionName || item.sectionName;
                 items.code = editorOptions?.code || item.code;
+                items.specificFolder = editorOptions?.specificFolder || item.specificFolder;
                 renderDxFileUploader(items, $container, {
                     controllerName: "Document",
                     uploadTitle: "Files",
                     uploadUrl: "/api/Attachment/AsyncUploadFile",
                     accept: "*/*"
                 });
+                //loadDxFileUploaderAttachments(item, "Document", items);
             }
             break;
         case "empty":
@@ -3718,7 +3721,7 @@ function sendClientErrorLog(message, err, additionalDetails = {}) {
             errorLog.ErrorBrowserDetails.FunctionName = additionalDetails.functionName || null;
             errorLog.ErrorBrowserDetails.ErrorType = additionalDetails.errorType || 'http_error';
             errorLog.ErrorBrowserDetails.Context = JSON.stringify(additionalDetails.context) || JSON.stringify(getPageContext());
-            errorLog.ErrorBrowserDetails.BreadcrumbTrails = additionalDetails?.breadcrumbTrail ?? "";// || getBreadcrumbTrail();
+            errorLog.ErrorBrowserDetails.BreadcrumbTrails = additionalDetails?.breadcrumbTrail ?? [];// || getBreadcrumbTrail();
         }
         else {
 
@@ -3728,7 +3731,7 @@ function sendClientErrorLog(message, err, additionalDetails = {}) {
             errorLog.ErrorBrowserDetails.ColumnNumber = additionalDetails.columnNumber || null;
             errorLog.ErrorBrowserDetails.FunctionName = additionalDetails.functionName || null;
             errorLog.ErrorBrowserDetails.Context = JSON.stringify(additionalDetails.context) || JSON.stringify(getPageContext());
-            errorLog.ErrorBrowserDetails.BreadcrumbTrails = additionalDetails?.breadcrumbTrail ?? "";// || getBreadcrumbTrail();
+            errorLog.ErrorBrowserDetails.BreadcrumbTrails = additionalDetails?.breadcrumbTrail ?? [];// || getBreadcrumbTrail();
         }
 
        
@@ -6075,7 +6078,6 @@ function renderDxFileUploader(editorOptions, $container, options) {
                 showUploaderLoader(idControlElement, "File loading...");
             },
             uploadFile: function (file) {
-                debugger
                 const opts = resolveUploadOptions(controlId, editorOptions);
                 return uploadFileAjax(file, {
                     url: "/api/Attachment/AsyncUploadFile",
@@ -6279,8 +6281,9 @@ function loadDxFileUploaderAttachments(sectionName, controllerName, editorOption
     const { uploaderId, previewId } = getDxFileUploaderIds(controllId);
     const idControlElement = `#${uploaderId}`;
     showUploaderLoader(idControlElement, "File loading...");
+    debugger
     $.ajax({
-        url: `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${currentOptions.sectionName ? currentOptions.sectionName : sectionName}`,
+        url: `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${currentOptions.sectionName ? (editorOptions.moduleName + '_' + currentOptions.sectionName + (editorOptions?.specificFolder ? '_' + editorOptions?.specificFolder : '')) : sectionName}`,
         method: "GET",
         success: function (data) {
             const $preview = $(`#${previewId}`);
@@ -6302,7 +6305,7 @@ function loadDxFileUploaderAttachments(sectionName, controllerName, editorOption
 
 function buildFolder(latestOptions, sectionName) {
     //return (latestOptions?.sectionName || sectionName) +
-    return (`Quotation`) +
+    return (latestOptions.moduleName == 'qt' ? `Quotation` : `PolicyIssuance`) +
         (latestOptions?.code ? `\\${latestOptions.code}` : "");
 }
 function uploadFileAjax(file, options) {
@@ -6344,12 +6347,13 @@ function uploadFileAjax(file, options) {
 
 function resolveUploadOptions(sectionName,editorOptions) {
     const latestOptions = getCurrentEditorOptions(editorOptions) || {};
-
-    debugger
-    if (latestOptions?.specificFolder)
-        latestOptions.sectionName = latestOptions?.specificFolder;
-    if (latestOptions?.code)
-        latestOptions.code = latestOptions?.code;
+    latestOptions.moduleName = editorOptions?.moduleName;
+    if (editorOptions?.code)
+        latestOptions.code = editorOptions?.code;
+    if (editorOptions?.specificFolder) {
+        latestOptions.code = `${editorOptions?.code}\\${editorOptions?.specificFolder}`;
+        sectionName = `${sectionName}_${editorOptions?.specificFolder}`
+    }
     return {
         guid: latestOptions.guid || "",
         folder: buildFolder(latestOptions, sectionName) || "",
