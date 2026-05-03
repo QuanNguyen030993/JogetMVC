@@ -1404,7 +1404,8 @@ Note:
                 .text(statusText(st))
                 .attr("class", `statusTag ${statusClass(st)}`);
 
-            $(`#${formModuleKeyPi}-stageDeptPill`).text(`Pending at: ${stageDept} - ${stageAccount ?? ""}`);
+            stageAccount = map[state.stageDept] ? map[state.stageDept] : "(Unassigned)";
+            $(`#${formModuleKeyPi}-stageDeptPill`).text(`Pending at: ${state.stageDept} - ${stageAccount ?? ""}`);
             $(`#${formModuleKeyPi}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
 
             deptData.FO = { ...q, sectionName: "FO", code: q.policyIssuanceCode };

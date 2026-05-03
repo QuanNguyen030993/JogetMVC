@@ -3,6 +3,17 @@
     margin-right: var(--collapsed-form-mr);
 }
 
+@keyframes slideInFromLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
 .dExFormToolBar {
     position: inherit;
     top: auto;
@@ -680,9 +691,17 @@ aside {
     color: #374151;
     font-size: 12px;
     font-weight: bold;
+    animation: slideInFromLeft 0.5s ease-out 0.1s;
 }
 
-.toolbar {
+.btn {
+    animation: slideInFromLeft 0.5s ease-out;
+}
+
+.btn:nth-child(1) { animation-delay: 0.2s; }
+.btn:nth-child(2) { animation-delay: 0.3s; }
+.btn:nth-child(3) { animation-delay: 0.4s; }
+.btn:nth-child(4) { animation-delay: 0.5s; }
     display: flex;
     gap: 10px;
     align-items: center;
@@ -772,6 +791,10 @@ aside {
     top: 0;
     z-index: 2;
     background: linear-gradient(135deg, #2A7B9B 0%, #57C785 50%, #EDDD53 100%);
+    /* Add for smoother rendering */
+    will-change: transform;
+    backface-visibility: hidden;
+    transform: translateZ(0);
 }
 
     .qt-cardHeader .h {
@@ -792,6 +815,10 @@ aside {
     top: 0;
     z-index: 2;
     background: linear-gradient(135deg, #F5CCA4 0%, #EBBDAE 50%,#FFFFFF 100%);
+    /* Add for smoother rendering */
+    will-change: transform;
+    backface-visibility: hidden;
+    transform: translateZ(0);
 }
 
     .pi-cardHeader .h {
@@ -890,6 +917,7 @@ aside {
     display: inline-flex;
     align-items: center;
     line-height: 1;
+    animation: slideInFromLeft 0.5s ease-out;
 }
 
     /* Pending / New */

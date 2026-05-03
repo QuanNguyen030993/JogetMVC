@@ -936,6 +936,27 @@ Note:
 
         }
 
+        function renderDeptFormShells() {
+            $(`#${formModuleKeyQt}-formFO`).dxForm({ formData: deptData.FO, readOnly: true, colCount: 1 });
+            $(`#${formModuleKeyQt}-formTS`).dxForm({ formData: deptData.TS, readOnly: true, colCount: 1 });
+            $(`#${formModuleKeyQt}-formUW`).dxForm({ formData: deptData.UW, readOnly: true, colCount: 1 });
+            $(`#${formModuleKeyQt}-formLMKT`).dxForm({ formData: deptData.LMKT, readOnly: true, colCount: 1 });
+            $(`#${formModuleKeyQt}-formPM`).dxForm({ formData: deptData.PM, readOnly: true, colCount: 1 });
+        }
+
+        function initializeOverviewShell() {
+            deptData.FO = { sectionName: "FO", code: "" };
+            deptData.TS = { sectionName: "TS", code: "" };
+            deptData.UW = { sectionName: "UW", code: "" };
+            deptData.LMKT = { sectionName: "LMKT", code: "" };
+            deptData.PM = { sectionName: "PM", code: "" };
+            renderDeptFormShells();
+            resetOverviewAnimation(formModuleKeyQt);
+            applyNodeHighlights();
+            applySectionFocusHighlight();
+            updateHints();
+        }
+
         function resetOverviewAnimation(prefix) {
             const $sections = $(`#${prefix}-overviewScroll section.dept-section`);
             $sections.removeClass("visible");
@@ -1494,6 +1515,8 @@ Note:
 
         setTimeout(layoutTreeLine, 0);
         window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
+
+        initializeOverviewShell();
 
         loadQuotePage(true).then(() => {
             loadQuoteDetail(state.selectedId);
