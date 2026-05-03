@@ -1,7 +1,7 @@
 ﻿@model DeptTreePartialModel
 
 @{
-    string Id(string name) => $"{Model.Prefix}-{name}";
+    string Id(string name) => $"{Model.Prefix}-{name}_{Model.Id}";
     var moduleCode = (Model.ModuleCode ?? "").Trim().ToLower();
 
     var deptCodes = moduleCode == "qt"
