@@ -973,6 +973,10 @@
   const colGap = 280;
   const rowGap = 150;
 
+
+  const SCALE_X = 1.9;   // ← Điều chỉnh để giãn ngang
+  const SCALE_Y = 2.0;   // ← Điều chỉnh để giãn dọc
+
   const positions = {};
 
   Object.keys(grouped)
@@ -985,8 +989,8 @@
 
       arr.forEach((n, index) => {
         positions[n.id] = {
-          x: startX + layer * colGap,
-          y: baseY + index * rowGap,
+          x: n.posX ? n.posX * SCALE_X : startX + layer * colGap,
+          y: n.posY ? n.posY * SCALE_Y : baseY + index * rowGap,
           layer
         };
       });
