@@ -6281,7 +6281,6 @@ function loadDxFileUploaderAttachments(sectionName, controllerName, editorOption
     const { uploaderId, previewId } = getDxFileUploaderIds(controllId);
     const idControlElement = `#${uploaderId}`;
     showUploaderLoader(idControlElement, "File loading...");
-    debugger
     $.ajax({
         url: `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${currentOptions.sectionName ? (editorOptions.moduleName + '_' + currentOptions.sectionName + (editorOptions?.specificFolder ? '_' + editorOptions?.specificFolder : '')) : sectionName}`,
         method: "GET",

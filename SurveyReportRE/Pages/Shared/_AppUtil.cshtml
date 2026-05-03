@@ -1544,6 +1544,10 @@
             if (isNullOrEmpty(item.height)) {
                 item.height = _defaultGridFieldHeight;
             }
+            if (item.dataType == "datetime" || item.dataType == "date") {
+                item.editorOptions = item.editorOptions || {};
+                item.editorOptions.pickerType = "calendar";
+            }
             if (item.dataType == "enum") {
                 byteObjectConvert(item, gridInstance);
                 item = selectBoxRemakeOption(item, gridInstance);
