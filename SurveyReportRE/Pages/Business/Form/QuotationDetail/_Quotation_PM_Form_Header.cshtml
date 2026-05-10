@@ -1,21 +1,22 @@
-﻿@{
+﻿@using JogetMVC.Model
+@{
     string dept = "PM";
+    long quotationId = Convert.ToInt64(ViewData["Id"]);
 }
-
 
 <div class="dept-title">@dept</div>
 <div class="dept-form-header">
     <div class="dept-form-header__assign">
-        <div id="qt-@dept.ToString().ToLower()AssigneeBox"></div>
+        <div id="@QuotationIdHelper.AssigneeBox(dept, quotationId)"></div>
     </div>
-    <div id="btnToggleResForm"></div>
+    <div id="@QuotationIdHelper.BtnToggleResForm"></div>
 </div>
-<div id="qt-stickPanel_@dept">
+<div id="@QuotationIdHelper.StickPanel(dept, quotationId)">
 </div>
 <div class="dept-hint-wrap">
-    <div class="dept-hint" id="qt-hintPM"></div>
-    <div class="dept-updated" id="qt-updPM" title="Last updated">—</div>
-    <div id="qt-expandCollapsedBtn_@dept" class="dept-toggle-icon" aria-hidden="true">▾</div>
+    <div class="dept-hint" id="@QuotationIdHelper.Hint(dept, quotationId)"></div>
+    <div class="dept-updated" id="@QuotationIdHelper.Upd(dept, quotationId)" title="Last updated">—</div>
+    <div id="@QuotationIdHelper.ExpandCollapsedBtn(dept, quotationId)" class="dept-toggle-icon" aria-hidden="true">▾</div>
 </div>
 <script>
     setTimeout( () => {

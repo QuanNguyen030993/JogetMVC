@@ -1,16 +1,17 @@
-﻿@{
+﻿@using JogetMVC.Model
+@{
     string dept = "TS";
+    long quotationId = Convert.ToInt64(ViewData["Id"]);
 }
-
 
 <div class="dept-title">@dept</div>
 <div class="dept-form-header">
     <div class="dept-form-header__assign">
-        <div id="qt-@dept.ToString().ToLower()AssigneeBox"></div>
+        <div id="@QuotationIdHelper.AssigneeBox(dept, quotationId)"></div>
     </div>
-    <div id="btnToggleResForm"></div>
+    <div id="@QuotationIdHelper.BtnToggleResForm"></div>
 </div>
-<div id="qt-stickPanel_@dept">
+<div id="@QuotationIdHelper.StickPanel(dept, quotationId)">
     @* <div class="sticky-wrap wobble" data-tooltip-toggle>
     <div class="pin">
     </div>
@@ -24,9 +25,9 @@
 </div> *@
 </div>
 <div class="dept-hint-wrap">
-    <div class="dept-hint" id="qt-hintTS"></div>
-    <div class="dept-updated" id="qt-updTS" title="Last updated">—</div>
-    <div id="qt-expandCollapsedBtn_@dept" class="dept-toggle-icon" aria-hidden="true">▾</div>
+    <div class="dept-hint" id="@QuotationIdHelper.Hint(dept, quotationId)"></div>
+    <div class="dept-updated" id="@QuotationIdHelper.Upd(dept, quotationId)" title="Last updated">—</div>
+    <div id="@QuotationIdHelper.ExpandCollapsedBtn(dept, quotationId)" class="dept-toggle-icon" aria-hidden="true">▾</div>
 </div>
 
 
