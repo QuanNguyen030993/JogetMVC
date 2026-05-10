@@ -510,8 +510,9 @@ Note:
    {
        Prefix = prefix,
        ModuleCode = moduleCode,
-       Title = title
-   })
+       Title = title,
+       Id = ViewData["Id"].ToString()
+   }),
     </div>
 
     <div class="actionBar">
@@ -974,7 +975,7 @@ Note:
         function animateOverviewSections(prefix) {
             const sequence = qtDeptModuleCode;
             sequence.forEach((dept, idx) => {
-                const sectionId = `#${prefix}-sec${dept}`;
+                const sectionId = `#${prefix}-sec${dept}_@ViewData["Id"]`;
                 const $section = $(sectionId);
                 if (!$section.length) return;
 
@@ -1125,7 +1126,7 @@ Note:
 
         function applySectionFocusHighlight() {
             $(".dept-section").removeClass("focused");
-            $(`#${formModuleKeyQt}-sec${state.focusDept}`).addClass("focused");
+            $(`#${formModuleKeyQt}-sec${state.focusDept}_@ViewData["Id"]`).addClass("focused");
         }
 
         function setupDeptTree() {
@@ -1137,7 +1138,7 @@ Note:
                 applySectionFocusHighlight();
                 applyEditLock();
                 updateHints();
-                scrollToDept(formModuleKeyQt, state.focusDept);
+                scrollToDept(formModuleKeyQt, { id: `${state.focusDept}_@ViewData["Id"]`, keyId: "@ViewData["Id"]" });
                 setSectionCollapsed(state.focusDept, false);
             });
         }
@@ -1159,7 +1160,7 @@ Note:
         }
 
         function setSectionCollapsed(dept, collapsed) {
-            var $sec = $(`#${formModuleKeyQt}-sec${dept}`);
+            var $sec = $(`#${formModuleKeyQt}-sec${dept}_@ViewData["Id"]`);
             if (!$sec.length) return;
             var body = $sec.find(".dept-body")[0];
             var bodyUpper = $sec.find(".dept-upperbody")[0];
@@ -1197,7 +1198,7 @@ Note:
 
         function bindSectionHeaderToggle() {
             $.each(qtDeptModuleCode, function (deptIndex, dept) {
-                var $sec = $(`#${formModuleKeyQt}-sec${dept}`);
+                var $sec = $(`#${formModuleKeyQt}-sec${dept}_@ViewData["Id"]`);
                 if (!$sec.length) return;
 
                 $sec.find(".dept-header").off("click.sec").on("click.sec", function (e) {
@@ -1455,7 +1456,7 @@ Note:
             updateSectionUpdatedTime(q);
             initDepartmentAssignees(formModuleKeyQt, firstRender ? null : 0);
             animateOverviewSections(formModuleKeyQt);
-            scrollToDept(formModuleKeyQt, state.focusDept);
+            scrollToDept(formModuleKeyQt, { id: `${state.focusDept}_@ViewData["Id"]`, keyId: "@ViewData["Id"]" } );
             TinyMCEElementMaker(`.htmleditor`);
             
         }

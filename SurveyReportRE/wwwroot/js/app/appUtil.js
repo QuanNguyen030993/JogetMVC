@@ -6949,12 +6949,7 @@ function openBranchOverlay(currentDept) {
     renderBranchOverlay(currentDept);
     $("#branchOverlay").show();
 }
-function scrollToDept(module, dept) {
-    const container = document.getElementById(`${module}-overviewScroll`);
-    const el = document.getElementById(`${module}-sec` + dept);
-    if (!container || !el) return;
-    container.scrollTo({ top: el.offsetTop - 8, behavior: "smooth" });
-}
+
 
 async function libreConvert(id) {
     //const fileRes = await fetch(`/api/Document/LibreConvert/${id}`);
