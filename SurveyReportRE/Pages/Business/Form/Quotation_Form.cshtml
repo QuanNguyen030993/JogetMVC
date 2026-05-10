@@ -14,6 +14,7 @@ Note:
 -Call ajax to main table
 -Replace Quotation visible data fields, should replace by VS
 -Remove app div for scroll
+
 *@
 
 <style>
@@ -663,30 +664,7 @@ Note:
             });
         }
 
-        function showListLoader(show) {
-            let $loader = $("#qt-quoteList").find(".quoteListLoader");
-            if (!$loader.length) {
-                $loader = $('<div class="quoteListLoader" style="display:none;">Loading...</div>');
-                $("#qt-quoteList").append($loader);
-            }
-            show ? $loader.show() : $loader.hide();
-        }
 
-        function showListEnd(show) {
-            let $end = $("#qt-quoteList").find(".quoteListEnd");
-            if (!$end.length) {
-                $end = $('<div class="quoteListEnd" style="display:none;">Hết dữ liệu</div>');
-                $("#qt-quoteList").append($end);
-            }
-            show ? $end.show() : $end.hide();
-        }
-
-        function showListEmpty(show) {
-            $("#qt-quoteList .quoteListEmpty").remove();
-            if (show) {
-                $("#qt-quoteList").append('<div class="quoteListEmpty">No quotations found.</div>');
-            }
-        }
 
         function appendQuoteCards(data) {
             var $root = $("#qt-quoteList");
@@ -726,8 +704,6 @@ Note:
                     `);
             });
 
-            showListLoader(false);
-            if (state.quotePaging.done) showListEnd(true);
         }
 
         function syncSelectedState(q) {
@@ -842,12 +818,9 @@ Note:
                 state.quotes = [];
                 pICs = [];
                 $("#qt-quoteList").empty();
-                showListEnd(false);
-                showListEmpty(false);
             }
 
             state.quotePaging.loading = true;
-            showListLoader(true);
 
             try {
                 var data = await $.ajax({
@@ -861,8 +834,6 @@ Note:
                 const rows = Array.isArray(data) ? data : [];
 
                 if (reset && rows.length === 0) {
-                    showListLoader(false);
-                    showListEmpty(true);
                     state.quotePaging.done = true;
                     return;
                 }
@@ -873,7 +844,6 @@ Note:
                 state.quotePaging.skip += rows.length;
                 if (rows.length < state.quotePaging.take) {
                     state.quotePaging.done = true;
-                    showListEnd(true);
                 }
 
                 if (!state.quotePaging.firstLoadDone && state.quotes.length > 0) {
@@ -885,11 +855,9 @@ Note:
                 }
             } catch (err) {
                 console.error("loadQuotePage error:", err);
-                showListLoader(false);
                 DevExpress.ui.notify("Load quotation list failed", "error", 1500);
             } finally {
                 state.quotePaging.loading = false;
-                showListLoader(false);
             }
         }
 

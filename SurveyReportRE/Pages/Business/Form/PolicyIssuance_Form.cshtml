@@ -687,30 +687,7 @@ Note:
             });
         }
 
-        function showListLoader(show) {
-            let $loader = $("#pi-quoteList").find(".quoteListLoader");
-            if (!$loader.length) {
-                $loader = $('<div class="quoteListLoader" style="display:none;">Loading...</div>');
-                $("#pi-quoteList").append($loader);
-            }
-            show ? $loader.show() : $loader.hide();
-        }
 
-        function showListEnd(show) {
-            let $end = $("#pi-quoteList").find(".quoteListEnd");
-            if (!$end.length) {
-                $end = $('<div class="quoteListEnd" style="display:none;">Hết dữ liệu</div>');
-                $("#pi-quoteList").append($end);
-            }
-            show ? $end.show() : $end.hide();
-        }
-
-        function showListEmpty(show) {
-            $("#pi-quoteList .quoteListEmpty").remove();
-            if (show) {
-                $("#pi-quoteList").append('<div class="quoteListEmpty">No policyIssuances found.</div>');
-            }
-        }
 
         function appendQuoteCards(data) {
             var $root = $("#pi-quoteList");
@@ -750,8 +727,6 @@ Note:
                 `);
             });
 
-            showListLoader(false);
-            if (state.quotePaging.done) showListEnd(true);
         }
 
         function syncSelectedState(q) {
@@ -845,12 +820,9 @@ Note:
                 state.quotes = [];
                 pICs = [];
                 $("#pi-quoteList").empty();
-                showListEnd(false);
-                showListEmpty(false);
             }
 
             state.quotePaging.loading = true;
-            showListLoader(true);
 
             try {
                 var data = await $.ajax({
@@ -864,8 +836,6 @@ Note:
                 const rows = Array.isArray(data) ? data : [];
 
                 if (reset && rows.length === 0) {
-                    showListLoader(false);
-                    showListEmpty(true);
                     state.quotePaging.done = true;
                     return;
                 }
@@ -876,7 +846,6 @@ Note:
                 state.quotePaging.skip += rows.length;
                 if (rows.length < state.quotePaging.take) {
                     state.quotePaging.done = true;
-                    showListEnd(true);
                 }
 
                 if (!state.quotePaging.firstLoadDone && state.quotes.length > 0) {
@@ -888,11 +857,9 @@ Note:
                 }
             } catch (err) {
                 console.error("loadQuotePage error:", err);
-                showListLoader(false);
                 DevExpress.ui.notify("Load policyIssuance list failed", "error", 1500);
             } finally {
                 state.quotePaging.loading = false;
-                showListLoader(false);
             }
         }
 
@@ -1614,15 +1581,11 @@ Note:
 
             const rows = Array.isArray(data) ? data : [];
             if (!rows.length) {
-                showListEmpty(true);
                 return;
             }
 
-            showListEmpty(false);
             appendQuoteCards(rows);
 
-            if (!state.isSearching && state.quotePaging.done) showListEnd(true);
-            else showListEnd(false);
         }
 
         async function searchQuoteFromServer(keyword) {
@@ -1630,7 +1593,6 @@ Note:
             state.serverSearchMode = true;
             state.isSearching = true;
 
-            showListLoader(true);
 
             try {
                 const params = new URLSearchParams();
@@ -1651,7 +1613,6 @@ Note:
             } catch (err) {
                 console.error(err);
             } finally {
-                if (token === state.searchRequestToken) showListLoader(false);
             }
         }
 
