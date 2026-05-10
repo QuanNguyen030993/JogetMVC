@@ -2,12 +2,11 @@
 // This file provides a centralized way to generate and manage all div IDs used in the Quotation Form
 // across different sections (header, upperbody, form, lowerbody, footer) and departments (FO, TS, UW, LMKT, PM)
 
-window.QuotationIdManager = {
+window.PolicyIssuanceIdManager = {
     // Configuration
-    prefix: 'qt',
-    departments: ['FO', 'TS', 'UW', 'LMKT', 'PM'],
+    prefix: 'pi',
+    departments: ['FO', 'TS', 'PM'],
     sections: ['Header', 'UpperBody', 'Form', 'LowerBody', 'Footer'],
-
     // Main ID generation function
     generateId: function (element, department, quotationId, additionalSuffix = '') {
         if (!this.departments.includes(department)) {

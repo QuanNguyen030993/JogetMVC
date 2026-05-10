@@ -13,12 +13,12 @@
 
 
 </style>
-<div id="@QuotationIdHelper.Form(dept, quotationId)">
+<div id="@QTViewIdHelper.Form(dept, quotationId)">
 </div>
 <script type="text/javascript">
     var that = new Object();
     that.ModelName = "Quotation";
-    window.QuotationPage.state.formFO = $("#@QuotationIdHelper.Form(dept, quotationId)").dxForm({
+    window.QuotationPage.state.formFO = $("#@QTViewIdHelper.Form(dept, quotationId)").dxForm({
     dataSource: makeBasicDataSource(that, true),
     items: [
 

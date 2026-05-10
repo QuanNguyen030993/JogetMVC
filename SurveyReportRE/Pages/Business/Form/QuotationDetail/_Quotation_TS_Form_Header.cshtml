@@ -7,11 +7,11 @@
 <div class="dept-title">@dept</div>
 <div class="dept-form-header">
     <div class="dept-form-header__assign">
-        <div id="@QuotationIdHelper.AssigneeBox(dept, quotationId)"></div>
+        <div id="@QTViewIdHelper.AssigneeBox(dept, quotationId)"></div>
     </div>
-    <div id="@QuotationIdHelper.BtnToggleResForm"></div>
+    <div id="@QTViewIdHelper.BtnToggleResForm"></div>
 </div>
-<div id="@QuotationIdHelper.StickPanel(dept, quotationId)">
+<div id="@QTViewIdHelper.StickPanel(dept, quotationId)">
     @* <div class="sticky-wrap wobble" data-tooltip-toggle>
     <div class="pin">
     </div>
@@ -25,9 +25,9 @@
 </div> *@
 </div>
 <div class="dept-hint-wrap">
-    <div class="dept-hint" id="@QuotationIdHelper.Hint(dept, quotationId)"></div>
-    <div class="dept-updated" id="@QuotationIdHelper.Upd(dept, quotationId)" title="Last updated">—</div>
-    <div id="@QuotationIdHelper.ExpandCollapsedBtn(dept, quotationId)" class="dept-toggle-icon" aria-hidden="true">▾</div>
+    <div class="dept-hint" id="@QTViewIdHelper.Hint(dept, quotationId)"></div>
+    <div class="dept-updated" id="@QTViewIdHelper.Upd(dept, quotationId)" title="Last updated">—</div>
+    <div id="@QTViewIdHelper.ExpandCollapsedBtn(dept, quotationId)" class="dept-toggle-icon" aria-hidden="true">▾</div>
 </div>
 
 

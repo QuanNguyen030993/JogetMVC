@@ -689,46 +689,6 @@ Note:
 
 
 
-        function appendQuoteCards(data) {
-            var $root = $("#pi-quoteList");
-
-            data.forEach(q => {
-                var isSel = q.id === selectedId;
-                pICs.push({ policyIssuanceCode: q.policyIssuanceCode, pIC: q.pIC ?? "{}" });
-
-
-                $root.append(`
-                    <div class="${formModuleKeyPi}-quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-guid="${q.guid}" data-attachmentid="${q.documentId}" data-codeno="${q.policyIssuanceCode}" data-stagedept="${q.stageDept}" data-stageaccount="${parsePicMap(q.pIC)[q.stageDept] ? parsePicMap(q.pIC)[q.stageDept] : "(Unassigned)"}">
-                        <div class="quoteTop">
-                            <div>
-                                <div class="quoteClient">${q.clientName || ""}</div>
-                                <div>${q.productName || ""}</div>
-                            </div>
-                            <div class="statusTag ${statusClass(q.policyIssuanceStatus)}">${statusText(q.policyIssuanceStatus)}</div>
-                        </div>
-                        <div class="quoteMeta">
-                            <div class="policyIssuanceCode">${q.policyIssuanceCode || ""}</div>
-                            <div>${q.lineName || ""}</div>
-                            <div>${(typeof formatDate === "function") ? formatDate(q.requestedDate, "dd-mm-yyyy") : (q.requestedDate || "")}</div>
-                        </div>
-                        <div class="quoteMeta">
-                            <div>Total Sum Insured</div>
-                            <div class="quoteAmount">${money(q.sumInsuredTotal)}</div>
-                        </div>
-                        <div class="quoteMeta">
-                            <div>Total Premium</div>
-                            <div class="quoteAmount">${money(q.premiumTotal)}</div>
-                        </div>
-                        <div class="quoteMeta">
-                            <div>Total Due</div>
-                            <div class="quoteAmount">${money(q.totalDue)}</div>
-                        </div>
-                    </div>
-                `);
-            });
-
-        }
-
         function syncSelectedState(q) {
             if (!q) return;
 
@@ -794,15 +754,35 @@ Note:
                               $.each(piDeptModuleCode, function (itemIndex, item) {
                                       setTimeout(() => {
                                           var findRoute = state.nextStep.flowSteps.find(f => f.fromNodeId == item && f.stepNo == state.nextStep.instanceWorkflow.currentStep);
-                                          $(`#pi-btnSubmitBranch_${item}`).dxButton({
-                                              text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
-                                                  function (e) {
-                                                      var content = tinymce.get(`pi-remarkBox_${item}`).getContent();
-                                                      var formItems = $(`#pi-form${item}`).dxForm("instance")?.option("formData") || {};
-                                                      formItems.comment = content;
-                                                      submitNextStep(`${item}`, state.nextStep, findRoute, formItems);
-                                                  }
+                                           var returnButtonId = window.PolicyIssuanceIdManager.btnReturnBranch(item,@ViewData["Id"]);
+                                          var submitButtonId = window.PolicyIssuanceIdManager.btnSubmitBranch(item,@ViewData["Id"]);
+                                         $(`#${returnButtonId}`).dxButton({
+                                            text: findRouteReturn ? findRouteReturn.displayStatus : "", icon: "check", type: "info", onClick:
+                                                function (e) {
+                                                    var content = tinymce.get(`qt-remarkBox_${item}`).getContent();
+                                                    var formItems = $(`#qt-form${item}`).dxForm("instance")?.option("formData") || {};
+                                                    formItems.comment = content;
+                                                    returnToStep(`${item}`, state.nextStep, findRouteReturn, formItems);
+                                                }
                                           });
+                                          $(`#${submitButtonId}`).dxButton({
+                                            text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
+                                                function (e) {
+                                                    var content = tinymce.get(`qt-remarkBox_${item}`).getContent();
+                                                    var formItems = $(`#qt-form${item}`).dxForm("instance")?.option("formData") || {};
+                                                    formItems.comment = content;
+                                                    submitNextStep(`${item}`, state.nextStep, findRoute, formItems);
+                                                }
+                                        });
+                                          // $(`#pi-btnSubmitBranch_${item}`).dxButton({
+                                          //     text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
+                                          //         function (e) {
+                                          //             var content = tinymce.get(`pi-remarkBox_${item}`).getContent();
+                                          //             var formItems = $(`#pi-form${item}`).dxForm("instance")?.option("formData") || {};
+                                          //             formItems.comment = content;
+                                          //             submitNextStep(`${item}`, state.nextStep, findRoute, formItems);
+                                          //         }
+                                          // });
                                      }, 100);
                               });
                           });
@@ -819,7 +799,6 @@ Note:
                 state.quotePaging.firstLoadDone = false;
                 state.quotes = [];
                 pICs = [];
-                $("#pi-quoteList").empty();
             }
 
             state.quotePaging.loading = true;
@@ -841,7 +820,6 @@ Note:
                 }
 
                 state.quotes = state.quotes.concat(rows);
-                appendQuoteCards(rows);
 
                 state.quotePaging.skip += rows.length;
                 if (rows.length < state.quotePaging.take) {
@@ -882,71 +860,111 @@ Note:
 
 
         function renderDeptForms() {
-            $(`#${formModuleKeyPi}-formFO`).dxForm({ formData: deptData.FO, readOnly: true, colCount: 1 });
-            $(`#${formModuleKeyPi}-formTS`).dxForm({ formData: deptData.TS, readOnly: true, colCount: 1 });
-            $(`#${formModuleKeyPi}-formUW`).dxForm({ formData: deptData.UW, readOnly: true, colCount: 1 });
-            $(`#${formModuleKeyPi}-formLMKT`).dxForm({ formData: deptData.LMKT, readOnly: true, colCount: 1 });
-            $(`#${formModuleKeyPi}-formPM`).dxForm({ formData: deptData.PM, readOnly: true, colCount: 1 });
+             $.each(piDeptModuleCode, function (itemIndex, item) {
+                var formId = window.PolicyIssuanceIdManager.form(item,@ViewData["Id"]);
+                 $(`#${formId}`).dxForm({ formData: deptData[item], readOnly: true, colCount: 1 });
+
+            });
+
             reloadState();
             applyEditLock();
             updateHints();
         }
 
+        // function applyEditLock() {
+        //     const roMKT = !(state.currentUserRole === "FO");
+        //     const roTS = !(state.currentUserRole === "TS");
+        //     const roUW = !(state.currentUserRole === "UW");
+        //     const roLMKT = !(state.currentUserRole === "LMKT");
+        //     const roPM = !(state.currentUserRole === "PM");
+
+        //      setTimeout(() => {
+        //         $(`#${formModuleKeyPi}-btnSave_FO`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roMKT );
+        //         $(`#${formModuleKeyPi}-btnSave_TS`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roTS);
+        //         $(`#${formModuleKeyPi}-btnSave_UW`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roUW);
+        //         $(`#${formModuleKeyPi}-btnSave_LMKT`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roLMKT);
+        //         $(`#${formModuleKeyPi}-btnSave_PM`).dxButton("instance")?.option("visible",  _isSuperUser ? true :!roPM);
+
+        //         $(`#${formModuleKeyPi}-btnSubmitBranch_FO`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roMKT);
+        //         $(`#${formModuleKeyPi}-btnSubmitBranch_TS`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roTS);
+        //         $(`#${formModuleKeyPi}-btnSubmitBranch_UW`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roUW);
+        //         $(`#${formModuleKeyPi}-btnSubmitBranch_LMKT`).dxButton("instance")?.option("visible",  _isSuperUser ? true :!roLMKT);
+        //         $(`#${formModuleKeyPi}-btnSubmitBranch_PM`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roPM);
+
+        //         // $(`#${formModuleKeyPi}-btnSave_FO`).dxButton("instance")?.option("visible", !roMKT );
+        //         // $(`#${formModuleKeyPi}-btnSave_TS`).dxButton("instance")?.option("visible", !roTS);
+        //         // $(`#${formModuleKeyPi}-btnSave_UW`).dxButton("instance")?.option("visible", !roUW);
+        //         // $(`#${formModuleKeyPi}-btnSave_LMKT`).dxButton("instance")?.option("visible", !roLMKT);
+        //         // $(`#${formModuleKeyPi}-btnSave_PM`).dxButton("instance")?.option("visible", !roPM);
+
+        //         // $(`#${formModuleKeyPi}-btnSubmitBranch_FO`).dxButton("instance")?.option("visible", !roMKT);
+        //         // $(`#${formModuleKeyPi}-btnSubmitBranch_TS`).dxButton("instance")?.option("visible", !roTS);
+        //         // $(`#${formModuleKeyPi}-btnSubmitBranch_UW`).dxButton("instance")?.option("visible", !roUW);
+        //         // $(`#${formModuleKeyPi}-btnSubmitBranch_LMKT`).dxButton("instance")?.option("visible", !roLMKT);
+        //         // $(`#${formModuleKeyPi}-btnSubmitBranch_PM`).dxButton("instance")?.option("visible", !roPM);
+        //      }, 1);
+
+        //       setTimeout(() => {
+        //     $(`#${formModuleKeyPi}-formFO`).dxForm("instance")?.option("readOnly", roMKT);
+        //     $(`#${formModuleKeyPi}-formTS`).dxForm("instance")?.option("readOnly", roTS);
+        //     $(`#${formModuleKeyPi}-formUW`).dxForm("instance")?.option("readOnly", roUW);
+        //     $(`#${formModuleKeyPi}-formLMKT`).dxForm("instance")?.option("readOnly", roLMKT);
+        //     $(`#${formModuleKeyPi}-formPM`).dxForm("instance")?.option("readOnly", roPM);
+        //      }, 1);
+
+        //     $(`#${formModuleKeyPi}-roleSelect`).dxSelectBox({
+        //         items: QtRoles,
+        //         value: state.currentUserRole,
+        //         stylingMode: "outlined",
+        //         onValueChanged: (e) => {
+        //             state.currentUserRole = e.value;
+        //             $(`#${formModuleKeyPi}-loginRoleLabel`).text(state.currentUserRole);
+        //             applyEditLock();
+        //             updateHints();
+        //             DevExpress.ui.notify("Role switched: " + state.currentUserRole, "info", 1200);
+        //         }
+        //     });
+        // }
         function applyEditLock() {
-            const roMKT = !(state.currentUserRole === "FO");
-            const roTS = !(state.currentUserRole === "TS");
-            const roUW = !(state.currentUserRole === "UW");
-            const roLMKT = !(state.currentUserRole === "LMKT");
-            const roPM = !(state.currentUserRole === "PM");
+            const roleApply = {};
+              $.each(piDeptModuleCode, function (itemIndex, item) {
+                roleApply[item]= !(state.currentUserRole === item);
 
-             setTimeout(() => {
-                $(`#${formModuleKeyPi}-btnSave_FO`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roMKT );
-                $(`#${formModuleKeyPi}-btnSave_TS`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roTS);
-                $(`#${formModuleKeyPi}-btnSave_UW`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roUW);
-                $(`#${formModuleKeyPi}-btnSave_LMKT`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roLMKT);
-                $(`#${formModuleKeyPi}-btnSave_PM`).dxButton("instance")?.option("visible",  _isSuperUser ? true :!roPM);
+            });
 
-                $(`#${formModuleKeyPi}-btnSubmitBranch_FO`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roMKT);
-                $(`#${formModuleKeyPi}-btnSubmitBranch_TS`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roTS);
-                $(`#${formModuleKeyPi}-btnSubmitBranch_UW`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roUW);
-                $(`#${formModuleKeyPi}-btnSubmitBranch_LMKT`).dxButton("instance")?.option("visible",  _isSuperUser ? true :!roLMKT);
-                $(`#${formModuleKeyPi}-btnSubmitBranch_PM`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roPM);
 
-                // $(`#${formModuleKeyPi}-btnSave_FO`).dxButton("instance")?.option("visible", !roMKT );
-                // $(`#${formModuleKeyPi}-btnSave_TS`).dxButton("instance")?.option("visible", !roTS);
-                // $(`#${formModuleKeyPi}-btnSave_UW`).dxButton("instance")?.option("visible", !roUW);
-                // $(`#${formModuleKeyPi}-btnSave_LMKT`).dxButton("instance")?.option("visible", !roLMKT);
-                // $(`#${formModuleKeyPi}-btnSave_PM`).dxButton("instance")?.option("visible", !roPM);
+            setTimeout(() => {
+                 $.each(piDeptModuleCode, function (itemIndex, item) {
+                       var saveButtonId = window.PolicyIssuanceIdManager.btnSave(item,@ViewData["Id"]);
+                        var submitButtonId = window.PolicyIssuanceIdManager.btnSubmitBranch(item,@ViewData["Id"]);
+                    $(`#${saveButtonId}`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roleApply[item]);
+                    $(`#${submitButtonId}`).dxButton("instance")?.option("visible", _isSuperUser ? true :  !roleApply[item]);
+                });
+               
+            }, 1);
 
-                // $(`#${formModuleKeyPi}-btnSubmitBranch_FO`).dxButton("instance")?.option("visible", !roMKT);
-                // $(`#${formModuleKeyPi}-btnSubmitBranch_TS`).dxButton("instance")?.option("visible", !roTS);
-                // $(`#${formModuleKeyPi}-btnSubmitBranch_UW`).dxButton("instance")?.option("visible", !roUW);
-                // $(`#${formModuleKeyPi}-btnSubmitBranch_LMKT`).dxButton("instance")?.option("visible", !roLMKT);
-                // $(`#${formModuleKeyPi}-btnSubmitBranch_PM`).dxButton("instance")?.option("visible", !roPM);
-             }, 1);
+            setTimeout(() => {
+                  $.each(piDeptModuleCode, function (itemIndex, item) {
+                var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
+                 $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
 
-              setTimeout(() => {
-            $(`#${formModuleKeyPi}-formFO`).dxForm("instance")?.option("readOnly", roMKT);
-            $(`#${formModuleKeyPi}-formTS`).dxForm("instance")?.option("readOnly", roTS);
-            $(`#${formModuleKeyPi}-formUW`).dxForm("instance")?.option("readOnly", roUW);
-            $(`#${formModuleKeyPi}-formLMKT`).dxForm("instance")?.option("readOnly", roLMKT);
-            $(`#${formModuleKeyPi}-formPM`).dxForm("instance")?.option("readOnly", roPM);
-             }, 1);
+            });
+               
+            }, 1);
 
-            $(`#${formModuleKeyPi}-roleSelect`).dxSelectBox({
+            $(`#${formModuleKeyQt}-roleSelect`).dxSelectBox({
                 items: QtRoles,
                 value: state.currentUserRole,
                 stylingMode: "outlined",
                 onValueChanged: (e) => {
                     state.currentUserRole = e.value;
-                    $(`#${formModuleKeyPi}-loginRoleLabel`).text(state.currentUserRole);
+                    $(`#${formModuleKeyQt}-loginRoleLabel`).text(state.currentUserRole);
                     applyEditLock();
                     updateHints();
                     DevExpress.ui.notify("Role switched: " + state.currentUserRole, "info", 1200);
                 }
             });
         }
-
         function updateHints() {
             $(`#${formModuleKeyPi}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
 
@@ -1394,69 +1412,6 @@ Note:
         }
 
         //Select items
-        function bindQuoteCardClick() {
-            $("#pi-quoteList")
-                .off("click.quoteCard", ".pi-quoteCard")
-                .on("click.quoteCard", ".pi-quoteCard", function () {
-                    const id = Number($(this).attr("data-id"));
-                    const source = state.isSearching ? (state.displayQuotes || []) : (state.quotes || []);
-                    const q = source.find(x => Number(x.id) === id);
-                    if (!q) return;
-                    selectedId = q.id ?? null;
-                    selectedGuid = q.guid ?? null;
-                    selectedFromGuid = q.copyFromGuid ?? null;
-                    selectedAttachmentId = q.documentId ?? null;
-                    selectedCodeNo = q.policyIssuanceCode ?? null;
-                    stageDept = q.stageDept ?? null;
-
-                    state.selectedId = selectedId;
-                    state.selectedGuid = selectedGuid;
-                    state.selectedCopyGuid = selectedFromGuid;
-                    state.selectedAttachmentId = selectedAttachmentId;
-                    state.selectedCodeNo = selectedCodeNo;
-                    state.stageDept = stageDept;
-                    state.focusDept = state.currentUserRole;
-
-                    const params = new URLSearchParams();
-                    params.set("refKey", state.selectedGuid);
-                    params.set("refField", 'RecordGuid');
-
-                    ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null)
-                    .then(res => {
-                        var pinnedNotes = (res || []).map(x => ({
-                            id: x.id,
-                            section: x.currentDepartment,//target main
-                            fromSection: x.fromDepartment,//target pin
-                            toSection: x.toDepartment,
-                            type: x.type,
-                            unread: !x.isRead,
-                            isRead: !x.isRead,
-                            linkedPin: x.isPinned,
-                            isPinned: x.isPinned,
-                            body: x.content,
-                            text: x.content,
-                            replies: 0,
-                            fullText: x.content,
-                            urgent: false,
-                            time: parseToGMT7(x.createdDate, 0)
-                        }));
-                    state.comments = pinnedNotes;
-                    state.pinNotes = pinnedNotes.filter(f => f.isPinned);
-                    });
-
-
-                    PIC_JSON = pICs.find(f => f.policyIssuanceCode == selectedCodeNo)?.pIC ?? q.pIC ?? "{}";
-                    renderDeptCallouts(PIC_JSON);
-                    var map = parsePicMap(PIC_JSON);
-                    stageAccount = map[stageDept] ? map[stageDept] : "(Unassigned)";
-
-                    $(".pi-quoteCard").removeClass("selected");
-                    $(this).addClass("selected");
-
-
-
-                });
-        }
 
         function bindInfiniteScroll() {
             const $scroller = $(".quote-pane-scroll");
@@ -1576,17 +1531,7 @@ Note:
             );
         }
 
-        function renderQuoteList(data) {
-            $("#pi-quoteList").empty();
-
-            const rows = Array.isArray(data) ? data : [];
-            if (!rows.length) {
-                return;
-            }
-
-            appendQuoteCards(rows);
-
-        }
+   
 
         async function searchQuoteFromServer(keyword) {
             const token = ++state.searchRequestToken;
@@ -1609,7 +1554,6 @@ Note:
                 if (token !== state.searchRequestToken) return;
 
                 state.displayQuotes = Array.isArray(data) ? data : [];
-                renderQuoteList(state.displayQuotes);
             } catch (err) {
                 console.error(err);
             } finally {
@@ -1621,7 +1565,6 @@ Note:
             state.serverSearchMode = false;
             state.displayQuotes = [];
             state.searchRequestToken++;
-            renderQuoteList(state.quotes);
         }
 
         const triggerServerSearch = debounce(function (keyword) {
@@ -1651,12 +1594,10 @@ Note:
                 if (localRows.length > 0) {
                     state.serverSearchMode = false;
                     state.displayQuotes = localRows;
-                    renderQuoteList(localRows);
                     // triggerServerSearch(searchText);
                     state.isSearching = false;
                 } else {
                     state.displayQuotes = [];
-                    renderQuoteList([]);
                     triggerServerSearch(searchText);
                     state.isSearching = false;
                 }
@@ -1701,7 +1642,7 @@ Note:
 
         HoverAjax.bind();
         bindSectionHeaderToggle();
-        bindQuoteCardClick();
+        // bindQuoteCardClick();
         bindInfiniteScroll();
         setupDeptTree();
         initMainPaneSplitter();
