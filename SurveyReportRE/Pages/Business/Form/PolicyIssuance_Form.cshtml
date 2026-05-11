@@ -505,14 +505,15 @@ Note:
 
 <body>
     <div class="title">
-        @await Html.PartialAsync("_OverviewPane", new OverviewPanePartialModel
+   @await Html.PartialAsync("_OverviewPane", new OverviewPanePartialModel
    {
        Prefix = prefix,
        ModuleCode = moduleCode,
-       Title = title
-   })
+       Title = title,
+       Id = ViewData["Id"].ToString()
+   }),
     </div>
-
+@* 
     <div class="actionBar">
         <div class="actionLeft">
             <span class="pill">Record: <b id="pi-recordNo">Qu-10030</b></span>
@@ -522,7 +523,7 @@ Note:
         <div class="actionRight">
             <div id="pi-btnClientConfirm"></div>
         </div>
-    </div>
+    </div> *@
 
     <div id="branchOverlay" class="branchOverlay">
         <div class="backdrop"></div>
@@ -800,7 +801,6 @@ Note:
             }
 
             state.quotePaging.loading = true;
-
             try {
                 var data = await $.ajax({
                     url: buildListUrl(),
@@ -950,13 +950,13 @@ Note:
                
             }, 1);
 
-            $(`#${formModuleKeyQt}-roleSelect`).dxSelectBox({
+            $(`#${formModuleKeyPi}-roleSelect`).dxSelectBox({
                 items: QtRoles,
                 value: state.currentUserRole,
                 stylingMode: "outlined",
                 onValueChanged: (e) => {
                     state.currentUserRole = e.value;
-                    $(`#${formModuleKeyQt}-loginRoleLabel`).text(state.currentUserRole);
+                    $(`#${formModuleKeyPi}-loginRoleLabel`).text(state.currentUserRole);
                     applyEditLock();
                     updateHints();
                     DevExpress.ui.notify("Role switched: " + state.currentUserRole, "info", 1200);
@@ -964,7 +964,7 @@ Note:
             });
         }
         function updateHints() {
-            $(`#${formModuleKeyPi}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
+            // $(`#${formModuleKeyPi}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
 
             QtRoles.forEach(k => {
                 const canEdit = (state.currentUserRole === k);
@@ -1021,7 +1021,7 @@ Note:
             };
 
             Object.keys(map).forEach(dept => {
-            $(`#${formModuleKeyPi}-upd${dept}`).text("Updated: " + fmtTimeLocal(map[dept]));
+            $(`#${formModuleKeyPi}-upd_${dept}`).text("Updated: " + fmtTimeLocal(map[dept]));
             });
         }
 
@@ -1033,7 +1033,7 @@ Note:
 
         function applySectionFocusHighlight() {
             $(".dept-section").removeClass("focused");
-            $(`#${formModuleKeyPi}-sec_${state.focusDept}`).addClass("focused");
+            $(`#${formModuleKeyPi}-sec_${state.focusDept}_@ViewData["Id"]`).addClass("focused");
         }
 
         function setupDeptTree() {
@@ -1045,7 +1045,7 @@ Note:
                 applySectionFocusHighlight();
                 applyEditLock();
                 updateHints();
-                scrollToDept(formModuleKeyPi, state.focusDept);
+                scrollToDept(formModuleKeyPi, { id: `${state.focusDept}`, keyId: "@ViewData["Id"]" });
                 setSectionCollapsed(state.focusDept, false);
             });
         }
@@ -1067,7 +1067,7 @@ Note:
         }
 
         function setSectionCollapsed(dept, collapsed) {
-            var $sec = $(`#${formModuleKeyPi}-sec_${dept}`);
+            var $sec = $(`#${formModuleKeyPi}-sec_${dept}_@ViewData["Id"]`);
             if (!$sec.length) return;
             var body = $sec.find(".dept-body")[0];
             var bodyUpper = $sec.find(".dept-upperbody")[0];
@@ -1105,7 +1105,7 @@ Note:
 
         function bindSectionHeaderToggle() {
             $.each(piDeptModuleCode, function(deptIndex, dept) {
-                var $sec = $(`#${formModuleKeyPi}-sec_${dept}`);
+                var $sec = $(`#${formModuleKeyPi}-sec_${dept}_@ViewData["Id"]`);
                 if (!$sec.length) return;
 
                 $sec.find(".dept-header").off("click.sec").on("click.sec", function (e) {
@@ -1351,7 +1351,7 @@ Note:
         function animateOverviewSections() {
             const sequence = piDeptModuleCode;
             sequence.forEach((dept, idx) => {
-                const sectionId = `#${formModuleKeyPi}-sec${dept}`;
+                const sectionId = `#${formModuleKeyPi}-sec_${dept}_@ViewData["Id"]`;
                 const $section = $(sectionId);
                 if (!$section.length) return;
 
@@ -1389,9 +1389,9 @@ Note:
                 .text(statusText(st))
                 .attr("class", `statusTag ${statusClass(st)}`);
 
-            stageAccount = map[state.stageDept] ? map[state.stageDept] : "(Unassigned)";
-            $(`#${formModuleKeyPi}-stageDeptPill`).text(`Pending at: ${state.stageDept} - ${stageAccount ?? ""}`);
-            $(`#${formModuleKeyPi}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
+             $(`#${window.PolicyIssuanceIdManager.stageDeptPill(q.id)}`).text(`Pending at: ${state.stageDept} - ${stageAccount ?? ""}`);
+            // $(`#${formModuleKeyPi}-stageDeptPill`).text(`Pending at: ${state.stageDept} - ${stageAccount ?? ""}`);
+            // $(`#${formModuleKeyPi}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
 
             deptData.FO = { ...q, sectionName: "FO", code: q.policyIssuanceCode };
             deptData.TS = { ...q, sectionName: "TS", code: q.policyIssuanceCode };
@@ -1404,8 +1404,8 @@ Note:
             applySectionFocusHighlight();
             updateHints();
             updateSectionUpdatedTime(q);
-            initDepartmentAssignees(formModuleKeyPi, firstRender ? null : 0  );
-            scrollToDept(formModuleKeyPi, state.focusDept);
+            initDepartmentAssignees(formModuleKeyPi, deptData, firstRender ? null : 0  );
+            scrollToDept(formModuleKeyPi, { id: `${state.focusDept}`, keyId: "@ViewData["Id"]" });
             TinyMCEElementMaker(`.htmleditor`);
 
             animateOverviewSections();

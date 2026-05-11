@@ -1,12 +1,14 @@
-﻿@{
+﻿@using JogetMVC.Model
+@{
     string dept = "TS";
+    long policyIssuanceId = Convert.ToInt64(ViewData["Id"]);
 }
 
 
 <div class="dept-title">@dept</div>
 <div class="dept-form-header">
     <div class="dept-form-header__assign">
-        <div id="pi-@dept.ToString().ToLower()AssigneeBox"></div>
+        <div id="@PIViewIdHelper.AssigneeBox(dept, policyIssuanceId)"></div>
     </div>
     <div id="btnToggleResForm"></div>
 </div>
@@ -19,15 +21,4 @@
 </div>
 
 <script>
-    setTimeout( () => {
-    var formItems = $("#pi-formTS").dxForm("instance")?.option("formData") || {};
-    // renderDepartmentAssigneeBox("#pi-tsAssigneeBox", {
-    //     groupName: "TS",
-    //     dataForm: formItems,
-    //     value: formItems.TSAssigneeId || null,
-    //     onChanged: function (item, editor) {
-    //     }
-    // });
-    }, _delayRenderAssigneeBox);
-
 </script>

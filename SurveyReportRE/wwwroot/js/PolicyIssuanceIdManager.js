@@ -29,11 +29,12 @@ window.PolicyIssuanceIdManager = {
     quoteCard: function (quotationId) { return `${this.prefix}-quoteCard`; }, // Use data-id attribute for specific cards
 
     // Detail elements
-    detailStatus: function () { return `${this.prefix}-detailStatus`; },
-    stageDeptPill: function () { return `${this.prefix}-stageDeptPill`; },
+    detailStatus: function (quotationId) { return `${this.prefix}-detailStatus_${quotationId}`; },
+    stageDeptPill: function (quotationId) { return `${this.prefix}-stageDeptPill_${quotationId}`; },
 
     // Form elements by department
     form: function (department, quotationId) { return this.generateId('form', department, quotationId); },
+    overviewScroll: function (quotationId) { return `${this.prefix}-overviewScroll_${quotationId}`; },
 
     // Button elements by department
     btnSave: function (department, quotationId) { return this.generateId('btnSave', department, quotationId); },
