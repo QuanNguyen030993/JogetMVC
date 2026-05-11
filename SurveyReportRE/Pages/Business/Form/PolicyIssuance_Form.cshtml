@@ -648,27 +648,11 @@ Note:
 
             if (searchText) params.set("searchText", searchText);
             if (filter && filter !== "all") params.set("policyIssuanceStatus", filter);
-
+            params.set("key", @Convert.ToInt32(ViewData["Id"]));
             return `/api/PolicyIssuance/GetAll?${params.toString()}`;
         }
 
-        function loadQuoteDetail(id) {
-            if (!id) return Promise.resolve(null);
-            if (state.quoteDetails[id]) {
-                return Promise.resolve(state.quoteDetails[id]);
-            }
-            return $.ajax({
-                url: `/api/PolicyIssuance/GetAll?key=${id}`,
-                method: "GET",
-                contentType: "application/json"
-            }).then(detail => {
-                var item = Array.isArray(detail) ? detail[0] : detail;
-                if (item) {
-                    state.quoteDetails[id] = item;
-                }
-                return item;
-            });
-        }
+      
 
         function loadPIDetail(id) {
             if (!id) return Promise.resolve(null);
@@ -1395,8 +1379,6 @@ Note:
 
             deptData.FO = { ...q, sectionName: "FO", code: q.policyIssuanceCode };
             deptData.TS = { ...q, sectionName: "TS", code: q.policyIssuanceCode };
-            deptData.UW = { ...q, sectionName: "UW", code: q.policyIssuanceCode };
-            deptData.LMKT = { ...q, sectionName: "LMKT", code: q.policyIssuanceCode };
             deptData.PM = { ...q, sectionName: "PM", code: q.policyIssuanceCode };
 
             renderDeptForms();

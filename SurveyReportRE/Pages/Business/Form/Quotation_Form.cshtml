@@ -516,7 +516,7 @@ Note:
    }),
     </div>
 
-    <div class="actionBar">
+   @*  <div class="actionBar">
         <div class="actionLeft">
             <span class="pill">Record: <b id="qt-recordNo">Qu-10030</b></span>
             <span class="pill">Login role: <b id="qt-loginRoleLabel"></b></span>
@@ -525,7 +525,7 @@ Note:
         <div class="actionRight">
             <div id="qt-btnClientConfirm"></div>
         </div>
-    </div>
+    </div> *@
 
     <div id="branchOverlay" class="branchOverlay">
         <div class="backdrop"></div>
@@ -644,24 +644,6 @@ Note:
             if (filter && filter !== "all") params.set("quotationStatus", filter);
             params.set("key", @Convert.ToInt32(ViewData["Id"]));
             return `/api/Quotation/GetAll?${params.toString()}`;
-        }
-
-        function loadQuoteDetail(id) {
-            if (!id) return Promise.resolve(null);
-            if (state.quoteDetails[id]) {
-                return Promise.resolve(state.quoteDetails[id]);
-            }
-            return $.ajax({
-                url: `/api/Quotation/GetAll?key=${id}`,
-                method: "GET",
-                contentType: "application/json"
-            }).then(detail => {
-                var item = Array.isArray(detail) ? detail[0] : detail;
-                if (item) {
-                    state.quoteDetails[id] = item;
-                }
-                return item;
-            });
         }
 
 
@@ -1337,8 +1319,8 @@ Note:
                 .text(statusText(st))
                 .attr("class", `statusTag ${statusClass(st)}`);
 
-            $(`#${formModuleKeyQt}-stageDeptPill`).text(`Pending at: ${state.stageDept} - ${stageAccount ?? ""}`);
-            $(`#${formModuleKeyQt}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
+            $(`#${window.QuotationIdManager.stageDeptPill(q.id)}`).text(`Pending at: ${state.stageDept} - ${stageAccount ?? ""}`);
+            // $(`#${formModuleKeyQt}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
 
             deptData.FO = { ...q, sectionName: "FO", code: q.quotationCode };
             deptData.TS = { ...q, sectionName: "TS", code: q.quotationCode };
@@ -1417,7 +1399,6 @@ Note:
         initializeOverviewShell();
 
         loadQuotePage(true).then(() => {
-            loadQuoteDetail(state.selectedId);
             applyNodeHighlights();
             applySectionFocusHighlight();
             updateHints();
