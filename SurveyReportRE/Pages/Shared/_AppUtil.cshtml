@@ -1815,6 +1815,7 @@ function scrollToDept(module, dept) {
     container.scrollTo({ top: el.offsetTop - 8, behavior: "smooth" });
 }
     function initDepartmentAssignees(moduleKey, data , timeout = _delayRenderAssigneeBox) {
+        debugger
         var pageLayout = window.QuotationPage;
         var stateLayout = pageLayout.state;
         stateLayout.isAssigneeBoxRender = false;
@@ -1822,6 +1823,7 @@ function scrollToDept(module, dept) {
             $.each(qtDeptModuleCode, function (itemIndex, item) {
                 setTimeout(() => {
                         var currentPic = getDefaultPicByDept(item,  data[item]);
+                            if (data[item])
                         renderDepartmentAssigneeBox(`#${moduleKey}-AssigneeBox_${item}_${data[item].id}`, {
                         groupName: item,
                             dataForm: data[item],
@@ -1854,6 +1856,7 @@ function scrollToDept(module, dept) {
             $.each(piDeptModuleCode, function (itemIndex, item) {
                 setTimeout(() => {
                         var currentPic = getDefaultPicByDept(item, data[item]);
+                             if (data[item])
                             renderDepartmentAssigneeBox(`#${moduleKey}-AssigneeBox_${item}_${data[item].id}`, {
                         groupName: item,
                             dataForm: data[item],
@@ -1890,7 +1893,7 @@ function scrollToDept(module, dept) {
             value: null,
             onChanged: null
         }, options || {});
-
+        debugger
         const store = new DevExpress.data.CustomStore({
             key: "id",
             loadMode: "raw",
