@@ -1012,7 +1012,7 @@ Note:
             };
 
             Object.keys(map).forEach(dept => {
-                $(`#${formModuleKeyQt}-upd${dept}`).text("Updated: " + fmtTimeLocal(map[dept]));
+                $(`#${formModuleKeyQt}-upd_${dept}`).text("Updated: " + fmtTimeLocal(map[dept]));
             });
         }
 
@@ -1352,7 +1352,7 @@ Note:
             applySectionFocusHighlight();
             updateHints();
             updateSectionUpdatedTime(q);
-            initDepartmentAssignees(formModuleKeyQt, firstRender ? null : 0);
+            initDepartmentAssignees(formModuleKeyQt,deptData, firstRender ? null : 0);
             animateOverviewSections(formModuleKeyQt);
             scrollToDept(formModuleKeyQt, { id: `${state.focusDept}`, keyId: "@ViewData["Id"]" } );
             TinyMCEElementMaker(`.htmleditor`);

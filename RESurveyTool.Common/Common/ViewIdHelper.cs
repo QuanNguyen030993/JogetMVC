@@ -123,7 +123,7 @@ namespace JogetMVC.Model
         public static string BranchOverlay => "branchOverlay";
 
         // Section-specific elements (from QuotationDetail partials)
-        public static string AssigneeBox(string department, long quotationId) => $"{Prefix}-{department.ToLower().Replace("lmkt", "lmkt")}AssigneeBox";
+        public static string AssigneeBox(string department, long quotationId) => $"{Prefix}-AssigneeBox_{department}_{quotationId}";
         public static string BtnToggleResForm => "btnToggleResForm";
         public static string StickPanel(string department, long quotationId) => GenerateId("stickPanel", department, quotationId);
 
@@ -238,7 +238,7 @@ namespace JogetMVC.Model
         public static string BranchOverlay => "branchOverlay";
 
         // Section-specific elements (from QuotationDetail partials)
-        public static string AssigneeBox(string department, long quotationId) => $"{Prefix}-{department.ToLower().Replace("lmkt", "lmkt")}AssigneeBox";
+        public static string AssigneeBox(string department, long quotationId) => $"{Prefix}-AssigneeBox_{department}_{quotationId}";
         public static string BtnToggleResForm => "btnToggleResForm";
         public static string StickPanel(string department, long quotationId) => GenerateId("stickPanel", department, quotationId);
 

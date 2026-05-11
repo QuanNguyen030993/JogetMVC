@@ -74,7 +74,7 @@ window.QuotationIdManager = {
 
     // Section-specific elements (from QuotationDetail partials)
     assigneeBox: function (department, quotationId) {
-        return `${this.prefix}-${department.toLowerCase()}AssigneeBox`;
+        return `${this.prefix}-AssigneeBox_${department}_${quotationId}`;
     },
     btnToggleResForm: function () { return 'btnToggleResForm'; },
     stickPanel: function (department, quotationId) { return this.generateId('stickPanel', department, quotationId); },
