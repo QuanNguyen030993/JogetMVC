@@ -1809,8 +1809,8 @@
     }
 
 function scrollToDept(module, dept) {
-    const container = document.getElementById(`${module}-overviewScroll_${dept.keyId}`);
-    const el = document.getElementById(`${module}-sec` + dept.id);
+      const container = document.getElementById(`${window.QuotationIdManager.overviewScroll(dept.keyId)}`);
+    const el = document.getElementById(`${window.QuotationIdManager.sec(dept.id,dept.keyId)}`);
     if (!container || !el) return;
     container.scrollTo({ top: el.offsetTop - 8, behavior: "smooth" });
 }

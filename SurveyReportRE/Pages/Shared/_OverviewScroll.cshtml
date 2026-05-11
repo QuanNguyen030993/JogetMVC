@@ -1,4 +1,5 @@
-﻿@model OverviewScrollPartialModel
+﻿@using JogetMVC.Model
+@model OverviewScrollPartialModel
 
 @{
     string Id(string name) => $"{Model.Prefix}-{name}_{Model.Id}";
@@ -8,26 +9,26 @@
     string[] piDeptModuleCode = new string[] { "FO", "TS", "PM" };
 }
 
-<div id="@Id("overviewScroll")" class="overview-scroll">
+<div id="@ViewIdHelper.OverViewScroll(Model.Prefix,Model.Id)" class="overview-scroll">
 
     @if (moduleCode == "qt")
     {
         @foreach (string item in qtDeptModuleCode)
         {
-            <section id="@Id($"sec{item}")" class="dept-section">
-                <div id="@($"{Model.Id}")" class="dept-header">
+            <section id="@Id($"sec_{item}")" class="dept-section">
+                <div id="@Id($"sec_{item}-body")" class="dept-header">
                     @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form_Header", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec{item}-header") })
                 </div>
-                <div id="@Id($"sec{item}-upperbody")" class="dept-upperbody">
+                <div id="@Id($"sec_{item}-upperbody")" class="dept-upperbody">
                     @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form_UpperBody", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec{item}-upperbody") })
                 </div>
-                <div id="@Id($"sec{item}-body")" class="dept-body">
+                <div id="@Id($"sec_{item}-body")" class="dept-body">
                     @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec{item}-body") })
                 </div>
-                <div id="@Id($"sec{item}-lowerbody")" class="dept-lowerbody">
+                <div id="@Id($"sec_{item}-lowerbody")" class="dept-lowerbody">
                     @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form_LowerBody", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec{item}-lowerbody") })
                 </div>
-                <div id="@Id($"sec{item}-footer")" class="dept-footer">
+                <div id="@Id($"sec_{item}-footer")" class="dept-footer">
                     @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form_Footer", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec{item}-footer") })
                 </div>
             </section>
@@ -38,20 +39,20 @@
     {
         @foreach (string item in piDeptModuleCode)
         {
-            <section id="@Id($"sec{item}_{Model.Id}")" class="dept-section">
-                <div id="@($"{Model.Id}")" class="dept-header">
+            <section id="@Id($"sec_{item}")" class="dept-section">
+                <div id="@Id($"sec_{item}-body")" class="dept-header">
                     @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_Header", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec{item}-header") })
                 </div>
-                <div id="@Id($"sec{item}-upperbody_{Model.Id}")" class="dept-upperbody">
+                <div id="@Id($"sec_{item}-upperbody")" class="dept-upperbody">
                     @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_UpperBody", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec{item}-upperbody") })
                 </div>
-                <div id="@Id($"sec{item}-body_{Model.Id}")" class="dept-body">
+                <div id="@Id($"sec_{item}-body")" class="dept-body">
                     @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec{item}-body") })
                 </div>
-                <div id="@Id($"sec{item}-lowerbody_{Model.Id}")" class="dept-lowerbody">
+                <div id="@Id($"sec_{item}-lowerbody")" class="dept-lowerbody">
                     @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_LowerBody", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec{item}-lowerbody") })
                 </div>
-                <div id="@Id($"sec{item}-footer_{Model.Id}")" class="dept-footer">
+                <div id="@Id($"sec_{item}-footer")" class="dept-footer">
                     @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_Footer", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec{item}-footer") })
                 </div>
             </section>

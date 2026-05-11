@@ -35,7 +35,7 @@ window.QuotationIdManager = {
 
     // Form elements by department
     form: function (department, quotationId) { return this.generateId('form', department, quotationId); },
-
+    overviewScroll: function (quotationId) { return `${this.prefix}-overviewScroll_${quotationId}`; },
     // Button elements by department
     btnSave: function (department, quotationId) { return this.generateId('btnSave', department, quotationId); },
     btnSubmitBranch: function (department, quotationId) { return this.generateId('btnSubmitBranch', department, quotationId); },

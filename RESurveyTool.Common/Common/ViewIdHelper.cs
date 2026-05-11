@@ -10,41 +10,46 @@ namespace JogetMVC.Model
     /// </summary>
     /// 
 
-//Cấu trúc div id chính:
-//qt-recordNo: Hiển thị số hiệu quotation.
-//qt-loginRoleLabel: Role đăng nhập hiện tại.
-//qt-focusDeptPill: Phòng ban hiện tại.
-//qt-btnClientConfirm: Nút submit sang Policy Issuance.
-//qt-quoteList: Container chứa danh sách quote cards.
-//qt-quoteCard[data-id]: Các card quotation riêng lẻ (với data-id động).
-//qt-recordNo: Hiển thị mã quotation trong chi tiết.
-//qt-detailStatus: Trạng thái hiện tại.
-//qt-stageDeptPill: Phòng ban xử lý + người phụ trách.
-//qt-focusDeptPill: Phòng ban được focus.
-//qt-form{dept}: Form dxForm chính cho mỗi phòng ban (ví dụ: qt-formFO, qt-formTS, qt-formUW, qt-formLMKT, qt-formPM).
-//qt-btnSave_{dept}: Nút save cho phòng ban.
-//qt-btnSubmitBranch_{dept}: Nút submit workflow.
-//qt-btnReturnBranch_{dept}: Nút return/back.
-//qt-expandCollapsedBtn_{dept}: Nút expand/collapse.
-//qt-sec{dept}: Section container cho mỗi phòng ban.
-//qt-upd{dept}: Thời gian cập nhật cuối.
-//qt-hint{dept}: Biểu thị edit/lock status.
-//qt-remarkBox_{dept}: TinyMCE editor để nhập remarks.
-//qt-btnToggleLeftPane: Toggle left panel.
-//qt-btnCollapseAllTab: Collapse tất cả sections.
-//qt-btnToggleComment: Toggle audit logs.
-//qt-btnToggleReferenceFields: Toggle common fields.
-//qt-btnPreview: Xem trước PDF.
-//qt-roleSelect: Selector role phòng ban.
-//qt-treeStack: Cây phòng ban.
-//qt-treeVLine: Đường thẳng đứng.
-//rightCommentDock: Main panel bên phải.
-//rightCommentSub: Header text.
-//rightCommentList: Nội dung danh sách.
-//headerWidgetsPanel: Panel buttons.
-//qt-pdfViewer_{quoteId}: IFrame preview PDF.
-//branchOverlay: Popup workflow routing.
-    public static class QTViewIdHelper
+    //Cấu trúc div id chính:
+    //qt-recordNo: Hiển thị số hiệu quotation.
+    //qt-loginRoleLabel: Role đăng nhập hiện tại.
+    //qt-focusDeptPill: Phòng ban hiện tại.
+    //qt-btnClientConfirm: Nút submit sang Policy Issuance.
+    //qt-quoteList: Container chứa danh sách quote cards.
+    //qt-quoteCard[data-id]: Các card quotation riêng lẻ (với data-id động).
+    //qt-recordNo: Hiển thị mã quotation trong chi tiết.
+    //qt-detailStatus: Trạng thái hiện tại.
+    //qt-stageDeptPill: Phòng ban xử lý + người phụ trách.
+    //qt-focusDeptPill: Phòng ban được focus.
+    //qt-form{dept}: Form dxForm chính cho mỗi phòng ban (ví dụ: qt-formFO, qt-formTS, qt-formUW, qt-formLMKT, qt-formPM).
+    //qt-btnSave_{dept}: Nút save cho phòng ban.
+    //qt-btnSubmitBranch_{dept}: Nút submit workflow.
+    //qt-btnReturnBranch_{dept}: Nút return/back.
+    //qt-expandCollapsedBtn_{dept}: Nút expand/collapse.
+    //qt-sec{dept}: Section container cho mỗi phòng ban.
+    //qt-upd{dept}: Thời gian cập nhật cuối.
+    //qt-hint{dept}: Biểu thị edit/lock status.
+    //qt-remarkBox_{dept}: TinyMCE editor để nhập remarks.
+    //qt-btnToggleLeftPane: Toggle left panel.
+    //qt-btnCollapseAllTab: Collapse tất cả sections.
+    //qt-btnToggleComment: Toggle audit logs.
+    //qt-btnToggleReferenceFields: Toggle common fields.
+    //qt-btnPreview: Xem trước PDF.
+    //qt-roleSelect: Selector role phòng ban.
+    //qt-treeStack: Cây phòng ban.
+    //qt-treeVLine: Đường thẳng đứng.
+    //rightCommentDock: Main panel bên phải.
+    //rightCommentSub: Header text.
+    //rightCommentList: Nội dung danh sách.
+    //headerWidgetsPanel: Panel buttons.
+    //qt-pdfViewer_{quoteId}: IFrame preview PDF.
+    //branchOverlay: Popup workflow routing.
+    public static class ViewIdHelper
+    {
+        public static string OverViewScroll(string Prefix,string Id) => $"{Prefix}-overviewScroll_{Id}";
+    }
+
+        public static class QTViewIdHelper
     {
         // Configuration
         public const string Prefix = "qt";
@@ -109,6 +114,7 @@ namespace JogetMVC.Model
         public static string RightCommentSub => "rightCommentSub";
         public static string RightCommentList => "rightCommentList";
         public static string HeaderWidgetsPanel => "headerWidgetsPanel";
+        
 
         // PDF Viewer
         public static string PdfViewer(long quoteId) => $"{Prefix}-pdfViewer_{quoteId}";
