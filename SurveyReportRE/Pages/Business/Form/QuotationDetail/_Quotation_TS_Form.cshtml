@@ -1,4 +1,5 @@
-﻿@* @page "{pageNum:int?}"
+﻿@using JogetMVC.Model
+@* @page "{pageNum:int?}"
 @using Newtonsoft.Json *@
 @* @model Quotation_TS_FormModel *@
 @* @{
@@ -6,6 +7,10 @@
     ViewBag.Title = "Quotation";
     ViewData["Id"] = 0;
 } *@
+@{
+    string dept = "TS";
+    long quotationId = Convert.ToInt64(ViewData["Id"]);
+}
 <style>
     .dx-tabpanel .dx-tabpanel-tabs .dx-tab {
         width: auto;
@@ -16,7 +21,7 @@
 <script type="text/javascript">
         var that = new Object();
     that.ModelName = "Quotation";
-    $("#qt-formTS").dxForm({
+    $(`@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
         dataSource: makeBasicDataSource(that, true),
          items: [
 
@@ -235,7 +240,7 @@
 </script>
 
 
-<div id="qt-formTS">
+<div id="@QTViewIdHelper.Form(dept, quotationId)">
 </div>
 <div style="margin-top:10px;font-weight:800;font-size:12px;">Locations</div>
 <div id="gridTSLocations" style="margin-top:8px;"></div>

@@ -1,4 +1,5 @@
-﻿@* @page "{pageNum:int?}"
+﻿@using JogetMVC.Model
+@* @page "{pageNum:int?}"
 @using Newtonsoft.Json *@
 @* @model Quotation_PM_FormModel *@
 @* @{
@@ -6,6 +7,10 @@
     ViewBag.Title = "Quotation";
     ViewData["Id"] = 0;
 } *@
+@{
+    string dept = "PM";
+    long quotationId = Convert.ToInt64(ViewData["Id"]);
+}
 <style>
     .dx-tabpanel .dx-tabpanel-tabs .dx-tab {
         width: auto;
@@ -13,12 +18,31 @@
         padding-right: 18px;
     }
 </style>
-<div id="qt-formPM">
+<div id="@QTViewIdHelper.Form(dept, quotationId)">
 </div>
 <script type="text/javascript">
         var that = new Object();
     that.ModelName = "Quotation";
-    $(`#qt-formPM`).dxForm({
+    $(`@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
+        dataSource: makeBasicDataSource(that, true),
+                 items: [
+                         {itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
+            ,
+            editorOptions: {
+            name: "files"
+        }
+        ,template: function (data, itemElement) {
+            setTimeout(function () {
+                var item = new Object();
+                item.editorType = "dxFileUploader";
+                item.moduleName = "qt"; item.sectionName = "PM";
+                createEditor(item, itemElement, $("<div>"), null);
+                // loadAttachmentList("PM");
+                }, 1000);
+            }
+
+        }
+        ]}
         dataSource: makeBasicDataSource(that, true),
                  items: [
                          {itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
