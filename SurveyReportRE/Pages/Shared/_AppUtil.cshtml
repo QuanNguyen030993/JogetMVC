@@ -1809,13 +1809,22 @@
     }
 
 function scrollToDept(module, dept) {
-    const container = document.getElementById(`${window.QuotationIdManager.overviewScroll(dept.keyId)}`);
-    const el = document.getElementById(`${window.QuotationIdManager.sec(dept.id,dept.keyId)}`);
-    if (!container || !el) return;
-    container.scrollTo({ top: el.offsetTop - 8, behavior: "smooth" });
+    if (module == "qt") {
+        var container = document.getElementById(`${window.QuotationIdManager.overviewScroll(dept.keyId)}`);
+        var el = document.getElementById(`${window.QuotationIdManager.sec(dept.id,dept.keyId)}`);
+        if (!container || !el) return;
+        container.scrollTo({ top: el.offsetTop - 8, behavior: "smooth" });
+    }
+
+    if (module == "pi"){
+        var container = document.getElementById(`${window.PolicyIssuanceIdManager.overviewScroll(dept.keyId)}`);
+        var el = document.getElementById(`${window.PolicyIssuanceIdManager.sec(dept.id,dept.keyId)}`);
+        if (!container || !el) return;
+        container.scrollTo({ top: el.offsetTop - 8, behavior: "smooth" });
+    }
+
 }
     function initDepartmentAssignees(moduleKey, data , timeout = _delayRenderAssigneeBox) {
-        debugger
         var pageLayout = window.QuotationPage;
         var stateLayout = pageLayout.state;
         stateLayout.isAssigneeBoxRender = false;
@@ -1893,7 +1902,6 @@ function scrollToDept(module, dept) {
             value: null,
             onChanged: null
         }, options || {});
-        debugger
         const store = new DevExpress.data.CustomStore({
             key: "id",
             loadMode: "raw",
