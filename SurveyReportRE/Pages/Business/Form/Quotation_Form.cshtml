@@ -963,7 +963,7 @@ Note:
                              </svg> LOCK
                            </span>`;
 
-                $(`#${formModuleKeyQt}-hint${k}`).html(icon);
+                $(`#${formModuleKeyQt}-hint_${k}_@ViewData["Id"]`).html(icon);
             });
         }
 
@@ -994,7 +994,7 @@ Note:
             };
 
             Object.keys(map).forEach(dept => {
-                $(`#${formModuleKeyQt}-upd_${dept}`).text("Updated: " + fmtTimeLocal(map[dept]));
+                $(`#${formModuleKeyQt}-upd_${dept}_@ViewData["Id"]`).text("Updated: " + fmtTimeLocal(map[dept]));
             });
         }
 

@@ -974,7 +974,7 @@ Note:
                      </svg> LOCK
                    </span>`;
 
-                $(`#${formModuleKeyPi}-hint${k}`).html(icon);
+                $(`#${formModuleKeyPi}-hint_${k}_@ViewData["Id"]`).html(icon);
             });
         }
 
@@ -1005,7 +1005,7 @@ Note:
             };
 
             Object.keys(map).forEach(dept => {
-            $(`#${formModuleKeyPi}-upd_${dept}`).text("Updated: " + fmtTimeLocal(map[dept]));
+            $(`#${formModuleKeyPi}-upd_${dept}_@ViewData["Id"]`).text("Updated: " + fmtTimeLocal(map[dept]));
             });
         }
 
