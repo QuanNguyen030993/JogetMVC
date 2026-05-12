@@ -6728,67 +6728,6 @@ function evaluateConditionRule(condition, formData) {
     return compareValues(actualValue, operator, expectedValue, dataType);
 }
 
-function submitNextStep(dept, _nextStep, findRoute, formItems) {
-    var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
-    var sendData = new Object();
-    sendData.InstanceWorkflow = convertKeysToUpperFirstChar(_nextStep.instanceWorkflow);
-    sendData.StepsWorkflow = convertKeysToUpperFirstChar(findRoute);
-    sendData.QuotationId = formItems.id;
-    sendData.Comment = formItems.comment;
-
-    //var formItemsRes = $(`#qt-formRES`).dxForm("instance")?.option("formData") || {};
-    var condition = JSON.parse(JSON.parse(findRoute.data));
-    if (condition.source == "form") {
-        formItems = window.QuotationPage.state.formFO.dxForm("instance").option("formData");
-        formItems.hasResAttachment = window.QuotationPage.state.hasResAttachment;
-    }
-    if (evaluateConditionRule(condition, formItems)) {
-        ajaxPost('/api/InstanceWorkflow/SubmitNextStep', sendData, {
-            onSuccess: function (response) {
-                appNotifySuccess(`Submitted to ${findRoute.toNodeId}`, false);
-            },
-            onError: function (err) {
-            }
-        });
-        DevExpress.ui.notify("Submitted !", "Success");
-    }
-    else {
-        DevExpress.ui.notify(condition.message, condition.validateType);
-    }
-    
-  
-}
-function returnToStep(dept, _nextStep, findRoute, formItems) {
-    var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
-    var sendData = new Object();
-    sendData.InstanceWorkflow = convertKeysToUpperFirstChar(_nextStep.instanceWorkflow);
-    sendData.StepsWorkflow = convertKeysToUpperFirstChar(findRoute);
-    sendData.QuotationId = formItems.id;
-    sendData.Comment = formItems.comment;
-
-    //var formItemsRes = $(`#qt-formRES`).dxForm("instance")?.option("formData") || {};
-    var condition = JSON.parse(JSON.parse(findRoute.data));
-    if (condition.source == "form") {
-        formItems = window.QuotationPage.state.formFO.dxForm("instance").option("formData");
-        formItems.hasResAttachment = window.QuotationPage.state.hasResAttachment;
-    }
-    if (evaluateConditionRule(condition, formItems)) {
-        ajaxPost('/api/InstanceWorkflow/ReturnToStep', sendData, {
-            onSuccess: function (response) {
-                appNotifySuccess(`Submitted to ${findRoute.toNodeId}`, false);
-            },
-            onError: function (err) {
-            }
-        });
-        DevExpress.ui.notify("Submitted !", "Success");
-    }
-    else {
-        DevExpress.ui.notify(condition.message, condition.validateType);
-    }
-
-
-}
-
 function openBranchOverlay(currentDept) {
     //const currentDept = stageDept || focusDept || "FO";
     renderBranchOverlay(currentDept);
@@ -7092,70 +7031,6 @@ async function openWordMammothPopup(id) {
     popup.show();
 }
 
-
-function reloadWorkflow(selectedGuid, selectedId, stageDept, moduleKey) {
-    $(`#${moduleKey}-flowPanel`).empty();
-
-
-
-
-    ajaxGet(`/api/Quotation/GetQuotationWorkflowDefinition/${selectedGuid}`, null)
-        .then(instance => {
-            var passingParams = { UITabId: `form_DrawCanvas_Form_${instance.id}`, pageNum: instance.id };
-            appendElementViewInside(`/Business/Workflow/DrawCanvas_Form/${instance.id}`, passingParams, $(`#${moduleKey}-flowPanel`), `${moduleKey}-form_DrawCanvas_Form`, "appendTo");
-            const q = `SELECT DeptCode AS 'dept',ActionTime AS 'time',ActionNote AS 'note' FROM QuotationWorkflowHistory WHERE QuotationId = ${selectedId}`;
-            $.ajax({
-                url: `/api/QuotationWorkflowHistory/ExecuteCustomQuery`,
-                method: "POST",
-                async: false,
-                contentType: "application/json",
-                data: JSON.stringify(q),
-                success: function (data) {
-                    staticFlow = data;
-                },
-                error: function () {
-                }
-            });
-
-            // var key = `flow:${selectedCodeNo}`;
-            function renderFlow(items) {
-                if (!Array.isArray(items) || items.length === 0) {
-                    return { summary: "-", html: `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No history</div>` };
-                }
-                // const summary = items.map(x => x.dept).join(" → ");
-                const summary = "";
-                const arrow = `
-                            <div class="fh-arrow" aria-hidden="true">
-                              <svg viewBox="0 0 24 24" fill="none" width="12" height="18">
-                                <path d="M12 4v12" stroke="black" stroke-width="2" stroke-linecap="round"/>
-                                <path d="M7 13l5 5 5-5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                              </svg>
-                            </div>
-                          `;
-                const html = items.map((x, idx) => {
-                    const isCur = (x.dept === stageDept); // stageDept already exists in your mock
-                    return `
-                                  <div>
-                                    <div class="fh-row">
-                                      <div class="fh-node ${isCur ? "cur" : ""}">${escapeHtml(x.dept)}</div>
-                                      <div class="fh-meta">
-                                        <div class="fh-note">${escapeHtml(x.note || "")}</div>
-                                        <div class="fh-time">${escapeHtml(x.time || "")}</div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  ${idx < items.length - 1 ? arrow : ""}
-                                `;
-                }).join("");
-                return { summary, html };
-            }
-            var getData = renderFlow(staticFlow);
-            $(`#${moduleKey}-flowSummary`).text(getData.summary);
-            $(`#${moduleKey}-flowHistoryBody`).html(getData.html);
-        });
-
-
-}
 
 function openMessageDialog(item) {
 
