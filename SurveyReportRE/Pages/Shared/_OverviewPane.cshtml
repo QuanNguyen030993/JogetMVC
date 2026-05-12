@@ -54,13 +54,15 @@
             @await Html.PartialAsync("_DeptTree", new DeptTreePartialModel
        {
            Prefix = Model.Prefix,
-           ModuleCode = Model.ModuleCode
+           ModuleCode = Model.ModuleCode,
+           Id = Model.Id
        })
 
             @await Html.PartialAsync("_OverviewScroll", new OverviewScrollPartialModel
        {
            Prefix = Model.Prefix,
-           ModuleCode = Model.ModuleCode
+           ModuleCode = Model.ModuleCode,
+           Id = Model.Id
        })
 
         </div>

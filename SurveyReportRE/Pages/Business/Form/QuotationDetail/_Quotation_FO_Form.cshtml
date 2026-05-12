@@ -1,19 +1,24 @@
-﻿
+﻿@using JogetMVC.Model
+@{
+    string dept = "FO";
+    long quotationId = Convert.ToInt64(ViewData["Id"]);
+}
+
 <style>
     .dx-tabpanel .dx-tabpanel-tabs .dx-tab {
         width: auto;
         padding-left: 18px;
         padding-right: 18px;
     }
-   
+
 
 </style>
-<div id="qt-formFO">
+<div id="@QTViewIdHelper.Form(dept, quotationId)">
 </div>
 <script type="text/javascript">
     var that = new Object();
     that.ModelName = "Quotation";
-    window.QuotationPage.state.formFO = $("#qt-formFO").dxForm({
+    window.QuotationPage.state.formFO = $("#@QTViewIdHelper.Form(dept, quotationId)").dxForm({
     dataSource: makeBasicDataSource(that, true),
     items: [
 

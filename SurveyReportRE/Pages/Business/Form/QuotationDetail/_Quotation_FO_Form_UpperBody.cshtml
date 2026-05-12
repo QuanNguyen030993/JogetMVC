@@ -1,19 +1,20 @@
-﻿ @{
-    string dept = "FO";  
-
+﻿@using JogetMVC.Model
+@{
+    string dept = "FO";
+    long quotationId = Convert.ToInt64(ViewData["Id"]);
 }
     <!-- COMPOSER -->
-<div id="qt-pinZone_@dept"  class="composer">
+<div id="@QTViewIdHelper.PinZone(dept)"  class="composer">
         <div class="pinned-zone">
             <div class="pinned-zone-header">
                 <div  class="pinned-zone-title">Pinned notes</div>
                 <div class="pinned-toolbar">
-                    <div id="qt-btnExpandAllPins_@dept"></div>
-                    <div id="qt-btnCollapseAllPins_@dept"></div>
-                    <div id="qt-btnUrgentPins_@dept"></div>
+                    <div id="@QTViewIdHelper.BtnExpandAllPins(dept)"></div>
+                    <div id="@QTViewIdHelper.BtnCollapseAllPins(dept)"></div>
+                    <div id="@QTViewIdHelper.BtnUrgentPins(dept)"></div>
                 </div>
             </div>
-            <div class="pin-list" id="qt-pinList_@dept"></div>
+            <div class="pin-list" id="@QTViewIdHelper.PinList(dept)"></div>
         </div>
 
     </div>

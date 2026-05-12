@@ -1,16 +1,17 @@
-﻿@{
+﻿@using JogetMVC.Model
+@{
     string dept = "TS";
+    long quotationId = Convert.ToInt64(ViewData["Id"]);
 }
-
 
 <div class="dept-title">@dept</div>
 <div class="dept-form-header">
     <div class="dept-form-header__assign">
-        <div id="qt-@dept.ToString().ToLower()AssigneeBox"></div>
+        <div id="@QTViewIdHelper.AssigneeBox(dept, quotationId)"></div>
     </div>
-    <div id="btnToggleResForm"></div>
+    <div id="@QTViewIdHelper.BtnToggleResForm"></div>
 </div>
-<div id="qt-stickPanel_@dept">
+<div id="@QTViewIdHelper.StickPanel(dept, quotationId)">
     @* <div class="sticky-wrap wobble" data-tooltip-toggle>
     <div class="pin">
     </div>
@@ -24,33 +25,11 @@
 </div> *@
 </div>
 <div class="dept-hint-wrap">
-    <div class="dept-hint" id="qt-hintTS"></div>
-    <div class="dept-updated" id="qt-updTS" title="Last updated">—</div>
-    <div id="qt-expandCollapsedBtn_@dept" class="dept-toggle-icon" aria-hidden="true">▾</div>
+    <div class="dept-hint" id="@QTViewIdHelper.Hint(dept, quotationId)"></div>
+    <div class="dept-updated" id="@QTViewIdHelper.Upd(dept, quotationId)" title="Last updated">—</div>
+    <div id="@QTViewIdHelper.ExpandCollapsedBtn(dept, quotationId)" class="dept-toggle-icon" aria-hidden="true">▾</div>
 </div>
 
 
-@* <div class="dept-title">TS</div>
-<div class="dept-form-header">
-    <div class="dept-form-header__assign">
-        <div id="qt-tsAssigneeBox"></div>
-    </div>
-</div>
-<div class="dept-hint-wrap">
-    <div class="dept-hint" id="qt-hintTS"></div>
-    <div class="dept-updated" id="qt-updTS" title="Last updated">—</div>
-    <div class="dept-toggle-icon" aria-hidden="true">▾</div>
-</div> *@
 <script>
-    setTimeout( () => {
-    var formItems = $("#qt-formTS").dxForm("instance")?.option("formData") || {};
-    // renderDepartmentAssigneeBox("#qt-tsAssigneeBox", {
-    //     groupName: "TS",
-    //     dataForm: formItems,
-    //     value: formItems.TSAssigneeId || null,
-    //     onChanged: function (item, editor) {
-    //     }
-    // });
-    }, _delayRenderAssigneeBox);
-
 </script>

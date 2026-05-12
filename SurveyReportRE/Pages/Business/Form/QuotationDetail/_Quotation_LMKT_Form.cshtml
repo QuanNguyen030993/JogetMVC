@@ -1,4 +1,5 @@
-﻿@* @page "{pageNum:int?}"
+﻿@using JogetMVC.Model
+@* @page "{pageNum:int?}"
 @using Newtonsoft.Json *@
 @* @model Quotation_LMKT_FormModel *@
 @* @{
@@ -6,6 +7,10 @@
     ViewBag.Title = "Quotation";
     ViewData["Id"] = 0;
 } *@
+@{
+    string dept = "LMKT";
+    long quotationId = Convert.ToInt64(ViewData["Id"]);
+}
 <style>
     .dx-tabpanel .dx-tabpanel-tabs .dx-tab {
         width: auto;
@@ -17,7 +22,7 @@
         var that = new Object();
     that.ModelName = "Quotation";
 
-    $(`#qt-formLMKT`).dxForm({
+    $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
         dataSource: makeBasicDataSource(that, true),
                items: [ 
                         {itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
@@ -43,5 +48,5 @@
            ]
     });
 </script>
-<div id="qt-formLMKT">
+<div id="@QTViewIdHelper.Form(dept, quotationId)">
 </div>
