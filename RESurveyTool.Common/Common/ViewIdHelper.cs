@@ -134,7 +134,110 @@ namespace JogetMVC.Model
         };
 
         #region Utilities
+        //public static string GenerateId(string element, string department, long quotationId, string additionalSuffix = "")
+        //{
+        //    if (!Array.Exists(Departments, d => d == department))
+        //    {
+        //        throw new ArgumentException($"Invalid department: {department}. Valid departments: {string.Join(", ", Departments)}");
+        //    }
+        //    var suffix = string.IsNullOrEmpty(additionalSuffix) ? "" : $"_{additionalSuffix}";
+        //    return $"{Prefix}-{element}_{department}_{quotationId}{suffix}";
+        //}
 
+        // Specific element ID generators
+        // Core elements
+        public static string RecordNo => $"{Prefix}-recordNo";
+        public static string LoginRoleLabel => $"{Prefix}-loginRoleLabel";
+        public static string FocusDeptPill => $"{Prefix}-focusDeptPill";
+        public static string BtnClientConfirm => $"{Prefix}-btnClientConfirm";
+
+        // Quote list elements
+
+        // Detail elements
+        public static string DetailStatus => $"{Prefix}-detailStatus";
+        public static string StageDeptPill => $"{Prefix}-stageDeptPill";
+
+        // Form elements by department
+        public static string Form(string department, long quotationId) => GenerateId("form", department, quotationId);
+
+        // Button elements by department
+        public static string BtnSave(string department, long quotationId) => GenerateId("btnSave", department, quotationId);
+        public static string BtnSubmitBranch(string department, long quotationId) => GenerateId("btnSubmitBranch", department, quotationId);
+        public static string BtnReturnBranch(string department, long quotationId) => GenerateId("btnReturnBranch", department, quotationId);
+        public static string ExpandCollapsedBtn(string department, long quotationId) => GenerateId("expandCollapsedBtn", department, quotationId);
+
+        // Section elements by department
+        public static string Sec(string department, long quotationId) => GenerateId("sec", department, quotationId);
+        public static string Upd(string department, long quotationId) => GenerateId("upd", department, quotationId);
+        public static string Hint(string department, long quotationId) => GenerateId("hint", department, quotationId);
+        public static string RemarkBox(string department, long quotationId) => GenerateId("remarkBox", department, quotationId);
+
+        // Control elements
+        public static string BtnToggleLeftPane => $"{Prefix}-btnToggleLeftPane";
+        public static string BtnCollapseAllTab => $"{Prefix}-btnCollapseAllTab";
+        public static string BtnToggleComment => $"{Prefix}-btnToggleComment";
+        public static string BtnToggleReferenceFields => $"{Prefix}-btnToggleReferenceFields";
+        public static string BtnPreview => $"{Prefix}-btnPreview";
+        public static string RoleSelect => $"{Prefix}-roleSelect";
+
+        // Tree navigation
+        public static string TreeStack => $"{Prefix}-treeStack";
+        public static string TreeVLine => $"{Prefix}-treeVLine";
+
+        // Right panel
+        public static string RightCommentDock => "rightCommentDock";
+        public static string RightCommentSub => "rightCommentSub";
+        public static string RightCommentList => "rightCommentList";
+        public static string HeaderWidgetsPanel => "headerWidgetsPanel";
+
+
+        // PDF Viewer
+        public static string PdfViewer(long quoteId) => $"{Prefix}-pdfViewer_{quoteId}";
+
+        // Overlay/Dialog
+        public static string BranchOverlay => "branchOverlay";
+
+        // Section-specific elements (from QuotationDetail partials)
+        public static string AssigneeBox(string department, long quotationId) => $"{Prefix}-AssigneeBox_{department}_{quotationId}";
+        public static string BtnToggleResForm => "btnToggleResForm";
+        public static string StickPanel(string department, long quotationId) => GenerateId("stickPanel", department, quotationId);
+
+        /// <summary>
+        /// Get all IDs for a specific quotation
+        /// </summary>
+        public static Dictionary<string, Dictionary<string, string>> GetAllIdsForQuotation(long quotationId)
+        {
+            var ids = new Dictionary<string, Dictionary<string, string>>();
+            foreach (var dept in Departments)
+            {
+                ids[dept] = new Dictionary<string, string>
+                {
+                    ["form"] = Form(dept, quotationId),
+                    ["btnSave"] = BtnSave(dept, quotationId),
+                    ["btnSubmitBranch"] = BtnSubmitBranch(dept, quotationId),
+                    ["btnReturnBranch"] = BtnReturnBranch(dept, quotationId),
+                    ["expandCollapsedBtn"] = ExpandCollapsedBtn(dept, quotationId),
+                    ["sec"] = Sec(dept, quotationId),
+                    ["upd"] = Upd(dept, quotationId),
+                    ["hint"] = Hint(dept, quotationId),
+                    ["remarkBox"] = RemarkBox(dept, quotationId),
+                    ["assigneeBox"] = AssigneeBox(dept, quotationId),
+                    ["stickPanel"] = StickPanel(dept, quotationId)
+                };
+            }
+            return ids;
+        }
+
+        // Validation
+        public static bool ValidateDepartment(string department)
+        {
+            return Array.Exists(Departments, d => d == department);
+        }
+
+        public static bool ValidateSection(string section)
+        {
+            return Array.Exists(Sections, s => s == section);
+        }
         public static string GenerateId(
             string element,
             string department = null,
@@ -158,27 +261,27 @@ namespace JogetMVC.Model
             return string.Join("_", parts);
         }
 
-        public static bool ValidateDepartment(string department)
-        {
-            return Departments.Contains(department);
-        }
+        //public static bool ValidateDepartment(string department)
+        //{
+        //    return Departments.Contains(department);
+        //}
 
-        public static bool ValidateSection(string section)
-        {
-            return Sections.Contains(section);
-        }
+        //public static bool ValidateSection(string section)
+        //{
+        //    return Sections.Contains(section);
+        //}
 
-        #endregion
+        //#endregion
 
-        #region Core
+        //#region Core
 
-        public static string RecordNo => GenerateId("recordNo");
+        //public static string RecordNo => GenerateId("recordNo");
 
-        public static string LoginRoleLabel => GenerateId("loginRoleLabel");
+        //public static string LoginRoleLabel => GenerateId("loginRoleLabel");
 
-        public static string FocusDeptPill => GenerateId("focusDeptPill");
+        //public static string FocusDeptPill => GenerateId("focusDeptPill");
 
-        public static string BtnClientConfirm => GenerateId("btnClientConfirm");
+        //public static string BtnClientConfirm => GenerateId("btnClientConfirm");
 
         #endregion
 
@@ -193,11 +296,11 @@ namespace JogetMVC.Model
 
         #region Detail
 
-        public static string DetailStatus(long quotationId)
-            => GenerateId("detailStatus", quotationId: quotationId);
+        //public static string DetailStatus(long quotationId)
+        //    => GenerateId("detailStatus", quotationId: quotationId);
 
-        public static string StageDeptPill(long quotationId)
-            => GenerateId("stageDeptPill", quotationId: quotationId);
+        //public static string StageDeptPill(long quotationId)
+        //    => GenerateId("stageDeptPill", quotationId: quotationId);
 
         public static string OverViewScroll(long quotationId)
             => GenerateId("overviewScroll", quotationId: quotationId);
@@ -211,32 +314,32 @@ namespace JogetMVC.Model
 
         #region Forms
 
-        public static string Form(string department, long quotationId)
-            => GenerateId("form", department, quotationId);
+        //public static string Form(string department, long quotationId)
+        //    => GenerateId("form", department, quotationId);
 
         public static string Section(string department, long quotationId)
             => GenerateId("sec", department, quotationId);
 
-        public static string Sec(string department, long quotationId)
-            => Section(department, quotationId);
+        //public static string Sec(string department, long quotationId)
+        //    => Section(department, quotationId);
 
         public static string UpdateLabel(string department, long quotationId)
             => GenerateId("upd", department, quotationId);
 
-        public static string Upd(string department, long quotationId)
-            => UpdateLabel(department, quotationId);
+        //public static string Upd(string department, long quotationId)
+        //    => UpdateLabel(department, quotationId);
 
-        public static string Hint(string department, long quotationId)
-            => GenerateId("hint", department, quotationId);
+        //public static string Hint(string department, long quotationId)
+        //    => GenerateId("hint", department, quotationId);
 
-        public static string RemarkBox(string department, long quotationId)
-            => GenerateId("remarkBox", department, quotationId);
+        //public static string RemarkBox(string department, long quotationId)
+        //    => GenerateId("remarkBox", department, quotationId);
 
-        public static string AssigneeBox(string department, long quotationId)
-            => GenerateId("assigneeBox", department, quotationId);
+        //public static string AssigneeBox(string department, long quotationId)
+        //    => GenerateId("assigneeBox", department, quotationId);
 
-        public static string StickPanel(string department, long quotationId)
-            => GenerateId("stickPanel", department, quotationId);
+        //public static string StickPanel(string department, long quotationId)
+        //    => GenerateId("stickPanel", department, quotationId);
 
         // Missing old helper methods
         public static string CommentWrap(string department)
@@ -246,39 +349,39 @@ namespace JogetMVC.Model
 
         #region Buttons
 
-        public static string BtnSave(string department, long quotationId)
-            => GenerateId("btnSave", department, quotationId);
+        //public static string BtnSave(string department, long quotationId)
+        //    => GenerateId("btnSave", department, quotationId);
 
-        public static string BtnSubmitBranch(string department, long quotationId)
-            => GenerateId("btnSubmitBranch", department, quotationId);
+        //public static string BtnSubmitBranch(string department, long quotationId)
+        //    => GenerateId("btnSubmitBranch", department, quotationId);
 
-        public static string BtnReturnBranch(string department, long quotationId)
-            => GenerateId("btnReturnBranch", department, quotationId);
+        //public static string BtnReturnBranch(string department, long quotationId)
+        //    => GenerateId("btnReturnBranch", department, quotationId);
 
         public static string BtnExpandCollapse(string department, long quotationId)
             => GenerateId("btnExpandCollapse", department, quotationId);
 
         // Backward compatibility
-        public static string ExpandCollapsedBtn(string department, long quotationId)
-            => BtnExpandCollapse(department, quotationId);
+        //public static string ExpandCollapsedBtn(string department, long quotationId)
+        //    => BtnExpandCollapse(department, quotationId);
 
-        public static string BtnToggleLeftPane
-            => GenerateId("btnToggleLeftPane");
+        //public static string BtnToggleLeftPane
+        //    => GenerateId("btnToggleLeftPane");
 
-        public static string BtnCollapseAllTab
-            => GenerateId("btnCollapseAllTab");
+        //public static string BtnCollapseAllTab
+        //    => GenerateId("btnCollapseAllTab");
 
-        public static string BtnToggleComment
-            => GenerateId("btnToggleComment");
+        //public static string BtnToggleComment
+        //    => GenerateId("btnToggleComment");
 
-        public static string BtnToggleReferenceFields
-            => GenerateId("btnToggleReferenceFields");
+        //public static string BtnToggleReferenceFields
+        //    => GenerateId("btnToggleReferenceFields");
 
-        public static string BtnPreview
-            => GenerateId("btnPreview");
+        //public static string BtnPreview
+        //    => GenerateId("btnPreview");
 
-        public static string BtnToggleResForm
-            => GenerateId("btnToggleResForm");
+        //public static string BtnToggleResForm
+        //    => GenerateId("btnToggleResForm");
 
         #endregion
 
@@ -304,39 +407,39 @@ namespace JogetMVC.Model
 
         #region Role / Navigation
 
-        public static string RoleSelect
-            => GenerateId("roleSelect");
+        //public static string RoleSelect
+        //    => GenerateId("roleSelect");
 
-        public static string TreeStack
-            => GenerateId("treeStack");
+        //public static string TreeStack
+        //    => GenerateId("treeStack");
 
-        public static string TreeVLine
-            => GenerateId("treeVLine");
+        //public static string TreeVLine
+        //    => GenerateId("treeVLine");
 
         #endregion
 
         #region Right Panel
 
-        public static string RightCommentDock => "rightCommentDock";
+        //public static string RightCommentDock => "rightCommentDock";
 
-        public static string RightCommentSub => "rightCommentSub";
+        //public static string RightCommentSub => "rightCommentSub";
 
-        public static string RightCommentList => "rightCommentList";
+        //public static string RightCommentList => "rightCommentList";
 
-        public static string HeaderWidgetsPanel => "headerWidgetsPanel";
+        //public static string HeaderWidgetsPanel => "headerWidgetsPanel";
 
         #endregion
 
         #region PDF
 
-        public static string PdfViewer(long quotationId)
-            => GenerateId("pdfViewer", quotationId: quotationId);
+        //public static string PdfViewer(long quotationId)
+        //    => GenerateId("pdfViewer", quotationId: quotationId);
 
         #endregion
 
         #region Overlay
 
-        public static string BranchOverlay => "branchOverlay";
+        //public static string BranchOverlay => "branchOverlay";
 
         #endregion
 
@@ -392,33 +495,34 @@ namespace JogetMVC.Model
 
         #region All IDs
 
-        public static Dictionary<string, Dictionary<string, string>>
-            GetAllIdsForQuotation(long quotationId)
-        {
-            var result =
-                new Dictionary<string, Dictionary<string, string>>();
+        //public static Dictionary<string, Dictionary<string, string>>
+        //    GetAllIdsForQuotation(long quotationId)
+        //{
+        //    var result =
+        //        new Dictionary<string, Dictionary<string, string>>();
 
-            foreach (var dept in Departments)
-            {
-                result[dept] = new Dictionary<string, string>
-                {
-                    ["form"] = Form(dept, quotationId),
-                    ["section"] = Section(dept, quotationId),
-                    ["btnSave"] = BtnSave(dept, quotationId),
-                    ["btnSubmitBranch"] = BtnSubmitBranch(dept, quotationId),
-                    ["btnReturnBranch"] = BtnReturnBranch(dept, quotationId),
-                    ["btnExpandCollapse"] = BtnExpandCollapse(dept, quotationId),
-                    ["updateLabel"] = UpdateLabel(dept, quotationId),
-                    ["hint"] = Hint(dept, quotationId),
-                    ["remarkBox"] = RemarkBox(dept, quotationId),
-                    ["assigneeBox"] = AssigneeBox(dept, quotationId),
-                    ["stickPanel"] = StickPanel(dept, quotationId)
-                };
-            }
+        //    foreach (var dept in Departments)
+        //    {
+        //        result[dept] = new Dictionary<string, string>
+        //        {
+        //            ["form"] = Form(dept, quotationId),
+        //            ["section"] = Section(dept, quotationId),
+        //            ["btnSave"] = BtnSave(dept, quotationId),
+        //            ["btnSubmitBranch"] = BtnSubmitBranch(dept, quotationId),
+        //            ["btnReturnBranch"] = BtnReturnBranch(dept, quotationId),
+        //            ["btnExpandCollapse"] = BtnExpandCollapse(dept, quotationId),
+        //            ["updateLabel"] = UpdateLabel(dept, quotationId),
+        //            ["hint"] = Hint(dept, quotationId),
+        //            ["remarkBox"] = RemarkBox(dept, quotationId),
+        //            ["assigneeBox"] = AssigneeBox(dept, quotationId),
+        //            ["stickPanel"] = StickPanel(dept, quotationId)
+        //        };
+        //    }
 
-            return result;
-        }
+        //    return result;
+        //}
 
+       
         #endregion
     }
 

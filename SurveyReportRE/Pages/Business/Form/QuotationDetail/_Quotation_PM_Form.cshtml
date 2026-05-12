@@ -23,26 +23,7 @@
 <script type="text/javascript">
         var that = new Object();
     that.ModelName = "Quotation";
-    $(`@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
-        dataSource: makeBasicDataSource(that, true),
-                 items: [
-                         {itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
-            ,
-            editorOptions: {
-            name: "files"
-        }
-        ,template: function (data, itemElement) {
-            setTimeout(function () {
-                var item = new Object();
-                item.editorType = "dxFileUploader";
-                item.moduleName = "qt"; item.sectionName = "PM";
-                createEditor(item, itemElement, $("<div>"), null);
-                // loadAttachmentList("PM");
-                }, 1000);
-            }
-
-        }
-        ]}
+    $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
         dataSource: makeBasicDataSource(that, true),
                  items: [
                          {itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
