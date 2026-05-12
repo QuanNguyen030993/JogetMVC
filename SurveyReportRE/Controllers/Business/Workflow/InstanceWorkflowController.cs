@@ -36,6 +36,9 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     private readonly IBaseRepository<MailQueue> _mailQueueRepository;
     private readonly IBaseRepository<Users> _usersRepository;
     private readonly IBaseRepository<Employee> _employeeRepository;
+    private readonly IBaseRepository<TurnAroundTimeConfig> _turnAroundTimeConfigRepository;
+    private readonly IBaseRepository<TurnAroundTimeDeptProcessing> _turnAroundTimeDeptProcessingRepository;
+    private readonly IBaseRepository<TurnAroundTimeSession> _turnAroundTimeSessionRepository;
     private readonly IHubContext<FileProcessingHub> _hubContext;
     private string DOMAIN_NAME = "";
     private MailConfig _emailSettings;
@@ -58,6 +61,9 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         _mailTemplateRepository = new BaseRepository<MailTemplate>(configuration, _httpContextAccessor);
         _usersRepository = new BaseRepository<Users>(configuration, _httpContextAccessor);
         _employeeRepository = new BaseRepository<Employee>(configuration, _httpContextAccessor);
+        _turnAroundTimeConfigRepository = new BaseRepository<TurnAroundTimeConfig>(configuration, _httpContextAccessor);
+        _turnAroundTimeDeptProcessingRepository = new BaseRepository<TurnAroundTimeDeptProcessing>(configuration, _httpContextAccessor);
+        _turnAroundTimeSessionRepository = new BaseRepository<TurnAroundTimeSession>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
         _hubContext = hubContext;
         DOMAIN_NAME = configuration.GetSection("Domain:DCServer").Value;
@@ -71,8 +77,8 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         //submitRequest.InstanceWorkflow.CurrentStep = ControllerHelper.UpStep(submitRequest.InstanceWorkflow).ToString();
         //submitRequest.InstanceWorkflow.CurrentStep = submitRequest.StepsWorkflow.JumpStepNo;
         submitRequest.InstanceWorkflow.CurrentStep = submitRequest.StepsWorkflow.TNodeId;
-
-        await _BaseRepository.UpdateData(submitRequest.InstanceWorkflow, JsonConvert.SerializeObject(submitRequest.InstanceWorkflow), submitRequest.InstanceWorkflow?.Id, "Id");
+        //Un comment
+        //await _BaseRepository.UpdateData(submitRequest.InstanceWorkflow, JsonConvert.SerializeObject(submitRequest.InstanceWorkflow), submitRequest.InstanceWorkflow?.Id, "Id");
         Quotation quotation = new Quotation();
         quotation = await _quotationRepository.GetSingleObject(s => s.Id == submitRequest.QuotationId);
         quotation.StageDept = submitRequest.StepsWorkflow.ToNodeId;
@@ -106,8 +112,8 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                 break;
         }
         quotation.TurnAroundTimeAttributes = JsonConvert.SerializeObject(result);
-        
-         await _quotationRepository.UpdateData(quotation, JsonConvert.SerializeObject(quotation), quotation?.Id, "Id");
+        //Un comment
+        //await _quotationRepository.UpdateData(quotation, JsonConvert.SerializeObject(quotation), quotation?.Id, "Id");
         var userInfo = await ControllerHelper.FetchUserRoles(_httpContextAccessor,configuration, DOMAIN_NAME);
         string logQuery = $@"INSERT INTO QuotationCommentLog (QuotationId
 ,DeptCode,CommentOrder,CommentBy,CommentTime,CommentText,SourceSystem)
@@ -163,7 +169,8 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                 flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
             MailQueue mailQueue = new MailQueue();
             mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
-            if (mailQueue != null) await _mailQueueRepository.InsertData(mailQueue);
+            //Un comment
+            //if (mailQueue != null) await _mailQueueRepository.InsertData(mailQueue);
         }
         return Ok();
     }
