@@ -1,0 +1,11 @@
+﻿@page
+@model TurnAroundTimeConfigModel
+@{
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@TurnAroundTimeConfigModel.ModelName`), new TurnAroundTimeConfigGridOption('@TurnAroundTimeConfigModel.ModelName'), null);
+    });
+</script>
+<div id="dataGrid_@TurnAroundTimeConfigModel.ModelName"></div>
