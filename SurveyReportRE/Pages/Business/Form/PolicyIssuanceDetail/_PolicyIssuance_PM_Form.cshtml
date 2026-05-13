@@ -1,11 +1,9 @@
-﻿@* @page "{pageNum:int?}"
-@using Newtonsoft.Json *@
-@* @model Quotation_PM_FormModel *@
-@* @{
-   
-    ViewBag.Title = "Quotation";
-    ViewData["Id"] = 0;
-} *@
+﻿@using JogetMVC.Model
+@{
+    string dept = "PM";
+    long quotationId = Convert.ToInt64(ViewData["Id"]);
+}
+
 <style>
     .dx-tabpanel .dx-tabpanel-tabs .dx-tab {
         width: auto;
@@ -13,12 +11,12 @@
         padding-right: 18px;
     }
 </style>
-<div id="pi-formPM">
+<div id="@PIViewIdHelper.Form(dept, quotationId)">
 </div>
 <script type="text/javascript">
         var that = new Object();
     that.ModelName = "PolicyIssuance";
-    $(`#pi-formPM`).dxForm({
+    $(`#@PIViewIdHelper.Form(dept, quotationId)`).dxForm({
         dataSource: makeBasicDataSource(that, true),
                  items: [
                          {itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"

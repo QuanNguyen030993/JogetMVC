@@ -1,4 +1,9 @@
-﻿
+﻿@using JogetMVC.Model
+@{
+    string dept = "FO";
+    long quotationId = Convert.ToInt64(ViewData["Id"]);
+}
+
 <style>
     .dx-tabpanel .dx-tabpanel-tabs .dx-tab {
         width: auto;
@@ -8,13 +13,13 @@
    
 
 </style>
-<div id="pi-formFO">
+<div id="@PIViewIdHelper.Form(dept, quotationId)">
 </div>
 <script type="text/javascript">
         var that = new Object();
     that.ModelName = "PolicyIssuance";
 
-    $("#pi-formFO").dxForm({
+    $("#@PIViewIdHelper.Form(dept, quotationId)").dxForm({
         dataSource: makeBasicDataSource(that, true),
     items: [
 
