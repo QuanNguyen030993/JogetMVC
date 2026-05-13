@@ -296,11 +296,7 @@ namespace JogetMVC.Model
 
         #region Detail
 
-        //public static string DetailStatus(long quotationId)
-        //    => GenerateId("detailStatus", quotationId: quotationId);
-
-        //public static string StageDeptPill(long quotationId)
-        //    => GenerateId("stageDeptPill", quotationId: quotationId);
+      
 
         public static string OverViewScroll(long quotationId)
             => GenerateId("overviewScroll", quotationId: quotationId);
@@ -314,33 +310,17 @@ namespace JogetMVC.Model
 
         #region Forms
 
-        //public static string Form(string department, long quotationId)
-        //    => GenerateId("form", department, quotationId);
+     
 
         public static string Section(string department, long quotationId)
             => GenerateId("sec", department, quotationId);
 
-        //public static string Sec(string department, long quotationId)
-        //    => Section(department, quotationId);
+        
 
         public static string UpdateLabel(string department, long quotationId)
             => GenerateId("upd", department, quotationId);
 
-        //public static string Upd(string department, long quotationId)
-        //    => UpdateLabel(department, quotationId);
-
-        //public static string Hint(string department, long quotationId)
-        //    => GenerateId("hint", department, quotationId);
-
-        //public static string RemarkBox(string department, long quotationId)
-        //    => GenerateId("remarkBox", department, quotationId);
-
-        //public static string AssigneeBox(string department, long quotationId)
-        //    => GenerateId("assigneeBox", department, quotationId);
-
-        //public static string StickPanel(string department, long quotationId)
-        //    => GenerateId("stickPanel", department, quotationId);
-
+      
         // Missing old helper methods
         public static string CommentWrap(string department)
             => GenerateId("commentWrap", department);
@@ -349,39 +329,13 @@ namespace JogetMVC.Model
 
         #region Buttons
 
-        //public static string BtnSave(string department, long quotationId)
-        //    => GenerateId("btnSave", department, quotationId);
-
-        //public static string BtnSubmitBranch(string department, long quotationId)
-        //    => GenerateId("btnSubmitBranch", department, quotationId);
-
-        //public static string BtnReturnBranch(string department, long quotationId)
-        //    => GenerateId("btnReturnBranch", department, quotationId);
+     
 
         public static string BtnExpandCollapse(string department, long quotationId)
             => GenerateId("btnExpandCollapse", department, quotationId);
 
         // Backward compatibility
-        //public static string ExpandCollapsedBtn(string department, long quotationId)
-        //    => BtnExpandCollapse(department, quotationId);
-
-        //public static string BtnToggleLeftPane
-        //    => GenerateId("btnToggleLeftPane");
-
-        //public static string BtnCollapseAllTab
-        //    => GenerateId("btnCollapseAllTab");
-
-        //public static string BtnToggleComment
-        //    => GenerateId("btnToggleComment");
-
-        //public static string BtnToggleReferenceFields
-        //    => GenerateId("btnToggleReferenceFields");
-
-        //public static string BtnPreview
-        //    => GenerateId("btnPreview");
-
-        //public static string BtnToggleResForm
-        //    => GenerateId("btnToggleResForm");
+      
 
         #endregion
 
@@ -420,20 +374,13 @@ namespace JogetMVC.Model
 
         #region Right Panel
 
-        //public static string RightCommentDock => "rightCommentDock";
-
-        //public static string RightCommentSub => "rightCommentSub";
-
-        //public static string RightCommentList => "rightCommentList";
-
-        //public static string HeaderWidgetsPanel => "headerWidgetsPanel";
+        
 
         #endregion
 
         #region PDF
 
-        //public static string PdfViewer(long quotationId)
-        //    => GenerateId("pdfViewer", quotationId: quotationId);
+       
 
         #endregion
 
@@ -490,6 +437,8 @@ namespace JogetMVC.Model
 
         public static string DxPopup(long quotationId)
             => GenerateId("dxPopup", quotationId: quotationId);
+        public static string Decision(string department, long quotationId)
+            => $"decisionRadio_{department}_{quotationId}";
 
         #endregion
 
@@ -834,6 +783,8 @@ namespace JogetMVC.Model
 
             return result;
         }
+        public static string Decision(string department, long quotationId)
+            => $"decisionRadio_{department}_{quotationId}";
 
         #endregion
     }

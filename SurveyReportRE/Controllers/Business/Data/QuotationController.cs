@@ -58,7 +58,7 @@ public class QuotationController : BaseControllerApi<Quotation>
     private readonly IHubContext<FileProcessingHub> _hubContext;
     private readonly ILogger<Quotation> _logger;
     private readonly IConfigurationSection path;
-    private readonly IHttpContextAccessor _httpContextAccessor; 
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private MailConfig _emailSettings;
     public static string MANAGER_APP = "";
     public static string APPROVER_APP = "";
@@ -176,17 +176,17 @@ public class QuotationController : BaseControllerApi<Quotation>
             {
 
                 Base = await _BaseRepository.GetManyObjectByIdAsync(int.Parse(obj.ToString()));
-                Base.ForEach( f =>
-                            f =  _BaseRepository.ObjectSpecificIncludeSync(f, f => f.ResFK)
+                Base.ForEach(f =>
+                            f = _BaseRepository.ObjectSpecificIncludeSync(f, f => f.ResFK)
                         );
-                
+
             }
         }
         else
         {
             Base = await _BaseRepository.GetAll(requestParams);
-            Base.ForEach( f =>
-                        f =  _BaseRepository.ObjectSpecificIncludeSync(f, f => f.ResFK)
+            Base.ForEach(f =>
+                        f = _BaseRepository.ObjectSpecificIncludeSync(f, f => f.ResFK)
                     );
         }
 
@@ -208,12 +208,12 @@ public class QuotationController : BaseControllerApi<Quotation>
         quotationData.QuotationData = JsonConvert.DeserializeObject<QuotationData>(Request.Form["QuotationData"]);
 
 
-     
+
 
         //Before insert quotation
         Quotation quotation = new Quotation();
         List<FormatCodeNo> tableConfig = new List<FormatCodeNo>();
-        tableConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(Quotation)+"Code");
+        tableConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(Quotation) + "Code");
 
         Res res = new Res();
         res = await _resRepository.InsertData(res);
@@ -244,6 +244,7 @@ public class QuotationController : BaseControllerApi<Quotation>
             instanceWorkflow.RecordGuid = quotation.Guid;
             instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
             //instanceWorkflow.CurrentStep = "2";
+            if (stepsWorkflow == null) return StatusCode(500, "Workflow created failed");
             instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
             instanceWorkflow.CurrentStepId = new Guid();
             instanceWorkflow.IsCancelled = false;
@@ -253,17 +254,17 @@ public class QuotationController : BaseControllerApi<Quotation>
 
 
 
-        SubmitRequest submitRequest = new SubmitRequest();
-        submitRequest.StepsWorkflow = stepsWorkflow;
-        submitRequest.Comment = $"{quotation.QuotationCode} created!";
-        submitRequest.InstanceWorkflow = instanceWorkflow;
+            SubmitRequest submitRequest = new SubmitRequest();
+            submitRequest.StepsWorkflow = stepsWorkflow;
+            submitRequest.Comment = $"{quotation.QuotationCode} created!";
+            submitRequest.InstanceWorkflow = instanceWorkflow;
 
-        await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
+            await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
 
         }
         PICAttributes pICAttributes = new PICAttributes();
         pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
-        var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor,_hubContext);
+        var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
         NotificationRequest notification = new NotificationRequest();
         Notification Notification = new Notification();
         Notification.Title = "Create Quotation";
@@ -273,8 +274,8 @@ public class QuotationController : BaseControllerApi<Quotation>
         Notification.Resource = $"{pICAttributes.TS}_TS";
         Notification.System = "WM";
         Notification.RecordGuid = quotation.Guid;
-        
-        Notification.ReceivedBy = pICAttributes.TS;  
+
+        Notification.ReceivedBy = pICAttributes.TS;
         notification.Notification = Notification;
         notification.connectionId = pICAttributes.TS;
         notification.tabPublicUrl = new
