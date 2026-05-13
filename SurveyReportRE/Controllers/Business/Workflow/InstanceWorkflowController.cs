@@ -71,22 +71,21 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     }
 
     [HttpPost]
-    public async Task<IActionResult> SubmitNextStep([FromBody] SubmitRequest submitRequest)
+    public async Task<IActionResult> QuotationSubmitNextStep([FromBody] SubmitRequest submitRequest)
     {
 
         if (string.IsNullOrEmpty(submitRequest.StepsWorkflow.FromNodeId) || string.IsNullOrEmpty(submitRequest.StepsWorkflow.ToNodeId)) return StatusCode(500, "Submit problem, please contact IT Admin!!!!");
         //submitRequest.InstanceWorkflow.CurrentStep = ControllerHelper.UpStep(submitRequest.InstanceWorkflow).ToString();
         //submitRequest.InstanceWorkflow.CurrentStep = submitRequest.StepsWorkflow.JumpStepNo;
         submitRequest.InstanceWorkflow.CurrentStep = submitRequest.StepsWorkflow.TNodeId;
-        //Un comment
-        //await _BaseRepository.UpdateData(submitRequest.InstanceWorkflow, JsonConvert.SerializeObject(submitRequest.InstanceWorkflow), submitRequest.InstanceWorkflow?.Id, "Id");
+        await _BaseRepository.UpdateData(submitRequest.InstanceWorkflow, JsonConvert.SerializeObject(submitRequest.InstanceWorkflow), submitRequest.InstanceWorkflow?.Id, "Id");
         Quotation quotation = new Quotation();
         quotation = await _quotationRepository.GetSingleObject(s => s.Id == submitRequest.QuotationId);
         quotation.StageDept = submitRequest.StepsWorkflow.ToNodeId;
         TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(quotation.TurnAroundTimeAttributes);
         TurnAroundItem tatObject = submitRequest.StepsWorkflow.FromNodeId switch
         {
-            "FO" =>  result.FO,
+            "FO" => result.FO,
             "TS" => result.TS,
             "UW" => result.UW,
             "LMKT" => result.LMKT,
@@ -114,72 +113,10 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         }
         quotation.TurnAroundTimeAttributes = JsonConvert.SerializeObject(result);
 
+        await TATLog(quotation, tatObject, submitRequest.StepsWorkflow.FromNodeId);
 
-        TurnAroundTimeSession activeSession = new TurnAroundTimeSession();
-        activeSession = await _turnAroundTimeSessionRepository
-        .GetSingleObject(s => s.RecordGuid == quotation.Guid);
-
-
-        if (activeSession == null)
-        {
-            // Đếm số phiên đã có để tính SessionNo tiếp theo
-            var allSessions = await _turnAroundTimeSessionRepository
-                .GetListObject(s => s.RecordGuid == quotation.Guid);
-
-            int nextSessionNo = (allSessions?.Count ?? 0) + 1;
-
-            activeSession = new TurnAroundTimeSession
-            {
-                SessionNo = nextSessionNo,
-                SessionTypeId = quotation.RequestTypeId,   // truyền từ client: New=1 / Renew=2 / Amend=3
-                SessionStartDate = tatObject.AcceptDate,
-                SessionEndDate = tatObject.CompleteDate,
-                TotalDays = 0,
-                RecordGuid = quotation.Guid
-            };
-            // Un comment
-             await _turnAroundTimeSessionRepository.InsertData(activeSession);
-            // Sau insert, activeSession.Id đã được gán bởi EF/repository
-        }
-        else
-        {
-            // Đếm số phiên đã có để tính SessionNo tiếp theo
-            var allSessions = await _turnAroundTimeSessionRepository
-                .GetListObject(s => s.RecordGuid == quotation.Guid);
-
-
-            activeSession.SessionNo = activeSession.SessionNo;
-            activeSession.SessionTypeId = quotation.RequestTypeId;   // truyền từ client: New=1 / Renew=2 / Amend=3
-            activeSession.SessionStartDate = activeSession.SessionStartDate;
-            activeSession.SessionEndDate = tatObject.CompleteDate;
-            activeSession.TotalDays = 0;
-            activeSession.RecordGuid = quotation.Guid;
-            // Un comment
-            await _turnAroundTimeSessionRepository.UpdateData(activeSession, JsonConvert.SerializeObject(activeSession), activeSession.Id, "Id");
-            // Sau insert, activeSession.Id đã được gán bởi EF/repository
-        }
-
-        // Bước 2 — Tìm hoặc tạo DeptProcessing cho phòng ban đang submit
-        TurnAroundTimeDeptProcessing deptProcessing = new TurnAroundTimeDeptProcessing();
-
-        DateTime acceptDate = tatObject.AcceptDate ?? DateTime.Now;
-        DateTime completeDate = tatObject.CompleteDate ?? DateTime.Now;
-        int processingDays = (completeDate.Date - acceptDate.Date).Days;  // đơn vị ngày
-
-            // Chưa có → tạo mới
-            deptProcessing = new TurnAroundTimeDeptProcessing
-            {
-                TurnAroundTimeSessionId = activeSession.Id,
-                Department = submitRequest.StepsWorkflow.FromNodeId,
-                AcceptDate = acceptDate,
-                CompleteDate = completeDate,
-                ProcessingDays = processingDays
-            };
-            // Un comment
-            await _turnAroundTimeDeptProcessingRepository.InsertData(deptProcessing);
-        //Un comment
-        //await _quotationRepository.UpdateData(quotation, JsonConvert.SerializeObject(quotation), quotation?.Id, "Id");
-        var userInfo = await ControllerHelper.FetchUserRoles(_httpContextAccessor,configuration, DOMAIN_NAME);
+        await _quotationRepository.UpdateData(quotation, JsonConvert.SerializeObject(quotation), quotation?.Id, "Id");
+        var userInfo = await ControllerHelper.FetchUserRoles(_httpContextAccessor, configuration, DOMAIN_NAME);
         string logQuery = $@"INSERT INTO QuotationCommentLog (QuotationId
 ,DeptCode,CommentOrder,CommentBy,CommentTime,CommentText,SourceSystem)
             VALUES ({quotation.Id},'{submitRequest.StepsWorkflow.FromNodeId}'
@@ -221,7 +158,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             "PM" => pICAttributes.PM,
             _ => null
         };
-        ControllerHelper.SignalRResponse(_hubContext, "ItemSubmitted",new { type = "Quotation"}, ControllerUtil.GetCurrentContextUser(_httpContextAccessor,configuration),DOMAIN_NAME);
+        ControllerHelper.SignalRResponse(_hubContext, "ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         Employee employee = new Employee();
         flowUser = await _usersRepository.GetSingleObject(s => s.username == accountName);
         employee = await _employeeRepository.GetSingleObject(s => s.UsersId == flowUser.Id);
@@ -234,14 +171,13 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                 flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
             MailQueue mailQueue = new MailQueue();
             mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
-            //Un comment
-            //if (mailQueue != null) await _mailQueueRepository.InsertData(mailQueue);
+            if (mailQueue != null) await _mailQueueRepository.InsertData(mailQueue);
         }
         return Ok();
     }
 
 
-    public async Task<IActionResult> ReturnToStep([FromBody] SubmitRequest submitRequest)
+    public async Task<IActionResult> QuotationReturnToStep([FromBody] SubmitRequest submitRequest)
     {
 
         if (string.IsNullOrEmpty(submitRequest.StepsWorkflow.FromNodeId) || string.IsNullOrEmpty(submitRequest.StepsWorkflow.ToNodeId)) return StatusCode(500, "Submit problem, please contact IT Admin!!!!");
@@ -282,59 +218,8 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         }
         quotation.TurnAroundTimeAttributes = JsonConvert.SerializeObject(result);
 
-        TurnAroundTimeSession activeSession = new TurnAroundTimeSession(); 
+        await TATLog(quotation, tatObject, submitRequest.StepsWorkflow.FromNodeId);
 
-        if (activeSession == null)
-        {
-            // Đếm số phiên đã có để tính SessionNo tiếp theo
-            var allSessions = await _turnAroundTimeSessionRepository
-                .GetListObject(s => s.RecordGuid == quotation.Guid);
-
-            int nextSessionNo = (allSessions?.Count ?? 0) + 1;
-
-            activeSession = new TurnAroundTimeSession
-            {
-                SessionNo = nextSessionNo,
-                SessionTypeId = quotation.RequestTypeId,   // truyền từ client: New=1 / Renew=2 / Amend=3
-                SessionStartDate = DateTime.Now,
-                SessionEndDate = null,
-                TotalDays = 0,
-                RecordGuid = quotation.Guid
-            };
-            // Un comment
-             await _turnAroundTimeSessionRepository.InsertData(activeSession);
-            // Sau insert, activeSession.Id đã được gán bởi EF/repository
-        }
-
-        // Bước 2 — Tìm hoặc tạo DeptProcessing cho phòng ban đang submit
-        TurnAroundTimeDeptProcessing deptProcessing = new TurnAroundTimeDeptProcessing();
-
-        DateTime acceptDate = tatObject.AcceptDate ?? DateTime.Now;
-        DateTime completeDate = tatObject.CompleteDate ?? DateTime.Now;
-        int processingDays = (completeDate.Date - acceptDate.Date).Days;  // đơn vị ngày
-
-        if (deptProcessing == null)
-        {
-            // Chưa có → tạo mới
-            deptProcessing = new TurnAroundTimeDeptProcessing
-            {
-                TurnAroundTimeSessionId = activeSession.Id,
-                Department = submitRequest.StepsWorkflow.FromNodeId,
-                AcceptDate = acceptDate,
-                CompleteDate = completeDate,
-                ProcessingDays = processingDays
-            };
-            // Un comment
-             await _turnAroundTimeDeptProcessingRepository.InsertData(deptProcessing);
-        }
-        //else
-        //{
-        //    // Đã có (trường hợp Return rồi Submit lại) → cập nhật CompleteDate
-        //    deptProcessing.CompleteDate = completeDate;
-        //    deptProcessing.ProcessingDays = processingDays;
-        //    // Un comment
-        //    // await _turnAroundTimeDeptProcessingRepository.UpdateData(deptProcessing, ...);
-        //}
         await _quotationRepository.UpdateData(quotation, JsonConvert.SerializeObject(quotation), quotation?.Id, "Id");
         var userInfo = await ControllerHelper.FetchUserRoles(_httpContextAccessor, configuration, DOMAIN_NAME);
         string logQuery = $@"INSERT INTO QuotationCommentLog (QuotationId
@@ -395,6 +280,68 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         }
         return Ok();
     }
-  
+    public async Task TATLog([FromBody]Quotation quotation, [FromQuery] TurnAroundItem tatObject, string department)
+    {
+         TurnAroundTimeSession activeSession = new TurnAroundTimeSession();
+            activeSession = await _turnAroundTimeSessionRepository
+            .GetSingleObject(s => s.RecordGuid == quotation.Guid);
+
+
+                if (activeSession == null)
+                {
+                    // Đếm số phiên đã có để tính SessionNo tiếp theo
+                    var allSessions = await _turnAroundTimeSessionRepository
+                        .GetListObject(s => s.RecordGuid == quotation.Guid);
+
+            int nextSessionNo = (allSessions?.Count ?? 0) + 1;
+
+            activeSession = new TurnAroundTimeSession
+                    {
+                        SessionNo = nextSessionNo,
+                        SessionTypeId = quotation.RequestTypeId,   // truyền từ client: New=1 / Renew=2 / Amend=3
+                        SessionStartDate = tatObject.AcceptDate,
+                        SessionEndDate = tatObject.CompleteDate,
+                        TotalDays = 0,
+                        RecordGuid = quotation.Guid
+        };
+        await _turnAroundTimeSessionRepository.InsertData(activeSession);
+                    // Sau insert, activeSession.Id đã được gán bởi EF/repository
+                }
+                else
+        {
+            // Đếm số phiên đã có để tính SessionNo tiếp theo
+            var allSessions = await _turnAroundTimeSessionRepository
+                .GetListObject(s => s.RecordGuid == quotation.Guid);
+
+
+            activeSession.SessionNo = activeSession.SessionNo;
+            activeSession.SessionTypeId = quotation.RequestTypeId;   // truyền từ client: New=1 / Renew=2 / Amend=3
+            activeSession.SessionStartDate = activeSession.SessionStartDate;
+            activeSession.SessionEndDate = tatObject.CompleteDate;
+            activeSession.TotalDays = 0;
+            activeSession.RecordGuid = quotation.Guid;
+            await _turnAroundTimeSessionRepository.UpdateData(activeSession, JsonConvert.SerializeObject(activeSession), activeSession.Id, "Id");
+            // Sau insert, activeSession.Id đã được gán bởi EF/repository
+        }
+
+        // Bước 2 — Tìm hoặc tạo DeptProcessing cho phòng ban đang submit
+        TurnAroundTimeDeptProcessing deptProcessing = new TurnAroundTimeDeptProcessing();
+
+        DateTime acceptDate = tatObject.AcceptDate ?? DateTime.Now;
+        DateTime completeDate = tatObject.CompleteDate ?? DateTime.Now;
+        int processingDays = (completeDate.Date - acceptDate.Date).Days;  // đơn vị ngày
+
+        // Chưa có → tạo mới
+        deptProcessing = new TurnAroundTimeDeptProcessing
+        {
+            TurnAroundTimeSessionId = activeSession.Id,
+            Department = department,
+            AcceptDate = acceptDate,
+            CompleteDate = completeDate,
+            ProcessingDays = processingDays
+        };
+        await _turnAroundTimeDeptProcessingRepository.InsertData(deptProcessing);
+
+        }
 }
 

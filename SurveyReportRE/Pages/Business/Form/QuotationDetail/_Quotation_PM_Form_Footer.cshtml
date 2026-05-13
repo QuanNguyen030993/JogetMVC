@@ -1,17 +1,18 @@
-﻿@{
+﻿@using JogetMVC.Model
+@{
     string dept = "PM";
-
+    long quotationId = Convert.ToInt64(ViewData["Id"]);
 }
 
 
-<div class="actionBarDept" id="actionBarDept_@dept">
+<div class="actionBarDept" id="@QTViewIdHelper.ActionBarDept(dept)">
     <div class="actionLeft">
-        <span class="dept-title">Remarks</span> <div id="qt-remarkBox_@dept" class="htmleditor"></div>
+        <span class="dept-title">Remarks</span> <div id="@QTViewIdHelper.RemarkBox(dept, quotationId)" class="htmleditor"></div>
     </div>
     <div class="actionRight">
-        <div id="qt-btnSave_@dept"></div>
-        <div id="qt-btnReturnBranch_@dept"></div>
-        <div id="qt-btnSubmitBranch_@dept"></div>
+        <div id="@QTViewIdHelper.BtnSave(dept, quotationId)"></div>
+        <div id="@QTViewIdHelper.BtnReturnBranch(dept, quotationId)"></div>
+        <div id="@QTViewIdHelper.BtnSubmitBranch(dept, quotationId)"></div>
     </div>
 </div>
 
@@ -23,9 +24,9 @@
      var dept = "@dept";
              var pageLayout = window.QuotationPage;
        var stateLayout = pageLayout.state;
-     $("#qt-btnSave_@dept").dxButton({ text: "Save", icon: "save", type: "default", onClick:
+    $("#@QTViewIdHelper.BtnSave(dept, quotationId)").dxButton({ text: "Save", icon: "save", type: "default", onClick:
          function (e) {
-               var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
+               var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
                var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
                    shadingColor: "rgba(0,0,0,0.4)",
                    visible: false,

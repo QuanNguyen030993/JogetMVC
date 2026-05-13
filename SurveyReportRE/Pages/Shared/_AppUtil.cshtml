@@ -2049,7 +2049,8 @@ function scrollToDept(module, dept) {
     }
 
 
-    function submitNextStep(dept, _nextStep, findRoute, formItems) {
+    function submitNextStep(moduleName, _nextStep, findRoute, formItems) {
+        debugger
         // var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
         var sendData = new Object();
         sendData.InstanceWorkflow = convertKeysToUpperFirstChar(_nextStep.instanceWorkflow);
@@ -2064,7 +2065,11 @@ function scrollToDept(module, dept) {
             formItems.hasResAttachment = window.QuotationPage.state.hasResAttachment;
         }
         if (evaluateConditionRule(condition, formItems)) {
-            ajaxPost('/api/InstanceWorkflow/SubmitNextStep', sendData, {
+            var flowName = "";
+            if (moduleName === "qt") flowName = "Quotation";
+            if (moduleName === "pi") flowName = "PolicyIssuance";
+
+                    ajaxPost(`/api/InstanceWorkflow/${flowName}SubmitNextStep`, sendData, {
                 onSuccess: function (response) {
                     appNotifySuccess(`Submitted to ${findRoute.toNodeId}`, false);
                 },
@@ -2079,7 +2084,7 @@ function scrollToDept(module, dept) {
 
 
     }
-    function returnToStep(dept, _nextStep, findRoute, formItems) {
+        function returnToStep(moduleName, _nextStep, findRoute, formItems) {
         // var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
         var sendData = new Object();
         sendData.InstanceWorkflow = convertKeysToUpperFirstChar(_nextStep.instanceWorkflow);
@@ -2094,7 +2099,10 @@ function scrollToDept(module, dept) {
             formItems.hasResAttachment = window.QuotationPage.state.hasResAttachment;
         }
         if (evaluateConditionRule(condition, formItems)) {
-            ajaxPost('/api/InstanceWorkflow/ReturnToStep', sendData, {
+                 var flowName = "";
+                if (moduleName === "qt") flowName = "Quotation";
+                if (moduleName === "pi") flowName = "PolicyIssuance";
+                ajaxPost(`/api/InstanceWorkflow/${flowName}ReturnToStep`, sendData, {
                 onSuccess: function (response) {
                     appNotifySuccess(`Submitted to ${findRoute.toNodeId}`, false);
                 },

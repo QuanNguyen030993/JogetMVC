@@ -151,25 +151,25 @@ public class Quotation : BaseModel
     public decimal? ExchangeRateTotalSumIns { get; set; }  // c_excRateTotalSumIns
     public decimal? ExchangeRateTotalSumInsVnd { get; set; }// c_excRateTotalSumInsVND
 
-    // =========================================================
-    // Ý 6 — Terms/Conditions/Deductible/Claim basis/Jurisdiction
-    // - Eng/Viet follow logic Ý 2 (multi-language JSON)
-    // =========================================================
-    // Default display (prefer VI -> EN -> any)
-    public string? TermsConditionsText { get; set; } = "";           // from c_termsConViet/c_termsConEng/c_termsCon
-    public string? ClaimSettlementBasisText { get; set; } = "";      // from c_claimSetBasisViet/c_claimSetBasisEng
-    public string? JurisdictionLawText { get; set; } = "";           // from c_lawJurisViet/c_lawJurisEng
-    public string? DutyOfDisclosureText { get; set; } = "";          // from c_dutyDisViet/c_dutyDisEng
+    //// =========================================================
+    //// Ý 6 — Terms/Conditions/Deductible/Claim basis/Jurisdiction
+    //// - Eng/Viet follow logic Ý 2 (multi-language JSON)
+    //// =========================================================
+    //// Default display (prefer VI -> EN -> any)
+    //public string? TermsConditionsText { get; set; } = "";           // from c_termsConViet/c_termsConEng/c_termsCon
+    //public string? ClaimSettlementBasisText { get; set; } = "";      // from c_claimSetBasisViet/c_claimSetBasisEng
+    //public string? JurisdictionLawText { get; set; } = "";           // from c_lawJurisViet/c_lawJurisEng
+    //public string? DutyOfDisclosureText { get; set; } = "";          // from c_dutyDisViet/c_dutyDisEng
 
-    // Multi-language payload for terms group
-    public string? TermsMultiLangJson { get; set; } = "";            // JSON (vi/en/..)
+    //// Multi-language payload for terms group
+    //public string? TermsMultiLangJson { get; set; } = "";            // JSON (vi/en/..)
 
-    // Non-language fields
-    public string? ClauseName { get; set; } = "";                    // c_nameClause
-    public string? SpecialAppliedSpec { get; set; } = "";            // c_specApplied
-    public string? Deductible { get; set; } = "";                    // c_deductible
-    public string? DeductibleFire { get; set; } = "";                // c_deductibleFire
-    public string? LimitOfLiability { get; set; } = "";              // c_limitLia
+    //// Non-language fields
+    //public string? ClauseName { get; set; } = "";                    // c_nameClause
+    //public string? SpecialAppliedSpec { get; set; } = "";            // c_specApplied
+    //public string? Deductible { get; set; } = "";                    // c_deductible
+    //public string? DeductibleFire { get; set; } = "";                // c_deductibleFire
+    //public string? LimitOfLiability { get; set; } = "";              // c_limitLia
 
    
 

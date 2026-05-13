@@ -1,32 +1,33 @@
-﻿ @{
+﻿@using JogetMVC.Model
+ @{
     string dept = "FO";  
-
+    long quotationId = Convert.ToInt64(ViewData["Id"]);
 }
 
 
 <div class="actionBarDept" id="actionBarDept_@dept">
     <div class="actionLeft">
-        <span class="dept-title">Remarks</span> <div id="pi-remarkBox_@dept" class="htmleditor"></div>
+        <span class="dept-title">Remarks</span> <div id="@PIViewIdHelper.RemarkBox(dept,quotationId)" class="htmleditor"></div>
     </div>
     <div class="actionRight">
-        <div id="pi-btnSave_@dept"></div>
-        <div id="pi-btnReturnBranch_@dept"></div>
-        <div id="pi-btnSubmitBranch_@dept"></div>
+        <div id="@PIViewIdHelper.BtnSave(dept,quotationId)"></div>
+        <div id="@PIViewIdHelper.BtnReturnBranch(dept,quotationId)"></div>
+        <div id="@PIViewIdHelper.BtnSubmitBranch(dept,quotationId)"></div>
     </div>
 </div>
 
 <script>
-   if (tinymce.get(`pi-remarkBox_@dept`))
-      tinymce.get(`pi-remarkBox_@dept`).remove();
+   // if (tinymce.get(`pi-remarkBox_@dept`))
+   //    tinymce.get(`pi-remarkBox_@dept`).remove();
       // TinyMCEElementMaker(`pi-remarkBox_@dept`);
     setTimeout( () => {
-    var formItems = $("#pi-formFO").dxForm("instance")?.option("formData") || {};
+    // var formItems = $("#pi-formFO").dxForm("instance")?.option("formData") || {};
     var dept = "@dept";
          var pageLayout = window.PolicyIssuancePage;
-        var stateLayout = pageLayout.state;             
-        $("#pi-btnSave_@dept").dxButton({ text: "Save", icon: "save", type: "default", onClick:
+        var stateLayout = pageLayout.state;
+         $("#@PIViewIdHelper.BtnSave(dept, quotationId)").dxButton({ text: "Save", icon: "save", type: "default", onClick:
         function (e) {
-              var formItems = $(`#pi-form${dept}`).dxForm("instance")?.option("formData") || {};
+               var formItems = $(`#@PIViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
               
               var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
                   shadingColor: "rgba(0,0,0,0.4)",

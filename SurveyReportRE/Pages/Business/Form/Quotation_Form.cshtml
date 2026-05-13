@@ -712,7 +712,6 @@ Note:
                             // setNextStep(state.nextStep);
                             $.each(qtDeptModuleCode, function (itemIndex, item) {
                                     setTimeout(() => {
-                                        debugger
                                         var findRoute = state.nextStep.flowSteps.find(f => !f.actionCode.includes("BACK_") && f.fromNodeId == item && f.fNodeId == state.nextStep.currentStep);
                                         var findRouteReturn = state.nextStep.flowSteps.find(f => f.actionCode.includes("BACK_") && f.fromNodeId == item && f.fNodeId == state.nextStep.currentStep);
                                         var returnButtonId = window.QuotationIdManager.btnReturnBranch(item,@ViewData["Id"]);
@@ -725,7 +724,7 @@ Note:
                                                     var content = tinymce.get(`${remarkBoxId}`).getContent();
                                                     var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                                                     formItems.comment = content;
-                                                    returnToStep(`${item}`, state.nextStep, findRouteReturn, formItems);
+                                                    returnToStep(`${formModuleKeyQt}`, state.nextStep, findRouteReturn, formItems);
                                                 }
                                         });
                                           $(`#${submitButtonId}`).dxButton({
@@ -734,7 +733,7 @@ Note:
                                                     var content = tinymce.get(`${remarkBoxId}`).getContent();
                                                     var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                                                     formItems.comment = content;
-                                                    submitNextStep(`${item}`, state.nextStep, findRoute, formItems);
+                                                    submitNextStep(`${formModuleKeyQt}`, state.nextStep, findRoute, formItems);
                                                 }
                                         });
                                       

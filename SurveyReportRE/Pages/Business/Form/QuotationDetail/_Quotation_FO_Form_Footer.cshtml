@@ -24,7 +24,7 @@
 
     setTimeout( () => {
 
-    var formItems = $(`#${window.QuotationIdManager.form('@dept',@quotationId)}`).dxForm("instance")?.option("formData") || {};
+    // var formItems = $(`#${window.QuotationIdManager.form('@dept',@quotationId)}`).dxForm("instance")?.option("formData") || {};
     var encodedFolder = encodeURIComponent(`qt_FO_RES`);
     if (window.QuotationPage.state.quotes[0].resFK) // check tiep cho nay
        $.get(`/api/Document/AttachmentSummary/${window.QuotationPage.state.quotes[0].guid}/${encodedFolder}`, null

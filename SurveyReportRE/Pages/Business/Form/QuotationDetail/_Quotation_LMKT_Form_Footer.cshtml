@@ -24,9 +24,9 @@
      var dept = "@dept";
              var pageLayout = window.QuotationPage;
        var stateLayout = pageLayout.state;
-     $("#qt-btnSave_@dept").dxButton({ text: "Save", icon: "save", type: "default", onClick:
+    $("#@QTViewIdHelper.BtnSave(dept, quotationId)").dxButton({ text: "Save", icon: "save", type: "default", onClick:
          function (e) {
-               var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
+               var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
                var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
                    shadingColor: "rgba(0,0,0,0.4)",
                    visible: false,
