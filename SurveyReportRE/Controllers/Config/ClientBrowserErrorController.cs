@@ -21,14 +21,20 @@ public class ClientBrowserErrorController : BaseControllerApi<ClientBrowserError
         _httpContextAccessor = httpContextAccessor;
         _errorBrowserDetailsRepository = new  BaseRepository<ErrorBrowserDetails>(configuration, _httpContextAccessor);
     }
-
+    /// <summary>
+    /// How to use ErrorBrowserDetails
+    /// 1. js file will indicate line number in Source > js file
+    /// 2. view file will indicate line number in Source > Index file
+    /// </summary>
+    /// <param name="model"></param>
+    /// <returns></returns>
     [HttpPost]
     public async Task<IActionResult> LogClientError([FromBody] ClientBrowserError model)
     {
         try
         {
             //model.ErrorDetails = JsonConvert.SerializeObject(model.ErrorBrowserDetails);
-            await _BaseRepository.InsertData(model);
+           
 
             if (model?.ErrorBrowserDetails != null )
             {
@@ -36,8 +42,12 @@ public class ClientBrowserErrorController : BaseControllerApi<ClientBrowserError
                     if (model?.ErrorBrowserDetails?.BreadcrumbTrails.Count > 0)
                     model.ErrorBrowserDetails.BreadcrumbTrail = JsonConvert.SerializeObject(model?.ErrorBrowserDetails?.BreadcrumbTrails);
             }
-            if (model?.ErrorBrowserDetails?.FileName != null)
+            if (model?.ErrorBrowserDetails?.FileName != null &&
+                !(string.IsNullOrEmpty(model?.ErrorBrowserDetails?.ResponseText)))
+            {
             await _errorBrowserDetailsRepository.InsertData(model?.ErrorBrowserDetails ?? new ErrorBrowserDetails());
+                await _BaseRepository.InsertData(model);
+            }
 
             return Ok();
         }

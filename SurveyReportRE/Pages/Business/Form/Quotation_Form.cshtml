@@ -718,20 +718,24 @@ Note:
                                         var submitButtonId = window.QuotationIdManager.btnSubmitBranch(item,@ViewData["Id"]);
                                         var remarkBoxId = window.QuotationIdManager.remarkBox(item,@ViewData["Id"]);
                                         var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
+                                        var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                                         var tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
                                          $(`#${returnButtonId}`).dxButton({
+                                             disabled: tatObject[item].AcceptDate ? false : true,
                                             text: findRouteReturn ? findRouteReturn.displayStatus : "", icon: "check", type: "info", onClick:
                                                 function (e) {
                                                     var content = tinymce.get(`${remarkBoxId}`).getContent();
-                                                    var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                                                    formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                                                     formItems.comment = content;
                                                     returnToStep(`${formModuleKeyQt}`, state.nextStep, findRouteReturn, formItems);
                                                 }
                                         });
                                           $(`#${submitButtonId}`).dxButton({
+                                               disabled: tatObject[item].AcceptDate ? false : true,
                                             text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
                                                 function (e) {
                                                     var content = tinymce.get(`${remarkBoxId}`).getContent();
-                                                    var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                                                    formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                                                     formItems.comment = content;
                                                     submitNextStep(`${formModuleKeyQt}`, state.nextStep, findRoute, formItems);
                                                 }
@@ -1336,7 +1340,7 @@ Note:
             applySectionFocusHighlight();
             updateHints();
             updateSectionUpdatedTime(q);
-            initDepartmentAssignees(formModuleKeyQt,deptData, firstRender ? null : 0);
+            initDepartmentAssignees(formModuleKeyQt,deptData, firstRender ? null : 2000);
             animateOverviewSections(formModuleKeyQt);
             scrollToDept(formModuleKeyQt, { id: `${state.focusDept}`, keyId: "@ViewData["Id"]" } );
             TinyMCEElementMaker(`.htmleditor`);

@@ -9,15 +9,19 @@ public class FileProcessingHub : Hub
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IConfiguration _configuration;
     private readonly IBaseRepository<UsersSession> _userSessionRepository;
+    public static IHubContext<FileProcessingHub> _hubContext;
+
 
     public FileProcessingHub(
         IHttpContextAccessor httpContextAccessor,
         IConfiguration configuration,
-        IBaseRepository<UsersSession> userSessionRepository)
+        IBaseRepository<UsersSession> userSessionRepository,
+        IHubContext<FileProcessingHub> hubContext)
     {
         _httpContextAccessor = httpContextAccessor;
         _configuration = configuration;
         _userSessionRepository = userSessionRepository;
+        _hubContext = hubContext;
     }
     public override async Task OnDisconnectedAsync(Exception? exception)
     {

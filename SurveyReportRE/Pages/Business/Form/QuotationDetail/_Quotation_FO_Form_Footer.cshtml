@@ -33,9 +33,9 @@
             window.QuotationPage.state.formFO.dxForm("instance").updateData("hasResAttachment", res.hasAttachment);
             window.QuotationPage.state.hasResAttachment = res.hasAttachment;
             if (res.hasAttachment)
-            $("#btnToggleResForm").addClass("hasResAttachment");
+            $("#@QTViewIdHelper.BtnToggleResForm(dept, quotationId)").addClass("hasResAttachment");
             else
-            $("#btnToggleResForm").removeClass("hasResAttachment");
+            $("#@QTViewIdHelper.BtnToggleResForm(dept, quotationId)").removeClass("hasResAttachment");
        });
     }, 200);
     var dept = "@dept";

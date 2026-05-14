@@ -32,6 +32,8 @@ using System.Dynamic;
 using ERPCore.Models;
 using Document = ERPCore.Models.Migration.Business.Data.Document;
 using ERPCore.Models.Migration.Business.Social;
+using AngleSharp.Html;
+using ERPCore.Pages;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -222,7 +224,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         JsonConvert.PopulateObject(JsonConvert.SerializeObject(quotationData.QuotationData.Quotation), quotation);
         quotation.QuotationCode = ControllerUtil.GenerateNumberSeq(tableConfig, _formatCodeNoRepository, nameof(Quotation));
         quotation.ResId = res.Id;
-        quotation = await _BaseRepository.InsertData(quotation);
+       
 
 
         if (files != null)
@@ -241,10 +243,16 @@ public class QuotationController : BaseControllerApi<Quotation>
         {
             StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.StepNo == "1" && s.FromNodeId == quotationData.QuotationData.StartingDept);
             InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
-            instanceWorkflow.RecordGuid = quotation.Guid;
             instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
             //instanceWorkflow.CurrentStep = "2";
-            if (stepsWorkflow == null) return StatusCode(500, "Workflow created failed");
+            if (stepsWorkflow == null) return StatusCode(500, new
+            {
+                message = "Workflow not build or missing from system",
+                detail = "Please contact admin!"
+            });
+            quotation = await _BaseRepository.InsertData(quotation);
+            instanceWorkflow.RecordGuid = quotation.Guid;
+
             instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
             instanceWorkflow.CurrentStepId = new Guid();
             instanceWorkflow.IsCancelled = false;
@@ -259,6 +267,9 @@ public class QuotationController : BaseControllerApi<Quotation>
             submitRequest.Comment = $"{quotation.QuotationCode} created!";
             submitRequest.InstanceWorkflow = instanceWorkflow;
 
+
+           
+            
             await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
 
         }
@@ -397,8 +408,8 @@ public class QuotationController : BaseControllerApi<Quotation>
         return Ok(null);
     }
 
-    [HttpGet("{id}/{toDept}")]
-    public async Task<IActionResult> AssignTask(long id, string toDept)
+    [HttpGet("{id}/{toDept}/{loginUser}")]
+    public async Task<IActionResult> AssignTask(long id, string toDept, string loginUser)
     {
         MailTemplate mailTemplate = new MailTemplate();
         mailTemplate = await _mailTemplateRepository.GetSingleObject(s => s.TemplateName == "Assign Mail");
@@ -421,14 +432,36 @@ public class QuotationController : BaseControllerApi<Quotation>
         employee = await _employeeRepository.GetSingleObject(s => s.UsersId == flowUser.Id);
         try
         {
-            DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
-            Dictionary<string, object> flowDictionaryData = new Dictionary<string, object>();
-            if (query.Rows.Count > 0)
+            if (mailTemplate != null)
+            {
+                DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
+                Dictionary<string, object> flowDictionaryData = new Dictionary<string, object>();
+                if (query.Rows.Count > 0)
 
-                flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
-            MailQueue mailQueue = new MailQueue();
-            mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
-            await _mailQueueRepository.InsertData(mailQueue);
+                    flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
+                MailQueue mailQueue = new MailQueue();
+                mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
+                await _mailQueueRepository.InsertData(mailQueue);
+
+            }
+
+
+            dynamic transferObject = new
+            {
+                DOMAIN_NAME = DOMAIN_NAME,
+                Title = "Assigning Task",
+                Subject = $"You have been assigned from {loginUser}",
+                Resource = "Assign from ",
+                Guid = quotation.Guid,
+                ReceivedBy = accountName,
+                Id = quotation.Id,
+                Code = quotation.QuotationCode 
+            };
+
+            Notification notification = await ControllerUtil.Notify(transferObject);
+            await _notificationRepository.InsertData(notification);
+
+
             return Ok();
         } 
         catch (Exception exception)

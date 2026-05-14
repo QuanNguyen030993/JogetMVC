@@ -108,7 +108,6 @@ namespace JogetMVC.Model
 
         // Section-specific elements
         public static string AssigneeBox(string dept, long quotationId) => GenerateId("AssigneeBox", dept, quotationId);
-        public static string BtnToggleResForm => "btnToggleResForm";
    }
 
     public static class QTViewIdHelper
@@ -199,7 +198,8 @@ namespace JogetMVC.Model
 
         // Section-specific elements (from QuotationDetail partials)
         public static string AssigneeBox(string department, long quotationId) => $"{Prefix}-AssigneeBox_{department}_{quotationId}";
-        public static string BtnToggleResForm => "btnToggleResForm";
+
+        public static string BtnToggleResForm(string department, long quotationId) => $"{Prefix}-btnToggleResForm_{department}_{quotationId}";
         public static string StickPanel(string department, long quotationId) => GenerateId("stickPanel", department, quotationId);
 
         /// <summary>
@@ -642,8 +642,7 @@ namespace JogetMVC.Model
         public static string BtnPreview
             => GenerateId("btnPreview");
 
-        public static string BtnToggleResForm
-            => GenerateId("btnToggleResForm");
+        public static string BtnToggleResForm(string department, long quotationId) => $"{Prefix}-btnToggleResForm_{department}_{quotationId}";
 
         #endregion
 

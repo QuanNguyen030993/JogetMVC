@@ -40,6 +40,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     private readonly IBaseRepository<TurnAroundTimeConfig> _turnAroundTimeConfigRepository;
     private readonly IBaseRepository<TurnAroundTimeDeptProcessing> _turnAroundTimeDeptProcessingRepository;
     private readonly IBaseRepository<TurnAroundTimeSession> _turnAroundTimeSessionRepository;
+    private readonly IBaseRepository<Notification> _notificationRepository;
     private readonly IHubContext<FileProcessingHub> _hubContext;
     private string DOMAIN_NAME = "";
     private MailConfig _emailSettings;
@@ -65,6 +66,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         _turnAroundTimeConfigRepository = new BaseRepository<TurnAroundTimeConfig>(configuration, _httpContextAccessor);
         _turnAroundTimeDeptProcessingRepository = new BaseRepository<TurnAroundTimeDeptProcessing>(configuration, _httpContextAccessor);
         _turnAroundTimeSessionRepository = new BaseRepository<TurnAroundTimeSession>(configuration, _httpContextAccessor);
+        _notificationRepository = new BaseRepository<Notification>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
         _hubContext = hubContext;
         DOMAIN_NAME = configuration.GetSection("Domain:DCServer").Value;
@@ -173,6 +175,22 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
             if (mailQueue != null) await _mailQueueRepository.InsertData(mailQueue);
         }
+
+        dynamic transferObject = new
+        {
+            DOMAIN_NAME = DOMAIN_NAME,
+            Title = "Assigning Task",
+            Subject = $"You have been submitted from {employee.FullName}",
+            Resource = "Assign from ",
+            Guid = quotation.Guid,
+            ReceivedBy = accountName,
+            Id = quotation.Id,
+            Code = quotation.QuotationCode
+        };
+
+        Notification notification = await ControllerUtil.Notify(transferObject);
+        await _notificationRepository.InsertData(notification);
+
         return Ok();
     }
 
@@ -278,6 +296,23 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
             if (mailQueue != null) await _mailQueueRepository.InsertData(mailQueue);
         }
+
+
+        dynamic transferObject = new
+        {
+            DOMAIN_NAME = DOMAIN_NAME,
+            Title = "Assigning Task",
+            Subject = $"You have been returned from {employee.FullName}",
+            Resource = "Assign from ",
+            Guid = quotation.Guid,
+            ReceivedBy = accountName,
+            Id = quotation.Id,
+            Code = quotation.QuotationCode
+        };
+
+        Notification notification = await ControllerUtil.Notify(transferObject);
+        await _notificationRepository.InsertData(notification);
+
         return Ok();
     }
     public async Task TATLog([FromBody]Quotation quotation, [FromQuery] TurnAroundItem tatObject, string department)

@@ -16,6 +16,10 @@ using Microsoft.Extensions.Options;
 using ERPCore.Models;
 using ERPCore.Models.Base;
 using Microsoft.AspNetCore.Mvc;
+using iText.StyledXmlParser.Node;
+using Microsoft.AspNetCore.SignalR;
+using RESurveyTool.Models.Models.Parsing;
+using ERPCore.Models.Migration.Business.Social;
 
 namespace ERPCore.ControllerUtil
 {
@@ -70,8 +74,47 @@ namespace ERPCore.ControllerUtil
                 }
             }else
             {
-               
             }
+        }
+
+
+        public static async Task<Notification> Notify(dynamic transferObject
+            )
+        {
+            string DOMAIN_NAME = transferObject.DOMAIN_NAME;
+            NotificationRequest notification = new NotificationRequest();
+            Notification Notification = new Notification();
+            Notification.Title = transferObject.Title; 
+            Notification.Message = transferObject.Subject;
+            Notification.IsRead = false;
+            Notification.Url = $"/Business/Form/{nameof(Quotation)}_Form/{transferObject.Id}";
+            Notification.Resource = $"{transferObject.Resource}";
+            Notification.System = "WM";
+            Notification.RecordGuid = transferObject.Guid;
+
+            Notification.ReceivedBy = transferObject.ReceivedBy;
+            notification.Notification = Notification;
+            notification.connectionId = transferObject.ReceivedBy;
+            notification.tabPublicUrl = new
+            {
+                url = $"/Business/Form/{nameof(Quotation)}_Form/{transferObject.Id}",
+                caption = $"form_{nameof(Quotation)}_Form_{transferObject.Id}",
+                name = $"{nameof(Quotation)} {transferObject.Code}",
+                data = ""
+            };
+            IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
+
+            OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(DOMAIN_NAME, "") == transferObject.ReceivedBy);
+            if (onlineUser?.ConnectionId != null)
+            {
+                await FileProcessingHub._hubContext.Clients.Client(onlineUser?.ConnectionId).SendAsync("NotificationReceive",
+                          new
+                          {
+                              title = notification?.Notification?.Title ?? "",
+                              message = notification?.Notification?.Message ?? ""
+                          });
+            }
+            return Notification;
         }
         public static async Task<IActionResult> LogAction(IBaseRepository<QuotationCommentLog> _quotationCommentLogRepository
             , IHttpContextAccessor httpContextAccessor

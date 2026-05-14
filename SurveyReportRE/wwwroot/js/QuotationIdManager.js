@@ -76,6 +76,9 @@ window.QuotationIdManager = {
     assigneeBox: function (department, quotationId) {
         return `${this.prefix}-AssigneeBox_${department}_${quotationId}`;
     },
+    resForm: function (department, resId) {
+        return `${this.prefix}-form_${department}_${resId}`;
+    },
     btnToggleResForm: function () { return 'btnToggleResForm'; },
     stickPanel: function (department, quotationId) { return this.generateId('stickPanel', department, quotationId); },
 

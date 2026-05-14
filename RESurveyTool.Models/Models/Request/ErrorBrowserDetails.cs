@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ERPCore.Models.Migration.Base;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ERPCore.Models.Request
 {
-    public class ErrorBrowserDetails
+    public class ErrorBrowserDetails : BaseModel
     {
         public int? Status { get; set; }
         public string? ResponseText { get; set; } = "";

@@ -4989,41 +4989,6 @@ function updateNotification(count) {
     }
 }
 
-// ====== reload + refresh UI ======
-async function reloadNotifications(take = 30) {
-    const qs = $.param({
-        filter: JSON.stringify(["receivedBy", "=", _loginUser]),
-        paging: 1,
-        skip: 0,
-        take: take,
-        orderBy: "CreatedDate",
-        orderDir: "desc"
-    });
-    ajaxGet("/api/Notification/GetAll", qs)
-        .then(ids => {
-            try {
-                ids = ids.map(id => {
-                    if (id.url != "{}" && id.url != "" && id.url != undefined && id.url != null) {
-                        id.url = JSON.parse(id.url);
-                    }
-                    else {
-                        id.url = "";
-                    }
-
-                    ; return id;
-                });
-                const res = ids;
-                _notif.items = res || [];
-                refreshNotifUI();
-            } catch (e) {
-                console.error(e);
-            }
-
-
-        }).promise();
-
-}
-
 
 
 function showPopupNotification(title, body) {
@@ -5490,7 +5455,6 @@ function getScrollbarWidth() {
 
 function stretchColumnsEvenly(e, opts) {
     const grid = e.component;
-
     // chặn loop: chỉ chạy 1 lần mỗi lifecycle
     const flagKey = "_stretched_evenly";
     if (grid.__internalFlags?.[flagKey]) return;
@@ -5520,7 +5484,7 @@ function stretchColumnsEvenly(e, opts) {
 
     // trừ scrollbar nếu có vertical scroll
     const sw = getScrollbarWidth();
-    const hasVScroll = grid.getScrollable && grid.getScrollable().scrollHeight() > grid.getScrollable().clientHeight();
+    const hasVScroll = grid.getScrollable && (grid.getScrollable()?.scrollHeight() || 0) > (grid.getScrollable()?.clientHeight() || 0);
     const available = finalWidth - (hasVScroll ? sw : 0);
 
     // nếu bạn có cột fixed width muốn giữ, tính tổng width fixed trước
@@ -6393,15 +6357,25 @@ window.addEventListener('unhandledrejection', function(event) {
     sendClientErrorLog(event.reason?.message || 'Unhandled promise rejection', null, errorInfo);
 });
 
+
+$.Deferred.exceptionHook = function (error, stack) {
+    if (error.status != 200)
+    appErrorHandling('Deferred error', error);
+};
+
 // Override console.error to also log to server
 const originalConsoleError = console.error;
 console.error = function(...args) {
     // Call original
-    originalConsoleError.apply(console, args);
-    
-    // Log to server
+    //originalConsoleError.apply(console, args);
+
+    const errorInfo = {
+        //message: event.reason?.message || String(event.reason),
+        //stack: event.reason?.stack,
+        errorType: 'console_error'
+    };
     const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
-    sendClientErrorLog('Console Error: ' + message, null, { errorType: 'console_error' });
+    sendClientErrorLog('Console Error: ' + message, null, errorInfo);
 };
 
 // Track user actions for breadcrumb

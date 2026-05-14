@@ -461,10 +461,10 @@
                             processData: false,
                             contentType: false,
                             success: function (res) {
-                                console.log("Quotation created successfully", res);
+                                    DevExpress.ui.notify("Quotation created!", "success", 1200);
                             },
                             error: function (xhr) {
-                                console.error("CreateQuotation failed", xhr.responseText);
+                                               appNotifyError(`${xhr.responseJSON.detail}\n${xhr.responseJSON.message}`);
                             }
                         });
 
@@ -506,7 +506,7 @@
                         //});
 
 
-                        DevExpress.ui.notify("Quotation created!", "success", 1200);
+                        
                         popupInstance.hide();
                     },
                 },
@@ -1833,26 +1833,27 @@ function scrollToDept(module, dept) {
                 setTimeout(() => {
                         var currentPic = getDefaultPicByDept(item,  data[item]);
                             if (data[item])
-                        renderDepartmentAssigneeBox(`#${moduleKey}-AssigneeBox_${item}_${data[item].id}`, {
+                                    renderDepartmentAssigneeBox(`#${window.QuotationIdManager.assigneeBox(item, data[item].id)}`, {
                         groupName: item,
                             dataForm: data[item],
                         //value: formItems.lmktAssigneeId || null,
                         onChanged: function (itemChild, editor) {
+                            console.log(this.dataForm);
                             if (!stateLayout.isAssigneeBoxRender) return;
-                                var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
+                            var formId = window.QuotationIdManager.form(item,this.dataForm.id);
                                 var ds = $(`#${formId}`).dxForm("instance").option("dataSource");
                             var store = ds;
-                                var PICs = JSON.parse(data[item].pic);
+                                    var PICs = JSON.parse(this.dataForm.pic);
                             if (!itemChild?.accountName) return;
                             if (currentPic == itemChild?.accountName) return;
                             PICs[item] = itemChild.accountName;
                             var data = new Object();
                             data.pIC = JSON.stringify(PICs);
-                                store.update(data[item].id, data)
+                                    store.update(this.dataForm.id, data)
                                 .done(function () {
                                     DevExpress.ui.notify(`Assigned To ${itemChild.fullName}`, "success", 2000);
                                 });
-                                ajaxGet(`/api/Quotation/AssignTask/${data[item].id}/${item}`,null )
+                                    ajaxGet(`/api/Quotation/AssignTask/${this.dataForm.id}/${item}/${_loginUser}`,null )
                                 .then(list => {
 
 
@@ -1866,21 +1867,21 @@ function scrollToDept(module, dept) {
                 setTimeout(() => {
                         var currentPic = getDefaultPicByDept(item, data[item]);
                              if (data[item])
-                            renderDepartmentAssigneeBox(`#${moduleKey}-AssigneeBox_${item}_${data[item].id}`, {
+                                renderDepartmentAssigneeBox(`#${window.QuotationIdManager.assigneeBox(item, data[item].id)}`, {
                         groupName: item,
                             dataForm: data[item],
                         //value: formItems.lmktAssigneeId || null,
                         onChanged: function (itemChild, editor) {
-                                    var formId = window.PolicyIssuanceIdManager.form(item,@ViewData["Id"]);
+                                var formId = window.PolicyIssuanceIdManager.form(item,this.dataForm.id);
                                     var ds = $(`#${formId}`).dxForm("instance").option("dataSource");
                                var store = ds;
-                                var PICs = JSON.parse(data[item].pic);
+                                    var PICs = JSON.parse(this.dataForm.pic);
                             if (!itemChild?.accountName) return;
                             if (currentPic == itemChild?.accountName) return;
                             PICs[item] = itemChild.accountName;
                             var data = new Object();
                             data.pIC = JSON.stringify(PICs);
-                                store.update(data[item].id, data)
+                                    store.update(this.dataForm.id, data)
                                 .done(function () {
                                     DevExpress.ui.notify(`Assigned To ${itemChild.fullName}`, "success", 2000);
                                 });
@@ -2050,7 +2051,6 @@ function scrollToDept(module, dept) {
 
 
     function submitNextStep(moduleName, _nextStep, findRoute, formItems) {
-        debugger
         // var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
         var sendData = new Object();
         sendData.InstanceWorkflow = convertKeysToUpperFirstChar(_nextStep.instanceWorkflow);
@@ -2117,6 +2117,43 @@ function scrollToDept(module, dept) {
 
 
     }
+        // ====== reload + refresh UI ======
+    async function reloadNotifications(take = 30) {
+        const qs = $.param({
+            filter: JSON.stringify(["receivedBy", "=", _loginUser]),
+            paging: 1,
+            skip: 0,
+            take: take,
+            orderBy: "CreatedDate",
+            orderDir: "desc"
+        });
+        var de = $.Deferred();
+
+        ajaxGet("/api/Notification/GetAll", qs)
+            .then(ids => {
+                    ids = ids.map(id => {
+                        try {
+                            if (id.url && id.url !== "{}") {
+                                id.url = JSON.parse(id.url);
+                            } else {
+                                id.url = "";
+                            }
+                        } catch (e) {
+                            id.url = "";
+                            de.reject(e);
+                        }
+                        return id;
+                    });
+                    const res = ids;
+                    _notif.items = res || [];
+                    refreshNotifUI();
+                     de.resolve("Ok"); 
+                }).fail(function (xhr) {
+                     de.reject(xhr);
+                }).promise();
+
+    }
+
 
 
 </script>
