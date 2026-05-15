@@ -27,7 +27,7 @@ CREATE TABLE dbo.QuotationWorkflowHistory (
     QuotationId       BIGINT NOT NULL,
     --QuotationCode     NVARCHAR(50) NULL,          -- denormalize (optional)
 
-    StepNo            INT NULL,                       -- thứ tự nếu hệ nguồn có, hoặc bạn tự generate
+    StepNo            NVARCHAR(100) NULL,                       -- thứ tự nếu hệ nguồn có, hoặc bạn tự generate
     DeptCode          NVARCHAR(20) NOT NULL,          -- x.dept
     ActionTime        DATETIME2(0) NULL,              -- x.time
     ActionNote        NVARCHAR(500) NULL,             -- x.note

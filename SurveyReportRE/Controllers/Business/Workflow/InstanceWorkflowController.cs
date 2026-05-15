@@ -132,7 +132,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 
         string logFlowQuery = $@"INSERT INTO QuotationWorkflowHistory(QuotationId
 ,StepNo,DeptCode,ActionTime,ActionNote,FromDeptCode,ToDeptCode,ActionCode,Actor,SourceSystem)
-            VALUES ({quotation.Id},{submitRequest.InstanceWorkflow.CurrentStep}
+            VALUES ({quotation.Id},'{submitRequest.InstanceWorkflow.CurrentStep}'
 ,'{submitRequest.StepsWorkflow.FromNodeId}'
 ,'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}'
 ,'{submitRequest.StepsWorkflow.DisplayStatus}'
