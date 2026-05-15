@@ -234,7 +234,7 @@
                 success: function(result) {
                     if (result.success) {
                         appNotifyInfo(`Grid layout saved successfully (${result.updatedCount} columns updated)`);
-                        console.log('Layout configuration saved to server:', result);
+                        //console.log('Layout configuration saved to server:', result);
                     } else {
                         console.warn('Server response:', result);
                     }
@@ -266,9 +266,9 @@
                     if (result.success && result.data) {
                         this.setGridIndexVisible(result.data);
                         appNotifyInfo(`Grid layout loaded from server (${result.count} columns)`);
-                        console.log('Layout configuration loaded from server:', result.data);
+                        //console.log('Layout configuration loaded from server:', result.data);
                     } else {
-                        console.warn('No layout configuration found on server');
+                        //console.warn('No layout configuration found on server');
                     }
                 }.bind(this),
                 error: function(err) {
@@ -297,7 +297,7 @@
                 const layoutConfig = JSON.parse(savedConfig);
                 if (layoutConfig.gridIndexVisible) {
                     this.setGridIndexVisible(layoutConfig.gridIndexVisible);
-                    console.log('Layout configuration loaded from localStorage:', configKey);
+                    //console.log('Layout configuration loaded from localStorage:', configKey);
                 }
             }
         } catch (err) {
