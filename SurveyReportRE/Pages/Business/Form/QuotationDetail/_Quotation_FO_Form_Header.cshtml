@@ -9,7 +9,7 @@
     <div class="dept-form-header__assign">
         <div id="@QTViewIdHelper.AssigneeBox(dept, quotationId)"></div>
     </div>
-    <div id="@QTViewIdHelper.BtnToggleResForm"></div>
+    <div id="@QTViewIdHelper.BtnToggleResForm(dept,quotationId)"></div>
 </div>
 <div id="@QTViewIdHelper.StickPanel(dept, quotationId)">
 @* <div class="sticky-wrap wobble" data-tooltip-toggle>
@@ -33,7 +33,7 @@
 </div>
 <script>
 
-     window.QuotationPage.resButtonComponent = $("#btnToggleResForm").dxButton({
+     window.QuotationPage.resButtonComponent = $("#@QTViewIdHelper.BtnToggleResForm(dept,quotationId)").dxButton({
                     text: "Res Form",
                     icon: "file",
                     type: "normal",
@@ -50,10 +50,11 @@
             setTimeout(function () {
 
                 var item = new Object();
+                item.id = @quotationId;
                 item.editorType = "dxFileUploader";
                 item.moduleName = "qt"; item.sectionName = "FO";
-                 item.code = window.QuotationPage.state.quotes[0].quotationCode; 
-                 item.specificFolder = "RES";
+                item.code = window.QuotationPage.state.quotes[0].quotationCode; 
+                item.specificFolder = "RES";
                 createEditor(item, itemElement, $("<div>"), null);
 
                 // var item = new Object();
@@ -127,6 +128,7 @@
                             template: function (data, itemElement) {
                                 setTimeout(function () {
                                     var item = new Object();
+                                    item.id = @quotationId;
                                     item.editorType = "dxFileUploader";
                                     item.moduleName = "qt"; item.sectionName = "UwCommentAttachment";
                                     createEditor(item, itemElement, $("<div>"), null);
@@ -218,6 +220,7 @@
                             template: function (data, itemElement) {
                                 setTimeout(function () {
                                     var item = new Object();
+                                    item.id = @quotationId;
                                     item.editorType = "dxFileUploader";
                                     item.moduleName = "qt"; item.sectionName = "SurveyResultAttachment";
                                     createEditor(item, itemElement, $("<div>"), null);
@@ -260,6 +263,7 @@
                             template: function (data, itemElement) {
                                 setTimeout(function () {
                                     var item = new Object();
+                                    item.id = @quotationId;
                                     item.editorType = "dxFileUploader";
                                     item.moduleName = "qt"; item.sectionName = "RiArrangementAttachment";
                                     createEditor(item, itemElement, $("<div>"), null);
@@ -276,7 +280,7 @@
         // =========================================================
         {
             itemType: "group",
-            caption: "VIII. Others / BI",
+            caption: "VIII. Others / BI",   
             colCount: 2,
             items: [
                 { dataField: "isOthers", label: { text: "Is Others" }, editorType: "dxSwitch", editorOptions: { switchedOnText: "Yes", switchedOffText: "No" } },
@@ -312,6 +316,7 @@
                             form.formInstance.option("items", resItems);
                             form.formInstance.updateData("sectionName", "RES");
                             form.formInstance.updateData("specificFolder", `RES\\${parentFormData.quotationCode}`);
+                            form.formInstance.updateData("guid", parentFormData.guid);
 
                     });
                     popupInstance.show();

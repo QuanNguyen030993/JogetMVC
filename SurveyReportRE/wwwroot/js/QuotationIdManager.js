@@ -79,7 +79,7 @@ window.QuotationIdManager = {
     resForm: function (department, resId) {
         return `${this.prefix}-form_${department}_${resId}`;
     },
-    btnToggleResForm: function () { return 'btnToggleResForm'; },
+    btnToggleResForm: function () { return this.generateId('btnToggleResForm', department, quotationId); },
     stickPanel: function (department, quotationId) { return this.generateId('stickPanel', department, quotationId); },
 
     // Utility functions

@@ -840,6 +840,7 @@ function createEditor(item, $container, $element, editorOptions) {
             {
 
                 var items = new Object();
+                items.id = editorOptions?.id || item.id;
                 items.moduleName = editorOptions?.moduleName || item.moduleName;
                 items.sectionName = editorOptions?.sectionName || item.sectionName;
                 items.code = editorOptions?.code || item.code;
@@ -6088,7 +6089,7 @@ function formatBytes(bytes) {
 }
 
 function getCurrentEditorOptions(editorOptions) {
-    const form = $(`#${editorOptions.moduleName}-form${editorOptions.sectionName}`).dxForm("instance");
+    const form = $(`#${window.QuotationIdManager.form(editorOptions.sectionName, editorOptions.id)}`).dxForm("instance");
     if (!form) return null;
     return form.option("formData");
 }
