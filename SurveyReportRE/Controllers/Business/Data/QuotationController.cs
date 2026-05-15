@@ -781,7 +781,7 @@ public class QuotationController : BaseControllerApi<Quotation>
 
             }
         });
-
+        ControllerHelper.SignalRResponse(_hubContext, "ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         return new HttpResponseMessage(HttpStatusCode.OK);
     }
     public async Task BulkInsertQuotationAsync(List<Quotation> data)

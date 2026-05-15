@@ -968,7 +968,12 @@
                              console.error(error);
                              DevExpress.ui.notify("Send message failed", "error", 2000);
                          });
-                 }
+                 },
+                       onEnterKey: function (e) {
+                               if (e.event && e.event.ctrlKey) {
+                                       DevExpress.ui.notify("Enterkey", "success", 2000);
+                               }
+                           }
              });
          if (commentsIn.length > 0) {
              comments = commentsIn;
@@ -1208,11 +1213,6 @@
                        onValueChanged: function (e) {
                            parentForm.updateData("content", e.value);
                        },
-                       onEnterKey: function (e) {
-                           if (e.event && e.event.ctrlKey) {
-                               sendComment();
-                           }
-                       },
                        elementAttr: {
                            class: "jira-comment-editor",
                            id: `${moduleKey}-commentContent_${dept}`
@@ -1268,36 +1268,36 @@
                                        type: "default",
                                        stylingMode: "contained",
                                        icon: "far fa-paper-plane",
-                                       onClick: function () {
-                                           sendComment();
-                                       }
+                                       // onClick: function () {
+                                       //     //sendComment();
+                                       // }
                                    });
                                }
                            }
                        ]
                    });
-                   function sendComment() {
-                       const currentFormData = parentForm.option("formData") || {};
-                       const content = (currentFormData.content || "").trim();
-                       if (!content) {
-                           DevExpress.ui.notify("Please enter comment content", "warning", 2000);
-                           return;
-                       }
-                       const payload = {
-                           id: currentFormData.id,
-                           fromDepartment: currentFormData.fromDepartment,
-                           toDepartment: currentFormData.toDepartment,
-                           type: currentFormData.type,
-                           content: currentFormData.content
-                       };
-                       console.log("Send payload:", payload);
-                       // TODO: call api here
-                       DevExpress.ui.notify("Message sent", "success", 1500);
-                       parentForm.updateData("content", "");
-                       $(`#${moduleKey}-commentEditor_${dept}`)
-                           .dxTextArea("instance")
-                           .option("value", "");
-                   }
+                   // function sendComment() {
+                   //     const currentFormData = parentForm.option("formData") || {};
+                   //     const content = (currentFormData.content || "").trim();
+                   //     if (!content) {
+                   //         DevExpress.ui.notify("Please enter comment content", "warning", 2000);
+                   //         return;
+                   //     }
+                   //     const payload = {
+                   //         id: currentFormData.id,
+                   //         fromDepartment: currentFormData.fromDepartment,
+                   //         toDepartment: currentFormData.toDepartment,
+                   //         type: currentFormData.type,
+                   //         content: currentFormData.content
+                   //     };
+                   //     console.log("Send payload:", payload);
+                   //     // TODO: call api here
+                   //     DevExpress.ui.notify("Message sent", "success", 1500);
+                   //     parentForm.updateData("content", "");
+                   //     $(`#${moduleKey}-commentEditor_${dept}`)
+                   //         .dxTextArea("instance")
+                   //         .option("value", "");
+                   // }
                }
            }
        ]

@@ -21,6 +21,7 @@ using System.Data;
 using System.Net;
 using ERPCore.Models.Models.Parsing;
 using ERPCore.Models.Migration.Business.Social;
+using Microsoft.AspNetCore.SignalR;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -29,11 +30,21 @@ public class SectionCommentNoteController : BaseControllerApi<SectionCommentNote
     private readonly IBaseRepository<SectionCommentNote> _BaseRepository;
     private readonly IConfiguration configuration;
     private readonly IConfigurationSection path;
-  
+    private static string DOMAIN_NAME = "";
     public SectionCommentNoteController(IBaseRepository<SectionCommentNote> BaseRepository, IConfiguration config, IHttpContextAccessor httpContextAccessor, ILogger<SectionCommentNote> logger) : base(BaseRepository, httpContextAccessor)
     {
         configuration = config;
         _BaseRepository = BaseRepository;
-    }
 
+        DOMAIN_NAME = configuration.GetSection("Domain:DCServer").Value;
+    }
+    [HttpPost]
+    public override async Task<IActionResult> InsertData([FromForm] InsertFormCollection form)
+    {
+        var entity = new SectionCommentNote();
+        JsonConvert.PopulateObject(form.values, entity);
+        entity = await _BaseRepository.InsertData(entity);
+        ControllerHelper.SignalRResponse(FileProcessingHub._hubContext, "ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        return Ok(entity);
+    }
 }
