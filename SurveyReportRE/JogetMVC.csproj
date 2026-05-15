@@ -13,10 +13,14 @@
 		<Compile Remove="Controllers\RiskEvaluationController .cs" />
 		<Compile Remove="Controllers\SurveyResultStatusController.cs" />
 		<Compile Remove="Controllers\UWSurveyController.cs" />
+		<Compile Remove="Pages\Business\Form\PolicyIssuance_Individual_Form.cshtml.cs" />
+		<Compile Remove="Pages\Business\Form\Quotation_Individual_Form.cshtml.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <Content Remove="App.config" />
+	  <Content Remove="Pages\Business\Form\PolicyIssuance_Individual_Form.cshtml" />
+	  <Content Remove="Pages\Business\Form\Quotation_Individual_Form.cshtml" />
 	  <Content Remove="wwwroot\css\app\menu.css" />
 	  <Content Remove="wwwroot\css\app\site.less.css" />
 	</ItemGroup>
@@ -108,10 +112,6 @@
 		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 		</Content>
 		<Content Update="Pages\Business\Form\QuotationDetail\_Quotation_FO_Form_Header.cshtml">
-		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</Content>
-		<Content Update="Pages\Business\Form\PolicyIssuance_Individual_Form.cshtml">
 		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
 		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 		</Content>

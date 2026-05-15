@@ -9,6 +9,7 @@ using ERPCore.Models.Business.Migration.Config;
 using Syncfusion.Licensing;
 using TMIVHashing;
 using ERPCore.ControllerUtil;
+using Serilog.Events;
 
 //Generate once
 //string projectId = "9A19103F16F74668BE549A1E7A4F75";
@@ -37,9 +38,9 @@ var logger = new LoggerConfiguration()
                                 AutoCreateSqlTable = true
                             }
                         )
-                    //.Filter.ByIncludingOnly(logEvent =>
-                    //     logEvent.Level == LogEventLevel.Error || logEvent.Level == LogEventLevel.Warning || logEvent.Level == LogEventLevel.Information
-                    //)
+                    .Filter.ByIncludingOnly(logEvent =>
+                         logEvent.Level == LogEventLevel.Error || logEvent.Level == LogEventLevel.Warning //|| logEvent.Level == LogEventLevel.Information
+                    )
                     .CreateLogger();
 Log.Logger = logger;
 
