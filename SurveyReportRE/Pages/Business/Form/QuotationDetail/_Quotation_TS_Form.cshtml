@@ -33,6 +33,7 @@
         ,template: function (data, itemElement) {
             setTimeout(function () {
                 var item = new Object();
+                item.id = @quotationId;
                 item.editorType = "dxFileUploader";
               item.moduleName = "qt"; item.sectionName = "TS";
                 createEditor(item, itemElement, $("<div>"), null);
@@ -61,7 +62,7 @@
               var tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
               if (tatObject[`@dept`].AcceptDate)
               {
-                $(`#AC_@QTViewIdHelper.Decision(dept, quotationId)`).addClass("btn-success");
+                $(`#AC_@QTViewIdHelper.Decision(dept, quotationId)`).addClass("btn-info");
                 $(`#${itemData.id}`).dxButton("instance").option("disabled", true);
                 if (itemData.id === "RJ_@QTViewIdHelper.Decision(dept, quotationId)" ) $(`#RJ_@QTViewIdHelper.Decision(dept, quotationId)`).dxButton("instance").option("disabled", false);
               }

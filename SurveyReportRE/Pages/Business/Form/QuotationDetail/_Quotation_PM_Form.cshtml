@@ -34,6 +34,7 @@
         ,template: function (data, itemElement) {
             setTimeout(function () {
                 var item = new Object();
+                item.id = @quotationId;
                 item.editorType = "dxFileUploader";
                 item.moduleName = "qt"; item.sectionName = "PM";
                 createEditor(item, itemElement, $("<div>"), null);
