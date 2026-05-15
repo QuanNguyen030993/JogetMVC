@@ -581,8 +581,7 @@ Note:
 
         var filter = "all";
         var searchText = "";
-        let selectedId = null;
-        var selectedCodeNo = null;
+
         var commentPanelOpened = false;
         // let stageDept = null;
         var stageAccount = "";
@@ -629,7 +628,7 @@ Note:
             });
         }
     function getSelectedModel() {
-             const q = state.quotes.find(x => x.id === selectedId) || state.quotes[0];
+             const q = state.quotes.find(x => x.id === state.selectedId) || state.quotes[0];
              return q || null;
          }
 
@@ -651,12 +650,7 @@ Note:
         function syncSelectedState(q) {
             if (!q) return;
 
-            // selectedId = q.id ?? null;
-            // selectedGuid = q.guid ?? null;
-            // selectedAttachmentId = q.documentId ?? null;
-            // selectedCodeNo = q.quotationCode ?? null;
-            // stageDept = q.stageDept ?? null;
-
+        
 
 
             state.selectedId =  q.id ?? null;
@@ -690,7 +684,7 @@ Note:
                     state.pinNotes = pinnedNotes.filter(f => f.isPinned);
                 });
 
-
+                debugger
             PIC_JSON = pICs.find(f => f.quotationCode == state.selectedCodeNo)?.pIC ?? q.pIC ?? "{}";
             renderDeptCallouts(PIC_JSON);
             var map = parsePicMap(PIC_JSON);
@@ -816,7 +810,7 @@ Note:
         // Global function for SignalR to reload quotation components
         window.reloadQuotationComponents = async function() {
             // Reload the quotation list
-            await loadQuotePage(true);
+            loadQuotePage(true).then(async () => {
             // Reload the selected detail if any
             if (state.selectedId) {
                 await loadSelectedWorkflow();
@@ -828,6 +822,8 @@ Note:
             renderDeptForms();
             // Update UI hints
             updateHints();
+            });
+            // scrollToDept(formModuleKeyQt,state.quotes[0].stageDept);
         };
 
 
@@ -1135,7 +1131,7 @@ Note:
                 document.documentElement.style.setProperty("--rightdock-width", "20%");
                 $("#rightCommentSub").text(`Audit log - ${quoteNo}` || "-");
                 $("#rightCommentList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
-
+                debugger
                 // const q = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${quoteId}`;
                 const q = `OnSystem`;
                 $.ajax({
@@ -1214,7 +1210,7 @@ Note:
                     stylingMode: "contained",
                     onClick: () => {
                         openRightCommentPanel();
-                        loadReferenceFields(selectedCodeNo, selectedId);
+                        loadReferenceFields(state.selectedCodeNo, state.selectedId);
                     }
                 }).appendTo($("#headerWidgetsPanel"));
 
@@ -1224,7 +1220,7 @@ Note:
                     stylingMode: "contained",
                     onClick: () => {
                         openRightCommentPanel();
-                        loadComments(selectedCodeNo, selectedId);
+                        loadComments(state.selectedCodeNo, state.selectedId);
                     }
                 }).appendTo($("#headerWidgetsPanel"));
 
@@ -1247,7 +1243,7 @@ Note:
                     onClick: () => {
                         if (!commentPanelOpened) {
                             openRightCommentPanel();
-                            loadComments(selectedCodeNo, selectedId);
+                            loadComments(state.selectedCodeNo, state.selectedId);
                         } else {
                             closeRightCommentPanel();
                         }
@@ -1262,7 +1258,7 @@ Note:
                     onClick: () => {
                         if (!commentPanelOpened) {
                             openRightCommentPanel();
-                            loadReferenceFields(selectedCodeNo, selectedId);
+                            loadReferenceFields(state.selectedCodeNo, state.selectedId);
                         } else {
                             closeRightCommentPanel();
                         }
@@ -1277,7 +1273,7 @@ Note:
                     onClick: () => {
                         if (!commentPanelOpened) {
                             openRightCommentPanel();
-                            previewQuotation(selectedCodeNo, selectedId, state.selectedAttachmentId);
+                            previewQuotation(state.selectedCodeNo, state.selectedId, state.selectedAttachmentId);
                         } else {
                             closeRightCommentPanel();
                         }
@@ -1292,6 +1288,7 @@ Note:
                     type: "normal",
                     stylingMode: "contained",
                     onClick: () => {
+                        debugger
                         if (!toggleHideWorkflow) {
                             $(`#${formModuleKeyQt}-flowPanel`).empty();
                             $(`#${formModuleKeyQt}-flowHistoryPanel`).show();
@@ -1328,11 +1325,11 @@ Note:
             $(`#${window.QuotationIdManager.stageDeptPill(q.id)}`).text(`Pending at: ${state.stageDept} - ${stageAccount ?? ""}`);
             // $(`#${formModuleKeyQt}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
 
-            deptData.FO = { ...q, sectionName: "FO", code: q.quotationCode };
-            deptData.TS = { ...q, sectionName: "TS", code: q.quotationCode };
-            deptData.UW = { ...q, sectionName: "UW", code: q.quotationCode };
-            deptData.LMKT = { ...q, sectionName: "LMKT", code: q.quotationCode };
-            deptData.PM = { ...q, sectionName: "PM", code: q.quotationCode };
+            deptData.FO = { ...q,   id: q.id, sectionName: "FO", code: q.quotationCode };
+            deptData.TS = { ...q,   id: q.id, sectionName: "TS", code: q.quotationCode };
+            deptData.UW = { ...q,   id: q.id, sectionName: "UW", code: q.quotationCode };
+            deptData.LMKT = { ...q, id: q.id, sectionName: "LMKT", code: q.quotationCode };
+            deptData.PM = { ...q,   id: q.id, sectionName: "PM", code: q.quotationCode };
 
             renderDeptForms();
             resetOverviewAnimation(formModuleKeyQt);
@@ -1362,7 +1359,7 @@ Note:
             icon: "check",
             type: "success",
             onClick: function () {
-                var quotationConvert = state.quotes.find(x => x.id == selectedId);
+                var quotationConvert = state.quotes.find(x => x.id == state.selectedId);
                 if (!quotationConvert) return;
 
                 var policyIssuance = new Object();

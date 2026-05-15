@@ -1,7 +1,7 @@
 ﻿@page "{pageNum:int?}"
 @using JogetMVC.Model
 @using Newtonsoft.Json
-@model PolicyIssuance_Individual_FormModel
+@model PolicyIssuance_FormModel
 @{
     var moduleCode = "pi";
     var prefix = moduleCode;
@@ -579,11 +579,9 @@ Note:
 
         var filter = "all";
         var searchText = "";
-        let selectedId = null;
         var selectedGuid = null;
         var selectedFromGuid = null;
         let selectedAttachmentId = null;
-        var selectedCodeNo = null;
         var commentPanelOpened = false;
         let stageDept = null;
         var stageAccount = "";
@@ -632,10 +630,10 @@ Note:
         }
 
         function getSelectedModel() {
-            if (selectedId && state.quoteDetails[selectedId]) {
-                return state.quoteDetails[selectedId];
+            if (state.selectedId && state.quoteDetails[state.selectedId]) {
+                return state.quoteDetails[state.selectedId];
             }
-            const q = state.quotes.find(x => x.id === selectedId) || state.quotes[0];
+            const q = state.quotes.find(x => x.id === state.selectedId) || state.quotes[0];
             return q || null;
         }
 
@@ -677,18 +675,18 @@ Note:
         function syncSelectedState(q) {
             if (!q) return;
 
-            selectedId = q.id ?? null;
+            // selectedId = q.id ?? null;
             selectedGuid = q.guid ?? null;
             selectedAttachmentId = q.documentId ?? null;
-            selectedCodeNo = q.policyIssuanceCode ?? null;
+            // selectedCodeNo = q.policyIssuanceCode ?? null;
             stageDept = q.stageDept ?? null;
 
 
 
-            state.selectedId = selectedId;
+            state.selectedId = q.id;
             state.selectedGuid = selectedGuid;
             state.selectedAttachmentId = selectedAttachmentId;
-            state.selectedCodeNo = selectedCodeNo;
+            state.selectedCodeNo = q.policyIssuanceCode;
             state.stageDept = stageDept;
             const params = new URLSearchParams();
             params.set("refKey", state.selectedGuid);
@@ -825,7 +823,7 @@ Note:
 
         function rerenderCurrentSelectionOnly() {
             $(".pi-quoteCard").removeClass("selected");
-            $(`.pi-quoteCard[data-id="${selectedId}"]`).addClass("selected");
+            $(`.pi-quoteCard[data-id="${state.selectedId}"]`).addClass("selected");
         }
 
 
@@ -1218,7 +1216,7 @@ Note:
                     stylingMode: "contained",
                     onClick: () => {
                         openRightCommentPanel();
-                        loadReferenceFields(selectedCodeNo, selectedId);
+                        loadReferenceFields(state.selectedCodeNo, state.selectedId);
                     }
                 }).appendTo($("#headerWidgetsPanel"));
 
@@ -1228,7 +1226,7 @@ Note:
                     stylingMode: "contained",
                     onClick: () => {
                         openRightCommentPanel();
-                        loadComments(selectedCodeNo, selectedId);
+                        loadComments(state.selectedCodeNo, state.selectedId);
                     }
                 }).appendTo($("#headerWidgetsPanel"));
 
@@ -1251,7 +1249,7 @@ Note:
                     onClick: () => {
                         if (!commentPanelOpened) {
                             openRightCommentPanel();
-                            loadComments(selectedCodeNo, selectedId);
+                            loadComments(state.selectedCodeNo, state.selectedId);
                         } else {
                             closeRightCommentPanel();
                         }
@@ -1266,7 +1264,7 @@ Note:
                     onClick: () => {
                         if (!commentPanelOpened) {
                             openRightCommentPanel();
-                            loadReferenceFields(selectedCodeNo, selectedId);
+                            loadReferenceFields(state.selectedCodeNo, state.selectedId);
                         } else {
                             closeRightCommentPanel();
                         }
@@ -1281,7 +1279,7 @@ Note:
                     onClick: () => {
                         if (!commentPanelOpened) {
                             openRightCommentPanel();
-                            previewPolicyIssuance(selectedCodeNo, selectedId, state.selectedAttachmentId);
+                            previewPolicyIssuance(state.selectedCodeNo, state.selectedId, state.selectedAttachmentId);
                         } else {
                             closeRightCommentPanel();
                         }
@@ -1377,9 +1375,9 @@ Note:
             // $(`#${formModuleKeyPi}-stageDeptPill`).text(`Pending at: ${state.stageDept} - ${stageAccount ?? ""}`);
             // $(`#${formModuleKeyPi}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
 
-            deptData.FO = { ...q, sectionName: "FO", code: q.policyIssuanceCode };
-            deptData.TS = { ...q, sectionName: "TS", code: q.policyIssuanceCode };
-            deptData.PM = { ...q, sectionName: "PM", code: q.policyIssuanceCode };
+            deptData.FO = { ...q, id: q.id, sectionName: "FO", code: q.policyIssuanceCode };
+            deptData.TS = { ...q, id: q.id, sectionName: "TS", code: q.policyIssuanceCode };
+            deptData.PM = { ...q, id: q.id, sectionName: "PM", code: q.policyIssuanceCode };
 
             renderDeptForms();
             applyNodeHighlights();
@@ -1591,7 +1589,7 @@ Note:
             icon: "check",
             type: "success",
             onClick: function () {
-               var policyIssuanceConvert = state.quotes.find(x => x.id == selectedId);
+               var policyIssuanceConvert = state.quotes.find(x => x.id == state.selectedId);
                 if (!policyIssuanceConvert) return;
 
                 var policyIssuance = new Object();
