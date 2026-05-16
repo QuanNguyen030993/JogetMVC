@@ -2072,10 +2072,8 @@ async function makeFieldFeatures(item, obj, type) {
 
     var dataSource = null;
 
-    if (type == "grid") {
-
+    if (type == "grid" && obj.fromGrid) {
         obj.customQuery = config?.sysTableConfig?.customQuery;
-
         dataSource = makeBasicDataSource(
             obj,
             false,

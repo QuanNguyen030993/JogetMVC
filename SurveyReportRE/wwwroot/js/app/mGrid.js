@@ -778,7 +778,8 @@ var MGridOption = class MGridOption {
     }
 
     async makeGridOptions(mGridConfigInstance = null) {
-       var that = this;
+        var that = this;
+       that.fromGrid = true;
        return fetchConfigurationData(that.ModelName, that.gridType, that).then(fetchConfig => {
            try {
             this.isAllowRowMenu = true;
