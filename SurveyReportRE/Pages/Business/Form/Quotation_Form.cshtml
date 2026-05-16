@@ -566,7 +566,7 @@ Note:
     state.selectedCodeNo = null;
     state.selectedAttachmentId = null;
     state.stageDept = null;
-
+    
     state.quotePaging = {
         skip: 0,
         take: 20,
@@ -1403,8 +1403,9 @@ Note:
         window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
 
         initializeOverviewShell();
-
+        
         loadQuotePage(true).then(() => {
+            
             applyNodeHighlights();
             applySectionFocusHighlight();
             updateHints();

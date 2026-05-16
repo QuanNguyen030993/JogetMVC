@@ -2056,66 +2056,196 @@ function getDxKind(obj) {
 
     return name;
 }
+async function makeFieldFeatures(item, obj, type) {
 
-function makeFieldFeatures(item, obj, type) {
     var model = item.dataField.replace(/\b(\w+)Id\b/g, (match, p1) => {
         return p1.charAt(0).toUpperCase() + p1.slice(1);
     });
 
-    if (item.mappingFieldFK != null || item.mappingFieldFK != undefined) {
+    if (item.mappingFieldFK != null) {
         model = item.mappingFieldFK.name;
     }
-    var config = new Object();
+
+    const config = await fetchConfigurationData(model, obj.gridType);
+
+    config.model = model;
+
     var dataSource = null;
+
     if (type == "grid") {
-        config = fetchConfigurationData(model, obj.gridType);
-        obj.customQuery = config.sysTableConfig.customQuery;
-        dataSource = makeBasicDataSource(obj, false, true);
+
+        obj.customQuery = config?.sysTableConfig?.customQuery;
+
+        dataSource = makeBasicDataSource(
+            obj,
+            false,
+            config
+        );
     }
+
     if (type == "form") {
-        config = fetchConfigurationData(model);
+
         var mDropDownDS = new MDropDownDataSource();
-        dataSource = mDropDownDS.getDropDownDS('id', `api/${model}/DropDownLookUp`);
+
+        dataSource = mDropDownDS.getDropDownDS(
+            'id',
+            `api/${model}/DropDownLookUp`
+        );
     }
-    ////item.calculateDisplayValue = gridInstance.GridConfig.displayExpr,
+
     $.each(config.getScheme, function (schIndex, schCol) {
+
         delete schCol.width;
         delete schCol.height;
-        if (schCol.dataType == "string" && schCol.dataField.indexOf("Id") < 0 && schCol.lookup == null && schCol.mLookup == null) {
+
+        if (
+            schCol.dataType == "string"
+            && schCol.dataField.indexOf("Id") < 0
+            && schCol.lookup == null
+            && schCol.mLookup == null
+        ) {
+
             schCol.calculateFilterExpression = function (value, operation, target) {
+
                 if (value != null) {
+
                     if (value.indexOf(",") < 0) {
-                        value = typeof value === "string" ? value.trim() : value;
-                        return this.defaultCalculateFilterExpression(value, operation, target);
+
+                        value = typeof value === "string"
+                            ? value.trim()
+                            : value;
+
+                        return this.defaultCalculateFilterExpression(
+                            value,
+                            operation,
+                            target
+                        );
+
                     } else {
+
                         var filterValues = value.split(',');
+
                         var filterExpression = [];
+
                         for (var i = 0; i < filterValues.length; i++) {
-                            var valf = typeof filterValues[i] === "string" ? filterValues[i].trim() : filterValues[i];
-                            var filterExpr = [this.dataField, operation || '=', valf];
+
+                            var valf = typeof filterValues[i] === "string"
+                                ? filterValues[i].trim()
+                                : filterValues[i];
+
+                            var filterExpr = [
+                                this.dataField,
+                                operation || '=',
+                                valf
+                            ];
+
                             if (i > 0) {
                                 filterExpression.push('or');
                             }
+
                             filterExpression.push(filterExpr);
                         }
+
                         return filterExpression;
                     }
+
                 } else {
-                    return this.defaultCalculateFilterExpression(null, operation, target);
+
+                    return this.defaultCalculateFilterExpression(
+                        null,
+                        operation,
+                        target
+                    );
                 }
             }
-        }
-        else {
-            schCol.calculateFilterExpression = function (value, operation, target) {
-                return this.defaultCalculateFilterExpression(value, operation, target);
+
+        } else {
+
+            schCol.calculateFilterExpression = function (
+                value,
+                operation,
+                target
+            ) {
+                return this.defaultCalculateFilterExpression(
+                    value,
+                    operation,
+                    target
+                );
             }
         }
-
     });
+
     return {
-        config, dataSource, model
+        config,
+        dataSource,
+        model
     };
 }
+//async function makeFieldFeatures(item, obj, type) {
+//    var model = item.dataField.replace(/\b(\w+)Id\b/g, (match, p1) => {
+//        return p1.charAt(0).toUpperCase() + p1.slice(1);
+//    });
+//    fetchConfigurationData(model, obj.gridType).then(
+//        config => {
+//            config.model = model;
+
+//    if (item.mappingFieldFK != null || item.mappingFieldFK != undefined) {
+//        model = item.mappingFieldFK.name;
+//    }
+//    var config = new Object();
+//    var dataSource = null;
+//    if (type == "grid") {
+        
+//                obj.customQuery = config.sysTableConfig.customQuery;
+//                dataSource = makeBasicDataSource(obj, false, true);
+//    }
+//    if (type == "form") {
+//            //config = fetchConfigurationData(model);
+//            var mDropDownDS = new MDropDownDataSource();
+//            dataSource = mDropDownDS.getDropDownDS('id', `api/${model}/DropDownLookUp`);
+         
+//    }
+//    ////item.calculateDisplayValue = gridInstance.GridConfig.displayExpr,
+//    $.each(config.getScheme, function (schIndex, schCol) {
+//        delete schCol.width;
+//        delete schCol.height;
+//        if (schCol.dataType == "string" && schCol.dataField.indexOf("Id") < 0 && schCol.lookup == null && schCol.mLookup == null) {
+//            schCol.calculateFilterExpression = function (value, operation, target) {
+//                if (value != null) {
+//                    if (value.indexOf(",") < 0) {
+//                        value = typeof value === "string" ? value.trim() : value;
+//                        return this.defaultCalculateFilterExpression(value, operation, target);
+//                    } else {
+//                        var filterValues = value.split(',');
+//                        var filterExpression = [];
+//                        for (var i = 0; i < filterValues.length; i++) {
+//                            var valf = typeof filterValues[i] === "string" ? filterValues[i].trim() : filterValues[i];
+//                            var filterExpr = [this.dataField, operation || '=', valf];
+//                            if (i > 0) {
+//                                filterExpression.push('or');
+//                            }
+//                            filterExpression.push(filterExpr);
+//                        }
+//                        return filterExpression;
+//                    }
+//                } else {
+//                    return this.defaultCalculateFilterExpression(null, operation, target);
+//                }
+//            }
+//        }
+//        else {
+//            schCol.calculateFilterExpression = function (value, operation, target) {
+//                return this.defaultCalculateFilterExpression(value, operation, target);
+//            }
+//        }
+
+//    });
+//    return {
+//        config, dataSource, model
+//                };
+//            }
+//        );
+//}
 
 
 function createAccordionGroup(item, $itemElement, formInstanceProps) {

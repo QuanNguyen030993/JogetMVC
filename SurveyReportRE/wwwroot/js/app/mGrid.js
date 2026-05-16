@@ -49,24 +49,68 @@
         }
     };
 
-    renderGrid() {
-        try {
-            var that = this;
-            // Set reference to MGrid instance for MGridOption to use
-            this.mGridOption.mGridInstance = this;
-            
-            if (!that.mGridOption.allowBuildOption)
-                this.component = this.container.dxDataGrid(that.mGridOption.makeGridOptions(null)).dxDataGrid("instance");
-            else 
-                this.component = this.container.dxDataGrid(that.mGridOption.makeGridOptions(that.mGridOption)).dxDataGrid("instance");
+    //renderGrid() {
+    //    try {
+    //        var that = this;
+    //        // Set reference to MGrid instance for MGridOption to use
+    //        this.mGridOption.mGridInstance = this;
 
-            // Initialize grid index visible
-            this.updateGridIndexVisible();
-            return this.component;
-        } catch (err) {
-            appErrorHandling('Library error: call renderGrid was failed.', err);
+    //        if (!that.mGridOption.allowBuildOption)
+    //            this.component = this.container.dxDataGrid(that.mGridOption.makeGridOptions(null)).dxDataGrid("instance");
+    //        else
+    //            this.component = this.container.dxDataGrid(that.mGridOption.makeGridOptions(that.mGridOption)).dxDataGrid("instance");
+
+    //        // Initialize grid index visible
+    //        this.updateGridIndexVisible();
+    //        return this.component;
+    //    } catch (err) {
+    //        appErrorHandling('Library error: call renderGrid was failed.', err);
+    //    }
+    //};
+
+    renderGrid() {
+
+        try {
+
+            var that = this;
+
+            // Set reference
+            this.mGridOption.mGridInstance = this;
+
+            var buildOptionPromise =
+                !that.mGridOption.allowBuildOption
+                    ? that.mGridOption.makeGridOptions(null)
+                    : that.mGridOption.makeGridOptions(that.mGridOption);
+
+            buildOptionPromise.then(gridOptions => {
+
+                if (!gridOptions)
+                    return;
+
+                this.component = this.container
+                    .dxDataGrid(gridOptions)
+                    .dxDataGrid("instance");
+
+                // Initialize grid index visible
+                this.updateGridIndexVisible();
+
+            }).catch(err => {
+
+                appErrorHandling(
+                    'Library error: renderGrid async failed.',
+                    err
+                );
+            });
+
         }
-    };
+        catch (err) {
+
+            appErrorHandling(
+                'Library error: call renderGrid was failed.',
+                err
+            );
+        }
+    }
 
     /**
      * Toggle edit layout mode - enables/disables column reordering
@@ -101,26 +145,26 @@
      * Update gridIndexVisible based on current visible columns order from array elements
      */
     updateGridIndexVisible() {
-        try {
-            if (!this.component) return;
+        //try {
+        //    if (!this.component) return;
 
-            // Get columns from the component's column array (actual order in DOM)
-            const columns = this.component.option('columns');
-            this.gridIndexVisible = {};
+        //    // Get columns from the component's column array (actual order in DOM)
+        //    const columns = this.component.option('columns');
+        //    this.gridIndexVisible = {};
 
-            // Filter visible columns and assign index based on their position in the array
-            let visibleIndex = 0;
-            columns.forEach((col, arrayIndex) => {
-                if (col && col.dataField && col.visible !== false) {
-                    this.gridIndexVisible[col.dataField] = visibleIndex;
-                    visibleIndex++;
-                }
-            });
+        //    // Filter visible columns and assign index based on their position in the array
+        //    let visibleIndex = 0;
+        //    columns.forEach((col, arrayIndex) => {
+        //        if (col && col.dataField && col.visible !== false) {
+        //            this.gridIndexVisible[col.dataField] = visibleIndex;
+        //            visibleIndex++;
+        //        }
+        //    });
 
-            console.log('Grid Index Visible Updated from array order:', this.gridIndexVisible);
-        } catch (err) {
-            appErrorHandling('Library error: call updateGridIndexVisible was failed.', err);
-        }
+        //    console.log('Grid Index Visible Updated from array order:', this.gridIndexVisible);
+        //} catch (err) {
+        //    appErrorHandling('Library error: call updateGridIndexVisible was failed.', err);
+        //}
     }
 
     /**
@@ -733,13 +777,14 @@ var MGridOption = class MGridOption {
             info.data[this.filterRefField2] = this.filterRefId2;
     }
 
-    makeGridOptions(mGridConfigInstance = null) {
-        try {
+    async makeGridOptions(mGridConfigInstance = null) {
+       var that = this;
+       return fetchConfigurationData(that.ModelName, that.gridType, that).then(fetchConfig => {
+           try {
             this.isAllowRowMenu = true;
-            var that = this;
             var summary = new Object();
             var gridEditorOptions = {};
-            var fetchConfig = fetchConfigurationData(that.ModelName, that.gridType);
+
             that.customQuery = fetchConfig?.sysTableConfig?.customQuery ?? "";
             var gridDataSource = makeBasicDataSource(that, false, that.customQuery != "" ? true : false);
             if (that.mGridDetailOption != null || that.mGridDetailOption != undefined) {
@@ -763,7 +808,9 @@ var MGridOption = class MGridOption {
             this.GridConfig = fetchConfig;//getModelConfig(that.ModelName, false);
             if (that.gridType == "User")
                 this.GridConfig = fetchConfig;// getModelConfig(that.ModelName);
-            RenderGridElement(fetchConfig.getScheme, that);
+                
+
+
             if (mGridConfigInstance) {
                 if (mGridConfigInstance.gridEditorOptions != null || mGridConfigInstance.gridEditorOptions != undefined)
                     gridEditorOptions = mGridConfigInstance.gridEditorOptions;
@@ -927,10 +974,12 @@ var MGridOption = class MGridOption {
             if (that.Params)
                 if (that.Params.isAllowRowMenu)
                     this.isAllowRowMenu = that.Params.isAllowRowMenu;
-            return properties;
+                return properties;
+
         } catch (err) {
             appErrorHandling('Library error: call GetGridOptions was failed.', err);
-        }
+            }
+        });
     };
 
 
