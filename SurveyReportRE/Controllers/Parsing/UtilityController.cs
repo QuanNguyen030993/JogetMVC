@@ -20,6 +20,9 @@ using System.Text;
 using System.Net.Http.Headers;
 using RESurveyTool.Models.Models.Parsing;
 using ERPCore.Models.Config;
+using System.Text.RegularExpressions;
+using System.Text.Json;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 
 
@@ -91,8 +94,44 @@ namespace ERPCore.Controllers.Config
             return Ok(dependencies); // trả JSON đúng cho JS
             //return Ok(Base);
         }
-        [HttpGet]
+        [HttpPost]
+        public IActionResult SaveViewSchema([FromBody]JsonElement body)
+        {
+            var raw = body.ToString();
 
+            var view = body.GetProperty("view")
+            .GetString();
+
+            var itemsText = body.GetProperty("itemsText")
+                                .GetString();
+
+            //var root = @"D:\Source\MySource\JogetMVC\SurveyReportRE";
+            //var path = Path.Combine(
+            //    root,
+            //    "Views",
+            //    "QuotationDetail",
+            //    req + ".cshtml"
+            //);
+
+            //var content = System.IO.File.ReadAllText(path);
+
+            //content = Regex.Replace(
+
+            //    content,
+
+            //    @"items\s*:\s*\[[\s\S]*?\]\s*\}\s*\);",
+
+            //    $"items: {itemsText}" + Environment.NewLine + "});"
+
+            //);
+
+            //System.IO.File.WriteAllText(path, content);
+
+            return Ok(new
+            {
+                success = true
+            });
+        }
         #endregion
 
         #region POST API 

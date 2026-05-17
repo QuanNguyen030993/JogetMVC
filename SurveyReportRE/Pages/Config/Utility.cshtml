@@ -128,6 +128,50 @@ LOW CODE VIEW DESIGNER MOCKUP
         max-height:300px;
     }
 
+.dual-layout{
+    display:flex;
+    gap:20px;
+    margin-top:20px;
+}
+
+.drag-column{
+    flex:1;
+    background:white;
+    border-radius:12px;
+    padding:12px;
+    min-height:500px;
+    border:1px solid #ddd;
+}
+
+.drag-title{
+    font-size:18px;
+    font-weight:bold;
+    margin-bottom:16px;
+}
+
+.drag-zone{
+    min-height:400px;
+}
+
+.drag-item{
+    padding:12px;
+    background:#f4f7ff;
+    border:1px solid #cdd8ff;
+    border-radius:8px;
+    margin-bottom:10px;
+    cursor:move;
+}
+
+.drag-item:hover{
+    background:#dbeafe;
+}
+
+.add-field-box{
+    margin-top:20px;
+    display:flex;
+    gap:10px;
+}
+
 </style>
 
 <div class="layout">
@@ -176,7 +220,51 @@ LOW CODE VIEW DESIGNER MOCKUP
 
             <div id="jsonPreview"
                  class="json-box"></div>
+                 <div class="dual-layout">
 
+    <!-- HIDDEN -->
+    <div class="drag-column">
+
+        <div class="drag-title">
+            Hidden Fields
+        </div>
+
+        <div id="hiddenFields"
+             class="drag-zone"></div>
+
+    </div>
+
+    <!-- VISIBLE -->
+    <div class="drag-column">
+
+        <div class="drag-title">
+            Visible Fields
+        </div>
+
+        <div id="visibleFields"
+             class="drag-zone"></div>
+
+    </div>
+
+</div>
+
+<div class="preview-box">
+
+    <h2>
+        Add New Field
+    </h2>
+
+    <div class="add-field-box">
+
+        <div id="txtNewField"></div>
+
+        <div id="btnAddNewField"></div>
+
+        <div id="btnSaveView"></div>
+
+    </div>
+
+</div>
         </div>
 
     </div>
@@ -296,7 +384,7 @@ LOW CODE VIEW DESIGNER MOCKUP
 
         // renderPreview();
         renderJson();
-
+        renderDragColumns();
     }
     catch(ex){
 
@@ -549,5 +637,215 @@ LOW CODE VIEW DESIGNER MOCKUP
         );
 
     }
+    function renderDragColumns(){
 
+    var visibleFields = [];
+    var hiddenFields = [];
+
+    formSchema.forEach(g=>{
+
+        if(!g.items) return;
+
+        g.items.forEach(f=>{
+
+            if(f.visible === false){
+
+                hiddenFields.push(f);
+
+            }else{
+
+                visibleFields.push(f);
+            }
+
+        });
+
+    });
+    function renderDragItems(container,data){
+
+    var html = "";
+
+    data.forEach(f=>{
+
+        html += `
+            <div class='drag-item'>
+
+                <div>
+                    <b>${f.dataField}</b>
+                </div>
+
+                <div>
+                    ${f.editorType || 'dxTextBox'}
+                </div>
+
+            </div>
+        `;
+    });
+
+    $(container).html(html);
+
+}
+    $("#visibleFields").dxSortable({
+
+        group:"shared",
+
+        data:visibleFields,
+
+        filter:".drag-item",
+
+        allowDropInsideItem:false,
+
+        itemOrientation:"vertical",
+
+        moveItemOnDrop:true,
+
+        onAdd:function(e){
+
+            var field = e.itemData;
+            if (field)
+              field.visible =  true;
+
+            renderDragColumns();
+
+            renderExplorer();
+
+        }
+
+    });
+
+    $("#hiddenFields").dxSortable({
+
+        group:"shared",
+
+        data:hiddenFields,
+
+        filter:".drag-item",
+
+        allowDropInsideItem:false,
+
+        itemOrientation:"vertical",
+
+        moveItemOnDrop:true,
+
+        onAdd:function(e){
+
+            var field = e.itemData;
+            if (field)
+              field.visible =  false;
+            renderDragColumns();
+
+            renderExplorer();
+
+        }
+
+    });
+
+    renderDragItems(
+        "#visibleFields",
+        visibleFields
+    );
+
+    renderDragItems(
+        "#hiddenFields",
+        hiddenFields
+    );
+    $("#txtNewField").dxTextBox({
+
+    placeholder:"Field name"
+
+});
+
+}
+
+$("#btnAddNewField").dxButton({
+
+    text:"Add Field",
+
+    type:"default",
+
+    onClick:function(){
+
+        var fieldName = $("#txtNewField")
+            .dxTextBox("instance")
+            .option("value");
+
+        if(!fieldName) return;
+
+        var targetGroup = formSchema.find(x=>x.items);
+
+        targetGroup.items.push({
+
+            dataField:fieldName,
+
+            editorType:"dxTextBox",
+
+            visible:true,
+
+            isNew:true
+
+        });
+
+        renderExplorer();
+
+        renderDragColumns();
+
+        renderJson();
+
+    }
+
+});
+$("#btnSaveView").dxButton({
+
+    text:"Save View",
+
+    type:"success",
+
+    onClick:function(){
+
+        saveView();
+
+    }
+
+});
+function generateItemsText(){
+
+    return JSON.stringify(
+        formSchema,
+        null,
+        4
+    )
+    .replace(/"([^"]+)":/g, '$1:')
+    .replace(/"/g,"'");
+}
+function saveView(){
+
+    var generated = generateItemsText();
+
+    var viewName = $("#viewSelector")
+        .dxSelectBox("instance")
+        .option("value");
+
+        ajaxPost(
+
+        "/api/Utility/SaveViewSchema",
+
+        {
+
+            view:viewName,
+
+            itemsText:generated
+
+        })
+
+    .then(res=>{
+
+        DevExpress.ui.notify(
+            "Saved",
+            "success",
+            3000
+        );
+
+    });
+
+}
+renderDragColumns();
 </script>
