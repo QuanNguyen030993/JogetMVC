@@ -1,0 +1,553 @@
+﻿@page
+@model UtilityModel
+@*
+=========================================================
+LOW CODE VIEW DESIGNER MOCKUP
+- Read .cshtml content via API
+- Extract window.formSchema
+- Visualize groups + fields
+- Runtime preview
+=========================================================
+*@
+
+@{
+    ViewData["Title"] = "Low Code Designer";
+}
+
+
+<style> 
+
+    body{
+        margin:0;
+        background:#f5f7fb;
+        font-family:Arial;
+    }
+
+    .layout{
+        display:flex;
+        height:100vh;
+    }
+
+    .left{
+        width:340px;
+        background:white;
+        border-right:1px solid #ddd;
+        overflow:auto;
+    }
+
+    .center{
+        flex:1;
+        overflow:auto;
+        padding:20px;
+    }
+
+    .right{
+        width:360px;
+        background:white;
+        border-left:1px solid #ddd;
+        overflow:auto;
+    }
+
+    .panel-title{
+        padding:16px;
+        font-size:18px;
+        font-weight:bold;
+        border-bottom:1px solid #eee;
+    }
+
+    .toolbar{
+        padding:12px;
+        border-bottom:1px solid #eee;
+    }
+
+    .group-card{
+        margin:12px;
+        border:1px solid #ddd;
+        border-radius:10px;
+        overflow:hidden;
+    }
+
+    .group-title{
+        background:#eef4ff;
+        padding:12px;
+        font-weight:bold;
+    }
+
+    .field-item{
+        padding:12px;
+        border-top:1px solid #eee;
+        cursor:pointer;
+        display:flex;
+        justify-content:space-between;
+        transition:.2s;
+    }
+
+    .field-item:hover{
+        background:#f8fbff;
+    }
+
+    .field-item.active{
+        background:#dbeafe;
+    }
+
+    .editor-badge{
+        background:#eee;
+        padding:4px 8px;
+        border-radius:20px;
+        font-size:11px;
+    }
+
+    .preview-box{
+        background:white;
+        border-radius:12px;
+        padding:20px;
+        box-shadow:0 2px 8px rgba(0,0,0,.08);
+    }
+
+    .property-panel{
+        padding:16px;
+    }
+
+    .property-item{
+        margin-bottom:20px;
+    }
+
+    .property-item label{
+        display:block;
+        margin-bottom:6px;
+        font-weight:bold;
+    }
+
+    .json-box{
+        background:#111827;
+        color:#d1d5db;
+        padding:12px;
+        border-radius:10px;
+        font-size:12px;
+        overflow:auto;
+        max-height:300px;
+    }
+
+</style>
+
+<div class="layout">
+
+    <!-- LEFT -->
+    <div class="left">
+
+        <div class="panel-title">
+            View Explorer
+        </div>
+
+        <div class="toolbar">
+
+            <div id="viewSelector"></div>
+
+            <br/>
+
+            <div id="btnLoad"></div>
+
+        </div>
+
+        <div id="schemaExplorer"></div>
+
+    </div>
+
+    <!-- CENTER -->
+    <div class="center">
+
+      @*   <div class="preview-box">
+
+            <h2>
+                Runtime Form Preview
+            </h2>
+
+            <div id="formPreview"></div>
+
+        </div>
+
+        <br/> *@
+
+        <div class="preview-box">
+
+            <h2>
+                Extracted Schema JSON
+            </h2>
+
+            <div id="jsonPreview"
+                 class="json-box"></div>
+
+        </div>
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right">
+
+        <div class="panel-title">
+            Property Panel
+        </div>
+
+        <div id="propertyPanel"
+             class="property-panel">
+
+            Select field...
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+    // =====================================================
+    // STATE
+    // =====================================================
+
+    var formSchema = [];
+
+    var selectedField = null;
+
+    // =====================================================
+    // VIEW SELECTOR
+    // =====================================================
+
+    $("#viewSelector").dxSelectBox({
+
+        items:[
+
+            "_Quotation_FO_Form",
+            "_Quotation_TS_Form",
+            "_Quotation_UW_Form",
+            "_Quotation_PM_Form"
+
+        ],
+
+        value:"Quotation_FO_Form"
+
+    });
+
+    // =====================================================
+    // LOAD BUTTON
+    // =====================================================
+
+    $("#btnLoad").dxButton({
+
+        text:"Load View",
+
+        type:"default",
+
+        onClick:function(){
+
+            loadView();
+
+        }
+
+    });
+
+    // =====================================================
+    // LOAD VIEW
+    // =====================================================
+
+    function loadView(){
+        var moduleQuotation = "QuotationDetail";
+        var viewName = $("#viewSelector")
+            .dxSelectBox("instance")
+            .option("value");
+
+        ajaxGet(`/api/Utility/GetViewContent/${moduleQuotation}/${viewName}`, null
+        ).then(res => parseSchema(res.content));
+
+    }
+
+    // =====================================================
+    // PARSE SCHEMA
+    // EXPECT:
+    // window.formSchema = [...]
+    // =====================================================
+
+    function parseSchema(content){
+
+    try{
+
+        var match = content.match(
+            /items\s*:\s*\[([\s\S]*?)\]\s*\}\s*\);/
+        );
+
+        if(!match){
+
+            DevExpress.ui.notify(
+                "items not found",
+                "error",
+                3000
+            );
+
+            return;
+        }
+
+        var itemsText = "[" + match[1] + "]";
+        // FIX JS OBJECT
+        // itemsText = normalizeJsObject(itemsText);
+
+        formSchema = eval("(" + itemsText + ")");
+
+        renderExplorer();
+
+        // renderPreview();
+        renderJson();
+
+    }
+    catch(ex){
+
+        console.error(ex);
+
+        DevExpress.ui.notify(
+            "Parse failed",
+            "error",
+            3000
+        );
+    }
+}
+
+    // =====================================================
+    // EXPLORER
+    // =====================================================
+
+    function renderExplorer(){
+
+        var html = "";
+
+        formSchema.forEach(group=>{
+            if (group.items){
+            html += `
+                <div class='group-card'>
+
+                    <div class='group-title'>
+                        ${group.caption}
+                    </div>
+            `;
+            
+            group.items.forEach(field=>{
+
+                html += `
+                    <div 
+                        class='field-item ${selectedField == field.dataField ? 'active' : ''}'
+                        onclick='selectField("${field.dataField}")'
+                    >
+
+                        <div>
+                            ${field.dataField}
+                        </div>
+
+                        <div class='editor-badge'>
+                            ${field.editorType ? field.editorType : "dxTextBox"}
+                        </div>
+
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            }
+        });
+
+        $("#schemaExplorer").html(html);
+
+    }
+
+    // =====================================================
+    // FORM PREVIEW
+    // =====================================================
+    function normalizeJsObject(text){
+
+    text = text.replace(/\/\/.*$/gm, "");
+
+    // remove template function
+    text = text.replace(
+        /template\s*:\s*function\s*\([\s\S]*?\}\s*(?=,|\})/g,
+        'template:null'
+    );
+
+    // remove makeSelectBoxEditorOptions
+    text = text.replace(
+        /makeSelectBoxEditorOptions\([^\)]*\)/g,
+        '{}'
+    );
+
+    // remove labelTpl
+    text = text.replace(
+        /labelTpl\([^\)]*\)/g,
+        '"LABEL"'
+    );
+
+    return text;
+}
+    function renderPreview(){
+
+        $("#formPreview").dxForm({
+
+            formData:{},
+
+            colCount:2,
+
+            items: formSchema.map(g=>{
+                if (g.items)
+                return {
+
+                    itemType:"group",
+
+                    caption:g.caption,
+
+                    colCount:2,
+
+                    items:g.items
+                        .filter(x=>x.visible !== false)
+
+                };
+                else {
+                    return "{}";
+                }
+            })
+
+        });
+
+
+    }
+
+    // =====================================================
+    // PROPERTY PANEL
+    // =====================================================
+
+    function selectField(fieldName){
+
+        selectedField = fieldName;
+
+        renderExplorer();
+
+        var field = findField(fieldName);
+
+        $("#propertyPanel").html(`
+
+            <div class='property-item'>
+
+                <label>DataField</label>
+
+                <input type='text'
+                       value='${field.dataField}'
+                       disabled/>
+
+            </div>
+
+            <div class='property-item'>
+
+                <label>Editor Type</label>
+
+                <div id='editorType'></div>
+
+            </div>
+
+            <div class='property-item'>
+
+                <label>Visible</label>
+
+                <div id='visibleSwitch'></div>
+
+            </div>
+
+        `);
+
+        $("#editorType").dxSelectBox({
+
+            items:[
+                "dxTextBox",
+                "dxTextArea",
+                "dxDateBox",
+                "dxSelectBox",
+                "dxTagBox"
+            ],
+
+            value:field.editorType,
+
+            onValueChanged:function(e){
+
+                updateField(
+                    fieldName,
+                    "editorType",
+                    e.value
+                );
+
+            }
+
+        });
+
+        $("#visibleSwitch").dxSwitch({
+
+            value:field.visible !== false,
+
+            onValueChanged:function(e){
+
+                updateField(
+                    fieldName,
+                    "visible",
+                    e.value
+                );
+
+            }
+
+        });
+
+    }
+
+    // =====================================================
+    // UPDATE FIELD
+    // =====================================================
+
+    function updateField(fieldName,key,value){
+
+        var field = findField(fieldName);
+
+        field[key] = value;
+
+        // renderPreview();
+
+        renderExplorer();
+
+    }
+
+    // =====================================================
+    // FIND FIELD
+    // =====================================================
+
+    function findField(fieldName){
+
+        for(var g of formSchema){
+            if (g.items)
+            for(var f of g.items){
+
+                if(f.dataField == fieldName){
+
+                    return f;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    // =====================================================
+    // JSON
+    // =====================================================
+
+    function renderJson(){
+        $("#jsonPreview").html(
+           JSON.stringify(
+                formSchema,
+                null,
+                2
+            )
+        );
+
+    }
+
+</script>

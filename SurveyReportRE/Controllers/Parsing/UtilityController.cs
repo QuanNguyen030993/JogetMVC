@@ -48,7 +48,37 @@ namespace ERPCore.Controllers.Config
 
         #region GET API 
 
+        [HttpGet("{module}/{view}")]
+        public IActionResult GetViewContent(string module, string view)
+        {
+            var root = @"D:\Source\MySource\JogetMVC\SurveyReportRE";
 
+            var path = Path.Combine(
+                root,
+                "Pages",
+                "Business",
+                "Form",
+                $"{module}",
+                $"{view}.cshtml"
+            );
+
+            if (!System.IO.File.Exists(path))
+            {
+                return Ok(new
+                {
+                    success = false,
+                    message = "View not found"
+                });
+            }
+
+            var content = System.IO.File.ReadAllText(path);
+
+            return Ok(new
+            {
+                success = true,
+                content = content
+            });
+        }
 
         public async Task<ActionResult<Utility>> GetData(string sheetName)
         {
