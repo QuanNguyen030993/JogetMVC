@@ -158,12 +158,6 @@ namespace ERPCore.Controllers.Config
                 return BadRequest("Field not found");
             }
 
-            //if (!fieldMatch.Success)
-            //{
-            //    return BadRequest("Field not found");
-            //}
-
-            //var fieldText = fieldMatch.Value;
 
             var fieldObj = JsonConvert.DeserializeObject<Dictionary<string, object>>(fieldJson);
             string fieldTextNew = "";
@@ -183,11 +177,102 @@ namespace ERPCore.Controllers.Config
             }
 
             content = content.Replace(fieldText, fieldTextNew);
-            //content = Regex.Replace(
-            //        content,
-            //        $@"\{{[^{{}}]*dataField\s*:\s*'{fieldName}'[^{{}}]*\}}",
-            //        fieldJson.Replace("\"", "'")
-            //    );
+
+
+
+            System.IO.File.WriteAllText(path, content);
+
+            return Ok(new
+            {
+                success = true
+            });
+        }
+
+        [HttpPost]
+        public IActionResult SaveGroupViewSchema([FromBody] JsonElement body)
+        {
+            var raw = body.ToString();
+
+            var view = body.GetProperty("view")
+            .GetString();
+
+            var fieldName = body.GetProperty("groupCaption")
+                                .GetString();
+            var fieldJson = body.GetProperty("groupJson")
+                                .GetString();
+
+            var root = _blobStorageSettings.CurrentValue.DeployPath;
+
+
+
+            var path = Path.Combine(
+                root,
+               "Pages",
+                "Business",
+                 "Form",
+                "QuotationDetail",
+                view + ".cshtml"
+            );
+
+            var content = System.IO.File.ReadAllText(path);
+
+
+            //var fieldPattern = $@"\{{[^{{}}]*dataField\s*:\s*'{fieldName}'[^{{}}]*\}}";
+
+            //var fieldPattern =
+            //    $@"\{[\s\S]*?{[\s\S]*?dataField\s*:\s*['""]{fieldName}['""][\s\S]*?\}[\s\S]*?}";
+
+            var fieldPattern = $@"\{{{{                      
+[\s\S] *?               
+    dataField\s*:\s*       
+    ['""]{fieldName}['""]  
+    [\s\S] *?              
+\}}}}
+";
+
+            var match = Regex.Match(
+                content,
+                fieldPattern,
+                RegexOptions.Singleline | RegexOptions.IgnorePatternWhitespace
+            );
+
+            if (match.Success)
+            {
+                var fieldBlock = match.Value;
+            }
+
+
+            var fieldText = ExtractGroupBlock(content, fieldName);
+            if (fieldText == null)
+            {
+                return BadRequest("Field not found");
+            }
+
+
+            var fieldObj = JsonConvert.DeserializeObject<Dictionary<string, object>>(fieldJson);
+            string fieldTextNew = "";
+            // update từng property
+            foreach (var kv in fieldObj)
+            {
+                if (kv.Key == "caption")
+                {
+                    var isString = kv.Value is string;
+
+                    fieldTextNew = UpsertProperty(
+                        fieldText,
+                        kv.Key,
+                        kv.Key == "visible" ? kv.Value.ToString().ToLower() : kv.Value.ToString(),
+                        fieldObj,
+                        isString
+                    );
+                    break;
+                }
+                else continue;
+
+            }
+
+            content = content.Replace(fieldText, fieldTextNew);
+
 
 
             System.IO.File.WriteAllText(path, content);
@@ -204,7 +289,8 @@ namespace ERPCore.Controllers.Config
             var replacement = isString
                 ? $"{key}: '{value}'"
                 : $"{key}: {value}";
-
+         
+       
             if (Regex.IsMatch(fieldText, pattern))
             {
                 // property tồn tại → replace
@@ -217,9 +303,125 @@ namespace ERPCore.Controllers.Config
             }
         }
 
+        string UpsertProperty(
+
+    string fieldText,
+
+    string key,
+
+    string value,
+
+    Dictionary<string, object> fieldObj,
+
+    bool isString = true)
+
+        {
+
+            string insertText = isString
+
+                ? $"visible:false,"
+
+                : $"visible:false,";
+
+            // tìm vị trí trước items:
+
+            // ví dụ:
+
+            // editorType:'group',items:
+
+            // => chèn visible:false ngay trước items
+
+            var pattern = @"(?=items\s*:)";
+
+            if (!(bool)fieldObj["visible"])
+
+            {
+
+                // chưa có thì insert trước items
+
+                if (!Regex.IsMatch(fieldText, $@"\b{Regex.Escape(key)}\s*:\s*{value}"))
+
+                {
+
+                    fieldText = Regex.Replace(fieldText,pattern,insertText);
+
+                }
+
+            }
+
+            else
+
+            {
+
+                // visible=true => xoá property trước items
+
+                fieldText = Regex.Replace(
+
+                    fieldText,
+
+                    $@",?\s*{Regex.Escape("visible")}\s*:\s*('([^']*)'|true|false|null|\d+)\s*(?=,\s*items\s*:)",
+
+                    ""
+
+                );
+
+            }
+
+            return fieldText;
+
+        }
+
+
+
+
         private static string ExtractFieldBlock(string content, string fieldName)
         {
             var pattern = $@"dataField\s*:\s*[""']{Regex.Escape(fieldName)}[""']";
+            var match = Regex.Match(content, pattern, RegexOptions.Singleline);
+            if (!match.Success)
+                return null;
+            // tìm dấu { mở object cha
+            int start = match.Index;
+            while (start >= 0 && content[start] != '{')
+                start--;
+            if (start < 0)
+                return null;
+            int depth = 0;
+            bool inString = false;
+            char stringChar = '\0';
+            for (int i = start; i < content.Length; i++)
+            {
+                char c = content[i];
+                // xử lý string
+                if ((c == '"' || c == '\'') && (i == 0 || content[i - 1] != '\\'))
+                {
+                    if (!inString)
+                    {
+                        inString = true;
+                        stringChar = c;
+                    }
+                    else if (stringChar == c)
+                    {
+                        inString = false;
+                    }
+                }
+                if (inString)
+                    continue;
+                if (c == '{')
+                    depth++;
+                if (c == '}')
+                    depth--;
+                if (depth == 0)
+                {
+                    return content.Substring(start, i - start + 1);
+                }
+            }
+            return null;
+        }
+
+        private static string ExtractGroupBlock(string content, string fieldName)
+        {
+            var pattern = $@"itemType:\s*""group"",\s*caption:\s*[""']{Regex.Escape(fieldName)}[""']";
             var match = Regex.Match(content, pattern, RegexOptions.Singleline);
             if (!match.Success)
                 return null;

@@ -223,6 +223,7 @@ LOW CODE VIEW DESIGNER MOCKUP
                  <div class="dual-layout">
 
     <!-- HIDDEN -->
+                <div class="dual-layout">
     <div class="drag-column">
 
         <div class="drag-title">
@@ -245,6 +246,20 @@ LOW CODE VIEW DESIGNER MOCKUP
              class="drag-zone"></div>
 
     </div>
+    </div>
+     <div class="dual-layout">
+
+         <div class="drag-column">
+             <div class="drag-title">Hidden Groups</div>
+             <div id="hiddenGroups" class="drag-zone"></div>
+         </div>
+
+         <div class="drag-column">
+             <div class="drag-title">Visible Groups</div>
+             <div id="visibleGroups" class="drag-zone"></div>
+         </div>
+
+     </div>
 
 </div>
 
@@ -266,9 +281,9 @@ LOW CODE VIEW DESIGNER MOCKUP
             Select field...
 
         </div>
-
+        <div id="btnSaveView"></div>
     </div>
-    <div class="preview-box">
+@*     <div class="preview-box">
 
         <h2>
             Add New Field
@@ -280,11 +295,9 @@ LOW CODE VIEW DESIGNER MOCKUP
 
             <div id="btnAddNewField"></div>
 
-            <div id="btnSaveView"></div>
-
         </div>
 
-    </div>
+    </div> *@
 </div>
 
 <script>
@@ -296,6 +309,9 @@ LOW CODE VIEW DESIGNER MOCKUP
     var formSchema = [];
 
     var selectedField = null;
+
+            var visibleGroups = [];
+            var hiddenGroups = [];
 
     // =====================================================
     // VIEW SELECTOR
@@ -380,11 +396,25 @@ LOW CODE VIEW DESIGNER MOCKUP
 
         formSchema = eval("(" + itemsText + ")");
 
+
+
         renderExplorer();
 
         // renderPreview();
         renderJson();
         renderDragColumns();
+
+
+        formSchema = eval("(" + itemsText + ")");
+
+        // ✅ add groupId
+        formSchema.forEach((g, i) => {
+            if (g.itemType === "group") {
+                g.groupId = g.caption || ("group_" + i);
+            }
+        });
+        renderGroupDrag();
+
     }
     catch(ex){
 
@@ -815,7 +845,7 @@ $("#btnAddNewField").dxButton({
 });
 $("#btnSaveView").dxButton({
 
-    text:"Save View",
+    text:"Save field on view",
 
     type:"success",
 
@@ -856,64 +886,146 @@ function saveView(){
         });
 
 
-    // var generated = generateItemsText();
-
-    // var viewName = $("#viewSelector")
-    //     .dxSelectBox("instance")
-    //     .option("value");
-
-    //     ajaxPost(
-
-    //     "/api/Utility/SaveViewSchema",
-
-    //     {
-
-    //         view:viewName,
-
-    //         itemsText:generated
-
-    //     })
-
-    // .then(res=>{
-
-    //     DevExpress.ui.notify(
-    //         "Saved",
-    //         "success",
-    //         3000
-    //     );
-
-    // });
-
 
 }
-    // function renderDragItems(container, data){
+function renderGroupDrag(){
 
-    //     var html = "";
+        formSchema.forEach(g => {
 
-    //     data.forEach(f => {
+            if (g.itemType !== "group") return;
 
-    //         html += `
-    // <div class='drag-item'
+            if (g.visible === false) {
+                hiddenGroups.push(g);
+            } else {
+                visibleGroups.push(g);
+            }
 
-    //                  data-field="${f.dataField}"
+        });
 
-    //                  onclick='selectField("${f.dataField}")'>
-    // <div>
-    // <b>${f.dataField}</b>
-    // </div>
-    // <div>
+        function render(container, data){
+            var html = "";
 
-    //                     ${f.editorType || 'dxTextBox'}
-    // </div>
-    // </div>
+            data.forEach(g => {
+                html += `
+                    <div class='drag-item'
+                         onclick='selectGroup("${g.groupId}")'>
 
-    //         `;
+                        <b>${g.caption}</b>
 
-    //     });
+                    </div>
+                `;
+            });
 
-    //     $(container).html(html);
+            $(container).html(html);
+        }
 
-    // }
+        render("#visibleGroups", visibleGroups);
+        render("#hiddenGroups", hiddenGroups);
+}
 
+    $("#visibleGroups").dxSortable({
+        group: "groupShared",
+        data: visibleGroups,
+              filter:".drag-item",
+
+            allowDropInsideItem:false,
+
+            itemOrientation:"vertical",
+
+            moveItemOnDrop:true,
+        onAdd: function(e){
+        const draggedItem = e.fromData[e.fromIndex];
+                          hiddenGroups.splice(e.fromIndex, 1);
+                       draggedItem.visible =  true;
+                                  visibleGroups.push(draggedItem);
+                var viewName = $("#viewSelector")
+                        .dxSelectBox("instance")
+                        .option("value");
+                    ajaxPost("/api/Utility/SaveGroupViewSchema",{
+                        view: viewName,
+                                    groupCaption: draggedItem.caption,
+                                        groupJson: JSON.stringify(draggedItem)
+                        }).then(res=>{
+
+                        DevExpress.ui.notify(
+                            "Saved",
+                            "success",
+                            3000
+                        );
+
+                    });
+        }
+    });
+
+    $("#hiddenGroups").dxSortable({
+        group: "groupShared",
+        data: hiddenGroups,
+              filter:".drag-item",
+
+            allowDropInsideItem:false,
+
+            itemOrientation:"vertical",
+
+            moveItemOnDrop:true,
+       onAdd: function(e) {
+           const draggedItem = e.fromData[e.fromIndex];
+                  visibleGroups.splice(e.fromIndex, 1);
+                   draggedItem.visible =  false;
+                          hiddenGroups.push(draggedItem);
+                var viewName = $("#viewSelector")
+                            .dxSelectBox("instance")
+                            .option("value");
+                        ajaxPost("/api/Utility/SaveGroupViewSchema",{
+                            view: viewName,
+                                        groupCaption: draggedItem.caption,
+                                            groupJson: JSON.stringify(draggedItem)
+                            }).then(res=>{
+
+                            DevExpress.ui.notify(
+                                "Saved",
+                                "success",
+                                3000
+                            );
+
+                        });
+    }
+    });
+        function selectGroup(groupId){
+
+        var group = formSchema.find(g => g.groupId === groupId);
+
+        $("#propertyPanel").html(`
+            <div class='property-item'>
+                <label>Caption</label>
+                <input value='${group.caption}' disabled />
+            </div>
+
+            <div id='groupVisible'></div>
+        `);
+
+        // $("#groupVisible").dxSwitch({
+        //     value: group.visible !== false,
+        //     onValueChanged: function(e){
+        //         group.visible = e.value;
+        //         saveGroup(group);
+        //         renderExplorer();
+        //         renderGroupDrag();
+        //     }
+        // });
+    }
+function saveGroup(group){
+
+        var viewName = $("#viewSelector")
+            .dxSelectBox("instance")
+            .option("value");
+
+        ajaxPost("/api/Utility/SaveGroupViewSchema",{
+            view: viewName,
+            groupCaption: group.caption,
+            groupJson: JSON.stringify(group)
+        }).then(() => {
+            DevExpress.ui.notify("Group Saved", "success", 2000);
+        });
+    }
     renderDragColumns();
 </script>
