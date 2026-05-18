@@ -23,6 +23,7 @@ using ERPCore.Models.Config;
 using System.Text.RegularExpressions;
 using System.Text.Json;
 using DocumentFormat.OpenXml.Wordprocessing;
+using static iText.Kernel.Pdf.Colorspace.PdfSpecialCs;
 
 
 
@@ -40,6 +41,7 @@ namespace ERPCore.Controllers.Config
         private readonly URLConfig _urlConfig;
         private readonly InternalAuth _internalAuth;
 
+
         public UtilityController(IBaseRepository<Utility> BaseRepository, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> blobStorageSettings) : base(BaseRepository, httpContextAccessor)
         {
             //_BaseRepository = BaseRepository;
@@ -54,7 +56,7 @@ namespace ERPCore.Controllers.Config
         [HttpGet("{module}/{view}")]
         public IActionResult GetViewContent(string module, string view)
         {
-            var root = @"D:\Source\MySource\JogetMVC\SurveyReportRE";
+            var root = _blobStorageSettings.CurrentValue.DeployPath;
 
             var path = Path.Combine(
                 root,
@@ -79,7 +81,7 @@ namespace ERPCore.Controllers.Config
             return Ok(new
             {
                 success = true,
-                content = content
+                content = content.Replace("@","")
             });
         }
 
@@ -94,6 +96,8 @@ namespace ERPCore.Controllers.Config
             return Ok(dependencies); // trả JSON đúng cho JS
             //return Ok(Base);
         }
+
+
         [HttpPost]
         public IActionResult SaveViewSchema([FromBody]JsonElement body)
         {
@@ -102,35 +106,160 @@ namespace ERPCore.Controllers.Config
             var view = body.GetProperty("view")
             .GetString();
 
-            var itemsText = body.GetProperty("itemsText")
+            var fieldName = body.GetProperty("fieldName")
+                                .GetString();   
+            var fieldJson = body.GetProperty("fieldJson")
                                 .GetString();
 
-            //var root = @"D:\Source\MySource\JogetMVC\SurveyReportRE";
-            //var path = Path.Combine(
-            //    root,
-            //    "Views",
-            //    "QuotationDetail",
-            //    req + ".cshtml"
-            //);
+            var root = _blobStorageSettings.CurrentValue.DeployPath;
 
-            //var content = System.IO.File.ReadAllText(path);
 
+         
+            var path = Path.Combine(
+                root,
+               "Pages",
+                "Business",
+                 "Form",
+                "QuotationDetail",
+                view + ".cshtml"
+            );
+
+            var content = System.IO.File.ReadAllText(path);
+
+
+            //var fieldPattern = $@"\{{[^{{}}]*dataField\s*:\s*'{fieldName}'[^{{}}]*\}}";
+
+            //var fieldPattern =
+            //    $@"\{[\s\S]*?{[\s\S]*?dataField\s*:\s*['""]{fieldName}['""][\s\S]*?\}[\s\S]*?}";
+
+            var fieldPattern = $@"\{{{{                      
+[\s\S] *?               
+    dataField\s*:\s*       
+    ['""]{fieldName}['""]  
+    [\s\S] *?              
+\}}}}
+";
+
+            var match = Regex.Match(
+                content,
+                fieldPattern,
+                RegexOptions.Singleline | RegexOptions.IgnorePatternWhitespace
+            );
+
+            if (match.Success)
+            {
+                var fieldBlock = match.Value;
+            }
+
+
+            var fieldText = ExtractFieldBlock(content, fieldName);
+            if (fieldText == null)
+            {
+                return BadRequest("Field not found");
+            }
+
+            //if (!fieldMatch.Success)
+            //{
+            //    return BadRequest("Field not found");
+            //}
+
+            //var fieldText = fieldMatch.Value;
+
+            var fieldObj = JsonConvert.DeserializeObject<Dictionary<string, object>>(fieldJson);
+            string fieldTextNew = "";
+            // update từng property
+            foreach (var kv in fieldObj)
+            {
+                if (kv.Key == "dataField") continue;
+
+                var isString = kv.Value is string;
+
+                fieldTextNew = UpdateProperty(
+                    fieldText,
+                    kv.Key,
+                    kv.Key == "visible" ? kv.Value.ToString().ToLower() : kv.Value.ToString(),
+                    isString
+                );
+            }
+
+            content = content.Replace(fieldText, fieldTextNew);
             //content = Regex.Replace(
+            //        content,
+            //        $@"\{{[^{{}}]*dataField\s*:\s*'{fieldName}'[^{{}}]*\}}",
+            //        fieldJson.Replace("\"", "'")
+            //    );
 
-            //    content,
 
-            //    @"items\s*:\s*\[[\s\S]*?\]\s*\}\s*\);",
-
-            //    $"items: {itemsText}" + Environment.NewLine + "});"
-
-            //);
-
-            //System.IO.File.WriteAllText(path, content);
+            System.IO.File.WriteAllText(path, content);
 
             return Ok(new
             {
                 success = true
             });
+        }
+        string UpdateProperty(string fieldText, string key, string value, bool isString = true)
+        {
+            var pattern = $@"{key}\s*:\s*[^,}}]+";
+
+            var replacement = isString
+                ? $"{key}: '{value}'"
+                : $"{key}: {value}";
+
+            if (Regex.IsMatch(fieldText, pattern))
+            {
+                // property tồn tại → replace
+                return Regex.Replace(fieldText, pattern, replacement);
+            }
+            else
+            {
+                // property chưa có → thêm vào cuối
+                return fieldText.TrimEnd('}') + $", {replacement} }}";
+            }
+        }
+
+        private static string ExtractFieldBlock(string content, string fieldName)
+        {
+            var pattern = $@"dataField\s*:\s*[""']{Regex.Escape(fieldName)}[""']";
+            var match = Regex.Match(content, pattern, RegexOptions.Singleline);
+            if (!match.Success)
+                return null;
+            // tìm dấu { mở object cha
+            int start = match.Index;
+            while (start >= 0 && content[start] != '{')
+                start--;
+            if (start < 0)
+                return null;
+            int depth = 0;
+            bool inString = false;
+            char stringChar = '\0';
+            for (int i = start; i < content.Length; i++)
+            {
+                char c = content[i];
+                // xử lý string
+                if ((c == '"' || c == '\'') && (i == 0 || content[i - 1] != '\\'))
+                {
+                    if (!inString)
+                    {
+                        inString = true;
+                        stringChar = c;
+                    }
+                    else if (stringChar == c)
+                    {
+                        inString = false;
+                    }
+                }
+                if (inString)
+                    continue;
+                if (c == '{')
+                    depth++;
+                if (c == '}')
+                    depth--;
+                if (depth == 0)
+                {
+                    return content.Substring(start, i - start + 1);
+                }
+            }
+            return null;
         }
         #endregion
 

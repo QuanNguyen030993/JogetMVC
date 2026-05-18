@@ -248,23 +248,7 @@ LOW CODE VIEW DESIGNER MOCKUP
 
 </div>
 
-<div class="preview-box">
 
-    <h2>
-        Add New Field
-    </h2>
-
-    <div class="add-field-box">
-
-        <div id="txtNewField"></div>
-
-        <div id="btnAddNewField"></div>
-
-        <div id="btnSaveView"></div>
-
-    </div>
-
-</div>
         </div>
 
     </div>
@@ -284,7 +268,23 @@ LOW CODE VIEW DESIGNER MOCKUP
         </div>
 
     </div>
+    <div class="preview-box">
 
+        <h2>
+            Add New Field
+        </h2>
+
+        <div class="add-field-box">
+
+            <div id="txtNewField"></div>
+
+            <div id="btnAddNewField"></div>
+
+            <div id="btnSaveView"></div>
+
+        </div>
+
+    </div>
 </div>
 
 <script>
@@ -308,6 +308,7 @@ LOW CODE VIEW DESIGNER MOCKUP
             "_Quotation_FO_Form",
             "_Quotation_TS_Form",
             "_Quotation_UW_Form",
+            "_Quotation_LMKT_Form",
             "_Quotation_PM_Form"
 
         ],
@@ -358,7 +359,6 @@ LOW CODE VIEW DESIGNER MOCKUP
     function parseSchema(content){
 
     try{
-
         var match = content.match(
             /items\s*:\s*\[([\s\S]*?)\]\s*\}\s*\);/
         );
@@ -514,7 +514,6 @@ LOW CODE VIEW DESIGNER MOCKUP
         renderExplorer();
 
         var field = findField(fieldName);
-
         $("#propertyPanel").html(`
 
             <div class='property-item'>
@@ -550,12 +549,13 @@ LOW CODE VIEW DESIGNER MOCKUP
             items:[
                 "dxTextBox",
                 "dxTextArea",
+                "dxNumberBox",
                 "dxDateBox",
                 "dxSelectBox",
                 "dxTagBox"
             ],
 
-            value:field.editorType,
+                value:field?.editorType ? field.editorType : "dxTextBox",
 
             onValueChanged:function(e){
 
@@ -649,7 +649,6 @@ LOW CODE VIEW DESIGNER MOCKUP
         g.items.forEach(f=>{
 
             if(f.visible === false){
-
                 hiddenFields.push(f);
 
             }else{
@@ -667,7 +666,7 @@ LOW CODE VIEW DESIGNER MOCKUP
     data.forEach(f=>{
 
         html += `
-            <div class='drag-item'>
+                <div class='drag-item' onclick='selectField("${f.dataField}")'>
 
                 <div>
                     <b>${f.dataField}</b>
@@ -696,20 +695,32 @@ LOW CODE VIEW DESIGNER MOCKUP
 
         itemOrientation:"vertical",
 
-        moveItemOnDrop:true,
+         moveItemOnDrop:true,
+         onAdd: function(e) {
+                 const draggedItem = e.fromData[e.fromIndex];
+                       hiddenFields.splice(e.fromIndex, 1);
+                               draggedItem.visible =  true;
+                               visibleFields.push(draggedItem);// var field =  e.fromData[e.fromIndex];
+                                            var field = findField(draggedItem.dataField);
+            var viewName = $("#viewSelector")
+                    .dxSelectBox("instance")
+                    .option("value");
+                ajaxPost("/api/Utility/SaveViewSchema",{
+                    view: viewName,
+                        fieldName: draggedItem.dataField,
+                            fieldJson: JSON.stringify(field)
+                    }).then(res=>{
 
-        onAdd:function(e){
+                    DevExpress.ui.notify(
+                        "Saved",
+                        "success",
+                        3000
+                    );
 
-            var field = e.itemData;
-            if (field)
-              field.visible =  true;
+                });
 
-            renderDragColumns();
 
-            renderExplorer();
-
-        }
-
+         }
     });
 
     $("#hiddenFields").dxSortable({
@@ -725,18 +736,30 @@ LOW CODE VIEW DESIGNER MOCKUP
         itemOrientation:"vertical",
 
         moveItemOnDrop:true,
+                 onAdd: function(e) {
+                            const draggedItem = e.fromData[e.fromIndex];
+                              visibleFields.splice(e.fromIndex, 1);
+                                   draggedItem.visible =  false;
+                                      hiddenFields.push(draggedItem);
+                                              var field = findField(draggedItem.dataField);
+        var viewName = $("#viewSelector")
+                .dxSelectBox("instance")
+                .option("value");
+            ajaxPost("/api/Utility/SaveViewSchema",{
+                view: viewName,
+                    fieldName: draggedItem.dataField,
+                        fieldJson: JSON.stringify(field)
+                }).then(res=>{
 
-        onAdd:function(e){
+                DevExpress.ui.notify(
+                    "Saved",
+                    "success",
+                    3000
+                );
 
-            var field = e.itemData;
-            if (field)
-              field.visible =  false;
-            renderDragColumns();
+            });
 
-            renderExplorer();
-
-        }
-
+             }
     });
 
     renderDragItems(
@@ -783,11 +806,8 @@ $("#btnAddNewField").dxButton({
             isNew:true
 
         });
-
         renderExplorer();
-
         renderDragColumns();
-
         renderJson();
 
     }
@@ -817,35 +837,83 @@ function generateItemsText(){
     .replace(/"/g,"'");
 }
 function saveView(){
+    var field = findField(selectedField);
+         var viewName = $("#viewSelector")
+            .dxSelectBox("instance")
+            .option("value");
+        ajaxPost("/api/Utility/SaveViewSchema",{
+            view: viewName,
+            fieldName: selectedField,
+            fieldJson: JSON.stringify(field)
+            }).then(res=>{
 
-    var generated = generateItemsText();
+            DevExpress.ui.notify(
+                "Saved",
+                "success",
+                3000
+            );
 
-    var viewName = $("#viewSelector")
-        .dxSelectBox("instance")
-        .option("value");
+        });
 
-        ajaxPost(
 
-        "/api/Utility/SaveViewSchema",
+    // var generated = generateItemsText();
 
-        {
+    // var viewName = $("#viewSelector")
+    //     .dxSelectBox("instance")
+    //     .option("value");
 
-            view:viewName,
+    //     ajaxPost(
 
-            itemsText:generated
+    //     "/api/Utility/SaveViewSchema",
 
-        })
+    //     {
 
-    .then(res=>{
+    //         view:viewName,
 
-        DevExpress.ui.notify(
-            "Saved",
-            "success",
-            3000
-        );
+    //         itemsText:generated
 
-    });
+    //     })
+
+    // .then(res=>{
+
+    //     DevExpress.ui.notify(
+    //         "Saved",
+    //         "success",
+    //         3000
+    //     );
+
+    // });
+
 
 }
-renderDragColumns();
+    // function renderDragItems(container, data){
+
+    //     var html = "";
+
+    //     data.forEach(f => {
+
+    //         html += `
+    // <div class='drag-item'
+
+    //                  data-field="${f.dataField}"
+
+    //                  onclick='selectField("${f.dataField}")'>
+    // <div>
+    // <b>${f.dataField}</b>
+    // </div>
+    // <div>
+
+    //                     ${f.editorType || 'dxTextBox'}
+    // </div>
+    // </div>
+
+    //         `;
+
+    //     });
+
+    //     $(container).html(html);
+
+    // }
+
+    renderDragColumns();
 </script>
