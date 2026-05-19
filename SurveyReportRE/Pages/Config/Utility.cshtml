@@ -73,6 +73,13 @@ LOW CODE VIEW DESIGNER MOCKUP
         font-weight:bold;
     }
 
+    .group-zone {
+        margin-bottom: 20px;
+    }
+
+    .group-fields {
+        min-height: 80px;
+    }
     .field-item{
         padding:12px;
         border-top:1px solid #eee;
@@ -261,6 +268,25 @@ LOW CODE VIEW DESIGNER MOCKUP
 
      </div>
 
+                <div class="dual-layout">
+
+                    <div class="drag-column">
+                    <div class="panel-title">
+                        Re-order Fields by Group
+                    </div>
+
+                    <div id="reorderFieldContainer" class="dual-layout">
+
+                        <!-- Các group sẽ render dynamic tại đây -->
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
 </div>
 
 
@@ -300,6 +326,9 @@ LOW CODE VIEW DESIGNER MOCKUP
              class="property-panel">
         </div>
         <div id="btnSaveGroupView"></div>
+
+
+        
     </div>
 @*     <div class="preview-box">
 
@@ -424,15 +453,16 @@ LOW CODE VIEW DESIGNER MOCKUP
 
 
         formSchema = eval("(" + itemsText + ")");
-
+            
         // ✅ add groupId
         formSchema.forEach((g, i) => {
+                const randomId = crypto.randomUUID();
             if (g.itemType === "group") {
-                g.groupId = g.caption || ("group_" + i);
+                    g.groupId = randomId || ("group_" + i);
             }
         });
         renderGroupDrag();
-
+            renderReOrderFieldColumns();
     }
     catch(ex){
 
@@ -1053,7 +1083,7 @@ function renderGroupDrag(){
         // });
     }
     function saveGroupView(group){
-        debugger
+        
         var viewName = $("#viewSelector")
             .dxSelectBox("instance")
             .option("value");
@@ -1068,5 +1098,334 @@ function renderGroupDrag(){
             DevExpress.ui.notify("Group Saved", "success", 2000);
         });
     }
+        function renderReOrderFieldColumns(){
+
+        var html = "";
+
+        formSchema.forEach(group => {
+            
+            if(!group.items) return;
+
+            html += `
+                <div class='drag-column group-zone'>
+
+                    <div class='drag-title'>
+                        ${group.caption}
+                    </div>
+
+                    <div class='group-fields'
+                         id='group_${group.groupId}'
+                             data-group='${group.caption}'>
+                    </div>
+
+                </div>
+            `;
+        });
+
+            $("#reorderFieldContainer").html(html);
+
+        formSchema.forEach(group => {
+            
+            if(!group.items) return;
+
+            renderReOrderGroupFields(group);
+        });
+
+        initReOrderFieldSortable();
+    }
+
+    // =====================================================
+    // RENDER GROUP FIELD
+    // =====================================================
+
+    function renderReOrderGroupFields(group){
+
+        var html = "";
+
+        group.items.forEach(field => {
+
+            html += `
+                <div class='drag-item'
+                     data-field='${field.dataField}'
+                     onclick='selectField("${field.dataField}")'>
+
+                    <div>
+                        <b>${field.dataField}</b>
+                    </div>
+
+                    <div>
+                        ${field.editorType || 'dxTextBox'}
+                    </div>
+
+                </div>
+            `;
+        });
+
+        $(`#group_${group.groupId}`).html(html);
+    }
+
+    // =====================================================
+    // INIT FIELD SORTABLE
+    // =====================================================
+
+    function initReOrderFieldSortable(){
+
+        $(".group-fields").each(function(){
+
+            $(this).dxSortable({
+
+                group: "fieldShared",
+
+                filter: ".drag-item",
+
+                allowDropInsideItem: false,
+
+                itemOrientation: "vertical",
+
+                moveItemOnDrop: true,
+
+                onAdd: onReOrderFieldDrop
+
+            });
+
+        });
+    }
+
+    // =====================================================
+    // FIELD DROP
+    // =====================================================
+        function onReOrderFieldDrop(e){
+            debugger
+        // ✅ Lấy fieldName từ DOM (CHUẨN NHẤT)
+        var fieldName = $(e.itemElement).data("field");
+
+        // ✅ Xác định group source / target
+            var viewName = $("#viewSelector")
+                .dxSelectBox("instance")
+                .option("value");
+        var sourceGroupId = $(e.fromComponent.element()).data("group");
+        var targetGroupId = $(e.toComponent.element()).data("group");
+
+                ajaxPost("/api/Utility/SwapGroup",{
+
+                view:viewName,
+
+                    fieldName:fieldName,
+
+                            sourceGroup:sourceGroupId,
+                  targetGroup:targetGroupId
+
+
+
+            }).then(res => {
+
+                DevExpress.ui.notify(
+                    "Field reordered",
+                    "success",
+                    2000
+                );
+
+            });
+        // ✅ Find group
+        var sourceGroup = formSchema.find(g => g.groupId == sourceGroupId);
+        var targetGroup = formSchema.find(g => g.groupId == targetGroupId);
+
+        if(!sourceGroup || !targetGroup){
+            console.error("Group not found");
+            return;
+        }
+
+        // ✅ Find field object thật
+        var draggedItem = sourceGroup.items.find(f => f.dataField === fieldName);
+
+        if(!draggedItem){
+            console.error("Field not found:", fieldName);
+            return;
+        }
+
+        // ✅ Remove khỏi group cũ
+        sourceGroup.items = sourceGroup.items.filter(f => f.dataField !== fieldName);
+
+        // ✅ Insert vào group mới theo index
+        targetGroup.items.splice(e.toIndex, 0, draggedItem);
+
+        // ✅ DEBUG
+        console.log("Move field", fieldName);
+        console.log("From:", sourceGroup.caption);
+        console.log("To:", targetGroup.caption);
+        console.log("Index:", e.toIndex);
+
+        // ✅ Save API (nếu cần)
+        saveReOrderField(
+            draggedItem,
+            sourceGroup,
+            targetGroup,
+            e.toIndex
+        );
+
+        // ✅ Re-render UI
+        renderExplorer();
+        renderJson();
+        renderReOrderFieldColumns();
+    }
+    // function onReOrderFieldDrop(e){
+    //     debugger
+    //     var targetGroupId =
+    //         $(e.toContainer).data("group");
+
+    //     var sourceGroupId =
+    //         $(e.fromContainer).data("group");
+
+    //     var targetGroup =
+    //         formSchema.find(x =>
+    //             x.groupId == targetGroupId
+    //         );
+
+    //     var sourceGroup =
+    //         formSchema.find(x =>
+    //             x.groupId == sourceGroupId
+    //         );
+
+    //     var draggedItem =
+    //         e.fromData[e.fromIndex];
+            
+    //     // remove source
+    //     sourceGroup.items =
+    //         sourceGroup.items.filter(x =>
+    //             x.dataField != draggedItem.dataField
+    //         );
+
+    //     // insert target
+    //     targetGroup.items.splice(
+    //         e.toIndex,
+    //         0,
+    //         draggedItem
+    //     );
+
+    //     saveReOrderField(
+    //         draggedItem,
+    //         sourceGroup,
+    //         targetGroup,
+    //         e.toIndex
+    //     );
+
+    //     renderExplorer();
+    //     renderJson();
+    // }
+
+    // =====================================================
+    // GROUP SORTABLE
+    // =====================================================
+
+    // function initReOrderGroupSortable(){
+
+    //     $("#visibleGroups").dxSortable({
+
+    //         group: "groupShared",
+
+    //         filter: ".drag-item",
+
+    //         moveItemOnDrop: true,
+
+    //         onAdd: onReOrderGroupDrop
+    //     });
+
+     
+    // }
+
+    // =====================================================
+    // GROUP DROP
+    // =====================================================
+
+    function onReOrderGroupDrop(e){
+
+        const draggedItem =
+            e.fromData[e.fromIndex];
+
+        if($(e.toContainer).attr("id") == "visibleGroups"){
+
+            draggedItem.visible = true;
+
+        }else{
+
+            draggedItem.visible = false;
+        }
+
+        saveReOrderGroup(draggedItem);
+    }
+
+    // =====================================================
+    // SAVE FIELD REORDER
+    // =====================================================
+
+    function saveReOrderField(
+        field,
+        sourceGroup,
+        targetGroup,
+        newIndex){
+
+        // var viewName = $("#viewSelector")
+        //     .dxSelectBox("instance")
+        //     .option("value");
+
+        // ajaxPost("/api/Utility/ReOrderFieldToGroup",{
+
+        //     view:viewName,
+
+        //     fieldName:field.dataField,
+
+        //     fromGroup:sourceGroup.caption,
+
+        //     toGroup:targetGroup.caption,
+
+        //     newIndex:newIndex
+
+        // }).then(res => {
+
+        //     DevExpress.ui.notify(
+        //         "Field reordered",
+        //         "success",
+        //         2000
+        //     );
+
+        // });
+    }
+
+    // =====================================================
+    // SAVE GROUP REORDER
+    // =====================================================
+
+    function saveReOrderGroup(group){
+
+        // var viewName = $("#viewSelector")
+        //     .dxSelectBox("instance")
+        //     .option("value");
+
+        // ajaxPost("/api/Utility/ReOrderGroupVisible",{
+
+        //     view:viewName,
+
+        //     groupCaption:group.caption,
+
+        //     visible:group.visible
+
+        // }).then(res => {
+
+        //     DevExpress.ui.notify(
+        //         "Group reordered",
+        //         "success",
+        //         2000
+        //     );
+
+        // });
+    }
+
+    // =====================================================
+    // CSS
+    // =====================================================
+
+
+
     renderDragColumns();
+        renderReOrderFieldColumns();
 </script>

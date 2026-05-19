@@ -313,10 +313,6 @@ namespace ERPCore.Controllers.Config
             var content = System.IO.File.ReadAllText(path);
 
 
-            //var fieldPattern = $@"\{{[^{{}}]*dataField\s*:\s*'{fieldName}'[^{{}}]*\}}";
-
-            //var fieldPattern =
-            //    $@"\{[\s\S]*?{[\s\S]*?dataField\s*:\s*['""]{fieldName}['""][\s\S]*?\}[\s\S]*?}";
 
             var fieldPattern = $@"\{{{{                      
 [\s\S] *?               
@@ -354,31 +350,9 @@ namespace ERPCore.Controllers.Config
             if (Regex.IsMatch(fieldText, pattern))
             {
                  fieldTextNew = Regex.Replace(fieldText, pattern, $"$1{newName}$3");
-                //Console.WriteLine(fieldTextNew);
             }
 
 
-
-
-            // update từng property
-            //foreach (var kv in fieldObj)
-            //{
-            //    if (kv.Key == "caption")
-            //    {
-            //        var isString = kv.Value is string;
-
-
-            //        fieldTextNew = UpdateProperty(
-            //            fieldText,
-            //            kv.Key,
-            //            kv.Key == "visible" ? kv.Value.ToString().ToLower() : kv.Value.ToString(),
-            //            isString
-            //        );
-            //        break;
-            //    }
-            //    else continue;
-
-            //}
 
             content = content.Replace(fieldText, fieldTextNew);
 
@@ -412,6 +386,98 @@ namespace ERPCore.Controllers.Config
             }
         }
 
+        [HttpPost]
+        public IActionResult SwapGroup([FromBody] JsonElement body)
+        {
+            var view = body.GetProperty("view").GetString();
+            var fieldName = body.GetProperty("fieldName").GetString();
+            var sourceCaption = body.GetProperty("sourceGroup").GetString();
+            var targetCaption = body.GetProperty("targetGroup").GetString();
+
+            var root = _blobStorageSettings.CurrentValue.DeployPath;
+
+            var path = Path.Combine(
+                root,
+                "Pages",
+                "Business",
+                "Form",
+                "QuotationDetail",
+                view + ".cshtml"
+            );
+
+            var content = System.IO.File.ReadAllText(path);
+
+            // ✅ 1. Extract field
+            var fieldText = ExtractFieldBlock(content, fieldName);
+            if (string.IsNullOrEmpty(fieldText))
+                return BadRequest("Field not found");
+
+            // ✅ 2. Extract source group
+            var sourceBlock = ExtractGroupBlock(content, sourceCaption);
+            if (string.IsNullOrEmpty(sourceBlock))
+                return BadRequest("Source group not found");
+
+            // ✅ 3. Remove field khỏi source group
+            var updatedSource = RemoveFieldFromGroup(sourceBlock, fieldText);
+
+            // ✅ 4. Replace source group
+            content = content.Replace(sourceBlock, updatedSource);
+
+            // ✅ 5. Extract target group (sau khi update content)
+            var targetBlock = ExtractGroupBlock(content, targetCaption);
+            if (string.IsNullOrEmpty(targetBlock))
+                return BadRequest("Target group not found");
+
+            // ✅ 6. Insert field vào target
+            var updatedTarget = InsertFieldIntoGroup(targetBlock, fieldText);
+
+            // ✅ 7. Replace target group
+            content = content.Replace(targetBlock, updatedTarget);
+
+            System.IO.File.WriteAllText(path, content);
+
+            return Ok(new { success = true });
+        }
+        private string RemoveFieldFromGroup(string groupBlock, string fieldText)
+        {
+            var newGroup = groupBlock.Replace(fieldText, "");
+
+            // ✅ cleanup dấu ,
+            newGroup = Regex.Replace(newGroup, @",\s*,", ",");
+            newGroup = Regex.Replace(newGroup, @"\[\s*,", "[");
+            newGroup = Regex.Replace(newGroup, @",\s*\]", "]");
+
+            return newGroup;
+        }
+        private string InsertFieldIntoGroup(string targetBlock, string fieldText)
+        {
+            var itemsPattern = @"items\s*:\s*\[(.*?)\]";
+
+            var match = Regex.Match(targetBlock, itemsPattern, RegexOptions.Singleline);
+
+            if (!match.Success)
+                return targetBlock;
+
+            var itemsContent = match.Groups[1].Value.Trim();
+
+            if (!string.IsNullOrWhiteSpace(itemsContent))
+            {
+                itemsContent += ",\n" + fieldText;
+            }
+            else
+            {
+                itemsContent = fieldText;
+            }
+
+            var newItems = $"items: [\n{itemsContent}\n]";
+
+            return Regex.Replace(
+                targetBlock,
+                itemsPattern,
+                newItems,
+                RegexOptions.Singleline
+            );
+        }
         string UpsertProperty(
 
     string fieldText,
