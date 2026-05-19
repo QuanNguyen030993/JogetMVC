@@ -643,7 +643,13 @@ namespace ERPCore.Controllers.Config
             // =========================================
             else
             {
-                content = RemoveFieldFromRootItems(content, fieldText);
+
+                string fieldTextOut = null;
+                content = RemoveFieldFromRootItems(content, fieldName, out fieldTextOut);
+
+                if (string.IsNullOrEmpty(fieldText))
+                    return BadRequest("Field not found in root");
+
             }
 
             // =========================================
@@ -655,7 +661,9 @@ namespace ERPCore.Controllers.Config
 
             var updatedTarget = InsertFieldIntoGroup(targetBlock, fieldText);
 
-            content = ReplaceFirst(content, targetBlock, updatedTarget);
+
+ 
+            content = content.Replace(targetBlock, updatedTarget);
 
             System.IO.File.WriteAllText(path, content);
 
@@ -670,27 +678,94 @@ namespace ERPCore.Controllers.Config
                  + replace
                  + text.Substring(pos + search.Length);
         }
-
-        private string RemoveFieldFromRootItems(string content, string fieldText)
+        [HttpPost]
+        public IActionResult AddGroup([FromBody] JsonElement body)
         {
-            var itemsPattern = @"items\s*:\s*\[(.*?)\]";
+            var view = body.GetProperty("view").GetString();
+            var groupJson = body.GetProperty("groupJson").GetString();
 
+            var root = _blobStorageSettings.CurrentValue.DeployPath;
+
+            var path = Path.Combine(
+                root,
+                "Pages",
+                "Business",
+                "Form",
+                "QuotationDetail",
+                view + ".cshtml"
+            );
+
+            var content = System.IO.File.ReadAllText(path);
+
+            var groupObj = JsonConvert.DeserializeObject<Dictionary<string, object>>(groupJson);
+
+            // ✅ convert format JS object
+            var groupText = ConvertToJsObject(groupObj);
+
+            // ✅ insert vào ROOT items
+            content = InsertGroupIntoRoot(content, groupText);
+
+            System.IO.File.WriteAllText(path, content);
+
+            return Ok();
+        }
+        private string InsertGroupIntoRoot(string content, string groupText)
+        {
+            var pattern = @"items\s*:\s*\[";
+
+            var match = Regex.Match(content, pattern);
+
+            if (!match.Success)
+                return content;
+
+            var insertPos = match.Index + match.Length;
+
+            // ✅ thêm group + dấu ,
+            var insertText = "\n" + groupText + ",\n";
+
+            return content.Insert(insertPos, insertText);
+        }
+        private string RemoveFieldFromRootItems(string content, string fieldName, out string removedField)
+        {
+            removedField = null;
+
+            var itemsPattern = @"items\s*:\s*\[(.*?)\]";
             var match = Regex.Match(content, itemsPattern, RegexOptions.Singleline);
+
             if (!match.Success)
                 return content;
 
             var itemsContent = match.Groups[1].Value;
 
-            var newItemsContent = itemsContent.Replace(fieldText, "");
+            // ✅ match field theo dataField
+            var fieldPattern = $@"dataField\s*:\s*[""']{Regex.Escape(fieldName)}[""']";
 
-            // ✅ clean dấu ,
+            var fieldMatch = Regex.Match(
+                itemsContent,
+                fieldPattern,
+                RegexOptions.Singleline | RegexOptions.IgnorePatternWhitespace
+            );
+
+            if (!fieldMatch.Success)
+                return content;
+
+            // ✅ giữ lại block field để chèn sang group khác
+            removedField = ExtractFieldBlock(content, fieldName);
+
+            // ✅ remove field + dấu ,
+            var newItemsContent = itemsContent.Remove(
+                fieldMatch.Index,
+                fieldMatch.Length
+            );
+
+            // ✅ cleanup dấu ,
             newItemsContent = Regex.Replace(newItemsContent, @",\s*,", ",");
-            newItemsContent = Regex.Replace(newItemsContent, @"\[\s*,", "[");
-            newItemsContent = Regex.Replace(newItemsContent, @",\s*\]", "]");
+            newItemsContent = Regex.Replace(newItemsContent, @"^\s*,", "");
+            newItemsContent = Regex.Replace(newItemsContent, @",\s*$", "");
 
             var newItems = $"items: [\n{newItemsContent.Trim()}\n]";
 
-            return ReplaceFirst(content, match.Value, newItems);
+            return content.Replace($"{removedField},", "");
         }
         private string RemoveFieldFromGroup(string groupBlock, string fieldText)
         {

@@ -1,4 +1,4 @@
-﻿@using JogetMVC.Model
+@using JogetMVC.Model
 @* @page "{pageNum:int?}"
 @using Newtonsoft.Json *@
 @* @model Quotation_TS_FormModel *@
@@ -24,8 +24,13 @@
     $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
         dataSource: makeBasicDataSource(that, true),
          items: [
+    {dataField: "tmiCode",editorType: "dxSelectBox",visible:true},
 
-         {itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
+
+    {itemType: "group",caption: "Insurance Period",colCount:2,items:[]},
+
+
+{itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
             ,
             editorOptions: {
             name: "files"
@@ -42,7 +47,7 @@
             }
 
         }
-        ]}
+]}
                  ,{
         dataField: "decision",
         label: { text: "Decision" },
@@ -129,7 +134,7 @@
          caption: "Premium / Rate / VAT / Discount / Currency",
          colCount: 2,
          items: [
-             { dataField: "premiumTotal", editorType:"dxNumberBox", editorOptions: {format: '#,##0'
+{ dataField: "premiumTotal", editorType:"dxNumberBox", editorOptions: {format: '#,##0'
              // , onValueChanged: function (et) {
 
              // if (et.previousValue != et.value && et.previousValue != 0){
@@ -206,10 +211,8 @@
              { dataField: "vatAmount", label: { template: labelTpl("VatAmount - VAT amount") } },
 
              { dataField: "currencyCode", label: { template: labelTpl("CurrencyCode - Currency code") } },
-             { dataField: "exchangeRate", label: { template: labelTpl("ExchangeRate - Exchange rate") } }
-
-
-         ]
+             { dataField: "exchangeRate", label: { template: labelTpl("ExchangeRate - Exchange rate") } },
+]
      },
 
 

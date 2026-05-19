@@ -345,6 +345,19 @@ LOW CODE VIEW DESIGNER MOCKUP
         </div>
 
     </div> 
+    <div class="preview-box">
+
+        <h2>Add New Group</h2>
+
+        <div class="add-field-box">
+
+            <div id="txtNewGroup"></div>
+            <div id="btnAddNewGroup"></div>
+
+        </div>
+
+    </div>
+
 </div>
 
 <script>
@@ -1460,7 +1473,54 @@ function renderGroupDrag(){
     // CSS
     // =====================================================
 
+        $("#txtNewGroup").dxTextBox({
+        placeholder: "Group name"
+    });
 
+    $("#btnAddNewGroup").dxButton({
+
+        text: "Add Group",
+        type: "default",
+
+        onClick: function(){
+
+            var groupName = $("#txtNewGroup")
+                .dxTextBox("instance")
+                .option("value");
+
+            if(!groupName) return;
+
+            var newGroup = {
+                itemType: "group",
+                caption: groupName,
+                colCount: 2,
+                items: []
+            };
+
+            // ✅ push vào đầu
+            formSchema.unshift(newGroup);
+
+            // ✅ CALL API
+            var viewName = $("#viewSelector")
+                .dxSelectBox("instance")
+                .option("value");
+
+            ajaxPost("/api/Utility/AddGroup", {
+                view: viewName,
+                groupJson: JSON.stringify(newGroup)
+            }).then(() => {
+                DevExpress.ui.notify("Group added", "success", 2000);
+            });
+
+            renderExplorer();
+            renderDragColumns();
+            renderReOrderFieldColumns();
+            renderGroupDrag();
+            renderJson();
+        }
+
+    });
+    ``
 
     renderDragColumns();
         renderReOrderFieldColumns();
