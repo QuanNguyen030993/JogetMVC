@@ -330,7 +330,7 @@ LOW CODE VIEW DESIGNER MOCKUP
 
         
     </div>
-@*     <div class="preview-box">
+     <div class="preview-box">
 
         <h2>
             Add New Field
@@ -344,7 +344,7 @@ LOW CODE VIEW DESIGNER MOCKUP
 
         </div>
 
-    </div> *@
+    </div> 
 </div>
 
 <script>
@@ -442,7 +442,7 @@ LOW CODE VIEW DESIGNER MOCKUP
         // itemsText = normalizeJsObject(itemsText);
 
         formSchema = eval("(" + itemsText + ")");
-
+            normalizeSchema();
 
 
         renderExplorer();
@@ -453,7 +453,7 @@ LOW CODE VIEW DESIGNER MOCKUP
 
 
         formSchema = eval("(" + itemsText + ")");
-            
+                normalizeSchema();
         // ✅ add groupId
         formSchema.forEach((g, i) => {
                 const randomId = crypto.randomUUID();
@@ -856,41 +856,77 @@ LOW CODE VIEW DESIGNER MOCKUP
 });
 
 }
+    $("#btnAddNewField").dxButton({
 
-$("#btnAddNewField").dxButton({
+        text:"Add Field",
+        type:"default",
 
-    text:"Add Field",
+        onClick:function(){
 
-    type:"default",
+            var fieldName = $("#txtNewField")
+                .dxTextBox("instance")
+                .option("value");
 
-    onClick:function(){
+            if(!fieldName) return;
 
-        var fieldName = $("#txtNewField")
-            .dxTextBox("instance")
-            .option("value");
+            var targetGroup = formSchema.find(x => x.items);
 
-        if(!fieldName) return;
+            var newField = {
+                dataField: fieldName,
+                editorType: "dxTextBox",
+                visible: true
+            };
 
-        var targetGroup = formSchema.find(x=>x.items);
+            targetGroup.items.push(newField);
 
-        targetGroup.items.push({
+            // ✅ CALL API SAVE
+            var viewName = $("#viewSelector")
+                .dxSelectBox("instance")
+                .option("value");
 
-            dataField:fieldName,
+            ajaxPost("/api/Utility/AddField", {
+                view: viewName,
+                groupCaption: targetGroup.caption,
+                fieldJson: JSON.stringify(newField)
+            }).then(() => {
+                DevExpress.ui.notify("Field added", "success", 2000);
+            });
 
-            editorType:"dxTextBox",
+            renderExplorer();
+            renderDragColumns();
+            renderReOrderFieldColumns();
+            renderJson();
+        }
 
-            visible:true,
+    });
+        function normalizeSchema(){
 
-            isNew:true
+        var defaultGroup = {
+            itemType: "group",
+            caption: "General",
+            groupId: "general_group",
+            items: []
+        };
+
+        var newSchema = [];
+
+        formSchema.forEach(item => {
+
+            if(item.items){
+                newSchema.push(item);
+            }else{
+                defaultGroup.items.push(item);
+            }
 
         });
-        renderExplorer();
-        renderDragColumns();
-        renderJson();
 
+        if(defaultGroup.items.length > 0){
+            newSchema.unshift(defaultGroup);
+        }
+
+        formSchema = newSchema;
     }
-
-});
+    ``
 $("#btnSaveView").dxButton({
 
     text:"Save field on view",
@@ -1416,7 +1452,7 @@ function renderGroupDrag(){
         //         "success",
         //         2000
         //     );
-
+        
         // });
     }
 

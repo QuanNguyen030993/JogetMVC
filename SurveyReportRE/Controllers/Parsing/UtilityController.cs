@@ -365,6 +365,166 @@ namespace ERPCore.Controllers.Config
                 success = true
             });
         }
+        //[HttpPost]
+        //public IActionResult AddField([FromBody] JsonElement body)
+        //{
+        //    var view = body.GetProperty("view").GetString();
+        //    var groupCaption = body.GetProperty("groupCaption").GetString();
+        //    var fieldJson = body.GetProperty("fieldJson").GetString();
+
+        //    var root = _blobStorageSettings.CurrentValue.DeployPath;
+
+        //    var path = Path.Combine(
+        //        root,
+        //        "Pages",
+        //        "Business",
+        //        "Form",
+        //        "QuotationDetail",
+        //        view + ".cshtml"
+        //    );
+
+        //    var content = System.IO.File.ReadAllText(path);
+
+        //    var groupBlock = ExtractGroupBlock(content, groupCaption);
+        //    if (string.IsNullOrEmpty(groupBlock))
+        //        return BadRequest("Group not found");
+
+        //    var fieldObj = JsonConvert.DeserializeObject<Dictionary<string, object>>(fieldJson);
+
+        //    var fieldText = JsonConvert.SerializeObject(fieldObj);
+
+        //    var updatedGroup = InsertFieldIntoGroup(groupBlock, fieldText);
+
+        //    content = content.Replace(groupBlock, updatedGroup);
+
+        //    System.IO.File.WriteAllText(path, content);
+
+        //    return Ok();
+        //}
+        [HttpPost]
+        public IActionResult AddField([FromBody] JsonElement body)
+        {
+            var view = body.GetProperty("view").GetString();
+            var groupCaption = body.GetProperty("groupCaption").GetString();
+            var fieldJson = body.GetProperty("fieldJson").GetString();
+
+            var root = _blobStorageSettings.CurrentValue.DeployPath;
+
+            var path = Path.Combine(
+                root,
+                "Pages",
+                "Business",
+                "Form",
+                "QuotationDetail",
+                view + ".cshtml"
+            );
+
+            var content = System.IO.File.ReadAllText(path);
+
+            var fieldObj = JsonConvert.DeserializeObject<Dictionary<string, object>>(fieldJson);
+
+            // ✅ convert sang JS object format (quan trọng)
+            var fieldText = ConvertToJsObject(fieldObj);
+
+            // ✅ TRY: nếu có group
+            if (!string.IsNullOrWhiteSpace(groupCaption))
+            {
+                var groupBlock = ExtractGroupBlock(content, groupCaption);
+
+                if (!string.IsNullOrEmpty(groupBlock))
+                {
+                    var updatedGroup = InsertFieldIntoGroup(groupBlock, fieldText);
+                    content = content.Replace(groupBlock, updatedGroup);
+
+                    System.IO.File.WriteAllText(path, content);
+                    return Ok();
+                }
+            }
+
+            // ✅ FALLBACK: insert vào root items của dxForm
+            content = InsertIntoRootItems(content, fieldText);
+
+            System.IO.File.WriteAllText(path, content);
+
+            return Ok();
+        }
+
+        private string ConvertToJsObject(Dictionary<string, object> dict)
+        {
+            var json = JsonConvert.SerializeObject(dict, Formatting.None);
+
+            // ✅ bỏ dấu " ở key
+            json = Regex.Replace(json, @"""([^""]+)""\s*:", "$1:");
+
+            // ✅ đổi value string sang ''
+            json = Regex.Replace(json, @":\s*""([^""]*)""", ": \"$1\"");
+
+            return json;
+        }
+
+        //private string InsertIntoRootItems(string content, string fieldText)
+        //{
+        //    var itemsPattern = @"items\s*:\s*\[(.*?)\]";
+
+        //    var match = Regex.Match(content, itemsPattern, RegexOptions.Singleline);
+
+        //    if (!match.Success)
+        //        return content;
+
+        //    var itemsContent = match.Groups[1].Value.Trim();
+
+        //    string newItemsContent;
+
+        //    // ✅ chèn lên đầu, , ở sau field mới
+        //    if (!string.IsNullOrWhiteSpace(itemsContent))
+        //    {
+        //        newItemsContent = fieldText + ",\n" + itemsContent;
+        //    }
+        //    else
+        //    {
+        //        newItemsContent = fieldText;
+        //    }
+
+        //    var newItems = $"items: [\n{newItemsContent}\n]";
+
+        //    return Regex.Replace(
+        //        content,
+        //        itemsPattern,
+        //        newItems,
+        //        RegexOptions.Singleline
+        //    );
+        //}
+        private string InsertIntoRootItems(string content, string fieldText)
+        {
+            var itemsPattern = @"items\s*:\s*\[(.*?)\]";
+
+            var match = Regex.Match(content, itemsPattern, RegexOptions.Singleline);
+
+            if (!match.Success)
+                return content;
+
+            var itemsContent = match.Groups[1].Value.Trim();
+
+            string newItemsContent;
+
+            if (!string.IsNullOrWhiteSpace(itemsContent))
+            {
+                newItemsContent = fieldText + ",\n" + itemsContent;
+            }
+            else
+            {
+                newItemsContent = fieldText;
+            }
+
+            var newItems = $"items: [\n{newItemsContent}\n]";
+
+            // ✅ replace đúng vị trí match (không ảnh hưởng phần khác)
+            var result = content.Substring(0, match.Index)
+                       + newItems
+                       + content.Substring(match.Index + match.Length);
+
+            return result;
+        }
         string UpdateProperty(string fieldText, string key, string value, bool isString = true)
         {
             var pattern = $@"{key}\s*:\s*[^,}}]+";
@@ -385,6 +545,59 @@ namespace ERPCore.Controllers.Config
                 return fieldText.TrimEnd('}') + $", {replacement} }}";
             }
         }
+
+        //[HttpPost]
+        //public IActionResult SwapGroup([FromBody] JsonElement body)
+        //{
+        //    var view = body.GetProperty("view").GetString();
+        //    var fieldName = body.GetProperty("fieldName").GetString();
+        //    var sourceCaption = body.GetProperty("sourceGroup").GetString();
+        //    var targetCaption = body.GetProperty("targetGroup").GetString();
+
+        //    var root = _blobStorageSettings.CurrentValue.DeployPath;
+
+        //    var path = Path.Combine(
+        //        root,
+        //        "Pages",
+        //        "Business",
+        //        "Form",
+        //        "QuotationDetail",
+        //        view + ".cshtml"
+        //    );
+
+        //    var content = System.IO.File.ReadAllText(path);
+
+        //    // ✅ 1. Extract field
+        //    var fieldText = ExtractFieldBlock(content, fieldName);
+        //    if (string.IsNullOrEmpty(fieldText))
+        //        return BadRequest("Field not found");
+
+        //    // ✅ 2. Extract source group
+        //    var sourceBlock = ExtractGroupBlock(content, sourceCaption);
+        //    if (string.IsNullOrEmpty(sourceBlock))
+        //        return BadRequest("Source group not found");
+
+        //    // ✅ 3. Remove field khỏi source group
+        //    var updatedSource = RemoveFieldFromGroup(sourceBlock, fieldText);
+
+        //    // ✅ 4. Replace source group
+        //    content = content.Replace(sourceBlock, updatedSource);
+
+        //    // ✅ 5. Extract target group (sau khi update content)
+        //    var targetBlock = ExtractGroupBlock(content, targetCaption);
+        //    if (string.IsNullOrEmpty(targetBlock))
+        //        return BadRequest("Target group not found");
+
+        //    // ✅ 6. Insert field vào target
+        //    var updatedTarget = InsertFieldIntoGroup(targetBlock, fieldText);
+
+        //    // ✅ 7. Replace target group
+        //    content = content.Replace(targetBlock, updatedTarget);
+
+        //    System.IO.File.WriteAllText(path, content);
+
+        //    return Ok(new { success = true });
+        //}
 
         [HttpPost]
         public IActionResult SwapGroup([FromBody] JsonElement body)
@@ -412,31 +625,72 @@ namespace ERPCore.Controllers.Config
             if (string.IsNullOrEmpty(fieldText))
                 return BadRequest("Field not found");
 
-            // ✅ 2. Extract source group
-            var sourceBlock = ExtractGroupBlock(content, sourceCaption);
-            if (string.IsNullOrEmpty(sourceBlock))
-                return BadRequest("Source group not found");
+            // =========================================
+            // ✅ CASE 1: CÓ SOURCE GROUP
+            // =========================================
+            if (!string.IsNullOrWhiteSpace(sourceCaption) && sourceCaption != "General")
+            {
+                var sourceBlock = ExtractGroupBlock(content, sourceCaption);
+                if (string.IsNullOrEmpty(sourceBlock))
+                    return BadRequest("Source group not found");
 
-            // ✅ 3. Remove field khỏi source group
-            var updatedSource = RemoveFieldFromGroup(sourceBlock, fieldText);
+                var updatedSource = RemoveFieldFromGroup(sourceBlock, fieldText);
 
-            // ✅ 4. Replace source group
-            content = content.Replace(sourceBlock, updatedSource);
+                content = ReplaceFirst(content, sourceBlock, updatedSource);
+            }
+            // =========================================
+            // ✅ CASE 2: SOURCE = ROOT (General)
+            // =========================================
+            else
+            {
+                content = RemoveFieldFromRootItems(content, fieldText);
+            }
 
-            // ✅ 5. Extract target group (sau khi update content)
+            // =========================================
+            // ✅ TARGET GROUP
+            // =========================================
             var targetBlock = ExtractGroupBlock(content, targetCaption);
             if (string.IsNullOrEmpty(targetBlock))
                 return BadRequest("Target group not found");
 
-            // ✅ 6. Insert field vào target
             var updatedTarget = InsertFieldIntoGroup(targetBlock, fieldText);
 
-            // ✅ 7. Replace target group
-            content = content.Replace(targetBlock, updatedTarget);
+            content = ReplaceFirst(content, targetBlock, updatedTarget);
 
             System.IO.File.WriteAllText(path, content);
 
             return Ok(new { success = true });
+        }
+        private string ReplaceFirst(string text, string search, string replace)
+        {
+            var pos = text.IndexOf(search);
+            if (pos < 0) return text;
+
+            return text.Substring(0, pos)
+                 + replace
+                 + text.Substring(pos + search.Length);
+        }
+
+        private string RemoveFieldFromRootItems(string content, string fieldText)
+        {
+            var itemsPattern = @"items\s*:\s*\[(.*?)\]";
+
+            var match = Regex.Match(content, itemsPattern, RegexOptions.Singleline);
+            if (!match.Success)
+                return content;
+
+            var itemsContent = match.Groups[1].Value;
+
+            var newItemsContent = itemsContent.Replace(fieldText, "");
+
+            // ✅ clean dấu ,
+            newItemsContent = Regex.Replace(newItemsContent, @",\s*,", ",");
+            newItemsContent = Regex.Replace(newItemsContent, @"\[\s*,", "[");
+            newItemsContent = Regex.Replace(newItemsContent, @",\s*\]", "]");
+
+            var newItems = $"items: [\n{newItemsContent.Trim()}\n]";
+
+            return ReplaceFirst(content, match.Value, newItems);
         }
         private string RemoveFieldFromGroup(string groupBlock, string fieldText)
         {
