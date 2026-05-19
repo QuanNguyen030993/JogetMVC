@@ -283,6 +283,24 @@ LOW CODE VIEW DESIGNER MOCKUP
         </div>
         <div id="btnSaveView"></div>
     </div>
+    <div class="right">
+
+        <div class="panel-title">
+            Property Group Panel
+        </div>
+
+        <div id="propertyGroupPanel"
+             class="property-panel">
+
+            Select field...
+
+        </div>
+
+        <div id="propertyNewGroupPanel"
+             class="property-panel">
+        </div>
+        <div id="btnSaveGroupView"></div>
+    </div>
 @*     <div class="preview-box">
 
         <h2>
@@ -856,6 +874,27 @@ $("#btnSaveView").dxButton({
     }
 
 });
+
+    $("#btnSaveGroupView").dxButton({
+        text:"Save group field on view",
+        type:"success",
+
+        onClick:function(){
+
+            saveGroupView();
+
+        }
+
+    });
+
+        $("#propertyNewGroupPanel").dxTextBox({
+            width:100,
+            height:50,
+            onClick:function(){
+                saveGroup();
+            }
+
+        });
 function generateItemsText(){
 
     return JSON.stringify(
@@ -994,10 +1033,10 @@ function renderGroupDrag(){
 
         var group = formSchema.find(g => g.groupId === groupId);
 
-        $("#propertyPanel").html(`
+            $("#propertyGroupPanel").html(`
             <div class='property-item'>
                 <label>Caption</label>
-                <input value='${group.caption}' disabled />
+                <input id='groupOldName' value='${group.caption}' disabled />
             </div>
 
             <div id='groupVisible'></div>
@@ -1013,16 +1052,18 @@ function renderGroupDrag(){
         //     }
         // });
     }
-function saveGroup(group){
-
+    function saveGroupView(group){
+        debugger
         var viewName = $("#viewSelector")
             .dxSelectBox("instance")
             .option("value");
-
-        ajaxPost("/api/Utility/SaveGroupViewSchema",{
+                        var oldName = $(`#groupOldName`).val();
+                var newName = $(`#propertyNewGroupPanel`).dxTextBox("instance").option("value");
+            ajaxPost("/api/Utility/RenameGroupViewSchema",{
             view: viewName,
-            groupCaption: group.caption,
-            groupJson: JSON.stringify(group)
+            newGroupName: newName,
+                oldGroupName: oldName//,
+            // groupJson: JSON.stringify(group)
         }).then(() => {
             DevExpress.ui.notify("Group Saved", "success", 2000);
         });

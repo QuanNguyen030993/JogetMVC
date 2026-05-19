@@ -282,6 +282,115 @@ namespace ERPCore.Controllers.Config
                 success = true
             });
         }
+
+        [HttpPost]
+        public IActionResult RenameGroupViewSchema([FromBody] JsonElement body)
+        { 
+            var raw = body.ToString();
+
+            var view = body.GetProperty("view")
+            .GetString();
+            var newName = body.GetProperty("newGroupName")
+                                .GetString();
+            var fieldName = body.GetProperty("oldGroupName")
+                                .GetString();
+            //var fieldJson = body.GetProperty("groupJson")
+            //                    .GetString();
+
+            var root = _blobStorageSettings.CurrentValue.DeployPath;
+
+
+
+            var path = Path.Combine(
+                root,
+               "Pages",
+                "Business",
+                 "Form",
+                "QuotationDetail",
+                view + ".cshtml"
+            );
+
+            var content = System.IO.File.ReadAllText(path);
+
+
+            //var fieldPattern = $@"\{{[^{{}}]*dataField\s*:\s*'{fieldName}'[^{{}}]*\}}";
+
+            //var fieldPattern =
+            //    $@"\{[\s\S]*?{[\s\S]*?dataField\s*:\s*['""]{fieldName}['""][\s\S]*?\}[\s\S]*?}";
+
+            var fieldPattern = $@"\{{{{                      
+[\s\S] *?               
+    dataField\s*:\s*       
+    ['""]{fieldName}['""]  
+    [\s\S] *?              
+\}}}}
+";
+
+            var match = Regex.Match(
+                content,
+                fieldPattern,
+                RegexOptions.Singleline | RegexOptions.IgnorePatternWhitespace
+            );
+
+            if (match.Success)
+            {
+                var fieldBlock = match.Value;
+            }
+
+
+            var fieldText = ExtractGroupBlock(content, fieldName);
+            if (fieldText == null)
+            {
+                return BadRequest("Field not found");
+            }
+
+
+            //var fieldObj = JsonConvert.DeserializeObject<Dictionary<string, object>>(fieldJson);
+            string fieldTextNew = "";
+
+
+            var pattern = @"(caption\s*:\s*"")(.*?)("")";
+
+            if (Regex.IsMatch(fieldText, pattern))
+            {
+                 fieldTextNew = Regex.Replace(fieldText, pattern, $"$1{newName}$3");
+                //Console.WriteLine(fieldTextNew);
+            }
+
+
+
+
+            // update từng property
+            //foreach (var kv in fieldObj)
+            //{
+            //    if (kv.Key == "caption")
+            //    {
+            //        var isString = kv.Value is string;
+
+
+            //        fieldTextNew = UpdateProperty(
+            //            fieldText,
+            //            kv.Key,
+            //            kv.Key == "visible" ? kv.Value.ToString().ToLower() : kv.Value.ToString(),
+            //            isString
+            //        );
+            //        break;
+            //    }
+            //    else continue;
+
+            //}
+
+            content = content.Replace(fieldText, fieldTextNew);
+
+
+
+            System.IO.File.WriteAllText(path, content);
+
+            return Ok(new
+            {
+                success = true
+            });
+        }
         string UpdateProperty(string fieldText, string key, string value, bool isString = true)
         {
             var pattern = $@"{key}\s*:\s*[^,}}]+";
