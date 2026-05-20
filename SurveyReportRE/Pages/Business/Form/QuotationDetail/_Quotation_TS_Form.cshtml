@@ -24,6 +24,13 @@
     $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
         dataSource: makeBasicDataSource(that, true),
          items: [
+{itemType: "group",caption: "VAT",colCount:2,items: [
+{dataField: "vat",editorType: "dxTextBox",visible:true},
+{dataField: "vatValue",editorType: "dxTextBox",visible:true}
+]},
+
+
+
 {itemType: "group",caption: "Premium",colCount:2,items: [
 {dataField: "tmivShare",editorType: "dxNumberBox",visible:true},
                  { dataField: "deductibleId", label: { template: labelTpl("Deductible - Deductible") } },
@@ -32,31 +39,6 @@
 { dataField: "premiumVoluntary", label: { template: labelTpl("PremiumVoluntary - Voluntary premium") } },
 { dataField: "premiumTotalBeforeVat", label: { template: labelTpl("PremiumTotalBeforeVat - Tổng premium trước VAT") } },
 { dataField: "premiumTotal", editorType:"dxNumberBox", editorOptions: {format: '#,##0'
-             // , onValueChanged: function (et) {
-
-             // if (et.previousValue != et.value && et.previousValue != 0){
-                
-             //         // $.ajax({
-             //         //     url: `/api/Quotation/UpdateData`,
-             //         //     type: "PUT",
-             //         //     data: { key: formItems.id, values: JSON.stringify({ sumInsuredTotal: e.value })},
-             //         //     processData: true,
-             //         //     success: function (data) {
-             //         //     },
-             //         //     error: function (error) {
-             //         //         console.error("Error loading data:", error);
-             //         //     }
-             //         // });
-             // }
-             // } ,onFocusOut: function (et) {
-             //    var formItems = $("#qt-formTS").dxForm().dxForm("instance").option("formData");
-             //      ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ premiumTotal: formItems.premiumTotal })} , {
-             //             onSuccess: function (response) {
-             //             },
-             //             onError: function (err) {
-             //             }
-             //       });
-             // }
              
          } }
 ]},
@@ -191,7 +173,7 @@
 
      {
          itemType: "group",
-         caption: "Rate / VAT / Discount / Currency",
+         caption: "Rate / Discount / Currency",
          colCount: 2,
          items: [
              { dataField: "totalDue", editorType:"dxNumberBox", editorOptions: {format: '#,##0'
@@ -229,11 +211,11 @@
              { dataField: "premiumVoluntaryAnnual", label: { template: labelTpl("PremiumVoluntaryAnnual - Annual voluntary premium") } },
              { dataField: "premiumCfeAnnual", label: { template: labelTpl("PremiumCfeAnnual - Annual CFE premium") } },
              { dataField: "premiumCommission", label: { template: labelTpl("PremiumCommission - Commission premium") } },
-             { dataField: "annualRate", label: { template: labelTpl("AnnualRate - Annual rate") } },
+             { dataField: "annualRate", label: { template: labelTpl("AnnualRate - Annual rate") } }//,
 
-             { dataField: "vatFlagOrValue", label: { template: labelTpl("VatFlagOrValue - VAT flag/value") } },
-             { dataField: "vatPercent", label: { template: labelTpl("VatPercent - VAT %") } },
-             { dataField: "vatAmount", label: { template: labelTpl("VatAmount - VAT amount") } }]
+             // { dataField: "vatFlagOrValue", label: { template: labelTpl("VatFlagOrValue - VAT flag/value") } },
+             // { dataField: "vatPercent", label: { template: labelTpl("VatPercent - VAT %") } },
+             // { dataField: "vatAmount", label: { template: labelTpl("VatAmount - VAT amount") } }]
      },
 
 
