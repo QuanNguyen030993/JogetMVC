@@ -24,12 +24,29 @@
     $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
         dataSource: makeBasicDataSource(that, true),
          items: [
+{itemType: "group",caption: "Premium",colCount:2,items: [
+{dataField: "tmivShare",editorType: "dxNumberBox",visible:true}
+]},
+
+{dataField: "tmivShare",editorType: "dxNumberBox",visible:true},
+{itemType: "group",caption: "Sum Insured",colCount:2,items: [
+{ dataField: "sumInsuredTotal", editorType:"dxNumberBox", editorOptions: {format: '#,##0'
+         } },
+{ dataField: "sumInsuredTotalUsd", label: { template: labelTpl("SumInsuredTotalUsd - Total Sum Insured (USD)") } },
+    { dataField: "exchangeRate", label: { template: labelTpl("ExchangeRate - Exchange rate") } }
+]},
+
+{itemType: "group",caption: "Coverage",colCount:2,items: [
+        {dataField: "coverageId",editorType:  "dxTextBox",visible:true} // "dxDataGrid"
+    ]},
+
 
 {dataField: "biQtNum",editorType: "dxSelectBox",visible:true},
 {dataField: "incBIQuoId",editorType: "dxTextBox",visible:true},
 {dataField: "iarQuotationNo",editorType: "dxTextBox",visible:true},
 {dataField: "IncIARQuoId",editorType: "dxSelectBox",visible:true},
 {dataField: "tmiCode",editorType: "dxSelectBox",visible: true},
+{ dataField: "currencyId", label: { template: labelTpl("CurrencyCode - Currency code") } },
 
 
     {itemType: "group",caption: "Insurance Period",colCount:2,items: [
@@ -220,8 +237,7 @@
              { dataField: "vatPercent", label: { template: labelTpl("VatPercent - VAT %") } },
              { dataField: "vatAmount", label: { template: labelTpl("VatAmount - VAT amount") } },
 
-             { dataField: "currencyCode", label: { template: labelTpl("CurrencyCode - Currency code") } },
-             { dataField: "exchangeRate", label: { template: labelTpl("ExchangeRate - Exchange rate") } },
+            
 ]
      },
 
@@ -234,7 +250,7 @@
          colCount: 2,
          items: [
              { dataField: "clauseName", label: { template: labelTpl("ClauseName - Tên clause") } },
-             { dataField: "deductible", label: { template: labelTpl("Deductible - Deductible") } },
+             { dataField: "deductibleId", label: { template: labelTpl("Deductible - Deductible") } },
              { dataField: "limitOfLiability", label: { template: labelTpl("LimitOfLiability - Limit of liability") } }
          ]
      },
@@ -254,37 +270,9 @@
      },
             {
          itemType: "group",
-         caption: "Location / TSI / Sum Insured",
+         caption: "Location / TSI",
          colCount: 2,
          items: [
-             { dataField: "sumInsuredTotal", editorType:"dxNumberBox", editorOptions: {format: '#,##0'
-             // , onValueChanged: function (e) {
-
-             // if (e.previousValue != e.value && e.previousValue != 0){
-
-             //         // $.ajax({
-             //         //     url: `/api/Quotation/UpdateData`,
-             //         //     type: "PUT",
-             //         //     data: { key: formItems.id, values: JSON.stringify({ sumInsuredTotal: e.value })},
-             //         //     processData: true,
-             //         //     success: function (data) {
-             //         //     },
-             //         //     error: function (error) {
-             //         //         console.error("Error loading data:", error);
-             //         //     }
-             //         // });
-             // }
-             // } ,onFocusOut: function (e) {
-             //   var formItems = $("#qt-formTS").dxForm().dxForm("instance").option("formData");
-             //      ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ sumInsuredTotal: formItems.sumInsuredTotal })} , {
-             //             onSuccess: function (response) {
-             //             },
-             //             onError: function (err) {
-             //             }
-             //       });
-             // }
-             
-         } },
              { dataField: "locationCountDeclared", label: { template: labelTpl("LocationCountDeclared - Số location khai báo") } },
              { dataField: "locationCountLegacy", label: { template: labelTpl("LocationCountLegacy - Số location (legacy)") } },
              { dataField: "locationCountAnnual", label: { template: labelTpl("LocationCountAnnual - Số location annual") } },
@@ -292,8 +280,6 @@
              { dataField: "locationSummary", label: { template: labelTpl("LocationSummary - Tóm tắt location (text)") } },
              { dataField: "locationMapRef", label: { template: labelTpl("LocationMapRef - Tham chiếu map location") } },
              { dataField: "locationAttachmentRef", label: { template: labelTpl("LocationAttachmentRef - Attachment location") } },
-
-             { dataField: "sumInsuredTotalUsd", label: { template: labelTpl("SumInsuredTotalUsd - Total Sum Insured (USD)") } },
 
              { dataField: "topRiskPd", label: { template: labelTpl("TopRiskPd - Top risk PD") } },
              { dataField: "topRiskPdQuotation", label: { template: labelTpl("TopRiskPdQuotation - Top risk PD quotation") } },
