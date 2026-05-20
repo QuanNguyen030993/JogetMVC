@@ -254,7 +254,7 @@
          colCount: 3,
          items: [
              { dataField: "riskGrade", label: { template: labelTpl("RiskGrade - Risk grade") } },
-                                  { dataField: "topRiskPd", label: {text: "Top Risk (After Co)", template: labelTpl("TopRiskPd - Top risk PD") } },
+                 { dataField: "topRiskPd", label: {text: "Top Risk (After Co)", template: labelTpl("TopRiskPd - Top risk PD") } },
                  { dataField: "topRiskPdQuotation", label: { template: labelTpl("TopRiskPdQuotation - Top risk PD quotation") } }
 
          ]
@@ -281,14 +281,14 @@
      // }
          ]
        });
-      var tsLocations = [
-          { site:"HCM", address:"District 1", category:"Warehouse", sumInsured: 1200000 },
-          { site:"HN",  address:"Cau Giay",   category:"Office",    sumInsured: 350000  },
-        ];
+      // var tsLocations = [
+      //     { site:"HCM", address:"District 1", category:"Warehouse", sumInsured: 1200000 },
+      //     { site:"HN",  address:"Cau Giay",   category:"Office",    sumInsured: 350000  },
+      //   ];
 
 
-        var gridOptions = new LocationGridOption("Location", "User");
-        new MGrid(null, $("#gridTSLocations"), gridOptions, null);
+      //   var gridOptions = new LocationGridOption("Location", "User");
+      //   new MGrid(null, $("#gridTSLocations"), gridOptions, null);
           // $("#gridTSLocations").dxDataGrid({
           //   dataSource: tsLocations, height: 220, showBorders: true,
           //   editing: { mode:"cell", allowUpdating:false, allowAdding:false, allowDeleting:false },
