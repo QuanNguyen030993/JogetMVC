@@ -252,31 +252,32 @@
          caption: "Risk",
          colCount: 3,
          items: [
-             { dataField: "riskGrade", label: { template: labelTpl("RiskGrade - Risk grade") } }
+             { dataField: "riskGrade", label: { template: labelTpl("RiskGrade - Risk grade") } },
+                                  { dataField: "topRiskPd", label: {text: "Top Risk (After Co)", template: labelTpl("TopRiskPd - Top risk PD") } },
+                 { dataField: "topRiskPdQuotation", label: { template: labelTpl("TopRiskPdQuotation - Top risk PD quotation") } }
+
          ]
      },
-            {
-         itemType: "group",
-         caption: "Location / TSI",
-         colCount: 2,
-         items: [
-             { dataField: "locationCountDeclared", label: { template: labelTpl("LocationCountDeclared - Số location khai báo") } },
-             { dataField: "locationCountLegacy", label: { template: labelTpl("LocationCountLegacy - Số location (legacy)") } },
-             { dataField: "locationCountAnnual", label: { template: labelTpl("LocationCountAnnual - Số location annual") } },
-             { dataField: "locationCountActual", label: { template: labelTpl("LocationCountActual - Số location actual") } },
-             { dataField: "locationSummary", label: { template: labelTpl("LocationSummary - Tóm tắt location (text)") } },
-             { dataField: "locationMapRef", label: { template: labelTpl("LocationMapRef - Tham chiếu map location") } },
-             { dataField: "locationAttachmentRef", label: { template: labelTpl("LocationAttachmentRef - Attachment location") } },
-
-             { dataField: "topRiskPd", label: { template: labelTpl("TopRiskPd - Top risk PD") } },
-             { dataField: "topRiskPdQuotation", label: { template: labelTpl("TopRiskPdQuotation - Top risk PD quotation") } },
-
-             { dataField: "tsiPd", label: { template: labelTpl("TsiPd - TSI PD") } },
-             { dataField: "tsiPdQuotation", label: { template: labelTpl("TsiPdQuotation - TSI PD quotation") } }
+     //        {
+     //     itemType: "group",
+     //     caption: "Location / TSI",
+     //     colCount: 2,
+     //     items: [
+     //         { dataField: "locationCountDeclared", label: { template: labelTpl("LocationCountDeclared - Số location khai báo") } },
+     //         { dataField: "locationCountLegacy", label: { template: labelTpl("LocationCountLegacy - Số location (legacy)") } },
+     //         { dataField: "locationCountAnnual", label: { template: labelTpl("LocationCountAnnual - Số location annual") } },
+     //         { dataField: "locationCountActual", label: { template: labelTpl("LocationCountActual - Số location actual") } },
+     //         { dataField: "locationSummary", label: { template: labelTpl("LocationSummary - Tóm tắt location (text)") } },
+     //         { dataField: "locationMapRef", label: { template: labelTpl("LocationMapRef - Tham chiếu map location") } },
+     //         { dataField: "locationAttachmentRef", label: { template: labelTpl("LocationAttachmentRef - Attachment location") } },
 
 
-         ]
-     }
+     //         { dataField: "tsiPd", label: { template: labelTpl("TsiPd - TSI PD") } },
+     //         { dataField: "tsiPdQuotation", label: { template: labelTpl("TsiPdQuotation - TSI PD quotation") } }
+
+
+     //     ]
+     // }
          ]
        });
       var tsLocations = [
