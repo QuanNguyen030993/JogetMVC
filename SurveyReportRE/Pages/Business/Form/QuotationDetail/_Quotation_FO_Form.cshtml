@@ -22,23 +22,7 @@
     dataSource: makeBasicDataSource(that, true),
     items: [
 
-         {itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
-            ,
-            editorOptions: {
-            name: "files"
-        }
-        ,template: function (data, itemElement) {
-            setTimeout(function () {
-                var item = new Object();
-                item.editorType = "dxFileUploader";
-                item.moduleName = "qt"; item.sectionName = "FO";
-                createEditor(item, itemElement, $("<div>"), null);
-                // loadAttachmentList("FO");
-                }, 1000);
-            }
-            
-        }
-        ]},
+         {itemType: "group", caption: "Attachment",colCount: 1, items: attachmentDefault("qt","@(dept)",@(quotationId))},
                  { dataField:"clientName", label:{text:"Client Name"}, isRequired:true },
                  { dataField:"requestTypeId", editorType:"dxSelectBox", label:{text:"Request Type"}, editorOptions: makeSelectBoxEditorOptions(_enums.reqType),displayExpr: "value",
                       valueExpr: "id"

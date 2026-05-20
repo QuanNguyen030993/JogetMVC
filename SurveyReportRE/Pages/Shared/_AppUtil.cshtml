@@ -2238,6 +2238,53 @@ function scrollToDept(module, dept) {
 
     }
 
+    function attachmentDefault(moduleKey, dept, id){
+        return [{
+            dataField: "attachment", editorType: "dxFileUploader"
+            ,
+            editorOptions: {
+                name: "files"
+            }
+            , template: function (data, itemElement) {
+                    var item = new Object();
+                    item.editorType = "dxFileUploader";
+                    item.moduleName = moduleKey + "_default"; item.sectionName = dept;
+                    item.id = id;
+                    createEditor(item, itemElement, $(`<div>`), null);
+            }
 
+        },
+        {
+            dataField: "supportingDocument", editorType: "dxFileUploader"
+            ,
+            editorOptions: {
+                name: "files"
+            }
+            , template: function (data, itemElement) {
+                    var item = new Object();
+                    item.editorType = "dxFileUploader";
+                    item.moduleName = moduleKey+ "_supportingDoc"; item.sectionName = dept;
+                    item.id = id;
+                    createEditor(item, itemElement, $(`<div>`), null);
+            }
+
+        }]
+        // , {
+        //         dataField: "supportingDocument", editorType: "dxFileUploader"
+        //         ,
+        //         editorOptions: {
+        //             name: "sdfiles"
+        //         }
+        //         , template: function (data, itemElement) {
+        //                 var item = new Object();
+        //                 item.editorType = "dxFileUploader";
+        //                 item.moduleName = moduleKey; item.sectionName = dept;
+        //                 item.id = id;
+        //                 createEditor(item, itemElement, $(`<div>`), null);
+        //                 // loadAttachmentList("FO");
+        //         }
+
+        //     }];
+    }
 
 </script>

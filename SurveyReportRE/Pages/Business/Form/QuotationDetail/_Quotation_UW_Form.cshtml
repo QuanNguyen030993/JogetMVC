@@ -28,23 +28,7 @@
      $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
          dataSource: makeBasicDataSource(that, true),
         items: [ 
-              {itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
-            ,
-            editorOptions: {
-            name: "files"
-        }
-        ,template: function (data, itemElement) {
-            setTimeout(function () {
-                var item = new Object();
-                item.id = @quotationId;
-                item.editorType = "dxFileUploader";
-               item.moduleName = "qt"; item.sectionName = "UW";
-                createEditor(item, itemElement, $("<div>"), null);
-                // loadAttachmentList("UW");
-                }, 1000);
-            }
-        }
-        ]}
+              {itemType: "group", caption: "Attachment",colCount: 1, items: attachmentDefault("qt","@(dept)",@(quotationId))}
             ,
              {
         dataField: "decision",

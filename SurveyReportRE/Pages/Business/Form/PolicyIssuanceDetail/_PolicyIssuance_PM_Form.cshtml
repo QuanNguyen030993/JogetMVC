@@ -19,26 +19,86 @@
     $(`#@PIViewIdHelper.Form(dept, quotationId)`).dxForm({
         dataSource: makeBasicDataSource(that, true),
                  items: [
-                         {itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
-            ,
+                         {itemType: "group", caption: "Attachment",colCount: 1, items: attachmentDefault("pi","@(dept)",@(quotationId))},
+                          {
+            dataField: "decision",
+            label: { text: "Decision" },
+            editorType: "dxRadioGroup",
             editorOptions: {
-            name: "files"
-        }
-        ,template: function (data, itemElement) {
-            setTimeout(function () {
-                var item = new Object();
-                item.id = @quotationId;
-                item.editorType = "dxFileUploader";
-                item.moduleName = "pi"; item.sectionName = "PM";
-                createEditor(item, itemElement, $("<div>"), null);
-                // loadAttachmentList("PM");
-                }, 1000);
+                items: [
+                    { id: "AC_@PIViewIdHelper.Decision(dept, quotationId)" , text: "Accept", value: true },
+                    { id: "AS_@PIViewIdHelper.Decision(dept, quotationId)" , text: "Assign", value: false },
+                    { id: "RJ_@PIViewIdHelper.Decision(dept, quotationId)" , text: "Reject", value: false }
+                ],
+                 displayExpr: "text",
+                 valueExpr: "id",
+                 layout: "horizontal",
+                 itemTemplate: function(itemData, _, itemElement) {
+                 setTimeout(() => {
+                  var formItems = $(`#@PIViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+                  var tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
+                  if (tatObject[`@dept`].AcceptDate)
+                  {
+                    $(`#AC_@PIViewIdHelper.Decision(dept, quotationId)`).addClass("btn-info");
+                    $(`#${itemData.id}`).dxButton("instance").option("disabled", true);
+                    if (itemData.id === "RJ_@PIViewIdHelper.Decision(dept, quotationId)" ) $(`#RJ_@PIViewIdHelper.Decision(dept, quotationId)`).dxButton("instance").option("disabled", false);
+                  }
+                 },4000);
+
+                 $(`<div id='${itemData.id}'>`).dxButton({
+                 text: itemData.text,
+                 width: "100%",
+                 height: "100%",
+                 onClick: function (e){
+                     if (_ == 0)
+                     {
+                          var formItems = $(`#@PIViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+                           var tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
+                              tatObject[`@dept`].AcceptDate = new Date();
+                              formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+                           ajaxPut('/api/Quotation/UpdateData',
+                            {
+                                key: formItems.id,
+                                values: JSON.stringify(
+                                    formItems
+                                )
+                            },
+                            {
+                                onSuccess: function (response) {
+                                    Devexpress.ui.notify("Task accepted", "success");
+                                },
+                                onError: function (err) { }
+                            });
+                     }
+                      if (_ == 2)
+                     {
+                            var formItems = $(`#@PIViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+                  var tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
+                              tatObject[`@dept`].AcceptDate = "";
+                              formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+                           ajaxPut('/api/Quotation/UpdateData',
+                            {
+                                key: formItems.id,
+                                values: JSON.stringify(
+                                    formItems
+                                )
+                            },
+                            {
+                                onSuccess: function (response) {
+                                    Devexpress.ui.notify("Task accepted", "success");
+                                },
+                                onError: function (err) { }
+                            });
+                     }
+                 }
+
+                 }).appendTo(itemElement);
+              itemElement
+            },
+            isRequired: true
             }
-
-        }
-        ]}
-
-    ,{itemType: "group",caption: "Checklist",colCount:1,items: [
+        },
+                         {itemType: "group",caption: "Checklist",colCount:1,items: [
     {dataField: "policyNoCL",editorType: "dxCheckBox",visible:true},
     {dataField: "theInsured",editorType: "dxCheckBox",visible:true},
     {dataField: "occupation",editorType: "dxCheckBox",visible:true},

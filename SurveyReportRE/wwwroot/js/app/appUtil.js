@@ -6131,7 +6131,7 @@ function hideUploaderLoader(idControlElement) {
     $(`${idControlElement} .previewLoader`).remove();
 }
 function renderDxFileUploader(editorOptions, $container, options) {
-    const controlId = `${editorOptions.moduleName}_${editorOptions.sectionName}`;
+    const controlId = `${editorOptions.moduleName}_${editorOptions.sectionName}_${editorOptions.id}`;
     options = options || {};
     const controllerName = options.controllerName || "Document";
     const currentOptions = getCurrentEditorOptions(editorOptions) || {};
