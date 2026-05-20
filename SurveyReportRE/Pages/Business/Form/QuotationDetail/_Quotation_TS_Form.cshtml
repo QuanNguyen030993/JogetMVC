@@ -24,10 +24,20 @@
     $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
         dataSource: makeBasicDataSource(that, true),
          items: [
-    {dataField: "tmiCode",editorType: "dxSelectBox",visible:true},
+
+{dataField: "biQtNum",editorType: "dxSelectBox",visible:true},
+{dataField: "incBIQuoId",editorType: "dxTextBox",visible:true},
+{dataField: "iarQuotationNo",editorType: "dxTextBox",visible:true},
+{dataField: "IncIARQuoId",editorType: "dxSelectBox",visible:true},
+{dataField: "tmiCode",editorType: "dxSelectBox",visible: true},
 
 
-    {itemType: "group",caption: "Insurance Period",colCount:2,items:[]},
+    {itemType: "group",caption: "Insurance Period",colCount:2,items: [
+{dataField: "insPeriodId",editorType: "dxSelectBox",visible: true},
+{dataField: "periodInsuranceStartDate",editorType: "dxTextBox",visible:true},
+{dataField: "periodInsuranceEndDate",editorType: "dxTextBox",visible:true},
+{dataField: "actualDays",editorType: "dxNumberBox",visible:true}
+]},
 
 
 {itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
