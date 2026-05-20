@@ -989,6 +989,11 @@ function saveView(){
          var viewName = $("#viewSelector")
             .dxSelectBox("instance")
             .option("value");
+
+                        var  editorType = $("#editorType")
+                .dxSelectBox("instance")
+                .option("value");
+                    field.editorType = editorType;
         ajaxPost("/api/Utility/SaveViewSchema",{
             view: viewName,
             fieldName: selectedField,
@@ -1003,7 +1008,10 @@ function saveView(){
 
         });
 
-
+            renderExplorer();
+                renderDragColumns();
+                renderReOrderFieldColumns();
+                renderJson();
 
 }
 function renderGroupDrag(){

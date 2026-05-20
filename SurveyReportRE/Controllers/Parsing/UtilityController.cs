@@ -126,30 +126,7 @@ namespace ERPCore.Controllers.Config
 
             var content = System.IO.File.ReadAllText(path);
 
-
-            //var fieldPattern = $@"\{{[^{{}}]*dataField\s*:\s*'{fieldName}'[^{{}}]*\}}";
-
-            //var fieldPattern =
-            //    $@"\{[\s\S]*?{[\s\S]*?dataField\s*:\s*['""]{fieldName}['""][\s\S]*?\}[\s\S]*?}";
-
-            var fieldPattern = $@"\{{{{                      
-[\s\S] *?               
-    dataField\s*:\s*       
-    ['""]{fieldName}['""]  
-    [\s\S] *?              
-\}}}}
-";
-
-            var match = Regex.Match(
-                content,
-                fieldPattern,
-                RegexOptions.Singleline | RegexOptions.IgnorePatternWhitespace
-            );
-
-            if (match.Success)
-            {
-                var fieldBlock = match.Value;
-            }
+    
 
 
             var fieldText = ExtractFieldBlock(content, fieldName);
@@ -174,9 +151,10 @@ namespace ERPCore.Controllers.Config
                     kv.Key == "visible" ? kv.Value.ToString().ToLower() : kv.Value.ToString(),
                     isString
                 );
+                content = content.Replace(fieldText, fieldTextNew);
             }
 
-            content = content.Replace(fieldText, fieldTextNew);
+            content = content.Replace(fieldText, fieldTextNew); // !!!!
 
 
 
@@ -530,7 +508,7 @@ namespace ERPCore.Controllers.Config
             var pattern = $@"{key}\s*:\s*[^,}}]+";
 
             var replacement = isString
-                ? $"{key}: '{value}'"
+                ? $"{key}: \"{value}\""
                 : $"{key}: {value}";
          
        
