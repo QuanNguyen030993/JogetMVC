@@ -25,7 +25,40 @@
         dataSource: makeBasicDataSource(that, true),
          items: [
 {itemType: "group",caption: "Premium",colCount:2,items: [
-{dataField: "tmivShare",editorType: "dxNumberBox",visible:true}
+{dataField: "tmivShare",editorType: "dxNumberBox",visible:true},
+                 { dataField: "deductibleId", label: { template: labelTpl("Deductible - Deductible") } },
+{ dataField: "premiumRate", label: { template: labelTpl("PremiumRate - Premium rate") } },
+{ dataField: "premiumCfe", label: { template: labelTpl("PremiumCfe - CFE premium") } },
+{ dataField: "premiumVoluntary", label: { template: labelTpl("PremiumVoluntary - Voluntary premium") } },
+{ dataField: "premiumTotalBeforeVat", label: { template: labelTpl("PremiumTotalBeforeVat - Tổng premium trước VAT") } },
+{ dataField: "premiumTotal", editorType:"dxNumberBox", editorOptions: {format: '#,##0'
+             // , onValueChanged: function (et) {
+
+             // if (et.previousValue != et.value && et.previousValue != 0){
+                
+             //         // $.ajax({
+             //         //     url: `/api/Quotation/UpdateData`,
+             //         //     type: "PUT",
+             //         //     data: { key: formItems.id, values: JSON.stringify({ sumInsuredTotal: e.value })},
+             //         //     processData: true,
+             //         //     success: function (data) {
+             //         //     },
+             //         //     error: function (error) {
+             //         //         console.error("Error loading data:", error);
+             //         //     }
+             //         // });
+             // }
+             // } ,onFocusOut: function (et) {
+             //    var formItems = $("#qt-formTS").dxForm().dxForm("instance").option("formData");
+             //      ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ premiumTotal: formItems.premiumTotal })} , {
+             //             onSuccess: function (response) {
+             //             },
+             //             onError: function (err) {
+             //             }
+             //       });
+             // }
+             
+         } }
 ]},
 
 {dataField: "tmivShare",editorType: "dxNumberBox",visible:true},
@@ -158,38 +191,9 @@
 
      {
          itemType: "group",
-         caption: "Premium / Rate / VAT / Discount / Currency",
+         caption: "Rate / VAT / Discount / Currency",
          colCount: 2,
          items: [
-{ dataField: "premiumTotal", editorType:"dxNumberBox", editorOptions: {format: '#,##0'
-             // , onValueChanged: function (et) {
-
-             // if (et.previousValue != et.value && et.previousValue != 0){
-                
-             //         // $.ajax({
-             //         //     url: `/api/Quotation/UpdateData`,
-             //         //     type: "PUT",
-             //         //     data: { key: formItems.id, values: JSON.stringify({ sumInsuredTotal: e.value })},
-             //         //     processData: true,
-             //         //     success: function (data) {
-             //         //     },
-             //         //     error: function (error) {
-             //         //         console.error("Error loading data:", error);
-             //         //     }
-             //         // });
-             // }
-             // } ,onFocusOut: function (et) {
-             //    var formItems = $("#qt-formTS").dxForm().dxForm("instance").option("formData");
-             //      ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ premiumTotal: formItems.premiumTotal })} , {
-             //             onSuccess: function (response) {
-             //             },
-             //             onError: function (err) {
-             //             }
-             //       });
-             // }
-             
-         } },
-             { dataField: "premiumTotalBeforeVat", label: { template: labelTpl("PremiumTotalBeforeVat - Tổng premium trước VAT") } },
              { dataField: "totalDue", editorType:"dxNumberBox", editorOptions: {format: '#,##0'
              // , onValueChanged: function (ed) {
 
@@ -221,24 +225,15 @@
                     
          } },
              { dataField: "premiumAnnualTotal", label: { template: labelTpl("PremiumAnnualTotal - Total annual premium") } },
-
-             { dataField: "premiumVoluntary", label: { template: labelTpl("PremiumVoluntary - Voluntary premium") } },
              { dataField: "premiumVoluntaryValue", label: { template: labelTpl("PremiumVoluntaryValue - Voluntary premium (value)") } },
              { dataField: "premiumVoluntaryAnnual", label: { template: labelTpl("PremiumVoluntaryAnnual - Annual voluntary premium") } },
-
-             { dataField: "premiumCfe", label: { template: labelTpl("PremiumCfe - CFE premium") } },
              { dataField: "premiumCfeAnnual", label: { template: labelTpl("PremiumCfeAnnual - Annual CFE premium") } },
              { dataField: "premiumCommission", label: { template: labelTpl("PremiumCommission - Commission premium") } },
-
-             { dataField: "premiumRate", label: { template: labelTpl("PremiumRate - Premium rate") } },
              { dataField: "annualRate", label: { template: labelTpl("AnnualRate - Annual rate") } },
 
              { dataField: "vatFlagOrValue", label: { template: labelTpl("VatFlagOrValue - VAT flag/value") } },
              { dataField: "vatPercent", label: { template: labelTpl("VatPercent - VAT %") } },
-             { dataField: "vatAmount", label: { template: labelTpl("VatAmount - VAT amount") } },
-
-            
-]
+             { dataField: "vatAmount", label: { template: labelTpl("VatAmount - VAT amount") } }]
      },
 
 
@@ -250,7 +245,6 @@
          colCount: 2,
          items: [
              { dataField: "clauseName", label: { template: labelTpl("ClauseName - Tên clause") } },
-             { dataField: "deductibleId", label: { template: labelTpl("Deductible - Deductible") } },
              { dataField: "limitOfLiability", label: { template: labelTpl("LimitOfLiability - Limit of liability") } }
          ]
      },
