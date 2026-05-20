@@ -16,7 +16,9 @@
     $("#@PIViewIdHelper.Form(dept, quotationId)").dxForm({
         dataSource: makeBasicDataSource(that, true),
          items: [
-{itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
+
+{itemType: "group", caption: "Attachment",colCount: 1, items: [
+{ dataField: "attachment", editorType:"dxFileUploader"
             ,
             editorOptions: {
             name: "files"
@@ -32,8 +34,37 @@
                 }, 1000);
             }
 
-        }
-]}
+        },
+
+    {itemType: "group",caption: "Policy",colCount:1,items: [
+    {dataField: "policyPackage",editorType: "dxCheckBox",visible:true},
+    {dataField: "languageOfPolicy",editorType: "dxCheckBox",visible:true}
+    ]},
+
+    {itemType: "group",caption: "Fill List",colCount:1,items: [
+    {dataField: "confirmedQuotationFlag",editorType: "dxCheckBox",visible:true},
+    {dataField: "riClosings",editorType: "dxCheckBox",visible:true},
+    {dataField: "factoryOperationYears",editorType: "dxCheckBox",visible:true},
+    {dataField: "newReplacementValue",editorType: "dxCheckBox",visible:true},
+    {dataField: "holdCoverType",editorType: "dxCheckBox",visible:true},
+    {dataField: "resultAttachment",editorType: "dxCheckBox",visible:true},
+    {dataField: "declarationText",editorType: "dxCheckBox",visible:true},
+    {dataField: "machineryList",editorType: "dxCheckBox",visible:true},
+    {dataField: "isBodApproved",editorType: "dxCheckBox",visible:true},
+    {dataField: "uRFAttachment",editorType: "dxCheckBox",visible:true},
+    {dataField: "emailInformRi",editorType: "dxCheckBox",visible:true},
+    {dataField: "riScheme",editorType: "dxCheckBox",visible:true},
+    {dataField: "proposalForm",editorType: "dxCheckBox",visible:true},
+    {dataField: "premiumBreakdown",editorType: "dxCheckBox",visible:true},
+    {dataField: "reason",editorType: "dxCheckBox",visible:true},
+    {dataField: "chassisEngineNumber",editorType: "dxCheckBox",visible:true},
+    {dataField: "finalPremium",editorType: "dxCheckBox",visible:true},
+    {dataField: "isKycChecked",editorType: "dxCheckBox",visible:true},
+    {dataField: "isGlobalCover",editorType: "dxCheckBox",visible:true},
+    {dataField: "ichigenka",editorType: "dxCheckBox",visible:true},
+    ]},
+
+  ]}
              ,
 
 
