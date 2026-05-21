@@ -31,7 +31,16 @@ window.QuotationIdManager = {
 
     // Detail elements
     detailStatus: function (quotationId) { return `${this.prefix}-detailStatus_${quotationId}`; },
+    //btnToggleReferenceFieldsMini: function (quotationId) { return `${this.prefix}-btnToggleReferenceFieldsMini_${quotationId}`; },
+    //btnToggleCommentMini: function (quotationId) { return `${this.prefix}-btnToggleCommentMini_${quotationId}`; },
+    btnCollapseAllTab: function (quotationId) { return `${this.prefix}-btnCollapseAllTab_${quotationId}`; },
+    btnToggleComment: function (quotationId) { return `${this.prefix}-btnToggleComment_${quotationId}`; },
+    btnToggleReferenceFields: function (quotationId) { return `${this.prefix}-btnToggleReferenceFields_${quotationId}`; },
+    btnPreview: function (quotationId) { return `${this.prefix}-btnPreview_${quotationId}`; },
+    panelHoverInFlow: function (quotationId) { return `${this.prefix}-panelHoverInFlow_${quotationId}`; },
     stageDeptPill: function (quotationId) { return `${this.prefix}-stageDeptPill_${quotationId}`; },
+    flowPanel: function (quotationId) { return `${this.prefix}-flowPanel_${quotationId}`; },
+    flowHistoryPanel: function (quotationId) { return `${this.prefix}-flowHistoryPanel_${quotationId}`; },
 
     // Form elements by department
     form: function (department, quotationId) { return this.generateId('form', department, quotationId); },
@@ -50,10 +59,6 @@ window.QuotationIdManager = {
 
     // Control elements
     btnToggleLeftPane: function () { return `${this.prefix}-btnToggleLeftPane`; },
-    btnCollapseAllTab: function () { return `${this.prefix}-btnCollapseAllTab`; },
-    btnToggleComment: function () { return `${this.prefix}-btnToggleComment`; },
-    btnToggleReferenceFields: function () { return `${this.prefix}-btnToggleReferenceFields`; },
-    btnPreview: function () { return `${this.prefix}-btnPreview`; },
     roleSelect: function () { return `${this.prefix}-roleSelect`; },
 
     // Tree navigation

@@ -102,7 +102,8 @@ namespace ERPCore.Controllers.Config
         public IActionResult SaveViewSchema([FromBody]JsonElement body)
         {
             var raw = body.ToString();
-
+            var module = body.GetProperty("module")
+          .GetString();
             var view = body.GetProperty("view")
             .GetString();
 
@@ -114,15 +115,15 @@ namespace ERPCore.Controllers.Config
             var root = _blobStorageSettings.CurrentValue.DeployPath;
 
 
-         
+
             var path = Path.Combine(
-                root,
+               root,
                "Pages",
-                "Business",
-                 "Form",
-                "QuotationDetail",
-                view + ".cshtml"
-            );
+               "Business",
+               "Form",
+              $"{module}Detail",
+               view + ".cshtml"
+           );
 
             var content = System.IO.File.ReadAllText(path);
 
@@ -170,7 +171,8 @@ namespace ERPCore.Controllers.Config
         public IActionResult SaveGroupViewSchema([FromBody] JsonElement body)
         {
             var raw = body.ToString();
-
+            var module = body.GetProperty("module")
+          .GetString();
             var view = body.GetProperty("view")
             .GetString();
 
@@ -184,13 +186,13 @@ namespace ERPCore.Controllers.Config
 
 
             var path = Path.Combine(
-                root,
+               root,
                "Pages",
-                "Business",
-                 "Form",
-                "QuotationDetail",
-                view + ".cshtml"
-            );
+               "Business",
+               "Form",
+              $"{module}Detail",
+               view + ".cshtml"
+           );
 
             var content = System.IO.File.ReadAllText(path);
 
@@ -265,7 +267,8 @@ namespace ERPCore.Controllers.Config
         public IActionResult RenameGroupViewSchema([FromBody] JsonElement body)
         { 
             var raw = body.ToString();
-
+            var module = body.GetProperty("module")
+           .GetString();
             var view = body.GetProperty("view")
             .GetString();
             var newName = body.GetProperty("newGroupName")
@@ -280,13 +283,13 @@ namespace ERPCore.Controllers.Config
 
 
             var path = Path.Combine(
-                root,
-               "Pages",
-                "Business",
-                 "Form",
-                "QuotationDetail",
-                view + ".cshtml"
-            );
+              root,
+              "Pages",
+              "Business",
+              "Form",
+             $"{module}Detail",
+              view + ".cshtml"
+          );
 
             var content = System.IO.File.ReadAllText(path);
 
@@ -382,6 +385,8 @@ namespace ERPCore.Controllers.Config
         [HttpPost]
         public IActionResult AddField([FromBody] JsonElement body)
         {
+            var module = body.GetProperty("module")
+          .GetString();
             var view = body.GetProperty("view").GetString();
             var groupCaption = body.GetProperty("groupCaption").GetString();
             var fieldJson = body.GetProperty("fieldJson").GetString();
@@ -393,7 +398,7 @@ namespace ERPCore.Controllers.Config
                 "Pages",
                 "Business",
                 "Form",
-                "QuotationDetail",
+               $"{module}Detail",
                 view + ".cshtml"
             );
 
@@ -580,6 +585,8 @@ namespace ERPCore.Controllers.Config
         [HttpPost]
         public IActionResult SwapGroup([FromBody] JsonElement body)
         {
+            var module = body.GetProperty("module")
+          .GetString();
             var view = body.GetProperty("view").GetString();
             var fieldName = body.GetProperty("fieldName").GetString();
             var sourceCaption = body.GetProperty("sourceGroup").GetString();
@@ -588,13 +595,13 @@ namespace ERPCore.Controllers.Config
             var root = _blobStorageSettings.CurrentValue.DeployPath;
 
             var path = Path.Combine(
-                root,
-                "Pages",
-                "Business",
-                "Form",
-                "QuotationDetail",
-                view + ".cshtml"
-            );
+              root,
+              "Pages",
+              "Business",
+              "Form",
+             $"{module}Detail",
+              view + ".cshtml"
+          );
 
             var content = System.IO.File.ReadAllText(path);
 
@@ -659,19 +666,21 @@ namespace ERPCore.Controllers.Config
         [HttpPost]
         public IActionResult AddGroup([FromBody] JsonElement body)
         {
+            var module = body.GetProperty("module")
+          .GetString();
             var view = body.GetProperty("view").GetString();
             var groupJson = body.GetProperty("groupJson").GetString();
 
             var root = _blobStorageSettings.CurrentValue.DeployPath;
 
             var path = Path.Combine(
-                root,
-                "Pages",
-                "Business",
-                "Form",
-                "QuotationDetail",
-                view + ".cshtml"
-            );
+               root,
+               "Pages",
+               "Business",
+               "Form",
+              $"{module}Detail",
+               view + ".cshtml"
+           );
 
             var content = System.IO.File.ReadAllText(path);
 

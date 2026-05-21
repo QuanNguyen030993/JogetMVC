@@ -1,8 +1,10 @@
-﻿@model OverviewPanePartialModel
+﻿@using JogetMVC.Model
+@model OverviewPanePartialModel
 
 @{
     string Id(string name) => $"{Model.Prefix}-{name}";
     var moduleCode = (Model.ModuleCode ?? "").Trim().ToLower();
+    var quotationId = Convert.ToInt64(ViewData["Id"]);
 }
 
 <div id="@Id("overviewRoot")" class="pane pane-right">
@@ -10,30 +12,30 @@
         <div class=@Id("cardHeader")>
             <div style="display:flex;align-items:center;gap:10px;">
                 <div class="h">@Model.Title</div>
-                <span id="@Id("detailStatus")" class="statusTag">-</span>
-                <span id="@Id("stageDeptPill")" class="pill">Request pending at: </span>
+                <span id="@ViewIdHelper.DetailStatus(moduleCode,quotationId)" class="statusTag">-</span>
+                <span id="@ViewIdHelper.StageDeptPill(moduleCode,quotationId)" class="pill">Request pending at: </span>
             </div>
             <div style="display:flex;align-items:center;gap:8px;">
-                <div id="@Id("panelHoverInFlow")" ></div>
+                <div id="@ViewIdHelper.PanelHoverInFlow(moduleCode,quotationId)"></div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;">
-                <div id="@Id("btnCollapseAllTab")"></div>
-                <div id="@Id("btnToggleReferenceFields")"></div>
-                <div id="@Id("btnToggleComment")"></div>
-                <div id="@Id("btnPreview")"></div>
+                <div id="@ViewIdHelper.BtnCollapseAllTab(moduleCode,quotationId)"></div>
+                <div id="@ViewIdHelper.BtnToggleReferenceFields(moduleCode,quotationId)"></div>
+                <div id="@ViewIdHelper.BtnToggleComment(moduleCode,quotationId)"></div>
+                <div id="@ViewIdHelper.BtnPreview(moduleCode,quotationId)"></div>
             </div>
         </div>
 
         <div class="cardBody overview-wrap" style="padding:0">
 
-            <div id="@Id("flowPanel")" class="flow-panel">
+            <div id="@ViewIdHelper.FlowPanel(moduleCode,quotationId)" class="flow-panel">
              </div>
-            <div id="@Id("flowHistoryPanel")" class="flow-history-panel">
+            <div id="@ViewIdHelper.FlowHistoryPanel(moduleCode,quotationId)" class="flow-history-panel">
                 <div class="fh-title">
                     <span>Flow History</span>
-                    <span id="@Id("flowSummary")" class="fh-sub">-</span>
+                    <span id="@ViewIdHelper.FlowSummary(moduleCode,quotationId)" class="fh-sub">-</span>
                 </div>
-                <div id="@Id("flowHistoryBody")" class="fh-flow">
+                <div id="@ViewIdHelper.FlowHistoryBody(moduleCode,quotationId)" class="fh-flow">
                     <div style="color:#6b7280;font-size:12px;padding:6px 4px;">Hover tree to load…</div>
                 </div>
             </div>

@@ -14,6 +14,8 @@ using MimeKit;
 using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.SharePoint.Taxonomy.WebServices;
 using ERPCore.Models;
+using ERPCore.Models.Business.Migration.Config;
+using System.Dynamic;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -68,14 +70,68 @@ public class QuotationWorkflowHistoryController : BaseControllerApi<QuotationWor
     [HttpPost]
     public override async Task<object> ExecuteCustomQuery([FromBody] string query)
     {
+        //List<Dictionary<string, object>> obj = new List<Dictionary<string, object>>();
+        //if (Query != query && !query.Contains("@"))
+        //{
+        //    Query = query;
+        //}
+        //obj = await _BaseRepository.ExecuteCustomLogQuery(Query);
+        //return obj;
         List<Dictionary<string, object>> obj = new List<Dictionary<string, object>>();
-        if (Query != query && !query.Contains("@"))
+        if (Query != query && !string.IsNullOrWhiteSpace(query) && !query.Contains("@"))
         {
             Query = query;
         }
-        obj = await _BaseRepository.ExecuteCustomLogQuery(Query);
+        var controllerName = ControllerContext.RouteData?.Values["controller"]?.ToString() ?? nameof(QuotationWorkflowHistory);
+        BaseRepository<SysTable> sysTableRepo = new BaseRepository<SysTable>(_BaseRepository._baseConfiguration, _httpContextAccessor);
+        SysTable sysTable = await sysTableRepo.GetSingleObject(s => s.Name == controllerName);
+
+
+        var rawRequestParams = _httpContextAccessor.HttpContext.Request.Query.ToList();
+        // Chuẩn hóa:
+        // - cặp đầu tiên filterRefField/filterRefId => refField/refKey
+        // - các cặp sau => điều kiện AND
+        var normalizedParams = Util.NormalizeRefParams(rawRequestParams);
+        IDictionary<string, object> dynamicObj = new ExpandoObject();
+        foreach (var item in normalizedParams)
+        {
+            dynamicObj[item.Key] = item.Value;
+        }
+        if (normalizedParams != null && normalizedParams.Count > 0)
+        {
+            if (dynamicObj.ContainsKey("filterRefId") || dynamicObj.ContainsKey("key"))
+            {
+                var built = Util.LoadParamsBuildCustomQuery<object>(
+                    baseQuery: query == "OnSystem" ? sysTable.CustomQuery : Query,
+                    loadParams: normalizedParams,
+                    defaultOrderBy: "HistoryId",
+                    defaultOrderDir: "DESC",
+                    pkTieBreaker: "QuotationId",
+                    mainTableAlias: null,
+                    allowedColumns: new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                    {
+                   "Id",
+                   "Guid",
+                   "CreatedBy",
+                   "CreatedDate",
+                   "Deleted",
+                   "FromDepartment",
+                   "ToDepartment",
+                   "CommentType",
+                   "CommentBy",
+                   "CommentText",
+                   "QuotationId",
+                   "CommentId"
+                    }
+                );
+                sysTable.CustomQuery = built.Sql;
+                return await _BaseRepository.ExecuteCustomLogQuery(sysTable.CustomQuery, built.Parameters);
+            }
+        }
+        obj = await _BaseRepository.ExecuteCustomLogQuery(query == "OnSystem" ? sysTable.CustomQuery : Query);
         return obj;
     }
+
 
 
     public async Task BulkInsertQuotationWorkflowHistoryAsync(List<QuotationWorkflowHistory> data)
@@ -112,38 +168,5 @@ public class QuotationWorkflowHistoryController : BaseControllerApi<QuotationWor
     }
 
 
-    //public static List<QuotationWorkflowHistory> ConvertToQuotationWorkflowHistoryList(List<Dictionary<string, object>> rawData)
-    //{
-    //    var result = new List<QuotationWorkflowHistory>();
-
-    //    foreach (var dict in rawData)
-    //    {
-    //        var obj = new QuotationWorkflowHistory();
-    //        foreach (var prop in typeof(QuotationWorkflowHistory).GetProperties())
-    //        {
-    //            var key = prop.Name;
-    //            if (key == "Id") continue;
-    //            if (key == "Guid") continue;
-    //            if (key == "CreatedBy") continue;
-    //            if (key == "CreatedDate") continue;
-    //            if (key == "ModifiedBy") continue;
-    //            if (key == "ModifiedDate") continue;
-    //            if (key == "Deleted") continue;
-    //            if (key == "DeletedBy") continue;
-    //            if (key == "DeletedDate") continue;
-    //            if (key == "RowOrder") continue;
-    //            if (key == "CopyFromGuid") continue;
-    //            if (key == "DraftGuid") continue;
-
-    //            if (dict.TryGetValue(key, out var value) && value != null)
-    //            {
-    //                prop.SetValue(obj, value.ToString());
-    //            }
-    //        }
-    //        result.Add(obj);
-    //    }
-
-    //    return result;
-    //}
 
 }

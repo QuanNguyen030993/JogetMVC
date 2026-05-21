@@ -1241,72 +1241,72 @@ Note:
                     }
                 });
 
-                $(`#${formModuleKeyPi}-btnToggleComment`).dxButton({
-                    text: "Audit logs",
-                    icon: "comment",
-                    type: "normal",
-                    stylingMode: "contained",
-                    onClick: () => {
-                        if (!commentPanelOpened) {
-                            openRightCommentPanel();
-                            loadComments(state.selectedCodeNo, state.selectedId);
-                        } else {
-                            closeRightCommentPanel();
-                        }
-                    }
-                });
+                    $(`#${window.PolicyIssuanceIdManager.btnToggleComment(@ViewData["Id"])}`).dxButton({
+        text: "Audit logs",
+        icon: "comment",
+        type: "normal",
+        stylingMode: "contained",
+        onClick: () => {
+            if (!commentPanelOpened) {
+                openRightCommentPanel();
+                loadComments(state.selectedCodeNo, state.selectedId);
+            } else {
+                closeRightCommentPanel();
+            }
+        }
+    });
 
-                $(`#${formModuleKeyPi}-btnToggleReferenceFields`).dxButton({
-                    text: "Common fields",
-                    icon: "fas fa-sliders-h",
-                    type: "normal",
-                    stylingMode: "contained",
-                    onClick: () => {
-                        if (!commentPanelOpened) {
-                            openRightCommentPanel();
-                            loadReferenceFields(state.selectedCodeNo, state.selectedId);
-                        } else {
-                            closeRightCommentPanel();
-                        }
-                    }
-                });
+    $(`#${window.PolicyIssuanceIdManager.btnToggleReferenceFields(@ViewData["Id"])}`).dxButton({
+        text: "Common fields",
+        icon: "fas fa-sliders-h",
+        type: "normal",
+        stylingMode: "contained",
+        onClick: () => {
+            if (!commentPanelOpened) {
+                openRightCommentPanel();
+                loadReferenceFields(state.selectedCodeNo, state.selectedId);
+            } else {
+                closeRightCommentPanel();
+            }
+        }
+    });
 
-                $(`#${formModuleKeyPi}-btnPreview`).dxButton({
-                    text: "Preview",
-                    icon: "fas fa-eye",
-                    type: "normal",
-                    stylingMode: "contained",
-                    onClick: () => {
-                        if (!commentPanelOpened) {
-                            openRightCommentPanel();
-                            previewPolicyIssuance(state.selectedCodeNo, state.selectedId, state.selectedAttachmentId);
-                        } else {
-                            closeRightCommentPanel();
-                        }
-                    }
-                });
+    $(`#${window.PolicyIssuanceIdManager.btnPreview(@ViewData["Id"])}`).dxButton({
+        text: "Preview",
+        icon: "fas fa-eye",
+        type: "normal",
+        stylingMode: "contained",
+        onClick: () => {
+            if (!commentPanelOpened) {
+                openRightCommentPanel();
+                previewPolicyIssuance(state.selectedCodeNo, state.selectedId, state.selectedAttachmentId);
+            } else {
+                closeRightCommentPanel();
+            }
+        }
+    });
 
-                var toggleHideWorkflow = false;
+    var toggleHideWorkflow = false;
 
-                $(`#${formModuleKeyPi}-panelHoverInFlow`).dxButton({
-                    text: "Workflow",
-                    readOnly: true,
-                    type: "normal",
-                    stylingMode: "contained",
-                    onClick: () => {
-                        if (!toggleHideWorkflow) {
-                            $(`#${formModuleKeyPi}-flowPanel`).empty();
-                            $(`#${formModuleKeyPi}-flowHistoryPanel`).show();
-                            $(`#${formModuleKeyPi}-flowPanel`).show();
-                            toggleHideWorkflow = true;
-                            reloadWorkflow(state.selectedGuid, state.selectedId, state.stageDept, formModuleKeyPi);
-                        } else {
-                            $(`#${formModuleKeyPi}-flowHistoryPanel`).hide();
-                            $(`#${formModuleKeyPi}-flowPanel`).hide();
-                            toggleHideWorkflow = false;
-                        }
-                    }
-                });
+    $(`#${window.PolicyIssuanceIdManager.panelHoverInFlow(@ViewData["Id"])}`).dxButton({
+        text: "Workflow",
+        readOnly: true,
+        type: "normal",
+        stylingMode: "contained",
+        onClick: () => {
+            if (!toggleHideWorkflow) {
+                $(`#${window.PolicyIssuanceIdManager.flowPanel(@ViewData["Id"])}`).empty();
+                $(`#${window.PolicyIssuanceIdManager.flowHistoryPanel(@ViewData["Id"])}`).show();
+                $(`#${window.PolicyIssuanceIdManager.flowPanel(@ViewData["Id"])}`).show();
+                toggleHideWorkflow = true;
+                reloadWorkflow(state.selectedGuid, @ViewData["Id"], state.stageDept, formModuleKeyQt);
+            } else {
+                $(`#${window.PolicyIssuanceIdManager.flowHistoryPanel(@ViewData["Id"])}`).hide();
+                $(`#${window.PolicyIssuanceIdManager.flowPanel(@ViewData["Id"])}`).hide();
+                toggleHideWorkflow = false;
+            }
+        }
+    });
 
                 $("#btnCloseRightComment").off("click").on("click", function () {
                     closeRightCommentPanel();

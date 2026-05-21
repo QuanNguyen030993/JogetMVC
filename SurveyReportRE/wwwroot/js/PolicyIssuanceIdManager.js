@@ -31,7 +31,16 @@ window.PolicyIssuanceIdManager = {
     // Detail elements
     detailStatus: function (quotationId) { return `${this.prefix}-detailStatus_${quotationId}`; },
     stageDeptPill: function (quotationId) { return `${this.prefix}-stageDeptPill_${quotationId}`; },
-
+    //btnToggleReferenceFieldsMini: function (quotationId) { return `${this.prefix}-btnToggleReferenceFieldsMini_${quotationId}`; },
+    //btnToggleCommentMini: function (quotationId) { return `${this.prefix}-btnToggleCommentMini_${quotationId}`; },
+    btnCollapseAllTab: function (quotationId) { return `${this.prefix}-btnCollapseAllTab_${quotationId}`; },
+    btnToggleComment: function (quotationId) { return `${this.prefix}-btnToggleComment_${quotationId}`; },
+    btnToggleReferenceFields: function (quotationId) { return `${this.prefix}-btnToggleReferenceFields_${quotationId}`; },
+    btnPreview: function (quotationId) { return `${this.prefix}-btnPreview_${quotationId}`; },
+    panelHoverInFlow: function (quotationId) { return `${this.prefix}-panelHoverInFlow_${quotationId}`; },
+    stageDeptPill: function (quotationId) { return `${this.prefix}-stageDeptPill_${quotationId}`; },
+    flowPanel: function (quotationId) { return `${this.prefix}-flowPanel_${quotationId}`; },
+    flowHistoryPanel: function (quotationId) { return `${this.prefix}-flowHistoryPanel_${quotationId}`; },
     // Form elements by department
     form: function (department, quotationId) { return this.generateId('form', department, quotationId); },
     overviewScroll: function (quotationId) { return `${this.prefix}-overviewScroll_${quotationId}`; },

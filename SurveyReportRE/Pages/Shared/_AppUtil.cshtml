@@ -1602,7 +1602,6 @@
             }
 
             else if (item.dataType == "table") {
-                debugger
                 var gridConfig = await makeFieldFeatures(
                     item,
                     gridInstance,
@@ -2070,17 +2069,18 @@ function scrollToDept(module, dept) {
 
 
     function reloadWorkflow(selectedGuid, selectedId, stageDept, moduleKey) {
-        $(`#${moduleKey}-flowPanel`).empty();
+            $(`#${moduleKey}-flowPanel_${selectedId}`).empty();
         ajaxGet(`/api/Quotation/GetQuotationWorkflowDefinition/${selectedGuid}`, null)
             .then(instance => {
                     if (instance)
                     {
                         var staticFlow = null;
                 var passingParams = { UITabId: `form_DrawCanvas_Form_${instance.id}`, pageNum: instance.id };
-                appendElementViewInside(`/Business/Workflow/DrawCanvas_Form/${instance.id}`, passingParams, $(`#${moduleKey}-flowPanel`), `${moduleKey}-form_DrawCanvas_Form`, "appendTo");
-                const q = `SELECT DeptCode AS 'dept',ActionTime AS 'time',ActionNote AS 'note' FROM QuotationWorkflowHistory WHERE QuotationId = ${selectedId}`;
+                appendElementViewInside(`/Business/Workflow/DrawCanvas_Form/${instance.id}`, passingParams, $(`#${moduleKey}-flowPanel_${instance.id}`), `${moduleKey}-form_DrawCanvas_Form_${instance.id}`, "appendTo");
+                // const q = `SELECT DeptCode AS 'dept',ActionTime AS 'time',ActionNote AS 'note' FROM QuotationWorkflowHistory WHERE QuotationId = ${selectedId}`;
+                const q = `OnSystem`;
                 $.ajax({
-                    url: `/api/QuotationWorkflowHistory/ExecuteCustomQuery`,
+                            url: `/api/QuotationWorkflowHistory/ExecuteCustomQuery?filterRefField=QuotationId&filterRefId=${selectedId}`,
                     method: "POST",
                     async: false,
                     contentType: "application/json",
@@ -2125,8 +2125,11 @@ function scrollToDept(module, dept) {
                     return { summary, html };
                 }
                 var getData = renderFlow(staticFlow);
-                $(`#${moduleKey}-flowSummary`).text(getData.summary);
-                $(`#${moduleKey}-flowHistoryBody`).html(getData.html);
+                    $(`#${moduleKey}-flowSummary_${selectedId}`).text(getData.summary);
+                    $(`#${moduleKey}-flowHistoryBody_${selectedId}`).html(getData.html);
+                }
+                else {
+                    alert("Please contact admin!");
                 }
             });
 

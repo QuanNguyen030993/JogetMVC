@@ -47,28 +47,28 @@ namespace JogetMVC.Model
     public static class ViewIdHelper
     {
         public static string OverViewScroll(string Prefix, string Id) => $"{Prefix}-overviewScroll_{Id}";
-        private const string Prefix = "qt";
+
 
         // Utility method
-        public static string GenerateId(string element, string dept, long quotationId) => $"{Prefix}-{element}_{dept}_{quotationId}";
+        public static string GenerateId(string element, string dept, long quotationId) => $"{element}_{dept}_{quotationId}";
 
         // Core elements
-        public static string RecordNo => $"{Prefix}-recordNo";
-        public static string LoginRoleLabel => $"{Prefix}-loginRoleLabel";
-        public static string FocusDeptPill => $"{Prefix}-focusDeptPill";
-        public static string BtnClientConfirm => $"{Prefix}-btnClientConfirm";
+        public static string RecordNo => $"recordNo";
+        public static string LoginRoleLabel => $"loginRoleLabel";
+        public static string FocusDeptPill => $"recordNo";
+        public static string BtnClientConfirm => $"recordNo";
 
         // Quote list elements
-        public static string QuoteList => $"{Prefix}-quoteList";
-        public static string QuoteCard => $"{Prefix}-quoteCard"; // Use data-id attribute
+        public static string QuoteList => $"recordNo";
+        public static string QuoteCard => $"recordNo"; // Use data-id attribute
 
         // Detail elements
-        public static string DetailStatus(long quotationId) => $"{Prefix}-detailStatus_{quotationId}";
-        public static string StageDeptPill(long quotationId) => $"{Prefix}-stageDeptPill_{quotationId}";
+        public static string DetailStatus(string prefix,long quotationId) => $"{prefix}-detailStatus_{quotationId}";
+        public static string StageDeptPill(string prefix, long quotationId) => $"{prefix}-stageDeptPill_{quotationId}";
 
         // Form elements by department
         public static string Form(string dept, long quotationId) => GenerateId("form", dept, quotationId);
-        public static string OverViewScroll(long quotationId) => $"{Prefix}-overviewScroll_{quotationId}";
+        public static string OverViewScroll(string prefix, long quotationId) => $"{prefix}-overviewScroll_{quotationId}";
 
         // Button elements by department
         public static string BtnSave(string dept, long quotationId) => GenerateId("btnSave", dept, quotationId);
@@ -82,17 +82,25 @@ namespace JogetMVC.Model
         public static string Hint(string dept, long quotationId) => GenerateId("hint", dept, quotationId);
         public static string RemarkBox(string dept, long quotationId) => GenerateId("remarkBox", dept, quotationId);
 
-        // Control elements
-        public static string BtnToggleLeftPane => $"{Prefix}-btnToggleLeftPane";
-        public static string BtnCollapseAllTab => $"{Prefix}-btnCollapseAllTab";
-        public static string BtnToggleComment => $"{Prefix}-btnToggleComment";
-        public static string BtnToggleReferenceFields => $"{Prefix}-btnToggleReferenceFields";
-        public static string BtnPreview => $"{Prefix}-btnPreview";
-        public static string RoleSelect => $"{Prefix}-roleSelect";
 
-        // Tree navigation
-        public static string TreeStack => $"{Prefix}-treeStack";
-        public static string TreeVLine => $"{Prefix}-treeVLine";
+        //Overview button
+
+        public static string PanelHoverInFlow(string prefix, long quotationId) => $"{prefix}-panelHoverInFlow_{quotationId}";
+        public static string BtnCollapseAllTab(string prefix, long quotationId) => $"{prefix}-btnCollapseAllTab_{quotationId}";
+        public static string BtnToggleReferenceFields(string prefix, long quotationId) => $"{prefix}-btnToggleReferenceFields_{quotationId}";
+        public static string BtnToggleComment(string prefix, long quotationId) => $"{prefix}-btnToggleComment_{quotationId}";
+        public static string BtnPreview(string prefix, long quotationId) => $"{prefix}-btnPreview_{quotationId}";
+        public static string FlowPanel(string prefix, long quotationId) => $"{prefix}-flowPanel_{quotationId}";
+        public static string FlowHistoryPanel(string prefix, long quotationId) => $"{prefix}-flowHistoryPanel_{quotationId}";
+        public static string FlowSummary(string prefix, long quotationId) => $"{prefix}-flowSummary_{quotationId}";
+        public static string FlowHistoryBody(string prefix, long quotationId) => $"{prefix}-flowHistoryBody_{quotationId}";
+        //// Control elements
+        //public static string BtnToggleLeftPane => $"{Prefix}-btnToggleLeftPane";
+        //public static string RoleSelect => $"{Prefix}-roleSelect";
+
+        //// Tree navigation
+        //public static string TreeStack => $"{Prefix}-treeStack";
+        //public static string TreeVLine => $"{Prefix}-treeVLine";
 
         // Right panel
         public static string RightCommentDock => "rightCommentDock";
@@ -101,7 +109,7 @@ namespace JogetMVC.Model
         public static string HeaderWidgetsPanel => "headerWidgetsPanel";
 
         // PDF Viewer
-        public static string PdfViewer(long quoteId) => $"{Prefix}-pdfViewer_{quoteId}";
+        //public static string PdfViewer(long quoteId) => $"{Prefix}-pdfViewer_{quoteId}";
 
         // Overlay/Dialog
         public static string BranchOverlay => "branchOverlay";
@@ -152,9 +160,8 @@ namespace JogetMVC.Model
 
         // Quote list elements
 
-        // Detail elements
-        public static string DetailStatus => $"{Prefix}-detailStatus";
-        public static string StageDeptPill => $"{Prefix}-stageDeptPill";
+       
+
 
         // Form elements by department
         public static string Form(string department, long quotationId) => GenerateId("form", department, quotationId);
@@ -173,10 +180,7 @@ namespace JogetMVC.Model
 
         // Control elements
         public static string BtnToggleLeftPane => $"{Prefix}-btnToggleLeftPane";
-        public static string BtnCollapseAllTab => $"{Prefix}-btnCollapseAllTab";
-        public static string BtnToggleComment => $"{Prefix}-btnToggleComment";
-        public static string BtnToggleReferenceFields => $"{Prefix}-btnToggleReferenceFields";
-        public static string BtnPreview => $"{Prefix}-btnPreview";
+
         public static string RoleSelect => $"{Prefix}-roleSelect";
 
         // Tree navigation
@@ -558,8 +562,7 @@ namespace JogetMVC.Model
 
         #region Detail
 
-        public static string DetailStatus(long quotationId)
-            => GenerateId("detailStatus", quotationId: quotationId);
+        public static string DetailStatus(long quotationId) => $"{Prefix}-detailStatus_{quotationId}";
 
         public static string StageDeptPill(long quotationId)
             => GenerateId("stageDeptPill", quotationId: quotationId);

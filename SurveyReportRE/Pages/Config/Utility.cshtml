@@ -192,6 +192,7 @@ LOW CODE VIEW DESIGNER MOCKUP
 
         <div class="toolbar">
 
+            <div id="moduleSelector"></div>
             <div id="viewSelector"></div>
 
             <br/>
@@ -295,7 +296,8 @@ LOW CODE VIEW DESIGNER MOCKUP
     </div>
 
     <!-- RIGHT -->
-    <div class="right">
+    <div class="preview-box">
+
 
         <div class="panel-title">
             Property Panel
@@ -308,8 +310,6 @@ LOW CODE VIEW DESIGNER MOCKUP
 
         </div>
         <div id="btnSaveView"></div>
-    </div>
-    <div class="right">
 
         <div class="panel-title">
             Property Group Panel
@@ -327,11 +327,6 @@ LOW CODE VIEW DESIGNER MOCKUP
         </div>
         <div id="btnSaveGroupView"></div>
 
-
-        
-    </div>
-     <div class="preview-box">
-
         <h2>
             Add New Field
         </h2>
@@ -343,10 +338,6 @@ LOW CODE VIEW DESIGNER MOCKUP
             <div id="btnAddNewField"></div>
 
         </div>
-
-    </div> 
-    <div class="preview-box">
-
         <h2>Add New Group</h2>
 
         <div class="add-field-box">
@@ -355,8 +346,7 @@ LOW CODE VIEW DESIGNER MOCKUP
             <div id="btnAddNewGroup"></div>
 
         </div>
-
-    </div>
+    </div> 
 
 </div>
 
@@ -377,16 +367,27 @@ LOW CODE VIEW DESIGNER MOCKUP
     // VIEW SELECTOR
     // =====================================================
 
+
+    $("#moduleSelector").dxSelectBox({
+        items: [
+            "Quotation",
+            "PolicyIssuance"
+        ],
+            value: "Quotation"
+    });
+
+
     $("#viewSelector").dxSelectBox({
 
         items:[
-
             "_Quotation_FO_Form",
             "_Quotation_TS_Form",
             "_Quotation_UW_Form",
             "_Quotation_LMKT_Form",
-            "_Quotation_PM_Form"
-
+            "_Quotation_PM_Form",
+            "_PolicyIssuance_FO_Form",
+            "_PolicyIssuance_TS_Form",
+            "_PolicyIssuance_PM_Form"
         ],
 
         value:"Quotation_FO_Form"
@@ -416,8 +417,16 @@ LOW CODE VIEW DESIGNER MOCKUP
     // =====================================================
 
     function loadView(){
-        var moduleQuotation = "QuotationDetail";
-        var viewName = $("#viewSelector")
+
+     var moduleName = $("#moduleSelector")
+            .dxSelectBox("instance")
+            .option("value");
+
+            var moduleQuotation = `${moduleName}Detail`;
+
+
+
+            var viewName = $("#viewSelector")
             .dxSelectBox("instance")
             .option("value");
 
@@ -643,7 +652,8 @@ LOW CODE VIEW DESIGNER MOCKUP
                 "dxNumberBox",
                 "dxDateBox",
                 "dxSelectBox",
-                "dxTagBox"
+                "dxTagBox",
+                "dxDataGrid"
             ],
 
                 value:field?.editorType ? field.editorType : "dxTextBox",
@@ -793,10 +803,17 @@ LOW CODE VIEW DESIGNER MOCKUP
                                draggedItem.visible =  true;
                                visibleFields.push(draggedItem);// var field =  e.fromData[e.fromIndex];
                                             var field = findField(draggedItem.dataField);
-            var viewName = $("#viewSelector")
+
+
+                    var module = $("#moduleSelector")
+                    .dxSelectBox("instance")
+                    .option("value");
+                    
+                    var viewName = $("#viewSelector")
                     .dxSelectBox("instance")
                     .option("value");
                 ajaxPost("/api/Utility/SaveViewSchema",{
+                        module: module,
                     view: viewName,
                         fieldName: draggedItem.dataField,
                             fieldJson: JSON.stringify(field)
@@ -833,11 +850,16 @@ LOW CODE VIEW DESIGNER MOCKUP
                                    draggedItem.visible =  false;
                                       hiddenFields.push(draggedItem);
                                               var field = findField(draggedItem.dataField);
+
+                                                  var module = $("#moduleSelector")
+                        .dxSelectBox("instance")
+                        .option("value");
         var viewName = $("#viewSelector")
                 .dxSelectBox("instance")
                 .option("value");
             ajaxPost("/api/Utility/SaveViewSchema",{
                 view: viewName,
+                    module: module,
                     fieldName: draggedItem.dataField,
                         fieldJson: JSON.stringify(field)
                 }).then(res=>{
@@ -893,11 +915,16 @@ LOW CODE VIEW DESIGNER MOCKUP
             targetGroup.items.push(newField);
 
             // ✅ CALL API SAVE
-            var viewName = $("#viewSelector")
+                    var module = $("#moduleSelector")
+                .dxSelectBox("instance")
+                .option("value");  var viewName = 
+                
+                $("#viewSelector")
                 .dxSelectBox("instance")
                 .option("value");
 
             ajaxPost("/api/Utility/AddField", {
+                    module: module,
                 view: viewName,
                 groupCaption: targetGroup.caption,
                 fieldJson: JSON.stringify(newField)
@@ -986,7 +1013,14 @@ function generateItemsText(){
 }
 function saveView(){
     var field = findField(selectedField);
+
+
+
          var viewName = $("#viewSelector")
+            .dxSelectBox("instance")
+            .option("value");
+
+                    var module = $("#moduleSelector")
             .dxSelectBox("instance")
             .option("value");
 
@@ -996,6 +1030,7 @@ function saveView(){
                     field.editorType = editorType;
         ajaxPost("/api/Utility/SaveViewSchema",{
             view: viewName,
+                    module: module,
             fieldName: selectedField,
             fieldJson: JSON.stringify(field)
             }).then(res=>{
@@ -1140,14 +1175,17 @@ function renderGroupDrag(){
         // });
     }
     function saveGroupView(group){
-        
-        var viewName = $("#viewSelector")
+
+                var module = $("#moduleSelector")
+            .dxSelectBox("instance")
+            .option("value");var viewName = $("#viewSelector")
             .dxSelectBox("instance")
             .option("value");
                         var oldName = $(`#groupOldName`).val();
                 var newName = $(`#propertyNewGroupPanel`).dxTextBox("instance").option("value");
             ajaxPost("/api/Utility/RenameGroupViewSchema",{
             view: viewName,
+                    module: module,
             newGroupName: newName,
                 oldGroupName: oldName//,
             // groupJson: JSON.stringify(group)
@@ -1252,11 +1290,13 @@ function renderGroupDrag(){
     // FIELD DROP
     // =====================================================
         function onReOrderFieldDrop(e){
-            debugger
         // ✅ Lấy fieldName từ DOM (CHUẨN NHẤT)
         var fieldName = $(e.itemElement).data("field");
 
         // ✅ Xác định group source / target
+                var module = $("#moduleSelector")
+                    .dxSelectBox("instance")
+                    .option("value");
             var viewName = $("#viewSelector")
                 .dxSelectBox("instance")
                 .option("value");
@@ -1266,6 +1306,7 @@ function renderGroupDrag(){
                 ajaxPost("/api/Utility/SwapGroup",{
 
                 view:viewName,
+                    module:module,
 
                     fieldName:fieldName,
 
@@ -1509,12 +1550,15 @@ function renderGroupDrag(){
             formSchema.unshift(newGroup);
 
             // ✅ CALL API
-            var viewName = $("#viewSelector")
+                    var module = $("#moduleSelector")
+                .dxSelectBox("instance")
+                .option("value"); var viewName = $("#viewSelector")
                 .dxSelectBox("instance")
                 .option("value");
 
             ajaxPost("/api/Utility/AddGroup", {
                 view: viewName,
+                        module: module,
                 groupJson: JSON.stringify(newGroup)
             }).then(() => {
                 DevExpress.ui.notify("Group added", "success", 2000);
@@ -1528,8 +1572,81 @@ function renderGroupDrag(){
         }
 
     });
-    ``
 
     renderDragColumns();
         renderReOrderFieldColumns();
+
+    //         async function addFieldsSequentially(){
+
+    //     const fields = [
+    //         "policyPackage",
+    //         "reason",
+    //         "riScheme",
+    //         "riClosings",
+    //         "finalPremium",
+    //         "premiumBreakdown",
+    //         "isKycChecked",
+    //         "declarationText",
+    //         "isBodApproved",
+    //         "holdCoverType",
+    //         "uRFAttachment",
+    //         "machineryList",
+    //         "propertyTypeList",
+    //         "factoryOperationYears",
+    //         "chassisEngineNumber",
+    //         "newReplacementValue",
+    //         "sumInsuredBreakdown",
+    //         "isGlobalCover",
+    //         "emailInformRi",
+    //         "resultAttachment",
+    //         "confirmedQuotationFlag",
+    //         "proposalForm",
+    //         "ichigenka",
+    //         "policyNoCL",
+    //         "theInsured",
+    //         "occupation",
+    //         "occupationFCICode",
+    //         "riskGrading",
+    //         "pOI",
+    //         "tSI",
+    //         "premium",
+    //         "deductible",
+    //         "tnCs",
+    //         "occupationCode",
+    //         "premiumRate"
+    //     ];
+
+    //     const module = "PolicyIssuance";
+    //     const viewName = "_PolicyIssuance_TS_Form";
+
+    //     for (const fieldName of fields){
+
+    //         console.log("Adding:", fieldName);
+
+    //         const newField = {
+    //             dataField: fieldName,
+    //             editorType: "dxTextBox",
+    //             visible: true
+    //         };
+    //         debugger
+    //         ajaxPost("/api/Utility/AddField", {
+    //             module: module,
+    //             view: viewName,
+    //             groupCaption: "Attachment",
+    //             fieldJson: JSON.stringify(newField)
+    //         });
+
+    //         DevExpress.ui.notify(`Added ${fieldName}`, "success", 1000);
+
+    //         // ✅ delay 10s
+    //     }
+
+    //     console.log("DONE");
+    // }
+    // function delay(ms){
+    //     return new Promise(resolve => setTimeout(resolve, ms));
+    // }
+
+    //     addFieldsSequentially();
+
 </script>
