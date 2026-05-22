@@ -6088,17 +6088,8 @@ function formatBytes(bytes) {
     return gb.toFixed(1) + " GB";
 }
 
-function getCurrentEditorOptions(editorOptions) {
-    const form = $(`#${window.QuotationIdManager.form(editorOptions.sectionName, editorOptions.id)}`).dxForm("instance");
-    if (!form) return null;
-    return form.option("formData");
-}
-function getDxFileUploaderIds(sectionName) {
-    return {
-        uploaderId: `fileUpload_${sectionName}`,
-        previewId: `attList_${sectionName}`
-    };
-}
+
+
 function showUploaderLoader(idControlElement, message) {
     const $element = $(idControlElement);
     if (!$element.length) return;
@@ -6132,11 +6123,12 @@ function hideUploaderLoader(idControlElement) {
 }
 function renderDxFileUploader(editorOptions, $container, options) {
     const controlId = `${editorOptions.moduleName}_${editorOptions.sectionName}_${editorOptions.id}`;
+    editorOptions.controlId = controlId;
     options = options || {};
     const controllerName = options.controllerName || "Document";
     const currentOptions = getCurrentEditorOptions(editorOptions) || {};
 
-    const ids = getDxFileUploaderIds(controlId);
+    const ids = getDxFileUploaderIds(editorOptions);
     const uploaderId = ids.uploaderId;
     const previewId = ids.previewId;
     const idControlElement = `#${uploaderId}`;
@@ -6188,23 +6180,6 @@ function renderDxFileUploader(editorOptions, $container, options) {
     loadDxFileUploaderAttachments(controlId, controllerName, editorOptions);
 }
 
-//function updateDxFileUploaderHeaders(editorOptions) {
-    
-//    const controlIdIn = `${editorOptions.moduleName}_${editorOptions.sectionName}`;
-//    const currentOptions = getCurrentEditorOptions(editorOptions);
-//    if (!currentOptions) return;
-
-//    const { uploaderId } = getDxFileUploaderIds(controlIdIn);
-//    const uploader = $(`#${uploaderId}`).dxFileUploader("instance");
-//    if (!uploader) return;
-//    uploader.option("uploadHeaders", {
-//        RecordGuid: currentOptions.guid || "",
-//        Folder: editorOptions.sectionName || sectionName
-//    });
-
-//    uploader.option("readOnly", !!currentOptions.isReadOnly);
-//    uploader.option("selectButtonText", `Upload ${currentOptions.uploadTitle || "Files"}`);
-//}
 
 
 
@@ -6302,104 +6277,7 @@ function createAttachmentItem(x, onDeleted) {
 
     return $item;
 }
-function renderAttachmentListLazy(list, attList_Host, options) {
-    options = options || {};
 
-    const batchSize = options.batchSize || 8;
-    const delay = options.delay || 0;
-    const onDeleted = options.onDeleted;
-
-    if (!attList_Host || attList_Host.length === 0) return;
-
-    attList_Host.empty();
-
-    if (!list || list.length === 0) {
-        attList_Host.html("<div style='opacity:.7;padding:6px 2px;'>No attachments</div>");
-        return;
-    }
-
-    let index = 0;
-    let cancelled = false;
-
-    const token = Date.now() + "_" + Math.random().toString(36).slice(2);
-    attList_Host.data("lazyRenderToken", token);
-
-    function appendBatch() {
-        if (cancelled) return;
-        if (attList_Host.data("lazyRenderToken") !== token) return;
-
-        const frag = document.createDocumentFragment();
-        const itemsToAnimate = [];
-
-        for (let i = 0; i < batchSize && index < list.length; i++, index++) {
-            const $item = createAttachmentItem(list[index], onDeleted);
-            frag.appendChild($item[0]);
-            itemsToAnimate.push($item);
-        }
-
-        attList_Host[0].appendChild(frag);
-
-        requestAnimationFrame(() => {
-            itemsToAnimate.forEach(($item, idx) => {
-                setTimeout(() => {
-                    $item.css({
-                        opacity: 1,
-                        transform: "translateY(0)"
-                    });
-                }, idx * 20);
-            });
-        });
-
-        if (index < list.length) {
-            if (delay > 0) {
-                setTimeout(() => requestAnimationFrame(appendBatch), delay);
-            } else {
-                requestAnimationFrame(appendBatch);
-            }
-        }
-    }
-
-    appendBatch();
-
-    return {
-        cancel: function () {
-            cancelled = true;
-        }
-    };
-}
-function loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions) {
-    const currentOptions = getCurrentEditorOptions(editorOptions);
-    if (!currentOptions || !currentOptions.guid) return;
-    var controllId = `${editorOptions.moduleName}_${editorOptions.sectionName}`;
-    const { uploaderId, previewId } = getDxFileUploaderIds(controllId);
-    const idControlElement = `#${uploaderId}`;
-    showUploaderLoader(idControlElement, "File loading...");
-    $.ajax({
-        url: `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${currentOptions.sectionName ? (editorOptions.moduleName + '_' + currentOptions.sectionName + (editorOptions?.specificFolder ? '_' + editorOptions?.specificFolder : '')) : sectionName}`,
-        method: "GET",
-        success: function (data) {
-            const $preview = $(`#${previewId}`);
-            renderAttachmentListLazy(data, $preview, {
-                batchSize: 6,
-                delay: 16,
-                onDeleted: function () {
-                    loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions);
-                }
-            });
-
-            hideUploaderLoader(idControlElement);
-        },
-        error: function () {
-            hideUploaderLoader(idControlElement);
-        }
-    });
-}
-
-function buildFolder(latestOptions, sectionName) {
-    //return (latestOptions?.sectionName || sectionName) +
-    return (latestOptions.moduleName == 'qt' ? `Quotation` : `PolicyIssuance`) +
-        (latestOptions?.code ? `\\${latestOptions.code}` : "");
-}
 function uploadFileAjax(file, options) {
     const url = options.url;
     const guid = options.guid || "";
@@ -6437,22 +6315,6 @@ function uploadFileAjax(file, options) {
 
 }
 
-function resolveUploadOptions(sectionName,editorOptions) {
-    const latestOptions = getCurrentEditorOptions(editorOptions) || {};
-    latestOptions.moduleName = editorOptions?.moduleName;
-    if (editorOptions?.code)
-        latestOptions.code = editorOptions?.code;
-    if (editorOptions?.specificFolder) {
-        latestOptions.code = `${editorOptions?.code}\\${editorOptions?.specificFolder}`;
-        sectionName = `${sectionName}_${editorOptions?.specificFolder}`
-    }
-    return {
-        guid: latestOptions.guid || "",
-        folder: buildFolder(latestOptions, sectionName) || "",
-        section: sectionName
-    };
-
-}
 
 function getJson(url, data) {
     return $.ajax({

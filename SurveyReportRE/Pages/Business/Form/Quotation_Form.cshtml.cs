@@ -11,6 +11,7 @@ namespace ERPCore.Pages
         //private readonly ILogger<Quotation_FormModel> _logger;
         public static string ModelName { get; set; } = "";
         private static string Id { get; set; }
+        private static string Guid { get; set; }
 
         private readonly IBaseRepository<Quotation> _quotationRepository;
 
@@ -19,7 +20,7 @@ namespace ERPCore.Pages
             _quotationRepository = new BaseRepository<Quotation>(configuration, httpContextAccessor);
             //_logger = logger;
         }
-        public async void OnGet(int? pageNum)
+        public async void OnGet(int? pageNum, string? Guid)
         {
             if (pageNum != 0)
             {
@@ -41,6 +42,7 @@ namespace ERPCore.Pages
 
             ModelName = nameof(Quotation);
             ViewData[nameof(Id)] = pageNum ?? 0;
+            ViewData[nameof(Guid)] = Guid ?? "";
         }
     }
 }
