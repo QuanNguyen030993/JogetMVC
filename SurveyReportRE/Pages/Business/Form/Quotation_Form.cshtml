@@ -1297,7 +1297,7 @@ Note:
                             $(`#${window.QuotationIdManager.flowHistoryPanel(@ViewData["Id"])}`).show();
                             $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).show();
                             toggleHideWorkflow = true;
-                            reloadWorkflow(state.selectedGuid, @ViewData["Id"], state.stageDept, formModuleKeyQt);
+                                reloadWorkflow("@(ViewData["Guid"])", @(ViewData["Id"]), state.stageDept, formModuleKeyQt);
                         } else {
                             $(`#${window.QuotationIdManager.flowHistoryPanel(@ViewData["Id"])}`).hide();
                             $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).hide();

@@ -1304,7 +1304,7 @@ Note:
                 $(`#${window.PolicyIssuanceIdManager.flowHistoryPanel(@ViewData["Id"])}`).show();
                 $(`#${window.PolicyIssuanceIdManager.flowPanel(@ViewData["Id"])}`).show();
                 toggleHideWorkflow = true;
-                reloadWorkflow(state.selectedGuid, @ViewData["Id"], state.stageDept, formModuleKeyQt);
+                            reloadWorkflow("@(ViewData["Guid"])", @(ViewData["Id"]),state.stageDept, formModuleKeyQt);
             } else {
                 $(`#${window.PolicyIssuanceIdManager.flowHistoryPanel(@ViewData["Id"])}`).hide();
                 $(`#${window.PolicyIssuanceIdManager.flowPanel(@ViewData["Id"])}`).hide();

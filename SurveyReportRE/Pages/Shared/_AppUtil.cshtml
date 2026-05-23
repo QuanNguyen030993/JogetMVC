@@ -2075,7 +2075,7 @@ function scrollToDept(module, dept) {
                     {
                         var staticFlow = null;
                 var passingParams = { UITabId: `form_DrawCanvas_Form_${instance.id}`, pageNum: instance.id };
-                appendElementViewInside(`/Business/Workflow/DrawCanvas_Form/${instance.id}`, passingParams, $(`#${moduleKey}-flowPanel_${instance.id}`), `${moduleKey}-form_DrawCanvas_Form_${instance.id}`, "appendTo");
+                    appendElementViewInside(`/Business/Workflow/DrawCanvas_Form/${instance.id}`, passingParams, $(`#${moduleKey}-flowPanel_${selectedId}`), `${moduleKey}-form_DrawCanvas_Form_${instance.id}`, "appendTo");
                 // const q = `SELECT DeptCode AS 'dept',ActionTime AS 'time',ActionNote AS 'note' FROM QuotationWorkflowHistory WHERE QuotationId = ${selectedId}`;
                 const q = `OnSystem`;
                 $.ajax({
@@ -2128,7 +2128,7 @@ function scrollToDept(module, dept) {
                     $(`#${moduleKey}-flowHistoryBody_${selectedId}`).html(getData.html);
                 }
                 else {
-                    alert("Please contact admin!");
+                    alert("Workflow does not exist in this request!");
                 }
             });
 
