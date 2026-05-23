@@ -845,13 +845,14 @@ function createEditor(item, $container, $element, editorOptions) {
                 items.sectionName = editorOptions?.sectionName || item.sectionName;
                 items.code = editorOptions?.code || item.code;
                 items.specificFolder = editorOptions?.specificFolder || item.specificFolder;
+                console.log(items);
                 renderDxFileUploader(items, $container, {
                     controllerName: "Document",
                     uploadTitle: "Files",
                     uploadUrl: "/api/Attachment/AsyncUploadFile",
                     accept: "*/*"
                 });
-                //loadDxFileUploaderAttachments(item, "Document", items);
+                
             }
             break;
         case "empty":
@@ -6121,64 +6122,7 @@ function showUploaderLoader(idControlElement, message) {
 function hideUploaderLoader(idControlElement) {
     $(`${idControlElement} .previewLoader`).remove();
 }
-function renderDxFileUploader(editorOptions, $container, options) {
-    const controlId = `${editorOptions.moduleName}_${editorOptions.sectionName}_${editorOptions.id}`;
-    editorOptions.controlId = controlId;
-    options = options || {};
-    const controllerName = options.controllerName || "Document";
-    const currentOptions = getCurrentEditorOptions(editorOptions) || {};
 
-    const ids = getDxFileUploaderIds(editorOptions);
-    const uploaderId = ids.uploaderId;
-    const previewId = ids.previewId;
-    const idControlElement = `#${uploaderId}`;
-
-    const uploadTitle = currentOptions.uploadTitle || options.uploadTitle || "Files";
-
-    $(`#${previewId}`).remove();
-    $(`#${uploaderId}`).remove();
-    
-    //const $preview =  $(`<div id="${previewId}" style="display:flex;flex-wrap:wrap;gap:25px;top:10px"></div>`)
-    const $preview = $(`<div id="${previewId}" class="att-preview"></div>`)
-        .appendTo($container);
-    $(`<div id="${uploaderId}"></div>`)
-        .appendTo($container)
-        .dxFileUploader({
-            readOnly: !!currentOptions.isReadOnly,
-            multiple: true,
-            accept: options.accept || "*/*",
-            selectButtonText: `Upload ${uploadTitle}`,
-            dropZone: `#${previewId}`,
-            labelText: "",
-            uploadMode: "instantly",
-            uploadUrl: options.uploadUrl || `/api/Attachment/AsyncUploadFile`,
-            showFileList: false,
-            uploadHeaders: {
-               //Only use for static string
-            },
-            onInitialized: function (e) {
-                //updateDxFileUploaderHeaders(editorOptions);
-            },
-            onUploadStarted: function (e) {
-                showUploaderLoader(idControlElement, "File loading...");
-            },
-            uploadFile: function (file) {
-                const opts = resolveUploadOptions(controlId, editorOptions);
-                return uploadFileAjax(file, {
-                    url: "/api/Attachment/AsyncUploadFile",
-                    ...opts
-                });
-               
-            },
-            onUploaded: function (e) {
-                hideUploaderLoader(idControlElement);
-
-                loadDxFileUploaderAttachments(controlId, controllerName, editorOptions)
-            }
-        });
-
-    loadDxFileUploaderAttachments(controlId, controllerName, editorOptions);
-}
 
 
 

@@ -593,7 +593,7 @@ var MGridOption = class MGridOption {
             appErrorHandling('Library error: call onEditorPrepared was failed.', err);
             console.trace();
         }
-    }
+    } 
     onBeforeSend(operation, ajaxSettings) {
         if (this.queryParams != null)
             $.extend(ajaxSettings.data, { queryParams: this.queryParams });
