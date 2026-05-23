@@ -512,7 +512,8 @@ Note:
        Prefix = prefix,
        ModuleCode = moduleCode,
        Title = title,
-       Id = ViewData["Id"].ToString()
+       Id = ViewData["Id"].ToString(),
+       Guid = ViewData["guid"].ToString()
    }),
     </div>
 
@@ -798,8 +799,12 @@ Note:
         function reloadState() {
             $.each(qtDeptModuleCode, function (itemIndex, item) {
                 var items = new Object();
-                items.moduleName = "qt";
+                items.moduleName = "@prefix";
                 items.sectionName = item;
+                items.id = @ViewData["Id"];
+                items.guid = "@ViewData["Guid"]";
+                const controlId = `${items.moduleName}_${items.sectionName}_${items.id}`;
+                items.controlId = controlId;
                 loadDxFileUploaderAttachments(item, "Document", items);
                 commentPinModule(formModuleKeyQt, item, state.selectedGuid, state.pinNotes);
                 commentModule(formModuleKeyQt, item, state.selectedGuid, state.comments);
@@ -1408,7 +1413,6 @@ Note:
             updateHints();
             renderDeptCallouts(PIC_JSON);
             firstRender = false;
-            
         });
     }, _delayQuotationsLoadForm);
 </script>

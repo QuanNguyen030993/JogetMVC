@@ -2427,12 +2427,35 @@
         constructor(modelName, gridType, params) {
             super(modelName, gridType, params);
         };
+        hyperLinkCode(columns, moduleName, controllerName, propertyName, specificLinkField = null) {
+            $.each(columns, function (i, col) {
+                if (col.dataField == (specificLinkField != null ? specificLinkField : "Code")) {
+                    col.cellTemplate = function (container, options) {
+                        var selectedValue = options.data[propertyName];
+                        var selectedGuid = options.data["guid"];
+                        console.log(selectedGuid);
+                        $('<a>').addClass('dx-link dx-link-edit')
+                            .text(options.text)
+                            .css({ color: "#337ab7", textDecoration: "underline", cursor: "pointer" })
+                            .on('dxclick', function () {
+                                if (Object.keys(options.key).length > 0)
+                                    callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}/${selectedGuid}`, `form_${controllerName}_Form_${options.key.id}`, `${controllerName} ${options.text}`);
+                                else
+                                    callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}/${selectedGuid}`, `form_${controllerName}_Form_${options.key}`, `${controllerName} ${options.text}`);
+                                //callElementView(`/Business/MasterData/Client_Form/2`, `${controllerName}_Form`, `${controllerName} ${options.text}`);
+                            })
+                            .appendTo(container);
+                    }
+                } else {
 
+                }
+            });
+        }
         onCustomizeColumns(columns) {
             var that = this;
             super.onCustomizeColumns(columns);
-            super.hyperLinkCode(columns, "Business/Form", "PolicyIssuance", "id", "policyIssuanceCode");
-            super.hyperLinkCode(columns, "Business/Form", "Quotation", "quotationId", "quotationCode");
+            this.hyperLinkCode(columns, "Business/Form", "PolicyIssuance", "id", "policyIssuanceCode");
+            this.hyperLinkCode(columns, "Business/Form", "Quotation", "quotationId", "quotationCode");
             $.each(columns, function (colIndex, col) {
             if (col.dataField === "policyIssuanceStatus")
             {

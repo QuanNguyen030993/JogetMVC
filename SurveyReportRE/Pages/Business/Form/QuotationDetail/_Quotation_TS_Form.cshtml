@@ -9,7 +9,7 @@
 } *@
 @{
     string dept = "TS";
-    long quotationId = Convert.ToInt64(ViewData["Id"]);
+    long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
 }
 <style>
     .dx-tabpanel .dx-tabpanel-tabs .dx-tab {
@@ -24,7 +24,7 @@
     $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
         dataSource: makeBasicDataSource(that, true),
          items: [
-                { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefault("qt","@(dept)",@(quotationId))},
+            { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefault("qt", "@(dept)", @(quotationId), "@(quotationGuid)") },
 
 
     {

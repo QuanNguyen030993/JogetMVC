@@ -1,4 +1,4 @@
-﻿@page "{pageNum:int?}"
+﻿@page "{pageNum:int?}/{guid}"
 @using JogetMVC.Model
 @using Newtonsoft.Json
 @model PolicyIssuance_FormModel
@@ -510,7 +510,8 @@ Note:
        Prefix = prefix,
        ModuleCode = moduleCode,
        Title = title,
-       Id = ViewData["Id"].ToString()
+       Id = ViewData["Id"].ToString(),
+       Guid = ViewData["guid"].ToString()
    }),
     </div>
 @* 
@@ -830,8 +831,12 @@ Note:
         function reloadState(){
               $.each(piDeptModuleCode, function (itemIndex, item) {
                 var items = new Object();
-                items.moduleName = "pi";
+                items.moduleName = "@prefix";
                 items.sectionName = item;
+                items.id = @ViewData["Id"];
+                items.guid = "@ViewData["Guid"]";
+                const controlId = `${items.moduleName}_${items.sectionName}_${items.id}`;
+                items.controlId = controlId;
                 loadDxFileUploaderAttachments(item, "Document", items);
                 commentPinModule(formModuleKeyPi,item,state.selectedGuid, state.pinNotes);
                 commentModule(formModuleKeyPi,item,state.selectedGuid, state.comments);

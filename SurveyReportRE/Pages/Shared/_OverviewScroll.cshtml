@@ -17,19 +17,19 @@
         {
             <section id="@Id($"sec_{item}")" class="dept-section">
                 <div id="@Id($"sec_{item}-header")" class="dept-header">
-                    @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form_Header", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-header") })
+                    @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form_Header", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-header"), ["Guid"] = ($"{Model.Guid}") })
                 </div>
                 <div id="@Id($"sec_{item}-upperbody")" class="dept-upperbody">
-                    @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form_UpperBody", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-upperbody") })
+                    @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form_UpperBody", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-upperbody"), ["Guid"] = ($"{Model.Guid}") })
                 </div>
                 <div id="@Id($"sec_{item}-body")" class="dept-body">
-                    @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-body") })
+                    @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-body"), ["Guid"] = ($"{Model.Guid}") })
                 </div>
                 <div id="@Id($"sec_{item}-lowerbody")" class="dept-lowerbody">
-                    @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form_LowerBody", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-lowerbody") })
+                    @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form_LowerBody", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-lowerbody"), ["Guid"] = ($"{Model.Guid}") })
                 </div>
                 <div id="@Id($"sec_{item}-footer")" class="dept-footer">
-                    @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form_Footer", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-footer") })
+                    @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form_Footer", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-footer"), ["Guid"] = ($"{Model.Guid}") })
                 </div>
             </section>
         }
@@ -41,19 +41,19 @@
         {
             <section id="@Id($"sec_{item}")" class="dept-section">
                 <div id="@Id($"sec_{item}-header")" class="dept-header">
-                    @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_Header", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-header") })
+                    @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_Header", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-header"), ["Guid"] = ($"{Model.Guid}") })
                 </div>
                 <div id="@Id($"sec_{item}-upperbody")" class="dept-upperbody">
-                    @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_UpperBody", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-upperbody") })
+                    @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_UpperBody", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-upperbody"), ["Guid"] = ($"{Model.Guid}") })
                 </div>
                 <div id="@Id($"sec_{item}-body")" class="dept-body">
-                    @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-body") })
+                    @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-body"), ["Guid"] = ($"{Model.Guid}") })
                 </div>
                 <div id="@Id($"sec_{item}-lowerbody")" class="dept-lowerbody">
-                    @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_LowerBody", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-lowerbody") })
+                    @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_LowerBody", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-lowerbody"), ["Guid"] = ($"{Model.Guid}") })
                 </div>
                 <div id="@Id($"sec_{item}-footer")" class="dept-footer">
-                    @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_Footer", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-footer") })
+                    @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_Footer", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-footer"), ["Guid"] = ($"{Model.Guid}") })
                 </div>
             </section>
         }

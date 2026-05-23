@@ -57,14 +57,16 @@
        {
            Prefix = Model.Prefix,
            ModuleCode = Model.ModuleCode,
-           Id = Model.Id
+           Id = Model.Id,
+           Guid = Model.Guid
        })
 
             @await Html.PartialAsync("_OverviewScroll", new OverviewScrollPartialModel
        {
            Prefix = Model.Prefix,
            ModuleCode = Model.ModuleCode,
-           Id = Model.Id
+           Id = Model.Id,
+           Guid = Model.Guid
        })
 
         </div>

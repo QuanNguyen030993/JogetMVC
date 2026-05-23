@@ -3,6 +3,7 @@ using ERPCore.Models.Models.Parsing;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.SharePoint.WebControls;
+using System;
 
 namespace ERPCore.Pages
 {
@@ -13,13 +14,14 @@ namespace ERPCore.Pages
         private static string Id { get; set; }
 
         private readonly IBaseRepository<PolicyIssuance> _policyIssuanceRepository;
+        private static string Guid { get; set; }
 
         public PolicyIssuance_FormModel(ILogger<PolicyIssuance_FormModel> logger, IConfiguration configuration, Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> blobStorageSettings, IHttpContextAccessor httpContextAccessor)
         {
             _policyIssuanceRepository = new BaseRepository<PolicyIssuance>(configuration, httpContextAccessor);
             //_logger = logger;
         }
-        public async void OnGet(int? pageNum)
+        public async void OnGet(int? pageNum, string guid)
         {
             if (pageNum != 0)
             {
@@ -41,6 +43,7 @@ namespace ERPCore.Pages
 
             ModelName = nameof(PolicyIssuance);
             ViewData[nameof(Id)] = pageNum ?? 0;
+            ViewData[nameof(Guid)] = guid ?? "";
         }
     }
 }

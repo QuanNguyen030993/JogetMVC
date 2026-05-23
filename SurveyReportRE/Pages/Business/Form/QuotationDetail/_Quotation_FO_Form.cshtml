@@ -1,7 +1,8 @@
 ﻿@using JogetMVC.Model
 @{
     string dept = "FO";
-    long quotationId = Convert.ToInt64(ViewData["Id"]);
+    long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
+    
 }
 
 <style>
@@ -22,7 +23,7 @@
     dataSource: makeBasicDataSource(that, true),
     items: [
 
-         {itemType: "group", caption: "Attachment",colCount: 1, items: attachmentDefault("qt","@(dept)",@(quotationId))},
+            { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefault("qt", "@(dept)", @(quotationId), "@(quotationGuid)") },
                  { dataField:"clientName", label:{text:"Client Name"}, isRequired:true },
                  { dataField:"requestTypeId", editorType:"dxSelectBox", label:{text:"Request Type"}, editorOptions: makeSelectBoxEditorOptions(_enums.reqType),displayExpr: "value",
                       valueExpr: "id"

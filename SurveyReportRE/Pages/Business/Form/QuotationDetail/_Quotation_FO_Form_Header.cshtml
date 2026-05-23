@@ -1,7 +1,7 @@
 ﻿@using JogetMVC.Model
 @{
     string dept = "FO";
-    long quotationId = Convert.ToInt64(ViewData["Id"]);
+    long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
 }
 
 <div class="dept-title">@dept</div>
@@ -51,17 +51,12 @@
 
                 var item = new Object();
                 item.id = @quotationId;
+                item.guid = "@quotationGuid";
                 item.editorType = "dxFileUploader";
                 item.moduleName = "qt"; item.sectionName = "FO";
                 item.code = window.QuotationPage.state.quotes[0].quotationCode; 
                 item.specificFolder = "RES";
-                createEditor(item, itemElement, $("<div>"), null);
-
-                // var item = new Object();
-                // item.editorType = "dxFileUploader";
-                //  item.moduleName = "qt"; item.sectionName = "RES";
-                //  createEditor(item, itemElement, $("<div>"), null);
-                // loadAttachmentList("FO");
+                createEditor(item, itemElement, $("<div>"), item);
                 }, 1000);
             }
 

@@ -707,9 +707,9 @@ function base64ToUint8Array(base64) {
     }
     return bytes;
 }
-function createEditor(item, $container, $element, editorOptions) {
+function createEditor(devExtremeItem, $container, $element, editorOptions) {
     //editorOptions should be main property of control here
-    switch (item.editorType) {
+    switch (devExtremeItem.editorType) {
         case "dxImageUploader":
             var controllerName = "Document";
 
@@ -719,7 +719,7 @@ function createEditor(item, $container, $element, editorOptions) {
                     method: 'GET',
                     success: function (data) {
                         if (data.length > 0) {
-                            const previewId = `#imagePreview_${item.surveyId}_${item.outlineId}`;
+                            const previewId = `#imagePreview_${devExtremeItem.surveyId}_${devExtremeItem.outlineId}`;
                             const $previewWrapper = $(previewId);
                             if ($previewWrapper.find(".previewLoader").length === 0) {
                                 const $loadDiv = $("<div>")
@@ -745,7 +745,7 @@ function createEditor(item, $container, $element, editorOptions) {
                                 var uint8Array = new Uint8Array(imageInstance.fileData);
                                 var blob = new Blob([uint8Array], { type: imageInstance.type });
                                 var url = URL.createObjectURL(blob);
-                                item.attachment = imageInstance;
+                                devExtremeItem.attachment = imageInstance;
                                 imageInstance.ModelName = controllerName;
                                 addImageToPreview(url, imageInstance);
                             });
@@ -809,8 +809,8 @@ function createEditor(item, $container, $element, editorOptions) {
                             };
                         }
                         var formData = editorOptions.instanceProps.formInstance.option("formData");
-                        var formField = `uploadFile${item.dataField}`;
-                        var fileObject = { attachment: e.file, fileName: e.file.name, dataField: item.dataField, modelName: editorOptions.ModelName, outlineId: item.outline.id, outlinePlaceholder: item.outline.placeHolder, outlineGuid: item.outline.guid, fileData: Array.from(byteArray), cacheGuid: responseObject.attachment.guid };
+                        var formField = `uploadFile${devExtremeItem.dataField}`;
+                        var fileObject = { attachment: e.file, fileName: e.file.name, dataField: devExtremeItem.dataField, modelName: editorOptions.ModelName, outlineId: devExtremeItem.outline.id, outlinePlaceholder: devExtremeItem.outline.placeHolder, outlineGuid: devExtremeItem.outline.guid, fileData: Array.from(byteArray), cacheGuid: responseObject.attachment.guid };
                         if (formData[formField] == null || formData[formField] == undefined) {
                             formData[formField] = [];
                         }
@@ -823,14 +823,14 @@ function createEditor(item, $container, $element, editorOptions) {
                         }
 
                         if (responseObject.attachment.id) {
-                            item.attachmentId = responseObject.attachment.id;
+                            devExtremeItem.attachmentId = responseObject.attachment.id;
                         }
 
                         if (responseObject.sitePictures) {
-                            item.sitePictureId = responseObject.sitePictures.id;
+                            devExtremeItem.sitePictureId = responseObject.sitePictures.id;
                         }
-                        item.ModelName = controllerName;
-                        //addImageToPreview(url, item);
+                        devExtremeItem.ModelName = controllerName;
+                        //addImageToPreview(url, devExtremeItem);
                         addImageToPreview(url, responseObject.attachment);
                     }
                 }
@@ -838,25 +838,24 @@ function createEditor(item, $container, $element, editorOptions) {
             break;
         case "dxFileUploader":
             {
-
                 var items = new Object();
-                items.id = editorOptions?.id || item.id;
-                items.moduleName = editorOptions?.moduleName || item.moduleName;
-                items.sectionName = editorOptions?.sectionName || item.sectionName;
-                items.code = editorOptions?.code || item.code;
-                items.specificFolder = editorOptions?.specificFolder || item.specificFolder;
-                console.log(items);
+                items.id = editorOptions?.id || devExtremeItem.id;
+                items.guid = editorOptions?.guid || "";
+                items.moduleName = editorOptions?.moduleName || devExtremeItem.moduleName;
+                items.sectionName = editorOptions?.sectionName || devExtremeItem.sectionName;
+                items.code = editorOptions?.code || devExtremeItem.code;
+                items.specificFolder = editorOptions?.specificFolder || devExtremeItem.specificFolder;
                 renderDxFileUploader(items, $container, {
                     controllerName: "Document",
                     uploadTitle: "Files",
                     uploadUrl: "/api/Attachment/AsyncUploadFile",
                     accept: "*/*"
                 });
-                
+
             }
             break;
         case "empty":
-            //$element.text(item.label.texts).appendTo($container);
+            //$element.text(devExtremeItem.label.texts).appendTo($container);
             break;
         case "simple":
             break;
@@ -895,7 +894,7 @@ function createEditor(item, $container, $element, editorOptions) {
                 'modules/better-table': quillBetterTable,
                 'formats/custom-list': CustomList
             }, true);
-            var editor = createHtmlEditor($container, $element, item, editorOptions);
+            var editor = createHtmlEditor($container, $element, devExtremeItem, editorOptions);
 
             break;
         case "dxDateBox":
@@ -922,7 +921,7 @@ function createEditor(item, $container, $element, editorOptions) {
             $element.dxTagBox(editorOptions).appendTo($container);
             break;
         default:
-            console.warn("Unsupported editor type:", item.editorType);
+            console.warn("Unsupported editor type:", devExtremeItem.editorType);
     }
 }
 
@@ -6091,37 +6090,8 @@ function formatBytes(bytes) {
 
 
 
-function showUploaderLoader(idControlElement, message) {
-    const $element = $(idControlElement);
-    if (!$element.length) return;
 
-    $(`${idControlElement} .previewLoader`).remove();
 
-    const $loadDiv = $("<div>")
-        .addClass("previewLoader")
-        .css({
-            position: "absolute",
-            width: "100%",
-            height: "100%",
-            top: 0,
-            left: 0
-        })
-        .appendTo($element.css("position", "relative"));
-
-    $("<div>").appendTo($loadDiv).dxLoadPanel({
-        message: message || "File loading...",
-        visible: true,
-        shading: true,
-        shadingColor: "rgba(255,255,255,0.7)",
-        showPane: true,
-        closeOnOutsideClick: false,
-        position: { of: idControlElement }
-    });
-}
-
-function hideUploaderLoader(idControlElement) {
-    $(`${idControlElement} .previewLoader`).remove();
-}
 
 
 
@@ -6220,43 +6190,6 @@ function createAttachmentItem(x, onDeleted) {
     });
 
     return $item;
-}
-
-function uploadFileAjax(file, options) {
-    const url = options.url;
-    const guid = options.guid || "";
-    const folder = options.folder || "";
-    const sectionName = options.section || "";
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    return $.ajax({
-        url: url,
-        method: "POST",
-        data: formData,
-        processData: false,
-        contentType: false,
-        beforeSend: function (xhr) {
-
-            if (guid) {
-                xhr.setRequestHeader("RecordGuid", guid);
-            }
-
-            if (folder) {
-                xhr.setRequestHeader("Folder", folder);
-            }
-
-            if (window.appToken) {
-                xhr.setRequestHeader("Authorization", "Bearer " + window.appToken);
-            }
-            if (sectionName) {
-                xhr.setRequestHeader("SectionName", sectionName);
-            }
-
-        }
-    });
-
 }
 
 

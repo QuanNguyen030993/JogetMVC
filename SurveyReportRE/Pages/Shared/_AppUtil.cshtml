@@ -1920,7 +1920,6 @@ function scrollToDept(module, dept) {
                             dataForm: data[item],
                         //value: formItems.lmktAssigneeId || null,
                         onChanged: function (itemChild, editor) {
-                            console.log(this.dataForm);
                             if (!stateLayout.isAssigneeBoxRender) return;
                             var formId = window.QuotationIdManager.form(item,this.dataForm.id);
                                 var ds = $(`#${formId}`).dxForm("instance").option("dataSource");
@@ -2241,7 +2240,7 @@ function scrollToDept(module, dept) {
 
     }
     //Attachment handle
-    function attachmentDefault(moduleKey, dept, id){
+    function attachmentDefault(moduleKey, dept, id, guid){
         return [{
             dataField: moduleKey === "qt" ? "quotation" : "document", editorType: "dxFileUploader"
             ,
@@ -2253,7 +2252,8 @@ function scrollToDept(module, dept) {
                     item.editorType = "dxFileUploader";
                     item.moduleName = moduleKey + "_default"; item.sectionName = dept;
                     item.id = id;
-                    createEditor(item, itemElement, $(`<div>`), null);
+                    item.guid = guid;
+                    createEditor(item, itemElement, $(`<div>`), item);
             }
 
         },
@@ -2268,7 +2268,8 @@ function scrollToDept(module, dept) {
                     item.editorType = "dxFileUploader";
                     item.moduleName = moduleKey+ "_supportingDoc"; item.sectionName = dept;
                     item.id = id;
-                    createEditor(item, itemElement, $(`<div>`), null);
+                    item.guid = guid;
+                createEditor(item, itemElement, $(`<div>`), item);
             }
 
         }]
@@ -2290,7 +2291,7 @@ function scrollToDept(module, dept) {
         //     }];
     }
     function resolveUploadOptions(sectionName,editorOptions) {
-        const latestOptions = getCurrentEditorOptions(editorOptions) || {};
+        const latestOptions = getCurrentFormOptions(editorOptions) || {};
         latestOptions.moduleName = editorOptions?.moduleName;
         if (editorOptions?.code)
             latestOptions.code = editorOptions?.code;
@@ -2305,18 +2306,26 @@ function scrollToDept(module, dept) {
         };
 
     }
-    function getCurrentEditorOptions(editorOptions) {
-    const form = $(`#${window.QuotationIdManager.form(editorOptions.sectionName, editorOptions.id)}`).dxForm("instance");
-    if (!form) return null;
+    function getCurrentFormOptions(editorOptions) {
+        var form = new Object();
+        if (editorOptions.moduleName.includes("qt"))
+    form = $(`#${window.QuotationIdManager.form(editorOptions.sectionName, editorOptions.id)}`).dxForm("instance");
+        if (editorOptions.moduleName.includes("pi"))
+    form = $(`#${window.PolicyIssuanceIdManager.form(editorOptions.sectionName, editorOptions.id)}`).dxForm("instance");
+        if (!form) {
+            return null
+        };
     return form.option("formData");
 }
     function buildFolder(latestOptions, sectionName) {
         //return (latestOptions?.sectionName || sectionName) +
-        return (latestOptions.moduleName.includes('qt_') ? `Quotation` : `PolicyIssuance`) +
+        return (latestOptions.moduleName.includes('qt') ? `Quotation` : `PolicyIssuance`) +
             (latestOptions?.code ? `\\${latestOptions.code}` : "");
     }
 
     function getDxFileUploaderIds(editorOptions) {
+        editorOptions.uploaderId= `fileUpload_${editorOptions.controlId}`;
+        editorOptions.previewId = `attList_${editorOptions.controlId}`;
         return {
             uploaderId: `fileUpload_${editorOptions.controlId}`,
                 previewId: `attList_${editorOptions.controlId}`
@@ -2337,7 +2346,6 @@ function scrollToDept(module, dept) {
             attList_Host.html("<div style='opacity:.7;padding:6px 2px;'>No attachments</div>");
             return;
         }
-
         let index = 0;
         let cancelled = false;
 
@@ -2389,18 +2397,16 @@ function scrollToDept(module, dept) {
     }
 
     function loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions) {
-        const currentOptions = getCurrentEditorOptions(editorOptions);
+        const currentOptions = getCurrentFormOptions(editorOptions);
+        currentOptions.guid = editorOptions.guid;
         if (!currentOptions || !currentOptions.guid) return;
-        var controllId = `fileUpload_${editorOptions.moduleName}_${editorOptions.sectionName}_${editorOptions.id}`;
-        const { uploaderId, previewId } = getDxFileUploaderIds(editorOptions);
-        const idControlElement = `#${uploaderId}`;
-        showUploaderLoader(idControlElement, "File loading...");
+        var combine = editorOptions?.specificFolder ? `${editorOptions.moduleName}_${currentOptions.sectionName}_${currentOptions.id}_${editorOptions?.specificFolder}` : `${editorOptions.controlId}`;
+        showUploaderLoader( `${editorOptions.uploaderId}`, "File loading...");
         $.ajax({
-            url: `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${currentOptions.sectionName ? (editorOptions.moduleName + '_' + currentOptions.sectionName + (editorOptions?.specificFolder ? '_' + editorOptions?.specificFolder : '')) : sectionName}`,
+            url: `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${(combine)} `,
             method: "GET",
             success: function (data) {
-                debugger
-                const $preview = $(`#${previewId}`);
+                const $preview = $(`#${editorOptions.previewId}`);
                 renderAttachmentListLazy(data, $preview, {
                     batchSize: 6,
                     delay: 16,
@@ -2409,10 +2415,10 @@ function scrollToDept(module, dept) {
                     }
                 });
 
-                hideUploaderLoader(idControlElement);
+                hideUploaderLoader( `${editorOptions.uploaderId}`);
             },
             error: function () {
-                hideUploaderLoader(idControlElement);
+                hideUploaderLoader(`${editorOptions.uploaderId}`);
             }
         });
     }
@@ -2421,31 +2427,24 @@ function scrollToDept(module, dept) {
         editorOptions.controlId = controlId;
         options = options || {};
         const controllerName = options.controllerName || "Document";
-        const currentOptions = getCurrentEditorOptions(editorOptions) || {};
-
+        const currentOptions = getCurrentFormOptions(editorOptions) || {};
+        currentOptions.guid = editorOptions.guid || "";
         const ids = getDxFileUploaderIds(editorOptions);
-        const uploaderId = ids.uploaderId;
-        const previewId = ids.previewId;
-        const idControlElement = `#${uploaderId}`;
-        console.log(`renderDxFileUploader`);
-        console.log(uploaderId);
-        console.log(previewId);
-        const uploadTitle = currentOptions.uploadTitle || options.uploadTitle || "Files";
 
-        $(`#${previewId}`).remove();
-        $(`#${uploaderId}`).remove();
+        $(`#${editorOptions.previewId}`).remove();
+        $(`#${editorOptions.uploaderId}`).remove();
 
         //const $preview =  $(`<div id="${previewId}" style="display:flex;flex-wrap:wrap;gap:25px;top:10px"></div>`)
-        const $preview = $(`<div id="${previewId}" class="att-preview"></div>`)
+        const $preview = $(`<div id="${editorOptions.previewId}" class="att-preview"></div>`)
             .appendTo($container);
-        $(`<div id="${uploaderId}"></div>`)
+        $(`<div id="${editorOptions.uploaderId}"></div>`)
             .appendTo($container)
             .dxFileUploader({
                 readOnly: !!currentOptions.isReadOnly,
                 multiple: true,
                 accept: options.accept || "*/*",
-                selectButtonText: `Upload ${uploadTitle}`,
-                dropZone: `#${previewId}`,
+                selectButtonText: `Upload Attachments`,
+                dropZone: `#${editorOptions.previewId}`,
                 labelText: "",
                 uploadMode: "instantly",
                 uploadUrl: options.uploadUrl || `/api/Attachment/AsyncUploadFile`,
@@ -2457,10 +2456,10 @@ function scrollToDept(module, dept) {
                     //updateDxFileUploaderHeaders(editorOptions);
                 },
                 onUploadStarted: function (e) {
-                    showUploaderLoader(idControlElement, "File loading...");
+                    showUploaderLoader(editorOptions.uploaderId, "File loading...");
                 },
                 uploadFile: function (file) {
-                    const opts = resolveUploadOptions(controlId, editorOptions);
+                    const opts = resolveUploadOptions(editorOptions.controlId, editorOptions);
                     return uploadFileAjax(file, {
                         url: "/api/Attachment/AsyncUploadFile",
                         ...opts
@@ -2468,12 +2467,80 @@ function scrollToDept(module, dept) {
 
                 },
                 onUploaded: function (e) {
-                    hideUploaderLoader(idControlElement);
-
-                    loadDxFileUploaderAttachments(controlId, controllerName, editorOptions)
+                    hideUploaderLoader(editorOptions.uploaderId);
+                    loadDxFileUploaderAttachments(editorOptions.controlId, controllerName, editorOptions)
                 }
             });
 
-        loadDxFileUploaderAttachments(controlId, controllerName, editorOptions);
+        loadDxFileUploaderAttachments(editorOptions.controlId, controllerName, editorOptions);
     }
+
+    function showUploaderLoader(idControlElement, message) {
+        const $element = $("#" + idControlElement);
+        if (!$element.length) return;
+
+        $(`#${idControlElement} .previewLoader`).remove();
+
+        const $loadDiv = $("<div>")
+            .addClass("previewLoader")
+            .css({
+                position: "absolute",
+                width: "100%",
+                height: "100%",
+                top: 0,
+                left: 0
+            })
+            .appendTo($element.css("position", "relative"));
+
+        $("<div>").appendTo($loadDiv).dxLoadPanel({
+            message: message || "File loading...",
+            visible: true,
+            shading: true,
+            shadingColor: "rgba(255,255,255,0.7)",
+            showPane: true,
+            closeOnOutsideClick: false,
+            position: { of: "#" +  idControlElement }
+        });
+    }
+    function hideUploaderLoader(idControlElement) {
+        $(`#${idControlElement} .previewLoader`).remove();
+    }
+
+    function uploadFileAjax(file, options) {
+        const url = options.url;
+        const guid = options.guid || "";
+        const folder = options.folder || "";
+        const sectionName = options.section || "";
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        return $.ajax({
+            url: url,
+            method: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            beforeSend: function (xhr) {
+
+                if (guid) {
+                    xhr.setRequestHeader("RecordGuid", guid);
+                }
+
+                if (folder) {
+                    xhr.setRequestHeader("Folder", folder);
+                }
+
+                if (window.appToken) {
+                    xhr.setRequestHeader("Authorization", "Bearer " + window.appToken);
+                }
+                if (sectionName) {
+                    xhr.setRequestHeader("SectionName", sectionName);
+                }
+
+            }
+        });
+
+    }
+
 </script>
