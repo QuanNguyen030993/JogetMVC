@@ -1,0 +1,20 @@
+﻿@page "{Dept}"
+@model SLA_FormModel
+@{
+
+}
+<script>
+    $(function () {
+        debugger
+        var _dept = "@(ViewData["Dept"].ToString())";
+             var _formConfig = new Object();
+            _formConfig.tabName = '@HttpContext.Request.Query["Caption"].ToString()';
+                _formConfig.originModelName = "@SLA_FormModel.ModelName";
+                _formConfig.formElementName = "@SLA_FormModel.ModelName";
+            _formConfig.colCount = 1;
+            var mFormOption = new MFormOption(_formConfig, null);
+            new TSSLAForm(0, null, _formConfig, mFormOption);
+    })
+</script>
+<div id="form_@(SLA_FormModel.ModelName)_0"></div>
+
