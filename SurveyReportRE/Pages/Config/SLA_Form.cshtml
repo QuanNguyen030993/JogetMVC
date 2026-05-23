@@ -4,8 +4,31 @@
 
 }
 <script>
-    $(function () {
-        debugger
+
+    function generateItems(attributes){
+
+    var items = [];
+
+    Object.keys(attributes).forEach(function(key){
+
+        items.push({
+
+            dataField: key,
+
+            editorType: "dxNumberBox",
+
+            label: {
+                text: getLabel(key)
+            },
+
+            editorOptions: {
+                min: 0
+            }
+        });
+    });
+
+    return items;
+}
         var _dept = "@(ViewData["Dept"].ToString())";
              var _formConfig = new Object();
             _formConfig.tabName = '@HttpContext.Request.Query["Caption"].ToString()';
@@ -13,8 +36,19 @@
                 _formConfig.formElementName = "@SLA_FormModel.ModelName";
             _formConfig.colCount = 1;
             var mFormOption = new MFormOption(_formConfig, null);
-            new TSSLAForm(0, null, _formConfig, mFormOption);
-    })
+            new TSSLAForm(1, null, _formConfig, mFormOption);
+
+    // var attributes = {
+    //     renewBeforeMonth: 2,
+    //     urgentRenewLastDays: 5
+    // };
+
+    //     $("#form_@(SLA_FormModel.ModelName)_1").dxForm({
+
+    //     formData: attributes,
+
+    //     items: generateItems(attributes)
+    // });
 </script>
-<div id="form_@(SLA_FormModel.ModelName)_0"></div>
+<div id="form_@(SLA_FormModel.ModelName)_1"></div>
 

@@ -3440,10 +3440,71 @@ var WorkflowDefinitionForm = class WorkflowDefinitionForm extends MForm {
 
     var TSSLAForm = class TSSLAForm extends MForm {
         constructor(id, childGridConfig, formConfig, mFormOption) {
-        super(id, childGridConfig, formConfig, mFormOption)
+            super(id, childGridConfig, formConfig, mFormOption)
+        }
+         getLabel(key) {
+             debugger
+                switch (key) {
+
+                    case "renewBeforeMonth":
+                        return "Reminder Before Renew (Month)";
+
+                    case "urgentRenewLastDays":
+                        return "Urgent Renew Last Days";
+
+                    default:
+                        return key;
+                }
+            }
+        generateItems(attributes) {
+            
+            var items = [];
+
+            Object.keys(attributes).forEach(function (key) {
+                debugger
+                items.push({
+
+                    dataField: key,
+
+                    editorType: "dxNumberBox",
+
+                    // label: {
+                    //     text: this.getLabel(key)
+                    // },
+
+                    editorOptions: {
+                        min: 0
+                    }
+                });
+            });
+
+            return items;
+        }
+
+        groupingLayout(_formConfig, itemsArray, formInstance) {
+            var attributes = {
+                renewBeforeMonth: 2,
+                urgentRenewLastDays: 5
+            };
+                super.groupingLayout(_formConfig, itemsArray, formInstance)
+                itemsArray = [
+
+                    // =========================================================
+
+                    // Header  Request
+                    // =========================================================
+                    {
+                        itemType: "group",
+                        caption: "Config",
+                        colCount: 1,
+                        items: this.generateItems(attributes)
+                    }
+                ];
+
+                return itemsArray;
+            }
     }
 
-        }
 
          var UWSLAForm = class UWSLAForm extends MForm {
         constructor(id, childGridConfig, formConfig, mFormOption) {
