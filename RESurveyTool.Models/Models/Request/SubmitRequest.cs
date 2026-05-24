@@ -11,5 +11,6 @@ namespace ERPCore.Models.Request
         public StepsWorkflow? ToStepsWorkflow { get; set; }
         public long? QuotationId { get; set; }  
         public string? Comment { get; set; }
+        public bool? isEmail { get; set; } = false;
     }
 }

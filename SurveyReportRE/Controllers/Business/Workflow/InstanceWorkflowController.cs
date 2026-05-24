@@ -41,6 +41,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     private readonly IBaseRepository<TurnAroundTimeDeptProcessing> _turnAroundTimeDeptProcessingRepository;
     private readonly IBaseRepository<TurnAroundTimeSession> _turnAroundTimeSessionRepository;
     private readonly IBaseRepository<Notification> _notificationRepository;
+    private readonly IBaseRepository<UrlCall> _urlCallRepository;
     private readonly IHubContext<FileProcessingHub> _hubContext;
     private string DOMAIN_NAME = "";
     private MailConfig _emailSettings;
@@ -67,6 +68,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         _turnAroundTimeDeptProcessingRepository = new BaseRepository<TurnAroundTimeDeptProcessing>(configuration, _httpContextAccessor);
         _turnAroundTimeSessionRepository = new BaseRepository<TurnAroundTimeSession>(configuration, _httpContextAccessor);
         _notificationRepository = new BaseRepository<Notification>(configuration, _httpContextAccessor);
+        _urlCallRepository = new BaseRepository<UrlCall>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
         _hubContext = hubContext;
         DOMAIN_NAME = configuration.GetSection("Domain:DCServer").Value;
@@ -164,6 +166,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         Employee employee = new Employee();
         flowUser = await _usersRepository.GetSingleObject(s => s.username == accountName);
         employee = await _employeeRepository.GetSingleObject(s => s.UsersId == flowUser.Id);
+            MailQueue mailQueue = new MailQueue();
         if (mailTemplate != null)
         {
             DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
@@ -171,7 +174,6 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             if (query.Rows.Count > 0)
 
                 flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
-            MailQueue mailQueue = new MailQueue();
             mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
             if (mailQueue != null) await _mailQueueRepository.InsertData(mailQueue);
         }
@@ -188,7 +190,18 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             Code = quotation.QuotationCode
         };
 
-        Notification notification = await ControllerUtil.Notify(transferObject);
+
+
+        Notification notification = new Notification();
+        UrlCall urlCall = new UrlCall();
+        if (submitRequest.isEmail ?? false)
+        {//Test cho nay
+            notification = Util.MakeNotificationFromEmail(notification, mailQueue, quotation, configuration,out urlCall);
+            notification = await ControllerUtil.NotifySameEmail(notification, transferObject);
+        }
+        else
+            notification = await ControllerUtil.Notify(transferObject);
+        await _urlCallRepository.InsertData(urlCall);
         await _notificationRepository.InsertData(notification);
 
         return Ok();

@@ -442,7 +442,7 @@ public class QuotationController : BaseControllerApi<Quotation>
                 MailQueue mailQueue = new MailQueue();
                 mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
                 await _mailQueueRepository.InsertData(mailQueue);
-
+                
             }
 
 
@@ -459,6 +459,9 @@ public class QuotationController : BaseControllerApi<Quotation>
             };
 
             Notification notification = await ControllerUtil.Notify(transferObject);
+
+             
+
             await _notificationRepository.InsertData(notification);
 
 

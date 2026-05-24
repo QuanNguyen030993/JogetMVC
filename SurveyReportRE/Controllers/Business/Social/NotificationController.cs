@@ -75,9 +75,11 @@ public class NotificationController : BaseControllerApi<Notification>
                           message = notification?.Notification?.Message ?? ""
                       });
         }
+
         return Ok();
     }
 
+  
 
 }
 
