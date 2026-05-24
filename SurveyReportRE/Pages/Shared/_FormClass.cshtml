@@ -3442,68 +3442,117 @@ var WorkflowDefinitionForm = class WorkflowDefinitionForm extends MForm {
         constructor(id, childGridConfig, formConfig, mFormOption) {
             super(id, childGridConfig, formConfig, mFormOption)
         }
-         getLabel(key) {
-             debugger
-                switch (key) {
 
-                    case "renewBeforeMonth":
-                        return "Reminder Before Renew (Month)";
-
-                    case "urgentRenewLastDays":
-                        return "Urgent Renew Last Days";
-
-                    default:
-                        return key;
-                }
+        getSuccess(data) {
+            var that = this;
+            if (this.id > 0 && data != null) {
+                that.orgFormData = data;
+                that.formInstance.option("items[0].items", generateItems(JSON.parse(data.attributes)));
+                that.attributes = generateItems(JSON.parse(data.attributes));
             }
-        generateItems(attributes) {
-            
-            var items = [];
-
-            Object.keys(attributes).forEach(function (key) {
-                debugger
-                items.push({
-
-                    dataField: key,
-
-                    editorType: "dxNumberBox",
-
-                    // label: {
-                    //     text: this.getLabel(key)
-                    // },
-
-                    editorOptions: {
-                        min: 0
-                    }
-                });
-            });
-
-            return items;
         }
+        
+        doSaveData(isClose) {
+            try {
+                debugger
+                var that = this;
+                var form = that.formInstance;
+                var result = that.validateForm(form);
+                if (result == null || result.isValid) {
+                    var formData = form.option('formData');
+                    $.each(that.fieldConfigs, function (i, f) {
+                        delete formData[f.dataField];
+                    });
+                    delete formData["guid"];
+                    delete formData["id"];
+                    delete formData["rowOrder"];
+                    var ds = that.formInstance.option("dataSource");
+                    var store = ds;
+                    var data = new Object();
+                    const dataPost = new Object();
+                    $.each(that.attributes, function (index, field) {
+                        var key = field.dataField;
+                        if (formData.hasOwnProperty(key)) {
+                            dataPost[key] = formData[key];
+                        }
+                        else {
+                            dataPost[key] = oldAttributes[key];
+                        }
+                    });
+
+                    // var attributes = { //fix json if broken
+                    //     renewBeforeMonth: 2,
+                    //     urgentRenewLastDays: 5
+                    // };
+                    // data.attributes = JSON.stringify(attributes);
+                    data.attributes = JSON.stringify(dataPost);
+                    this.orgFormData = formData;
+                    store.update(this.id, data)
+                        .done(function () {
+                            //that.refreshForm();
+                        });
+                    //delete formData["Guid"];
+                }
+            } catch (err) {
+                appErrorHandling('Library error: call MForm.doSaveData() was failed.', err);
+                return;
+            }
+        }
+
+        
 
         groupingLayout(_formConfig, itemsArray, formInstance) {
             var attributes = {
                 renewBeforeMonth: 2,
                 urgentRenewLastDays: 5
             };
-                super.groupingLayout(_formConfig, itemsArray, formInstance)
                 itemsArray = [
 
-                    // =========================================================
-
-                    // Header  Request
-                    // =========================================================
                     {
                         itemType: "group",
                         caption: "Config",
-                        colCount: 1,
-                        items: this.generateItems(attributes)
+                        colCount: 2,
+                        items: []
                     }
                 ];
+               
 
                 return itemsArray;
             }
-    }
+
+        initFormToolbar(formInstance) {
+            //Note: this is custom method not belong to Devextreme
+            var that = this;
+            if (that.allowFormActionButton) {
+                //var headerbox = formInstance.element().find(".dx-item.dx-box-item").first();
+                //var headerbox = formInstance.element().find(".dx-box-flex.dx-box.dx-widget.dx-visibility-change-handler.dx-collection").first();
+                var headerbox = formInstance.element().find(".dx-box-flex.dx-box.dx-widget.dx-collection").first();
+
+                var toolbarItems = $(`<div id="${that.ModelName}Toolbar" class="dExFormToolBar"'/>`)
+                    .dxToolbar({
+                        items: that.allowFormActionButton ? this.customizeToolbar() : [],
+                        width: "100%",
+                        onInitialized: tryExecute(function (e) {
+                            var that = this;
+                            //if (that.formPermissions.buttons.length > 0) {
+                            //    var toolbarItems = e.component.option("items");
+                            //    $.each(toolbarItems, function (index, it) {
+                            //        if ($.inArray(it.name, that.formPermissions.butt  ons) < 0) {
+                            //            it.options.disabled = true;
+                            //        }
+                            //    });
+                            //    e.component.option("items", toolbarItems);
+                            //}
+                        }.bind(this))
+                    })
+                // Nếu muốn đổi xuống dưới thì là appendTo(headerbox)
+                var $toolbarElement = toolbarItems.appendTo(headerbox);
+                return toolbarItems.dxToolbar('instance');
+                // Nếu muốn đổi xuống dưới thì là  return $toolbarElement.dxToolbar('instance');
+            }
+        }
+
+        }
 
 
          var UWSLAForm = class UWSLAForm extends MForm {

@@ -2542,5 +2542,38 @@ function scrollToDept(module, dept) {
         });
 
     }
+    function generateItems(attributes) {
+        var items = [];
 
+        Object.keys(attributes).forEach(function (key, value) {
+
+            items.push({
+                dataField: key,
+                editorType: "dxNumberBox",
+                // label: {
+                //     text: getLabel(key)
+                // },
+                editorOptions: {
+                width: 100,
+                    value: attributes[key],
+                    min: 0
+                }
+            });
+        });
+
+        return items;
+    }
+    function getLabel(key) {
+        switch (key) {
+
+            case "renewBeforeMonth":
+                return "Reminder Before Renew (Month)";
+
+            case "urgentRenewLastDays":
+                return "Urgent Renew Last Days";
+
+            default:
+                return key;
+        }
+    }
 </script>
