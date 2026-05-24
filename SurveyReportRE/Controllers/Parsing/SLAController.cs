@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ERPCore.Controllers.Base;
+using ERPCore.Models.Migration.Business.HumanResource;
 
 namespace ERPCore.Controllers.Config
 {
@@ -17,5 +18,20 @@ namespace ERPCore.Controllers.Config
 
         }
 
+        [HttpGet("{dept}")]
+        public async Task<IActionResult> SLALookup(string dept)
+        {
+
+            SLA data = await _BaseRepository.GetSingleObject(x =>
+                           x.Dept == dept
+                       );
+
+            if (data == null)
+            {
+                return Ok(new { success = false, message = "Config not found" });
+            }
+
+            return Ok(new { success = true, data = data });
+        }
     }
 }

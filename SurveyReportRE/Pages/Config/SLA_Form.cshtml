@@ -7,15 +7,20 @@
     
         var _dept = "@(ViewData["Dept"].ToString())";
              var _formConfig = new Object();
-            _formConfig.tabName = '@HttpContext.Request.Query["Caption"].ToString()';
+                _formConfig.tabName = '@HttpContext.Request.Query["Caption"].ToString()';
                 _formConfig.originModelName = "@SLA_FormModel.ModelName";
                 _formConfig.formElementName = "@SLA_FormModel.ModelName";
-            _formConfig.colCount = 1;
-            var mFormOption = new MFormOption(_formConfig, null);
+                _formConfig.colCount = 1;
+                var mFormOption = new MFormOption(_formConfig, null);
+    ajaxGet(`api/SLA/SLALookup/@(ViewData["Dept"].ToString())`, null).done(response => {
+        $(`#form_@(SLA_FormModel.ModelName)`).attr("id", `form_@(SLA_FormModel.ModelName)_${response.data.id}`)
             if (_dept == "TS")
-            new TSSLAForm(1, null, _formConfig, mFormOption);
-
-
+            new TSSLAForm(response.data.id, null, _formConfig, mFormOption);
+            if (_dept == "UW")
+            new UWSLAForm(response.data.id, null, _formConfig, mFormOption);
+            if (_dept == "PM")
+            new PMSLAForm(response.data.id, null, _formConfig, mFormOption);
+    });
 </script>
-<div id="form_@(SLA_FormModel.ModelName)_1" class="dExForm"></div>
+<div id="form_@(SLA_FormModel.ModelName)" class="dExForm"></div>
 

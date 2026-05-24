@@ -3,6 +3,7 @@
     //constructor(id, gcConfig, numberSequence, cloneUrl, colCount) {
     constructor(id, childGridConfig, formConfig, formOptions) {
         try {
+            this.pk = "id";
             this.id = id;
             this.isQuery = id == 0 ? false : true;
             this.isChildForeignKey = false;
@@ -486,16 +487,16 @@
                     }) || "";
                 });
 
-                var id = formData["id"];
+                var id = formData[that.pk];
                 this.orgFormData = formData;
                 //delete formData["Guid"];
                 var data = new Object();;
                 if (id == null || id == undefined) {
-                    delete formData["id"];
+                    delete formData[that.pk];
                     data.values = JSON.stringify(appReplaceDoubleQuote(formData));
                     that.callApi('POST', data, isClose);
                 } else {
-                    data.key = formData["id"];
+                    data.key = formData[that.pk];
                     data.values = JSON.stringify(appReplaceDoubleQuote(formData));
                     that.callApi('PUT', data, isClose);
                 }
