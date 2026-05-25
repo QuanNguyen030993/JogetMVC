@@ -3,25 +3,24 @@
     string dept = "TS";
     long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
 }
-    <!-- COMPOSER -->
-<div id="@QTViewIdHelper.PinZone(dept)"  class="composer">
-        <div class="pinned-zone">
-            <div class="pinned-zone-header">
-                 <div  class="pinned-zone-title">Pinned notes</div>
-                <div class="pinned-toolbar">
-                    <div id="@QTViewIdHelper.BtnExpandAllPins(dept)"></div>
-                    <div id="@QTViewIdHelper.BtnCollapseAllPins(dept)"></div>
-                    <div id="@QTViewIdHelper.BtnUrgentPins(dept)"></div>
-                </div>
+<!-- COMPOSER -->
+<div id="@QTViewIdHelper.PinZone(dept, quotationId)" class="composer">
+    <div class="pinned-zone">
+        <div class="pinned-zone-header">
+            <div class="pinned-zone-title">Pinned notes</div>
+            <div class="pinned-toolbar">
+                <div id="@QTViewIdHelper.BtnExpandAllPins(dept, quotationId)"></div>
+                <div id="@QTViewIdHelper.BtnCollapseAllPins(dept, quotationId)"></div>
+                <div id="@QTViewIdHelper.BtnUrgentPins(dept, quotationId)"></div>
             </div>
-            <div class="pin-list" id="@QTViewIdHelper.PinList(dept)"></div>
         </div>
-
+        <div class="pin-list" id="@QTViewIdHelper.PinList(dept, quotationId)"></div>
     </div>
+
+</div>
 
 <script>
 
-    // commentPinModule('qt', '@dept')
 
 </script>
 

@@ -378,13 +378,13 @@ namespace JogetMVC.Model
 
         #region Right Panel
 
-        
+
 
         #endregion
 
         #region PDF
 
-       
+
 
         #endregion
 
@@ -396,20 +396,20 @@ namespace JogetMVC.Model
 
         #region Pin / Comment
 
-        public static string PinZone(string department)
-            => GenerateId("pinZone", department);
+        public static string PinZone(string department, long quotationId)
+            => GenerateId("pinZone", department, quotationId);
 
-        public static string PinList(string department)
-            => GenerateId("pinList", department);
+        public static string PinList(string department, long quotationId)
+            => GenerateId("pinList", department, quotationId);
 
-        public static string BtnExpandAllPins(string department)
-            => GenerateId("btnExpandAllPins", department);
+        public static string BtnExpandAllPins(string department, long quotationId)
+            => GenerateId("btnExpandAllPins", department, quotationId);
 
-        public static string BtnCollapseAllPins(string department)
-            => GenerateId("btnCollapseAllPins", department);
+        public static string BtnCollapseAllPins(string department, long quotationId)
+            => GenerateId("btnCollapseAllPins", department, quotationId);
 
-        public static string BtnUrgentPins(string department)
-            => GenerateId("btnUrgentPins", department);
+        public static string BtnUrgentPins(string department, long quotationId)
+            => GenerateId("btnUrgentPins", department, quotationId);
 
         public static string CommentPanelControl(string department, long quotationId) 
             => GenerateId("commentPanelControl", department, quotationId);
@@ -707,21 +707,20 @@ namespace JogetMVC.Model
 
         #region Pin / Comment
 
-        public static string PinZone(string department)
-            => GenerateId("pinZone", department);
+        public static string PinZone(string department, long quotationId)
+            => GenerateId("pinZone", department, quotationId);
 
-        public static string PinList(string department)
-            => GenerateId("pinList", department);
+        public static string PinList(string department, long quotationId)
+            => GenerateId("pinList", department, quotationId);
 
-        public static string BtnExpandAllPins(string department)
-            => GenerateId("btnExpandAllPins", department);
+        public static string BtnExpandAllPins(string department, long quotationId)
+            => GenerateId("btnExpandAllPins", department, quotationId);
 
-        public static string BtnCollapseAllPins(string department)
-            => GenerateId("btnCollapseAllPins", department);
+        public static string BtnCollapseAllPins(string department, long quotationId)
+            => GenerateId("btnCollapseAllPins", department, quotationId);
 
-        public static string BtnUrgentPins(string department)
-            => GenerateId("btnUrgentPins", department);
-
+        public static string BtnUrgentPins(string department, long quotationId)
+            => GenerateId("btnUrgentPins", department, quotationId);
 
         public static string CommentPanelControl(string department, long quotationId)
             => GenerateId("commentPanelControl", department, quotationId);

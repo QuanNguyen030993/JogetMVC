@@ -1009,7 +1009,8 @@
 
                     var items = getCurrentPins();
                     if (!items.length) {
-                        wrap.append(`<div class="empty-state">No pinned note</div>`);
+                        //wrap.append(`<div class="empty-state">No pinned note</div>`);
+                            $(`.pinned-zone`).remove();
                         return;
                     }
 
@@ -1088,35 +1089,7 @@
 
 
                     });
-                 
 
-
-                    // items.forEach(pin => {
-                    //   $(`.btn-collapse-pin-${pin.id}`).dxButton({
-                    //     text: "Collapse",
-                    //     stylingMode: "text",
-                    //     onClick: function() {
-                    //       $(`[data-pin-id="${pin.id}"]`).removeClass("expanded");
-                    //     }
-                    //   });
-                    //   $(`.btn-reply-pin-${pin.id}`).dxButton({
-                    //     text: "Reply",
-                    //     stylingMode: "text",
-                    //     onClick: function() {
-                    //       popupInstance.show();
-                    //     }
-                    //   });
-                    //   $(`.btn-done-pin-${pin.id}`).dxButton({
-                    //     text: "Mark done",
-                    //     stylingMode: "text",
-                    //     type: "success"
-                    //   });
-                    //   $(`.btn-unpin-pin-${pin.id}`).dxButton({
-                    //     text: "Unpin",
-                    //     stylingMode: "text",
-                    //     type: "danger"
-                    //   });
-                    // });
                 }
                 function buildTopButtons() {
 
