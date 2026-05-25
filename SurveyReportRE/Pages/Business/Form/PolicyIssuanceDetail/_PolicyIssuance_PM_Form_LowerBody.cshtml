@@ -1,35 +1,36 @@
-﻿@{
+﻿@using JogetMVC.Model
+@{
     string dept = "PM";
-
+    long quotationId = Convert.ToInt32(ViewData["Id"]);
+    string quotationGuid = ViewData["Guid"].ToString();
 }
-    <!-- COMPOSER -->
-    <div class="composer">
+<!-- COMPOSER -->
+<div class="composer">
 
-        <div class="dept-title">Comments</div>
+    <div class="dept-title">Comments</div>
 
-        <div id="pi-commentPanelControl_@dept"></div>
-        <div class="composer-actions">
-            <div id="pi-btnChatSend_@dept"> </div>
-        </div>
-        <div class="filter-bar">
-            <div class="filter-left">
-                <div id="pi-filterTypeSelect_@dept"></div>
-                
-                <div id="pi-btnFilterAll_@dept"></div>
-                <div id="pi-btnFilterRequest_@dept"></div>
-                <div id="pi-btnFilterBlocker_@dept"></div>
-                <div id="pi-btnFilterDiscussion_@dept"></div>
-                <div id="pi-btnFilterInternal_@dept"></div>
-            </div>
-            <div class="filter-note">
-            </div>
-            <div class="comment-wrap" id="pi-commentWrap_@dept"></div>
-        </div>
+    <div id="@PIViewIdHelper.CommentPanelControl(dept, quotationId)"></div>
+    <div class="composer-actions">
     </div>
+    <div class="filter-bar">
+        <div class="filter-left">
+            <div id="@PIViewIdHelper.FilterTypeSelect(dept,quotationId)"></div>
+
+            <div id="@PIViewIdHelper.BtnFilterAll(dept, quotationId)"></div>
+            <div id="@PIViewIdHelper.BtnFilterRequest(dept, quotationId)"></div>
+            <div id="@PIViewIdHelper.BtnFilterBlocker(dept, quotationId)"></div>
+            <div id="@PIViewIdHelper.BtnFilterDiscussion(dept, quotationId)"></div>
+            <div id="@PIViewIdHelper.BtnFilterInternal(dept, quotationId)"></div>
+        </div>
+        <div class="filter-note">
+        </div>
+        <div class="comment-wrap" id="@PIViewIdHelper.CommentWrap(dept, quotationId)" style="width:100%"></div>
+    </div>
+</div>
 
 <script>
     setTimeout(() => {
-        renderFormComment(`pi-commentPanelControl_@dept`,`@dept`,`pi`);
-        // commentModule ('pi' , '@dept', null);
+        renderFormComment(`@PIViewIdHelper.CommentPanelControl(dept, quotationId)`,`@dept`,`pi`,@(quotationId));
+        // commentModule ('qt' , '@dept', null);
     },1);
 </script>

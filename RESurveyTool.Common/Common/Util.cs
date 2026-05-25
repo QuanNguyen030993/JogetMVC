@@ -225,7 +225,53 @@ namespace ERPCore.Common
                 }
             }
         }
+        public static object URLObjectMaking(dynamic transferObject)
+        {
 
+            try
+            {
+                Type objectType = ((Type)transferObject.GetType());
+                string CodeField = objectType.GetProperties().FirstOrDefault(f => f.Name.Contains("Code"))?.Name ?? "";
+                string fieldValue = objectType.GetProperties().FirstOrDefault(f => f.Name.Contains("Code"))?.GetValue((dynamic)transferObject) ?? "";
+                if (string.IsNullOrEmpty(CodeField))
+                return new
+                {
+                    url = $"/Business/Form/{objectType.Name}_Form/{transferObject.Id}",
+                    caption = $"form_{objectType.Name}_Form_{transferObject.Id}",
+                    name = $"{(objectType.Name)}",
+                    data = ""
+
+                }; else
+                return new
+                {
+                    url = $"/Business/Form/{objectType.Name}_Form/{transferObject.Id}",
+                    caption = $"form_{objectType.Name}_Form_{transferObject.Id}",
+                    name = $"{(objectType.Name)} {fieldValue}",
+                    data = ""
+
+                };
+
+            }
+            catch
+            {
+                return new
+                {
+                    url = $"",
+                    caption = $"",
+                    name = $"",
+                    data = ""
+
+                };
+            }
+            return new
+            {
+                url = $"",
+                caption = $"",
+                name = $"",
+                data = ""
+
+            };
+        }
         public static void AddFontToHTMLNodes<T>(T objectInstance) where T : class
         {
             var properties = ObjectProperties<T>().ToList().Where(x => !systemColumns.Contains(x.Name));

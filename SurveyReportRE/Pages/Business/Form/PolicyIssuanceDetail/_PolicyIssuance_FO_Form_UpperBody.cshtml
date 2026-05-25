@@ -1,26 +1,26 @@
-﻿@{
+﻿@using JogetMVC.Model
+@{
     string dept = "FO";
-
+    long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
 }
-    <!-- COMPOSER -->
-     <div id="pi-pinZone_@dept"  class="composer">
-        <div class="pinned-zone">
-            <div class="pinned-zone-header">
-                 <div  class="pinned-zone-title">Pinned notes</div>
-                <div class="pinned-toolbar">
-                    <div id="pi-btnExpandAllPins_@dept"></div>
-                    <div id="pi-btnCollapseAllPins_@dept"></div>
-                    <div id="pi-btnUrgentPins_@dept"></div>
-                </div>
+<!-- COMPOSER -->
+<div id="@PIViewIdHelper.PinZone(dept, quotationId)" class="composer">
+    <div class="pinned-zone">
+        <div class="pinned-zone-header">
+            <div class="pinned-zone-title">Pinned notes</div>
+            <div class="pinned-toolbar">
+                <div id="@PIViewIdHelper.BtnExpandAllPins(dept, quotationId)"></div>
+                <div id="@PIViewIdHelper.BtnCollapseAllPins(dept, quotationId)"></div>
+                <div id="@PIViewIdHelper.BtnUrgentPins(dept, quotationId)"></div>
             </div>
-            <div class="pin-list" id="pi-pinList_@dept"></div>
         </div>
-
+        <div class="pin-list" id="@PIViewIdHelper.PinList(dept, quotationId)"></div>
     </div>
+
+</div>
 
 <script>
 
-    // commentPinModule('pi', '@dept')
 
 </script>
 

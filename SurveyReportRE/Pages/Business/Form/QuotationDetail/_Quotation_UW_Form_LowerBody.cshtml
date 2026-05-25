@@ -1,39 +1,37 @@
 ﻿@using JogetMVC.Model
 @{
     string dept = "UW";
-    long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
+    long quotationId = Convert.ToInt64(ViewData["Id"]); 
+    string quotationGuid = ViewData["Guid"].ToString();
 }
-    <!-- COMPOSER -->
-    <div class="composer">
+<!-- COMPOSER -->
+<div class="composer">
 
-        <div class="dept-title">Comments</div>
+    <div class="dept-title">Comments</div>
 
-        <div id="@QTViewIdHelper.CommentPanelControl(dept)"></div>
-        <div class="composer-actions">
-            
-        </div>
-        <div class="filter-bar">
-            <div class="filter-left">
-                <div id="@QTViewIdHelper.FilterTypeSelect(dept)"></div>
-                
-                <div id="@QTViewIdHelper.BtnFilterAll(dept)"></div>
-                <div id="@QTViewIdHelper.BtnFilterRequest(dept)"></div>
-                <div id="@QTViewIdHelper.BtnFilterBlocker(dept)"></div>
-                <div id="@QTViewIdHelper.BtnFilterDiscussion(dept)"></div>
-                <div id="@QTViewIdHelper.BtnFilterInternal(dept)"></div>
-            </div>
-            <div class="filter-note">
-            </div>
-            <div class="comment-wrap" id="@QTViewIdHelper.CommentWrap(dept)" style="width:100%"></div>
-        </div>
+    <div id="@QTViewIdHelper.CommentPanelControl(dept, quotationId)"></div>
+    <div class="composer-actions">
     </div>
+    <div class="filter-bar">
+        <div class="filter-left">
+            <div id="@QTViewIdHelper.FilterTypeSelect(dept,quotationId)"></div>
+
+            <div id="@QTViewIdHelper.BtnFilterAll(dept, quotationId)"></div>
+            <div id="@QTViewIdHelper.BtnFilterRequest(dept, quotationId)"></div>
+            <div id="@QTViewIdHelper.BtnFilterBlocker(dept, quotationId)"></div>
+            <div id="@QTViewIdHelper.BtnFilterDiscussion(dept, quotationId)"></div>
+            <div id="@QTViewIdHelper.BtnFilterInternal(dept, quotationId)"></div>
+        </div>
+        <div class="filter-note">
+        </div>
+        <div class="comment-wrap" id="@QTViewIdHelper.CommentWrap(dept, quotationId)" style="width:100%"></div>
+    </div>
+</div>
 
 <script>
     setTimeout(() => {
-        renderFormComment(`qt-commentPanelControl_@dept`,`@dept`,`qt`);
+        renderFormComment(`@QTViewIdHelper.CommentPanelControl(dept, quotationId)`,`@dept`,`qt`,@(quotationId));
         // commentModule ('qt' , '@dept', null);
     },1);
 </script>
-
-
 

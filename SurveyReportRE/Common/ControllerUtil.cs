@@ -20,6 +20,7 @@ using iText.StyledXmlParser.Node;
 using Microsoft.AspNetCore.SignalR;
 using RESurveyTool.Models.Models.Parsing;
 using ERPCore.Models.Migration.Business.Social;
+using ERPCore.Common;
 
 namespace ERPCore.ControllerUtil
 {
@@ -95,13 +96,14 @@ namespace ERPCore.ControllerUtil
             Notification.ReceivedBy = transferObject.ReceivedBy;
             notification.Notification = Notification;
             notification.connectionId = transferObject.ReceivedBy;
-            notification.tabPublicUrl = new
-            {
-                url = $"/Business/Form/{nameof(Quotation)}_Form/{transferObject.Id}",
-                caption = $"form_{nameof(Quotation)}_Form_{transferObject.Id}",
-                name = $"{nameof(Quotation)} {transferObject.Code}",
-                data = ""
-            };
+            //notification.tabPublicUrl = new
+            //{
+            //    url = $"/Business/Form/{nameof(Quotation)}_Form/{transferObject.Id}",
+            //    caption = $"form_{nameof(Quotation)}_Form_{transferObject.Id}",
+            //    name = $"{nameof(Quotation)} {transferObject.Code}",
+            //    data = ""
+            //}; 
+            notification.tabPublicUrl = Util.URLObjectMaking(transferObject);
             IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
 
             //OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(DOMAIN_NAME, "") == transferObject.ReceivedBy);
@@ -129,6 +131,41 @@ namespace ERPCore.ControllerUtil
             }
             return Notification;
         }
+
+
+        //public static async Task<Notification> MakeNotificationFromEmail(Notification Notification, dynamic transferObject
+        //    )
+        //{
+        //    string DOMAIN_NAME = transferObject.DOMAIN_NAME;
+        //    NotificationRequest notification = new NotificationRequest();
+        //    notification.Notification = Notification;
+        //    notification.connectionId = transferObject.ReceivedBy;
+        //    notification.tabPublicUrl = new
+        //    {
+        //        url = $"/Business/Form/{nameof(Quotation)}_Form/{transferObject.Id}",
+        //        caption = $"form_{nameof(Quotation)}_Form_{transferObject.Id}",
+        //        name = $"{nameof(Quotation)} {transferObject.Code}",
+        //        data = ""
+        //    };
+        //    IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
+        //    foreach (string item in transferObject.ReceivedBy.Split(','))
+        //    {
+        //        OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(DOMAIN_NAME, "") == item);
+        //        if (onlineUser?.ConnectionId != null)
+        //        {
+        //            await FileProcessingHub._hubContext.Clients.Client(onlineUser?.ConnectionId).SendAsync("NotificationReceive",
+        //                      new
+        //                      {
+        //                          title = notification?.Notification?.Title ?? "",
+        //                          message = notification?.Notification?.Message ?? ""
+        //                      });
+        //        }
+        //    }
+
+        //    return Notification;
+        //}
+
+
         public static async Task<Notification> NotifySameEmail(Notification Notification, dynamic transferObject
             )
         {
@@ -136,13 +173,14 @@ namespace ERPCore.ControllerUtil
             NotificationRequest notification = new NotificationRequest();
             notification.Notification = Notification;
             notification.connectionId = transferObject.ReceivedBy;
-            notification.tabPublicUrl = new
-            {
-                url = $"/Business/Form/{nameof(Quotation)}_Form/{transferObject.Id}",
-                caption = $"form_{nameof(Quotation)}_Form_{transferObject.Id}",
-                name = $"{nameof(Quotation)} {transferObject.Code}",
-                data = ""
-            };
+            //notification.tabPublicUrl = new
+            //{
+            //    url = $"/Business/Form/{nameof(Quotation)}_Form/{transferObject.Id}",
+            //    caption = $"form_{nameof(Quotation)}_Form_{transferObject.Id}",
+            //    name = $"{nameof(Quotation)} {transferObject.Code}",
+            //    data = ""
+            //};
+            notification.tabPublicUrl = Util.URLObjectMaking(transferObject);
             IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
             foreach (string item in transferObject.ReceivedBy.Split(','))
             {

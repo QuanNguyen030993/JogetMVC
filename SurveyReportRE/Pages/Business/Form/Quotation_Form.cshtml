@@ -806,8 +806,8 @@ Note:
                 const controlId = `${items.moduleName}_${items.sectionName}_${items.id}`;
                 items.controlId = controlId;
                 loadDxFileUploaderAttachments(item, "Document", items);
-                commentPinModule(formModuleKeyQt, item, state.selectedGuid, state.pinNotes);
-                commentModule(formModuleKeyQt, item, state.selectedGuid, state.comments);
+                commentPinModule(formModuleKeyQt, item,  "@ViewData["Guid"]", state.pinNotes,@ViewData["Id"]);
+                commentModule(formModuleKeyQt, item,  "@ViewData["Guid"]", state.comments,@ViewData["Id"]);
             });
         }
 

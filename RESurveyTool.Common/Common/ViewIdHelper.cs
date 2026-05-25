@@ -326,8 +326,8 @@ namespace JogetMVC.Model
 
       
         // Missing old helper methods
-        public static string CommentWrap(string department)
-            => GenerateId("commentWrap", department);
+        public static string CommentWrap(string department, long quotationId)
+            => GenerateId("commentWrap", department, quotationId);
 
         #endregion
 
@@ -344,22 +344,22 @@ namespace JogetMVC.Model
         #endregion
 
         // Missing filter buttons from original project
-        public static string BtnFilterRequest(string department)
-            => GenerateId("btnFilterRequest", department);
+        public static string BtnFilterRequest(string department, long quotationId)
+            => GenerateId("btnFilterRequest", department, quotationId);
 
-        public static string BtnFilterBlocker(string department)
-            => GenerateId("btnFilterBlocker", department);
+        public static string BtnFilterBlocker(string department, long quotationId)
+            => GenerateId("btnFilterBlocker", department, quotationId);
 
-        public static string BtnFilterDiscussion(string department)
-            => GenerateId("btnFilterDiscussion", department);
+        public static string BtnFilterDiscussion(string department, long quotationId)
+            => GenerateId("btnFilterDiscussion", department, quotationId);
 
-        public static string BtnFilterInternal(string department)
-            => GenerateId("btnFilterInternal", department);
+        public static string BtnFilterInternal(string department, long quotationId)
+            => GenerateId("btnFilterInternal", department, quotationId);
 
         #region Comment Filters
 
-        public static string BtnFilterAll(string department)
-            => GenerateId("btnFilterAll", department);
+        public static string BtnFilterAll(string department, long quotationId)
+            => GenerateId("btnFilterAll", department, quotationId);
 
         #endregion
 
@@ -378,13 +378,13 @@ namespace JogetMVC.Model
 
         #region Right Panel
 
-        
+
 
         #endregion
 
         #region PDF
 
-       
+
 
         #endregion
 
@@ -396,26 +396,26 @@ namespace JogetMVC.Model
 
         #region Pin / Comment
 
-        public static string PinZone(string department)
-            => GenerateId("pinZone", department);
+        public static string PinZone(string department, long quotationId)
+            => GenerateId("pinZone", department, quotationId);
 
-        public static string PinList(string department)
-            => GenerateId("pinList", department);
+        public static string PinList(string department, long quotationId)
+            => GenerateId("pinList", department, quotationId);
 
-        public static string BtnExpandAllPins(string department)
-            => GenerateId("btnExpandAllPins", department);
+        public static string BtnExpandAllPins(string department, long quotationId)
+            => GenerateId("btnExpandAllPins", department, quotationId);
 
-        public static string BtnCollapseAllPins(string department)
-            => GenerateId("btnCollapseAllPins", department);
+        public static string BtnCollapseAllPins(string department, long quotationId)
+            => GenerateId("btnCollapseAllPins", department, quotationId);
 
-        public static string BtnUrgentPins(string department)
-            => GenerateId("btnUrgentPins", department);
+        public static string BtnUrgentPins(string department, long quotationId)
+            => GenerateId("btnUrgentPins", department, quotationId);
 
-        public static string CommentPanelControl(string department)
-            => GenerateId("commentPanelControl", department);
+        public static string CommentPanelControl(string department, long quotationId) 
+            => GenerateId("commentPanelControl", department, quotationId);
 
-        public static string FilterTypeSelect(string department)
-            => GenerateId("filterTypeSelect", department);
+        public static string FilterTypeSelect(string department, long quotationId)
+            => GenerateId("filterTypeSelect", department,quotationId);
 
         public static string ActionBarDept(string department)
             => GenerateId("actionBarDept", department);
@@ -607,8 +607,8 @@ namespace JogetMVC.Model
             => GenerateId("stickPanel", department, quotationId);
 
         // Missing old helper methods
-        public static string CommentWrap(string department)
-            => GenerateId("commentWrap", department);
+        public static string CommentWrap(string department, long quotationId)
+             => GenerateId("commentWrap", department, quotationId);
 
         #endregion
 
@@ -648,24 +648,22 @@ namespace JogetMVC.Model
         public static string BtnToggleResForm(string department, long quotationId) => $"{Prefix}-btnToggleResForm_{department}_{quotationId}";
 
         #endregion
+        public static string BtnFilterRequest(string department, long quotationId)
+                   => GenerateId("btnFilterRequest", department, quotationId);
 
-        // Missing filter buttons from original project
-        public static string BtnFilterRequest(string department)
-            => GenerateId("btnFilterRequest", department);
+        public static string BtnFilterBlocker(string department, long quotationId)
+            => GenerateId("btnFilterBlocker", department, quotationId);
 
-        public static string BtnFilterBlocker(string department)
-            => GenerateId("btnFilterBlocker", department);
+        public static string BtnFilterDiscussion(string department, long quotationId)
+            => GenerateId("btnFilterDiscussion", department, quotationId);
 
-        public static string BtnFilterDiscussion(string department)
-            => GenerateId("btnFilterDiscussion", department);
-
-        public static string BtnFilterInternal(string department)
-            => GenerateId("btnFilterInternal", department);
+        public static string BtnFilterInternal(string department, long quotationId)
+            => GenerateId("btnFilterInternal", department, quotationId);
 
         #region Comment Filters
 
-        public static string BtnFilterAll(string department)
-            => GenerateId("btnFilterAll", department);
+        public static string BtnFilterAll(string department, long quotationId)
+            => GenerateId("btnFilterAll", department, quotationId);
 
         #endregion
 
@@ -709,26 +707,26 @@ namespace JogetMVC.Model
 
         #region Pin / Comment
 
-        public static string PinZone(string department)
-            => GenerateId("pinZone", department);
+        public static string PinZone(string department, long quotationId)
+            => GenerateId("pinZone", department, quotationId);
 
-        public static string PinList(string department)
-            => GenerateId("pinList", department);
+        public static string PinList(string department, long quotationId)
+            => GenerateId("pinList", department, quotationId);
 
-        public static string BtnExpandAllPins(string department)
-            => GenerateId("btnExpandAllPins", department);
+        public static string BtnExpandAllPins(string department, long quotationId)
+            => GenerateId("btnExpandAllPins", department, quotationId);
 
-        public static string BtnCollapseAllPins(string department)
-            => GenerateId("btnCollapseAllPins", department);
+        public static string BtnCollapseAllPins(string department, long quotationId)
+            => GenerateId("btnCollapseAllPins", department, quotationId);
 
-        public static string BtnUrgentPins(string department)
-            => GenerateId("btnUrgentPins", department);
+        public static string BtnUrgentPins(string department, long quotationId)
+            => GenerateId("btnUrgentPins", department, quotationId);
 
-        public static string CommentPanelControl(string department)
-            => GenerateId("commentPanelControl", department);
+        public static string CommentPanelControl(string department, long quotationId)
+            => GenerateId("commentPanelControl", department, quotationId);
 
-        public static string FilterTypeSelect(string department)
-            => GenerateId("filterTypeSelect", department);
+        public static string FilterTypeSelect(string department, long quotationId)
+            => GenerateId("filterTypeSelect", department, quotationId);
 
         public static string ActionBarDept(string department)
             => GenerateId("actionBarDept", department);

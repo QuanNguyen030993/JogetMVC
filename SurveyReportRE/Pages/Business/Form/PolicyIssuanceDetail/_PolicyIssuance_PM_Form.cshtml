@@ -11,6 +11,9 @@
         padding-right: 18px;
     }
 </style>
+<div style="margin-top:10px;font-weight:800;font-size:12px;">PA Process</div>
+<div id="gridPA_@quotationId"></div>
+
 <div id="@PIViewIdHelper.Form(dept, quotationId)">
 </div>
 <script type="text/javascript">
@@ -113,5 +116,17 @@
     {dataField: "premiumRate",editorType: "dxCheckBox",visible:true}
     ]},
     ]
+
        });
+       var additionOptions = new Object();
+        additionOptions.filterRefId = 1;
+
+        var gridOptions = new PolicyIssuanceSubDetailsGridOption("PolicyIssuanceSubDetails", "User",additionOptions);
+        var grid = new MGrid(null, $("#gridPA_@quotationId"), gridOptions, null);
+        grid.component.option("height", 100);
+        grid.component.option("width", "100%");
+          
+          //       $("#gridPA").dxDataGrid("instance").option("editing", {
+          //   mode:"cell", allowUpdating: !roTS, allowAdding: !roTS, allowDeleting: !roTS
+          // });
 </script>

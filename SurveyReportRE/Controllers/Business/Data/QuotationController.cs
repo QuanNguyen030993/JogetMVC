@@ -224,7 +224,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         JsonConvert.PopulateObject(JsonConvert.SerializeObject(quotationData.QuotationData.Quotation), quotation);
         quotation.QuotationCode = ControllerUtil.GenerateNumberSeq(tableConfig, _formatCodeNoRepository, nameof(Quotation));
         quotation.ResId = res.Id;
-       
+
 
 
         if (files != null)
@@ -289,13 +289,14 @@ public class QuotationController : BaseControllerApi<Quotation>
         Notification.ReceivedBy = pICAttributes.TS;
         notification.Notification = Notification;
         notification.connectionId = pICAttributes.TS;
-        notification.tabPublicUrl = new
-        {
-            url = $"/Business/Form/{nameof(Quotation)}_Form/{quotation.Id}",
-            caption = $"form_{nameof(Quotation)}_Form_{quotation.Id}",
-            name = $"{nameof(Quotation)} {quotation.QuotationCode}",
-            data = ""
-        }; ;
+        //notification.tabPublicUrl = new
+        //{
+        //    url = $"/Business/Form/{nameof(Quotation)}_Form/{quotation.Id}",
+        //    caption = $"form_{nameof(Quotation)}_Form_{quotation.Id}",
+        //    name = $"{nameof(Quotation)} {quotation.QuotationCode}",
+        //    data = ""
+        //}; ;        
+        notification.tabPublicUrl = Util.URLObjectMaking(quotation);
         NotificationController.Notify(notification);
 
 
