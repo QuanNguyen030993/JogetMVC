@@ -196,7 +196,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         UrlCall urlCall = new UrlCall();
         if (submitRequest.isEmail ?? false)
         {//Test cho nay
-            notification = Util.MakeNotificationFromEmail(notification, mailQueue, quotation, configuration,out urlCall);
+            //notification = await ControllerUtil.MakeNotificationFromEmail(notification, mailQueue, quotation, configuration,out urlCall);
             notification = await ControllerUtil.NotifySameEmail(notification, transferObject);
         }
         else

@@ -75,53 +75,6 @@ public class PolicyIssuance : BaseModel
 
     // NOTE: c_piRemarks is TODO to review (merge into Notes/Remarks)
 
-    // =========================
-    // Ý 6 — RI / Co-insurance / Premium
-    // =========================
-    public string? RiScheme { get; set; }                // c_RIScheme
-    public string? RiClosings { get; set; }              // c_RIClosings
-    public string? ReinsuranceType { get; set; }         // c_reinsurrance
-
-    public string? CoInsuranceOutward { get; set; }      // c_coInsuranceOutward
-    public string? CoInsuranceNote { get; set; }         // c_noteForCoInsuranceOutward
-    public string? CoInsurerName { get; set; }           // c_NameCoInsurer
-
-    public decimal? FinalPremium { get; set; }           // c_finalPremium
-    public string? PremiumBreakdown { get; set; }        // c_premiumBreakdown
-
-    // TODO: RI & Premium attachments – move to Attachment module
-    // public string? RiSchemeAttachment { get; set; }    // c_RISchemeAtt
-    // public string? RiClosingsAttachment { get; set; }  // c_RIClosingsAtt
-    // public string? PremiumBreakdownAttachment { get; set; } // c_premiumBreakdownAtt
-    // public string? EmailInformRiAttachment { get; set; }    // c_emailInformRIAtt
-
-    // =========================
-    // Ý 7 — KYC / Compliance / Declaration
-    // =========================
-    public string? IsKycChecked { get; set; }            // c_KYCChecked (Checked/NULL/Yes/No...)
-    public string? DeclarationText { get; set; }         // c_declaration
-    public string? URF { get; set; }                     // c_URF  (keep name)
-    public string? IsBodApproved { get; set; }           // c_BODApproved
-    public string? HoldCoverType { get; set; }           // c_holdCover
-
-    // TODO: Compliance attachments – move to Attachment / Compliance module
-    // public string? KycCheckedAttachment { get; set; }  // c_KYCCheckedAtt
-    // public string? DeclarationAttachment { get; set; } // c_declarationAtt
-    // public string? URFAttachment { get; set; }         // c_URFAtt
-    // public string? BodApprovedAttachment { get; set; } // c_BODApprovedAtt
-    // public string? HoldCoverAttachment { get; set; }   // c_holdCoverAtt
-
-    // =========================
-    // Ý 8 — Asset / Property / Machinery Lists
-    // =========================
-    public string? MachineryList { get; set; }           // c_listOfMachineries
-    public string? PropertyTypeList { get; set; }        // c_typeOfPropertyList
-    public string? FactoryOperationYears { get; set; }   // c_operationYearofFactories
-    public string? ChassisEngineNumber { get; set; }     // c_chasisEngineNumber
-    public string? NewReplacementValue { get; set; }     // c_newReplacementValue
-    public string? SumInsuredBreakdown { get; set; }     // c_breakdownSI
-    public string? IsGlobalCover { get; set; }           // c_global (Both/Yes/No)
-    public string? PolicyLocation { get; set; }          // c_piLocation
     [MaxLength(4000)]
     public string? TurnAroundTimeAttributes { get; set; } = "";
 
