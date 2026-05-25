@@ -1000,7 +1000,7 @@ aside {
 }
      .dept-body {
         overflow: hidden;
-       /*max-height: 5000px;*/
+       max-height: 5000px;
         transition: max-height .18s ease, opacity .18s ease;
         opacity: 1;
         min-height: 200px;
