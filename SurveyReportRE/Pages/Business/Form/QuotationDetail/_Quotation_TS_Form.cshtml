@@ -1,12 +1,4 @@
 @using JogetMVC.Model
-@* @page "{pageNum:int?}"
-@using Newtonsoft.Json *@
-@* @model Quotation_TS_FormModel *@
-@* @{
-   
-    ViewBag.Title = "Quotation";
-    ViewData["Id"] = 0;
-} *@
 @{
     string dept = "TS";
     long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
@@ -19,276 +11,175 @@
     }
 </style>
 <script type="text/javascript">
-        var that = new Object();
+    var that = new Object();
     that.ModelName = "Quotation";
     $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
-        dataSource: makeBasicDataSource(that, true),
-         items: [
-            { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefault("qt", "@(dept)", @(quotationId), "@(quotationGuid)") },
+    dataSource: makeBasicDataSource(that, true),
+     items: [
+        { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefault("qt", "@(dept)", @(quotationId), "@(quotationGuid)") },
 
 
     {
-            dataField: "decision",
-            label: { text: "Decision" },
-            editorType: "dxRadioGroup",
-            editorOptions: {
-                items: [
-                    { id: "AC_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Accept", value: true },
-                    { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Assign", value: false },
-                    { id: "RJ_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Reject", value: false }
-                ],
-                 displayExpr: "text",
-                 valueExpr: "id",
-                 layout: "horizontal",
-                 itemTemplate: function(itemData, _, itemElement) {
-                 setTimeout(() => {
-                  var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-                  var tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
-                  if (tatObject[`@dept`].AcceptDate)
-                  {
-                    $(`#AC_@QTViewIdHelper.Decision(dept, quotationId)`).addClass("btn-info");
-                    $(`#${itemData.id}`).dxButton("instance").option("disabled", true);
-                    if (itemData.id === "RJ_@QTViewIdHelper.Decision(dept, quotationId)" ) $(`#RJ_@QTViewIdHelper.Decision(dept, quotationId)`).dxButton("instance").option("disabled", false);
-                  }
-                 },4000);
+        dataField: "decision",
+        label: { text: "Decision" },
+        editorType: "dxRadioGroup",
+        editorOptions: {
+            items: [
+                { id: "AC_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Accept", value: true },
+                { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Assign", value: false },
+                { id: "RJ_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Reject", value: false }
+            ],
+             displayExpr: "text",
+             valueExpr: "id",
+             layout: "horizontal",
+             itemTemplate: function(itemData, _, itemElement) {
+             setTimeout(() => {
+              var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+              var tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
+              if (tatObject[`@dept`].AcceptDate)
+              {
+                $(`#AC_@QTViewIdHelper.Decision(dept, quotationId)`).addClass("btn-info");
+                $(`#${itemData.id}`).dxButton("instance").option("disabled", true);
+                if (itemData.id === "RJ_@QTViewIdHelper.Decision(dept, quotationId)" ) $(`#RJ_@QTViewIdHelper.Decision(dept, quotationId)`).dxButton("instance").option("disabled", false);
+              }
+             },4000);
 
-                 $(`<div id='${itemData.id}'>`).dxButton({
-                 text: itemData.text,
-                 width: "100%",
-                 height: "100%",
-                 onClick: function (e){
-                     if (_ == 0)
-                     {
-                          var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-                           var tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
-                              tatObject[`@dept`].AcceptDate = new Date();
-                              formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
-                           ajaxPut('/api/Quotation/UpdateData',
-                            {
-                                key: formItems.id,
-                                values: JSON.stringify(
-                                    formItems
-                                )
+             $(`<div id='${itemData.id}'>`).dxButton({
+             text: itemData.text,
+             width: "100%",
+             height: "100%",
+             onClick: function (e){
+                 if (_ == 0)
+                 {
+                      var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+                       var tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
+                          tatObject[`@dept`].AcceptDate = new Date();
+                          formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+                       ajaxPut('/api/Quotation/UpdateData',
+                        {
+                            key: formItems.id,
+                            values: JSON.stringify(
+                                formItems
+                            )
+                        },
+                        {
+                            onSuccess: function (response) {
+                                Devexpress.ui.notify("Task accepted", "success");
                             },
-                            {
-                                onSuccess: function (response) {
-                                    Devexpress.ui.notify("Task accepted", "success");
-                                },
-                                onError: function (err) { }
-                            });
-                     }
-                      if (_ == 2)
-                     {
-                            var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-                  var tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
-                              tatObject[`@dept`].AcceptDate = "";
-                              formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
-                           ajaxPut('/api/Quotation/UpdateData',
-                            {
-                                key: formItems.id,
-                                values: JSON.stringify(
-                                    formItems
-                                )
-                            },
-                            {
-                                onSuccess: function (response) {
-                                    Devexpress.ui.notify("Task accepted", "success");
-                                },
-                                onError: function (err) { }
-                            });
-                     }
+                            onError: function (err) { }
+                        });
                  }
+                  if (_ == 2)
+                 {
+                        var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+              var tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
+                          tatObject[`@dept`].AcceptDate = "";
+                          formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+                       ajaxPut('/api/Quotation/UpdateData',
+                        {
+                            key: formItems.id,
+                            values: JSON.stringify(
+                                formItems
+                            )
+                        },
+                        {
+                            onSuccess: function (response) {
+                                Devexpress.ui.notify("Task accepted", "success");
+                            },
+                            onError: function (err) { }
+                        });
+                 }
+             }
 
-                 }).appendTo(itemElement);
-              itemElement
-            },
-            isRequired: true
-            }
+             }).appendTo(itemElement);
+          itemElement
         },
-            {dataField: "biQtNum",editorType: "dxSelectBox",visible:true},
-        {dataField: "incBIQuoId",editorType: "dxTextBox",visible:true},
-        {dataField: "iarQuotationNo",editorType: "dxTextBox",visible:true},
-        {dataField: "IncIARQuoId",editorType: "dxSelectBox",visible:true},
-        {dataField: "tmiCode",editorType: "dxSelectBox",visible: true},
+        isRequired: true
+        }
+    },
+        {dataField: "biQtNum",editorType: "dxSelectBox",visible:true},
+    {dataField: "incBIQuoId",editorType: "dxTextBox",visible:true},
+    {dataField: "iarQuotationNo",editorType: "dxTextBox",visible:true},
+    {dataField: "IncIARQuoId",editorType: "dxSelectBox",visible:true},
+    {dataField: "tmiCode",editorType: "dxSelectBox",visible: true},
 
     {dataField: "tmivShare",editorType: "dxNumberBox",visible:true},
 
-            { dataField: "currencyId", label: { template: labelTpl("CurrencyCode - Currency code") } },
+        { dataField: "currencyId", label: { template: labelTpl("CurrencyCode - Currency code") } },
 
-                {itemType: "group",caption: "Insurance Period",colCount:2,items: [
+            {itemType: "group",caption: "Insurance Period",colCount:2,items: [
     {dataField: "insPeriodId",editorType: "dxSelectBox",visible: true},
     {dataField: "periodInsuranceStartDate",editorType: "dxTextBox",visible:true},
     {dataField: "periodInsuranceEndDate",editorType: "dxTextBox",visible:true},
     {dataField: "actualDays",editorType: "dxNumberBox",visible:true}
     ]},
-        {itemType: "group",caption: "Coverage",colCount:2,items: [
-            {dataField: "coverageId",editorType:  "dxTextBox",visible:true} // "dxDataGrid"
-        ]},
-
-
-
-            {itemType: "group",caption: "Sum Insured",colCount:2,items: [
-    { dataField: "sumInsuredTotal", editorType:"dxNumberBox", editorOptions: {format: '#,##0'
-             } },
-    { dataField: "sumInsuredTotalUsd", label: { template: labelTpl("SumInsuredTotalUsd - Total Sum Insured (USD)") } },
-        { dataField: "exchangeRate", label: { template: labelTpl("ExchangeRate - Exchange rate") } }
+    {itemType: "group",caption: "Coverage",colCount:2,items: [
+        {dataField: "coverageId",editorType:  "dxTextBox",visible:true} // "dxDataGrid"
     ]},
-        {itemType: "group",caption: "Premium",colCount:2,items: [
+
+
+
+        {itemType: "group",caption: "Sum Insured",colCount:2,items: [
+    { dataField: "sumInsuredTotal", editorType:"dxNumberBox", editorOptions: {format: '#,##0'
+         } },
+    { dataField: "sumInsuredTotalUsd", label: { template: labelTpl("SumInsuredTotalUsd - Total Sum Insured (USD)") } },
+    { dataField: "exchangeRate", label: { template: labelTpl("ExchangeRate - Exchange rate") } }
+    ]},
+    {itemType: "group",caption: "Premium",colCount:2,items: [
     {dataField: "tmivShare",editorType: "dxNumberBox",visible:true},
-                     { dataField: "deductibleId", label: { template: labelTpl("Deductible - Deductible") } },
+                 { dataField: "deductibleId", label: { template: labelTpl("Deductible - Deductible") } },
     { dataField: "premiumRate", label: { template: labelTpl("PremiumRate - Premium rate") } },
     { dataField: "premiumCfe", label: { template: labelTpl("PremiumCfe - CFE premium") } },
     { dataField: "premiumVoluntary", label: { template: labelTpl("PremiumVoluntary - Voluntary premium") } },
     { dataField: "premiumTotalBeforeVat", label: { template: labelTpl("PremiumTotalBeforeVat - Tổng premium trước VAT") } },
     { dataField: "premiumTotal", editorType:"dxNumberBox", editorOptions: {format: '#,##0'
 
-             } }
+         } }
     ]},
-        {itemType: "group",caption: "VAT",colCount:2,items: [
+    {itemType: "group",caption: "VAT",colCount:2,items: [
     {dataField: "vat",editorType: "dxTextBox",visible:true},
     {dataField: "vatValue",editorType: "dxTextBox",visible:true}
     ]},
 
-         {
-             itemType: "group",
-             caption: "Due",
-             colCount: 2,
-             items: [
-                 { dataField: "totalDue", editorType:"dxNumberBox", editorOptions: {format: '#,##0'
-                 // , onValueChanged: function (ed) {
-
-                 // if (ed.previousValue != ed.value && ed.previousValue != 0){
-
-                 //         // $.ajax({
-                 //         //     url: `/api/Quotation/UpdateData`,
-                 //         //     type: "PUT",
-                 //         //     data: { key: formItems.id, values: JSON.stringify({ sumInsuredTotal: e.value })},
-                 //         //     processData: true,
-                 //         //     success: function (data) {
-                 //         //     },
-                 //         //     error: function (error) {
-                 //         //         console.error("Error loading data:", error);
-                 //         //     }
-                 //         // });
-                 // }
-                 // }
-                 // ,onFocusOut: function (ed) {
-                 //   var formItems = $("#qt-formTS").dxForm().dxForm("instance").option("formData");
-                 //      ajaxPut('/api/Quotation/UpdateData',{ key: formItems.id, values: JSON.stringify({ totalDue: formItems.totalDue })} , {
-                 //             onSuccess: function (response) {
-                 //             },
-                 //             onError: function (err) {
-                 //             }
-                 //       });
-                 // }
+     {
+         itemType: "group",
+         caption: "Due",
+         colCount: 2,
+         items: [
+             { dataField: "totalDue", editorType:"dxNumberBox", editorOptions: {format: '#,##0'
 
 
-             } },
-                 // { dataField: "premiumAnnualTotal", label: { template: labelTpl("PremiumAnnualTotal - Total annual premium") } },
-                 // { dataField: "premiumVoluntaryValue", label: { template: labelTpl("PremiumVoluntaryValue - Voluntary premium (value)") } },
-                 // { dataField: "premiumVoluntaryAnnual", label: { template: labelTpl("PremiumVoluntaryAnnual - Annual voluntary premium") } },
-                 // { dataField: "premiumCfeAnnual", label: { template: labelTpl("PremiumCfeAnnual - Annual CFE premium") } },
-                 // { dataField: "premiumCommission", label: { template: labelTpl("PremiumCommission - Commission premium") } },
-                 // { dataField: "annualRate", label: { template: labelTpl("AnnualRate - Annual rate") } }//,
-
-                 // { dataField: "vatFlagOrValue", label: { template: labelTpl("VatFlagOrValue - VAT flag/value") } },
-                 // { dataField: "vatPercent", label: { template: labelTpl("VatPercent - VAT %") } },
-                 // { dataField: "vatAmount", label: { template: labelTpl("VatAmount - VAT amount") }
-                 ]
-         },
-
+         } },
+             ]
+     },
     {itemType: "group",caption: "Installment",colCount:2,items: [
     {dataField: "installmentId",editorType: "dxTextBox",visible:true} //dxDatagrid
     ]},
-        {itemType: "group",caption: "Terms & Conditions",colCount:2,items: [
+    {itemType: "group",caption: "Terms & Conditions",colCount:2,items: [
     {dataField: "TermsConditionsText",editorType: "dxTextBox",visible:true}
     ]},
-                {itemType: "group",caption: "Clause",colCount:2,items: [
-{dataField: "clauseId",editorType: "dxTextBox",visible:true}
-]},
+    {itemType: "group",caption: "Clause",colCount:2,items: [
+    {dataField: "clauseId",editorType: "dxTextBox",visible:true}
+    ]},
 
 
 
 
 
+    {
+     itemType: "group",
+     caption: "Risk",
+     colCount: 3,
+     items: [
+         { dataField: "riskGrade", label: { template: labelTpl("RiskGrade - Risk grade") } },
+             { dataField: "topRiskPd", label: {text: "Top Risk (After Co)", template: labelTpl("TopRiskPd - Top risk PD") } },
+             { dataField: "topRiskPdQuotation", label: { template: labelTpl("TopRiskPdQuotation - Top risk PD quotation") } }
 
+     ]
+    },
+    
+     ]
+    });
 
-
-
-
-
-
-     // {
-     //     itemType: "group",
-     //     caption: "Terms  Conditions / Deductible / Claim Basis",
-     //     colCount: 2,
-     //     items: [
-     //         { dataField: "clauseName", label: { template: labelTpl("ClauseName - Tên clause") } },
-     //         { dataField: "limitOfLiability", label: { template: labelTpl("LimitOfLiability - Limit of liability") } }
-     //     ]
-     // },
-
-
-
-
-     {
-         itemType: "group",
-         caption: "Risk",
-         colCount: 3,
-         items: [
-             { dataField: "riskGrade", label: { template: labelTpl("RiskGrade - Risk grade") } },
-                 { dataField: "topRiskPd", label: {text: "Top Risk (After Co)", template: labelTpl("TopRiskPd - Top risk PD") } },
-                 { dataField: "topRiskPdQuotation", label: { template: labelTpl("TopRiskPdQuotation - Top risk PD quotation") } }
-
-         ]
-     },
-     //        {
-     //     itemType: "group",
-     //     caption: "Location / TSI",
-     //     colCount: 2,
-     //     items: [
-     //         { dataField: "locationCountDeclared", label: { template: labelTpl("LocationCountDeclared - Số location khai báo") } },
-     //         { dataField: "locationCountLegacy", label: { template: labelTpl("LocationCountLegacy - Số location (legacy)") } },
-     //         { dataField: "locationCountAnnual", label: { template: labelTpl("LocationCountAnnual - Số location annual") } },
-     //         { dataField: "locationCountActual", label: { template: labelTpl("LocationCountActual - Số location actual") } },
-     //         { dataField: "locationSummary", label: { template: labelTpl("LocationSummary - Tóm tắt location (text)") } },
-     //         { dataField: "locationMapRef", label: { template: labelTpl("LocationMapRef - Tham chiếu map location") } },
-     //         { dataField: "locationAttachmentRef", label: { template: labelTpl("LocationAttachmentRef - Attachment location") } },
-
-
-     //         { dataField: "tsiPd", label: { template: labelTpl("TsiPd - TSI PD") } },
-     //         { dataField: "tsiPdQuotation", label: { template: labelTpl("TsiPdQuotation - TSI PD quotation") } }
-
-
-     //     ]
-     // }
-         ]
-       });
-      // var tsLocations = [
-      //     { site:"HCM", address:"District 1", category:"Warehouse", sumInsured: 1200000 },
-      //     { site:"HN",  address:"Cau Giay",   category:"Office",    sumInsured: 350000  },
-      //   ];
-
-
-      //   var gridOptions = new LocationGridOption("Location", "User");
-      //   new MGrid(null, $("#gridTSLocations"), gridOptions, null);
-          // $("#gridTSLocations").dxDataGrid({
-          //   dataSource: tsLocations, height: 220, showBorders: true,
-          //   editing: { mode:"cell", allowUpdating:false, allowAdding:false, allowDeleting:false },
-          //   columns: [
-          //     { dataField:"site", caption:"Site", width: 90 },
-          //     { dataField:"address", caption:"Address" },
-          //     { dataField:"category", caption:"Occupancy", width: 140 },
-          //     // { dataField:"sumInsured", caption:"Sum Insured", dataType:"number", format:"#0" }
-          //   ]
-          // });
-          //       $("#gridTSLocations").dxDataGrid("instance").option("editing", {
-          //   mode:"cell", allowUpdating: !roTS, allowAdding: !roTS, allowDeleting: !roTS
-          // });
 </script>
-
-
-<div id="@QTViewIdHelper.Form(dept, quotationId)">
-</div>
-<div style="margin-top:10px;font-weight:800;font-size:12px;">Locations</div>
-<div id="gridTSLocations" style="margin-top:8px;"></div>
+<div id="@QTViewIdHelper.Form(dept, quotationId)"></div>
