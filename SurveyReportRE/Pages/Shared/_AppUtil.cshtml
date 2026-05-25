@@ -657,7 +657,7 @@
         
     }
 
-    function  commentModule(moduleKey, dept, guid, commentsIn) {
+    function  commentModule(moduleKey, dept, guid, commentsIn, id) {
         var currentSection = `${dept}`;
         var filterType = "All";
         var unreadOnly = false;
@@ -692,7 +692,7 @@
 
 
         function renderComments(comments) {
-            const wrap = $(`#${moduleKey}-commentWrap_${dept}`);
+                const wrap = $(`#${moduleKey}-commentWrap_${dept}_${id}`);
             wrap.empty();
             const items = getCurrentComments();
             if (!items.length) {
@@ -777,7 +777,7 @@
 
 
         function buildFilters() {
-            $(`#${moduleKey}-filterTypeSelect_${dept}`).dxSelectBox({
+                $(`#${moduleKey}-filterTypeSelect_${dept}_${id}`).dxSelectBox({
                 width: 180,
                 dataSource: ["All", "Request", "Blocker", "Discussion", "Internal"],
                 value: "All",
@@ -796,53 +796,53 @@
             //     }
             // });
 
-            $(`#${moduleKey}-btnFilterAll_${dept}`).dxButton({
+                $(`#${moduleKey}-btnFilterAll_${dept}_${id}`).dxButton({
                 text: "All",
                 type: "default",
                 stylingMode: "outlined",
                 onClick: function () {
                     filterType = "All";
-                    $(`#${moduleKey}-filterTypeSelect_${dept}`).dxSelectBox("instance").option("value", "All");
+                        $(`#${moduleKey}-filterTypeSelect_${dept}_${id}`).dxSelectBox("instance").option("value", "All");
                     renderComments(comments);
                 }
             });
 
-            $(`#${moduleKey}-btnFilterRequest_${dept}`).dxButton({
+                $(`#${moduleKey}-btnFilterRequest_${dept}_${id}`).dxButton({
                 text: "Request",
                 stylingMode: "outlined",
                 onClick: function () {
                     filterType = "Request";
-                    $(`#${moduleKey}-filterTypeSelect_${dept}`).dxSelectBox("instance").option("value", "Request");
+                        $(`#${moduleKey}-filterTypeSelect_${dept}_${id}`).dxSelectBox("instance").option("value", "Request");
                     renderComments(comments);
                 }
             });
 
-            $(`#${moduleKey}-btnFilterBlocker_${dept}`).dxButton({
+                $(`#${moduleKey}-btnFilterBlocker_${dept}_${id}`).dxButton({
                 text: "Blocker",
                 stylingMode: "outlined",
                 onClick: function () {
                     filterType = "Blocker";
-                    $(`#${moduleKey}-filterTypeSelect_${dept}`).dxSelectBox("instance").option("value", "Blocker");
+                        $(`#${moduleKey}-filterTypeSelect_${dept}_${id}`).dxSelectBox("instance").option("value", "Blocker");
                     renderComments(comments);
                 }
             });
 
-            $(`#${moduleKey}-btnFilterDiscussion_${dept}`).dxButton({
+                $(`#${moduleKey}-btnFilterDiscussion_${dept}_${id}`).dxButton({
                 text: "Discussion",
                 stylingMode: "outlined",
                 onClick: function () {
                     filterType = "Discussion";
-                    $(`#${moduleKey}-filterTypeSelect_${dept}`).dxSelectBox("instance").option("value", "Discussion");
+                        $(`#${moduleKey}-filterTypeSelect_${dept}_${id}`).dxSelectBox("instance").option("value", "Discussion");
                     renderComments(comments);
                 }
             });
 
-            $(`#${moduleKey}-btnFilterInternal_${dept}`).dxButton({
+                $(`#${moduleKey}-btnFilterInternal_${dept}_${id}`).dxButton({
                 text: "Internal",
                 stylingMode: "outlined",
                 onClick: function () {
                     filterType = "Internal";
-                    $(`#${moduleKey}-filterTypeSelect_${dept}`).dxSelectBox("instance").option("value", "Internal");
+                        $(`#${moduleKey}-filterTypeSelect_${dept}_${id}`).dxSelectBox("instance").option("value", "Internal");
                     renderComments(comments);
                 }
             });
@@ -946,10 +946,10 @@
              that.ModelName = "SectionCommentNote";
              var dataSource = makeBasicDataSource(that, false);
              var store = dataSource.store();
-         $(`#${moduleKey}-btnChatSend_${dept}`).dxButton({
+                $(`#${moduleKey}-btnChatSend_${dept}_${id}`).dxButton({
                  onClick: function (e) {
-                    
-                    var commentDataForm = $(`#${moduleKey}-commentPanelControl_${dept}`).dxForm("instance").option("formData");
+
+                        var commentDataForm = $(`#${moduleKey}-commentPanelControl_${dept}_${id}`).dxForm("instance").option("formData");
                       const commentText = commentDataForm.content?.trim();
                       if (!commentText) {
                           DevExpress.ui.notify("Please enter comment content", "warning", 2000);
@@ -985,7 +985,7 @@
 
     }
 
-    function commentPinModule(moduleKey, dept, guid, commentsIn) {
+    function commentPinModule(moduleKey, dept, guid, commentsIn, id) {
         var currentSection = `${dept}`;
         var filterType = "All";
         var unreadOnly = false;
@@ -1004,7 +1004,7 @@
 
 
             function renderPins() {
-                    var wrap = $(`#${moduleKey}-pinList_${dept}`);
+                        var wrap = $(`#${moduleKey}-pinList_${dept}_${id}`);
                     wrap.empty();
 
                     var items = getCurrentPins();
@@ -1063,7 +1063,7 @@
 
 
                     $.each(groupByFromSection, function(pinIndex, pinItem){
-                       var wrapIcon = $(`#${moduleKey}-stickPanel_${dept}`);
+                           var wrapIcon = $(`#${moduleKey}-stickPanel_${dept}_${id}`);
 
                             wrapIcon.empty();
                             wrapIcon.append(
@@ -1080,8 +1080,8 @@
                             </div>`
                             );
 
-                            $(`#${moduleKey}-pinZone_${dept}`).off("click").on("click", () => 
-                                {
+                                $(`#${moduleKey}-pinZone_${dept}_${id}`).off("click").on("click", () =>
+                                    {
                                     wrapIcon.fadeOut();
                                 }
                             );
@@ -1121,7 +1121,7 @@
                 function buildTopButtons() {
 
 
-                    $(`#${moduleKey}-btnExpandAllPins_${dept}`).dxButton({
+                        $(`#${moduleKey}-btnExpandAllPins_${dept}_${id}`).dxButton({
                         text: "Expand Pins",
                         icon: "chevrondown",
                         stylingMode: "outlined",
@@ -1130,7 +1130,7 @@
                         }
                     });
 
-                    $(`#${moduleKey}-btnCollapseAllPins_${dept}`).dxButton({
+                        $(`#${moduleKey}-btnCollapseAllPins_${dept}_${id}`).dxButton({
                         text: "Collapse Pins",
                         icon: "chevronup",
                         stylingMode: "outlined",
@@ -1139,7 +1139,7 @@
                         }
                     });
 
-                    $(`#${moduleKey}-btnUrgentPins_${dept}`).dxButton({
+                        $(`#${moduleKey}-btnUrgentPins_${dept}_${id}`).dxButton({
                         text: "Urgent only",
                         stylingMode: "outlined",
                         onClick: function (e) {
@@ -1167,7 +1167,7 @@
                 }
 
 
-        function renderFormComment(idForm, dept, moduleKey) {
+        function renderFormComment(idForm, dept, moduleKey, id) {
 
       $(`#${idForm}`).dxForm({
        width: "100%",
@@ -1191,21 +1191,21 @@
                    const wrapper = $(`
     <div class="jira-comment-box">
     <div class="jira-comment-editor-wrap">
-    <div id="${moduleKey}-commentEditor_${dept}"></div>
+        <div id="${moduleKey}-commentEditor_${dept}_${id}"></div>
     </div>
     <div class="jira-comment-footer">
     <div class="jira-comment-footer-left">
     <span class="jira-comment-hint">Ctrl + Enter to send</span>
     </div>
     <div class="jira-comment-footer-right">
-    <div id="${moduleKey}-actionForm_${dept}"></div>
+        <div id="${moduleKey}-actionForm_${dept}_${id}"></div>
     </div>
     </div>
     </div>
                    `);
                    itemElement.append(wrapper);
                    // TextArea comment
-                   $(`#${moduleKey}-commentEditor_${dept}`).dxTextArea({
+                       $(`#${moduleKey}-commentEditor_${dept}_${id}`).dxTextArea({
                        value: parentForm.option("formData")?.content || "",
                        height: 110,
                        placeholder: "Write a comment...",
@@ -1219,7 +1219,7 @@
                        }
                    });
                    // Mini form phía dưới bên phải
-                   $(`#${moduleKey}-actionForm_${dept}`).dxForm({
+                       $(`#${moduleKey}-actionForm_${dept}_${id}`).dxForm({
                        formData: parentForm.option("formData"),
                        labelLocation: "top",
                        colCount: 3,
