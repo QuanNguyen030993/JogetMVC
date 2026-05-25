@@ -22,11 +22,8 @@ using System.Text.Json;
 using System.Configuration;
 using TMIVHashing;
 using ERPCore.Models.Models.Parsing;
-using BitMiracle.LibTiff.Classic;
-using AngleSharp;
-using iText.StyledXmlParser.Node;
-using Microsoft.AspNetCore.SignalR;
-using RESurveyTool.Models.Models.Parsing;
+using WebConfig = Microsoft.Extensions.Configuration;
+using ERPCore.Models.Migration.Business.Social;
 namespace ERPCore.Common
 {
     public static class Util
@@ -1408,7 +1405,42 @@ namespace ERPCore.Common
             return $"SELECT * FROM [{tableName}] WITH (NOLOCK) WHERE Active = 1 AND Deleted = 0";
         }
 
+        public static Notification MakeNotificationFromEmail(Notification notification, MailQueue mailQueue,dynamic objectIn , WebConfig.IConfiguration configuration,out UrlCall urlCall)
+        {
+            urlCall = new UrlCall();
+            
 
+            urlCall.Folder = "Business";
+            urlCall.Module = "Workflow";
+            urlCall.Controller = "SurveyWorkflow";
+            urlCall.Action = "Index";
+            urlCall.TypeAction = "View";
+            urlCall.Token = "";
+            urlCall.RecordGuidId = objectIn.Guid;
+            urlCall.Params = JsonConvert.SerializeObject(new
+            {
+                url = $"/Business/Form/{objectIn.GetType().Name}_Form/{objectIn.Id}",
+                caption = $"form_{objectIn.GetType().Name}_Form_{objectIn.Id}",
+                name = $"{objectIn.GetType().Name} {objectIn.Code}",
+                data = ""
+            });
+            urlCall.ExpireTime = DateTime.Now.AddDays(2);
+            urlCall.Expired = false;
+            string REDIRECT_MAIN_VIEW = configuration.GetSection("UrlConfig:RedirectMainView").Value;
+            //string redirectMainView = System.IO.Path.Combine(REDIRECT_MAIN_VIEW, typeof(UrlCall).Name, "ReturnView");
+            string redirectMainView = $"{REDIRECT_MAIN_VIEW}{typeof(UrlCall).Name}{"/ReturnView"}";
+            redirectMainView += $"?guid={urlCall.Guid}";
+            notification.IsRead = false;
+            notification.Url = $"/Business/Form/{nameof(Quotation)}_Form/{objectIn.Id}";
+            notification.Resource = $"{objectIn.Resource}";
+            notification.System = "WM";
+            notification.Title = mailQueue.subject;
+            notification.Message = mailQueue.html_body;
+            notification.ReceivedBy = $"{mailQueue.ToName},{mailQueue.cc}";
+            notification.RecordGuid = objectIn.Guid;
+
+            return notification;
+        }
         public static Dictionary<string, object> MakeQueryIntoDirectory(DataRow row)
         {
             var dictionary = new Dictionary<string, object>();
