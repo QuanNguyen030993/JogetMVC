@@ -3,38 +3,32 @@ using ERPCore.Models.Migration.Business.Data;
 using System;
 using System.ComponentModel.DataAnnotations;
 
-public class PolicyIssuance : BaseModel 
+public class PolicyIssuance : BaseModel
 {
     // =========================
     // Ý 1 — Header / Request
     // =========================
-    public string? IssueReqNo { get; set; }              // c_piRefNum
-    public string? IssueReqRefNo { get; set; }           // c_refNum
-    public string? ParentRequestId { get; set; }         // c_parent_id
+
     public string? RequestType { get; set; }             // c_reqType
-    public string? IssueRequestCategory { get; set; }    // c_piType
 
     public DateTime? RequestDate { get; set; }           // c_reqDate
     public DateTime? DueDate { get; set; }               // c_dueDate
+    public DateTime? InsuredDate { get; set; }           // c_dateInsured
 
     public string? QuotationCode { get; set; }           // c_jogetQuoNum
-    public string? QuotationCodeAlt { get; set; }        // c_jogetQuoNum1
+    public string? QuotationParentCode { get; set; }        // c_jogetQuoNum1
     public long? QuotationId { get; set; }             // c_quotationId 
     // =========================
     // Ý 2 — Policy / PolicyHolder / Product / Line
     // =========================
     public string? PolicyNo { get; set; }                // c_policyNo
     public string? PolicyHolderId { get; set; }          // c_policyHolder
-    public string? PolicyType { get; set; }              // c_policyType
+    //Quotation refer
+    //public string? ProductCode { get; set; }             // c_productName  (join Product/Line master)
+    //public string? ProductType { get; set; }             // c_productType
 
-    public string? ProductCode { get; set; }             // c_productName  (join Product/Line master)
-    public string? ProductType { get; set; }             // c_productType
 
-    public string? PolicyLanguage { get; set; }          // c_languageOfPolicy
-    public string? PolicyPackage { get; set; }           // c_packageOfPolicy
-
-    public DateTime? PolicyPeriodStartDate { get; set; } // c_periodInsStart
-    public DateTime? InsuredDate { get; set; }           // c_dateInsured
+    //public DateTime? PolicyPeriodStartDate { get; set; } // c_periodInsStart
 
     public int? PolicyQuantity { get; set; }             // c_quantityOfPolicy
 
@@ -46,16 +40,10 @@ public class PolicyIssuance : BaseModel
     // =========================
     // Ý 4 — Status / Timeline / SLA
     // =========================
-    public string? IssueStatusCode { get; set; }         // c_piStatus
-    public string? IssueStatusLabel { get; set; }        // c_piStatusLabel
-    public string? OverallStatusCode { get; set; }       // c_status
+    //public string? IssueStatusCode { get; set; }         // c_piStatus
+    //public string? IssueStatusLabel { get; set; }        // c_piStatusLabel
+    //public string? OverallStatusCode { get; set; }       // c_status
 
-    // TODO: Timeline fields – move to workflow/history module
-    // public DateTime? AcceptedDate { get; set; }        // c_acceptedDate
-    // public DateTime? FoTsActionDate { get; set; }      // c_dateFOTS
-    // public string? PiNoByPm { get; set; }              // c_piNumByPm
-    // public string? PiNoByTs { get; set; }              // c_piNumByTs
-    // public string? PiNoByFo { get; set; }              // c_piNumByFo
 
     // SLA: DROPPED (c_a1Days, c_a1DaysOver, c_a1_flag, c_quoNumFlag)
 
@@ -66,14 +54,10 @@ public class PolicyIssuance : BaseModel
     public string? Notes { get; set; }                   // c_notes
     public string? Reason { get; set; }                  // c_reason
 
-    public string? Remarks { get; set; }                 // c_remarks
-    public string? PrevRemarks { get; set; }             // c_preRemarks / c_preRemark (merged)
-    public string? PmRemarks { get; set; }               // c_pmRemarks
-    public string? TsRemarks { get; set; }               // c_TS_remarks
 
     public string? FollowUpNote { get; set; }            // c_followUp
 
-    // NOTE: c_piRemarks is TODO to review (merge into Notes/Remarks)
+
 
     [MaxLength(4000)]
     public string? TurnAroundTimeAttributes { get; set; } = "";
@@ -95,38 +79,9 @@ public class PolicyIssuance : BaseModel
     public string? PolicyIssuanceCode { get; set; }
     public long? ClientId { get; set; }
     public long? AttachmentId { get; set; }
-    public Attachment? AttachmentFK { get; set; }   
+    public Attachment? AttachmentFK { get; set; }
     public long? DocumentId { get; set; }
     public Document? DocumentFK { get; set; }
-    public string? ClientName { get; set; } 
+    public string? ClientName { get; set; }
 
-    // TODO: Asset list attachments – move to Attachment module
-    // public string? MachineryListAttachment { get; set; }       // c_listOfMachineriesAtt
-    // public string? PropertyTypeListAttachment { get; set; }    // c_typeOfPropertyListAtt
-    // public string? FactoryOperationYearsAttachment { get; set; }// c_operationYearofFactoriesAtt
-    // public string? ChassisEngineNumberAttachment { get; set; } // c_chasisEngineNumberAtt
-    // public string? GlobalCoverAttachment { get; set; }         // c_globalAtt
-
-    // =========================
-    // Ý 9 — Email / Attachments
-    // =========================
-    // TODO: rename but COMMENT OUT ALL fields; move to Email/Attachment module
-    // public string? EmailTitle { get; set; }             // c_titleEmail
-    // public string? EmailTitle2 { get; set; }            // c_title2Email
-    // public string? EmailLink { get; set; }              // c_linkEmail
-    // public string? EmailListHtml { get; set; }          // c_listEmail
-    // public string? EmailCc { get; set; }                // c_emailCC
-    // public string? AdditionalEmailCc { get; set; }      // c_addiEmailCc
-    // public string? PrevAdditionalEmailCc { get; set; }  // c_preAddiEmailCc
-    // public string? EmailMktClient { get; set; }         // c_emailMKTClient
-    // public string? EmailInformRi { get; set; }          // c_emailInformRI
-    // public string? PiAttachment { get; set; }           // c_piAttach
-    // public string? AdditionalAttachments { get; set; }  // c_addiAttachments
-    // public string? MainAttachment { get; set; }         // c_attachment
-    // public string? ResultAttachment { get; set; }       // c_resAtt
-    // public string? ConfirmedQuotationFlag { get; set; } // c_confirmedQuotation
-    // public string? ConfirmedQuotationAttachment { get; set; } // c_confirmedQuotationAtt
-    // public string? ProposalForm { get; set; }           // c_proposalForm
-    // public string? ProposalFormAttachment { get; set; } // c_proposalFormAtt
-    // public string? HardSoftCopy { get; set; }           // c_hardSoftCopy
 }

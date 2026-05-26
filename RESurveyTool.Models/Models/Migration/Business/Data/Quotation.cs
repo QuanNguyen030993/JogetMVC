@@ -39,19 +39,21 @@ public class Quotation : BaseModel
     // - Multi-language expandable (3rd language+) via JSON
     // =========================================================
     public string? PolicyHolderId { get; set; } = "";            // c_policyHolder
+    public string? PolicyNo { get; set; } = "";
+
     public string? InsuredId { get; set; } = "";                 // c_ins
-
-    public string? ClientCodePA { get; set; } = "";              // c_clientCodePA
-    public string? ClientCodeJG { get; set; } = "";              // c_clientCodeJG
-
-    // Default display (prefer VI -> EN -> any)
-    public string? PolicyHolderName { get; set; } = "";          // from c_phNameViet/c_policyHolderViet/c_phNameEng
     public string? InsuredName { get; set; } = "";               // from c_insNameViet/c_insNameEng
     public string? ClientName { get; set; } = "";                // from c_clientNameViet/c_clientNameEng
     public long? ClientId { get; set; }                // from c_clientNameViet/c_clientNameEng
     public Client? ClientFK { get; set; }                // from c_clientNameViet/c_clientNameEng
+    public string? ClientCode { get; set; }
     public string? RegisteredAddress { get; set; } = "";         // from c_registeredAddressViet/c_registeredAddress
     public string? BusinessAddress { get; set; } = "";           // from c_businessAddressViet/c_businessAddressEng
+
+    public string? InsRegisteredAddress { get; set; } = "";
+    public string BusinessOccupationName { get; set; } = "";
+    public long? Occupation { get; set; } = 0;
+    public EnumData? OccupationEnum { get; set; }   
 
     // Multi-language payload for PolicyHolder/Insured/Client + addresses
     public string? PartyMultiLangJson { get; set; } = "";        // JSON (vi/en/..)
@@ -61,117 +63,13 @@ public class Quotation : BaseModel
     // =========================================================
     // TODO: Move Product/Line/CFE to Master Data later.
     public string? ProductName { get; set; } = "";               // c_productName
-    public string? ProductDisplayName { get; set; } = "";        // c_productNameView
-    public string? ProductType { get; set; } = "";               // c_productType
+    //public string? ProductDisplayName { get; set; } = "";        // c_productNameView
+    //public string? ProductType { get; set; } = "";               // c_productType
 
     public string? LineName { get; set; } = "";                  // c_lineName
-    public string? SubLineName { get; set; } = "";               // c_lineName1
+    //public string? SubLineName { get; set; } = "";               // c_lineName1
+    public long? QuotationQuantity { get; set; }
 
-    public string? CfeCode { get; set; } = "";                   // c_CFECode
-    public string? IsCfe { get; set; } = "";                     // c_isCfe
-    public string? IsCfeForm { get; set; } = "";                 // c_isCfeForm
-    public string? ShowCfe { get; set; } = "";                   // c_showCFE
-
-    public string? IarQuotationNo { get; set; } = "";            // c_IARQuoNum
-
-    // =========================================================
-    // Ý 4 — Location / TSI / SumInsured (rename; keep all)
-    // =========================================================
-   
-    public decimal? SumInsuredTotal { get; set; }          // c_totalSumIns
-    public decimal? SumInsuredTotalUsd { get; set; }       // c_totalSumInsUSD
-    public decimal? SumInsuredTotalVnd { get; set; }       // c_totalSumInsVND
-    public decimal? SumInsuredTotalAlt { get; set; }       // c_totalSumIns1
-
-    public decimal? SumInsuredBI { get; set; }             // c_totalSumInsBI
-
-    public decimal? TsiTotal { get; set; }                 // c_TSI
-    public decimal? TsiBI { get; set; }                    // c_TSIBi
-    public string? TsiFromBi { get; set; } = "";                 // c_tsiFromBi
-    public string? TsiFromBiForm { get; set; } = "";             // c_tsiFromBiForm
-
-    public string? TopRisk { get; set; } = "";                   // c_topRisk
-    public string? TopRiskPd { get; set; } = "";                 // c_topRiskPd
-    public string? TopRiskPdQuotation { get; set; } = "";        // c_topRiskPdQt
-    public string? TopRiskPdBI { get; set; } = "";               // c_topRiskPdBI
-
-    public decimal? TsiPd { get; set; }                    // c_TSIPd
-    public decimal? TsiPdQuotation { get; set; }           // c_TSIPdQT
-    public decimal? TsiPdBI { get; set; }                  // c_TSIPdBI
-
-    public string? Exposure { get; set; } = "";                  // c_exposure
-
-    public string? GeoLimitEng { get; set; } = "";               // c_geoLimitEng
-    public string? GeoLimitViet { get; set; } = "";              // c_geoLimitViet
-
-    // =========================================================
-    // Ý 5 — Premium / Rate / VAT / Discount / Currency (refactor + keep all)
-    // =========================================================
-    public decimal? PremiumTotal { get; set; }             // c_totalPremium
-    public decimal? PremiumTotalBeforeVat { get; set; }    // c_totalPremiumBeforeVat
-    public decimal? TotalDue { get; set; }                 // c_totalDue
-
-    public decimal? PremiumAnnual { get; set; }            // c_annualPremium
-    public decimal? PremiumAnnualTotal { get; set; }       // c_totalAnnualPremium
-
-    public decimal? PremiumActual { get; set; }            // c_actualPremium
-    public decimal? PremiumTotalBI { get; set; }           // c_totalPremiumBI
-
-    public decimal? PremiumVoluntary { get; set; }         // c_volPremium
-    public decimal? PremiumVoluntaryValue { get; set; }    // c_voluntaryPremium
-    public decimal? PremiumVoluntaryAnnual { get; set; }   // c_annualVoluntaryPremium
-
-    public decimal? PremiumCfe { get; set; }               // c_cfePremium
-    public decimal? PremiumCfeAnnual { get; set; }         // c_annualCFEPremium
-
-    public decimal? PremiumCommission { get; set; }        // c_comPremium
-
-    public decimal? PremiumRate { get; set; }              // c_premiumRate
-    public decimal? PremiumRateAlt { get; set; }           // c_premiumRate1
-    public decimal? PremiumRateBI { get; set; }            // c_premiumRateBI
-    public decimal? AnnualRate { get; set; }               // c_annualRate
-
-    public string? DiscountPercentOrValue { get; set; } = "";    // c_discount (unknown % or amount)
-    public decimal? PremiumDiscount { get; set; }          // c_premiumDis
-
-    public decimal? PreDiscount { get; set; }              // c_preDiscount
-    public decimal? PreDiscountTotal { get; set; }         // c_preDiscountTotal
-    public decimal? PreDiscountVoluntary { get; set; }     // c_preDiscountVol
-    public decimal? PreDiscountCommission { get; set; }    // c_preDiscountCom
-
-    public string? VatFlagOrValue { get; set; } = "";            // c_VAT (unknown flag/value)
-    public decimal? VatPercent { get; set; }               // c_VATPerc
-    public decimal? VatAmount { get; set; }                // c_VATAmount
-    public decimal? VatPercentBI { get; set; }             // c_VATPercBI
-    public decimal? VatAmountBI { get; set; }              // c_VATAmountBI
-
-    public string? CurrencyCode { get; set; } = "";              // c_currency
-    public decimal? ExchangeRate { get; set; }             // c_excRate
-    public string? EquivalentToCurrency { get; set; } = "";      // c_equivalentTo
-    public decimal? ExchangeRateTotalSumIns { get; set; }  // c_excRateTotalSumIns
-    public decimal? ExchangeRateTotalSumInsVnd { get; set; }// c_excRateTotalSumInsVND
-
-    //// =========================================================
-    //// Ý 6 — Terms/Conditions/Deductible/Claim basis/Jurisdiction
-    //// - Eng/Viet follow logic Ý 2 (multi-language JSON)
-    //// =========================================================
-    //// Default display (prefer VI -> EN -> any)
-    //public string? TermsConditionsText { get; set; } = "";           // from c_termsConViet/c_termsConEng/c_termsCon
-    //public string? ClaimSettlementBasisText { get; set; } = "";      // from c_claimSetBasisViet/c_claimSetBasisEng
-    //public string? JurisdictionLawText { get; set; } = "";           // from c_lawJurisViet/c_lawJurisEng
-    //public string? DutyOfDisclosureText { get; set; } = "";          // from c_dutyDisViet/c_dutyDisEng
-
-    //// Multi-language payload for terms group
-    //public string? TermsMultiLangJson { get; set; } = "";            // JSON (vi/en/..)
-
-    //// Non-language fields
-    //public string? ClauseName { get; set; } = "";                    // c_nameClause
-    //public string? SpecialAppliedSpec { get; set; } = "";            // c_specApplied
-    //public string? Deductible { get; set; } = "";                    // c_deductible
-    //public string? DeductibleFire { get; set; } = "";                // c_deductibleFire
-    //public string? LimitOfLiability { get; set; } = "";              // c_limitLia
-
-   
 
     //Build
     public string? StageDept { get; set; } = "";
@@ -184,11 +82,11 @@ public class Quotation : BaseModel
     public string? ProductCode { get; set; } = "";
     public long? ReinsuranceId { get; set; }
     public EnumData? ReinsuranceEnum { get; set; }
-    public long? LocationId { get; set; }
-    public Location? LocationFK { get; set; }
     public long? ResId { get; set; }
     public Res? ResFK { get; set; }
-    public string? PolicyNo { get; set; } = "";
+    public long? LineId { get; set; }
+    public Line? LineFK { get; set; }
+    public string? LineCode { get; set; } = "";
     public long? AttachmentId { get; set; }
     public Attachment? AttachmentFK { get; set; }
     public long? DocumentId { get; set; }
@@ -197,43 +95,7 @@ public class Quotation : BaseModel
     public TurnAroundAttributes? TurnAroundAttributes { get; set; }
     public List<Document> Documents { get; set; } = new List<Document>();
 
-    // =========================================================
-    // Ý 9 — Attachment/email fields (commented-out + TODO)
-    // =========================================================
 
-    // TODO: Email fields – move to Email / Notification module
-    // public string? EmailTitle { get; set; } = "";                  // c_titleEmail
-    // public string? EmailSecondaryTitle { get; set; } = "";         // c_title2Email
-    // public string? EmailContentHtml { get; set; } = "";            // c_listEmail
-    // public string? EmailLinkUrl { get; set; } = "";                // c_linkEmail
-    // public string? EmailTo { get; set; } = "";                     // c_to
-    // public string? EmailCc { get; set; } = "";                     // c_emailCc
-    // public string? AdditionalEmailCc { get; set; } = "";           // c_addiEmailCc
-    // public string? AdditionalEmailCcWorkflow { get; set; } = "";   // c_addiEmailCcWf
-    // public string? PreAdditionalEmailCc { get; set; } = "";        // c_preAddiEmailCc
-    // public string? MktTsEmailCc { get; set; } = "";                // c_mktTsEmailCc
-    // public string? MktFoEmailCc { get; set; } = "";                // c_mktFoEmailCc
-    // public string? ManagerEmailCc { get; set; } = "";              // c_mgrEmailCc
-    // public string? UwEmailCc { get; set; } = "";                   // c_uwEmailCc
-
-    // TODO: Attachment fields – move to Attachment / File module
-    // public string? MainAttachmentRef { get; set; } = "";           // c_attachment
-    // public string? QuotationAttachmentRef { get; set; } = "";      // c_attachmentQT / c_attachQT
-    // public string? ResultAttachmentRef { get; set; } = "";         // c_resAttachment / c_resAtt
-    // public string? ResultFormAttachmentRef { get; set; } = "";     // c_attachResForm
-    // public string? ResultAttachmentAltRef { get; set; } = "";      // c_attachRes
-    // public string? OtherAttachmentRef { get; set; } = "";          // c_otherAtt
-    // public string? AdditionalAttachmentsRef { get; set; } = "";    // c_addiAttachments
-    // public string? SurveyResultAttachmentRef { get; set; } = "";   // c_surveyResultAtt
-    // public string? RiArrangementAttachmentRef { get; set; } = "";  // c_RIArrangementAtt
-    // public string? UwAttachmentRef2 { get; set; } = "";            // c_uwAtt
-    // public string? UwCommentAttachmentRef { get; set; } = "";      // c_UWCommentsAtt
-
-    // TODO: UI display flags – move to UI/Form config
-    // public string? ShowQuotationForm { get; set; } = "";           // c_showQuotForm
-    // public string? ShowBiQuotationForm { get; set; } = "";         // c_showBiQuotForm
-    // public string? ShowQuotation { get; set; } = "";               // c_showQuot
-    // public string? ShowBiQuotation { get; set; } = "";             // c_showBiQuot
 }
 
 public class TurnAroundAttributes

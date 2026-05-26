@@ -134,7 +134,6 @@
             nativeRemoveTab($tabDivId);
     });
 
-        //var loginUser = `@Html.Raw(ViewData["LoginUser"])`;
 
 
         _isSuperUser =  `@Html.Raw(ViewData["IsSuperUser"])`;
@@ -162,21 +161,6 @@
                  },
             });
         }
-        // _loginUser = loginUser.replace("TOKIOMARINE\\", "");
-            // $.ajax({
-            //     url: `/api/Users/GetUserRoles?accountName=${_loginUser}`,
-            //     type: 'GET',
-            //     async: false,
-            //     data: { accountName: loginUser },
-            //     success: function (response) {
-            //         $("#rolename").text(response.RoleName);
-            //         _role = response.RoleName;
-            //         _displayName = response.DisplayName;
-            //     },
-            //     error: function (xhr, status, error) {
-            //         console.error('Error:', error);
-            //     }
-            // });
 
 
             var loadParams = `@Html.Raw(@ViewData["LoadParams"])`;

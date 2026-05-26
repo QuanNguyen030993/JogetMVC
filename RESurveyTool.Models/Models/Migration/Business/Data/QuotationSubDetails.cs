@@ -7,6 +7,15 @@ using ERPCore.Models.Migration.Config;
 
 public class QuotationSubDetails : BaseModel
 {
-    
+    public long? CoverageId { get; set; }
+    // Model plan
+    public long? DeductibleId { get; set; }
+    // Model plan
+    public long? InstallmentId { get; set; }
+    // Model plan
+    public long? ClauseId { get; set; }
+    // Model plan
+    public long? LocationId { get; set; }
+    public Location? LocationFK { get; set; }
 }
 
