@@ -5,7 +5,7 @@
 }
 <script>
     
-        var _dept = "@(ViewData["Dept"].ToString())";
+        var _deptInput = "@(ViewData["Dept"].ToString())";
              var _formConfig = new Object();
                 _formConfig.tabName = '@HttpContext.Request.Query["Caption"].ToString()';
                 _formConfig.originModelName = "@SLA_FormModel.ModelName";
@@ -14,11 +14,11 @@
                 var mFormOption = new MFormOption(_formConfig, null);
     ajaxGet(`api/SLA/SLALookup/@(ViewData["Dept"].ToString())`, null).done(response => {
         $(`#form_@(SLA_FormModel.ModelName)`).attr("id", `form_@(SLA_FormModel.ModelName)_${response.data.id}`)
-            if (_dept == "TS")
+            if (_deptInput == "TS")
             new TSSLAForm(response.data.id, null, _formConfig, mFormOption);
-            if (_dept == "UW")
+            if (_deptInput == "UW")
             new UWSLAForm(response.data.id, null, _formConfig, mFormOption);
-            if (_dept == "PM")
+            if (_deptInput == "PM")
             new PMSLAForm(response.data.id, null, _formConfig, mFormOption);
     });
 </script>

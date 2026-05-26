@@ -35,7 +35,7 @@ namespace ERPCore.Controllers.Base
         private readonly IBaseRepository<T> _BaseRepository;
         internal IHttpContextAccessor _httpContextAccessor { get; set; }
         internal ILogger<T> _loggerT { get; set; }
-        private static string DOMAIN_NAME = "";
+        internal static string DOMAIN_NAME = "";
         private static string BLOB_PATH = "";
 
         public BaseControllerApi(IBaseRepository<T> BaseRepository, IHttpContextAccessor httpContextAccessor)
@@ -197,17 +197,17 @@ namespace ERPCore.Controllers.Base
             }
         }
 
-        [HttpGet]
-        public virtual async Task<ActionResult<T>> GetUserRoles(string accountName)
-        {
-            string roleName = "";
-            string superUsers = _BaseRepository?._baseConfiguration?.GetSection("SuperUser:SuperUser")?.Value ?? "Anonymous";
-            bool isSuperUser = superUsers.Contains(accountName);
-            var roles = await _BaseRepository.GetUserRoles(accountName.Replace(DOMAIN_NAME, ""), isSuperUser);
-            if (roles != null)
-                roleName = roles.RoleName.ToString();
-            return Ok(roleName);
-        }
+        //[HttpGet]
+        //public virtual async Task<ActionResult<T>> GetUserRoles(string accountName)
+        //{
+        //    string roleName = "";
+        //    string superUsers = _BaseRepository?._baseConfiguration?.GetSection("SuperUser:SuperUser")?.Value ?? "Anonymous";
+        //    bool isSuperUser = superUsers.Contains(accountName);
+        //    var roles = await _BaseRepository.GetUserRoles(accountName.Replace(DOMAIN_NAME, ""), isSuperUser);
+        //    if (roles != null)
+        //        roleName = roles.RoleName.ToString();
+        //    return Ok(roles);
+        //}
 
         [HttpGet("{id}")]
         public virtual async Task<ActionResult<T>> Clone(int id)

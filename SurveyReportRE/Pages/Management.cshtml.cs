@@ -64,8 +64,8 @@ namespace ERPCore.Pages
         public void OnGet(string loadParams)
         {
             //var windowsIdentity = WindowsIdentity.GetCurrent();
-            var loginUser =    User?.Identity?.Name?.Replace(@"\", @"\\") ?? "Anonymous";
-            ViewData["LoginUser"] = loginUser;
+            //var loginUser =    User?.Identity?.Name?.Replace(@"\", @"\\") ?? "Anonymous";
+            //ViewData["LoginUser"] = loginUser;
             ViewData["IsSuperUser"] = IsSuperUser ? "true" : "false";
             ViewData["IsDebugMode"] = IsDebugMode ? "true" : "false";
             ViewData["NotifyEnv"] = NotifyEnv ? "true" : "false";

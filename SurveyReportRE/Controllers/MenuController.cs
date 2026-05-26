@@ -115,8 +115,15 @@ public class MenuController : BaseControllerApi<Menu>
                 }
             }
         }
-
-        return Ok(result);
+        bool isSuperUser = superUsers.Contains(loginAccount);
+        var roles = await _BaseRepository.GetUserRoles(loginAccount.Replace(DOMAIN_NAME, ""), isSuperUser);
+        if (roles != null)
+        //return Ok(roles);
+            return Ok(new { Menu = result, UserRoles = roles });
+        else
+        {
+            return Ok(new { UserRoles = roles });
+        }
     }
 
     public override async Task<ActionResult<List<dynamic>>> GetSystemScheme()

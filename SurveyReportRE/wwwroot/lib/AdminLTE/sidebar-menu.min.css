@@ -1564,7 +1564,23 @@ body.sidebar-collapse
         line-height: 10px
     }
 }
+#dropdown-menu {
+    width: 220px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    z-index: 9999;
+}
 
+    #dropdown-menu ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    #dropdown-menu li:hover {
+        background: #f5f5f5;
+    }
 .open:not(.dropup) > .animated-dropdown-menu {
     backface-visibility: visible !important;
     -webkit-animation: flipInX .7s both;

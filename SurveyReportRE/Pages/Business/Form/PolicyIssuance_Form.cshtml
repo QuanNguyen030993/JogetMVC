@@ -709,6 +709,7 @@ Note:
                             replies: 0,
                             fullText: x.content,
                             urgent: false,
+                            author: x.author,
                             time: parseToGMT7(x.createdDate, 0)
                         }));
                         state.comments = pinnedNotes;

@@ -46,10 +46,13 @@
                     <span class="notif-count" id="notifCount" style="display:none;">0</span>
                 </div>
                 <div class="navbar-nav user user-menu" style="display:contents;margin-right: 15%; margin-left: auto;">
-                    <div>
+                    <input id="rolename" type="hidden" />
+                </div>
 
-                        <input id="rolename" type="hidden" />
-            </div>
+                <div id="dropdown-menu" style="display:none; position:absolute; right:10px; top:50px;">
+                    <ul id="dropdownContent"></ul>
+                </div>
+
                 </div>
                 @* <p id="onlineState" class="status-button"> </p> *@
 
@@ -131,10 +134,8 @@
             nativeRemoveTab($tabDivId);
     });
 
-        var loginUser = `@Html.Raw(ViewData["LoginUser"])`;
+        //var loginUser = `@Html.Raw(ViewData["LoginUser"])`;
 
-        var loginDept = "";
-        var loginDisplayName = "";
 
         _isSuperUser =  `@Html.Raw(ViewData["IsSuperUser"])`;
         _isDebugMode = `@Html.Raw(ViewData["IsDebugMode"])`;
@@ -161,20 +162,21 @@
                  },
             });
         }
-        _loginUser = loginUser.replace("TOKIOMARINE\\", "");
-            $.ajax({
-                url: `/api/Users/GetUserRoles?accountName=${_loginUser}`,
-                type: 'GET',
-                async: false,
-                data: { accountName: loginUser },
-                success: function (response) {
-                    $("#rolename").text(response);
-                    _role = response;
-                },
-                error: function (xhr, status, error) {
-                    console.error('Error:', error);
-                }
-            });
+        // _loginUser = loginUser.replace("TOKIOMARINE\\", "");
+            // $.ajax({
+            //     url: `/api/Users/GetUserRoles?accountName=${_loginUser}`,
+            //     type: 'GET',
+            //     async: false,
+            //     data: { accountName: loginUser },
+            //     success: function (response) {
+            //         $("#rolename").text(response.RoleName);
+            //         _role = response.RoleName;
+            //         _displayName = response.DisplayName;
+            //     },
+            //     error: function (xhr, status, error) {
+            //         console.error('Error:', error);
+            //     }
+            // });
 
 
             var loadParams = `@Html.Raw(@ViewData["LoadParams"])`;
@@ -188,35 +190,40 @@
                 //    }, 1000);
             }
 
-            var marginTop = "margin-top:3px";
+        var marginTop = "margin-top:3px";
         var avatar = `./img/no-profile-icon.jpg`;
        $(".user.user-menu").append(`<div style="margin-right:5px;${marginTop}">
        <img src="${avatar}" class="user-image" style="border-radius:50%"
        width="25px" height="25px" alt="User Image"/> </div>
-       <div style="color: white;${marginTop}">
-       ${loginUser}</div>
+       <div id="accountLabel" style="color: white;${marginTop}">${_loginUser}</div>
+
        `);
-        // $(".user .user-menu-dropdown").append(`
-        //                                         <li class="user-header">
-        //                                          <img src="${avatar}" style= class="user-image" alt="User Image">
-        //                                             <p>
-        //                                                ${loginUser}
-        //                                             </p>
-        //                                         </li>
 
-        //                                         <!-- Menu Footer-->
-        //                                         <li class="user-footer">
-        //                                             <div class="pull-left">
 
-        //                                             </div>
-        //                                             <div class="pull-right">
-        //                                                 <div  id="logoutForm" style="float: right !important; margin-top: -7px;">
-        //                                                     <a type="submit" href="/Account/Logout" class="btn btn-default btn-flat">Log out</a>
-        //                                                 </div>
-        //                                             </div>
-        //                                         </li>`);
+        $("#dropdownContent").html(`
+        <li style="padding:10px; border-bottom:1px solid #eee;">
+            <bAccount Setting</b>
+        </li>
+        <li style="padding:10px;">
+            <div id="displayLabel"></div>
+            <div id="roleLabel"></div>
+        </li>
+        <li style="padding:10px; text-align:right;">
+            <a href="#" class="btn btn-default btn-sm">Close application</a>
+        </li>
+    `);
 
-        var url = '@ViewData["HostUrl"]'
+    $(".user-image").on("click", function (e) {
+        e.stopPropagation();
+        $("#dropdown-menu").toggle();
+    });
+
+    $(document).on("click", function () {
+        $("#dropdown-menu").hide();
+    });
+
+
+     var url = '@ViewData["HostUrl"]'
             // monitorConnection(url, 'onlineState', 10000);
 
     

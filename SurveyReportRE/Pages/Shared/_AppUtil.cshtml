@@ -696,7 +696,7 @@
             wrap.empty();
             const items = getCurrentComments();
             if (!items.length) {
-                wrap.append(`<div class="empty-state">Không có comment phù hợp với bộ lọc hiện tại.</div>`);
+                wrap.append(`<div class="empty-state">No comments.</div>`);
                 return;
             }
 
@@ -715,7 +715,7 @@
                   <div class="comment-head-left">
                     <div class="comment-meta">
                       <div class="comment-author-row">
-                        <span class="comment-author">${item.fromSection} - ${escapeHtml(item.author)} Added a comment - ${fmtTimeLocal(item.time)} </span>
+                        <span class="comment-author">${escapeHtml(item.author)} - Added a comment - ${fmtTimeLocal(item.time)} </span>
                         <span class="mini-badge ${badgeClassByType(item.type)}">${item.type}</span>
                         ${linkedPin}
                       </div>
@@ -957,7 +957,11 @@
                       }
                      var commentData = new Object();
                      commentData = ObjectPopulateKey(commentDataForm, true, false);
-                     commentData.CurrentDepartment = commentData.ToDepartment;
+                             commentData.FromDepartment = _role; // comment out
+                             // commentData.FromDepartment = "FO";
+                         commentData.CurrentDepartment = dept;
+                         commentData.Author = _displayName;
+                     // commentData.CurrentDepartment = commentData.ToDepartment;
                      commentData.RecordGuid = guid;
                      commentData.IsPinned = commentData.Type == "Pinned" ? true :  false;
                           store.insert(commentData)
@@ -1195,22 +1199,22 @@
                        $(`#${moduleKey}-actionForm_${dept}_${id}`).dxForm({
                        formData: parentForm.option("formData"),
                        labelLocation: "top",
-                       colCount: 3,
+                       colCount: 2,
                        width: "auto",
                        items: [
-                           {
-                               dataField: "toDepartment",
-                               label: { text: "To Department" },
-                               editorType: "dxSelectBox",
-                               editorOptions: {
-                                   dataSource: qtDeptModuleCode.filter(m => m !== dept),
-                                   value: parentForm.option("formData")?.toDepartment || qtDeptModuleCode.filter(m => m !== dept)[0],
-                                   width: 170,
-                                   onValueChanged: function (e) {
-                                       parentForm.updateData("toDepartment", e.value);
-                                   }
-                               }
-                           },
+                           // {
+                           //     dataField: "toDepartment",
+                           //     label: { text: "To Department" },
+                           //     editorType: "dxSelectBox",
+                           //     editorOptions: {
+                           //         dataSource: qtDeptModuleCode.filter(m => m !== dept),
+                           //         value: parentForm.option("formData")?.toDepartment || qtDeptModuleCode.filter(m => m !== dept)[0],
+                           //         width: 170,
+                           //         onValueChanged: function (e) {
+                           //             parentForm.updateData("toDepartment", e.value);
+                           //         }
+                           //     }
+                           // },
                            {
                                dataField: "type",
                                label: { text: "Type" },
@@ -1233,44 +1237,21 @@
                                label: { visible: false },
                                template: function (_, btnElement) {
                                    btnElement.addClass("mini-send-wrap");
+                                   //Raw render UI
                                    $("<div>")
-                                       .attr("id", `${moduleKey}-btnChatSend_${dept}`)
+                                       .attr("id", `${moduleKey}-btnChatSend_${dept}_${id}`)
                                        .appendTo(btnElement);
-                                   $(`#${moduleKey}-btnChatSend_${dept}`).dxButton({
+                                       $(`#${moduleKey}-btnChatSend_${dept}_${id}`).dxButton({
                                        text: "Send",
                                        type: "default",
                                        stylingMode: "contained",
                                        icon: "far fa-paper-plane",
-                                       // onClick: function () {
-                                       //     //sendComment();
-                                       // }
+                                       
                                    });
                                }
                            }
                        ]
                    });
-                   // function sendComment() {
-                   //     const currentFormData = parentForm.option("formData") || {};
-                   //     const content = (currentFormData.content || "").trim();
-                   //     if (!content) {
-                   //         DevExpress.ui.notify("Please enter comment content", "warning", 2000);
-                   //         return;
-                   //     }
-                   //     const payload = {
-                   //         id: currentFormData.id,
-                   //         fromDepartment: currentFormData.fromDepartment,
-                   //         toDepartment: currentFormData.toDepartment,
-                   //         type: currentFormData.type,
-                   //         content: currentFormData.content
-                   //     };
-                   //     console.log("Send payload:", payload);
-                   //     // TODO: call api here
-                   //     DevExpress.ui.notify("Message sent", "success", 1500);
-                   //     parentForm.updateData("content", "");
-                   //     $(`#${moduleKey}-commentEditor_${dept}`)
-                   //         .dxTextArea("instance")
-                   //         .option("value", "");
-                   // }
                }
            }
        ]
