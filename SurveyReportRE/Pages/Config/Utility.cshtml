@@ -431,7 +431,7 @@ LOW CODE VIEW DESIGNER MOCKUP
             .option("value");
 
         ajaxGet(`/api/Utility/GetViewContent/${moduleQuotation}/${viewName}`, null
-        ).then(res => parseSchema(res.content));
+        ).then(res => {console.log(res.content) ; parseSchema(res.content);});
 
     }
 
@@ -489,7 +489,7 @@ LOW CODE VIEW DESIGNER MOCKUP
     catch(ex){
 
         console.error(ex);
-
+        console.log(ex);
         DevExpress.ui.notify(
             "Parse failed",
             "error",

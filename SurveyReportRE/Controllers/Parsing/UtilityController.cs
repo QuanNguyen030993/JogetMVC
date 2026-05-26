@@ -82,6 +82,9 @@ namespace ERPCore.Controllers.Config
             {
                 success = true,
                 content = content.Replace("@","")
+                .Replace("dept", "'dept'")
+                .Replace("(quotationId)", "'quotationId'")
+                .Replace("(quotationGuid)", "'quotationGuid'")
             });
         }
 
