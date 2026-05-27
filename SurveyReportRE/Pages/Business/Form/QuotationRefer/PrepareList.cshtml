@@ -9,10 +9,10 @@
         mGridOption.isAllowRowMenu = true;
         
         var mGrid = new MGrid(null, $(`#dataGrid_@PrepareListModel.ModelName`), new PrepareListGridOption('@PrepareListModel.ModelName', "User", mGridOption), null);
-        var DS = mGrid.component.getDataSource();
-        DS.filter(["isArchived", "=", null], "or", ["isArchived", "=", false]);
-        mGrid.component.option("dataSource", DS);
-        mGrid.component.option("selection", { mode: "multiple"});
+        // var DS = mGrid.component.getDataSource();
+        // DS.filter(["isArchived", "=", null], "or", ["isArchived", "=", false]);
+        // mGrid.component.option("dataSource", DS);
+        // mGrid.component.option("selection", { mode: "multiple"});
     });
 </script>
 <div id="dataGrid_@PrepareListModel.ModelName"></div>

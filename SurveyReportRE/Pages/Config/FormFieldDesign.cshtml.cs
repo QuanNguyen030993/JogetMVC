@@ -4,12 +4,12 @@ using ERPCore.Models.Migration.Business.Config;
 
 namespace ERPCore.Pages
 {
-    public class UtilityModel : PageModel
+    public class FormFieldDesignModel : PageModel
     {
-        private readonly ILogger<UtilityModel> _logger;
+        private readonly ILogger<FormFieldDesignModel> _logger;
         public static string ModelName { get; set; } = "";
 
-        public UtilityModel(ILogger<UtilityModel> logger)
+        public FormFieldDesignModel(ILogger<FormFieldDesignModel> logger)
         {
             _logger = logger;
         }

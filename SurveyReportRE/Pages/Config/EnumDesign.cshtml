@@ -1,0 +1,246 @@
+﻿@page
+@model EnumDesignModel
+@{
+    Layout = null;
+}
+    <title>Low Code Dictionary Builder</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: #f5f7fb;
+        }
+
+        .layout {
+            display: flex;
+            height: 100vh;
+        }
+
+        .panel {
+            background: white;
+            overflow: auto;
+        }
+
+        .left {
+            width: 320px;
+            border-right: 1px solid #ddd;
+        }
+
+        .center {
+            flex: 1;
+            padding: 20px;
+        }
+
+        .right {
+            width: 320px;
+            border-left: 1px solid #ddd;
+            padding: 10px;
+        }
+
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            margin: 10px;
+        }
+
+        .card-title {
+            padding: 10px;
+            font-weight: bold;
+            background: #eef4ff;
+        }
+
+        .item {
+            padding: 8px;
+            cursor: pointer;
+            border-top: 1px solid #eee;
+        }
+
+            .item:hover {
+                background: #dbeafe;
+            }
+
+        .form-item {
+            margin-bottom: 15px;
+        }
+    </style>
+
+
+    <div class="layout">
+
+
+        <!-- LEFT -->
+        <div class="panel left" id="dictionaryPanel"></div>
+
+
+        <!-- CENTER -->
+        <div class="center">
+            <div id="formBuilder"></div>
+        </div>
+
+
+        <!-- RIGHT -->
+        <div class="panel right">
+            <h3>Properties</h3>
+            <div id="propertyPanel">Select field...</div>
+
+
+            <h3>JSON</h3>
+            <pre id="jsonBox" style="background:#111;color:#0f0;padding:10px;height:300px;overflow:auto"></pre>
+        </div>
+
+
+    </div>
+
+
+    <script>
+        ajaxGet(`/api/EnumData/GetAll`,null).done(res => {console.log(res)
+
+         function mapToDictionary(rawData){
+
+            const map = {};
+
+            rawData.forEach(row => {
+
+                // ✅ Group
+                const group = row.sysTableName || row.mappingField;
+
+                // ✅ Field
+                const field = row.mappingField || row.name || "Default";
+
+                const key = group + "|" + field;
+
+                if(!map[key]){
+                    map[key] = {
+                        group: group,
+                        field: field,
+                        items: []
+                    };
+                }
+
+                map[key].items.push({
+                    text: row.value,
+                    order: row.enumOrder ?? 999
+                });
+
+            });
+
+            // ✅ Convert to array + sort
+            return Object.values(map).map(g => ({
+                group: g.group,
+                field: g.field,
+                items: g.items
+                    .sort((a,b) => a.order - b.order)
+                    .map(x => x.text)
+            }));
+        }
+
+        var dictionaryData = mapToDictionary(res);
+
+        var formSchema = [];
+        var selectedField = null;
+        // =========================
+        // RENDER DICTIONARY
+        // =========================
+        function renderDictionary(){
+            var html = "";
+            dictionaryData.forEach(g => {
+                html += `<div class='card'>`;
+                html += `<div class='card-title'>${g.group}</div>`;
+                html += `<div style='padding:5px'>${g.field}</div>`;
+                g.items.forEach(i => {
+                    html += `<div class='item' onclick='addField("${g.field}",${JSON.stringify(g.items)})'>${i}</div>`;
+                });
+                html += `<div class='item' style='font-weight:bold;color:blue' onclick='addField("${g.field}",${JSON.stringify(g.items)})'>+ Add Field</div>`;
+                html += `</div>`;
+            });
+            $("#dictionaryPanel").html(html);
+        }
+        // =========================
+        // ADD FIELD
+        // =========================
+        function addField(field, options){
+            formSchema.push({
+                dataField: field,
+                editorType: "dxSelectBox",
+                visible: true,
+                items: options
+            });
+            renderForm();
+            renderJson();
+        }
+        // =========================
+        // RENDER FORM
+        // =========================
+        function renderForm(){
+            var html = "";
+            formSchema.forEach((f,i) => {
+                html += `<div class='form-item' onclick='selectField(${i})'>`;
+                html += `<label><b>${f.dataField}</b></label>`;
+                html += `<div id='field_${i}'></div>`;
+                html += `</div>`;
+            });
+            $("#formBuilder").html(html);
+            formSchema.forEach((f,i) => {
+                $("#field_"+i).dxSelectBox({
+                    dataSource: f.items || [],
+                    valueExpr: null
+                });
+            });
+        }
+        // =========================
+        // SELECT FIELD
+        // =========================
+        function selectField(index){
+            selectedField = index;
+            var field = formSchema[index];
+
+
+            var html = `
+                <div>
+                    <label>Editor Type</label>
+                    <div id='editorType'></div>
+                </div>
+                <div style='margin-top:10px'>
+                    <label>Visible</label>
+                    <div id='visibleSwitch'></div>
+                </div>
+            `;
+
+
+            $("#propertyPanel").html(html);
+
+
+            $("#editorType").dxSelectBox({
+                items:["dxSelectBox","dxTagBox","dxTextBox"],
+                value: field.editorType,
+                onValueChanged: function(e){
+                    field.editorType = e.value;
+                }
+            });
+
+
+            $("#visibleSwitch").dxSwitch({
+                value: field.visible,
+                onValueChanged: function(e){
+                    field.visible = e.value;
+                }
+            });
+        }
+
+        // =========================
+        // JSON
+        // =========================
+        function renderJson(){
+
+            $("#jsonBox").html(JSON.stringify(formSchema,null,2));
+        }
+
+        // INIT
+        renderDictionary();
+        renderForm();
+        renderJson();
+        });
+
+    </script>
+

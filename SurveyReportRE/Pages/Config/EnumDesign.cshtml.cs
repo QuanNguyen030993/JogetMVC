@@ -1,15 +1,15 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using ERPCore.Models.Migration.Config;
 using ERPCore.Models.Models.Parsing;
+using ERPCore.Models.Migration.Business.Config;
 
 namespace ERPCore.Pages
 {
-    public class EnumDataModel : PageModel
+    public class EnumDesignModel : PageModel
     {
-        private readonly ILogger<EnumDataModel> _logger;
+        private readonly ILogger<EnumDesignModel> _logger;
         public static string ModelName { get; set; } = "";
 
-        public EnumDataModel(ILogger<EnumDataModel> logger)
+        public EnumDesignModel(ILogger<EnumDesignModel> logger)
         {
             _logger = logger;
         }

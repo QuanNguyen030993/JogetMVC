@@ -703,14 +703,14 @@ var MGridOption = class MGridOption {
         //    grid.option("width", 1600);
         //    grid.updateDimensions();
         //}
-        stretchColumnsEvenly(e, {
-            targetWidth: window.innerWidth - _widthMenuWidth - _rightWindowPadding,
-            minWidthEach: 120,
-            excludeFields: [
-                // nếu bạn có cột action/checkbox riêng và muốn giữ nguyên
-                // ví dụ: "Actions", "Select"
-            ]
-        });
+        //stretchColumnsEvenly(e, {
+        //    targetWidth: window.innerWidth - _widthMenuWidth - _rightWindowPadding,
+        //    minWidthEach: 120,
+        //    excludeFields: [
+        //        // nếu bạn có cột action/checkbox riêng và muốn giữ nguyên
+        //        // ví dụ: "Actions", "Select"
+        //    ]
+        //});
         
         // Load saved layout configuration
         if (this.loadLayoutConfiguration) {
