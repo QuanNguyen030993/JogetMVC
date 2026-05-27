@@ -839,6 +839,7 @@ function createEditor(devExtremeItem, $container, $element, editorOptions) {
         case "dxFileUploader":
             {
                 var items = new Object();
+                items.isNotLoading = editorOptions?.isNotLoading || false;
                 items.id = editorOptions?.id || devExtremeItem.id;
                 items.guid = editorOptions?.guid || "";
                 items.moduleName = editorOptions?.moduleName || devExtremeItem.moduleName;

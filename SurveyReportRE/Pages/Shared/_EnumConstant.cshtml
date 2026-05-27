@@ -1,6 +1,6 @@
 ﻿
 <script>
-         var _enums = {
+      var _enums = {
       assignmentMode: [
         // { id: "auto", text: "Auto route (recommended)" },
         { id: "later", text: "Assign later" },
@@ -18,6 +18,14 @@
       reqType: [{id: 149 ,value: "New Quotation"}, {id: 146 ,value:"Renew Quotation"},{id: 147 ,value:"Endorsement"}, {id: 148 ,value:"Revise Quotation"} ],
       lineName: ["Fire & Property, BI", "Liability", "Cargo", "Engineering", "Motor"],
       businessChannel: ["Inward", "Direct (DIR)", "Agent (AGY)", "Broker (BRK)"],
-      reinsurance: [{id: 143, value: "FACOUT"}, {id: 144, value: "NO FACOUT"}, {id: 145, value: "Ichigenka"}]
+      reInsuranceType: []
     };
+
+
+    $.each(_enums, function(index, item) {
+        debugger
+    if (!item.length)
+            ajaxGet(`/api/EnumData/FetchEnum/${index}`).done(res => {if (res) _enums[index] = res;
+        });
+    });
 </script>

@@ -2,7 +2,8 @@
 @using Newtonsoft.Json
 @model Quotation_Request_FormModel
 @{
-   
+    string prefix = "qt";
+    string dept = "FO";
     ViewBag.Title = "Quotation";
     ViewData["Id"] = 0;
 }
@@ -103,20 +104,20 @@
     </div>
 
     <script>
-        (function () {
-            const clientQuery = `SELECT
+            var guid= crypto.randomUUID();
+            var clientQuery = `SELECT
                                     c.Id,
                                     c.ClientCode,
                                     JSON_VALUE(c.ClientName, '$.Eng')  AS EnglishName,
                                     JSON_VALUE(c.ClientName, '$.Viet') AS VietnameseName,
                                     c.BranchId AS BranchId
                                 FROM Client c
-                                WHERE c.Deleted = 0;`;
+                            WHERE c.Deleted = 0;`;
 
-            const DEPTS = ["RE"];
-            const REMEMS = ["quan.nh", "huan.lt", "minh.lh"];
+            var DEPTS = ["RE"];
+            var REMEMS = ["quan.nh", "huan.lt", "minh.lh"];
 
-            const ATTACHMENT_TYPES = [
+            var ATTACHMENT_TYPES = [
                 { id: "supporting_document", text: "Supporting Document" },
                 { id: "quotation_file", text: "Quotation File" },
                 { id: "mail_file", text: "Mail File" }
@@ -141,22 +142,22 @@
             }
 
             function ensurePicKeys(obj) {
-                const o = { ...obj };
+                var o = { ...obj };
                 DEPTS.forEach(k => { if (!(k in o)) o[k] = null; });
                 return o;
             }
 
             function updatePicMap(form, dept, account) {
-                const fd = form.option("formData") || {};
-                const current = ensurePicKeys(safeParseJson(fd.PIC));
+                var fd = form.option("formData") || {};
+                var current = ensurePicKeys(safeParseJson(fd.PIC));
                 current[dept] = account || null;
                 form.option("formData.PIC", JSON.stringify(current));
             }
 
             function initPicIfEmpty(form) {
-                const fd = form.option("formData") || {};
-                const pic = safeParseJson(fd.PIC);
-                const hasAny = pic && Object.keys(pic).length > 0;
+                var fd = form.option("formData") || {};
+                var pic = safeParseJson(fd.PIC);
+                var hasAny = pic && Object.keys(pic).length > 0;
 
                 if (!hasAny) {
                     form.option("formData.PIC", JSON.stringify({
@@ -185,7 +186,7 @@
                     file: null,
                     fileName: "",
                     fileSize: 0,
-                    fileType: "",
+                fileType: "",
                     attachmentType: null,
                     note: "",
                     uploadedPath: "",
@@ -195,9 +196,9 @@
 
             function formatFileSize(bytes) {
                 if (!bytes || bytes <= 0) return "";
-                const units = ["B", "KB", "MB", "GB"];
-                let i = 0;
-                let val = bytes;
+                var units = ["B", "KB", "MB", "GB"];
+                var i = 0;
+                var val = bytes;
                 while (val >= 1024 && i < units.length - 1) {
                     val /= 1024;
                     i++;
@@ -220,7 +221,7 @@
                     attachmentType: x.attachmentType,
                     fileName: x.fileName,
                     fileSize: x.fileSize,
-                    fileType: x.fileType,
+                fileType: x.fileType,
                     uploadedPath: x.uploadedPath || "",
                     uploadedName: x.uploadedName || "",
                     note: x.note || ""
@@ -234,7 +235,7 @@
             }
 
             function validateAttachments() {
-                const invalid = vm.attachments.some(x => !x.fileName || !x.attachmentType);
+                var invalid = vm.attachments.some(x => !x.fileName || !x.attachmentType);
                 if (invalid) {
                     DevExpress.ui.notify("Attachment row must have file and document type.", "warning", 2000);
                     return false;
@@ -244,7 +245,7 @@
 
             DevExpress.localization.locale("en");
 
-            const vm = {
+            var vm = {
                 subject: "",
                 reqPerson: _loginUser,
             reqDate: new Date(2026, 0, 21), // 21-01-2026
@@ -260,7 +261,7 @@
             }
 
             function buildSummary() {
-                const modeLabel =
+                var modeLabel =
                     vm.assignmentMode === "auto" ? "AUTO ROUTE" :
                     vm.assignmentMode === "later" ? "ASSIGN LATER" :
                     "MANUAL ASSIGN";
@@ -333,10 +334,10 @@
                                         item.editorOptions = new Object();
                                         item.editorOptions.dataSource = e.component.option("dataSource");
 
-                                        const dataGrid = makeTheClientLocationGrid(item, e, that, $("<div>"), function (selectedItems) {
+                                        var dataGrid = makeTheClientLocationGrid(item, e, that, $("<div>"), function (selectedItems) {
                                             var hasSelection = selectedItems.selectedRowKeys.length > 0;
                                             if (!hasSelection) return;
-                                            const selectedRow = selectedItems.selectedRowsData[0];
+                                            var selectedRow = selectedItems.selectedRowsData[0];
                                             e.component.option("value", selectedItems.selectedRowKeys[0]);
                                             that.formInstance.updateData("clientName", selectedRow.englishName);
                                             e.component.close();
@@ -350,6 +351,7 @@
                             { dataField: "requestTypeId", label: { text: "Request Type" }, editorType: "dxSelectBox", isRequired: true, editorOptions: makeSelectBoxEditorOptions(_enums.reqType) },
                             { dataField: "policyNo", label: { text: "Policy No" }, editorType: "dxTextBox" },
                             { dataField: "lineName", editorType: "dxSelectBox", editorOptions: { items: _enums.lineName, searchEnabled: true } },
+                            { dataField: "lineCode", editorType: "dxTextBox", visible: true, editorOptions: { readOnly: true } },
                             { dataField: "productName", editorType: "dxTextBox", visible: false, editorOptions: { readOnly: true } },
                             {
                                 dataField: "productId",
@@ -373,26 +375,28 @@
                                     }
                                 }
                             },
+                            { dataField: "productCode", editorType: "dxTextBox", visible: true, editorOptions: { readOnly: true } },
                             { dataField: "businessOccupation", label: { text: "Business Occupation" }, editorType: "dxTextBox" },
                             { dataField: "dueDate", editorType: "dxDateBox", editorOptions: { displayFormat: "dd-MM-yyyy" } },
                             { dataField: "businessChannel", editorType: "dxSelectBox", editorOptions: { items: _enums.businessChannel } },
-                            { dataField: "reinsuranceId", label: { text: "Reinsurance" }, editorType: "dxSelectBox", editorOptions: { valueExpr: "id", displayExpr: "value", items: _enums.reinsurance } },
+                            { dataField: "reinsuranceId", label: { text: "Reinsurance" }, editorType: "dxSelectBox", editorOptions: { valueExpr: "id", displayExpr: "value", items: _enums.reInsuranceType } },
 
                             {
                                 itemType: "simple",
                                 colSpan: 2,
+                                visible: false,
                                 label: { text: "Is Survey ?" },
                                 template: function (data, itemElement) {
-                                    const form = data.component;
-                                    const fd = form.option("formData") || {};
+                                    var form = data.component;
+                                    var fd = form.option("formData") || {};
 
-                                    const $wrap = $("<div>").addClass("survey-field-wrap");
-                                    const $row = $("<div>").addClass("survey-field-row").appendTo($wrap);
+                                    var $wrap = $("<div>").addClass("survey-field-wrap");
+                                    var $row = $("<div>").addClass("survey-field-row").appendTo($wrap);
 
-                                    const $switchHost = $("<div>").appendTo($row);
+                                    var $switchHost = $("<div>").appendTo($row);
                                     $("<div>").addClass("survey-field-spacer").appendTo($row);
 
-                                    const $accWrap = $("<div>").addClass("survey-acc-wrap").appendTo($wrap);
+                                    var $accWrap = $("<div>").addClass("survey-acc-wrap").appendTo($wrap);
 
                                     $switchHost.dxSwitch({
                                         value: !!fd.surveyNeeded,
@@ -400,19 +404,19 @@
                                             form.option("formData.surveyNeeded", e.value);
                                             $accWrap.toggle(!!e.value);
 
-                                            const acc = $accWrap.find(".survey-acc").dxAccordion("instance");
+                                            var acc = $accWrap.find(".survey-acc").dxAccordion("instance");
                                             if (acc) acc.option("selectedIndex", e.value ? 0 : -1);
                                         }
                                     });
 
-                                    const $acc = $("<div>").addClass("survey-acc").appendTo($accWrap);
+                                    var $acc = $("<div>").addClass("survey-acc").appendTo($accWrap);
 
                                     function updatePic(dept, account) {
-                                        const current = ensurePicKeys(safeParseJson(form.option("formData.PIC")));
+                                        var current = ensurePicKeys(safeParseJson(form.option("formData.PIC")));
                                         current[dept] = account || null;
                                         form.option("formData.PIC", JSON.stringify(current));
 
-                                        const picEditor = form.getEditor?.("PIC");
+                                        var picEditor = form.getEditor?.("PIC");
                                         if (picEditor) picEditor.option("value", form.option("formData.PIC"));
                                     }
 
@@ -422,22 +426,22 @@
                                         selectedIndex: fd.surveyNeeded ? 0 : -1,
                                         animationDuration: 180,
                                         dataSource: [{ key: "survey", title: "SURVEY PIC" }],
-                                        itemTitleTemplate: (it) => $("<div>").addClass("acc-title").text(it.title),
+                                    itemTitleTemplate: (it) => $("<div>").addClass("acc-title").text(it.title),
                                         itemTemplate: (it, idx, el) => {
-                                            const $body = $("<div>").addClass("acc-body");
+                                            var $body = $("<div>").addClass("acc-body");
                                             $("<div>").text("Title").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
-                                            const $preview = $("<div>").css("marginTop", 10).appendTo($body);
+                                            var $preview = $("<div>").css("marginTop", 10).appendTo($body);
 
                                             fd.reTitle = `Request survey to ${fd.clientName} by ${_loginUser}`;
 
                                             $("<div>").text("Department").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
-                                            const $dept = $("<div>").css("marginTop", 10).appendTo($body);
+                                            var $dept = $("<div>").css("marginTop", 10).appendTo($body);
 
                                             $("<div>").text("Member").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
-                                            const $accText = $("<div>").css("marginTop", 10).appendTo($body);
+                                            var $accText = $("<div>").css("marginTop", 10).appendTo($body);
 
                                             $("<div>").text("Message to RE").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
-                                            const $MsgText = $("<div>").css("marginTop", 10).appendTo($body);
+                                            var $MsgText = $("<div>").css("marginTop", 10).appendTo($body);
 
                                             $dept.dxSelectBox({
                                                 items: DEPTS,
@@ -503,10 +507,10 @@
                                         var item = this;
                                         item.editorOptions = new Object();
                                         item.editorOptions.dataSource = e.component.option("dataSource");
-                        const dataGrid = makeTheWorkflowGrid(item, e, that, $("<div>"), function(selectedItems){
+                        var dataGrid = makeTheWorkflowGrid(item, e, that, $("<div>"), function(selectedItems){
                                             var hasSelection = selectedItems.selectedRowKeys.length > 0;
                                             if (!hasSelection) return;
-                                            const selectedRow = selectedItems.selectedRowsData[0];
+                                            var selectedRow = selectedItems.selectedRowsData[0];
                                             e.component.option("value", selectedItems.selectedRowKeys[0].id);
 
                                             ajaxGet(`/api/WorkflowDefinition/GetStepsList/${selectedRow.guid}`)
@@ -570,6 +574,43 @@
                             }
                         ]
                     }
+                    ,{
+                            dataField: "@prefix" === "@prefix" ? "quotation" : "document", editorType: "dxFileUploader"
+                            ,
+                            editorOptions: {
+                                name: "files"
+                            }
+                            , template: function (data, itemElement) {
+                                    var item = new Object();
+                                    var moduleKey = "@prefix";
+                                    item.editorType = "dxFileUploader";
+                                    item.moduleName = moduleKey + "_default"; item.sectionName =  "@dept";
+                                    item.id = @ViewData["Id"];
+                                    item.guid = guid;
+                                    item.isNotLoading = true;
+                                    createEditor(item, itemElement, $(`<div>`), item);
+                            }
+
+                        },
+                        {
+                            dataField: "supportingDocument", editorType: "dxFileUploader"
+                            ,
+                            editorOptions: {
+                                    name: "sdfiles"
+                            }
+                            , template: function (data, itemElement) {
+                                    var item = new Object();
+                                var moduleKey = "@prefix";
+                                    item.editorType = "dxFileUploader";
+                                    item.moduleName = moduleKey+ "_supportingDoc"; item.sectionName =  "@dept";
+                                    item.id = @ViewData["Id"];
+                                    item.guid = guid;
+                                item.isNotLoading = true;
+                                createEditor(item, itemElement, $(`<div>`), item);
+                            }
+
+                        }
+
                 ],
                 onInitialized(e) {
                     buildSummary();
@@ -578,149 +619,148 @@
                     syncAttachmentToForm();
                 }
             });
-
             // var attachmentStore = new DevExpress.data.ArrayStore({
             //     key: "_key",
             //     data: vm.attachments
             // });
 
-            $("#attachmentGrid").dxDataGrid({
-                dataSource: [],
-                width:"100%",
-                keyExpr: "_key",
-                showBorders: true,
-                columnAutoWidth: true,
-                hoverStateEnabled: true,
-                repaintChangesOnly: true,
-                noDataText: "No attachment. Click 'Add row' to insert.",
-                paging: false,
-                editing: {
-                    mode: "cell",
-                    allowAdding: true,
-                    allowUpdating: false,
-                    allowDeleting: false,
-                    useIcons: true
-                },
-                columns: [
-                    {
-                        caption: "Upload File",
-                        width: 500,
-                        allowSorting: false,
-                        allowFiltering: false,
-                        cellTemplate: function (container, options) {
-                                const row = options.data;
-                                const rowIndex = options.rowIndex;
-                                const newGuid = generateGUID();
-                                const $wrap = $("<div>").css({
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    gap: "6px"
-                                });
-                                const uploadId = "uploadFile_" + rowIndex;
-                                const $uploader = $("<div>").attr("id", uploadId).appendTo($wrap);
-                                const $meta = $("<div>").addClass("att-file-meta").appendTo($wrap);
-                                var item = {};
-                                item.editorType = "dxFileUploader";
-                                item.moduleName = "qt";
-                                item.sectionName = "Quotation";
-                                const opts = resolveUploadOptions("uploadFile", item);
-                                $uploader.dxFileUploader({
-                                    multiple: false,
-                                    accept: options.accept || "*/*",
-                                    selectButtonText: "Upload File",
-                                    dropZone: "#" + uploadId,
-                                    labelText: "",
-                                    uploadMode: "instantly",
-                                    uploadUrl: "/api/Document/AsyncUploadFile",
-                                    name: "files",
-                                    showFileList: true,
-                                    uploadHeaders: {
-                                        Folder: opts.folder,
-                                        Guid: newGuid
-                                    },
-                                    onUploadStarted: function (e) {
-                                        $uploader.css("position", "relative");
-                                        $("#" + uploadId + " .previewLoader").remove();
-                                        $("<div>")
-                                            .addClass("previewLoader")
-                                            .appendTo("#" + uploadId)
-                                            .dxLoadPanel({
-                                                message: "File loading...",
-                                                visible: true,
-                                                shading: true,
-                                                shadingColor: "rgba(255,255,255,0.7)",
-                                                showPane: true,
-                                                closeOnOutsideClick: false,
-                                                position: { of: "#" + uploadId }
-                                            });
-                                    },
-                                    onUploaded: function (e) {
-                                        $("#" + uploadId + " .previewLoader").remove();
-                                        let responseObject = {};
-                                        try {
-                                            responseObject = JSON.parse(e.request.response || "{}");
-                                        } catch (ex) {
-                                            console.error("Response parse error", ex);
-                                        }
-                                        row.fileGuid = newGuid;
-                                        row.fileName = e.file.name;
-                                        row.fileSize = e.file.size;
-                                        row.fileType = e.file.type;
-                                        row.uploadResponse = responseObject;
-                                        $meta.text(`${row.fileName} (${formatFileSize(row.fileSize)})`);
-                                    },
-                                    onUploadError: function (e) {
-                                        $("#" + uploadId + " .previewLoader").remove();
-                                        $meta.text("Upload failed");
-                                        console.error(e);
-                                    }
-                                });
-                                if (row.fileName) {
-                                    $meta.text(`${row.fileName} (${formatFileSize(row.fileSize || 0)})`);
-                                }
-                                $(container).append($wrap);
-                        }
-                    },
-                    {
-                        dataField: "attachmentType",
-                        caption: "Document Type",
-                        width: 240,
-                        lookup: {
-                            dataSource: ATTACHMENT_TYPES,
-                            valueExpr: "id",
-                            displayExpr: "text"
-                        },
-                        validationRules: [
-                            { type: "required", message: "Document Type is required" }
-                        ]
-                    }
-                ],
-                toolbar: {
-                    items: [
-                        {
-                            location: "before",
-                            widget: "dxButton",
-                            options: {
-                                icon: "add",
-                                text: "Add row",
-                                type: "default",
-                                onClick: function () {
-                                    $("#attachmentGrid").dxDataGrid("instance").addRow();
-                                }
-                            }
-                        }
-                    ]
-                }
-            });
 
-            const assigneeStore = new DevExpress.data.ArrayStore({ key: "_key", data: vm.assignees });
+
+            var assigneeStore = new DevExpress.data.ArrayStore({ key: "_key", data: vm.assignees });
 
             $("#assigneeList").dxDataGrid({
                 dataSource: assigneeStore,
                 keyExpr: "_key",
                 showBorders: true,
                 columnAutoWidth: true,
-                hoverStateEnabled: true,
+                hoverStateEnabled: true,            // $("#attachmentGrid").dxDataGrid({
+            //     dataSource: [],
+            //     width:"100%",
+            //     keyExpr: "_key",
+            //     showBorders: true,
+            //     columnAutoWidth: true,
+            //     hoverStateEnabled: true,
+            //     repaintChangesOnly: true,
+            //     noDataText: "No attachment. Click 'Add row' to insert.",
+            //     paging: false,
+            //     editing: {
+            //         mode: "cell",
+            //         allowAdding: true,
+            //         allowUpdating: false,
+            //     allowDeleting:false,
+            //         useIcons: true
+            //     },
+            //     columns: [
+            //         {
+            //             caption: "Upload File",
+            //             width: 500,
+            //             allowSorting: false,
+            //             allowFiltering: false,
+            //             cellTemplate: function (container, options) {
+            //                     var row = options.data;
+            //                     var rowIndex = options.rowIndex;
+            //                     var newGuid = generateGUID();
+            //                     var $wrap = $("<div>").css({
+            //                         display: "flex",
+            //                         flexDirection: "column",
+            //                         gap: "6px"
+            //                     });
+            //                     var uploadId = "uploadFile_" + rowIndex;
+            //                     var $uploader = $("<div>").attr("id", uploadId).appendTo($wrap);
+            //                     var $meta = $("<div>").addClass("att-file-meta").appendTo($wrap);
+            //                     var item = {};
+            //                     item.editorType = "dxFileUploader";
+            //                     item.moduleName = "@prefix";
+            //                     item.sectionName = "Quotation";
+            //                     var opts = resolveUploadOptions("uploadFile", item);
+            //                     $uploader.dxFileUploader({
+            //                         multiple: false,
+            //                         accept: options.accept || "*/*",
+            //                         selectButtonText: "Upload File",
+            //                         dropZone: "#" + uploadId,
+            //                         labelText: "",
+            //                         uploadMode: "instantly",
+            //                         uploadUrl: "/api/Document/AsyncUploadFile",
+            //                         name: "files",
+            //                         showFileList: true,
+            //                         uploadHeaders: {
+            //                             Folder: opts.folder,
+            //                             Guid: newGuid
+            //                         },
+            //                         onUploadStarted: function (e) {
+            //                             $uploader.css("position", "relative");
+            //                             $("#" + uploadId + " .previewLoader").remove();
+            //                             $("<div>")
+            //                                 .addClass("previewLoader")
+            //                                 .appendTo("#" + uploadId)
+            //                                 .dxLoadPanel({
+            //                                     message: "File loading...",
+            //                                     visible: true,
+            //                                     shading: true,
+            //                                     shadingColor: "rgba(255,255,255,0.7)",
+            //                                     showPane: true,
+            //                                     closeOnOutsideClick: false,
+            //                                     position: { of: "#" + uploadId }
+            //                                 });
+            //                         },
+            //                         onUploaded: function (e) {
+            //                             $("#" + uploadId + " .previewLoader").remove();
+            //                             var responseObject = {};
+            //                             try {
+            //                                 responseObject = JSON.parse(e.request.response || "{}");
+            //                             } catch (ex) {
+            //                                 console.error("Response parse error", ex);
+            //                             }
+            //                             row.fileGuid = newGuid;
+            //                             row.fileName = e.file.name;
+            //                             row.fileSize = e.file.size;
+            //                         row.fileType = e.file.type;
+            //                             row.uploadResponse = responseObject;
+            //                             $meta.text(`${row.fileName} (${formatFileSize(row.fileSize)})`);
+            //                         },
+            //                         onUploadError: function (e) {
+            //                             $("#" + uploadId + " .previewLoader").remove();
+            //                             $meta.text("Upload failed");
+            //                             console.error(e);
+            //                         }
+            //                     });
+            //                     if (row.fileName) {
+            //                         $meta.text(`${row.fileName} (${formatFileSize(row.fileSize || 0)})`);
+            //                     }
+            //                     $(container).append($wrap);
+            //             }
+            //         },
+            //         {
+            //             dataField: "attachmentType",
+            //             caption: "Document Type",
+            //             width: 240,
+            //             lookup: {
+            //                 dataSource: ATTACHMENT_TYPES,
+            //                 valueExpr: "id",
+            //                 displayExpr: "text"
+            //             },
+            //             validationRules: [
+            //                 { type: "required", message: "Document Type is required" }
+            //             ]
+            //         }
+            //     ],
+            //     toolbar: {
+            //         items: [
+            //             {
+            //                 location: "before",
+            //                 widget: "dxButton",
+            //                 options: {
+            //                     icon: "add",
+            //                     text: "Add row",
+            //                     type: "default",
+            //                     onClick: function () {
+            //                         $("#attachmentGrid").dxDataGrid("instance").addRow();
+            //                     }
+            //                 }
+            //             }
+            //         ]
+            //     }
+            // });
                 noDataText: "No manual assignee entry. Switch to Manual assign and click New.",
                 paging: { pageSize: 10 },
                 pager: { showInfo: true },
@@ -743,7 +783,7 @@
                         buttons: [
                             { hint: "Edit", icon: "edit", onClick(e) { openPopupForEdit(e.row.data); } },
                             {
-                                hint: "Delete", icon: "trash",
+                                hint: "Devare", icon: "trash",
                                 onClick(e) {
                                     assigneeStore.remove(e.row.data._key);
                                     $("#assigneeList").dxDataGrid("instance").refresh();
@@ -785,8 +825,8 @@
                 }
             });
 
-            let popupMode = "new";
-            let editingKey = null;
+            var popupMode = "new";
+            var editingKey = null;
 
             $("#assigneePopup").dxPopup({
                 width: 920,
@@ -854,20 +894,20 @@
                             text: "Save",
                             type: "default",
                             onClick: function () {
-                                const form = $("#assignBox").dxForm("instance");
-                                const result = form.validate();
+                                var form = $("#assignBox").dxForm("instance");
+                                var result = form.validate();
                                 if (!result.isValid) {
                                     DevExpress.ui.notify("Please fill required fields.", "error", 1500);
                                     return;
                                 }
 
-                                const data = form.option("formData");
+                                var data = form.option("formData");
                                 data._key = data.to;
 
                                 if (popupMode === "new") {
                                     vm.assignees.push({ ...data });
                                 } else {
-                                    const idx = vm.assignees.findIndex(x => x._key === editingKey);
+                                    var idx = vm.assignees.findIndex(x => x._key === editingKey);
                                     if (idx >= 0) vm.assignees[idx] = { ...data };
                                 }
 
@@ -912,7 +952,7 @@
                               _enums.assignee.push(...res.data);
                           
                         });
-                          const popup = $("#assigneePopup").dxPopup("instance");
+                          var popup = $("#assigneePopup").dxPopup("instance");
                             popup.option("title", "New Assignee Entry");
                             popup.show();
                
@@ -928,17 +968,17 @@
                 editingKey = row._key;
                 currentEntry = { ...row };
 
-                const popup = $("#assigneePopup").dxPopup("instance");
+                var popup = $("#assigneePopup").dxPopup("instance");
                 popup.option("title", "Edit Assignee Entry");
                 popup.show();
             }
 
             function refreshAssignmentUI() {
-                const grid = $("#assigneeList").dxDataGrid("instance");
-                const btnNew = $("#btnNewAssignee").dxButton("instance");
-                const btnClear = $("#btnClearAssignee").dxButton("instance");
+                var grid = $("#assigneeList").dxDataGrid("instance");
+                var btnNew = $("#btnNewAssignee").dxButton("instance");
+                var btnClear = $("#btnClearAssignee").dxButton("instance");
 
-                const enabled = isManual();
+                var enabled = isManual();
                 btnNew.option("disabled", !enabled);
                 btnClear.option("disabled", !enabled);
                 grid.option("disabled", !enabled);
@@ -947,8 +987,8 @@
             refreshAssignmentUI();
 
             // window.getQuotationRequestPayload = function () {
-            //     const formIns = $("#quotationRequestForm").dxForm("instance");
-            //     const formData = formIns.option("formData") || {};
+            //     var formIns = $("#quotationRequestForm").dxForm("instance");
+            //     var formData = formIns.option("formData") || {};
 
             //     formData.attachments = buildAttachmentPayload();
             //     formData.assignees = vm.assignees;
@@ -957,12 +997,11 @@
             // };
 
             // window.validateQuotationRequestForm = function () {
-            //     const formIns = $("#quotationRequestForm").dxForm("instance");
-            //     const r1 = formIns.validate();
-            //     const r2 = validateAttachments();
+            //     var formIns = $("#quotationRequestForm").dxForm("instance");
+            //     var r1 = formIns.validate();
+            //     var r2 = validateAttachments();
             //     return !!(r1.isValid && r2);
             // };
 
-        })();
     </script>
 </body>

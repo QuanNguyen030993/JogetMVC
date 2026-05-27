@@ -90,21 +90,19 @@
         <div class="panel left" id="dictionaryPanel"></div>
 
 
-        <!-- CENTER -->
-        <div class="center">
-            <div id="formBuilder"></div>
-        </div>
+    <!-- CENTER: GRID FIELD DROP -->
+    <div class="panel center">
+        <h3>DataGrid Field Mapping</h3>
+        <div id="gridFields"></div>
+    </div>
 
+    <!-- RIGHT: CONFIG -->
+    <div class="panel right">
+        <h3>Field Config</h3>
+        <div id="configPanel"></div>
+        <button id="btnSave">Save Mapping</button>
+    </div>
 
-        <!-- RIGHT -->
-        <div class="panel right">
-            <h3>Properties</h3>
-            <div id="propertyPanel">Select field...</div>
-
-
-            <h3>JSON</h3>
-            <pre id="jsonBox" style="background:#111;color:#0f0;padding:10px;height:300px;overflow:auto"></pre>
-        </div>
 
 
     </div>
@@ -113,14 +111,20 @@
     <script>
         var dictionaryData = [];
         var formSchema = [];
+        var gridFields = [];
         var selectedField = null;
 
         var resResponse = [];
         var that = new Object();
         that.ModelName = "EnumData";
+
+        var thatdg = new Object();
+        thatdg.ModelName = "DataGridConfig";
         var ds = makeBasicDataSource(that, true);
+        var dsdg = makeBasicDataSource(thatdg, true);
 
         var store = ds;
+        var storeDsdg = dsdg;
         function addFieldManual(){
 
         var fieldName = $("#txtFieldName").val();
@@ -159,10 +163,10 @@
             reload();
         }
 
-                function renderJson(){
+        //         function renderJson(){
 
-            $("#jsonBox").html(JSON.stringify(formSchema,null,2));
-        }
+        //     $("#jsonBox").html(JSON.stringify(formSchema,null,2));
+        // }
             function addGroup(){
 
         var groupName = $("#txtGroupName").val();
@@ -268,28 +272,230 @@
             $("#dictionaryPanel").html(html);
         }
 
-           function renderForm(){
-            var html = "";
-            // formSchema.forEach((f,i) => {
-            //     html += `<div class='form-item' onclick='selectField(${i-1})'>`;
-            //     html += `<label><b>${f.dataField}</b></label>`;
-            //     html += `<div id='field_${i}'></div>`;
-            //     html += `</div>`;
-            // });
-            // $("#formBuilder").html(html);
-            // formSchema.forEach((f,i) => {
-            //     $("#field_"+i).dxSelectBox({
-            //         dataSource: f.items || [],
-            //         valueExpr: null
-            //     });
-            // });
+        //    function renderForm(){
+        //     var html = "";
+        //     // formSchema.forEach((f,i) => {
+        //     //     html += `<div class='form-item' onclick='selectField(${i-1})'>`;
+        //     //     html += `<label><b>${f.dataField}</b></label>`;
+        //     //     html += `<div id='field_${i}'></div>`;
+        //     //     html += `</div>`;
+        //     // });
+        //     // $("#formBuilder").html(html);
+        //     // formSchema.forEach((f,i) => {
+        //     //     $("#field_"+i).dxSelectBox({
+        //     //         dataSource: f.items || [],
+        //     //         valueExpr: null
+        //     //     });
+        //     // });
+        // }
+
+    // function renderGrid(){
+
+    //     var html="";
+
+    //     gridFields.forEach((f,i)=>{
+
+    //         html+=`<div class='field'
+    //             onclick='selectField("${f.dataField}")'
+    //             ondrop='dropEnum("${f.dataField}")'
+    //             ondragover='allowDrop(event)'>
+
+    //             <b>${f.dataField}</b>
+    //             <div style='color:gray'>${f.formItem?.enum||"none"}</div>
+
+    //             <div id='preview_${i}' class='preview-box'></div>
+
+    //         </div>`;
+    //     });
+
+    //     $('#gridFields').html(html);
+
+    //     // ✅ render preview dxSelectBox
+    //     gridFields.forEach((f,i)=>{
+
+    //         if(!f.formItem?.enum) return;
+
+    //         var enumObj = dictionaryData.find(x=>x.group===f.formItem.enum);
+
+    //         if(!enumObj) return;
+
+    //         var editor = f.formItem.multi ? "dxTagBox" : "dxSelectBox";
+
+    //         // $("#preview_"+i){
+    //         //     dataSource: enumObj.items,
+    //         //     searchEnabled: true
+    //         // };
+
+    //     });
+    // }
+        function renderGrid(){
+
+        var html="";
+        var groupMap = {};
+
+    gridFields.forEach(f => {
+        if(!groupMap[f.sysTableId]){
+            groupMap[f.sysTableId] = [];
         }
+        groupMap[f.sysTableId].push(f);
+    });
+
+    // ✅ render theo group
+    Object.keys(groupMap).forEach(groupId => {
+
+        html += `
+            <div style='margin-bottom:20px'>
+                <div style='font-weight:bold;
+                            background:#eef4ff;
+                            padding:10px;
+                            border-radius:8px'>
+                    Group: ${groupId}
+                </div>
+        `;
+
+        groupMap[groupId].forEach((f,i) => {
+
+                var parsed = null;
+                try{
+                    parsed = parseParamsByteArrAsObject(f.formItem);
+                }catch(e){}
+
+                html += `
+                <div class='field'
+                    ondrop='dropEnum("${f.dataField}")'
+                    ondragover='allowDrop(event)'>
+
+                    <b>${f.dataField}</b>
+
+                    <div style='color:gray'>
+                        ${parsed?.enum || "none"}
+                    </div>
+
+                    <div id='ddl_${f.id}'></div>
+                    <div id='preview_${f.id}' class='preview-box'></div>
+
+                </div>`;
+            });
+
+            html += `</div>`;
+        });
+
+    $("#gridFields").html(html);
+
+        // ✅ init dxSelectBox cho từng field
+        // gridFields.forEach((f,i)=>{
+        //     $("#ddl_"+i).dxSelectBox({
+        //         dataSource: dictionaryData.map(x=>x.group),
+        //         value: f.formItem?.enum,
+        //         placeholder: "Select Enum",
+        //         onValueChanged: function(e){
+        //             f.formItem = f.formItem || {};
+        //             f.formItem.enum = e.value;
+        //             var itemField = gridFields.find(f => f.dataField == f.dataField);
+        //             var data = new Object();
+        //             data.formItem = JSON.stringify({ enum: e.value });
+        //             storeDsdg.update(f.id, data)
+        //             // renderGrid();
+        //         }
+        //     });
+
+        // });
+        gridFields.forEach(f => {
+
+        var parsed = null;
+        try{
+            parsed = parseParamsByteArrAsObject(f.formItem);
+        }catch(e){}
+
+            $("#ddl_"+f.id).dxSelectBox({
+                dataSource: dictionaryData.map(x => x.group),
+                value: parsed?.enum,
+                placeholder: "Select Enum",
+
+                onValueChanged: function(e){
+
+                    var newObj = {
+                        enum: e.value
+                    };
+
+                    // ✅ SAVE DB
+                    storeDsdg.update(f.id, {
+                        formItem: JSON.stringify(newObj)
+                    });
+
+                    f.formItem = JSON.stringify(newObj);
+
+             
+                    reload();
+                }
+            });
+
+        });
+
+
+        // // ✅ render preview control
+        // gridFields.forEach((f,i)=>{
+
+        //     if(!f.formItem?.enum) return;
+
+        //     var enumObj = dictionaryData.find(x=>x.group===f.formItem.enum);
+        //     if(!enumObj) return;
+
+        //     if(f.formItem?.multi){
+
+        //         $("#preview_"+i).dxTagBox({
+        //             dataSource: enumObj.items,
+        //             searchEnabled: true
+        //         });
+
+        //     } else {
+
+        //         $("#preview_"+i).dxSelectBox({
+        //             dataSource: enumObj.items,
+        //             searchEnabled: true
+        //         });
+
+        //     }
+
+        // });
+         // ✅ PREVIEW CONTROL
+        gridFields.forEach(f => {
+
+            var parsed = null;
+            try{
+                parsed = parseParamsByteArrAsObject(f.formItem);
+            }catch(e){}
+
+            if(!parsed?.enum) return;
+
+            var enumObj = dictionaryData.find(x => x.group === parsed.enum);
+            if(!enumObj) return;
+
+            var isMulti = parsed.multi;
+
+            if(isMulti){
+                $("#preview_"+f.id).dxTagBox({
+                    dataSource: enumObj.items,
+                    searchEnabled: true
+                });
+            }
+            else{
+                $("#preview_"+f.id).dxSelectBox({
+                    dataSource: enumObj.items,
+                    searchEnabled: true
+                });
+            }
+
+        });
+
+    }
+
         function reload()
         {
 
 
-        ajaxGet(`/api/EnumData/GetAll`,null).done(res => {console.log(res)
-        resResponse = [] ;
+        ajaxGet(`/api/EnumData/GetAll`,null).done(res => {
+         resResponse = [] ;
             resResponse = res;
                 
          function mapToDictionary(rawData){
@@ -334,8 +540,16 @@
             dictionaryData = mapToDictionary(res);
 
         renderDictionary();
-        renderForm();
-        renderJson();
+        // renderForm();
+        // renderJson();
+        });
+         const params = new URLSearchParams();
+        params.set("refKey", "dxSelectBox");
+         params.set("refField", 'FormDataType'); 
+        ajaxGet(`/api/DataGridConfig/GetAll?${params.toString()}`,null).done(res => {
+            console.log(res);
+            gridFields = res;
+            renderGrid();
         });
         }
         reload();

@@ -15,7 +15,6 @@
 
         doSaveData(isClose) {
             try {
-                debugger
                 var that = this;
                 var form = that.formInstance;
                 var result = that.validateForm(form);
@@ -3205,7 +3204,7 @@ var ReferenceQuotationForm = class ReferenceQuotationForm extends MForm {
                 caption: "UW Follow Fields",
                 colCount: 1,
                 items: [
-                    { dataField: "reinsuranceId", label: {text:"Reinsurance" }, editorType: "dxSelectBox", editorOptions: { width: 200,  valueExpr: "id", displayExpr: "value", items: _enums.reinsurance } }
+                        { dataField: "reinsuranceId", label: {text:"Reinsurance" }, editorType: "dxSelectBox", editorOptions: { width: 200,  valueExpr: "id", displayExpr: "value", items: _enums.reInsuranceType } }
                 ]
             },
             {

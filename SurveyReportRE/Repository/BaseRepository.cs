@@ -570,8 +570,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
         using (var connection = new SqlConnection(_connectionString))
         {
             var sql = $@"SELECT EnumData.* FROM EnumData WITH (NOLOCK) 
-                        INNER JOIN SysTable ON SysTable.Id = EnumData.SysTableId
-                        WHERE SysTable.Name = '{name}' ORDER BY EnumOrder ASC";
+                        WHERE EnumData.Name = '{name}'";
             var result = await connection.QueryAsync<T>(sql, new { SysTableName = name });
             Util.QueryLogs(_connectionString, "sp_Querylogs",
                    ("@QueryString", $"EnumData: {sql}")
