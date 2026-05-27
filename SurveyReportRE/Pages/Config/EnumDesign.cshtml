@@ -70,6 +70,23 @@
 
 
         <!-- LEFT -->
+    <div style="padding:10px;border-bottom:1px solid #ddd">
+
+        <input id="txtGroupName" placeholder="Group name"
+               style="width:100%;margin-bottom:5px" />
+
+        <button onclick="addGroup()" style="width:100%">+ Add Group</button>
+        <button onclick="deleteGroup()" style="width:100%">- Delete Group</button>
+
+        <hr />
+
+        <input id="txtFieldName" placeholder="Key name"
+               style="width:100%;margin-bottom:5px" />
+
+        <button onclick="addFieldManual()" style="width:100%">+ Add Key</button>
+        <button onclick="deleteField()" style="width:100%">- Delete Key</button>
+    </div>
+
         <div class="panel left" id="dictionaryPanel"></div>
 
 
@@ -94,8 +111,187 @@
 
 
     <script>
-        ajaxGet(`/api/EnumData/GetAll`,null).done(res => {console.log(res)
+        var dictionaryData = [];
+        var formSchema = [];
+        var selectedField = null;
 
+        var resResponse = [];
+        var that = new Object();
+        that.ModelName = "EnumData";
+        var ds = makeBasicDataSource(that, true);
+
+        var store = ds;
+        function addFieldManual(){
+
+        var fieldName = $("#txtFieldName").val();
+        var group = $("#txtGroupName").val();
+        if(!fieldName) return;
+
+        // lấy group đang chọn (bạn có thể improve sau)
+
+        var payload = {
+                sysTableName: "",
+                mappingField: "",
+                name: group,
+                value: fieldName,
+                enumOrder: 0
+            };
+            store.insert(payload);
+            reload();
+        }
+
+
+         function addField(group){
+
+        var fieldName = $("#txtFieldName").val();
+        if(!fieldName) return;
+
+        // lấy group đang chọn (bạn có thể improve sau)
+
+        var payload = {
+                sysTableName: "",
+                mappingField: "",
+                name: group,
+                value: fieldName,
+                enumOrder: 0
+            };
+            store.insert(payload);
+            reload();
+        }
+
+                function renderJson(){
+
+            $("#jsonBox").html(JSON.stringify(formSchema,null,2));
+        }
+            function addGroup(){
+
+        var groupName = $("#txtGroupName").val();
+        if(!groupName) return;
+
+        var payload = {
+            sysTableName: "",
+            mappingField: "",
+            name: groupName,
+            value: "Default",
+            enumOrder: 0
+        };
+         store.insert(payload);
+        reload();
+        }
+
+        function deleteGroup(){
+             var groupName = $(`#txtGroupName`).val();
+             var groupByName = resResponse.filter(f => f.name === groupName);
+             var groupByMappingField = resResponse.filter(f => f.mappingField === groupName);
+
+             if (groupByName)
+             $.each(groupByName, function(i, item) {
+                store.remove(item.id);
+             })
+
+
+             if (groupByMappingField)
+              $.each(groupByMappingField, function(i, item) {
+                   store.remove(item.id);
+             })
+             reload();
+        }
+            function assignGroupName(name){
+
+            $(`#txtGroupName`).val(name.innerText);
+        }
+        
+         function selectField(groupName, items, element){
+             var that = new Object();
+             that.innerText = groupName;
+            assignGroupName(that);
+            selectedField = element.innerText;
+            $(`#txtFieldName`).val(selectedField);
+
+
+            // var html = `
+            //     <div>
+            //         <label>Editor Type</label>
+            //         <div id='editorType'></div>
+            //     </div>
+            //     <div style='margin-top:10px'>
+            //         <label>Visible</label>
+            //         <div id='visibleSwitch'></div>
+            //     </div>
+            // `;
+
+
+            // $("#propertyPanel").html(html);
+
+
+            // $("#editorType").dxSelectBox({
+            //     items:["dxSelectBox","dxTagBox","dxTextBox"],
+            //     value: field.editorType,
+            //     onValueChanged: function(e){
+            //         field.editorType = e.value;
+            //     }
+            // });
+
+
+            // $("#visibleSwitch").dxSwitch({
+            //     value: field.visible,
+            //     onValueChanged: function(e){
+            //         field.visible = e.value;
+            //     }
+            // });
+
+        }
+        
+    
+
+        function deleteField(){
+            var fieldName = $(`#txtFieldName`).val();
+            var groupName = $(`#txtGroupName`).val();
+             var item = resResponse.find(f => f.value === fieldName && f.name == groupName);
+                store.remove(item.id);
+
+             reload();
+        }
+
+         function renderDictionary(){
+            var html = "";
+            dictionaryData.forEach(g => {
+                html += `<div class='card'>`;
+                html += `<div class='card-title' onclick='assignGroupName(this)' >${g.group}</div>`;
+                html += `<div style='padding:5px'>${g.field}</div>`;
+                g.items.forEach(i => {
+                    html += `<div class='item' onclick='selectField("${g.field}",${JSON.stringify(g.items)},this)'>${i}</div>`;
+                });
+                html += `<div class='item' style='font-weight:bold;color:blue' onclick='addField("${g.group}")'>+ Add Key</div>`;
+                html += `</div>`;
+            });
+            $("#dictionaryPanel").html(html);
+        }
+
+           function renderForm(){
+            var html = "";
+            // formSchema.forEach((f,i) => {
+            //     html += `<div class='form-item' onclick='selectField(${i-1})'>`;
+            //     html += `<label><b>${f.dataField}</b></label>`;
+            //     html += `<div id='field_${i}'></div>`;
+            //     html += `</div>`;
+            // });
+            // $("#formBuilder").html(html);
+            // formSchema.forEach((f,i) => {
+            //     $("#field_"+i).dxSelectBox({
+            //         dataSource: f.items || [],
+            //         valueExpr: null
+            //     });
+            // });
+        }
+        function reload()
+        {
+
+
+        ajaxGet(`/api/EnumData/GetAll`,null).done(res => {console.log(res)
+        resResponse = [] ;
+            resResponse = res;
+                
          function mapToDictionary(rawData){
 
             const map = {};
@@ -103,10 +299,10 @@
             rawData.forEach(row => {
 
                 // ✅ Group
-                const group = row.sysTableName || row.mappingField;
+                const group = row.name;
 
                 // ✅ Field
-                const field = row.mappingField || row.name || "Default";
+                const field = row.name || "Default";
 
                 const key = group + "|" + field;
 
@@ -134,113 +330,14 @@
                     .map(x => x.text)
             }));
         }
+        dictionaryData= [];
+            dictionaryData = mapToDictionary(res);
 
-        var dictionaryData = mapToDictionary(res);
-
-        var formSchema = [];
-        var selectedField = null;
-        // =========================
-        // RENDER DICTIONARY
-        // =========================
-        function renderDictionary(){
-            var html = "";
-            dictionaryData.forEach(g => {
-                html += `<div class='card'>`;
-                html += `<div class='card-title'>${g.group}</div>`;
-                html += `<div style='padding:5px'>${g.field}</div>`;
-                g.items.forEach(i => {
-                    html += `<div class='item' onclick='addField("${g.field}",${JSON.stringify(g.items)})'>${i}</div>`;
-                });
-                html += `<div class='item' style='font-weight:bold;color:blue' onclick='addField("${g.field}",${JSON.stringify(g.items)})'>+ Add Field</div>`;
-                html += `</div>`;
-            });
-            $("#dictionaryPanel").html(html);
-        }
-        // =========================
-        // ADD FIELD
-        // =========================
-        function addField(field, options){
-            formSchema.push({
-                dataField: field,
-                editorType: "dxSelectBox",
-                visible: true,
-                items: options
-            });
-            renderForm();
-            renderJson();
-        }
-        // =========================
-        // RENDER FORM
-        // =========================
-        function renderForm(){
-            var html = "";
-            formSchema.forEach((f,i) => {
-                html += `<div class='form-item' onclick='selectField(${i})'>`;
-                html += `<label><b>${f.dataField}</b></label>`;
-                html += `<div id='field_${i}'></div>`;
-                html += `</div>`;
-            });
-            $("#formBuilder").html(html);
-            formSchema.forEach((f,i) => {
-                $("#field_"+i).dxSelectBox({
-                    dataSource: f.items || [],
-                    valueExpr: null
-                });
-            });
-        }
-        // =========================
-        // SELECT FIELD
-        // =========================
-        function selectField(index){
-            selectedField = index;
-            var field = formSchema[index];
-
-
-            var html = `
-                <div>
-                    <label>Editor Type</label>
-                    <div id='editorType'></div>
-                </div>
-                <div style='margin-top:10px'>
-                    <label>Visible</label>
-                    <div id='visibleSwitch'></div>
-                </div>
-            `;
-
-
-            $("#propertyPanel").html(html);
-
-
-            $("#editorType").dxSelectBox({
-                items:["dxSelectBox","dxTagBox","dxTextBox"],
-                value: field.editorType,
-                onValueChanged: function(e){
-                    field.editorType = e.value;
-                }
-            });
-
-
-            $("#visibleSwitch").dxSwitch({
-                value: field.visible,
-                onValueChanged: function(e){
-                    field.visible = e.value;
-                }
-            });
-        }
-
-        // =========================
-        // JSON
-        // =========================
-        function renderJson(){
-
-            $("#jsonBox").html(JSON.stringify(formSchema,null,2));
-        }
-
-        // INIT
         renderDictionary();
         renderForm();
         renderJson();
         });
-
+        }
+        reload();
     </script>
 

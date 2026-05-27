@@ -16,8 +16,8 @@ namespace ERPCore.Pages
 
         public void OnGet()
         {
-            ModelName = nameof(EmptyClass);
-            ViewData["Model"] = nameof(EmptyClass);
+            ModelName = nameof(EnumData);
+            ViewData["Model"] = nameof(EnumData);
         }
     }
 }
