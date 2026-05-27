@@ -10,14 +10,7 @@
 
 <style>
 
-    #qrPage {
-        max-width: 1180px;
-        margin: 18px auto;
-        background: #fff;
-        border-radius: 16px;
-        box-shadow: 0 10px 30px rgba(0,0,0,.08);
-        padding: 16px;
-    }
+   
 
     .sectionTitle {
         font-size: 14px;
@@ -84,7 +77,7 @@
 
 <body>
     <div id="form_Quotation_Request_Form"></div>
-    <div id="qrPage">
+    <div id="requestPage">
         <div id="quotationRequestForm"></div>
 
         <div class="sectionTitle">Attachment</div>
@@ -105,14 +98,7 @@
 
     <script>
             var guid= crypto.randomUUID();
-            var clientQuery = `SELECT
-                                    c.Id,
-                                    c.ClientCode,
-                                    JSON_VALUE(c.ClientName, '$.Eng')  AS EnglishName,
-                                    JSON_VALUE(c.ClientName, '$.Viet') AS VietnameseName,
-                                    c.BranchId AS BranchId
-                                FROM Client c
-                            WHERE c.Deleted = 0;`;
+            var clientQuery = `OnSystem`;
 
             var DEPTS = ["RE"];
             var REMEMS = ["quan.nh", "huan.lt", "minh.lh"];
@@ -216,7 +202,7 @@
             }
 
             function buildAttachmentPayload() {
-                return vm.attachments.map(x => ({
+                return vm.attachments?.map(x => ({
                     _key: x._key,
                     attachmentType: x.attachmentType,
                     fileName: x.fileName,
@@ -248,7 +234,7 @@
             var vm = {
                 subject: "",
                 reqPerson: _loginUser,
-            reqDate: new Date(2026, 0, 21), // 21-01-2026
+                reqDate: new Date(2026, 0, 21), // 21-01-2026
 
             assignmentMode: "manual",     // auto | later | manual
                 assignedTeamOrRole: "TS",
@@ -348,9 +334,20 @@
                                 }
                             },
 
-                            { dataField: "requestTypeId", label: { text: "Request Type" }, editorType: "dxSelectBox", isRequired: true, editorOptions: makeSelectBoxEditorOptions(_enums.reqType) },
+                            { dataField: "requestTypeId", label: { text: "Request Type" }, editorType: "dxSelectBox", isRequired: true, editorOptions: makeSelectBoxEditorOptions(_enums.requestType) },
                             { dataField: "policyNo", label: { text: "Policy No" }, editorType: "dxTextBox" },
-                            { dataField: "lineName", editorType: "dxSelectBox", editorOptions: { items: _enums.lineName, searchEnabled: true } },
+                            { dataField: "lineId", editorType: "dxSelectBox", editorOptions: {
+                                items: _entitys.line,
+                                keyExpr: "id",
+                                displayExpr: "value",
+                                searchEnabled: true,
+                                onValueChanged(e) {
+                                    that.formInstance = that.dxForm("instance");
+                                    that.formInstance.updateData("lineCode", e.value.code);
+                                    that.formInstance.updateData("lineName", e.value.name);
+                                } }
+                            },
+                            { dataField: "lineName", editorType: "dxTextBox", visible: false},
                             { dataField: "lineCode", editorType: "dxTextBox", visible: true, editorOptions: { readOnly: true } },
                             { dataField: "productName", editorType: "dxTextBox", visible: false, editorOptions: { readOnly: true } },
                             {
@@ -358,28 +355,34 @@
                                 editorType: "dxSelectBox",
                                 editorOptions: {
                                     label: { text: "Product Name" },
+                                     items: _entitys.product,
                                     labelMode: "floating",
                                     searchEnabled: true,
-                                    valueExpr: "id",
-                                    displayExpr: "productName",
-                                    dataSource: [],
-                                    onInitialized(e) {
-                                        ajaxGet("/api/Product/GetAll", null)
-                                            .then(list => {
-                                                e.component.option("dataSource", list);
-                                            });
-                                    },
+                                    keyExpr: "id",
+                                    displayExpr: "value",
+                                    // dataSource: [],
+                                    // onInitialized(e) {
+                                    //     ajaxGet("/api/Product/GetAll", null)
+                                    //         .then(list => {
+                                    //             e.component.option("dataSource", list);
+                                    //         });
+                                    // },
                                     onValueChanged(e) {
                                         that.formInstance = that.dxForm("instance");
-                                        that.formInstance.updateData("productName", e.component.option("text"));
+                                        that.formInstance.updateData("productName", e.value.name);
+                                        that.formInstance.updateData("productCode", e.value.code);
                                     }
                                 }
                             },
                             { dataField: "productCode", editorType: "dxTextBox", visible: true, editorOptions: { readOnly: true } },
                             { dataField: "businessOccupation", label: { text: "Business Occupation" }, editorType: "dxTextBox" },
                             { dataField: "dueDate", editorType: "dxDateBox", editorOptions: { displayFormat: "dd-MM-yyyy" } },
-                            { dataField: "businessChannel", editorType: "dxSelectBox", editorOptions: { items: _enums.businessChannel } },
-                            { dataField: "reinsuranceId", label: { text: "Reinsurance" }, editorType: "dxSelectBox", editorOptions: { valueExpr: "id", displayExpr: "value", items: _enums.reInsuranceType } },
+                            { dataField: "businessChannel", editorType: "dxSelectBox",
+                                editorOptions: { items: _enums.BusinessChannel,    
+                                    keyExpr: "id",
+                                    displayExpr: "value", 
+                                } },
+                                { dataField: "reinsuranceId", label: { text: "Reinsurance" }, editorType: "dxSelectBox", editorOptions: { keyExpr: "id", displayExpr: "value", items: _enums.reInsuranceType } },
 
                             {
                                 itemType: "simple",
@@ -454,7 +457,7 @@
                                                 items: REMEMS,
                                                 label: "Member",
                                                 labelMode: "static",
-                  onValueChanged: function(e){
+                                                onValueChanged: function(e){
                                                     fd.rePIC = e.value;
                                                 }
                                             });
@@ -464,7 +467,7 @@
                                                 label: "RE Message",
                                                 labelMode: "static",
                                                 placeholder: "Message to RE team",
-                   onValueChanged: function(e){
+                                                onValueChanged: function(e){
                                                     fd.reMsg = e.value;
                                                 }
                                             });
@@ -499,6 +502,7 @@
                                         width: _defaultDropDownWidth,
                                         height: _defaultDropDownHeight,
                                     },
+                                    visible: false,
                                     showClearButton: true,
                      dataSource:configDataWFDEF.dataSource,
                     
@@ -584,6 +588,7 @@
                                     var item = new Object();
                                     var moduleKey = "@prefix";
                                     item.editorType = "dxFileUploader";
+                                    item.uploadMode = "useForm";
                                     item.moduleName = moduleKey + "_default"; item.sectionName =  "@dept";
                                     item.id = @ViewData["Id"];
                                     item.guid = guid;
@@ -602,6 +607,7 @@
                                     var item = new Object();
                                 var moduleKey = "@prefix";
                                     item.editorType = "dxFileUploader";
+                                item.uploadMode = "useForm";
                                     item.moduleName = moduleKey+ "_supportingDoc"; item.sectionName =  "@dept";
                                     item.id = @ViewData["Id"];
                                     item.guid = guid;

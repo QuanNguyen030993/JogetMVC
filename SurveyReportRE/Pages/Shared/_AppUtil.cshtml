@@ -325,7 +325,7 @@
         
         var divMainPopup = $(`#mainPopup`);
         var popupInstance = divMainPopup.dxPopup({
-            width: "60%",
+            width: "90%",
             height: "90%",
             dragEnabled: true,
             closeOnOutsideClick: true,
@@ -358,32 +358,43 @@
                     text: "Fill Data",
                     onClick() {
                         var form = $(`#quotationRequestForm`).dxForm().dxForm("instance");
-                        form.option("formData", {
-                            PIC: "quan.nh",
-                            assignedTeamOrRole: "TS",
-                            assignees: {},
-                            assignmentMode: "manual",
-                            businessChannel: "Direct (DIR)",
-                            clientId: 1124,
-                            clientName: "NGUYEN MANH CUONG",
-                            createDate: new Date(),
-                            dueDate: new Date(),
-                            lineName: "Liability",
-                            productId: 2,
-                            productName: "Industrial All Risks",
-                            reinsuranceId: 143,
-                            reqDate: new Date(),
-                            reqPerson: "quan.nh",
-                            requestTypeId: 149,
-                            subject: "Subject báo giá",
-                            workflowDefinitionId: 5,
-                        });
+                            var payload={
+                                assignedTeamOrRole:"TS",
+                                assignees:{},
+                                assignmentMode:"manual",
+                                businessChannel:1,
+                                businessOccupation:"AAAAAAA",
+                                clientId:1128,
+                                clientName:"DAO DUY THANG",
+                                createDate:new Date(),
+                                dueDate:new Date(),
+                                lineId:1,
+                                lineCode:"LI1",
+                                lineName:"Fire & Property, BI",
+                                PIC:"quan.nh",
+                                policyNo:"PPPPPP",
+                                productCode:"PC8",
+                                productId:8,
+                                productName:"Business Package Policy",
+                                quotationStatus:"New",
+                                reinsuranceId: 145,
+                                reqDate:new Date(),
+                                reqPerson:"quan.nh",
+                                requestTypeId:149,
+                                requestedDate:new Date(),
+                                stageAccount:"quan.nh",
+                                stageDept:"TS",
+                                subject:"Subject báo giá",
+                                turnAroundTimeAttributes:"{\"FO\":{\"AcceptDate\":\"2026-05-27T09:26:40.050Z\",\"CompleteDate\":\"2026-05-27T09:26:40.050Z\"},\"TS\":{\"AcceptDate\":\"\",\"CompleteDate\":\"\"},\"UW\":{\"AcceptDate\":\"\",\"CompleteDate\":\"\"}}",
+                                startingDept:"FO"};
+                            form.option("formData", payload);
                     },
                 },
             },{
                 widget: 'dxButton',
                 toolbar: 'bottom',
                 location: 'after',
+
                 options: {
                     stylingMode: 'contained',
                     type: 'normal',
@@ -410,8 +421,8 @@
                         var quotationData = new Object();
                         quotationData.Quotation = new Object();
                         quotationData.Quotation = ObjectPopulateKey(submitSummaryData, true, false);
-                        //var makeRequestAccount = _loginUser;
-                        var makeRequestAccount = "thao.bp";
+                        var makeRequestAccount = _loginUser;
+                        // var makeRequestAccount = "thao.bp";
 
                         quotationData.Quotation.RequestedDate = submitSummaryData.createDate;
                         quotationData.Quotation.PIC = { FO: makeRequestAccount, TS: "", UW: "", LKMT: "" };
@@ -433,17 +444,8 @@
                         quotationData.StartingDept = "FO";
                         //quotationData.LineId = submitSummaryData.lineId;
                         //quotationData.ProductId = submitSummaryData.productId;
-                        var uploader = $("#uploadFile").dxFileUploader("instance");
-                    
-          
-
-                        // ajaxPost('/api/Quotation/CreateQuotation', quotationData, {
-                        //     onSuccess: function (response) {
-                        //     },
-                        //     onError: function (err) {
-                        //     }
-                        // });
-
+                             var uploader = $("#fileUpload_qt_default_FO_0").dxFileUploader("instance");
+         
 
                         var formData = new FormData();
                         formData.append("QuotationData",JSON.stringify(quotationData));
@@ -454,6 +456,7 @@
                             formData.append("Files", files[i]);
                         }
                         }
+
                         $.ajax({
                             url: "/api/Quotation/CreateQuotation",
                             type: "POST",
@@ -2352,29 +2355,45 @@ function scrollToDept(module, dept) {
 
     function loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions) {
         const currentOptions = getCurrentFormOptions(editorOptions);
-        currentOptions.guid = editorOptions.guid;
-        if (!currentOptions || !currentOptions.guid) return;
-        var combine = editorOptions?.specificFolder ? `${editorOptions.moduleName}_${currentOptions.sectionName}_${currentOptions.id}_${editorOptions?.specificFolder}` : `${editorOptions.controlId}`;
-        showUploaderLoader( `${editorOptions.uploaderId}`, "File loading...");
-        $.ajax({
-            url: `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${(combine)} `,
-            method: "GET",
-            success: function (data) {
-                const $preview = $(`#${editorOptions.previewId}`);
-                renderAttachmentListLazy(data, $preview, {
-                    batchSize: 6,
-                    delay: 16,
-                    onDeleted: function () {
-                        loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions);
-                    }
-                });
+             if(!editorOptions.isNotLoading)
+            {
+            currentOptions.guid = editorOptions.guid;
+            if (!currentOptions || !currentOptions.guid) return;
+            var combine = editorOptions?.specificFolder ? `${editorOptions.moduleName}_${currentOptions.sectionName}_${currentOptions.id}_${editorOptions?.specificFolder}` : `${editorOptions.controlId}`;
+       
+            showUploaderLoader( `${editorOptions.uploaderId}`, "File loading...");
+            $.ajax({
+                url: `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${(combine)} `,
+                method: "GET",
+                success: function (data) {
+                    const $preview = $(`#${editorOptions.previewId}`);
+                    renderAttachmentListLazy(data, $preview, {
+                        batchSize: 6,
+                        delay: 16,
+                        onDeleted: function () {
+                            loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions);
+                        }
+                    });
 
-                hideUploaderLoader( `${editorOptions.uploaderId}`);
-            },
-            error: function () {
-                hideUploaderLoader(`${editorOptions.uploaderId}`);
-            }
-        });
+                    hideUploaderLoader( `${editorOptions.uploaderId}`);
+                },
+                error: function () {
+                    hideUploaderLoader(`${editorOptions.uploaderId}`);
+                }
+            });
+      }
+      else {
+               const $preview = $(`#${editorOptions.previewId}`);
+              console.log($preview);
+                        // renderAttachmentListLazy(data, $preview, {
+                        //     batchSize: 6,
+                        //     delay: 16,
+                        //     onDeleted: function () {
+                        //         //loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions);
+                        //     }
+                        // });
+
+      }
     }
     function renderDxFileUploader(editorOptions, $container, options) {
         const controlId = `${editorOptions.moduleName}_${editorOptions.sectionName}_${editorOptions.id}`;
@@ -2400,9 +2419,9 @@ function scrollToDept(module, dept) {
                 selectButtonText: `Upload Attachments`,
                 dropZone: `#${editorOptions.previewId}`,
                 labelText: "",
-                uploadMode: "instantly",
+                uploadMode: editorOptions.uploadMode ? editorOptions.uploadMode : "instantly",
                 uploadUrl: options.uploadUrl || `/api/Attachment/AsyncUploadFile`,
-                showFileList: false,
+                showFileList: editorOptions.uploadMode != "instantly" ? true : false,
                 uploadHeaders: {
                     //Only use for static string
                 },
@@ -2411,6 +2430,10 @@ function scrollToDept(module, dept) {
                 },
                 onUploadStarted: function (e) {
                     showUploaderLoader(editorOptions.uploaderId, "File loading...");
+                },
+                onValueChanged: function(e){
+                        if (editorOptions.uploadMode != "instantly")
+                        loadDxFileUploaderAttachments(editorOptions.controlId, controllerName, editorOptions)
                 },
                 uploadFile: function (file) {
                     const opts = resolveUploadOptions(editorOptions.controlId, editorOptions);
@@ -2423,9 +2446,10 @@ function scrollToDept(module, dept) {
                 onUploaded: function (e) {
                     hideUploaderLoader(editorOptions.uploaderId);
                     loadDxFileUploaderAttachments(editorOptions.controlId, controllerName, editorOptions)
+
+
                 }
             });
-            if (!(editorOptions.isNotLoading))
         loadDxFileUploaderAttachments(editorOptions.controlId, controllerName, editorOptions);
     }
 

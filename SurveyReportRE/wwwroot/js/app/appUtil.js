@@ -841,6 +841,7 @@ function createEditor(devExtremeItem, $container, $element, editorOptions) {
                 var items = new Object();
                 items.isNotLoading = editorOptions?.isNotLoading || false;
                 items.id = editorOptions?.id || devExtremeItem.id;
+                items.uploadMode = editorOptions?.uploadMode || devExtremeItem.uploadMode;
                 items.guid = editorOptions?.guid || "";
                 items.moduleName = editorOptions?.moduleName || devExtremeItem.moduleName;
                 items.sectionName = editorOptions?.sectionName || devExtremeItem.sectionName;

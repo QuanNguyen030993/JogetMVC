@@ -41,7 +41,7 @@
 
             { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefault("qt", "@(dept)", @(quotationId), "@(quotationGuid)") },
                  { dataField:"clientName", label:{text:"Client Name"}, isRequired:true },
-                 { dataField:"requestTypeId", editorType:"dxSelectBox", label:{text:"Request Type"}, editorOptions: makeSelectBoxEditorOptions(_enums.reqType),displayExpr: "value",
+                 { dataField:"requestTypeId", editorType:"dxSelectBox", label:{text:"Request Type"}, editorOptions: makeSelectBoxEditorOptions(_enums.requestType),displayExpr: "value",
                       valueExpr: "id"
                  },
                  { dataField:"reinsuranceId", editorType:"dxSelectBox", label:{text:"Reinsurance"}, 

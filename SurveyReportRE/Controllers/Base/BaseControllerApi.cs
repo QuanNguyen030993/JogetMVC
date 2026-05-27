@@ -713,6 +713,50 @@ namespace ERPCore.Controllers.Base
         }
 
 
+        [HttpPost]
+        public virtual async Task<IActionResult> AsyncUploadSingleFile(IFormFile file)
+        {// Use blog settings while override this method instead
+            var path = BLOB_PATH;
+            IBaseRepository<Document> _documentRepository = new BaseRepository<Document>(_BaseRepository._baseConfiguration, _httpContextAccessor);
+            //var storageFolder = _blobStorageSettings.CurrentValue.Path;
+            string folder = Request.Headers["Folder"];
+            string guid = Request.Headers["RecordGuid"];
+            string sectionName = Request.Headers["SectionName"];
+            if (file != null && file.Length > 0)
+            {
+                using (var ms = new MemoryStream())
+                {
+                    file.CopyTo(ms);
+                    var fileBytes = ms.ToArray();
+                    var unixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                    string s = Convert.ToBase64String(fileBytes);
+                    if (!System.IO.Directory.Exists(BLOB_PATH))
+                        Directory.CreateDirectory(BLOB_PATH);
+                    if (!System.IO.Directory.Exists(Path.Combine(BLOB_PATH, folder)))
+                        Directory.CreateDirectory(Path.Combine(BLOB_PATH, folder));
+
+                    Document document = new Document();
+                    //Attachment attachmentForm = new Attachment();
+                    //document.SubDirectory = Path.Combine(folder, $"{unixMilliseconds}_{file.FileName}") ;
+                    document.SubDirectory = Path.Combine(folder);
+                    document.RecordGuid = guid != null ? Guid.Parse(guid) : null;
+                    document.FileName = file.FileName;
+                    document.FileType = System.IO.Path.GetExtension(file.FileName);
+                    document.Size = file.Length;
+                    document.Attributes = JsonConvert.SerializeObject((object)(new { SectionName = sectionName }));
+                    document = await _documentRepository.InsertData(document);
+                    //AttachmentForm attachmentForm = ControllerHelper.BindingAttachmentForm(attachment, BLOB_PATH);
+                    //System.IO.File.WriteAllBytes(Path.Combine(path, folder, $"{unixMilliseconds}_{file.FileName}"), fileBytes);
+                    System.IO.File.WriteAllBytes(Path.Combine(path, folder, $"{document.Guid}{document.FileType}"), fileBytes);
+
+                    return Ok(new { success = true, message = "File uploaded successfully", attachment = document });
+                }
+            }
+            else
+                return Ok(new { success = false, message = "No file uploaded" });
+        }
+
+
 
 
 

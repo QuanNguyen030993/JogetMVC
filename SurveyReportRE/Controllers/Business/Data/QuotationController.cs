@@ -34,6 +34,7 @@ using Document = ERPCore.Models.Migration.Business.Data.Document;
 using ERPCore.Models.Migration.Business.Social;
 using AngleSharp.Html;
 using ERPCore.Pages;
+using JogetMVC.Model;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -74,11 +75,13 @@ public class QuotationController : BaseControllerApi<Quotation>
     private static string spPassword = "";
     private static string MAPPING_PATH = "";
     private readonly Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> _blobStorageSettings;
+    private readonly Microsoft.Extensions.Options.IOptionsMonitor<BusinessConfig> _businessConfig;
     public QuotationController(IBaseRepository<Quotation> BaseRepository
         , IConfiguration config
         , IHttpContextAccessor httpContextAccessor
         , ILogger<Quotation> logger
         , Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> blobStorageSettings
+        , Microsoft.Extensions.Options.IOptionsMonitor<BusinessConfig> businessConfig
          , IHubContext<FileProcessingHub> hubContext
         ) : base(BaseRepository, httpContextAccessor
             )
@@ -118,6 +121,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         spUserName = configuration.GetSection("SharePoint:Username").Value;
         spPassword = configuration.GetSection("SharePoint:Password").Value;
         _blobStorageSettings = blobStorageSettings;
+        _businessConfig = businessConfig;
         _logger = logger;
     }
 
@@ -208,8 +212,8 @@ public class QuotationController : BaseControllerApi<Quotation>
         IFormFileCollection files = null;
         files = ((FormCollection)(Request.Form)).Files;
         quotationData.QuotationData = JsonConvert.DeserializeObject<QuotationData>(Request.Form["QuotationData"]);
-
-
+        foreach (var file in files)
+        {
 
 
         //Before insert quotation
@@ -227,17 +231,12 @@ public class QuotationController : BaseControllerApi<Quotation>
 
 
 
-        if (files != null)
-        {
-            Request.Headers["Folder"] = $@"FO\{quotation.QuotationCode}";
-            Request.Headers["RecordGuid"] = quotation.Guid.ToString();
-            await AsyncUploadFile();
-        }
+        
 
 
         //After insert quotation
         WorkflowDefinition workflowDefinition = new WorkflowDefinition();
-        workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(s => s.Id == quotationData.QuotationData.WorkflowDefinitionId);
+        workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(s => s.WorkflowCode == _businessConfig.CurrentValue.Workflow.Quotation);
 
         if (workflowDefinition != null)
         {
@@ -251,6 +250,13 @@ public class QuotationController : BaseControllerApi<Quotation>
                 detail = "Please contact admin!"
             });
             quotation = await _BaseRepository.InsertData(quotation);
+            if (file != null)
+            {
+                Request.Headers["Folder"] = $@"{nameof(Quotation)}\{quotation.QuotationCode}";
+                Request.Headers["RecordGuid"] = quotation.Guid.ToString();
+                Request.Headers["SectionName"] = $@"qt_default_FO_{quotation.Id.ToString()}";
+                await AsyncUploadSingleFile(file);
+            }
             instanceWorkflow.RecordGuid = quotation.Guid;
 
             instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
@@ -299,8 +305,9 @@ public class QuotationController : BaseControllerApi<Quotation>
         notification.tabPublicUrl = Util.URLObjectMaking(quotation);
         NotificationController.Notify(notification);
 
+        }
 
-        return Ok(quotation);
+        return Ok();
     }
     [HttpPost]
     public async Task<IActionResult> CloneQuotation([FromForm] QuotationRequest quotationData)

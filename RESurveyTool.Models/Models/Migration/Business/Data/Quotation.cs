@@ -65,7 +65,6 @@ public class Quotation : BaseModel
     public string? ProductName { get; set; } = "";               // c_productName
     //public string? ProductDisplayName { get; set; } = "";        // c_productNameView
     //public string? ProductType { get; set; } = "";               // c_productType
-
     public string? LineName { get; set; } = "";                  // c_lineName
     //public string? SubLineName { get; set; } = "";               // c_lineName1
     public long? QuotationQuantity { get; set; }

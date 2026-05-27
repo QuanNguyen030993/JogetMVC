@@ -1,0 +1,24 @@
+﻿
+<script>
+      var _entitys = {
+      line: [], product: []
+    };
+
+
+    $.each(_entitys, function(index, item) {
+    if (!item.length)
+            ajaxGet(`/api/${index}/GetAll`).done(res => {
+                if (res) {
+                    var objectParsing = [];
+                    objectParsing = res.map(m => {
+                        var obj  = new Object();
+                        obj.id = m.id;
+                        obj.code =  m.hasOwnProperty("code") ||  m.hasOwnProperty(index+"Code") ?  m[index+"Code"] : "";
+                        obj.value = m.hasOwnProperty("name") ||  m.hasOwnProperty(index+"Name")  ? m[index+"Name"] : "";
+                        return obj;
+                    });
+                    _entitys[index] = objectParsing;
+                }
+        });
+    });
+</script>

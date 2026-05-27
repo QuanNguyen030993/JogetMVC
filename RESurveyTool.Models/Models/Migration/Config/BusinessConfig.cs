@@ -15,16 +15,12 @@ namespace ERPCore.Models.Business.Migration.Config
         public string UserAppKey { get; set; } = "";
         public string DefaultCurrencyEnumName { get; set; } = "";
         public string DefaultCurrencyType { get; set; } = "";
-        public string ApprovedDocxFileName { get; set; } = "";
-        public string ApprovedLCDocxFileName { get; set; } = "";
-        public string SuffixApprovedDocxFileName { get; set; } = "";
-        public string SurveyEvaluationStatusKeyName { get; set; } = "";
-        public string SurveyEvaluationCategoryKeyName { get; set; } = "";
         public string DefaultStatusSurveyEvaluation { get; set; } = "";
         public string HCMSiteName { get; set; } = "";
         public string HNSiteName { get; set; } = "";
         public string HCMSiteEmailCCAccount { get; set; } = "";
         public string HNSiteEmailCCAccount { get; set; } = "";
+        public Workflow? Workflow { get; set; }
         public Dictionary<string, SiteConfig> Sites { get; set; } = new Dictionary<string, SiteConfig>();
     }
 
@@ -35,4 +31,11 @@ namespace ERPCore.Models.Business.Migration.Config
         public string EmailCCAccount { get; set; } = "";
         public string OwnData { get; set; } = "";   
     }
+
+    public class Workflow
+    {
+        public string Quotation { get; set; } = "";
+        public string PolicyIssuance { get; set; } = ""; 
+    }
+
 }

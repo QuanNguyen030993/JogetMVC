@@ -531,7 +531,15 @@ aside {
 }
 .dxc-tooltip {
     z-index: 2000;
-}  
+}
+#requestPage {
+    width:100%;
+    margin: 18px auto;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.08);
+    padding: 16px;
+}
 /* Top header */
 /*.topbar {
     height: 56px;
