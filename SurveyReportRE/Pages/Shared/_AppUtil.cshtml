@@ -326,8 +326,8 @@
             var sectionName = `qt_default_FO`;
         var divMainPopup = $(`#mainPopup`);
         var popupInstance = divMainPopup.dxPopup({
-            width: "90%",
-            height: "90%",
+            width: "95%",
+            height: "95%",
             title:"Quotation Request",
             dragEnabled: true,
             closeOnOutsideClick: true,
@@ -335,7 +335,7 @@
             },
             contentTemplate: function (container) {
                     var passingParams = { UITabId: `Quotation_Request_Form`, pageNum: id };
-                appendElementViewInsideAsync(`/Business/Form/Popup/Quotation_Request_Form`, passingParams, container, `Quotation_Request_Form`, "appendTo")
+                appendElementViewInsideAsync(`/Business/Form/PopupDetail/Quotation_Request_Form`, passingParams, container, `Quotation_Request_Form`, "appendTo")
                     .then(form => {
                         var scrollView = popupStandardContentByScroll(form.option("container"));
                             scrollView.appendTo(container);
@@ -549,7 +549,7 @@
                     (async () => {
                         try {
                           var passingParams = { UITabId: `PolicyIssuance_Request_Form`, pageNum: 0 };
-                            appendElementViewInsideAsync(`/Business/Form/Popup/PolicyIssuance_Request_Form`, passingParams, container, `PolicyIssuance_Request_Form`, "appendTo")
+                            appendElementViewInsideAsync(`/Business/Form/PopupDetail/PolicyIssuance_Request_Form`, passingParams, container, `PolicyIssuance_Request_Form`, "appendTo")
                                 .then(form => {
                                     var scrollView = popupStandardContentByScroll(form.option("container"));
                                         scrollView.appendTo(container);

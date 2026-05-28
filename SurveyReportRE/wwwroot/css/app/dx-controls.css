@@ -6317,7 +6317,7 @@
 }
 
 .dx-popup-content {
-    padding: 20px;
+    padding: 0px;
 }
 
     .dx-popup-content > .dx-button {
@@ -8183,12 +8183,13 @@
 
 
 .dx-form-group-caption {
-    font-size: 20px;
+    font-size: 14px;
+    font-weight: bold;
 }
 
 .dx-form-group-with-caption > .dx-form-group-content {
     border-top: 1px solid #ddd;
-    padding-bottom: 20px;
+    padding-bottom: 10px;
 }
 
 .dx-field-item-help-text,
