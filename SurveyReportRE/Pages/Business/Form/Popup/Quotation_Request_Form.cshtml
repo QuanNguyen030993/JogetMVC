@@ -79,9 +79,9 @@
     <div id="form_Quotation_Request_Form"></div>
     <div id="requestPage">
         <div id="quotationRequestForm"></div>
-
+@* 
         <div class="sectionTitle">Attachment</div>
-        <div id="attachmentGrid"></div>
+        <div id="attachmentGrid"></div> *@
 
         <div class="toolbarRow">
             <div class="sectionTitle" style="margin:0;">Quotation PIC</div>
@@ -261,8 +261,8 @@
                 items: [
                     {
                         itemType: "group",
-                        colSpan: 2,
-                        caption: "Quotation Request",
+                        colSpan: 3,
+                        // caption: "Quotation Request",
                         items: [
                             { dataField: "PIC", editorType: "dxTextBox", editorOptions: { readOnly: true, value: _loginUser } },
                             { dataField: "createDate", editorType: "dxDateBox", editorOptions: { readOnly: true, displayFormat: "dd-MM-yyyy", value: new Date() } },
@@ -531,13 +531,44 @@
                                         return dataGrid.container;
                                     }
                                 }
-                            },
+                        },{
+                        dataField: "@prefix" === "@prefix" ? "quotation" : "document", editorType: "dxFileUploader"
+                        ,
+                        editorOptions: {
+                            name: "files"
+                        }
+                        , template: function (data, itemElement) {
+                                var item = new Object();
+                                var moduleKey = "@prefix";
+                                item.editorType = "dxFileUploader";
+                                item.uploadMode = "useForm";
+                                item.moduleName = moduleKey + "_default"; item.sectionName =  "@dept";
+                                item.id = @ViewData["Id"];
+                                item.guid = guid;
+                                item.isNotLoading = true;
+                                createEditor(item, itemElement, $(`<div>`), item);
+                        }
 
-                            {
-                                dataField: "attachments",
-                                visible: false,
-                                editorType: "dxTextArea"
-                            }
+                    },
+                    {
+                        dataField: "supportingDocument", editorType: "dxFileUploader"
+                        ,
+                        editorOptions: {
+                                name: "sdfiles"
+                        }
+                        , template: function (data, itemElement) {
+                                var item = new Object();
+                            var moduleKey = "@prefix";
+                                item.editorType = "dxFileUploader";
+                            item.uploadMode = "useForm";
+                                item.moduleName = moduleKey+ "_supportingDoc"; item.sectionName =  "@dept";
+                                item.id = @ViewData["Id"];
+                                item.guid = guid;
+                            item.isNotLoading = true;
+                            createEditor(item, itemElement, $(`<div>`), item);
+                        }
+
+                    }
                         ]
                     },
 
@@ -578,44 +609,7 @@
                             }
                         ]
                     }
-                    ,{
-                            dataField: "@prefix" === "@prefix" ? "quotation" : "document", editorType: "dxFileUploader"
-                            ,
-                            editorOptions: {
-                                name: "files"
-                            }
-                            , template: function (data, itemElement) {
-                                    var item = new Object();
-                                    var moduleKey = "@prefix";
-                                    item.editorType = "dxFileUploader";
-                                    item.uploadMode = "useForm";
-                                    item.moduleName = moduleKey + "_default"; item.sectionName =  "@dept";
-                                    item.id = @ViewData["Id"];
-                                    item.guid = guid;
-                                    item.isNotLoading = true;
-                                    createEditor(item, itemElement, $(`<div>`), item);
-                            }
-
-                        },
-                        {
-                            dataField: "supportingDocument", editorType: "dxFileUploader"
-                            ,
-                            editorOptions: {
-                                    name: "sdfiles"
-                            }
-                            , template: function (data, itemElement) {
-                                    var item = new Object();
-                                var moduleKey = "@prefix";
-                                    item.editorType = "dxFileUploader";
-                                item.uploadMode = "useForm";
-                                    item.moduleName = moduleKey+ "_supportingDoc"; item.sectionName =  "@dept";
-                                    item.id = @ViewData["Id"];
-                                    item.guid = guid;
-                                item.isNotLoading = true;
-                                createEditor(item, itemElement, $(`<div>`), item);
-                            }
-
-                        }
+                    
 
                 ],
                 onInitialized(e) {

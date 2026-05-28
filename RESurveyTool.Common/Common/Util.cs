@@ -233,10 +233,22 @@ namespace ERPCore.Common
                 Type objectType = ((Type)transferObject.GetType());
                 string CodeField = objectType.GetProperties().FirstOrDefault(f => f.Name.Contains("Code"))?.Name ?? "";
                 string fieldValue = objectType.GetProperties().FirstOrDefault(f => f.Name.Contains("Code"))?.GetValue((dynamic)transferObject) ?? "";
+                string Guid = "/";
+                    
+                    try
+                {
+                    Guid = "/" + objectType.GetProperties().FirstOrDefault(f => f.Name.Contains("Guid"))?.GetValue(transferObject) ?? "";
+
+                }
+                catch
+                {
+
+                }
+
                 if (string.IsNullOrEmpty(CodeField))
                 return new
                 {
-                    url = $"/Business/Form/{objectType.Name}_Form/{transferObject.Id}",
+                    url = $"/Business/Form/{objectType.Name}_Form/{transferObject.Id}{Guid}",
                     caption = $"form_{objectType.Name}_Form_{transferObject.Id}",
                     name = $"{(objectType.Name)}",
                     data = ""
@@ -244,7 +256,7 @@ namespace ERPCore.Common
                 }; else
                 return new
                 {
-                    url = $"/Business/Form/{objectType.Name}_Form/{transferObject.Id}",
+                    url = $"/Business/Form/{objectType.Name}_Form/{transferObject.Id}{Guid}",
                     caption = $"form_{objectType.Name}_Form_{transferObject.Id}",
                     name = $"{(objectType.Name)} {fieldValue}",
                     data = ""

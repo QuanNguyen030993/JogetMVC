@@ -32,9 +32,7 @@ using System.Dynamic;
 using ERPCore.Models;
 using Document = ERPCore.Models.Migration.Business.Data.Document;
 using ERPCore.Models.Migration.Business.Social;
-using AngleSharp.Html;
-using ERPCore.Pages;
-using JogetMVC.Model;
+using AutoMapper.Internal;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -63,6 +61,7 @@ public class QuotationController : BaseControllerApi<Quotation>
     private readonly IConfigurationSection path;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private MailConfig _emailSettings;
+    private Message _messageSettings;
     public static string MANAGER_APP = "";
     public static string APPROVER_APP = "";
     public static string CHECKER_APP = "";
@@ -106,6 +105,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         _documentRepository = new BaseRepository<Document>(configuration, _httpContextAccessor);
         _notificationRepository = new BaseRepository<Notification>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
+        _messageSettings = configuration.GetSection("Message").Get<Message>();
 
         _hubContext = hubContext;
         MANAGER_APP = configuration.GetSection("BusinessConfig:ManagerAppKey").Value;
@@ -254,7 +254,7 @@ public class QuotationController : BaseControllerApi<Quotation>
             {
                 Request.Headers["Folder"] = $@"{nameof(Quotation)}\{quotation.QuotationCode}";
                 Request.Headers["RecordGuid"] = quotation.Guid.ToString();
-                Request.Headers["SectionName"] = $@"qt_default_FO_{quotation.Id.ToString()}";
+                Request.Headers["SectionName"] = $@"{quotationData.QuotationData.Attributes.SectionName}_{quotation.Id.ToString()}";
                 await AsyncUploadSingleFile(file);
             }
             instanceWorkflow.RecordGuid = quotation.Guid;
@@ -284,10 +284,9 @@ public class QuotationController : BaseControllerApi<Quotation>
         var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
         NotificationRequest notification = new NotificationRequest();
         Notification Notification = new Notification();
-        Notification.Title = "Create Quotation";
-        Notification.Message = quotation?.Subject ?? "You have new quotation";
+        Notification.Title = _messageSettings.InitializeMessage.Title;
+        Notification.Message = quotation?.Subject ?? _messageSettings.InitializeMessage.Content;
         Notification.IsRead = false;
-        Notification.Url = "Link URL";
         Notification.Resource = $"{pICAttributes.TS}_TS";
         Notification.System = "WM";
         Notification.RecordGuid = quotation.Guid;
@@ -303,7 +302,10 @@ public class QuotationController : BaseControllerApi<Quotation>
         //    data = ""
         //}; ;        
         notification.tabPublicUrl = Util.URLObjectMaking(quotation);
-        NotificationController.Notify(notification);
+        PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
+            string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
+            Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
+            NotificationController.Notify(notification);
 
         }
 
@@ -452,6 +454,7 @@ public class QuotationController : BaseControllerApi<Quotation>
                 await _mailQueueRepository.InsertData(mailQueue);
                 
             }
+
 
 
             dynamic transferObject = new

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using ERPCore.Models.Models.Parsing;
+using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.Contracts;
 
@@ -16,5 +17,6 @@ namespace ERPCore.Models.Request
         public QuotationTmp? QuotationTmp { get; set; }
         public long? WorkflowDefinitionId { get; set; }
         public string StartingDept { get; set; }
+        public AttributesParsing? Attributes { get; set; }
     }
 }

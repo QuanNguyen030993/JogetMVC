@@ -322,17 +322,19 @@
 
 
     function newQuotationForm() {
-        
+        var id = 0;
+            var sectionName = `qt_default_FO`;
         var divMainPopup = $(`#mainPopup`);
         var popupInstance = divMainPopup.dxPopup({
             width: "90%",
             height: "90%",
+            title:"Quotation Request",
             dragEnabled: true,
             closeOnOutsideClick: true,
             onHiding: function (e) {
             },
             contentTemplate: function (container) {
-                var passingParams = { UITabId: `Quotation_Request_Form`, pageNum: 0 };
+                    var passingParams = { UITabId: `Quotation_Request_Form`, pageNum: id };
                 appendElementViewInsideAsync(`/Business/Form/Popup/Quotation_Request_Form`, passingParams, container, `Quotation_Request_Form`, "appendTo")
                     .then(form => {
                         var scrollView = popupStandardContentByScroll(form.option("container"));
@@ -385,7 +387,7 @@
                                 stageAccount:"quan.nh",
                                 stageDept:"TS",
                                 subject:"Subject báo giá",
-                                turnAroundTimeAttributes:"{\"FO\":{\"AcceptDate\":\"2026-05-27T09:26:40.050Z\",\"CompleteDate\":\"2026-05-27T09:26:40.050Z\"},\"TS\":{\"AcceptDate\":\"\",\"CompleteDate\":\"\"},\"UW\":{\"AcceptDate\":\"\",\"CompleteDate\":\"\"}}",
+                                turnAroundTimeAttributes:"",
                                 startingDept:"FO"};
                             form.option("formData", payload);
                     },
@@ -440,11 +442,18 @@
                         quotationData.Quotation.StageDept = submitSummaryData.assignedTeamOrRole;
                         quotationData.Quotation.QuotationStatus = "New";
                         quotationData.Quotation.WorkflowStatus = "Pending";
-                        quotationData.WorkflowDefinitionId = submitSummaryData.workflowDefinitionId;
+                        quotationData.Attributes = new Object();
+                        quotationData.Attributes.SectionName = sectionName;
+
+                        // quotationData.WorkflowDefinitionId = submitSummaryData.workflowDefinitionId;
                         quotationData.StartingDept = "FO";
+
+
+                        var attributesData = new Object();
+                        attributesData.Attributes = new Object();
                         //quotationData.LineId = submitSummaryData.lineId;
                         //quotationData.ProductId = submitSummaryData.productId;
-                             var uploader = $("#fileUpload_qt_default_FO_0").dxFileUploader("instance");
+                        var uploader = $(`#fileUpload_${sectionName}_${id}`).dxFileUploader("instance");
          
 
                         var formData = new FormData();
@@ -2171,9 +2180,12 @@ function scrollToDept(module, dept) {
             orderDir: "desc"
         });
         var de = $.Deferred();
-
-        ajaxGet("/api/Notification/GetAll", qs)
+            var params = new URLSearchParams();
+                  params.set("refKey", _loginUser);
+                    params.set("refField", 'ReceivedBy');
+            ajaxGet(`/api/Notification/GetAll?${params.toString()}`, qs)
             .then(ids => {
+                console.log(ids);
                     ids = ids.map(id => {
                         try {
                             if (id.url && id.url !== "{}") {
@@ -2384,16 +2396,18 @@ function scrollToDept(module, dept) {
       }
       else {
                const $preview = $(`#${editorOptions.previewId}`);
-              console.log($preview);
-                        // renderAttachmentListLazy(data, $preview, {
-                        //     batchSize: 6,
-                        //     delay: 16,
-                        //     onDeleted: function () {
-                        //         //loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions);
-                        //     }
-                        // });
+              var data = [];
+              var uploader = $("#fileUpload_qt_default_FO_0").dxFileUploader("instance"); 
+              data = uploader.option("value") || [];
+                        renderAttachmentListLazy(data, $preview, {
+                            batchSize: 6,
+                            delay: 16,
+                            onDeleted: function () {
+                                //loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions);
+                            }
+                        });
 
-      }
+        }
     }
     function renderDxFileUploader(editorOptions, $container, options) {
         const controlId = `${editorOptions.moduleName}_${editorOptions.sectionName}_${editorOptions.id}`;
@@ -2453,6 +2467,104 @@ function scrollToDept(module, dept) {
         loadDxFileUploaderAttachments(editorOptions.controlId, controllerName, editorOptions);
     }
 
+
+
+    function createAttachmentItem(x, onDeleted) {
+        const fileName = x.fileName || x.FileName || x.name || "Unnamed";
+        const ext = (x.extension || x.Extension || getExt(fileName)).toLowerCase();
+        const size = x.size || x.fileSize || x.FileSize || 0;
+        const downloadUrl = x.downloadUrl || x.DownloadUrl || x.url;
+        const id = x.id || x.Id || x.attachmentId;
+        const $item = $("<div>")
+            .addClass("att-item")
+            .css({
+                opacity: 0,
+                transform: "translateY(8px)",
+                transition: "opacity .18s ease, transform .18s ease"
+            });
+
+        $("<div>")
+            .addClass("att-ico")
+            .text(getIconByExt(ext))
+            .appendTo($item);
+
+        const $meta = $("<div>").addClass("att-meta").appendTo($item);
+
+        $("<div>")
+            .addClass("att-name")
+            .attr("title", fileName)
+            .text(fileName)
+            .appendTo($meta);
+
+        $("<div>")
+            .addClass("att-sub")
+            .text((ext ? ext.toUpperCase() : "FILE") + " • " + formatBytes(size))
+            .appendTo($meta);
+
+        const $actions = $("<div>").addClass("att-actions").appendTo($item);
+
+            if (x.recordGuid)
+        $("<div>").dxButton({
+            icon: "download",
+            hint: "Download",
+            stylingMode: "contained",
+            onClick: function (ev) {
+                ev.event?.stopPropagation?.();
+                if (downloadUrl) {
+                    window.open(downloadUrl, "_blank");
+                } else {
+                    DevExpress.ui.notify("No download url", "warning", 2000);
+                }
+            }
+        }).appendTo($actions);
+            if (x.recordGuid)
+        $("<div>").dxButton({
+            icon: "trash",
+            hint: "Delete",
+            stylingMode: "outlined",
+            onClick: async function (ev) {
+                ev.event?.stopPropagation?.();
+
+                if (!id) {
+                    DevExpress.ui.notify("Missing id", "warning", 2000);
+                    return;
+                }
+
+                try {
+                    const res = await fetch(`/api/Document/DeleteDocumentData?id=${encodeURIComponent(id)}`, {
+                        method: "GET"
+                    });
+
+                    if (!res.ok) throw new Error("Delete failed");
+
+                    DevExpress.ui.notify("Deleted", "success", 1200);
+                    if (typeof onDeleted === "function") {
+                        onDeleted(x);
+                    }
+                } catch (err) {
+                    DevExpress.ui.notify(err.message || "Delete error", "error", 2500);
+                }
+            }
+        }).appendTo($actions);
+
+        $item.css("cursor", downloadUrl ? "pointer" : "default");
+            if (x.recordGuid)
+        $item.on("click", async function (ev) {
+            if (ext === "xlsx" || ext === "xls") {
+                //libreConvert(id);
+                openExcelPreviewPopup(id);
+            }
+            if (ext === "docx" || ext === "doc")
+                openWordPreviewPopup(id);
+            if (ext === "jpg" || ext === "jpeg" || ext === "png")
+                openImagePreviewPopup(id);
+
+            //if (ext === "docx")
+            //    openWordMammothPopup(id);
+        });
+
+        return $item;
+    }
     function showUploaderLoader(idControlElement, message) {
         const $element = $("#" + idControlElement);
         if (!$element.length) return;
