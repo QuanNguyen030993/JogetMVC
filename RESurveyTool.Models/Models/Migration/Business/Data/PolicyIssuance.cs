@@ -1,5 +1,6 @@
 using ERPCore.Models.Migration.Base;
 using ERPCore.Models.Migration.Business.Data;
+using ERPCore.Models.Migration.Config;
 using System;
 using System.ComponentModel.DataAnnotations;
 
@@ -69,7 +70,8 @@ public class PolicyIssuance : BaseModel
     public string? WorkflowStatus { get; set; } = "";
     public string? PolicyIssuanceStatus { get; set; } = "";
     public string? PIC { get; set; } = "";
-
+    public string? LeaderPIC { get; set; } = "";
+    public string? HODPIC { get; set; } = "";
     public long? ProductId { get; set; }
     public long? LineId { get; set; }
     public long? ReinsuranceId { get; set; }
@@ -83,5 +85,7 @@ public class PolicyIssuance : BaseModel
     public long? DocumentId { get; set; }
     public Document? DocumentFK { get; set; }
     public string? ClientName { get; set; }
+    public long? BranchId { get; set; }
+    public EnumData? BranchEnum { get; set; }
 
 }

@@ -264,7 +264,7 @@
                 html += `<div class='card-title' onclick='assignGroupName(this)' >${g.group}</div>`;
                 html += `<div style='padding:5px'>${g.field}</div>`;
                 g.items.forEach(i => {
-                    html += `<div class='item' onclick='selectField("${g.field}",${JSON.stringify(g.items)},this)'>${i}</div>`;
+                    html += `<div class='item' onclick='selectField("${g.field}",${JSON.stringify(g.items)},this)'>${i.text}<span class="badge exit" style="display: flex;float: right;">${i.id}</span></div>`;
                 });
                 html += `<div class='item' style='font-weight:bold;color:blue' onclick='addField("${g.group}")'>+ Add Key</div>`;
                 html += `</div>`;
@@ -503,7 +503,7 @@
             const map = {};
 
             rawData.forEach(row => {
-
+                console.log(row);
                 // ✅ Group
                 const group = row.name;
 
@@ -522,6 +522,7 @@
 
                 map[key].items.push({
                     text: row.value,
+                    id: row.id,
                     order: row.enumOrder ?? 999
                 });
 
@@ -533,7 +534,7 @@
                 field: g.field,
                 items: g.items
                     .sort((a,b) => a.order - b.order)
-                    .map(x => x.text)
+                    .map(x => { text = x.text;x.id = x.id ; return x;} )
             }));
         }
         dictionaryData= [];

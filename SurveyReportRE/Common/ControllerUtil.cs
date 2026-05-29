@@ -21,6 +21,8 @@ using Microsoft.AspNetCore.SignalR;
 using RESurveyTool.Models.Models.Parsing;
 using ERPCore.Models.Migration.Business.Social;
 using ERPCore.Common;
+using ERPCore.Models.Business.Migration.Config;
+using static ERPCore.Models.Models.Parsing.JsonHandle;
 
 namespace ERPCore.ControllerUtil
 {
@@ -78,7 +80,50 @@ namespace ERPCore.ControllerUtil
             }
         }
 
+        public static (PICAttributes PICMain, PICSysHandleAttributes PICLeader) PersonInChargeHandle(dynamic objectIn, StepsWorkflow stepsWorkflow, Microsoft.Extensions.Options.IOptionsMonitor<BusinessConfig> businessConfig)
+        {
 
+            var getBranchId = businessConfig.CurrentValue.Sites.Values.Where(w => w.BranchCode == objectIn.BranchId).ToList();
+            PICSysHandleAttributes PICLeader = new PICSysHandleAttributes();
+            PICLeader = getBranchId.First().LeaderFollowRequest;
+            PICAttributes PICMain = new PICAttributes();
+            PICMain = JsonConvert.DeserializeObject<PICAttributes>(objectIn.PIC);
+            //TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(objectIn.TurnAroundTimeAttributes);
+            //TurnAroundItem tatObject = stepsWorkflow.ToNodeId switch
+            //{
+            //    "FO" => result.FO,
+            //    "TS" => result.TS,
+            //    "UW" => result.UW,
+            //    "LMKT" => result.LMKT,
+            //    "PM" => result.PM,
+            //    _ => null
+            //};
+            //tatObject.CompleteDate = DateTime.Now;
+            //switch (stepsWorkflow.FromNodeId)
+            //{
+            //    case "FO":
+            //        result.FO = tatObject;
+            //        break;
+            //    case "TS":
+            //        result.TS = tatObject;
+            //        break;
+            //    case "UW":
+            //        result.UW = tatObject;
+            //        break;
+            //    case "LMKT":
+            //        result.LMKT = tatObject;
+            //        break;
+            //    case "PM":
+            //        result.PM = tatObject;
+            //        break;
+            //}
+            //objectIn.TurnAroundTimeAttributes = JsonConvert.SerializeObject(result);
+
+
+
+            return (PICMain, PICLeader);
+
+        }
         public static async Task<Notification> Notify(dynamic transferObject
             )
         {

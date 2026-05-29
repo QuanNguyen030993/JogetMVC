@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static ERPCore.Models.Models.Parsing.JsonHandle;
 
 namespace ERPCore.Models.Business.Migration.Config
 {
@@ -16,22 +17,56 @@ namespace ERPCore.Models.Business.Migration.Config
         public string DefaultCurrencyEnumName { get; set; } = "";
         public string DefaultCurrencyType { get; set; } = "";
         public string DefaultStatusSurveyEvaluation { get; set; } = "";
-        public string HCMSiteName { get; set; } = "";
-        public string HNSiteName { get; set; } = "";
-        public string HCMSiteEmailCCAccount { get; set; } = "";
-        public string HNSiteEmailCCAccount { get; set; } = "";
         public Workflow? Workflow { get; set; }
         public Dictionary<string, SiteConfig> Sites { get; set; } = new Dictionary<string, SiteConfig>();
     }
 
     public class SiteConfig
     {
-        public int? BranchCode { get; set; } = 0;
-        public string Name { get; set; } = "";
-        public string EmailCCAccount { get; set; } = "";
-        public string OwnData { get; set; } = "";   
+        public int BranchCode { get; set; }
+        public string Name { get; set; }
+        public string EmailCCAccount { get; set; }
+
+        public PICSysHandleAttributes LeaderFollowRequest { get; set; }
+        public HODFollowRequest HODFollowRequest { get; set; }
+        public string HelpingDraft { get; set; }
+        public string OwnData { get; set; }
     }
 
+    // Nếu muốn custom riêng HCM/HN thì có thể kế thừa
+    public class HCMSiteConfig : SiteConfig
+    {
+        // thêm field riêng nếu cần
+    }
+
+    public class HNSiteConfig : SiteConfig
+    {
+        // thêm field riêng nếu cần
+    }
+
+    //public class LeaderFollowRequest
+    //{
+    //    public FO FO { get; set; }
+    //    public string TS { get; set; }
+    //    public string UW { get; set; }
+    //    public string PM { get; set; }
+    //}
+
+    public class FO
+    {
+        public string CBJ { get; set; }
+        public string CB { get; set; }
+        public string BDP { get; set; }
+        public string BR { get; set; }
+    }
+
+    public class HODFollowRequest
+    {
+        public string FO { get; set; }
+        public string TS { get; set; }
+        public string UW { get; set; }
+        public string PM { get; set; }
+    }
     public class Workflow
     {
         public string Quotation { get; set; } = "";

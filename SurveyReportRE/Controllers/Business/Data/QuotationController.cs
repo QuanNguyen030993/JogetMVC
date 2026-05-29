@@ -34,6 +34,7 @@ using Document = ERPCore.Models.Migration.Business.Data.Document;
 using ERPCore.Models.Migration.Business.Social;
 using AutoMapper.Internal;
 using ERPCore.Models.Models.Parsing;
+using static ERPCore.Models.Models.Parsing.JsonHandle;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -267,6 +268,10 @@ public class QuotationController : BaseControllerApi<Quotation>
                         message = "Workflow not build or missing from system",
                         detail = "Please contact admin!"
                     });
+
+
+                    (PICAttributes PICMain, PICSysHandleAttributes PICLeader) picS = ControllerUtil.PersonInChargeHandle(quotation, stepsWorkflow, _businessConfig);
+                    quotation.LeaderPIC = JsonConvert.SerializeObject(picS.PICLeader);
                     quotation = await _BaseRepository.InsertData(quotation);
                     if (file != null)
                     {
@@ -294,23 +299,22 @@ public class QuotationController : BaseControllerApi<Quotation>
 
 
 
-                    await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
-
-                }
-                PICAttributes pICAttributes = new PICAttributes();
-                pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
-                var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
+                await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
+                
+                    //loop multiple account tai day
+                    var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
                 NotificationRequest notification = new NotificationRequest();
                 Notification Notification = new Notification();
                 Notification.Title = string.Format(_messageSettings.InitializeMessage.Title, quotation.QuotationCode);
                 Notification.Message = quotation?.Subject ?? string.Format(_messageSettings.InitializeMessage.Content, "");
                 Notification.IsRead = false;
-                Notification.Resource = $"{pICAttributes.TS}_TS";
+                Notification.Resource = $"{picS.PICMain.GetType().GetProperty(stepsWorkflow.ToNodeId).GetValue(picS.PICMain)}_{stepsWorkflow.ToNodeId}";
                 Notification.System = "WM";
                 Notification.RecordGuid = quotation.Guid;
-                Notification.ReceivedBy = pICAttributes.TS;
+
+                Notification.ReceivedBy = (string)picS.PICMain.GetType().GetProperty(stepsWorkflow.ToNodeId).GetValue(picS.PICMain);
                 notification.Notification = Notification;
-                notification.connectionId = pICAttributes.TS;
+                notification.connectionId = (string)picS.PICMain.GetType().GetProperty(stepsWorkflow.ToNodeId).GetValue(picS.PICMain);
                 notification.tabPublicUrl = Util.URLObjectMaking(quotation);
                 PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
                 string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
@@ -330,6 +334,9 @@ public class QuotationController : BaseControllerApi<Quotation>
                     type = "inprogress"
                 };
                 ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+
+                }
+
             }
         }
         if (quotationData.QuotationData.Quotation.QuotationQuantity > 0 && files.Count == 0)
@@ -352,7 +359,7 @@ public class QuotationController : BaseControllerApi<Quotation>
             quotation.QuotationCode = ControllerUtil.GenerateNumberSeq(tableConfig, _formatCodeNoRepository, nameof(Quotation));
             quotation.ResId = res.Id;
 
-
+                (PICAttributes PICMain, PICSysHandleAttributes PICLeader) picS;
 
 
 
@@ -372,7 +379,11 @@ public class QuotationController : BaseControllerApi<Quotation>
                     message = "Workflow not build or missing from system",
                     detail = "Please contact admin!"
                 });
-                quotation = await _BaseRepository.InsertData(quotation);
+
+                    picS = ControllerUtil.PersonInChargeHandle(quotation, stepsWorkflow, _businessConfig);
+
+                    quotation.LeaderPIC = JsonConvert.SerializeObject(picS.PICLeader);
+                    quotation = await _BaseRepository.InsertData(quotation);
      
                 instanceWorkflow.RecordGuid = quotation.Guid;
 
@@ -395,42 +406,42 @@ public class QuotationController : BaseControllerApi<Quotation>
 
                 await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
 
-            }
-            PICAttributes pICAttributes = new PICAttributes();
-            pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
-            var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
-            NotificationRequest notification = new NotificationRequest();
-            Notification Notification = new Notification();
-            Notification.Title = string.Format(_messageSettings.InitializeMessage.Title, quotation.QuotationCode);
-            Notification.Message = quotation?.Subject ?? string.Format(_messageSettings.InitializeMessage.Content, "");
-            Notification.IsRead = false;
-            Notification.Resource = $"{pICAttributes.TS}_TS";
-            Notification.System = "WM";
-            Notification.RecordGuid = quotation.Guid;
+                    //loop multiple account tai day
+                    var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
+                NotificationRequest notification = new NotificationRequest();
+                Notification Notification = new Notification();
+                Notification.Title = string.Format(_messageSettings.InitializeMessage.Title, quotation.QuotationCode);
+                Notification.Message = quotation?.Subject ?? string.Format(_messageSettings.InitializeMessage.Content, "");
+                Notification.IsRead = false;
+                Notification.Resource = $"{picS.PICMain.GetType().GetProperty(stepsWorkflow.ToNodeId).GetValue(picS.PICMain)}_{stepsWorkflow.ToNodeId}";
+                Notification.System = "WM";
+                Notification.RecordGuid = quotation.Guid;
 
-            Notification.ReceivedBy = pICAttributes.TS;
-            notification.Notification = Notification;
-            notification.connectionId = pICAttributes.TS;      
-            notification.tabPublicUrl = Util.URLObjectMaking(quotation);
-            PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
-            string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
-            Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
-            NotificationController.Notify(notification);
+                Notification.ReceivedBy = (string)picS.PICMain.GetType().GetProperty(stepsWorkflow.ToNodeId).GetValue(picS.PICMain);
+                notification.Notification = Notification;
+                notification.connectionId = (string)picS.PICMain.GetType().GetProperty(stepsWorkflow.ToNodeId).GetValue(picS.PICMain);      
+                notification.tabPublicUrl = Util.URLObjectMaking(quotation);
+                PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
+                string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
+                Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
+                NotificationController.Notify(notification);
 
 
                 quotationComplete = quotationCount ?? 0 / i; //Pending at ajax
                 result = new SignalRResult
-            {
+                {
                 status = "saving ...",
                 data = quotationData,
                     tabName = _messageSettings.OverviewMessageLoading.Title,
                     subTabContent = _messageSettings.OverviewMessageLoading.Content,
                     progressvalue = 75,//quotationComplete,
                 type = "inprogress"
-            };
-            ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
-            }
+                };
+                ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+                }
 
+            }
+         
         }
         result = new SignalRResult
         {

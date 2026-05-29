@@ -192,6 +192,7 @@
                     _key: generateGUID(),
                     to: null,
                     notes: "",
+                    branchId: "",
                     deptTarget: vm.assignedTeamOrRole || "TS"
                 };
             }
@@ -677,6 +678,7 @@
                                         icon: "plus",
                                         type: "default",
                                         onClick() {
+                                        debugger
                                             openPopupForNew();
                                         }
                                     });
@@ -739,50 +741,58 @@
                 contentTemplate: function (content) {
                     content.empty();
 
-
-                      $.ajax({
-                            url: "api/Employee/GetAssignableByGroup",
-                            type: "GET",
-                            dataType: "json",
-                            data: {
-                                group:  vm.assignedTeamOrRole || "TS",
-                                excludeCurrent: true,
-                                keyword: ""
-                            }
-                        }).then(function (res) {
-                            $("<div id='assignBox'>").appendTo(content).dxForm({
-                                formData: {
-                                    to: currentEntry.to,
-                                    notes: currentEntry.notes,
-                                    deptTarget: vm.assignedTeamOrRole
-                                },
-                                colCount: 2,
-                                labelMode: "floating",
-                                items: [
-                                    {
-                                        dataField: "to",
-                                        colCount: 2,
-                                        editorType: "dxSelectBox",
-                                        validationRules: [{ type: "required" }],
-                                        editorOptions: {
-                                            dataSource: res.data,
-                                            displayExpr: "fullName",
-                                            valueExpr: "accountName",
-                                            searchEnabled: true
-                                        }
-                                    },
-                                    {
-                                        dataField: "notes",
-                                        colCount: 2,
-                                        editorType: "dxTextArea",
-                                        label: { text: "Notes" },
-                                        editorOptions: {
-                                            minHeight: 90
-                                        }
-                                    }
-                                ]
-                            });
-                        });
+                      //   debugger
+                      // $.ajax({
+                      //       url: "api/Employee/GetAssignableByGroup",
+                      //       type: "GET",
+                      //       dataType: "json",
+                      //       data: {
+                      //           group:  vm.assignedTeamOrRole || "TS",
+                      //           excludeCurrent: true,
+                      //           keyword: ""
+                      //       }
+                      //       }).then(function (res) {
+                      //       $("<div id='assignBox'>").appendTo(content).dxForm({
+                      //           formData: {
+                      //               to: currentEntry.to,
+                      //               branchId: currentEntry.areaId,
+                      //               notes: currentEntry.notes,
+                      //               deptTarget: vm.assignedTeamOrRole
+                      //           },
+                      //           colCount: 1,
+                      //           labelMode: "floating",
+                      //           items: [
+                      //               {
+                      //                   dataField: "to",
+                      //                   editorType: "dxSelectBox",
+                      //                   validationRules: [{ type: "required" }],
+                      //                   editorOptions: {
+                      //                       dataSource: res.data,
+                      //                       displayExpr: "fullName",
+                      //                       valueExpr: "accountName",
+                      //                       searchEnabled: true
+                      //                   }
+                      //           },
+                      //           {
+                      //               dataField: "branchId",
+                      //               visible: false,
+                      //               editorType: "dxNumberBox",
+                      //               label: { text: "Branch" },
+                      //               editorOptions: {
+                      //                   minHeight: 90
+                      //               }
+                      //           },
+                      //               {
+                      //                   dataField: "notes",
+                      //                   editorType: "dxTextArea",
+                      //                   label: { text: "Notes" },
+                      //                   editorOptions: {
+                      //                       minHeight: 90
+                      //                   }
+                      //               }
+                      //           ]
+                      //       });
+                      //   });
 
                 },
                 toolbarItems: [
@@ -803,7 +813,7 @@
 
                                 var data = form.option("formData");
                                 data._key = data.to;
-
+                                debugger
                                 if (popupMode === "new") {
                                     vm.assignees.push({ ...data });
                                 } else {
@@ -835,10 +845,11 @@
                     DevExpress.ui.notify("Switch Assignment Mode to 'Manual assign' to add entries.", "warning", 1800);
                     return;
                 }
-
+                debugger
                 popupMode = "new";
                 currentEntry = entryTemplate();
-
+                          var popup = $("#assigneePopup").dxPopup("instance");
+                 popup.option("title", "New Assignee Entry");
                       $.ajax({
                             url: "api/Employee/GetAssignableByGroup",
                             type: "GET",
@@ -849,12 +860,54 @@
                                 keyword: ""
                             }
                         }).then(function (res) {
-                              _enums.assignee.push(...res.data);
-                          
-                        });
-                          var popup = $("#assigneePopup").dxPopup("instance");
-                            popup.option("title", "New Assignee Entry");
+                            _enums.assignee.push(...res.data);
+                            popup.option("contentTemplate", function (content) {
+                              $("<div id='assignBox'>").appendTo(content).dxForm({
+                                formData: {
+                                    to: _enums.assignee[0].accountName,
+                                    branchId: _enums.assignee[0].areaId,
+                                    notes: "",
+                                    deptTarget: vm.assignedTeamOrRole
+                                },
+                                colCount: 1,
+                                labelMode: "floating",
+                                items: [
+                                    {
+                                        dataField: "to",
+                                        editorType: "dxSelectBox",
+                                        validationRules: [{ type: "required" }],
+                                        editorOptions: {
+                                            dataSource: res.data,
+                                            displayExpr: "fullName",
+                                            valueExpr: "accountName",
+                                            searchEnabled: true
+                                        }
+                                },
+                                {
+                                    dataField: "branchId",
+                                    visible: false,
+                                    editorType: "dxNumberBox",
+                                    label: { text: "Branch" },
+                                    editorOptions: {
+                                        minHeight: 90
+                                    }
+                                },
+                                    {
+                                        dataField: "notes",
+                                        editorType: "dxTextArea",
+                                        label: { text: "Notes" },
+                                        editorOptions: {
+                                            minHeight: 90
+                                        }
+                                    }
+                                ]
+                            });
+                      });
+
                             popup.show();
+                        });
+                            
+                            
                
             }
 

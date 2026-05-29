@@ -24,6 +24,9 @@ using TMIVHashing;
 using ERPCore.Models.Models.Parsing;
 using WebConfig = Microsoft.Extensions.Configuration;
 using ERPCore.Models.Migration.Business.Social;
+using static ERPCore.Models.Models.Parsing.JsonHandle;
+using ERPCore.Models.Migration.Business.Workflow;
+using ERPCore.Models.Business.Migration.Config;
 namespace ERPCore.Common
 {
     public static class Util
@@ -1463,6 +1466,40 @@ namespace ERPCore.Common
             return $"SELECT * FROM [{tableName}] WITH (NOLOCK) WHERE Active = 1 AND Deleted = 0";
         }
 
+        public static void TurnAroundTimeHandle(dynamic objectIn, StepsWorkflow stepsWorkflow)
+        {
+            TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(objectIn.TurnAroundTimeAttributes);
+            TurnAroundItem tatObject = stepsWorkflow.FromNodeId switch
+            {
+                "FO" => result.FO,
+                "TS" => result.TS,
+                "UW" => result.UW,
+                "LMKT" => result.LMKT,
+                "PM" => result.PM,
+                _ => null
+            };
+            tatObject.CompleteDate = DateTime.Now;
+            switch (stepsWorkflow.FromNodeId)
+            {
+                case "FO":
+                    result.FO = tatObject;
+                    break;
+                case "TS":
+                    result.TS = tatObject;
+                    break;
+                case "UW":
+                    result.UW = tatObject;
+                    break;
+                case "LMKT":
+                    result.LMKT = tatObject;
+                    break;
+                case "PM":
+                    result.PM = tatObject;
+                    break;
+            }
+            objectIn.TurnAroundTimeAttributes = JsonConvert.SerializeObject(result);
+        }
+      
         public static Notification MakeNotificationFromEmail(Notification notification, MailQueue mailQueue,dynamic objectIn , WebConfig.IConfiguration configuration,out UrlCall urlCall)
         {
             urlCall = new UrlCall();

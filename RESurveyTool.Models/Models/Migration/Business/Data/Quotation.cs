@@ -4,6 +4,7 @@ using ERPCore.Models.Migration.Base;
 using ERPCore.Models.Migration.Business.Data;
 using ERPCore.Models.Migration.Business.MasterData;
 using ERPCore.Models.Migration.Config;
+using static ERPCore.Models.Models.Parsing.JsonHandle;
 
 public class Quotation : BaseModel
 {
@@ -76,6 +77,8 @@ public class Quotation : BaseModel
     public string? WorkflowStatus { get; set; } = "";
     public string? QuotationStatus { get; set; } = "";
     public string? PIC { get; set; } = "";
+    public string? LeaderPIC { get; set; } = "";
+    public string? HODPIC { get; set; } = "";
     public long? ProductId { get; set; }
     public Product? ProductFK { get; set; }
     public string? ProductCode { get; set; } = "";
@@ -90,33 +93,11 @@ public class Quotation : BaseModel
     public Attachment? AttachmentFK { get; set; }
     public long? DocumentId { get; set; }
     public Document? DocumentFK { get; set; }
+    public long? BranchId { get; set; } 
+    public EnumData? BranchEnum { get; set; }
     public string? TurnAroundTimeAttributes { get; set; }
     public TurnAroundAttributes? TurnAroundAttributes { get; set; }
     public List<Document> Documents { get; set; } = new List<Document>();
 
 
-}
-
-public class TurnAroundAttributes
-{
-    //{    "FO": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 10:30:00" },    "TS": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 09:15:00" },    "UW": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 09:15:00" },    "LMKT": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 09:15:00" },    "PM": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 09:15:00" }  }
-    public TurnAroundItem? FO { get; set; }
-    public TurnAroundItem? TS { get; set; }
-    public TurnAroundItem? UW { get; set; }
-    public TurnAroundItem? LMKT { get; set; }
-    public TurnAroundItem? PM { get; set; }
-}
-public class PICAttributes
-{
-    //{    "FO": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 10:30:00" },    "TS": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 09:15:00" },    "UW": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 09:15:00" },    "LMKT": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 09:15:00" },    "PM": { "acceptDate": "2026-03-16 09:15:00", "completeDate": "2026-03-16 09:15:00" }  }
-    public string? FO { get; set; }
-    public string? TS { get; set; }
-    public string? UW { get; set; }
-    public string? LMKT { get; set; }
-    public string? PM { get; set; }
-}
-public class TurnAroundItem
-{
-    public DateTime? AcceptDate { get; set; }
-    public DateTime? CompleteDate { get; set; }
 }
