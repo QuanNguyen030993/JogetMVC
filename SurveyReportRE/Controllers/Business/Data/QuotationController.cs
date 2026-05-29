@@ -212,8 +212,8 @@ public class QuotationController : BaseControllerApi<Quotation>
         SignalRResult result = new SignalRResult
         {
             status = "saving ...",
-            tabName = "Create Quotation",
-            subTabContent = "Please wait",
+            tabName = _messageSettings.OverviewMessageLoading.Title,
+            subTabContent = _messageSettings.OverviewMessageLoading.Content,
             data = quotationData,
             progressvalue = 0,
             type = "inprogress"
@@ -302,23 +302,15 @@ public class QuotationController : BaseControllerApi<Quotation>
                 var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
                 NotificationRequest notification = new NotificationRequest();
                 Notification Notification = new Notification();
-                Notification.Title = _messageSettings.InitializeMessage.Title;
-                Notification.Message = quotation?.Subject ?? _messageSettings.InitializeMessage.Content;
+                Notification.Title = string.Format(_messageSettings.InitializeMessage.Title, quotation.QuotationCode);
+                Notification.Message = quotation?.Subject ?? string.Format(_messageSettings.InitializeMessage.Content, "");
                 Notification.IsRead = false;
                 Notification.Resource = $"{pICAttributes.TS}_TS";
                 Notification.System = "WM";
                 Notification.RecordGuid = quotation.Guid;
-
                 Notification.ReceivedBy = pICAttributes.TS;
                 notification.Notification = Notification;
                 notification.connectionId = pICAttributes.TS;
-                //notification.tabPublicUrl = new
-                //{
-                //    url = $"/Business/Form/{nameof(Quotation)}_Form/{quotation.Id}",
-                //    caption = $"form_{nameof(Quotation)}_Form_{quotation.Id}",
-                //    name = $"{nameof(Quotation)} {quotation.QuotationCode}",
-                //    data = ""
-                //}; ;        
                 notification.tabPublicUrl = Util.URLObjectMaking(quotation);
                 PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
                 string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
@@ -331,8 +323,8 @@ public class QuotationController : BaseControllerApi<Quotation>
                 result = new SignalRResult
                 {
                     status = "saving ...",
-                    tabName = "Create Quotation",
-                    subTabContent = "Please wait",
+                    tabName = _messageSettings.OverviewMessageLoading.Title,
+                    subTabContent = _messageSettings.OverviewMessageLoading.Content,
                     data = quotationData,
                     progressvalue = 75,//fileComplete,
                     type = "inprogress"
@@ -409,8 +401,8 @@ public class QuotationController : BaseControllerApi<Quotation>
             var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
             NotificationRequest notification = new NotificationRequest();
             Notification Notification = new Notification();
-            Notification.Title = _messageSettings.InitializeMessage.Title;
-            Notification.Message = quotation?.Subject ?? _messageSettings.InitializeMessage.Content;
+            Notification.Title = string.Format(_messageSettings.InitializeMessage.Title, quotation.QuotationCode);
+            Notification.Message = quotation?.Subject ?? string.Format(_messageSettings.InitializeMessage.Content, "");
             Notification.IsRead = false;
             Notification.Resource = $"{pICAttributes.TS}_TS";
             Notification.System = "WM";
@@ -418,14 +410,7 @@ public class QuotationController : BaseControllerApi<Quotation>
 
             Notification.ReceivedBy = pICAttributes.TS;
             notification.Notification = Notification;
-            notification.connectionId = pICAttributes.TS;
-            //notification.tabPublicUrl = new
-            //{
-            //    url = $"/Business/Form/{nameof(Quotation)}_Form/{quotation.Id}",
-            //    caption = $"form_{nameof(Quotation)}_Form_{quotation.Id}",
-            //    name = $"{nameof(Quotation)} {quotation.QuotationCode}",
-            //    data = ""
-            //}; ;        
+            notification.connectionId = pICAttributes.TS;      
             notification.tabPublicUrl = Util.URLObjectMaking(quotation);
             PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
             string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
@@ -438,9 +423,9 @@ public class QuotationController : BaseControllerApi<Quotation>
             {
                 status = "saving ...",
                 data = quotationData,
-                tabName = "Create Quotation",
-                subTabContent = "Please wait",
-                progressvalue = 75,//quotationComplete,
+                    tabName = _messageSettings.OverviewMessageLoading.Title,
+                    subTabContent = _messageSettings.OverviewMessageLoading.Content,
+                    progressvalue = 75,//quotationComplete,
                 type = "inprogress"
             };
             ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
@@ -451,8 +436,8 @@ public class QuotationController : BaseControllerApi<Quotation>
         {
             status = "",
             data = quotationData,
-            tabName = "Create Quotation",
-            subTabContent = "Please wait",
+            tabName = _messageSettings.OverviewMessageLoading.Title,
+            subTabContent = _messageSettings.OverviewMessageLoading.Content,
             progressvalue = 100,
             type = "complete"
         };

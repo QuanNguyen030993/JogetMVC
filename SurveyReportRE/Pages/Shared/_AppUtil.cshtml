@@ -429,7 +429,7 @@
                     text: "Complete",
                     onClick() {
                         //var entryForm = $(`#assigneeEntryForm`).dxForm().dxForm("instance");
-                            makeMiniLoadingPanel("Create Quotation", "Please wait");
+                                makeMiniLoadingPanel("Initiate Quotation", "Please wait...");
 
                             var result = new Object();
                                 result.payload = new Object();
@@ -485,8 +485,8 @@
                             }
                         }
                              
-                                    result.payload.progressvalue = 50;
-                                        renderBrowserLoading(result);
+                        result.payload.progressvalue = 50;
+                        renderBrowserLoading(result);
                         $.ajax({
                             url: "/api/Quotation/CreateQuotation",
                             type: "POST",
@@ -2192,19 +2192,12 @@ function scrollToDept(module, dept) {
     }
         // ====== reload + refresh UI ======
     async function reloadNotifications(take = 30) {
-        const qs = $.param({
-            filter: JSON.stringify(["receivedBy", "=", _loginUser]),
-            paging: 1,
-            skip: 0,
-            take: take,
-            orderBy: "CreatedDate",
-            orderDir: "desc"
-        });
+   
         var de = $.Deferred();
             var params = new URLSearchParams();
-                  params.set("refKey", _loginUser);
-                    params.set("refField", 'ReceivedBy');
-            ajaxGet(`/api/Notification/GetAll?${params.toString()}`, qs)
+            params.set("refKey", _loginUser);
+            params.set("refField", 'ReceivedBy');
+            ajaxGet(`/api/Notification/GetAll?${params.toString()}`, null) // Do not passing another param if use URL Search Params 
             .then(ids => {
                     ids = ids.map(id => {
                         try {

@@ -547,7 +547,9 @@
                         colCount: 1,
                         
                         caption: "Attachment",
-                        items: [{
+                        items: [
+                        {dataField: "quotationQuantity",editorType: "dxNumberBox",editorOptions: { minValue: 1} },
+                            {
                         dataField: "@prefix" === "@prefix" ? "quotation" : "document", editorType: "dxFileUploader"
                         ,
                         editorOptions: {
