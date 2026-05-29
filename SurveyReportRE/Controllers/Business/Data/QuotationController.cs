@@ -33,6 +33,7 @@ using ERPCore.Models;
 using Document = ERPCore.Models.Migration.Business.Data.Document;
 using ERPCore.Models.Migration.Business.Social;
 using AutoMapper.Internal;
+using ERPCore.Models.Models.Parsing;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -208,107 +209,254 @@ public class QuotationController : BaseControllerApi<Quotation>
     [HttpPost]
     public async Task<IActionResult> CreateQuotation([FromForm] QuotationRequest quotationData)
     {
+        SignalRResult result = new SignalRResult
+        {
+            status = "saving ...",
+            tabName = "Create Quotation",
+            subTabContent = "Please wait",
+            data = quotationData,
+            progressvalue = 0,
+            type = "inprogress"
+        };
+        IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
+        OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(DOMAIN_NAME, "") == ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration));
+        //Pending at ajax 
+        //ControllerHelper.SignalRResponse("R_InitializeLoading", new { payload = result, connectionId = onlineUser.ConnectionId}, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
 
+        
         IFormFileCollection files = null;
         files = ((FormCollection)(Request.Form)).Files;
         quotationData.QuotationData = JsonConvert.DeserializeObject<QuotationData>(Request.Form["QuotationData"]);
-        foreach (var file in files)
+        if (files.Count > 0)
         {
-
-
-        //Before insert quotation
-        Quotation quotation = new Quotation();
-        List<FormatCodeNo> tableConfig = new List<FormatCodeNo>();
-        tableConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(Quotation) + "Code");
-
-        Res res = new Res();
-        res = await _resRepository.InsertData(res);
-
-
-        JsonConvert.PopulateObject(JsonConvert.SerializeObject(quotationData.QuotationData.Quotation), quotation);
-        quotation.QuotationCode = ControllerUtil.GenerateNumberSeq(tableConfig, _formatCodeNoRepository, nameof(Quotation));
-        quotation.ResId = res.Id;
-
-
-
-        
-
-
-        //After insert quotation
-        WorkflowDefinition workflowDefinition = new WorkflowDefinition();
-        workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(s => s.WorkflowCode == _businessConfig.CurrentValue.Workflow.Quotation);
-
-        if (workflowDefinition != null)
-        {
-            StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.StepNo == "1" && s.FromNodeId == quotationData.QuotationData.StartingDept);
-            InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
-            instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
-            //instanceWorkflow.CurrentStep = "2";
-            if (stepsWorkflow == null) return StatusCode(500, new
+            int filesCount = files.Count;
+            double fileComplete = 0;
+            int i = 0;
+            foreach (var file in files)
             {
-                message = "Workflow not build or missing from system",
-                detail = "Please contact admin!"
-            });
-            quotation = await _BaseRepository.InsertData(quotation);
-            if (file != null)
-            {
-                Request.Headers["Folder"] = $@"{nameof(Quotation)}\{quotation.QuotationCode}";
-                Request.Headers["RecordGuid"] = quotation.Guid.ToString();
-                Request.Headers["SectionName"] = $@"{quotationData.QuotationData.Attributes.SectionName}_{quotation.Id.ToString()}";
-                await AsyncUploadSingleFile(file);
+                //Before insert quotation
+                Quotation quotation = new Quotation();
+                List<FormatCodeNo> tableConfig = new List<FormatCodeNo>();
+                tableConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(Quotation) + "Code");
+
+                Res res = new Res();
+                res = await _resRepository.InsertData(res);
+
+
+                JsonConvert.PopulateObject(JsonConvert.SerializeObject(quotationData.QuotationData.Quotation), quotation);
+                quotation.QuotationCode = ControllerUtil.GenerateNumberSeq(tableConfig, _formatCodeNoRepository, nameof(Quotation));
+                quotation.ResId = res.Id;
+
+
+
+
+
+
+                //After insert quotation
+                WorkflowDefinition workflowDefinition = new WorkflowDefinition();
+                workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(s => s.WorkflowCode == _businessConfig.CurrentValue.Workflow.Quotation);
+
+                if (workflowDefinition != null)
+                {
+                    StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.StepNo == "1" && s.FromNodeId == quotationData.QuotationData.StartingDept);
+                    InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
+                    instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
+                    //instanceWorkflow.CurrentStep = "2";
+                    if (stepsWorkflow == null) return StatusCode(500, new
+                    {
+                        message = "Workflow not build or missing from system",
+                        detail = "Please contact admin!"
+                    });
+                    quotation = await _BaseRepository.InsertData(quotation);
+                    if (file != null)
+                    {
+                        Request.Headers["Folder"] = $@"{nameof(Quotation)}\{quotation.QuotationCode}";
+                        Request.Headers["RecordGuid"] = quotation.Guid.ToString();
+                        Request.Headers["SectionName"] = $@"{quotationData.QuotationData.Attributes.SectionName}_{quotation.Id.ToString()}";
+                        await AsyncUploadSingleFile(file);
+                    }
+                    instanceWorkflow.RecordGuid = quotation.Guid;
+
+                    instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
+                    instanceWorkflow.CurrentStepId = new Guid();
+                    instanceWorkflow.IsCancelled = false;
+                    instanceWorkflow.IsCompleted = false;
+                    instanceWorkflow = await _instanceWorkflowRepository.InsertData(instanceWorkflow);
+
+
+
+
+                    SubmitRequest submitRequest = new SubmitRequest();
+                    submitRequest.StepsWorkflow = stepsWorkflow;
+                    submitRequest.Comment = $"{quotation.QuotationCode} created!";
+                    submitRequest.InstanceWorkflow = instanceWorkflow;
+
+
+
+
+                    await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
+
+                }
+                PICAttributes pICAttributes = new PICAttributes();
+                pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
+                var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
+                NotificationRequest notification = new NotificationRequest();
+                Notification Notification = new Notification();
+                Notification.Title = _messageSettings.InitializeMessage.Title;
+                Notification.Message = quotation?.Subject ?? _messageSettings.InitializeMessage.Content;
+                Notification.IsRead = false;
+                Notification.Resource = $"{pICAttributes.TS}_TS";
+                Notification.System = "WM";
+                Notification.RecordGuid = quotation.Guid;
+
+                Notification.ReceivedBy = pICAttributes.TS;
+                notification.Notification = Notification;
+                notification.connectionId = pICAttributes.TS;
+                //notification.tabPublicUrl = new
+                //{
+                //    url = $"/Business/Form/{nameof(Quotation)}_Form/{quotation.Id}",
+                //    caption = $"form_{nameof(Quotation)}_Form_{quotation.Id}",
+                //    name = $"{nameof(Quotation)} {quotation.QuotationCode}",
+                //    data = ""
+                //}; ;        
+                notification.tabPublicUrl = Util.URLObjectMaking(quotation);
+                PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
+                string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
+                Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
+                NotificationController.Notify(notification);
+
+
+                i++;
+                fileComplete = filesCount / i; // Pending at ajax
+                result = new SignalRResult
+                {
+                    status = "saving ...",
+                    tabName = "Create Quotation",
+                    subTabContent = "Please wait",
+                    data = quotationData,
+                    progressvalue = 75,//fileComplete,
+                    type = "inprogress"
+                };
+                ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
             }
-            instanceWorkflow.RecordGuid = quotation.Guid;
-
-            instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
-            instanceWorkflow.CurrentStepId = new Guid();
-            instanceWorkflow.IsCancelled = false;
-            instanceWorkflow.IsCompleted = false;
-            instanceWorkflow = await _instanceWorkflowRepository.InsertData(instanceWorkflow);
-
-
-
-
-            SubmitRequest submitRequest = new SubmitRequest();
-            submitRequest.StepsWorkflow = stepsWorkflow;
-            submitRequest.Comment = $"{quotation.QuotationCode} created!";
-            submitRequest.InstanceWorkflow = instanceWorkflow;
-
-
-           
-            
-            await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
-
         }
-        PICAttributes pICAttributes = new PICAttributes();
-        pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
-        var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
-        NotificationRequest notification = new NotificationRequest();
-        Notification Notification = new Notification();
-        Notification.Title = _messageSettings.InitializeMessage.Title;
-        Notification.Message = quotation?.Subject ?? _messageSettings.InitializeMessage.Content;
-        Notification.IsRead = false;
-        Notification.Resource = $"{pICAttributes.TS}_TS";
-        Notification.System = "WM";
-        Notification.RecordGuid = quotation.Guid;
+        if (quotationData.QuotationData.Quotation.QuotationQuantity > 0 && files.Count == 0)
+        {
+            long? quotationCount = quotationData.QuotationData.Quotation.QuotationQuantity ?? 0;
+            double quotationComplete = 0;
+            for (int i = 0; i < quotationData.QuotationData.Quotation.QuotationQuantity; i++)
+            {
 
-        Notification.ReceivedBy = pICAttributes.TS;
-        notification.Notification = Notification;
-        notification.connectionId = pICAttributes.TS;
-        //notification.tabPublicUrl = new
-        //{
-        //    url = $"/Business/Form/{nameof(Quotation)}_Form/{quotation.Id}",
-        //    caption = $"form_{nameof(Quotation)}_Form_{quotation.Id}",
-        //    name = $"{nameof(Quotation)} {quotation.QuotationCode}",
-        //    data = ""
-        //}; ;        
-        notification.tabPublicUrl = Util.URLObjectMaking(quotation);
-        PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
+            //Before insert quotation
+            Quotation quotation = new Quotation();
+            List<FormatCodeNo> tableConfig = new List<FormatCodeNo>();
+            tableConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(Quotation) + "Code");
+
+            Res res = new Res();
+            res = await _resRepository.InsertData(res);
+
+
+            JsonConvert.PopulateObject(JsonConvert.SerializeObject(quotationData.QuotationData.Quotation), quotation);
+            quotation.QuotationCode = ControllerUtil.GenerateNumberSeq(tableConfig, _formatCodeNoRepository, nameof(Quotation));
+            quotation.ResId = res.Id;
+
+
+
+
+
+
+            //After insert quotation
+            WorkflowDefinition workflowDefinition = new WorkflowDefinition();
+            workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(s => s.WorkflowCode == _businessConfig.CurrentValue.Workflow.Quotation);
+
+            if (workflowDefinition != null)
+            {
+                StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.StepNo == "1" && s.FromNodeId == quotationData.QuotationData.StartingDept);
+                InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
+                instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
+                //instanceWorkflow.CurrentStep = "2";
+                if (stepsWorkflow == null) return StatusCode(500, new
+                {
+                    message = "Workflow not build or missing from system",
+                    detail = "Please contact admin!"
+                });
+                quotation = await _BaseRepository.InsertData(quotation);
+     
+                instanceWorkflow.RecordGuid = quotation.Guid;
+
+                instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
+                instanceWorkflow.CurrentStepId = new Guid();
+                instanceWorkflow.IsCancelled = false;
+                instanceWorkflow.IsCompleted = false;
+                instanceWorkflow = await _instanceWorkflowRepository.InsertData(instanceWorkflow);
+
+
+
+
+                SubmitRequest submitRequest = new SubmitRequest();
+                submitRequest.StepsWorkflow = stepsWorkflow;
+                submitRequest.Comment = $"{quotation.QuotationCode} created!";
+                submitRequest.InstanceWorkflow = instanceWorkflow;
+
+
+
+
+                await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
+
+            }
+            PICAttributes pICAttributes = new PICAttributes();
+            pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
+            var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
+            NotificationRequest notification = new NotificationRequest();
+            Notification Notification = new Notification();
+            Notification.Title = _messageSettings.InitializeMessage.Title;
+            Notification.Message = quotation?.Subject ?? _messageSettings.InitializeMessage.Content;
+            Notification.IsRead = false;
+            Notification.Resource = $"{pICAttributes.TS}_TS";
+            Notification.System = "WM";
+            Notification.RecordGuid = quotation.Guid;
+
+            Notification.ReceivedBy = pICAttributes.TS;
+            notification.Notification = Notification;
+            notification.connectionId = pICAttributes.TS;
+            //notification.tabPublicUrl = new
+            //{
+            //    url = $"/Business/Form/{nameof(Quotation)}_Form/{quotation.Id}",
+            //    caption = $"form_{nameof(Quotation)}_Form_{quotation.Id}",
+            //    name = $"{nameof(Quotation)} {quotation.QuotationCode}",
+            //    data = ""
+            //}; ;        
+            notification.tabPublicUrl = Util.URLObjectMaking(quotation);
+            PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
             string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
             Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
             NotificationController.Notify(notification);
 
-        }
 
+                quotationComplete = quotationCount ?? 0 / i; //Pending at ajax
+                result = new SignalRResult
+            {
+                status = "saving ...",
+                data = quotationData,
+                tabName = "Create Quotation",
+                subTabContent = "Please wait",
+                progressvalue = 75,//quotationComplete,
+                type = "inprogress"
+            };
+            ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+            }
+
+        }
+        result = new SignalRResult
+        {
+            status = "",
+            data = quotationData,
+            tabName = "Create Quotation",
+            subTabContent = "Please wait",
+            progressvalue = 100,
+            type = "complete"
+        };
+        ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         return Ok();
     }
     [HttpPost]
@@ -795,7 +943,7 @@ public class QuotationController : BaseControllerApi<Quotation>
 
             }
         });
-        ControllerHelper.SignalRResponse(_hubContext, "ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        ControllerHelper.SignalRResponse( "ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         return new HttpResponseMessage(HttpStatusCode.OK);
     }
     public async Task BulkInsertQuotationAsync(List<Quotation> data)

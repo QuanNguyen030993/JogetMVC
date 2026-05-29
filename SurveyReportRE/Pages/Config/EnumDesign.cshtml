@@ -547,7 +547,6 @@
         params.set("refKey", "dxSelectBox");
          params.set("refField", 'FormDataType'); 
         ajaxGet(`/api/DataGridConfig/GetAll?${params.toString()}`,null).done(res => {
-            console.log(res);
             gridFields = res;
             renderGrid();
         });

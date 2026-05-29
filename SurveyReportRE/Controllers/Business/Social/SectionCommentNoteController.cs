@@ -44,7 +44,7 @@ public class SectionCommentNoteController : BaseControllerApi<SectionCommentNote
         var entity = new SectionCommentNote();
         JsonConvert.PopulateObject(form.values, entity);
         entity = await _BaseRepository.InsertData(entity);
-        ControllerHelper.SignalRResponse(FileProcessingHub._hubContext, "ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        ControllerHelper.SignalRResponse( "ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         return Ok(entity);
     }
 }

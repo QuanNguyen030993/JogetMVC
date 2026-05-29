@@ -390,9 +390,22 @@
                                 turnAroundTimeAttributes:"",
                                 startingDept:"FO"};
                             form.option("formData", payload);
+                        },
                     },
                 },
-            },{
+                    {
+                    widget: 'dxButton',
+                    toolbar: 'bottom',
+                    location: 'after',
+                    options: {
+                        stylingMode: 'contained',
+                        type: 'normal',
+                        text: "Demo load",
+                        onClick() {
+                             makeMiniLoadingPanel("Demo joget","demo content");
+                               startBrowserLoading(100000);
+                        }}},
+                {
                 widget: 'dxButton',
                 toolbar: 'bottom',
                 location: 'after',
@@ -416,6 +429,12 @@
                     text: "Complete",
                     onClick() {
                         //var entryForm = $(`#assigneeEntryForm`).dxForm().dxForm("instance");
+                            makeMiniLoadingPanel("Create Quotation", "Please wait");
+
+                            var result = new Object();
+                                result.payload = new Object();
+                                result.payload.progressvalue = 25;
+                                    renderBrowserLoading(result);
                         var entryForm = $(`#assignBox`).dxForm().dxForm("instance");
                         var entrySummaryForm = $(`#quotationRequestForm`).dxForm().dxForm("instance");
                         var submitData = entryForm?.option("formData") || {};
@@ -460,12 +479,14 @@
                         formData.append("QuotationData",JSON.stringify(quotationData));
                         if (uploader){
                         var files = uploader.option("value");
-
+                        
                         for (var i = 0; i < files.length; i++) {
                             formData.append("Files", files[i]);
+                            }
                         }
-                        }
-
+                             
+                                    result.payload.progressvalue = 50;
+                                        renderBrowserLoading(result);
                         $.ajax({
                             url: "/api/Quotation/CreateQuotation",
                             type: "POST",
@@ -2185,7 +2206,6 @@ function scrollToDept(module, dept) {
                     params.set("refField", 'ReceivedBy');
             ajaxGet(`/api/Notification/GetAll?${params.toString()}`, qs)
             .then(ids => {
-                console.log(ids);
                     ids = ids.map(id => {
                         try {
                             if (id.url && id.url !== "{}") {
@@ -2666,4 +2686,68 @@ function scrollToDept(module, dept) {
                 return key;
         }
     }
+    function makeMiniLoadingPanel(tabName, subTabContent){
+            $(`<div>`).html(`
+                <div class="mini-browser-loading" id="browserLoading">
+            <div class="browser-pill">
+            <div class="pill-content">
+            <div class="pill-text">
+                <div class="domain">${tabName}</div>
+                <div class="source">${subTabContent}</div>
+            </div>
+            </div>
+            <div class="progress-line">
+            <div class="progress-fill" id="progressFill"></div>
+            </div>
+            </div>
+            </div>`).appendTo($(`body`));
+    }
+
+    function disposeMiniLoadingPanel(){
+            setTimeout(()=>{
+                    $(`#browserLoading`).remove();
+            },1000);
+    }
+     function startBrowserLoading(duration = 3000){
+           const fill = document.getElementById("progressFill");
+           const wrapper = document.getElementById("browserLoading");
+           let progress = 0;
+           fill.style.width = "0%";
+           wrapper.style.display = "block";
+           wrapper.classList.remove("fade-out");
+           const interval = setInterval(()=>{
+               progress += 1;
+               fill.style.width = progress + "%";
+               if(progress >= 100){
+                   clearInterval(interval);
+                   setTimeout(()=>{
+                       wrapper.classList.add("fade-out");
+                       setTimeout(()=>{
+                           wrapper.style.display = "none";
+                       },350);
+                   },150);
+                       disposeMiniLoadingPanel();
+               }
+           }, duration / 100);
+       }
+
+            function renderBrowserLoading(result){
+               const fill = document.getElementById("progressFill");
+               const wrapper = document.getElementById("browserLoading");
+               let progress = result.payload.progressvalue;
+                   fill.style.width = progress + "%";
+               wrapper.style.display = "block";
+               wrapper.classList.remove("fade-out");
+                    if(progress >= 100){
+                        debugger
+                            wrapper.classList.add("fade-out");
+                                                       setTimeout(()=>{
+                                   wrapper.style.display = "none";
+                               },350);
+                                   disposeMiniLoadingPanel();
+                    }
+             
+           }
+
+
 </script>

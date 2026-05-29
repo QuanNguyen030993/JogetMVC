@@ -96,8 +96,7 @@ namespace ERPCore.ControllerUtil
             else return "1";
         }
 
-        public async static Task SignalRResponse(IHubContext<FileProcessingHub> hubContext
-            , string UIMethod
+        public async static Task SignalRResponse(string UIMethod
             , object returnObject
             , string connectionId
             , string domainName
@@ -107,7 +106,7 @@ namespace ERPCore.ControllerUtil
             IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
                 OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(domainName, "") == connectionId);
 
-                await hubContext.Clients.Client(onlineUser.ConnectionId).SendAsync(UIMethod,
+                await FileProcessingHub._hubContext.Clients.Client(onlineUser.ConnectionId).SendAsync(UIMethod,
                 returnObject);
         }
      

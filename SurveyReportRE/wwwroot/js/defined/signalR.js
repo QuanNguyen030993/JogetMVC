@@ -71,7 +71,75 @@ connectionSignR.start().then(async function () {
                 //}
         //alert("Submitted");
     });
-    
+
+    connectionSignR.on("R_InitializeLoading", function (responseData) {
+        if (responseData.connectionId == _connectionId) {
+            makeMiniLoadingPanel(responseData.payload.tabName, responseData.payload.subTabName);
+            renderBrowserLoading(responseData);
+        }
+    });
+    connectionSignR.on("R_OverviewLoading", function (responseData) {
+        if (responseData.connectionId == _connectionId) {
+            debugger
+            
+            renderBrowserLoading(responseData);
+            //progressValue = responseData.lossControlData.progressvalue;
+            //if (responseData.lossControlData.progressvalue == 100) {
+            //    $(`#saveLossControlForm_${_id}`).dxButton("instance").option("disabled", false);
+            //    submitButtonSignalRVisible();
+            //    // tabValidationCheck();
+
+
+            //    $.each(_formInstances, function (formIndex, focusForm) {
+            //        focusForm.instance.option('changedFields', {});
+            //    })
+
+            //    // var focusForm = _formInstances.find(f => f.formName == focusTabName);
+            //    // focusForm.instance.option('changedFields', {}); 
+            //    //  if (focusForm)
+            //    // subTabValidationCheck(focusForm.formName);
+            //}
+            //$(`#form_LossControl_Form_${responseData.lossControlData.data.id}_progressBar`).dxBarGauge("instance").option("values", [responseData.lossControlData.progressvalue]);
+            //$(`#form_LossControl_Form_${responseData.lossControlData.data.id}_progressBar`).dxBarGauge("instance").option("customStatus", responseData.lossControlData.type);
+
+            //var height = $(".main-header.wrapper").height();
+            //const $el = $(`[aria-controls="form_LossControl_Form_${_id}"]`);
+            //if ($(window).scrollTop() > height) {
+            //    $(`[aria-controls="form_LossControl_Form_${_id}"]`)
+            //        .css({
+            //            position: "fixed",
+            //            zIndex: "100",
+            //            left: "43%",
+            //            transition: "opacity 0.5s ease",
+            //            opacity: 1
+            //        });
+            //}
+            //if ((responseData.lossControlData.progressvalue == 100) && ($el.css("position") === "fixed")) {
+            //    setTimeout(() => {
+            //        $el.css({
+            //            opacity: 0,
+            //        });
+            //    }, 500);
+            //    setTimeout(() => {
+            //        $el.css({
+            //            position: "inherit",
+            //            left: "43%",
+            //            zIndex: "100",
+            //            opacity: 1,
+            //        });
+            //    }, 1000);
+            //}
+            //if (responseData.errorMsg) {
+            //    $(`#saveLossControlForm_${responseData.lossControlData.data.id}`).dxButton("instance").option("disabled", false);
+            //    $(`#form_LossControl_Form_${responseData.lossControlData.data.id}_progressBar`).dxBarGauge("instance").option("customStatus", responseData.lossControlData.type);
+            //    appErrorHandling(responseData.errorMsg);
+            //    // tabValidationCheck();
+            //    var focusForm = _formInstances.find(f => f.formName == focusTabName);
+            //    //  if (focusForm)
+            //    // subTabValidationCheck(focusForm.formName);
+            //}
+        }
+    });
 }).catch(function (err) {
     console.error("SignalR connection failed:", err);
 });

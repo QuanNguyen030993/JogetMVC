@@ -12,7 +12,6 @@
             var d = new $.Deferred();
             $.get("/api/Menu/GetHierarchyMenu?pageSystem=Management").done(function (result) {
                 d.resolve(result.menu);
-                console.log(result);
                 _menus = result.menu; // cache
                 $("#rolename").text(result.userRoles.RoleName);
                  _loginUser =  result.userRoles.LoginName.replace("TOKIOMARINE\\", "");;

@@ -241,23 +241,19 @@
                 return vm.assignmentMode === "manual";
             }
 
-            function buildSummary() {
-                var modeLabel =
-                    vm.assignmentMode === "auto" ? "AUTO ROUTE" :
-                    vm.assignmentMode === "later" ? "ASSIGN LATER" :
-                    "MANUAL ASSIGN";
-            }
+       
 
             var that = $("#quotationRequestForm").dxForm({
                 formData: vm,
                 colCount: 2,
-                rowCount: 2,
+                rowCount: 3,
                 labelMode: "floating",
                 showColonAfterLabel: false,
                 items: [
                     {
                         itemType: "group",
                         colCount: 2,
+                        
                         caption: "Header Information",
                         items: [
                             { dataField: "PIC", editorType: "dxTextBox", editorOptions: { readOnly: true, value: _loginUser } },
@@ -270,71 +266,11 @@
                                 validationRules: [{ type: "required" }]
                             },
                             { dataField: "requestTypeId", label: { text: "Request Type" }, editorType: "dxSelectBox", isRequired: true, editorOptions: makeSelectBoxEditorOptions(_enums.requestType) },
-                            { dataField: "clientName", editorType: "dxTextBox", visible: false, editorOptions: { readOnly: true } },
-
-                            {
-                                dataField: "clientId",
-                                editorType: "dxDropDownBox",
-                                isRequired: true,
-                                label: { text: "Client" },
-                                editorOptions: {
-                                    displayExpr: "englishName",
-                                    keyExpr: "id",
-                                    editorType: "dxDropDownBox",
-                                    width: "100%",
-                                    dropDownOptions: {
-                                        width: _defaultDropDownWidth,
-                                        height: _defaultDropDownHeight,
-                                    },
-                                    showClearButton: true,
-                                    dataSource: new DevExpress.data.CustomStore({
-                                        key: "id",
-                                        load: function (loadOptions) {
-                                            return $.ajax({
-                                                url: `/api/Client/ExecuteCustomQuery`,
-                                                method: "POST",
-                                                contentType: "application/json",
-                                                data: JSON.stringify(clientQuery)
-                                            });
-                                        },
-                                        byKey: function (key) {
-                                            if (key)
-                                                return $.ajax({
-                                                    url: `/api/Client/DropDownLookupCustomQuery?key=${encodeURIComponent(key)}`,
-                                                    method: "POST",
-                                                    contentType: "application/json",
-                                                    data: JSON.stringify(clientQuery)
-                                                }).then(function (result) {
-                                                    return Array.isArray(result) ? result[0] : result;
-                                                });
-                                            else
-                                                return new Array();
-                                        },
-                                    }),
-                                    contentTemplate: function (e) {
-                                        that.formInstance = that.dxForm("instance");
-                                        var item = this;
-                                        item.editorOptions = new Object();
-                                        item.editorOptions.dataSource = e.component.option("dataSource");
-
-                                        var dataGrid = makeTheClientLocationGrid(item, e, that, $("<div>"), function (selectedItems) {
-                                            var hasSelection = selectedItems.selectedRowKeys.length > 0;
-                                            if (!hasSelection) return;
-                                            var selectedRow = selectedItems.selectedRowsData[0];
-                                            e.component.option("value", selectedItems.selectedRowKeys[0]);
-                                            that.formInstance.updateData("clientName", selectedRow.englishName);
-                                            e.component.close();
-                                        });
-
-                                        return dataGrid.container;
-                                    }
-                                }
-                            },
-                            { dataField: "businessOccupation", label: { text: "Business Occupation" }, editorType: "dxTextBox" },
+                            { dataField: "dueDate", editorType: "dxDateBox", editorOptions: { displayFormat: "dd-MM-yyyy" } },
+                           
                             { dataField: "policyNo", label: { text: "Policy No" }, editorType: "dxTextBox" },
                             
                            
-                            { dataField: "dueDate", editorType: "dxDateBox", editorOptions: { displayFormat: "dd-MM-yyyy" } },
                             { dataField: "businessChannel", editorType: "dxSelectBox",
                                 editorOptions: { items: _enums.BusinessChannel,    
                                     keyExpr: "id",
@@ -489,9 +425,12 @@
                         //         }
                         // }
                 ]},
+                { itemType: "group",items:[
+
                 {
                     itemType: "group",
                     colCount: 2,
+                    
                     caption: "Product",
                     items: [
                     { dataField: "lineId", editorType: "dxSelectBox", editorOptions: {
@@ -532,11 +471,81 @@
                             }
                     }
                 },
-            { dataField: "productCode", editorType: "dxTextBox", visible: true, editorOptions: { readOnly: true } },
-            ]},
+                { dataField: "productCode", editorType: "dxTextBox", visible: true, editorOptions: { readOnly: true } },
+                ]},
+                {
+                        itemType: "group",
+                        colCount: 2,
+                        
+                        caption: "Client Information",
+                        items: [
+                        { dataField: "clientName", editorType: "dxTextBox", visible: false, editorOptions: { readOnly: true } },
+                        {
+                            dataField: "clientId",
+                            editorType: "dxDropDownBox",
+                            isRequired: true,
+                            label: { text: "Client" },
+                            editorOptions: {
+                                displayExpr: "englishName",
+                                keyExpr: "id",
+                                editorType: "dxDropDownBox",
+                                width: "100%",
+                                dropDownOptions: {
+                                    width: _defaultDropDownWidth,
+                                    height: _defaultDropDownHeight,
+                                },
+                                showClearButton: true,
+                                dataSource: new DevExpress.data.CustomStore({
+                                    key: "id",
+                                    load: function (loadOptions) {
+                                        return $.ajax({
+                                            url: `/api/Client/ExecuteCustomQuery`,
+                                            method: "POST",
+                                            contentType: "application/json",
+                                            data: JSON.stringify(clientQuery)
+                                        });
+                                    },
+                                    byKey: function (key) {
+                                        if (key)
+                                            return $.ajax({
+                                                url: `/api/Client/DropDownLookupCustomQuery?key=${encodeURIComponent(key)}`,
+                                                method: "POST",
+                                                contentType: "application/json",
+                                                data: JSON.stringify(clientQuery)
+                                            }).then(function (result) {
+                                                return Array.isArray(result) ? result[0] : result;
+                                            });
+                                        else
+                                            return new Array();
+                                    },
+                                }),
+                                contentTemplate: function (e) {
+                                    that.formInstance = that.dxForm("instance");
+                                    var item = this;
+                                    item.editorOptions = new Object();
+                                    item.editorOptions.dataSource = e.component.option("dataSource");
+
+                                    var dataGrid = makeTheClientLocationGrid(item, e, that, $("<div>"), function (selectedItems) {
+                                        var hasSelection = selectedItems.selectedRowKeys.length > 0;
+                                        if (!hasSelection) return;
+                                        var selectedRow = selectedItems.selectedRowsData[0];
+                                        e.component.option("value", selectedItems.selectedRowKeys[0]);
+                                        that.formInstance.updateData("clientName", selectedRow.englishName);
+                                        e.component.close();
+                                    });
+
+                                    return dataGrid.container;
+                                }
+                            }
+                        },
+                    { dataField: "businessOccupation", label: { text: "Business Occupation" }, editorType: "dxTextBox" },
+
+        ]}
+        ]},
                             {
                         itemType: "group",
                         colCount: 1,
+                        
                         caption: "Attachment",
                         items: [{
                         dataField: "@prefix" === "@prefix" ? "quotation" : "document", editorType: "dxFileUploader"
@@ -579,12 +588,12 @@
                         ]},
                         {
                         itemType: "group",
-                        colCount: 1,
+                        colCount: 2,
+                        
                         caption: "Assignment",
                         items: [
                     {
                         dataField: "assignmentMode",
-                        colCount: 2,
                         editorType: "dxSelectBox",
                         editorOptions: {
                             dataSource: _enums.assignmentMode,
@@ -593,7 +602,7 @@
                             onValueChanged(e) {
                                 vm.assignmentMode = e.value;
                                 refreshAssignmentUI();
-                                buildSummary();
+                               
                             }
                         }
                     },
@@ -601,22 +610,23 @@
                         dataField: "assignedTeamOrRole",
                         label: { text: "Assigned Team/Role" },
                         editorType: "dxSelectBox",
-                        colCount: 2,
                         editorOptions: {
                             dataSource: _enums.teamOrRole,
                             displayExpr: "text",
                             valueExpr: "id",
                             onValueChanged(e) {
                                 vm.assignedTeamOrRole = e.value;
-                                buildSummary();
+                               
                             }
                         }
                     },
                             {
                                 itemType: "simple",
                                 dataField: "assigneeList",
+                                colSpan: 2,
+                                
                                 visible: true,
-                                label: { text: "Choose PIC" },
+                                label: { text: "Assign PIC" },
                                 template: function (data, itemElement) {
                                 $(`<div id="btnNewAssignee">`).appendTo(itemElement);
                                 $(`<div id="btnClearAssignee">`).appendTo(itemElement);
@@ -686,7 +696,7 @@
 
                 ],
                 onInitialized(e) {
-                    buildSummary();
+                   
                     //that.formInstance = e.component;
                     initPicIfEmpty(e.component);
                     syncAttachmentToForm();
