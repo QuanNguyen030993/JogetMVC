@@ -80,10 +80,10 @@ namespace ERPCore.ControllerUtil
             }
         }
 
-        public static (PICAttributes PICMain, PICSysHandleAttributes PICLeader) PersonInChargeHandle(dynamic objectIn, StepsWorkflow stepsWorkflow, Microsoft.Extensions.Options.IOptionsMonitor<BusinessConfig> businessConfig)
+        public static (PICAttributes PICMain, PICSysHandleAttributes PICLeader) PersonInChargeHandle(dynamic objectIn, StepsWorkflow stepsWorkflow, Microsoft.Extensions.Options.IOptionsMonitor<BusinessConfig> businessConfig, List<EnumData> siteEnums)
         {
-
-            var getBranchId = businessConfig.CurrentValue.Sites.Values.Where(w => w.BranchCode == objectIn.BranchId).ToList();
+            EnumData enumData = siteEnums.FirstOrDefault(f => f.Code == objectIn.BranchCode);
+            var getBranchId = businessConfig.CurrentValue.Sites.Values.Where(w => w.BranchCode == enumData.Code).ToList();
             PICSysHandleAttributes PICLeader = new PICSysHandleAttributes();
             PICLeader = getBranchId.First().LeaderFollowRequest;
             PICAttributes PICMain = new PICAttributes();

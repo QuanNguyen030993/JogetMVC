@@ -2674,3 +2674,74 @@ text-overflow: ellipsis;
         transform: translateY(-8px);
     }
 }
+/* ================= SIGNALR MONITOR ================= */
+
+.signalr-monitor {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff;
+    border-radius: 20px;
+    padding: 4px 10px;
+    margin-left: 10px;
+    border: 1px solid rgba(0,0,0,.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 120px;
+    user-select: none;
+}
+
+.signalr-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: gray;
+}
+
+.signalr-connected .signalr-dot {
+    background: #28a745;
+}
+
+.signalr-reconnecting .signalr-dot {
+    background: #ff9800;
+    animation: pulseSignalR 1s infinite;
+}
+
+.signalr-disconnected .signalr-dot {
+    background: #dc3545;
+}
+
+.signalr-blink {
+    animation: signalRFlash .4s ease;
+}
+
+@keyframes signalRFlash {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(40,167,69,0);
+    }
+
+    50% {
+        transform: scale(1.08);
+        box-shadow: 0 0 20px rgba(40,167,69,.7);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes pulseSignalR {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: .3;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}

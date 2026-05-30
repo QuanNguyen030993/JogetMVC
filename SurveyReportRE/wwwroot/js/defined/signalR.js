@@ -1,4 +1,57 @@
-﻿
+﻿let signalRMessageCount = 0;
+
+function setSignalRStatus(status) {
+
+    const panel = $("#signalRMonitor");
+
+    panel.removeClass(
+        "signalr-connected signalr-reconnecting signalr-disconnected"
+    );
+
+    switch (status) {
+
+        case "connected":
+            panel.addClass("signalr-connected");
+            panel.find(".signalr-text").text("Online");
+            break;
+
+        case "reconnecting":
+            panel.addClass("signalr-reconnecting");
+            panel.find(".signalr-text").text("Reconnecting");
+            break;
+
+        default:
+            panel.addClass("signalr-disconnected");
+            panel.find(".signalr-text").text("Offline");
+            break;
+    }
+}
+
+function signalRBlink() {
+
+    signalRMessageCount++;
+
+    $("#signalRCounter")
+        .text(`(${signalRMessageCount})`);
+
+    const panel = $("#signalRMonitor");
+
+    panel.addClass("signalr-blink");
+
+    setTimeout(() => {
+        panel.removeClass("signalr-blink");
+    }, 400);
+}
+
+function registerSignalREvent(eventName, callback) {
+
+    connectionSignR.on(eventName, function (...args) {
+
+        signalRBlink();
+
+        callback(...args);
+    });
+}
 const connectionSignR = new signalR.HubConnectionBuilder()
     .withUrl("/fileProcessingHub", {
         transport: signalR.HttpTransportType.WebSockets
@@ -6,10 +59,47 @@ const connectionSignR = new signalR.HubConnectionBuilder()
     .configureLogging(signalR.LogLevel.Information)
     .withAutomaticReconnect()
     .build();
+connectionSignR.onreconnecting(function (err) {
 
+    console.warn("SignalR reconnecting", err);
+
+    setSignalRStatus("reconnecting");
+});
+
+connectionSignR.onreconnected(async function () {
+
+    console.log("SignalR reconnected");
+
+    try {
+
+        _connectionId =
+            await connectionSignR.invoke("GetConnectionId");
+
+        $("#signalRMonitor .signalr-text")
+            .text(`Online`);
+
+    } catch (e) {
+        console.error(e);
+    }
+
+    setSignalRStatus("connected");
+});
+
+connectionSignR.onclose(function () {
+
+    console.error("SignalR disconnected");
+
+    setSignalRStatus("disconnected");
+});
 connectionSignR.start().then(async function () {
     // if (!_connectionId)
-    _connectionId = await connectionSignR.invoke("GetConnectionId");
+    setSignalRStatus("connected");
+
+    _connectionId =
+        await connectionSignR.invoke("GetConnectionId");
+
+    $("#signalRMonitor .signalr-text")
+        .text(`Online`);
     connectionSignR.on(`LCReportFeature_${_connectionId}`, function (responseData) {
         if (responseData.connectionId == _connectionId) {
             if (responseData.isCreate) {

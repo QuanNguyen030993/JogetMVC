@@ -24,7 +24,7 @@ namespace ERPCore.Controllers.Config
             List<DataGridConfig> dataGridConfigs = new List<DataGridConfig>();
             dataGridConfigs.AddRange(JsonConvert.DeserializeObject<List<DataGridConfig>>(JsonConvert.SerializeObject(Base)));
             dataGridConfigs.ForEach(f => {
-                if (f.DataField == "key"
+                if (f.DataField == "value"
                 )
                 {
                     f.Fixed = true;

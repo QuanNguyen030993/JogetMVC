@@ -11,6 +11,7 @@ using ERPCore.Models.Migration.Config;
 using ERPCore.Models.Request;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
+using ERPCore.Models.Migration.Business.HumanResource;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -116,7 +117,7 @@ public class MenuController : BaseControllerApi<Menu>
             }
         }
         bool isSuperUser = superUsers.Contains(loginAccount);
-        var roles = await _BaseRepository.GetUserRoles(loginAccount.Replace(DOMAIN_NAME, ""), isSuperUser);
+        var roles = await _BaseRepository.GetUserRoles("quan.nh", isSuperUser);
         if (roles != null)
         //return Ok(roles);
             return Ok(new { Menu = result, UserRoles = roles });

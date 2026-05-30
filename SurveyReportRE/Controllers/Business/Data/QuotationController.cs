@@ -58,6 +58,7 @@ public class QuotationController : BaseControllerApi<Quotation>
     private readonly IBaseRepository<StepsWorkflow> _stepsWorkflowRepository;
     private readonly IBaseRepository<Document> _documentRepository;
     private readonly IBaseRepository<Notification> _notificationRepository;
+    private readonly IBaseRepository<EnumData> _enumDataRepository;
     private readonly IHubContext<FileProcessingHub> _hubContext;
     private readonly ILogger<Quotation> _logger;
     private readonly IConfigurationSection path;
@@ -106,6 +107,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         _stepsWorkflowRepository = new BaseRepository<StepsWorkflow>(configuration, _httpContextAccessor);
         _documentRepository = new BaseRepository<Document>(configuration, _httpContextAccessor);
         _notificationRepository = new BaseRepository<Notification>(configuration, _httpContextAccessor);
+        _enumDataRepository = new BaseRepository<EnumData>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
         _messageSettings = configuration.GetSection("Message").Get<Message>();
 
@@ -223,8 +225,9 @@ public class QuotationController : BaseControllerApi<Quotation>
         OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(DOMAIN_NAME, "") == ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration));
         //Pending at ajax 
         //ControllerHelper.SignalRResponse("R_InitializeLoading", new { payload = result, connectionId = onlineUser.ConnectionId}, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        List<EnumData> siteEnums = new List<EnumData>();
+        siteEnums = await _enumDataRepository.EnumData("BranchOffice");
 
-        
         IFormFileCollection files = null;
         files = ((FormCollection)(Request.Form)).Files;
         quotationData.QuotationData = JsonConvert.DeserializeObject<QuotationData>(Request.Form["QuotationData"]);
@@ -268,9 +271,9 @@ public class QuotationController : BaseControllerApi<Quotation>
                         message = "Workflow not build or missing from system",
                         detail = "Please contact admin!"
                     });
+                   
 
-
-                    (PICAttributes PICMain, PICSysHandleAttributes PICLeader) picS = ControllerUtil.PersonInChargeHandle(quotation, stepsWorkflow, _businessConfig);
+                    (PICAttributes PICMain, PICSysHandleAttributes PICLeader) picS = ControllerUtil.PersonInChargeHandle(quotation, stepsWorkflow, _businessConfig, siteEnums);
                     quotation.LeaderPIC = JsonConvert.SerializeObject(picS.PICLeader);
                     quotation = await _BaseRepository.InsertData(quotation);
                     if (file != null)
@@ -380,7 +383,7 @@ public class QuotationController : BaseControllerApi<Quotation>
                     detail = "Please contact admin!"
                 });
 
-                    picS = ControllerUtil.PersonInChargeHandle(quotation, stepsWorkflow, _businessConfig);
+                    picS = ControllerUtil.PersonInChargeHandle(quotation, stepsWorkflow, _businessConfig, siteEnums);
 
                     quotation.LeaderPIC = JsonConvert.SerializeObject(picS.PICLeader);
                     quotation = await _BaseRepository.InsertData(quotation);

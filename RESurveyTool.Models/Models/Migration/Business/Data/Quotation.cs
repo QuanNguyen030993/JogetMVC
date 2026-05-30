@@ -95,6 +95,7 @@ public class Quotation : BaseModel
     public Document? DocumentFK { get; set; }
     public long? BranchId { get; set; } 
     public EnumData? BranchEnum { get; set; }
+    public string? BranchCode { get; set; }
     public string? TurnAroundTimeAttributes { get; set; }
     public TurnAroundAttributes? TurnAroundAttributes { get; set; }
     public List<Document> Documents { get; set; } = new List<Document>();

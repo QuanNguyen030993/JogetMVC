@@ -87,5 +87,6 @@ public class PolicyIssuance : BaseModel
     public string? ClientName { get; set; }
     public long? BranchId { get; set; }
     public EnumData? BranchEnum { get; set; }
+    public string? BranchCode { get; set; }
 
 }

@@ -609,13 +609,13 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
     {
         using (var connection = new SqlConnection(_connectionString))
         {
-            var sql = $@"SELECT DISTINCT TOP 1 r.Department RoleName, u.name AS DisplayName, u.username AS LoginName
+            var sql = $@"SELECT DISTINCT TOP 1 r.Department RoleName, u.name AS DisplayName, u.username AS LoginName, u.branch AS Branch
                     FROM UserRoles ur
                     INNER JOIN Users u ON ur.UserId = u.Id
                     INNER JOIN Employee r ON r.AccountName = u.[username]
                     WHERE u.[username] = '{accountName}'";
             if (isSuperUser)
-                sql = $@"SELECT DISTINCT TOP 1 u.department RoleName, u.name AS DisplayName, u.username AS LoginName
+                sql = $@"SELECT DISTINCT TOP 1 u.department RoleName, u.name AS DisplayName, u.username AS LoginName, u.branch AS Branch
                     FROM Users u 
                     WHERE u.[username] = '{accountName}'";
             var result = await connection.QueryAsync<dynamic>(sql);

@@ -23,7 +23,7 @@ namespace ERPCore.Models.Business.Migration.Config
 
     public class SiteConfig
     {
-        public int BranchCode { get; set; }
+        public string BranchCode { get; set; }
         public string Name { get; set; }
         public string EmailCCAccount { get; set; }
 

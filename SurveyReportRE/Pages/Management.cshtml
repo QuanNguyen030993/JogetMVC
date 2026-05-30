@@ -56,9 +56,13 @@
 
                 </div>
                 @* <p id="onlineState" class="status-button"> </p> *@
-
+            <div id="signalRMonitor" class="signalr-monitor signalr-disconnected">
+                <div class="signalr-dot"></div>
+                <span class="signalr-text">Offline</span>
+                <span id="signalRCounter">(0)</span>
             </div>
-            
+            </div>
+   
             @await Html.PartialAsync("_SPAReference")
             <div id="mainPopup"></div>
             <div id="outlinePopup"></div>
