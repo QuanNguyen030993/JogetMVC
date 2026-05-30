@@ -388,6 +388,7 @@
                                     stageDept:"TS",
                                     subject:"Subject báo giá",
                                     turnAroundTimeAttributes:"",
+                                    quotationQuantity:2,
                                     startingDept:"FO"};
                                 form.option("formData", payload);
                             },
@@ -1368,23 +1369,41 @@
             return parts.join(" ");
         }
 
-        function renderPicInline(picJson) {
-            const obj = parsePicObject(picJson);
-            const deptOrder = ["FO", "TS", "UW", "LMKT", "PM"];
+    function formatPicValue(val, dept) {
+        if (!val) return "-";
+
+        // FO là object
+        if (dept === "FO" && typeof val === "object") {
+            return Object.entries(val)
+                .filter(([k, v]) => v)
+                .map(([k, v]) => `${k}:${v}`)
+                .join(" | ");
+        }
+
+        return String(val);
+    }
+
+    function renderPicInline(picJson) {
+        const obj = parsePicObject(picJson);
+        const deptOrder = ["FO", "TS", "UW", "LMKT", "PM"];
+
+        return `
+            <div class="pic-inline-wrap">
+                ${deptOrder.map(dept => {
+            const value = formatPicValue(obj[dept], dept);
 
             return `
-                <div class="pic-inline-wrap">
-                    ${deptOrder.map(dept => `
                         <div class="pic-inline pic-inline--${dept.toLowerCase()}">
                             <span class="pic-inline-head">${dept}</span>
-                            <span class="pic-inline-val" title="${escapeHtml(obj[dept] || "-")}">
-                                ${escapeHtml(obj[dept] || "-")}
+                            <span class="pic-inline-val" title="${escapeHtml(value)}">
+                                ${escapeHtml(value)}
                             </span>
                         </div>
-                    `).join("")}
-                </div>
-            `;
-        }
+                    `;
+        }).join("")}
+            </div>
+        `;
+    }
 
         function TinyMCEElementMaker(classform)
         {

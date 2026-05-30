@@ -117,10 +117,11 @@ connectionSignR.start().then(async function () {
         }
     });
     connectionSignR.on("onlineUsersChanged", (users) => {
+        signalRBlink();
         userRender(users);
     });
     connectionSignR.on(`sectionRender_${_connectionId}`, (responseData) => {
-        
+        signalRBlink();
         const idx = window.QuotationPage.state.quotes.findIndex(x => x.id === responseData.data.id);
         window.QuotationPage.state.quotes[idx] = { ...responseData.data };
 
@@ -142,17 +143,23 @@ connectionSignR.start().then(async function () {
     });
 
     connectionSignR.on("NotificationCountUpdated", function (count) {
+        signalRBlink();
+
         updateNotification(count);
     });
     connectionSignR.on("NotificationUpdated", function (items) {
+        signalRBlink();
         updateNotification(items.length);
     });
     connectionSignR.on("NotificationReceive", function (items) {
+        signalRBlink();
+
         reloadNotifications();
         showPopupNotification(items.title,
             items.message);
     });
     connectionSignR.on("ItemSubmitted", function (items) {
+        signalRBlink();
         //if (items.data.type === "Quotation") {
                     // Call the reload function for quotation components
                     if (window.reloadQuotationComponents) {
@@ -163,12 +170,14 @@ connectionSignR.start().then(async function () {
     });
 
     connectionSignR.on("R_InitializeLoading", function (responseData) {
+        signalRBlink();
         if (responseData.connectionId == _connectionId) {
             makeMiniLoadingPanel(responseData.payload.tabName, responseData.payload.subTabName);
             renderBrowserLoading(responseData);
         }
     });
     connectionSignR.on("R_OverviewLoading", function (responseData) {
+        signalRBlink();
         if (responseData.connectionId == _connectionId) {
             debugger
             

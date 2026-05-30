@@ -2187,7 +2187,7 @@
                  if (col.dataField == "requestedDate") {
                     col.sortOrder = "desc";
                 }
-                if (col.dataField === "pic")
+                if (col.dataField === "pic" || col.dataField === "leaderPIC" || col.dataField === "hODPIC")
                 {
                     col.cssClass = "col-pic-rows";
                     col.allowSorting = false;
@@ -2198,14 +2198,14 @@
                     // };
                       // phần này phục vụ search/filter
                     col.calculateCellValue = function (rowData) {
-                        return buildPicCategorySearchText(rowData.pic);
+                        return buildPicCategorySearchText(rowData[col.dataField]);
                     };
 
                     // phần này phục vụ render đẹp
                     col.cellTemplate = function (container, options) {
                         $(container)
-                            .attr("title", buildPicCategorySearchText(options.data.pic))
-                            .append(renderPicInline(options.data.pic));
+                            .attr("title", buildPicCategorySearchText(options.data[col.dataField]))
+                            .append(renderPicInline(options.data[col.dataField]));
                     };
                     // Nếu muốn filter row theo contains chắc hơn
                     // col.calculateFilterExpression = function (filterValue, selectedFilterOperation) {
@@ -2441,7 +2441,6 @@
                     col.cellTemplate = function (container, options) {
                         var selectedValue = options.data[propertyName];
                         var selectedGuid = options.data["guid"];
-                        console.log(selectedGuid);
                         $('<a>').addClass('dx-link dx-link-edit')
                             .text(options.text)
                             .css({ color: "#337ab7", textDecoration: "underline", cursor: "pointer" })
