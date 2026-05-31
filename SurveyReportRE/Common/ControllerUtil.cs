@@ -80,12 +80,14 @@ namespace ERPCore.ControllerUtil
             }
         }
 
-        public static (PICAttributes PICMain, PICSysHandleAttributes PICLeader) PersonInChargeHandle(dynamic objectIn, StepsWorkflow stepsWorkflow, Microsoft.Extensions.Options.IOptionsMonitor<BusinessConfig> businessConfig, List<EnumData> siteEnums)
+        public static (PICAttributes PICMain, PICSysHandleAttributes PICLeader, PICAttributes PICHOD) PersonInChargeHandle(dynamic objectIn, StepsWorkflow stepsWorkflow, Microsoft.Extensions.Options.IOptionsMonitor<BusinessConfig> businessConfig, List<EnumData> siteEnums)
         {
             EnumData enumData = siteEnums.FirstOrDefault(f => f.Code == objectIn.BranchCode);
             var getBranchId = businessConfig.CurrentValue.Sites.Values.Where(w => w.BranchCode == enumData.Code).ToList();
             PICSysHandleAttributes PICLeader = new PICSysHandleAttributes();
+            PICAttributes PICHOD = new PICAttributes();
             PICLeader = getBranchId.First().LeaderFollowRequest;
+            PICHOD = getBranchId.First().HODFollowRequest;
             PICAttributes PICMain = new PICAttributes();
             PICMain = JsonConvert.DeserializeObject<PICAttributes>(objectIn.PIC);
             //TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(objectIn.TurnAroundTimeAttributes);
@@ -121,7 +123,7 @@ namespace ERPCore.ControllerUtil
 
 
 
-            return (PICMain, PICLeader);
+            return (PICMain, PICLeader, PICHOD);
 
         }
         public static async Task<Notification> Notify(dynamic transferObject
@@ -141,26 +143,9 @@ namespace ERPCore.ControllerUtil
             Notification.ReceivedBy = transferObject.ReceivedBy;
             notification.Notification = Notification;
             notification.connectionId = transferObject.ReceivedBy;
-            //notification.tabPublicUrl = new
-            //{
-            //    url = $"/Business/Form/{nameof(Quotation)}_Form/{transferObject.Id}",
-            //    caption = $"form_{nameof(Quotation)}_Form_{transferObject.Id}",
-            //    name = $"{nameof(Quotation)} {transferObject.Code}",
-            //    data = ""
-            //}; 
             notification.tabPublicUrl = Util.URLObjectMaking(transferObject);
             IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
 
-            //OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(DOMAIN_NAME, "") == transferObject.ReceivedBy);
-            //if (onlineUser?.ConnectionId != null)
-            //{
-            //    await FileProcessingHub._hubContext.Clients.Client(onlineUser?.ConnectionId).SendAsync("NotificationReceive",
-            //              new
-            //              {
-            //                  title = notification?.Notification?.Title ?? "",
-            //                  message = notification?.Notification?.Message ?? ""
-            //              });
-            //}
             foreach (string item in transferObject.ReceivedBy.Split(','))
             {
                 OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(DOMAIN_NAME, "") == item);

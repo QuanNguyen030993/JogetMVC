@@ -35,6 +35,10 @@ using ERPCore.Models.Migration.Business.Social;
 using AutoMapper.Internal;
 using ERPCore.Models.Models.Parsing;
 using static ERPCore.Models.Models.Parsing.JsonHandle;
+using Syncfusion.CompoundFile.DocIO;
+using Org.BouncyCastle.Bcpg.Sig;
+using ERPCore.Pages.Business.Form.PolicyIssuanceDetail;
+using System.Collections.Generic;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -262,80 +266,25 @@ public class QuotationController : BaseControllerApi<Quotation>
 
                 if (workflowDefinition != null)
                 {
-                    StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.StepNo == "1" && s.FromNodeId == quotationData.QuotationData.StartingDept);
-                    InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
-                    instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
-                    //instanceWorkflow.CurrentStep = "2";
-                    if (stepsWorkflow == null) return StatusCode(500, new
+                    await NotificationHandle(
+                     workflowDefinition,
+                     quotation,
+                     quotationData,
+                    siteEnums,
+                     file
+                    );
+
+                    i++;
+                    fileComplete = filesCount / i; // Pending at ajax
+                    result = new SignalRResult
                     {
-                        message = "Workflow not build or missing from system",
-                        detail = "Please contact admin!"
-                    });
-                   
-
-                    (PICAttributes PICMain, PICSysHandleAttributes PICLeader) picS = ControllerUtil.PersonInChargeHandle(quotation, stepsWorkflow, _businessConfig, siteEnums);
-                    quotation.LeaderPIC = JsonConvert.SerializeObject(picS.PICLeader);
-                    quotation = await _BaseRepository.InsertData(quotation);
-                    if (file != null)
-                    {
-                        Request.Headers["Folder"] = $@"{nameof(Quotation)}\{quotation.QuotationCode}";
-                        Request.Headers["RecordGuid"] = quotation.Guid.ToString();
-                        Request.Headers["SectionName"] = $@"{quotationData.QuotationData.Attributes.SectionName}_{quotation.Id.ToString()}";
-                        await AsyncUploadSingleFile(file);
-                    }
-                    instanceWorkflow.RecordGuid = quotation.Guid;
-
-                    instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
-                    instanceWorkflow.CurrentStepId = new Guid();
-                    instanceWorkflow.IsCancelled = false;
-                    instanceWorkflow.IsCompleted = false;
-                    instanceWorkflow = await _instanceWorkflowRepository.InsertData(instanceWorkflow);
-
-
-
-
-                    SubmitRequest submitRequest = new SubmitRequest();
-                    submitRequest.StepsWorkflow = stepsWorkflow;
-                    submitRequest.Comment = $"{quotation.QuotationCode} created!";
-                    submitRequest.InstanceWorkflow = instanceWorkflow;
-
-
-
-
-                await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
-                
-                    //loop multiple account tai day
-                    var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
-                NotificationRequest notification = new NotificationRequest();
-                Notification Notification = new Notification();
-                Notification.Title = string.Format(_messageSettings.InitializeMessage.Title, quotation.QuotationCode);
-                Notification.Message = quotation?.Subject ?? string.Format(_messageSettings.InitializeMessage.Content, "");
-                Notification.IsRead = false;
-                Notification.Resource = $"{picS.PICMain.GetType().GetProperty(stepsWorkflow.ToNodeId).GetValue(picS.PICMain)}_{stepsWorkflow.ToNodeId}";
-                Notification.System = "WM";
-                Notification.RecordGuid = quotation.Guid;
-
-                Notification.ReceivedBy = (string)picS.PICMain.GetType().GetProperty(stepsWorkflow.ToNodeId).GetValue(picS.PICMain);
-                notification.Notification = Notification;
-                notification.connectionId = (string)picS.PICMain.GetType().GetProperty(stepsWorkflow.ToNodeId).GetValue(picS.PICMain);
-                notification.tabPublicUrl = Util.URLObjectMaking(quotation);
-                PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
-                string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
-                Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
-                NotificationController.Notify(notification);
-
-
-                i++;
-                fileComplete = filesCount / i; // Pending at ajax
-                result = new SignalRResult
-                {
-                    status = "saving ...",
-                    tabName = _messageSettings.OverviewMessageLoading.Title,
-                    subTabContent = _messageSettings.OverviewMessageLoading.Content,
-                    data = quotationData,
-                    progressvalue = 75,//fileComplete,
-                    type = "inprogress"
-                };
+                        status = "saving ...",
+                        tabName = _messageSettings.OverviewMessageLoading.Title,
+                        subTabContent = _messageSettings.OverviewMessageLoading.Content,
+                        data = quotationData,
+                        progressvalue = 75,//fileComplete,
+                        type = "inprogress"
+                    };
                 ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
 
                 }
@@ -373,64 +322,14 @@ public class QuotationController : BaseControllerApi<Quotation>
 
             if (workflowDefinition != null)
             {
-                StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.StepNo == "1" && s.FromNodeId == quotationData.QuotationData.StartingDept);
-                InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
-                instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
-                //instanceWorkflow.CurrentStep = "2";
-                if (stepsWorkflow == null) return StatusCode(500, new
-                {
-                    message = "Workflow not build or missing from system",
-                    detail = "Please contact admin!"
-                });
-
-                    picS = ControllerUtil.PersonInChargeHandle(quotation, stepsWorkflow, _businessConfig, siteEnums);
-
-                    quotation.LeaderPIC = JsonConvert.SerializeObject(picS.PICLeader);
-                    quotation = await _BaseRepository.InsertData(quotation);
-     
-                instanceWorkflow.RecordGuid = quotation.Guid;
-
-                instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
-                instanceWorkflow.CurrentStepId = new Guid();
-                instanceWorkflow.IsCancelled = false;
-                instanceWorkflow.IsCompleted = false;
-                instanceWorkflow = await _instanceWorkflowRepository.InsertData(instanceWorkflow);
-
-
-
-
-                SubmitRequest submitRequest = new SubmitRequest();
-                submitRequest.StepsWorkflow = stepsWorkflow;
-                submitRequest.Comment = $"{quotation.QuotationCode} created!";
-                submitRequest.InstanceWorkflow = instanceWorkflow;
-
-
-
-
-                await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
-
-                    //loop multiple account tai day
-                    var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
-                NotificationRequest notification = new NotificationRequest();
-                Notification Notification = new Notification();
-                Notification.Title = string.Format(_messageSettings.InitializeMessage.Title, quotation.QuotationCode);
-                Notification.Message = quotation?.Subject ?? string.Format(_messageSettings.InitializeMessage.Content, "");
-                Notification.IsRead = false;
-                Notification.Resource = $"{picS.PICMain.GetType().GetProperty(stepsWorkflow.ToNodeId).GetValue(picS.PICMain)}_{stepsWorkflow.ToNodeId}";
-                Notification.System = "WM";
-                Notification.RecordGuid = quotation.Guid;
-
-                Notification.ReceivedBy = (string)picS.PICMain.GetType().GetProperty(stepsWorkflow.ToNodeId).GetValue(picS.PICMain);
-                notification.Notification = Notification;
-                notification.connectionId = (string)picS.PICMain.GetType().GetProperty(stepsWorkflow.ToNodeId).GetValue(picS.PICMain);      
-                notification.tabPublicUrl = Util.URLObjectMaking(quotation);
-                PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
-                string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
-                Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
-                NotificationController.Notify(notification);
-
-
-                quotationComplete = quotationCount ?? 0 / i; //Pending at ajax
+                await NotificationHandle(
+                workflowDefinition,
+                quotation,
+                quotationData,
+                siteEnums,
+                 null
+                );
+                    quotationComplete = quotationCount ?? 0 / i; //Pending at ajax
                 result = new SignalRResult
                 {
                 status = "saving ...",
@@ -628,6 +527,79 @@ public class QuotationController : BaseControllerApi<Quotation>
         catch (Exception exception)
         {
             throw exception;
+        }
+    }
+    [NonAction]
+    public async Task NotificationHandle(
+         WorkflowDefinition workflowDefinition,
+         Quotation quotation,
+        QuotationRequest quotationData,
+         List<EnumData> siteEnums,
+        IFormFile file = null
+        )
+    {
+        StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.StepNo == "1" && s.FromNodeId == quotationData.QuotationData.StartingDept);
+        InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
+        instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
+        //instanceWorkflow.CurrentStep = "2";
+        if (stepsWorkflow != null)
+
+        {
+            (PICAttributes PICMain, PICSysHandleAttributes PICLeader, PICAttributes PICHOD) picS = ControllerUtil.PersonInChargeHandle(quotation, stepsWorkflow, _businessConfig, siteEnums);
+            quotation.LeaderPIC = JsonConvert.SerializeObject(picS.PICLeader);
+            quotation.HODPIC = JsonConvert.SerializeObject(picS.PICHOD);
+            quotation = await _BaseRepository.InsertData(quotation);
+            if (file != null)
+            {
+                Request.Headers["Folder"] = $@"{nameof(Quotation)}\{quotation.QuotationCode}";
+                Request.Headers["RecordGuid"] = quotation.Guid.ToString();
+                Request.Headers["SectionName"] = $@"{quotationData.QuotationData.Attributes.SectionName}_{quotation.Id.ToString()}";
+                await AsyncUploadSingleFile(file);
+            }
+            instanceWorkflow.RecordGuid = quotation.Guid;
+
+            instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
+            instanceWorkflow.CurrentStepId = new Guid();
+            instanceWorkflow.IsCancelled = false;
+            instanceWorkflow.IsCompleted = false;
+            instanceWorkflow = await _instanceWorkflowRepository.InsertData(instanceWorkflow);
+
+
+
+
+            SubmitRequest submitRequest = new SubmitRequest();
+            submitRequest.StepsWorkflow = stepsWorkflow;
+            submitRequest.Comment = $"{quotation.QuotationCode} created!";
+            submitRequest.InstanceWorkflow = instanceWorkflow;
+
+
+
+
+            await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
+
+            //loop multiple account tai day
+            var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
+            string picsStr = picS.PICMain.GetType().GetProperty(stepsWorkflow?.ToNodeId ?? "")?.GetValue(picS.PICMain ?? new PICAttributes()).ToString() ?? "";
+            foreach (var memberName in picsStr.Split(","))
+            {
+                NotificationRequest notification = new NotificationRequest();
+                Notification Notification = new Notification();
+                Notification.Title = string.Format(_messageSettings.InitializeMessage.Title, quotation.QuotationCode);
+                Notification.Message = quotation?.Subject ?? string.Format(_messageSettings.InitializeMessage.Content, "");
+                Notification.IsRead = false;
+                Notification.Resource = $"{memberName}_{stepsWorkflow.ToNodeId}";
+                Notification.System = "WM";
+                Notification.RecordGuid = quotation.Guid;
+
+                Notification.ReceivedBy = memberName;
+                notification.Notification = Notification;
+                notification.connectionId = memberName;
+                notification.tabPublicUrl = Util.URLObjectMaking(quotation);
+                PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
+                string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
+                Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
+                NotificationController.Notify(notification);
+            }
         }
     }
 

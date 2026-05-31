@@ -678,7 +678,6 @@
                                         icon: "plus",
                                         type: "default",
                                         onClick() {
-                                        debugger
                                             openPopupForNew();
                                         }
                                     });
@@ -813,7 +812,6 @@
 
                                 var data = form.option("formData");
                                 data._key = data.to;
-                                debugger
                                 if (popupMode === "new") {
                                     vm.assignees.push({ ...data });
                                 } else {
@@ -845,7 +843,6 @@
                     DevExpress.ui.notify("Switch Assignment Mode to 'Manual assign' to add entries.", "warning", 1800);
                     return;
                 }
-                debugger
                 popupMode = "new";
                 currentEntry = entryTemplate();
                           var popup = $("#assigneePopup").dxPopup("instance");
@@ -862,7 +859,7 @@
                         }).then(function (res) {
                             _enums.assignee.push(...res.data);
                             popup.option("contentTemplate", function (content) {
-                              $("<div id='assignBox'>").appendTo(content).dxForm({
+                              $("<div id='assignBox' class='dExForm'>").appendTo(content).dxForm({
                                 formData: {
                                     to: _enums.assignee[0].accountName,
                                     branchId: _enums.assignee[0].areaId,

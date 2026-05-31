@@ -28,7 +28,7 @@ namespace ERPCore.Models.Business.Migration.Config
         public string EmailCCAccount { get; set; }
 
         public PICSysHandleAttributes LeaderFollowRequest { get; set; }
-        public HODFollowRequest HODFollowRequest { get; set; }
+        public PICAttributes HODFollowRequest { get; set; }
         public string HelpingDraft { get; set; }
         public string OwnData { get; set; }
     }
