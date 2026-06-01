@@ -27,6 +27,7 @@ using ERPCore.Models.Migration.Business.Social;
 using static ERPCore.Models.Models.Parsing.JsonHandle;
 using ERPCore.Models.Migration.Business.Workflow;
 using ERPCore.Models.Business.Migration.Config;
+using static SkiaSharp.HarfBuzz.SKShaper;
 namespace ERPCore.Common
 {
     public static class Util
@@ -2453,6 +2454,17 @@ VALUES
     bool useNoLock = true
 )
         {
+            string QuoteName(string name)
+            {
+                if (string.IsNullOrWhiteSpace(name)) return name;
+                return "[" + name.Replace("]", "]]") + "]";
+            }
+
+            string BuildColumnSql(string columnName)
+            {
+                var q = QuoteName(columnName);
+                return string.IsNullOrWhiteSpace(tableName) ? q : $"{tableName}.{q}";
+            }
             // =========================
             // 1) merge params (KHÔNG bỏ reserved ở đây)
             // =========================
@@ -2518,27 +2530,48 @@ VALUES
             // =========================
             // 5) apply simple filters (query params ngoài filter/sort/skip/take)
             // Ví dụ receivedBy=quan.nh
-            // =========================
-            foreach (var kv in allParams)
+            //// =========================
+            
+            var combineParams = new Dictionary<string, string>();
+            for (int i = 1; i <= 20; i++)
+            {
+                var fieldKey = i == 1 ? "refField" : $"refField{i}";
+                var valueKey = i == 1 ? "refKey" : $"refKey{i}";
+
+                if (
+                    allParams.TryGetValue(fieldKey, out var fieldName) &&
+                    allParams.TryGetValue(valueKey, out var fieldValue) &&
+                    !string.IsNullOrWhiteSpace(fieldName)
+                )
+                {
+                    combineParams[fieldName] = fieldValue;
+                }
+            }
+
+            
+            foreach (var kv in combineParams)
             {
                 var key = kv.Key;
                 var value = kv.Value;
 
-                if (_reservedKeys.Contains(key)) continue;      // ✅ chỉ bỏ ở đây
                 if (string.IsNullOrWhiteSpace(value)) continue;
-                if (!_reservedKeys.Contains(key)) continue;    // ✅ chống inject column
+
+                var actualColumn = string.Equals(key, "key", StringComparison.OrdinalIgnoreCase)
+                    ? pkTieBreaker
+                    : key;
+
+                
 
                 var pName = "@p" + (++pIndex);
 
                 sql.Append(" AND ");
-                sql.Append(QuoteName(key));
-                sql.Append(" LIKE '%' + ");
+                sql.Append(BuildColumnSql(actualColumn));
+                sql.Append(" = ");
                 sql.Append(pName);
-                sql.AppendLine(" + '%'");
+                sql.AppendLine();
 
                 parameters[pName] = value;
             }
-
             // =========================
             // 6) ORDER BY (DevExtreme sort= JSON)
             // =========================

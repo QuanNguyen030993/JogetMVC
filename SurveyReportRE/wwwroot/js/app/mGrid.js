@@ -24,6 +24,14 @@
                     this.refId2 = mGridOption.filterRefId2;
                 if (mGridOption.filterRefField2 != undefined)
                     this.refField2 = mGridOption.filterRefField2;
+                if (mGridOption.filterRefId != null || mGridOption.filterRefId != undefined)
+                    this.filterRefId = mGridOption.filterRefId;
+                if (mGridOption.filterRefField != null || mGridOption.filterRefField != undefined)
+                    this.filterRefField = mGridOption.filterRefField;
+                if (mGridOption.filterRefId2 != undefined)
+                    this.filterRefId2 = mGridOption.filterRefId2;
+                if (mGridOption.filterRefField2 != undefined)
+                    this.filterRefField2 = mGridOption.filterRefField2;
                 if (mGridOption.isAllowRowMenu != null || mGridOption.isAllowRowMenu != undefined)
                     this.isAllowRowMenu = mGridOption.isAllowRowMenu;
                 if (mGridOption.allowBuildOption != null || mGridOption.allowBuildOption != undefined)

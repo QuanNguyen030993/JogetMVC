@@ -117,7 +117,7 @@ public class MenuController : BaseControllerApi<Menu>
             }
         }
         bool isSuperUser = superUsers.Contains(loginAccount);
-        var roles = await _BaseRepository.GetUserRoles("quan.nh", isSuperUser);
+        var roles = await _BaseRepository.GetUserRoles(loginAccount, isSuperUser);
         if (roles != null)
         //return Ok(roles);
             return Ok(new { Menu = result, UserRoles = roles });

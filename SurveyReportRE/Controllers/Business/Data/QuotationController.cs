@@ -169,6 +169,11 @@ public class QuotationController : BaseControllerApi<Quotation>
         take = Math.Clamp(take, 1, 200);
 
         var requestParams = HttpContext.Request.Query.ToList();
+        var requestParamsHeader = HttpContext.Request.Headers.ToList();
+        //Pending
+
+        //requestParams.AddRange(requestParamsHeader);
+
         IDictionary<string, object> dynamicObj = new ExpandoObject { };
         foreach (var item in requestParams)
         {

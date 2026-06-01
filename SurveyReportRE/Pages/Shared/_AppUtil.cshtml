@@ -111,11 +111,20 @@
                             });
                         }
                         else {
+                            var params = new URLSearchParams();
+                            if (instance?.filterRefId)
+                                params.set("refKey", instance?.filterRefId);
+                            if(instance?.filterRefField)
+                                params.set("refField", instance?.filterRefField);
+                            if (instance?.filterRefId2)
+                                params.set("refKey2", instance?.filterRefId2);
+                            if(instance?.filterRefField2)
+                                params.set("refField2", instance?.filterRefField2);
                             return new DevExpress.data.DataSource({
-                                filter: filter,
+                                // filter: filter,
                                 store: DevExpress.data.AspNet.createStore({
                                     key: "id",
-                                    loadUrl: `/api/${instance.ModelName}/GetAll`,
+                                    loadUrl: `/api/${instance.ModelName}/GetAll?${params.toString()}`,
                                     onBeforeSend: function (method, ajaxOptions) {
                                         if (method === "load") {
                                             ajaxOptions.data = ajaxOptions.data || {};
@@ -123,7 +132,11 @@
                                                 "filterField": instance?.filterRefField ?? "",
                                                 "filterField2": instance?.filterRefField2 ?? "",
                                                 "filterValue": instance?.filterRefId ?? "",
-                                                "filterValue2": instance?.filterRefId2 ?? ""
+                                                "filterValue2": instance?.filterRefId2 ?? "",
+                                                "refField": instance?.filterRefField ?? "",
+                                                "refField2": instance?.filterRefField2 ?? "",
+                                                "refKey": instance?.filterRefId ?? "",
+                                                "refKey2": instance?.filterRefId2 ?? "",
                                             };
                                         }
                                     },
@@ -135,11 +148,35 @@
                         }
                     }
                     else {
+                        var params = new URLSearchParams();
+                          if (instance?.filterRefId)
+                            params.set("refKey", instance?.filterRefId);
+                          if (instance?.filterRefField)
+                            params.set("refField", instance?.filterRefField);
+                          if (instance?.filterRefId2)
+                            params.set("refKey2", instance?.filterRefId2);
+                          if(instance?.filterRefField2)
+                            params.set("refField2", instance?.filterRefField2);
                         return new DevExpress.data.DataSource({
-                            filter: filter,
+                            // filter: filter,
                             store: DevExpress.data.AspNet.createStore({
                                 key: "id",
-                                loadUrl: `/api/${instance.ModelName}/GetAll`,
+                                loadUrl: `/api/${instance.ModelName}/GetAll?${params.toString()}`,
+                                  onBeforeSend: function (method, ajaxOptions) {
+                                        if (method === "load") {
+                                            ajaxOptions.data = ajaxOptions.data || {};
+                                            ajaxOptions.headers = {
+                                                "filterField": instance?.filterRefField ?? "",
+                                                "filterField2": instance?.filterRefField2 ?? "",
+                                                "filterValue": instance?.filterRefId ?? "",
+                                                "filterValue2": instance?.filterRefId2 ?? "",
+                                                "refField": instance?.filterRefField ?? "",
+                                                "refField2": instance?.filterRefField2 ?? "",
+                                                "refKey": instance?.filterRefId ?? "",
+                                                "refKey2": instance?.filterRefId2 ?? "",
+                                            };
+                                        }
+                                    },
                                 updateUrl: `/api/${instance.ModelName}/UpdateData`,
                                 insertUrl: `/api/${instance.ModelName}/InsertData`,
                                 deleteUrl: `/api/${instance.ModelName}/DeleteData`
