@@ -2674,7 +2674,117 @@ text-overflow: ellipsis;
         transform: translateY(-8px);
     }
 }
-/* ================= SIGNALR MONITOR ================= */
+
+.report-btn {
+    width: 160px;
+    height: 160px;
+    border: 3px solid #f37021;
+    border-radius: 20px;
+    background-color: #e5bba2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #f37021;
+    font-family: Arial, sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+    .report-btn:hover {
+        background: #f37021;
+        color: white;
+    }
+
+        .report-btn:hover .triangle {
+            border-bottom: 60px solid #ffffff;
+            color: white;
+        }
+
+.triangle {
+    width: 0;
+    height: 0;
+    border-left: 35px solid transparent;
+    border-right: 35px solid transparent;
+    border-bottom: 60px solid #ffffff;
+    position: relative;
+    margin-bottom: 10px;
+}
+
+    .triangle::after {
+        content: "!";
+        position: absolute;
+        top: 18px;
+        left: -5px;
+        font-size: 28px;
+        font-weight: bold;
+        color: #f37021;
+    }
+
+
+.report-text {
+    font-size: 20px;
+}
+
+.report-mini {
+    width: 30px;
+    height: 30px;
+    border: 1.5px solid #f37021;
+    border-radius: 6px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: white;
+    cursor: pointer;
+    transition: 0.25s ease;
+    background-color: #e5bba2;
+}
+
+    .report-mini:hover {
+        background: #f37021;
+    }
+
+/* Triangle-mini (to hơn) */
+.triangle-mini {
+    width: 0;
+    height: 0;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-bottom: 14px solid white;
+    position: relative;
+}
+
+    /* Viền tam giác */
+    .triangle-mini::before {
+        content: "";
+        position: absolute;
+        top: -1.5px;
+        left: -8.5px;
+        border-left: 8.5px solid transparent;
+        border-right: 8.5px solid transparent;
+        border-bottom: 16px solid #f37021;
+        z-index: -1;
+    }
+
+    /* Dấu ! (to & rõ hơn) */
+    .triangle-mini::after {
+        content: "!";
+        position: absolute;
+        top: 3px;
+        left: -0.1rem;
+        font-size: 9px;
+        font-weight: bold;
+        color: #f37021;
+    }
+
+/* Hover đổi màu */
+.report-mini:hover .triangle-mini .triangle-mini::after {
+    border-bottom-color: #ffffff;
+}
+
+.report-mini:hover .triangle-mini::after {
+    color: #f37021;
+}/* ================= SIGNALR MONITOR ================= */
 
 .signalr-monitor {
     display: flex;

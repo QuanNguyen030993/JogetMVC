@@ -2978,4 +2978,42 @@
     //     //}));
     //     return dataSourceLookup;
     // }
+      function submitIssue(id, reportType, codeNo){
+        var control = new Object();
+        var popupInstance = makePopup("medium", "Report Issue Bug");
+           popupInstance.option("contentTemplate", function (container) {
+                var item = new Object();
+                item.id = id;
+                item.editorType = "dxHtmlEditor";
+                item.instanceProps = new Object();
+                item.instanceProps.refFieldId = id;
+                var itemElement = $(`<div>`)
+                // item.moduleName = "qt"; item.sectionName = "SurveyResultAttachment";
+                createEditor(item, itemElement, $("<div>"), item);
+                control = item;
+                itemElement.appendTo(container);
+           });
+            popupInstance.option("toolbarItems[0].options.onClick", function () {
+               //OK
+                var passingData = new Object();
+                passingData.IssueId = id;
+                passingData.ReportType = reportType;
+                passingData.CodeNo = codeNo;
+                passingData.Content = control.value;
+                ajaxPost('api/Notification/JiraSubmit', passingData, {
+                         onSuccess: function () {
+                             DevExpress.ui.notify("Your issue reported!", "info", 1200);
+                         },
+                         onError: function () { }
+                     });
+               popupInstance.hide();
+           });
+           popupInstance.option("toolbarItems[1].options.onClick", function () {
+               //Cancel
+               popupInstance.hide();
+           });
+           popupInstance.show();
+
+
+    }
 </script>

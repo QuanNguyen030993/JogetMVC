@@ -15,6 +15,9 @@ using ERPCore.Models.Migration.Business.Data;
 using ERPCore.Models.Migration.Config;
 using System.Text.Json;
 using ERPCore.Models.Migration.Business.Social;
+using ERPCore.Models.Business.Migration.Config;
+using ERPCore.Models.Request;
+using HtmlAgilityPack;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -34,6 +37,50 @@ public class NotificationController : BaseControllerApi<Notification>
         _hubContext = hubContext;
         DOMAIN_NAME = configuration.GetSection("Domain:DCServer").Value;
     }
+    [HttpPost]
+    public async Task<IActionResult> JiraSubmit([FromBody] JiraSubmitRequest request)
+    {
+        HtmlDocument document = new HtmlDocument();
+        document.LoadHtml(request.Content);
+        var imgs = document.DocumentNode.SelectNodes("//img");
+        string contentEmail = configuration.GetSection("SupportConfig:ContentSupport").Value;
+        string submitContent = string.Format(contentEmail, request.CodeNo, request.Content);
+        //if (imgs != null)
+        //{
+        //    foreach (var img in imgs)
+        //    {
+        //        var src = img.GetAttributeValue("src", null);
+        //        string base64Data = "";
+        //        string base64Pattern = @"data:image/\w+;base64,([^""]+)";
+        //        Match match = Regex.Match(img.OuterHtml, base64Pattern);
+        //        if (match.Success)
+        //        {
+        //            base64Data = match.Groups[1].Value;
+        //            byte[] byteArray = Convert.FromBase64String(base64Data);
+        //        }
+        //        submitContent = $@"<img data-imagetype=""AttachmentByCid"" data-custom=""{src}""";
+        //    }
+        //}
+        string submitEmail = configuration.GetSection("SupportConfig:EmailAddress").Value;
+        string title = configuration.GetSection("SupportConfig:Title").Value;
+        string emailName = configuration.GetSection("SupportConfig:EmailName").Value;
+
+        string titleContent = string.Format(title, request.ReportType);
+        MailItem mailItem = new MailItem();
+        mailItem.ToName = emailName;
+        mailItem.ToEmail = submitEmail;
+        mailItem.Subject = titleContent;
+        mailItem.HtmlBody = submitContent;
+        mailItem.TextBody = "";
+        MailConfig emailSettings = configuration.GetSection("Email").Get<MailConfig>();
+        BusinessConfig businessConfig = configuration.GetSection("BusinessConfig").Get<BusinessConfig>();
+        var currentUser = ControllerUtil.GetCurrentContextUser(_BaseRepository._httpContextAccessor, configuration);
+        string ccAddresses = string.Join(';', $"{currentUser}@tokiomarine.com.vn", $"{emailSettings.FollowCC}");
+        mailItem.CC = ccAddresses;
+        MailUtil.SendEmail(emailSettings, mailItem, null).Wait();
+        return Ok();
+    }
+
 
 
     [AllowAnonymous]
