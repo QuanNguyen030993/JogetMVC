@@ -4,6 +4,10 @@
             this.ImportType = "default";
             this.refKey = 0;
             this.refField = "Id";
+            this.refOperator = "=";
+            //= Bằng <> Khác > Lớn hơn >= Lớn hơn hoặc bằng < Nhỏ hơn <= Nhỏ hơn hoặc bằng
+            //contains Chuỗi có chứa notcontains Chuỗi không chứa startswith Bắt đầu với endswith Kết thúc với
+            //! Phủ định and Và or Hoặc
             this.isAllowRowMenu = true;
             
             // Layout editor mode properties
@@ -16,22 +20,7 @@
             if (mGridOption) {
                 if (mGridOption.mGridDetailOption != null || mGridOption.mGridDetailOption != undefined)
                     this.mGridDetailOption = mGridOption.mGridDetailOption;
-                if (mGridOption.refKey != null || mGridOption.refKey != undefined)
-                    this.refKey = mGridOption.refKey;
-                if (mGridOption.refField != null || mGridOption.refField != undefined) 
-                    this.refField = mGridOption.refField;
-                if (mGridOption.refKey2 != undefined)
-                    this.refKey2 = mGridOption.refKey2;
-                if (mGridOption.refField2 != undefined)
-                    this.refField2 = mGridOption.refField2;
-                if (mGridOption.refKey != null || mGridOption.refKey != undefined)
-                    this.refKey = mGridOption.refKey;
-                if (mGridOption.refField != null || mGridOption.refField != undefined)
-                    this.refField = mGridOption.refField;
-                if (mGridOption.refKey2 != undefined)
-                    this.refKey2 = mGridOption.refKey2;
-                if (mGridOption.refField2 != undefined)
-                    this.refField2 = mGridOption.refField2;
+                referenceMaking(this, mGridOption);
                 if (mGridOption.isAllowRowMenu != null || mGridOption.isAllowRowMenu != undefined)
                     this.isAllowRowMenu = mGridOption.isAllowRowMenu;
                 if (mGridOption.allowBuildOption != null || mGridOption.allowBuildOption != undefined)
@@ -330,6 +319,9 @@
             appErrorHandling('Library error: call resetLayoutToDefault was failed.', err);
         }
     }
+
+   
+
 };
 var MGridOption = class MGridOption {
     constructor(modelName, gridType, gridConfig) {
@@ -337,14 +329,7 @@ var MGridOption = class MGridOption {
         this.ModelName = modelName;
         if (gridConfig) {
             this.mGridDetailOption = gridConfig;
-            if (gridConfig.refKey != null || gridConfig.refKey != undefined)
-                this.refKey = gridConfig.refKey;
-            if (gridConfig.refField != null || gridConfig.refField != undefined)
-                this.refField = gridConfig.refField;
-            if (gridConfig.refKey2 != undefined)
-                this.refKey2 = gridConfig.refKey2;
-            if (gridConfig.refField2 != undefined)
-                this.refField2 = gridConfig.refField2;
+            referenceMaking(this, gridConfig);
             if (gridConfig.height != undefined)
                 this.height = gridConfig.height;
         }
@@ -1122,4 +1107,18 @@ var MDropDownDataSource = class MDropDownDataSource {
             }
         });
     }
+}
+function referenceMaking(item, gridConfig) {
+    if (gridConfig.refKey != null || gridConfig.refKey != undefined)
+        item.refKey = gridConfig.refKey;
+    if (gridConfig.refOperator != null || gridConfig.refOperator != undefined)
+        item.refOperator = gridConfig.refOperator;
+    if (gridConfig.refField != null || gridConfig.refField != undefined)
+        item.refField = gridConfig.refField;
+    if (gridConfig.refKey2 != undefined)
+        item.refKey2 = gridConfig.refKey2;
+    if (gridConfig.refOperator2 != null || gridConfig.refOperator2 != undefined)
+        item.refOperator2 = gridConfig.refOperator2;
+    if (gridConfig.refField2 != undefined)
+        item.refField2 = gridConfig.refField2;
 }

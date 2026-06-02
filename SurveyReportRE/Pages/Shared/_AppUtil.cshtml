@@ -1,4 +1,6 @@
 ﻿<script>
+
+
         //Performance check query in need
         function makeBasicDataSource(instance, isForm = false, configBefore = false) {
             try {
@@ -128,16 +130,12 @@
                                     onBeforeSend: function (method, ajaxOptions) {
                                         if (method === "load") {
                                             ajaxOptions.data = ajaxOptions.data || {};
-                                            ajaxOptions.headers = {
-                                                "filterField": instance?.refField ?? "",
-                                                "filterField2": instance?.refField2 ?? "",
-                                                "filterValue": instance?.refKey ?? "",
-                                                "filterValue2": instance?.refKey2 ?? "",
-                                                "refField": instance?.refField ?? "",
-                                                "refField2": instance?.refField2 ?? "",
-                                                "refKey": instance?.refKey ?? "",
-                                                "refKey2": instance?.refKey2 ?? "",
-                                            };
+                                            // ajaxOptions.headers = {
+                                            //     "refField": instance?.refField ?? "",
+                                            //     "refField2": instance?.refField2 ?? "",
+                                            //     "refKey": instance?.refKey ?? "",
+                                            //     "refKey2": instance?.refKey2 ?? "",
+                                            // };
                                         }
                                     },
                                     updateUrl: `/api/${instance.ModelName}/UpdateData`,
@@ -153,11 +151,15 @@
                             params.set("refKey", instance?.refKey);
                           if (instance?.refField)
                             params.set("refField", instance?.refField);
+                             if (instance?.refOperator)
+                            params.set("refOperator", instance?.refOperator);
                           if (instance?.refKey2)
                             params.set("refKey2", instance?.refKey2);
                           if(instance?.refField2)
                             params.set("refField2", instance?.refField2);
-                        return new DevExpress.data.DataSource({
+                               if (instance?.refOperator2)
+                            params.set("refOperator2", instance?.refOperator2);
+                         return new DevExpress.data.DataSource({
                             // filter: filter,
                             store: DevExpress.data.AspNet.createStore({
                                 key: "id",
@@ -165,16 +167,12 @@
                                   onBeforeSend: function (method, ajaxOptions) {
                                         if (method === "load") {
                                             ajaxOptions.data = ajaxOptions.data || {};
-                                            ajaxOptions.headers = {
-                                                "filterField": instance?.refField ?? "",
-                                                "filterField2": instance?.refField2 ?? "",
-                                                "filterValue": instance?.refKey ?? "",
-                                                "filterValue2": instance?.refKey2 ?? "",
-                                                "refField": instance?.refField ?? "",
-                                                "refField2": instance?.refField2 ?? "",
-                                                "refKey": instance?.refKey ?? "",
-                                                "refKey2": instance?.refKey2 ?? "",
-                                            };
+                                            // ajaxOptions.headers = {
+                                            //     "refField": instance?.refField ?? "",
+                                            //     "refField2": instance?.refField2 ?? "",
+                                            //     "refKey": instance?.refKey ?? "",
+                                            //     "refKey2": instance?.refKey2 ?? "",
+                                            // };
                                         }
                                     },
                                 updateUrl: `/api/${instance.ModelName}/UpdateData`,

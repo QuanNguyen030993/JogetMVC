@@ -2159,6 +2159,7 @@ VALUES
 
         private static string QuoteName(string name)
             => "[" + name.Replace("]", "]]") + "]";
+
         private static readonly HashSet<string> _reservedKeys = new(StringComparer.OrdinalIgnoreCase)
         {
             "mode","paging","skip","take","pageSize","orderBy","orderDir","key","_", "requireTotalCount", "refField", "refKey"
