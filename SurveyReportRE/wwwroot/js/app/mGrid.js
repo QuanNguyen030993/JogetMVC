@@ -2,7 +2,7 @@
     constructor(gridConfig, container, mGridOption) {
         try {
             this.ImportType = "default";
-            this.refId = 0;
+            this.refKey = 0;
             this.refField = "Id";
             this.isAllowRowMenu = true;
             
@@ -17,11 +17,11 @@
                 if (mGridOption.mGridDetailOption != null || mGridOption.mGridDetailOption != undefined)
                     this.mGridDetailOption = mGridOption.mGridDetailOption;
                 if (mGridOption.refKey != null || mGridOption.refKey != undefined)
-                    this.refId = mGridOption.refKey;
+                    this.refKey = mGridOption.refKey;
                 if (mGridOption.refField != null || mGridOption.refField != undefined) 
                     this.refField = mGridOption.refField;
                 if (mGridOption.refKey2 != undefined)
-                    this.refId2 = mGridOption.refKey2;
+                    this.refKey2 = mGridOption.refKey2;
                 if (mGridOption.refField2 != undefined)
                     this.refField2 = mGridOption.refField2;
                 if (mGridOption.refKey != null || mGridOption.refKey != undefined)
@@ -780,7 +780,7 @@ var MGridOption = class MGridOption {
         if (that.refField) {
             info.data[that.refField] = that.refKey;
         }
-        info.data[this.refField] = this.refId;
+        info.data[this.refField] = this.refKey;
         if (this.refKey2 != null || this.refKey2 != undefined)
             info.data[this.refField2] = this.refKey2;
     }

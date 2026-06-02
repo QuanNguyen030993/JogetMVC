@@ -2909,7 +2909,7 @@ string? mainTableAlias = null
                 bool hasRefPair = dict.Keys.Any(k => k.StartsWith("refField", StringComparison.OrdinalIgnoreCase));
 
                 // =========================
-                // 1. build refField/refId
+                // 1. build refField/refKey
                 // =========================
                 var refIndexes = new List<string>();
 
