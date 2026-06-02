@@ -1020,7 +1020,7 @@ Note:
                 // const q = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${quoteId}`;
                 const q = `OnSystem`;
                 $.ajax({
-                    url: `/api/QuotationCommentLog/ExecuteCustomQuery?filterRefField=QuotationId&filterRefId=${quoteId}`,
+                    url: `/api/QuotationCommentLog/ExecuteCustomQuery?refField=QuotationId&filterRefId=${quoteId}`,
                     method: "POST",
                     async: true,
                     contentType: "application/json",

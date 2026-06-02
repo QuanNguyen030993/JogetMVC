@@ -109,7 +109,7 @@ public class QuotationCommentLogController : BaseControllerApi<QuotationCommentL
 
         var rawRequestParams = _httpContextAccessor.HttpContext.Request.Query.ToList();
         // Chuẩn hóa:
-        // - cặp đầu tiên filterRefField/filterRefId => refField/refKey
+        // - cặp đầu tiên refField/filterRefId => refField/refKey
         // - các cặp sau => điều kiện AND
         var normalizedParams = Util.NormalizeRefParams(rawRequestParams);
         IDictionary<string, object> dynamicObj = new ExpandoObject();

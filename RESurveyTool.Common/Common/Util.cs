@@ -2906,7 +2906,7 @@ string? mainTableAlias = null
             {
                 var dict = loadParams.ToDictionary(x => x.Key, x => x.Value.ToString(), StringComparer.OrdinalIgnoreCase);
 
-                bool hasRefPair = dict.Keys.Any(k => k.StartsWith("filterRefField", StringComparison.OrdinalIgnoreCase));
+                bool hasRefPair = dict.Keys.Any(k => k.StartsWith("refField", StringComparison.OrdinalIgnoreCase));
 
                 // =========================
                 // 1. build refField/refId
@@ -2915,9 +2915,9 @@ string? mainTableAlias = null
 
                 foreach (var key in dict.Keys)
                 {
-                    if (key.StartsWith("filterRefField", StringComparison.OrdinalIgnoreCase))
+                    if (key.StartsWith("refField", StringComparison.OrdinalIgnoreCase))
                     {
-                        var suffix = key.Substring("filterRefField".Length); // "", "2", "3"
+                        var suffix = key.Substring("refField".Length); // "", "2", "3"
                         refIndexes.Add(suffix);
                     }
                 }
@@ -2929,7 +2929,7 @@ string? mainTableAlias = null
 
                 foreach (var suffix in refIndexes)
                 {
-                    var fieldKey = "filterRefField" + suffix;
+                    var fieldKey = "refField" + suffix;
                     var valueKey = "filterRefId" + suffix;
 
                     if (!dict.TryGetValue(fieldKey, out var field)) continue;
@@ -2948,7 +2948,7 @@ string? mainTableAlias = null
                 {
                     var key = kv.Key;
 
-                    if (key.StartsWith("filterRefField", StringComparison.OrdinalIgnoreCase) ||
+                    if (key.StartsWith("refField", StringComparison.OrdinalIgnoreCase) ||
                         key.StartsWith("filterRefId", StringComparison.OrdinalIgnoreCase))
                         continue;
 

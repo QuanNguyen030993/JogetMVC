@@ -18,20 +18,20 @@
                     this.mGridDetailOption = mGridOption.mGridDetailOption;
                 if (mGridOption.filterRefId != null || mGridOption.filterRefId != undefined)
                     this.refId = mGridOption.filterRefId;
-                if (mGridOption.filterRefField != null || mGridOption.filterRefField != undefined) 
-                    this.refField = mGridOption.filterRefField;
+                if (mGridOption.refField != null || mGridOption.refField != undefined) 
+                    this.refField = mGridOption.refField;
                 if (mGridOption.filterRefId2 != undefined)
                     this.refId2 = mGridOption.filterRefId2;
-                if (mGridOption.filterRefField2 != undefined)
-                    this.refField2 = mGridOption.filterRefField2;
+                if (mGridOption.refField2 != undefined)
+                    this.refField2 = mGridOption.refField2;
                 if (mGridOption.filterRefId != null || mGridOption.filterRefId != undefined)
                     this.filterRefId = mGridOption.filterRefId;
-                if (mGridOption.filterRefField != null || mGridOption.filterRefField != undefined)
-                    this.filterRefField = mGridOption.filterRefField;
+                if (mGridOption.refField != null || mGridOption.refField != undefined)
+                    this.refField = mGridOption.refField;
                 if (mGridOption.filterRefId2 != undefined)
                     this.filterRefId2 = mGridOption.filterRefId2;
-                if (mGridOption.filterRefField2 != undefined)
-                    this.filterRefField2 = mGridOption.filterRefField2;
+                if (mGridOption.refField2 != undefined)
+                    this.refField2 = mGridOption.refField2;
                 if (mGridOption.isAllowRowMenu != null || mGridOption.isAllowRowMenu != undefined)
                     this.isAllowRowMenu = mGridOption.isAllowRowMenu;
                 if (mGridOption.allowBuildOption != null || mGridOption.allowBuildOption != undefined)
@@ -339,12 +339,12 @@ var MGridOption = class MGridOption {
             this.mGridDetailOption = gridConfig;
             if (gridConfig.filterRefId != null || gridConfig.filterRefId != undefined)
                 this.filterRefId = gridConfig.filterRefId;
-            if (gridConfig.filterRefField != null || gridConfig.filterRefField != undefined)
-                this.filterRefField = gridConfig.filterRefField;
+            if (gridConfig.refField != null || gridConfig.refField != undefined)
+                this.refField = gridConfig.refField;
             if (gridConfig.filterRefId2 != undefined)
                 this.filterRefId2 = gridConfig.filterRefId2;
-            if (gridConfig.filterRefField2 != undefined)
-                this.filterRefField2 = gridConfig.filterRefField2;
+            if (gridConfig.refField2 != undefined)
+                this.refField2 = gridConfig.refField2;
             if (gridConfig.height != undefined)
                 this.height = gridConfig.height;
         }
@@ -777,12 +777,12 @@ var MGridOption = class MGridOption {
 
     onInitNewRow(info) {
         var that = this;
-        if (that.filterRefField) {
-            info.data[that.filterRefField] = that.filterRefId;
+        if (that.refField) {
+            info.data[that.refField] = that.filterRefId;
         }
         info.data[this.refField] = this.refId;
         if (this.filterRefId2 != null || this.filterRefId2 != undefined)
-            info.data[this.filterRefField2] = this.filterRefId2;
+            info.data[this.refField2] = this.filterRefId2;
     }
 
     async makeGridOptions(mGridConfigInstance = null) {

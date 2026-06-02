@@ -12,19 +12,19 @@
                 if (checkCustomQueryByModel == null) throw _genericExceptionMessage;
                 if (!isForm) {
                     let filter = null;
-                    if (instance.filterRefId != null && instance.filterRefField != null) {
-                        filter = [instance.filterRefField, "=", instance.filterRefId];
+                    if (instance.filterRefId != null && instance.refField != null) {
+                        filter = [instance.refField, "=", instance.filterRefId];
                     }
 
-                    if (instance.filterRefField2 != null) {
+                    if (instance.refField2 != null) {
                         if (filter) {
                             if (instance.filterRefId2 == null)
                                 filter = [
-                                    filter, "and", [instance.filterRefField2, "=", null]
+                                    filter, "and", [instance.refField2, "=", null]
                                 ];
                             else
                                 filter = [
-                                    filter, "and", [instance.filterRefField2, "=", instance.filterRefId2]
+                                    filter, "and", [instance.refField2, "=", instance.filterRefId2]
                                 ];
                         }
                     }
@@ -114,12 +114,12 @@
                             var params = new URLSearchParams();
                             if (instance?.filterRefId)
                                 params.set("refKey", instance?.filterRefId);
-                            if(instance?.filterRefField)
-                                params.set("refField", instance?.filterRefField);
+                            if(instance?.refField)
+                                params.set("refField", instance?.refField);
                             if (instance?.filterRefId2)
                                 params.set("refKey2", instance?.filterRefId2);
-                            if(instance?.filterRefField2)
-                                params.set("refField2", instance?.filterRefField2);
+                            if(instance?.refField2)
+                                params.set("refField2", instance?.refField2);
                             return new DevExpress.data.DataSource({
                                 // filter: filter,
                                 store: DevExpress.data.AspNet.createStore({
@@ -129,12 +129,12 @@
                                         if (method === "load") {
                                             ajaxOptions.data = ajaxOptions.data || {};
                                             ajaxOptions.headers = {
-                                                "filterField": instance?.filterRefField ?? "",
-                                                "filterField2": instance?.filterRefField2 ?? "",
+                                                "filterField": instance?.refField ?? "",
+                                                "filterField2": instance?.refField2 ?? "",
                                                 "filterValue": instance?.filterRefId ?? "",
                                                 "filterValue2": instance?.filterRefId2 ?? "",
-                                                "refField": instance?.filterRefField ?? "",
-                                                "refField2": instance?.filterRefField2 ?? "",
+                                                "refField": instance?.refField ?? "",
+                                                "refField2": instance?.refField2 ?? "",
                                                 "refKey": instance?.filterRefId ?? "",
                                                 "refKey2": instance?.filterRefId2 ?? "",
                                             };
@@ -151,12 +151,12 @@
                         var params = new URLSearchParams();
                           if (instance?.filterRefId)
                             params.set("refKey", instance?.filterRefId);
-                          if (instance?.filterRefField)
-                            params.set("refField", instance?.filterRefField);
+                          if (instance?.refField)
+                            params.set("refField", instance?.refField);
                           if (instance?.filterRefId2)
                             params.set("refKey2", instance?.filterRefId2);
-                          if(instance?.filterRefField2)
-                            params.set("refField2", instance?.filterRefField2);
+                          if(instance?.refField2)
+                            params.set("refField2", instance?.refField2);
                         return new DevExpress.data.DataSource({
                             // filter: filter,
                             store: DevExpress.data.AspNet.createStore({
@@ -166,12 +166,12 @@
                                         if (method === "load") {
                                             ajaxOptions.data = ajaxOptions.data || {};
                                             ajaxOptions.headers = {
-                                                "filterField": instance?.filterRefField ?? "",
-                                                "filterField2": instance?.filterRefField2 ?? "",
+                                                "filterField": instance?.refField ?? "",
+                                                "filterField2": instance?.refField2 ?? "",
                                                 "filterValue": instance?.filterRefId ?? "",
                                                 "filterValue2": instance?.filterRefId2 ?? "",
-                                                "refField": instance?.filterRefField ?? "",
-                                                "refField2": instance?.filterRefField2 ?? "",
+                                                "refField": instance?.refField ?? "",
+                                                "refField2": instance?.refField2 ?? "",
                                                 "refKey": instance?.filterRefId ?? "",
                                                 "refKey2": instance?.filterRefId2 ?? "",
                                             };
@@ -2120,7 +2120,7 @@
                     // const q = `SELECT DeptCode AS 'dept',ActionTime AS 'time',ActionNote AS 'note' FROM QuotationWorkflowHistory WHERE QuotationId = ${selectedId}`;
                     const q = `OnSystem`;
                     $.ajax({
-                                url: `/api/QuotationWorkflowHistory/ExecuteCustomQuery?filterRefField=QuotationId&filterRefId=${selectedId}`,
+                                url: `/api/QuotationWorkflowHistory/ExecuteCustomQuery?refField=QuotationId&filterRefId=${selectedId}`,
                         method: "POST",
                         async: false,
                         contentType: "application/json",

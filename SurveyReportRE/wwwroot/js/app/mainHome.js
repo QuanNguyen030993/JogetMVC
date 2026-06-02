@@ -112,12 +112,12 @@ var appendChildGridViewInsideAsync = function (childItem, itemElement, className
                 }
                 var gridOptionConfig = {
                     filterRefId: childItem.filterRefId,
-                    filterRefField: childItem.filterRefField,
+                    refField: childItem.refField,
                     height: _defaultGridMinHeight
                 };
                 var mGridOption = new GridClass(childItem.modelName, "User", gridOptionConfig);
                 mGridOption.filterRefId = childItem.filterRefId;
-                mGridOption.filterRefField = childItem.filterRefField;
+                mGridOption.refField = childItem.refField;
                 mGridOption.gridEditorOptions = {};
                 mGridOption.gridEditorOptions = {
                     editing: childItem.editing
