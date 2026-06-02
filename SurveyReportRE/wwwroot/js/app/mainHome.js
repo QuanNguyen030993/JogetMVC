@@ -111,19 +111,19 @@ var appendChildGridViewInsideAsync = function (childItem, itemElement, className
                     throw new Error(`Class ${className} không tìm thấy!`);
                 }
                 var gridOptionConfig = {
-                    filterRefId: childItem.filterRefId,
+                    refKey: childItem.refKey,
                     refField: childItem.refField,
                     height: _defaultGridMinHeight
                 };
                 var mGridOption = new GridClass(childItem.modelName, "User", gridOptionConfig);
-                mGridOption.filterRefId = childItem.filterRefId;
+                mGridOption.refKey = childItem.refKey;
                 mGridOption.refField = childItem.refField;
                 mGridOption.gridEditorOptions = {};
                 mGridOption.gridEditorOptions = {
                     editing: childItem.editing
                 };
-                $(`<div id="dataGrid_${childItem.modelName}_${childItem.filterRefId}" style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid(mGridOption.makeGridOptions(mGridOption)).appendTo(itemElement);
-                const dataGrid = $(`<div id="dataGrid_${childItem.modelName}_${childItem.filterRefId}" style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid().dxDataGrid("instance");
+                $(`<div id="dataGrid_${childItem.modelName}_${childItem.refKey}" style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid(mGridOption.makeGridOptions(mGridOption)).appendTo(itemElement);
+                const dataGrid = $(`<div id="dataGrid_${childItem.modelName}_${childItem.refKey}" style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid().dxDataGrid("instance");
 
                 if (dataGrid) {
                     resolve(dataGrid); // Trả về instance

@@ -3391,8 +3391,8 @@ function participantListColRemake(col, gridInstance, that) {
                             sideOrder: options.data.items[0]?.sideOrder,
                             personName: "",
                             personDepartment: "",
-                            sideId: that.filterRefId2,
-                            surveyId: that.filterRefId,
+                            sideId: that.refKey2,
+                            surveyId: that.refKey,
                             rowOrder: 0
                         };
 
@@ -3517,8 +3517,8 @@ function LCparticipantListColRemake(col, gridInstance, that) {
                             sideOrder: options.data.items[0]?.sideOrder,
                             personName: "",
                             personDepartment: "",
-                            sideId: that.filterRefId2,
-                            lossControlId: that.filterRefId,
+                            sideId: that.refKey2,
+                            lossControlId: that.refKey,
                             rowOrder: 0
                         };
 

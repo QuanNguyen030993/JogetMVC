@@ -17,7 +17,7 @@
     var ImageGridOption = class ImageGridOption extends MGridOption {
         constructor(modelName, gridType, config) {
             super(modelName, gridType, config);
-            this.surveyId = config.filterRefId;
+            this.surveyId = config.refKey;
             this.outline = config.outline
         };
         onContentReady(e) {
@@ -227,7 +227,7 @@
                                                 personName: "",
                                                 personDepartment: "",
                                                 sideId: 67,
-                                                surveyId: that.filterRefId,
+                                                surveyId: that.refKey,
                                                 rowOrder: 0,
                                                 sideOrder: maxSideOrder + 1
                                             };
@@ -273,7 +273,7 @@
                             personName: "",
                             personDepartment: "",
                             sideId: 67,
-                            surveyId: that.filterRefId,
+                            surveyId: that.refKey,
                             rowOrder: 0,
                         };
                         dataSource.store().insert(newGroup)
@@ -393,7 +393,7 @@
                                                 personName: "",
                                                 personDepartment: "",
                                                 sideId: 66,
-                                                surveyId: that.filterRefId,
+                                                surveyId: that.refKey,
                                                 rowOrder: 0,
                                                 sideOrder: groupRowsForDisplay.length
                                             };

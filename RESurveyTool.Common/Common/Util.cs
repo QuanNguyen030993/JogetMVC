@@ -2930,7 +2930,7 @@ string? mainTableAlias = null
                 foreach (var suffix in refIndexes)
                 {
                     var fieldKey = "refField" + suffix;
-                    var valueKey = "filterRefId" + suffix;
+                    var valueKey = "refKey" + suffix;
 
                     if (!dict.TryGetValue(fieldKey, out var field)) continue;
                     if (!dict.TryGetValue(valueKey, out var value)) continue;
@@ -2949,7 +2949,7 @@ string? mainTableAlias = null
                     var key = kv.Key;
 
                     if (key.StartsWith("refField", StringComparison.OrdinalIgnoreCase) ||
-                        key.StartsWith("filterRefId", StringComparison.OrdinalIgnoreCase))
+                        key.StartsWith("refKey", StringComparison.OrdinalIgnoreCase))
                         continue;
 
                     // nếu có refField thì bỏ key

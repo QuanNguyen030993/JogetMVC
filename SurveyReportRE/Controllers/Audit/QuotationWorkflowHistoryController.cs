@@ -89,7 +89,7 @@ public class QuotationWorkflowHistoryController : BaseControllerApi<QuotationWor
 
         var rawRequestParams = _httpContextAccessor.HttpContext.Request.Query.ToList();
         // Chuẩn hóa:
-        // - cặp đầu tiên refField/filterRefId => refField/refKey
+        // - cặp đầu tiên refField/refKey => refField/refKey
         // - các cặp sau => điều kiện AND
         var normalizedParams = Util.NormalizeRefParams(rawRequestParams);
         IDictionary<string, object> dynamicObj = new ExpandoObject();
@@ -99,7 +99,7 @@ public class QuotationWorkflowHistoryController : BaseControllerApi<QuotationWor
         }
         if (normalizedParams != null && normalizedParams.Count > 0)
         {
-            if (dynamicObj.ContainsKey("filterRefId") || dynamicObj.ContainsKey("key"))
+            if (dynamicObj.ContainsKey("refKey") || dynamicObj.ContainsKey("key"))
             {
                 var built = Util.LoadParamsBuildCustomQuery<object>(
                     baseQuery: query == "OnSystem" ? sysTable.CustomQuery : Query,
