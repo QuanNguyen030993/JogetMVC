@@ -113,11 +113,11 @@ public class QuotationCommentLogController : BaseControllerApi<QuotationCommentL
         // - các cặp sau => điều kiện AND
         var normalizedParams = Util.NormalizeRefParams(rawRequestParams);
         IDictionary<string, object> dynamicObj = new ExpandoObject();
-        foreach (var item in normalizedParams)
+        foreach (var item in rawRequestParams)
         {
             dynamicObj[item.Key] = item.Value;
         }
-        if (normalizedParams != null && normalizedParams.Count > 0)
+        if (rawRequestParams != null && rawRequestParams.Count > 0)
         {
             if (dynamicObj.ContainsKey("refKey") || dynamicObj.ContainsKey("key"))
             {
@@ -144,8 +144,11 @@ public class QuotationCommentLogController : BaseControllerApi<QuotationCommentL
                    "CommentId"
                     }
                 );
+
+              
+
                 sysTable.CustomQuery = built.Sql;
-                return await _BaseRepository.ExecuteCustomLogQuery(sysTable.CustomQuery, built.Parameters);
+                return await _BaseRepository.ExecuteCustomLogQuery(built.Sql, built.Parameters);
             }
         }
         obj = await _BaseRepository.ExecuteCustomLogQuery(query == "OnSystem" ? sysTable.CustomQuery : Query);
