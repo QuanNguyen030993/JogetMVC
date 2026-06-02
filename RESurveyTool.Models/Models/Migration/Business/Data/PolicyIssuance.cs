@@ -88,5 +88,7 @@ public class PolicyIssuance : BaseModel
     public long? BranchId { get; set; }
     public EnumData? BranchEnum { get; set; }
     public string? BranchCode { get; set; }
+    public long? StatusId { get; set; }
+    public EnumData? StatusEnum { get; set; }
 
 }

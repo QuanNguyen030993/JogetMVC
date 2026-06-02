@@ -11,12 +11,14 @@ using Syncfusion.Pdf.Graphics;
 using System.Data;
 using ERPCore.Models.Request;
 using Microsoft.SharePoint.WorkflowActions;
+using ERPCore.Models.Migration.Config;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
 public class StepsWorkflowController : BaseControllerApi<StepsWorkflow>
 {
     private readonly IBaseRepository<StepsWorkflow> _BaseRepository;
+    private readonly IBaseRepository<EnumData> _enumDataRepository;
     private readonly IBaseRepository<WorkflowInstanceNode> _workflowInstanceNodeRepository;
     private readonly IConfiguration configuration;
     private readonly IConfigurationSection path;
@@ -25,6 +27,7 @@ public class StepsWorkflowController : BaseControllerApi<StepsWorkflow>
         configuration = config;
         _BaseRepository = BaseRepository;
         _workflowInstanceNodeRepository = new BaseRepository<WorkflowInstanceNode>(configuration, _httpContextAccessor);
+        _enumDataRepository = new BaseRepository<EnumData>(configuration, _httpContextAccessor);
 
     }
 
@@ -50,8 +53,8 @@ public class StepsWorkflowController : BaseControllerApi<StepsWorkflow>
                 await _BaseRepository.DeleteData(f, f.Id, "Id", true);
             });
         }
-
-        foreach (var f in workflowDefinition.Steps)
+        List<EnumData> enumDatas = await _enumDataRepository.EnumData("OverallStatus");
+        foreach (StepsWorkflow f in workflowDefinition.Steps)
         {
             StepsWorkflow stepsWorkflow = new StepsWorkflow();
 
@@ -61,7 +64,8 @@ public class StepsWorkflowController : BaseControllerApi<StepsWorkflow>
             string toNodeId = workflowDefinition.Nodes.FirstOrDefault(fi => fi.NodeId == f.ToNodeId).NodeName ?? "";
             stepsWorkflow.FromNodeId = fromNodeId;
             stepsWorkflow.ToNodeId = toNodeId;
-
+            stepsWorkflow.StatusCode = enumDatas.FirstOrDefault(x => x.Id == f.StatusId)?.Code ?? "";
+            stepsWorkflow.StatusName = enumDatas.FirstOrDefault(x => x.Id == f.StatusId)?.Value ?? "";
             await _BaseRepository.InsertData(stepsWorkflow);
 
 

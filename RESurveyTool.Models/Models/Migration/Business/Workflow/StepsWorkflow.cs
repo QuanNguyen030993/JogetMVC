@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 using ERPCore.Models.Migration.Base;
+using ERPCore.Models.Migration.Config;
 namespace ERPCore.Models.Migration.Business.Workflow
 {
     public class StepsWorkflow : BaseModel
@@ -62,7 +63,10 @@ namespace ERPCore.Models.Migration.Business.Workflow
         public string? ActionCode { get; set; } = "";
         [MaxLength(8000)]
         public string? Data { get; set; } = "";
-
+        public string? StatusCode { get; set; } = "";
+        public string? StatusName { get; set; } = "";
+        public long? StatusId { get; set; } = 0;
+        public EnumData? StatusEnum { get; set; } 
 
     }
 }

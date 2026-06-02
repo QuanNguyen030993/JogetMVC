@@ -553,6 +553,11 @@ public class QuotationController : BaseControllerApi<Quotation>
             (PICAttributes PICMain, PICSysHandleAttributes PICLeader, PICAttributes PICHOD) picS = ControllerUtil.PersonInChargeHandle(quotation, stepsWorkflow, _businessConfig, siteEnums);
             quotation.LeaderPIC = JsonConvert.SerializeObject(picS.PICLeader);
             quotation.HODPIC = JsonConvert.SerializeObject(picS.PICHOD);
+            quotation.StatusId = stepsWorkflow.StatusId;
+
+            EnumData enumData = await _enumDataRepository.GetSingleObject(s => s.Id == stepsWorkflow.StatusId);
+
+            quotation.QuotationStatus = enumData?.Value ?? "";
             quotation = await _BaseRepository.InsertData(quotation);
             if (file != null)
             {

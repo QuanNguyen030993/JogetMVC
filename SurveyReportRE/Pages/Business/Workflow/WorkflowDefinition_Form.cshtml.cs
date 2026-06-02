@@ -9,6 +9,7 @@ public class WorkflowDefinition_FormModel : PageModel
     public static string FKModelName { get; set; } = "";
     public static string SchemeModelName { get; set; } = "";
     private static int Id { get; set; }
+    private static string Guid { get; set; } = "";
     private static int FKId { get; set; }
     private static string JsonConfig { get; set; } = "";
 
@@ -16,7 +17,7 @@ public class WorkflowDefinition_FormModel : PageModel
     {
         //_logger = logger;
     }
-    public void OnGet(int? pageNum)
+    public void OnGet(int? pageNum, string guid)
     {
         if (pageNum != 0)
         {
@@ -25,5 +26,6 @@ public class WorkflowDefinition_FormModel : PageModel
         ModelName = nameof(WorkflowDefinition);
         SchemeModelName = nameof(WorkflowDefinition);
         ViewData[nameof(Id)] = pageNum ?? 0;
+        ViewData[nameof(Guid)] = guid ?? "";
     }
 }
