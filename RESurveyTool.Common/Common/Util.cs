@@ -2532,12 +2532,30 @@ VALUES
             // 5) apply simple filters (query params ngoài filter/sort/skip/take)
             // Ví dụ receivedBy=quan.nh
             //// =========================
-            
-            var combineParams = new Dictionary<string, string>();
+
+            //var combineParams = new Dictionary<string, string>();
+            //for (int i = 1; i <= 20; i++)
+            //{
+            //    var fieldKey = i == 1 ? "refField" : $"refField{i}";
+            //    var valueKey = i == 1 ? "refKey" : $"refKey{i}";
+
+            //    if (
+            //        allParams.TryGetValue(fieldKey, out var fieldName) &&
+            //        allParams.TryGetValue(valueKey, out var fieldValue) &&
+            //        !string.IsNullOrWhiteSpace(fieldName)
+            //    )
+            //    {
+            //        combineParams[fieldName] = fieldValue;
+            //    }
+            //}
+
+            var combineParams = new List<RefFilter>();
+
             for (int i = 1; i <= 20; i++)
             {
                 var fieldKey = i == 1 ? "refField" : $"refField{i}";
                 var valueKey = i == 1 ? "refKey" : $"refKey{i}";
+                var opKey = i == 1 ? "refOperator" : $"refOperator{i}";
 
                 if (
                     allParams.TryGetValue(fieldKey, out var fieldName) &&
@@ -2545,34 +2563,96 @@ VALUES
                     !string.IsNullOrWhiteSpace(fieldName)
                 )
                 {
-                    combineParams[fieldName] = fieldValue;
+                    var op = allParams.ContainsKey(opKey) ? allParams[opKey] : "=";
+
+                    combineParams.Add(new RefFilter
+                    {
+                        Key = fieldName,
+                        Value = fieldValue,
+                        Operator = op
+                    });
                 }
             }
 
-            
-            foreach (var kv in combineParams)
+            foreach (var item in combineParams)
             {
-                var key = kv.Key;
-                var value = kv.Value;
+                if (string.IsNullOrWhiteSpace(item.Value)) continue;
 
-                if (string.IsNullOrWhiteSpace(value)) continue;
-
-                var actualColumn = string.Equals(key, "key", StringComparison.OrdinalIgnoreCase)
+                var actualColumn = string.Equals(item.Key, "key", StringComparison.OrdinalIgnoreCase)
                     ? pkTieBreaker
-                    : key;
+                    : item.Key;
 
-                
-
+                var op = (item.Operator ?? "=").ToLowerInvariant();
                 var pName = "@p" + (++pIndex);
 
                 sql.Append(" AND ");
-                sql.Append(BuildColumnSql(actualColumn));
-                sql.Append(" = ");
-                sql.Append(pName);
-                sql.AppendLine();
 
-                parameters[pName] = value;
+                switch (op)
+                {
+                    case "=":
+                    case "<>":
+                    case ">":
+                    case "<":
+                    case ">=":
+                    case "<=":
+                        sql.Append($"{BuildColumnSql(actualColumn)} {op} {pName}");
+                        parameters[pName] = item.Value;
+                        break;
+
+                    case "contains":
+                        sql.Append($"{BuildColumnSql(actualColumn)} LIKE '%' + {pName} + '%'");
+                        parameters[pName] = item.Value;
+                        break;
+
+                    case "notcontains":
+                        sql.Append($"{BuildColumnSql(actualColumn)} NOT LIKE '%' + {pName} + '%'");
+                        parameters[pName] = item.Value;
+                        break;
+
+                    case "startswith":
+                        sql.Append($"{BuildColumnSql(actualColumn)} LIKE {pName} + '%'");
+                        parameters[pName] = item.Value;
+                        break;
+
+                    case "endswith":
+                        sql.Append($"{BuildColumnSql(actualColumn)} LIKE '%' + {pName}");
+                        parameters[pName] = item.Value;
+                        break;
+
+                    default:
+                        // fallback
+                        sql.Append($"{BuildColumnSql(actualColumn)} = {pName}");
+                        parameters[pName] = item.Value;
+                        break;
+                }
+
+                sql.AppendLine();
             }
+//``
+
+            //foreach (var kv in combineParams)
+            //{
+            //    var key = kv.Key;
+            //    var value = kv.Value;
+
+            //    if (string.IsNullOrWhiteSpace(value)) continue;
+
+            //    var actualColumn = string.Equals(key, "key", StringComparison.OrdinalIgnoreCase)
+            //        ? pkTieBreaker
+            //        : key;
+
+                
+
+            //    var pName = "@p" + (++pIndex);
+
+            //    sql.Append(" AND ");
+            //    sql.Append(BuildColumnSql(actualColumn));
+            //    sql.Append(" = ");
+            //    sql.Append(pName);
+            //    sql.AppendLine();
+
+            //    parameters[pName] = value;
+            //}
             // =========================
             // 6) ORDER BY (DevExtreme sort= JSON)
             // =========================

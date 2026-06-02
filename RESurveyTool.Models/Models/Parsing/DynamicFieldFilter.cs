@@ -11,5 +11,13 @@ namespace ERPCore.Models.Models.Parsing
     {
         public string FieldName { get; set; } = "";
         public object? FieldValue { get; set; }
+        public string Operator { get; set; } = "="; 
     }
+    public class RefFilter
+    {
+        public string Key { get; set; } = "";
+        public string Value { get; set; } = "";
+        public string Operator { get; set; } = "=";
+    }
+
 }

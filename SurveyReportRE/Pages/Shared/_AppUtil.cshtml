@@ -114,14 +114,18 @@
                         }
                         else {
                             var params = new URLSearchParams();
-                            if (instance?.refKey)
-                                params.set("refKey", instance?.refKey);
-                            if(instance?.refField)
-                                params.set("refField", instance?.refField);
-                            if (instance?.refKey2)
-                                params.set("refKey2", instance?.refKey2);
-                            if(instance?.refField2)
-                                params.set("refField2", instance?.refField2);
+                           if (instance?.refKey)
+                            params.set("refKey", instance?.refKey);
+                          if (instance?.refField)
+                            params.set("refField", instance?.refField);
+                             if (instance?.refOperator)
+                            params.set("refOperator", instance?.refOperator);
+                          if (instance?.refKey2)
+                            params.set("refKey2", instance?.refKey2);
+                          if(instance?.refField2)
+                            params.set("refField2", instance?.refField2);
+                          if (instance?.refOperator2)
+                            params.set("refOperator2", instance?.refOperator2);
                             return new DevExpress.data.DataSource({
                                 // filter: filter,
                                 store: DevExpress.data.AspNet.createStore({
@@ -157,7 +161,7 @@
                             params.set("refKey2", instance?.refKey2);
                           if(instance?.refField2)
                             params.set("refField2", instance?.refField2);
-                               if (instance?.refOperator2)
+                          if (instance?.refOperator2)
                             params.set("refOperator2", instance?.refOperator2);
                          return new DevExpress.data.DataSource({
                             // filter: filter,
