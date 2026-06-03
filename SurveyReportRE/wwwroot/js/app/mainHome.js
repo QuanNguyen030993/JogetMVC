@@ -303,26 +303,6 @@ var appendElementViewInsideAsync = function (url, params, container, code, typeC
 
 
 
-var apiInvokeRequest = function (url, method, dataTypeOptions, options, functionCall, values, asyncStatus) {
-    $.ajax({
-        url: url,
-        method: method,
-        dataType: dataTypeOptions,
-        ...options,
-        data: values,
-        async: asyncStatus ? true : false,
-        success: function (data) {
-            if (functionCall !== null || functionCall !== undefined) {
-                functionCall(data);
-            }
-        },
-        error: function (xhr, status, error) {
-            console.log(error);
-        }
-    });
-}
-
-
 //function closeTab() {
 //    var li = $("#tablist > ul").find("[tabindex = '0']");
 //    var panelId = li.remove().attr("aria-controls");

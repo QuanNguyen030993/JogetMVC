@@ -53,7 +53,7 @@
                 </div>
             </div>
 
-            @await Html.PartialAsync("_DeptTree", new DeptTreePartialModel
+    @*         @Html.Partial("_DeptTree", new DeptTreePartialModel
        {
            Prefix = Model.Prefix,
            ModuleCode = Model.ModuleCode,
@@ -61,14 +61,30 @@
            Guid = Model.Guid
        })
 
-            @await Html.PartialAsync("_OverviewScroll", new OverviewScrollPartialModel
+            @Html.Partial("_OverviewScroll", new OverviewScrollPartialModel
        {
            Prefix = Model.Prefix,
            ModuleCode = Model.ModuleCode,
            Id = Model.Id,
            Guid = Model.Guid
-       })
+       }) *@
+            <!-- 1. DeptTree -->
+            <partial name="_DeptTree" model='new DeptTreePartialModel
+{
+    Prefix = Model.Prefix,
+    ModuleCode = Model.ModuleCode,
+    Id = Model.Id,
+    Guid = Model.Guid
+}' />
 
+            <!-- 2. OverviewScroll -->
+            <partial name="_OverviewScroll" model='new OverviewScrollPartialModel
+{
+    Prefix = Model.Prefix,
+    ModuleCode = Model.ModuleCode,
+    Id = Model.Id,
+    Guid = Model.Guid
+}' />
         </div>
     </section>
 </div>

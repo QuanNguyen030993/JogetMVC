@@ -179,8 +179,6 @@ connectionSignR.start().then(async function () {
     connectionSignR.on("R_OverviewLoading", function (responseData) {
         signalRBlink();
         if (responseData.connectionId == _connectionId) {
-            debugger
-            
             renderBrowserLoading(responseData);
             //progressValue = responseData.lossControlData.progressvalue;
             //if (responseData.lossControlData.progressvalue == 100) {

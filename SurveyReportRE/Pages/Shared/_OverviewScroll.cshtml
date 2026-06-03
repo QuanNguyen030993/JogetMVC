@@ -15,21 +15,88 @@
     {
         @foreach (string item in qtDeptModuleCode)
         {
-            <section id="@Id($"sec_{item}")" class="dept-section">
+          @*   <section id="@Id($"sec_{item}")" class="dept-section">
                 <div id="@Id($"sec_{item}-header")" class="dept-header">
-                    @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form_Header", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-header"), ["Guid"] = ($"{Model.Guid}") })
+
+                    @Html.Partial($"Business/Form/QuotationDetail/_Quotation_{item}_Form_Header", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-header"), ["Guid"] = ($"{Model.Guid}") })
                 </div>
                 <div id="@Id($"sec_{item}-upperbody")" class="dept-upperbody">
-                    @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form_UpperBody", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-upperbody"), ["Guid"] = ($"{Model.Guid}") })
+                    @Html.Partial($"Business/Form/QuotationDetail/_Quotation_{item}_Form_UpperBody", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-upperbody"), ["Guid"] = ($"{Model.Guid}") })
                 </div>
                 <div id="@Id($"sec_{item}-body")" class="dept-body">
-                    @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-body"), ["Guid"] = ($"{Model.Guid}") })
+                    @Html.Partial($"Business/Form/QuotationDetail/_Quotation_{item}_Form", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-body"), ["Guid"] = ($"{Model.Guid}") })
                 </div>
                 <div id="@Id($"sec_{item}-lowerbody")" class="dept-lowerbody">
-                    @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form_LowerBody", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-lowerbody"), ["Guid"] = ($"{Model.Guid}") })
+                    @Html.Partial($"Business/Form/QuotationDetail/_Quotation_{item}_Form_LowerBody", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-lowerbody"), ["Guid"] = ($"{Model.Guid}") })
                 </div>
                 <div id="@Id($"sec_{item}-footer")" class="dept-footer">
-                    @await Html.PartialAsync($"Business/Form/QuotationDetail/_Quotation_{item}_Form_Footer", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-footer"), ["Guid"] = ($"{Model.Guid}") })
+                    @Html.Partial($"Business/Form/QuotationDetail/_Quotation_{item}_Form_Footer", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-footer"), ["Guid"] = ($"{Model.Guid}") })
+                </div>
+            </section> *@
+            <section id="@Id($"sec_{item}")" class="dept-section">
+                <!-- 1. Header -->
+                <div id="@Id($"sec_{item}-header")" class="dept-header">
+                    @{
+                        var viewDataHeader = new ViewDataDictionary(ViewData)
+                    {
+                        ["Id"] = Model.Id.ToString(),
+                        ["Cd"] = Cd($"sec_{item}-header"),
+                        ["Guid"] = Model.Guid.ToString()
+                    };
+                    }
+                    <partial name="@($"Business/Form/QuotationDetail/_Quotation_{item}_Form_Header")" view-data="viewDataHeader" />
+                </div>
+
+                <!-- 2. UpperBody -->
+                <div id="@Id($"sec_{item}-upperbody")" class="dept-upperbody">
+                    @{
+                        var viewDataUpperBody = new ViewDataDictionary(ViewData)
+                    {
+                        ["Id"] = Model.Id.ToString(),
+                        ["Cd"] = Cd($"sec_{item}-upperbody"),
+                        ["Guid"] = Model.Guid.ToString()
+                    };
+                    }
+                    <partial name="@($"Business/Form/QuotationDetail/_Quotation_{item}_Form_UpperBody")" view-data="viewDataUpperBody" />
+                </div>
+
+                <!-- 3. Body -->
+                <div id="@Id($"sec_{item}-body")" class="dept-body">
+                    @{
+                        var viewDataBody = new ViewDataDictionary(ViewData)
+                    {
+                        ["Id"] = Model.Id.ToString(),
+                        ["Cd"] = Cd($"sec_{item}-body"),
+                        ["Guid"] = Model.Guid.ToString()
+                    };
+                    }
+                    <partial name="@($"Business/Form/QuotationDetail/_Quotation_{item}_Form")" view-data="viewDataBody" />
+                </div>
+
+                <!-- 4. LowerBody -->
+                <div id="@Id($"sec_{item}-lowerbody")" class="dept-lowerbody">
+                    @{
+                        var viewDataLowerBody = new ViewDataDictionary(ViewData)
+                    {
+                        ["Id"] = Model.Id.ToString(),
+                        ["Cd"] = Cd($"sec_{item}-lowerbody"),
+                        ["Guid"] = Model.Guid.ToString()
+                    };
+                    }
+                    <partial name="@($"Business/Form/QuotationDetail/_Quotation_{item}_Form_LowerBody")" view-data="viewDataLowerBody" />
+                </div>
+
+                <!-- 5. Footer -->
+                <div id="@Id($"sec_{item}-footer")" class="dept-footer">
+                    @{
+                        var viewDataFooter = new ViewDataDictionary(ViewData)
+                    {
+                        ["Id"] = Model.Id.ToString(),
+                        ["Cd"] = Cd($"sec_{item}-footer"),
+                        ["Guid"] = Model.Guid.ToString()
+                    };
+                    }
+                    <partial name="@($"Business/Form/QuotationDetail/_Quotation_{item}_Form_Footer")" view-data="viewDataFooter" />
                 </div>
             </section>
         }
@@ -39,21 +106,87 @@
     {
         @foreach (string item in piDeptModuleCode)
         {
-            <section id="@Id($"sec_{item}")" class="dept-section">
+         @*    <section id="@Id($"sec_{item}")" class="dept-section">
                 <div id="@Id($"sec_{item}-header")" class="dept-header">
-                    @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_Header", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-header"), ["Guid"] = ($"{Model.Guid}") })
+                    @Html.Partial($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_Header", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-header"), ["Guid"] = ($"{Model.Guid}") })
                 </div>
                 <div id="@Id($"sec_{item}-upperbody")" class="dept-upperbody">
-                    @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_UpperBody", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-upperbody"), ["Guid"] = ($"{Model.Guid}") })
+                    @Html.Partial($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_UpperBody", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-upperbody"), ["Guid"] = ($"{Model.Guid}") })
                 </div>
                 <div id="@Id($"sec_{item}-body")" class="dept-body">
-                    @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-body"), ["Guid"] = ($"{Model.Guid}") })
+                    @Html.Partial($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-body"), ["Guid"] = ($"{Model.Guid}") })
                 </div>
                 <div id="@Id($"sec_{item}-lowerbody")" class="dept-lowerbody">
-                    @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_LowerBody", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-lowerbody"), ["Guid"] = ($"{Model.Guid}") })
+                    @Html.Partial($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_LowerBody", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-lowerbody"), ["Guid"] = ($"{Model.Guid}") })
                 </div>
                 <div id="@Id($"sec_{item}-footer")" class="dept-footer">
-                    @await Html.PartialAsync($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_Footer", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-footer"), ["Guid"] = ($"{Model.Guid}") })
+                    @Html.Partial($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_Footer", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-footer"), ["Guid"] = ($"{Model.Guid}") })
+                </div>
+            </section> *@
+            <section id="@Id($"sec_{item}")" class="dept-section">
+                <!-- 1. Header -->
+                <div id="@Id($"sec_{item}-header")" class="dept-header">
+                    @{
+                        var vdHeader = new ViewDataDictionary(ViewData)
+                    {
+                        ["Id"] = Model.Id.ToString(),
+                        ["Cd"] = Cd($"sec_{item}-header"),
+                        ["Guid"] = Model.Guid.ToString()
+                    };
+                    }
+                    <partial name="@($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_Header")" view-data="vdHeader" />
+                </div>
+
+                <!-- 2. UpperBody -->
+                <div id="@Id($"sec_{item}-upperbody")" class="dept-upperbody">
+                    @{
+                        var vdUpperBody = new ViewDataDictionary(ViewData)
+                    {
+                        ["Id"] = Model.Id.ToString(),
+                        ["Cd"] = Cd($"sec_{item}-upperbody"),
+                        ["Guid"] = Model.Guid.ToString()
+                    };
+                    }
+                    <partial name="@($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_UpperBody")" view-data="vdUpperBody" />
+                </div>
+
+                <!-- 3. Body -->
+                <div id="@Id($"sec_{item}-body")" class="dept-body">
+                    @{
+                        var vdBody = new ViewDataDictionary(ViewData)
+                    {
+                        ["Id"] = Model.Id.ToString(),
+                        ["Cd"] = Cd($"sec_{item}-body"),
+                        ["Guid"] = Model.Guid.ToString()
+                    };
+                    }
+                    <partial name="@($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form")" view-data="vdBody" />
+                </div>
+
+                <!-- 4. LowerBody -->
+                <div id="@Id($"sec_{item}-lowerbody")" class="dept-lowerbody">
+                    @{
+                        var vdLowerBody = new ViewDataDictionary(ViewData)
+                    {
+                        ["Id"] = Model.Id.ToString(),
+                        ["Cd"] = Cd($"sec_{item}-lowerbody"),
+                        ["Guid"] = Model.Guid.ToString()
+                    };
+                    }
+                    <partial name="@($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_LowerBody")" view-data="vdLowerBody" />
+                </div>
+
+                <!-- 5. Footer -->
+                <div id="@Id($"sec_{item}-footer")" class="dept-footer">
+                    @{
+                        var vdFooter = new ViewDataDictionary(ViewData)
+                    {
+                        ["Id"] = Model.Id.ToString(),
+                        ["Cd"] = Cd($"sec_{item}-footer"),
+                        ["Guid"] = Model.Guid.ToString()
+                    };
+                    }
+                    <partial name="@($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_Footer")" view-data="vdFooter" />
                 </div>
             </section>
         }

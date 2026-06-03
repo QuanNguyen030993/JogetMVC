@@ -12,13 +12,10 @@ namespace ERPCore.Pages
         //private readonly ILogger<PolicyIssuance_FormModel> _logger;
         public static string ModelName { get; set; } = "";
         private static string Id { get; set; }
-
-        private readonly IBaseRepository<PolicyIssuance> _policyIssuanceRepository;
         private static string Guid { get; set; }
 
-        public PolicyIssuance_FormModel(ILogger<PolicyIssuance_FormModel> logger, IConfiguration configuration, Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> blobStorageSettings, IHttpContextAccessor httpContextAccessor)
+        public PolicyIssuance_FormModel()
         {
-            _policyIssuanceRepository = new BaseRepository<PolicyIssuance>(configuration, httpContextAccessor);
             //_logger = logger;
         }
         public async void OnGet(int? pageNum, string guid)

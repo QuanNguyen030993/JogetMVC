@@ -13,11 +13,10 @@ namespace ERPCore.Pages
         private static string Id { get; set; }
         private static string Guid { get; set; }
 
-        private readonly IBaseRepository<Quotation> _quotationRepository;
 
-        public Quotation_FormModel(ILogger<Quotation_FormModel> logger, IConfiguration configuration, Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> blobStorageSettings, IHttpContextAccessor httpContextAccessor)
+        public Quotation_FormModel()
         {
-            _quotationRepository = new BaseRepository<Quotation>(configuration, httpContextAccessor);
+            //_quotationRepository = new BaseRepository<Quotation>(configuration, httpContextAccessor);
             //_logger = logger;
         }
         public async void OnGet(int? pageNum, string? guid)

@@ -2259,42 +2259,45 @@
                             mGridOption.isShowingRenewButton = false;
 
                             var mGrid = new MGrid(null, $(`#dataGrid_@QuotationModel.ModelName`), new QuotationGridOption('@QuotationModel.ModelName', "User", mGridOption), null);
-                            var DS = mGrid.component.getDataSource();
+                            setTimeout(() => {
+                                   var DS = mGrid.component.getDataSource();
                                 // 👉 Tính ngày hiện tại + 2 tháng
-                            var today = new Date();
-                            var twoMonthsLater = new Date(today);
-                            twoMonthsLater.setMonth(today.getMonth() + 2);
-                            // 👉 Apply filter
+                                    var today = new Date();
+                                    var twoMonthsLater = new Date(today);
+                                    twoMonthsLater.setMonth(today.getMonth() + 2);
+                                    // 👉 Apply filter
 
 
-                             DS.filter([["inceptionDate", ">=", today] ,["inceptionDate", "<=", twoMonthsLater]]);
-                              mGrid.component.option("selection", { mode: "multiple"});
-                              mGrid.component.option("editing",   {
-                                allowUpdating: false,
-                                allowAdding: false,
-                                allowDeleting: false
-                            });
-                            mGrid.component.option("dataSource", DS);
-                            var popupInstance = makePopupWithScroll(
-                                mGrid.container
-                                ,"medium", "Renew quotation list");
-                                popupInstance.option("toolbarItems[0].options.onClick", function () {
-                                    popupInstance.hide();
-                                var that = new Object();
-                                 that.ModelName = "QuotationTmp";
-                                var TmpDataSource = makeBasicDataSource(that,true);
-                            
-                                var store = TmpDataSource;
-                                var seletedRows =  mGrid.component.getSelectedRowsData();
-                                $.each(seletedRows , function(itemIndex, item) {
-                                         store.insert(item)
-                                        .done(function () {
-                                        })
-                                        .fail(function (error) {
+                                     DS.filter([["inceptionDate", ">=", today] ,["inceptionDate", "<=", twoMonthsLater]]);
+                                      mGrid.component.option("selection", { mode: "multiple"});
+                                      mGrid.component.option("editing",   {
+                                        allowUpdating: false,
+                                        allowAdding: false,
+                                        allowDeleting: false
+                                    });
+                                    mGrid.component.option("dataSource", DS);
+                                    var popupInstance = makePopupWithScroll(
+                                        mGrid.container
+                                        ,"medium", "Renew quotation list");
+                                        popupInstance.option("toolbarItems[0].options.onClick", function () {
+                                            popupInstance.hide();
+                                        var that = new Object();
+                                         that.ModelName = "QuotationTmp";
+                                        var TmpDataSource = makeBasicDataSource(that,true);
+
+                                        var store = TmpDataSource;
+                                        var seletedRows =  mGrid.component.getSelectedRowsData();
+                                        $.each(seletedRows , function(itemIndex, item) {
+                                                 store.insert(item)
+                                                .done(function () {
+                                                })
+                                                .fail(function (error) {
+                                                });
                                         });
-                                });
-                                });
-                            popupInstance.show();
+                                        });
+                                    popupInstance.show();
+                            },1000);
+                     
                         },
                         onInitialized: function (args) {
                             this.btnExportInstance = args.component;
