@@ -768,25 +768,25 @@ Note:
 
                 var toggleHideWorkflow = false;
 
-                $(`#${window.QuotationIdManager.panelHoverInFlow(@ViewData["Id"])}`).dxButton({
-                    text: "Workflow",
-                    readOnly: true,
-                    type: "normal",
-                    stylingMode: "contained",
-                    onClick: () => {
-                        if (!toggleHideWorkflow) {
-                            $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).empty();
-                            $(`#${window.QuotationIdManager.flowHistoryPanel(@ViewData["Id"])}`).show();
-                            $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).show();
-                            toggleHideWorkflow = true;
-                                reloadWorkflow("@(ViewData["Guid"])", @(ViewData["Id"]), state.stageDept, formModuleKeyQt);
-                        } else {
-                            $(`#${window.QuotationIdManager.flowHistoryPanel(@ViewData["Id"])}`).hide();
-                            $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).hide();
-                            toggleHideWorkflow = false;
-                        }
-                    }
-                });
+                // $(`#${window.QuotationIdManager.panelHoverInFlow(@ViewData["Id"])}`).dxButton({
+                //     text: "Workflow",
+                //     readOnly: true,
+                //     type: "normal",
+                //     stylingMode: "contained",
+                //     onClick: () => {
+                //         if (!toggleHideWorkflow) {
+                //             $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).empty();
+                //             $(`#${window.QuotationIdManager.flowHistoryPanel(@ViewData["Id"])}`).show();
+                //             $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).show();
+                //             toggleHideWorkflow = true;
+                //                 reloadWorkflow("@(ViewData["Guid"])", @(ViewData["Id"]), state.stageDept, formModuleKeyQt);
+                //         } else {
+                //             $(`#${window.QuotationIdManager.flowHistoryPanel(@ViewData["Id"])}`).hide();
+                //             $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).hide();
+                //             toggleHideWorkflow = false;
+                //         }
+                //     }
+                // });
 
                 $("#btnCloseRightComment").off("click").on("click", function () {
                     closeRightCommentPanel();
@@ -827,7 +827,6 @@ Note:
             initDepartmentAssignees(formModuleKeyQt,deptData, firstRender ? null : 2000);
             animateOverviewSections(formModuleKeyQt);
             scrollToDept(formModuleKeyQt, { id: `${state.focusDept}`, keyId: "@ViewData["Id"]" } );
-            debugger
             TinyMCEElementMaker(`.htmleditor`);
             
         }
@@ -890,7 +889,6 @@ Note:
         initializeOverviewShell();
         
         loadQuotePage(true).then(() => {
-            debugger
             applyNodeHighlights();
             applySectionFocusHighlight();
             updateHints();

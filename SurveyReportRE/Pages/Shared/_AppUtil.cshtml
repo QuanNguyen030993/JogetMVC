@@ -1357,6 +1357,8 @@
             const pad = (n) => String(n).padStart(2, "0");
             return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
         }
+
+
         function normalizeStatus(raw) {
             const s = String(raw ?? "").trim();
             const k = s.toLowerCase().replace(/\s+/g, " ");
@@ -3055,4 +3057,86 @@
 
 
     }
+
+      
+     function transitionMapeHandle(x){
+            return {
+                fromNodeId: x.fromNodeId,
+                toNodeId: x.toNodeId,
+                statusId: x.statusId || 0,
+                statusCode: x.statusCode || "",
+                statusName: x.statusName || "",
+                stepNo: x.stepNo,
+                actionCode: x.actionCode || "",
+                actionName: x.actionName || "",
+                flowType: x.flowType || "Both",
+                isReturn: !!x.isReturn,
+                isLoop: !!x.isLoop,
+                loopGroup: x.loopGroup || "",
+                loopExitMode: x.loopExitMode || "None",
+                maxLoopCount: x.maxLoopCount || null,
+                isExitTransition: !!x.isExitTransition,
+                userDecisionLabel: x.userDecisionLabel || "",
+                conditionJson: x.conditionJson || ""
+            }
+        }
+
+        function workflowNodesHandle(x){
+            return {
+             id: x.id,
+                    parentId: x.parent === "#" ? null : x.parent,
+                    nodeName: x.text,
+                    nodeType: x.type,
+                    nodeCode: x.code,
+                    orderNo: x.orderNo ?? (index + 1),
+                    stepRole: x.stepRole,
+                    departmentName: x.departmentName,
+                    levelNo: x.levelNo,
+                    flowType: x.flowType || "Both",
+                    allowLoop: !!x.allowLoop,
+                    loopGroup: x.loopGroup || "",
+                    x: x.x,
+                    y: x.y
+             }
+        }
+            function formatDateToString(dateInput) {
+        const date = new Date(dateInput);
+
+        // ISO chuẩn (UTC)
+        const iso = date.toISOString();
+
+        // Convert sang GMT+7
+        const offsetMs = 7 * 60 * 60 * 1000;
+        const dateGMT7 = new Date(date.getTime());
+
+        // Format yyyy-MM-dd HH:mm:ss
+        const pad = (n) => n.toString().padStart(2, '0');
+
+        const gmt7 = `${dateGMT7.getFullYear()}-${pad(dateGMT7.getMonth() + 1)}-${pad(dateGMT7.getDate())}T`
+            + `${pad(dateGMT7.getHours())}:${pad(dateGMT7.getMinutes())}:${pad(dateGMT7.getSeconds())}.000Z`;
+
+        return {
+            iso,        // chuẩn Z
+            gmt7        // giờ VN
+        };
+    }
+
+       // function createNodeEl(node, pos, runtimeState) {
+       //    var el = document.createElement("div");
+       //    el.id = node.id;
+       //    el.className = "node " + getNodeFlowClass(node.flowType) + " " + getNodeStateClass(node.id, runtimeState);
+       //    el.style.left = pos.x + "px";
+       //    el.style.top = pos.y + "px";
+       //    el.innerHTML = `
+       //      <div class="node-title">${safe(node.nodeName || node.id)}</div>
+       //      <div class="node-meta">
+       //        <div>Order: ${safe(node.orderNo)}</div>
+       //        <div>Level: ${safe(node.levelNo)}</div>
+       //        <div>Flow: ${safe(node.flowType || "Both")}</div>
+       //        <div>X: <span data-x="${node.id}">${safe(node.x)}</span> | Y: <span data-y="${node.id}">${safe(node.y)}</span></div>
+       //      </div>
+       //    `;
+       //    return el;
+       //  }
+
 </script>

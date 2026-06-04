@@ -655,8 +655,8 @@
         border-color: #c4b5fd;
         color: #5b21b6;
     }
-
     .jtk-connector {
+
         z-index: 4;
     }
 
@@ -718,9 +718,7 @@
                     </div>
                 </div>
             </div>
-            <div class="sub">
-                jsPlumb
-            </div>
+
 
             <div class="card-in-frame">
                 <div class="header-in-frame">Legend</div>
@@ -1031,6 +1029,7 @@
 
         function createNodeEl(node, pos, runtimeState) {
           var el = document.createElement("div");
+          console.log(node);
           el.id = node.id;
           el.className = "node " + getNodeFlowClass(node.flowType) + " " + getNodeStateClass(node.id, runtimeState);
           el.style.left = pos.x + "px";
@@ -1071,6 +1070,9 @@
         function connectEdge(t) {
           var color = colorForEdge(t);
           var label = safe(t.actionName || t.userDecisionLabel || t.actionCode || "");
+          debugger
+          var statusName = _enums.OverallStatus.find(f => f.id == t.statusId);
+                                  label = `${label} - <div class="statusTag ${normalizeStatus(statusName?.value || "").css}">${statusName?.value || ""}</div>`;
           var isSelfLoop = t.fromNodeId === t.toNodeId;
 
           var overlays = [
@@ -1471,22 +1473,11 @@
             const id = generateUniqueNodeId(data, template.nodeName);
             const nextOrder = ((data.workflowNodes || []).reduce((m, n) => Math.max(m, n.orderNo || 0), 0)) + 1;
 
-            const node = {
-                id: id,
-                parentId: null,
-                nodeName: template.nodeName || id,
-                nodeType: template.nodeType || "",
-                nodeCode: template.nodeCode || "",
-                orderNo: nextOrder,
-                stepRole: template.stepRole || "",
-                departmentName: template.departmentName || "",
-                levelNo: template.levelNo != null ? template.levelNo : 1,
-                flowType: template.flowType || "Both",
-                allowLoop: !!template.allowLoop,
-                loopGroup: template.loopGroup || "",
-                x: x,
-                y: y
-            };
+           var node = workflowNodesHandle(template);
+           node.id = id;
+           node.orderNo = nextOrder;
+           node.x = x;
+           node.y = y;
 
             data.workflowNodes.push(node);
 

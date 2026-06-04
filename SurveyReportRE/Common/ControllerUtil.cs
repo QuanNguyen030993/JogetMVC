@@ -248,9 +248,10 @@ namespace ERPCore.ControllerUtil
             ,N'{workflowEntity.Comment}'
             ,'WEB')
                     ";
-
-
-                        string logFlowQuery = $@"INSERT INTO QuotationWorkflowHistory(QuotationId
+            string logFlowQuery = "";
+            if (workflowEntity.isFullDetail)
+            {
+                logFlowQuery = $@"INSERT INTO QuotationWorkflowHistory(QuotationId
             ,StepNo,DeptCode,ActionTime,ActionNote,FromDeptCode,ToDeptCode,ActionCode,Actor,SourceSystem)
                         VALUES ({entity.Id},{workflowEntity.InstanceWorkflow.CurrentStep}
             ,'{workflowEntity.StepsWorkflow.FromNodeId}'
@@ -261,7 +262,7 @@ namespace ERPCore.ControllerUtil
             ,'{workflowEntity.StepsWorkflow.ActionCode}'
             ,'{userInfo.Users.name}','WEB')
                     ";
-
+            }
             using var loggerFactory = LoggerFactory.Create(loggingBuilder => loggingBuilder
           .SetMinimumLevel(LogLevel.Trace)
           .AddConsole());
@@ -269,7 +270,8 @@ namespace ERPCore.ControllerUtil
             var logger = loggerFactory.CreateLogger<QuotationCommentLog>();
             var quotationCommentLogApiController = new QuotationCommentLogController(_quotationCommentLogRepository, configuration, httpContextAccessor, logger, optionsMonitor);
                         await quotationCommentLogApiController.ExecuteCustomQuery(logQuery);
-                        await quotationCommentLogApiController.ExecuteCustomQuery(logFlowQuery);
+            if (workflowEntity.isFullDetail)
+                await quotationCommentLogApiController.ExecuteCustomQuery(logFlowQuery);
 
             return null; 
         }

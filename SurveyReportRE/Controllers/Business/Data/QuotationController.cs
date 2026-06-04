@@ -613,6 +613,20 @@ public class QuotationController : BaseControllerApi<Quotation>
         }
     }
 
+    [HttpPost]
+    public async Task<IActionResult> LogAction([FromForm] QuotationRequest quotationData)
+    {
+        quotationData.QuotationData = JsonConvert.DeserializeObject<QuotationData>(Request.Form["QuotationData"]);
+        quotationData.QuotationData.SubmitRequest = JsonConvert.DeserializeObject<SubmitRequest>(Request.Form["SubmitRequest"]);
+        SubmitRequest submitRequest = new SubmitRequest();
+        submitRequest.Comment = quotationData?.QuotationData?.SubmitRequest?.Comment;
+        submitRequest.StepsWorkflow = new StepsWorkflow();
+        submitRequest.StepsWorkflow.FromNodeId = quotationData?.QuotationData?.SubmitRequest?.StepsWorkflow?.FromNodeId;
+        submitRequest.isFullDetail  = quotationData?.QuotationData?.SubmitRequest?.isFullDetail;
+        await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotationData.QuotationData.Quotation,submitRequest , _blobStorageSettings);
+        return Ok();
+    }
+
     [HttpGet("{listIds}/{jsessionId}")]
     public async Task<ActionResult<Quotation>> PullDataBySession(string listIds,string jsessionId)
     {

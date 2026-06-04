@@ -46,7 +46,7 @@
                     $(`#${itemData.id}`).dxButton("instance").option("disabled", true);
                     if (itemData.id === "RJ_@PIViewIdHelper.Decision(dept, quotationId)" ) $(`#RJ_@PIViewIdHelper.Decision(dept, quotationId)`).dxButton("instance").option("disabled", false);
                   }
-                 },4000);
+                 },_delayRenderDecisionButton);
 
                  $(`<div id='${itemData.id}'>`).dxButton({
                  text: itemData.text,

@@ -18,5 +18,6 @@ namespace ERPCore.Models.Request
         public long? WorkflowDefinitionId { get; set; }
         public string StartingDept { get; set; }
         public AttributesParsing? Attributes { get; set; }
+        public SubmitRequest? SubmitRequest { get; set; }
     }
 }

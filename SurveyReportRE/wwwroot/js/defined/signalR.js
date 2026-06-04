@@ -28,7 +28,7 @@ function setSignalRStatus(status) {
 }
 
 function signalRBlink() {
-
+    debugger
     signalRMessageCount++;
 
     $("#signalRCounter")
@@ -121,6 +121,7 @@ connectionSignR.start().then(async function () {
         userRender(users);
     });
     connectionSignR.on(`sectionRender_${_connectionId}`, (responseData) => {
+        debugger
         signalRBlink();
         const idx = window.QuotationPage.state.quotes.findIndex(x => x.id === responseData.data.id);
         window.QuotationPage.state.quotes[idx] = { ...responseData.data };

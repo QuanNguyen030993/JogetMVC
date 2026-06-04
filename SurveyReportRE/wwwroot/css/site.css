@@ -1058,9 +1058,10 @@ aside {
     }
 
     /* In Progress */
+
     .statusTag.in-progress {
-        background: rgba(59,130,246);
-        color: #1e3a8a;
+        background: #f97316; /* màu cam */
+        color: #ffffff; /* chữ trắng */
     }
 
     /* Accept / Approved / Client Accept */
@@ -2787,19 +2788,13 @@ text-overflow: ellipsis;
 }/* ================= SIGNALR MONITOR ================= */
 
 .signalr-monitor {
+    position: relative;
+    top: 7px;
+    right: 60px;
     display: flex;
     align-items: center;
-    gap: 6px;
-    background: #fff;
-    border-radius: 20px;
-    padding: 4px 10px;
-    margin-left: 10px;
-    border: 1px solid rgba(0,0,0,.1);
-    box-shadow: 0 2px 8px rgba(0,0,0,.08);
-    font-size: 12px;
-    font-weight: 600;
-    min-width: 120px;
-    user-select: none;
+    gap: 4px;
+    cursor: pointer;
 }
 
 .signalr-dot {
@@ -2822,25 +2817,56 @@ text-overflow: ellipsis;
     background: #dc3545;
 }
 
-.signalr-blink {
-    animation: signalRFlash .4s ease;
+
+
+/* Connected: nhấp nháy nhẹ xanh -> xám -> xanh */
+.signalr-connected .signalr-dot .signalr-blink  {
+    animation: blinkSignalR 1s infinite;
 }
 
-@keyframes signalRFlash {
+/* Reconnecting: nháy nhanh hơn (cam -> xám) */
+.signalr-reconnecting .signalr-dot .signalr-blink  {
+    animation: blinkReconnect 0.6s infinite;
+}
+
+/* Disconnected: đỏ tĩnh */
+.signalr-disconnected .signalr-dot .signalr-blink {
+    background: #dc3545;
+}
+
+    .signalr-blink {
+    animation: blinkSignalR .1s ease;
+}
+
+@keyframes blinkSignalR {
     0% {
-        transform: scale(1);
-        box-shadow: 0 0 0 rgba(40,167,69,0);
+        background: #28a745; /* xanh */
     }
 
     50% {
-        transform: scale(1.08);
-        box-shadow: 0 0 20px rgba(40,167,69,.7);
+        background: gray; /* xám */
     }
 
     100% {
-        transform: scale(1);
+        background: #28a745; /* xanh */
     }
 }
+
+/* Animation reconnect (cảnh báo hơn) */
+@keyframes blinkReconnect {
+    0% {
+        background: #ff9800;
+    }
+
+    50% {
+        background: #ddd;
+    }
+
+    100% {
+        background: #ff9800;
+    }
+}
+
 
 @keyframes pulseSignalR {
     0% {

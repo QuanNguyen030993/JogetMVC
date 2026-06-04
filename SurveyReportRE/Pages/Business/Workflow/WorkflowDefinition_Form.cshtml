@@ -1584,20 +1584,11 @@
                     // versionNo: workflowHeader?.versionNo|| "",
                     // isActive: workflowHeader?.isActive|| "",
                 },
-                workflowNodes: workflowTreeData.map((x, index) => ({
-                    id: x.id,
-                    parentId: x.parent === "#" ? null : x.parent,
-                    nodeName: x.text,
-                    nodeType: x.type,
-                    nodeCode: x.code,
-                    orderNo: x.orderNo ?? (index + 1),
-                    stepRole: x.stepRole,
-                    departmentName: x.departmentName,
-                    levelNo: x.levelNo,
-                    flowType: x.flowType || "Both",
-                    allowLoop: !!x.allowLoop,
-                    loopGroup: x.loopGroup || ""
-                })),
+                workflowNodes: workflowTreeData.map((x, index) => (
+              
+                workflowNodesHandle(x)
+                
+                )),
                 workflowTransitions: transitions.map(x => (transitionMapeHandle(x)))
             };
 
@@ -1737,25 +1728,6 @@
             refreshGrid();
         }
 
-        // function getEmptyTransition(fromNodeId) {
-        //     return {
-        //         fromNodeId: fromNodeId || "",
-        //         toNodeId: "",
-        //         actionCode: "",
-        //         actionName: "",
-        //         stepNo: null,
-        //         jumpStepNo: null,
-        //         flowType: "Both",
-        //         isReturn: false,
-        //         isLoop: false,
-        //         loopGroup: "",
-        //         loopExitMode: "None",
-        //         maxLoopCount: null,
-        //         isExitTransition: false,
-        //         userDecisionLabel: "",
-        //         conditionJson: ""
-        //     };
-        // }
 
         function getNextOrderNo(parentId) {
             var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
@@ -1898,102 +1870,8 @@
                 labelLocation: "top",
                 colCount: 2,
                  items: transitionItem,
-                // items: [
-                //     {
-                //         dataField: "fromNodeId",
-                //         label: { text: "From Node" },
-                //         editorType: "dxSelectBox",
-                //         editorOptions: {
-                //             dataSource: [],
-                //             valueExpr: "id",
-                //             displayExpr: "text",
-                //             searchEnabled: true
-                //         }
-                //     },
-                //     {
-                //         dataField: "toNodeId",
-                //         label: { text: "To Node" },
-                //         editorType: "dxSelectBox",
-                //         editorOptions: {
-                //             dataSource: [],
-                //             valueExpr: "id",
-                //             displayExpr: "text",
-                //             searchEnabled: true
-                //         }
-                //     },
-                //     {
-                //         dataField: "actionCode",
-                //         label: { text: "Action Code" }
-                //     },
-                //     {
-                //         dataField: "actionName",
-                //         label: { text: "Action Name" }
-                //     },
-                //     {
-                //         dataField: "stepNo",
-                //         label: { text: "Step No" },
-                //         editorType: "dxTextBox",
-                //     },
-                //     {
-                //         dataField: "jumpStepNo",
-                //         label: { text: "Jump Point" },
-                //         editorType: "dxTextBox",
-                //     },
-                //     {
-                //         dataField: "flowType",
-                //         label: { text: "Transition Flow Type" },
-                //         editorType: "dxSelectBox",
-                //         editorOptions: {
-                //             dataSource: ["Quotation", "PolicyIssuance", "Both"]
-                //         }
-                //     },
-                //     {
-                //         dataField: "isReturn",
-                //         label: { text: "Return Flow" },
-                //         editorType: "dxSwitch"
-                //     },
-                //     {
-                //         dataField: "isLoop",
-                //         label: { text: "Loop Flow" },
-                //         editorType: "dxSwitch"
-                //     },
-                //     {
-                //         dataField: "loopGroup",
-                //         label: { text: "Loop Group" }
-                //     },
-                //     {
-                //         dataField: "loopExitMode",
-                //         label: { text: "Loop Exit Mode" },
-                //         editorType: "dxSelectBox",
-                //         editorOptions: {
-                //             dataSource: ["None", "UserDecision", "Condition", "MaxIteration"]
-                //         }
-                //     },
-                //     {
-                //         dataField: "maxLoopCount",
-                //         label: { text: "Max Loop Count" },
-                //         editorType: "dxNumberBox",
-                //         editorOptions: { min: 1 }
-                //     },
-                //     {
-                //         dataField: "isExitTransition",
-                //         label: { text: "Exit Transition" },
-                //         editorType: "dxSwitch"
-                //     },
-                //     {
-                //         dataField: "userDecisionLabel",
-                //         label: { text: "User Decision Label" }
-                //     },
-                //     {
-                //         dataField: "conditionJson",
-                //         label: { text: "Condition JSON" },
-                //         editorType: "dxTextArea",
-                //         editorOptions: { minHeight: 100 },
-                //         colSpan: 2
-                //     }
-                // ],
+                
                 onInitialized: function (e) {
-                    debugger
                     transitionFormInstance = e.component;
                     refreshTransitionNodeLookup();
                 }
@@ -2022,62 +1900,7 @@
                     useIcons: true
                 },
                 columns: transitionItem,
-                // columns: [
-                //     {
-                //         caption: "#",
-                //         width: 60,
-                //         cellTemplate: function (container, options) {
-                //             container.text(options.rowIndex + 1);
-                //         }
-                //     },
-                //     { dataField: "fromNodeId", caption: "From Node" },
-                //     { dataField: "toNodeId", caption: "To Node" },
-                    
-                //     { dataField: "statusId", caption: "Status"},
-                //     { dataField: "statusCode", caption: "Status Code"},
-                //     { dataField: "statusName", caption: "Status Name" },
-                //     {
-                //         dataField: "stepNo",
-                //         caption: "Step No"
-                //     },
-                //     {
-                //         dataField: "jumpStepNo",
-                //         caption: "Jump Point"
-                //     },
-                //     { dataField: "actionCode", caption: "Action Code" },
-                //     { dataField: "actionName", caption: "Action Name" },
-                //     {
-                //         dataField: "flowType",
-                //         caption: "Flow Type",
-                //         lookup: {
-                //             dataSource: ["Quotation", "PolicyIssuance", "Both"]
-                //         }
-                //     },
-                //     { dataField: "isReturn", caption: "Is Return", dataType: "boolean", width: 90 },
-                //     { dataField: "isLoop", caption: "Is Loop", dataType: "boolean", width: 80 },
-                //     { dataField: "loopGroup", caption: "Loop Group" },
-                //     { dataField: "loopExitMode", caption: "Loop Exit Mode" },
-                //     { dataField: "maxLoopCount", caption: "Max Loop Count", dataType: "number" },
-                //     { dataField: "isExitTransition", caption: "Is Exit", dataType: "boolean", width: 80 },
-                //     { dataField: "userDecisionLabel", caption: "User Decision Label" },
-                //     {
-                //         dataField: "conditionJson",
-                //         caption: "Condition JSON",
-                //         minWidth: 220,
-                //         cellTemplate: function (container, options) {
-                //             const text = options.value || "";
-                //             $("<div>")
-                //                 .css({
-                //                     whiteSpace: "pre-wrap",
-                //                     wordBreak: "break-word",
-                //                     maxHeight: "90px",
-                //                     overflow: "auto"
-                //                 })
-                //                 .text(text)
-                //                 .appendTo(container);
-                //         }
-                //     }
-                // ],
+                
                 onRowRemoving: function (e) {
                     const rowIndex = transitions.findIndex(x => x.__rowKey === e.data.__rowKey);
 
@@ -2201,27 +2024,7 @@
             refreshGrid();
         }
 
-        function transitionMapeHandle(x){
-            return {
-                fromNodeId: x.fromNodeId,
-                toNodeId: x.toNodeId,
-                statusId: x.statusId || 0,
-                statusCode: x.statusCode || "",
-                statusName: x.statusName || "",
-                stepNo: x.stepNo,
-                actionCode: x.actionCode || "",
-                actionName: x.actionName || "",
-                flowType: x.flowType || "Both",
-                isReturn: !!x.isReturn,
-                isLoop: !!x.isLoop,
-                loopGroup: x.loopGroup || "",
-                loopExitMode: x.loopExitMode || "None",
-                maxLoopCount: x.maxLoopCount || null,
-                isExitTransition: !!x.isExitTransition,
-                userDecisionLabel: x.userDecisionLabel || "",
-                conditionJson: x.conditionJson || ""
-            }
-        }
+       
 
 
         function initPayloadBoxOnce() {

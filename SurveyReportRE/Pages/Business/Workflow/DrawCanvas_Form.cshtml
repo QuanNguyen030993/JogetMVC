@@ -518,24 +518,24 @@
           };
         }
 
-        function createNodeEl(node, pos, runtimeState) {
-          var el = document.createElement("div");
-          el.id = node.id;
-          el.className = "node " + (node.id === lastObject.tNodeId ? "focus" : getNodeFlowClass(node.flowType)) + " " + getNodeStateClass(node.id, runtimeState);
-          el.style.left = pos.x + "px";
-          el.style.top = pos.y + "px";
-          el.innerHTML = `
-            <div class="node-title">${safe(node.nodeName || node.id)}</div>
-            <div class="node-meta">
-              <div>Order: ${safe(node.orderNo)}</div>
-              <div>Level: ${safe(node.levelNo)}</div>
-              <div>Flow: ${safe(node.flowType || "Both")}</div>
-              <div>X: <span data-x="${node.id}">${safe(node.x)}</span> | Y: <span data-y="${node.id}">${safe(node.y)}</span></div>
-            </div>
-          `;
+        // function createNodeEl(node, pos, runtimeState) {
+        //   var el = document.createElement("div");
+        //   el.id = node.id;
+        //   el.className = "node " + (node.id === lastObject.tNodeId ? "focus" : getNodeFlowClass(node.flowType)) + " " + getNodeStateClass(node.id, runtimeState);
+        //   el.style.left = pos.x + "px";
+        //   el.style.top = pos.y + "px";
+        //   el.innerHTML = `
+        //     <div class="node-title">${safe(node.nodeName || node.id)}</div>
+        //     <div class="node-meta">
+        //       <div>Order: ${safe(node.orderNo)}</div>
+        //       <div>Level: ${safe(node.levelNo)}</div>
+        //       <div>Flow: ${safe(node.flowType || "Both")}</div>
+        //       <div>X: <span data-x="${node.id}">${safe(node.x)}</span> | Y: <span data-y="${node.id}">${safe(node.y)}</span></div>
+        //     </div>
+        //   `;
 
-          return el;
-        }
+        //   return el;
+        // }
 
         function createLayerLabel(layer, x) {
           var el = document.createElement("div");

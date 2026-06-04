@@ -12,5 +12,6 @@ namespace ERPCore.Models.Request
         public long? QuotationId { get; set; }  
         public string? Comment { get; set; }
         public bool? isEmail { get; set; } = false;
+        public bool? isFullDetail { get; set; } = true; 
     }
 }

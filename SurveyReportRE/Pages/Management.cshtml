@@ -56,11 +56,7 @@
 
                 </div>
                 @* <p id="onlineState" class="status-button"> </p> *@
-            <div id="signalRMonitor" class="signalr-monitor signalr-disconnected">
-                <div class="signalr-dot"></div>
-                <span class="signalr-text">Offline</span>
-                <span id="signalRCounter">(0)</span>
-            </div>
+                
             </div>
    
             @await Html.PartialAsync("_SPAReference")
@@ -180,10 +176,17 @@
 
         var marginTop = "margin-top:3px";
         var avatar = `./img/no-profile-icon.jpg`;
-       $(".user.user-menu").append(`<div style="margin-right:5px;${marginTop}">
+       $(".user.user-menu").append(`<div style="display:flex;margin-right: -15%;${marginTop}">
        <img src="${avatar}" class="user-image" style="border-radius:50%"
-       width="25px" height="25px" alt="User Image"/> </div>
-       <div id="accountLabel" style="color: white;${marginTop}">${_loginUser}</div>
+       width="25px" height="25px" alt="User Image"/> 
+       <div id="accountLabel" style="color: white;margin-right:5px;${marginTop}">${_loginUser}</div>
+       <div id="signalRMonitor" class="signalr-monitor signalr-disconnected">
+                    <div class="signalr-dot"></div>
+                    <span class="signalr-text">Offline</span>
+                    <span id="signalRCounter">(0)</span>
+                </div>
+                </div>
+       
 
        `);
 
@@ -242,23 +245,7 @@
     }
 
     // ====== API call (mock) ======
-    // function apiGetNotifications(take = 30) {
-    //     // TODO: thay bằng API thật của bạn
-    //     //Example
-    //     var objectJson =  {url:"/Business/Form/Survey_Form/67",caption:"form_Survey_Form_67",name:"Survey SVRE.1225.067",data:""}
-    //     var stringObjectJson = JSON.stringify(objectJson);
-    //     // Mock demo
-    //     return $.Deferred().resolve({
-    //         items: [
-    //             { id: 101, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
-    //             { id: 102, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
-    //             { id: 103, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
-    //             { id: 104, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
-    //             { id: 105, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
-    //             { id: 106, title: "Approval required", message: "Quotation QT-2025-123 needs approval", createdOn: new Date(Date.now() - 3600_000), isRead: true, url: `/Management?loadParams=...` }
-    //         ]
-    //     }).promise();
-    // }
+
 
     function apiMarkRead(id) {
 
@@ -493,7 +480,7 @@
                    const html = `
     <div class="launcher-wrap">
     <div class="launcher-title">
-                           Choose action
+                           Select action
     </div>
     <div class="launcher-grid">
     <div class="launcher-item quotation" id="btnQuotation">
