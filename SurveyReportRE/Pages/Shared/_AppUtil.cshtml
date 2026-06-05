@@ -499,8 +499,8 @@
                             quotationData.Quotation.PIC = JSON.stringify(quotationData.Quotation.PIC);
                             quotationData.Quotation.StageAccount = submitData?.to || "";
                             quotationData.Quotation.StageDept = submitSummaryData.assignedTeamOrRole;
-                            quotationData.Quotation.QuotationStatus = "New";
-                            quotationData.Quotation.WorkflowStatus = "Pending";
+                            quotationData.Quotation.QuotationStatus = "TS Pending";
+                            quotationData.Quotation.WorkflowStatus = "TS Pending";
                             quotationData.Quotation.BranchId = submitData?.branchId;
                             quotationData.Quotation.BranchCode = _branch
                             quotationData.Attributes = new Object();
@@ -536,7 +536,7 @@
                                         DevExpress.ui.notify("Quotation created!", "success", 1200);
                                 },
                                 error: function (xhr) {
-                                                   appNotifyError(`${xhr.responseJSON.detail}\n${xhr.responseJSON.message}`);
+                                                   appNotifyError(`${xhr.responseJSON.detail} <br/>${xhr.responseJSON.message}`);
                                 }
                             });
 
@@ -548,7 +548,7 @@
                                 notificationData.Notification.IsRead = false;
                                 notificationData.Notification.Url = "Link URL";
                                 notificationData.Notification.Resource = `${_loginUser}_${_role}`;
-                                notificationData.Notification.System = "QM";
+                                notificationData.Notification.System = "WM";
                                 notificationData.Notification.ReceivedBy = submitSummaryData.rePIC;  // Assign RE member ?
                                 notificationData.MKTSurveyRequest = new Object();
                                 notificationData.MKTSurveyRequest.ClientName = submitSummaryData.clientName;
@@ -702,7 +702,7 @@
                                   policyIssuance.PIC = JSON.stringify(policyIssuance.PIC);
                                   policyIssuance.StageDept = "FO";
                                   policyIssuance.PolicyIssuanceStatus = "New";
-                                  policyIssuance.WorkflowStatus = "Pending";
+                                  policyIssuance.WorkflowStatus = "FO Pending";
                                   policyIssuance.CopyFromGuid = item.guid;
                                   policyIssuance.QuotationId = item.id;
 
@@ -1084,7 +1084,7 @@
 
                         var items = getCurrentPins();
                         if (!items.length) {
-                            //wrap.append(`<div class="empty-state">No pinned note</div>`);
+                           //wrap.append(`<div class="empty-state">No pinned note</div>`);
                                 $(`.pinned-zone`).remove();
                             return;
                         }
@@ -3139,4 +3139,96 @@
        //    return el;
        //  }
 
+       function acceptDecision(object){
+            var statusObject = _enums.OverallStatus.find(f => f.value == object.statusName);
+                          object.formItems.statusId  = statusObject.id;
+                          object.formItems.workflowStatus = statusObject.value;
+                          object.formItems.quotationStatus = statusObject.value;
+                           ajaxPut(object.url,
+                            {
+                                key: object.formItems.id,
+                                values: JSON.stringify(
+                                    object.formItems
+                                )
+                            },
+                            {
+                                onSuccess: function (response) {
+                                },
+                                onError: function (err) { }
+                            });
+
+                        var submitRequest = new Object();
+                            submitRequest.Comment = object.Comment;
+                            submitRequest.StepsWorkflow = new Object()
+                            submitRequest.StepsWorkflow.FromNodeId = object.dept;
+                            submitRequest.isFullDetail = false;
+                         var quotationData = new Object();
+
+                            quotationData.Quotation = new Object();
+                            quotationData.Quotation.Id = object.formItems.id;
+                            quotationData.Quotation.Guid = object.formItems.guid;
+                            quotationData.Quotation.BranchCode = _branch;
+                            quotationData.Attributes = new Object();
+                            quotationData.Attributes.SectionName = object.dept;
+                             var formData = new FormData();
+                            formData.append(`${object.schemeName}Data`,JSON.stringify(quotationData));
+                            formData.append("SubmitRequest",JSON.stringify(submitRequest));
+                              $.ajax({
+                                url:`${object.urlLog}`,
+                                type: "POST",
+                                data: formData,
+                                processData: false,
+                                contentType: false,
+                                success: function (res) {
+                                },
+                                error: function (xhr) {
+                                }
+                            });
+       }
+       function rejectDecision(object){
+            var statusObject = _enums.OverallStatus.find(f => f.value == object.statusName);
+                          object.formItems.statusId  = statusObject.id;
+                          object.formItems.workflowStatus = statusObject.value;
+                          object.formItems.quotationStatus = statusObject.value;
+                           ajaxPut(object.url,
+                            {
+                                key: object.formItems.id,
+                                values: JSON.stringify(
+                                    object.formItems
+                                )
+                            },
+                            {
+                                onSuccess: function (response) {
+                                },
+                                onError: function (err) { }
+                            });
+
+                        var submitRequest = new Object();
+                            submitRequest.Comment = object.Comment;
+                            submitRequest.StepsWorkflow = new Object()
+                            submitRequest.StepsWorkflow.FromNodeId = object.dept;
+                            submitRequest.isFullDetail = false;
+                         var quotationData = new Object();
+
+                            quotationData.Quotation = new Object();
+                            quotationData.Quotation.Id = object.formItems.id;
+                            quotationData.Quotation.Guid = object.formItems.guid;
+                            quotationData.Quotation.BranchCode = _branch;
+                            quotationData.Attributes = new Object();
+                            quotationData.Attributes.SectionName = object.dept;
+                             var formData = new FormData();
+                            formData.append(`${object.schemeName}Data`,JSON.stringify(quotationData));
+                            formData.append("SubmitRequest",JSON.stringify(submitRequest));
+                              $.ajax({
+                                url:`${object.urlLog}`,
+                                type: "POST",
+                                data: formData,
+                                processData: false,
+                                contentType: false,
+                                success: function (res) {
+                                },
+                                error: function (xhr) {
+                                }
+                            });
+       }
 </script>

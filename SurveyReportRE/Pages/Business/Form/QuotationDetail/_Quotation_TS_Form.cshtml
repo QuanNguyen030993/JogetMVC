@@ -53,72 +53,33 @@
                  {
                       var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
                        var tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
-                          tatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
-                          formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
-                          var statusObject = _enums.OverallStatus.find(f => f.value == "In Progress");
-                          formItems.statusId  = statusObject.id;
-                          formItems.workflowStatus = statusObject.value;
-                          formItems.quotationStatus = statusObject.value;
-                           ajaxPut('/api/Quotation/UpdateData',
-                            {
-                                key: formItems.id,
-                                values: JSON.stringify(
-                                    formItems
-                                )
-                            },
-                            {
-                                onSuccess: function (response) {
-                                },
-                                onError: function (err) { }
-                            });
-
-                        var submitRequest = new Object();
-                            submitRequest.Comment = `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`;
-                            submitRequest.StepsWorkflow = new Object()
-                            submitRequest.StepsWorkflow.FromNodeId = `@dept`;
-                            submitRequest.isFullDetail = false;
-                         var quotationData = new Object();
-
-                            quotationData.Quotation = new Object();
-                            quotationData.Quotation.Id = formItems.id;
-                            quotationData.Quotation.Guid = formItems.guid;
-                            quotationData.Quotation.BranchCode = _branch;
-                            quotationData.Attributes = new Object();
-                            quotationData.Attributes.SectionName = `@dept`;
-                             var formData = new FormData();
-                            formData.append("QuotationData",JSON.stringify(quotationData));
-                            formData.append("SubmitRequest",JSON.stringify(submitRequest));
-                              $.ajax({
-                                url: "/api/Quotation/LogAction",
-                                type: "POST",
-                                data: formData,
-                                processData: false,
-                                contentType: false,
-                                success: function (res) {
-                                },
-                                error: function (xhr) {
-                                }
-                            });
-
+                      tatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
+                      formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+                      var passingObject = new Object(); 
+                      passingObject.statusName = "@dept Process"; // base on Dept
+                      passingObject.Comment = `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`;  // base on Dept
+                      passingObject.formItems = formItems; 
+                      passingObject.dept = `@dept`;
+                      passingObject.url = '/api/Quotation/UpdateData';
+                      passingObject.urlLog = `/api/Quotation/LogAction`;
+                      passingObject.schemeName = `Quotation`;
+                      acceptDecision(passingObject);
                  }
-                  if (_ == 2)
+                 if (_ == 2)
                  {
-                        var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-                        var tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
-                          tatObject[`@dept`].AcceptDate = "";
-                          formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
-                       ajaxPut('/api/Quotation/UpdateData',
-                        {
-                            key: formItems.id,
-                            values: JSON.stringify(
-                                formItems
-                            )
-                        },
-                        {
-                            onSuccess: function (response) {
-                            },
-                            onError: function (err) { }
-                        });
+                      var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+                      var tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
+                      tatObject[`@dept`].AcceptDate = "";
+                      formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+                      var passingObject = new Object();
+                      passingObject.statusName = "@dept Pending"; // base on Dept
+                      passingObject.Comment = `Quotation ${formItems.quotationCode} rejected by ${_displayName}!`;  // base on Dept
+                      passingObject.formItems = formItems;
+                      passingObject.dept = `@dept`;
+                      passingObject.url = '/api/Quotation/UpdateData';
+                      passingObject.urlLog = `/api/Quotation/LogAction`;
+                      passingObject.schemeName = `Quotation`;
+                      rejectDecision(passingObject);
                  }
              }
 

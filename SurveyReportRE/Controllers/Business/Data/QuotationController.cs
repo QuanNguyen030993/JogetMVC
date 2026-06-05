@@ -8,22 +8,13 @@ using ERPCore.ControllerUtil;
 using ERPCore.Common;
 using System.Net;
 using ERPCore.Models.Base;
-using DocumentFormat.OpenXml.Wordprocessing;
-using System.Text.RegularExpressions;
-using MimeKit;
-using DocumentFormat.OpenXml.Bibliography;
-using Microsoft.SharePoint.Taxonomy.WebServices;
 using ERPCore.Models.Migration.Config;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using ERPCore.Models.Business.Migration.Config;
 using ERPCore.Models.Migration.Business.HumanResource;
-using ERPCore.Repository;
 using ERPCore.Models.Request;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.SharePoint.WebControls;
 using RESurveyTool.Models.Models.Parsing;
-using Microsoft.AspNetCore.Http;
 using ERPCore.Models.Migration.Business.Workflow;
 using ERPCore.Models.Migration.Business.MasterData;
 using ERPCore.Models.Migration.Business.Data;
@@ -32,13 +23,8 @@ using System.Dynamic;
 using ERPCore.Models;
 using Document = ERPCore.Models.Migration.Business.Data.Document;
 using ERPCore.Models.Migration.Business.Social;
-using AutoMapper.Internal;
 using ERPCore.Models.Models.Parsing;
 using static ERPCore.Models.Models.Parsing.JsonHandle;
-using Syncfusion.CompoundFile.DocIO;
-using Org.BouncyCastle.Bcpg.Sig;
-using ERPCore.Pages.Business.Form.PolicyIssuanceDetail;
-using System.Collections.Generic;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -221,146 +207,177 @@ public class QuotationController : BaseControllerApi<Quotation>
     [HttpPost]
     public async Task<IActionResult> CreateQuotation([FromForm] QuotationRequest quotationData)
     {
-        SignalRResult result = new SignalRResult
+        try
         {
-            status = "saving ...",
-            tabName = _messageSettings.OverviewMessageLoading.Title,
-            subTabContent = _messageSettings.OverviewMessageLoading.Content,
-            data = quotationData,
-            progressvalue = 0,
-            type = "inprogress"
-        };
-        IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
-        OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(DOMAIN_NAME, "") == ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration));
-        //Pending at ajax 
-        //ControllerHelper.SignalRResponse("R_InitializeLoading", new { payload = result, connectionId = onlineUser.ConnectionId}, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
-        List<EnumData> siteEnums = new List<EnumData>();
-        siteEnums = await _enumDataRepository.EnumData("BranchOffice");
 
-        IFormFileCollection files = null;
-        files = ((FormCollection)(Request.Form)).Files;
-        quotationData.QuotationData = JsonConvert.DeserializeObject<QuotationData>(Request.Form["QuotationData"]);
-        if (files.Count > 0)
-        {
-            int filesCount = files.Count;
-            double fileComplete = 0;
-            int i = 0;
-            foreach (var file in files)
+            SignalRResult result = new SignalRResult
             {
-                //Before insert quotation
-                Quotation quotation = new Quotation();
-                List<FormatCodeNo> tableConfig = new List<FormatCodeNo>();
-                tableConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(Quotation) + "Code");
-
-                Res res = new Res();
-                res = await _resRepository.InsertData(res);
-
-
-                JsonConvert.PopulateObject(JsonConvert.SerializeObject(quotationData.QuotationData.Quotation), quotation);
-                quotation.QuotationCode = ControllerUtil.GenerateNumberSeq(tableConfig, _formatCodeNoRepository, nameof(Quotation));
-                quotation.ResId = res.Id;
-
-
-
-
-
-
-                //After insert quotation
-                WorkflowDefinition workflowDefinition = new WorkflowDefinition();
-                workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(s => s.WorkflowCode == _businessConfig.CurrentValue.Workflow.Quotation);
-
-                if (workflowDefinition != null)
-                {
-                    await NotificationHandle(
-                     workflowDefinition,
-                     quotation,
-                     quotationData,
-                    siteEnums,
-                     file
-                    );
-
-                    i++;
-                    fileComplete = filesCount / i; // Pending at ajax
-                    result = new SignalRResult
-                    {
-                        status = "saving ...",
-                        tabName = _messageSettings.OverviewMessageLoading.Title,
-                        subTabContent = _messageSettings.OverviewMessageLoading.Content,
-                        data = quotationData,
-                        progressvalue = 75,//fileComplete,
-                        type = "inprogress"
-                    };
-                ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
-
-                }
-
-            }
-        }
-        if (quotationData.QuotationData.Quotation.QuotationQuantity > 0 && files.Count == 0)
-        {
-            long? quotationCount = quotationData.QuotationData.Quotation.QuotationQuantity ?? 0;
-            double quotationComplete = 0;
-            for (int i = 0; i < quotationData.QuotationData.Quotation.QuotationQuantity; i++)
-            {
-
-            //Before insert quotation
-            Quotation quotation = new Quotation();
-            List<FormatCodeNo> tableConfig = new List<FormatCodeNo>();
-            tableConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(Quotation) + "Code");
-
-            Res res = new Res();
-            res = await _resRepository.InsertData(res);
-
-
-            JsonConvert.PopulateObject(JsonConvert.SerializeObject(quotationData.QuotationData.Quotation), quotation);
-            quotation.QuotationCode = ControllerUtil.GenerateNumberSeq(tableConfig, _formatCodeNoRepository, nameof(Quotation));
-            quotation.ResId = res.Id;
-
-                (PICAttributes PICMain, PICSysHandleAttributes PICLeader) picS;
-
-
-
-
-            //After insert quotation
-            WorkflowDefinition workflowDefinition = new WorkflowDefinition();
-            workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(s => s.WorkflowCode == _businessConfig.CurrentValue.Workflow.Quotation);
-
-            if (workflowDefinition != null)
-            {
-                await NotificationHandle(
-                workflowDefinition,
-                quotation,
-                quotationData,
-                siteEnums,
-                 null
-                );
-                    quotationComplete = quotationCount ?? 0 / i; //Pending at ajax
-                result = new SignalRResult
-                {
                 status = "saving ...",
+                tabName = _messageSettings.OverviewMessageLoading.Title,
+                subTabContent = _messageSettings.OverviewMessageLoading.Content,
                 data = quotationData,
-                    tabName = _messageSettings.OverviewMessageLoading.Title,
-                    subTabContent = _messageSettings.OverviewMessageLoading.Content,
-                    progressvalue = 75,//quotationComplete,
+                progressvalue = 0,
                 type = "inprogress"
-                };
-                ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
-                }
+            };
+            IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
+            OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(DOMAIN_NAME, "") == ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration));
+            //Pending at ajax 
+            //ControllerHelper.SignalRResponse("R_InitializeLoading", new { payload = result, connectionId = onlineUser.ConnectionId}, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+            List<EnumData> siteEnums = new List<EnumData>();
+            siteEnums = await _enumDataRepository.EnumData("BranchOffice");
 
+            IFormFileCollection files = null;
+            files = ((FormCollection)(Request.Form)).Files;
+            quotationData.QuotationData = JsonConvert.DeserializeObject<QuotationData>(Request.Form["QuotationData"]);
+            if (files.Count > 0)
+            {
+                int filesCount = files.Count;
+                double fileComplete = 0;
+                int i = 0;
+                foreach (var file in files)
+                {
+                    //Before insert quotation
+                    Quotation quotation = new Quotation();
+                    List<FormatCodeNo> tableConfig = new List<FormatCodeNo>();
+                    tableConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(Quotation) + "Code");
+
+                    Res res = new Res();
+                    res = await _resRepository.InsertData(res);
+
+
+                    JsonConvert.PopulateObject(JsonConvert.SerializeObject(quotationData.QuotationData.Quotation), quotation);
+                    quotation.QuotationCode = ControllerUtil.GenerateNumberSeq(tableConfig, _formatCodeNoRepository, nameof(Quotation));
+                    quotation.ResId = res.Id;
+
+
+
+
+
+
+                    //After insert quotation
+                    WorkflowDefinition workflowDefinition = new WorkflowDefinition();
+                    workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(s => s.WorkflowCode == _businessConfig.CurrentValue.Workflow.Quotation);
+
+                    if (workflowDefinition != null)
+                    {
+                        await NotificationHandle(
+                         workflowDefinition,
+                         quotation,
+                         quotationData,
+                        siteEnums,
+                         file
+                        );
+
+                        i++;
+                        fileComplete = filesCount / i; // Pending at ajax
+                        result = new SignalRResult
+                        {
+                            status = "saving ...",
+                            tabName = _messageSettings.OverviewMessageLoading.Title,
+                            subTabContent = _messageSettings.OverviewMessageLoading.Content,
+                            data = quotationData,
+                            progressvalue = 75,//fileComplete,
+                            type = "inprogress"
+                        };
+                        ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+
+                    }
+
+                }
             }
-         
+            if (quotationData.QuotationData.Quotation.QuotationQuantity > 0 && files.Count == 0)
+            {
+                long? quotationCount = quotationData.QuotationData.Quotation.QuotationQuantity ?? 0;
+                double quotationComplete = 0;
+                for (int i = 0; i < quotationData.QuotationData.Quotation.QuotationQuantity; i++)
+                {
+
+                    //Before insert quotation
+                    Quotation quotation = new Quotation();
+                    List<FormatCodeNo> tableConfig = new List<FormatCodeNo>();
+                    tableConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(Quotation) + "Code");
+
+                    Res res = new Res();
+                    res = await _resRepository.InsertData(res);
+
+
+                    JsonConvert.PopulateObject(JsonConvert.SerializeObject(quotationData.QuotationData.Quotation), quotation);
+                    quotation.QuotationCode = ControllerUtil.GenerateNumberSeq(tableConfig, _formatCodeNoRepository, nameof(Quotation));
+                    quotation.ResId = res.Id;
+
+                    (PICAttributes PICMain, PICSysHandleAttributes PICLeader) picS;
+
+
+
+
+                    //After insert quotation
+                    WorkflowDefinition workflowDefinition = new WorkflowDefinition();
+                    workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(s => s.WorkflowCode == _businessConfig.CurrentValue.Workflow.Quotation);
+
+                    if (workflowDefinition != null)
+                    {
+                        await NotificationHandle(
+                        workflowDefinition,
+                        quotation,
+                        quotationData,
+                        siteEnums,
+                         null
+                        );
+                        quotationComplete = quotationCount ?? 0 / i; //Pending at ajax
+                        result = new SignalRResult
+                        {
+                            status = "saving ...",
+                            data = quotationData,
+                            tabName = _messageSettings.OverviewMessageLoading.Title,
+                            subTabContent = _messageSettings.OverviewMessageLoading.Content,
+                            progressvalue = 75,//quotationComplete,
+                            type = "inprogress"
+                        };
+                        ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+                    }
+                    else
+                    {
+                        result = new SignalRResult
+                        {
+                            status = "saving ...",
+                            data = quotationData,
+                            tabName = _messageSettings.OverviewMessageLoading.Title,
+                            subTabContent = _messageSettings.OverviewMessageLoading.Content,
+                            progressvalue = 100,//quotationComplete,
+                            type = "error"
+                        };
+                        ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+                        return BadRequest(new {detail = "Initial Quotation Error", message = "Flow not found!" });
+                    }
+                }
+            }
+            result = new SignalRResult
+            {
+                status = "",
+                data = quotationData,
+                tabName = _messageSettings.OverviewMessageLoading.Title,
+                subTabContent = _messageSettings.OverviewMessageLoading.Content,
+                progressvalue = 100,
+                type = "complete"
+            };
+            ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+            return Ok();
         }
-        result = new SignalRResult
+        catch (Exception ex)
         {
-            status = "",
-            data = quotationData,
-            tabName = _messageSettings.OverviewMessageLoading.Title,
-            subTabContent = _messageSettings.OverviewMessageLoading.Content,
-            progressvalue = 100,
-            type = "complete"
-        };
-        ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
-        return Ok();
+            SignalRResult result = new SignalRResult();
+            result = new SignalRResult
+            {
+                status = "",
+                data = null,
+                tabName = _messageSettings.OverviewMessageLoading.Title,
+                subTabContent = _messageSettings.OverviewMessageLoading.Content,
+                progressvalue = 100,
+                type = "error"
+            };
+            return BadRequest(ex.Message);
+
+        }
     }
     [HttpPost]
     public async Task<IActionResult> CloneQuotation([FromForm] QuotationRequest quotationData)
@@ -390,11 +407,11 @@ public class QuotationController : BaseControllerApi<Quotation>
 
             quotation = await _BaseRepository.InsertData(quotation);
 
-            foreach (Document document in quotation.Documents) 
+            foreach (Document document in quotation.Documents)
             {
                 Document doc = new Document();
                 JsonConvert.PopulateObject(JsonConvert.SerializeObject(document), doc);
-                
+
                 doc.RecordGuid = quotation.Guid;
                 doc.Guid = new Guid();
                 doc.SubDirectory = $"Quotation\\{quotation.QuotationCode}";
@@ -402,7 +419,7 @@ public class QuotationController : BaseControllerApi<Quotation>
                 await CloneFileAndData(doc, $"Quotation\\{quotationTmp.OldQuotationCode}", document.Guid.ToString(), document.FileType);
 
             }
-            
+
 
 
 
@@ -412,7 +429,7 @@ public class QuotationController : BaseControllerApi<Quotation>
 
             if (workflowDefinition != null)
             {
-            StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.StepNo == "1" && s.FromNodeId == quotationData.QuotationData.StartingDept);
+                StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.StepNo == "1" && s.FromNodeId == quotationData.QuotationData.StartingDept);
                 InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
                 instanceWorkflow.RecordGuid = quotation.Guid;
                 instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
@@ -426,10 +443,10 @@ public class QuotationController : BaseControllerApi<Quotation>
 
 
 
-            SubmitRequest submitRequest = new SubmitRequest();
-            submitRequest.StepsWorkflow = stepsWorkflow;
-            submitRequest.Comment = $"{quotation.QuotationCode} created!";
-            submitRequest.InstanceWorkflow = instanceWorkflow;
+                SubmitRequest submitRequest = new SubmitRequest();
+                submitRequest.StepsWorkflow = stepsWorkflow;
+                submitRequest.Comment = $"{quotation.QuotationCode} created!";
+                submitRequest.InstanceWorkflow = instanceWorkflow;
                 await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
             }
 
@@ -464,7 +481,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         instanceWorkflow = await _instanceWorkflowRepository.GetSingleObject(s => s.RecordGuid == guid);
         if (instanceWorkflow != null)
         {
-           return Ok(instanceWorkflow);
+            return Ok(instanceWorkflow);
         }
         return Ok(null);
     }
@@ -478,7 +495,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         quotation = await _BaseRepository.GetSingleObject(s => s.Id == id);
         Users flowUser = new Users();
         PICAttributes pICAttributes = new PICAttributes();
-        pICAttributes = JsonConvert.DeserializeObject<PICAttributes> (quotation.PIC);
+        pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
         string accountName = toDept switch
         {
             "FO" => pICAttributes.FO,
@@ -503,7 +520,7 @@ public class QuotationController : BaseControllerApi<Quotation>
                 MailQueue mailQueue = new MailQueue();
                 mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
                 await _mailQueueRepository.InsertData(mailQueue);
-                
+
             }
 
 
@@ -517,18 +534,18 @@ public class QuotationController : BaseControllerApi<Quotation>
                 Guid = quotation.Guid,
                 ReceivedBy = accountName,
                 Id = quotation.Id,
-                Code = quotation.QuotationCode 
+                Code = quotation.QuotationCode
             };
 
             Notification notification = await ControllerUtil.Notify(transferObject);
 
-             
+
 
             await _notificationRepository.InsertData(notification);
 
 
             return Ok();
-        } 
+        }
         catch (Exception exception)
         {
             throw exception;
@@ -622,196 +639,197 @@ public class QuotationController : BaseControllerApi<Quotation>
         submitRequest.Comment = quotationData?.QuotationData?.SubmitRequest?.Comment;
         submitRequest.StepsWorkflow = new StepsWorkflow();
         submitRequest.StepsWorkflow.FromNodeId = quotationData?.QuotationData?.SubmitRequest?.StepsWorkflow?.FromNodeId;
-        submitRequest.isFullDetail  = quotationData?.QuotationData?.SubmitRequest?.isFullDetail;
-        await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotationData.QuotationData.Quotation,submitRequest , _blobStorageSettings);
+        submitRequest.isFullDetail = quotationData?.QuotationData?.SubmitRequest?.isFullDetail;
+        await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotationData.QuotationData.Quotation, submitRequest, _blobStorageSettings);
         return Ok();
     }
 
     [HttpGet("{listIds}/{jsessionId}")]
-    public async Task<ActionResult<Quotation>> PullDataBySession(string listIds,string jsessionId)
+    public async Task<ActionResult<Quotation>> PullDataBySession(string listIds, string jsessionId)
     {
         string[] ids = listIds.Split(',');
         foreach (string id in ids)
         {
-            await Task.Factory.StartNew(async () => {
+            await Task.Factory.StartNew(async () =>
+            {
                 Thread.Sleep(5000);
 
-        string excelPath = Path.Combine(BLOB_PATH, MAPPING_PATH);
-        Quotation checkQuotation = new Quotation();
-        bool isExist = await _BaseRepository.RecordExistsAsync<Quotation>("QuotationCode", id);
+                string excelPath = Path.Combine(BLOB_PATH, MAPPING_PATH);
+                Quotation checkQuotation = new Quotation();
+                bool isExist = await _BaseRepository.RecordExistsAsync<Quotation>("QuotationCode", id);
 
-        if (isExist)
-        {
-            checkQuotation = await _BaseRepository.GetSingleObject(s => s.QuotationCode == id);
-            await _BaseRepository.DeleteData(checkQuotation, checkQuotation.Id, "Id", true);
-            //return Ok();
-        }
-        DataSet ds = Util.ReadExcelFiles(excelPath);
-        DataTable? dtMigration = Util.GetTableBySheetName(ds,"Migration");
-        if (dtMigration != null)
-        {
-        // Ensure there are at least 2 columns
-
-        var col1Name = dtMigration.Columns[0].ColumnName;
-        var col2Name = dtMigration.Columns[1].ColumnName;
-
-        bool IsTrueLike(object? v)
-        {
-            if (v == null || v == DBNull.Value) return false;
-
-            // ExcelReader có thể trả bool, double, string...
-            if (v is bool b) return b;
-            if (v is double d) return Math.Abs(d - 1d) < 0.0000001; // 1 = TRUE
-            var s = v.ToString()?.Trim();
-            if (string.IsNullOrEmpty(s)) return false;
-
-            return s.Equals("true", StringComparison.OrdinalIgnoreCase)
-                || s.Equals("yes", StringComparison.OrdinalIgnoreCase)
-                || s.Equals("y", StringComparison.OrdinalIgnoreCase)
-                || s.Equals("1");
-        }
-
-        // Tạo table output chỉ gồm 2 cột
-        DataTable output = new DataTable($"{dtMigration.TableName}_Filtered");
-        output.Columns.Add(col1Name, typeof(string));
-        output.Columns.Add(col2Name, typeof(string));
-
-        foreach (DataRow r in dtMigration.Rows)
-            { 
-                if (!IsTrueLike(r["Query"])) continue;
-
-                output.Rows.Add(
-                    r[col1Name]?.ToString(),
-                    r[col2Name]?.ToString()
-                );
-
-            }
-            string query = Util.MakingSelectSql(
-               output,                         // DataTable đã filter Query = TRUE
-               "app_fd_tmiv_qp_m_qt",
-               "",
-               id
-            );
-
-            string pullingQuery = $"EXEC [usp_fd_quotation_process_pull] '{id}' , '{query}'";
-            string queryInsert = Util.MakingInsertSql(
-               output,                         // DataTable đã filter Query = TRUE
-               "",
-               "Quotation"
-            );
-            List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomJogetQuery(pullingQuery);
-            var built = Util.BuildInsertValuesSql(
-                targetTable: "Quotation",
-                mapping: output,         // cột1: sourceKey, cột2: targetCol
-                rows: obj,
-                ignoreCaseKeys: true,
-                skipRowsMissingAnyMappedField: false
-            );
-
-                // không có row hợp lệ
-
-            using var conn = new SqlConnection(_BaseRepository._connectionString);
-            await conn.OpenAsync();
-
-            using var cmd = new SqlCommand(built.Sql, conn);
-            cmd.Parameters.AddRange(built.Parameters.ToArray());
-
-            int affected = await cmd.ExecuteNonQueryAsync();
-
-            /// Attachment handle if in need
-            string pullingQueryAttachment = $"EXEC [usp_fd_quotation_process_attachment_pull] '{id}'";
-            List<Dictionary<string, object>> objAtt = await _BaseRepository.ExecuteCustomJogetQuery(pullingQueryAttachment);
-            if (objAtt != null)
-            foreach (var objAt in objAtt)
-            {
-                string attachmentId = objAt["id"]?.ToString() ?? "";
-                string attachmentName = objAt["c_attachQT"]?.ToString() ?? ""   ;
-                //Selen.IJavaScriptExecutor js = (Selen.IJavaScriptExecutor)driver;
-                //js.ExecuteScript($"arguments[0].scrollTop = arguments[0].scrollTop - {initialScrollHeight.ToString()};", messagePane);
-                if (!string.IsNullOrEmpty(attachmentId) && !string.IsNullOrEmpty(attachmentName))
+                if (isExist)
                 {
-
-                    string URL = $@"https://wf.tokiomarine.com.vn/jw/web/client/app/TMIV_qp/23/form/download/tmiv_qp_grid_attach/{attachmentId}/{Uri.EscapeUriString(attachmentName)}";
-
-                    using var client = new HttpClient();
-                    ///window.getCookie = function(name) {
-                    ///var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-                    ///if (match) return match[2];
-                    ///}
-
-                // ===== Headers tối thiểu =====
-                client.DefaultRequestHeaders.Add(
-                        "Cookie",
-                        $"JSESSIONID={jsessionId}"
-                    );
-
-                    client.DefaultRequestHeaders.Referrer =
-                        new Uri("https://wf.tokiomarine.com.vn/jw/web/userview/TMIV_qp/tmiv_qp_userview/_/completedQT");
-
-                    client.DefaultRequestHeaders.UserAgent.ParseAdd(
-                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-                    );
-
-                    // ===== GET =====
-                    var response = await client.GetAsync(URL);
-                    response.EnsureSuccessStatusCode();
-
-                    // ===== Read file =====
-                    var bytes = await response.Content.ReadAsByteArrayAsync();
-                    string tempDir = System.IO.Path.Combine(_blobStorageSettings.CurrentValue.Path, _blobStorageSettings.CurrentValue.QuotationAttachmentFolder,id);
-                    //string tempDir = "D:\\Source\\MySource\\ERPCore\\ERPCore\\ERPCore\\bin\\Debug\\Attachment\\Quotation";
-                    if (!Directory.Exists(tempDir))
-                    {
-                        Directory.CreateDirectory(tempDir);
-                    }
-                    System.IO.File.WriteAllBytes(System.IO.Path.Combine(tempDir, attachmentName), bytes);
-
-                    ///Remove attachment after process 
-                    //System.IO.File.Delete(System.IO.Path.Combine(tempDir, attachmentName));
+                    checkQuotation = await _BaseRepository.GetSingleObject(s => s.QuotationCode == id);
+                    await _BaseRepository.DeleteData(checkQuotation, checkQuotation.Id, "Id", true);
+                    //return Ok();
                 }
-            }
-        }
+                DataSet ds = Util.ReadExcelFiles(excelPath);
+                DataTable? dtMigration = Util.GetTableBySheetName(ds, "Migration");
+                if (dtMigration != null)
+                {
+                    // Ensure there are at least 2 columns
+
+                    var col1Name = dtMigration.Columns[0].ColumnName;
+                    var col2Name = dtMigration.Columns[1].ColumnName;
+
+                    bool IsTrueLike(object? v)
+                    {
+                        if (v == null || v == DBNull.Value) return false;
+
+                        // ExcelReader có thể trả bool, double, string...
+                        if (v is bool b) return b;
+                        if (v is double d) return Math.Abs(d - 1d) < 0.0000001; // 1 = TRUE
+                        var s = v.ToString()?.Trim();
+                        if (string.IsNullOrEmpty(s)) return false;
+
+                        return s.Equals("true", StringComparison.OrdinalIgnoreCase)
+                            || s.Equals("yes", StringComparison.OrdinalIgnoreCase)
+                            || s.Equals("y", StringComparison.OrdinalIgnoreCase)
+                            || s.Equals("1");
+                    }
+
+                    // Tạo table output chỉ gồm 2 cột
+                    DataTable output = new DataTable($"{dtMigration.TableName}_Filtered");
+                    output.Columns.Add(col1Name, typeof(string));
+                    output.Columns.Add(col2Name, typeof(string));
+
+                    foreach (DataRow r in dtMigration.Rows)
+                    {
+                        if (!IsTrueLike(r["Query"])) continue;
+
+                        output.Rows.Add(
+                            r[col1Name]?.ToString(),
+                            r[col2Name]?.ToString()
+                        );
+
+                    }
+                    string query = Util.MakingSelectSql(
+                       output,                         // DataTable đã filter Query = TRUE
+                       "app_fd_tmiv_qp_m_qt",
+                       "",
+                       id
+                    );
+
+                    string pullingQuery = $"EXEC [usp_fd_quotation_process_pull] '{id}' , '{query}'";
+                    string queryInsert = Util.MakingInsertSql(
+                       output,                         // DataTable đã filter Query = TRUE
+                       "",
+                       "Quotation"
+                    );
+                    List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomJogetQuery(pullingQuery);
+                    var built = Util.BuildInsertValuesSql(
+                        targetTable: "Quotation",
+                        mapping: output,         // cột1: sourceKey, cột2: targetCol
+                        rows: obj,
+                        ignoreCaseKeys: true,
+                        skipRowsMissingAnyMappedField: false
+                    );
+
+                    // không có row hợp lệ
+
+                    using var conn = new SqlConnection(_BaseRepository._connectionString);
+                    await conn.OpenAsync();
+
+                    using var cmd = new SqlCommand(built.Sql, conn);
+                    cmd.Parameters.AddRange(built.Parameters.ToArray());
+
+                    int affected = await cmd.ExecuteNonQueryAsync();
+
+                    /// Attachment handle if in need
+                    string pullingQueryAttachment = $"EXEC [usp_fd_quotation_process_attachment_pull] '{id}'";
+                    List<Dictionary<string, object>> objAtt = await _BaseRepository.ExecuteCustomJogetQuery(pullingQueryAttachment);
+                    if (objAtt != null)
+                        foreach (var objAt in objAtt)
+                        {
+                            string attachmentId = objAt["id"]?.ToString() ?? "";
+                            string attachmentName = objAt["c_attachQT"]?.ToString() ?? "";
+                            //Selen.IJavaScriptExecutor js = (Selen.IJavaScriptExecutor)driver;
+                            //js.ExecuteScript($"arguments[0].scrollTop = arguments[0].scrollTop - {initialScrollHeight.ToString()};", messagePane);
+                            if (!string.IsNullOrEmpty(attachmentId) && !string.IsNullOrEmpty(attachmentName))
+                            {
+
+                                string URL = $@"https://wf.tokiomarine.com.vn/jw/web/client/app/TMIV_qp/23/form/download/tmiv_qp_grid_attach/{attachmentId}/{Uri.EscapeUriString(attachmentName)}";
+
+                                using var client = new HttpClient();
+                                ///window.getCookie = function(name) {
+                                ///var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+                                ///if (match) return match[2];
+                                ///}
+
+                                // ===== Headers tối thiểu =====
+                                client.DefaultRequestHeaders.Add(
+                                        "Cookie",
+                                        $"JSESSIONID={jsessionId}"
+                                    );
+
+                                client.DefaultRequestHeaders.Referrer =
+                                    new Uri("https://wf.tokiomarine.com.vn/jw/web/userview/TMIV_qp/tmiv_qp_userview/_/completedQT");
+
+                                client.DefaultRequestHeaders.UserAgent.ParseAdd(
+                                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+                                );
+
+                                // ===== GET =====
+                                var response = await client.GetAsync(URL);
+                                response.EnsureSuccessStatusCode();
+
+                                // ===== Read file =====
+                                var bytes = await response.Content.ReadAsByteArrayAsync();
+                                string tempDir = System.IO.Path.Combine(_blobStorageSettings.CurrentValue.Path, _blobStorageSettings.CurrentValue.QuotationAttachmentFolder, id);
+                                //string tempDir = "D:\\Source\\MySource\\ERPCore\\ERPCore\\ERPCore\\bin\\Debug\\Attachment\\Quotation";
+                                if (!Directory.Exists(tempDir))
+                                {
+                                    Directory.CreateDirectory(tempDir);
+                                }
+                                System.IO.File.WriteAllBytes(System.IO.Path.Combine(tempDir, attachmentName), bytes);
+
+                                ///Remove attachment after process 
+                                //System.IO.File.Delete(System.IO.Path.Combine(tempDir, attachmentName));
+                            }
+                        }
+                }
 
 
-        //SecureString theSecureString = new NetworkCredential(spUserName, spPassword).SecurePassword;
+                //SecureString theSecureString = new NetworkCredential(spUserName, spPassword).SecurePassword;
 
-        //SharePointOnlineCredentials onlineCredentials = new SharePointOnlineCredentials(spUserName, theSecureString);
-        //string myWebsiteUrl = "https://tokiomarinevn.sharepoint.com/:x:/r/sites/Jogettechnicaldocuments/_layouts/15/Doc.aspx?dtMigrationdoc=%7Bfc836aef-8fbf-4b7d-8118-6db3d8e1d45d%7D&action=edit&wdenableroaming=1&wdlcid=en-US&wdorigin=ItemsView&wdhostclicktime=1767835335974&wdredirectionreason=Force_SingleStepBoot&wdinitialsession=68cb23ed-0a45-e1b5-3d08-429011b3e4cd&wdrldsc=2&wdrldc=1&wdrldr=ContinueInExcel";
-        ////var authManager = new OfficeDevPnP.Core.AuthenticationManager();
-        //var authManager = new AuthenticationManager().GetACSAppOnlyContext(myWebsiteUrl, clientId, clientSecret));
-        //{
-        //    ClientContext ctx = authManager.GetWebLoginClientContext(myWebsiteUrl);
-        //    //ClientContext ctx = new ClientContext(myWebsiteUrl);
-        //    ctx.Credentials = onlineCredentials;
-        //    Web web = ctx.Web;
-        //    ctx.Load(web);
-        //    ctx.ExecuteQuery();
-        //    ctx.Load(ctx.Web, p => p.Title);
-        //    ctx.ExecuteQuery();
-        //}
+                //SharePointOnlineCredentials onlineCredentials = new SharePointOnlineCredentials(spUserName, theSecureString);
+                //string myWebsiteUrl = "https://tokiomarinevn.sharepoint.com/:x:/r/sites/Jogettechnicaldocuments/_layouts/15/Doc.aspx?dtMigrationdoc=%7Bfc836aef-8fbf-4b7d-8118-6db3d8e1d45d%7D&action=edit&wdenableroaming=1&wdlcid=en-US&wdorigin=ItemsView&wdhostclicktime=1767835335974&wdredirectionreason=Force_SingleStepBoot&wdinitialsession=68cb23ed-0a45-e1b5-3d08-429011b3e4cd&wdrldsc=2&wdrldc=1&wdrldr=ContinueInExcel";
+                ////var authManager = new OfficeDevPnP.Core.AuthenticationManager();
+                //var authManager = new AuthenticationManager().GetACSAppOnlyContext(myWebsiteUrl, clientId, clientSecret));
+                //{
+                //    ClientContext ctx = authManager.GetWebLoginClientContext(myWebsiteUrl);
+                //    //ClientContext ctx = new ClientContext(myWebsiteUrl);
+                //    ctx.Credentials = onlineCredentials;
+                //    Web web = ctx.Web;
+                //    ctx.Load(web);
+                //    ctx.ExecuteQuery();
+                //    ctx.Load(ctx.Web, p => p.Title);
+                //    ctx.ExecuteQuery();
+                //}
 
-        //string siteUrl = "https://tenant.sharepoint.com/";
-        //using (var ctx = new OfficeDevPnP.Core.AuthenticationManager().GetWebLoginClientContext(myWebsiteUrl))
-        //{
-        //    ctx.Load(ctx.Web, p => p.Title);
-        //    ctx.ExecuteQuery();
-        //    Microsoft.SharePoint.Client.File file = ctx.Web.GetFileByUrl(myWebsiteUrl);
-        //    ctx.Load(file);
-        //    ctx.ExecuteQuery();
-        //    //string filepath = @"C:\temp\" + file.Name;
-        //    //Microsoft.SharePoint.Client.ClientResult<Stream> mstream = file.OpenBinaryStream();
-        //    //ctx.ExecuteQuery();
+                //string siteUrl = "https://tenant.sharepoint.com/";
+                //using (var ctx = new OfficeDevPnP.Core.AuthenticationManager().GetWebLoginClientContext(myWebsiteUrl))
+                //{
+                //    ctx.Load(ctx.Web, p => p.Title);
+                //    ctx.ExecuteQuery();
+                //    Microsoft.SharePoint.Client.File file = ctx.Web.GetFileByUrl(myWebsiteUrl);
+                //    ctx.Load(file);
+                //    ctx.ExecuteQuery();
+                //    //string filepath = @"C:\temp\" + file.Name;
+                //    //Microsoft.SharePoint.Client.ClientResult<Stream> mstream = file.OpenBinaryStream();
+                //    //ctx.ExecuteQuery();
 
-        //};
+                //};
 
-        // This method calls a pop up window with the login page and it also prompts 
-        // for the multi factor authentication code. 
+                // This method calls a pop up window with the login page and it also prompts 
+                // for the multi factor authentication code. 
 
-        //
+                //
 
                 await base.PullData(id);
             });
-                }
+        }
         return Ok();
     }
 
@@ -855,8 +873,8 @@ public class QuotationController : BaseControllerApi<Quotation>
             long? empArea = employee.AreaId;
             if (string.IsNullOrEmpty(employee.AccountName)) return filteredBase;
             string surveyedByAccountName = employee.AccountName;
-            
-  
+
+
             filteredBase = Base
                 .Where(w => w.ContainsKey("stageAccount") && w["stageAccount"]?.ToString() == userName)
                 .ToList();
@@ -918,7 +936,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         JsonConvert.PopulateObject(form.values, entity);
         _BaseRepository.UpdateData(entity, form.values, form.key, "Id");
 
-   
+
 
 
         Task.Run(async () =>
@@ -928,7 +946,7 @@ public class QuotationController : BaseControllerApi<Quotation>
             OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(DOMAIN_NAME, "") == CURRENT_USER);
             if (onlineUser != null)
             {
-            connectionId = onlineUser.ConnectionId;
+                connectionId = onlineUser.ConnectionId;
                 if (!string.IsNullOrEmpty(connectionId))
                     await _hubContext.Clients.Client(connectionId).SendAsync($"sectionRender_{connectionId}", new
                     {
@@ -938,7 +956,7 @@ public class QuotationController : BaseControllerApi<Quotation>
 
             }
         });
-        ControllerHelper.SignalRResponse( "ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        ControllerHelper.SignalRResponse("ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         return new HttpResponseMessage(HttpStatusCode.OK);
     }
     public async Task BulkInsertQuotationAsync(List<Quotation> data)
@@ -975,6 +993,6 @@ public class QuotationController : BaseControllerApi<Quotation>
     }
 
 
-  
+
 
 }

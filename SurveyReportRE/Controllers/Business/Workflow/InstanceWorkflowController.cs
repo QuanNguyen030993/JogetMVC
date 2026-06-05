@@ -87,6 +87,9 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         Quotation quotation = new Quotation();
         quotation = await _quotationRepository.GetSingleObject(s => s.Id == submitRequest.QuotationId);
         quotation.StageDept = submitRequest.StepsWorkflow.ToNodeId;
+        quotation.QuotationStatus = submitRequest.StepsWorkflow.StatusName;
+        quotation.WorkflowStatus = submitRequest.StepsWorkflow.StatusName;
+        quotation.StatusId = submitRequest.StepsWorkflow.StatusId;
         TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(quotation.TurnAroundTimeAttributes);
         TurnAroundItem tatObject = submitRequest.StepsWorkflow.FromNodeId switch
         {
@@ -219,6 +222,9 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         Quotation quotation = new Quotation();
         quotation = await _quotationRepository.GetSingleObject(s => s.Id == submitRequest.QuotationId);
         quotation.StageDept = submitRequest.StepsWorkflow.ToNodeId;
+        quotation.QuotationStatus = submitRequest.StepsWorkflow.StatusName;
+        quotation.WorkflowStatus = submitRequest.StepsWorkflow.StatusName;
+        quotation.StatusId = submitRequest.StepsWorkflow.StatusId;
         TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(quotation.TurnAroundTimeAttributes);
         TurnAroundItem tatObject = submitRequest.StepsWorkflow.FromNodeId switch
         {

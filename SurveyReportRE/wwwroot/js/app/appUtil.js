@@ -238,7 +238,7 @@ var appNotifyError = function (message, isConfirm, confirmText, cancelText, dela
     return Swal.fire({
         position: 'top',
         icon: 'error',
-        title: 'UI exception ' + message,
+        title: message,
         showCancelButton: isConfirm ?? false,
         showConfirmButton: isConfirm ?? false,
         confirmButtonText: confirmText ?? "OK",

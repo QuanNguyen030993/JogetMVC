@@ -28,7 +28,6 @@ function setSignalRStatus(status) {
 }
 
 function signalRBlink() {
-    debugger
     signalRMessageCount++;
 
     $("#signalRCounter")
@@ -40,7 +39,7 @@ function signalRBlink() {
 
     setTimeout(() => {
         panel.removeClass("signalr-blink");
-    }, 400);
+    }, 1000);
 }
 
 function registerSignalREvent(eventName, callback) {

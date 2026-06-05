@@ -198,7 +198,7 @@ Note:
                                          var tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
                                          $(`#${returnButtonId}`).dxButton({
                                              disabled: tatObject[item].AcceptDate ? false : true,
-                                            text: findRouteReturn ? findRouteReturn.displayStatus : "", icon: "check", type: "info", onClick:
+                                            text: findRouteReturn ? findRouteReturn.displayStatus : "", icon: "undo", type: "danger", onClick:
                                                 function (e) {
                                                     var content = tinymce.get(`${remarkBoxId}`).getContent();
                                                     formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
@@ -308,6 +308,10 @@ Note:
             renderDeptForms();
             // Update UI hints
             updateHints();
+                $.each(qtDeptModuleCode, function (itemIndex, item) {
+                     var form = $(`#${window.QuotationIdManager.form(item,@ViewData["Id"])}`).dxForm("instance");
+                    form.repaint();
+                });
             });
             // scrollToDept(formModuleKeyQt,state.quotes[0].stageDept);
         };
@@ -530,36 +534,37 @@ Note:
         function setSectionCollapsed(dept, collapsed) {
             var $sec = $(`#${formModuleKeyQt}-sec_${dept}_@ViewData["Id"]`);
             if (!$sec.length) return;
+            debugger    
             var body = $sec.find(".dept-body")[0];
             var bodyUpper = $sec.find(".dept-upperbody")[0];
             var bodyLower = $sec.find(".dept-lowerbody")[0];
             if (collapsed) {
                 $sec.addClass("collapsed");
                 if (body) {
-                    body.style.maxHeight = body.scrollHeight + "px";
-                    setTimeout(() => { body.style.maxHeight = "0px"; }, 220);
+                    // body.style.maxHeight = body.scrollHeight + "px";
+                    setTimeout(() => { body.style.maxHeight = "0px";body.style.minHeight = "0px";  }, 220);
                 }
                 if (bodyUpper) {
-                    bodyUpper.style.maxHeight = bodyUpper.scrollHeight + "px";
-                    setTimeout(() => { bodyUpper.style.maxHeight = "0px"; }, 220);
+                    // bodyUpper.style.maxHeight = bodyUpper.scrollHeight + "px";
+                    setTimeout(() => { bodyUpper.style.maxHeight = "0px";bodyUpper.style.minHeight = "0px"; }, 220);
                 }
                 if (bodyLower) {
-                    bodyLower.style.maxHeight = bodyLower.scrollHeight + "px";
-                    setTimeout(() => { bodyLower.style.maxHeight = "0px"; }, 220);
+                    // bodyLower.style.maxHeight = bodyLower.scrollHeight + "px";
+                    setTimeout(() => { bodyLower.style.maxHeight = "0px";bodyLower.style.minHeight = "0px";}, 220);
                 }
             } else {
                 $sec.removeClass("collapsed");
                 if (body) {
-                    body.style.maxHeight = body.scrollHeight + "px";
-                    setTimeout(() => { body.style.maxHeight = "2000px"; }, 220);
+                    // body.style.maxHeight = body.scrollHeight + "px";
+                    setTimeout(() => { body.style.maxHeight = "2000px"; body.style.minHeight = "200px";}, 220);
                 }
                 if (bodyUpper) {
-                    bodyUpper.style.maxHeight = bodyUpper.scrollHeight + "px";
-                    setTimeout(() => { bodyUpper.style.maxHeight = "2000px"; }, 220);
+                    // bodyUpper.style.maxHeight = bodyUpper.scrollHeight + "px";
+                    setTimeout(() => { bodyUpper.style.maxHeight = "2000px"; bodyUpper.style.minHeight = "50px";}, 220);
                 }
                 if (bodyLower) {
-                    bodyLower.style.maxHeight = bodyLower.scrollHeight + "px";
-                    setTimeout(() => { bodyLower.style.maxHeight = "2000px"; }, 220);
+                    // bodyLower.style.maxHeight = bodyLower.scrollHeight + "px";
+                    setTimeout(() => { bodyLower.style.maxHeight = "2000px"; bodyLower.style.minHeight = "200px";}, 220);
                 }
             }
         }
@@ -860,8 +865,8 @@ Note:
 
                 policyIssuance.PIC = JSON.stringify(policyIssuance.PIC);
                 policyIssuance.StageDept = "FO";
-                policyIssuance.PolicyIssuanceStatus = "New";
-                policyIssuance.WorkflowStatus = "Pending";
+                policyIssuance.PolicyIssuanceStatus = "FO Pending";
+                policyIssuance.WorkflowStatus = "FO Pending";
 
                 ajaxPost('api/PolicyIssuance/CreatePolicyIssuance', policyIssuance, {
                     onSuccess: function () {

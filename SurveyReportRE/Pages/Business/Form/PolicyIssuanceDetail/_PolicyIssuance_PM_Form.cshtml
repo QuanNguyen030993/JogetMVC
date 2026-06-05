@@ -53,48 +53,39 @@
                  width: "100%",
                  height: "100%",
                  onClick: function (e){
-                     if (_ == 0)
-                     {
-                          var formItems = $(`#@PIViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-                           var tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
-                              tatObject[`@dept`].AcceptDate = new Date();
-                              formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
-                           ajaxPut('/api/Quotation/UpdateData',
-                            {
-                                key: formItems.id,
-                                values: JSON.stringify(
-                                    formItems
-                                )
-                            },
-                            {
-                                onSuccess: function (response) {
-                                    Devexpress.ui.notify("Task accepted", "success");
-                                },
-                                onError: function (err) { }
-                            });
-                     }
-                      if (_ == 2)
-                     {
-                            var formItems = $(`#@PIViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-                  var tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
-                              tatObject[`@dept`].AcceptDate = "";
-                              formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
-                           ajaxPut('/api/Quotation/UpdateData',
-                            {
-                                key: formItems.id,
-                                values: JSON.stringify(
-                                    formItems
-                                )
-                            },
-                            {
-                                onSuccess: function (response) {
-                                    Devexpress.ui.notify("Task accepted", "success");
-                                },
-                                onError: function (err) { }
-                            });
-                     }
+                    if (_ == 0)
+                 {
+                      var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+                       var tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
+                      tatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
+                      formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+                      var passingObject = new Object();
+                      passingObject.statusName = "@dept Process"; // base on Dept
+                      passingObject.Comment = `PolicyIssuance ${formItems.quotationCode} accepted by ${_displayName}!`;  // base on Dept
+                      passingObject.formItems = formItems;
+                      passingObject.dept = `@dept`;
+                      passingObject.url = '/api/PolicyIssuance/UpdateData';
+                      passingObject.urlLog = `/api/PolicyIssuance/LogAction`;
+                      passingObject.schemeName = `PolicyIssuance`;
+                      acceptDecision(passingObject);
                  }
-
+                 if (_ == 2)
+                 {
+                      var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+                      var tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
+                      tatObject[`@dept`].AcceptDate = "";
+                      formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+                      var passingObject = new Object();
+                      passingObject.statusName = "@dept Pending"; // base on Dept
+                      passingObject.Comment = `PolicyIssuance ${formItems.quotationCode} rejected by ${_displayName}!`;  // base on Dept
+                      passingObject.formItems = formItems;
+                      passingObject.dept = `@dept`;
+                      passingObject.url = '/api/PolicyIssuance/UpdateData';
+                      passingObject.urlLog = `/api/PolicyIssuance/LogAction`;
+                      passingObject.schemeName = `PolicyIssuance`;
+                      rejectDecision(passingObject);
+                 }
+                 }
                  }).appendTo(itemElement);
               itemElement
             },

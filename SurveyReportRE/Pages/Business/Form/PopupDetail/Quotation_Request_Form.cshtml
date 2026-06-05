@@ -98,11 +98,6 @@
             var DEPTS = ["RE"];
             var REMEMS = ["quan.nh", "huan.lt", "minh.lh"];
 
-            var ATTACHMENT_TYPES = [
-                { id: "supporting_document", text: "Supporting Document" },
-                { id: "quotation_file", text: "Quotation File" },
-                { id: "mail_file", text: "Mail File" }
-            ];
 
             var item = new Object();
 
@@ -251,184 +246,77 @@
                 labelMode: "floating",
                 showColonAfterLabel: false,
                 items: [
-                    {
-                        itemType: "group",
-                        colCount: 2,
-                        
-                        caption: "Header Information",
-                        items: [
-                            { dataField: "PIC", editorType: "dxTextBox", editorOptions: { readOnly: true, value: _loginUser } },
-                            { dataField: "createDate", editorType: "dxDateBox", editorOptions: { readOnly: true, displayFormat: "dd-MM-yyyy", value: new Date() } },
-                            {
-                                dataField: "subject",
-                                colSpan: 2,
-                                editorType: "dxTextArea",
-                                editorOptions: { minHeight: 90 },
-                                validationRules: [{ type: "required" }]
-                            },
-                            { dataField: "requestTypeId", label: { text: "Request Type" }, editorType: "dxSelectBox", isRequired: true, editorOptions: makeSelectBoxEditorOptions(_enums.requestType) },
-                            { dataField: "dueDate", editorType: "dxDateBox", editorOptions: { displayFormat: "dd-MM-yyyy" } },
-                           
-                            { dataField: "policyNo", label: { text: "Policy No" }, editorType: "dxTextBox" },
-                            
-                           
-                            { dataField: "businessChannel", editorType: "dxSelectBox",
-                                editorOptions: { items: _enums.BusinessChannel,    
-                                    keyExpr: "id",
-                                    displayExpr: "value", 
-                                } },
-                                { dataField: "reinsuranceId", label: { text: "Reinsurance" }, editorType: "dxSelectBox", editorOptions: { keyExpr: "id", displayExpr: "value", items: _enums.reInsuranceType } },
-
-                            {
-                                itemType: "simple",
-                                colCount: 2,
-                                visible: false,
-                                label: { text: "Is Survey ?" },
-                                template: function (data, itemElement) {
-                                    var form = data.component;
-                                    var fd = form.option("formData") || {};
-
-                                    var $wrap = $("<div>").addClass("survey-field-wrap");
-                                    var $row = $("<div>").addClass("survey-field-row").appendTo($wrap);
-
-                                    var $switchHost = $("<div>").appendTo($row);
-                                    $("<div>").addClass("survey-field-spacer").appendTo($row);
-
-                                    var $accWrap = $("<div>").addClass("survey-acc-wrap").appendTo($wrap);
-
-                                    $switchHost.dxSwitch({
-                                        value: !!fd.surveyNeeded,
-                                        onValueChanged: function (e) {
-                                            form.option("formData.surveyNeeded", e.value);
-                                            $accWrap.toggle(!!e.value);
-
-                                            var acc = $accWrap.find(".survey-acc").dxAccordion("instance");
-                                            if (acc) acc.option("selectedIndex", e.value ? 0 : -1);
-                                        }
-                                    });
-
-                                    var $acc = $("<div>").addClass("survey-acc").appendTo($accWrap);
-
-                                    function updatePic(dept, account) {
-                                        var current = ensurePicKeys(safeParseJson(form.option("formData.PIC")));
-                                        current[dept] = account || null;
-                                        form.option("formData.PIC", JSON.stringify(current));
-
-                                        var picEditor = form.getEditor?.("PIC");
-                                        if (picEditor) picEditor.option("value", form.option("formData.PIC"));
-                                    }
-
-                                    $acc.dxAccordion({
-                                        multiple: false,
-                                        collapsible: true,
-                                        selectedIndex: fd.surveyNeeded ? 0 : -1,
-                                        animationDuration: 180,
-                                        dataSource: [{ key: "survey", title: "SURVEY PIC" }],
-                                    itemTitleTemplate: (it) => $("<div>").addClass("acc-title").text(it.title),
-                                        itemTemplate: (it, idx, el) => {
-                                            var $body = $("<div>").addClass("acc-body");
-                                            $("<div>").text("Title").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
-                                            var $preview = $("<div>").css("marginTop", 10).appendTo($body);
-
-                                            fd.reTitle = `Request survey to ${fd.clientName} by ${_loginUser}`;
-
-                                            $("<div>").text("Department").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
-                                            var $dept = $("<div>").css("marginTop", 10).appendTo($body);
-
-                                            $("<div>").text("Member").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
-                                            var $accText = $("<div>").css("marginTop", 10).appendTo($body);
-
-                                            $("<div>").text("Message to RE").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
-                                            var $MsgText = $("<div>").css("marginTop", 10).appendTo($body);
-
-                                            $dept.dxSelectBox({
-                                                items: DEPTS,
-                                                value: "RE",
-                                                label: "Department",
-                                                labelMode: "static"
-                                            });
-
-                                            $accText.dxSelectBox({
-                                                items: REMEMS,
-                                                label: "Member",
-                                                labelMode: "static",
-                                                onValueChanged: function(e){
-                                                    fd.rePIC = e.value;
-                                                }
-                                            });
-
-                                            $MsgText.dxTextArea({
-                                                value: "",
-                                                label: "RE Message",
-                                                labelMode: "static",
-                                                placeholder: "Message to RE team",
-                                                onValueChanged: function(e){
-                                                    fd.reMsg = e.value;
-                                                }
-                                            });
-
-                                            $preview.dxTextBox({
-                                                value: `Request survey to ${fd.clientName} by ${_loginUser}`,
-                                                readOnly: true,
-                                                height: 50,
-                                                label: "RE Title",
-                                                labelMode: "static"
-                                            });
-
-                                            $(el).append($body);
-                                        }
-                                    });
-
-                                    $accWrap.toggle(!!fd.surveyNeeded);
-                                    itemElement.append($wrap);
-                                }
-                            }
-                        //     ,{
-                        //         dataField: "workflowDefinitionId",
-                        //         label: { text: "Workflow" },
-                        //         editorType: "dxDropDownBox",
-                        //         editorOptions: {
-                        //             displayExpr: "workflowName",
-                        //             keyExpr: "id",
-                        //             editorType: "dxDropDownBox",
-                        //             width: "100%",
-                        //             dropDownOptions: {
-                        //                 width: _defaultDropDownWidth,
-                        //                 height: _defaultDropDownHeight,
-                        //             },
-                        //             visible: false,
-                        //             showClearButton: true,
-                        //                  dataSource:configDataWFDEF.dataSource,
-                        //                 contentTemplate:function (e) {
-                        //                 that.formInstance = that.dxForm("instance");
-                        //                 var item = this;
-                        //                 item.editorOptions = new Object();
-                        //                 item.editorOptions.dataSource = e.component.option("dataSource");
-                        //                 var dataGrid = makeTheWorkflowGrid(item, e, that, $("<div>"), function(selectedItems){
-                        //                     var hasSelection = selectedItems.selectedRowKeys.length > 0;
-                        //                     if (!hasSelection) return;
-                        //                     var selectedRow = selectedItems.selectedRowsData[0];
-                        //                     e.component.option("value", selectedItems.selectedRowKeys[0].id);
-
-                        //                     ajaxGet(`/api/WorkflowDefinition/GetStepsList/${selectedRow.guid}`)
-                        //                         .then(data => {
-                        //                             var roleInStep = data.find(f => f.stepNo == "1");
-                        //                             var selectBoxIns = that.formInstance.getEditor("assignedTeamOrRole");
-                        //                             selectBoxIns.option("value", roleInStep.toNodeId);
-                        //                             vm.assignedTeamOrRole = roleInStep.toNodeId;
-                        //                         });
-
-                        //                     e.component.close();
-                        //                 });
-
-                        //                 return dataGrid.container;
-                        //             }
-                        //         }
-                        // }
-                ]},
+                    
                 { itemType: "group",items:[
+            {
+                itemType: "group",
+                colCount: 2,
 
+                caption: "Client Information",
+                items: [
+                { dataField: "clientName", editorType: "dxTextBox", visible: false, editorOptions: { readOnly: true } },
                 {
+                    dataField: "clientId",
+                    editorType: "dxDropDownBox",
+                    isRequired: true,
+                    label: { text: "Client" },
+                    editorOptions: {
+                        displayExpr: "englishName",
+                        keyExpr: "id",
+                        editorType: "dxDropDownBox",
+                        width: "100%",
+                        dropDownOptions: {
+                            width: _defaultDropDownWidth,
+                            height: _defaultDropDownHeight,
+                        },
+                        showClearButton: true,
+                        dataSource: new DevExpress.data.CustomStore({
+                            key: "id",
+                            load: function (loadOptions) {
+                                return $.ajax({
+                                    url: `/api/Client/ExecuteCustomQuery`,
+                                    method: "POST",
+                                    contentType: "application/json",
+                                    data: JSON.stringify(clientQuery)
+                                });
+                            },
+                            byKey: function (key) {
+                                if (key)
+                                    return $.ajax({
+                                        url: `/api/Client/DropDownLookupCustomQuery?key=${encodeURIComponent(key)}`,
+                                        method: "POST",
+                                        contentType: "application/json",
+                                        data: JSON.stringify(clientQuery)
+                                    }).then(function (result) {
+                                        return Array.isArray(result) ? result[0] : result;
+                                    });
+                                else
+                                    return new Array();
+                            },
+                        }),
+                        contentTemplate: function (e) {
+                            that.formInstance = that.dxForm("instance");
+                            var item = this;
+                            item.editorOptions = new Object();
+                            item.editorOptions.dataSource = e.component.option("dataSource");
+
+                            var dataGrid = makeTheClientLocationGrid(item, e, that, $("<div>"), function (selectedItems) {
+                                var hasSelection = selectedItems.selectedRowKeys.length > 0;
+                                if (!hasSelection) return;
+                                var selectedRow = selectedItems.selectedRowsData[0];
+                                e.component.option("value", selectedItems.selectedRowKeys[0]);
+                                that.formInstance.updateData("clientName", selectedRow.englishName);
+                                e.component.close();
+                            });
+
+                            return dataGrid.container;
+                        }
+                    }
+                }
+            ,
+            { dataField: "businessOccupation", label: { text: "Business Occupation" }, editorType: "dxTextBox" },
+            ]},
+                    {
                     itemType: "group",
                     colCount: 2,
                     
@@ -471,85 +359,152 @@
                                 that.formInstance.updateData("productCode", e.value.code);
                             }
                     }
-                },
-                { dataField: "productCode", editorType: "dxTextBox", visible: true, editorOptions: { readOnly: true } },
+                    },
+                    { dataField: "productCode", editorType: "dxTextBox", visible: true, editorOptions: { readOnly: true } },
+                    ]}
+                    
                 ]},
                 {
-                        itemType: "group",
-                        colCount: 2,
-                        
-                        caption: "Client Information",
-                        items: [
-                        { dataField: "clientName", editorType: "dxTextBox", visible: false, editorOptions: { readOnly: true } },
+                    itemType: "group",
+                    colCount: 2,
+
+                    caption: "Header Information",
+                    items: [
+                        { dataField: "PIC", editorType: "dxTextBox", editorOptions: { readOnly: true, value: _loginUser } },
+                        { dataField: "createDate", editorType: "dxDateBox", editorOptions: { readOnly: true, displayFormat: "dd-MM-yyyy", value: new Date() } },
                         {
-                            dataField: "clientId",
-                            editorType: "dxDropDownBox",
-                            isRequired: true,
-                            label: { text: "Client" },
-                            editorOptions: {
-                                displayExpr: "englishName",
-                                keyExpr: "id",
-                                editorType: "dxDropDownBox",
-                                width: "100%",
-                                dropDownOptions: {
-                                    width: _defaultDropDownWidth,
-                                    height: _defaultDropDownHeight,
-                                },
-                                showClearButton: true,
-                                dataSource: new DevExpress.data.CustomStore({
-                                    key: "id",
-                                    load: function (loadOptions) {
-                                        return $.ajax({
-                                            url: `/api/Client/ExecuteCustomQuery`,
-                                            method: "POST",
-                                            contentType: "application/json",
-                                            data: JSON.stringify(clientQuery)
-                                        });
-                                    },
-                                    byKey: function (key) {
-                                        if (key)
-                                            return $.ajax({
-                                                url: `/api/Client/DropDownLookupCustomQuery?key=${encodeURIComponent(key)}`,
-                                                method: "POST",
-                                                contentType: "application/json",
-                                                data: JSON.stringify(clientQuery)
-                                            }).then(function (result) {
-                                                return Array.isArray(result) ? result[0] : result;
-                                            });
-                                        else
-                                            return new Array();
-                                    },
-                                }),
-                                contentTemplate: function (e) {
-                                    that.formInstance = that.dxForm("instance");
-                                    var item = this;
-                                    item.editorOptions = new Object();
-                                    item.editorOptions.dataSource = e.component.option("dataSource");
-
-                                    var dataGrid = makeTheClientLocationGrid(item, e, that, $("<div>"), function (selectedItems) {
-                                        var hasSelection = selectedItems.selectedRowKeys.length > 0;
-                                        if (!hasSelection) return;
-                                        var selectedRow = selectedItems.selectedRowsData[0];
-                                        e.component.option("value", selectedItems.selectedRowKeys[0]);
-                                        that.formInstance.updateData("clientName", selectedRow.englishName);
-                                        e.component.close();
-                                    });
-
-                                    return dataGrid.container;
-                                }
-                            }
+                            dataField: "subject",
+                            colSpan: 2,
+                            editorType: "dxTextArea",
+                            editorOptions: { minHeight: 90 },
+                            validationRules: [{ type: "required" }]
                         },
-                    { dataField: "businessOccupation", label: { text: "Business Occupation" }, editorType: "dxTextBox" },
+                        { dataField: "requestTypeId", label: { text: "Request Type" }, editorType: "dxSelectBox", isRequired: true, editorOptions: makeSelectBoxEditorOptions(_enums.requestType) },
+                        { dataField: "dueDate", editorType: "dxDateBox", editorOptions: { displayFormat: "dd-MM-yyyy" } },
 
-        ]}
-        ]},
+                        { dataField: "policyNo", label: { text: "Policy No" }, editorType: "dxTextBox" },
+
+
+                        { dataField: "businessChannel", editorType: "dxSelectBox",
+                            editorOptions: { items: _enums.BusinessChannel,
+                                keyExpr: "id",
+                                displayExpr: "value",
+                            } },
+                            { dataField: "reinsuranceId", label: { text: "Reinsurance" }, editorType: "dxSelectBox", editorOptions: { keyExpr: "id", displayExpr: "value", items: _enums.reInsuranceType } },
+
+                        {
+                            itemType: "simple",
+                            colCount: 2,
+                            visible: false,
+                            label: { text: "Is Survey ?" },
+                            template: function (data, itemElement) {
+                                var form = data.component;
+                                var fd = form.option("formData") || {};
+
+                                var $wrap = $("<div>").addClass("survey-field-wrap");
+                                var $row = $("<div>").addClass("survey-field-row").appendTo($wrap);
+
+                                var $switchHost = $("<div>").appendTo($row);
+                                $("<div>").addClass("survey-field-spacer").appendTo($row);
+
+                                var $accWrap = $("<div>").addClass("survey-acc-wrap").appendTo($wrap);
+
+                                $switchHost.dxSwitch({
+                                    value: !!fd.surveyNeeded,
+                                    onValueChanged: function (e) {
+                                        form.option("formData.surveyNeeded", e.value);
+                                        $accWrap.toggle(!!e.value);
+
+                                        var acc = $accWrap.find(".survey-acc").dxAccordion("instance");
+                                        if (acc) acc.option("selectedIndex", e.value ? 0 : -1);
+                                    }
+                                });
+
+                                var $acc = $("<div>").addClass("survey-acc").appendTo($accWrap);
+
+                                function updatePic(dept, account) {
+                                    var current = ensurePicKeys(safeParseJson(form.option("formData.PIC")));
+                                    current[dept] = account || null;
+                                    form.option("formData.PIC", JSON.stringify(current));
+
+                                    var picEditor = form.getEditor?.("PIC");
+                                    if (picEditor) picEditor.option("value", form.option("formData.PIC"));
+                                }
+
+                                $acc.dxAccordion({
+                                    multiple: false,
+                                    collapsible: true,
+                                    selectedIndex: fd.surveyNeeded ? 0 : -1,
+                                    animationDuration: 180,
+                                    dataSource: [{ key: "survey", title: "SURVEY PIC" }],
+                                itemTitleTemplate: (it) => $("<div>").addClass("acc-title").text(it.title),
+                                    itemTemplate: (it, idx, el) => {
+                                        var $body = $("<div>").addClass("acc-body");
+                                        $("<div>").text("Title").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
+                                        var $preview = $("<div>").css("marginTop", 10).appendTo($body);
+
+                                        fd.reTitle = `Request survey to ${fd.clientName} by ${_loginUser}`;
+
+                                        $("<div>").text("Department").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
+                                        var $dept = $("<div>").css("marginTop", 10).appendTo($body);
+
+                                        $("<div>").text("Member").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
+                                        var $accText = $("<div>").css("marginTop", 10).appendTo($body);
+
+                                        $("<div>").text("Message to RE").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
+                                        var $MsgText = $("<div>").css("marginTop", 10).appendTo($body);
+
+                                        $dept.dxSelectBox({
+                                            items: DEPTS,
+                                            value: "RE",
+                                            label: "Department",
+                                            labelMode: "static"
+                                        });
+
+                                        $accText.dxSelectBox({
+                                            items: REMEMS,
+                                            label: "Member",
+                                            labelMode: "static",
+                                            onValueChanged: function(e){
+                                                fd.rePIC = e.value;
+                                            }
+                                        });
+
+                                        $MsgText.dxTextArea({
+                                            value: "",
+                                            label: "RE Message",
+                                            labelMode: "static",
+                                            placeholder: "Message to RE team",
+                                            onValueChanged: function(e){
+                                                fd.reMsg = e.value;
+                                            }
+                                        });
+
+                                        $preview.dxTextBox({
+                                            value: `Request survey to ${fd.clientName} by ${_loginUser}`,
+                                            readOnly: true,
+                                            height: 50,
+                                            label: "RE Title",
+                                            labelMode: "static"
+                                        });
+
+                                        $(el).append($body);
+                                    }
+                                });
+
+                                $accWrap.toggle(!!fd.surveyNeeded);
+                                itemElement.append($wrap);
+                            }
+                        }
+
+            ]},
                             {
                         itemType: "group",
                         colCount: 1,
                         
                         caption: "Attachment",
                         items: [
-                        {dataField: "quotationQuantity",editorType: "dxNumberBox",editorOptions: { minValue: 1} },
+                {dataField: "quotationQuantity",editorType: "dxNumberBox",editorOptions: { minValue: 1} ,validationRules : { isRequired:  true} },
                             {
                         dataField: "@prefix" === "@prefix" ? "quotation" : "document", editorType: "dxFileUploader"
                         ,

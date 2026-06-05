@@ -1152,7 +1152,7 @@ Note:
                 policyIssuance.PIC = JSON.stringify(policyIssuance.PIC);
                 policyIssuance.StageDept = "FO";
                 policyIssuance.PolicyIssuanceStatus = "New";
-                policyIssuance.WorkflowStatus = "Pending";
+                policyIssuance.WorkflowStatus = "FO Pending";
 
                 ajaxPost('api/PolicyIssuance/CreatePolicyIssuance', policyIssuance, {
                     onSuccess: function () {
