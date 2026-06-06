@@ -241,7 +241,7 @@ namespace ERPCore.ControllerUtil
             var userInfo = await ControllerHelper.FetchUserRoles(httpContextAccessor, configuration, DOMAIN_NAME);
               string logQuery = $@"INSERT INTO QuotationCommentLog (QuotationId
             ,DeptCode,CommentOrder,CommentBy,CommentTime,CommentText,SourceSystem)
-                        VALUES ({entity.Id},'{workflowEntity.StepsWorkflow.FromNodeId}'
+                        VALUES ({entity.Id},'{workflowEntity.StepsWorkflow.FromNodeId} - {workflowEntity.StepsWorkflow.StepName}'
             ,{0}
             ,'{userInfo.Users.name}'
             ,'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}'
