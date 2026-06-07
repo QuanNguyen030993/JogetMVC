@@ -69,6 +69,7 @@ Note:
         var stageAccount = "";
 
         var deptData = { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} };
+        var remarkBoxs = { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} };
 
         state.quoteDetails = {};
 
@@ -200,7 +201,11 @@ Note:
                                              disabled: tatObject[item].AcceptDate ? false : true,
                                             text: findRouteReturn ? findRouteReturn.displayStatus : "", icon: "undo", type: "danger", onClick:
                                                 function (e) {
-                                                    var content = tinymce.get(`${remarkBoxId}`).getContent();
+                                                    // var content = tinymce.get(`${remarkBoxId}`).getContent();
+                                                    deptData[item]
+                                                    debugger
+                                                var content = remarkBoxs[item].controlRemark.instance.option("value");
+                                             
                                                     formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                                                     formItems.comment = content;
                                                     returnToStep(`${formModuleKeyQt}`, state.nextStep, findRouteReturn, formItems);
@@ -210,7 +215,8 @@ Note:
                                                disabled: tatObject[item].AcceptDate ? false : true,
                                             text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
                                                 function (e) {
-                                                    var content = tinymce.get(`${remarkBoxId}`).getContent();
+                                                var content = remarkBoxs[item].controlRemark.instance.option("value");
+                                     
                                                     formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                                                     formItems.comment = content;
                                                     submitNextStep(`${formModuleKeyQt}`, state.nextStep, findRoute, formItems);
@@ -534,7 +540,6 @@ Note:
         function setSectionCollapsed(dept, collapsed) {
             var $sec = $(`#${formModuleKeyQt}-sec_${dept}_@ViewData["Id"]`);
             if (!$sec.length) return;
-            debugger    
             var body = $sec.find(".dept-body")[0];
             var bodyUpper = $sec.find(".dept-upperbody")[0];
             var bodyLower = $sec.find(".dept-lowerbody")[0];
@@ -741,20 +746,20 @@ Note:
                     }
                 });
 
-                $(`#${window.QuotationIdManager.btnToggleReferenceFields(@ViewData["Id"])}`).dxButton({
-                    text: "Common fields",
-                    icon: "fas fa-sliders-h",
-                    type: "normal",
-                    stylingMode: "contained",
-                    onClick: () => {
-                        if (!commentPanelOpened) {
-                            openRightCommentPanel();
-                            loadReferenceFields(state.selectedCodeNo, state.selectedId);
-                        } else {
-                            closeRightCommentPanel();
-                        }
-                    }
-                });
+                // $(`#${window.QuotationIdManager.btnToggleReferenceFields(@ViewData["Id"])}`).dxButton({
+                //     text: "Common fields",
+                //     icon: "fas fa-sliders-h",
+                //     type: "normal",
+                //     stylingMode: "contained",
+                //     onClick: () => {
+                //         if (!commentPanelOpened) {
+                //             openRightCommentPanel();
+                //             loadReferenceFields(state.selectedCodeNo, state.selectedId);
+                //         } else {
+                //             closeRightCommentPanel();
+                //         }
+                //     }
+                // });
 
                 $(`#${window.QuotationIdManager.btnPreview(@ViewData["Id"])}`).dxButton({
                     text: "Preview",
@@ -817,11 +822,16 @@ Note:
             $(`#${window.QuotationIdManager.stageDeptPill(q.id)}`).text(`Pending at: ${state.stageDept} - ${stageAccount ?? ""}`);
             // $(`#${formModuleKeyQt}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
 
-            deptData.FO = { ...q,   id: q.id, sectionName: "FO", code: q.quotationCode };
-            deptData.TS = { ...q,   id: q.id, sectionName: "TS", code: q.quotationCode };
-            deptData.UW = { ...q,   id: q.id, sectionName: "UW", code: q.quotationCode };
-            deptData.LMKT = { ...q, id: q.id, sectionName: "LMKT", code: q.quotationCode };
-            deptData.PM = { ...q,   id: q.id, sectionName: "PM", code: q.quotationCode };
+            // deptData.FO = { ...q,   id: q.id, sectionName: "FO", code: q.quotationCode };
+            // deptData.TS = { ...q,   id: q.id, sectionName: "TS", code: q.quotationCode };
+            // deptData.UW = { ...q,   id: q.id, sectionName: "UW", code: q.quotationCode };
+            // deptData.LMKT = { ...q, id: q.id, sectionName: "LMKT", code: q.quotationCode };
+            // deptData.PM = { ...q,   id: q.id, sectionName: "PM", code: q.quotationCode };
+            $.each(qtDeptModuleCode, function (itemIndex, item) {
+                var control = TinyMCEElementMaker(`.htmleditor`, item, @ViewData["Id"], control);
+                deptData[item] = { ...q, id: q.id, sectionName: item, code: q.quotationCode };
+                remarkBoxs[item] = { id: q.id, sectionName: item, controlRemark: control };
+            });
 
             renderDeptForms();
             resetOverviewAnimation(formModuleKeyQt);
@@ -832,7 +842,9 @@ Note:
             initDepartmentAssignees(formModuleKeyQt,deptData, firstRender ? null : 2000);
             animateOverviewSections(formModuleKeyQt);
             scrollToDept(formModuleKeyQt, { id: `${state.focusDept}`, keyId: "@ViewData["Id"]" } );
-            TinyMCEElementMaker(`.htmleditor`);
+            // TinyMCEElementMaker(`.htmleditor`);
+
+
             
         }
 

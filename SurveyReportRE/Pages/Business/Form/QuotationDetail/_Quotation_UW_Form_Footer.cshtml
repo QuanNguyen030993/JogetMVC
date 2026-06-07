@@ -4,7 +4,7 @@
     long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
 }
 
-<div class="actionBarDept" id="@QTViewIdHelper.ActionBarDept(dept)">
+<div class="actionBarDept" id="@QTViewIdHelper.ActionBarDept(dept, quotationId)">
     <div class="actionLeft">
         <span class="dept-title">Remarks</span> <div id="@QTViewIdHelper.RemarkBox(dept, quotationId)" class="htmleditor"></div>
     </div>
@@ -15,9 +15,6 @@
     </div>
 </div>
 <script>
-            // if (tinymce.get(`qt-remarkBox_@dept`))
-        // tinymce.get(`qt-remarkBox_@dept`).remove();
-        // TinyMCEElementMaker(`qt-remarkBox_@dept`);
      var dept = "@dept";
      setTimeout( () => {
          var pageLayout = window.QuotationPage;

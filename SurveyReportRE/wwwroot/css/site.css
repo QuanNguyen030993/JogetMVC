@@ -3582,3 +3582,14 @@ text-overflow: ellipsis;
             opacity: 1;
             transform: translateY(0);
         }
+
+.quill-wrapper {
+    resize: vertical;
+    overflow: auto;
+    min-height: 150px;
+    max-height: 800px;
+}
+
+    .quill-wrapper .ql-container {
+        height: calc(100% - 42px);
+    }

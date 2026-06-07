@@ -6,7 +6,7 @@
 }
 
 
-<div class="actionBarDept" id="actionBarDept_@dept">
+<div class="actionBarDept" id="@QTViewIdHelper.ActionBarDept(dept, quotationId)">
     <div class="actionLeft">
         <span class="dept-title">Remarks</span> <div id="@QTViewIdHelper.RemarkBox(dept,quotationId)" class="htmleditor"></div>
     </div>
@@ -18,9 +18,6 @@
 </div>
 
 <script>
-        // if (tinymce.get(`qt-remarkBox_@dept`))
-        // tinymce.get(`qt-remarkBox_@dept`).remove();
-        // TinyMCEElementMaker(`qt-remarkBox_@dept`);
     setTimeout( () => {
 
     setTimeout( () => {
@@ -29,7 +26,6 @@
     if (window.QuotationPage.state.quotes[0].resFK) 
        $.get(`/api/Document/AttachmentSummary/@ViewData["Guid"].ToString()/${encodedFolder}`, null
        ).done(function (res) {
-           debugger
             window.QuotationPage.state.formFO.dxForm("instance").updateData("resAttachmentCount", res.attachmentCount);
             window.QuotationPage.state.formFO.dxForm("instance").updateData("hasResAttachment", res.hasAttachment);
             window.QuotationPage.state.hasResAttachment = res.hasAttachment;

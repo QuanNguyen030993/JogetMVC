@@ -417,8 +417,8 @@ namespace JogetMVC.Model
         public static string FilterTypeSelect(string department, long quotationId)
             => GenerateId("filterTypeSelect", department,quotationId);
 
-        public static string ActionBarDept(string department)
-            => GenerateId("actionBarDept", department);
+        public static string ActionBarDept(string department, long quotationId)
+            => GenerateId("actionBarDept", department, quotationId);
 
         #endregion
 
@@ -728,8 +728,8 @@ namespace JogetMVC.Model
         public static string FilterTypeSelect(string department, long quotationId)
             => GenerateId("filterTypeSelect", department, quotationId);
 
-        public static string ActionBarDept(string department)
-            => GenerateId("actionBarDept", department);
+        public static string ActionBarDept(string department, long quotationId)
+            => GenerateId("actionBarDept", department, quotationId);
 
         #endregion
 

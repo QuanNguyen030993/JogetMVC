@@ -27,17 +27,17 @@
 <script src="~/lib/jquerymutation/events.js"></script>
 @* <script src="~/lib/jquerymutation/mutate.js"></script>
 <script src="~/lib/jquerymutation/mutate.min.js"></script> *@
-@* <script src="~/lib/quill-better-table/dist/dx-quill.min.js"></script>
-<script src="~/lib/quill-image-resize-module/kensnyder/image-resize.min.js"></script> *@
+<script src="~/lib/quill-better-table/dist/dx-quill.min.js"></script>
+<script src="~/lib/quill-image-resize-module/kensnyder/image-resize.min.js"></script>
 <!-- Prism CSS -->
 @* <link rel="stylesheet" href="~/lib/prism/prism.min.css"> *@
 <!-- Prism JS -->
 @* <script src="~/lib/prism/prism.min.js"></script> *@
 <!-- Define global alias -->
-@* <script type="text/javascript">
+ <script type="text/javascript">
     window.Quill = window.DevExpress.Quill;
 </script>
- *@
+ 
 <script src="~/lib/knockout/knockout.js"></script>
 <script src="~/lib/wysiwyg-editor-summernote/summernote.js"></script>
 <script src="~/lib/bootstrap/tooltip.js"></script>
@@ -63,7 +63,7 @@
 <script src="~/lib/devextreme/globalize/message.min.js"></script>
 
 <!-- dx control jquery support -->
-@* <script type="text/javascript" src="~/lib/quill-better-table/dist/quill-better-table.js"></script> *@
+<script type="text/javascript" src="~/lib/quill-better-table/dist/quill-better-table.js"></script>
 
 
 <!--JS library: devextreme-20.1.4 -->
@@ -130,7 +130,7 @@
     const _defaultDropDownWidth = 800;
     const _defaultDropDownHeight = 500;
     const _defaultGridMinHeight = 350;
-    const _defaultHtmlEditorHeight = 300;
+    const _defaultHtmlEditorHeight = "calc(100% - 0px)";
     const _defaultHtmlEditorWidth = "100%";
     const _defaultButtonHeight = 50;
     const _defaultGridDropDownOptionsWidth = 700;

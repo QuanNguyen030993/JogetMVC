@@ -130,6 +130,7 @@ Note:
         var stageAccount = "";
 
         var deptData = { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} };
+        var remarkBoxs = { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} };
 
         state.piDetails = {};
 
@@ -804,20 +805,20 @@ Note:
         }
     });
 
-    $(`#${window.PolicyIssuanceIdManager.btnToggleReferenceFields(@ViewData["Id"])}`).dxButton({
-        text: "Common fields",
-        icon: "fas fa-sliders-h",
-        type: "normal",
-        stylingMode: "contained",
-        onClick: () => {
-            if (!commentPanelOpened) {
-                openRightCommentPanel();
-                loadReferenceFields(state.selectedCodeNo, state.selectedId);
-            } else {
-                closeRightCommentPanel();
-            }
-        }
-    });
+    // $(`#${window.PolicyIssuanceIdManager.btnToggleReferenceFields(@ViewData["Id"])}`).dxButton({
+    //     text: "Common fields",
+    //     icon: "fas fa-sliders-h",
+    //     type: "normal",
+    //     stylingMode: "contained",
+    //     onClick: () => {
+    //         if (!commentPanelOpened) {
+    //             openRightCommentPanel();
+    //             loadReferenceFields(state.selectedCodeNo, state.selectedId);
+    //         } else {
+    //             closeRightCommentPanel();
+    //         }
+    //     }
+    // });
 
     $(`#${window.PolicyIssuanceIdManager.btnPreview(@ViewData["Id"])}`).dxButton({
         text: "Preview",
@@ -922,10 +923,16 @@ Note:
              $(`#${window.PolicyIssuanceIdManager.stageDeptPill(q.id)}`).text(`Pending at: ${state.stageDept} - ${stageAccount ?? ""}`);
             // $(`#${formModuleKeyPi}-stageDeptPill`).text(`Pending at: ${state.stageDept} - ${stageAccount ?? ""}`);
             // $(`#${formModuleKeyPi}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
+            var control = new Object();
+            $.each(qtDeptModuleCode, function (itemIndex, item) {
 
-            deptData.FO = { ...q, id: q.id, sectionName: "FO", code: q.policyIssuanceCode };
-            deptData.TS = { ...q, id: q.id, sectionName: "TS", code: q.policyIssuanceCode };
-            deptData.PM = { ...q, id: q.id, sectionName: "PM", code: q.policyIssuanceCode };
+            deptData[item] = { ...q, id: q.id, sectionName: item, code: q.policyIssuanceCode };
+                TinyMCEElementMaker(`.htmleditor`, item, @ViewData["Id"], control);
+            });
+
+            // deptData.FO = { ...q, id: q.id, sectionName: "FO", code: q.policyIssuanceCode };
+            // deptData.TS = { ...q, id: q.id, sectionName: "TS", code: q.policyIssuanceCode };
+            // deptData.PM = { ...q, id: q.id, sectionName: "PM", code: q.policyIssuanceCode };
 
             renderDeptForms();
             applyNodeHighlights();
@@ -934,7 +941,7 @@ Note:
             updateSectionUpdatedTime(q);
             initDepartmentAssignees(formModuleKeyPi, deptData, firstRender ? null : 0  );
             scrollToDept(formModuleKeyPi, { id: `${state.focusDept}`, keyId: "@ViewData["Id"]" });
-            TinyMCEElementMaker(`.htmleditor`);
+            // TinyMCEElementMaker(`.htmleditor`);
 
             animateOverviewSections();
         }

@@ -5,7 +5,7 @@
 }
 
 
-<div class="actionBarDept" id="actionBarDept_@dept">
+<div class="actionBarDept" id="@PIViewIdHelper.ActionBarDept(dept,quotationId)>
     <div class="actionLeft">
         <span class="dept-title">Remarks</span> <div id="@PIViewIdHelper.RemarkBox(dept,quotationId)" class="htmleditor"></div>
     </div>
@@ -17,9 +17,6 @@
 </div>
 
 <script>
-   // if (tinymce.get(`pi-remarkBox_@dept`))
-   //    tinymce.get(`pi-remarkBox_@dept`).remove();
-      // TinyMCEElementMaker(`pi-remarkBox_@dept`);
     setTimeout( () => {
     // var formItems = $("#pi-formFO").dxForm("instance")?.option("formData") || {};
     var dept = "@dept";
