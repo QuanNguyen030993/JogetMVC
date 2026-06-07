@@ -563,8 +563,8 @@ a {
 .sidebar-mini.sidebar-collapse .right-side,
 .sidebar-mini.sidebar-collapse .main-footer {
     margin-left: var(--collapsed-ml) !important;
-    margin-right: var(--collapsed-mr) !important;
-    /*width: 130% !important;*/
+    /*margin-right: var(--collapsed-mr) !important;*/
+    /*width: 130% !important;*/ width: 96vw;
 }
 
 @media (max-width:991px) {
