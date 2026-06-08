@@ -3790,4 +3790,36 @@
                 console.warn("Unsupported editor type:", devExtremeItem.editorType);
         }
     }
+
+            function viewFieldAdjust(formId) {
+        var form = $("#" + formId).dxForm("instance");
+        if (!form) return;
+
+        var items = form.option("items");
+
+        function processItems(itemsArr) {
+            if (!Array.isArray(itemsArr)) return;
+
+            itemsArr.forEach(item => {
+                // Nếu là group => duyệt tiếp
+                if (item.itemType === "group" || item.items) {
+                    processItems(item.items);
+                    return;
+                }
+
+                // Nếu là field (có dataField)
+                if (item.dataField && (item.editorType != "dxFileUploader")) {
+                    if (!item.label) {
+                        item.label = {};
+                    }
+                    item.label.location = "top";
+                }
+            });
+        }
+
+        processItems(items);
+
+        // set lại items sau khi chỉnh sửa
+        form.option("items", items);
+    }
 </script>

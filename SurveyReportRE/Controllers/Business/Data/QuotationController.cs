@@ -228,6 +228,10 @@ public class QuotationController : BaseControllerApi<Quotation>
 
             IFormFileCollection files = null;
             files = ((FormCollection)(Request.Form)).Files;
+            Quotation quotation = new Quotation();
+            List<FormatCodeNo> tableRQConfig = new List<FormatCodeNo>();
+            tableRQConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(Quotation) + "RequestCode");
+            string requestNo = ControllerUtil.GenerateNumberSeq(tableRQConfig, _formatCodeNoRepository, nameof(Quotation));
             quotationData.QuotationData = JsonConvert.DeserializeObject<QuotationData>(Request.Form["QuotationData"]);
             if (files.Count > 0)
             {
@@ -237,7 +241,7 @@ public class QuotationController : BaseControllerApi<Quotation>
                 foreach (var file in files)
                 {
                     //Before insert quotation
-                    Quotation quotation = new Quotation();
+                    quotation = new Quotation();
                     List<FormatCodeNo> tableConfig = new List<FormatCodeNo>();
                     tableConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(Quotation) + "Code");
 
@@ -246,6 +250,7 @@ public class QuotationController : BaseControllerApi<Quotation>
 
 
                     JsonConvert.PopulateObject(JsonConvert.SerializeObject(quotationData.QuotationData.Quotation), quotation);
+                    quotation.RequestNo = requestNo;
                     quotation.QuotationCode = ControllerUtil.GenerateNumberSeq(tableConfig, _formatCodeNoRepository, nameof(Quotation));
                     quotation.ResId = res.Id;
 
@@ -293,7 +298,7 @@ public class QuotationController : BaseControllerApi<Quotation>
                 {
 
                     //Before insert quotation
-                    Quotation quotation = new Quotation();
+                    quotation = new Quotation();
                     List<FormatCodeNo> tableConfig = new List<FormatCodeNo>();
                     tableConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(Quotation) + "Code");
 
@@ -302,6 +307,7 @@ public class QuotationController : BaseControllerApi<Quotation>
 
 
                     JsonConvert.PopulateObject(JsonConvert.SerializeObject(quotationData.QuotationData.Quotation), quotation);
+                    quotation.RequestNo = requestNo;
                     quotation.QuotationCode = ControllerUtil.GenerateNumberSeq(tableConfig, _formatCodeNoRepository, nameof(Quotation));
                     quotation.ResId = res.Id;
 

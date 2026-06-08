@@ -21,10 +21,7 @@
         transform: rotate(360deg);
     }
 }
-.dx-htmleditor-content {
-    font-family: Asap;
-    font-size: 11px;
-}
+
 
 .dx-button-warning {
     color: #212529;
@@ -17755,6 +17752,9 @@
     padding: 12px 15px;
     white-space: pre-wrap;
     word-wrap: break-word;
+    font-family: Asap;
+    font-size: 11px;
+    min-height:150px;
 }
 
     .dx-htmleditor-content .dx-variable > span {

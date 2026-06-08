@@ -23,16 +23,13 @@
     dataSource: makeBasicDataSource(that, true),
     items: [
 
-        
-
-
             { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefault("qt", "@(dept)", @(quotationId), "@(quotationGuid)") },
                 {itemType: "group",caption: "Request Date",colCount:2,items: [
             {
                                   dataField: "requestedDate",
                                   editorType: "dxDateBox",
                                   editorOptions: { displayFormat: "dd/MM/yyyy" },
-                                  label: { template: labelTpl("RequestedDate - Ngày yêu cầu") }
+                                  label: {  template: labelTpl("RequestedDate - Ngày yêu cầu") }
                                 },
             {
                                   dataField: "dueDate",
@@ -41,62 +38,56 @@
                                   label: { template: labelTpl("DueDate - Due date") }
                                 }
             ]},
-             {itemType: "group",caption: "Request Date",colCount:2,items: [
-                 { dataField:"clientName", label:{text:"Client Name"}, isRequired:true },
-             
-             ]},
-                 { dataField:"requestTypeId", editorType:"dxSelectBox", label:{text:"Request Type"}, editorOptions: makeSelectBoxEditorOptions(_enums.requestType),displayExpr: "value",
-                      valueExpr: "id"
-                 },
+
+                 {itemType: "group",caption: "Client",colCount:2,items: [
+                     { dataField:"clientName", label:{text:"Client Name"}, isRequired:true },
+                   { dataField: "policyHolder", label: { template: labelTpl("Policy Holder ID") }, editorOptions: { readOnly: true } },
+                    { dataField: "insuredId", label: { template: labelTpl("Insured ID") },visible: false, editorOptions: { readOnly: true } },
+                    { dataField: "clientCode", label: { template: labelTpl("Client Code") }, editorOptions: { readOnly: true } },
+                    { dataField: "clientName", label: { template: labelTpl("Client Name") }, editorOptions: { readOnly: true } },
+                    { dataField: "businessAddress", label: { template: labelTpl("Business Address") }, editorOptions: { readOnly: true } },
+                        { dataField: "sourceOfBusinessName", label: { template: labelTpl("SourceOfBusinessName - Nguồn business (name)") } },
+
+                     ]},{
+                        itemType: "group",
+                        caption: "Products",
+                        colCount: 2,
+                        cssClass: "group-readonly",
+                        items: [
+                            { dataField: "lineName", label: { template: labelTpl("Line") }, editorOptions: { readOnly: true } },
+                            { dataField: "productName", label: { template: labelTpl("Product") }, editorOptions: { readOnly: true } },
+                        ]
+                    },
                 
-                 { dataField:"notes", label:{text:"Notes"}, editorType:"dxTextArea", colSpan:2, editorOptions:{ height: 80 } }, 
                  // { dataField:"surveyNeeded", label:{text:"Survey Needed"}, editorType:"dxSwitch" ,editorOptions:{ switchedOnText: "Yes", switchedOffText: "No"} },
                  {itemType: "group",
                 caption: "Request Infomation",
                 colCount: 3,
                 items: [
                 { dataField: "requestNo", label: { template: labelTpl("RequestNo - Mã Quotation Request") } },
-                    { dataField: "requestRefNo", label: { template: labelTpl("RequestRefNo - Refversion của request") } },
+                {dataField: "policyNo",editorType: "dxTextBox",visible:true},
+                    { dataField: "requestRefNo",visible: false, label: { template: labelTpl("RequestRefNo - Refversion của request") } },
                     { dataField: "quotationCode", label: { template: labelTpl("QuotationCode - Mã quotation khi request vào xử lý (Joget)") } },
-                    { dataField: "requestType", label: { template: labelTpl("RequestType - Loại request (ví dụ: New Quotation)") } },
-                    { dataField: "quotationType", label: { template: labelTpl("QuotationType - Loại đơn quotation type (ví dụ: New)") } },
+                     { dataField:"requestTypeId", editorType:"dxSelectBox", label:{text:"Request Type"}, editorOptions: makeSelectBoxEditorOptions(_enums.requestType),displayExpr: "value",
+                      valueExpr: "id"
+                 },
+                    { dataField: "quotationType",visible: false, label: { template: labelTpl("QuotationType - Loại đơn quotation type (ví dụ: New)") } },
                     { dataField: "businessChannelName", label: { template: labelTpl("BusinessChannelName - Kênh kinh doanh (name)") } },
-                    { dataField: "sourceOfBusinessName", label: { template: labelTpl("SourceOfBusinessName - Nguồn business (name)") } },
-                    { dataField: "businessChannelDisplayName", label: { template: labelTpl("BusinessChannelDisplayName - Tên hiển thị kênh (name of biz)") } },
+                    { dataField: "businessChannelDisplayName",visible: false, label: { template: labelTpl("BusinessChannelDisplayName - Tên hiển thị kênh (name of biz)") } },
                      { dataField:"reinsuranceId", editorType:"dxSelectBox", label:{text:"Reinsurance"},
                      editorOptions:{
                      items:_enums.reInsuranceType ,
                      displayExpr: "value",
                       valueExpr: "id"}
                  },
-                {dataField: "policyNo",editorType: "dxTextBox",visible:true}
-                            ]},{
-                    itemType: "group",
-                    caption: "Products",
-                    colCount: 2,
-                    cssClass: "group-readonly",
-                    items: [
-                        { dataField: "lineName", label: { template: labelTpl("Line") }, editorOptions: { readOnly: true } },
-                        { dataField: "productName", label: { template: labelTpl("Product") }, editorOptions: { readOnly: true } },
-                    ]
-        },// =========================================================
-    // Client / Policy Holder / Insured (From Quotation - Read only)
-    // =========================================================
-    {
-        itemType: "group",
-        caption: "Client",
-        colCount: 3,
-        cssClass: "group-readonly",
-        items: [
-               { dataField: "policyHolder", label: { template: labelTpl("Policy Holder ID") }, editorOptions: { readOnly: true } },
-                { dataField: "insuredId", label: { template: labelTpl("Insured ID") }, editorOptions: { readOnly: true } },
-                { dataField: "clientCode", label: { template: labelTpl("Client Code") }, editorOptions: { readOnly: true } },
-                { dataField: "clientName", label: { template: labelTpl("Client Name") }, editorOptions: { readOnly: true } },
-                { dataField: "businessAddress", label: { template: labelTpl("Business Address") }, editorOptions: { readOnly: true } },
-          ]
-    }
+                 
+
+                 { dataField:"subject", label:{text:"Subject"}, editorType:"dxTextArea", colSpan:3, editorOptions:{ height: 80 } },
+                
+                            ]}
 
                ]
     
     });
+    viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
 </script>

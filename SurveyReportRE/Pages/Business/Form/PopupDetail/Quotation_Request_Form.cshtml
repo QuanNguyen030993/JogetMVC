@@ -348,8 +348,8 @@
                             displayExpr: "value",
                             onValueChanged(e) {
                                 that.formInstance = that.dxForm("instance");
-                                that.formInstance.updateData("productName", e.value.value);
-                                that.formInstance.updateData("productCode", e.value.code);
+                                that.formInstance.updateData("productName", e.value?.value || e.value );
+                                that.formInstance.updateData("productCode", e.value?.code  || e.value);
                             }
                     }
                     },
@@ -382,6 +382,10 @@
                             editorOptions: { items: _enums.BusinessChannel,
                                 keyExpr: "id",
                                 displayExpr: "value",
+                                    onValueChanged(e) {
+                                that.formInstance = that.dxForm("instance");
+                                that.formInstance.updateData("businessChannelName", e.value?.value || e.value);
+                                    }
                             } },
                             { dataField: "reinsuranceId", label: { text: "Reinsurance" }, editorType: "dxSelectBox", editorOptions: { keyExpr: "id", displayExpr: "value", items: _enums.reInsuranceType } },
 
@@ -894,7 +898,7 @@
             }
 
             refreshAssignmentUI();
-
+           viewFieldAdjust("quotationRequestForm");
             // window.getQuotationRequestPayload = function () {
             //     var formIns = $("#quotationRequestForm").dxForm("instance");
             //     var formData = formIns.option("formData") || {};

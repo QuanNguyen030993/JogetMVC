@@ -13,7 +13,7 @@
                 this.childGridConfig = childGridConfig;
             }
             this.colCount = 2;
-            this.labelLocation = "left";
+            this.labelLocation = "top";
             this.outlineForm = { isUse: false, isOutlineChecked: false, isOutlineDynamic: false };
             this.isReadOnly = false;
             if (formConfig) {
