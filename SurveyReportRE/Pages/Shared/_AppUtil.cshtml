@@ -519,7 +519,9 @@
                             quotationData.Quotation.QuotationStatus = "TS Pending";
                             quotationData.Quotation.WorkflowStatus = "TS Pending";
                             quotationData.Quotation.BranchId = submitData?.branchId;
-                            quotationData.Quotation.BranchCode = _branch
+                            quotationData.Quotation.ProductId = quotationData.Quotation.ProductId.id;
+                            quotationData.Quotation.LineId = quotationData.Quotation.LineId.id;
+                            quotationData.Quotation.BranchCode = _branch;
                             quotationData.Attributes = new Object();
                             quotationData.Attributes.SectionName = sectionName;
 
@@ -553,7 +555,10 @@
                                         DevExpress.ui.notify("Quotation created!", "success", 1200);
                                 },
                                 error: function (xhr) {
-                                                   appNotifyError(`${xhr.responseJSON.detail} <br/>${xhr.responseJSON.message}`);
+                                    debugger
+                                     result.payload.progressvalue = 100;
+                                     renderBrowserLoading(result);
+                                     appNotifyError(`${xhr.responseJSON?.detail || xhr.statusText} <br/>${xhr.responseJSON?.message || xhr.responseText}`);
                                 }
                             });
 

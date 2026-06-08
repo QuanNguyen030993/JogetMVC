@@ -330,7 +330,7 @@
                         onValueChanged(e) {
                             that.formInstance = that.dxForm("instance");
                             that.formInstance.updateData("lineCode", e.value.code);
-                            that.formInstance.updateData("lineName", e.value.name);
+                            that.formInstance.updateData("lineName", e.value.value);
                         } }
                     },
                     { dataField: "lineName", editorType: "dxTextBox", visible: false},
@@ -346,16 +346,9 @@
                             searchEnabled: true,
                             keyExpr: "id",
                             displayExpr: "value",
-                            // dataSource: [],
-                            // onInitialized(e) {
-                            //     ajaxGet("/api/Product/GetAll", null)
-                            //         .then(list => {
-                            //             e.component.option("dataSource", list);
-                            //         });
-                            // },
                             onValueChanged(e) {
                                 that.formInstance = that.dxForm("instance");
-                                that.formInstance.updateData("productName", e.value.name);
+                                that.formInstance.updateData("productName", e.value.value);
                                 that.formInstance.updateData("productCode", e.value.code);
                             }
                     }
@@ -658,6 +651,17 @@
                     //that.formInstance = e.component;
                     initPicIfEmpty(e.component);
                     syncAttachmentToForm();
+                },
+                onFieldDataChanged: function(e) {
+                    if (e.dataField === "lineId") {
+                        let filtered = _entitys.product.filter(f => f.lineId === e.value.id);
+                
+                        let form = e.component;
+                        let editor = form.getEditor("productId");
+                
+                        editor.option("items", filtered);
+                        editor.option("value", null); // reset nếu cần
+                    }
                 }
             });
             // var attachmentStore = new DevExpress.data.ArrayStore({
