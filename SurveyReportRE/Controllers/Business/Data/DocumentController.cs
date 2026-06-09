@@ -259,7 +259,9 @@ public class DocumentController : BaseControllerApi<Document>
                     extension = ext.Replace(".",""),
                     size = d.Size,
                     subDirectory = d.SubDirectory,
-                    downloadUrl = Url.Action(nameof(StreamDocument), new { id = d.Id })
+                    downloadUrl = Url.Action(nameof(StreamDocument), new { id = d.Id }),
+                    author = d.CreatedBy,
+                    date = d.CreatedDate
                 };
             })
             .ToList();

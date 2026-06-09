@@ -2153,11 +2153,57 @@
             this.Params = params;
         };
 
+
+        onEditorPreparing(e) {
+            $.each(qtDeptModuleCode,function (itemInd, item){
+
+                if (e.dataField === `pic${item}` && e.parentType === "dataRow") {
+                 var rowData = e.row.data; // <-- row hiện tại
+                 // e.editorOptions.onValueChanged = function(ev) {
+                var selectedItem = ev.component.option("selectedItem");
+                if (!selectedItem) return;
+                var currentPIC = JSON.parse(rowData.pic || "{}");
+
+                if (currentPIC[item] === selectedItem.accountName) return;
+
+                currentPIC[item] = selectedItem.accountName;
+
+                // var grid = $("#dataGrid_QuotationTmp").dxDataGrid("instance");
+                // var store = grid.getDataSource().store();
+
+                // store.update(rowData.id, { pic: JSON.stringify(currentPIC) })
+                //     .done(function() {
+                //         // Cập nhật lại rowData local để các field khác vẫn đúng
+                //         rowData.pic = JSON.stringify(currentPIC);
+                //         grid.refresh();
+                //         DevExpress.ui.notify(`Assigned To ${selectedItem.fullName}`, "success", 2000);
+                //     })
+                //     .fail(function(err) {
+                //         DevExpress.ui.notify(`Update failed: ${err}`, "error", 2000);
+                //     });
+                //     };
+                }
+            });
+        }
+
+
         onCustomizeColumns(columns) {
             var that = this;
             super.onCustomizeColumns(columns);
             this.hyperLinkCode(columns, "Business/Form", "Quotation", "id", "quotationCode");
+
             $.each(columns, function (colIndex, col) {
+
+                       $.each(qtDeptModuleCode,function (itemInd, item){
+
+                     col.allowEditing = true;
+                        if (col.dataField === `pic${item}`) {
+                        col.cellTemplate = function (container, options) {
+                            col.value = JSON.parse(options.data.pic)[item];
+                             return $(`<div>`).text(JSON.parse(options.data.pic)[item]).appendTo(container);
+                        }
+                    }
+                });
             if (col.dataField === "quotationStatus")
             {
                 col.cellTemplate = function (container, options) {

@@ -26,7 +26,7 @@
     $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
         dataSource: makeBasicDataSource(that, true),
                  items: [
-            { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefault("qt", "@(dept)", @(quotationId), "@(quotationGuid)") },
+                      {itemType: "group",caption: "Decision",colCount:2,items: [
          {
     dataField: "decision",
     label: { text: "Decision" },
@@ -95,20 +95,22 @@
                 },
                 isRequired: true
                 }
-            }, {itemType: "group",caption: "Checklist",colCount:1,items: [
-    {dataField: "policyNoCL",editorType: "dxCheckBox",visible:true},
-    {dataField: "theInsured",editorType: "dxCheckBox",visible:true},
-    {dataField: "occupation",editorType: "dxCheckBox",visible:true},
-    {dataField: "occupationFCICode",editorType: "dxCheckBox",visible:true},
-    {dataField: "riskGrading",editorType: "dxCheckBox",visible:true},
-    {dataField: "pOI",editorType: "dxCheckBox",visible:true},
-    {dataField: "tSI",editorType: "dxCheckBox",visible:true},
-    {dataField: "premium",editorType: "dxCheckBox",visible:true},
-    {dataField: "deductible",editorType: "dxCheckBox",visible:true},
-    {dataField: "tnCs",editorType: "dxCheckBox",visible:true},
-    {dataField: "occupationCode",editorType: "dxCheckBox",visible:true},
-    {dataField: "premiumRate",editorType: "dxCheckBox",visible:true}
-    ]} ]
+            }]}, 
+            { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefault("qt", "@(dept)", @(quotationId), "@(quotationGuid)") },
+            {itemType: "group",caption: "Checklist",colCount:1,items: [
+            {dataField: "policyNoCL",editorType: "dxCheckBox",visible:true},
+            {dataField: "theInsured",editorType: "dxCheckBox",visible:true},
+            {dataField: "occupation",editorType: "dxCheckBox",visible:true},
+            {dataField: "occupationFCICode",editorType: "dxCheckBox",visible:true},
+            {dataField: "riskGrading",editorType: "dxCheckBox",visible:true},
+            {dataField: "pOI",editorType: "dxCheckBox",visible:true},
+            {dataField: "tSI",editorType: "dxCheckBox",visible:true},
+            {dataField: "premium",editorType: "dxCheckBox",visible:true},
+            {dataField: "deductible",editorType: "dxCheckBox",visible:true},
+            {dataField: "tnCs",editorType: "dxCheckBox",visible:true},
+            {dataField: "occupationCode",editorType: "dxCheckBox",visible:true},
+            {dataField: "premiumRate",editorType: "dxCheckBox",visible:true}
+            ]} ]
        });
        viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
 </script>

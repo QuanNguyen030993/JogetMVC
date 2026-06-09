@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ERPCore.Models.Migration.Base;
+using ERPCore.Models.Migration.Config;
 
 namespace ERPCore.Models.Migration.Business.MasterData
 {
@@ -41,7 +42,11 @@ namespace ERPCore.Models.Migration.Business.MasterData
         public string OfficePhoneNumber { get; set; } = "";
         public string RepresentativeName { get; set; } = "";
         public DateTime? StartDate { get; set; }//yyyymmdd 
+        public long? SourceOfBusinessId { get; set; }
+        public EnumData? SourceOfBusinessEnum { get; set; } 
         public string SourceOfBusiness { get; set; } = "";
+        public long? BusinessOccupationId { get; set; }
+        public EnumData? BusinessOccupationEnum { get; set; }
 
 
     }

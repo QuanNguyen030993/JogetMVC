@@ -16,7 +16,7 @@
     $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
      dataSource: makeBasicDataSource(that, true),
     items: [
-        { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefault("qt", "@(dept)", @(quotationId), "@(quotationGuid)") },
+         {itemType: "group",caption: "Decision",colCount:2,items: [
          {
     dataField: "decision",
     label: { text: "Decision" },
@@ -83,9 +83,10 @@
               }).appendTo(itemElement);
               },
               isRequired: true
-              }  
-            },   
-        ]        
+              }
+                }]},
+            { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefault("qt", "@(dept)", @(quotationId), "@(quotationGuid)") },
+            ]        
     }
 );
     viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");

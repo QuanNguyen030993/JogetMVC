@@ -30,7 +30,6 @@ window.PolicyIssuanceIdManager = {
 
     // Detail elements
     detailStatus: function (quotationId) { return `${this.prefix}-detailStatus_${quotationId}`; },
-    stageDeptPill: function (quotationId) { return `${this.prefix}-stageDeptPill_${quotationId}`; },
     //btnToggleReferenceFieldsMini: function (quotationId) { return `${this.prefix}-btnToggleReferenceFieldsMini_${quotationId}`; },
     //btnToggleCommentMini: function (quotationId) { return `${this.prefix}-btnToggleCommentMini_${quotationId}`; },
     btnCollapseAllTab: function (quotationId) { return `${this.prefix}-btnCollapseAllTab_${quotationId}`; },

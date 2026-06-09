@@ -815,11 +815,11 @@ Note:
             $(`#${formModuleKeyQt}-recordNo`).text(q.quotationCode);
 
             const st = q.quotationStatus ?? q.status;
+            $(`#${window.QuotationIdManager.stageDeptPill(q.id)}`).html(`<span id="@ViewIdHelper.DetailStatus(moduleCode, Convert.ToInt64(ViewData["Id"]))" class="pill">${q.workflowStatus}</span> - ${stageAccount ?? ""}`);
             $(`#${window.QuotationIdManager.detailStatus(q.id)}`)
                 .text(statusText(st))
                 .attr("class", `statusTag ${statusClass(st)}`);
 
-            $(`#${window.QuotationIdManager.stageDeptPill(q.id)}`).text(`Pending at: ${state.stageDept} - ${stageAccount ?? ""}`);
             // $(`#${formModuleKeyQt}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
 
             // deptData.FO = { ...q,   id: q.id, sectionName: "FO", code: q.quotationCode };

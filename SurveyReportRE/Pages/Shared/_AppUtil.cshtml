@@ -413,7 +413,7 @@
                     options: {
                         stylingMode: 'contained',
                         type: 'normal',
-                        text: "Fill Data",
+                        text: "Demo Data",
                         onClick() {
                             var form = $(`#quotationRequestForm`).dxForm().dxForm("instance");
                                 var payload={
@@ -450,18 +450,19 @@
                             },
                         },
                     },
-                        {
-                        widget: 'dxButton',
-                        toolbar: 'bottom',
-                        location: 'after',
-                        options: {
-                            stylingMode: 'contained',
-                            type: 'normal',
-                            text: "Demo load",
-                            onClick() {
-                                 makeMiniLoadingPanel("Demo joget","demo content");
-                                   startBrowserLoading(100000);
-                            }}},
+                        // {
+                        // widget: 'dxButton',
+                        // toolbar: 'bottom',
+                        // location: 'after',
+                        // options: {
+                        //     stylingMode: 'contained',
+                        //     type: 'normal',
+                        //     text: "Demo load",
+                        //     onClick() {
+                        //          makeMiniLoadingPanel("Demo joget","demo content");
+                        //            startBrowserLoading(100000);
+                        //     }}}
+                        //     ,
                     {
                     widget: 'dxButton',
                     toolbar: 'bottom',
@@ -486,8 +487,9 @@
                         text: "Complete",
                         onClick() {
 
+                       if ($("#quotationRequestForm").dxForm("instance").validate().isValid)
+                       {
                                     makeMiniLoadingPanel("Initiate Quotation", "Please wait...");
-
                                 var result = new Object();
                                     result.payload = new Object();
                                     result.payload.progressvalue = 25;
@@ -521,6 +523,7 @@
                             quotationData.Quotation.BranchId = submitData?.branchId;
                             quotationData.Quotation.ProductId = quotationData.Quotation.ProductId.id;
                             quotationData.Quotation.LineId = quotationData.Quotation.LineId.id;
+                            quotationData.Quotation.ReinsuranceId = quotationData.Quotation.ReinsuranceId.id;
                             quotationData.Quotation.BranchCode = _branch;
                             quotationData.Attributes = new Object();
                             quotationData.Attributes.SectionName = sectionName;
@@ -601,6 +604,7 @@
 
 
                              popupInstance.hide();
+                        }
                         },
                     },
                 }]
@@ -1533,9 +1537,12 @@
                 item.instanceProps = new Object();
                 item.instanceProps.refFieldId = id;
                 var itemElement = $(`#${window.QuotationIdManager.remarkBox(dept, id)}`);
-            if (!$(`#${window.QuotationIdManager.remarkBox(dept, id)}`)) {
-                createEditor(item, itemElement, $("<div>"), item);
-            }
+                var $element = $(`#${window.QuotationIdManager.remarkBox(dept, id)}`);
+                debugger
+                if ($element.length > 0) {
+                    $element.empty();
+                    createEditor(item, itemElement, $("<div>"), item);
+                }
             return item.control;
 
             // document.querySelectorAll(classform).forEach((el, idx) => {
@@ -2387,6 +2394,7 @@
                         item.moduleName = moduleKey + "_default"; item.sectionName = dept;
                         item.id = id;
                         item.guid = guid;
+                        item.titleName = "Upload Quotation"
                         createEditor(item, itemElement, $(`<div>`), item);
                 }
 
@@ -2402,7 +2410,8 @@
                         item.editorType = "dxFileUploader";
                         item.moduleName = moduleKey+ "_supportingDoc"; item.sectionName = dept;
                         item.id = id;
-                        item.guid = guid;
+                        item.guid = guid;;
+                        item.titleName = "Upload Supporting Document"
                     createEditor(item, itemElement, $(`<div>`), item);
                 }
 
@@ -2595,7 +2604,7 @@
                     readOnly: !!currentOptions.isReadOnly,
                     multiple: true,
                     accept: options.accept || "*/*",
-                    selectButtonText: `Upload Attachments`,
+                    selectButtonText: editorOptions.titleName || `Upload Attachments`,
                     dropZone: `#${editorOptions.previewId}`,
                     labelText: "",
                     uploadMode: editorOptions.uploadMode ? editorOptions.uploadMode : "instantly",
@@ -2635,11 +2644,14 @@
 
 
         function createAttachmentItem(x, onDeleted) {
+            debugger
             const fileName = x.fileName || x.FileName || x.name || "Unnamed";
             const ext = (x.extension || x.Extension || getExt(fileName)).toLowerCase();
             const size = x.size || x.fileSize || x.FileSize || 0;
             const downloadUrl = x.downloadUrl || x.DownloadUrl || x.url;
             const id = x.id || x.Id || x.attachmentId;
+            const author = x.author || x.author || x.author;
+            const date = x.date || x.date || x.date;
             const $item = $("<div>")
                 .addClass("att-item")
                 .css({
@@ -2658,12 +2670,12 @@
             $("<div>")
                 .addClass("att-name")
                 .attr("title", fileName)
-                .text(fileName)
+                .text(`${fileName}`)
                 .appendTo($meta);
 
             $("<div>")
                 .addClass("att-sub")
-                .text((ext ? ext.toUpperCase() : "FILE") + " • " + formatBytes(size))
+                .text((ext ? ext.toUpperCase() : "FILE") + " • " + formatBytes(size) + ` -  ${author}  -  ${fmtTimeLocal(date)}`)
                 .appendTo($meta);
 
             const $actions = $("<div>").addClass("att-actions").appendTo($item);
@@ -3710,6 +3722,7 @@
                     items.sectionName = editorOptions?.sectionName || devExtremeItem.sectionName;
                     items.code = editorOptions?.code || devExtremeItem.code;
                     items.specificFolder = editorOptions?.specificFolder || devExtremeItem.specificFolder;
+                    items.titleName = editorOptions?.titleName || devExtremeItem.titleName;
                     renderDxFileUploader(items, $container, {
                         controllerName: "Document",
                         uploadTitle: "Files",
@@ -3791,7 +3804,7 @@
         }
     }
 
-            function viewFieldAdjust(formId) {
+       function viewFieldAdjust(formId) {
         var form = $("#" + formId).dxForm("instance");
         if (!form) return;
 
@@ -3812,6 +3825,7 @@
                     if (!item.label) {
                         item.label = {};
                     }
+                    if (item.dataField != "decision")
                     item.label.location = "top";
                 }
             });

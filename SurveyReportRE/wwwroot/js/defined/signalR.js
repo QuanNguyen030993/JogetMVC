@@ -31,7 +31,7 @@ function signalRBlink() {
     signalRMessageCount++;
 
     $("#signalRCounter")
-        .text(`(${signalRMessageCount})`);
+        .text(`Session count from SignalR: (${signalRMessageCount})`);
 
     const panel = $("#signalRMonitor");
 

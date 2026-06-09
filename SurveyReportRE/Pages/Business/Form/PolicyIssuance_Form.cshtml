@@ -916,13 +916,14 @@ Note:
             $(`#${formModuleKeyPi}-recordNo`).text(q.policyIssuanceCode);
 
             const st = q.policyIssuanceStatus ?? q.status;
-            $(`#${formModuleKeyPi}-detailStatus`)
+
+            $(`#${window.PolicyIssuanceIdManager.stageDeptPill(q.id)}`).html(`<span id="@ViewIdHelper.DetailStatus(moduleCode, Convert.ToInt64(ViewData["Id"]))" class="pill">${q.workflowStatus}</span> - ${stageAccount ?? ""}`);
+            $(`#${window.PolicyIssuanceIdManager.detailStatus(q.id)}`)
                 .text(statusText(st))
                 .attr("class", `statusTag ${statusClass(st)}`);
 
-             $(`#${window.PolicyIssuanceIdManager.stageDeptPill(q.id)}`).text(`Pending at: ${state.stageDept} - ${stageAccount ?? ""}`);
-            // $(`#${formModuleKeyPi}-stageDeptPill`).text(`Pending at: ${state.stageDept} - ${stageAccount ?? ""}`);
-            // $(`#${formModuleKeyPi}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
+             $(`#${window.PolicyIssuanceIdManager.stageDeptPill(q.id)}`).html(`Pending at: ${state.stageDept} - ${stageAccount ?? ""}`);
+
             var control = new Object();
             $.each(qtDeptModuleCode, function (itemIndex, item) {
 

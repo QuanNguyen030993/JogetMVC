@@ -306,6 +306,8 @@
                                 var selectedRow = selectedItems.selectedRowsData[0];
                                 e.component.option("value", selectedItems.selectedRowKeys[0]);
                                 that.formInstance.updateData("clientName", selectedRow.englishName);
+                                debugger
+                  that.formInstance.updateData("businessOccupation", selectedRow.businessOccupation);
                                 e.component.close();
                             });
 
@@ -322,7 +324,7 @@
                     
                     caption: "Product",
                     items: [
-                    { dataField: "lineId", editorType: "dxSelectBox", editorOptions: {
+             { dataField: "lineId", isRequired: true, editorType: "dxSelectBox", editorOptions: {
                         items: _entitys.line,
                         keyExpr: "id",
                         displayExpr: "value",
@@ -337,7 +339,7 @@
                     { dataField: "lineCode", editorType: "dxTextBox", visible: true, editorOptions: { readOnly: true } },
                     { dataField: "productName", editorType: "dxTextBox", visible: false, editorOptions: { readOnly: true } },
                     {
-                        dataField: "productId",
+                 dataField: "productId", isRequired: true,
                         editorType: "dxSelectBox",
                         editorOptions: {
                             label: { text: "Product Name" },
@@ -378,7 +380,7 @@
                         { dataField: "policyNo", label: { text: "Policy No" }, editorType: "dxTextBox" },
 
 
-                        { dataField: "businessChannel", editorType: "dxSelectBox",
+                   { dataField: "businessChannel", isRequired: true, editorType: "dxSelectBox",
                             editorOptions: { items: _enums.BusinessChannel,
                                 keyExpr: "id",
                                 displayExpr: "value",
@@ -387,7 +389,7 @@
                                 that.formInstance.updateData("businessChannelName", e.value?.value || e.value);
                                     }
                             } },
-                            { dataField: "reinsuranceId", label: { text: "Reinsurance" }, editorType: "dxSelectBox", editorOptions: { keyExpr: "id", displayExpr: "value", items: _enums.reInsuranceType } },
+                       { dataField: "reinsuranceId", isRequired: true, label: { text: "Reinsurance" }, editorType: "dxSelectBox", editorOptions: { keyExpr: "id", displayExpr: "value", items: _enums.reInsuranceType } },
 
                         {
                             itemType: "simple",
@@ -501,7 +503,7 @@
                         
                         caption: "Attachment",
                         items: [
-                {dataField: "quotationQuantity",editorType: "dxNumberBox",editorOptions: { minValue: 1} ,validationRules : { isRequired:  true} },
+                         {dataField: "quotationQuantity", isRequired: true,editorType: "dxNumberBox",editorOptions: { minValue: 1} ,validationRules : { isRequired:  true} },
                             {
                         dataField: "@prefix" === "@prefix" ? "quotation" : "document", editorType: "dxFileUploader"
                         ,
@@ -517,6 +519,7 @@
                                 item.id = @ViewData["Id"];
                                 item.guid = guid;
                                 item.isNotLoading = true;
+                                item.titleName = "Upload Quotation";
                                 createEditor(item, itemElement, $(`<div>`), item);
                         }
 
@@ -536,6 +539,7 @@
                                 item.id = @ViewData["Id"];
                                 item.guid = guid;
                             item.isNotLoading = true;
+                                item.titleName = "Upload Supporting Document";
                             createEditor(item, itemElement, $(`<div>`), item);
                         }
 

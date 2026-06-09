@@ -21,9 +21,9 @@
     that.ModelName = "PolicyIssuance";
     $(`#@PIViewIdHelper.Form(dept, quotationId)`).dxForm({
         dataSource: makeBasicDataSource(that, true),
-                 items: [
-                         {itemType: "group", caption: "Attachment",colCount: 1, items: attachmentDefault("pi","@(dept)",@(quotationId), "@(quotationGuid)") },
-                          {
+         items: [
+             { itemType: "group" , dataField: "decision",items :[
+        {
             dataField: "decision",
             label: { text: "Decision" },
             editorType: "dxRadioGroup",
@@ -91,7 +91,10 @@
             },
             isRequired: true
             }
-        },
+        }
+             ]},
+
+                         {itemType: "group", caption: "Attachment",colCount: 1, items: attachmentDefault("pi","@(dept)",@(quotationId), "@(quotationGuid)") },
                          {itemType: "group",caption: "Checklist",colCount:1,items: [
     {dataField: "policyNoCL",editorType: "dxCheckBox",visible:true},
     {dataField: "theInsured",editorType: "dxCheckBox",visible:true},

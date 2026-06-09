@@ -15,24 +15,7 @@
     {
         @foreach (string item in qtDeptModuleCode)
         {
-          @*   <section id="@Id($"sec_{item}")" class="dept-section">
-                <div id="@Id($"sec_{item}-header")" class="dept-header">
-
-                    @Html.Partial($"Business/Form/QuotationDetail/_Quotation_{item}_Form_Header", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-header"), ["Guid"] = ($"{Model.Guid}") })
-                </div>
-                <div id="@Id($"sec_{item}-upperbody")" class="dept-upperbody">
-                    @Html.Partial($"Business/Form/QuotationDetail/_Quotation_{item}_Form_UpperBody", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-upperbody"), ["Guid"] = ($"{Model.Guid}") })
-                </div>
-                <div id="@Id($"sec_{item}-body")" class="dept-body">
-                    @Html.Partial($"Business/Form/QuotationDetail/_Quotation_{item}_Form", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-body"), ["Guid"] = ($"{Model.Guid}") })
-                </div>
-                <div id="@Id($"sec_{item}-lowerbody")" class="dept-lowerbody">
-                    @Html.Partial($"Business/Form/QuotationDetail/_Quotation_{item}_Form_LowerBody", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-lowerbody"), ["Guid"] = ($"{Model.Guid}") })
-                </div>
-                <div id="@Id($"sec_{item}-footer")" class="dept-footer">
-                    @Html.Partial($"Business/Form/QuotationDetail/_Quotation_{item}_Form_Footer", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-footer"), ["Guid"] = ($"{Model.Guid}") })
-                </div>
-            </section> *@
+          
             <section id="@Id($"sec_{item}")" class="dept-section">
                 <!-- 1. Header -->
                 <div id="@Id($"sec_{item}-header")" class="dept-header">
@@ -106,23 +89,7 @@
     {
         @foreach (string item in piDeptModuleCode)
         {
-         @*    <section id="@Id($"sec_{item}")" class="dept-section">
-                <div id="@Id($"sec_{item}-header")" class="dept-header">
-                    @Html.Partial($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_Header", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-header"), ["Guid"] = ($"{Model.Guid}") })
-                </div>
-                <div id="@Id($"sec_{item}-upperbody")" class="dept-upperbody">
-                    @Html.Partial($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_UpperBody", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-upperbody"), ["Guid"] = ($"{Model.Guid}") })
-                </div>
-                <div id="@Id($"sec_{item}-body")" class="dept-body">
-                    @Html.Partial($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-body"), ["Guid"] = ($"{Model.Guid}") })
-                </div>
-                <div id="@Id($"sec_{item}-lowerbody")" class="dept-lowerbody">
-                    @Html.Partial($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_LowerBody", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-lowerbody"), ["Guid"] = ($"{Model.Guid}") })
-                </div>
-                <div id="@Id($"sec_{item}-footer")" class="dept-footer">
-                    @Html.Partial($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_Footer", null, new ViewDataDictionary(ViewData) { ["Id"] = ($"{Model.Id}"), ["Cd"] = Cd($"sec_{item}-footer"), ["Guid"] = ($"{Model.Guid}") })
-                </div>
-            </section> *@
+       
             <section id="@Id($"sec_{item}")" class="dept-section">
                 <!-- 1. Header -->
                 <div id="@Id($"sec_{item}-header")" class="dept-header">
