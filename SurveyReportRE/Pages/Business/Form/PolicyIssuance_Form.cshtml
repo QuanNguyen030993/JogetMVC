@@ -290,7 +290,7 @@ Note:
 
                                               try
                                               {
-                                                 tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
+                                                 tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Problem");
                                               }
                                               catch
                                               {

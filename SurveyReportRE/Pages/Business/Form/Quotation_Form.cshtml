@@ -40,7 +40,7 @@ Note:
     state.nextStep.instanceWorkflow = new Object();
 
     state.currentUserRole = _role;
-    state.focusDept = _role == "IT" ? "FO" : _role;
+    var focusDept = _role == "IT" ? "FO" : _role    
 
     state.quotes = [];
     state.selectedId = null;
@@ -200,7 +200,7 @@ Note:
 
                                          try 
                                          {
-                                            tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
+                                            tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Problem");
                                          }
                                          catch 
                                          {
@@ -233,7 +233,6 @@ Note:
                                             text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
                                                 function (e) {
                                                 var content = remarkBoxs[item].controlRemark.instance.option("value");
-                                                    debugger
                                                     formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                                                     formItems.comment = content;
                                                     submitNextStep(`${formModuleKeyQt}`, state.nextStep, findRoute, formItems);
@@ -455,7 +454,7 @@ Note:
         }
 
         function updateHints() {
-            $(`#${formModuleKeyQt}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
+            $(`#${formModuleKeyQt}-focusDeptPill`).text(`Focus: ${focusDept}`);
 
             QtRoles.forEach(k => {
                 const canEdit = (state.currentUserRole === k);
@@ -519,25 +518,25 @@ Note:
         function applyNodeHighlights() {
             $(".dept-node").removeClass("status focus");
             $(`.dept-node[data-key='${stageDept}']`).addClass("status");
-            $(`.dept-node[data-key='${state.focusDept}']`).addClass("focus");
+            $(`.dept-node[data-key='${focusDept}']`).addClass("focus");
         }
 
         function applySectionFocusHighlight() {
             $(".dept-section").removeClass("focused");
-            $(`#${formModuleKeyQt}-sec_${state.focusDept}_@ViewData["Id"]`).addClass("focused");
+            $(`#${formModuleKeyQt}-sec_${focusDept}_@ViewData["Id"]`).addClass("focused");
         }
 
         function setupDeptTree() {
             $(`.${formModuleKeyQt}-dept-tree.dept-node`).off("click.tree").on("click.tree", function () {
                 const key = $(this).data("key");
-                state.focusDept = key;
+                focusDept = key;
 
                 applyNodeHighlights();
                 applySectionFocusHighlight();
                 applyEditLock();
                 updateHints();
-                scrollToDept(formModuleKeyQt, { id: `${state.focusDept}`, keyId: "@ViewData["Id"]" });
-                setSectionCollapsed(state.focusDept, false);
+                scrollToDept(formModuleKeyQt, { id: `${focusDept}`, keyId: "@ViewData["Id"]" });
+                setSectionCollapsed(focusDept, false);
             });
         }
 
@@ -843,7 +842,7 @@ Note:
                 .text(statusText(st))
                 .attr("class", `statusTag ${statusClass(st)}`);
 
-            // $(`#${formModuleKeyQt}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
+            // $(`#${formModuleKeyQt}-focusDeptPill`).text(`Focus: ${focusDept}`);
 
             // deptData.FO = { ...q,   id: q.id, sectionName: "FO", code: q.quotationCode };
             // deptData.TS = { ...q,   id: q.id, sectionName: "TS", code: q.quotationCode };
@@ -851,11 +850,15 @@ Note:
             // deptData.LMKT = { ...q, id: q.id, sectionName: "LMKT", code: q.quotationCode };
             // deptData.PM = { ...q,   id: q.id, sectionName: "PM", code: q.quotationCode };
             $.each(qtDeptModuleCode, function (itemIndex, item) {
+                // var control = TinyMCEElementMaker(`.htmleditor`, item, @ViewData["Id"], control);
+                // deptData[item] = { ...q, id: q.id, sectionName: item, code: q.quotationCode };
+                // remarkBoxs[item] = { id: q.id, sectionName: item, controlRemark: control };
+
+                    deptData[item] = { ...q, id: q.id, sectionName: item, code: q.quotationCode };
                 if (q.stageDept == item)
                 {
                     $(`#${QuotationIdManager.actionBarDept(item,@ViewData["Id"])}`).css({"display": "block"});
                     var control = TinyMCEElementMaker(`.htmleditor`, item, @ViewData["Id"], control);
-                    deptData[item] = { ...q, id: q.id, sectionName: item, code: q.quotationCode };
                     remarkBoxs[item] = { id: q.id, sectionName: item, controlRemark: control };
                 }
                 else {
@@ -871,7 +874,7 @@ Note:
             updateSectionUpdatedTime(q);
             initDepartmentAssignees(formModuleKeyQt,deptData, firstRender ? null : 2000);
             animateOverviewSections(formModuleKeyQt);
-            scrollToDept(formModuleKeyQt, { id: `${state.focusDept}`, keyId: "@ViewData["Id"]" } );
+            scrollToDept(formModuleKeyQt, { id: `${focusDept}`, keyId: "@ViewData["Id"]" } );
             // TinyMCEElementMaker(`.htmleditor`);
 
 

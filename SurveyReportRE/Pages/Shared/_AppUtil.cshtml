@@ -3838,4 +3838,15 @@
         // set lại items sau khi chỉnh sửa
         form.option("items", items);
     }
+    function tryParseJSON(object, msgIfFail){
+        try
+        {
+            return JSON.parse(object);
+        }
+        catch 
+        {
+            console.log(msgIfFail);
+            return null;
+        }
+    }
 </script>
