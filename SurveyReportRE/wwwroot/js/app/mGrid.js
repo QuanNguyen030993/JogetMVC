@@ -641,10 +641,11 @@ var MGridOption = class MGridOption {
     onRowPrepared(e) { }
     onRowUpdating(e) { }
     onRowInserting(e) { }
-    //    onSaved(e) { }
-    //    onSaving(e) { }
-    //    onRowRemoving(e) { }
-    //    onRowRemoved(e) { }
+        onSaved(e) { }
+        onSaving(e) { }
+    onRowRemoving(e) { }
+    onRowRemoved(e) { }
+    onSelectionChanged(e) { }
     hyperLinkCode(columns, moduleName, controllerName, propertyName, specificLinkField = null) {
         $.each(columns, function (i, col) {
             if (col.dataField == (specificLinkField != null ? specificLinkField : "Code")) {
@@ -653,7 +654,7 @@ var MGridOption = class MGridOption {
                     $('<a>').addClass('dx-link dx-link-edit')
                         .text(options.text)
                         .css({ color: "#337ab7", textDecoration: "underline", cursor: "pointer" })
-                        .on('dxclick', function () {
+                        .on('dxclick', function () {@
                             if (Object.keys(options.key).length > 0)
                                 callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}`, `form_${controllerName}_Form_${options.key.id}`, `${controllerName} ${options.text}`);
                             else
@@ -928,15 +929,16 @@ var MGridOption = class MGridOption {
                 onEditorPreparing: tryExecute(this.onEditorPreparing.bind(this)),
                 onRowUpdating: tryExecute(this.onRowUpdating.bind(this)),
                 onRowInserting: tryExecute(this.onRowInserting.bind(this)),
-                //onSaved: tryExecute(this.onSaved.bind(this)),
-                //onSaving: tryExecute(this.onSaving.bind(this)),
+                onSaved: tryExecute(this.onSaved.bind(this)),
+                onSaving: tryExecute(this.onSaving.bind(this)),
                 onCellClick: tryExecute(this.onCellClick.bind(this)),
                 //onRowExpanding: tryExecute(this.onRowExpanding.bind(this)),
                 onRowInserted: tryExecute(this.onRowInserted.bind(this)),
                 onRowPrepared: tryExecute(this.onRowPrepared.bind(this)),
                 //onRowUpdated: tryExecute(this.onRowUpdated.bind(this)),
-                //onRowRemoving: tryExecute(this.onRowRemoving.bind(this)),
-                //onRowRemoved: tryExecute(this.onRowRemoved.bind(this)),
+                onRowRemoving: tryExecute(this.onRowRemoving.bind(this)),
+                onRowRemoved: tryExecute(this.onRowRemoved.bind(this)),
+                onSelectionChanged: tryExecute(this.onSelectionChanged.bind(this)),
                 onToolbarPreparing: tryExecute(this.onToolbarPreparing.bind(this)),
                 onEditorPrepared: tryExecute(this.onEditorPrepared.bind(this)),
                 onEditingStart: tryExecute(this.onEditingStart.bind(this)),

@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using ERPCore.Models.Migration.Base;
 using ERPCore.Models.Migration.Business.Data;
 using ERPCore.Models.Migration.Business.MasterData;
+using ERPCore.Models.Migration.Business.Workflow;
 using ERPCore.Models.Migration.Config;
 using static ERPCore.Models.Models.Parsing.JsonHandle;
 
@@ -98,9 +99,9 @@ public class Quotation : BaseModel
     public string? BranchCode { get; set; }
     public string? TurnAroundTimeAttributes { get; set; }
     public long? StatusId { get; set; } 
-    public EnumData? StatusEnum { get; set; }   
+    public EnumData? StatusEnum { get; set; }
+    public InstanceWorkflow? InstanceWorkflowFK { get; set; }
     public TurnAroundAttributes? TurnAroundAttributes { get; set; }
     public List<Document> Documents { get; set; } = new List<Document>();
-
-
+    public List<QuotationDetails> QuotationDetails { get; set; } = new List<QuotationDetails>();
 }
