@@ -1,0 +1,20 @@
+﻿:root {
+    --collapsed-ml: -15%;
+    --collapsed-mr: 5%;
+    --collapsed-form-mr: 0%;
+    --rightdock-width: 20%;
+    /*--collapsed-grid-max-mr: 73%;*/
+    --sidebar-w: 260px;
+    --gap: 12px;
+    --bg: #f5f7fb;
+    --card: #fff;
+    --border: #e6e9f0;
+    --text: #1f2a37;
+    --muted: #6b7280;
+    --brand: #e84a5f; /* status highlight (quotation stage) */
+    --focus: #2563eb; /* click focus highlight */
+    --focusSoft: rgba(37,99,235,.12);
+    --node: 30px;
+    --nodeBorder: rgba(31,41,55,.28);
+    --line: rgba(17,24,39,.18);
+}

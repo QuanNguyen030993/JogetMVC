@@ -5,8 +5,9 @@ namespace ERPCore.Models.Migration.Config
 	public class EnumData : BaseModel
 	{
 		public string Name {get;set;} = "";
-        public long Value { get; set; } = 0;
+        public string Value { get; set; } = "";
         public string Key { get; set; } = "";
+        public string Code { get; set; } = "";
         public int? SysTableId { get; set; }
         public string SysTableName { get; set; } = "";
         public string MappingField { get; set; } = "";

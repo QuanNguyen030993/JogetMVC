@@ -46,6 +46,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RESurveyTool.Models\JogetMVC.Models.csproj" />
+    <ProjectReference Include="..\TMIVHashing\TMIVHashing.csproj" />
   </ItemGroup>
 
   <ItemGroup>

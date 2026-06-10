@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <meta charset="utf-8"/>
+
+    <title>JSON Designer Mockup</title>
+
+    <link rel="stylesheet"
+          href="https://cdn3.devexpress.com/jslib/24.1.3/css/dx.light.css"/>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <script src="https://cdn3.devexpress.com/jslib/24.1.3/js/dx.all.js"></script>
+
+    <style>
+
+        body{
+            margin:0;
+            background:#f4f6fa;
+            font-family:Arial;
+            overflow:hidden;
+        }
+
+        .layout{
+            display:flex;
+            height:100vh;
+            gap:12px;
+            padding:12px;
+            box-sizing:border-box;
+        }
+
+        .panel{
+            background:white;
+            border-radius:12px;
+            border:1px solid #dfe3ea;
+            overflow:hidden;
+            display:flex;
+            flex-direction:column;
+        }
+
+        .toolbox{
+            width:260px;
+        }
+
+        .designer{
+            flex:1;
+        }
+
+        .config{
+            width:350px;
+        }
+
+        .header{
+            padding:14px;
+            border-bottom:1px solid #eee;
+            background:#fafafa;
+            font-weight:bold;
+            font-size:14px;
+        }
+
+        .body{
+            padding:12px;
+            overflow:auto;
+            flex:1;
+        }
+
+        .tool-item{
+            border:1px solid #dfe3ea;
+            border-radius:10px;
+            padding:12px;
+            margin-bottom:10px;
+            cursor:pointer;
+            transition:all .2s;
+        }
+
+        .tool-item:hover{
+            border-color:#1976d2;
+            background:#f0f7ff;
+        }
+
+        .designer-toolbar{
+            padding:12px;
+            border-bottom:1px solid #eee;
+            display:flex;
+            gap:8px;
+        }
+
+        .field-card{
+            border:1px solid #dfe3ea;
+            border-radius:10px;
+            padding:12px;
+            margin-bottom:10px;
+            position:relative;
+            cursor:pointer;
+            background:white;
+        }
+
+        .field-card.active{
+            border:2px solid #1976d2;
+            background:#f0f7ff;
+        }
+
+        .field-type{
+            position:absolute;
+            right:10px;
+            top:10px;
+            font-size:11px;
+            background:#1976d2;
+            color:white;
+            border-radius:20px;
+            padding:3px 8px;
+        }
+
+        .field-label{
+            font-size:14px;
+            font-weight:600;
+        }
+
+        .field-data{
+            margin-top:5px;
+            font-size:12px;
+            color:#777;
+        }
+
+        .section-title{
+            font-size:13px;
+            font-weight:bold;
+            margin-bottom:10px;
+            color:#444;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="layout">
+
+    <!-- TOOLBOX -->
+
+    <div class="panel toolbox">
+
+        <div class="header">
+            Toolbox
+        </div>
+
+        <div class="body">
+
+            <div id="toolboxList"></div>
+
+        </div>
+
+    </div>
+
+    <!-- DESIGNER -->
+
+    <div class="panel designer">
+
+        <div class="designer-toolbar">
+
+            <div id="btnShowAll"></div>
+
+            <div id="btnHideAll"></div>
+
+            <div id="btnRequiredAll"></div>
+
+        </div>
+
+        <div class="body">
+
+            <div id="designerArea"></div>
+
+        </div>
+
+    </div>
+
+    <!-- CONFIG -->
+
+    <div class="panel config">
+
+        <div class="header">
+            Config
+        </div>
+
+        <div class="body">
+
+            <div class="section-title">
+                Quick Visibility
+            </div>
+
+            <div id="visibleTagBox"></div>
+
+            <br/>
+
+            <div class="section-title">
+                Field Properties
+            </div>
+
+            <div id="fieldForm"></div>
+
+            <br/>
+
+            <div class="section-title">
+                JSON
+            </div>
+
+            <div id="jsonPreview"></div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+    const toolboxItems = [
+
+        { type:"textbox", text:"TextBox" },
+        { type:"textarea", text:"TextArea" },
+        { type:"numberbox", text:"NumberBox" },
+        { type:"datebox", text:"DateBox" },
+        { type:"tagbox", text:"TagBox" },
+        { type:"lookup", text:"Lookup" },
+        { type:"checkbox", text:"CheckBox" },
+        { type:"grid", text:"Grid" }
+
+    ];
+
+    let fields = [
+
+        {
+            id:1,
+            type:"textbox",
+            label:"Customer Name",
+            dataField:"customerName",
+            visible:true,
+            required:true
+        },
+
+        {
+            id:2,
+            type:"numberbox",
+            label:"Premium Total",
+            dataField:"premiumTotal",
+            visible:true,
+            required:false
+        }
+
+    ];
+
+    let selectedField = null;
+
+    // TOOLBOX
+
+    $("#toolboxList").dxList({
+
+        dataSource: toolboxItems,
+
+        height: "100%",
+
+        itemTemplate: function(data){
+
+            return `
+                <div class="tool-item">
+                    ${data.text}
+                </div>
+            `;
+        },
+
+        onItemClick: function(e){
+
+            fields.push({
+
+                id: new Date().getTime(),
+
+                type: e.itemData.type,
+
+                label: e.itemData.text,
+
+                dataField: "",
+
+                visible: true,
+
+                required: false
+
+            });
+
+            renderDesigner();
+        }
+
+    });
+
+    // DESIGNER
+
+    function renderDesigner(){
+
+        const area = $("#designerArea");
+
+        area.empty();
+
+        fields.forEach(field => {
+
+            const card = $(`
+                <div class="field-card ${selectedField && selectedField.id === field.id ? "active" : ""}">
+                    <div class="field-type">
+                        ${field.type}
+                    </div>
+
+                    <div class="field-label">
+                        ${field.visible ? "👁️" : "🚫"} ${field.label}
+                    </div>
+
+                    <div class="field-data">
+                        ${field.dataField || "(empty dataField)"}
+                    </div>
+                </div>
+            `);
+
+            card.on("click", function(){
+
+                selectedField = field;
+
+                renderFieldForm();
+
+                renderDesigner();
+            });
+
+            area.append(card);
+
+        });
+
+        renderVisibilityTag();
+
+        renderJson();
+    }
+
+    // FIELD FORM
+
+    function renderFieldForm(){
+
+        if(!selectedField){
+
+            $("#fieldForm").html("");
+
+            return;
+        }
+
+        $("#fieldForm").dxForm({
+
+            formData: selectedField,
+
+            colCount:1,
+
+            items:[
+
+                {
+                    dataField:"label"
+                },
+
+                {
+                    dataField:"dataField"
+                },
+
+                {
+                    dataField:"visible",
+                    editorType:"dxCheckBox"
+                },
+
+                {
+                    dataField:"required",
+                    editorType:"dxCheckBox"
+                },
+
+                {
+                    dataField:"type",
+                    editorType:"dxSelectBox",
+                    editorOptions:{
+
+                        dataSource: toolboxItems,
+
+                        displayExpr:"text",
+
+                        valueExpr:"type"
+
+                    }
+                }
+
+            ],
+
+            onFieldDataChanged:function(){
+
+                renderDesigner();
+            }
+
+        });
+
+    }
+
+    // VISIBILITY
+
+    function renderVisibilityTag(){
+
+        $("#visibleTagBox").dxTagBox({
+
+            dataSource: fields,
+
+            displayExpr:"label",
+
+            valueExpr:"id",
+
+            value: fields
+                .filter(x => x.visible)
+                .map(x => x.id),
+
+            showSelectionControls:true,
+
+            multiline:true,
+
+            applyValueMode:"useButtons",
+
+            onValueChanged:function(e){
+
+                fields.forEach(field => {
+
+                    field.visible = e.value.includes(field.id);
+
+                });
+
+                renderDesigner();
+            }
+
+        });
+
+    }
+
+    // JSON
+
+    function renderJson(){
+
+        $("#jsonPreview").dxTextArea({
+
+            value: JSON.stringify(fields, null, 4),
+
+            readOnly:true,
+
+            height:250
+
+        });
+
+    }
+
+    // BUTTONS
+
+    $("#btnShowAll").dxButton({
+
+        text:"Show All",
+
+        type:"success",
+
+        onClick:function(){
+
+            fields.forEach(x => x.visible = true);
+
+            renderDesigner();
+        }
+
+    });
+
+    $("#btnHideAll").dxButton({
+
+        text:"Hide All",
+
+        type:"danger",
+
+        onClick:function(){
+
+            fields.forEach(x => x.visible = false);
+
+            renderDesigner();
+        }
+
+    });
+
+    $("#btnRequiredAll").dxButton({
+
+        text:"Required All",
+
+        type:"default",
+
+        onClick:function(){
+
+            fields.forEach(x => x.required = true);
+
+            renderDesigner();
+        }
+
+    });
+
+    renderDesigner();
+
+</script>
+
+</body>
+</html>

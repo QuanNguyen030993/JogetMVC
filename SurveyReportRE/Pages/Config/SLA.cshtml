@@ -1,0 +1,11 @@
+﻿@page
+@model SLAModel
+@{
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@SLAModel.ModelName`), new MGridOption('@SLAModel.ModelName', "User"), null);
+    });
+</script>
+<div id="dataGrid_@SLAModel.ModelName"></div>

@@ -6,20 +6,20 @@ using ERPCore.Models.Migration.Business.Workflow;
 
 namespace ERPCore.Pages
 {
-    public class QuotationRequestModel : PageModel
+    public class QuoRequestModel : PageModel
     {
-        //private readonly ILogger<QuotationRequest> _logger;
+        //private readonly ILogger<QuoRequest> _logger;
         public static string ModelName { get; set; } = "";
 
-        public QuotationRequestModel(ILogger<QuotationRequestModel> logger)
+        public QuoRequestModel(ILogger<QuoRequestModel> logger)
         {
             //_logger = logger;
         }
 
         public void OnGet()
         {
-            ModelName = nameof(QuotationRequest);
-            ViewData["Model"] = nameof(QuotationRequest);
+            ModelName = nameof(QuoRequest);
+            ViewData["Model"] = nameof(QuoRequest);
         }
     }
 }

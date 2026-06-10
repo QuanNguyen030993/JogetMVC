@@ -24,7 +24,7 @@ namespace ERPCore.Controllers.Config
             List<DataGridConfig> dataGridConfigs = new List<DataGridConfig>();
             dataGridConfigs.AddRange(JsonConvert.DeserializeObject<List<DataGridConfig>>(JsonConvert.SerializeObject(Base)));
             dataGridConfigs.ForEach(f => {
-                if (f.DataField == "key"
+                if (f.DataField == "value"
                 )
                 {
                     f.Fixed = true;
@@ -34,6 +34,11 @@ namespace ERPCore.Controllers.Config
             dataGridConfigs = dataGridConfigs.Select(s => { if (s.DataField == "sysTableId") { s.DataType = "table"; }; return s; }).ToList();
             return Ok(dataGridConfigs);
         }
-
+        [HttpGet("{name}")]
+        public async Task<IActionResult> FetchEnum(string name)
+        {
+            var enumDatas = await _BaseRepository.EnumData(name);
+            return Ok(enumDatas);
+        }
     }
 }

@@ -1,0 +1,35 @@
+﻿@using JogetMVC.Model
+@{
+    string dept = "TS";
+    long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
+}
+
+<div class="dept-title">@dept</div>
+<div class="dept-form-header">
+    <div class="dept-form-header__assign">
+        <div id="@QTViewIdHelper.AssigneeBox(dept, quotationId)"></div>
+    </div>
+    <div id="@QTViewIdHelper.BtnToggleResForm"></div>
+</div>
+<div id="@QTViewIdHelper.StickPanel(dept, quotationId)">
+    @* <div class="sticky-wrap wobble" data-tooltip-toggle>
+    <div class="pin">
+    </div>
+    <div class="sticky-note"></div>
+    <div class="sticky-badge">1</div>
+    <div class="sticky-mini-text">FROM TS</div>
+    <div class="note-tooltip">
+        <strong>Suggested use</strong><br>
+        Icon này có thể gắn ở header section. Khi section trước có comment hoặc giao việc, chỉ cần bật icon sticky note để tạo điểm nhấn trực quan.
+    </div>
+</div> *@
+</div>
+<div class="dept-hint-wrap">
+    <div class="dept-hint" id="@QTViewIdHelper.Hint(dept, quotationId)"></div>
+    <div class="dept-updated" id="@QTViewIdHelper.Upd(dept, quotationId)" title="Last updated">—</div>
+    <div id="@QTViewIdHelper.ExpandCollapsedBtn(dept, quotationId)" class="dept-toggle-icon" aria-hidden="true">▾</div>
+</div>
+
+
+<script>
+</script>

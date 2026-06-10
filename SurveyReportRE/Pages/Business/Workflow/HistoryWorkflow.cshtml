@@ -1,0 +1,11 @@
+﻿@page
+@model HistoryWorkflowModel
+@{
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@HistoryWorkflowModel.ModelName`), new HistoryWorkflowGridOption('@HistoryWorkflowModel.ModelName'), null);
+    });
+</script>
+<div id="dataGrid_@HistoryWorkflowModel.ModelName"></div>

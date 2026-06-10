@@ -3,6 +3,7 @@
     //constructor(id, gcConfig, numberSequence, cloneUrl, colCount) {
     constructor(id, childGridConfig, formConfig, formOptions) {
         try {
+            this.pk = "id";
             this.id = id;
             this.isQuery = id == 0 ? false : true;
             this.isChildForeignKey = false;
@@ -12,7 +13,7 @@
                 this.childGridConfig = childGridConfig;
             }
             this.colCount = 2;
-            this.labelLocation = "left";
+            this.labelLocation = "top";
             this.outlineForm = { isUse: false, isOutlineChecked: false, isOutlineDynamic: false };
             this.isReadOnly = false;
             if (formConfig) {
@@ -90,7 +91,7 @@
             if (this.formOptions.container != null || this.formOptions.container != undefined) 
                 this.container = this.formOptions.container;
                 else 
-            this.container = formElement;
+                this.container = formElement;
             if (formConfig != null || formConfig != undefined) {
                 this.tabCode = formConfig.tabCode ? formConfig.tabCode : 'form_' + this.ModelName + `_Form_${this.id}`;;
                 this.cloneUrl = formConfig.cloneUrl ? formConfig.cloneUrl : "";
@@ -170,12 +171,14 @@
     loadData() {
         try {
             var that = this;
-            var store = makeBasicDataSource(that, true);
+            //var store = makeBasicDataSource(that, true);
+            //store.load();
+            var store = that.formInstance.option("dataSource");
             store.load();
-
-
+            
         } catch (err) {
             appErrorHandling('Library error: call MForm.loadData() was failed.', err);
+            this.formInstance = null;
             return;
         }
     }
@@ -392,12 +395,13 @@
             var itemsConfig = this.buildFormItem(); //should not do the same time.
             formElement.addClass("fade-slide-up");
             this.formInstance = formElement.dxForm({
+                dataSource: makeBasicDataSource(that, true),
                 colCount: this.colCount,
                 items: itemsConfig,
                 height: "inherit",
                 elementAttr: {
                     class: "dExForm",
-                    id: this.id
+                    id: formElement[0] ? formElement[0].id : `${this.ModelName}_${this.id}`,
                 },
                 readOnly: this.isReadOnly,
                 changedFields: {},
@@ -454,8 +458,8 @@
         
             
             //$formElement.find(".dx-tabpanel-container").css("height", `100%`);
-            if (that.id > 0)
-                this.loadData();
+            if (that.id > 0) 
+                    this.loadData();
             else
                 this.initDataNewForm();
         } catch (err) {
@@ -483,16 +487,16 @@
                     }) || "";
                 });
 
-                var id = formData["id"];
+                var id = formData[that.pk];
                 this.orgFormData = formData;
                 //delete formData["Guid"];
                 var data = new Object();;
                 if (id == null || id == undefined) {
-                    delete formData["id"];
+                    delete formData[that.pk];
                     data.values = JSON.stringify(appReplaceDoubleQuote(formData));
                     that.callApi('POST', data, isClose);
                 } else {
-                    data.key = formData["id"];
+                    data.key = formData[that.pk];
                     data.values = JSON.stringify(appReplaceDoubleQuote(formData));
                     that.callApi('PUT', data, isClose);
                 }
@@ -551,7 +555,6 @@
     }
 
     //get item from customizeItemLayout()
-    //build form items with scraffold
     buildFormItem() {
         try {
             var that = this;

@@ -394,7 +394,7 @@
           <div style="flex:1;" id="deptSelect"></div>
         </div>
         <div class="demoHint">
-          Login dept: <b id="loginDeptLabel">MKT</b><br/>
+          Login dept: <b id="loginDeptLabel">FO</b><br/>
           Stage: <b id="stageDeptLabel">UW</b> • Focus: <b id="focusDeptLabel">PM</b>
         </div>
       </div>
@@ -427,7 +427,7 @@
         <div class="pills">
           <span class="pill">Quotation: <b id="pillQuo">-</b></span>
           <span class="pill">RequestNo: <b id="pillReq">-</b></span>
-          <span class="pill">Login: <b id="pillLogin">MKT</b></span>
+          <span class="pill">Login: <b id="pillLogin">FO</b></span>
           <span class="pill">Stage: <b id="pillStage">UW</b></span>
           <span class="pill">Focus: <b id="pillFocus">PM</b></span>
         </div>
@@ -440,7 +440,7 @@
 
       <!-- Stepper = dept order (1..4), focus/stage behave like old mock -->
       <div class="stepper" id="deptStepper">
-        <div class="step" data-dept="MKT"><div class="badge">1</div><div class="label">MKT</div></div>
+        <div class="step" data-dept="FO"><div class="badge">1</div><div class="label">FO</div></div>
         <div class="step" data-dept="TS"><div class="badge">2</div><div class="label">TS</div></div>
         <div class="step" data-dept="UW"><div class="badge">3</div><div class="label">UW</div></div>
         <div class="step" data-dept="PM"><div class="badge">4</div><div class="label">PM</div></div>
@@ -656,8 +656,8 @@
   // - focusDept: click highlight (user focus)
   // - edit allowed only when loginDept == focusDept
   // ============================================================
-  const Depts = ["MKT","TS","UW","PM"];
-  let loginDept = "MKT";
+  const Depts = ["FO","TS","UW","PM"];
+  let loginDept = "FO";
   let stageDept = "UW";
   let focusDept = "PM";
 
@@ -718,7 +718,7 @@
     // focused visual for related cards
     $(".deptBox").removeClass("focused");
 
-    if(focusDept === "MKT") $("#boxMKT").addClass("focused");
+    if(focusDept === "FO") $("#boxMKT").addClass("focused");
     if(focusDept === "TS")  $("#boxTSUW").addClass("focused");
     if(focusDept === "UW")  $("#boxTSUW").addClass("focused");
     if(focusDept === "PM")  $("#boxPM").addClass("focused");
@@ -728,7 +728,7 @@
   }
 
   function applyEditLock(){
-    const roMKT = !(loginDept === "MKT" && focusDept === "MKT");
+    const roMKT = !(loginDept === "FO" && focusDept === "FO");
     const roTS  = !(loginDept === "TS"  && focusDept === "TS");
     const roUW  = !(loginDept === "UW"  && focusDept === "UW");
     const roPM  = !(loginDept === "PM"  && focusDept === "PM");
@@ -1002,7 +1002,7 @@
 
     // Demo dept select (login dept)
     $("#deptSelect").dxSelectBox({
-      items:["MKT","TS","UW","LMKT","PM"],
+      items:["FO","TS","UW","LMKT","PM"],
       value: loginDept,
       stylingMode:"outlined",
       onValueChanged:(e)=>{
@@ -1014,7 +1014,7 @@
     });
 
     // Focus buttons
-    $("#btnFocusMKT").dxButton({ text:"Focus", stylingMode:"outlined", onClick:()=>setFocusDept("MKT") });
+    $("#btnFocusMKT").dxButton({ text:"Focus", stylingMode:"outlined", onClick:()=>setFocusDept("FO") });
     $("#btnFocusUW").dxButton({ text:"Focus UW", stylingMode:"outlined", onClick:()=>setFocusDept("UW") });
     $("#btnFocusLMKT").dxButton({ text:"Focus", stylingMode:"outlined", onClick:()=>setFocusDept("LMKT") });
     $("#btnFocusPM").dxButton({ text:"Focus", stylingMode:"outlined", onClick:()=>setFocusDept("PM") });

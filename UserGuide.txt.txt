@@ -1,0 +1,1 @@
+{   "apiUrl": "api/Roles/GetAll",   "apiByKeyUrl": "api/Roles/EnumLookup",   "group": "",   "excludeCurrent": false,   "displayExpr": "key",   "valueExpr": "id",   "editorValueExpr": "accountName",   "editorDisplayExpr": "fullName",   "searchExpr": ["fullName", "accountName", "displayName"],   "placeholder": "Select assignee...",   "width": 300 }

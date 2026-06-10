@@ -1,0 +1,59 @@
+﻿@using JogetMVC.Model
+@{
+    string dept = "PM";
+    long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
+}
+
+
+<div class="actionBarDept" id="@QTViewIdHelper.ActionBarDept(dept, quotationId)">
+    <div class="actionLeft">
+        <span class="dept-title">Remarks</span> <div id="@QTViewIdHelper.RemarkBox(dept, quotationId)" class="htmleditor"></div>
+    </div>
+    <div class="actionRight">
+        <div id="@QTViewIdHelper.BtnSave(dept, quotationId)"></div>
+        <div id="@QTViewIdHelper.BtnReturnBranch(dept, quotationId)"></div>
+        <div id="@QTViewIdHelper.BtnSubmitBranch(dept, quotationId)"></div>
+    </div>
+</div>
+
+<script>
+     setTimeout( () => {
+     var dept = "@dept";
+             var pageLayout = window.QuotationPage;
+       var stateLayout = pageLayout.state;
+    $("#@QTViewIdHelper.BtnSave(dept, quotationId)").dxButton({ text: "Save", icon: "save", type: "default", onClick:
+         function (e) {
+               var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+               var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
+                   shadingColor: "rgba(0,0,0,0.4)",
+                   visible: false,
+                   showIndicator: true,
+                   showPane: false,
+                   shading: true,
+                   closeOnOutsideClick: false,
+                    position: { of: `#@QTViewIdHelper.Form(dept, quotationId)`}
+                   // onShown: function () {
+                   //     setTimeout(function () {
+                   //         appLoadPanel.hide();
+                   //     }, 3000);
+                   // }
+               });
+              globalLoadPanel.dxLoadPanel("instance").show();
+
+             ajaxPut('/api/Quotation/UpdateData',
+             {
+                 key: formItems.id,
+                 values: JSON.stringify(
+                     formItems
+                 )
+             },
+             {
+                 onSuccess: function (response) {
+                 },
+                 onError: function (err) { }
+             }
+         );
+         }
+     });
+     }, _delayRenderSubmitButton);
+</script>

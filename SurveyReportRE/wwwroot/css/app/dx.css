@@ -6395,7 +6395,7 @@ input.dx-hidden {
 }
 .dx-fileuploader {
     width: 100%;
-    height: 110px;
+    height: 100px;
     background-color: #f5faff;
     border: 2px dashed #007bff;
     border-radius: 8px;
@@ -6419,7 +6419,6 @@ input.dx-hidden {
         gap: 10px;
     }
     .dx-fileuploader .dx-fileuploader-button {
-        margin-top: 10px;
         background-color: #007bff;
         color: white;
         border-radius: 4px;

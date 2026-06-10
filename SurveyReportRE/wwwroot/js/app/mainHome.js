@@ -1,4 +1,6 @@
 ﻿var callElementView = function (url, code, caption, data) {
+    //not invoke to the mForm js
+
     try {
         if (url.length === 0) {
             appNotify({ message: "Page request does not exist.", type: 'info' });
@@ -109,19 +111,19 @@ var appendChildGridViewInsideAsync = function (childItem, itemElement, className
                     throw new Error(`Class ${className} không tìm thấy!`);
                 }
                 var gridOptionConfig = {
-                    filterRefId: childItem.filterRefId,
-                    filterRefField: childItem.filterRefField,
+                    refKey: childItem.refKey,
+                    refField: childItem.refField,
                     height: _defaultGridMinHeight
                 };
                 var mGridOption = new GridClass(childItem.modelName, "User", gridOptionConfig);
-                mGridOption.filterRefId = childItem.filterRefId;
-                mGridOption.filterRefField = childItem.filterRefField;
+                mGridOption.refKey = childItem.refKey;
+                mGridOption.refField = childItem.refField;
                 mGridOption.gridEditorOptions = {};
                 mGridOption.gridEditorOptions = {
                     editing: childItem.editing
                 };
-                $(`<div id="dataGrid_${childItem.modelName}_${childItem.filterRefId}" style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid(mGridOption.getGridOptions(mGridOption)).appendTo(itemElement);
-                const dataGrid = $(`<div id="dataGrid_${childItem.modelName}_${childItem.filterRefId}" style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid().dxDataGrid("instance");
+                $(`<div id="dataGrid_${childItem.modelName}_${childItem.refKey}" style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid(mGridOption.makeGridOptions(mGridOption)).appendTo(itemElement);
+                const dataGrid = $(`<div id="dataGrid_${childItem.modelName}_${childItem.refKey}" style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid().dxDataGrid("instance");
 
                 if (dataGrid) {
                     resolve(dataGrid); // Trả về instance
@@ -225,14 +227,13 @@ var appendElementViewInsideAsync = function (url, params, container, code, typeC
                 type: 'GET'
             }).done(function (data) {
                 try {
+                    var containerDiv = $(`<div id="${code}" class="container" style="height: 100%; width: 100%">`);
                     switch (typeChild) {
                         case "appendTo":
-                            var containerDiv = $(`<div id="${code}" class="container" style="height: 100%; width: 100%">`);
                             containerDiv.html(data);
                             containerDiv.appendTo(container);
                             break;
                         case "append":
-                            var containerDiv = $(`<div id="${code}" class="container" style="height: 100%; width: 100%">`);
                             containerDiv.html(data);
                             container.append(containerDiv);
                             break;
@@ -241,22 +242,29 @@ var appendElementViewInsideAsync = function (url, params, container, code, typeC
                     }
 
                     // Tìm và tạo dxForm instance sau khi script thực thi
-                    const formInstance = $(`#form_${code}`).dxForm().dxForm("instance");
-                    if (formInstance) {
-                        resolve(formInstance); // Trả về instance
-                    } else {
-                        const customError = {
-                            status: 500,
-                            statusText: "Form Not Found",
-                            responseText: `dxForm instance với id "form_${code}" không tìm thấy.`,
-                            readyState: 4,
-                            responseJSON: {
-                                typeMsg: ["popup"],
-                                message: [`Không tìm thấy form: form_${code}`]
-                            }
-                        };
-                        reject(customError);
-                        //throw new Error("dxForm instance không tìm thấy!");
+                    try {
+                        const formInstance = $(`#form_${code}`).dxForm().dxForm("instance");
+                        formInstance.option("container", containerDiv);
+                        if (formInstance) {
+                            resolve(formInstance); // Trả về instance
+                        } else {
+                            const customError = {
+                                status: 500,
+                                statusText: "Form Not Found",
+                                responseText: `dxForm instance với id "form_${code}" không tìm thấy.`,
+                                readyState: 4,
+                                responseJSON: {
+                                    typeMsg: ["popup"],
+                                    message: [`Không tìm thấy form: form_${code}`]
+                                }
+                            };
+                            reject(customError);
+                            //throw new Error("dxForm instance không tìm thấy!");
+                        }
+
+                    }
+                    catch (exx) {
+                        resolve(null); 
                     }
                     //resolve(data); // Trả về dữ liệu từ AJAX
                 }
@@ -295,27 +303,6 @@ var appendElementViewInsideAsync = function (url, params, container, code, typeC
 
 
 
-
-var apiInvokeRequest = function (url, method, dataTypeOptions, options, functionCall, values, asyncStatus) {
-    $.ajax({
-        url: url,
-        method: method,
-        dataType: dataTypeOptions,
-        ...options,
-        data: values,
-        async: asyncStatus ? true : false,
-        success: function (data) {
-            if (functionCall !== null || functionCall !== undefined) {
-                functionCall(data);
-            }
-        },
-        error: function (xhr, status, error) {
-            console.log(error);
-        }
-    });
-}
-
-
 //function closeTab() {
 //    var li = $("#tablist > ul").find("[tabindex = '0']");
 //    var panelId = li.remove().attr("aria-controls");
@@ -333,7 +320,6 @@ function initTabs() {
                 var dataGrid = $try(function () {
                     return $tabContent.find("[id^='dataGrid_']").dxDataGrid("instance");
                 });
-
                 if (dataGrid != null) {
                     //dataGrid.option("height", "100%");
                     //dataGrid.refresh();
@@ -350,13 +336,13 @@ var tabFormatButtonClass = 'fa fa-times close-tab-btn';
 var addTab = function (code, tabTitle = '...', tabContent) {
     try {
         var $tabs = $("#tablist");
-        const tabExisted = $tabs.find(`#${code}`).length;
+        const tabExisted = $tabs.find(`#${code}_content_wrapper`).length;
         if (!tabExisted) {
             createNewTabElement(code, tabTitle, $tabs, tabContent);
         }
         else {
         }
-        var tabIndex = $tabs.find(`#${code}`).index() - 1;
+        var tabIndex = $tabs.find(`#${code}_content_wrapper`).index() - 1;
         $tabs.tabs("option", "active", tabIndex);
         $tabs.find(`#${code}`).html(tabContent);
     } catch (err) {
@@ -379,12 +365,14 @@ var createNewTabElement = function (code, tabTitle = '...', $tabs, tabContent) {
                     <span id="${code}_closeTab" class='${tabFormatButtonClass}' data-code="${code}_closeTab"></span><div>
                 </li>
             `);//.attr("aria-controls", code);
-                    //<span id="${code}_progressBar" style="padding: 5px;"></span>
-    var $tabContainer = $(`<div id="${code}" class="content-wrapper">`);
+    //<span id="${code}_progressBar" style="padding: 5px;"></span>
+    var $divContentWrapper = $(`<div id="${code}_content_wrapper" class="content-wrapper">`);
+    var $tabContainer = $(`<div id="${code}">`);
+    $tabContainer.appendTo($divContentWrapper);
     $tabs.find(".ui-tabs-nav").append(li);
     //var $contentDiv = $(`<div></div>`).html(tabContent);
     //$contentDiv.appendTo($tabContainer);
-    $tabs.append($tabContainer);
+    $tabs.append($divContentWrapper);
     $tabs.tabs("refresh");
 }
 
@@ -393,6 +381,9 @@ var removeTab = function (activeId) {
         var li = $("#tablist > ul").find("[tabindex = '0']");
         var panelId = li.remove().attr("aria-controls");
         $("#" + panelId).remove();
+
+
+
         var tabIndex = ($("#" + activeId).index()) - 1;
         if (tabIndex >= 0) {
             $("#tablist").tabs("option", "active", tabIndex);
@@ -416,6 +407,10 @@ var nativeRemoveTab = function($tabDivId){
 
         if (panelId) {
             $("#" + panelId).remove();
+            $(`#${panelId}_content_wrapper`).remove();
+            document.body.classList.remove("hasRightPanel");
+            $("#btnCloseRightComment").click();
+            //document.documentElement.style.setProperty("--collapsed-form-mr", "-26%");
         }
         $("#tablist").tabs("refresh");
     }, 150); // === duration animate
@@ -428,7 +423,7 @@ var setTabName = function (name, code) {
             var a = li.find("a");
             //set tab name
             if (name == null)
-                a.text("undefine");
+                a.text("undefined");
             else
                 a.text(name);
 

@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JogetMVC.Common", "RESurvey
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DemoLib", "DemoLib\DemoLib.csproj", "{37581D5B-EA7E-4FE2-8A57-07EB047DCC09}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TMIVHashing", "TMIVHashing\TMIVHashing.csproj", "{D4627871-5AA2-44A2-B2B0-E767E905DB94}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{37581D5B-EA7E-4FE2-8A57-07EB047DCC09}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37581D5B-EA7E-4FE2-8A57-07EB047DCC09}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{37581D5B-EA7E-4FE2-8A57-07EB047DCC09}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4627871-5AA2-44A2-B2B0-E767E905DB94}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4627871-5AA2-44A2-B2B0-E767E905DB94}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4627871-5AA2-44A2-B2B0-E767E905DB94}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4627871-5AA2-44A2-B2B0-E767E905DB94}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

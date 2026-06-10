@@ -1,0 +1,25 @@
+﻿@using JogetMVC.Model
+@{
+    string dept = "FO";
+    long policyIssuanceId = Convert.ToInt64(ViewData["Id"]);
+}
+
+
+<div class="dept-title">@dept</div>
+<div class="dept-form-header">
+    <div class="dept-form-header__assign">
+        <div id="@PIViewIdHelper.AssigneeBox(dept, policyIssuanceId)"></div>
+    </div>
+</div>
+<div id="pi-stickPanel_@dept">
+</div>
+<div class="dept-hint-wrap">
+    <div class="dept-hint" id="@PIViewIdHelper.Hint(dept, policyIssuanceId)"></div>
+    <div class="dept-updated" id="@PIViewIdHelper.Upd(dept, policyIssuanceId)" title="Last updated">—</div>
+    <div id="@PIViewIdHelper.ExpandCollapsedBtn(dept, policyIssuanceId)" class="dept-toggle-icon" aria-hidden="true">▾</div>
+</div>
+
+
+<script>
+   
+</script>

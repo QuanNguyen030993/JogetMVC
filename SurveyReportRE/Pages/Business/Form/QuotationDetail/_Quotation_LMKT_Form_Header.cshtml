@@ -1,0 +1,22 @@
+﻿@using JogetMVC.Model
+@{
+    string dept = "LMKT";
+    long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
+}
+
+<div class="dept-title">@dept</div>
+<div class="dept-form-header">
+    <div class="dept-form-header__assign">
+        <div id="@QTViewIdHelper.AssigneeBox(dept, quotationId)"></div>
+    </div>
+    <div id="@QTViewIdHelper.BtnToggleResForm"></div>
+</div>
+<div id="@QTViewIdHelper.StickPanel(dept, quotationId)">
+</div>
+<div class="dept-hint-wrap">
+    <div class="dept-hint" id="@QTViewIdHelper.Hint(dept, quotationId)"></div>
+    <div class="dept-updated" id="@QTViewIdHelper.Upd(dept, quotationId)" title="Last updated">—</div>
+    <div id="@QTViewIdHelper.ExpandCollapsedBtn(dept, quotationId)" class="dept-toggle-icon" aria-hidden="true">▾</div>
+</div>
+<script>
+</script>

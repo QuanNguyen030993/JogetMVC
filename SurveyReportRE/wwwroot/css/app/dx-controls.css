@@ -21,10 +21,7 @@
         transform: rotate(360deg);
     }
 }
-.dx-htmleditor-content {
-    font-family: Asap;
-    font-size: 11px;
-}
+
 
 .dx-button-warning {
     color: #212529;
@@ -6317,7 +6314,7 @@
 }
 
 .dx-popup-content {
-    padding: 20px;
+    padding: 0px;
 }
 
     .dx-popup-content > .dx-button {
@@ -6330,7 +6327,7 @@
 }
 
     .dx-popup-bottom.dx-toolbar {
-        padding: 20px;
+        padding: 5px;
         overflow: visible;
     }
 
@@ -7370,7 +7367,7 @@
 }
 
 .dx-radiobutton .dx-item-content {
-    padding: 6px 12px;
+    /*padding: 6px 12px;*/
     border: 1px solid #ccc;
     border-radius: 6px;
     background-color: #f7f7f7;
@@ -8183,12 +8180,13 @@
 
 
 .dx-form-group-caption {
-    font-size: 20px;
+    font-size: 14px;
+    font-weight: bold;
 }
 
 .dx-form-group-with-caption > .dx-form-group-content {
     border-top: 1px solid #ddd;
-    padding-bottom: 20px;
+    padding-bottom: 10px;
 }
 
 .dx-field-item-help-text,
@@ -17754,6 +17752,9 @@
     padding: 12px 15px;
     white-space: pre-wrap;
     word-wrap: break-word;
+    font-family: Asap;
+    font-size: 11px;
+    min-height:150px;
 }
 
     .dx-htmleditor-content .dx-variable > span {

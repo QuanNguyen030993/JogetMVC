@@ -1,52 +1,970 @@
-﻿@page "{pageNum:int?}"
+﻿@page "{pageNum:int?}/{guid}"
+@using JogetMVC.Model
 @using Newtonsoft.Json
 @model Quotation_FormModel
 @{
-    ViewData["Title"] = "Management";
-    ViewBag.Title = "Quotation";
-    ViewData["Id"] = 1;
+    var moduleCode = "qt";
+    var prefix = moduleCode;
+    var title = moduleCode == "qt" ? "Quotation Overview" : "Policy Issuance Overview";
 }
-<style>
-    .dx-tabpanel .dx-tabpanel-tabs .dx-tab {
-        width: auto;
-        padding-left: 18px;
-        padding-right: 18px;
-    }
-</style>
-<script type="text/javascript">
-    $(function () {
-        var _id = @Convert.ToInt32(ViewData["Id"]);
-        var _formConfig  = new MFormOption();
-        // _formConfig.cloneUrl = '/Business/MasterData/MailTemplate_Form/' + _id;
-        // _formConfig.tabCode = 'MailTemplate_Form';
-        // _formConfig.tabName = "";
-        _formConfig.originModelName = "@Quotation_FormModel.ModelName";
-        _formConfig.formElementName = "@Quotation_FormModel.ModelName";
-        _formConfig.colCount = 1;
-        new QuotationForm(1, null, _formConfig);
-    })
-</script>
-<div class="container">
-    <div id="quotationPopup"></div>
-    <div id="form_@(Quotation_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])" class="dExForm"></div>
-</div>
+@*
+Note:
+-Change style to site.css
+-Comment out menu topbar + sidebar
+-Call ajax to main table
+-Replace Quotation visible data fields, should replace by VS
+-Remove app div for scroll
 
-   @*  <div class="modal fade product-dialog" tabQuotation="-1" role="dialog" aria-labelledby="gridSystemModalLabel">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="gridSystemModalLabel">Select Your Products</h4>
-                </div>
-                <div class="modal-body">
-                    <!-- "Loading" spinner displayed while we get the product list. -->
-                    <div class="text-center"><i class="fa fa-fw fa-spin fa-spinner"></i> Loading...</div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary select-button">Select</button>
-                </div>
-            </div><!-- /.modal-content -->
-        </div><!-- /.modal-dialog -->
-    </div><!-- /.modal -->
- *@
+*@
+
+<style>
+
+
+</style>
+
+<script type="text/javascript">
+    var PIC_JSON = `{}`;
+    var formModuleKeyQt = "qt";
+    var pICs = [];
+    if ($('[data-toggle="push-menu"]').hasClass("sidebar-collapse")) {
+        $('[data-toggle="push-menu"]').click();
+        isToggleMenu = true;
+    }
+
+    var page = window.QuotationPage;
+    var state = page.state;
+
+    state.nextStep = new Object();
+    state.nextStep.flowSteps = [];
+    state.nextStep.currentStep = 1;
+    state.nextStep.instanceWorkflow = new Object();
+
+    state.currentUserRole = _role;
+    state.focusDept = _role == "IT" ? "FO" : _role;
+
+    state.quotes = [];
+    state.selectedId = null;
+    state.selectedGuid = null;
+    state.selectedCodeNo = null;
+    state.selectedAttachmentId = null;
+    state.stageDept = null;
+    
+    state.quotePaging = {
+        skip: 0,
+        take: 20,
+        loading: false,
+        done: false,
+        firstLoadDone: false
+    };
+    var firstRender = true;
+    setTimeout(() => {
+        const QtRoles = qtDeptModuleCode;
+        $(`#${formModuleKeyQt}-loginRoleLabel`).text(state.currentUserRole);
+
+        var filter = "all";
+        var searchText = "";
+
+        var commentPanelOpened = false;
+        // let stageDept = null;
+        var stageAccount = "";
+
+        var deptData = { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} };
+        var remarkBoxs = { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} };
+
+        state.quoteDetails = {};
+
+        function money(n) {
+            return new Intl.NumberFormat("vi-VN", {
+                style: "currency",
+                currency: "VND"
+            }).format(n || 0);
+        }
+
+
+        function statusClass(raw) { return normalizeStatus(raw).css; }
+        function statusText(raw) { return normalizeStatus(raw).text; }
+
+        function normalizeDeptKey(k) {
+            return String(k || "").trim().toUpperCase();
+        }
+
+        function parsePicMap(picJson) {
+            try {
+                const obj = JSON.parse(picJson || "{}");
+                const map = {};
+                Object.keys(obj).forEach(k => map[normalizeDeptKey(k)] = obj[k]);
+                return map;
+            } catch {
+                return {};
+            }
+        }
+
+        function renderDeptCallouts(picJson) {
+            const picMap = parsePicMap(picJson);
+            $(".dept-node").each(function () {
+                const dept = normalizeDeptKey($(this).data("key"));
+                const $co = $(this).find(".dept-callout");
+                if (!$co.length) return;
+                const pic = picMap[dept] || "-";
+                $co.find(".co-text").text(pic);
+                $co.css({ color: "rgba(17,24,39,.85)" });
+            });
+        }
+    function getSelectedModel() {
+             const q = state.quotes.find(x => x.id === state.selectedId) || state.quotes[0];
+             return q || null;
+         }
+
+
+
+        function buildListUrl() {
+            const params = new URLSearchParams();
+            params.set("skip", state.quotePaging.skip);
+            params.set("take", state.quotePaging.take);
+
+            if (searchText) params.set("searchText", searchText);
+            if (filter && filter !== "all") params.set("quotationStatus", filter);
+            params.set("key", @Convert.ToInt32(ViewData["Id"]));
+            return `/api/Quotation/GetAll?${params.toString()}`;
+        }
+
+
+
+        function syncSelectedState(q) {
+            if (!q) return;
+
+        
+
+
+            state.selectedId =  q.id ?? null;
+            state.selectedGuid = q.guid ?? null;
+            state.selectedAttachmentId = q.documentId ?? null;
+            state.selectedCodeNo = q.quotationCode ?? null;
+            state.stageDept = q.stageDept ?? null;
+            const params = new URLSearchParams();
+            params.set("refKey", state.selectedGuid);
+            params.set("refField", 'RecordGuid');
+            ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null)
+                .then(res => {
+                    var pinnedNotes = (res || []).map(x => ({
+                        id: x.id,
+                        section: x.currentDepartment,//target main
+                        fromSection: x.fromDepartment,//target pin
+                        toSection: x.toDepartment,
+                        type: x.type,
+                        unread: !x.isRead,
+                        isRead: !x.isRead,
+                        linkedPin: x.isPinned,
+                        isPinned: x.isPinned,
+                        body: x.content,
+                        text: x.content,
+                        replies: 0,
+                        fullText: x.content,
+                        author: x.author,
+                        urgent: false,
+                        time: parseToGMT7(x.createdDate, 0)
+                    }));
+                    state.comments = pinnedNotes;
+                    state.pinNotes = pinnedNotes.filter(f => f.isPinned);
+                });
+
+            PIC_JSON = pICs.find(f => f.quotationCode == state.selectedCodeNo)?.pIC ?? q.pIC ?? "{}";
+            renderDeptCallouts(PIC_JSON);
+            var map = parsePicMap(PIC_JSON);
+            stageAccount = map[state.stageDept] ? map[state.stageDept] : "(Unassigned)";
+
+
+        }
+
+        function loadSelectedWorkflow() {
+            if (!state.selectedGuid) return $.Deferred().resolve().promise();
+
+            return ajaxGet(`/api/Quotation/GetQuotationWorkflow/${state.selectedGuid}`, null)
+                .then(instance => {
+                    return ajaxGet(`/api/StepsWorkflow/GetNextStep/${instance?.workflowDefinitionId ?? "00000000-0000-0000-0000-000000000000"}/${instance?.currentStep ?? 0}`, null)
+                        .then(data => {
+                            state.nextStep.instanceWorkflow = instance;
+                            state.nextStep.flowSteps = data;
+                            state.nextStep.currentStep = instance?.currentStep ?? 0;
+                            // setNextStep(state.nextStep);
+                            $.each(qtDeptModuleCode, function (itemIndex, item) {
+                                    setTimeout(() => {
+                                        var findRoute = state.nextStep.flowSteps.find(f => !f.actionCode.includes("BACK_") && f.fromNodeId == item && f.fNodeId == state.nextStep.currentStep);
+                                        var findRouteReturn = state.nextStep.flowSteps.find(f => f.actionCode.includes("BACK_") && f.fromNodeId == item && f.fNodeId == state.nextStep.currentStep);
+                                        var returnButtonId = window.QuotationIdManager.btnReturnBranch(item,@ViewData["Id"]);
+                                        var submitButtonId = window.QuotationIdManager.btnSubmitBranch(item,@ViewData["Id"]);
+                                        var remarkBoxId = window.QuotationIdManager.remarkBox(item,@ViewData["Id"]);
+                                        var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
+                                        var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                                         var tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
+                                         $(`#${returnButtonId}`).dxButton({
+                                             disabled: tatObject[item].AcceptDate ? false : true,
+                                            text: findRouteReturn ? findRouteReturn.displayStatus : "", icon: "undo", type: "danger", onClick:
+                                                function (e) {
+                                                    // var content = tinymce.get(`${remarkBoxId}`).getContent();
+                                                    deptData[item]
+                                                    debugger
+                                                var content = remarkBoxs[item].controlRemark.instance.option("value");
+                                             
+                                                    formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                                                    formItems.comment = content;
+                                                    returnToStep(`${formModuleKeyQt}`, state.nextStep, findRouteReturn, formItems);
+                                                }
+                                        });
+                                          $(`#${submitButtonId}`).dxButton({
+                                               disabled: tatObject[item].AcceptDate ? false : true,
+                                            text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
+                                                function (e) {
+                                                var content = remarkBoxs[item].controlRemark.instance.option("value");
+                                     
+                                                    formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                                                    formItems.comment = content;
+                                                    submitNextStep(`${formModuleKeyQt}`, state.nextStep, findRoute, formItems);
+                                                }
+                                        });
+                                      
+                                   }, 100);
+                            });
+                        });
+                });
+        }
+
+        async function loadQuotePage(reset = false) {
+            if (state.quotePaging.loading) return;
+            if (!reset && state.quotePaging.done) return;
+
+            if (reset) {
+                state.quotePaging.skip = 0;
+                state.quotePaging.done = false;
+                state.quotePaging.firstLoadDone = false;
+                state.quotes = [];
+                pICs = [];
+            }
+
+            state.quotePaging.loading = true;
+
+            try {
+                var data = await $.ajax({
+                    url: buildListUrl(),
+                    method: "GET",
+                    contentType: "application/json"
+                });
+
+                data = data.map(m => { m.pIC = m.pic; return m; });
+
+                const rows = Array.isArray(data) ? data : [];
+
+                if (reset && rows.length === 0) {
+                    state.quotePaging.done = true;
+                    return;
+                }
+
+                state.quotes = state.quotes.concat(rows);
+
+                state.quotePaging.skip += rows.length;
+                if (rows.length < state.quotePaging.take) {
+                    state.quotePaging.done = true;
+                }
+
+                if (!state.quotePaging.firstLoadDone && state.quotes.length > 0) {
+                    state.quotePaging.firstLoadDone = true;
+                    syncSelectedState(state.quotes[0]);
+                    await loadSelectedWorkflow();
+
+                    renderDetail();
+                }
+            } catch (err) {
+                console.error("loadQuotePage error:", err);
+                DevExpress.ui.notify("Load quotation list failed", "error", 1500);
+            } finally {
+                state.quotePaging.loading = false;
+            }
+        }
+
+
+
+
+        function reloadState() {
+            $.each(qtDeptModuleCode, function (itemIndex, item) {
+                var items = new Object();
+                items.moduleName = "@prefix";
+                items.sectionName = item;
+                items.id = @ViewData["Id"];
+                items.guid = "@ViewData["Guid"]";
+                const controlId = `${items.moduleName}_${items.sectionName}_${items.id}`;
+                items.controlId = controlId;
+                loadDxFileUploaderAttachments(item, "Document", items);
+                commentPinModule(formModuleKeyQt, item,  "@ViewData["Guid"]", state.pinNotes,@ViewData["Id"]);
+                commentModule(formModuleKeyQt, item,  "@ViewData["Guid"]", state.comments,@ViewData["Id"]);
+            });
+        }
+
+        // Global function for SignalR to reload quotation components
+        window.reloadQuotationComponents = async function() {
+            // Reload the quotation list
+            loadQuotePage(true).then(async () => {
+            // Reload the selected detail if any
+            if (state.selectedId) {
+                await loadSelectedWorkflow();
+                renderDetail();
+            }
+            // Reload state for attachments and comments
+            reloadState();
+            // Re-render department forms
+            renderDeptForms();
+            // Update UI hints
+            updateHints();
+                $.each(qtDeptModuleCode, function (itemIndex, item) {
+                     var form = $(`#${window.QuotationIdManager.form(item,@ViewData["Id"])}`).dxForm("instance");
+                    form.repaint();
+                });
+            });
+            // scrollToDept(formModuleKeyQt,state.quotes[0].stageDept);
+        };
+
+
+        function renderDeptForms() {
+
+            $.each(qtDeptModuleCode, function (itemIndex, item) {
+                var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
+                 $(`#${formId}`).dxForm({ formData: deptData[item], readOnly: true, colCount: 1 });
+
+            });
+
+            reloadState();
+            applyEditLock();
+            updateHints();
+
+        }
+
+
+        function initializeOverviewShell() {
+              $.each(qtDeptModuleCode, function (itemIndex, item) {
+                deptData[item]= { sectionName: item, code: "" };
+
+            });
+            resetOverviewAnimation(formModuleKeyQt);
+            applyNodeHighlights();
+            applySectionFocusHighlight();
+            updateHints();
+        }
+
+        function resetOverviewAnimation(prefix) {
+            const $sections = $(`#${window.QuotationIdManager.overviewScroll(@ViewData["Id"])} section.dept-section`);
+            $sections.removeClass("visible");
+            $sections.each(function () {
+                const $section = $(this);
+                $section.find(".dept-header, .dept-upperbody, .dept-body, .dept-lowerbody, .dx-fileuploader, .attachment, .att-preview, .att-list, .att-item")
+                    .addClass("animate-step")
+                    .removeClass("visible");
+                // $(`#${prefix}-treeStack .dept-node[data-key='${$section.attr('id').replace(prefix + '-sec', '')}'] .dept-callout`)
+                //     .addClass("animate-step")
+                //     .removeClass("visible");
+            });
+        }
+
+        function animateOverviewSections(prefix) {
+            const sequence = qtDeptModuleCode;
+            sequence.forEach((dept, idx) => {
+                const sectionId = `#${prefix}-sec_${dept}_@ViewData["Id"]`;
+                const $section = $(sectionId);
+                if (!$section.length) return;
+
+                setTimeout(() => {
+                    $section.addClass("visible");
+
+                    const $assigneeCallout = $(`#${prefix}-treeStack .dept-node[data-key='${dept}'] .dept-callout`);
+                    $assigneeCallout.addClass("animate-step");
+                    setTimeout(() => {
+                        $assigneeCallout.addClass("visible");
+                    }, 100);
+
+                    const $fields = $section.find(".dept-header, .dept-upperbody, .dept-body, .dept-lowerbody");
+                    setTimeout(() => {
+                        $fields.addClass("visible");
+                    }, 220);
+
+                    const $attachments = $section.find(".dx-fileuploader, .attachment, .att-preview, .att-list, .att-item");
+                    setTimeout(() => {
+                        $attachments.addClass("animate-step visible");
+                    }, 360);
+                }, idx * 180);
+            });
+        }
+
+        function applyEditLock() {
+            const roleApply = {};
+              $.each(qtDeptModuleCode, function (itemIndex, item) {
+                roleApply[item]= !(state.currentUserRole === item);
+
+            });
+
+           
+
+            setTimeout(() => {
+                 $.each(qtDeptModuleCode, function (itemIndex, item) {
+                       var saveButtonId = window.QuotationIdManager.btnSave(item,@ViewData["Id"]);
+                        var submitButtonId = window.QuotationIdManager.btnSubmitBranch(item,@ViewData["Id"]);
+                    $(`#${saveButtonId}`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roleApply[item]);
+                    $(`#${submitButtonId}`).dxButton("instance")?.option("visible", _isSuperUser ? true :  !roleApply[item]);
+                });
+               
+            }, 1);
+
+            setTimeout(() => {
+                  $.each(qtDeptModuleCode, function (itemIndex, item) {
+                var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
+                 $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
+
+            });
+                
+            }, 1);
+
+            $(`#${formModuleKeyQt}-roleSelect`).dxSelectBox({
+                items: QtRoles,
+                value: state.currentUserRole,
+                stylingMode: "outlined",
+                onValueChanged: (e) => {
+                    state.currentUserRole = e.value;
+                    $(`#${formModuleKeyQt}-loginRoleLabel`).text(state.currentUserRole);
+                    applyEditLock();
+                    updateHints();
+                    DevExpress.ui.notify("Role switched: " + state.currentUserRole, "info", 1200);
+                }
+            });
+        }
+
+        function updateHints() {
+            $(`#${formModuleKeyQt}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
+
+            QtRoles.forEach(k => {
+                const canEdit = (state.currentUserRole === k);
+                const icon = canEdit
+                    ? `<span class="lock editable" title="Editable">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="27" height="24" viewBox="0 0 27 24" aria-hidden="true">
+                               <path d="M16 10V8a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                               <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"
+                                     d="M6 10h12a4 4 0 0 1 4 4v6a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4v-6a4 4 0 0 1 4-4Zm6 4.2
+                                        a2 2 0 1 0 0 4a2 2 0 0 0 0-4Zm-.9 3.7
+                                        c0-.3.2-.5.5-.6a.9.9 0 1 0 .8 0c.3.1.5.3.5.6V20
+                                        a.9.9 0 0 1-1.8 0v-2.1Z"/>
+                             </svg> EDIT
+                           </span>`
+                    : `<span class="lock readonly" title="Read only">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+                               <path d="M8 10V8a4 4 0 0 1 8 0v2" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                               <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"
+                                     d="M6 10h12a4 4 0 0 1 4 4v6a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4v-6a4 4 0 0 1 4-4Zm6 4.2
+                                        a2 2 0 1 0 0 4a2 2 0 0 0 0-4Zm-.9 3.7
+                                        c0-.3.2-.5.5-.6a.9.9 0 1 0 .8 0c.3.1.5.3.5.6V20
+                                        a.9.9 0 0 1-1.8 0v-2.1Z"/>
+                             </svg> LOCK
+                           </span>`;
+
+                $(`#${formModuleKeyQt}-hint_${k}_@ViewData["Id"]`).html(icon);
+            });
+        }
+
+        function updateCurrentStep(stepNo) {
+            var pageLayout = window.QuotationPage;
+            pageLayout.state.nextStep.currentStep = stepNo;
+        }
+
+        function setNextStep(nextStep) {
+            var pageLayout = window.QuotationPage;
+            pageLayout.state.nextStep = nextStep;
+        }
+
+        function updateSectionUpdatedTime(q) {
+            let tat = {};
+            try {
+                tat = JSON.parse(q?.turnAroundTimeAttributes || "{}");
+            } catch (e) {
+                tat = {};
+            }
+
+            const map = {
+                FO: tat?.FO?.CompleteDate || null,
+                TS: tat?.TS?.CompleteDate || null,
+                UW: tat?.UW?.CompleteDate || null,
+                LMKT: tat?.LMKT?.CompleteDate || null,
+                PM: tat?.PM?.CompleteDate || null
+            };
+
+            Object.keys(map).forEach(dept => {
+                $(`#${formModuleKeyQt}-upd_${dept}_@ViewData["Id"]`).text("Updated: " + fmtTimeLocal(map[dept]));
+            });
+        }
+
+        function applyNodeHighlights() {
+            $(".dept-node").removeClass("status focus");
+            $(`.dept-node[data-key='${state.stageDept}']`).addClass("status");
+            $(`.dept-node[data-key='${state.focusDept}']`).addClass("focus");
+        }
+
+        function applySectionFocusHighlight() {
+            $(".dept-section").removeClass("focused");
+            $(`#${formModuleKeyQt}-sec_${state.focusDept}_@ViewData["Id"]`).addClass("focused");
+        }
+
+        function setupDeptTree() {
+            $(`.${formModuleKeyQt}-dept-tree.dept-node`).off("click.tree").on("click.tree", function () {
+                const key = $(this).data("key");
+                state.focusDept = key;
+
+                applyNodeHighlights();
+                applySectionFocusHighlight();
+                applyEditLock();
+                updateHints();
+                scrollToDept(formModuleKeyQt, { id: `${state.focusDept}`, keyId: "@ViewData["Id"]" });
+                setSectionCollapsed(state.focusDept, false);
+            });
+        }
+
+        function layoutTreeLine() {
+            const $stack = $(`#${formModuleKeyQt}-treeStack`);
+            const $nodes = $stack.find(".dept-node");
+            const $line = $(`#${formModuleKeyQt}-treeVLine`);
+            if (!$nodes.length) return;
+
+            const stackRect = $stack[0].getBoundingClientRect();
+            const first = $nodes[0].getBoundingClientRect();
+            const last = $nodes[$nodes.length - 1].getBoundingClientRect();
+
+            const topInside = (first.top - stackRect.top) + (first.height / 2);
+            const bottomInside = (last.top - stackRect.top) + (last.height / 2);
+
+            $line.css({ top: `${topInside}px`, height: `${bottomInside - topInside}px` });
+        }
+
+        function setSectionCollapsed(dept, collapsed) {
+            var $sec = $(`#${formModuleKeyQt}-sec_${dept}_@ViewData["Id"]`);
+            if (!$sec.length) return;
+            var body = $sec.find(".dept-body")[0];
+            var bodyUpper = $sec.find(".dept-upperbody")[0];
+            var bodyLower = $sec.find(".dept-lowerbody")[0];
+            if (collapsed) {
+                $sec.addClass("collapsed");
+                if (body) {
+                    // body.style.maxHeight = body.scrollHeight + "px";
+                    setTimeout(() => { body.style.maxHeight = "0px";body.style.minHeight = "0px";  }, 220);
+                }
+                if (bodyUpper) {
+                    // bodyUpper.style.maxHeight = bodyUpper.scrollHeight + "px";
+                    setTimeout(() => { bodyUpper.style.maxHeight = "0px";bodyUpper.style.minHeight = "0px"; }, 220);
+                }
+                if (bodyLower) {
+                    // bodyLower.style.maxHeight = bodyLower.scrollHeight + "px";
+                    setTimeout(() => { bodyLower.style.maxHeight = "0px";bodyLower.style.minHeight = "0px";}, 220);
+                }
+            } else {
+                $sec.removeClass("collapsed");
+                if (body) {
+                    // body.style.maxHeight = body.scrollHeight + "px";
+                    setTimeout(() => { body.style.maxHeight = "2000px"; body.style.minHeight = "200px";}, 220);
+                }
+                if (bodyUpper) {
+                    // bodyUpper.style.maxHeight = bodyUpper.scrollHeight + "px";
+                    setTimeout(() => { bodyUpper.style.maxHeight = "2000px"; bodyUpper.style.minHeight = "50px";}, 220);
+                }
+                if (bodyLower) {
+                    // bodyLower.style.maxHeight = bodyLower.scrollHeight + "px";
+                    setTimeout(() => { bodyLower.style.maxHeight = "2000px"; bodyLower.style.minHeight = "200px";}, 220);
+                }
+            }
+        }
+
+        function bindSectionHeaderToggle() {
+            $.each(qtDeptModuleCode, function (deptIndex, dept) {
+                var $sec = $(`#${formModuleKeyQt}-sec_${dept}_@ViewData["Id"]`);
+                if (!$sec.length) return;
+
+                $sec.find(".dept-header").off("click.sec").on("click.sec", function (e) {
+                    if ($(e.target).closest("a,button,.dx-button").length) return;
+                    var isCollapsed = $sec.hasClass("collapsed");
+                    setSectionCollapsed(dept, !isCollapsed);
+                });
+
+                $(`#${formModuleKeyQt}-expandCollapsedBtn_${dept}`).dxButton({
+                    onClick: function () {
+                        var isCollapsed = $sec.hasClass("collapsed");
+                        setSectionCollapsed(dept, !isCollapsed);
+
+                    }
+                });
+            });
+        }
+
+        const HoverAjax = (function () {
+            function debounce(fn, wait) {
+                let t = null;
+                return function (...args) {
+                    clearTimeout(t);
+                    t = setTimeout(() => fn.apply(this, args), wait);
+                };
+            }
+
+            function escapeHtml(s) {
+                return String(s ?? "")
+                    .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+                    .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+            }
+
+            function renderComments(items) {
+                if (!Array.isArray(items) || items.length === 0) {
+                    return `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No audit logs</div>`;
+                }
+                return items.map((c) => `
+                                <div class="ct-item">
+                                    <div class="ct-user">${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}</div>
+                                    <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
+                                    <div class="ct-text">${c.commentText}</div>
+                                </div>
+                            `).join("");
+            }
+
+            const loadComments = debounce(function (quoteNo, quoteId) {
+                document.documentElement.style.setProperty("--rightdock-width", "20%");
+                $("#rightCommentSub").text(`Audit log - ${quoteNo}` || "-");
+                $("#rightCommentList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
+                // const q = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${quoteId}`;
+                const q = `OnSystem`;
+                $.ajax({
+                    url: `/api/QuotationCommentLog/ExecuteCustomQuery?refField=QuotationId&refKey=${quoteId}`,
+                    method: "POST",
+                    async: true,
+                    contentType: "application/json",
+                    data: JSON.stringify(q),
+                    success: function (data) { $("#rightCommentList").html(renderComments(data)); },
+                    error: function () {
+                        $("#rightCommentList").html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load audit logs</div>`);
+                    }
+                });
+            }, 180);
+
+            const loadReferenceFields = debounce(function (quoteNo, quoteId) {
+                document.documentElement.style.setProperty("--rightdock-width", "20%");
+                $("#rightCommentSub").text(`Common fields - ${quoteNo}`);
+                var _formConfig = new MFormOption();
+                _formConfig.originModelName = "Quotation";
+                _formConfig.formElementName = "Quotation";
+                _formConfig.colCount = 1;
+                _formConfig.container = $(`<div id="form_Quotation_${quoteId}" style="padding: 10px">`);
+                var form = new ReferenceQuotationForm(quoteId, null, _formConfig, _formConfig);
+                form.container.appendTo($("#rightCommentList"));
+            }, 180);
+
+            const previewQuotation = debounce(function (quoteNo, quoteId, attachmentId) {
+                document.documentElement.style.setProperty("--rightdock-width", "70%");
+                $("#rightCommentSub").text(`Preview quotation - ${quoteNo}`);
+                $("<iframe>")
+                    .attr("id", `${formModuleKeyQt}-pdfViewer_${quoteId}`)
+                    .attr("src", "")
+                    .css({ width: "100%", height: "600px", border: "1px solid #ccc" })
+                    .appendTo($("#rightCommentList"));
+
+                $.ajax({
+                    url: `/api/Utility/GetPdfFile/${attachmentId}`,
+                    method: "GET",
+                    xhrFields: { responseType: "blob" },
+                    success: function (blob) {
+                        const fileURL = URL.createObjectURL(blob);
+                        $(`#${formModuleKeyQt}-pdfViewer_${quoteId}`).attr("src", fileURL);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error loading PDF:", error);
+                    }
+                });
+            }, 180);
+
+            function openRightCommentPanel() {
+                const $dock = $("#rightCommentDock");
+                commentPanelOpened = true;
+                document.body.classList.add("hasRightPanel");
+                $dock.removeClass("is-closing").addClass("is-open");
+                $("#rightCommentList").empty();
+            }
+
+            function closeRightCommentPanel() {
+                const $dock = $("#rightCommentDock");
+                commentPanelOpened = false;
+                document.body.classList.remove("hasRightPanel");
+                $dock.removeClass("is-open").addClass("is-closing");
+
+                setTimeout(() => {
+                    $dock.removeClass("is-closing");
+                }, 300);
+            }
+
+            function bind() {
+                setTimeout(() => {
+                $("#headerWidgetsPanel").empty();
+
+                $(`<div id="${formModuleKeyQt}-btnToggleReferenceFieldsMini">`).dxButton({
+                    icon: "fas fa-sliders-h",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                        openRightCommentPanel();
+                        loadReferenceFields(state.selectedCodeNo, state.selectedId);
+                    }
+                }).appendTo($("#headerWidgetsPanel"));
+
+                $(`<div id="${formModuleKeyQt}-btnToggleCommentMini" style="margin-left: 10px">`).dxButton({
+                    icon: "comment",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                        openRightCommentPanel();
+                        loadComments(state.selectedCodeNo, state.selectedId);
+                    }
+                }).appendTo($("#headerWidgetsPanel"));
+
+                $(`#${formModuleKeyQt}-btnCollapseAllTab`).dxButton({
+                    text: "Collapse All Sections",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                        $.each(qtDeptModuleCode, function (itemIndex, item) {
+                            setSectionCollapsed(item, true);
+                        });
+                    }
+                });
+
+                $(`#${window.QuotationIdManager.btnToggleComment(@ViewData["Id"])}`).dxButton({
+                    text: "Audit logs",
+                    icon: "comment",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                        if (!commentPanelOpened) {
+                            openRightCommentPanel();
+                            loadComments(state.selectedCodeNo, state.selectedId);
+                        } else {
+                            closeRightCommentPanel();
+                        }
+                    }
+                });
+
+                // $(`#${window.QuotationIdManager.btnToggleReferenceFields(@ViewData["Id"])}`).dxButton({
+                //     text: "Common fields",
+                //     icon: "fas fa-sliders-h",
+                //     type: "normal",
+                //     stylingMode: "contained",
+                //     onClick: () => {
+                //         if (!commentPanelOpened) {
+                //             openRightCommentPanel();
+                //             loadReferenceFields(state.selectedCodeNo, state.selectedId);
+                //         } else {
+                //             closeRightCommentPanel();
+                //         }
+                //     }
+                // });
+
+                $(`#${window.QuotationIdManager.btnPreview(@ViewData["Id"])}`).dxButton({
+                    text: "Preview",
+                    icon: "fas fa-eye",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                        if (!commentPanelOpened) {
+                            openRightCommentPanel();
+                            previewQuotation(state.selectedCodeNo, state.selectedId, state.selectedAttachmentId);
+                        } else {
+                            closeRightCommentPanel();
+                        }
+                    }
+                });
+
+                var toggleHideWorkflow = false;
+
+                // $(`#${window.QuotationIdManager.panelHoverInFlow(@ViewData["Id"])}`).dxButton({
+                //     text: "Workflow",
+                //     readOnly: true,
+                //     type: "normal",
+                //     stylingMode: "contained",
+                //     onClick: () => {
+                //         if (!toggleHideWorkflow) {
+                //             $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).empty();
+                //             $(`#${window.QuotationIdManager.flowHistoryPanel(@ViewData["Id"])}`).show();
+                //             $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).show();
+                //             toggleHideWorkflow = true;
+                //                 reloadWorkflow("@(ViewData["Guid"])", @(ViewData["Id"]), state.stageDept, formModuleKeyQt);
+                //         } else {
+                //             $(`#${window.QuotationIdManager.flowHistoryPanel(@ViewData["Id"])}`).hide();
+                //             $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).hide();
+                //             toggleHideWorkflow = false;
+                //         }
+                //     }
+                // });
+
+                $("#btnCloseRightComment").off("click").on("click", function () {
+                    closeRightCommentPanel();
+                });
+                },500);
+
+            }
+
+            return { bind, loadComments, loadReferenceFields, openRightCommentPanel, closeRightCommentPanel };
+        })();
+
+        function renderDetail() {
+            var q = getSelectedModel();
+            if (!q) return;
+
+            $(`#${formModuleKeyQt}-recordNo`).text(q.quotationCode);
+
+            const st = q.quotationStatus ?? q.status;
+            $(`#${window.QuotationIdManager.stageDeptPill(q.id)}`).html(`<span id="@ViewIdHelper.DetailStatus(moduleCode, Convert.ToInt64(ViewData["Id"]))" class="pill">${q.workflowStatus}</span> - ${stageAccount ?? ""}`);
+            $(`#${window.QuotationIdManager.detailStatus(q.id)}`)
+                .text(statusText(st))
+                .attr("class", `statusTag ${statusClass(st)}`);
+
+            // $(`#${formModuleKeyQt}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
+
+            // deptData.FO = { ...q,   id: q.id, sectionName: "FO", code: q.quotationCode };
+            // deptData.TS = { ...q,   id: q.id, sectionName: "TS", code: q.quotationCode };
+            // deptData.UW = { ...q,   id: q.id, sectionName: "UW", code: q.quotationCode };
+            // deptData.LMKT = { ...q, id: q.id, sectionName: "LMKT", code: q.quotationCode };
+            // deptData.PM = { ...q,   id: q.id, sectionName: "PM", code: q.quotationCode };
+            $.each(qtDeptModuleCode, function (itemIndex, item) {
+                var control = TinyMCEElementMaker(`.htmleditor`, item, @ViewData["Id"], control);
+                deptData[item] = { ...q, id: q.id, sectionName: item, code: q.quotationCode };
+                remarkBoxs[item] = { id: q.id, sectionName: item, controlRemark: control };
+            });
+
+            renderDeptForms();
+            resetOverviewAnimation(formModuleKeyQt);
+            applyNodeHighlights();
+            applySectionFocusHighlight();
+            updateHints();
+            updateSectionUpdatedTime(q);
+            initDepartmentAssignees(formModuleKeyQt,deptData, firstRender ? null : 2000);
+            animateOverviewSections(formModuleKeyQt);
+            scrollToDept(formModuleKeyQt, { id: `${state.focusDept}`, keyId: "@ViewData["Id"]" } );
+            // TinyMCEElementMaker(`.htmleditor`);
+
+
+            
+        }
+
+
+        function debounce(fn, delay) {
+            let t = null;
+            return function (...args) {
+                clearTimeout(t);
+                t = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+
+
+        $(`#${formModuleKeyQt}-btnClientConfirm`).dxButton({
+            text: "Submit To Policy Issuance",
+            icon: "check",
+            type: "success",
+            onClick: function () {
+                var quotationConvert = state.quotes.find(x => x.id == state.selectedId);
+                if (!quotationConvert) return;
+
+                var policyIssuance = new Object();
+                policyIssuance = ObjectPopulateKey(quotationConvert, true, false);
+                policyIssuance.RequestDate = new Date();
+                policyIssuance.PIC = {
+                    FO: "",
+                    TS: "",
+                    PM: ""
+                };
+
+                policyIssuance.PIC = JSON.stringify(policyIssuance.PIC);
+                policyIssuance.StageDept = "FO";
+                policyIssuance.PolicyIssuanceStatus = "FO Pending";
+                policyIssuance.WorkflowStatus = "FO Pending";
+
+                ajaxPost('api/PolicyIssuance/CreatePolicyIssuance', policyIssuance, {
+                    onSuccess: function () {
+                        DevExpress.ui.notify("Quotation submitted!", "info", 1200);
+                    },
+                    onError: function () { }
+                });
+            }
+        });
+
+        $("#branchOverlay .backdrop").on("click", function () {
+            $("#branchOverlay").hide();
+            $("#branchOverlay .bnode.choice").removeClass("active");
+        });
+
+        HoverAjax.bind();
+        bindSectionHeaderToggle();
+        // bindInfiniteScroll();
+        setupDeptTree();
+        // initMainPaneSplitter();
+
+        setTimeout(layoutTreeLine, 0);
+        window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
+
+        initializeOverviewShell();
+        
+        loadQuotePage(true).then(() => {
+            applyNodeHighlights();
+            applySectionFocusHighlight();
+            updateHints();
+            renderDeptCallouts(PIC_JSON);
+            firstRender = false;
+        });
+    }, _delayQuotationsLoadForm);
+
+      // var reportButtonMini = `<div class="report-mini" onclick="submitIssue(${_id},'LossControl','${lossControlData.lossControlNo}')">
+      //             <div class="triangle-mini" ></div>
+      //           </div>`;
+
+         // <div style="display:flex">
+         //                                        ${reportButtonMini}
+         //                                        </div>
+
+</script>
+
+<body>
+    <div class="title">
+        <partial name="_OverviewPane" model='new OverviewPanePartialModel
+{
+    Prefix = prefix,
+    ModuleCode = moduleCode,
+    Title = title,
+    Id = ViewData["Id"]?.ToString(),
+    Guid = ViewData["guid"]?.ToString()
+}' />
+@*         @Html.Partial("_OverviewPane", new OverviewPanePartialModel
+   {
+       Prefix = prefix,
+       ModuleCode = moduleCode,
+       Title = title,
+       Id = ViewData["Id"].ToString(),
+       Guid = ViewData["guid"].ToString()
+   }), *@
+    </div>
+
+    @*  <div class="actionBar">
+        <div class="actionLeft">
+            <span class="pill">Record: <b id="qt-recordNo">Qu-10030</b></span>
+            <span class="pill">Login role: <b id="qt-loginRoleLabel"></b></span>
+            <span id="qt-focusDeptPill" class="pill">Focus section: </span>
+        </div>
+        <div class="actionRight">
+            <div id="qt-btnClientConfirm"></div>
+        </div>
+    </div> *@
+
+    <div id="branchOverlay" class="branchOverlay">
+        <div class="backdrop"></div>
+        <div class="branchPopup">
+            <div class="branchTitle">
+                <span>Submit Route</span>
+                <span class="branchHint">Choose next dept</span>
+            </div>
+            <div class="branchCanvas">
+                <svg width="100%" height="100%" viewBox="0 0 260 140" style="position:absolute;inset:0;"></svg>
+            </div>
+        </div>
+    </div>
+</body>

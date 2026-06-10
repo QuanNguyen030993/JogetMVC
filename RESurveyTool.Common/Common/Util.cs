@@ -1,25 +1,33 @@
 ﻿using Newtonsoft.Json;
 using ERPCore.Models.Migration.Business.Data;
-using ERPCore.Models.Migration.Config;
 using System.Reflection;
 using HtmlAgilityPack;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
 using System.Text;
 using ERPCore.Models.Request;
-using Newtonsoft.Json.Linq;
 using System.Data;
 using System.Drawing;
 using ERPCore.Common.Constant;
 using ERPCore.Models.Migration.Business.HumanResource;
-using ERPCore.Models.Migration.Business.Config;
 using ERPCore.Models.Migration.Business.MasterData;
 using System.Linq.Expressions;
 using System.Drawing.Imaging;
 using Microsoft.Data.SqlClient;
 using ExcelDataReader;
-using static SkiaSharp.HarfBuzz.SKShaper;
 using System.Globalization;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
+using System.Text.Json;
+using System.Configuration;
+using TMIVHashing;
+using ERPCore.Models.Models.Parsing;
+using WebConfig = Microsoft.Extensions.Configuration;
+using ERPCore.Models.Migration.Business.Social;
+using static ERPCore.Models.Models.Parsing.JsonHandle;
+using ERPCore.Models.Migration.Business.Workflow;
+using ERPCore.Models.Business.Migration.Config;
+using static SkiaSharp.HarfBuzz.SKShaper;
 namespace ERPCore.Common
 {
     public static class Util
@@ -221,7 +229,65 @@ namespace ERPCore.Common
                 }
             }
         }
+        public static object URLObjectMaking(dynamic transferObject)
+        {
 
+            try
+            {
+                Type objectType = ((Type)transferObject.GetType());
+                string CodeField = objectType.GetProperties().FirstOrDefault(f => f.Name.Contains("Code"))?.Name ?? "";
+                string fieldValue = objectType.GetProperties().FirstOrDefault(f => f.Name.Contains("Code"))?.GetValue((dynamic)transferObject) ?? "";
+                string Guid = "/";
+                    
+                    try
+                {
+                    Guid = "/" + objectType.GetProperties().FirstOrDefault(f => f.Name.Contains("Guid"))?.GetValue(transferObject) ?? "";
+
+                }
+                catch
+                {
+
+                }
+
+                if (string.IsNullOrEmpty(CodeField))
+                return new
+                {
+                    url = $"/Business/Form/{objectType.Name}_Form/{transferObject.Id}{Guid}",
+                    caption = $"form_{objectType.Name}_Form_{transferObject.Id}",
+                    name = $"{(objectType.Name)}",
+                    data = ""
+
+                }; else
+                return new
+                {
+                    url = $"/Business/Form/{objectType.Name}_Form/{transferObject.Id}{Guid}",
+                    caption = $"form_{objectType.Name}_Form_{transferObject.Id}",
+                    name = $"{(objectType.Name)} {fieldValue}",
+                    data = ""
+
+                };
+
+            }
+            catch
+            {
+                return new
+                {
+                    url = $"",
+                    caption = $"",
+                    name = $"",
+                    data = ""
+
+                };
+            }
+            return new
+            {
+                url = $"",
+                caption = $"",
+                name = $"",
+                data = ""
+
+            };
+        }
         public static void AddFontToHTMLNodes<T>(T objectInstance) where T : class
         {
             var properties = ObjectProperties<T>().ToList().Where(x => !systemColumns.Contains(x.Name));
@@ -708,17 +774,17 @@ namespace ERPCore.Common
         public static MailQueue MakeMailQueueItem(MailItem mailItem, MailConfig emailSettings, List<string> attachments = null, string type = "")
         {
             MailQueue mailQueue = new MailQueue();
-            //mailQueue.ToName = mailItem.ToName;
-            //mailQueue.ToEmail = mailItem.ToEmail;
-            //mailQueue.Subject = mailItem.Subject;
-            //mailQueue.TextBody = mailItem.TextBody;
-            //mailQueue.HtmlBody = mailItem.HtmlBody;
-            //mailQueue.CC = mailItem.CC;
-            //mailQueue.BCC = mailItem.BCC;
-            //mailQueue.FromAccount = emailSettings.User;
-            //mailQueue.Type = type;
-            //mailQueue.Attachments = attachments != null ? string.Join(',', attachments) : "";
-            //mailQueue.IsSend = false;
+            mailQueue.ToName = mailItem.ToName;
+            mailQueue.ToEmail = mailItem.ToEmail;
+            mailQueue.Subject = mailItem.Subject;
+            mailQueue.TextBody = mailItem.TextBody;
+            mailQueue.HtmlBody = mailItem.HtmlBody;
+            mailQueue.CC = mailItem.CC;
+            mailQueue.BCC = mailItem.BCC;
+            mailQueue.FromAccount = emailSettings.User;
+            mailQueue.Type = type;
+            mailQueue.Attachments = attachments != null ? string.Join(',', attachments) : "";
+            mailQueue.IsSend = false;
             return mailQueue;
         }
 
@@ -727,18 +793,18 @@ namespace ERPCore.Common
             return Regex.Replace(input, @"@@[a-zA-Z0-9]+", "");
         }
 
-        public static MailQueue NotifySession(Employee staff, Users notifyUser, MailTemplate mailTemplate, MailConfig emailSettings, Dictionary<string, object> dictionary, string FOLLOW_CC, List<string> attachments = null)
+        public static MailQueue NotifySession(Employee staff, MailTemplate mailTemplate, MailConfig emailSettings, Dictionary<string, object> dictionary, string FOLLOW_CC, List<string> attachments = null)
         {
             string contentHandle = MailUtil.BodyContentHandle(mailTemplate.TemplateContent, dictionary);
             mailTemplate.TemplateMailTitle = MailUtil.TitleContentHandle(mailTemplate.TemplateMailTitle, dictionary);
             mailTemplate.PrefixTitleMail = MailUtil.TitleContentHandle(mailTemplate.PrefixTitleMail, dictionary);
-            if (notifyUser != null && mailTemplate != null)
+            if  (mailTemplate != null && staff != null)
             {
                 if (mailTemplate.IsActive ?? false)
                 {
                     MailItem mailItem = new MailItem();
-                    mailItem.ToName = !string.IsNullOrEmpty(notifyUser.mail) ? notifyUser.name : mailTemplate.To;
-                    mailItem.ToEmail = !string.IsNullOrEmpty(notifyUser.mail) ? notifyUser.mail : mailTemplate.To;
+                    mailItem.ToName = !string.IsNullOrEmpty(staff.FullName) ? staff.FullName : mailTemplate.To;
+                    mailItem.ToEmail = !string.IsNullOrEmpty(staff.Email) ? staff.Email : mailTemplate.To;
                     mailItem.Subject = $"{mailTemplate.PrefixTitleMail} {mailTemplate.TemplateMailTitle}";
                     mailItem.HtmlBody = contentHandle;
                     mailItem.TextBody = "";
@@ -753,6 +819,29 @@ namespace ERPCore.Common
         }
 
 
+
+
+        public static int GetLastSegment(string? stepNo)
+        {
+            if (string.IsNullOrWhiteSpace(stepNo))
+                return 0;
+
+            var parts = stepNo.Split('.');
+
+            return int.TryParse(parts[^1], out int result) ? result : 0;
+        }
+
+
+        public static int GetPreviousSegment(string? stepNo)
+        {
+            if (string.IsNullOrWhiteSpace(stepNo))
+                return 0;
+
+            var parts = stepNo.Split('.');
+            var number = parts[0];
+            return int.Parse(parts[0]);
+            //return int.TryParse(parts[0], out int result) ? result : 0;
+        }
 
         private static int getDecreaseTime(int maxSize, double x)//x is imgWidth or imgHeight
         {
@@ -1378,7 +1467,76 @@ namespace ERPCore.Common
             return $"SELECT * FROM [{tableName}] WITH (NOLOCK) WHERE Active = 1 AND Deleted = 0";
         }
 
+        public static void TurnAroundTimeHandle(dynamic objectIn, StepsWorkflow stepsWorkflow)
+        {
+            TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(objectIn.TurnAroundTimeAttributes);
+            TurnAroundItem tatObject = stepsWorkflow.FromNodeId switch
+            {
+                "FO" => result.FO,
+                "TS" => result.TS,
+                "UW" => result.UW,
+                "LMKT" => result.LMKT,
+                "PM" => result.PM,
+                _ => null
+            };
+            tatObject.CompleteDate = DateTime.Now;
+            switch (stepsWorkflow.FromNodeId)
+            {
+                case "FO":
+                    result.FO = tatObject;
+                    break;
+                case "TS":
+                    result.TS = tatObject;
+                    break;
+                case "UW":
+                    result.UW = tatObject;
+                    break;
+                case "LMKT":
+                    result.LMKT = tatObject;
+                    break;
+                case "PM":
+                    result.PM = tatObject;
+                    break;
+            }
+            objectIn.TurnAroundTimeAttributes = JsonConvert.SerializeObject(result);
+        }
+      
+        public static Notification MakeNotificationFromEmail(Notification notification, MailQueue mailQueue,dynamic objectIn , WebConfig.IConfiguration configuration,out UrlCall urlCall)
+        {
+            urlCall = new UrlCall();
+            
 
+            urlCall.Folder = "Business";
+            urlCall.Module = "Workflow";
+            urlCall.Controller = "SurveyWorkflow";
+            urlCall.Action = "Index";
+            urlCall.TypeAction = "View";
+            urlCall.Token = "";
+            urlCall.RecordGuidId = objectIn.Guid;
+            urlCall.Params = JsonConvert.SerializeObject(new
+            {
+                url = $"/Business/Form/{objectIn.GetType().Name}_Form/{objectIn.Id}",
+                caption = $"form_{objectIn.GetType().Name}_Form_{objectIn.Id}",
+                name = $"{objectIn.GetType().Name} {objectIn.Code}",
+                data = ""
+            });
+            urlCall.ExpireTime = DateTime.Now.AddDays(2);
+            urlCall.Expired = false;
+            string REDIRECT_MAIN_VIEW = configuration.GetSection("UrlConfig:RedirectMainView").Value;
+            //string redirectMainView = System.IO.Path.Combine(REDIRECT_MAIN_VIEW, typeof(UrlCall).Name, "ReturnView");
+            string redirectMainView = $"{REDIRECT_MAIN_VIEW}{typeof(UrlCall).Name}{"/ReturnView"}";
+            redirectMainView += $"?guid={urlCall.Guid}";
+            notification.IsRead = false;
+            notification.Url = $"/Business/Form/{nameof(Quotation)}_Form/{objectIn.Id}";
+            notification.Resource = $"{objectIn.Resource}";
+            notification.System = "WM";
+            notification.Title = mailQueue.subject;
+            notification.Message = mailQueue.html_body;
+            notification.ReceivedBy = $"{mailQueue.ToName},{mailQueue.cc}";
+            notification.RecordGuid = objectIn.Guid;
+
+            return notification;
+        }
         public static Dictionary<string, object> MakeQueryIntoDirectory(DataRow row)
         {
             var dictionary = new Dictionary<string, object>();
@@ -1684,7 +1842,1695 @@ VALUES
             }
             return null;
         }
+        public static SpreadsheetDocument OpenSpreadsheetDocument(Stream stream)
+        {
+            var settings = new OpenSettings
+            {
+                AutoSave = false//,
+                //LeaveOpen = true
+            };
+            return SpreadsheetDocument.Open(stream, false, settings);
+        }
+        public static string GetString(
+    List<Cell> cells,
+    Dictionary<string, int> colMap,
+    string col,
+    WorkbookPart wbPart)
+        {
+            if (!colMap.ContainsKey(col)) return null;
+            int idx = colMap[col];
+            if (idx >= cells.Count) return null;
+            return GetCellValue(wbPart, cells[idx]);
+        }
 
+        public static int? GetNullableInt(
+            List<Cell> cells,
+            Dictionary<string, int> colMap,
+            string col,
+            WorkbookPart wbPart)
+        {
+            var s = GetString(cells, colMap, col, wbPart);
+            return int.TryParse(s, out var v) ? v : (int?)null;
+        }
+
+        public static DateTime? GetDate(
+            List<Cell> cells,
+            Dictionary<string, int> colMap,
+            string col,
+            WorkbookPart wbPart)
+        {
+            var raw = GetString(cells, colMap, col, wbPart);
+            if (string.IsNullOrWhiteSpace(raw))
+                return null;
+
+            if (double.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out double oaDate))
+            {
+                try
+                {
+                    return DateTime.FromOADate(oaDate);
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+
+
+            if (DateTime.TryParse(raw, out var d))
+                return d;
+
+            return null;
+        }
+
+        public static int GetInt(
+            List<Cell> cells,
+            Dictionary<string, int> colMap,
+            string colName,
+            WorkbookPart wbPart)
+        {
+            if (!colMap.ContainsKey(colName))
+                return 0;
+
+            int idx = colMap[colName];
+            if (idx >= cells.Count)
+                return 0;
+
+            var text = GetCellValue(wbPart, cells[idx]);
+            return int.TryParse(text, out int v) ? v : 0;
+        }
+
+        public static string GetCellValue(WorkbookPart wbPart, Cell cell)
+        {
+            string value = "";
+            if (cell != null)
+            {
+                if (cell.CellValue != null) value = cell.CellValue.InnerText;
+                if (cell.DataType?.Value == CellValues.SharedString)
+                {
+                    var sst = wbPart.SharedStringTablePart?.SharedStringTable;
+                    return sst?.ElementAt(int.Parse(value))?.InnerText ?? "";
+                }
+                if (cell?.ChildElements[0] != null)
+                {
+                    var chillCell = cell?.ChildElements[0];
+                    value = chillCell.InnerText;
+                }
+            }
+            else
+            {
+                return "";
+            }
+
+
+
+            if (cell.DataType != null && cell.DataType == CellValues.SharedString)
+            {
+                return wbPart.SharedStringTablePart
+                    .SharedStringTable
+                    .Elements<SharedStringItem>()
+                    .ElementAt(int.Parse(value))
+                    .InnerText;
+            }
+
+            return value;
+        }
+
+        public static Dictionary<int, string?> BuildColIndexToTextMap(WorkbookPart wbPart, Row row)
+        {
+            var dict = new Dictionary<int, string?>();
+            foreach (var cell in row.Elements<Cell>())
+            {
+                try
+                {
+                    var colIndex = GetColumnIndexFromCellReference(cell.CellReference?.Value);
+                    if (colIndex < 0) continue;
+
+                    dict[colIndex] = Util.GetCellValue(wbPart, cell); // hàm bạn đã có
+
+                }
+                catch
+                {
+
+                }
+            }
+            return dict;
+        }
+
+        // A=0, B=1, Z=25, AA=26...
+        private static int GetColumnIndexFromCellReference(string? cellRef)
+        {
+            if (string.IsNullOrWhiteSpace(cellRef)) return -1;
+
+            // lấy phần chữ đầu: "AB12" -> "AB"
+            int i = 0;
+            while (i < cellRef.Length && char.IsLetter(cellRef[i])) i++;
+            if (i == 0) return -1;
+
+            var colLetters = cellRef.Substring(0, i).ToUpperInvariant();
+
+            int index = 0;
+            foreach (var ch in colLetters)
+            {
+                index = index * 26 + (ch - 'A' + 1);
+            }
+            return index - 1; // 0-based
+        }
+
+        private static bool IsNullable(Type t) =>
+    !t.IsValueType || Nullable.GetUnderlyingType(t) != null;
+        public static void SetPropertyValue(Client dto, PropertyInfo prop, string? raw)
+        {
+            var s = (raw ?? "").Trim();
+            if (string.IsNullOrEmpty(s))
+            {
+                // null cho nullable, hoặc giữ default string=""
+                if (IsNullable(prop.PropertyType) && prop.PropertyType != typeof(string))
+                    prop.SetValue(dto, null);
+                return;
+            }
+
+            var t = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+
+            try
+            {
+                if (t == typeof(string))
+                {
+                    prop.SetValue(dto, s);
+                    return;
+                }
+
+                if (t == typeof(long))
+                {
+                    if (long.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var lv))
+                        prop.SetValue(dto, lv);
+                    return;
+                }
+
+                if (t == typeof(int))
+                {
+                    if (int.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var iv))
+                        prop.SetValue(dto, iv);
+                    return;
+                }
+
+                if (t == typeof(bool))
+                {
+                    // hỗ trợ Y/N, True/False, 1/0, "Active"
+                    var bv =
+                        s.Equals("Y", StringComparison.OrdinalIgnoreCase) ||
+                        s.Equals("YES", StringComparison.OrdinalIgnoreCase) ||
+                        s.Equals("TRUE", StringComparison.OrdinalIgnoreCase) ||
+                        s.Equals("1", StringComparison.OrdinalIgnoreCase) ||
+                        s.Equals("ACTIVE", StringComparison.OrdinalIgnoreCase);
+
+                    prop.SetValue(dto, bv);
+                    return;
+                }
+
+                if (t == typeof(DateTime))
+                {
+                    // hỗ trợ: yyyyMMdd, yyyy-MM-dd, yyyy-MM-dd HH:mm:ss.fff
+                    if (TryParseDate(s, out var dt))
+                        prop.SetValue(dto, dt);
+                    return;
+                }
+
+                // fallback convert
+                var converted = Convert.ChangeType(s, t, CultureInfo.InvariantCulture);
+                prop.SetValue(dto, converted);
+            }
+            catch
+            {
+                // tuỳ bạn: log lỗi theo col/row/prop để debug
+            }
+        }
+
+        public static void SetPropertyProductValue(Product dto, PropertyInfo prop, string? raw)
+        {
+            var s = (raw ?? "").Trim();
+            if (string.IsNullOrEmpty(s))
+            {
+                // null cho nullable, hoặc giữ default string=""
+                if (IsNullable(prop.PropertyType) && prop.PropertyType != typeof(string))
+                    prop.SetValue(dto, null);
+                return;
+            }
+
+            var t = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+
+            try
+            {
+                if (t == typeof(string))
+                {
+                    prop.SetValue(dto, s);
+                    return;
+                }
+
+                if (t == typeof(long))
+                {
+                    if (long.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var lv))
+                        prop.SetValue(dto, lv);
+                    return;
+                }
+
+                if (t == typeof(int))
+                {
+                    if (int.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var iv))
+                        prop.SetValue(dto, iv);
+                    return;
+                }
+
+                if (t == typeof(bool))
+                {
+                    // hỗ trợ Y/N, True/False, 1/0, "Active"
+                    var bv =
+                        s.Equals("Y", StringComparison.OrdinalIgnoreCase) ||
+                        s.Equals("YES", StringComparison.OrdinalIgnoreCase) ||
+                        s.Equals("TRUE", StringComparison.OrdinalIgnoreCase) ||
+                        s.Equals("1", StringComparison.OrdinalIgnoreCase) ||
+                        s.Equals("ACTIVE", StringComparison.OrdinalIgnoreCase);
+
+                    prop.SetValue(dto, bv);
+                    return;
+                }
+
+                if (t == typeof(DateTime))
+                {
+                    // hỗ trợ: yyyyMMdd, yyyy-MM-dd, yyyy-MM-dd HH:mm:ss.fff
+                    if (TryParseDate(s, out var dt))
+                        prop.SetValue(dto, dt);
+                    return;
+                }
+
+                // fallback convert
+                var converted = Convert.ChangeType(s, t, CultureInfo.InvariantCulture);
+                prop.SetValue(dto, converted);
+            }
+            catch
+            {
+                // tuỳ bạn: log lỗi theo col/row/prop để debug
+            }
+        }
+        private static bool TryParseDate(string s, out DateTime dt)
+        {
+            // yyyymmdd
+            if (s.Length == 8 && DateTime.TryParseExact(s, "yyyyMMdd", CultureInfo.InvariantCulture,
+                    DateTimeStyles.None, out dt))
+                return true;
+
+            // yyyy-MM-dd
+            if (DateTime.TryParseExact(s, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                    DateTimeStyles.None, out dt))
+                return true;
+
+            // full datetime
+            if (DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out dt))
+                return true;
+
+            dt = default;
+            return false;
+        }
+
+        private static string? Get(Dictionary<string, string> dict, string key)
+        => dict.TryGetValue(key, out var v) ? v : null;
+
+        private static int ParseInt(string? s, int def)
+            => int.TryParse(s, out var x) ? x : def;
+
+        private static string QuoteName(string name)
+            => "[" + name.Replace("]", "]]") + "]";
+
+        private static readonly HashSet<string> _reservedKeys = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "mode","paging","skip","take","pageSize","orderBy","orderDir","key","_", "requireTotalCount", "refField", "refKey"
+        };
+        public sealed class SqlQueryBuildResult
+        {
+            public string Sql { get; set; } = "";
+            public Dictionary<string, object> Parameters { get; set; } = new();
+        }
+        public static SqlQueryBuildResult BuildSelectQueryByDynamicField<T>(
+    string tableName,
+    IDictionary<string, string>? requestParams = null,
+    string defaultOrderBy = "Id",
+    string defaultOrderDir = "DESC",
+    int maxTake = 200,
+    int maxAll = 5000,
+    string? pkTieBreaker = "Id",
+    bool useNoLock = true
+)
+        {
+            tableName ??= typeof(T).Name;
+
+            // =========================
+            // 1) Merge params
+            // =========================
+            var allParams = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            if (requestParams != null)
+            {
+                foreach (var kv in requestParams)
+                {
+                    if (kv.Key == "_") continue;
+                    allParams[kv.Key] = kv.Value ?? "";
+                }
+            }
+
+            // =========================
+            // 2) Parse paging
+            // =========================
+            int skip = ParseInt(Get(allParams, "skip"), 0);
+            int take = ParseInt(Get(allParams, "take"), ParseInt(Get(allParams, "pageSize"), 50));
+
+            skip = Math.Max(skip, 0);
+            take = Math.Clamp(take, 1, maxTake);
+
+            var mode = Get(allParams, "mode");
+            var pagingFlag = Get(allParams, "paging");
+
+            bool paging =
+                string.Equals(mode, "page", StringComparison.OrdinalIgnoreCase)
+                || pagingFlag == "1"
+                || string.Equals(pagingFlag, "true", StringComparison.OrdinalIgnoreCase)
+                || allParams.ContainsKey("skip")
+                || allParams.ContainsKey("take");
+
+            // =========================
+            // 3) Build base SQL
+            // =========================
+            var sql = new StringBuilder();
+            var parameters = new Dictionary<string,Dictionary<string, object>>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, object> parameterProcess = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            int pIndex = 0;
+
+            sql.Append("SELECT * FROM ");
+            sql.Append(QuoteName(tableName));
+            if (useNoLock) sql.Append(" WITH (NOLOCK)");
+            sql.AppendLine();
+            sql.AppendLine("WHERE Deleted = 0");
+
+            // =========================
+            // 4) Apply refField/refKey AND N lần
+            // refField + refKey
+            // refField2 + refKey2
+            // refField3 + refKey3 ...
+            // =========================
+
+            // cặp đầu tiên
+            if (allParams.TryGetValue("refField", out var refField) &&
+                allParams.TryGetValue("refKey", out var refKey))
+            {
+                var pName = "@p" + (++pIndex);
+                Dictionary<string, object> parameter = new Dictionary<string, object>();
+                parameter[pName] = NormalizeToDbValue(refKey);
+                parameters[refField] = parameter;
+                parameterProcess[pName] = NormalizeToDbValue(refKey);
+            }
+
+            // các cặp tiếp theo
+            for (int i = 2; i <= 50; i++)
+            {
+                string fieldParam = $"refField{i}";
+                string keyParam = $"refKey{i}";
+
+                if (allParams.TryGetValue(fieldParam, out var fieldName) &&
+                    allParams.TryGetValue(keyParam, out var fieldValue))
+                {
+                    var pName = "@p" + (++pIndex);
+                    Dictionary<string, object> parameter = new Dictionary<string, object>();
+                    parameter[pName] = NormalizeToDbValue(fieldValue);
+                    parameters[fieldName] = parameter;
+                    parameterProcess[pName] = NormalizeToDbValue(fieldValue);
+                }
+            }
+           
+            // =========================
+            // 5) DevExtreme filter JSON (nếu cần giữ)
+            // =========================
+            //var filterJson = Get(allParams, "filter");
+            //if (!string.IsNullOrWhiteSpace(filterJson))
+            //{
+            //    var filterSql = ParseDevExtremeFilter(filterJson!, _reservedKeys, ref pIndex, parameters);
+            //    if (!string.IsNullOrWhiteSpace(filterSql))
+            //    {
+            //        sql.Append(" AND ");
+            //        sql.AppendLine(filterSql);
+            //    }
+            //}
+
+            // =========================
+            // 6) Custom query params thường
+            // Ví dụ: ?Type=Request&IsRead=false
+            // KHÔNG xử lý refField/refKey ở đây nữa
+            // =========================
+            foreach (KeyValuePair<string,Dictionary<string,object>> kv in parameters)
+            {
+                var key = kv.Key;
+                foreach (var item in kv.Value)
+                {
+                    var value = item;
+                    if (_reservedKeys.Contains(key)) continue;
+                    AppendNormalCondition(sql, key, value);
+                }
+             
+
+            }
+
+            // =========================
+            // 7) ORDER BY
+            // =========================
+            var sortJson = Get(allParams, "sort");
+            var orderBySql = BuildOrderByFromSort(sortJson, _reservedKeys);
+
+            if (string.IsNullOrWhiteSpace(orderBySql))
+            {
+                string orderBy = Get(allParams, "orderBy") ?? defaultOrderBy;
+                string orderDir = Get(allParams, "orderDir") ?? defaultOrderDir;
+
+                orderDir = string.Equals(orderDir, "asc", StringComparison.OrdinalIgnoreCase)
+                    ? "ASC"
+                    : "DESC";
+
+                if (!_reservedKeys.Contains(orderBy))
+                    orderBy = defaultOrderBy;
+
+                if (!_reservedKeys.Contains(orderBy))
+                    orderBy = pkTieBreaker ?? "Id";
+
+                orderBySql = $"{QuoteName(orderBy)} {orderDir}";
+            }
+
+            if (!string.IsNullOrWhiteSpace(pkTieBreaker) && _reservedKeys.Contains(pkTieBreaker))
+            {
+                var tie = QuoteName(pkTieBreaker);
+                if (!orderBySql.Contains(tie, StringComparison.OrdinalIgnoreCase))
+                {
+                    orderBySql += $", {tie} DESC";
+                }
+            }
+
+            sql.Append("ORDER BY ");
+            sql.AppendLine(orderBySql);
+
+            // =========================
+            // 8) Paging
+            // =========================
+            //if (paging)
+            //{
+            //    sql.AppendLine("OFFSET @skip ROWS FETCH NEXT @take ROWS ONLY;");
+            //    parameters["@skip"] = skip;
+            //    parameters["@take"] = take;
+            //}
+            //else
+            //{
+            //    sql.AppendLine($"OFFSET 0 ROWS FETCH NEXT {maxAll} ROWS ONLY;");
+            //}
+
+            return new SqlQueryBuildResult
+            {
+                Sql = sql.ToString(),
+                Parameters = parameterProcess
+            };
+        }
+        private static void AppendRefCondition(
+     StringBuilder sql,
+     Dictionary<string, object> parameters,
+     string fieldName,
+     string fieldValue,
+     ref int pIndex)
+        {
+            if (string.IsNullOrWhiteSpace(fieldName)) return;
+            if (string.IsNullOrWhiteSpace(fieldValue)) return;
+
+            // chống inject tên cột
+            if (_reservedKeys.Contains(fieldName)) return;
+
+            var pName = "@p" + (++pIndex);
+
+            sql.Append(" AND ");
+            sql.Append(QuoteName(fieldName));
+            sql.Append(" = ");
+            sql.AppendLine(pName);
+
+            parameters[pName] = NormalizeToDbValue(fieldValue);
+        }
+        public static List<DynamicFieldFilter> ExtractDynamicFilters(Dictionary<string, string> rawParams)
+        {
+            var result = new List<DynamicFieldFilter>();
+
+            // cặp đầu tiên: refField + refKey
+            if (
+                rawParams.TryGetValue("refField", out var refField) &&
+                rawParams.TryGetValue("refKey", out var refKey) &&
+                !string.IsNullOrWhiteSpace(refField)
+            )
+            {
+                result.Add(new DynamicFieldFilter
+                {
+                    FieldName = refField,
+                    FieldValue = NormalizeToDbValue(refKey)
+                });
+            }
+
+            // các cặp tiếp theo: refField2/refKey2, refField3/refKey3...
+            for (int i = 2; i <= 20; i++)
+            {
+                var fieldKey = $"refField{i}";
+                var valueKey = $"refKey{i}";
+
+                if (
+                    rawParams.TryGetValue(fieldKey, out var fieldName) &&
+                    rawParams.TryGetValue(valueKey, out var fieldValue) &&
+                    !string.IsNullOrWhiteSpace(fieldName)
+                )
+                {
+                    result.Add(new DynamicFieldFilter
+                    {
+                        FieldName = fieldName,
+                        FieldValue = NormalizeToDbValue(fieldValue)
+                    });
+                }
+            }
+
+            return result;
+        }
+        private static void AppendNormalCondition(
+    StringBuilder sql,
+    string key,
+    KeyValuePair<string,object> value)
+        {
+
+            sql.Append(" AND ");
+            sql.Append(QuoteName(key));
+
+            switch (value.Value)
+            {
+                case bool:
+                case int:
+                case long:
+                case decimal:
+                case double:
+                case float:
+                case Guid:
+                case DateTime:
+                    sql.Append(" = ");
+                    sql.AppendLine(value.Key);
+                    break;
+
+                default:
+                    sql.Append(" LIKE '%' + ");
+                    sql.Append(value.Key);
+                    sql.AppendLine(" + '%'");
+                    break;
+            }
+        }
+        public static SqlQueryBuildResult LoadParamsBuildSelectAllQuery<T>(
+    string tableName,
+    List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> loadParams,
+    string defaultOrderBy = "Id",
+    string defaultOrderDir = "DESC",
+    int maxTake = 200,
+    int maxAll = 5000,
+    string? pkTieBreaker = "Id",
+    bool useNoLock = true
+)
+        {
+            string QuoteName(string name)
+            {
+                if (string.IsNullOrWhiteSpace(name)) return name;
+                return "[" + name.Replace("]", "]]") + "]";
+            }
+
+            string BuildColumnSql(string columnName)
+            {
+                var q = QuoteName(columnName);
+                return string.IsNullOrWhiteSpace(tableName) ? q : $"{tableName}.{q}";
+            }
+            // =========================
+            // 1) merge params (KHÔNG bỏ reserved ở đây)
+            // =========================
+            var allParams = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            if (loadParams != null)
+            {
+                foreach (var kv in loadParams)
+                {
+                    if (kv.Key == "_") continue;
+                    allParams[kv.Key] = kv.Value.ToString() ?? "";
+                }
+            }
+
+            // =========================
+            // 2) parse paging
+            // DevExtreme sẽ gửi skip/take trực tiếp
+            // =========================
+            int skip = ParseInt(Get(allParams, "skip"), 0);
+            int take = ParseInt(Get(allParams, "take"), ParseInt(Get(allParams, "pageSize"), 50));
+
+            skip = Math.Max(skip, 0);
+            take = Math.Clamp(take, 1, maxTake);
+
+            // Nếu bạn vẫn muốn tự bật/tắt paging theo flag:
+            var mode = Get(allParams, "mode");
+            var pagingFlag = Get(allParams, "paging");
+            bool paging =
+                string.Equals(mode, "page", StringComparison.OrdinalIgnoreCase)
+                || pagingFlag == "1"
+                || string.Equals(pagingFlag, "true", StringComparison.OrdinalIgnoreCase)
+                // ✅ nếu DevExtreme có skip/take thì coi như paging
+                || allParams.ContainsKey("skip")
+                || allParams.ContainsKey("take");
+
+            // =========================
+            // 3) build base SQL
+            // =========================
+            var sql = new StringBuilder();
+            sql.Append("SELECT * FROM ");
+            sql.Append(QuoteName(tableName));
+            if (useNoLock) sql.Append(" WITH (NOLOCK)");
+            sql.AppendLine();
+            sql.AppendLine("WHERE Deleted = 0");
+
+            var parameters = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            int pIndex = 0;
+
+            // =========================
+            // 4) apply DevExtreme FILTER (filter= JSON)
+            // =========================
+            var filterJson = Get(allParams, "filter");
+            if (!string.IsNullOrWhiteSpace(filterJson))
+            {
+                var filterSql = ParseDevExtremeFilter(filterJson!, _reservedKeys, ref pIndex, parameters);
+                if (!string.IsNullOrWhiteSpace(filterSql))
+                {
+                    sql.Append(" AND ");
+                    sql.AppendLine(filterSql);
+                }
+            }
+
+            // =========================
+            // 5) apply simple filters (query params ngoài filter/sort/skip/take)
+            // Ví dụ receivedBy=quan.nh
+            //// =========================
+
+            //var combineParams = new Dictionary<string, string>();
+            //for (int i = 1; i <= 20; i++)
+            //{
+            //    var fieldKey = i == 1 ? "refField" : $"refField{i}";
+            //    var valueKey = i == 1 ? "refKey" : $"refKey{i}";
+
+            //    if (
+            //        allParams.TryGetValue(fieldKey, out var fieldName) &&
+            //        allParams.TryGetValue(valueKey, out var fieldValue) &&
+            //        !string.IsNullOrWhiteSpace(fieldName)
+            //    )
+            //    {
+            //        combineParams[fieldName] = fieldValue;
+            //    }
+            //}
+
+            var combineParams = new List<RefFilter>();
+
+            for (int i = 1; i <= 20; i++)
+            {
+                var fieldKey = i == 1 ? "refField" : $"refField{i}";
+                var valueKey = i == 1 ? "refKey" : $"refKey{i}";
+                var opKey = i == 1 ? "refOperator" : $"refOperator{i}";
+
+                if (
+                    allParams.TryGetValue(fieldKey, out var fieldName) &&
+                    allParams.TryGetValue(valueKey, out var fieldValue) &&
+                    !string.IsNullOrWhiteSpace(fieldName)
+                )
+                {
+                    var op = allParams.ContainsKey(opKey) ? allParams[opKey] : "=";
+
+                    combineParams.Add(new RefFilter
+                    {
+                        Key = fieldName,
+                        Value = fieldValue,
+                        Operator = op
+                    });
+                }
+            }
+
+            foreach (var item in combineParams)
+            {
+                if (string.IsNullOrWhiteSpace(item.Value)) continue;
+
+                var actualColumn = string.Equals(item.Key, "key", StringComparison.OrdinalIgnoreCase)
+                    ? pkTieBreaker
+                    : item.Key;
+
+                var op = (item.Operator ?? "=").ToLowerInvariant();
+                var pName = "@p" + (++pIndex);
+
+                sql.Append(" AND ");
+
+                switch (op)
+                {
+                    case "=":
+                    case "<>":
+                    case ">":
+                    case "<":
+                    case ">=":
+                    case "<=":
+                        sql.Append($"{BuildColumnSql(actualColumn)} {op} {pName}");
+                        parameters[pName] = item.Value;
+                        break;
+
+                    case "contains":
+                        sql.Append($"{BuildColumnSql(actualColumn)} LIKE '%' + {pName} + '%'");
+                        parameters[pName] = item.Value;
+                        break;
+
+                    case "notcontains":
+                        sql.Append($"{BuildColumnSql(actualColumn)} NOT LIKE '%' + {pName} + '%'");
+                        parameters[pName] = item.Value;
+                        break;
+
+                    case "startswith":
+                        sql.Append($"{BuildColumnSql(actualColumn)} LIKE {pName} + '%'");
+                        parameters[pName] = item.Value;
+                        break;
+
+                    case "endswith":
+                        sql.Append($"{BuildColumnSql(actualColumn)} LIKE '%' + {pName}");
+                        parameters[pName] = item.Value;
+                        break;
+
+                    default:
+                        // fallback
+                        sql.Append($"{BuildColumnSql(actualColumn)} = {pName}");
+                        parameters[pName] = item.Value;
+                        break;
+                }
+
+                sql.AppendLine();
+            }
+//``
+
+            //foreach (var kv in combineParams)
+            //{
+            //    var key = kv.Key;
+            //    var value = kv.Value;
+
+            //    if (string.IsNullOrWhiteSpace(value)) continue;
+
+            //    var actualColumn = string.Equals(key, "key", StringComparison.OrdinalIgnoreCase)
+            //        ? pkTieBreaker
+            //        : key;
+
+                
+
+            //    var pName = "@p" + (++pIndex);
+
+            //    sql.Append(" AND ");
+            //    sql.Append(BuildColumnSql(actualColumn));
+            //    sql.Append(" = ");
+            //    sql.Append(pName);
+            //    sql.AppendLine();
+
+            //    parameters[pName] = value;
+            //}
+            // =========================
+            // 6) ORDER BY (DevExtreme sort= JSON)
+            // =========================
+            var sortJson = Get(allParams, "sort");
+            var orderBySql = BuildOrderByFromSort(sortJson, _reservedKeys);
+
+            if (string.IsNullOrWhiteSpace(orderBySql))
+            {
+                // fallback từ orderBy/orderDir (nếu bạn tự truyền)
+                string orderBy = Get(allParams, "orderBy") ?? defaultOrderBy;
+                string orderDir = (Get(allParams, "orderDir") ?? defaultOrderDir);
+                orderDir = string.Equals(orderDir, "asc", StringComparison.OrdinalIgnoreCase) ? "ASC" : "DESC";
+
+                if (!_reservedKeys.Contains(orderBy)) orderBy = defaultOrderBy;
+                if (!_reservedKeys.Contains(orderBy)) orderBy = pkTieBreaker ?? "Id";
+
+                orderBySql = $"{QuoteName(orderBy)} {orderDir}";
+            }
+
+            // tie-breaker để paging ổn định khi trùng sort key
+            if (!string.IsNullOrWhiteSpace(pkTieBreaker) && _reservedKeys.Contains(pkTieBreaker))
+            {
+                var tie = QuoteName(pkTieBreaker);
+                if (!orderBySql.Contains(tie, StringComparison.OrdinalIgnoreCase))
+                    orderBySql += $", {tie} DESC";
+            }
+
+            sql.Append("ORDER BY ");
+            sql.AppendLine(orderBySql);
+
+            // =========================
+            // 7) paging / all
+            // =========================
+            if (paging)
+            {
+                sql.AppendLine("OFFSET @skip ROWS FETCH NEXT @take ROWS ONLY;");
+                parameters["@skip"] = skip;
+                parameters["@take"] = take;
+            }
+            else
+            {
+                sql.AppendLine($"OFFSET 0 ROWS FETCH NEXT {maxAll} ROWS ONLY;");
+            }
+
+            return new SqlQueryBuildResult
+            {
+                Sql = sql.ToString(),
+                Parameters = parameters
+            };
+        }
+
+        /* ---------------- helpers ---------------- */
+
+        private static string BuildOrderByFromSort(string? sortJson, HashSet<string> _reservedKeys)
+        {
+            if (string.IsNullOrWhiteSpace(sortJson)) return "";
+
+            try
+            {
+                using var doc = JsonDocument.Parse(sortJson);
+                if (doc.RootElement.ValueKind != JsonValueKind.Array) return "";
+
+                var parts = new List<string>();
+                foreach (var item in doc.RootElement.EnumerateArray())
+                {
+                    if (item.ValueKind != JsonValueKind.Object) continue;
+
+                    var selector = item.TryGetProperty("selector", out var selEl) ? selEl.GetString() : null;
+                    if (string.IsNullOrWhiteSpace(selector)) continue;
+
+                    var field = selector!;
+                    if (!_reservedKeys.Contains(field)) continue;
+
+                    bool desc = item.TryGetProperty("desc", out var dEl) && dEl.ValueKind == JsonValueKind.True;
+                    parts.Add($"{QuoteName(field)} {(desc ? "DESC" : "ASC")}");
+                }
+
+                return string.Join(", ", parts);
+            }
+            catch
+            {
+                return "";
+            }
+        }
+
+        // DevExtreme filter JSON (nested arrays)
+        private static string ParseDevExtremeFilter(
+            string filterJson,
+            HashSet<string> _reservedKeys,
+            ref int pIndex,
+            Dictionary<string, object> parameters
+        )
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(filterJson);
+                return ParseFilterNode(doc.RootElement, _reservedKeys, ref pIndex, parameters);
+            }
+            catch
+            {
+                return "";
+            }
+        }
+
+        private static string ParseFilterNode(
+            JsonElement node,
+            HashSet<string> _reservedKeys,
+            ref int pIndex,
+            Dictionary<string, object> parameters
+        )
+        {
+            if (node.ValueKind != JsonValueKind.Array) return "";
+
+            // condition: ["Field","op",value]
+            if (node.GetArrayLength() == 3
+                && node[0].ValueKind == JsonValueKind.String
+                && node[1].ValueKind == JsonValueKind.String)
+            {
+                var field = node[0].GetString()!;
+                var op = node[1].GetString()!;
+                var value = node[2];
+
+                if (_reservedKeys.Contains(field)) return "";
+                return BuildCondition(field, op, value, ref pIndex, parameters);
+            }
+
+            // composite: [expr, "and"/"or", expr, ...]
+            var parts = new List<string>();
+            string? pendingLogic = null;
+
+            for (int i = 0; i < node.GetArrayLength(); i++)
+            {
+                var item = node[i];
+
+                if (item.ValueKind == JsonValueKind.String)
+                {
+                    var token = item.GetString()!;
+                    if (string.Equals(token, "and", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(token, "or", StringComparison.OrdinalIgnoreCase))
+                    {
+                        pendingLogic = token.ToUpperInvariant();
+                        continue;
+                    }
+
+                    if (token == "!")
+                    {
+                        if (i + 1 < node.GetArrayLength())
+                        {
+                            var next = ParseFilterNode(node[i + 1], _reservedKeys, ref pIndex, parameters);
+                            if (!string.IsNullOrWhiteSpace(next)) parts.Add($"NOT ({next})");
+                            i++;
+                        }
+                        continue;
+                    }
+
+                    continue;
+                }
+
+                var expr = ParseFilterNode(item, _reservedKeys, ref pIndex, parameters);
+                if (string.IsNullOrWhiteSpace(expr)) continue;
+
+                if (parts.Count == 0) parts.Add($"({expr})");
+                else parts.Add($"{(pendingLogic ?? "AND")} ({expr})");
+
+                pendingLogic = null;
+            }
+
+            return parts.Count == 0 ? "" : string.Join(" ", parts);
+        }
+
+        private static string BuildCondition(
+            string field,
+            string op,
+            JsonElement valueEl,
+            ref int pIndex,
+            Dictionary<string, object> parameters
+        )
+        {
+            op = op.ToLowerInvariant();
+
+            bool isNull = valueEl.ValueKind == JsonValueKind.Null;
+            if (isNull)
+            {
+                return op switch
+                {
+                    "=" => $"{QuoteName(field)} IS NULL",
+                    "<>" => $"{QuoteName(field)} IS NOT NULL",
+                    _ => $"{QuoteName(field)} IS NULL"
+                };
+            }
+
+            object? val = valueEl.ValueKind switch
+            {
+                JsonValueKind.String => valueEl.GetString(),
+                JsonValueKind.Number => valueEl.TryGetInt64(out var l) ? l : valueEl.GetDouble(),
+                JsonValueKind.True => true,
+                JsonValueKind.False => false,
+                _ => valueEl.ToString()
+            };
+
+            var pName = "@p" + (++pIndex);
+
+            switch (op)
+            {
+                case "=":
+                case "<>":
+                case ">":
+                case "<":
+                case ">=":
+                case "<=":
+                    parameters[pName] = val!;
+                    return $"{QuoteName(field)} {op} {pName}";
+
+                case "contains":
+                    parameters[pName] = val?.ToString() ?? "";
+                    return $"{QuoteName(field)} LIKE '%' + {pName} + '%'";
+
+                case "notcontains":
+                    parameters[pName] = val?.ToString() ?? "";
+                    return $"{QuoteName(field)} NOT LIKE '%' + {pName} + '%'";
+
+                case "startswith":
+                    parameters[pName] = val?.ToString() ?? "";
+                    return $"{QuoteName(field)} LIKE {pName} + '%'";
+
+                case "endswith":
+                    parameters[pName] = val?.ToString() ?? "";
+                    return $"{QuoteName(field)} LIKE '%' + {pName}";
+
+                default:
+                    parameters[pName] = val!;
+                    return $"{QuoteName(field)} = {pName}";
+            }
+        }
+
+        public static string ParseConnectionString(string connectionString)
+        {
+            var builderStr = new SqlConnectionStringBuilder(connectionString);
+
+            bool isUseEncryption = bool.Parse(ConfigurationManager.AppSettings["encryption"]);
+
+
+            if (isUseEncryption)
+            {
+                string scheme = ConfigurationManager.AppSettings["scheme"];
+                string encryptString = Environment.GetEnvironmentVariable($"{scheme}_PWD", EnvironmentVariableTarget.Machine);
+                var passwordDecrypt = KeyVaultLocal.DecryptConnectionStringPassword(encryptString, "ApplicationSecretKey", "ApplicationSaltKey", 10);
+                //string password = KeyVaultLocal.DecryptConnectionStringPassword(builderStr.Password, "ApplicationSecretKey", "ApplicationSaltKey", 10);
+                builderStr.Password = passwordDecrypt;
+            }
+            //try
+            //{
+            //    string writeString = Environment.GetEnvironmentVariable("RETool_PWD", EnvironmentVariableTarget.Machine);
+            //    File.WriteAllText("application_key.txt", writeString);
+            //}
+            //catch (Exception ex)
+            //{
+            //    File.WriteAllText("error.txt", "Error");
+            //}
+
+
+            return builderStr.ConnectionString;
+        }
+        public static SqlQueryBuildResult LoadParamsBuildCustomQuery<T>(
+string baseQuery,
+List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> loadParams,
+string defaultOrderBy = "Id",
+string defaultOrderDir = "DESC",
+int maxTake = 200,
+int maxAll = 5000,
+string? pkTieBreaker = "Id",
+HashSet<string>? allowedColumns = null,
+string? mainTableAlias = null
+)
+        {
+            if (string.IsNullOrWhiteSpace(baseQuery))
+                throw new ArgumentException("baseQuery is required.");
+
+            var reservedKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "_",
+        "filter",
+        "sort",
+        "skip",
+        "take",
+        "page",
+        "pageSize",
+        "mode",
+        "paging",
+        "orderBy",
+        "orderDir",
+        "requireTotalCount",
+        "requireGroupCount",
+        "group",
+        "groupSummary",
+        "totalSummary",
+        "searchExpr",
+        "searchOperation",
+        "searchValue",
+        "select"
+    };
+
+            var safeColumns = allowedColumns ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        pkTieBreaker
+    };
+
+            string QuoteName(string name)
+            {
+                if (string.IsNullOrWhiteSpace(name)) return name;
+                return "[" + name.Replace("]", "]]") + "]";
+            }
+
+            string BuildColumnSql(string columnName)
+            {
+                var q = QuoteName(columnName);
+                return string.IsNullOrWhiteSpace(mainTableAlias) ? q : $"{mainTableAlias}.{q}";
+            }
+
+            int ParseInt(string? value, int defaultValue)
+            {
+                return int.TryParse(value, out var x) ? x : defaultValue;
+            }
+
+            string? Get(Dictionary<string, string> dict, string key)
+            {
+                return dict.TryGetValue(key, out var value) ? value : null;
+            }
+            var allParams = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            if (loadParams != null)
+            {
+                var dict = loadParams.ToDictionary(x => x.Key, x => x.Value.ToString(), StringComparer.OrdinalIgnoreCase);
+
+                bool hasRefPair = dict.Keys.Any(k => k.StartsWith("refField", StringComparison.OrdinalIgnoreCase));
+
+                // =========================
+                // 1. build refField/refKey
+                // =========================
+                var refIndexes = new List<string>();
+
+                foreach (var key in dict.Keys)
+                {
+                    if (key.StartsWith("refField", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var suffix = key.Substring("refField".Length); // "", "2", "3"
+                        refIndexes.Add(suffix);
+                    }
+                }
+
+                refIndexes = refIndexes
+                    .Distinct()
+                    .OrderBy(x => string.IsNullOrEmpty(x) ? 0 : int.TryParse(x, out var n) ? n : int.MaxValue)
+                    .ToList();
+
+                foreach (var suffix in refIndexes)
+                {
+                    var fieldKey = "refField" + suffix;
+                    var valueKey = "refKey" + suffix;
+
+                    if (!dict.TryGetValue(fieldKey, out var field)) continue;
+                    if (!dict.TryGetValue(valueKey, out var value)) continue;
+
+                    if (string.IsNullOrWhiteSpace(field) || string.IsNullOrWhiteSpace(value))
+                        continue;
+
+                    allParams[field] = value;
+                }
+
+                // =========================
+                // 2. add params thường
+                // =========================
+                foreach (var kv in dict)
+                {
+                    var key = kv.Key;
+
+                    if (key.StartsWith("refField", StringComparison.OrdinalIgnoreCase) ||
+                        key.StartsWith("refKey", StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    // nếu có refField thì bỏ key
+                    if (hasRefPair && string.Equals(key, "key", StringComparison.OrdinalIgnoreCase))
+                    { allParams["key"] = kv.Value;  continue; }
+
+                    allParams[key] = kv.Value;
+                }
+            }
+
+            int skip = ParseInt(Get(allParams, "skip"), 0);
+            int take = ParseInt(Get(allParams, "take"), ParseInt(Get(allParams, "pageSize"), 50));
+
+            skip = Math.Max(skip, 0);
+            take = Math.Clamp(take, 1, maxTake);
+
+            var mode = Get(allParams, "mode");
+            var pagingFlag = Get(allParams, "paging");
+
+            bool paging =
+                string.Equals(mode, "page", StringComparison.OrdinalIgnoreCase)
+                || pagingFlag == "1"
+                || string.Equals(pagingFlag, "true", StringComparison.OrdinalIgnoreCase)
+                || allParams.ContainsKey("skip")
+                || allParams.ContainsKey("take");
+
+            var parameters = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            int pIndex = 0;
+
+            string originalSql = baseQuery.Trim().TrimEnd(';');
+
+            string cleanedSql = originalSql;
+
+            cleanedSql = System.Text.RegularExpressions.Regex.Replace(
+                cleanedSql,
+                @"'([^']|'')*'",
+                "''",
+                System.Text.RegularExpressions.RegexOptions.Singleline
+            );
+
+            cleanedSql = System.Text.RegularExpressions.Regex.Replace(
+                cleanedSql,
+                @"--.*?$",
+                "",
+                System.Text.RegularExpressions.RegexOptions.Multiline
+            );
+
+            cleanedSql = System.Text.RegularExpressions.Regex.Replace(
+                cleanedSql,
+                @"/\*.*?\*/",
+                "",
+                System.Text.RegularExpressions.RegexOptions.Singleline
+            );
+
+            int level = 0;
+            int lastOrderByIndex = -1;
+            int lastOffsetIndex = -1;
+
+            string upperSql = cleanedSql.ToUpperInvariant();
+
+            for (int i = 0; i < upperSql.Length; i++)
+            {
+                char c = upperSql[i];
+                if (c == '(') level++;
+                else if (c == ')') level--;
+
+                if (level == 0)
+                {
+                    if (i + 8 <= upperSql.Length && upperSql.Substring(i, 8) == "ORDER BY")
+                    {
+                        bool startOk = i == 0 || !char.IsLetterOrDigit(upperSql[i - 1]);
+                        bool endOk = (i + 8) >= upperSql.Length || !char.IsLetterOrDigit(upperSql[i + 8]);
+                        if (startOk && endOk) lastOrderByIndex = i;
+                    }
+
+                    if (i + 6 <= upperSql.Length && upperSql.Substring(i, 6) == "OFFSET")
+                    {
+                        bool startOk = i == 0 || !char.IsLetterOrDigit(upperSql[i - 1]);
+                        bool endOk = (i + 6) >= upperSql.Length || !char.IsLetterOrDigit(upperSql[i + 6]);
+                        if (startOk && endOk) lastOffsetIndex = i;
+                    }
+                }
+            }
+
+            string sqlHead = originalSql;
+            string existingOrderBy = "";
+            string existingOffsetFetch = "";
+
+            if (lastOrderByIndex >= 0)
+            {
+                if (lastOffsetIndex > lastOrderByIndex)
+                {
+                    sqlHead = originalSql.Substring(0, lastOrderByIndex).TrimEnd();
+                    existingOrderBy = originalSql.Substring(lastOrderByIndex, lastOffsetIndex - lastOrderByIndex).Trim();
+                    existingOffsetFetch = originalSql.Substring(lastOffsetIndex).Trim();
+                }
+                else
+                {
+                    sqlHead = originalSql.Substring(0, lastOrderByIndex).TrimEnd();
+                    existingOrderBy = originalSql.Substring(lastOrderByIndex).Trim();
+                }
+
+                existingOrderBy = System.Text.RegularExpressions.Regex.Replace(
+                    existingOrderBy,
+                    @"^\s*ORDER\s+BY\s+",
+                    "",
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase
+                ).Trim();
+            }
+            else if (lastOffsetIndex >= 0)
+            {
+                sqlHead = originalSql.Substring(0, lastOffsetIndex).TrimEnd();
+                existingOffsetFetch = originalSql.Substring(lastOffsetIndex).Trim();
+            }
+
+            string cleanedHead = sqlHead;
+            cleanedHead = System.Text.RegularExpressions.Regex.Replace(cleanedHead, @"'([^']|'')*'", "''", System.Text.RegularExpressions.RegexOptions.Singleline);
+            cleanedHead = System.Text.RegularExpressions.Regex.Replace(cleanedHead, @"--.*?$", "", System.Text.RegularExpressions.RegexOptions.Multiline);
+            cleanedHead = System.Text.RegularExpressions.Regex.Replace(cleanedHead, @"/\*.*?\*/", "", System.Text.RegularExpressions.RegexOptions.Singleline);
+
+            bool hasWhere = System.Text.RegularExpressions.Regex.IsMatch(
+                cleanedHead,
+                @"\bWHERE\b",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase
+            );
+
+            var sql = new System.Text.StringBuilder();
+            sql.AppendLine(sqlHead);
+
+            if (!hasWhere)
+            {
+                sql.AppendLine(" WHERE 1 = 1 ");
+            }
+
+            // DevExtreme filter
+            var filterJson = Get(allParams, "filter");
+            if (!string.IsNullOrWhiteSpace(filterJson))
+            {
+                try
+                {
+                    using var doc = System.Text.Json.JsonDocument.Parse(filterJson);
+                    string ParseFilter(System.Text.Json.JsonElement el)
+                    {
+                        if (el.ValueKind != System.Text.Json.JsonValueKind.Array)
+                            return "";
+
+                        var arr = el.EnumerateArray().ToList();
+                        if (arr.Count == 0) return "";
+
+                        // unary not
+                        if (arr.Count == 2 && arr[0].ValueKind == System.Text.Json.JsonValueKind.String &&
+                            string.Equals(arr[0].GetString(), "!", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var inner = ParseFilter(arr[1]);
+                            return string.IsNullOrWhiteSpace(inner) ? "" : $"NOT ({inner})";
+                        }
+
+                        // simple condition: [field, op, value]
+                        if (arr.Count == 3 &&
+                            arr[0].ValueKind == System.Text.Json.JsonValueKind.String &&
+                            arr[1].ValueKind == System.Text.Json.JsonValueKind.String)
+                        {
+                            string field = arr[0].GetString() ?? "";
+                            string op = arr[1].GetString() ?? "";
+                            string actualField = string.Equals(field, "key", StringComparison.OrdinalIgnoreCase) ? pkTieBreaker : field;
+
+                            if (!safeColumns.Contains(actualField))
+                                return "";
+
+                            string colSql = BuildColumnSql(actualField);
+                            string pName = "@p" + (++pIndex);
+
+                            object? val = null;
+                            var valEl = arr[2];
+                            switch (valEl.ValueKind)
+                            {
+                                case System.Text.Json.JsonValueKind.String:
+                                    val = valEl.GetString();
+                                    break;
+                                case System.Text.Json.JsonValueKind.Number:
+                                    if (valEl.TryGetInt64(out var l)) val = l;
+                                    else if (valEl.TryGetDecimal(out var d)) val = d;
+                                    else val = valEl.ToString();
+                                    break;
+                                case System.Text.Json.JsonValueKind.True:
+                                case System.Text.Json.JsonValueKind.False:
+                                    val = valEl.GetBoolean();
+                                    break;
+                                case System.Text.Json.JsonValueKind.Null:
+                                    val = null;
+                                    break;
+                                default:
+                                    val = valEl.ToString();
+                                    break;
+                            }
+
+                            switch (op.ToLowerInvariant())
+                            {
+                                case "=":
+                                    if (val == null) return $"{colSql} IS NULL";
+                                    parameters[pName] = val;
+                                    return $"{colSql} = {pName}";
+
+                                case "<>":
+                                    if (val == null) return $"{colSql} IS NOT NULL";
+                                    parameters[pName] = val;
+                                    return $"{colSql} <> {pName}";
+
+                                case ">":
+                                case ">=":
+                                case "<":
+                                case "<=":
+                                    parameters[pName] = val ?? DBNull.Value;
+                                    return $"{colSql} {op} {pName}";
+
+                                case "contains":
+                                    parameters[pName] = val == null ? "" : val.ToString()!;
+                                    return $"{colSql} LIKE '%' + {pName} + '%'";
+
+                                case "notcontains":
+                                    parameters[pName] = val == null ? "" : val.ToString()!;
+                                    return $"{colSql} NOT LIKE '%' + {pName} + '%'";
+
+                                case "startswith":
+                                    parameters[pName] = val == null ? "" : val.ToString()!;
+                                    return $"{colSql} LIKE {pName} + '%'";
+
+                                case "endswith":
+                                    parameters[pName] = val == null ? "" : val.ToString()!;
+                                    return $"{colSql} LIKE '%' + {pName}";
+
+                                default:
+                                    return "";
+                            }
+                        }
+
+                        // complex group: [cond1, "and", cond2, "or", cond3...]
+                        var parts = new List<string>();
+                        for (int i = 0; i < arr.Count; i++)
+                        {
+                            var item = arr[i];
+
+                            if (item.ValueKind == System.Text.Json.JsonValueKind.String)
+                            {
+                                string token = item.GetString() ?? "";
+                                if (string.Equals(token, "and", StringComparison.OrdinalIgnoreCase) ||
+                                    string.Equals(token, "or", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    parts.Add(token.ToUpperInvariant());
+                                }
+                            }
+                            else if (item.ValueKind == System.Text.Json.JsonValueKind.Array)
+                            {
+                                string inner = ParseFilter(item);
+                                if (!string.IsNullOrWhiteSpace(inner))
+                                    parts.Add("(" + inner + ")");
+                            }
+                        }
+
+                        return string.Join(" ", parts);
+                    }
+
+                    var filterSql = ParseFilter(doc.RootElement);
+                    if (!string.IsNullOrWhiteSpace(filterSql))
+                    {
+                        sql.Append(" AND ");
+                        sql.AppendLine(filterSql);
+                    }
+                }
+                catch
+                {
+                    // bỏ qua filter lỗi json
+                }
+            }
+
+            foreach (var kv in allParams)
+            {
+                var key = kv.Key;
+                var value = kv.Value;
+
+                if (reservedKeys.Contains(key)) continue;
+                if (string.IsNullOrWhiteSpace(value)) continue;
+
+                var actualColumn = string.Equals(key, "key", StringComparison.OrdinalIgnoreCase)
+                    ? pkTieBreaker
+                    : key;
+
+                if (!safeColumns.Contains(actualColumn)) continue;
+
+                var pName = "@p" + (++pIndex);
+
+                sql.Append(" AND ");
+                sql.Append(BuildColumnSql(actualColumn));
+                sql.Append(" = ");
+                sql.Append(pName);
+                sql.AppendLine();
+
+                parameters[pName] = value;
+            }
+
+
+            // ORDER BY
+            string? orderBySql = null;
+
+            var sortJson = Get(allParams, "sort");
+            if (!string.IsNullOrWhiteSpace(sortJson))
+            {
+                try
+                {
+                    using var sortDoc = System.Text.Json.JsonDocument.Parse(sortJson);
+                    if (sortDoc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Array)
+                    {
+                        var orderParts = new List<string>();
+
+                        foreach (var item in sortDoc.RootElement.EnumerateArray())
+                        {
+                            if (item.ValueKind != System.Text.Json.JsonValueKind.Object) continue;
+
+                            if (!item.TryGetProperty("selector", out var selectorEl)) continue;
+                            string selector = selectorEl.GetString() ?? "";
+                            string actualColumn = string.Equals(selector, "key", StringComparison.OrdinalIgnoreCase)
+                                ? pkTieBreaker
+                                : selector;
+
+                            if (!safeColumns.Contains(actualColumn)) continue;
+
+                            bool desc = false;
+                            if (item.TryGetProperty("desc", out var descEl) &&
+                                (descEl.ValueKind == System.Text.Json.JsonValueKind.True || descEl.ValueKind == System.Text.Json.JsonValueKind.False))
+                            {
+                                desc = descEl.GetBoolean();
+                            }
+
+                            orderParts.Add($"{BuildColumnSql(actualColumn)} {(desc ? "DESC" : "ASC")}");
+                        }
+
+                        if (orderParts.Count > 0)
+                            orderBySql = string.Join(", ", orderParts);
+                    }
+                }
+                catch
+                {
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(orderBySql))
+            {
+                string? requestedOrderBy = Get(allParams, "orderBy");
+                string? requestedOrderDir = Get(allParams, "orderDir");
+
+                if (!string.IsNullOrWhiteSpace(requestedOrderBy))
+                {
+                    string actualColumn = string.Equals(requestedOrderBy, "key", StringComparison.OrdinalIgnoreCase)
+                        ? pkTieBreaker
+                        : requestedOrderBy!;
+
+                    if (safeColumns.Contains(actualColumn))
+                    {
+                        string orderDir = string.Equals(requestedOrderDir, "asc", StringComparison.OrdinalIgnoreCase)
+                            ? " ASC"
+                            : " DESC";
+
+                        orderBySql = $"{BuildColumnSql(actualColumn)} {orderDir}";
+                    }
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(orderBySql))
+            {
+                if (!string.IsNullOrWhiteSpace(existingOrderBy))
+                {
+                    orderBySql = existingOrderBy;
+                }
+                else
+                {
+                    string actualDefaultOrderBy = string.Equals(defaultOrderBy, "key", StringComparison.OrdinalIgnoreCase)
+                        ? defaultOrderBy
+                        : defaultOrderBy;
+
+                    string orderDir = string.Equals(defaultOrderDir, "asc", StringComparison.OrdinalIgnoreCase)
+                        ? "ASC"
+                        : "DESC";
+
+                    if (!safeColumns.Contains(actualDefaultOrderBy))
+                        actualDefaultOrderBy = !string.IsNullOrWhiteSpace(pkTieBreaker) ? pkTieBreaker! : defaultOrderBy;
+
+                    if (!safeColumns.Contains(actualDefaultOrderBy))
+                        actualDefaultOrderBy = defaultOrderBy;
+
+                    orderBySql = $"{BuildColumnSql(actualDefaultOrderBy)} {orderDir}";
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(pkTieBreaker) && safeColumns.Contains(pkTieBreaker))
+            {
+                string tie = BuildColumnSql(pkTieBreaker);
+                if (!orderBySql.Contains(tie, StringComparison.OrdinalIgnoreCase))
+                {
+                    orderBySql += $", {tie} DESC";
+                }
+            }
+
+            sql.Append(" ORDER BY ");
+            sql.AppendLine(orderBySql);
+
+            if (paging)
+            {
+                sql.AppendLine(" OFFSET @skip ROWS FETCH NEXT @take ROWS ONLY;");
+                parameters["@skip"] = skip;
+                parameters["@take"] = take;
+            }
+            else
+            {
+                sql.AppendLine($" OFFSET 0 ROWS FETCH NEXT {maxAll} ROWS ONLY;");
+            }
+
+            return new SqlQueryBuildResult
+            {
+                Sql = sql.ToString(),
+                Parameters = parameters
+            };
+        }
+        public static List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>>
+NormalizeRefParams(
+    List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> requestParams,
+    string? pkTieBreaker = "Id")
+        {
+            var result = new List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>>();
+            if (requestParams == null || requestParams.Count == 0) return result;
+
+            var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var kv in requestParams)
+            {
+                dict[kv.Key] = kv.Value.ToString();
+            }
+
+            // Giữ lại các param thường như skip/take/filter/sort...
+            foreach (var kv in requestParams)
+            {
+                var key = kv.Key ?? "";
+                if (!key.StartsWith("refField", StringComparison.OrdinalIgnoreCase) &&
+                    !key.StartsWith("refKey", StringComparison.OrdinalIgnoreCase))
+                {
+                    result.Add(new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>(
+                        kv.Key,
+                        kv.Value
+                    ));
+                }
+            }
+
+            // Cặp đầu tiên: refField + refKey
+            // Cặp sau: refField2/refKey2, refField3/refKey3...
+            var indexes = new List<string> { "" };
+
+            foreach (var key in dict.Keys)
+            {
+                if (key.StartsWith("refField", StringComparison.OrdinalIgnoreCase))
+                {
+                    var suffix = key.Substring("refField".Length); // "", "2", "3"...
+                    if (!indexes.Contains(suffix, StringComparer.OrdinalIgnoreCase))
+                        indexes.Add(suffix);
+                }
+            }
+
+            // sort: "" trước, rồi 2,3,4...
+            indexes = indexes
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(x => string.IsNullOrEmpty(x) ? 0 : int.TryParse(x, out var n) ? n : int.MaxValue)
+                .ToList();
+
+            foreach (var suffix in indexes)
+            {
+                var refFieldKey = "refField" + suffix;
+                var refValueKey = "refKey" + suffix;
+
+                if (!dict.TryGetValue(refFieldKey, out var field)) continue;
+                if (!dict.TryGetValue(refValueKey, out var value)) continue;
+
+                field = field?.Trim();
+                value = value?.Trim();
+
+                if (string.IsNullOrWhiteSpace(field) || string.IsNullOrWhiteSpace(value))
+                    continue;
+
+                // optional: nếu muốn refField=key thì map qua pkTieBreaker
+                if (string.Equals(field, "key", StringComparison.OrdinalIgnoreCase) &&
+                    !string.IsNullOrWhiteSpace(pkTieBreaker))
+                {
+                    field = pkTieBreaker;
+                }
+
+                result.Add(new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>(
+                    field,
+                    value
+                ));
+            }
+
+            return result;
+        }
     }
     public enum CommandQueryType
     {

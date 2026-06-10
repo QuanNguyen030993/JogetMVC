@@ -4,26 +4,27 @@
     ViewData["Title"] = "Management";
 }
 @await Html.PartialAsync("_LayoutReference")
+@await Html.PartialAsync("_AppUtil")
 <script src="~/js/app/appUtil.js"></script>
+@await Html.PartialAsync("_EnumConstant")
+@await Html.PartialAsync("_EntityConstant")
 <script src="~/js/app/mainHome.js"></script>
 <link href="~/favicon_new.ico" rel="icon" type="image/x-icon" />
 <script src="~/lib/AdminLTE/adminlte.min.js"></script>
-
-<body class="sidebar-mini skin-re" style="height: auto; min-height: 100%;width: 100%;">
-       
+<body class="sidebar-mini skin-re" style="height: auto; min-height: 100%; width: 100%;">
     <header>
         <div class="main-header wrapper" style="display:flex;">
-            <!--Logo-->
+            <!-- LOGO -->
             <div class="pull-left" style="width:14%">
                 <a href="#" class="logo" data-toggle="push-menu" role="button">
-                    <div class="logo-lg"><b>Quotation Management</b></div>
-                    <div class="logo-mini">
-                        <b>QM</b>
-                    </div>
+                    <div class="logo-lg"><b>Workflow Management</b></div>
                 </a>
             </div>
+            <!-- ROLE -->
             <div class="admin-float-swicher">
                 <p id="returnToSuperUser" />
+                <div id="qt-roleSelect"> </div>
+                <div id="pi-roleSelect"> </div>
                 <div id="environmentLabel" style="color: red;"></div>
                 <div id="environmentJogetLabel" style="color: red;"></div>
             </div>
@@ -34,39 +35,30 @@
              
             <!--Login Info-->
             <div style="display:flex;padding:5px;width: 16%;margin-top: 6px;justify-content: flex-end;">
-                <div id="notificationBtn" class="notif-wrapper">
-                    <svg width="18px"
-                         height="17px"
-                         viewBox="0 0 24 24"
-                         fill="none">
-                        <path d="M12 2C8.1 2 5 5.1 5 9V13C5 14.1 4.1 15 3 15V16H21V15C19.9 15 19 14.1 19 13V9C19 5.1 15.9 2 12 2Z"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round" />
-                        <path d="M9.8 21C10.3 22 11.1 22 12 22C12.9 22 13.7 22 14.2 21"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round" />
-                        <circle class="notification-dot"
-                                cx="18"
-                                cy="6"
-                                r="6"
-                                style="display:none"
-                                fill="#FF3B30" />
+                <div id="btnNew" style=" margin-right: 15px;z-index: 1000;"></div>
+                <div id="notificationBtn" class="notif-wrapper square-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="30" height="30" viewBox="0 0 256 256" xml:space="preserve">
+                    <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                    <path d="M 83.25 74.548 H 6.75 c -1.536 0 -2.864 -0.988 -3.306 -2.457 c -0.441 -1.468 0.122 -3.022 1.401 -3.868 c 0.896 -0.594 1.954 -1.152 3.233 -1.707 c 5.52 -2.514 6.42 -16.025 7.144 -26.882 c 0.182 -2.74 0.355 -5.327 0.59 -7.664 c 1.926 -12.752 8.052 -20.942 18.223 -24.424 C 35.767 3.067 40.169 0 45 0 s 9.233 3.067 10.964 7.546 c 10.171 3.482 16.298 11.671 18.214 24.352 c 0.245 2.409 0.416 4.996 0.6 7.736 c 0.723 10.857 1.624 24.368 7.168 26.893 c 1.255 0.544 2.313 1.102 3.21 1.696 c 1.279 0.846 1.842 2.4 1.4 3.868 C 86.114 73.56 84.785 74.548 83.25 74.548 z M 45 2.934 c -3.818 0 -7.279 2.556 -8.416 6.215 l -0.228 0.733 l -0.732 0.231 c -9.568 3.018 -15.096 10.287 -16.9 22.224 c -0.221 2.216 -0.392 4.779 -0.573 7.493 c -0.816 12.242 -1.74 26.117 -8.88 29.368 c -1.129 0.49 -2.064 0.982 -2.806 1.473 c -0.265 0.175 -0.26 0.409 -0.21 0.575 c 0.051 0.168 0.177 0.368 0.496 0.368 h 76.5 c 0.318 0 0.445 -0.2 0.496 -0.368 c 0.05 -0.166 0.054 -0.4 -0.209 -0.575 h -0.001 c -0.741 -0.491 -1.677 -0.983 -2.782 -1.462 c -7.163 -3.261 -8.088 -17.137 -8.905 -29.379 c -0.181 -2.714 -0.352 -5.277 -0.582 -7.565 c -1.795 -11.864 -7.323 -19.134 -16.891 -22.151 l -0.732 -0.231 L 53.416 9.15 C 52.279 5.49 48.818 2.934 45 2.934 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
+                    <path d="M 33.257 78.292 C 33.277 84.75 38.536 90 45 90 c 6.463 0 11.723 -5.25 11.743 -11.708 H 33.257 z M 45 87.066 c -3.816 0 -7.063 -2.443 -8.285 -5.843 h 16.57 C 52.063 84.623 48.816 87.066 45 87.066 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
+                    </g>
                     </svg>
-                    <span class="notif-count"></span>
+                    <span class="notif-dot"></span>
+                    <span class="notif-count" id="notifCount" style="display:none;">0</span>
                 </div>
                 <div class="navbar-nav user user-menu" style="display:contents;margin-right: 15%; margin-left: auto;">
-                        <div>
+                    <input id="rolename" type="hidden" />
+                </div>
 
-                        <input id="rolename" type="hidden" />
-                        </div>
-                    </div>
+                <div id="dropdown-menu" style="display:none; position:absolute; right:10px; top:50px;">
+                    <ul id="dropdownContent"></ul>
+                </div>
+
+                </div>
                 @* <p id="onlineState" class="status-button"> </p> *@
-
+                
             </div>
-            
+   
             @await Html.PartialAsync("_SPAReference")
             <div id="mainPopup"></div>
             <div id="outlinePopup"></div>
@@ -75,19 +67,20 @@
             <div id="detailPopup"></div>
             <div id="notificationPopup"></div>
             <div id="notificationPopOver"></div>
-            
+            <div id="assigneeEntryForm"></div>
+            <div id="moduleLauncherPopup"></div>
 
-        </div>
     </header>
     @await Html.PartialAsync("_MenuPartial")
+  
     <!-- Content Wrapper. Contains page content -->
     @* <div id="content-wrapper" class="content-wrapper" style="min-height: 901px; margin-top:0px;">
         </div> 
  *@
-     <div id="dashboard" style="margin-left: 50%;margin-top: 12%;">
-                <img src="https://play-lh.googleusercontent.com/ehviCuzUOKyADahIhD0axGjKyQPKrbiR5rgoM7Er0pHgV5hbq2jMCpAXAd8C0rQaWDk=w240-h480-rw" 
+     <div id="dashboard" style="margin-left: 40%;margin-top: 12%;">
+                <img src="~/img/TMIV_Logo.jpg" 
                  aria-hidden="true" alt="Icon image"   style="opacity:0.5">
-     </div>
+    </div>
 </body>
 <script type="text/javascript">
     //Chrome popup => allow site setting, allow windows chrome app notifications
@@ -139,16 +132,17 @@
         $("#tablist").on("click", "span.fa.fa-times", function () {
             var $tabDivId = $(this).closest("[id$='_li_tab']");
             nativeRemoveTab($tabDivId);
-        });
+    });
 
-        var loginUser = `@Html.Raw(ViewData["LoginUser"])`;
+
+
         _isSuperUser =  `@Html.Raw(ViewData["IsSuperUser"])`;
         _isDebugMode = `@Html.Raw(ViewData["IsDebugMode"])`;
         var _notifyEnv = `@Html.Raw(ViewData["NotifyEnv"])`;
         if (_notifyEnv  == "true")
             $("#environmentLabel").text(`(TMIV Environment: @ViewData["Environment"])`);
-        if (_notifyEnv  == "true")
-            $("#environmentJogetLabel").text(`(Joget Environment: @ViewData["JogetEnvironment"])`);
+        // if (_notifyEnv  == "true")
+        //     $("#environmentJogetLabel").text(`(Joget Environment: @ViewData["JogetEnvironment"])`);
         if (_isDebugMode == "true"){
 
 
@@ -167,20 +161,6 @@
                  },
             });
         }
-        _loginUser = loginUser.replace("TOKIOMARINE\\", "");
-            $.ajax({
-                url: `/api/Users/GetUserRoles?accountName=${loginUser}`,
-                type: 'GET',
-                async: false,
-                data: { accountName: loginUser },
-                success: function (response) {
-                    $("#rolename").text(response);
-                    _role = response;
-                },
-                error: function (xhr, status, error) {
-                    console.error('Error:', error);
-                }
-            });
 
 
             var loadParams = `@Html.Raw(@ViewData["LoadParams"])`;
@@ -194,35 +174,48 @@
                 //    }, 1000);
             }
 
-            var marginTop = "margin-top:3px";
+        var marginTop = "margin-top:3px";
         var avatar = `./img/no-profile-icon.jpg`;
-       $(".user.user-menu").append(`<div style="margin-right:5px;${marginTop}">
+       $(".user.user-menu").append(`<div style="display:flex;margin-right: -15%;${marginTop}">
        <img src="${avatar}" class="user-image" style="border-radius:50%"
-       width="25px" height="25px" alt="User Image"/> </div>
-       <div style="color: white;${marginTop}">
-       ${loginUser}</div>
+       width="25px" height="25px" alt="User Image"/> 
+       <div id="accountLabel" style="color: white;margin-right:5px;${marginTop}">${_loginUser}</div>
+       <div id="signalRMonitor" class="signalr-monitor signalr-disconnected">
+                    <div class="signalr-dot"></div>
+                    <span class="signalr-text">Offline</span>
+                    
+                </div>
+                </div>
+       
+
        `);
-        // $(".user .user-menu-dropdown").append(`
-        //                                         <li class="user-header">
-        //                                          <img src="${avatar}" style= class="user-image" alt="User Image">
-        //                                             <p>
-        //                                                ${loginUser}
-        //                                             </p>
-        //                                         </li>
 
-        //                                         <!-- Menu Footer-->
-        //                                         <li class="user-footer">
-        //                                             <div class="pull-left">
 
-        //                                             </div>
-        //                                             <div class="pull-right">
-        //                                                 <div  id="logoutForm" style="float: right !important; margin-top: -7px;">
-        //                                                     <a type="submit" href="/Account/Logout" class="btn btn-default btn-flat">Log out</a>
-        //                                                 </div>
-        //                                             </div>
-        //                                         </li>`);
+        $("#dropdownContent").html(`
+        <li style="padding:10px; border-bottom:1px solid #eee;">
+            <bAccount Setting</b>
+        </li>
+        <li style="padding:10px;">
+            <div id="displayLabel"></div>
+            <div id="roleLabel"></div>
+        </li>
+        <li><span id="signalRCounter">Session count from SignalR: (0)</span></li>
+        <li style="padding:10px; text-align:right;">
+            <a href="#" class="btn btn-default btn-sm">Close application</a>
+        </li>
+    `);
 
-        var url = '@ViewData["HostUrl"]'
+    $(".user-image").on("click", function (e) {
+        e.stopPropagation();
+        $("#dropdown-menu").toggle();
+    });
+
+    $(document).on("click", function () {
+        $("#dropdown-menu").hide();
+    });
+
+
+     var url = '@ViewData["HostUrl"]'
             // monitorConnection(url, 'onlineState', 10000);
 
     
@@ -253,25 +246,16 @@
     }
 
     // ====== API call (mock) ======
-    function apiGetNotifications(take = 30) {
-        // TODO: thay bằng API thật của bạn
-        //Example
-        var objectJson =  {url:"/Business/Form/Survey_Form/67",caption:"form_Survey_Form_67",name:"Survey SVRE.1225.067",data:""}
-        var stringObjectJson = JSON.stringify(objectJson);
-        // Mock demo
-        return $.Deferred().resolve({
-            items: [
-                { id: 101, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
-                { id: 102, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
-                { id: 103, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
-                { id: 104, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
-                { id: 105, title: "New task assigned", message: "You have a new assignment #A-001", createdOn: new Date(), isRead: false, url: `${stringObjectJson}` },
-                { id: 106, title: "Approval required", message: "Quotation QT-2025-123 needs approval", createdOn: new Date(Date.now() - 3600_000), isRead: true, url: `/Management?loadParams=...` }
-            ]
-        }).promise();
-    }
+
 
     function apiMarkRead(id) {
+
+        ajaxPut('/api/Notification/UpdateData', { key: id, values: JSON.stringify({ isRead: true }) }, {
+            onSuccess: function (response) {
+            },
+            onError: function (err) {
+            }
+        });
         // TODO: thay bằng API thật
         // return $.post(`/api/Notifications/MarkRead?id=${id}`);
         return $.Deferred().resolve(true).promise();
@@ -287,104 +271,9 @@
     function ensureNotificationPopup() {
         if (_notif.popup) return;
 
-        // _notif.popup = $("#notificationPopup").dxPopup({
-        //     title: "Notifications",
-        //     width: 420,
-        //     height: 520,
-        //     showCloseButton: true,
-        //     hideOnOutsideClick: true,
-        //     dragEnabled: false,
-        //     wrapperAttr: {
-        //         class: "dx-overlay-shader-custom"
-        //     },
-        //     position: {
-        //         // neo gần bell
-        //         of: $("#notificationBtn"),
-        //         my: "right top",
-        //         at: "right bottom",
-        //         offset: "0 10"
-        //     },
-        //     contentTemplate: function (contentEl) {
-        //         // Header tools
-        //         const $toolbar = $(`
-        //             <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
-        //               <div id="notifMarkAllBtn"></div>
-        //               <div style="margin-left:auto; opacity:.7; font-size:12px;" id="notifHint"></div>
-        //             </div>
-        //             <div id="notifList"></div>
-        //         `);
+        
 
-        //         $(contentEl).append($toolbar);
-
-        //         $("#notifMarkAllBtn").dxButton({
-        //             text: "Mark all as read",
-        //             icon: "check",
-        //             type: "default",
-        //             stylingMode: "outlined",
-        //             onClick: async function () {
-        //                 await apiMarkAllRead();
-        //                 // update local state
-        //                 _notif.items.forEach(x => x.isRead = true);
-        //                 refreshNotifUI();
-        //             }
-        //         });
-
-        //         _notif.list = $("#notifList").dxList({
-        //             dataSource: _notif.items,
-        //             height: 440,
-        //             noDataText: "No notifications",
-        //             searchEnabled: true,
-        //             searchExpr: ["title", "message"],
-        //             itemTemplate: function (itemData) {
-        //                 // item UI
-        //                 const isUnread = !itemData.isRead;
-        //                 const timeText = formatTime(itemData.createdOn);
-
-        //                 return $(`
-        //                     <div style="padding:10px 8px; border-bottom:1px solid rgba(0,0,0,.06);">
-        //                       <div style="display:flex; gap:8px; align-items:flex-start;">
-        //                         <div style="width:10px; margin-top:6px;">
-        //                           <span style="display:${isUnread ? "inline-block" : "none"}; width:8px; height:8px; border-radius:50%; background:#ff3b30;"></span>
-        //                         </div>
-        //                         <div style="flex:1;">
-        //                           <div style="display:flex; justify-content:space-between; gap:8px;">
-        //                             <div style="font-weight:${isUnread ? 700 : 600};">${escapeHtml(itemData.title || "")}</div>
-        //                             <div style="opacity:.6; font-size:12px; white-space:nowrap;">${timeText}</div>
-        //                           </div>
-        //                           <div style="opacity:.85; margin-top:4px; font-size:13px;">
-        //                             ${escapeHtml(itemData.message || "")}
-        //                           </div>
-        //                           <div style="margin-top:8px; display:flex; gap:8px;">
-        //                             <a href="javascript:void(0)" class="notif-open">Open</a>
-        //                             <a href="javascript:void(0)" class="notif-mark">${isUnread ? "Mark read" : "Read"}</a>
-        //                           </div>
-        //                         </div>
-        //                       </div>
-        //                     </div>
-        //                 `)
-        //                 .data("item", itemData)
-        //                 .on("click", ".notif-open", async function (e) {
-        //                     e.stopPropagation();
-        //                     await openNotification(itemData);
-        //                 })
-        //                 .on("click", ".notif-mark", async function (e) {
-        //                     e.stopPropagation();
-        //                     if (!itemData.isRead) {
-        //                         await apiMarkRead(itemData.id);
-        //                         itemData.isRead = true;
-        //                         refreshNotifUI();
-        //                     }
-        //                 });
-        //             }
-        //         }).dxList("instance");
-        //     },
-        //     onShown: function () {
-        //         // khi mở panel thì có thể reload để đảm bảo mới nhất
-        //         reloadNotifications();
-        //     }
-        // }).dxPopup("instance");
-
-            _notif.popover = $("#notificationPopOver").dxPopover({
+           _notif.popover = $("#notificationPopOver").dxPopover({
             target: "#notificationBtn",       // 🔔 neo theo bell
             position: {
                 my: "right top",
@@ -432,7 +321,7 @@
                     itemTemplate: function (itemData) {
                         // item UI
                         const isUnread = !itemData.isRead;
-                        const timeText = formatTime(itemData.createdOn);
+                        const timeText = formatTime(itemData.createdDate);
 
                         return $(`
                             <div style="padding:10px 8px; border-bottom:1px solid rgba(0,0,0,.06);">
@@ -451,6 +340,7 @@
                                   <div style="margin-top:8px; display:flex; gap:8px;">
                                     <a href="javascript:void(0)" class="notif-open">Open</a>
                                     <a href="javascript:void(0)" class="notif-mark">${isUnread ? "Mark read" : "Read"}</a>
+                                    <a href="javascript:void(0)" class="notif-view">View message</a>
                                   </div>
                                 </div>
                               </div>
@@ -468,6 +358,11 @@
                                 itemData.isRead = true;
                                 refreshNotifUI();
                             }
+                        }).on("click", ".notif-view", async function (e) {
+                            openMessageDialog(itemData);
+                            
+                               e.stopPropagation();
+                            // mở popup đọc nội dung, không ảnh hưởng open/mark read
                         });
                     }
                 }).dxList("instance");
@@ -476,17 +371,13 @@
     }
 
     function formatTime(dt) {
-        try {
-            const d = (dt instanceof Date) ? dt : new Date(dt);
-            return d.toLocaleString();
-        } catch { return ""; }
-    }
+           try {
+               const d = (dt instanceof Date) ? dt : new Date(dt);
+               return d.toLocaleString();
+           } catch { return ""; }
+       }
 
-    function escapeHtml(str) {
-        return (str || "").replace(/[&<>"']/g, s => ({
-            "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
-        }[s]));
-    }
+
 
     // ====== open item ======
     async function openNotification(item) {
@@ -500,23 +391,12 @@
         // 2) hành động mở: tùy hệ bạn
         // Nếu bạn có obj.url/caption/name kiểu loadParams -> callElementView(...)
         if (item.url) {
-            invokePageTab(item.url,true);
+            // invokePageTab(item.url,true);
+            callElementView(item.url.url, item.url.caption, item.url.name);
         } else {
             DevExpress.ui.notify("No target action for this notification", "warning", 1500);
         }
     }
-
-    // ====== reload + refresh UI ======
-    async function reloadNotifications(take = 30) {
-        try {
-            const res = await apiGetNotifications(take);
-            _notif.items = res.items || [];
-            refreshNotifUI();
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
     function refreshNotifUI() {
         _notif.unreadCount = (_notif.items || []).filter(x => !x.isRead).length;
         setNotifCount(_notif.unreadCount);
@@ -529,11 +409,11 @@
 
     // ====== public function you already call ======
     function updateNotification(intervalMs = 10000) {
-        reloadNotifications();
+         reloadNotifications();
 
         // polling
         setInterval(() => {
-            reloadNotifications();
+             // reloadNotifications();
         }, intervalMs);
     }
 
@@ -553,10 +433,246 @@
      hideNotificationDot();
      // _notif.popup.show();
      _notif.popover.toggle();
+
+     
+
      });
+
+
+
+
+     document.addEventListener("DOMContentLoaded", function () {
+        const pushMenuBtn = document.querySelector('[data-toggle="push-menu"]');
+        if (!pushMenuBtn) return;
+        pushMenuBtn.addEventListener("click", function () {
+            setTimeout(function () {
+                const body = document.body;
+
+                // if (body.classList.contains("sidebar-collapse")) {
+                //     // sidebar collapsed → reset margin-right
+                //     document.documentElement.style.setProperty("--collapsed-mr", "-22%");
+                //     document.documentElement.style.setProperty("--collapsed-form-mr", "-42%");
+                //     // document.documentElement.style.setProperty("--collapsed-grid-max-mr", "70%");
+                // } else {
+                //     document.documentElement.style.setProperty("--collapsed-mr", "-22%");
+                //     document.documentElement.style.setProperty("--collapsed-form-mr", "-26%");
+                //     // document.documentElement.style.setProperty("--collapsed-grid-max-mr", "73%");
+                // }
+            }, 0); 
+        });
+    });
+
+      let moduleLauncherPopup;
+    function openModuleLauncherPopup() {
+       if (!moduleLauncherPopup) {
+           moduleLauncherPopup = $("#moduleLauncherPopup").dxPopup({
+               title: "Create New",
+               width: "52vw",
+               height: "52vh",
+               minWidth: 760,
+               minHeight: 420,
+               maxWidth: 1100,
+               maxHeight: 700,
+               showTitle: false,
+               showCloseButton: true,
+               closeOnOutsideClick: true,
+               dragEnabled: false,
+               contentTemplate: function (container) {
+                   const html = `
+    <div class="launcher-wrap">
+    <div class="launcher-title">
+                           Select action
+    </div>
+    <div class="launcher-grid">
+    <div class="launcher-item quotation" id="btnQuotation">
+    <div class="icon">📄</div>
+    <div class="launcher-text">Create Quotation Request</div>
+    <div  class="launcher-text"></div>
+    </div>
+
+    <div class="launcher-item policy" id="btnPolicy">
+    <div class="icon">📝</div>
+    <div class="launcher-text">Create Policy Issuance Request </div>
+    <div  class="launcher-text"></div>
+    </div>
+    </div>
+    </div>`;
+
+        // <div class="launcher-item survey" id="btnQuotationRequest">
+    // <div class="icon">📝</div>
+    // <div class="launcher-text">Create Quotation </div>
+    // <div  class="launcher-text">(TS)</div>
+    // </div>
+               $(container).append(html);
+               $("#btnQuotation").on("click", function () {
+                   newQuotationForm();
+                   moduleLauncherPopup.hide();
+               });
+               // $("#btnQuotationRequest").on("click", function () {
+               //     // newQuotationRequestForm();
+               //     moduleLauncherPopup.hide();
+               // });
+               $("#btnPolicy").on("click", function () {
+                   newPolicyIssuanceForm();
+                   moduleLauncherPopup.hide();
+               });
+           }
+           }).dxPopup("instance");
+       }
+       moduleLauncherPopup.show();
+    }
+
+
+
+
+
+     $("#btnNew").dxButton({
+        text: "New",
+        icon: "plus",
+        onClick: () => openModuleLauncherPopup()
+     });
+      // ================= MODULE POPUP =================
+
 
 
 </script>
 <style>
-   
+    /* wrapper button vuông */
+    .square-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        background: #fff;
+        border: 1px solid rgba(17, 24, 39, .15);
+        box-shadow: 0 4px 10px rgba(0,0,0,.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        position: relative;
+        transition: all .18s ease;
+    }
+
+        /* hover */
+        .square-btn:hover {
+            background: #f5f7fb;
+            box-shadow: 0 6px 14px rgba(0,0,0,.12);
+    }
+
+        /* icon */
+        .square-btn .notif-icon {
+            width: 18px;
+            height: 18px;
+            color: #111827;
+        }
+
+        /* chấm đỏ thông báo */
+        .square-btn .notif-dot {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 9px;
+            height: 9px;
+            background: #FF3B30;
+            border-radius: 50%;
+            display: none; /* bật khi có notification */
+        }
+    /* ================= POPUP ================= */
+
+    .launcher-wrap {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 10px 12px 16px 12px;
+        box-sizing: border-box;
+    }
+
+    .launcher-title {
+        text-align: center;
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 34px;
+        color: #1f2937;
+        line-height: 1.2;
+    }
+
+    .launcher-grid {
+        display: flex;
+        justify-content: center;
+        align-items: stretch;
+        gap: 34px;
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .launcher-item {
+        width: 12vw;
+        height: 12vw;
+        min-width: 190px;
+        min-height: 190px;
+        max-width: 250px;
+        max-height: 250px;
+        border-radius: 24px;
+        background: #fff;
+        box-shadow: 0 12px 28px rgba(0,0,0,.12);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: .22s ease;
+        text-align: center;
+        padding: 18px;
+        box-sizing: border-box;
+        border: 1px solid rgba(17, 24, 39, .08);
+    }
+
+        .launcher-item:hover {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 18px 36px rgba(0,0,0,.16);
+        }
+
+        .launcher-item .icon {
+            font-size: 64px;
+            line-height: 1;
+        }
+
+    .launcher-text {
+        font-size: 20px;
+        line-height: 1.3;
+        font-weight: 700;
+        color: #111827;
+        max-width: 90%;
+    }
+
+    .launcher-item.quotation {
+        background: linear-gradient(180deg, #ffffff 0%, #eef6ff 100%);
+    }
+
+    .launcher-item.survey {
+        background: linear-gradient(180deg, #ffffff 0%, #fff7e8 100%);
+    }
+
+    .launcher-item.policy {
+        background: linear-gradient(180deg, #ffffff 0%, #eefbf5 100%);
+    }
+
+    @@media (max-width: 1200px) {
+
+        .launcher-item {
+            min-width: 170px;
+            min-height: 170px;
+        }
+
+            .launcher-item .icon {
+                font-size: 56px;
+            }
+
+        .launcher-text {
+            font-size: 18px;
+        }
+    }
 </style>

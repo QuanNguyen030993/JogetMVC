@@ -1,0 +1,73 @@
+﻿@page "{pageNum:int?}"
+@using Newtonsoft.Json 
+ @model PolicyIssuance_Request_FormModel 
+ @{
+   
+    ViewBag.Title = "PolicyIssuance";
+    ViewData["Id"] = 0;
+}
+
+<style>
+
+   
+    .sectionTitle {
+        font-size: 14px;
+        font-weight: 650;
+        margin: 18px 0 10px;
+        opacity: .9;
+    }
+
+
+
+    .toolbarRow {
+        margin-top: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+</style>
+
+<body>
+   
+        <div id="form_PolicyIssuance_Request_Form"></div>
+    <div id="dataGrid_Quotation_Request">
+        @* <div id="qrSummary" style="margin-bottom:12px;"></div> *@
+        <div id="PolicyIssuanceRequestForm"></div>
+
+        <div class="toolbarRow">
+            <div class="sectionTitle" style="margin:0;"></div>
+            <div style="display:flex; gap:8px;">
+                <div id="btnNewAssignee"></div>
+                <div id="btnClearAssignee"></div>
+            </div>
+        </div>
+
+        <div id="assigneeList" style="margin-top:10px;"></div>
+
+        @* <div style="margin-top:16px; display:flex; gap:10px;">
+            <div id="btnDraft"></div>
+            <div id="btnComplete"></div>
+        </div> *@
+
+        <div id="assigneePopup"></div>
+    </div>
+
+
+    <script>
+        var mGridOption = new Object();
+        mGridOption.isAllowRowMenu = false;
+        mGridOption.selection =  { mode: "multiple" };
+        var mGrid = new MGrid(null, $(`#dataGrid_Quotation_Request`), new QuotationGridOption('Quotation', "User", mGridOption), null);
+        var that = new Object();
+        that.ModelName = "Quotation";
+          that.customQuery = "OnSystem";
+        var DS = makeBasicDataSource(that, false, true);
+        DS.filter([["isArchived", "=", null], "or", ["isArchived", "=", false]], "and", ["quotationStatus", "=", "ClientAccept"]);
+        mGrid.component.option("dataSource",DS);
+        mGrid.component.option("selection", { mode: "multiple" });
+        mGrid.component.option("showSelectionControls", true);
+
+
+    </script>
+</body>

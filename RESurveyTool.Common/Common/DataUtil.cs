@@ -77,45 +77,5 @@ namespace ERPCore.Common
                 return null; // Hoặc có thể ném lại exception tuỳ yêu cầu
             }
         }
-
-
-        //public static GridConfig ScraffoldFromCustomQuery(string SysObjectCode, HRMDbContext dbContext, string query, bool isQueryDB = true)
-        //{
-        //    GridConfig gc = Scraffold.GetConfiguration(SysObjectCode, dbContext);
-
-
-        //    DataTable schema = new DataTable();
-        //    var listOfDynamic = new List<dynamic>();
-
-
-        //    using (var dbConn = new SqlConnection(Util.GetConnectionString()))
-        //    {
-        //        dbConn.Open();
-        //        string sql = query;//replace this with your store procedure name      
-        //        SqlCommand cmd = new SqlCommand(sql, dbConn);
-        //        cmd.CommandType = CommandType.Text;
-        //        SqlDataReader reader = cmd.ExecuteReader();
-        //        schema = reader.GetSchemaTable();
-        //        reader.Close();
-        //        dbConn.Close();
-        //    }
-
-        //    if (schema != null)
-        //    {
-        //        foreach (DataRow row in schema.Rows)
-        //        {
-        //            dynamic column = new ExpandoObject();
-        //            foreach (DataColumn col in schema.Columns)
-        //            {
-        //                ((IDictionary<string, object>)column)[col.ColumnName] = row[col];
-        //            }
-        //            listOfDynamic.Add(column);
-        //        }
-        //    }
-
-
-        //    return gc;
-        //}
-
     }
 }

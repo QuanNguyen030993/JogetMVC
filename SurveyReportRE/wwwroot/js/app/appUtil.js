@@ -1,30 +1,30 @@
 ﻿
-var ListFormat = Quill.import('formats/list');
+//var ListFormat = Quill.import('formats/list');
 
-class CustomList extends ListFormat {
-    static formats(domNode) {
-        let format = super.formats(domNode);
-        //format.class = domNode.getAttribute('class') || '';
-        return format;
-    }
+//class CustomList extends ListFormat {
+//    static formats(domNode) {
+//        let format = super.formats(domNode);
+//        //format.class = domNode.getAttribute('class') || '';
+//        return format;
+//    }
 
-    format(name, value) {
-        super.format(name, value);
-        if (name === 'class' && value) {
-            this.domNode.setAttribute('class', value);
-        }
-    }
-}
+//    format(name, value) {
+//        super.format(name, value);
+//        if (name === 'class' && value) {
+//            this.domNode.setAttribute('class', value);
+//        }
+//    }
+//}
 
-Quill.register(CustomList, true);
+//Quill.register(CustomList, true);
 
 var _db;
 var _cacheCompanyData = null;
-const _dbName = "CompanyDataDB";
-const _storeName = "CompanyData";
+    const _dbName = "CompanyDataDB";
+    const _storeName = "CompanyData";
 var _cacheOutlines = [];
 var _allScheme = [];
-var fetchTables = ["Client", "Outline", "DataGridConfig"];
+var fetchTables = ["Outline", "DataGridConfig"];
 
 function initIndexedDB() {
     const request = indexedDB.open(_dbName, 1);
@@ -238,7 +238,7 @@ var appNotifyError = function (message, isConfirm, confirmText, cancelText, dela
     return Swal.fire({
         position: 'top',
         icon: 'error',
-        title: 'UI exception ' + message,
+        title: message,
         showCancelButton: isConfirm ?? false,
         showConfirmButton: isConfirm ?? false,
         confirmButtonText: confirmText ?? "OK",
@@ -247,52 +247,6 @@ var appNotifyError = function (message, isConfirm, confirmText, cancelText, dela
     });
 }
 
-var appErrorHandling = function (message, err) {
-    if (err != null) {
-        if (err == "Unauthorized") {
-            window.location = "/Account/Login";
-        } else {
-            switch (err.status) {
-                case 401:
-                    window.location = "/Account/Login";
-                    break;
-                case 400: case 404: case 500:
-                    //Nhat bat custom exception
-                    if (message != err.responseText) {
-                        message = message == null ? err.responseText : message + err.responseText;
-                    } else {
-                        message = err.responseText;
-                    }
-
-                    break;
-                default:
-                    message = `${err.responseText}. ${err.stack}`;
-                    break;
-            }
-        }
-        console.log(err);
-        try {
-            sendClientErrorLog(message, err);
-        }
-        catch {
-
-        }
-        console.trace();
-    }
-
-    try {
-        let parsedObject = JSON.parse(message);
-        if (parsedObject.typeMsg != undefined) {
-            if (parsedObject.typeMsg[0] == "popup") {
-                appNotifyWarning(parsedObject.message[0]);
-            }
-        }
-        else
-            appNotifyError(message);
-
-    }
-    catch { appNotifyError(message); }
-}
 
 var appNotifyInfo = function (message, isConfirm) {
     return Swal.fire({
@@ -520,149 +474,17 @@ var initFormSubTab = function (entityName, container, tabTitle, instance) {
 }
 
 function isNullOrEmpty(str) {
-    return !str || str.trim().length === 0;
+    if (typeof str === "string")
+        return !str || str.trim().length === 0;
+    else {
+    return str === null ? true : false;
+    }
 }
 
 //function isNullOrEmpty(str) {
 //    return str === null || str === undefined || (typeof str === 'string' && str.trim().length === 0);
 //}
 
-function RenderGridElement(_gridConfig, gridInstance) {
-    $.each(_gridConfig, function (i, item) {
-        item.lookup = null;
-        item.mLookup = null;
-        if (item.gridVisibleIndex != null || item.gridVisibleIndex != undefined) {
-            item.visibleIndex = item.gridVisibleIndex;
-            if (item.gridVisibleIndex < 0) {
-                item.visible = false;
-            }
-        }
-        else
-            item.visibleIndex = item.order;
-
-        if (item.validationRules != null && item.validationRules != "") {
-            item.validationRules = JSON.parse(item.validationRules);
-        }
-
-        if (isNullOrEmpty(item.width)) {
-            item.width = _defaultGridFieldWidth;
-        }
-        if (isNullOrEmpty(item.height)) {
-            item.height = _defaultGridFieldHeight;
-        }
-        if (item.dataType == "enum") {
-            byteObjectConvert(item, gridInstance);
-            item = selectBoxRemakeOption(item, gridInstance);
-        }
-        else if (item.dataType == "table") {
-            var gridConfig = makeFieldFeatures(item, gridInstance, "grid");
-            if (gridConfig.config.displayExp) {
-                item.lookup = {
-                    dataSource: {
-                        key: 'id',
-                        store: DevExpress.data.AspNet.createStore({
-                            key: "id",
-                            loadUrl: `/api/${gridConfig.model}/GetAll`
-                        }),
-                        paginate: true,
-                    },
-                    displayExpr: gridConfig.config.displayExp,
-                    valueExpr: 'id'
-                };
-
-                item.editorType = "dxDropDownBox";
-                item.editorOptions = {
-                    editorType: "dxDropDownBox",
-                    width: "100%",
-                    dropDownOptions: {
-                        width: _defaultDropDownWidth,
-                        height: _defaultDropDownHeight,
-                    },
-                    showClearButton: true,
-                    dataSource: DevExpress.data.AspNet.createStore({
-                        key: 'id',
-                        loadUrl: `api/${gridConfig.model}/GetAll`,
-                        paginate: true
-                    }),
-                    columns: gridConfig.config.getScheme,
-                    contentTemplate: function (e) {
-                        const $dataGrid = $("<div>").dxDataGrid({
-                            selectionMode: 'all',
-                            // remoteOperations: { paging: true, filtering: true, sorting: true, grouping: true, summary: true, groupPaging: true },
-                            filterRow: { visible: true },
-                            dataSource: e.component.option("dataSource"),
-                            columns: e.component.option("columns"),
-                            selection: { mode: "single" },
-                            scrolling: {
-                                mode: 'virtual',
-                                preloadEnabled: false,
-                                showScrollbar: 'always'
-                            },
-                            width: "100%",
-                            height: "100%",
-                            allowItemDeleting: false,
-                            showSelectionControls: true,
-                            sorting: {
-                                mode: 'multiple',
-                            },
-                            onSelectionChanged: function (selectedItems) {
-                                var keys = selectedItems.selectedRowKeys,
-                                    hasSelection = keys.length;
-                                if (hasSelection) {
-                                    e.component.selectedItem = selectedItems.selectedRowsData;
-                                    e.component.option("displayValue", selectedItems.selectedRowsData[0][gridConfig.config.displayExp]);
-                                    e.component.option("value", keys[0]);
-                                }
-                            },
-                            columnAutoWidth: true,
-                            customizeColumns: function (columns) {
-                            },
-                        });
-
-                        var dtGrid = $dataGrid.dxDataGrid("instance");
-                        e.component.on("valueChanged", function (args) {
-                            dtGrid.selectRows(args.value, false);
-                            if (args.value != null) {
-                                e.component.close();
-                            }
-                        });
-
-                        return $dataGrid;
-                    }
-                };
-            }
-            else {
-                appErrorHandling(" RenderGridElement Exception: No display Expr defined!");
-            }
-        }
-    });
-
-}
-
-function getModelConfig(model, isFilter = true) {
-    var modelConfig = [];
-    if (_sysTables.length == 0)
-        $.ajax({
-            url: `/api/SysTable/GetAll`,
-            type: 'GET',
-            async: false,
-            success: function (response) {
-                modelConfig = response;
-                if (_sysTables.length == 0) {
-                    _sysTables = response;
-                }
-            },
-            error: function () {
-                appErrorHandling(" Table is not defined!");
-            }
-        });
-    else
-        modelConfig = _sysTables;
-    if (isFilter)
-        return modelConfig.find(f => f.name == model);
-    else
-        return modelConfig;
-}
 
 //function getSchemeConfig() {
 //    if (_allScheme.length == 0)
@@ -885,205 +707,7 @@ function base64ToUint8Array(base64) {
     }
     return bytes;
 }
-function createEditor(item, $container, $element, editorOptions) {
-    //editorOptions should be main property of control here
-    switch (item.editorType) {
-        case "dxFileUploader":
-            var controllerName = editorOptions.ModelName ? editorOptions.ModelName : "SitePictures";
 
-            if (editorOptions.refFieldId)
-                $.ajax({
-                    url: `/api/${controllerName}/GetAttachtmentBySurvey?id=${editorOptions.refFieldId}`, // Replace with your actual API
-                    method: 'GET',
-                    success: function (data) {
-                        if (data.length > 0) {
-                            const previewId = `#imagePreview_${item.surveyId}_${item.outlineId}`;
-                            const $previewWrapper = $(previewId);
-                            if ($previewWrapper.find(".previewLoader").length === 0) {
-                                const $loadDiv = $("<div>")
-                                    .addClass("previewLoader")
-                                    .css({ position: "absolute", width: "100%", height: "100%", top: 0, left: 0 })
-                                    .appendTo($previewWrapper.css("position", "relative")); // đảm bảo container có position
-
-                                const panel = $("<div>").appendTo($loadDiv);
-
-                                panel.dxLoadPanel({
-                                    message: "Image loading...",
-                                    visible: true,
-                                    shading: true,
-                                    shadingColor: "rgba(255,255,255,0.7)",
-                                    showPane: true,
-                                    closeOnOutsideClick: false,
-                                    position: { of: $previewWrapper }
-                                });
-                            }
-                            data = data.filter(f => f.outlineId == editorOptions.outline.id);
-                            data.forEach(imageInstance => {
-                                imageInstance.outline = editorOptions.outline;
-                                var uint8Array = new Uint8Array(imageInstance.fileData);
-                                var blob = new Blob([uint8Array], { type: imageInstance.type });
-                                var url = URL.createObjectURL(blob);
-                                item.attachment = imageInstance;
-                                imageInstance.ModelName = controllerName;
-                                addImageToPreview(url, imageInstance);
-                            });
-
-                            $(`#imagePreview_${editorOptions.refFieldId}_${editorOptions.outline.id} .previewLoader`).remove();
-                        }
-                    }
-                });
-            editorOptions.uploadTitle = "Images";
-            const $imagePreview = $(`<div id='imagePreview_${editorOptions.refFieldId}_${editorOptions.outline.id}' class='imagePreview' style='display: flex; flex-wrap: wrap; gap: 25px;top: 10px'>`).appendTo($container);
-            $(`<div id="fileUpload_${editorOptions.ModelName}_${editorOptions.id}">`).dxFileUploader({
-                readOnly: editorOptions.isReadOnly ? editorOptions.isReadOnly : false,
-                multiple: true,
-                accept: "image/*",
-                selectButtonText: `Choose ${editorOptions.uploadTitle}`,
-                dropZone: $imagePreview,
-                labelText: "",
-                uploadMode: "instantly",
-                uploadUrl: `/api/${controllerName}/AsyncUploadPicture?surveyId=${editorOptions.refFieldId}&outlineId=${editorOptions.outline.id}&outlinePlaceHolder=${encodeURIComponent(editorOptions.outline?.placeHolder)}`,
-                showFileList: false,
-                onDropZoneEnter: function (e) {
-                    //$(e.dropZoneElement).addClass("highlight-drop-zone");
-                },
-                onDropZoneLeave: function (e) {
-                    //$(e.dropZoneElement).removeClass("highlight-drop-zone");
-                },
-                //onDrop: function (e) {
-                //    //console.log("Files dropped:", e.event.dataTransfer.files);
-                //},
-                onUploadStarted: function (e) {
-                    $(`#imagePreview_${editorOptions.refFieldId}_${editorOptions.outline.id}`).css("position", "relative"); // đảm bảo relative
-                    $(`#imagePreview_${editorOptions.refFieldId}_${editorOptions.outline.id} .previewLoader`).remove(); // nếu có rồi
-                    $("<div>").addClass("previewLoader").appendTo(`#imagePreview_${editorOptions.refFieldId}_${editorOptions.outline.id}`)
-                        .dxLoadPanel({
-                            message: "Image loading...",
-                            visible: true,
-                            shading: true,
-                            shadingColor: "rgba(255,255,255,0.7)",
-                            showPane: true,
-                            closeOnOutsideClick: false,
-                            position: { of: `#imagePreview_${editorOptions.refFieldId}_${editorOptions.outline.id}` }
-                        });
-                },
-                onUploaded: function (e) {
-                    $(`#imagePreview_${editorOptions.refFieldId}_${editorOptions.outline.id} .previewLoader`).remove();
-                    var response = e.request.response;
-                    var responseObject = JSON.parse(response); // truy vấn attachment
-                    var fr = new FileReader();
-                    fr.readAsArrayBuffer(e.file);
-                    fr.onload = function (event) {
-                        var arrayBuffer = fr.result;
-                        var byteArray = new Uint8Array(arrayBuffer);
-                        var blob = new Blob([byteArray], { type: e.file.type });
-                        var url = URL.createObjectURL(blob);
-                        if (e.file && e.file.type.startsWith("image/")) {
-                            const img = new Image();
-                            img.src = url;
-                            img.onload = function () {
-                                e.file.width = img.width;
-                                e.file.height = img.height;
-                            };
-                        }
-                        var formData = editorOptions.instanceProps.formInstance.option("formData");
-                        var formField = `uploadFile${item.dataField}`;
-                        var fileObject = { attachment: e.file, fileName: e.file.name, dataField: item.dataField, modelName: editorOptions.ModelName, outlineId: item.outline.id, outlinePlaceholder: item.outline.placeHolder, outlineGuid: item.outline.guid, fileData: Array.from(byteArray), cacheGuid: responseObject.attachment.guid };
-                        if (formData[formField] == null || formData[formField] == undefined) {
-                            formData[formField] = [];
-                        }
-                        formData[formField].push(fileObject);
-                        if (editorOptions.id) {
-                            fileObject.surveyId = editorOptions.refFieldId;
-                            var formObject = new Object();
-                            formObject[formField] = formData[formField];
-                            editorOptions.instanceProps.formInstance.option("changedFields", formObject);
-                        }
-
-                        if (responseObject.attachment.id) {
-                            item.attachmentId = responseObject.attachment.id;
-                        }
-
-                        if (responseObject.sitePictures) {
-                            item.sitePictureId = responseObject.sitePictures.id;
-                        }
-                        item.ModelName = controllerName;
-                        //addImageToPreview(url, item);
-                        addImageToPreview(url, responseObject.attachment);
-                    }
-                }
-            }).appendTo($container);
-            break;
-        case "empty":
-            //$element.text(item.label.texts).appendTo($container);
-            break;
-        case "simple":
-            break;
-        case "dxTextBox": // Note that cant edit label of the control
-            $element.dxTextBox(editorOptions).appendTo($container);
-            break;
-        case "dxTextArea":
-            $element.dxTextArea(editorOptions).appendTo($container);
-            break;
-        case "dxDiagram":
-            break;
-        case "dxDataGrid":
-            var elementName = editorOptions.ModelName;
-            if (editorOptions.name != null || editorOptions.name != undefined) {
-                elementName = editorOptions.name;
-            }
-            editorOptions.gridOptionConfig.height = _defaultGridMinHeight;
-            var mGridOption = new MGridOption(editorOptions.ModelName, 'User', editorOptions.gridOptionConfig);
-            if (editorOptions.gridOption) {
-                if (editorOptions.gridOption.gridEditorOptions) {
-                    if (editorOptions.gridOption.gridEditorOptions != null || editorOptions.gridOption.gridEditorOptions != undefined) {
-                        containerId = editorOptions.gridOption.mGridDetailOption?.container
-                            ? editorOptions.gridOption.mGridDetailOption.container
-                            : `dataGrid_${elementName}_${editorOptions.id}`;
-                        $(`<div id='${containerId}' style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid(editorOptions.gridOption.getGridOptions(editorOptions.gridOption)).appendTo($container);
-                    }
-                }
-                else
-                    $(`<div id='dataGrid_${elementName}_${editorOptions.id}' style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid(editorOptions.gridOption.getGridOptions()).appendTo($container);
-            }
-            else
-                $(`<div id='dataGrid_${elementName}_${editorOptions.id}' style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid(mGridOption.getGridOptions()).appendTo($container);
-            break;
-        case "dxHtmlEditor":
-            DevExpress.Quill.register({
-                'modules/better-table': quillBetterTable,
-                'formats/custom-list': CustomList
-            }, true);
-            var editor = createHtmlEditor($container, $element, item, editorOptions);
-
-            break;
-        case "dxDateBox":
-            $element.dxDateBox({
-                ...editorOptions,
-                type: "date"
-            }).appendTo($container);
-            break;
-        case "dxCheckBox":
-            $element.dxCheckBox({
-                value: editorOptions.value,
-                onValueChanged: editorOptions.onValueChanged
-            }).appendTo($container);
-            break;
-        case "dxNumberBox":
-            $element.dxNumberBox(editorOptions).appendTo($container);
-            break;
-        case "dxSelectBox":
-            editorOptions.searchEnabled = true;
-            $element.dxSelectBox(editorOptions).appendTo($container);
-            break;
-        case "dxTagBox":
-            editorOptions.searchEnabled = true;
-            $element.dxTagBox(editorOptions).appendTo($container);
-            break;
-        default:
-            console.warn("Unsupported editor type:", item.editorType);
-    }
-}
 
 function toggleFullScreen(editor, editorElement, item, editorOptions) {
     let popupInstance;
@@ -1113,248 +737,7 @@ function toggleFullScreen(editor, editorElement, item, editorOptions) {
     popupInstance.show();
 }
 
-function createHtmlEditor(container, $element, item, editorOptions, isFullscreen = false) {
 
-    var defaultOnValueChanged = function (e) {
-        if (item.instanceProps?.formInstance) {
-            item.instanceProps.formInstance.updateData(item.dataField, e.value);
-        }
-        editorOptions.value = e.value;
-    };
-
-    if (item.customEditorOptions) {
-        if (editorOptions.onValueChanged)
-            defaultOnValueChanged = editorOptions.onValueChanged;
-    }
-
-    var quillInstance;
-    var currentRange = new Object;
-    currentRange.index = 0;
-    var wingdingsChars = [
-        { char: "" }, // black point
-        { char: "" }, // square
-        { char: "" }, // check
-        { char: "" }, // square check
-        { char: "" }, // square x
-        { char: "" }, // square x
-        { char: "" },  // right style arrow 
-        { char: "" }   // four square
-    ];
-    var superScriptChars = [
-        { char: "²" },
-        { char: "³" }
-    ];
-
-    var controlId = editorOptions.instanceProps ? editorOptions.instanceProps.refFieldId : editorOptions.id;
-    var editor = $element.dxHtmlEditor({
-        elementAttr: {
-            id: `dxHtmlEditor_${item.dataField}_${controlId}`
-        },
-        width: isFullscreen ? "100%" : _defaultHtmlEditorWidth,
-        height: isFullscreen ? "calc(100% - 20px)" : (editorOptions.isReadOnly ? "100%" : _defaultHtmlEditorHeight),
-        value: editorOptions.value,
-        readOnly: item.isFieldReadOnly ? true : (editorOptions.isReadOnly || editorOptions.readOnly || false),
-        isCodeView: false,
-        imageUpload: {
-            tabs: ['file', 'url'],
-            fileUploadMode: 'base64',
-        },
-        imageResize: {
-            displayStyles: {
-                backgroundColor: 'black',
-                border: 'none',
-                color: 'white'
-            },
-            modules: ['Resize', 'DisplaySize', 'Toolbar']
-        },
-        mediaResizing: {
-            enabled: true
-        },
-        toolbar: {
-
-            items: [
-
-                'undo', 'redo',
-                'separator',
-                {
-                    formatName: "size",
-                    formatValues: ['8pt', '9pt', '10pt', '11pt', '12pt', '14pt', '16pt', '18pt', '20pt', '22pt', '24pt', '26pt', '28pt', '36pt', '48pt', '72pt']
-                },
-                {
-                    formatName: 'font',
-                    formatValues: ['Asap', 'Wingdings'],
-                },
-                'separator', 'bold', 'italic', 'strike', 'underline', 'separator',
-                'alignLeft', 'alignCenter', 'alignRight', 'alignJustify', 'separator',
-                //'orderedList', 'bulletList', 'separator',
-                'separator',
-                {
-                    formatName: "header",
-                    formatValues: [false, 1, 2, 3, 4, 5, 6]
-                }, 'separator',
-                'color', 'background', 'separator',
-                'link', 'image', 'separator',
-                'clear', 'codeBlock', 'blockquote', 'separator',
-                {
-                    widget: 'dxButton',
-                    options: {
-                        hint: 'Insert Table',
-                        icon: 'inserttable',
-                        onClick: function (e) {
-                            var tableModule = editor.dxHtmlEditor("instance").getModule('better-table'); // get module instance
-                            tableModule.insertTable(3, 3);
-                        }
-                    }
-                }, {
-                    widget: 'dxButton',
-                    options: {
-                        hint: 'Increase Indent',
-                        icon: 'indent',
-                        onClick: function () {
-                            if (quillInstance) {
-                                let range = quillInstance.getSelection();
-                                if (range) {
-                                    quillInstance.format('indent', '+1'); // Tăng thụt lề
-                                }
-                            }
-                        }
-                    }
-                },
-                {
-                    widget: 'dxButton',
-                    options: {
-                        hint: 'Decrease Indent',
-                        icon: 'outdent',
-                        onClick: function () {
-                            if (quillInstance) {
-                                let range = quillInstance.getSelection();
-                                if (range) {
-                                    quillInstance.format('indent', '-1'); // Giảm thụt lề
-                                }
-                            }
-                        }
-                    }
-                },
-                {
-                    widget: "dxDropDownButton",
-                    options: {
-                        text: "Symbol",
-                        showArrowIcon: true,
-                        dropDownOptions: { width: 100 },
-                        items: wingdingsChars,
-                        itemTemplate: function (data) {
-                            return $("<div>").text(data.char).css({
-                                fontFamily: "Wingdings",
-                                fontSize: "24px",
-                                //textAlign: "center",
-                                cursor: "pointer"
-                            });
-                        },
-                        onItemClick: function (e) {
-                            if (quillInstance) {
-                                quillInstance.insertText(currentRange.index, e.itemData.char, { font: "Wingdings" });
-                            }
-                        }
-                    }
-                },
-                {
-                    widget: "dxDropDownButton",
-                    options: {
-                        text: "m²/m³",
-                        showArrowIcon: true,
-                        dropDownOptions: { width: 100 },
-                        items: superScriptChars,
-                        itemTemplate: function (data) {
-                            return $("<div>").text(data.char).css({
-                                fontFamily: "Asap",
-                                fontSize: "24px",
-                                //textAlign: "center",
-                                cursor: "pointer"
-                            });
-                        },
-                        onItemClick: function (e) {
-                            if (quillInstance) {
-                                quillInstance.insertText(currentRange.index, e.itemData.char, { font: "Asap" });
-                            }
-                        }
-                    }
-                },
-
-
-
-                //{
-                //    widget: 'dxButton',
-                //    options: {
-                //        hint: 'Ordered List',
-                //        icon: 'orderedlist',
-                //        onClick: function () {
-                //            let range = quillInstance.getSelection();
-                //            if (range) {
-                //                //quillInstance.format('list', 'ordered'); // Áp dụng danh sách có số
-                //                quillInstance.format('style', 'my-custom-ordered'); // Thêm class
-                //            }
-                //        }
-                //    }
-                //},
-                //{
-                //    widget: 'dxButton',
-                //    options: {
-                //        hint: 'Bullet List',
-                //        icon: 'bulletlist',
-                //        onClick: function () {
-                //            let range = quill.getSelection();
-                //            if (range) {
-                //                //quillInstance.format('list', 'bullet'); // Áp dụng danh sách chấm
-                //                quillInstance.format('style', 'my-custom-bullet'); // Thêm class
-                //            }
-                //        }
-                //    }
-                //},
-                'separator', {
-                    name: "fullscreen",
-                    widget: "dxButton",
-                    visible: isFullscreen ? false : true,
-                    options: {
-                        text: "Full Screen",
-                        onClick: function () {
-                            toggleFullScreen(editor.dxHtmlEditor("instance"), editor, item, editorOptions); // Gọi hàm xử lý toggle full screen
-                        }
-                    }
-                }, {
-                    name: "codeView",
-                    location: "before",
-                    widget: "dxButton",
-                    options: {
-                        text: "Code View",
-                        onClick: function (e) {
-                            toggleCodeView(editor.dxHtmlEditor("instance"), e.component);
-                        }
-                    }
-                }
-            ]
-        },
-        onInitialized: function (e) {
-            quillInstance = e.component;
-            quillInstance.on("selection-change", function (range) {
-                if (range) {
-                    currentRange = range;
-                }
-            });
-
-            lockTabPanel(e.element, editorOptions.isReadOnly);
-        },
-        customizeModules: function (cfg) {
-            cfg.table = false;
-            cfg['better-table'] = { operationMenu: [] };
-        },
-        onFocusOut: function () {
-            currentRange = quillInstance.getSelection();
-        },
-        onValueChanged: defaultOnValueChanged
-    }).appendTo(container);
-
-    return editor;
-}
 
 function toggleCodeView(editor, button) {
     const contentContainer = editor.element().find(".dx-htmleditor-content");
@@ -1652,7 +1035,7 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
         else if (item.editorType == "dxMultiDataGrid") {
             var model = "Users";
             var mDropDownDS = new MDropDownDataSource();
-            dataSource = mDropDownDS.getDropDownDS('id', `api/${model}/DropDownLookUp`);
+            dataSource = mDropDownDS.getDropDownDS('Id', `api/${model}/DropDownLookUp`);
             itemOptions = {
                 validationRules: item.validationRules,
                 formGroupName: item.formGroupName,
@@ -1904,149 +1287,149 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
         }
     }
 
-    if (formInstanceProps.isAllowAddOutline || formInstanceProps.isAllowAddOutline == null || formInstanceProps.isAllowAddOutline == undefined) {
-        var outlineTitle = "ADD OUTLINE";
-        if (formInstanceProps.formOptions)
-            if (formInstanceProps.formOptions.addOutlineTitle) outlineTitle = formInstanceProps.formOptions.addOutlineTitle;
-        var id = 0;
-        var surveyId = 0;
-        var jsonConfig = {};
-        var dataForm = null;
-        var addOutLine = {
-            itemType: "button",
-            alignment: "left",
-            name: "addOutline",
-            //dataField: "__addOutline__",
-            //editorType: "dxButton",
-            buttonOptions: {
-                height: _defaultButtonHeight,
-                width: "100%",
-                text: outlineTitle,
-                onClick: function (e) {
-                    var popupInstance = $(`#outlinePopup`).dxPopup({
-                        width: "70%",
-                        height: "70%",
-                        showTitle: true,
-                        title: outlineTitle,
-                        dragEnabled: false,
-                        closeOnOutsideClick: true,
-                        contentTemplate: function (container) {
-                            var content = $("<div>").appendTo(container);
-                            if (formInstanceProps?.outlineForm?.surveyTypeId)
-                                jsonConfig.surveyTypeId = formInstanceProps?.outlineForm?.surveyTypeId;
-                            if (formInstanceProps?.id)
-                                jsonConfig.mainId = formInstanceProps?.id;
-                            if (formInstanceProps?.refFieldId) {
-                                surveyId = formInstanceProps?.refFieldId;
-                                jsonConfig.surveyId = formInstanceProps?.refFieldId;
-                            }
-                            if (formInstanceProps?.Outline.length > 0) {
-                                //jsonConfig.parentOutlineId = formInstanceProps?.Outline.find(f => formInstanceProps?.ModelName.toUpperCase() == f.content.replace(' ', '') && f.surveyTypeId == formInstanceProps?.outlineForm?.surveyTypeId).id;
-                            }
-                            if (_cacheOutlines.length > 0)
-                                jsonConfig.parentOutlineId = _cacheOutlines.find(f => formInstanceProps?.ModelName.toLowerCase() == f.placeHolder.toLowerCase() && f.surveyTypeId == formInstanceProps?.outlineForm?.surveyTypeId).id;
-                            var passingParams = { UITabId: `Outline_Form_${surveyId}_${id}`, refPageNum: surveyId, pageNum: id, jsonConfig: JSON.stringify(jsonConfig) };
+    //if (formInstanceProps.isAllowAddOutline || formInstanceProps.isAllowAddOutline == null || formInstanceProps.isAllowAddOutline == undefined) {
+    //    var outlineTitle = "ADD OUTLINE";
+    //    if (formInstanceProps.formOptions)
+    //        if (formInstanceProps.formOptions.addOutlineTitle) outlineTitle = formInstanceProps.formOptions.addOutlineTitle;
+    //    var id = 0;
+    //    var surveyId = 0;
+    //    var jsonConfig = {};
+    //    var dataForm = null;
+    //    var addOutLine = {
+    //        itemType: "button",
+    //        alignment: "left",
+    //        name: "addOutline",
+    //        //dataField: "__addOutline__",
+    //        //editorType: "dxButton",
+    //        buttonOptions: {
+    //            height: _defaultButtonHeight,
+    //            width: "100%",
+    //            text: outlineTitle,
+    //            onClick: function (e) {
+    //                var popupInstance = $(`#outlinePopup`).dxPopup({
+    //                    width: "70%",
+    //                    height: "70%",
+    //                    showTitle: true,
+    //                    title: outlineTitle,
+    //                    dragEnabled: false,
+    //                    closeOnOutsideClick: true,
+    //                    contentTemplate: function (container) {
+    //                        var content = $("<div>").appendTo(container);
+    //                        if (formInstanceProps?.outlineForm?.surveyTypeId)
+    //                            jsonConfig.surveyTypeId = formInstanceProps?.outlineForm?.surveyTypeId;
+    //                        if (formInstanceProps?.id)
+    //                            jsonConfig.mainId = formInstanceProps?.id;
+    //                        if (formInstanceProps?.refFieldId) {
+    //                            surveyId = formInstanceProps?.refFieldId;
+    //                            jsonConfig.surveyId = formInstanceProps?.refFieldId;
+    //                        }
+    //                        if (formInstanceProps?.Outline.length > 0) {
+    //                            //jsonConfig.parentOutlineId = formInstanceProps?.Outline.find(f => formInstanceProps?.ModelName.toUpperCase() == f.content.replace(' ', '') && f.surveyTypeId == formInstanceProps?.outlineForm?.surveyTypeId).id;
+    //                        }
+    //                        if (_cacheOutlines.length > 0)
+    //                            jsonConfig.parentOutlineId = _cacheOutlines.find(f => formInstanceProps?.ModelName.toLowerCase() == f.placeHolder.toLowerCase() && f.surveyTypeId == formInstanceProps?.outlineForm?.surveyTypeId).id;
+    //                        var passingParams = { UITabId: `Outline_Form_${surveyId}_${id}`, refPageNum: surveyId, pageNum: id, jsonConfig: JSON.stringify(jsonConfig) };
 
-                            appendElementViewInsideAsync(`/Business/MasterData/Outline_Form`, passingParams, content, `Outline_Form_${surveyId}_${id}`, "appendTo").then(data => {
-                                dataForm = data;
+    //                        appendElementViewInsideAsync(`/Business/MasterData/Outline_Form`, passingParams, content, `Outline_Form_${surveyId}_${id}`, "appendTo").then(data => {
+    //                            dataForm = data;
 
-                            })
-                                .catch(error => {
-                                    try {
-                                        sendClientErrorLog("Lỗi khi tải dữ liệu:", error);
-                                    }
-                                    catch {
-                                    }
-                                    console.error("Lỗi khi tải dữ liệu:", error);
-                                });
-
-
-                            //$("<div>").dxScrollView({
-                            //    height: "100%",
-                            //    width: "100%",
-                            //    showScrollbar: "always",
-                            //    useNative: false,
-                            //    direction: "both",
-                            //    contentTemplate: function (scrollViewContent) {
-                            //        return scrollViewContent;
-                            //    }
-                            //}).appendTo(container);
+    //                        })
+    //                            .catch(error => {
+    //                                try {
+    //                                    sendClientErrorLog("Lỗi khi tải dữ liệu:", error);
+    //                                }
+    //                                catch {
+    //                                }
+    //                                console.error("Lỗi khi tải dữ liệu:", error);
+    //                            });
 
 
-                            return container;
-                        },
-                        onHiding: function (e) {
-
-                        }
-                        , toolbarItems: [{
-                            widget: 'dxButton',
-                            toolbar: 'bottom',
-                            location: 'after',
-                            options: {
-                                stylingMode: 'contained',
-                                type: 'normal',
-                                text: "Create",
-                                onClick() {
-                                    //var outlineForm = $(`#Outline_Form_${surveyId}_${id}`).dxForm().dxForm("instance");
-                                    var passingParams = {};
-                                    passingParams.Survey = {};
-                                    passingParams.Outline = {};
-                                    passingParams.MasterId = jsonConfig.mainId;
+    //                        //$("<div>").dxScrollView({
+    //                        //    height: "100%",
+    //                        //    width: "100%",
+    //                        //    showScrollbar: "always",
+    //                        //    useNative: false,
+    //                        //    direction: "both",
+    //                        //    contentTemplate: function (scrollViewContent) {
+    //                        //        return scrollViewContent;
+    //                        //    }
+    //                        //}).appendTo(container);
 
 
-                                    var formData = dataForm.option('formData');
-                                    //requestPassingData.Management = formData;
+    //                        return container;
+    //                    },
+    //                    onHiding: function (e) {
 
-                                    if (formData != null)
-                                        passingParams.Outline = formData;
-                                    if (surveyId != 0)
-                                        passingParams.Survey.Id = surveyId;
+    //                    }
+    //                    , toolbarItems: [{
+    //                        widget: 'dxButton',
+    //                        toolbar: 'bottom',
+    //                        location: 'after',
+    //                        options: {
+    //                            stylingMode: 'contained',
+    //                            type: 'normal',
+    //                            text: "Create",
+    //                            onClick() {
+    //                                //var outlineForm = $(`#Outline_Form_${surveyId}_${id}`).dxForm().dxForm("instance");
+    //                                var passingParams = {};
+    //                                passingParams.Survey = {};
+    //                                passingParams.Outline = {};
+    //                                passingParams.MasterId = jsonConfig.mainId;
 
-                                    if (!formData.hasOwnProperty('content') || !formData.content || formData.content.trim() === "") {
-                                        appNotifyWarning("Outline content cannot be empty!");
-                                    }
-                                    else {
-                                        $.ajax({
-                                            url: 'api/Survey/AddCustomOutline',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            type: 'POST',
-                                            data: JSON.stringify(passingParams)
-                                            , success: function (response) {
-                                                appNotifySuccess("Outline created success! Please refresh your survey. ");
-                                            },
-                                            error: function (err) {
-                                                appNotifyError("Outline created fail!");
-                                            }
-                                        });
-                                    }
-                                    popupInstance.hide();
-                                },
-                            },
-                        }, {
-                            widget: 'dxButton',
-                            toolbar: 'bottom',
-                            location: 'after',
-                            options: {
-                                stylingMode: 'contained',
-                                type: 'normal',
-                                text: "Close",
-                                onClick() {
-                                    popupInstance.hide();
-                                },
-                            },
-                        }]
-                    }).dxPopup("instance");
-                    popupInstance.show();
-                }
-            },
-            editorOptions: {
-                height: _defaultButtonHeight,
-                width: "100%"
-            },
-        };
-        if (!formInstanceProps.isReadOnly)
-            itemsArray.push(addOutLine);
-    }
+
+    //                                var formData = dataForm.option('formData');
+    //                                //requestPassingData.Management = formData;
+
+    //                                if (formData != null)
+    //                                    passingParams.Outline = formData;
+    //                                if (surveyId != 0)
+    //                                    passingParams.Survey.Id = surveyId;
+
+    //                                if (!formData.hasOwnProperty('content') || !formData.content || formData.content.trim() === "") {
+    //                                    appNotifyWarning("Outline content cannot be empty!");
+    //                                }
+    //                                else {
+    //                                    $.ajax({
+    //                                        url: 'api/Survey/AddCustomOutline',
+    //                                        headers: { 'Content-Type': 'application/json' },
+    //                                        type: 'POST',
+    //                                        data: JSON.stringify(passingParams)
+    //                                        , success: function (response) {
+    //                                            appNotifySuccess("Outline created success! Please refresh your survey. ");
+    //                                        },
+    //                                        error: function (err) {
+    //                                            appNotifyError("Outline created fail!");
+    //                                        }
+    //                                    });
+    //                                }
+    //                                popupInstance.hide();
+    //                            },
+    //                        },
+    //                    }, {
+    //                        widget: 'dxButton',
+    //                        toolbar: 'bottom',
+    //                        location: 'after',
+    //                        options: {
+    //                            stylingMode: 'contained',
+    //                            type: 'normal',
+    //                            text: "Close",
+    //                            onClick() {
+    //                                popupInstance.hide();
+    //                            },
+    //                        },
+    //                    }]
+    //                }).dxPopup("instance");
+    //                popupInstance.show();
+    //            }
+    //        },
+    //        editorOptions: {
+    //            height: _defaultButtonHeight,
+    //            width: "100%"
+    //        },
+    //    };
+    //    if (!formInstanceProps.isReadOnly)
+    //        itemsArray.push(addOutLine);
+    //}
 
 
     $.each(itemsArray, function (i, item) {
@@ -2129,156 +1512,6 @@ async function handlePaste(gridInstance, event, gridInstanceConfig) {
     //});
 }
 
-function fetchConfigurationData(model, typeScheme = null) {
-    var sysTableConfig = [];
-    var getScheme = [];
-    var displayExp;
-    var itemConfig = new Object();
-    // Fetch toolbarItemsConfig
-    itemConfig = getModelConfig(model);
-    sysTableConfig = itemConfig;
-    //if (_cacheDataGridConfigs.length > 0) ///Đưa cache ngay chỗ này
-    //    getScheme = _cacheDataGridConfigs.filter(f => f.sysTableFK.name == model);
-    //else {
-    var url = `/api/${model}/GetScheme`;
-    if (typeScheme != null || typeScheme != undefined)
-        url = typeScheme == "User" ? `/api/${model}/GetScheme` : `/api/${model}/GetSystemScheme`;
-    // Fetch getScheme
-    $.ajax({
-        url: url,
-        type: 'GET',
-        async: false,
-        success: function (response) {
-            getScheme = response;
-        },
-        error: function (err) {
-            console.warn(` AppUtilsFetchSchemeException: Scheme is not defined or controller ${model} not exist!`);
-        }
-    });
-    //}
-    // Tìm displayExpr dựa vào model trong toolbarItemsConfig
-    var displayExp = "name";
-    if (itemConfig != null || itemConfig != undefined) {
-        if (itemConfig.displayExpr)
-            displayExp = itemConfig.displayExpr;
-    }
-
-    return {
-        sysTableConfig,
-        getScheme,
-        displayExp
-    };
-}
-
-function makeBasicDataSource(instance, isForm = false) {
-    var checkCustomQueryByModel = null;
-    if (_sysTables) {
-        checkCustomQueryByModel = _sysTables.find(f => f.name == instance.ModelName);
-    }
-    if (!isForm) {
-
-        let filter = null;
-        if (instance.filterRefId != null && instance.filterRefField != null) {
-            filter = [instance.filterRefField, "=", instance.filterRefId];
-        }
-
-        if (instance.filterRefField2 != null) {
-            if (filter) {
-                if (instance.filterRefId2 == null)
-                    filter = [
-                        filter, "and", [instance.filterRefField2, "=", null]
-                    ];
-                else
-                    filter = [
-                        filter, "and", [instance.filterRefField2, "=", instance.filterRefId2]
-                    ];
-            }
-        }
-
-        if (checkCustomQueryByModel != null || checkCustomQueryByModel != undefined) {
-            if (checkCustomQueryByModel.customQuery != "" && checkCustomQueryByModel.customQuery != null && checkCustomQueryByModel.customQuery != undefined) {
-                return new DevExpress.data.DataSource({
-                    load: function () {
-                        return $.ajax({
-                            url: `/api/${instance.ModelName}/ExecuteCustomQuery`,
-                            method: "POST",
-                            contentType: "application/json",
-                            data: JSON.stringify(checkCustomQueryByModel.customQuery)
-                        });
-                    }
-                });
-            }
-            else {
-                return new DevExpress.data.DataSource({
-                    filter: filter,
-                    store: DevExpress.data.AspNet.createStore({
-                        key: "id",
-                        loadUrl: `/api/${instance.ModelName}/GetAll`,
-                        onBeforeSend: function (method, ajaxOptions) {
-                            if (method === "load") {
-                                ajaxOptions.data = ajaxOptions.data || {};
-                                ajaxOptions.headers = {
-                                    "filterField": instance?.filterRefField ?? "",
-                                    "filterField2": instance?.filterRefField2 ?? "",
-                                    "filterValue": instance?.filterRefId ?? "",
-                                    "filterValue2": instance?.filterRefId2 ?? ""
-                                };
-                            }
-                        },
-                        updateUrl: `/api/${instance.ModelName}/UpdateData`,
-                        insertUrl: `/api/${instance.ModelName}/InsertData`,
-                        deleteUrl: `/api/${instance.ModelName}/DeleteData`
-                    })
-                });
-            }
-        }
-        else {
-            return new DevExpress.data.DataSource({
-                filter: filter,
-                store: DevExpress.data.AspNet.createStore({
-                    key: "id",
-                    loadUrl: `/api/${instance.ModelName}/GetAll`,
-                    updateUrl: `/api/${instance.ModelName}/UpdateData`,
-                    insertUrl: `/api/${instance.ModelName}/InsertData`,
-                    deleteUrl: `/api/${instance.ModelName}/DeleteData`
-                })
-            });
-        }
-    }
-    else {
-        let filter = null;
-        filter = ["id", "=", instance.id];
-        if (checkCustomQueryByModel != null || checkCustomQueryByModel != undefined) {
-            if (checkCustomQueryByModel.customQuery == "" || checkCustomQueryByModel.customQuery == null || checkCustomQueryByModel.customQuery == undefined) {
-                return new DevExpress.data.CustomStore({
-                    load: function () {
-                        if (instance.isQuery) {
-                            if (instance.refFieldName && !instance.isChildForeignKey)
-                                instance.callApi('GetFKMany', null, null);
-                            else
-                                instance.callApi('GetSingle', null, null);
-
-                        }
-                    }
-                });
-            }
-            else {
-                checkCustomQueryByModel.filter = filter;
-                return new DevExpress.data.CustomStore({
-                    load: function (loadOptions) {
-                        instance.callApi('CustomQuery', checkCustomQueryByModel, null);
-                        //return $.ajax({
-                        //    url: `/api/${instance.ModelName}/ExecuteCustomQuery`,
-                        //    method: "POST",
-                        //    contentType: "application/json",
-                        //    data: JSON.stringify(checkCustomQueryByModel.customQuery)
-                        //});
-                    }
-                });
-            }
-        }
-    }
-}
 
 function groupItemsByFormGroupName(items) {
     const groupedItems = items.reduce((groups, item) => {
@@ -2344,66 +1577,217 @@ function groupItemsByFormGroupNameNonChild(items) {
     };
 }
 
+function getDxKind(obj) {
+    if (!obj) return "null";
 
+    if (obj instanceof DevExpress.data.DataSource) {
+        const store = obj.store?.();
+        return `DataSource`;
+    }
+    if (obj instanceof DevExpress.data.CustomStore) {
+        const store = obj.store?.();
+        return `CustomStore`;
+    }
 
-function makeFieldFeatures(item, obj, type) {
+    if (Array.isArray(obj)) return "Array";
+
+    const name = obj?.constructor?.name || "Unknown";
+
+    if (name === "CustomStore") return "CustomStore";
+    if (name === "ArrayStore") return "ArrayStore";
+    if (name === "LocalStore") return "LocalStore";
+    if (name === "ODataStore") return "ODataStore";
+
+    return name;
+}
+async function makeFieldFeatures(item, obj, type) {
+
     var model = item.dataField.replace(/\b(\w+)Id\b/g, (match, p1) => {
         return p1.charAt(0).toUpperCase() + p1.slice(1);
     });
 
-    if (item.mappingFieldFK != null || item.mappingFieldFK != undefined) {
+    if (item.mappingFieldFK != null) {
         model = item.mappingFieldFK.name;
     }
-    var config = new Object();
+
+    const config = await fetchConfigurationData(model, obj.gridType);
+
+    config.model = model;
+
     var dataSource = null;
-    if (type == "grid") {
-        config = fetchConfigurationData(model, obj.gridType);
-        dataSource = makeBasicDataSource(obj);
+
+    if (type == "grid" && obj.fromGrid) {
+        obj.customQuery = config?.sysTableConfig?.customQuery;
+        dataSource = makeBasicDataSource(
+            obj,
+            false,
+            config
+        );
     }
+
     if (type == "form") {
-        config = fetchConfigurationData(model);
+
         var mDropDownDS = new MDropDownDataSource();
-        dataSource = mDropDownDS.getDropDownDS('id', `api/${model}/DropDownLookUp`);
+
+        dataSource = mDropDownDS.getDropDownDS(
+            'id',
+            `api/${model}/DropDownLookUp`
+        );
     }
-    ////item.calculateDisplayValue = gridInstance.GridConfig.displayExpr,
+
     $.each(config.getScheme, function (schIndex, schCol) {
+
         delete schCol.width;
         delete schCol.height;
-        if (schCol.dataType == "string" && schCol.dataField.indexOf("Id") < 0 && schCol.lookup == null && schCol.mLookup == null) {
+
+        if (
+            schCol.dataType == "string"
+            && schCol.dataField.indexOf("Id") < 0
+            && schCol.lookup == null
+            && schCol.mLookup == null
+        ) {
+
             schCol.calculateFilterExpression = function (value, operation, target) {
+
                 if (value != null) {
+
                     if (value.indexOf(",") < 0) {
-                        value = typeof value === "string" ? value.trim() : value;
-                        return this.defaultCalculateFilterExpression(value, operation, target);
+
+                        value = typeof value === "string"
+                            ? value.trim()
+                            : value;
+
+                        return this.defaultCalculateFilterExpression(
+                            value,
+                            operation,
+                            target
+                        );
+
                     } else {
+
                         var filterValues = value.split(',');
+
                         var filterExpression = [];
+
                         for (var i = 0; i < filterValues.length; i++) {
-                            var valf = typeof filterValues[i] === "string" ? filterValues[i].trim() : filterValues[i];
-                            var filterExpr = [this.dataField, operation || '=', valf];
+
+                            var valf = typeof filterValues[i] === "string"
+                                ? filterValues[i].trim()
+                                : filterValues[i];
+
+                            var filterExpr = [
+                                this.dataField,
+                                operation || '=',
+                                valf
+                            ];
+
                             if (i > 0) {
                                 filterExpression.push('or');
                             }
+
                             filterExpression.push(filterExpr);
                         }
+
                         return filterExpression;
                     }
+
                 } else {
-                    return this.defaultCalculateFilterExpression(null, operation, target);
+
+                    return this.defaultCalculateFilterExpression(
+                        null,
+                        operation,
+                        target
+                    );
                 }
             }
-        }
-        else {
-            schCol.calculateFilterExpression = function (value, operation, target) {
-                return this.defaultCalculateFilterExpression(value, operation, target);
+
+        } else {
+
+            schCol.calculateFilterExpression = function (
+                value,
+                operation,
+                target
+            ) {
+                return this.defaultCalculateFilterExpression(
+                    value,
+                    operation,
+                    target
+                );
             }
         }
-
     });
+
     return {
-        config, dataSource, model
+        config,
+        dataSource,
+        model
     };
 }
+//async function makeFieldFeatures(item, obj, type) {
+//    var model = item.dataField.replace(/\b(\w+)Id\b/g, (match, p1) => {
+//        return p1.charAt(0).toUpperCase() + p1.slice(1);
+//    });
+//    fetchConfigurationData(model, obj.gridType).then(
+//        config => {
+//            config.model = model;
+
+//    if (item.mappingFieldFK != null || item.mappingFieldFK != undefined) {
+//        model = item.mappingFieldFK.name;
+//    }
+//    var config = new Object();
+//    var dataSource = null;
+//    if (type == "grid") {
+        
+//                obj.customQuery = config.sysTableConfig.customQuery;
+//                dataSource = makeBasicDataSource(obj, false, true);
+//    }
+//    if (type == "form") {
+//            //config = fetchConfigurationData(model);
+//            var mDropDownDS = new MDropDownDataSource();
+//            dataSource = mDropDownDS.getDropDownDS('id', `api/${model}/DropDownLookUp`);
+         
+//    }
+//    ////item.calculateDisplayValue = gridInstance.GridConfig.displayExpr,
+//    $.each(config.getScheme, function (schIndex, schCol) {
+//        delete schCol.width;
+//        delete schCol.height;
+//        if (schCol.dataType == "string" && schCol.dataField.indexOf("Id") < 0 && schCol.lookup == null && schCol.mLookup == null) {
+//            schCol.calculateFilterExpression = function (value, operation, target) {
+//                if (value != null) {
+//                    if (value.indexOf(",") < 0) {
+//                        value = typeof value === "string" ? value.trim() : value;
+//                        return this.defaultCalculateFilterExpression(value, operation, target);
+//                    } else {
+//                        var filterValues = value.split(',');
+//                        var filterExpression = [];
+//                        for (var i = 0; i < filterValues.length; i++) {
+//                            var valf = typeof filterValues[i] === "string" ? filterValues[i].trim() : filterValues[i];
+//                            var filterExpr = [this.dataField, operation || '=', valf];
+//                            if (i > 0) {
+//                                filterExpression.push('or');
+//                            }
+//                            filterExpression.push(filterExpr);
+//                        }
+//                        return filterExpression;
+//                    }
+//                } else {
+//                    return this.defaultCalculateFilterExpression(null, operation, target);
+//                }
+//            }
+//        }
+//        else {
+//            schCol.calculateFilterExpression = function (value, operation, target) {
+//                return this.defaultCalculateFilterExpression(value, operation, target);
+//            }
+//        }
+
+//    });
+//    return {
+//        config, dataSource, model
+//                };
+//            }
+//        );
+//}
 
 
 function createAccordionGroup(item, $itemElement, formInstanceProps) {
@@ -2484,9 +1868,9 @@ function createAccordionGroup(item, $itemElement, formInstanceProps) {
                             e.stopPropagation();
                         });
 
-                        createDeleteOutline({
-                            title: itemData.title
-                        }, deleteOutlineContainer, outlineObject, formInstanceProps, itemData);
+                        //createDeleteOutline({
+                        //    title: itemData.title
+                        //}, deleteOutlineContainer, outlineObject, formInstanceProps, itemData);
 
                         radioContainer.appendTo(outerContainer);
                         deleteOutlineContainer.appendTo(outerContainer);
@@ -2595,9 +1979,9 @@ function createAccordionField(item, $itemElement, editorOptions, formInstancePro
                                 const deleteOutlineContainer = $("<div style='display:flex;padding-left: 20px;margin-top: -4px;'>").addClass("custom-radio-button").on("click", function (e) {
                                     e.stopPropagation();
                                 });
-                                createDeleteOutline({
-                                    title: itemData.title
-                                }, deleteOutlineContainer, outlineObject, formInstanceProps, itemData);
+                                //createDeleteOutline({
+                                //    title: itemData.title
+                                //}, deleteOutlineContainer, outlineObject, formInstanceProps, itemData);
                                 deleteOutlineContainer.appendTo(outerContainer);
                             }
                         }
@@ -2854,257 +2238,257 @@ function createRadioGroup(titleData, radioContainer, outlineObject, formInstance
 
 
 
-function createDeleteOutline(titleData, deleteContainer, outlineObject, formInstanceProps, itemData) {
-    if (outlineObject.outlineOptions) {
-        if (outlineObject.outlineOptions) {
-            selectedValue = outlineObject.outlineOptions.OptionValue;
-        }
+//function createDeleteOutline(titleData, deleteContainer, outlineObject, formInstanceProps, itemData) {
+//    if (outlineObject.outlineOptions) {
+//        if (outlineObject.outlineOptions) {
+//            selectedValue = outlineObject.outlineOptions.OptionValue;
+//        }
 
-    }
-    else {
-        if (formInstanceProps.outlineForm) {
-            if (formInstanceProps.outlineForm.outlineOptions)
-                if (formInstanceProps.outlineForm.outlineOptions.length > 0) {
-                    selectedValue = formInstanceProps.outlineForm.outlineOptions.find(f => f.outlineId == outlineObject.id).optionValue;
-                }
-        }
-    }
-    //const groupName = `group_${titleData.title}_${outlineObject.id}_${formInstanceProps.id}`;
-
-
-    $(`<div id='renameOutline_${outlineObject.id}_${formInstanceProps.id}'>`).dxButton({
-        icon: "edit", // icon bút chì - biểu tượng rename
-        elementAttr: {
-            title: "Rename" // Tooltip khi hover
-        },
-        height: 30,
-        width: 40,
-        disabled: formInstanceProps.isReadOnly,
-        onContentReady: function (e) {
-            $(e.element).find(".dx-button-content").removeClass("dx-button-content").css({
-                marginTop: "5px",
-            });
-        },
-        onClick: function (e) {
-            var id = 0;
-            var surveyId = 0;
-            var jsonConfig = {};
-            var dataForm = null;
-            var popupInstance = $(`#outlinePopup`).dxPopup({
-                width: "70%",
-                height: "70%",
-                showTitle: true,
-                title: "RENAME OUTLINE",
-                dragEnabled: false,
-                closeOnOutsideClick: true,
-                contentTemplate: function (container) {
-                    var content = $("<div>").appendTo(container);
-                    if (formInstanceProps?.outlineForm?.surveyTypeId)
-                        jsonConfig.surveyTypeId = formInstanceProps?.outlineForm?.surveyTypeId;
-                    if (formInstanceProps?.id)
-                        jsonConfig.mainId = formInstanceProps?.id;
-                    if (formInstanceProps?.refFieldId) {
-                        surveyId = formInstanceProps?.refFieldId;
-                        jsonConfig.surveyId = formInstanceProps?.refFieldId;
-                    }
-                    if (formInstanceProps?.Outline.length > 0) {
-                        //jsonConfig.parentOutlineId = formInstanceProps?.Outline.find(f => formInstanceProps?.ModelName.toUpperCase() == f.content.replace(' ', '') && f.surveyTypeId == formInstanceProps?.outlineForm?.surveyTypeId).id;
-                    }
-                    if (_cacheOutlines.length > 0)
-                        jsonConfig.parentOutlineId = _cacheOutlines.find(f => formInstanceProps?.ModelName.toUpperCase() == f.content.replace(' ', '') && f.surveyTypeId == formInstanceProps?.outlineForm?.surveyTypeId).id;
-                    var passingParams = { UITabId: `Outline_Form_${surveyId}_${id}`, refPageNum: surveyId, pageNum: id, jsonConfig: JSON.stringify(jsonConfig) };
-
-                    appendElementViewInsideAsync(`/Business/MasterData/Outline_Form`, passingParams, content, `Outline_Form_${surveyId}_${id}`, "appendTo").then(data => {
-                        dataForm = data;
-
-                    })
-                        .catch(error => {
-                            try {
-                                sendClientErrorLog("Lỗi khi tải dữ liệu:", error);
-                            }
-                            catch {
-                            }
-                            console.error("Lỗi khi tải dữ liệu:", error);
-                        });
+//    }
+//    else {
+//        if (formInstanceProps.outlineForm) {
+//            if (formInstanceProps.outlineForm.outlineOptions)
+//                if (formInstanceProps.outlineForm.outlineOptions.length > 0) {
+//                    selectedValue = formInstanceProps.outlineForm.outlineOptions.find(f => f.outlineId == outlineObject.id).optionValue;
+//                }
+//        }
+//    }
+//    //const groupName = `group_${titleData.title}_${outlineObject.id}_${formInstanceProps.id}`;
 
 
-                    //$("<div>").dxScrollView({
-                    //    height: "100%",
-                    //    width: "100%",
-                    //    showScrollbar: "always",
-                    //    useNative: false,
-                    //    direction: "both",
-                    //    contentTemplate: function (scrollViewContent) {
-                    //        return scrollViewContent;
-                    //    }
-                    //}).appendTo(container);
+//    $(`<div id='renameOutline_${outlineObject.id}_${formInstanceProps.id}'>`).dxButton({
+//        icon: "edit", // icon bút chì - biểu tượng rename
+//        elementAttr: {
+//            title: "Rename" // Tooltip khi hover
+//        },
+//        height: 30,
+//        width: 40,
+//        disabled: formInstanceProps.isReadOnly,
+//        onContentReady: function (e) {
+//            $(e.element).find(".dx-button-content").removeClass("dx-button-content").css({
+//                marginTop: "5px",
+//            });
+//        },
+//        onClick: function (e) {
+//            var id = 0;
+//            var surveyId = 0;
+//            var jsonConfig = {};
+//            var dataForm = null;
+//            var popupInstance = $(`#outlinePopup`).dxPopup({
+//                width: "70%",
+//                height: "70%",
+//                showTitle: true,
+//                title: "RENAME OUTLINE",
+//                dragEnabled: false,
+//                closeOnOutsideClick: true,
+//                contentTemplate: function (container) {
+//                    var content = $("<div>").appendTo(container);
+//                    if (formInstanceProps?.outlineForm?.surveyTypeId)
+//                        jsonConfig.surveyTypeId = formInstanceProps?.outlineForm?.surveyTypeId;
+//                    if (formInstanceProps?.id)
+//                        jsonConfig.mainId = formInstanceProps?.id;
+//                    if (formInstanceProps?.refFieldId) {
+//                        surveyId = formInstanceProps?.refFieldId;
+//                        jsonConfig.surveyId = formInstanceProps?.refFieldId;
+//                    }
+//                    if (formInstanceProps?.Outline.length > 0) {
+//                        //jsonConfig.parentOutlineId = formInstanceProps?.Outline.find(f => formInstanceProps?.ModelName.toUpperCase() == f.content.replace(' ', '') && f.surveyTypeId == formInstanceProps?.outlineForm?.surveyTypeId).id;
+//                    }
+//                    if (_cacheOutlines.length > 0)
+//                        jsonConfig.parentOutlineId = _cacheOutlines.find(f => formInstanceProps?.ModelName.toUpperCase() == f.content.replace(' ', '') && f.surveyTypeId == formInstanceProps?.outlineForm?.surveyTypeId).id;
+//                    var passingParams = { UITabId: `Outline_Form_${surveyId}_${id}`, refPageNum: surveyId, pageNum: id, jsonConfig: JSON.stringify(jsonConfig) };
+
+//                    appendElementViewInsideAsync(`/Business/MasterData/Outline_Form`, passingParams, content, `Outline_Form_${surveyId}_${id}`, "appendTo").then(data => {
+//                        dataForm = data;
+
+//                    })
+//                        .catch(error => {
+//                            try {
+//                                sendClientErrorLog("Lỗi khi tải dữ liệu:", error);
+//                            }
+//                            catch {
+//                            }
+//                            console.error("Lỗi khi tải dữ liệu:", error);
+//                        });
 
 
-                    return container;
-                },
-                onHiding: function (e) {
-
-                }
-                , toolbarItems: [{
-                    widget: 'dxButton',
-                    toolbar: 'bottom',
-                    location: 'after',
-                    options: {
-                        stylingMode: 'contained',
-                        type: 'normal',
-                        text: "Change",
-                        onClick() {
-                            //var outlineForm = $(`#Outline_Form_${surveyId}_${id}`).dxForm().dxForm("instance");
-                            var passingParams = {};
-                            passingParams.Survey = {};
-                            passingParams.Outline = {};
-                            passingParams.MasterId = jsonConfig.mainId;
-
-                            var formData = dataForm.option('formData');
-                            //requestPassingData.Management = formData;
-
-                            if (formData != null) {
-                                passingParams.Outline = formData;
-                                if (outlineObject) {
-                                    passingParams.Outline.placeHolder = outlineObject.placeHolder;
-                                    passingParams.Outline.id = outlineObject.id;
-                                }
-                            }
-                            if (surveyId != 0)
-                                passingParams.Survey.Id = surveyId;
-
-                            $.ajax({
-                                url: 'api/Survey/RenameCustomOutline',
-                                headers: { 'Content-Type': 'application/json' },
-                                type: 'POST',
-                                data: JSON.stringify(passingParams)
-                                , success: function (response) {
-                                    appNotifySuccess("Outline renamed success! Please refresh your survey. ");
-                                },
-                                error: function (err) {
-                                    appNotifyError("Outline renamed fail!");
-                                }
-                            });
-                            popupInstance.hide();
-                        },
-                    },
-                }, {
-                    widget: 'dxButton',
-                    toolbar: 'bottom',
-                    location: 'after',
-                    options: {
-                        stylingMode: 'contained',
-                        type: 'normal',
-                        text: "Close",
-                        onClick() {
-                            popupInstance.hide();
-                        },
-                    },
-                }]
-            }).dxPopup("instance");
-            popupInstance.show();
+//                    //$("<div>").dxScrollView({
+//                    //    height: "100%",
+//                    //    width: "100%",
+//                    //    showScrollbar: "always",
+//                    //    useNative: false,
+//                    //    direction: "both",
+//                    //    contentTemplate: function (scrollViewContent) {
+//                    //        return scrollViewContent;
+//                    //    }
+//                    //}).appendTo(container);
 
 
-        }
-    }).appendTo(deleteContainer);
+//                    return container;
+//                },
+//                onHiding: function (e) {
+
+//                }
+//                , toolbarItems: [{
+//                    widget: 'dxButton',
+//                    toolbar: 'bottom',
+//                    location: 'after',
+//                    options: {
+//                        stylingMode: 'contained',
+//                        type: 'normal',
+//                        text: "Change",
+//                        onClick() {
+//                            //var outlineForm = $(`#Outline_Form_${surveyId}_${id}`).dxForm().dxForm("instance");
+//                            var passingParams = {};
+//                            passingParams.Survey = {};
+//                            passingParams.Outline = {};
+//                            passingParams.MasterId = jsonConfig.mainId;
+
+//                            var formData = dataForm.option('formData');
+//                            //requestPassingData.Management = formData;
+
+//                            if (formData != null) {
+//                                passingParams.Outline = formData;
+//                                if (outlineObject) {
+//                                    passingParams.Outline.placeHolder = outlineObject.placeHolder;
+//                                    passingParams.Outline.id = outlineObject.id;
+//                                }
+//                            }
+//                            if (surveyId != 0)
+//                                passingParams.Survey.Id = surveyId;
+
+//                            $.ajax({
+//                                url: 'api/Survey/RenameCustomOutline',
+//                                headers: { 'Content-Type': 'application/json' },
+//                                type: 'POST',
+//                                data: JSON.stringify(passingParams)
+//                                , success: function (response) {
+//                                    appNotifySuccess("Outline renamed success! Please refresh your survey. ");
+//                                },
+//                                error: function (err) {
+//                                    appNotifyError("Outline renamed fail!");
+//                                }
+//                            });
+//                            popupInstance.hide();
+//                        },
+//                    },
+//                }, {
+//                    widget: 'dxButton',
+//                    toolbar: 'bottom',
+//                    location: 'after',
+//                    options: {
+//                        stylingMode: 'contained',
+//                        type: 'normal',
+//                        text: "Close",
+//                        onClick() {
+//                            popupInstance.hide();
+//                        },
+//                    },
+//                }]
+//            }).dxPopup("instance");
+//            popupInstance.show();
 
 
-    $(`<div id='deleteOutline_${outlineObject.id}_${formInstanceProps.id}'>`).dxButton({
-        icon: "close", // icon mặc định của DevExtreme (biểu tượng X)
-        elementAttr: {
-            title: "Remove" // Tooltip khi hover vào
-        },
-        height: 30,
-        width: 40,
-        disabled: formInstanceProps.isReadOnly,
-        onContentReady: function (e) {
-            $(e.element).find(".dx-button-content").removeClass("dx-button-content").css({
-                marginTop: "5px",
-            });
-        },
-        onClick: function (e) {
-            var popupBox = appNotifyWarning("Are you sure to remove this outline?", true);
-            e.event.stopPropagation();
-            popupBox.then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: `api/${formInstanceProps.ModelName}/DeleteOutline/${formInstanceProps.id}/${outlineObject.id}`,
-                        type: 'GET',
-                        async: false,
-                        success: function (response) {
-                            appNotifySuccess("Outline removed! Please refresh your survey");
-                        },
-                        error: function () {
-                        }
-                    });
-                }
-                else {
-                }
-            });
+//        }
+//    }).appendTo(deleteContainer);
 
 
-        }
-    }).appendTo(deleteContainer);
+//    $(`<div id='deleteOutline_${outlineObject.id}_${formInstanceProps.id}'>`).dxButton({
+//        icon: "close", // icon mặc định của DevExtreme (biểu tượng X)
+//        elementAttr: {
+//            title: "Remove" // Tooltip khi hover vào
+//        },
+//        height: 30,
+//        width: 40,
+//        disabled: formInstanceProps.isReadOnly,
+//        onContentReady: function (e) {
+//            $(e.element).find(".dx-button-content").removeClass("dx-button-content").css({
+//                marginTop: "5px",
+//            });
+//        },
+//        onClick: function (e) {
+//            var popupBox = appNotifyWarning("Are you sure to remove this outline?", true);
+//            e.event.stopPropagation();
+//            popupBox.then((result) => {
+//                if (result.isConfirmed) {
+//                    $.ajax({
+//                        url: `api/${formInstanceProps.ModelName}/DeleteOutline/${formInstanceProps.id}/${outlineObject.id}`,
+//                        type: 'GET',
+//                        async: false,
+//                        success: function (response) {
+//                            appNotifySuccess("Outline removed! Please refresh your survey");
+//                        },
+//                        error: function () {
+//                        }
+//                    });
+//                }
+//                else {
+//                }
+//            });
 
-    //const inputControl = $("<input>")
-    //    .attr({
-    //        type: "radio",
-    //        id: id,
-    //        name: groupName,
-    //        checked: option.value == selectedValue ? true : false
-    //    })
-    //    //.addClass("custom-radio-button")   
-    //    .ready(function () {
-    //        var outlineOptionsObject = { outlineId: outlineObject.id, optionValue: 1 };
-    //        if (formInstanceProps.OutlineList == null || formInstanceProps.OutlineList == undefined)
-    //            formInstanceProps.OutlineList = [];
-    //        formInstanceProps.OutlineList.push(outlineOptionsObject);
-    //    })
-    //    .on("change", function () {
-    //        var outlineOptionsObject = { outlineId: outlineObject.id, optionValue: option.value };
-    //        var formData = formInstanceProps.formInstance.option("formData");
-    //        var formField = `outlineOptions_${itemData.outline.id}`;
-    //        if (formData[formField] == null || formData[formField] == undefined) {
-    //            formData[formField] = new Object();
-    //        }
-    //        formData[formField] = outlineOptionsObject;
-    //        if (formInstanceProps.id) {
-    //            var formObject = new Object();
-    //            formObject[formField] = formData[formField];
-    //            formInstanceProps.formInstance.option("changedFields", formObject);
-    //        }
-    //        var editor = $(`#dxHtmlEditor_${itemData.fieldInstance.dataField}_${itemData.fieldInstance.id}`).dxHtmlEditor().dxHtmlEditor("instance");
-    //        if (editor != null) {
-    //            if (option.value == -1) {
-    //                editor.option("readOnly", true);
-    //                editor.option("value", "");
-    //            } else if (option.value == 0) {
-    //                editor.option("readOnly", false);
-    //                editor.option("value", "Nil");
-    //            }
-    //            else {
-    //                if (formInstanceProps.isReadOnly)
-    //                    editor.option("readOnly", true);
-    //                else
-    //                    editor.option("readOnly", false);
-    //            }
-    //        }
-    //        else {
-    //            itemData.fieldInstance.isFieldReadOnly = false;
-    //            if (option.value == 0 || option.value == -1) {
-    //                itemData.fieldInstance.isFieldReadOnly = true;
-    //            }
-    //            else {
-    //                if (formInstanceProps.isReadOnly)
-    //                    itemData.fieldInstance.isFieldReadOnly = true;
-    //                else
-    //                    itemData.fieldInstance.isFieldReadOnly = false;
-    //            }
-    //        }
-    //    })
-    //    .appendTo(deleteContainer);
-    return deleteContainer;
-}
+
+//        }
+//    }).appendTo(deleteContainer);
+
+//    //const inputControl = $("<input>")
+//    //    .attr({
+//    //        type: "radio",
+//    //        id: id,
+//    //        name: groupName,
+//    //        checked: option.value == selectedValue ? true : false
+//    //    })
+//    //    //.addClass("custom-radio-button")   
+//    //    .ready(function () {
+//    //        var outlineOptionsObject = { outlineId: outlineObject.id, optionValue: 1 };
+//    //        if (formInstanceProps.OutlineList == null || formInstanceProps.OutlineList == undefined)
+//    //            formInstanceProps.OutlineList = [];
+//    //        formInstanceProps.OutlineList.push(outlineOptionsObject);
+//    //    })
+//    //    .on("change", function () {
+//    //        var outlineOptionsObject = { outlineId: outlineObject.id, optionValue: option.value };
+//    //        var formData = formInstanceProps.formInstance.option("formData");
+//    //        var formField = `outlineOptions_${itemData.outline.id}`;
+//    //        if (formData[formField] == null || formData[formField] == undefined) {
+//    //            formData[formField] = new Object();
+//    //        }
+//    //        formData[formField] = outlineOptionsObject;
+//    //        if (formInstanceProps.id) {
+//    //            var formObject = new Object();
+//    //            formObject[formField] = formData[formField];
+//    //            formInstanceProps.formInstance.option("changedFields", formObject);
+//    //        }
+//    //        var editor = $(`#dxHtmlEditor_${itemData.fieldInstance.dataField}_${itemData.fieldInstance.id}`).dxHtmlEditor().dxHtmlEditor("instance");
+//    //        if (editor != null) {
+//    //            if (option.value == -1) {
+//    //                editor.option("readOnly", true);
+//    //                editor.option("value", "");
+//    //            } else if (option.value == 0) {
+//    //                editor.option("readOnly", false);
+//    //                editor.option("value", "Nil");
+//    //            }
+//    //            else {
+//    //                if (formInstanceProps.isReadOnly)
+//    //                    editor.option("readOnly", true);
+//    //                else
+//    //                    editor.option("readOnly", false);
+//    //            }
+//    //        }
+//    //        else {
+//    //            itemData.fieldInstance.isFieldReadOnly = false;
+//    //            if (option.value == 0 || option.value == -1) {
+//    //                itemData.fieldInstance.isFieldReadOnly = true;
+//    //            }
+//    //            else {
+//    //                if (formInstanceProps.isReadOnly)
+//    //                    itemData.fieldInstance.isFieldReadOnly = true;
+//    //                else
+//    //                    itemData.fieldInstance.isFieldReadOnly = false;
+//    //            }
+//    //        }
+//    //    })
+//    //    .appendTo(deleteContainer);
+//    return deleteContainer;
+//}
 
 
 function isAccordionGroupSupportControls(item, props, formInstanceProps) {
@@ -3143,43 +2527,6 @@ function doubleClickDefaultPlaceHolderToText(editorOptions, data, item) {
     };
 }
 
-function dataSourceEnum(item, gridInstance) {
-    var isSameUsing = false;
-    var loadUrl = `api/${gridInstance.ModelName}/EnumLookup?refField=${item.formItemConfig.enum}&enumName=${item.formItemConfig.enum}`;
-    if (item.formItemConfig.isSameUsing)
-        loadUrl = `api/${gridInstance.ModelName}/EnumLookup?refField=${item.formItemConfig.enum}&enumName=${item.formItemConfig.enum}&isSameUsing=${item.formItemConfig.isSameUsing}`;
-    const dataSourceLookup = DevExpress.data.AspNet.createStore({
-        key: 'id',
-        //loadUrl: `api/${gridInstance.ModelName}/EnumLookup?refField=${item.formItemConfig.enum}&enumName=${item.formItemConfig.enum}`,
-        loadUrl: loadUrl,
-        insertUrl: `api/${gridInstance.ModelName}/UpdateEnum`,
-        paginate: true
-    });
-
-    $.ajax({
-        //url: `api/${gridInstance.ModelName}/EnumLookup?refField=${item.formItemConfig.enum}&enumName=${item.formItemConfig.enum}`,
-        url: loadUrl,
-        method: "GET",
-        dataType: "json",
-        async: false,
-        success: function (data) {
-            item.formItemConfig.enumDataArray = data.map(item => {
-                return {
-                    id: item.id,
-                    key: `${item.key}`
-                }
-            });
-        }
-    })
-
-    //dataSourceLookup.load().done((data) => item.formItemConfig.enumDataArray = data.map(it => {
-    //    return {
-    //        id: it.id,
-    //        key: `${it.key}`
-    //    }
-    //}));
-    return dataSourceLookup;
-}
 
 function flattenItems(items) {
     let result = [];
@@ -3194,179 +2541,7 @@ function flattenItems(items) {
     return result;
 }
 
-function selectBoxRemakeOption(item, gridInstance, index, addtionalOptions) {
-    var itemArr = [];
-    var dataSourceLookup = new Object();
-    if (item.formItem) {
-        if (item.formItem.enum) {
-            //itemArr = item.formItem.enumDataArray;
-            dataSourceLookup = dataSourceEnum(item, gridInstance);
-            itemArr = item.formItem.enumDataArray;
-            //dataSourceLookup.load().done((data) => itemArr = data.map(it => {
-            //    return {
-            //        id: it.id,
-            //        key: `${it.key}`
-            //    }
-            //}));
-        }
-        else {
-            dataSourceLookup = DevExpress.data.AspNet.createStore({
-                key: 'id',
-                loadUrl: `api/${gridInstance.ModelName}/EnumLookup?refField=${item.dataField}`,
-                insertUrl: `api/${gridInstance.ModelName}/UpdateEnum`,
-                paginate: true
-            });
 
-            $.ajax({
-                url: `api/${gridInstance.ModelName}/EnumLookup?refField=${item.dataField}`,
-                method: "GET",
-                dataType: "json",
-                async: false,
-                success: function (data) {
-                    itemArr = data.map(item => {
-                        return {
-                            id: item.id,
-                            key: `${item.key}`
-                        }
-                    });
-                }
-            })
-        }
-    }
-    else {
-        dataSourceLookup = DevExpress.data.AspNet.createStore({
-            key: 'id',
-            loadUrl: `api/${gridInstance.ModelName}/EnumLookup?refField=${item.dataField}`,
-            insertUrl: `api/${gridInstance.ModelName}/UpdateEnum`,
-            paginate: true
-        });
-
-        $.ajax({
-            url: `api/${gridInstance.ModelName}/EnumLookup?refField=${item.dataField}`,
-            method: "GET",
-            dataType: "json",
-            async: false,
-            success: function (data) {
-                itemArr = data.map(item => {
-                    return {
-                        id: item.id,
-                        key: `${item.key}`
-                    }
-                });
-            }
-        })
-    }
-
-
-
-
-    var dataSource = new DevExpress.data.DataSource({
-        store: {
-            data: itemArr,
-            type: 'array',
-            key: 'id',
-        },
-    });
-
-    item.lookup = { //Search Bar data
-        dataSource: dataSourceLookup,
-        displayExpr: 'key',
-        valueExpr: 'id',
-        searchEnabled: true,
-        showClearButton: true
-    };
-    //item.onSelectionChanged = function (e) {
-
-    //};
-
-    item.editorType = "dxSelectBox";
-    item.editorOptions = {
-        editorType: "dxSelectBox",
-        //dropDownOptions : { minWidth: 200 },
-        dataSource: dataSource,
-        valueExpr: 'id',
-        displayExpr: 'key',
-        searchEnabled: true,
-        width: 300,
-        acceptCustomValue: true,
-        onValueChanged: function (e) { // handle after select
-            if (gridInstance.moreActionFromSelectedChangeSelectBox)
-                gridInstance.moreActionFromSelectedChangeSelectBox(e, item, gridInstance);
-            else {
-                if (e.value) {
-                    // Cập nhật giá trị vào cell
-                    gridInstance.component.cellValue(
-                        gridInstance.row.rowIndex,
-                        item.dataField,
-                        e.value
-                    );
-                } else {
-                    // Xóa giá trị trong cell
-                    gridInstance.component.cellValue(
-                        gridInstance.row.rowIndex,
-                        item.dataField,
-                        null
-                    );
-                }
-                //gridInstance.component.saveEditData();
-            }
-        },
-        onCustomItemCreating: function (e) {
-            //var dataSource = dataSourceLookup;
-            e.customItem = {}; //Avoid lib error
-            e.text = $.trim(e.text);
-            var itemSearch = $try(function () { return dataSource._items.find(x => x.key === e.text) });
-            if (itemSearch != null) {
-                var selectedItem = $try(function () { return e.component.option("selectedItem") });
-                if (selectedItem != null) {
-                    e.customItem = itemSearch.key;
-                    gridInstance.component.cellValue(gridInstance.row.rowIndex, item.dataField, itemSearch.id);
-                    return e.customItem;
-                }
-            } else {
-                const newValue = e.text;
-                if (newValue) {
-                    $(function () {
-                        var dialog = DevExpress.ui.dialog.confirm("No selection matching your search, do you want to add new it?");
-                        dialog.done(function (confirm) {
-                            if (confirm == true) {
-                                const newItem = { key: newValue, mappingField: item.dataField, sysTableId: item.sysTableId };
-                                //e.customItem = dataSource.store().insert(newItem)
-                                //    .then(() => dataSource.load())
-                                //    .then(() => newItem)
-                                //    .catch((error) => {
-                                //        throw error;
-                                //    });
-                                if (dataSourceLookup != null) {
-                                    e.customItem = dataSourceLookup.insert(newItem).then(dataSourceLookup.load().done(function (data) {
-                                        itemArr = data.map(item => {
-                                            return {
-                                                id: item.id,
-                                                key: `${item.key}`
-                                            }
-                                        });
-                                        dataSource._items = itemArr;
-                                        dataSource._store._array = itemArr;
-                                        dataSource.reload();
-                                        gridInstance.component.refresh();
-                                    }));
-
-                                }
-                            }
-                        });
-                    })
-                }
-            }
-            return e.customItem;
-        },
-    };
-    if (addtionalOptions) {
-        item.editorOptions.acceptCustomValue = (addtionalOptions.acceptCustomValue != undefined || addtionalOptions.acceptCustomValue != null) ? addtionalOptions.acceptCustomValue : true;
-        item.editorOptions.searchEnabled = (addtionalOptions.searchEnabled != undefined || addtionalOptions.searchEnabled != null) ? addtionalOptions.searchEnabled : true;
-    }
-    return item;
-    //});
-}
 
 function byteObjectConvert(item, instanceProps) {
     if (item.formItem != null) {
@@ -3577,9 +2752,8 @@ function convertKeysToLowerFirstChar(obj) {
 }
 function convertToTitleCase(str) {
     if (!str) return ""; // Kiểm tra nếu chuỗi rỗng
-
     return str
-        .toLowerCase() // Chuyển toàn bộ chuỗi về chữ thường
+        //.toLowerCase() // Chuyển toàn bộ chuỗi về chữ thường
         .split(" ")    // Tách chuỗi thành mảng các từ
         .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Viết hoa chữ cái đầu mỗi từ
         .join(" ");    // Ghép lại thành chuỗi
@@ -3758,8 +2932,8 @@ function participantListColRemake(col, gridInstance, that) {
                             sideOrder: options.data.items[0]?.sideOrder,
                             personName: "",
                             personDepartment: "",
-                            sideId: that.filterRefId2,
-                            surveyId: that.filterRefId,
+                            sideId: that.refKey2,
+                            surveyId: that.refKey,
                             rowOrder: 0
                         };
 
@@ -3884,8 +3058,8 @@ function LCparticipantListColRemake(col, gridInstance, that) {
                             sideOrder: options.data.items[0]?.sideOrder,
                             personName: "",
                             personDepartment: "",
-                            sideId: that.filterRefId2,
-                            lossControlId: that.filterRefId,
+                            sideId: that.refKey2,
+                            lossControlId: that.refKey,
                             rowOrder: 0
                         };
 
@@ -3960,29 +3134,17 @@ function LCparticipantListColRemake(col, gridInstance, that) {
     };
 }
 
-function addMoveButtonsToCell(e) {
-    // Tạo nút Move Up
-    $("<a>")
-        .addClass("fa fa-arrow-up")
+function customCommandButtonCell(e) {
+    $(`<a class="dx-link dx-link-edit">`)
+       //.addClass("fa fa-arrow-up")
+        .text("Edit JSON")
         .css({ marginRight: "5px", cursor: "pointer", color: "#337ab7" })
         .on("click", function () {
-            const groupIndex = findPreviousGroupIndex(e.cellElement);
-            dataSourceMoveRow(e, e.rowIndex - 1, groupIndex, "up", e.component, true);
-            e.component.refresh();
-        })
-        .appendTo(e.cellElement);
-
-    // Tạo nút Move Down
-    $("<a>")
-        .addClass("fa fa-arrow-down")
-        .css({ marginRight: "35%", cursor: "pointer", color: "#337ab7" })
-        .on("click", function () {
-            const groupIndex = findPreviousGroupIndex(e.cellElement);
-            dataSourceMoveRow(e, e.rowIndex - 1, groupIndex, "down", e.component, true);
-            e.component.refresh();
+            callElementView(`/Business/Workflow/WorkflowDefinition_Form/${e.key}/${e.data.guid}`, `WorkflowDenifition_Form_${e.key}`, `WorkflowDenifition ${e.data.workflowCode}`);
         })
         .appendTo(e.cellElement);
 }
+
 function jsonToTable(jsonData, fieldsToShow = []) {
     const table = $("<table>").css({
         width: "100%",
@@ -4080,30 +3242,103 @@ function markupStatusCSS(container, options, control = null) {
 
 }
 
-function sendClientErrorLog(message, err) {
-    const errorLog = {
-        message: typeof message === 'string' ? message : JSON.stringify(message),
-        url: window.location.href,
-        userAgent: navigator.userAgent,
-        errorBrowserDetails: err ? {
-            status: err?.status || null,
-            responseText: err?.responseText || null,
-            stack: err?.stack || null
-        } : {},
-        time: new Date().toISOString()
-    };
-    $.ajax({
-        url: '/api/ClientBrowserError/LogClientError',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify(errorLog),
-        success: function () {
-            console.log("Error logged to server");
-        },
-        error: function () {
-            console.warn("Failed to log error to server");
+function sendClientErrorLog(message, err, additionalDetails = {}) {
+
+    if (window.ErrorFailLogCount <= _errorFailLogCountMax && err?.status != 200) {
+        const errorLog = new Object();
+        errorLog.Message = typeof message === 'string' ? message : JSON.stringify(message),
+            errorLog.Url = window.location.href,
+            errorLog.UserAgent = navigator.userAgent,
+        errorLog.Time = new Date().toISOString();
+            errorLog.ErrorBrowserDetails = new Object();
+        if (err) {
+            errorLog.ErrorBrowserDetails.Status = err?.status || null;
+            errorLog.ErrorBrowserDetails.ResponseText = err?.responseText || null;
+            errorLog.ErrorBrowserDetails.Stack = err?.stack || null;
+            errorLog.ErrorBrowserDetails.FileName = additionalDetails.fileName || err?.fileName || null;
+            errorLog.ErrorBrowserDetails.LineNumber = additionalDetails.lineNumber || err?.lineNumber || null;
+            errorLog.ErrorBrowserDetails.ColumnNumber = additionalDetails.columnNumber || err?.columnNumber || null;
+            errorLog.ErrorBrowserDetails.FunctionName = additionalDetails.functionName || null;
+            errorLog.ErrorBrowserDetails.ErrorType = additionalDetails.errorType || 'http_error';
+            errorLog.ErrorBrowserDetails.Context = JSON.stringify(additionalDetails.context) || JSON.stringify(getPageContext());
+            errorLog.ErrorBrowserDetails.BreadcrumbTrails = additionalDetails?.breadcrumbTrail ?? [];// || getBreadcrumbTrail();
         }
-    });
+        else {
+
+            errorLog.ErrorBrowserDetails.ErrorType = additionalDetails.errorType || 'unknown';
+            errorLog.ErrorBrowserDetails.FileName = additionalDetails.fileName || null;
+            errorLog.ErrorBrowserDetails.LineNumber = additionalDetails.lineNumber || null;
+            errorLog.ErrorBrowserDetails.ColumnNumber = additionalDetails.columnNumber || null;
+            errorLog.ErrorBrowserDetails.FunctionName = additionalDetails.functionName || null;
+            errorLog.ErrorBrowserDetails.Context = JSON.stringify(additionalDetails.context) || JSON.stringify(getPageContext());
+            errorLog.ErrorBrowserDetails.BreadcrumbTrails = additionalDetails?.breadcrumbTrail ?? [];// || getBreadcrumbTrail();
+        }
+
+       
+        ajaxPost('/api/ClientBrowserError/LogClientError', errorLog, {
+            onSuccess: function (response) {
+            },
+            onError: function (err) {
+                    window.ErrorFailLogCount++;
+            }
+        });
+    }
+    //$.ajax({
+    //    url: '/api/ClientBrowserError/LogClientError',
+    //    type: 'POST',
+    //    contentType: 'application/json',
+    //    data: JSON.stringify({ model: JSON.stringify( errorLog )}),
+    //    success: function () {
+    //        console.log("Error logged to server");
+    //    },
+    //    error: function () {
+    //        console.warn("Failed to log error to server");
+    //    }
+    //});
+}
+
+// Helper functions for error context
+function getPageContext() {
+    try {
+        return {
+            title: document.title,
+            url: window.location.href,
+            referrer: document.referrer,
+            viewport: {
+                width: window.innerWidth,
+                height: window.innerHeight
+            },
+            userAgent: navigator.userAgent,
+            timestamp: new Date().toISOString()
+        };
+    } catch (e) {
+        return { error: 'Failed to get page context: ' + e.message };
+    }
+}
+
+function getBreadcrumbTrail() {
+    try {
+        // Simple breadcrumb based on recent clicks (you can enhance this)
+        const trail = JSON.parse(localStorage.getItem('errorBreadcrumb') || '[]');
+        return trail.slice(-10); // Last 10 actions
+    } catch (e) {
+        return [];
+    }
+}
+
+function addBreadcrumb(action) {
+    try {
+        const trail = JSON.parse(localStorage.getItem('errorBreadcrumb') || '[]');
+        trail.push({
+            action: action,
+            timestamp: new Date().toISOString(),
+            url: window.location.href
+        });
+        if (trail.length > 20) trail.shift(); // Keep only last 20
+        localStorage.setItem('errorBreadcrumb', JSON.stringify(trail));
+    } catch (e) {
+        // Ignore
+    }
 }
 
 function parseDateTime(dateStr) {
@@ -4257,19 +3492,19 @@ function buildGroupedData(rawData, groupField, groupSortField) {
 
     return result;
 }
-function stringToUtcDate(stringDate) {
-    const date = new Date(stringDate);
-    var resultDate = date;
-    if (stringDate)
-        if (stringDate.slice(-1) === "Z") {
-            // getTimezoneOffset() returns minutes, so multiply by 60000 for milliseconds
-            const offsetMinutes = date.getTimezoneOffset();
-            const utcDate = new Date(date.getTime() + (-1 * offsetMinutes * 60 * 1000));
-            resultDate = new Date(utcDate.getTime() + (7 * 60 * 60 * 1000));
-        }
-    //return date; // Return the original date if it's not UTC
-    return resultDate;
-}
+//function stringToUtcDate(stringDate) {
+//    const date = new Date(stringDate);
+//    var resultDate = date;
+//    if (stringDate)
+//        if (stringDate.slice(-1) === "Z") {
+//            // getTimezoneOffset() returns minutes, so multiply by 60000 for milliseconds
+//            const offsetMinutes = date.getTimezoneOffset();
+//            const utcDate = new Date(date.getTime() + (-1 * offsetMinutes * 60 * 1000));
+//            resultDate = new Date(utcDate.getTime() + (7 * 60 * 60 * 1000));
+//        }
+//    //return date; // Return the original date if it's not UTC
+//    return resultDate;
+//}
 
 const tabClickEvent = function (e, eTabName, eTab, callback) {
     var eTabNameR = eTabName;
@@ -4289,7 +3524,19 @@ const tabClickEvent = function (e, eTabName, eTab, callback) {
 function formatNumber(num) {
     return num < 10 ? '0' + num : num.toString();
 }
+//function formatDate(timeStampString, format) {
+//    var d = new Date(timeStampString),
+//        month = '' + (d.getMonth() + 1),
+//        day = '' + d.getDate(),
+//        year = d.getFullYear();
 
+//    if (month.length < 2)
+//        month = '0' + month;
+//    if (day.length < 2)
+//        day = '0' + day;
+
+//    return [day, month, year].join('-');
+//}
 function tabValidationCheck(checkFields, tabs, id, connectionId, entityName) {
     if (id && _cacheDataGridConfigs) {
         $.each(tabs, function (tabIndex, tabItem) {
@@ -4521,11 +3768,19 @@ function fieldPictureFeature($fieldContainer, itemElement, object, info, folder)
     return itemElement;
 }
 
-function ObjectPopulateKey(item) {
+function ObjectPopulateKey(item, caseConvert = false, fromSource = false) {
     var cloneItems = {};
     Object.keys(item).forEach(key => {
         if (key in item) {
-            cloneItems[key] = item[key];
+            if (!caseConvert)
+                cloneItems[key] = item[key];
+            else {
+                if (!fromSource)
+                    cloneItems[convertToTitleCase(key)] = item[key];
+                else {
+                    cloneItems[key] = item[convertToTitleCase(key)];
+                }
+            }
         }
     });
     return cloneItems;
@@ -4672,143 +3927,422 @@ function fieldMultiplePictureFeature($fieldContainer, itemElement, object, info,
     $container.appendTo(itemElement);
     return itemElement;
 }
+function makeLookupGrid(config) {
+    const {
+        container,
+        dropdownControl = null,
+        instanceProps = null,
+        dataSource = [],
+        columns = [],
 
-function makeTheClientLocationGrid(instanceItems, dropdownControl, instanceProps, container, onSelectionChanged = null) {
-    var divContainer = container;
-    divContainer.css({
-        width: "100%", height: "100%"
+        width = "100%",
+        height = "100%",
+        gridHeight = "85%",
+        scrollHeight = "100%",
+        scrollWidth = "100%",
+
+        keyExpr = "id",
+        selectionMode = "single",
+        showSelectionControls = true,
+        filterRowVisible = true,
+        pagingEnabled = true,
+        pageSize = 10,
+        pagerVisible = true,
+        columnAutoWidth = true,
+
+        topPanelBuilder = null,
+        onSelectionChanged = null,
+        onValueChanged = null,
+        onGridReady = null,
+        gridOptions = {},
+
+        closeDropdownOnValueChanged = true,
+        closeDropdownOnSelect = true,
+        defaultSelectionHandler = null
+    } = config || {};
+
+    const $host = container.empty();
+    $host.css({
+        width,
+        height,
+        overflow: "hidden"
     });
 
-    function defaultSelectionHandler(selectedItems) {
-        var hasSelection = selectedItems.selectedRowKeys.length > 0;
+    const $scrollView = $("<div>").css({
+        width: scrollWidth,
+        height: scrollHeight
+    });
+
+    const $content = $("<div>").css({
+        width: "100%",
+        height: "100%"
+    });
+
+    const context = {
+        container: $host,
+        content: $content,
+        dropdownControl,
+        instanceProps,
+        dataSource,
+        columns,
+        keyExpr,
+        config
+    };
+
+    function internalDefaultSelectionHandler(e) {
+        const hasSelection = e?.selectedRowKeys?.length > 0;
         if (!hasSelection) return;
 
-        const selectedRow = selectedItems.selectedRowsData[0];
-        dropdownControl.component.option("value", selectedItems.selectedRowKeys[0]);
+        const selectedKey = e.selectedRowKeys[0];
+        const selectedRow = e.selectedRowsData?.[0] || null;
 
-        instanceProps.formInstance.updateData("clientName", selectedRow.clientName || "");
-        instanceProps.formInstance.updateData("locationAddress", selectedRow.clientAddress || "");
-        instanceProps.formInstance.updateData("clientCode", selectedRow.clientCode || "");
-        instanceProps.formInstance.updateData("locationId", selectedRow.locationId || 0);
-
-        dropdownControl.component.close();
+        if (typeof defaultSelectionHandler === "function") {
+            defaultSelectionHandler(e, {
+                ...context,
+                selectedKey,
+                selectedRow
+            });
+        } else if (dropdownControl?.component) {
+            dropdownControl.component.option("value", selectedKey);
+            if (closeDropdownOnSelect) dropdownControl.component.close();
+        }
     }
 
-    // Wrapper: custom có thể chặn default bằng cách return false
     function selectionHandlerWrapper(e) {
-        // Nếu có custom callback
         if (typeof onSelectionChanged === "function") {
             const result = onSelectionChanged(e, {
-                defaultHandler: defaultSelectionHandler,
-                dropdownControl,
-                instanceProps
+                ...context,
+                defaultHandler: internalDefaultSelectionHandler
             });
-
-            // Nếu callback trả về false -> không chạy default
             if (result === false) return;
         }
 
-        // Mặc định vẫn chạy default
-        defaultSelectionHandler(e);
+        internalDefaultSelectionHandler(e);
     }
 
-    var grid = $("<div>").dxDataGrid({
-        dataSource: instanceItems.editorOptions.dataSource,
-        columns: [
-            { dataField: "clientCode", caption: "Client Code" },
-            { dataField: "clientName", caption: "Client Name" },
-            { dataField: "clientAddress", caption: "Client Address" },
-            { dataField: "locationAddressName", caption: "Location Address Name" }
-        ],
-        filterRow: { visible: true },
-        selectionMode: 'all',
-        selection: {
-            mode: "single" // Chọn một dòng duy nhất
-        },
-        width: "100%",
-        height: "85%",
-        allowItemDeleting: false,
-        showSelectionControls: true,
-        paging: { enabled: true, pageSize: 10 },
-        pager: { visible: true },
-        onSelectionChanged: selectionHandlerWrapper,
-        columnAutoWidth: true,
+    let $topPanel = null;
+    if (typeof topPanelBuilder === "function") {
+        $topPanel = topPanelBuilder(context);
+        if ($topPanel) $content.append($topPanel);
+    }
 
+    const $grid = $("<div>");
+    $content.append($grid);
+
+    $scrollView.append($content);
+    $host.append($scrollView);
+
+    $scrollView.dxScrollView({
+        width: scrollWidth,
+        height: scrollHeight,
+        useNative: false
     });
 
-    var divBranchCode = $(`<div style="display:flex;padding:10px">`)
-    $(`<div style="padding-top: 10px; padding-right: 10px;">Branch code: </div>`).appendTo(divBranchCode);
-    //$(`<div>`).dxSelectBox({
-    //    dataSource: [{ id: 89, key: "Ha Noi" }, { id: 88, key: "Ho Chi Minh" }],
-    //    valueExpr: 'id',
-    //    displayExpr: 'key',
-    //    searchEnabled: true,
-    //    width: 300,
-    //    onValueChanged: function (e) { // handle after select
-    //        var DS = grid.dxDataGrid("instance").getDataSource();
-    //        DS.filter(["areaId", "=", e.value]);
-    //        DS.load();
-    //    },
-    //}).appendTo(divBranchCode);
-    $("<div>").dxRadioGroup({
-        dataSource: [{ id: 89, key: "Ha Noi" }, { id: 88, key: "Ho Chi Minh" }],
-        valueExpr: 'id',
-        displayExpr: 'key',
-        onValueChanged: function (e) { // handle after select
-            var DS = grid.dxDataGrid("instance").getDataSource();
-            DS.filter(["areaId", "=", e.value]);
-            DS.load();
+    const scrollInstance = $scrollView.dxScrollView("instance");
+
+    const baseGridOptions = {
+        dataSource,
+        keyExpr,
+        columns,
+        filterRow: { visible: filterRowVisible },
+        selection: { mode: selectionMode },
+        showSelectionControls,
+        width: "100%",
+        height: gridHeight,
+        paging: { enabled: pagingEnabled, pageSize },
+        pager: { visible: pagerVisible },
+        onSelectionChanged: selectionHandlerWrapper,
+        columnAutoWidth
+    };
+
+    $grid.dxDataGrid($.extend(true, {}, baseGridOptions, gridOptions));
+    const gridInstance = $grid.dxDataGrid("instance");
+
+    const result = {
+        container: $host,
+        content: $content,
+        topPanel: $topPanel,
+        scrollView: scrollInstance,
+        scrollElement: $scrollView,
+        component: $grid,
+        grid: gridInstance,
+
+        reload: function () {
+            gridInstance.getDataSource().reload();
         },
-        //itemTemplate: function (itemData) {
-        ////    const isBold = (item.key === "Overall");
-        ////    var divContainer = $("<div>");
-        ////    $(`.dx-field-item-label-text:contains('Overall')`).first().attr("style", "font-weight: bold;");
-        ////    return divContainer
-        ////        .text(itemData.key)
-        ////        .css({ "font-weight": isBold ? "bold" : "normal" }, { "disabled": _surveyData.isReadOnly });
-        //},
-        layout: "horizontal" // or "vertical"
-    }).appendTo(divBranchCode);
+        load: function () {
+            gridInstance.getDataSource().load();
+        },
+        setFilter: function (filterExpr) {
+            const ds = gridInstance.getDataSource();
+            ds.filter(filterExpr);
+            ds.load();
+        },
+        clearFilter: function () {
+            const ds = gridInstance.getDataSource();
+            ds.filter(null);
+            ds.load();
+        },
+        setGridHeight: function (newHeight) {
+            gridInstance.option("height", newHeight);
+            gridInstance.updateDimensions();
+            scrollInstance.update();
+        },
+        setContainerHeight: function (newHeight) {
+            $host.css("height", newHeight);
+            scrollInstance.update();
+            gridInstance.updateDimensions();
+        }
+    };
 
-    divBranchCode.appendTo(divContainer);
+    if (dropdownControl?.component) {
+        dropdownControl.component.on("valueChanged", function (args) {
+            if (typeof onValueChanged === "function") {
+                onValueChanged(args, {
+                    ...context,
+                    grid: gridInstance,
+                    result
+                });
+            }
 
-    dropdownControl.component.on("valueChanged", function (args) {
-        if (args.value != null) {
-            dropdownControl.component.close();
+            if (closeDropdownOnValueChanged && args.value != null) {
+                dropdownControl.component.close();
+            }
+        });
+    }
+
+    if (typeof onGridReady === "function") {
+        onGridReady({
+            ...context,
+            grid: gridInstance,
+            result
+        });
+    }
+
+    return result;
+}
+
+//Dropdown config
+function makeTheWorkflowGrid(instanceItems, dropdownControl, instanceProps, container, onSelectionChanged = null, sizeOptions = {}) {
+    return makeLookupGrid({
+        container: container,
+        dropdownControl: dropdownControl,
+        instanceProps: instanceProps,
+        dataSource: instanceItems.editorOptions.dataSource,
+        keyExpr: "id",
+
+        width: sizeOptions.width || "100%",
+        height: sizeOptions.height || "100%",
+        gridHeight: sizeOptions.gridHeight || "85%",
+        scrollHeight: sizeOptions.scrollHeight || "100%",
+
+        columns: [
+            { dataField: "workflowCode", caption: "Workflow Code", width: 160 },
+            { dataField: "workflowName", caption: "Workflow Name", minWidth: 220 },
+            {
+                caption: "Preview",
+                width: 120,
+                alignment: "center",
+                allowFiltering: false,
+                allowSorting: false,
+                cellTemplate: function (cellElement, cellInfo) {
+                    const row = cellInfo.data || {};
+                    const previewId = "wfPreview_" + row.id;
+
+                    const $badge = $("<div>")
+                        .attr("id", previewId)
+                        .text("Hover preview")
+                        .css({
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "6px 10px",
+                            borderRadius: "999px",
+                            background: "#eff6ff",
+                            color: "#1d4ed8",
+                            border: "1px solid #bfdbfe",
+                            cursor: "pointer",
+                            fontSize: "12px",
+                            fontWeight: 600
+                        });
+
+                    $(cellElement).append($badge);
+
+                    const $popoverContent = $("<div>").css({
+                        width: "440px",
+                        height: "280px",
+                        padding: "8px"
+                    });
+
+                    const $popover = $("<div>").appendTo(cellElement).dxPopover({
+                        target: "#" + previewId,
+                        showEvent: "mouseenter",
+                        hideEvent: "mouseleave",
+                        width: 460,
+                        height: 320,
+                        position: "right",
+                        shading: false,
+                        closeOnOutsideClick: false,
+                        contentTemplate: function (contentEl) {
+                            $(contentEl).append($popoverContent);
+                        },
+                        onShowing: function () {
+                            renderWorkflowMiniPreview(
+                                $popoverContent,
+                                row
+                            );
+                        }
+                    }).dxPopover("instance");
+
+                    // giữ popover khi rê chuột sang vùng popup
+                    $badge.on("mouseenter", function () {
+                        $popover.show();
+                    });
+                }
+            }
+        ],
+
+        defaultSelectionHandler: function (e, ctx) {
+            if (!ctx.selectedRow) return;
+            ctx.dropdownControl.component.option("value", ctx.selectedKey);
+            ctx.dropdownControl.component.close();
+        },
+
+        onSelectionChanged: function (e, ctx) {
+            if (typeof onSelectionChanged === "function") {
+                return onSelectionChanged(e, ctx);
+            }
+        },
+
+        gridOptions: {
+            allowItemDeleting: false,
+            hoverStateEnabled: true
         }
     });
-    grid.appendTo(divContainer);
-
-    var objectInstance = new Object();
-
-    var scrollView = $(`<div>`);
-    scrollView.dxScrollView({
-        width: "100%",
-        height: "100%",
-        useNative: false // Sử dụng thanh cuộn tùy chỉnh của DevExtreme
-    });
-    divContainer.appendTo(scrollView);
-
-    //var form = new GoodPracticesForm(_id, null, _formConfig, _formConfig);
-
-
-
-    //form.container.appendTo(scrollView);
-    //scrollView.appendTo(container);
-    //scrollView.dxScrollView({
-    //    width: "100%",
-    //    height: "100%",
-    //    useNative: false // Sử dụng thanh cuộn tùy chỉnh của DevExtreme
-    //});
-
-
-
-    objectInstance.container = divContainer;
-    objectInstance.component = grid;
-
-
-    return objectInstance;
 }
+
+function renderWorkflowMiniPreview(container, rowData) {
+    const $container = $(container);
+    $container.empty();
+    let nodes = [];
+
+    try {
+        //if (typeof workflowNodesJson === "string") {
+        //    nodes = JSON.parse(workflowNodesJson || "[]");
+        //} else if (Array.isArray(workflowNodesJson)) {
+        //    nodes = workflowNodesJson;
+        //}
+
+    } catch (e) {
+        $container.html(`<div style="padding:10px;color:#b91c1c;">Invalid workflow JSON</div>`);
+        return;
+    }
+
+    //if (!Array.isArray(nodes) || nodes.length === 0) {
+    //    $container.html(`<div style="padding:10px;color:#64748b;">No workflow nodes</div>`);
+    //    return;
+    //}
+
+
+    const $wrap = $(`<div></div>`).css({
+        position: "relative",
+        width: "1000" + "px",
+        height: "1000" + "px",
+        background: "#fff",
+        border: "1px solid #dbe2ea",
+        borderRadius: "10px",
+        overflow: "hidden"
+    //    position: "absolute",
+    //    right:"25%",
+    //    top: "110px",
+    //    bottom: "14px",
+    //    width: "70%",
+    //    background: "#fff",
+    //    border: "1px solid var(--border)",
+    //    borderRadius:"16px",
+    //boxShadow: "0 14px 40px rgba(0, 0, 0, .18)",
+    //padding: "10px 10px 8px",
+    //zIndex: "35"
+
+    });
+    var passingParams = { UITabId: `form_DrawCanvas_Form_${rowData.id}`, pageNum: rowData.id };
+        appendElementViewInside(`/Business/Workflow/DrawCanvas_Form/${rowData.id}`, passingParams, $wrap, `form_DrawCanvas_Form`, "appendTo");
+
+
+    $container.append($wrap);
+}
+function makeTheClientLocationGrid(instanceItems, dropdownControl, instanceProps, container, onSelectionChanged = null, sizeOptions = {}) {
+    return makeLookupGrid({
+        container: container,
+        dropdownControl: dropdownControl,
+        instanceProps: instanceProps,
+        dataSource: instanceItems.editorOptions.dataSource,
+        keyExpr: "id",
+
+        width: sizeOptions.width || "100%",
+        height: sizeOptions.height || "100%",
+        gridHeight: sizeOptions.gridHeight || "85%",
+        scrollHeight: sizeOptions.scrollHeight || "100%",
+
+        columns: [
+            { dataField: "clientCode", caption: "Client Code" },
+            { dataField: "englishName", caption: "English Name" },
+            { dataField: "vietnameseName", caption: "Vietnamese Name" },
+            { dataField: "clientType", caption: "Client Type" }
+        ],
+
+        topPanelBuilder: function () {
+            const $panel = $('<div style="display:flex;padding:10px;align-items:center;gap:10px;"></div>');
+            $('<div style="padding-right:10px;">Branch code:</div>').appendTo($panel);
+            $('<div class="branch-radio-host"></div>').appendTo($panel);
+            return $panel;
+        },
+
+        onGridReady: function (ctx) {
+            const $radioHost = ctx.result.topPanel.find(".branch-radio-host");
+
+            $radioHost.dxRadioGroup({
+                dataSource: [
+                    { id: 20, key: "Ha Noi" },
+                    { id: 10, key: "Ho Chi Minh" }
+                ],
+                valueExpr: "id",
+                displayExpr: "key",
+                layout: "horizontal",
+                onValueChanged: function (e) {
+                    const ds = ctx.grid.getDataSource();
+                    ds.filter(["branchId", "=", e.value]);
+                    ds.load();
+                }
+            });
+        },
+
+        defaultSelectionHandler: function (e, ctx) {
+            if (!ctx.selectedRow) return;
+
+            ctx.dropdownControl.component.option("value", ctx.selectedKey);
+
+            // ctx.instanceProps.formInstance.updateData("clientName", ctx.selectedRow.clientName || "");
+            // ctx.instanceProps.formInstance.updateData("locationAddress", ctx.selectedRow.clientAddress || "");
+            // ctx.instanceProps.formInstance.updateData("clientCode", ctx.selectedRow.clientCode || "");
+            // ctx.instanceProps.formInstance.updateData("locationId", ctx.selectedRow.locationId || 0);
+
+            ctx.dropdownControl.component.close();
+        },
+
+        onSelectionChanged: function (e, ctx) {
+            if (typeof onSelectionChanged === "function") {
+                return onSelectionChanged(e, ctx);
+            }
+        },
+
+        gridOptions: {
+            allowItemDeleting: false
+        }
+    });
+}
+
+
 function makeLCPreviewPictureObject(imageInstance, imgContainerSizeObject, imgSizeObject, $imagePreview1, $imagePreview2, defaultMargin = "0%") {
     // Use .then() to handle the result asynchronously
     var arrayBuffer = imageInstance.fileData;
@@ -4996,6 +4530,24 @@ function updateNotification(count) {
 }
 
 
+
+function showPopupNotification(title, body) {
+    if (Notification.permission !== 'granted') {
+        Notification.requestPermission();
+    } else {
+        const options = {
+            body: body,
+            dir: 'ltr'//,
+            // image: 'image.jpg'
+        };
+        const notification = new Notification(title, options);
+
+        notification.onclick = function () {
+            window.open('https://www.google.com');
+        };
+    }
+}
+
 function flashNotificationDot() {
     const $icon = $("#notificationBtn");
     showNotificationDot();
@@ -5085,57 +4637,9 @@ function RenderElementV2(_viewConfig, searchFormControls, objectIds, callback) {
                 }
             });
         }
-        if (item.Type == "Entity") {
-            var mDropDownDS = new MDropDownDataSource();
-            var dataSource = mDropDownDS.getDropDownDS('Id', `api/${item.FilterField}Api/GetLookup`);
-            searchFormControls.push({
-                dataField: item.ElementName,
-                editorType: "dxDropDownBox",
-                label: { location: "left", text: item.Caption },
-                editorOptions: {
-                    width: _filterWidth,
-                    dropDownOptions: {
-                        width: _entityWidth
-                    },
-                    valueExpr: item.ValueExpr,
-                    displayExpr: item.DisplayExpr,
-                    dataSource: dataSource,
-                    columns: item.ShowColumns,
-                    contentTemplate: function (e) {
-                        const $dataGrid = $("<div>").dxDataGrid({
-                            selectionMode: 'all',
-                            // remoteOperations: { paging: true, filtering: true, sorting: true, grouping: true, summary: true, groupPaging: true },
-                            filterRow: { visible: true },
-                            dataSource: e.component.option("dataSource"),
-                            columns: e.component.option("columns"),
-                            selection: { mode: "multiple" },
-                            scrolling: {
-                                mode: 'virtual',
-                                preloadEnabled: false,
-                                showScrollbar: 'always'
-                            },
-                            width: "100%",
-                            height: "100%",
-                            allowItemDeleting: false,
-                            showSelectionControls: true,
-                            sorting: {
-                                mode: 'multiple',
-                            },
-                            onSelectionChanged: function (selectedItems) {
-                                e.component.selectedItem = selectedItems.selectedRowsData;
-                                const keys = selectedItems.selectedRowKeys;
-                                e.component.option("value", keys);
-                                e.component.option("value", selectedItems.selectedRowsData.map(obj => obj.Id).join(','));
-                            },
-                            columnAutoWidth: true,
-                            customizeColumns: function (columns) {
-                            },
-                        });
-                        return $dataGrid;
-                    }
-                }
-            });
-        }
+        //if (item.Type == "table") {
+       
+        //}
         if (item.Type == "dxTextBox") {
             searchFormControls.push({
                 dataField: item.ElementName,
@@ -5271,4 +4775,1350 @@ function labelTpl(text) {
 
         $label.append($wrap);
     };
+}
+function popupStandardContentByScroll(customContainer) {
+    var scrollView = $("<div>");
+    customContainer.appendTo(scrollView);
+
+    scrollView.dxScrollView({
+        width: "100%",
+        height: "100%",
+        useNative: false 
+    });
+    return scrollView;
+}
+    // =========================
+    // ajaxCore (base engine)
+    // =========================
+
+function ajaxCore(method, url, {
+    routeParam = null,   // ví dụ dept cho route: /{dept}
+    query = null,        // object => query string
+    body = null,         // object => JSON body
+    headers = {},        // custom headers (merge)
+    dataType = "json",
+    timeout = 30000,
+    cache = false,
+    processData = false,
+    // callbacks (optional)
+    onSuccess = null,
+    onError = null,
+    onFinally = null,
+
+    // hook (optional)
+    beforeSend = null
+} = {}) {
+
+    const fullUrl = (routeParam !== null && routeParam !== undefined)
+        ? `${url}?${routeParam}`
+        : url;
+
+    const m = (method || "GET").toUpperCase();
+    const isGet = m === "GET";
+    const isPut = m === "PUT";
+
+    // NOTE: theo style bạn đang dùng: set 'Content-Type' trong headers cho POST JSON
+    const finalHeaders = { ...headers };
+    if (!isGet) {
+        // nếu user chưa set thì auto set
+        if (!finalHeaders["Content-Type"] && !finalHeaders["content-type"]) {
+            finalHeaders["Content-Type"] = "application/json";
+        }
+
+
+    }
+    else {
+        if (routeParam && typeof routeParam === "object") {
+            for (const [k, v] of Object.entries(query)) {
+                if (v === null || v === undefined) continue;
+                finalHeaders[headerPrefix + k] = String(v);
+            }
+        }
+    }
+
+    var ajaxOptions = {
+        url: fullUrl,
+        type: m,
+        dataType,
+        timeout,
+        cache,
+        processData: processData,
+        // GET => query, POST => JSON.stringify(body)
+        data: isGet ? (query || {}) : (body == null ? null : (isPut ? body : JSON.stringify(body))),
+
+
+        //Should not use in PUT method
+        //headers: finalHeaders,
+        //contentType: isGet ? undefined : "application/json; charset=utf-8",
+
+        beforeSend: (xhr) => {
+            try { beforeSend?.(xhr); } catch { }
+        }
+    };
+
+    if (!isPut) {
+
+        // nếu không phải GET thì thêm contentType JSON
+        if (!isGet) {
+            ajaxOptions.contentType = "application/json; charset=utf-8";
+        }
+
+        if (finalHeaders) {
+            ajaxOptions.headers = finalHeaders;
+        }
+    }
+
+    const jqxhr = $.ajax(ajaxOptions);
+
+    // callbacks + promise bridge
+    jqxhr
+        .done((res, textStatus, xhr) => {
+            try { onSuccess?.(res, { url: fullUrl, method: m, textStatus, xhr }); } catch (e) {
+                try { sendClientErrorLog?.("onSuccess callback error", e); } catch { }
+            }
+        })
+        .fail((xhr, textStatus, errorThrown) => {
+            const errInfo = {
+                url: fullUrl,
+                method: m,
+                textStatus,
+                errorThrown,
+                status: xhr?.status,
+                responseText: xhr?.responseText,
+                breadcrumbTrail: JSON.stringify(body),
+                xhr
+            };
+
+            try { onError?.(errInfo); } catch (e) {
+                try { sendClientErrorLog?.("onError callback error", e); } catch { }
+            }
+
+            try { sendClientErrorLog?.("AJAX ERROR", errInfo); } catch { }
+        })
+        .always(() => {
+            try { onFinally?.(); } catch { }
+        });
+
+    return jqxhr; // jqXHR = Promise-like
+}
+
+
+
+    // =========================
+    // ajaxGet (optional wrapper)
+    // =========================
+    function ajaxGet(url, routeParamOrQuery = null, maybeQuery = null, opt = {}) {
+        let routeParam = null;
+        let query = {};
+
+        if (typeof routeParamOrQuery === "string" || typeof routeParamOrQuery === "number") {
+            routeParam = routeParamOrQuery;
+            query = maybeQuery || {};
+        } else if (routeParamOrQuery && typeof routeParamOrQuery === "object") {
+            query = routeParamOrQuery;
+        }
+
+        return ajaxCore("GET", url, { routeParam, query, ...opt });
+    }
+
+
+
+    // =========================
+    // ajaxPost (EDIT theo code bạn đưa)
+    // - set headers: { 'Content-Type': 'application/json' }
+    // - data: JSON.stringify(data)
+    // - có callback success/error
+    // - trả promise
+    // =========================
+    function ajaxPost(url, data = {}, opt = {}) {
+        return ajaxCore("POST", url, {
+            body: data,
+            headers: { "Content-Type": "application/json", ...(opt.headers || {}) },
+
+            // forward callbacks/hook
+            onSuccess: opt.onSuccess,
+            onError: opt.onError,
+            onFinally: opt.onFinally,
+            beforeSend: opt.beforeSend,
+
+            // misc
+            dataType: opt.dataType || "json",
+            timeout: opt.timeout || 30000,
+            cache: opt.cache ?? false
+        });
+    }
+
+    function ajaxPut(url, data = {}, opt = {}) {
+    return ajaxCore("PUT", url, {
+        body: data,
+        processData: true,
+        // forward callbacks/hook
+        onSuccess: opt.onSuccess,
+        onError: opt.onError,
+        onFinally: opt.onFinally,
+        beforeSend: opt.beforeSend,
+        timeout: opt.timeout || 30000,
+        cache: opt.cache ?? false
+    });
+}
+
+// =========================
+// Usage đúng theo ví dụ của bạn
+// =========================
+// quotationData.StageDept = "FO";
+// ajaxPost("/api/Quotation/CreateQuotation", quotationData, {
+//     onSuccess: (response) => { console.log("OK", response); },
+//     onError: (err) => { console.log("ERR", err); },
+//     onFinally: () => { console.log("DONE"); }
+// })
+// .done(r => console.log("done:", r))
+// .fail(x => console.log("fail:", x?.responseText))
+// .always(() => console.log("always"));
+function getRenderedGridWidth(grid) {
+    const el = grid.element().get(0);
+    return Math.ceil(el.getBoundingClientRect().width);
+}
+
+// (optional) lấy scrollbar width để trừ nếu cần
+function getScrollbarWidth() {
+    const div = document.createElement("div");
+    div.style.width = "100px";
+    div.style.height = "100px";
+    div.style.overflow = "scroll";
+    div.style.position = "absolute";
+    div.style.top = "-9999px";
+    document.body.appendChild(div);
+    const sw = div.offsetWidth - div.clientWidth;
+    document.body.removeChild(div);
+    return sw;
+}
+
+function stretchColumnsEvenly(e, opts) {
+    const grid = e.component;
+    // chặn loop: chỉ chạy 1 lần mỗi lifecycle
+    const flagKey = "_stretched_evenly";
+    if (grid.__internalFlags?.[flagKey]) return;
+    grid.__internalFlags = grid.__internalFlags || {};
+    grid.__internalFlags[flagKey] = true;
+
+    const renderedWidth = getRenderedGridWidth(grid);
+
+    const targetWidth = opts?.targetWidth ?? window.innerWidth - _widthMenuWidth - _rightWindowPadding;
+    const minWidthEach = opts?.minWidthEach ?? 120;
+    const excludeFields = new Set(opts?.excludeFields ?? []); // vd ["_command", "Select", "Buttons"]
+
+    // nếu bạn muốn ép grid width như bạn đang làm
+    if (renderedWidth > targetWidth) {
+        grid.option("width", targetWidth);
+        grid.updateDimensions();
+    }
+
+    // width cuối cùng sau khi set option width
+    const finalWidth = getRenderedGridWidth(grid);
+
+    // visible columns
+    const cols = grid.getVisibleColumns().filter(c => !c.command); // loại command column (edit/delete/buttons)
+    const stretchCols = cols.filter(c => !excludeFields.has(c.dataField));
+
+    if (!stretchCols.length) return;
+
+    // trừ scrollbar nếu có vertical scroll
+    const sw = getScrollbarWidth();
+    const hasVScroll = grid.getScrollable && (grid.getScrollable()?.scrollHeight() || 0) > (grid.getScrollable()?.clientHeight() || 0);
+    const available = finalWidth - (hasVScroll ? sw : 0);
+
+    // nếu bạn có cột fixed width muốn giữ, tính tổng width fixed trước
+    const fixedSum = cols
+        .filter(c => excludeFields.has(c.dataField))
+        .reduce((sum, c) => sum + (c.width || 0), 0);
+
+    const free = Math.max(0, available - fixedSum);
+
+    const evenW = Math.max(minWidthEach, Math.floor(free / stretchCols.length));
+
+    grid.beginUpdate();
+    try {
+        stretchCols.forEach(c => {
+            // dùng visibleIndex / index chuẩn
+            grid.columnOption(c.index, "width", evenW);
+        });
+    } finally {
+        grid.endUpdate();
+        // update lại layout
+        grid.updateDimensions();
+    }
+}
+
+
+function newKey() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return String(Date.now()) + "_" + Math.random().toString(16).slice(2);
+}
+
+
+function entryTemplate() {
+    return {
+        _key: newKey(),
+        to: null,
+        notes: ""
+    };
+}
+function upsertPicByDept(jsonText, deptKey, picName) {
+    // 1) Normalize input
+    deptKey = (deptKey || "").trim();
+    picName = (picName || "").trim();
+
+    if (!deptKey) throw new Error("deptKey is empty.");
+    if (!picName) throw new Error("picName is empty.");
+
+    // 2) Parse JSON safely
+    let obj = {};
+    if (jsonText && String(jsonText).trim()) {
+        try {
+            const parsed = JSON.parse(jsonText);
+            if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) obj = parsed;
+        } catch {
+            // JSON lỗi => reset để tránh crash
+            obj = {};
+        }
+    }
+
+    // 3) Upsert (insert/update)
+    obj[deptKey] = picName;
+
+    // 4) Return string JSON
+    return JSON.stringify(obj);
+}
+
+
+// wwwroot/js/app/attachmentUtil.js
+// Requires: jQuery + DevExtreme
+
+window.AttachmentUtil = (function () {
+
+    function _safe(obj, path, fallback) {
+        try {
+            return path.split(".").reduce((o, k) => (o ? o[k] : undefined), obj) ?? fallback;
+        } catch { return fallback; }
+    }
+
+    function _extOf(name) {
+        const s = (name || "").trim();
+        const idx = s.lastIndexOf(".");
+        return idx >= 0 ? s.substring(idx + 1).toLowerCase() : "";
+    }
+
+    //function iconByExt(ext) {
+    //    ext = (ext || "").toLowerCase();
+    //        console.log(ext);
+    //    switch (ext) {
+    //        case "not found": return "Not Found";
+    //        case "pdf": return "📕";
+    //        case "xls":
+    //        case "xlsx":
+    //        case "csv": return "📗";
+    //        case "doc":
+    //        case "docx": return "📘";
+    //        case "ppt":
+    //        case "pptx": return "📙";
+    //        case "msg":
+    //        case "eml": return "✉️";
+    //        case "xml":
+    //        case "json": return "🧾";
+    //        case "zip":
+    //        case "rar":
+    //        case "7z": return "🗜️";
+    //        case "png":
+    //        case "jpg":
+    //        case "jpeg":
+    //        case "gif":
+    //        case "bmp":
+    //        case "webp": return "🖼️";
+    //        default: return "📎";
+    //    }
+    //}
+
+    function formatBytes(bytes) {
+        const n = Number(bytes || 0);
+        if (n < 1024) return n + " B";
+        const kb = n / 1024;
+        if (kb < 1024) return kb.toFixed(1) + " KB";
+        const mb = kb / 1024;
+        if (mb < 1024) return mb.toFixed(1) + " MB";
+        const gb = mb / 1024;
+        return gb.toFixed(1) + " GB";
+    }
+
+    function getFormInstance(formSelector) {
+        return $(formSelector).dxForm("instance");
+    }
+
+    function getKeyAndValues(formSelector, keyField) {
+        const form = getFormInstance(formSelector);
+        const formData = form?.option("formData") || {};
+        const key = keyField ? formData?.[keyField] : (formData?.id ?? formData?.Id);
+        return {
+            key,
+            values: JSON.stringify(formData) // đúng ý bạn: values change là JSON.stringify
+        };
+    }
+
+    async function apiUpload({ insertUrl, file, key, values, extraFormData, headers }) {
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("key", key);
+        fd.append("values", values);
+
+        if (extraFormData && typeof extraFormData === "object") {
+            Object.keys(extraFormData).forEach(k => fd.append(k, extraFormData[k]));
+        }
+
+        const res = await fetch(insertUrl, {
+            method: "POST",
+            body: fd,
+            headers: headers || undefined
+        });
+
+        if (!res.ok) {
+            const msg = await res.text().catch(() => "");
+            throw new Error(msg || ("Upload failed: " + res.status));
+        }
+
+        return await res.json().catch(() => ({}));
+    }
+
+    async function apiList({ listUrl, key, headers }) {
+        if (!listUrl) return [];
+        const url = typeof listUrl === "function" ? listUrl(key) : listUrl;
+        const res = await fetch(url, { method: "GET", headers: headers || undefined });
+        if (!res.ok) return [];
+        return await res.json().catch(() => []);
+    }
+
+    async function apiDelete({ deleteUrl, id, headers }) {
+        if (!deleteUrl) return true;
+        const url = typeof deleteUrl === "function" ? deleteUrl(id) : deleteUrl;
+        const res = await fetch(url, { method: "DELETE", headers: headers || undefined });
+        if (!res.ok) {
+            const msg = await res.text().catch(() => "");
+            throw new Error(msg || "Delete failed");
+        }
+        return true;
+    }
+
+    function normalizeItem(raw, map) {
+        // map: { id, fileName, extension, size, downloadUrl }
+        // có thể truyền string path, hoặc function
+        const get = (rule) => {
+            if (!rule) return undefined;
+            if (typeof rule === "function") return rule(raw);
+            if (typeof rule === "string") return _safe(raw, rule, undefined);
+            return undefined;
+        };
+
+        const fileName = get(map?.fileName) ?? raw.fileName ?? raw.FileName ?? raw.name;
+        const extension = get(map?.extension) ?? raw.extension ?? raw.Extension ?? _extOf(fileName);
+        const size = get(map?.size) ?? raw.size ?? raw.fileSize ?? raw.FileSize;
+        const downloadUrl = get(map?.downloadUrl) ?? raw.downloadUrl ?? raw.DownloadUrl ?? raw.url;
+
+        return {
+            id: get(map?.id) ?? raw.id ?? raw.Id ?? raw.attachmentId,
+            fileName,
+            extension,
+            size,
+            downloadUrl,
+            raw
+        };
+    }
+
+    function renderAttachmentList($host, store, options) {
+        // options: { onDownload, onDelete }
+        return $host.dxList({
+            dataSource: store,
+            height: 260,
+            noDataText: "No attachments",
+            itemTemplate: function (itemData) {
+                const name = itemData.fileName || "Unnamed";
+                const ext = itemData.extension || _extOf(name);
+                const size = itemData.size || 0;
+
+                const $item = $("<div style='display:flex;align-items:center;gap:10px;padding:6px 4px;'>");
+
+                $("<div style='width:32px;font-size:20px;text-align:center;'>")
+                    .text(getIconByExt(ext))
+                    .appendTo($item);
+
+                const $mid = $("<div style='flex:1;min-width:0;'>").appendTo($item);
+                $("<div style='font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>")
+                    .text(name)
+                    .appendTo($mid);
+
+                $("<div style='opacity:.75;font-size:12px;'>")
+                    .text((ext ? ext.toUpperCase() : "FILE") + " • " + formatBytes(size))
+                    .appendTo($mid);
+
+                const $actions = $("<div style='display:flex;gap:6px;'>").appendTo($item);
+
+                $("<div>").dxButton({
+                    icon: "download",
+                    stylingMode: "contained",
+                    hint: "Download",
+                    onClick: function () { options?.onDownload?.(itemData); }
+                }).appendTo($actions);
+
+                //$("<div>").dxButton({
+                //    icon: "trash",
+                //    stylingMode: "outlined",
+                //    hint: "Delete",
+                //    onClick: function () { options?.onDelete?.(itemData); }
+                //}).appendTo($actions);
+
+                $("<div>").dxButton({
+                    icon: "trash",
+                    hint: "Delete",
+                    stylingMode: "outlined",
+                    onClick: async function (ev) {
+                        ev.event?.stopPropagation?.();
+
+                        if (!id) {
+                            DevExpress.ui.notify("Missing id", "warning", 2000);
+                            return;
+                        }
+
+                        try {
+                            const res = await fetch(`/api/Document/DeleteDocumentData?id=${encodeURIComponent(id)}`, {
+                                method: "GET"
+                            });
+
+                            if (!res.ok) throw new Error("Delete failed");
+
+                            // animation slide đóng item
+                            $item.css({
+                                overflow: "hidden",
+                                maxHeight: $item.outerHeight() + "px",
+                                opacity: 1,
+                                transform: "translateX(0)",
+                                transition: "max-height .22s ease, opacity .18s ease, margin .22s ease, padding .22s ease, transform .22s ease"
+                            });
+
+                            requestAnimationFrame(() => {
+                                $item.css({
+                                    opacity: 0,
+                                    transform: "translateX(24px)",
+                                    maxHeight: "0px",
+                                    marginTop: "0px",
+                                    marginBottom: "0px",
+                                    paddingTop: "0px",
+                                    paddingBottom: "0px",
+                                    borderWidth: "0px"
+                                });
+                            });
+
+                            setTimeout(() => {
+                                $item.remove();
+                                DevExpress.ui.notify("Deleted", "success", 1200);
+
+                                if (typeof onDeleted === "function") {
+                                    onDeleted(x, { skipReload: true });
+                                }
+                            }, 240);
+
+                        } catch (err) {
+                            DevExpress.ui.notify(err.message || "Delete error", "error", 2500);
+                        }
+                    }
+                }).appendTo($actions);
+                return $item;
+            }
+        }).dxList("instance");
+    }
+
+    /**
+     * Init attachment control inside a container
+     * cfg = {
+     *   formSelector: "#formMKT",
+     *   hostSelector: "#attHost",                 // nơi render uploader + list
+     *   keyField: "id",                           // field name trong formData
+     *   apis: { insertUrl, listUrl(key), deleteUrl(id) },
+     *   map: { id, fileName, extension, size, downloadUrl },
+     *   uploader: { multiple, allowedFileExtensions, maxFileSize, uploadMode },
+     *   extraFormData: () => ({...}) | object,
+     *   headers: () => ({...}) | object,
+     *   onUploaded: (result, file) => {},
+     * }
+     */
+    function init(cfg) {
+        const formSelector = cfg.formSelector;
+
+        // NEW: ưu tiên hostElement
+        const $host = cfg.hostElement ? $(cfg.hostElement) : $(cfg.hostSelector);
+
+        if ($host.length === 0) throw new Error("Attachment host not found");
+        $host.empty();
+        const $uploader = $("<div class='att-uploader'>").appendTo($host);
+        const $listWrap = $("<div class='att-list' style='margin-top:10px;'>").appendTo($host);
+
+        const store = new DevExpress.data.ArrayStore({ key: "id", data: [] });
+
+        const listInstance = renderAttachmentList($listWrap, store, {
+            onDownload: (item) => {
+                const url = item.downloadUrl;
+                if (url) window.open(url, "_blank");
+                else DevExpress.ui.notify("No downloadUrl", "warning", 2000);
+            },
+            onDelete: async (item) => {
+                const id = item.id;
+                if (!id) return DevExpress.ui.notify("Missing attachment id", "warning", 2500);
+
+                const headers = typeof cfg.headers === "function" ? cfg.headers() : cfg.headers;
+
+                try {
+                    await apiDelete({ deleteUrl: cfg.apis?.deleteUrl, id, headers });
+                    store.remove(id);
+                    store.load();
+                    DevExpress.ui.notify("Deleted", "success", 1200);
+                } catch (e) {
+                    DevExpress.ui.notify(e.message || "Delete error", "error", 3000);
+                }
+            }
+        });
+
+        async function reload() {
+            const payload = getKeyAndValues(formSelector, cfg.keyField);
+            if (!payload.key) return;
+
+            const headers = typeof cfg.headers === "function" ? cfg.headers() : cfg.headers;
+
+            const data = await apiList({ listUrl: cfg.apis?.listUrl, key: payload.key, headers });
+            const normalized = (data || [])
+                .map(x => normalizeItem(x, cfg.map))
+                .filter(x => x.id != null);
+
+            store.clear();
+            normalized.forEach(x => store.insert(x));
+            await store.load();
+        }
+
+        $uploader.dxFileUploader({
+            selectButtonText: "Upload files",
+            labelText: "",
+            multiple: cfg.uploader?.multiple ?? true,
+            accept: "*/*",
+            uploadMode: "instantly",
+            showFileList: true,
+            allowedFileExtensions: cfg.uploader?.allowedFileExtensions ?? undefined,
+            maxFileSize: cfg.uploader?.maxFileSize ?? undefined,
+
+            uploadFile: async function (file) {
+                const payload = getKeyAndValues(formSelector, cfg.keyField);
+                if (!payload.key) {
+                    DevExpress.ui.notify("Missing key (formData.id)", "warning", 2500);
+                    throw new Error("Missing key");
+                }
+
+                const extraFormData = typeof cfg.extraFormData === "function" ? cfg.extraFormData() : cfg.extraFormData;
+                const headers = typeof cfg.headers === "function" ? cfg.headers() : cfg.headers;
+
+                try {
+                    const result = await apiUpload({
+                        insertUrl: cfg.apis?.insertUrl,
+                        file,
+                        key: payload.key,
+                        values: payload.values,
+                        extraFormData,
+                        headers
+                    });
+
+                    cfg.onUploaded?.(result, file);
+
+                    // Nếu API trả về item => insert ngay, không thì reload
+                    const inserted = normalizeItem(result, cfg.map);
+                    if (inserted.id != null) {
+                        try { store.insert(inserted); await store.load(); } catch { await reload(); }
+                    } else {
+                        await reload();
+                    }
+
+                    DevExpress.ui.notify("Uploaded: " + file.name, "success", 1000);
+                } catch (e) {
+                    DevExpress.ui.notify(e.message || ("Upload error: " + file.name), "error", 3500);
+                    throw e;
+                }
+            }
+        });
+
+        // expose reload for caller
+        const api = {
+            reload,
+            listInstance,
+            store,
+            getKeyAndValues: () => getKeyAndValues(formSelector, cfg.keyField)
+        };
+
+        // initial load
+        reload();
+        return api;
+    }
+
+    return {
+        init,
+        //iconByExt,
+        formatBytes,
+        getKeyAndValues
+    };
+})();
+
+function getIconByExt(ext) {
+    ext = (ext || "").toLowerCase();
+    if (ext === "not found on server") return "!";
+    if (ext === "pdf") return "📕";
+    if (ext === "xls" || ext === "xlsx" || ext === "csv") return "📗";
+    if (ext === "doc" || ext === "docx") return "📘";
+    if (ext === "ppt" || ext === "pptx") return "📙";
+    if (ext === "msg" || ext === "eml") return "✉️";
+    if (ext === "xml" || ext === "json") return "🧾";
+    if (ext === "zip" || ext === "rar" || ext === "7z") return "🗜️";
+    if (["png", "jpg", "jpeg", "gif", "bmp", "webp"].includes(ext)) return "🖼️";
+    return "📎";
+}
+
+function getExt(fileName) {
+    const s = (fileName || "");
+    const i = s.lastIndexOf(".");
+    return i >= 0 ? s.substring(i + 1) : "";
+}
+
+function formatBytes(bytes) {
+    const n = Number(bytes || 0);
+    if (n < 1024) return n + " B";
+    const kb = n / 1024;
+    if (kb < 1024) return kb.toFixed(1) + " KB";
+    const mb = kb / 1024;
+    if (mb < 1024) return mb.toFixed(1) + " MB";
+    const gb = mb / 1024;
+    return gb.toFixed(1) + " GB";
+}
+
+
+
+
+
+
+
+
+
+
+function getJson(url, data) {
+    return $.ajax({
+        url: url,
+        type: "GET",
+        data: data || {},
+        dataType: "json"
+    });
+}
+
+
+// Global error handlers for detailed JavaScript error tracing
+window.addEventListener('error', function(event) {
+    const errorInfo = {
+        message: event.message,
+        fileName: event.filename,
+        lineNumber: event.lineno,
+        columnNumber: event.colno,
+        stack: event.error?.stack,
+        errorType: 'uncaught'
+    };
+    sendClientErrorLog(event.message, null, errorInfo);
+});
+
+window.addEventListener('unhandledrejection', function(event) {
+    const errorInfo = {
+        message: event.reason?.message || String(event.reason),
+        stack: event.reason?.stack,
+        errorType: 'unhandled_promise'
+    };
+    sendClientErrorLog(event.reason?.message || 'Unhandled promise rejection', null, errorInfo);
+});
+
+
+$.Deferred.exceptionHook = function (error, stack) {
+    if (error.status != 200)
+    appErrorHandling('Deferred error', error);
+};
+
+// Override console.error to also log to server
+const originalConsoleError = console.error;
+console.error = function(...args) {
+    // Call original
+    //originalConsoleError.apply(console, args);
+
+    const errorInfo = {
+        //message: event.reason?.message || String(event.reason),
+        //stack: event.reason?.stack,
+        errorType: 'console_error'
+    };
+    const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
+    sendClientErrorLog('Console Error: ' + message, null, errorInfo);
+};
+
+// Track user actions for breadcrumb
+$(document).on('click', '[id], button, a', function() {
+    const element = $(this);
+    const id = element.attr('id') || element.attr('class') || element.prop('tagName');
+    addBreadcrumb('click: ' + id);
+});
+
+$(document).on('submit', 'form', function() {
+    addBreadcrumb('submit: ' + ($(this).attr('id') || 'form'));
+});
+       
+
+function getDefaultPicByDept(deptKey, dataForm) {
+    if (!deptKey) return null;
+    if (!dataForm.pIC) return null;
+    PIC_MAP = JSON.parse(dataForm.pIC || "{}");
+    return PIC_MAP[deptKey] || null;
+}
+
+
+
+
+
+
+
+
+function renderBranchOverlay(currentDept) {
+    const formState = buildFormState();
+    const choices = getNextChoices(currentDept, formState);
+
+    if (!choices.length) {
+        DevExpress.ui.notify("No valid route - please complete required fields", "warning", 1600);
+        return;
+    }
+
+    const $canvas = $("#branchOverlay .branchCanvas");
+    const $svg = $canvas.find("svg").first();
+
+    // clear
+    $svg.find("path").remove();
+    $canvas.find(".bnode").remove();
+
+    const nodeSize = 52;
+    const xRootNode = 14;
+    const xChoiceNode = 182;
+
+    const xRootLine = 40;
+    const xJ = 110;
+    const xRightLine = 200;
+
+    const canvasH = Math.max(140, choices.length * 70);
+    $canvas.css("height", canvasH + "px");
+    $svg.attr("viewBox", `0 0 260 ${canvasH}`);
+
+    const yJ = canvasH / 2;
+    const rootTop = Math.round(yJ - nodeSize / 2);
+
+    $canvas.append(
+        `<div class="bnode root current"
+                      style="left:${xRootNode}px; top:${rootTop}px;"
+                      title="Current role: ${currentDept}">
+                    ${currentDept}
+                 </div>`
+    );
+
+    const topPad = 14;
+    const bottomPad = 14;
+    const yMin = topPad + nodeSize / 2;
+    const yMax = canvasH - bottomPad - nodeSize / 2;
+
+    let ys;
+    if (choices.length === 1) ys = [yJ];
+    else if (choices.length === 2) ys = [yJ - 30, yJ + 30];
+    else ys = choices.map((_, i) => yMin + i * ((yMax - yMin) / (choices.length - 1)));
+
+    const addPath = (d) => $svg.append(`<path d="${d}" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />`);
+
+    if (choices.length === 1) {
+        addPath(`M${xRootLine} ${yJ} L${xRightLine} ${yJ}`);
+    } else {
+        addPath(`M${xRootLine} ${yJ} L${xJ} ${yJ}`);
+        addPath(`M${xJ} ${ys[0]} L${xJ} ${ys[ys.length - 1]}`);
+        ys.forEach(y => addPath(`M${xJ} ${y} L${xRightLine} ${y}`));
+    }
+
+    choices.forEach((dept, i) => {
+        const yChoice = ys[i];
+        const top = Math.round(yChoice - nodeSize / 2);
+        const id = `route_${dept}`;
+
+        $canvas.append(
+            `<div id="${id}" class="bnode choice" style="left:${xChoiceNode}px; top:${top}px;" title="Route to ${dept}">${dept}</div>`
+        );
+
+        $(`#${id}`).off("click").on("click", () => routeTo(dept));
+    });
+}
+function getValueByPath(obj, path) {
+    if (!obj || !path) return undefined;
+    return path.split(".").reduce((acc, key) => acc?.[key], obj);
+}
+
+function normalizeValueByDataType(value, dataType) {
+    switch ((dataType || "").toLowerCase()) {
+        case "boolean":
+            if (typeof value === "boolean") return value;
+            if (typeof value === "string") {
+                const v = value.trim().toLowerCase();
+                if (v === "true") return true;
+                if (v === "false") return false;
+            }
+            return Boolean(value);
+
+        case "number":
+        case "int":
+        case "decimal":
+            if (value === null || value === undefined || value === "") return null;
+            return Number(value);
+
+        case "string":
+            if (value === null || value === undefined) return "";
+            return String(value);
+
+        case "date":
+        case "datetime":
+            if (!value) return null;
+            const d = new Date(value);
+            return isNaN(d.getTime()) ? null : d;
+
+        default:
+            return value;
+    }
+}
+
+function compareValues(left, operator, right, dataType) {
+    const op = (operator || "").trim();
+
+    if (dataType === "date" || dataType === "datetime") {
+        const leftTime = left instanceof Date ? left.getTime() : null;
+        const rightTime = right instanceof Date ? right.getTime() : null;
+
+        switch (op) {
+            case "=":
+            case "==":
+                return leftTime === rightTime;
+            case "!=":
+            case "<>":
+                return leftTime !== rightTime;
+            case ">":
+                return leftTime > rightTime;
+            case "<":
+                return leftTime < rightTime;
+            case ">=":
+                return leftTime >= rightTime;
+            case "<=":
+                return leftTime <= rightTime;
+            default:
+                return false;
+        }
+    }
+
+    switch (op) {
+        case "=":
+        case "==":
+            return left === right;
+
+        case "!=":
+        case "<>":
+            return left !== right;
+
+        case ">":
+            return left > right;
+
+        case "<":
+            return left < right;
+
+        case ">=":
+            return left >= right;
+
+        case "<=":
+            return left <= right;
+
+        case "contains":
+            if (Array.isArray(left)) return left.includes(right);
+            return String(left ?? "").toLowerCase().includes(String(right ?? "").toLowerCase());
+
+        case "notcontains":
+            if (Array.isArray(left)) return !left.includes(right);
+            return !String(left ?? "").toLowerCase().includes(String(right ?? "").toLowerCase());
+
+        case "startswith":
+            return String(left ?? "").toLowerCase().startsWith(String(right ?? "").toLowerCase());
+
+        case "endswith":
+            return String(left ?? "").toLowerCase().endsWith(String(right ?? "").toLowerCase());
+
+        case "in":
+            if (!Array.isArray(right)) return false;
+            return right.includes(left);
+
+        case "notin":
+            if (!Array.isArray(right)) return false;
+            return !right.includes(left);
+
+        case "isnull":
+            return left === null || left === undefined || left === "";
+
+        case "isnotnull":
+            return !(left === null || left === undefined || left === "");
+
+        default:
+            return false;
+    }
+}
+
+function evaluateConditionRule(condition, formData) {
+    if (!condition || typeof condition !== "object") return false;
+    if (!condition.field) return true;
+    const type = (condition.type || "").toLowerCase();
+    const source = (condition.source || "").toLowerCase();
+
+    //if (type !== "rule") return false;
+    //if (source !== "payload") return false;
+
+    const field = condition.field;
+    const operator = condition.operator;
+    const dataType = (condition.dataType || "").toLowerCase();
+    const expectedValueRaw = condition.value;
+    var actualValueRaw = null;
+ 
+        actualValueRaw = getValueByPath(formData, field);
+
+
+    const actualValue = normalizeValueByDataType(actualValueRaw, dataType);
+    const expectedValue = normalizeValueByDataType(expectedValueRaw, dataType);
+
+    return compareValues(actualValue, operator, expectedValue, dataType);
+}
+
+function openBranchOverlay(currentDept) {
+    //const currentDept = stageDept || focusDept || "FO";
+    renderBranchOverlay(currentDept);
+    $("#branchOverlay").show();
+}
+
+
+async function libreConvert(id) {
+    //const fileRes = await fetch(`/api/Document/LibreConvert/${id}`);
+    //get file
+    $.ajax({
+        url: `/api/Document/LibreConvert/${id}`,
+        method: "GET",
+        xhrFields: {
+            withCredentials: true,
+            responseType: "blob"
+        },
+        success: function (blob) {
+            const popup = makePopup("large", "Res");
+
+            popup.option({
+                width: "80vw",
+                height: "90vh",
+                title: "Word Preview",
+                contentTemplate(container) {
+                   
+                    $("<iframe>")
+                        .attr("id", `pdfViewer_${id}`)
+                        .attr("src", "")
+                        .css({
+                            width: "100%",
+                            height: "600px",
+                            border: "1px solid #ccc"
+                        })
+                        .appendTo(container);
+                    const fileURL = URL.createObjectURL(blob);
+                    $(`#pdfViewer_${id}`).attr("src", fileURL);
+                   
+                }
+            });
+
+            popup.show();
+            
+            //const url = window.URL.createObjectURL(blob);
+            //const tabName = `pdfPreviewTab_${id}`;
+            //const existingTab = window.open('', tabName);
+
+            //if (existingTab) {
+            //    existingTab.location.href = url;
+            //} else {
+            //    window.open(url, tabName);
+            //}
+
+            //window.URL.revokeObjectURL(url);
+        },
+        error: function (xhr, status, error) {
+            appNotifyWarning("Call Libre fail!.");
+        }
+    });
+
+}
+
+async function openExcelPreviewPopup(id) {
+    var popupInstance = makePopup("large", "Res");
+    popupInstance.option({
+        width: "90vw",
+        height: "90vh",
+        showTitle: true,
+        title: "Excel Preview",
+        dragEnabled: true,
+        resizeEnabled: true,
+        contentTemplate: function (container) {
+            const $container = $(container);
+
+            const $wrapper = $("<div>").css({
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden"
+            }).appendTo($container);
+
+            const $toolbar = $("<div>").css({
+                padding: "8px 12px",
+                borderBottom: "1px solid #ddd",
+                display: "flex",
+                gap: "8px",
+                alignItems: "center",
+                flexShrink: 0
+            }).appendTo($wrapper);
+
+            const $sheetSelect = $("<div>").css({
+                width: "260px"
+            }).appendTo($toolbar);
+
+            const $body = $("<div>").attr("id", "excelPreviewBody").css({
+                flex: 1,
+                overflow: "auto",
+                padding: "12px",
+                background: "#fff"
+            }).appendTo($wrapper);
+
+            $body.html("<div style='padding:20px'>Loading...</div>");
+
+            (async function () {
+                try {
+                    const fileRes = await fetch(`/api/Document/StreamDocument?id=${id}`);
+                   
+                    const arrayBuffer = await fileRes.arrayBuffer();
+
+                    // 4. đọc workbook
+                    const workbook = XLSX.read(arrayBuffer, {
+                        type: "array",
+                        cellStyles: true,
+                        cellDates: true
+                    });
+
+                    function renderSheet(sheetName) {
+                        const sheet = workbook.Sheets[sheetName];
+                        if (!sheet) return;
+
+                        // HTML cơ bản từ SheetJS
+                        let html = XLSX.utils.sheet_to_html(sheet, {
+                            editable: false
+                        });
+
+                        $body.html(`
+                            <div class="excel-html-wrap" style="overflow:auto;width:100%;height:100%">
+                                ${html}
+                            </div>
+                        `);
+
+                        // style tăng trải nghiệm nhìn giống grid hơn
+                        $body.find("table").css({
+                            borderCollapse: "collapse",
+                            width: "max-content",
+                            minWidth: "100%",
+                            background: "#fff"
+                        });
+
+                        $body.find("th, td").css({
+                            border: "1px solid #dcdcdc",
+                            padding: "6px 10px",
+                            whiteSpace: "nowrap",
+                            verticalAlign: "middle"
+                        });
+
+                        $body.find("tr:nth-child(even)").css({
+                            background: "#fafafa"
+                        });
+                    }
+
+                    // 5. dropdown chọn sheet
+                    $sheetSelect.dxSelectBox({
+                        dataSource: workbook.SheetNames,
+                        value: workbook.SheetNames[0],
+                        placeholder: "Select sheet",
+                        onValueChanged: function (e) {
+                            renderSheet(e.value);
+                        }
+                    });
+
+                    // render sheet đầu tiên
+                    renderSheet(workbook.SheetNames[0]);
+
+                } catch (err) {
+                    console.error(err);
+                    $body.html(`<div style="padding:20px;color:red;">${err.message}</div>`);
+                }
+            })();
+        }
+    });
+
+    popupInstance.show();
+}
+async function openWordPreviewPopup(id) {
+    const popup = makePopup("large", "Res");
+
+    popup.option({
+        width: "80vw",
+        height: "90vh",
+        title: "Word Preview",
+        contentTemplate(container) {
+            const $host = $("<div>")
+                .css({
+                    width: "100%",
+                    height: "100%",
+                    overflow: "auto",
+                    padding: 20,
+                    background: "#f5f6f8"
+                })
+                .html("Loading...")
+                .appendTo(container);
+
+            fetch(`/api/Document/StreamDocument?id=${id}`)
+                .then(r => {
+                    if (!r.ok) throw new Error(`Load file thất bại: ${r.status}`);
+                    return r.blob();
+                })
+                .then(blob => {
+                    const docEl = $("<div>")
+                        .css({
+                            background: "#fff",
+                            padding: 40,
+                            margin: "0 auto",
+                            maxWidth: 900,
+                            boxShadow: "0 4px 20px rgba(0,0,0,0.1)"
+                        })[0];
+
+                    $host.empty().append(docEl);
+
+                    return docx.renderAsync(blob, docEl, null, {
+                        className: "docx",
+                        inWrapper: true,
+                        breakPages: true
+                    });
+                })
+                .catch(err => {
+                    console.error(err);
+                    $host.html(`<div style="padding:20px;color:red;">${err.message}</div>`);
+                });
+        }
+    });
+
+    popup.show();
+}
+
+async function openImagePreviewPopup(id) {
+    const popup = makePopup("large", "Res");
+    popup.option({
+        width: "80vw",
+        height: "90vh",
+        title: "Image Preview",
+        contentTemplate(container) {
+            var scrollContent = popupStandardContentByScroll($("<img>")
+                .attr("src", `/api/Document/StreamDocument?id=${id}`)
+                .css({ width: '100%', height: 'auto', objectFit: 'cover', borderRadius: '5px' }));
+            scrollContent.appendTo(container);
+        }
+    });
+    popup.show();
+}
+function makePopupWithScroll($element,$size,$label) {
+    const popup = makePopup($size, $label);
+    popup.option({
+        width: "80vw",
+        height: "90vh",
+        contentTemplate(container) {
+            var scrollContent = popupStandardContentByScroll($element);
+            scrollContent.appendTo(container);
+        }
+    });
+    return popup;
+}
+
+async function openWordMammothPopup(id) {
+    const popup = makePopup("large", "Res");
+    popup.option({
+        width: "70vw",
+        height: "85vh",
+        title: "Word Text Preview",
+        contentTemplate(container) {
+            const $host = $("<div>").css({
+                width: "100%",
+                height: "100%",
+                overflow: "auto",
+                padding: "20px",
+                background: "#fff",
+                lineHeight: "1.6",
+                fontFamily: "Calibri, Arial"
+            }).html("Loading...").appendTo(container);
+
+            (async () => {
+                try {
+                    // 1. fetch binary từ API của bạn
+
+                    const res = await fetch(`/api/Document/StreamDocument?id=${id}`);
+                    if (!res.ok) throw new Error(`Load file thất bại: ${res.status}`);
+
+                    const arrayBuffer = await res.arrayBuffer();
+
+                    // 2. convert docx → HTML
+                    const result = await mammoth.convertToHtml({ arrayBuffer });
+
+                    // 3. render HTML
+                    $host.html(result.value);
+
+                    // 4. log warning nếu có
+                    if (result.messages && result.messages.length) {
+                        console.warn("Mammoth warnings:", result.messages);
+                    }
+
+                } catch (err) {
+                    console.error(err);
+                    $host.html(`<div style="color:red;">${err.message}</div>`);
+                }
+            })();
+        }
+    });
+
+    popup.show();
+}
+
+
+function openMessageDialog(item) {
+
+    const createdText = fmtTimeLocal(item.createdDate);
+    const title = escapeHtml(item.title || "Message");
+    // ưu tiên message; nếu bạn có field khác như item.body/item.content thì thay ở đây
+    const body = escapeHtml(item.message || "");
+    var popup = makePopup("small", "Title")
+
+    popup.option("contentTemplate", function (container) {
+        return `
+        <div class="msg-meta">
+          ${createdText ? `Subject date: ${createdText}` : ""}
+        </div>
+        <div class="msg-body">${body || "(empty)"}</div>
+      `;
+    });
+    popup.show();
 }

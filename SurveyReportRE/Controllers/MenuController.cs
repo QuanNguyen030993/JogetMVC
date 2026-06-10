@@ -11,6 +11,7 @@ using ERPCore.Models.Migration.Config;
 using ERPCore.Models.Request;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
+using ERPCore.Models.Migration.Business.HumanResource;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -115,8 +116,15 @@ public class MenuController : BaseControllerApi<Menu>
                 }
             }
         }
-
-        return Ok(result);
+        bool isSuperUser = superUsers.Contains(loginAccount);
+        var roles = await _BaseRepository.GetUserRoles(loginAccount, isSuperUser);
+        if (roles != null)
+        //return Ok(roles);
+            return Ok(new { Menu = result, UserRoles = roles });
+        else
+        {
+            return Ok(new { UserRoles = roles });
+        }
     }
 
     public override async Task<ActionResult<List<dynamic>>> GetSystemScheme()

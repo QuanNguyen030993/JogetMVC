@@ -432,7 +432,7 @@
               <div class="treeStack" id="treeStack">
                 <div class="vline" id="treeVLine"></div>
 
-                <div class="dept-node" data-key="MKT"  data-target="#secMKT"  title="MKT">MKT</div>
+                <div class="dept-node" data-key="FO"  data-target="#secMKT"  title="FO">FO</div>
                 <div class="dept-node" data-key="TS"   data-target="#secTS"   title="TS">TS</div>
                 <div class="dept-node" data-key="UW"   data-target="#secUW"   title="UW">UW</div>
                 <div class="dept-node" data-key="LMKT" data-target="#secLMKT" title="Leader MKT">LMKT</div>
@@ -443,7 +443,7 @@
             <div id="overviewScroll" class="overview-scroll">
               <section id="secMKT" class="dept-section">
                 <div class="dept-header">
-                  <div class="dept-title">MKT</div>
+                  <div class="dept-title">FO</div>
                   <div class="dept-hint" id="hintMKT"></div>
                 </div>
                 <div id="formMKT"></div>
@@ -497,7 +497,7 @@
   <div class="actionBar">
     <div class="actionLeft">
       <span class="pill">Record: <b id="recordNo">Qu-10030</b></span>
-      <span class="pill">Login role: <b id="loginRoleLabel">MKT</b></span>
+      <span class="pill">Login role: <b id="loginRoleLabel">FO</b></span>
     </div>
     <div class="actionRight">
       <div id="btnSaveDraft"></div>
@@ -546,8 +546,8 @@
   ];
 
   // ===== UI state =====
-  const Roles = ["MKT","TS","UW","LMKT","PM"];
-  let currentUserRole = "MKT";
+  const Roles = ["FO","TS","UW","LMKT","PM"];
+  let currentUserRole = "FO";
   let filter = "all";
   let searchText = "";
   let selectedId = quotes[0]?.id;
@@ -726,7 +726,7 @@
 
   function applyEditLock(){
     // Only allow edit when focusDept matches currentUserRole (demo rule)
-    const roMKT  = !(currentUserRole === "MKT"  && focusDept === "MKT");
+    const roMKT  = !(currentUserRole === "FO"  && focusDept === "FO");
     const roTS   = !(currentUserRole === "TS"   && focusDept === "TS");
     const roUW   = !(currentUserRole === "UW"   && focusDept === "UW");
     const roLMKT = !(currentUserRole === "LMKT" && focusDept === "LMKT");
@@ -747,7 +747,7 @@
     $("#loginRoleLabel").text(currentUserRole);
     $("#focusDeptPill").text(`Focus: ${focusDept}`);
 
-    const all = ["MKT","TS","UW","LMKT","PM"];
+    const all = ["FO","TS","UW","LMKT","PM"];
     all.forEach(k => {
       const canEdit = (focusDept === k) && (currentUserRole === k);
       $(`#hint${k}`).text(`${canEdit ? "EDIT ENABLED" : "READ ONLY"} • login=${currentUserRole}`);

@@ -1,0 +1,37 @@
+﻿@using JogetMVC.Model
+@{
+    string dept = "FO";
+    long quotationId = Convert.ToInt32(ViewData["Id"]);
+    string quotationGuid = ViewData["Guid"].ToString();
+}
+<!-- COMPOSER -->
+<div class="composer">
+
+    <div class="dept-title">Comments</div>
+
+    <div id="@PIViewIdHelper.CommentPanelControl(dept, quotationId)"></div>
+    <div class="composer-actions">
+    </div>
+    <div class="filter-bar">
+        <div class="filter-left">
+            <div id="@PIViewIdHelper.FilterTypeSelect(dept,quotationId)"></div>
+
+            <div id="@PIViewIdHelper.BtnFilterAll(dept, quotationId)"></div>
+            <div id="@PIViewIdHelper.BtnFilterRequest(dept, quotationId)"></div>
+            <div id="@PIViewIdHelper.BtnFilterBlocker(dept, quotationId)"></div>
+            <div id="@PIViewIdHelper.BtnFilterDiscussion(dept, quotationId)"></div>
+            <div id="@PIViewIdHelper.BtnFilterInternal(dept, quotationId)"></div>
+        </div>
+        <div class="filter-note">
+        </div>
+        <div class="comment-wrap" id="@PIViewIdHelper.CommentWrap(dept, quotationId)" style="width:100%"></div>
+    </div>
+</div>
+
+<script>
+    setTimeout(() => {
+        renderFormComment(`@PIViewIdHelper.CommentPanelControl(dept, quotationId)`,`@dept`,`pi`,@(quotationId));
+        // commentModule ('qt' , '@dept', null);
+    },1);
+</script>
+

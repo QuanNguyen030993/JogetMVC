@@ -1,25 +1,72 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 using ERPCore.Models.Migration.Base;
-using ERPCore.Models.Migration.Business.MasterData;
 using ERPCore.Models.Migration.Config;
 namespace ERPCore.Models.Migration.Business.Workflow
 {
     public class StepsWorkflow : BaseModel
     {
-        public long? NotifyMailTemplateId { get;set;}
-        public MailTemplate? NotifyMailTemplateFK {get;set;}   
-        public int? Steps {get;set;}
-        public long? FlowMailTemplateId { get; set; }
-        public MailTemplate? FlowMailTemplateFK {get;set;}
-        public long? ReturnMailTemplateId { get; set; }
-        public MailTemplate? ReturnMailTemplateFK { get;set;}
-        public long? ReturnId { get; set; }
-        public EnumData? ReturnEnum { get; set; }
-        public long? PositiveStatusId { get; set; }
-        public EnumData? PositiveStatusEnum { get; set; }
-        public long? NegativeStatusId { get; set; }
-        public EnumData? NegativeStatusEnum { get; set; }
-        public string Entity { get; set; } = "";
+        public Guid WorkflowDefinitionId { get; set; }
+        [MaxLength(100)]
+        public string? StepCode { get; set; } = null!;   // FO_REVIEW_AND_ROUTE
+
+        [MaxLength(255)]
+        public string? StepName { get; set; } = null!;
+
+        public long? StepType { get; set; } 
+
+        [MaxLength(50)]
+        public string? RoleCode { get; set; }           // FO / TS / UW / MKT_MGR
+
+        [MaxLength(50)]
+        public string? DepartmentCode { get; set; }
+
+        public int? SortOrder { get; set; }
+
+        public bool? IsStart { get; set; }
+        public bool? IsEnd { get; set; }
+        public bool? IsActive { get; set; } = true;
+         
+        public bool? CanEdit { get; set; }
+        public bool? CanComment { get; set; } = true;
+        public bool? CanUpload { get; set; }
+
+        [MaxLength(255)]
+        public string? DisplayStatus { get; set; }
+
+        [MaxLength(100)]
+        public string? UiMode { get; set; }            // ReadOnly / EditQuotation / Approval
+
+        public int? LevelNo { get; set; }
+
+        [MaxLength(100)]
+        public string? FlowType { get; set; }
+
+        public bool? AllowLoop { get; set; }
+
+        [MaxLength(100)]
+        public string? LoopGroup { get; set; }
+
+        public decimal? PosX { get; set; }
+        public decimal? PosY { get; set; }
+
+        public Guid? ParentStepId { get; set; }
+
+        public string? StepNo { get; set; }
+        public string? JumpStepNo { get; set; }
+        public string? FNodeId { get; set; } = "";
+        public string? TNodeId { get; set; } = "";
+        public string? FromNodeId { get; set; } = "";
+        public string? ToNodeId { get; set; } = "";
+        public string? ActionCode { get; set; } = "";
+        [MaxLength(8000)]
+        public string? Data { get; set; } = "";
+        public string? StatusCode { get; set; } = "";
+        public string? StatusName { get; set; } = "";
+        public long? StatusId { get; set; } = 0;
+        public EnumData? StatusEnum { get; set; } 
+
     }
 }

@@ -1,4 +1,6 @@
-﻿<!--CSS library: common -->
+﻿<!--CSS variables-->
+<link href="~/css/constant/rootstats.css" rel="stylesheet" type="text/css" />
+<!--CSS library: common -->
 <link href="~/css/app/dx.css" rel="stylesheet" type="text/css" />
 <!--Only use 1 CSS-->
 <link href="~/css/app/dx-controls.css" rel="stylesheet" type="text/css" />
@@ -6,7 +8,7 @@
 <!--Only use 1 CSS-->
 @* <link href="~/css/devextreme-20.1.4/dx.material.blue.light.css" rel="stylesheet" type="text/css" /> *@
 <link href="~/css/jquery/top-panel.min.css" rel="stylesheet" type="text/css" />
- <link href="~/css/fonts/css/all.min.css" rel="stylesheet" type="text/css" /> 
+<link href="~/css/fonts/css/all.min.css" rel="stylesheet" type="text/css" />
 
 <!--App CSS: customized-->
 <link href="~/css/devextreme/dx-diagram.min.css" rel="stylesheet">
@@ -32,10 +34,10 @@
 <!-- Prism JS -->
 @* <script src="~/lib/prism/prism.min.js"></script> *@
 <!-- Define global alias -->
-<script type="text/javascript">
+ <script type="text/javascript">
     window.Quill = window.DevExpress.Quill;
 </script>
-
+ 
 <script src="~/lib/knockout/knockout.js"></script>
 <script src="~/lib/wysiwyg-editor-summernote/summernote.js"></script>
 <script src="~/lib/bootstrap/tooltip.js"></script>
@@ -69,8 +71,8 @@
 @* <script src="~/lib/devextreme-20.1.4/dx-diagram.js"></script> *@
 <script src="~/lib/devextreme-diagram/2.0.45/dx-diagram.min.js"></script>
 <script src="~/lib/devextreme-gantt/2.0.40/dx-gantt.min.js"></script>
-@* <script src="~/lib/devextreme-22.2.15/dx.all.js"></script> *@
-<script src="~/lib/devextreme-20.2.13/dx.all.js"></script>
+@* <script src="~/lib/devextreme-22.2.15/dx.all.js"></script>  *@
+<script src="~/lib/devextreme-20.2.13/dx.all.js"></script>  
 <script src="~/lib/devextreme-20.1.4/aspnet/dx.aspnet.data.js"></script>
 <script src="~/lib/devextreme-20.1.4/aspnet/dx.aspnet.mvc.js"></script>
 <!-- Xtrareport-->
@@ -93,20 +95,42 @@
 
 <!-- docx preview -->
 <script src="~/lib/docxjs/jszip.min.js"></script>
-@* <script src="~/lib/docxjs/docx-preview.min.js"></script> *@
+<!-- Demo lib-->
+<script src="~/lib/docx-preview/docx-preview.min.js"></script>
+<script src="~/lib/mammoth/mammoth.browser.min.js"></script>
+<script src="~/lib/jsplumb/jsplumb.min.js"></script>
+ <link href="~/css/jstree/style.min.css" rel="stylesheet" />
 
+
+<script src="~/lib/tinymce/tinymce.min.js"></script>
+<script src="~/lib/tinymce/icons/default/icons.min.js"></script>
+<script src="~/lib/tinymce/models/dom/model.min.js"></script>
+<script src="~/lib/tinymce/plugins/lists/plugin.min.js"></script>
+<script src="~/lib/tinymce/themes/silver/theme.min.js"></script>
+<script src="~/lib/tinymce/tinymce.min.js"></script>
+ <link href="~/lib/tinymce/skins/ui/oxide/content.min.css" rel="stylesheet" />
+<link href="~/lib/tinymce/skins/ui/oxide/skin.min.css" rel="stylesheet" />
+<link href="~/lib/tinymce/skins/ui/oxide/content.inline.min.css" rel="stylesheet" />
+
+<script src="~/lib/jstree/jstree.min.js"></script>
 <script>
     // var constHostName = 'https://localhost:5000/api';
-    const _defaultFormFieldWidth = 300;
+    const _defaultSkipDropDown = 0;
+    const _defaultTakeDropDown = 1000; // Can than so nay khi dung cho dropdown
+
+
+    const _defaultFormFieldWidth = "100%";
     const _defaultFormFieldHeight = 50;
-    const _defaultGridFieldWidth = 150;
+    const _defaultEditorFieldWidth = "100%";
+    const _defaultEditorFieldHeight = 300;
+    const _defaultGridFieldWidth = 300;
     const _defaultGridFieldHeight = 50;
     const _defaultTextAreaHeight = 50;
     const _defaultTextAreaWidth = "100%";
-    const _defaultDropDownWidth = 500;
+    const _defaultDropDownWidth = 800;
     const _defaultDropDownHeight = 500;
     const _defaultGridMinHeight = 350;
-    const _defaultHtmlEditorHeight = 300;
+    const _defaultHtmlEditorHeight = "calc(100% - 0px)";
     const _defaultHtmlEditorWidth = "100%";
     const _defaultButtonHeight = 50;
     const _defaultGridDropDownOptionsWidth = 700;
@@ -116,50 +140,9 @@
     const _timeoutPopup = 15000;
     const _swalPopupDelayTime = 20000;
     const _surveyFormAutoSavedInterval = 120000;
-    var _menus = [];
-    var _isAllowDraft = 0;
-    var _cacheModels = [];
-    
-    // function getDataFromIndexedDB() {
-    //     if (_db) {
-           
-    //     }
-    // }
-    // getDataFromIndexedDB();
-
-
-
-    $.ajax({
-        url: `api/DataGridConfig/CacheUsingModel`,
-        async: false,
-        success: function (response) {
-            _cacheModels = response;
-        },
-        error: function (exception) {
-        }
-    });
-
-
-
-    var _sysTables = [];
-    $.ajax({
-        url: `/api/SysTable/GetAll`,
-        type: 'GET',
-        async: false,
-        success: function (response) {
-            modelConfig = response;
-            if (_sysTables.length == 0) {
-                _sysTables = response;
-            }
-        },
-        error: function () {
-            appErrorHandling("Load SysTables fail!");
-        }
-    });
-    var _role = "";
-    var _loginUser = "";
-    var _isSuperUser = "false";
-    var _isDebugMode = "false";
+    const _delaySequenceQuery = 500;
+    const _rightWindowPadding = 45;
+    const _widthMenuWidth = 197;
     const currencyFormatter = "#,##0.## VNĐ";
     const currency4Formatter = "#,##0.#### VNĐ";
     const percentageFormatter = "#,###.## %";
@@ -169,38 +152,170 @@
     const dateFormatter = "dd MMM yyyy";
     const datetimeFormatter = "dd MMM yyyy hh:mm";
     const timeFormatter = "hh:mm";
-
     const variableMapping = {
-        currencyFormatter,
-        currency4Formatter,
-        percentageFormatter,
-        decimalFormatter,
-        decimal3Formatter,
-        decimal4Formatter,
-        dateFormatter,
-        datetimeFormatter,
-        timeFormatter
+    currencyFormatter,
+    currency4Formatter,
+    percentageFormatter,
+    decimalFormatter,
+    decimal3Formatter,
+    decimal4Formatter,
+    dateFormatter,
+    datetimeFormatter,
+    timeFormatter
     };
-        // Write your JavaScript code.
+    const _delayQuotationsLoad = 300;
+    const _delayQuotationsLoadForm = 1;
+    const _delayPolicyIssuancesLoad = 300;
+    const _delayNextStepLoading = 1000;
+    const _delayRenderAssigneeBox = 1000;   
+    const _delayRenderSubmitButton = 3000;
+    const _delayLoadDataSubmitButton = 5000;
+    const _delayRenderDecisionButton = 1000;
+        const _errorFailLogCountMax = 100;
+    window.ErrorFailLogCount = 0;
+    // var _nextStep = new Object();
+    // _nextStep.flowSteps = [];
+    // _nextStep.currentStep = 1;
+    // _nextStep.instanceWorkflow = new Object();
+    window.Config = {
+    loadedConfig: [],
+    loadedSTConfig: []
+    };
+    window.QuotationPage = {
+    state: {
+        quotes: [],
+        hasResAttachment: false,
+        formFO: {},
+        resButtonComponent: {},
+        isAssigneeBoxRender: false,
+        selectedId: null,
+        selectedGuid: null,
+        selectedCodeNo: null,
+        selectedAttachmentId: null,
+        stageDept: null,
+        stageAccount: "",
+        focusDept: null,
+        currentUserRole: null,
+        picJson: "{}",
+        commentPanelOpened: false,
+        deptData: { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} },
+        nextStep: {},
+        resFK: {},
+        comments: [],
+        pinNotes: []
+        },
+    actions: {},
+    quotePaging : {
+        skip: 0,
+        take: 1,
+        loading: false,
+        done: false,
+        firstLoadDone: false
+    }
+    };
+
+    window.PolicyIssuancePage = {
+    state: {
+        quotes: [],
+        hasResAttachment: false,
+        formFO: {},
+        resButtonComponent: {},
+        isAssigneeBoxRender: false,
+        selectedId: null,
+        selectedGuid: null,
+        selectCopyGuid: null,
+        selectedCodeNo: null,
+        selectedAttachmentId: null,
+        stageDept: null,
+        stageAccount: "",
+        focusDept: null,
+        currentUserRole: null,
+        picJson: "{}",
+        commentPanelOpened: false,
+        deptData: { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} },
+        nextStep: {},
+        comments: [],
+        pinNotes: []
+        },
+    actions: {},
+    quotePaging : {
+        skip: 0,
+        take: 1,
+        loading: false,
+        done: false,
+        firstLoadDone: false
+    }
+    };
+    // const _reduceDataGridMaxOverFlow  = 300;
+    var _menus = [];
+    var _isAllowDraft = 0;
+    var _cacheModels = [];
+    const _stateLayout = window.QuotationPage.state;
+    // function getDataFromIndexedDB() {
+    //     if (_db) {
+
+    //     }
+    // }
+    // getDataFromIndexedDB();
+
+
+
+    $.ajax({
+    url: `api/DataGridConfig/CacheUsingModel`,
+    async: false,
+    success: function (response) {
+    _cacheModels = response;
+    },
+    error: function (exception) {
+    }
+    });
+
+    var _role = "";
+    var _roleAppName = "";
+    var _branch = "";
+    var _loginUser = "";
+    var _displayName = "";
+    var _isSuperUser = "false";
+    var _isDebugMode = "false";
+    var _genericExceptionMessage = "";
+    
+    var _windowWidth = 0;
+    // Write your JavaScript code.
     var _connectionId = null;//generateGUID();
     // const connectionSignR = new signalR.HubConnectionBuilder()
     //     .withUrl("/fileProcessingHub").build(); //
 
-     var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
-          shadingColor: "rgba(0,0,0,0.4)",
-          visible: false,
-          showIndicator: true,
-          showPane: false,
-          shading: true,
-          closeOnOutsideClick: false//,
-          // onShown: function () {
-          //     setTimeout(function () {
-          //         appLoadPanel.hide();
-          //     }, 3000);
-          // }
-      });
+    var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
+    shadingColor: "rgba(0,0,0,0.4)",
+    visible: false,
+    showIndicator: true,
+    showPane: false,
+    shading: true,
+    closeOnOutsideClick: false//,
+    // onShown: function () {
+    //     setTimeout(function () {
+    //         appLoadPanel.hide();
+    //     }, 3000);
+    // }
+    });
 
-      var globalLoadPanelInstance = globalLoadPanel.dxLoadPanel("instance");
+    var globalLoadPanelInstance = globalLoadPanel.dxLoadPanel("instance");
+    // window.addEventListener("resize", function () {
+    //     const w = window.innerWidth;
+    //     const h = window.innerHeight;
+    //     _windowWidth = w;
+    // }); // Zoom event handle
+    //Delay config 
 
+</script>
+<script>
+    @using System.Text.Json;
+    @{
+        
+    string[] qtDeptModuleCode = new string[] { "FO", "TS", "UW", "LMKT", "PM" }; 
+    string[] piDeptModuleCode = new string[] { "FO", "TS", "PM" }; 
+    }
+    var qtDeptModuleCode = @Html.Raw(JsonSerializer.Serialize(qtDeptModuleCode));
+    var piDeptModuleCode = @Html.Raw(JsonSerializer.Serialize(piDeptModuleCode));
 </script>
 <script src="~/js/defined/signalR.js"></script>

@@ -1,0 +1,923 @@
+﻿@page "{pageNum:int?}"
+@using Newtonsoft.Json
+@model Quotation_Request_FormModel
+@{
+    string prefix = "qt";
+    string dept = "FO";
+    ViewBag.Title = "Quotation";
+    ViewData["Id"] = 0;
+}
+
+<style>
+
+   
+
+    .sectionTitle {
+        font-size: 14px;
+        font-weight: 650;
+        margin: 18px 0 10px;
+        opacity: .9;
+    }
+
+  
+
+    .toolbarRow {
+        margin-top: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .survey-field-wrap {
+        width: 100%;
+    }
+
+    .survey-field-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 36px;
+    }
+
+    .survey-field-spacer {
+        flex: 1;
+    }
+
+    .survey-acc-wrap {
+        margin-top: 12px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .acc-title {
+        font-weight: 600;
+        padding: 2px 0;
+    }
+
+    .acc-body {
+        padding: 8px 2px 2px;
+    }
+
+    #attachmentGrid .dx-fileuploader-wrapper {
+        padding: 0;
+    }
+
+    .att-file-meta {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 6px;
+        word-break: break-word;
+        line-height: 1.35;
+    }
+</style>
+
+    <div id="form_Quotation_Request_Form"></div>
+    <div id="requestPage">
+        <div id="quotationRequestForm"></div>
+@* 
+        <div class="sectionTitle">Attachment</div>
+        <div id="attachmentGrid"></div> *@
+
+     @*    <div class="toolbarRow">
+            <div style="display:flex; gap:8px;">
+               
+            </div>
+        </div>
+ *@
+        
+
+        <div id="assigneePopup"></div>
+    </div>
+
+    <script>
+            var guid= crypto.randomUUID();
+            var clientQuery = `OnSystem`;
+
+            var DEPTS = ["RE"];
+            var REMEMS = ["quan.nh", "huan.lt", "minh.lh"];
+
+
+            var item = new Object();
+
+             item.editorType ="dxDropDownBox";
+             item.dataField = "workflowDefinitionId"
+            var objGridType = new Object();
+            objGridType.gridType = "User";
+            objGridType.ModelName = "WorkflowDefinition";
+            objGridType.refField = "isActive";
+            objGridType.refKey = true;
+
+            var configDataWFDEF = makeFieldFeatures(item, objGridType, "grid");
+
+            function safeParseJson(s) {
+                if (!s) return {};
+                if (typeof s === "object") return s;
+                try { return JSON.parse(s); } catch { return {}; }
+            }
+
+            function ensurePicKeys(obj) {
+                var o = { ...obj };
+                DEPTS.forEach(k => { if (!(k in o)) o[k] = null; });
+                return o;
+            }
+
+            function updatePicMap(form, dept, account) {
+                var fd = form.option("formData") || {};
+                var current = ensurePicKeys(safeParseJson(fd.PIC));
+                current[dept] = account || null;
+                form.option("formData.PIC", JSON.stringify(current));
+            }
+
+            function initPicIfEmpty(form) {
+                var fd = form.option("formData") || {};
+                var pic = safeParseJson(fd.PIC);
+                var hasAny = pic && Object.keys(pic).length > 0;
+
+                if (!hasAny) {
+                    form.option("formData.PIC", JSON.stringify({
+                        FO: _loginUser,
+                        RE: "an.re",
+                        TS: null,
+                        UW: null,
+                        LMKT: null,
+                        PM: null
+                    }));
+                } else {
+                    form.option("formData.PIC", JSON.stringify(ensurePicKeys(pic)));
+                }
+            }
+
+            function showSurveyAccordion(show) {
+                $("#surveyAccordionWrap").toggle(!!show);
+                if (show) {
+                    $("#surveyAccordion").dxAccordion("instance")?.option("selectedIndex", 0);
+                }
+            }
+
+            function attachmentTemplate() {
+                return {
+                    _key: generateGUID(),
+                    file: null,
+                    fileName: "",
+                    fileSize: 0,
+                fileType: "",
+                    attachmentType: null,
+                    note: "",
+                    uploadedPath: "",
+                    uploadedName: ""
+                };
+            }
+
+            function formatFileSize(bytes) {
+                if (!bytes || bytes <= 0) return "";
+                var units = ["B", "KB", "MB", "GB"];
+                var i = 0;
+                var val = bytes;
+                while (val >= 1024 && i < units.length - 1) {
+                    val /= 1024;
+                    i++;
+                }
+                return `${val.toFixed(val >= 10 || i === 0 ? 0 : 2)} ${units[i]}`;
+            }
+
+            function entryTemplate() {
+                return {
+                    _key: generateGUID(),
+                    to: null,
+                    notes: "",
+                    branchId: "",
+                    deptTarget: vm.assignedTeamOrRole || "TS"
+                };
+            }
+
+            function buildAttachmentPayload() {
+                return vm.attachments?.map(x => ({
+                    _key: x._key,
+                    attachmentType: x.attachmentType,
+                    fileName: x.fileName,
+                    fileSize: x.fileSize,
+                fileType: x.fileType,
+                    uploadedPath: x.uploadedPath || "",
+                    uploadedName: x.uploadedName || "",
+                    note: x.note || ""
+                }));
+            }
+
+            function syncAttachmentToForm() {
+                if (that && that.formInstance) {
+                    that.formInstance.updateData("attachments", JSON.stringify(buildAttachmentPayload()));
+                }
+            }
+
+            function validateAttachments() {
+                var invalid = vm.attachments.some(x => !x.fileName || !x.attachmentType);
+                if (invalid) {
+                    DevExpress.ui.notify("Attachment row must have file and document type.", "warning", 2000);
+                    return false;
+                }
+                return true;
+            }
+
+            DevExpress.localization.locale("en");
+
+            var vm = {
+                subject: "",
+                reqPerson: _loginUser,
+                reqDate: new Date(2026, 0, 21), // 21-01-2026
+
+            assignmentMode: "manual",     // auto | later | manual
+                assignedTeamOrRole: "TS",
+
+            assignees: []               // only for manual mode
+            };
+
+            function isManual() {
+                return vm.assignmentMode === "manual";
+            }
+
+       
+
+            var that = $("#quotationRequestForm").dxForm({
+                formData: vm,
+                colCount: 2,
+                rowCount: 3,
+                labelMode: "floating",
+                showColonAfterLabel: false,
+                items: [
+                    
+                { itemType: "group",items:[
+            {
+                itemType: "group",
+                colCount: 2,
+
+                caption: "Client Information",
+                items: [
+                { dataField: "clientName", editorType: "dxTextBox", visible: false, editorOptions: { readOnly: true } },
+                {
+                    dataField: "clientId",
+                    editorType: "dxDropDownBox",
+                    isRequired: true,
+                    label: { text: "Client" },
+                    editorOptions: {
+                        displayExpr: "englishName",
+                        keyExpr: "id",
+                        editorType: "dxDropDownBox",
+                        width: "100%",
+                        dropDownOptions: {
+                            width: _defaultDropDownWidth,
+                            height: _defaultDropDownHeight,
+                        },
+                        showClearButton: true,
+                        dataSource: new DevExpress.data.CustomStore({
+                            key: "id",
+                            load: function (loadOptions) {
+                                return $.ajax({
+                                    url: `/api/Client/ExecuteCustomQuery`,
+                                    method: "POST",
+                                    contentType: "application/json",
+                                    data: JSON.stringify(clientQuery)
+                                });
+                            },
+                            byKey: function (key) {
+                                if (key)
+                                    return $.ajax({
+                                        url: `/api/Client/DropDownLookupCustomQuery?key=${encodeURIComponent(key)}`,
+                                        method: "POST",
+                                        contentType: "application/json",
+                                        data: JSON.stringify(clientQuery)
+                                    }).then(function (result) {
+                                        return Array.isArray(result) ? result[0] : result;
+                                    });
+                                else
+                                    return new Array();
+                            },
+                        }),
+                        contentTemplate: function (e) {
+                            that.formInstance = that.dxForm("instance");
+                            var item = this;
+                            item.editorOptions = new Object();
+                            item.editorOptions.dataSource = e.component.option("dataSource");
+
+                            var dataGrid = makeTheClientLocationGrid(item, e, that, $("<div>"), function (selectedItems) {
+                                var hasSelection = selectedItems.selectedRowKeys.length > 0;
+                                if (!hasSelection) return;
+                                var selectedRow = selectedItems.selectedRowsData[0];
+                                e.component.option("value", selectedItems.selectedRowKeys[0]);
+                                that.formInstance.updateData("clientName", selectedRow.englishName);
+                                debugger
+                  that.formInstance.updateData("businessOccupation", selectedRow.businessOccupation);
+                                e.component.close();
+                            });
+
+                            return dataGrid.container;
+                        }
+                    }
+                }
+            ,
+            { dataField: "businessOccupation", label: { text: "Business Occupation" }, editorType: "dxTextBox" },
+            ]},
+                    {
+                    itemType: "group",
+                    colCount: 2,
+                    
+                    caption: "Product",
+                    items: [
+             { dataField: "lineId", isRequired: true, editorType: "dxSelectBox", editorOptions: {
+                        items: _entitys.line,
+                        keyExpr: "id",
+                        displayExpr: "value",
+                        searchEnabled: true,
+                        onValueChanged(e) {
+                            that.formInstance = that.dxForm("instance");
+                            that.formInstance.updateData("lineCode", e.value.code);
+                            that.formInstance.updateData("lineName", e.value.value);
+                        } }
+                    },
+                    { dataField: "lineName", editorType: "dxTextBox", visible: false},
+                    { dataField: "lineCode", editorType: "dxTextBox", visible: true, editorOptions: { readOnly: true } },
+                    { dataField: "productName", editorType: "dxTextBox", visible: false, editorOptions: { readOnly: true } },
+                    {
+                 dataField: "productId", isRequired: true,
+                        editorType: "dxSelectBox",
+                        editorOptions: {
+                            label: { text: "Product Name" },
+                             items: _entitys.product,
+                            labelMode: "floating",
+                            searchEnabled: true,
+                            keyExpr: "id",
+                            displayExpr: "value",
+                            onValueChanged(e) {
+                                that.formInstance = that.dxForm("instance");
+                                that.formInstance.updateData("productName", e.value?.value || e.value );
+                                that.formInstance.updateData("productCode", e.value?.code  || e.value);
+                            }
+                    }
+                    },
+                    { dataField: "productCode", editorType: "dxTextBox", visible: true, editorOptions: { readOnly: true } },
+                    ]}
+                    
+                ]},
+                {
+                    itemType: "group",
+                    colCount: 2,
+
+                    caption: "Header Information",
+                    items: [
+                        { dataField: "PIC", editorType: "dxTextBox", editorOptions: { readOnly: true, value: _loginUser } },
+                        { dataField: "createDate", editorType: "dxDateBox", editorOptions: { readOnly: true, displayFormat: "dd-MM-yyyy", value: new Date() } },
+                        {
+                            dataField: "subject",
+                            colSpan: 2,
+                            editorType: "dxTextArea",
+                            editorOptions: { minHeight: 90 },
+                            validationRules: [{ type: "required" }]
+                        },
+                        { dataField: "requestTypeId", label: { text: "Request Type" }, editorType: "dxSelectBox", isRequired: true, editorOptions: makeSelectBoxEditorOptions(_enums.requestType) },
+                        { dataField: "dueDate", editorType: "dxDateBox", editorOptions: { displayFormat: "dd-MM-yyyy" } },
+
+                        { dataField: "policyNo", label: { text: "Policy No" }, editorType: "dxTextBox" },
+
+
+                   { dataField: "businessChannel", isRequired: true, editorType: "dxSelectBox",
+                            editorOptions: { items: _enums.BusinessChannel,
+                                keyExpr: "id",
+                                displayExpr: "value",
+                                    onValueChanged(e) {
+                                that.formInstance = that.dxForm("instance");
+                                that.formInstance.updateData("businessChannelName", e.value?.value || e.value);
+                                    }
+                            } },
+                       { dataField: "reinsuranceId", isRequired: true, label: { text: "Reinsurance" }, editorType: "dxSelectBox", editorOptions: { keyExpr: "id", displayExpr: "value", items: _enums.reInsuranceType } },
+
+                        {
+                            itemType: "simple",
+                            colCount: 2,
+                            visible: false,
+                            label: { text: "Is Survey ?" },
+                            template: function (data, itemElement) {
+                                var form = data.component;
+                                var fd = form.option("formData") || {};
+
+                                var $wrap = $("<div>").addClass("survey-field-wrap");
+                                var $row = $("<div>").addClass("survey-field-row").appendTo($wrap);
+
+                                var $switchHost = $("<div>").appendTo($row);
+                                $("<div>").addClass("survey-field-spacer").appendTo($row);
+
+                                var $accWrap = $("<div>").addClass("survey-acc-wrap").appendTo($wrap);
+
+                                $switchHost.dxSwitch({
+                                    value: !!fd.surveyNeeded,
+                                    onValueChanged: function (e) {
+                                        form.option("formData.surveyNeeded", e.value);
+                                        $accWrap.toggle(!!e.value);
+
+                                        var acc = $accWrap.find(".survey-acc").dxAccordion("instance");
+                                        if (acc) acc.option("selectedIndex", e.value ? 0 : -1);
+                                    }
+                                });
+
+                                var $acc = $("<div>").addClass("survey-acc").appendTo($accWrap);
+
+                                function updatePic(dept, account) {
+                                    var current = ensurePicKeys(safeParseJson(form.option("formData.PIC")));
+                                    current[dept] = account || null;
+                                    form.option("formData.PIC", JSON.stringify(current));
+
+                                    var picEditor = form.getEditor?.("PIC");
+                                    if (picEditor) picEditor.option("value", form.option("formData.PIC"));
+                                }
+
+                                $acc.dxAccordion({
+                                    multiple: false,
+                                    collapsible: true,
+                                    selectedIndex: fd.surveyNeeded ? 0 : -1,
+                                    animationDuration: 180,
+                                    dataSource: [{ key: "survey", title: "SURVEY PIC" }],
+                                itemTitleTemplate: (it) => $("<div>").addClass("acc-title").text(it.title),
+                                    itemTemplate: (it, idx, el) => {
+                                        var $body = $("<div>").addClass("acc-body");
+                                        $("<div>").text("Title").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
+                                        var $preview = $("<div>").css("marginTop", 10).appendTo($body);
+
+                                        fd.reTitle = `Request survey to ${fd.clientName} by ${_loginUser}`;
+
+                                        $("<div>").text("Department").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
+                                        var $dept = $("<div>").css("marginTop", 10).appendTo($body);
+
+                                        $("<div>").text("Member").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
+                                        var $accText = $("<div>").css("marginTop", 10).appendTo($body);
+
+                                        $("<div>").text("Message to RE").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
+                                        var $MsgText = $("<div>").css("marginTop", 10).appendTo($body);
+
+                                        $dept.dxSelectBox({
+                                            items: DEPTS,
+                                            value: "RE",
+                                            label: "Department",
+                                            labelMode: "static"
+                                        });
+
+                                        $accText.dxSelectBox({
+                                            items: REMEMS,
+                                            label: "Member",
+                                            labelMode: "static",
+                                            onValueChanged: function(e){
+                                                fd.rePIC = e.value;
+                                            }
+                                        });
+
+                                        $MsgText.dxTextArea({
+                                            value: "",
+                                            label: "RE Message",
+                                            labelMode: "static",
+                                            placeholder: "Message to RE team",
+                                            onValueChanged: function(e){
+                                                fd.reMsg = e.value;
+                                            }
+                                        });
+
+                                        $preview.dxTextBox({
+                                            value: `Request survey to ${fd.clientName} by ${_loginUser}`,
+                                            readOnly: true,
+                                            height: 50,
+                                            label: "RE Title",
+                                            labelMode: "static"
+                                        });
+
+                                        $(el).append($body);
+                                    }
+                                });
+
+                                $accWrap.toggle(!!fd.surveyNeeded);
+                                itemElement.append($wrap);
+                            }
+                        }
+
+            ]},
+                            {
+                        itemType: "group",
+                        colCount: 1,
+                        
+                        caption: "Attachment",
+                        items: [
+                         {dataField: "quotationQuantity", isRequired: true,editorType: "dxNumberBox",editorOptions: { minValue: 1} ,validationRules : { isRequired:  true} },
+                            {
+                        dataField: "@prefix" === "@prefix" ? "quotation" : "document", editorType: "dxFileUploader"
+                        ,
+                        editorOptions: {
+                            name: "files"
+                        }
+                        , template: function (data, itemElement) {
+                                var item = new Object();
+                                var moduleKey = "@prefix";
+                                item.editorType = "dxFileUploader";
+                                item.uploadMode = "useForm";
+                                item.moduleName = moduleKey + "_default"; item.sectionName =  "@dept";
+                                item.id = @ViewData["Id"];
+                                item.guid = guid;
+                                item.isNotLoading = true;
+                                item.titleName = "Upload Quotation";
+                                createEditor(item, itemElement, $(`<div>`), item);
+                        }
+
+                        },
+                        {
+                        dataField: "supportingDocument", editorType: "dxFileUploader"
+                        ,
+                        editorOptions: {
+                                name: "sdfiles"
+                        }
+                        , template: function (data, itemElement) {
+                                var item = new Object();
+                            var moduleKey = "@prefix";
+                                item.editorType = "dxFileUploader";
+                            item.uploadMode = "useForm";
+                                item.moduleName = moduleKey+ "_supportingDoc"; item.sectionName =  "@dept";
+                                item.id = @ViewData["Id"];
+                                item.guid = guid;
+                            item.isNotLoading = true;
+                                item.titleName = "Upload Supporting Document";
+                            createEditor(item, itemElement, $(`<div>`), item);
+                        }
+
+                                    }
+                        ]},
+                        {
+                        itemType: "group",
+                        colCount: 2,
+                        
+                        caption: "Assignment",
+                        items: [
+                    {
+                        dataField: "assignmentMode",
+                        editorType: "dxSelectBox",
+                        editorOptions: {
+                            dataSource: _enums.assignmentMode,
+                            displayExpr: "text",
+                            valueExpr: "id",
+                            onValueChanged(e) {
+                                vm.assignmentMode = e.value;
+                                refreshAssignmentUI();
+                               
+                            }
+                        }
+                    },
+                    {
+                        dataField: "assignedTeamOrRole",
+                        label: { text: "Assigned Team/Role" },
+                        editorType: "dxSelectBox",
+                        editorOptions: {
+                            dataSource: _enums.teamOrRole,
+                            displayExpr: "text",
+                            valueExpr: "id",
+                            onValueChanged(e) {
+                                vm.assignedTeamOrRole = e.value;
+                               
+                            }
+                        }
+                    },
+                            {
+                                itemType: "simple",
+                                dataField: "assigneeList",
+                                colSpan: 2,
+                                
+                                visible: true,
+                                label: { text: "Assign PIC" },
+                                template: function (data, itemElement) {
+                                $(`<div id="btnNewAssignee">`).appendTo(itemElement);
+                                $(`<div id="btnClearAssignee">`).appendTo(itemElement);
+                                var assigneeStore = new DevExpress.data.ArrayStore({ key: "_key", data: vm.assignees });
+
+                                 $(`<div id="assigneeList" style="margin-top:10px;">`).dxDataGrid({
+                                    dataSource: assigneeStore,
+                                    keyExpr: "_key",
+                                    showBorders: true,
+                                    columnAutoWidth: true,
+                                    hoverStateEnabled: true,
+                                    noDataText: "No manual assignee entry. Switch to Manual assign and click New.",
+                                    paging: { pageSize: 10 },
+                                    pager: { showInfo: true },
+                                    columns: [
+                                        {
+                                            dataField: "to",
+                                            caption: "Assignee",
+                                            lookup: { dataSource: _enums.assignee, valueExpr: "accountName", displayExpr: "fullName" }
+                                        },
+                                        {
+                                            dataField: "notes",
+                                            caption: "Notes",
+                                            cellTemplate(container) {
+                                                $("<div/>").text("Hidden notes, open entry to view").appendTo(container);
+                                            }
+                                        },
+                                        {
+                                            type: "buttons",
+                                            width: 120,
+                                            buttons: [
+                                                { hint: "Edit", icon: "edit", onClick(e) { openPopupForEdit(e.row.data); } },
+                                                {
+                                                    hint: "Devare", icon: "trash",
+                                                    onClick(e) {
+                                                        assigneeStore.remove(e.row.data._key);
+                                                        $("#assigneeList").dxDataGrid("instance").refresh();
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }).appendTo(itemElement);
+                                    $("#btnNewAssignee").dxButton({
+                                        text: "New",
+                                        icon: "plus",
+                                        type: "default",
+                                        onClick() {
+                                            openPopupForNew();
+                                        }
+                                    });
+
+                                    $("#btnClearAssignee").dxButton({
+                                        text: "Clear",
+                                        icon: "trash",
+                                        type: "normal",
+                                        onClick() {
+                                            vm.assignees.splice(0, vm.assignees.length);
+                                            $("#assigneeList").dxDataGrid("instance").refresh();
+                                        }
+                                    });
+                                }
+                            }
+                        ]
+                    }
+                    
+
+                ],
+                onInitialized(e) {
+                   
+                    //that.formInstance = e.component;
+                    initPicIfEmpty(e.component);
+                    syncAttachmentToForm();
+                },
+                onFieldDataChanged: function(e) {
+                    if (e.dataField === "lineId") {
+                        let filtered = _entitys.product.filter(f => f.lineId === e.value.id);
+                
+                        let form = e.component;
+                        let editor = form.getEditor("productId");
+                
+                        editor.option("items", filtered);
+                        editor.option("value", null); // reset nếu cần
+                    }
+                }
+            });
+            // var attachmentStore = new DevExpress.data.ArrayStore({
+            //     key: "_key",
+            //     data: vm.attachments
+            // });
+
+
+
+            var popupFormItems = [
+                {
+                    dataField: "to",
+                    editorType: "dxSelectBox",
+                    isRequired: true,
+                    editorOptions: { dataSource: _enums.assignee, displayExpr: "fullName", valueExpr: "accountName", searchEnabled: true }
+                },
+                { dataField: "notes", colCount: 2, editorType: "dxTextArea", editorOptions: { minHeight: 90 } }
+            ];
+
+            var currentEntry = entryTemplate();
+
+        
+
+            var popupMode = "new";
+            var editingKey = null;
+
+            $("#assigneePopup").dxPopup({
+                width: 920,
+                height: "auto",
+                showTitle: true,
+                title: "New Assignee Entry",
+                visible: false,
+                dragEnabled: true,
+                closeOnOutsideClick: true,
+                contentTemplate: function (content) {
+                    content.empty();
+
+                      //   debugger
+                      // $.ajax({
+                      //       url: "api/Employee/GetAssignableByGroup",
+                      //       type: "GET",
+                      //       dataType: "json",
+                      //       data: {
+                      //           group:  vm.assignedTeamOrRole || "TS",
+                      //           excludeCurrent: true,
+                      //           keyword: ""
+                      //       }
+                      //       }).then(function (res) {
+                      //       $("<div id='assignBox'>").appendTo(content).dxForm({
+                      //           formData: {
+                      //               to: currentEntry.to,
+                      //               branchId: currentEntry.areaId,
+                      //               notes: currentEntry.notes,
+                      //               deptTarget: vm.assignedTeamOrRole
+                      //           },
+                      //           colCount: 1,
+                      //           labelMode: "floating",
+                      //           items: [
+                      //               {
+                      //                   dataField: "to",
+                      //                   editorType: "dxSelectBox",
+                      //                   validationRules: [{ type: "required" }],
+                      //                   editorOptions: {
+                      //                       dataSource: res.data,
+                      //                       displayExpr: "fullName",
+                      //                       valueExpr: "accountName",
+                      //                       searchEnabled: true
+                      //                   }
+                      //           },
+                      //           {
+                      //               dataField: "branchId",
+                      //               visible: false,
+                      //               editorType: "dxNumberBox",
+                      //               label: { text: "Branch" },
+                      //               editorOptions: {
+                      //                   minHeight: 90
+                      //               }
+                      //           },
+                      //               {
+                      //                   dataField: "notes",
+                      //                   editorType: "dxTextArea",
+                      //                   label: { text: "Notes" },
+                      //                   editorOptions: {
+                      //                       minHeight: 90
+                      //                   }
+                      //               }
+                      //           ]
+                      //       });
+                      //   });
+
+                },
+                toolbarItems: [
+                    {
+                        widget: "dxButton",
+                        toolbar: "bottom",
+                        location: "after",
+                        options: {
+                            text: "Save",
+                            type: "default",
+                            onClick: function () {
+                                var form = $("#assignBox").dxForm("instance");
+                                var result = form.validate();
+                                if (!result.isValid) {
+                                    DevExpress.ui.notify("Please fill required fields.", "error", 1500);
+                                    return;
+                                }
+
+                                var data = form.option("formData");
+                                data._key = data.to;
+                                if (popupMode === "new") {
+                                    vm.assignees.push({ ...data });
+                                } else {
+                                    var idx = vm.assignees.findIndex(x => x._key === editingKey);
+                                    if (idx >= 0) vm.assignees[idx] = { ...data };
+                                }
+
+                                $("#assigneeList").dxDataGrid("instance").refresh();
+                                $("#assigneePopup").dxPopup("instance").hide();
+                            }
+                        }
+                    },
+                    {
+                        widget: "dxButton",
+                        toolbar: "bottom",
+                        location: "after",
+                        options: {
+                            text: "Cancel",
+                            onClick: function () {
+                                $("#assigneePopup").dxPopup("instance").hide();
+                            }
+                        }
+                    }
+                ]
+            });
+
+            function openPopupForNew() {
+                if (!isManual()) {
+                    DevExpress.ui.notify("Switch Assignment Mode to 'Manual assign' to add entries.", "warning", 1800);
+                    return;
+                }
+                popupMode = "new";
+                currentEntry = entryTemplate();
+                          var popup = $("#assigneePopup").dxPopup("instance");
+                 popup.option("title", "New Assignee Entry");
+                      $.ajax({
+                            url: "api/Employee/GetAssignableByGroup",
+                            type: "GET",
+                            dataType: "json",
+                            data: {
+                                group:  vm.assignedTeamOrRole || "TS",
+                                excludeCurrent: true,
+                                keyword: ""
+                            }
+                        }).then(function (res) {
+                            _enums.assignee.push(...res.data);
+                            popup.option("contentTemplate", function (content) {
+                              $("<div id='assignBox' class='dExForm'>").appendTo(content).dxForm({
+                                formData: {
+                                    to: _enums.assignee[0].accountName,
+                                    branchId: _enums.assignee[0].areaId,
+                                    notes: "",
+                                    deptTarget: vm.assignedTeamOrRole
+                                },
+                                colCount: 1,
+                                labelMode: "floating",
+                                items: [
+                                    {
+                                        dataField: "to",
+                                        editorType: "dxSelectBox",
+                                        validationRules: [{ type: "required" }],
+                                        editorOptions: {
+                                            dataSource: res.data,
+                                            displayExpr: "fullName",
+                                            valueExpr: "accountName",
+                                            searchEnabled: true
+                                        }
+                                },
+                                {
+                                    dataField: "branchId",
+                                    visible: false,
+                                    editorType: "dxNumberBox",
+                                    label: { text: "Branch" },
+                                    editorOptions: {
+                                        minHeight: 90
+                                    }
+                                },
+                                    {
+                                        dataField: "notes",
+                                        editorType: "dxTextArea",
+                                        label: { text: "Notes" },
+                                        editorOptions: {
+                                            minHeight: 90
+                                        }
+                                    }
+                                ]
+                            });
+                      });
+
+                            popup.show();
+                        });
+                            
+                            
+               
+            }
+
+            function openPopupForEdit(row) {
+                if (!isManual()) {
+                    DevExpress.ui.notify("This list is for Manual assign mode.", "warning", 1600);
+                    return;
+                }
+
+                popupMode = "edit";
+                editingKey = row._key;
+                currentEntry = { ...row };
+
+                var popup = $("#assigneePopup").dxPopup("instance");
+                popup.option("title", "Edit Assignee Entry");
+                popup.show();
+            }
+
+            function refreshAssignmentUI() {
+                var grid = $("#assigneeList").dxDataGrid("instance");
+                var btnNew = $("#btnNewAssignee").dxButton("instance");
+                var btnClear = $("#btnClearAssignee").dxButton("instance");
+
+                var enabled = isManual();
+                btnNew.option("disabled", !enabled);
+                btnClear.option("disabled", !enabled);
+                grid.option("disabled", !enabled);
+            }
+
+            refreshAssignmentUI();
+           viewFieldAdjust("quotationRequestForm");
+            // window.getQuotationRequestPayload = function () {
+            //     var formIns = $("#quotationRequestForm").dxForm("instance");
+            //     var formData = formIns.option("formData") || {};
+
+            //     formData.attachments = buildAttachmentPayload();
+            //     formData.assignees = vm.assignees;
+
+            //     return formData;
+            // };
+
+            // window.validateQuotationRequestForm = function () {
+            //     var formIns = $("#quotationRequestForm").dxForm("instance");
+            //     var r1 = formIns.validate();
+            //     var r2 = validateAttachments();
+            //     return !!(r1.isValid && r2);
+            // };
+
+    </script>

@@ -1,0 +1,20 @@
+﻿@page
+@model PolicyIssuanceModel
+@{
+
+}
+<script>
+    $(function () {
+        var mGridOption = new Object();
+        mGridOption.isAllowRowMenu = true;
+        mGridOption.refOperator = "contains";
+        mGridOption.refKey = _loginUser;
+        mGridOption.refField = "pic";
+        if (_roleAppName == "Leader")
+        mGridOption.refField = "leaderPIC";
+        if (_roleAppName == "HOD")
+        mGridOption.refField = "hodpic";
+        var mGrid = new MGrid(null, $(`#dataGrid_@PolicyIssuanceModel.ModelName`), new PolicyIssuanceGridOption('@PolicyIssuanceModel.ModelName', "User", mGridOption), null);
+    });
+</script>
+<div id="dataGrid_@PolicyIssuanceModel.ModelName"></div>

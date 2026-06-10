@@ -1,0 +1,77 @@
+﻿@using JogetMVC.Model
+@{
+    string prefix = "qt";
+    string dept = "FO";
+    long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
+}
+
+
+<div class="actionBarDept" id="@QTViewIdHelper.ActionBarDept(dept, quotationId)">
+    <div class="actionLeft">
+        <span class="dept-title">Remarks</span> <div id="@QTViewIdHelper.RemarkBox(dept,quotationId)" class="htmleditor"></div>
+    </div>
+    <div class="actionRight">
+        <div id="@QTViewIdHelper.BtnSave(dept,quotationId)"></div>
+        <div id="@QTViewIdHelper.BtnReturnBranch(dept,quotationId)"></div>
+        <div id="@QTViewIdHelper.BtnSubmitBranch(dept,quotationId)"></div>
+    </div>
+</div>
+
+<script>
+    setTimeout( () => {
+
+    setTimeout( () => {
+
+    var encodedFolder = encodeURIComponent(`@(prefix)_@(dept)_@(quotationId)_RES`);
+    if (window.QuotationPage.state.quotes[0].resFK) 
+       $.get(`/api/Document/AttachmentSummary/@ViewData["Guid"].ToString()/${encodedFolder}`, null
+       ).done(function (res) {
+            window.QuotationPage.state.formFO.dxForm("instance").updateData("resAttachmentCount", res.attachmentCount);
+            window.QuotationPage.state.formFO.dxForm("instance").updateData("hasResAttachment", res.hasAttachment);
+            window.QuotationPage.state.hasResAttachment = res.hasAttachment;
+            if (res.hasAttachment)
+            $("#@QTViewIdHelper.BtnToggleResForm(dept, quotationId)").addClass("hasResAttachment");
+            else
+            $("#@QTViewIdHelper.BtnToggleResForm(dept, quotationId)").removeClass("hasResAttachment");
+       });
+    }, 200);
+    var dept = "@dept";
+         var pageLayout = window.QuotationPage;
+        $("#@QTViewIdHelper.BtnSave(dept, quotationId)").dxButton({ text: "Save", icon: "save", type: "default", onClick:
+        function (e) {
+              var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+
+              var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
+                  shadingColor: "rgba(0,0,0,0.4)",
+                  visible: false,
+                  showIndicator: true,
+                  showPane: false,
+                  shading: true,
+                  closeOnOutsideClick: false,
+                   position: { of: `#@QTViewIdHelper.Form(dept, quotationId)`}
+                  // onShown: function () {
+                  //     setTimeout(function () {
+                  //         appLoadPanel.hide();
+                  //     }, 3000);
+                  // }
+              });
+             globalLoadPanel.dxLoadPanel("instance").show();
+
+            ajaxPut('/api/Quotation/UpdateData',
+            {
+                key: formItems.id,
+                values: JSON.stringify(
+                    formItems
+                )
+            },
+            {
+                onSuccess: function (response) {
+                },
+                onError: function (err) { }
+            }
+        );
+        }
+    });
+    }, _delayRenderSubmitButton);
+</script>
+

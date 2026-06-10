@@ -1,0 +1,172 @@
+﻿using DocumentFormat.OpenXml.Office2013.Excel;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using ERPCore.Controllers.Base;
+using ERPCore.Models.Migration.Business.Config;
+using System.Data;
+using ERPCore.ControllerUtil;
+using ERPCore.Common;
+using System.Net;
+using ERPCore.Models.Base;
+using DocumentFormat.OpenXml.Wordprocessing;
+using System.Text.RegularExpressions;
+using MimeKit;
+using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.SharePoint.Taxonomy.WebServices;
+using ERPCore.Models;
+using ERPCore.Models.Business.Migration.Config;
+using System.Dynamic;
+
+[ApiController]
+[Route("api/[controller]/[action]")]
+public class QuotationWorkflowHistoryController : BaseControllerApi<QuotationWorkflowHistory>
+{
+    private readonly IBaseRepository<QuotationWorkflowHistory> _BaseRepository;
+    private readonly IConfiguration configuration;
+    private readonly IBaseRepository<Survey> _surveyRepository;
+    private readonly IBaseRepository<ERPCore.Models.Migration.Business.Data.Attachment> _attachmentRepository;
+    private readonly IBaseRepository<Users> _usersRepository;
+    private readonly IConfigurationSection path;
+    public static string MANAGER_APP = "";
+    public static string APPROVER_APP = "";
+    public static string CHECKER_APP = "";
+    public static string USER_APP = "";
+    public static string SUPER_USER = "";
+    public static string DOMAIN_NAME = "";
+    private static string BLOB_PATH = "";
+    public static string CURRENT_USER = "";
+    private static string spUserName = "";
+    private static string spPassword = "";
+    private static string MAPPING_PATH = "";
+    private readonly Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> _blobStorageSettings;
+    private static string Query;
+    public QuotationWorkflowHistoryController(IBaseRepository<QuotationWorkflowHistory> BaseRepository
+        , IConfiguration config
+        , IHttpContextAccessor httpContextAccessor
+        , ILogger<QuotationWorkflowHistory> logger
+        , Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> blobStorageSettings
+        ) : base(BaseRepository, httpContextAccessor
+            )
+    {
+        configuration = config;
+        _BaseRepository = BaseRepository;
+        _attachmentRepository = new BaseRepository<ERPCore.Models.Migration.Business.Data.Attachment>(configuration, _httpContextAccessor);
+        _usersRepository = new BaseRepository<Users>(configuration, _httpContextAccessor);
+        MANAGER_APP = configuration.GetSection("BusinessConfig:ManagerAppKey").Value;
+        APPROVER_APP = configuration.GetSection("BusinessConfig:ApproverAppKey").Value;
+        CHECKER_APP = configuration.GetSection("BusinessConfig:CheckerAppKey").Value;
+        USER_APP = configuration.GetSection("BusinessConfig:UserAppKey").Value;
+        SUPER_USER = configuration.GetSection("SuperUser:SuperUser").Value;
+        DOMAIN_NAME = configuration.GetSection("Domain:DCServer").Value;
+        path = _BaseRepository._baseConfiguration.GetSection("BlobStorage:Path");
+        MAPPING_PATH = _BaseRepository._baseConfiguration.GetSection("MigrationConfig:MappingField").Value;
+        BLOB_PATH = path.Value;
+        CURRENT_USER = _httpContextAccessor.HttpContext.User.Identity.Name.Replace(DOMAIN_NAME, "");
+        spUserName = configuration.GetSection("SharePoint:Username").Value;
+        spPassword = configuration.GetSection("SharePoint:Password").Value;
+        _blobStorageSettings = blobStorageSettings;
+    }
+
+    [HttpPost]
+    public override async Task<object> ExecuteCustomQuery([FromBody] string query)
+    {
+        //List<Dictionary<string, object>> obj = new List<Dictionary<string, object>>();
+        //if (Query != query && !query.Contains("@"))
+        //{
+        //    Query = query;
+        //}
+        //obj = await _BaseRepository.ExecuteCustomLogQuery(Query);
+        //return obj;
+        List<Dictionary<string, object>> obj = new List<Dictionary<string, object>>();
+        if (Query != query && !string.IsNullOrWhiteSpace(query) && !query.Contains("@"))
+        {
+            Query = query;
+        }
+        var controllerName = ControllerContext.RouteData?.Values["controller"]?.ToString() ?? nameof(QuotationWorkflowHistory);
+        BaseRepository<SysTable> sysTableRepo = new BaseRepository<SysTable>(_BaseRepository._baseConfiguration, _httpContextAccessor);
+        SysTable sysTable = await sysTableRepo.GetSingleObject(s => s.Name == controllerName);
+
+
+        var rawRequestParams = _httpContextAccessor.HttpContext.Request.Query.ToList();
+        // Chuẩn hóa:
+        // - cặp đầu tiên refField/refKey => refField/refKey
+        // - các cặp sau => điều kiện AND
+        var normalizedParams = Util.NormalizeRefParams(rawRequestParams);
+        IDictionary<string, object> dynamicObj = new ExpandoObject();
+        foreach (var item in normalizedParams)
+        {
+            dynamicObj[item.Key] = item.Value;
+        }
+        if (normalizedParams != null && normalizedParams.Count > 0)
+        {
+            if (dynamicObj.ContainsKey("refKey") || dynamicObj.ContainsKey("key"))
+            {
+                var built = Util.LoadParamsBuildCustomQuery<object>(
+                    baseQuery: query == "OnSystem" ? sysTable.CustomQuery : Query,
+                    loadParams: normalizedParams,
+                    defaultOrderBy: "HistoryId",
+                    defaultOrderDir: "DESC",
+                    pkTieBreaker: "QuotationId",
+                    mainTableAlias: null,
+                    allowedColumns: new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                    {
+                   "Id",
+                   "Guid",
+                   "CreatedBy",
+                   "CreatedDate",
+                   "Deleted",
+                   "FromDepartment",
+                   "ToDepartment",
+                   "CommentType",
+                   "CommentBy",
+                   "CommentText",
+                   "QuotationId",
+                   "CommentId"
+                    }
+                );
+                sysTable.CustomQuery = built.Sql;
+                return await _BaseRepository.ExecuteCustomLogQuery(sysTable.CustomQuery, built.Parameters);
+            }
+        }
+        obj = await _BaseRepository.ExecuteCustomLogQuery(query == "OnSystem" ? sysTable.CustomQuery : Query);
+        return obj;
+    }
+
+
+
+    public async Task BulkInsertQuotationWorkflowHistoryAsync(List<QuotationWorkflowHistory> data)
+    {
+        var dt = new DataTable();
+
+        // Khởi tạo cột (phải khớp DB)
+        foreach (var prop in typeof(QuotationWorkflowHistory).GetProperties())
+        {
+            dt.Columns.Add(prop.Name, typeof(string));
+        }
+
+        // Gán dữ liệu
+        foreach (var item in data)
+        {
+            var row = dt.NewRow();
+            foreach (var prop in typeof(QuotationWorkflowHistory).GetProperties())
+            {
+                row[prop.Name] = prop.GetValue(item) ?? DBNull.Value;
+            }
+            dt.Rows.Add(row);
+        }
+
+        // Bulk insert
+        using var connection = new SqlConnection(_BaseRepository._connectionString);
+        await connection.OpenAsync();
+        using var bulkCopy = new SqlBulkCopy(connection)
+        {
+            DestinationTableName = "dbo.QuotationWorkflowHistory", // Đảm bảo đúng tên bảng
+            BulkCopyTimeout = 60
+        };
+
+        await bulkCopy.WriteToServerAsync(dt);
+    }
+
+
+
+}

@@ -1,0 +1,1434 @@
+﻿@page "{pageNum:int?}"
+@using JogetMVC.Model
+@using Newtonsoft.Json
+@model PolicyIssuance_Individual_FormModel
+@{
+     var moduleCode = "pi";   // hoặc "qt"
+    var prefix = moduleCode; // thường cho prefix = luôn qt / pi
+    var title = moduleCode == "pi" ? "Item Overview" : "Policy Issuance Overview";
+}
+@*
+Note: 
+-Change style to site.css
+-Comment out menu topbar + sidebar 
+-Call ajax to main table 
+-Replace Quotation visible data fields, should replace by VS 
+-Remove app div for scroll
+*@
+<style>
+
+    .att-preview {
+        width: 80%;
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 10px;
+        gap: 10px;
+        overflow-x: hidden;
+        overflow-y: auto;
+        padding: 6px 4px;
+        scroll-behavior: smooth;
+        max-height: 320px;
+    }
+
+        .att-preview::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .att-preview::-webkit-scrollbar-thumb {
+            background: #bbb;
+            border-radius: 4px;
+        }
+
+    .att-item {
+        width: 100%;
+        max-width: 720px;
+        min-height: 52px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background: #fff;
+        box-sizing: border-box;
+    }
+
+    .att-ico {
+        flex: 0 0 32px;
+        width: 32px;
+        text-align: center;
+        font-size: 18px;
+    }
+
+    .att-meta {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .att-name {
+        font-weight: 600;
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .att-sub {
+        font-size: 12px;
+        color: #777;
+        margin-top: 2px;
+    }
+
+    .att-actions {
+        flex: 0 0 auto;
+        display: flex;
+        gap: 6px;
+    }
+
+    .att-list {
+        margin-top: 10px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 10px;
+    }
+
+    .att-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        background: #fff;
+    }
+
+    .att-ico {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        font-size: 18px;
+        background: #f3f4f6;
+        flex: 0 0 auto;
+    }
+
+    .att-meta {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .att-name {
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .att-sub {
+        opacity: .75;
+        font-size: 12px;
+        margin-top: 2px;
+    }
+
+    .att-actions {
+        display: flex;
+        gap: 6px;
+        flex: 0 0 auto;
+    }
+
+    .dx-tabpanel .dx-tabpanel-tabs .dx-tab {
+        width: auto;
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .actionBar {
+        position: fixed;
+        left: var(--sidebar-w);
+        right: 0;
+        bottom: 0;
+        z-index: 60;
+        background: rgba(255,255,255,.92);
+        border-top: 1px solid var(--border);
+        backdrop-filter: blur(6px);
+        padding: 10px 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .contentGrid {
+        height: calc(100vh - 56px);
+        margin-right: var(--collapsed-form-mr);
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        gap: 12px;
+        padding: 12px;
+        box-sizing: border-box;
+        min-height: 0;
+    }
+
+    /* ======= dept node + callout (giữ đúng style bạn đã làm) ======= */
+    .dept-node {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        z-index: 1;
+    }
+
+    .dept-circle {
+        position: relative;
+        width: var(--node);
+        height: var(--node);
+        border-radius: 999px;
+        background: #fff;
+        border: 2px solid var(--nodeBorder);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 8px;
+        font-weight: 900;
+        color: #111827;
+        box-shadow: 0 6px 18px rgba(0,0,0,.08);
+        pointer-events: auto;
+        cursor: pointer;
+        user-select: none;
+        transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+        z-index: 2;
+    }
+
+    .dept-node:hover .dept-circle {
+        transform: scale(1.06);
+    }
+
+    .dept-node.status .dept-circle {
+        border-color: rgba(232,74,95,.95);
+        box-shadow: 0 0 0 4px rgba(232,74,95,.16), 0 10px 22px rgba(0,0,0,.10);
+    }
+
+    .dept-node.focus .dept-circle {
+        border-color: rgba(37,99,235,.95);
+        box-shadow: 0 0 0 4px rgba(37,99,235,.18), 0 10px 22px rgba(0,0,0,.10);
+    }
+
+    .dept-node.status.focus .dept-circle {
+        border-color: rgba(37,99,235,.95);
+    }
+
+        .dept-node.status.focus .dept-circle::after {
+            content: "";
+            position: absolute;
+            inset: 4px;
+            border-radius: 999px;
+            border: 2px solid rgba(232,74,95,.9);
+            pointer-events: none;
+        }
+
+    .dept-callout {
+        position: absolute;
+        right: calc(var(--node) + 12px);
+        top: 50%;
+        transform: translateY(-50%) translateX(10px);
+        min-width: 150px;
+        height: 30px;
+        padding: 0 10px;
+        border-radius: 10px;
+        background: #fff;
+        border: 1px solid rgba(17,24,39,.14);
+        box-shadow: 0 6px 14px rgba(0,0,0,.08);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity .12s ease, transform .12s ease, visibility .12s ease;
+        z-index: 3;
+    }
+
+        .dept-callout::after {
+            content: "";
+            position: absolute;
+            right: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-left: 10px solid #fff;
+        }
+
+        .dept-callout::before {
+            content: "";
+            position: absolute;
+            right: -11px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 9px solid transparent;
+            border-bottom: 9px solid transparent;
+            border-left: 11px solid rgba(17,24,39,.14);
+        }
+
+    .dept-node:hover .dept-callout {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(-50%) translateX(0);
+    }
+
+    .dept-callout .co-icon {
+        width: 18px;
+        height: 18px;
+        display: inline-grid;
+        place-items: center;
+    }
+
+    .dept-callout .co-text {
+        font-size: 12px;
+        font-weight: 800;
+        color: rgba(17,24,39,.85);
+    }
+
+    /* ======= NEW: Section header click expand/collapse + updated time ======= */
+    .dept-section .dept-header {
+        cursor: pointer;
+        user-select: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid rgba(17,24,39,.08);
+    }
+
+    .dept-hint-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .dept-updated {
+        font-size: 12px;
+        font-weight: 800;
+        color: rgba(17,24,39,.65);
+        white-space: nowrap;
+    }
+
+    .dept-toggle-icon {
+        font-size: 14px;
+        font-weight: 900;
+        opacity: .7;
+        transform: rotate(0deg);
+        transition: transform .15s ease;
+    }
+
+
+
+    .dept-section.collapsed .dept-toggle-icon {
+        transform: rotate(-90deg);
+    }
+
+    .dept-form-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+        padding: 8px 0;
+    }
+
+    .dept-form-header__title {
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+
+    .dept-form-header__assign {
+        min-width: 320px;
+        max-width: 420px;
+        width: 100%;
+    }
+
+    .contentGrid {
+        height: calc(100vh - 56px);
+        margin-right: var(--collapsed-form-mr);
+        display: grid;
+        grid-template-columns: minmax(260px, 420px) 10px minmax(620px, 1fr);
+        gap: 0;
+        padding: 12px;
+        box-sizing: border-box;
+        min-height: 0;
+        min-width: 0;
+    }
+
+    /* Pane trái / phải */
+    .pane {
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .pane-left {
+        padding-right: 6px;
+    }
+
+    .pane-right {
+        padding-left: 6px;
+    }
+
+    /* Splitter giống Outlook */
+    .pane-splitter {
+        position: relative;
+        width: 10px;
+        cursor: col-resize;
+        user-select: none;
+        touch-action: none;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .pane-splitter::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 1px;
+            transform: translateX(-50%);
+            background: rgba(17,24,39,.10);
+        }
+
+        .pane-splitter::after {
+            content: "";
+            width: 4px;
+            height: 64px;
+            border-radius: 999px;
+            background: rgba(107,114,128,.35);
+            box-shadow: 0 0 0 1px rgba(17,24,39,.05);
+            transition: background .15s ease, transform .15s ease;
+            z-index: 2;
+        }
+
+        .pane-splitter:hover::after,
+        .pane-splitter.dragging::after {
+            background: rgba(37,99,235,.55);
+            transform: scaleY(1.08);
+        }
+
+    /* Card trong pane */
+    .pane .card {
+        height: 100%;
+        min-height: 0;
+    }
+
+    /* Left list scroll đẹp hơn */
+    .quote-pane-scroll {
+        height: 100%;
+        overflow: auto;
+        min-height: 0;
+    }
+
+    /* Trạng thái collapse trái */
+    .contentGrid.left-collapsed {
+        grid-template-columns: 56px 10px minmax(620px, 1fr);
+    }
+
+        .contentGrid.left-collapsed .pane-left .cardBody,
+        .contentGrid.left-collapsed .pane-left .cardHeader > *:not(.collapse-toggle-wrap) {
+            display: none !important;
+        }
+
+        .contentGrid.left-collapsed .pane-left .cardHeader {
+            justify-content: center;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+    .collapse-toggle-wrap {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    #pi-btnToggleLeftPane {
+        min-width: 36px;
+    }
+
+    .field-lock-wrap{
+        display: flex;
+    }
+
+    .field-lock-btn{
+        margin-left: 10px;
+    }
+</style>
+
+<script type="text/javascript">
+          // var PIC_JSON = `{"FO":"thao.bp","TS":"hien.ttt","UW":"thanh.pp","LKMT":"thao.np"}`;
+          var PIC_JSON = `{}`;
+
+          
+          var formModuleKeyPi = "pi";
+
+
+
+        var pICs = [];
+        if ($('[data-toggle="push-menu"]').hasClass("sidebar-collapse")) {
+            $('[data-toggle="push-menu"]').click();
+            isToggleMenu = true;
+        }
+        // =========================
+        // 0) Data load
+        // =========================
+        window.PolicyIssuancePage = window.PolicyIssuancePage || {
+            state: {
+                quotes: [],
+                selectedId: null,
+                selectedGuid: null,
+                selectedCodeNo: null,
+                stageDept: null,
+                stageAccount: "",
+                focusDept: null,
+                currentUserRole: null,
+                picJson: "{}",
+                commentPanelOpened: false,
+                deptData: { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} }
+            },
+            actions: {}
+        };
+        var page = window.PolicyIssuancePage;
+        var state = page.state;
+
+        state.currentUserRole = _role;
+        state.focusDept = _role == "IT" ? "FO" : _role;
+        // var quotes = [];
+            var query = `SELECT JSON_VALUE(c.ClientName,'$.Eng') AS ClientName,p.*
+    FROM PolicyIssuance p WITH (NOLOCK)
+    LEFT JOIN Client c ON c.Id = p.ClientId
+    ORDER BY CreatedDate DESC`; // Remove this query
+        $.ajax({
+            url: `/api/PolicyIssuance/ExecuteCustomQuery`,
+            method: "POST",
+            async: false,
+            contentType: "application/json",
+            data: JSON.stringify(query),
+            success: function(data) {
+                  // quotes = data;
+                   state.quotes = Array.isArray(data) ? data : [];
+                    state.selectedId = state.quotes[0]?.id ?? null;
+                    state.selectedGuid = state.quotes[0]?.guid ?? null;
+                    state.selectedCodeNo = state.quotes[0]?.quotationCode ?? null;
+                    state.stageDept = state.quotes[0]?.stageDept ?? null;
+            }
+        });
+
+         if (_isSuperUser)
+
+
+
+        // // ===== UI state =====
+
+        // var Roles = ["FO", "TS", "UW", "LMKT", "PM"];
+        var Roles = piDeptModuleCode;
+        // var currentUserRole = _role;
+        $("#loginRoleLabel").text(state.currentUserRole);
+
+        var filter = "all";
+        var searchText = "";
+        let selectedId = state.quotes[0]?.id;
+        let selectedGuid = state.quotes[0]?.guid;
+        var selectedCodeNo = state.quotes[0]?.policyIssuanceCode;
+
+        var commentPanelOpened = false;
+        let stageDept = state.quotes[0]?.stageDept;
+
+        let stageAccount = "";                 // status ring
+        // let state.focusDept = _role == "IT" ? "FO" : _role;        // focus ring
+
+        function money(n) { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(n || 0); }
+
+     
+      
+
+        function statusClass(raw) { return normalizeStatus(raw).css; }
+        function statusText(raw) { return normalizeStatus(raw).text; }
+
+        function getSelectedModel() {
+            const q = state.quotes.find(x => x.id === selectedId) || state.quotes[0];
+            return q || null;
+        }
+
+        function applyFilter(data) {
+            var arr = (data || []).slice();
+            if (filter !== "all") arr = arr.filter(x => x.status === filter);
+            if (searchText) {
+                var t = searchText.toLowerCase();
+                arr = arr.filter(x =>
+                    (x.policyIssuanceCode || "").toLowerCase().includes(t) ||
+                    (x.clientName || "").toLowerCase().includes(t) ||
+                    String(x.requestNo || "").includes(t)
+                );
+            }
+            return arr;
+        }
+
+        // =========================
+        // 2) Form data per dept
+        // =========================
+        var deptData = { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} };
+
+
+
+        function renderDeptForms() {
+            //Data render to partial
+           $(`#${formModuleKeyPi}-formFO`).dxForm({ formData: deptData.FO, readOnly: true, colCount: 1 });
+            $(`#${formModuleKeyPi}-formTS`).dxForm({ formData: deptData.TS, readOnly: true, colCount: 1 });
+
+            $(`#${formModuleKeyPi}-formPM`).dxForm({ formData: deptData.PM, readOnly: true, colCount: 1 });
+           $.each(piDeptModuleCode, function (itemIndex, item) {
+               
+                     var items = new Object();
+                     items.moduleName = "pi";
+                     items.sectionName = item;
+                    loadDxFileUploaderAttachments(item,"Document",items );
+               
+            });
+            //   var itemsMKT = new Object();
+            // itemsMKT.moduleName = "pi";
+            //  itemsMKT.sectionName = "FO";
+            // loadDxFileUploaderAttachments("FO","Document",itemsMKT );
+            //       var itemsTS = new Object();
+            // itemsTS.moduleName = "pi";
+            //  itemsTS.sectionName = "TS";
+            // loadDxFileUploaderAttachments("TS","Document", itemsTS);
+            //       var itemsPM = new Object();
+            // itemsPM.moduleName = "pi";
+            //  itemsPM.sectionName = "PM";
+            // loadDxFileUploaderAttachments("PM","Document", itemsPM);
+            applyEditLock();
+            updateHints();
+        }
+
+              function applyEditLock() {
+            // demo rule: chỉ edit khi login đúng dept
+            const roMKT = !(state.currentUserRole === "FO");
+            const roTS = !(state.currentUserRole === "TS");
+            // const roUW = !(state.currentUserRole === "UW");
+            // const roLMKT = !(state.currentUserRole === "LMKT");
+            const roPM = !(state.currentUserRole === "PM");
+
+             setTimeout(() => {
+                $(`#${formModuleKeyPi}-btnSave_FO`).dxButton("instance")?.option("visible", !roMKT);
+                $(`#${formModuleKeyPi}-btnSave_TS`).dxButton("instance")?.option("visible", !roTS);
+                $(`#${formModuleKeyPi}-btnSave_PM`).dxButton("instance")?.option("visible", !roPM);
+                                   
+                $(`#${formModuleKeyPi}-btnSubmitBranch_FO`).dxButton("instance")?.option("visible", !roMKT);
+                $(`#${formModuleKeyPi}-btnSubmitBranch_TS`).dxButton("instance")?.option("visible", !roTS);
+                $(`#${formModuleKeyPi}-btnSubmitBranch_PM`).dxButton("instance")?.option("visible", !roPM);
+            }, 250);
+
+
+
+            $(`#${formModuleKeyPi}-formFO`).dxForm("instance")?.option("readOnly", roMKT);
+            $(`#${formModuleKeyPi}-formTS`).dxForm("instance")?.option("readOnly", roTS);
+            $(`#${formModuleKeyPi}-formPM`).dxForm("instance")?.option("readOnly", roPM);
+
+            $(`#${formModuleKeyPi}-roleSelect`).dxSelectBox({
+          items: Roles, value: state.currentUserRole, stylingMode:"outlined",
+          onValueChanged: (e) => {
+            state.currentUserRole = e.value;
+            $("#loginRoleLabel").text(state.currentUserRole);
+            applyEditLock();
+            updateHints();
+            DevExpress.ui.notify("Role switched: " + state.currentUserRole, "info", 1200);
+          }
+        });
+        }
+
+        function updateHints() {
+            $("#focusDeptPill").text(`Focus: ${state.focusDept}`);
+
+            Roles.forEach(k => {
+                const canEdit = (state.currentUserRole === k);
+                const icon = canEdit
+                    ? `<span class="lock editable" title="Editable">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="27" height="24" viewBox="0 0 27 24" aria-hidden="true">
+                           <path d="M16 10V8a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                           <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"
+                                 d="M6 10h12a4 4 0 0 1 4 4v6a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4v-6a4 4 0 0 1 4-4Zm6 4.2
+                                    a2 2 0 1 0 0 4a2 2 0 0 0 0-4Zm-.9 3.7
+                                    c0-.3.2-.5.5-.6a.9.9 0 1 0 .8 0c.3.1.5.3.5.6V20
+                                    a.9.9 0 0 1-1.8 0v-2.1Z"/>
+                         </svg> EDIT
+                       </span>`
+                    : `<span class="lock readonly" title="Read only">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+                           <path d="M8 10V8a4 4 0 0 1 8 0v2" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                           <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"
+                                 d="M6 10h12a4 4 0 0 1 4 4v6a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4v-6a4 4 0 0 1 4-4Zm6 4.2
+                                    a2 2 0 1 0 0 4a2 2 0 0 0 0-4Zm-.9 3.7
+                                    c0-.3.2-.5.5-.6a.9.9 0 1 0 .8 0c.3.1.5.3.5.6V20
+                                    a.9.9 0 0 1-1.8 0v-2.1Z"/>
+                         </svg> LOCK
+                       </span>`;
+
+                $(`#${formModuleKeyPi}-hint${k}`).html(icon);
+            });
+        }
+
+        // =========================
+        // 3) Updated time per section
+        // =========================
+     
+
+           function updateSectionUpdatedTime(q) {
+        let tat = {};
+
+        try {
+            tat = JSON.parse(q?.turnAroundTimeAttributes || "{}");
+        } catch (e) {
+            tat = {};
+        }
+
+        const map = {
+            FO: tat?.FO?.CompleteDate || null,
+            TS: tat?.TS?.CompleteDate || null,
+            UW: tat?.UW?.CompleteDate || null,
+            LMKT: tat?.LMKT?.CompleteDate || null,
+            PM: tat?.PM?.CompleteDate || null
+        };
+
+        Object.keys(map).forEach(dept => {
+            $(`#${formModuleKeyPi}-upd${dept}`).text("Updated: " + fmtTimeLocal(map[dept]));
+        });
+    }
+
+        // =========================
+        // 4) Tree highlight + scroll
+        // =========================
+        function applyNodeHighlights() {
+            $(".dept-node").removeClass("status focus");
+            $(`.dept-node[data-key='${stageDept}']`).addClass("status");
+            $(`.dept-node[data-key='${state.focusDept}']`).addClass("focus");
+        }
+
+        function applySectionFocusHighlight() {
+            $(".dept-section").removeClass("focused");
+            $(`#${formModuleKeyPi}-sec${state.focusDept}`).addClass("focused");
+        }
+
+
+
+        function setupDeptTree() {
+           $(`.${formModuleKeyPi}-dept-tree.dept-node`).off("click.tree").on("click.tree", function () {
+                const key = $(this).data("key");
+                state.focusDept = key;
+
+                applyNodeHighlights();
+                applySectionFocusHighlight();
+                applyEditLock();
+                updateHints();
+                scrollToDept(formModuleKeyPi,state.focusDept);
+
+                // optional: auto expand focused dept
+                setSectionCollapsed(state.focusDept, false);
+            });
+        }
+
+      
+        function layoutTreeLine() {
+            const $stack = $(`#${formModuleKeyPi}-treeStack`);
+            const $nodes = $stack.find(".dept-node");
+            const $line = $(`#${formModuleKeyPi}-treeVLine`);
+            if (!$nodes.length) return;
+
+            const stackRect = $stack[0].getBoundingClientRect();
+            const first = $nodes[0].getBoundingClientRect();
+            const last = $nodes[$nodes.length - 1].getBoundingClientRect();
+
+            const topInside = (first.top - stackRect.top) + (first.height / 2);
+            const bottomInside = (last.top - stackRect.top) + (last.height / 2);
+
+            $line.css({ top: `${topInside}px`, height: `${bottomInside - topInside}px` });
+        }
+
+
+        // =========================
+        // 5) Expand / Collapse sections by clicking header
+        // =========================
+        function setSectionCollapsed(dept, collapsed) {
+            const $sec = $(`#${formModuleKeyPi}-sec${dept}`);
+            if (!$sec.length) return;
+            const body = $sec.find(".dept-body")[0];
+
+            if (collapsed) {
+                $sec.addClass("collapsed");
+                if (body) {
+                    body.style.maxHeight = body.scrollHeight + "px";
+                    setTimeout(() => { body.style.maxHeight = "0px"; }, 220);
+                }
+            } else {
+                $sec.removeClass("collapsed");
+                if (body) {
+                    body.style.maxHeight = body.scrollHeight + "px";
+                    setTimeout(() => { body.style.maxHeight = "2000px"; }, 220);
+                }
+            }
+        }
+
+           function toggleSection(dept) {
+            const $sec = $(`#${formModuleKeyPi}-sec${dept}`);
+            setSectionCollapsed(dept, !$sec.hasClass("collapsed"));
+        }
+
+        function bindSectionHeaderToggle() {
+            piDeptModuleCode.forEach(dept => {
+                const $sec = $(`#${formModuleKeyPi}-sec${dept}`);
+                if (!$sec.length) return;
+
+                $sec.find(".dept-header").off("click.sec").on("click.sec", function (e) {
+                    if ($(e.target).closest("a,button,.dx-button").length) return;
+                    toggleSection(dept);
+                });
+            });
+        }
+
+        // =========================
+        // 6) Comments panel module (giữ theo style bạn)
+        // =========================
+        const HoverAjax = (function () {
+            function debounce(fn, wait) {
+                let t = null;
+                return function (...args) {
+                    clearTimeout(t);
+                    t = setTimeout(() => fn.apply(this, args), wait);
+                };
+            }
+
+            function escapeHtml(s) {
+                return String(s ?? "")
+                    .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+                    .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+            }
+
+            function renderComments(items) {
+                if (!Array.isArray(items) || items.length === 0) {
+                    return `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No audit logs</div>`;
+                }
+                return items.map((c) => `
+                    <div class="ct-item">
+                        <div class="ct-user">${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}</div>
+                        <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
+                        <div class="ct-text">${escapeHtml(c.commentText || "")}</div>
+                    </div>
+                `).join("");
+            }
+
+
+            const loadComments = debounce(function (quoteNo, quoteId) {
+                 $("#rightCommentSub").text(`Audit log - ${quoteNo}` || "-");
+                $("#rightCommentList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
+
+                const q = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${quoteId}`;
+                $.ajax({
+                    url: `/api/QuotationCommentLog/ExecuteCustomQuery`,
+                    method: "POST",
+                    async: true,
+                    contentType: "application/json",
+                    data: JSON.stringify(q),
+                    success: function (data) { $("#rightCommentList").html(renderComments(data)); },
+                    error: function () {
+                        $("#rightCommentList").html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load audit logs</div>`);
+                    }
+                });
+            }, 180);
+
+            const loadReferenceFields = debounce(function (quoteNo, quoteId) {
+                $("#rightCommentSub").text(`Common fields - ${quoteNo}`);
+                 var _formConfig = new MFormOption();
+                 _formConfig.originModelName = "Quotation";
+                 _formConfig.formElementName = "Quotation";
+                 _formConfig.colCount = 1;
+                 _formConfig.container = $(`<div id = "form_Quotation_${quoteId}" style="padding: 10px" >`);
+                 var form =  new ReferenceQuotationForm(quoteId, null, _formConfig, _formConfig);
+                 form.container.appendTo($("#rightCommentList"));
+
+            }, 180);
+
+
+          function openRightCommentPanel() {
+        const $dock = $("#rightCommentDock");
+
+        commentPanelOpened = true;
+        document.body.classList.add("hasRightPanel");
+
+        $dock.removeClass("is-closing").addClass("is-open");
+        $("#rightCommentList").empty();
+        // document.documentElement.style.setProperty("--collapsed-form-mr", "-2%");
+        }
+
+        function closeRightCommentPanel() {
+            const $dock = $("#rightCommentDock");
+
+            commentPanelOpened = false;
+            document.body.classList.remove("hasRightPanel");
+
+            $dock.removeClass("is-open").addClass("is-closing");
+            // document.documentElement.style.setProperty("--collapsed-form-mr", "-26%");
+
+            setTimeout(() => {
+                $dock.removeClass("is-closing");
+            }, 300);
+        }
+
+      // ✅ bind giữ nguyên – chỉ còn việc gắn event như cũ
+            function bind() {
+                $("#headerWidgetsPanel").empty();
+
+                 $(`<div id="${formModuleKeyPi}-btnToggleReferenceFieldsMini">`).dxButton({
+                    icon: "fas fa-sliders-h",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                     openRightCommentPanel();
+                     loadReferenceFields(selectedCodeNo, selectedId);
+                      }
+                    }).appendTo($("#headerWidgetsPanel"));
+
+                $(`<div id="${formModuleKeyPi}-btnToggleCommentMini" style="margin-left: 10px">`).dxButton({
+                    icon: "comment",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                     openRightCommentPanel();
+                      loadComments(selectedCodeNo, selectedId);
+                            }
+                    }).appendTo($("#headerWidgetsPanel"));
+
+                 $(`#${formModuleKeyPi}-btnCollapseAllTab`).dxButton({
+                    text: "Collapse All Sections",
+                    type: "normal",
+                    stylingMode: "contained",
+                     onClick: () => {
+                             $.each(piDeptModuleCode, function (itemIndex, item) {
+                           setSectionCollapsed(item, true);
+                        });
+                      // setSectionCollapsed("FO", true);
+                      // setSectionCollapsed("TS",true);
+                      // setSectionCollapsed("LMKT",true);
+                      // setSectionCollapsed("UW",true);
+                      // setSectionCollapsed("PM",true);
+                     }
+                 });
+                $(`#${formModuleKeyPi}-btnToggleComment`).dxButton({
+                    text: "Audit logs",
+                    icon: "comment",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                if (!commentPanelOpened) {
+                  openRightCommentPanel();
+                                loadComments(selectedCodeNo, selectedId);
+                            } else {
+                  closeRightCommentPanel();
+                            }
+                        }
+                    });
+
+                 $(`#${formModuleKeyPi}-btnToggleReferenceFields`).dxButton({
+                    text: "Common fields",
+                    icon: "fas fa-sliders-h",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                if (!commentPanelOpened) {
+                  openRightCommentPanel();
+                                loadReferenceFields(selectedCodeNo, selectedId);
+                            } else {
+                  closeRightCommentPanel();
+                            }
+                        }
+                    });
+
+        $("#btnCloseRightComment").off("click").on("click", function () {
+            closeRightCommentPanel();
+                });
+            }
+
+      // ✅ expose để gọi trực tiếp mà không cần bind
+      return { bind, loadComments, loadReferenceFields, openRightCommentPanel, closeRightCommentPanel };
+        })();
+
+        // =========================
+        // 7) Render list/detail
+        // =========================
+        function renderDetail() {
+            var q = state.quotes.find(x => x.id === selectedId) || state.quotes[0];
+            if (!q) return;
+
+          $(`#${formModuleKeyPi}-recordNo`).text(q.quotationCode);
+
+            const st = q.quotationStatus ?? q.status;
+            $(`#${formModuleKeyPi}-detailStatus`)
+                .text(statusText(st))
+                .attr("class", `statusTag ${statusClass(st)}`);
+
+            // stage/focus pills
+            $(`#${formModuleKeyPi}-stageDeptPill`).text(`Pending at: ${stageDept} - ${stageAccount ?? ""}`);
+            $(`#${formModuleKeyPi}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
+
+            deptData.FO = { ...q, sectionName: "FO", code: q.policyIssuanceCode };
+            deptData.TS = { ...q, sectionName: "TS", code: q.policyIssuanceCode };
+            deptData.UW = { ...q, sectionName: "UW", code: q.policyIssuanceCode };
+            deptData.LMKT = { ...q, sectionName: "LMKT", code: q.policyIssuanceCode };
+            deptData.PM = { ...q, sectionName: "PM", code: q.policyIssuanceCode };
+
+            renderDeptForms();
+
+            applyNodeHighlights();
+            applySectionFocusHighlight();
+            updateHints();
+            updateSectionUpdatedTime(q);
+            initDepartmentAssignees(formModuleKeyPi);
+            scrollToDept(formModuleKeyPi,state.focusDept);
+        }
+
+
+        function renderList() {
+            var data = applyFilter(state.quotes);
+            var $root = $("#pi-quoteList").empty();
+
+            if (!data.length) {
+                $root.append(`<div style="color:#6b7280;padding:10px;">No quotations found.</div>`);
+                return;
+            }
+            data.forEach(q => {
+                var isSel = q.id === selectedId;
+
+                pICs.push({policyIssuanceCode: q.policyIssuanceCode, pIC: q.pIC});
+                $root.append(`
+                    <div class="${formModuleKeyPi}-quoteCard ${isSel ? "selected" : ""}" data-id="${q.id}" data-guid="${q.guid}" data-codeno="${q.policyIssuanceCode}" data-stagedept="${q.stageDept}" data-stageaccount="${parsePicMap(q.pIC)[q.stageDept]}">
+                        <div class="quoteTop">
+                            <div>
+                                <div class="quoteClient">${q.clientName || ""}</div>
+                                <div>${q.policyNo || ""}</div>
+                            </div>
+                            <div class="statusTag ${statusClass(q.policyIssuanceStatus)}">${statusText(q.policyIssuanceStatus)}</div>
+                        </div>
+                        <div class="quoteMeta">
+                            <div class="policyIssuanceCode">${q.policyIssuanceCode || ""}</div>
+                            <div>${q.lineName || ""}</div>
+                            <div>${(typeof formatDate === "function") ? formatDate(q.requestDate, "dd-mm-yyyy") : (q.requestDate || "")}</div>
+                        </div>
+                        @*<div class="quoteMeta">
+                            <div>Total Sum Insured</div>
+                            <div class="quoteAmount">${money(q.sumInsuredTotal)}</div>
+                        </div>
+                        <div class="quoteMeta">
+                            <div>Total Premium</div>
+                            <div class="quoteAmount">${money(q.premiumTotal)}</div>
+                        </div>
+                        <div class="quoteMeta">
+                            <div>Total Due</div>
+                            <div class="quoteAmount">${money(q.totalDue)}</div>
+                        </div>*@
+                    </div>
+                `);
+
+            });
+
+            $(`.${formModuleKeyPi}-quoteCard`).off("click").on("click", function () {
+                selectedId = Number($(this).attr("data-id"));
+                selectedGuid = $(this).attr("data-guid");
+                selectedCodeNo = $(this).attr("data-codeno");
+
+                stageDept = $(this).attr("data-stagedept");
+                PIC_JSON = pICs.find(f => f.policyIssuanceCode ==  selectedCodeNo ).pIC;
+                stageAccount = $(this).attr("data-stageaccount");
+
+                renderDeptCallouts(PIC_JSON);
+                // focus ring về đúng role hiện tại
+                state.focusDept = state.currentUserRole;
+                renderList();
+                renderDetail();
+                initDepartmentAssignees(formModuleKeyPi);
+                if (commentPanelOpened)
+                {
+                   $("#btnCloseRightComment").click();
+                    // HoverAjax.loadComments(selectedCodeNo, selectedId);
+                    // HoverAjax.loadReferenceFields(selectedCodeNo, selectedId);
+                }
+            });
+        }
+
+        // =========================
+        // 8) Route overlay (fix bug getNextChoices + addPath append)
+        // =========================
+        // const ROUTE_GRAPH = {
+        //     MKT: [
+        //         { to: "TS", rule: "MKT_to_TS" },
+        //         { to: "UW", rule: "MKT_to_UW" },
+        //         { to: "LMKT", rule: "MKT_to_LMKT" },
+        //         { to: "PM", rule: "MKT_to_PM" },
+        //     ],
+        //     TS: [
+        //         { to: "UW", rule: "TS_to_UW" },
+        //         { to: "FO", rule: "TS_to_FO" },
+        //     ],
+        //     UW: [
+        //         { to: "LMKT", rule: "UW_to_LMKT" },
+        //         { to: "FO", rule: "UW_to_FO" },
+        //     ],
+        //     LMKT: [
+        //         { to: "PM", rule: "LMKT_to_PM" },
+        //         { to: "FO", rule: "LMKT_to_FO" },
+        //     ],
+        //     PM: []
+        // };
+
+        // function buildFormState() {
+        //     return {
+        //         requiredDone: { MKT: false, TS: false, UW: true, LMKT: false, PM: false },
+        //         flags: {
+        //             needTechnicalSurvey: false,
+        //             needUnderwriting: false,
+        //             needLeaderMarketing: true,
+        //             needPolicyManager: true,
+        //             hasBlockingErrors: true
+        //         }
+        //     };
+        // }
+
+        // const RULES = {
+        //     MKT_to_TS: (s) => s.flags.needTechnicalSurvey && s.requiredDone.MKT && !s.flags.hasBlockingErrors,
+        //     MKT_to_UW: (s) => s.flags.needUnderwriting && s.requiredDone.MKT && !s.flags.hasBlockingErrors,
+        //     MKT_to_LMKT: (s) => s.flags.needLeaderMarketing && s.requiredDone.MKT,
+        //     MKT_to_PM: (s) => s.flags.needPolicyManager && s.requiredDone.MKT,
+
+        //     TS_to_UW: (s) => s.requiredDone.TS && s.flags.needUnderwriting,
+        //     TS_to_FO: (s) => !s.requiredDone.TS,
+
+        //     UW_to_LMKT: (s) => s.requiredDone.UW && s.flags.needLeaderMarketing,
+        //     UW_to_FO: (s) => !s.requiredDone.UW,
+
+        //     LMKT_to_PM: (s) => s.requiredDone.LMKT,
+        //     LMKT_to_FO: (s) => !s.requiredDone.LMKT,
+        // };
+
+        // function getNextChoices(currentDept, formState) {
+        //     const edges = ROUTE_GRAPH[currentDept] ?? [];
+        //     return edges
+        //         .filter(e => (RULES[e.rule]?.(formState) ?? true))
+        //         .map(e => e.to);
+        // }
+
+        // function renderBranchOverlay(currentDept) {
+        //     const formState = buildFormState();
+        //     const choices = getNextChoices(currentDept, formState);
+
+        //     if (!choices.length) {
+        //         DevExpress.ui.notify("No valid route - please complete required fields", "warning", 1600);
+        //         return;
+        //     }
+
+        //     const $canvas = $("#branchOverlay .branchCanvas");
+        //     const $svg = $canvas.find("svg").first();
+
+        //     // clear
+        //     $svg.find("path").remove();
+        //     $canvas.find(".bnode").remove();
+
+        //     const nodeSize = 52;
+        //     const xRootNode = 14;
+        //     const xChoiceNode = 182;
+
+        //     const xRootLine = 40;
+        //     const xJ = 110;
+        //     const xRightLine = 200;
+
+        //     const canvasH = Math.max(140, choices.length * 70);
+        //     $canvas.css("height", canvasH + "px");
+        //     $svg.attr("viewBox", `0 0 260 ${canvasH}`);
+
+        //     const yJ = canvasH / 2;
+        //     const rootTop = Math.round(yJ - nodeSize / 2);
+
+        //     $canvas.append(
+        //         `<div class="bnode root current"
+        //               style="left:${xRootNode}px; top:${rootTop}px;"
+        //               title="Current role: ${currentDept}">
+        //             ${currentDept}
+        //          </div>`
+        //     );
+
+        //     const topPad = 14;
+        //     const bottomPad = 14;
+        //     const yMin = topPad + nodeSize / 2;
+        //     const yMax = canvasH - bottomPad - nodeSize / 2;
+
+        //     let ys;
+        //     if (choices.length === 1) ys = [yJ];
+        //     else if (choices.length === 2) ys = [yJ - 30, yJ + 30];
+        //     else ys = choices.map((_, i) => yMin + i * ((yMax - yMin) / (choices.length - 1)));
+
+        //     const addPath = (d) => $svg.append(`<path d="${d}" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none" />`);
+
+        //     if (choices.length === 1) {
+        //         addPath(`M${xRootLine} ${yJ} L${xRightLine} ${yJ}`);
+        //     } else {
+        //         addPath(`M${xRootLine} ${yJ} L${xJ} ${yJ}`);
+        //         addPath(`M${xJ} ${ys[0]} L${xJ} ${ys[ys.length - 1]}`);
+        //         ys.forEach(y => addPath(`M${xJ} ${y} L${xRightLine} ${y}`));
+        //     }
+
+        //     choices.forEach((dept, i) => {
+        //         const yChoice = ys[i];
+        //         const top = Math.round(yChoice - nodeSize / 2);
+        //         const id = `route_${dept}`;
+
+        //         $canvas.append(
+        //             `<div id="${id}" class="bnode choice" style="left:${xChoiceNode}px; top:${top}px;" title="Route to ${dept}">${dept}</div>`
+        //         );
+
+        //         $(`#${id}`).off("click").on("click", () => routeTo(dept));
+        //     });
+        // }
+
+        // function openBranchOverlay() {
+        //     const currentDept = stageDept || state.focusDept || "FO";
+        //     renderBranchOverlay(currentDept);
+        //     $("#branchOverlay").show();
+        // }
+
+        function closeBranchOverlay() {
+            $("#branchOverlay").hide();
+            $("#branchOverlay .bnode.choice").removeClass("active");
+        }
+
+        // function routeTo(dept) {
+        //     $("#branchOverlay .bnode.choice").removeClass("active");
+        //     $(`#route_${dept}`).addClass("active");
+
+        //     state.focusDept = dept;
+        //     applyNodeHighlights();
+        //     applySectionFocusHighlight();
+        //     applyEditLock();
+        //     updateHints();
+        //     scrollToDept(formModuleKeyPi,state.focusDept);
+
+        //     // popup remark (giữ code bạn, chỉ không đụng tới vì bạn đang dùng nhiều helper)
+        //     DevExpress.ui.notify(`Mock submit routed to ${dept}`, "success", 1200);
+
+        //     setTimeout(closeBranchOverlay, 350);
+        // }
+
+        // =========================
+        // 9) PIC callouts
+        // =========================
+
+        // const PIC_MAP = JSON.parse(PIC_JSON || "{}");
+        function normalizeDeptKey(k) {
+            const x = String(k || "").trim().toUpperCase();
+            return x;
+        }
+
+        function parsePicMap(picJson) {
+            try {
+                const obj = JSON.parse(picJson || "{}");
+                const map = {};
+                Object.keys(obj).forEach(k => map[normalizeDeptKey(k)] = obj[k]);
+                return map;
+            } catch { return {}; }
+        }
+
+        function  renderDeptCallouts(picJson) {
+            const picMap = parsePicMap(picJson);
+            $(".dept-node").each(function () {
+                const dept = normalizeDeptKey($(this).data("key"));
+                const $co = $(this).find(".dept-callout");
+                if (!$co.length) return;
+
+                const pic = picMap[dept] || "-";
+                $co.find(".co-text").text(pic);
+                $co.css({ color: "rgba(17,24,39,.85)" });
+            });
+        }
+            function initMainPaneSplitter() {
+        const grid = document.getElementById("mainContentGrid");
+        const splitter = document.getElementById("mainSplitter");
+        if (!grid || !splitter) return;
+
+        const MIN_LEFT = 260;
+        const MAX_LEFT = 520;
+        const COLLAPSED_LEFT = 0;
+        const SPLITTER_W = 10;
+
+        let isDragging = false;
+
+        function setLeftWidth(px) {
+            const total = grid.clientWidth;
+            const maxAllowed = Math.min(MAX_LEFT, total - 620 - SPLITTER_W);
+            const left = Math.max(MIN_LEFT, Math.min(px, maxAllowed));
+
+            grid.classList.remove("left-collapsed");
+            grid.style.gridTemplateColumns = `${left}px ${SPLITTER_W}px minmax(620px, 1fr)`;
+        }
+
+        function collapseLeft() {
+            grid.classList.add("left-collapsed");
+            grid.style.gridTemplateColumns = `${COLLAPSED_LEFT}px ${SPLITTER_W}px minmax(620px, 1fr)`;
+        }
+
+        function expandLeftDefault() {
+            setLeftWidth(360);
+        }
+
+        splitter.addEventListener("mousedown", function (e) {
+            e.preventDefault();
+            isDragging = true;
+            splitter.classList.add("dragging");
+            document.body.style.cursor = "col-resize";
+            document.body.style.userSelect = "none";
+        });
+
+        window.addEventListener("mousemove", function (e) {
+            if (!isDragging) return;
+            const rect = grid.getBoundingClientRect();
+            const nextLeft = e.clientX - rect.left;
+            setLeftWidth(nextLeft);
+        });
+
+        window.addEventListener("mouseup", function () {
+            if (!isDragging) return;
+            isDragging = false;
+            splitter.classList.remove("dragging");
+            document.body.style.cursor = "";
+            document.body.style.userSelect = "";
+        });
+
+        $("#pi-btnToggleLeftPane").dxButton({
+            icon: "pin",
+            hint: "Thu gọn / mở rộng danh sách items",
+            stylingMode: "text",
+            onClick: function () {
+                if (grid.classList.contains("left-collapsed")) {
+                    expandLeftDefault();
+                } else {
+                    collapseLeft();
+                }
+            }
+        });
+
+        window.addEventListener("resize", function () {
+            if (grid.classList.contains("left-collapsed")) {
+                grid.style.gridTemplateColumns = `${COLLAPSED_LEFT}px ${SPLITTER_W}px minmax(620px, 1fr)`;
+            } else {
+                const first = parseInt((grid.style.gridTemplateColumns || "").split(" ")[0], 10);
+                if (!isNaN(first)) setLeftWidth(first);
+            }
+        });
+    }
+        // =========================
+        // 10) Controls init
+        // =========================
+        $("#pi-searchBox").dxTextBox({
+            placeholder: "Search items...",
+            stylingMode: "outlined",
+            mode: "search",
+            onValueChanged: (e) => { searchText = e.value || ""; renderList(); }
+        });
+
+        $("#btnEdit").dxButton({ text: "Edit", icon: "edit", type: "normal", onClick: () => DevExpress.ui.notify("Mock: Edit selected", "info", 1200) });
+        $("#btnMore").dxDropDownButton({ text: "More", icon: "overflow", items: ["Export", "Print", "Email"], onItemClick: (e) => DevExpress.ui.notify("Mock: " + e.itemData, "info", 1200) });
+
+        $("#btnSaveDraft").dxButton({ text: "Save Draft", icon: "save", type: "normal", onClick: () => DevExpress.ui.notify("Mock: saved draft", "success", 1200) });
+
+        $("#branchOverlay .backdrop").on("click", closeBranchOverlay);
+
+        // =========================
+        // 11) Init render
+        // =========================
+        HoverAjax.bind();
+        bindSectionHeaderToggle();
+
+        renderList();
+        PIC_JSON = pICs.find(f => f.policyIssuanceCode ==  selectedCodeNo).pIC;
+        stageAccount = PIC_JSON[stageDept];                 // status ring
+        renderDetail();
+        setupDeptTree();
+
+        applyNodeHighlights();
+        applySectionFocusHighlight();
+        updateHints();
+
+        renderDeptCallouts(PIC_JSON);
+
+        setTimeout(layoutTreeLine, 0);
+        window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
+        initMainPaneSplitter();
+</script>
+
+<body>
+    <div class="title">
+        @* header removed *@
+    </div>
+
+
+    <div class="contentGrid" id="mainContentGrid">
+        @await Html.PartialAsync("_LeftPane", new LeftPanePartialModel
+   {
+       Prefix = "pi",
+       Title = "Your Items",
+       SearchWidth = "210px",
+       SearchPlaceholder = "Search items..."
+   })
+     
+        <!-- Splitter -->
+        <div id="mainSplitter" class="pane-splitter" title="Kéo để thay đổi kích thước"></div>
+          @await Html.PartialAsync("_OverviewPane", new OverviewPanePartialModel
+        {
+            Prefix = prefix,
+            ModuleCode = moduleCode,
+            Title = title
+        })
+        <!-- Right pane -->
+       
+    </div>
+
+    <!-- Bottom action bar -->
+    <div class="actionBar">
+        <div class="actionLeft">
+            <span class="pill">Record: <b id="recordNo">Qu-10030</b></span>
+            <span class="pill">Login role: <b id="loginRoleLabel"></b></span>
+
+            <span id="focusDeptPill" class="pill">Focus section: </span>
+        </div>
+        <div class="actionRight">
+            <div id="btnSaveDraft"></div>
+            <div id="btnSubmitBranch"></div>
+        </div>
+    </div>
+
+    <!-- Branch overlay -->
+    <div id="branchOverlay" class="branchOverlay">
+        <div class="backdrop"></div>
+        <div class="branchPopup">
+            <div class="branchTitle">
+                <span>Submit Route</span>
+                <span class="branchHint">Choose next dept</span>
+            </div>
+            <div class="branchCanvas">
+                <svg width="100%" height="100%" viewBox="0 0 260 140" style="position:absolute;inset:0;"></svg>
+            </div>
+        </div>
+    </div>
+
+</body>

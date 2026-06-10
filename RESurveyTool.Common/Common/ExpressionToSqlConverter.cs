@@ -96,6 +96,35 @@ public static class ExpressionToSqlConverter<T>
                 // Trường hợp chưa so sánh thì chỉ trả về CAST
                 return $"CONVERT(NVARCHAR(MAX), [{columnName}])";
             }
+            if (methodCallExpression.Method.Name == "Contains")
+            {
+                string columnSql = "";
+                object value = null;
+
+                // Case 1: x.Name.Contains("abc")
+                if (methodCallExpression.Object is MemberExpression memberExprContains)
+                {
+                    columnSql = $"[{memberExprContains.Member.Name}]";
+                }
+                // Case 2: x.Name.ToString().Contains("abc")
+                else if (methodCallExpression.Object is MethodCallExpression innerMethod
+                         && innerMethod.Method.Name == "ToString"
+                         && innerMethod.Object is MemberExpression innerMember)
+                {
+                    columnSql = $"CONVERT(NVARCHAR(MAX), [{innerMember.Member.Name}])";
+                }
+
+                // Lấy value
+                if (methodCallExpression.Arguments.Count > 0)
+                {
+                    value = GetValueFromExpression(methodCallExpression.Arguments[0]);
+                }
+
+                string paramName = $"@p{parameters.Count}";
+                parameters[paramName] = $"%{value}%";
+
+                return $"{columnSql} LIKE {paramName}";
+            }
         }
         throw new NotSupportedException($"Unsupported expression type: {expression.GetType()}");
     }

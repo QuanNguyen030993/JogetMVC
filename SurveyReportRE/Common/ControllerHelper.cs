@@ -11,6 +11,9 @@ using ERPCore.Models.Migration.Business.HumanResource;
 using ERPCore.Models.Migration.Business.MasterData;
 using ERPCore.Models.Migration.Business.Workflow;
 using ERPCore.Models.Request;
+using ERPCore.Models.Migration.Business.Social;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.SharePoint.ApplicationPages.Calendar.Exchange;
 
 namespace ERPCore.ControllerUtil
 {
@@ -80,19 +83,32 @@ namespace ERPCore.ControllerUtil
 
       
       
-        public static int UpStep(InstanceWorkflow instanceWorkflow)
+        public static string UpStep(InstanceWorkflow instanceWorkflow)
         {
             if (instanceWorkflow != null)
-                return (instanceWorkflow?.CurrentStep ?? 0) + 1;
-            else return 1;
+                return (Util.GetPreviousSegment(instanceWorkflow?.CurrentStep ?? "0") + 1).ToString();
+            else return "1";
         }
-        public static int DownStep(InstanceWorkflow instanceWorkflow)
+        public static string DownStep(InstanceWorkflow instanceWorkflow)
         {
             if (instanceWorkflow != null)
-                return ((instanceWorkflow?.CurrentStep ?? 0) - 1) < 1 ? 1 : (instanceWorkflow?.CurrentStep ?? 0) - 1;
-            else return 1;
+                return (Util.GetPreviousSegment(instanceWorkflow?.CurrentStep ?? "0") - 1) < 1 ? "1": ((Util.GetPreviousSegment(instanceWorkflow?.CurrentStep ?? "0") - 1) - 1).ToString();
+            else return "1";
         }
 
+        public async static Task SignalRResponse(string UIMethod
+            , object returnObject
+            , string connectionId
+            , string domainName
+            )
+        {
+
+            IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
+                OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(domainName, "") == connectionId);
+
+                await FileProcessingHub._hubContext.Clients.Client(onlineUser.ConnectionId).SendAsync(UIMethod,
+                returnObject);
+        }
      
     }
 }

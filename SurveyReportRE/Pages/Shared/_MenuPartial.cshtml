@@ -1,22 +1,6 @@
 ﻿@* <link href="~/lib/tree-search/jquery.treefilter.css" rel="stylesheet" />
 <script src="~/lib/tree-search/jquery.treefilter.js"></script> *@
-<aside class="main-sidebar">
-    <section class="sidebar" style="height: auto;">
-        @* <div class="sidebar-form"> *@
-            @* <div class="input-group"> *@
-            @* <input type="text" id="my-search" name="q" class="form-control" placeholder="Search..."> *@
-            @* <span class="input-group-btn">
-            <a href="#" id="remove-search-btn" class="btn btn-flat">
-            <i class="fa fa-remove"></i>
-            </a>
-            </span> *@
-            @* </div> *@
-        @* </div> *@
-        <ul class="sidebar-menu tree" data-widget="tree" id="my-tree">
-        </ul>
 
-    </section>
-</aside>
 
 <script>
    
@@ -27,8 +11,17 @@
         load: function (loadOptions) {
             var d = new $.Deferred();
             $.get("/api/Menu/GetHierarchyMenu?pageSystem=Management").done(function (result) {
-                d.resolve(result);
-                _menus = result;
+                d.resolve(result.menu);
+                _menus = result.menu; // cache
+                $("#rolename").text(result.userRoles.RoleName);
+                 _loginUser =  result.userRoles.LoginName.replace("TOKIOMARINE\\", "");;
+                $("#accountLabel").text(_loginUser);
+                 _role = result.userRoles.RoleName;
+                 _roleAppName = result.userRoles.RoleAppName;
+                 _branch = result.userRoles.Branch;
+                $("#roleLabel").text(`Department ${_role}`);
+                 _displayName = result.userRoles.DisplayName;
+                $("#displayLabel").text(`${_displayName}`);
             });
             return d.promise();
         }
@@ -116,23 +109,70 @@
                         var $icon = $(this).find(`i.fa-angle-left.pull-right.pull-right-${val.id}`);
                         if ($icon[0].clientHeight == 0) {
                             // Show tooltip on hover
+                                //     ${val.children.length > 0 ? val.children.map(m =>
+                                // `<div><a href="#" id="new-tab-${m.id}" data-action="${m.action}" data-name="${m.name}" data-caption="${m.caption}"> <i class="${m.icon}"></i><span>${m.caption}</span> </a></div>`) : ''}
+                        //     const tooltip = $(`
+                        //         <div class="hover-tooltip hover-tooltip-${val.id}">
+                        //             ${val.children.length > 0
+                        //               ? val.children.map(m => `
+                        //                   <div class="tt-item">
+                        //                     <a href="#" id="new-tab-${m.id}" data-action="${m.action}" data-name="${m.name}" data-caption="${m.caption}">
+                        //                       <i class="${m.icon}"></i><span>${m.caption}</span>
+                        //                     </a>
+                        //                   </div>
+                        //                 `).join("")
+                        //               : ""
+                        //             }
+                        //         <p>${val.caption}</p>
+                        //     </div>
+                        // `).css({
+                        //             position: 'absolute',
+                        //             top: $(this).offset().top + 'px',
+                        //             left: $(this).offset().left + $(this).outerWidth() + 'px',
+                        //             background: '#fff',
+                        //             padding: '10px',
+                        //             border: '1px solid #ddd',
+                        //             boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)',
+                        //             zIndex: 1050,
+                        //             borderRadius: '5px',
+                        //         }).hide();
+
                             const tooltip = $(`
-                                <div class="hover-tooltip-${val.id}">
-                                <p>${val.caption}</p>
-                                    ${val.children.length > 0 ? val.children.map(m =>
-                                `<div><a href="#" id="new-tab-${m.id}" data-action="${m.action}" data-name="${m.name}" data-caption="${m.caption}"> <i class="${m.icon}"></i><span>${m.caption}</span> </a></div>`) : ''}
-                            </div>
-                        `).css({
-                                    position: 'absolute',
-                                    top: $(this).offset().top + 'px',
-                                    left: $(this).offset().left + $(this).outerWidth() + 'px',
-                                    background: '#fff',
-                                    padding: '10px',
-                                    border: '1px solid #ddd',
-                                    boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)',
-                                    zIndex: 1050,
-                                    borderRadius: '5px',
-                                }).hide();
+                              <div class="hover-tooltip hover-tooltip-${val.id}">
+                                <div class="tt-head">
+                                  <div class="tt-parent">
+                                    <i class="${val.icon}"></i>
+                                    <span>${val.caption}</span>
+                                  </div>
+                                  <div class="tt-sub"></div>
+                                </div>
+
+                                <div class="tt-body">
+                                  ${val.children?.length ? val.children.map(m => `
+                                    <a class="tt-item"
+                                       href="#"
+                                       id="new-tab-${m.id}"
+                                       data-action="${m.action}"
+                                       data-name="${m.name}"
+                                       data-caption="${m.caption}">
+                                      <i class="${m.icon}"></i>
+                                      <span class="tt-text">${m.caption}</span>
+                                    </a>
+                                  `).join("") : `<div class="tt-empty">No menu</div>`}
+                                </div>
+                              </div>
+                            `).css({
+                                     position: 'absolute',
+                                     top: $(this).offset().top + 'px',
+                                     left: $(this).offset().left + $(this).outerWidth() + 'px',
+                                     background: '#fff',
+                                     padding: '10px',
+                                     border: '1px solid #ddd',
+                                     boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)',
+                                     zIndex: 1050,
+                                     borderRadius: '5px',
+                                 }).hide();
+
 
                             $('body').append(tooltip);
                             if (val.children.length > 0) {
@@ -163,12 +203,10 @@
                     function () {
                         // Remove tooltip when hover out
                         setTimeout(() => {
-                            if (!$('.hover-tooltip:hover').length) {
-                                $(`.hover-tooltip-${val.id}`).fadeOut(300, function () {
-                                    $(this).remove();
-                                });
-                            }
-                        }, 500);
+                               if (!$('.hover-tooltip:hover').length && !$(`li.icon-id-${val.id}:hover`).length) {
+                                  $(`.hover-tooltip-${val.id}`).fadeOut(200, function () { $(this).remove(); });
+                                }
+                        }, 150);
                     }
                 );
             if (hasChild) {

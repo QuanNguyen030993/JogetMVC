@@ -5357,6 +5357,13 @@
     background-position-x: -900%;
   }
 }
+/*.dx-tooltip-wrapper {
+    z-index: 99999 !important;
+    opacity: 1 !important;
+    display: block !important;
+}
+*/
+
 .dx-tooltip-wrapper .dx-overlay-content {
   border: 1px solid #ddd;
   background-color: #fff;
@@ -6464,7 +6471,7 @@
 }
 .dx-form-group-with-caption > .dx-form-group-content {
   border-top: 1px solid #ddd;
-  padding-bottom: 10px;
+  padding-bottom: 5px;
 }
 .dx-field-item-help-text,
 .dx-field-item-label-text {

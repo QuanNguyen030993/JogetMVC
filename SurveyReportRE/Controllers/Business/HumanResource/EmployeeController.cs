@@ -5,6 +5,7 @@ using ERPCore.Models.Migration.Business.Config;
 using ERPCore.Models.Migration.Business.HumanResource;
 using System.Dynamic;
 using System.Text.RegularExpressions;
+using Microsoft.Data.SqlClient;
 
 [Route("api/[controller]/[action]")]
 [ApiController]
@@ -20,6 +21,112 @@ public class EmployeeController : BaseControllerApi<Employee>
         _configuration = configuration;
         _usersRepository = new BaseRepository<Users>(configuration, httpContextAccessor);
     }
+    [HttpGet]
+    public async Task<IActionResult> GetAssignableByGroup(string group, bool excludeCurrent = true, string keyword = "")
+    {
+        var currentLogin = (User?.Identity?.Name ?? "").Trim();
+
+        List<Employee> data = await _BaseRepository.GetListObject(l => l.Department == group);
+
+        if (excludeCurrent)
+        {
+            data = data.Where(x =>
+                !string.Equals(x.AccountName?.Trim(), currentLogin, StringComparison.OrdinalIgnoreCase) 
+            ).ToList();
+        }
+        //data.ForEach(async em => em = await _BaseRepository.ObjectSpecificInclude(em, em => em.UsersFK));
+            
+        return Ok(new
+        {
+            success = true,
+            data = data
+        });
+    }
+    [HttpGet("{id}")]
+    public async Task<IActionResult> EmployeeLookup(string id)
+    {
+        var loginName = (User?.Identity?.Name ?? "").Trim().ToLower();
+
+        Employee data = await _BaseRepository.GetSingleObject(x =>
+                       x.AccountName == id 
+                   );
+        //var emp = await _db.Employee
+        //    .AsNoTracking()
+        //    .Where(x => !x.Deleted && x.Id == id)
+        //    .Select(x => new
+        //    {
+        //        id = x.Id,
+        //        employeeCode = x.EmployeeCode,
+        //        fullName = x.FullName,
+        //        group = x.Group,
+        //        displayName = x.FullName + " (" + x.EmployeeCode + ")"
+        //    })
+        //    .FirstOrDefaultAsync();
+
+        if (data == null)
+        {
+            return Ok(new { success = false, message = "Employee not found" });
+        }
+
+        return Ok(new { success = true, data = data });
+    }
+    [HttpGet]
+    public async Task<IActionResult> GetMyAssigneeProfile()
+    {
+        var loginName = (User?.Identity?.Name ?? "").Trim().ToLower();
+
+        List<Employee> data = await _BaseRepository.GetListObject(x =>
+
+                       (x.AccountName ?? "").ToLower() == loginName 
+                   );
+          Employee emp =  data.Select(x => new Employee
+            {
+                Id = x.Id,
+              FullName = x.FullName,
+              AccountName = x.AccountName,
+              Department = x.Department
+            })
+            .FirstOrDefault();
+
+        if (emp == null)
+        {
+            return Ok(new { success = false, message = "Current employee not found" });
+        }
+
+        return Ok(new { success = true, data = emp });
+    }
+
+    //[HttpGet("{dept}")]
+    //public async Task<ActionResult<Employee>> AssigneeList(string dept)
+    //{
+    //    //var requestParams = HttpContext.Request.Query.ToList();
+    //    //IDictionary<string, object> dynamicObj = new ExpandoObject { };
+    //    //foreach (var item in requestParams)
+    //    //{
+    //    //    dynamicObj[item.Key] = item.Value;
+    //    //}
+    //    //var Base = await _BaseRepository.GetAll();
+
+    //    //if (dynamicObj.ContainsKey("key"))
+    //    //{
+    //    //    var obj = dynamicObj["key"];
+    //    //    int result = 0;
+    //    //    int.TryParse(obj.ToString(), out result);
+    //    //    if (result != 0)
+    //    //        Base = await _BaseRepository.GetManyObjectByIdAsync(int.Parse(obj.ToString()));
+    //    //    else
+    //    //        Base = Base.Where(s => s.FullName.ToString() == (obj.ToString() ?? "")).ToList();
+
+
+    //    //}
+    //    //if (Base == null)
+    //    //{
+    //    //    return NotFound();
+    //    //}
+    //    List<Employee> Base = new List<Employee>();
+    //    Base = await _BaseRepository.GetListObject(o => o.Department == dept);
+    //    return Ok(Base);
+    //}
 
     [HttpGet]
     public override async Task<ActionResult<Employee>> DropDownLookup()
@@ -60,7 +167,6 @@ public class EmployeeController : BaseControllerApi<Employee>
         List<Users> users = new List<Users>();
         users = await _usersRepository.GetAll();
         //users = users.Where(w => Regex.IsMatch(w.name, @"\sRE$")).ToList();
-        users = users.Where(w => w.department == "RE").ToList();
 
         List<Employee> employees = new List<Employee>();
         employees = await _BaseRepository.GetAll();

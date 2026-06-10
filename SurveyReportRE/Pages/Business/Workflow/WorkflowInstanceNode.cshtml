@@ -1,0 +1,11 @@
+﻿@page
+@model WorkflowInstanceNodeModel
+@{
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@WorkflowInstanceNodeModel.ModelName`), new WorkflowInstanceNodeGridOption('@WorkflowInstanceNodeModel.ModelName'), null);
+    });
+</script>
+<div id="dataGrid_@WorkflowInstanceNodeModel.ModelName"></div>

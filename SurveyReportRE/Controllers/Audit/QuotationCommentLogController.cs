@@ -1,0 +1,194 @@
+﻿using DocumentFormat.OpenXml.Office2013.Excel;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using ERPCore.Controllers.Base;
+using ERPCore.Models.Migration.Business.Config;
+using System.Data;
+using ERPCore.ControllerUtil;
+using ERPCore.Common;
+using System.Net;
+using ERPCore.Models.Base;
+using DocumentFormat.OpenXml.Wordprocessing;
+using System.Text.RegularExpressions;
+using MimeKit;
+using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.SharePoint.Taxonomy.WebServices;
+using ERPCore.Models;
+using ERPCore.Models.Business.Migration.Config;
+using System.Dynamic;
+
+[ApiController]
+[Route("api/[controller]/[action]")]
+public class QuotationCommentLogController : BaseControllerApi<QuotationCommentLog>
+{
+    private readonly IBaseRepository<QuotationCommentLog> _BaseRepository;
+    private readonly IConfiguration configuration;
+    private readonly IBaseRepository<Survey> _surveyRepository;
+    private readonly IBaseRepository<ERPCore.Models.Migration.Business.Data.Attachment> _attachmentRepository;
+    private readonly IBaseRepository<Users> _usersRepository;
+    private readonly IConfigurationSection path;
+    private readonly Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> _blobStorageSettings;
+    private static string Query;
+    public QuotationCommentLogController(IBaseRepository<QuotationCommentLog> BaseRepository
+        , IConfiguration config
+        , IHttpContextAccessor httpContextAccessor
+        , ILogger<QuotationCommentLog> logger
+        , Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> blobStorageSettings
+        ) : base(BaseRepository, httpContextAccessor
+            )
+    {
+        configuration = config;
+        _BaseRepository = BaseRepository;
+        _attachmentRepository = new BaseRepository<ERPCore.Models.Migration.Business.Data.Attachment>(configuration, _httpContextAccessor);
+        _usersRepository = new BaseRepository<Users>(configuration, _httpContextAccessor);
+        path = _BaseRepository._baseConfiguration.GetSection("BlobStorage:Path");
+        _blobStorageSettings = blobStorageSettings;
+    }
+
+    //[HttpPost]
+    //public override async Task<object> ExecuteCustomQuery([FromBody] string query)
+    //{
+    //    List<Dictionary<string, object>> obj = new List<Dictionary<string, object>>();
+    //    if (Query != query && !query.Contains("@"))
+    //    {
+    //        Query = query;
+    //    }
+
+    //    var controllerName = ControllerContext.RouteData.Values["controller"]?.ToString();
+    //    BaseRepository<SysTable> sysTableRepo = new BaseRepository<SysTable>(_BaseRepository._baseConfiguration, _httpContextAccessor);
+    //    SysTable sysTable = await sysTableRepo.GetSingleObject(s => s.Name == controllerName);
+
+    //    var requestParams = HttpContext.Request.Query.ToList();
+    //    IDictionary<string, object> dynamicObj = new ExpandoObject { };
+    //    foreach (var item in requestParams)
+    //    {
+    //        dynamicObj[item.Key] = item.Value;
+    //    }
+    //    var Base = new List<QuotationCommentLog>();
+    //    if (requestParams != null && requestParams.Count > 0)
+    //    {
+    //        if (dynamicObj.ContainsKey("key"))
+    //        {
+    //            var built = Util.LoadParamsBuildCustomQuery<object>(
+    //                baseQuery: sysTable.CustomQuery,
+    //                loadParams: requestParams,
+    //                defaultOrderBy: "CommentId",
+    //                defaultOrderDir: "DESC",
+    //                pkTieBreaker: "CommentId",
+    //                mainTableAlias: null,
+    //                allowedColumns: new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    //                {
+    //                            "Id",
+    //                            "Guid",
+    //                            "CreatedBy",
+    //                            "CreatedDate",
+    //                            "Deleted"
+    //                }
+    //            );
+    //            sysTable.CustomQuery = built.Sql;
+    //            return obj = await _BaseRepository.ExecuteCustomLogQuery(sysTable.CustomQuery, built.Parameters);
+    //        }
+    //    }
+    //    obj = await _BaseRepository.ExecuteCustomLogQuery(sysTable.CustomQuery);
+
+    //    return obj;
+    //}
+
+    [HttpPost]
+    public override async Task<object> ExecuteCustomQuery([FromBody] string query)
+    {
+        List<Dictionary<string, object>> obj = new List<Dictionary<string, object>>();
+        if (Query != query && !string.IsNullOrWhiteSpace(query) && !query.Contains("@"))
+        {
+            Query = query;
+        }
+        var controllerName = ControllerContext.RouteData?.Values["controller"]?.ToString() ?? "QuotationCommentLog";
+        BaseRepository<SysTable> sysTableRepo = new BaseRepository<SysTable>(_BaseRepository._baseConfiguration, _httpContextAccessor);
+        SysTable sysTable = await sysTableRepo.GetSingleObject(s => s.Name == controllerName);
+      
+
+        var rawRequestParams = _httpContextAccessor.HttpContext.Request.Query.ToList();
+        // Chuẩn hóa:
+        // - cặp đầu tiên refField/refKey => refField/refKey
+        // - các cặp sau => điều kiện AND
+        var normalizedParams = Util.NormalizeRefParams(rawRequestParams);
+        IDictionary<string, object> dynamicObj = new ExpandoObject();
+        foreach (var item in rawRequestParams)
+        {
+            dynamicObj[item.Key] = item.Value;
+        }
+        if (rawRequestParams != null && rawRequestParams.Count > 0)
+        {
+            if (dynamicObj.ContainsKey("refKey") || dynamicObj.ContainsKey("key"))
+            {
+                var built = Util.LoadParamsBuildCustomQuery<object>(
+                    baseQuery: query == "OnSystem" ? sysTable.CustomQuery : Query,
+                    loadParams: normalizedParams,
+                    defaultOrderBy: "CommentId",
+                    defaultOrderDir: "DESC",
+                    pkTieBreaker: "CommentId",
+                    mainTableAlias: null,
+                    allowedColumns: new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                    {
+                   "Id",
+                   "Guid",
+                   "CreatedBy",
+                   "CreatedDate",
+                   "Deleted",
+                   "FromDepartment",
+                   "ToDepartment",
+                   "CommentType",
+                   "CommentBy",
+                   "CommentText",
+                   "QuotationId",
+                   "CommentId"
+                    }
+                );
+
+              
+
+                sysTable.CustomQuery = built.Sql;
+                return await _BaseRepository.ExecuteCustomLogQuery(built.Sql, built.Parameters);
+            }
+        }
+        obj = await _BaseRepository.ExecuteCustomLogQuery(query == "OnSystem" ? sysTable.CustomQuery : Query);
+        return obj;
+    }
+
+
+    public async Task BulkInsertQuotationCommentLogAsync(List<QuotationCommentLog> data)
+    {
+        var dt = new DataTable();
+
+        // Khởi tạo cột (phải khớp DB)
+        foreach (var prop in typeof(QuotationCommentLog).GetProperties())
+        {
+            dt.Columns.Add(prop.Name, typeof(string));
+        }
+
+        // Gán dữ liệu
+        foreach (var item in data)
+        {
+            var row = dt.NewRow();
+            foreach (var prop in typeof(QuotationCommentLog).GetProperties())
+            {
+                row[prop.Name] = prop.GetValue(item) ?? DBNull.Value;
+            }
+            dt.Rows.Add(row);
+        }
+
+        // Bulk insert
+        using var connection = new SqlConnection(_BaseRepository._connectionString);
+        await connection.OpenAsync();
+        using var bulkCopy = new SqlBulkCopy(connection)
+        {
+            DestinationTableName = "dbo.QuotationCommentLog", // Đảm bảo đúng tên bảng
+            BulkCopyTimeout = 60
+        };
+
+        await bulkCopy.WriteToServerAsync(dt);
+    }
+
+
+
+}

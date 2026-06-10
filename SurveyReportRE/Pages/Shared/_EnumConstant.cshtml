@@ -1,0 +1,32 @@
+﻿
+<script>
+      var _enums = {
+      assignmentMode: [
+        // { id: "auto", text: "Auto route (recommended)" },
+        { id: "later", text: "Assign later" },
+        { id: "manual", text: "Manual assign" }
+      ],
+      teamOrRole: [
+        { id: "TS", text: "Marketing TS" },
+        { id: "UW", text: "Underwriting" }
+      ],
+      assignee: [
+        // { accountName: "admin", fullName: "Admin admin" },
+        // { accountName: "hien.ttt", fullName: "To Thi Thu Hien" },
+        // { accountName: "accpentest", fullName: "accpentest test" }
+      ],
+      requestType: [],
+      BusinessChannel: [],
+      reInsuranceType: [],
+      BranchOffice: [],
+      OverallStatus: [],
+      reInsuranceType: []
+    };
+
+
+    $.each(_enums, function(index, item) {
+    if (!item.length)
+            ajaxGet(`/api/EnumData/FetchEnum/${index}`).done(res => {if (res) _enums[index] = res;
+        });
+    });
+</script>

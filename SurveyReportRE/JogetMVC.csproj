@@ -13,10 +13,14 @@
 		<Compile Remove="Controllers\RiskEvaluationController .cs" />
 		<Compile Remove="Controllers\SurveyResultStatusController.cs" />
 		<Compile Remove="Controllers\UWSurveyController.cs" />
+		<Compile Remove="Pages\Business\Form\PolicyIssuance_Individual_Form.cshtml.cs" />
+		<Compile Remove="Pages\Business\Form\Quotation_Individual_Form.cshtml.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <Content Remove="App.config" />
+	  <Content Remove="Pages\Business\Form\PolicyIssuance_Individual_Form.cshtml" />
+	  <Content Remove="Pages\Business\Form\Quotation_Individual_Form.cshtml" />
 	  <Content Remove="wwwroot\css\app\menu.css" />
 	  <Content Remove="wwwroot\css\app\site.less.css" />
 	</ItemGroup>
@@ -55,8 +59,6 @@
 	<ItemGroup>
 		<Folder Include="Controllers\Development\" />
 		<Folder Include="Pages\Business\ExportData\" />
-		<Folder Include="Pages\Business\Form\Popup\" />
-		<Folder Include="Pages\Business\Form\SurveyDetail\" />
 		<Folder Include="Pages\Business\LCForm\LossControlDetail\" />
 		<Folder Include="Template\" />
 		<Folder Include="wwwroot\js\scripts\" />
@@ -69,13 +71,85 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\RESurveyTool.Common\JogetMVC.Common.csproj" />
 	  <ProjectReference Include="..\RESurveyTool.Models\JogetMVC.Models.csproj" />
+	  <ProjectReference Include="..\TMIVHashing\TMIVHashing.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Compile Update="Properties\Resources.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>Resources.resx</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Update="Pages\Business\Form\PolicyIssuanceDetail\_PolicyIssuance_FO_Form_Footer - Copy.cshtml">
+		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+		<Content Update="Pages\Business\Form\PolicyIssuanceDetail\_PolicyIssuance_LMKT_Form_Footer - Copy.cshtml">
+		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+		<Content Update="Pages\Business\Form\PolicyIssuanceDetail\_PolicyIssuance_PM_Form_Footer - Copy.cshtml">
+		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+		<Content Update="Pages\Business\Form\PolicyIssuanceDetail\_PolicyIssuance_TS_Form_Footer - Copy.cshtml">
+		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+		<Content Update="Pages\Business\Form\PolicyIssuanceDetail\_PolicyIssuance_UW_Form_Footer - Copy.cshtml">
+		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+		<Content Update="Pages\Business\Form\PolicyIssuance.cshtml">
+		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+		<Content Update="Pages\Business\Form\QuotationDetail\_Quotation_LMKT_Form_Footer.cshtml">
+		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+		<Content Update="Pages\Business\Form\QuotationDetail\_Quotation_FO_Form_Header.cshtml">
+		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+		<Content Update="Pages\Business\Form\PolicyIssuance_Form.cshtml">
+		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+		<Content Update="Pages\Business\Workflow\DrawCanvas_Form.cshtml">
+		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+		<Content Update="Pages\Config\SLA.cshtml">
+		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+		<Content Update="Pages\Config\ErrorBrowserDetails.cshtml">
+		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
 		<Content Update="Pages\DemoLibs.cshtml">
 		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
 		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 		</Content>
+		<Content Update="Pages\Shared\_EnumConstant.cshtml">
+		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+		<Content Update="Pages\Shared\_AppUtil.cshtml">
+		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Update="Properties\Resources.resx">
+	    <Generator>ResXFileCodeGenerator</Generator>
+	    <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+	  </EmbeddedResource>
 	</ItemGroup>
 
 	<ProjectExtensions>

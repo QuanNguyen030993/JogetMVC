@@ -2,28 +2,34 @@
     constructor(gridConfig, container, mGridOption) {
         try {
             this.ImportType = "default";
-            this.refId = 0;
+            this.refKey = 0;
             this.refField = "Id";
+            this.refOperator = "=";
+            //= Bằng <> Khác > Lớn hơn >= Lớn hơn hoặc bằng < Nhỏ hơn <= Nhỏ hơn hoặc bằng
+            //contains Chuỗi có chứa notcontains Chuỗi không chứa startswith Bắt đầu với endswith Kết thúc với
+            //! Phủ định and Và or Hoặc
             this.isAllowRowMenu = true;
+            
+            // Layout editor mode properties
+            this.isEditLayoutMode = false;
+            this.gridIndexVisible = {}; // Stores visible column indexes
+            this.originalColumnOrder = []; // Stores original column order
+            
             //Note: 
             //refField correct in best practices column
             if (mGridOption) {
                 if (mGridOption.mGridDetailOption != null || mGridOption.mGridDetailOption != undefined)
                     this.mGridDetailOption = mGridOption.mGridDetailOption;
-                if (mGridOption.filterRefId != null || mGridOption.filterRefId != undefined)
-                    this.refId = mGridOption.filterRefId;
-                if (mGridOption.filterRefField != null || mGridOption.filterRefField != undefined) 
-                    this.refField = mGridOption.filterRefField;
-                if (mGridOption.filterRefId2 != undefined)
-                    this.refId2 = mGridOption.filterRefId2;
-                if (mGridOption.filterRefField2 != undefined)
-                    this.refField2 = mGridOption.filterRefField2;
+                referenceMaking(this, mGridOption);
                 if (mGridOption.isAllowRowMenu != null || mGridOption.isAllowRowMenu != undefined)
                     this.isAllowRowMenu = mGridOption.isAllowRowMenu;
                 if (mGridOption.allowBuildOption != null || mGridOption.allowBuildOption != undefined)
                     this.allowBuildOption = mGridOption.allowBuildOption;
                 if (mGridOption.gridEditorOptions != null || mGridOption.gridEditorOptions != undefined)
                     this.gridEditorOptions = mGridOption.gridEditorOptions;
+                if (mGridOption.enableEditLayoutMode != null || mGridOption.enableEditLayoutMode != undefined)
+                    this.enableEditLayoutMode = mGridOption.enableEditLayoutMode;
+                this.enableEditLayoutMode = true;
                 this.mGridOption = mGridOption;
             }
             else
@@ -40,19 +46,282 @@
         }
     };
 
-    renderGrid() {
-        try {
-            var that = this;
-            if (!that.mGridOption.allowBuildOption)
-                this.component = this.container.dxDataGrid(that.mGridOption.getGridOptions(null)).dxDataGrid("instance");
-            else 
-                this.component = this.container.dxDataGrid(that.mGridOption.getGridOptions(that.mGridOption)).dxDataGrid("instance");
+    //renderGrid() {
+    //    try {
+    //        var that = this;
+    //        // Set reference to MGrid instance for MGridOption to use
+    //        this.mGridOption.mGridInstance = this;
 
-            return this.component;
-        } catch (err) {
-            appErrorHandling('Library error: call renderGrid was failed.', err);
+    //        if (!that.mGridOption.allowBuildOption)
+    //            this.component = this.container.dxDataGrid(that.mGridOption.makeGridOptions(null)).dxDataGrid("instance");
+    //        else
+    //            this.component = this.container.dxDataGrid(that.mGridOption.makeGridOptions(that.mGridOption)).dxDataGrid("instance");
+
+    //        // Initialize grid index visible
+    //        this.updateGridIndexVisible();
+    //        return this.component;
+    //    } catch (err) {
+    //        appErrorHandling('Library error: call renderGrid was failed.', err);
+    //    }
+    //};
+
+    renderGrid() {
+
+        try {
+
+            var that = this;
+
+            // Set reference
+            this.mGridOption.mGridInstance = this;
+
+            var buildOptionPromise =
+                !that.mGridOption.allowBuildOption
+                    ? that.mGridOption.makeGridOptions(null)
+                    : that.mGridOption.makeGridOptions(that.mGridOption);
+
+            buildOptionPromise.then(gridOptions => {
+
+                if (!gridOptions)
+                    return;
+
+                this.component = this.container
+                    .dxDataGrid(gridOptions)
+                    .dxDataGrid("instance");
+
+                // Initialize grid index visible
+                this.updateGridIndexVisible();
+
+            }).catch(err => {
+
+                appErrorHandling(
+                    'Library error: renderGrid async failed.',
+                    err
+                );
+            });
+
         }
-    };
+        catch (err) {
+
+            appErrorHandling(
+                'Library error: call renderGrid was failed.',
+                err
+            );
+        }
+    }
+
+    /**
+     * Toggle edit layout mode - enables/disables column reordering
+     */
+    toggleEditLayoutMode() {
+        try {
+            this.isEditLayoutMode = !this.isEditLayoutMode;
+            
+            if (this.component) {
+                this.component.option('allowColumnReordering', this.isEditLayoutMode);
+                this.component.option('allowColumnResizing', this.isEditLayoutMode);
+                this.component.option('columnResizingMode', this.isEditLayoutMode ? 'widget' : 'nextColumn');
+                
+                // Apply visual style to indicate edit mode
+                if (this.isEditLayoutMode) {
+                    this.container.addClass('mgrid-edit-layout-mode');
+                    appNotifyInfo('Grid layout editing mode enabled');
+                } else {
+                    this.container.removeClass('mgrid-edit-layout-mode');
+                    this.saveLayoutConfiguration();
+                    appNotifyInfo('Grid layout editing mode disabled. Layout saved.');
+                }
+            }
+            
+            return this.isEditLayoutMode;
+        } catch (err) {
+            appErrorHandling('Library error: call toggleEditLayoutMode was failed.', err);
+        }
+    }
+
+    /**
+     * Update gridIndexVisible based on current visible columns order from array elements
+     */
+    updateGridIndexVisible() {
+        //try {
+        //    if (!this.component) return;
+
+        //    // Get columns from the component's column array (actual order in DOM)
+        //    const columns = this.component.option('columns');
+        //    this.gridIndexVisible = {};
+
+        //    // Filter visible columns and assign index based on their position in the array
+        //    let visibleIndex = 0;
+        //    columns.forEach((col, arrayIndex) => {
+        //        if (col && col.dataField && col.visible !== false) {
+        //            this.gridIndexVisible[col.dataField] = visibleIndex;
+        //            visibleIndex++;
+        //        }
+        //    });
+
+        //    console.log('Grid Index Visible Updated from array order:', this.gridIndexVisible);
+        //} catch (err) {
+        //    appErrorHandling('Library error: call updateGridIndexVisible was failed.', err);
+        //}
+    }
+
+    /**
+     * Get current gridIndexVisible configuration
+     */
+    getGridIndexVisible() {
+        return this.gridIndexVisible;
+    }
+
+    /**
+     * Set gridIndexVisible and apply column order
+     */
+    setGridIndexVisible(indexConfig) {
+        try {
+            if (!this.component || !indexConfig) return;
+            
+            this.gridIndexVisible = indexConfig;
+            
+            // Apply the new column order
+            const columns = this.component.getVisibleColumns();
+            const sortedColumns = columns.sort((a, b) => {
+                const indexA = indexConfig[a.dataField] !== undefined ? indexConfig[a.dataField] : 999;
+                const indexB = indexConfig[b.dataField] !== undefined ? indexConfig[b.dataField] : 999;
+                return indexA - indexB;
+            });
+            
+            sortedColumns.forEach((col, index) => {
+                col.visibleIndex = index;
+            });
+            
+            this.component.refresh();
+        } catch (err) {
+            appErrorHandling('Library error: call setGridIndexVisible was failed.', err);
+        }
+    }
+
+    /**
+     * Save layout configuration to localStorage and server
+     */
+    saveLayoutConfiguration() {
+        try {
+            const configKey = `mgrid_layout_${this.mGridOption.ModelName}`;
+            const layoutConfig = {
+                gridIndexVisible: this.gridIndexVisible,
+                timestamp: new Date().toISOString()
+            };
+            localStorage.setItem(configKey, JSON.stringify(layoutConfig));
+            console.log('Layout configuration saved to localStorage:', configKey);
+
+            // Save to server via API
+            this.saveLayoutToServer(this.gridIndexVisible);
+        } catch (err) {
+            appErrorHandling('Library error: call saveLayoutConfiguration was failed.', err);
+        }
+    }
+
+    /**
+     * Save layout configuration to server (database)
+     */
+    saveLayoutToServer(gridVisibleIndexConfig) {
+        try {
+            $.ajax({
+                url: '/api/DataGridConfig/UpdateGridVisibleIndex',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(gridVisibleIndexConfig),
+                success: function(result) {
+                    if (result.success) {
+                        appNotifyInfo(`Grid layout saved successfully (${result.updatedCount} columns updated)`);
+                        //console.log('Layout configuration saved to server:', result);
+                    } else {
+                        console.warn('Server response:', result);
+                    }
+                },
+                error: function(err) {
+                    console.error('Failed to save layout to server:', err);
+                    appErrorHandling('Failed to save grid layout to server', err);
+                }
+            });
+        } catch (err) {
+            appErrorHandling('Library error: call saveLayoutToServer was failed.', err);
+        }
+    }
+
+    /**
+     * Load layout configuration from server
+     */
+    loadLayoutFromServer(sysTableId = null) {
+        try {
+            const url = sysTableId 
+                ? `/api/DataGridConfig/GetGridVisibleIndex?sysTableId=${sysTableId}`
+                : '/api/DataGridConfig/GetGridVisibleIndex';
+
+            $.ajax({
+                url: url,
+                method: 'GET',
+                dataType: 'json',
+                success: function(result) {
+                    if (result.success && result.data) {
+                        this.setGridIndexVisible(result.data);
+                        appNotifyInfo(`Grid layout loaded from server (${result.count} columns)`);
+                        //console.log('Layout configuration loaded from server:', result.data);
+                    } else {
+                        //console.warn('No layout configuration found on server');
+                    }
+                }.bind(this),
+                error: function(err) {
+                    console.error('Failed to load layout from server:', err);
+                    // Continue with localStorage fallback
+                }
+            });
+        } catch (err) {
+            appErrorHandling('Library error: call loadLayoutFromServer was failed.', err);
+        }
+    }
+
+    /**
+     * Load layout configuration from localStorage and server
+     */
+    loadLayoutConfiguration() {
+        try {
+            // First try to load from server
+            this.loadLayoutFromServer();
+
+            // Fallback to localStorage if server load fails
+            const configKey = `mgrid_layout_${this.mGridOption.ModelName}`;
+            const savedConfig = localStorage.getItem(configKey);
+            
+            if (savedConfig) {
+                const layoutConfig = JSON.parse(savedConfig);
+                if (layoutConfig.gridIndexVisible) {
+                    this.setGridIndexVisible(layoutConfig.gridIndexVisible);
+                    //console.log('Layout configuration loaded from localStorage:', configKey);
+                }
+            }
+        } catch (err) {
+            appErrorHandling('Library error: call loadLayoutConfiguration was failed.', err);
+        }
+    }
+
+    /**
+     * Reset layout to default configuration
+     */
+    resetLayoutToDefault() {
+        try {
+            const configKey = `mgrid_layout_${this.mGridOption.ModelName}`;
+            localStorage.removeItem(configKey);
+            
+            if (this.component) {
+                this.component.refresh();
+                this.updateGridIndexVisible();
+                appNotifyInfo('Grid layout reset to default');
+            }
+        } catch (err) {
+            appErrorHandling('Library error: call resetLayoutToDefault was failed.', err);
+        }
+    }
+
+   
+
 };
 var MGridOption = class MGridOption {
     constructor(modelName, gridType, gridConfig) {
@@ -60,14 +329,7 @@ var MGridOption = class MGridOption {
         this.ModelName = modelName;
         if (gridConfig) {
             this.mGridDetailOption = gridConfig;
-            if (gridConfig.filterRefId != null || gridConfig.filterRefId != undefined)
-                this.filterRefId = gridConfig.filterRefId;
-            if (gridConfig.filterRefField != null || gridConfig.filterRefField != undefined)
-                this.filterRefField = gridConfig.filterRefField;
-            if (gridConfig.filterRefId2 != undefined)
-                this.filterRefId2 = gridConfig.filterRefId2;
-            if (gridConfig.filterRefField2 != undefined)
-                this.filterRefField2 = gridConfig.filterRefField2;
+            referenceMaking(this, gridConfig);
             if (gridConfig.height != undefined)
                 this.height = gridConfig.height;
         }
@@ -137,7 +399,6 @@ var MGridOption = class MGridOption {
                     }
                 }
                 if (fieldConfigs == null) return;
-
                 //apply populate cell value from DropDown
                 if (populateDataConfigs != null) {
                     var populateDataConfig = populateDataConfigs.find(x => x.srcFieldName == fc.dataField);
@@ -149,11 +410,11 @@ var MGridOption = class MGridOption {
                             editor = that.editors[this.srcFieldName];
                             if (editor != null) {
                                 // drop down box
-                                if (editor.value != null && value != null) {
-                                    if (editor.seletedData != null) {
-                                        var seleteddata = editor.seletedData[0];
+                                if (editor.NAME == "dxDropDownBox" && value != null) {
+                                    if (editor.selectedItem != null) {
+                                        var selectedData = editor.selectedItem[0];
                                         $.each(this.desFieldNames, function (i, dFieldName) {
-                                            var selectedValue = seleteddata[dFieldName.DrFieldName];
+                                            var selectedValue = selectedData[dFieldName.DrFieldName];
                                             //if (selectedValue == undefined)
                                             //    selectedValue = dFieldName.DrFieldName;
                                             newData[dFieldName.FieldName] = selectedValue;
@@ -161,7 +422,7 @@ var MGridOption = class MGridOption {
                                     }
                                 }
                                 // select box
-                                else if (editor.option("displayValue") != null && value != null) {
+                                else if (editor.NAME == "dxSelectBox" && editor.option("displayValue") != null && value != null) {
                                     $.each(this.desFieldNames, function (i, dFieldName) {
                                         newData[dFieldName.FieldName] = editor.option("displayValue");
                                     });
@@ -262,6 +523,31 @@ var MGridOption = class MGridOption {
                 }
             }
         });
+
+        // Add Edit Layout button (always visible)
+        e.toolbarOptions.items.unshift({
+            location: "after",
+            widget: "dxButton",
+            options: {
+                type: 'default',
+                text: 'Edit Layout',
+                icon: "edit",
+                onClick: function () {
+                    if (that.mGridInstance) {
+                        that.mGridInstance.toggleEditLayoutMode();
+                        // Update button appearance
+                        if (that.mGridInstance.isEditLayoutMode) {
+                            $(this).dxButton('instance').option('type', 'success');
+                            $(this).dxButton('instance').option('text', 'Exit Layout Edit');
+                        } else {
+                            $(this).dxButton('instance').option('type', 'default');
+                            $(this).dxButton('instance').option('text', 'Edit Layout');
+                        }
+                    }
+                }
+            }
+        });
+
         if (this.GridConfig)
             if (this.GridConfig.toolbarItemsConfig) {
                 var gridToolBarConfig = JSON.parse(this.GridConfig.toolbarItemsConfig);
@@ -278,23 +564,6 @@ var MGridOption = class MGridOption {
                     }
                 });
             }
-
-
-
-        // import features
-        //e.toolbarOptions.items.push({
-        //    name: "btnImport",
-        //    location: "after",
-        //    widget: "dxButton",
-        //    options: {
-        //        hint: "Import",
-        //        icon: "upload",
-        //        entityName: that.ModelName,
-        //        importType: that.ImportType,
-        //        onClick: that.showImportPopup.bind(this)
-        //    }
-        //});
-
     }
     onEditorPreparing(e) {
         var that = this;
@@ -317,7 +586,7 @@ var MGridOption = class MGridOption {
             appErrorHandling('Library error: call onEditorPrepared was failed.', err);
             console.trace();
         }
-    }
+    } 
     onBeforeSend(operation, ajaxSettings) {
         if (this.queryParams != null)
             $.extend(ajaxSettings.data, { queryParams: this.queryParams });
@@ -409,11 +678,59 @@ var MGridOption = class MGridOption {
     }
 
     onContentReady(e) {
+        //function getRenderedGridWidth(grid) {
+        //    const el = grid.element().get(0);
+        //    console.log(el);
+        //    return Math.ceil(el.getBoundingClientRect().width);
+        //}
+
+        //const grid = e.component;
+        //const renderedWidth = getRenderedGridWidth(grid);
+
+        //const vw = window.innerWidth;
+        ////if (renderedWidth > vw) {
+        //if (renderedWidth > 1600) {
+        //    const host = document.getElementById(this.ModelName);
+        //    if (!host) return;
+        //    //host.style.setProperty('margin-right','var(--collapsed-grid-max-mr)');
+        //    grid.option("width", 1600);
+        //    grid.updateDimensions();
+        //}
+        //stretchColumnsEvenly(e, {
+        //    targetWidth: window.innerWidth - _widthMenuWidth - _rightWindowPadding,
+        //    minWidthEach: 120,
+        //    excludeFields: [
+        //        // nếu bạn có cột action/checkbox riêng và muốn giữ nguyên
+        //        // ví dụ: "Actions", "Select"
+        //    ]
+        //});
+        
+        // Load saved layout configuration
+        if (this.loadLayoutConfiguration) {
+            this.loadLayoutConfiguration();
+        }
     }
 
     onInitialized(e) {
         var that = this;
         that.dataGrid = e.component;
+        
+        // Set up column reordering handler
+        var gridInstance = e.component;
+        var originalOnOptionChanged = gridInstance.option('onOptionChanged');
+        
+        gridInstance.on('optionChanged', function (eventArgs) {
+            if (eventArgs.name === 'columns' && that.isEditLayoutMode) {
+                // Delay update to ensure all column movements are processed
+                setTimeout(function () {
+                    that.updateGridIndexVisible();
+                }, 100);
+            }
+            
+            if (typeof originalOnOptionChanged === 'function') {
+                originalOnOptionChanged(eventArgs);
+            }
+        });
     }
 
     //    onRowValidating(e) {
@@ -445,22 +762,25 @@ var MGridOption = class MGridOption {
 
     onInitNewRow(info) {
         var that = this;
-        if (that.filterRefField) {
-            info.data[that.filterRefField] = that.filterRefId;
+        if (that.refField) {
+            info.data[that.refField] = that.refKey;
         }
-        info.data[this.refField] = this.refId;
-        if (this.filterRefId2 != null || this.filterRefId2 != undefined)
-            info.data[this.filterRefField2] = this.filterRefId2;
+        info.data[this.refField] = this.refKey;
+        if (this.refKey2 != null || this.refKey2 != undefined)
+            info.data[this.refField2] = this.refKey2;
     }
 
-    getGridOptions(mGridConfigInstance = null) {
-        try {
+    async makeGridOptions(mGridConfigInstance = null) {
+        var that = this;
+       that.fromGrid = true;
+       return fetchConfigurationData(that.ModelName, that.gridType, that).then(fetchConfig => {
+           try {
             this.isAllowRowMenu = true;
-            var that = this;
             var summary = new Object();
             var gridEditorOptions = {};
-            var fetchConfig = fetchConfigurationData(that.ModelName, that.gridType);
-            var gridDataSource = makeBasicDataSource(that);
+
+            that.customQuery = fetchConfig?.sysTableConfig?.customQuery ?? "";
+            var gridDataSource = makeBasicDataSource(that, false, that.customQuery != "" ? true : false);
             if (that.mGridDetailOption != null || that.mGridDetailOption != undefined) {
                 if (that.mGridDetailOption.visibleColumns != null || that.mGridDetailOption.visibleColumns != undefined) {
                     fetchConfig.getScheme = fetchConfig.getScheme.filter(field =>
@@ -477,10 +797,14 @@ var MGridOption = class MGridOption {
             }
             this.buildGridColumn(fetchConfig.getScheme);
             this.columns = fetchConfig.getScheme;
-            this.GridConfig = getModelConfig(that.ModelName, false);
+
+
+            this.GridConfig = fetchConfig;//getModelConfig(that.ModelName, false);
             if (that.gridType == "User")
-                this.GridConfig = getModelConfig(that.ModelName);
-            RenderGridElement(fetchConfig.getScheme, that);
+                this.GridConfig = fetchConfig;// getModelConfig(that.ModelName);
+                
+
+
             if (mGridConfigInstance) {
                 if (mGridConfigInstance.gridEditorOptions != null || mGridConfigInstance.gridEditorOptions != undefined)
                     gridEditorOptions = mGridConfigInstance.gridEditorOptions;
@@ -494,7 +818,7 @@ var MGridOption = class MGridOption {
                 }
             }
             if (this.gridEditorOptions != null || this.gridEditorOptions != undefined)
-                  gridEditorOptions = this.gridEditorOptions;
+                gridEditorOptions = this.gridEditorOptions;
             var defaultEditing = new Object();
             var exportConfig = new Object();
             if (fetchConfig.sysTableConfig) {
@@ -531,37 +855,38 @@ var MGridOption = class MGridOption {
                 columnChooser: { allowSearch: true, enabled: true },
                 columnFixing: { enabled: true },
                 sorting: { mode: 'multiple' },
-                rowDragging: {
-                    allowReordering: false,
-                    onReorder: function (e) {
-                        const gridInstance = e.component;
-                        const dataSource = gridInstance.getDataSource();
+                //rowDragging: {
+                //    allowReordering: false,
+                //    onReorder: function (e) {
+                //        const gridInstance = e.component;
+                //        const dataSource = gridInstance.getDataSource();
 
-                        let visibleRows = gridInstance.getVisibleRows();
+                //        let visibleRows = gridInstance.getVisibleRows();
 
-                        const fromIndex = dataSource._items.findIndex((item) => item.id === e.itemData.id);
-                        const toIndex = dataSource._items.findIndex((item) => item.id === visibleRows[e.toIndex].data.id);
+                //        const fromIndex = dataSource._items.findIndex((item) => item.id === e.itemData.id);
+                //        const toIndex = dataSource._items.findIndex((item) => item.id === visibleRows[e.toIndex].data.id);
 
-                        const movedItem = dataSource._items.splice(fromIndex, 1)[0];
-                        dataSource._items.splice(toIndex, 0, movedItem);
+                //        const movedItem = dataSource._items.splice(fromIndex, 1)[0];
+                //        dataSource._items.splice(toIndex, 0, movedItem);
 
-                        const updatedData = dataSource._items.map((item, index) => ({
-                            id: item.id,
-                            rowOrder: index + 1
-                        }));
-                        $.each(updatedData, function (_, row) {
-                            dataSource.store().update(row.id, { rowOrder: row.rowOrder })
-                                .then(() => {
-                                })
-                                .catch(error => console.error("Error updating rowOrder:", error));
-                        });
+                //        const updatedData = dataSource._items.map((item, index) => ({
+                //            id: item.id,
+                //            rowOrder: index + 1
+                //        }));
+                //        $.each(updatedData, function (_, row) {
+                //            dataSource.store().update(row.id, { rowOrder: row.rowOrder })
+                //                .then(() => {
+                //                })
+                //                .catch(error => console.error("Error updating rowOrder:", error));
+                //        });
 
-                        dataSource.reload().then(() => {
-                            gridInstance.refresh();
-                        });
-                    }
-                },
-                keyExpr: "id",
+                //        dataSource.reload().then(() => {
+                //            gridInstance.refresh();
+                //        });
+                //    }
+                //},
+                rowDragging: null,
+                keyExpr: (gridDataSource instanceof DevExpress.data.DataSource || gridDataSource instanceof DevExpress.data.CustomStore) ? null : (fetchConfig?.keyExpr ?? "id"),
                 //scrolling: { mode: 'infinite', showScrollbar: 'always' },
                 scrolling: {
                     mode: 'virtual',
@@ -571,6 +896,7 @@ var MGridOption = class MGridOption {
                 },
                 filterRow: { visible: true },
                 headerFilter: { visible: true, allowSearch: true },
+                remoteOperations: fetchConfig?.sysTableConfig?.customQuery == "OnSystem" ? { paging: false, sorting: false, filtering: false } : null,
                 filterPanel: { visible: true },
                 groupPanel: { visible: true, allowColumnDragging: true, emptyPanelText: "" },
                 grouping: {
@@ -594,7 +920,7 @@ var MGridOption = class MGridOption {
                     //texts: { exportAll: 'Export all', exportSelectedRows: 'Export selected rows', exportTo: 'Export' }
                 },
                 masterDetail: this.masterDetail,
-                width: "100%",//"inherit"
+                width: "inherit", //Change to margin left - right, must be without width, must not set 100% here
                 height: this.height ? this.height : window.innerHeight - 130, // == null ? "inherit"
                 columns: this.columns,
                 customizeColumns: tryExecute(this.onCustomizeColumns.bind(this)),
@@ -618,19 +944,13 @@ var MGridOption = class MGridOption {
                 onInitialized: tryExecute(this.onInitialized.bind(this)),
                 //onRowValidating: tryExecute(this.onRowValidating.bind(this)),
                 onInitNewRow: tryExecute(this.onInitNewRow.bind(this)),
-                getGridOptions: tryExecute(this.getGridOptions.bind(this)),
+                makeGridOptions: tryExecute(this.makeGridOptions.bind(this)),
                 onContextMenuPreparing: tryExecute(this.onContextMenuPreparing.bind(this)),
                 //onDataErrorOccurred: tryExecute(this.onDataErrorOccurred.bind(this))
                 onCellPrepared: tryExecute(this.onCellPrepared.bind(this)),
+                selection: { mode: "single" },
                 //onCellHoverChanged: tryExecute(this.onCellHoverChanged.bind(this)),
-                 //,onRowClick: function (e) {
-                //    if (e.rowType == 'group') {
-                //        if (e.isExpanded)
-                //            e.component.collapseRow(e.key);
-                //        else
-                //            e.component.expandRow(e.key);
-                //    }
-                //}
+                onRowClick: tryExecute(this.onRowClick.bind(this)), 
                 //editing: {
                 //    ...((Object.keys(gridEditorOptions).length > 0) ? gridEditorOptions.edit : defaultEditing.edit)
                 //},
@@ -638,20 +958,22 @@ var MGridOption = class MGridOption {
                 //...(Object.keys(gridEditorOptions).length > 0 ? gridEditorOptions : {})
                 ...((Object.keys(gridEditorOptions).length > 0) ? gridEditorOptions : defaultEditing)
             };
+
             if (!properties.editing.allowAdding && !properties.editing.allowUpdating && !properties.editing.allowDeleting)
                 this.isAllowRowMenu = false;
-            else
-                properties.rowDragging.allowReordering = true;
+            //else
+            //    properties.rowDragging.allowReordering = true;
 
 
             if (that.Params)
                 if (that.Params.isAllowRowMenu)
                     this.isAllowRowMenu = that.Params.isAllowRowMenu;
+                return properties;
 
-            return properties;
         } catch (err) {
             appErrorHandling('Library error: call GetGridOptions was failed.', err);
-        }
+            }
+        });
     };
 
 
@@ -675,32 +997,37 @@ var MGridOption = class MGridOption {
         }).dxPopup("instance");
         popupMGridDetail.show();
     }
-
+    onRowClick(e) {
+        if (e.rowType == 'group') {
+            if (e.isExpanded)
+                e.component.collapseRow(e.key);
+            else
+                e.component.expandRow(e.key);
+        }
+    }
 };
 
 var MDropDownDataSource = class MDropDownDataSource {
+    //Performance check query in need
     constructor() {
         this.queryParams = null;
     }
-    set setQueryParams(queryParams) {
+    setQueryParams(queryParams) {
         this.queryParams = queryParams;
     }
+
     getDropDownDS(key, ApiMethod, customOptions) {
         var that = this;
-        return new DevExpress.data.DataSource({
+
+        return new DevExpress.data.CustomStore({
             key: key,
-            store: new DevExpress.data.CustomStore({
-                loadMode: "raw",
-                key: key,
-                cacheRawData: true
-            }),
+            loadMode: "raw",
             load: function (loadOptions) {
                 var d = $.Deferred();
                 var params = {};
                 var filter = [];
-
-                params.skip = loadOptions.skip;
-                params.take = loadOptions.take;
+                params.skip = customOptions.skip;
+                params.take = customOptions.take;
                 params.sort = loadOptions.sort ? JSON.stringify(loadOptions.sort) : "";
                 params.totalSummary = loadOptions.totalSummary ? JSON.stringify(loadOptions.totalSummary) : "";
                 params.group = loadOptions.group ? JSON.stringify(loadOptions.group) : "";
@@ -708,68 +1035,90 @@ var MDropDownDataSource = class MDropDownDataSource {
                 params.requireTotalCount = loadOptions.requireTotalCount;
                 if (loadOptions.filter != undefined) {
                     filter[0] = loadOptions.filter;
-                    params.filter = JSON.stringify(loadOptions.filter);
+                    params.key = JSON.stringify(loadOptions.filter);
                 }
+
                 if (that.queryParams != null) {
                     params.queryParams = that.queryParams;
                 }
-                //If a user typed something in dxAutocomplete, dxSelectBox or dxLookup
+
                 if (loadOptions.searchValue) {
                     if (filter[0] != undefined) {
                         filter[1] = "and";
                         filter[2] = [loadOptions.searchExpr, loadOptions.searchOperation, loadOptions.searchValue];
-                    } else if (loadOptions.searchValue) {
+                    } else {
                         filter[0] = [loadOptions.searchExpr, loadOptions.searchOperation, loadOptions.searchValue];
                     }
                 }
+
                 if (filter.length > 0) {
                     params.filter = JSON.stringify(filter);
                 }
-                $.ajaxSetup({
-                    async: true
-                });
-                $.getJSON(`${ApiMethod}`, params).done(function (result) {
-                    if (result != undefined) {
-                        if (result.data != null) {
-                            d.resolve(result.data
-                                , {
+                $.getJSON(ApiMethod.replace("DropDownLookUp","GetAll"), params)
+                    .done(function (result) {
+                        if (result != undefined) {
+                            if (result.data != null) {
+                                d.resolve(result.data, {
                                     totalCount: result.totalCount,
                                     summary: result.summary
-                                }
-                            );
+                                });
+                            } else {
+                                d.resolve(result);
+                            }
+                        } else {
+                            d.resolve([]);
                         }
-                        else {
-                            d.resolve(result);
-                        }
-                    } else {
-                        d.resolve();
-                    }
-                });
+                    })
+                    .fail(function (xhr) {
+                        d.reject(xhr);
+                    });
+
                 return d.promise();
             },
 
-            byKey: function (key, ex) {
+            byKey: function (value) {
                 var url = null;
-                if (typeof key === "object") {
-                    key = JSON.stringify(key);
+                if (typeof value === "object") {
+                    value = JSON.stringify(value);
                 }
+
                 if (ApiMethod.indexOf("?") > 0)
-                    url = `${ApiMethod}&key=${key.toString()}`;
+                    url = `${ApiMethod}&key=${encodeURIComponent(value)}`;
                 else
-                    url = `${ApiMethod}?key=${key.toString()}`;
+                    url = `${ApiMethod}?key=${encodeURIComponent(value)}`;
 
                 var d = $.Deferred();
+
                 $.get(url)
                     .done(function (result) {
                         if (result != undefined && result.data != null)
                             d.resolve(result.data[0]);
+                        else if (Array.isArray(result))
+                            d.resolve(result[0]);
                         else
                             d.resolve(result);
+                            //return Array.isArray(result) ? result[0] : result;
+                    })
+                    .fail(function (xhr) {
+                        d.reject(xhr);
                     });
-                return d.promise();
 
+                return d.promise();
             }
-        }
-        );
+        });
     }
+}
+function referenceMaking(item, gridConfig) {
+    if (gridConfig.refKey != null || gridConfig.refKey != undefined)
+        item.refKey = gridConfig.refKey;
+    if (gridConfig.refOperator != null || gridConfig.refOperator != undefined)
+        item.refOperator = gridConfig.refOperator;
+    if (gridConfig.refField != null || gridConfig.refField != undefined)
+        item.refField = gridConfig.refField;
+    if (gridConfig.refKey2 != undefined)
+        item.refKey2 = gridConfig.refKey2;
+    if (gridConfig.refOperator2 != null || gridConfig.refOperator2 != undefined)
+        item.refOperator2 = gridConfig.refOperator2;
+    if (gridConfig.refField2 != undefined)
+        item.refField2 = gridConfig.refField2;
 }

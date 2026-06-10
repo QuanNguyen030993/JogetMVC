@@ -1,0 +1,109 @@
+﻿@using JogetMVC.Model
+@{
+    string dept = "FO";
+    long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
+}
+
+<div class="dept-title">@dept</div>
+<div class="dept-form-header">
+    <div class="dept-form-header__assign">
+        <div id="@QTViewIdHelper.AssigneeBox(dept, quotationId)"></div>
+    </div>
+    <div id="@QTViewIdHelper.BtnToggleResForm(dept,quotationId)"></div>
+</div>
+<div id="@QTViewIdHelper.StickPanel(dept, quotationId)">
+@* <div class="sticky-wrap wobble" data-tooltip-toggle>
+    <div class="pin">
+    </div>
+    <div class="sticky-note"></div>
+    <div class="sticky-badge">1</div>
+    <div class="sticky-mini-text">FROM FO</div>
+    <div class="note-tooltip">
+        <strong>Suggested use</strong><br>
+        Icon này có thể gắn ở header section. Khi section trước có comment hoặc giao việc, chỉ cần bật icon sticky note để tạo điểm nhấn trực quan.
+    </div>
+</div> *@
+</div>
+<div class="dept-hint-wrap">
+    @* <div class="dept-hint" id="qt-hintFO"></div> *@
+    <div class="dept-hint" id="@QTViewIdHelper.Hint(dept, quotationId)"></div>
+    <div class="dept-updated" id="@QTViewIdHelper.Upd(dept, quotationId)" title="Last updated">—</div>
+    @* <div class="dept-updated" id="qt-updFO" title="Last updated">—</div> *@
+    <div id="@QTViewIdHelper.ExpandCollapsedBtn(dept, quotationId)" class="dept-toggle-icon" aria-hidden="true">▾</div>
+</div>
+<script>
+
+     window.QuotationPage.resButtonComponent = $("#@QTViewIdHelper.BtnToggleResForm(dept,quotationId)").dxButton({
+                    text: "Res Form",
+                    icon: "file",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                            var resItems = [
+
+                                 {itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
+            ,
+            editorOptions: {
+            name: "files"
+        }
+        ,template: function (data, itemElement) {
+            setTimeout(function () {
+
+                var item = new Object();
+                item.id = @quotationId;
+                item.guid = "@quotationGuid";
+                item.editorType = "dxFileUploader";
+                item.moduleName = "qt"; item.sectionName = "FO";
+                item.code = window.QuotationPage.state.quotes[0].quotationCode; 
+                item.specificFolder = "RES";
+                createEditor(item, itemElement, $("<div>"), item);
+                }, 1000);
+            }
+
+        }
+        ]}
+       
+    ];
+
+                       var popupInstance = makePopup("large", "Res");
+                        popupInstance.option("contentTemplate", function (container) {
+
+                       var _formConfig = new MFormOption();
+                            _formConfig.originModelName = "Res";
+                            _formConfig.formElementName = "Res";
+                            _formConfig.colCount = 1;
+                            var parentFormData = $("#@QTViewIdHelper.Form(dept,quotationId)").dxForm("instance")?.option("formData");
+                            // _formConfig.container = $(`<div id = "form_${_formConfig.originModelName}_${parentFormData.resId}" style="padding: 10px; margin-right: 0px" >`);
+                            _formConfig.container = $(`<div id = "${window.QuotationIdManager.resForm('RES', parentFormData.resId)}" style="padding: 10px; margin-right: 0px" >`);
+                            var form =  new ResFormQuotationForm(parentFormData.resId, null, _formConfig, _formConfig);
+                           
+                            
+                            // var scrollView = $(`<div>`);
+                            // scrollView.dxScrollView({
+                            //     width: "100%",
+                            //     height: "100%",
+                            //     useNative: false
+                            // });
+                            var scrollView = popupStandardContentByScroll(form.container);
+                            scrollView.appendTo(container);
+                            form.formInstance.option("items", resItems);
+                            form.formInstance.updateData("sectionName", "RES");
+                            form.formInstance.updateData("specificFolder", `RES\\${parentFormData.quotationCode}`);
+                            form.formInstance.updateData("guid", parentFormData.guid);
+
+                    });
+
+
+                     popupInstance.option("toolbarItems[0].options.onClick", function () {
+                           popupInstance.hide();
+                       });
+                       popupInstance.option("toolbarItems[1].options.onClick", function () {
+                           //Cancel
+                           popupInstance.hide();
+                       });
+
+                    popupInstance.show();
+
+                    }
+                    });
+</script>

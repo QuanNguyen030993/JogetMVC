@@ -7,10 +7,21 @@
     $(function () {
         var mGridOption = new Object();
         mGridOption.isAllowRowMenu = true;
+        mGridOption.isShowingRenewButton = true;
+ 
+        mGridOption.refOperator = "contains";
+        mGridOption.refKey = _loginUser;
+
+        mGridOption.refField = "pic";
+        if (_roleAppName == "Leader")
+        mGridOption.refField = "leaderPIC";
+        if (_roleAppName == "HOD")
+        mGridOption.refField = "hodpic";
+        //Pending filterName refactor
         var mGrid = new MGrid(null, $(`#dataGrid_@QuotationModel.ModelName`), new QuotationGridOption('@QuotationModel.ModelName', "User", mGridOption), null);
-        var DS = mGrid.component.getDataSource();
-        DS.filter(["isArchived", "=", null], "or", ["isArchived", "=", false]);
-        mGrid.component.option("dataSource", DS);
+        // var DS = mGrid.component.getDataSource();
+        // DS.filter(["isArchived", "=", null], "or", ["isArchived", "=", false]);
+        // mGrid.component.option("dataSource", DS);
     });
 </script>
 <div id="dataGrid_@QuotationModel.ModelName"></div>

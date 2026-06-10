@@ -1,0 +1,11 @@
+﻿@page
+@model LineModel
+@{
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@LineModel.ModelName`), new LineGridOption('@LineModel.ModelName'), null);
+    });
+</script>
+<div id="dataGrid_@LineModel.ModelName"></div>

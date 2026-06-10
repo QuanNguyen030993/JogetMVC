@@ -48,7 +48,10 @@ public sealed class HttpRequestAuditMiddleware
         _logger = logger;
         _httpContextAccessor = httpContextAccessor;
         _baseConfiguration = config;
-        _connectionString = _baseConfiguration.GetConnectionString("Default" + "Connection");
+        _connectionString = _baseConfiguration.GetConnectionString(ControllerUtil.tmivEnvironment + "Connection");
+        _connectionString = ControllerUtil.ParseConnectionString(_connectionString, config);
+
+
         List<Dictionary<string, object>> resultList = new List<Dictionary<string, object>>();
         using (SqlConnection connection = new SqlConnection(_connectionString))
         {

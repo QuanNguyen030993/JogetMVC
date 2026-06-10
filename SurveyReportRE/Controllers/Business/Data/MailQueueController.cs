@@ -21,6 +21,7 @@ using Syncfusion.Pdf.Graphics;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Net;
+using ERPCore.Models.Migration.Business.Social;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -28,7 +29,7 @@ public class MailQueueController : BaseControllerApi<MailQueue>
 {
     private readonly IBaseRepository<MailQueue> _BaseRepository;
     private readonly IConfiguration configuration;
-    private readonly IBaseRepository<Survey> _surveyRepository;
+    private readonly IBaseRepository<Notification> _notificationRepository;
     private readonly IBaseRepository<Attachment> _attachmentRepository;
     private readonly IBaseRepository<Employee> _employeeRepository;
     private readonly IBaseRepository<Users> _usersRepository;
@@ -47,16 +48,12 @@ public class MailQueueController : BaseControllerApi<MailQueue>
     {
         configuration = config;
         _BaseRepository = BaseRepository;
-        _surveyRepository = new BaseRepository<Survey>(configuration, _httpContextAccessor);
+        _notificationRepository = new BaseRepository<Notification>(configuration, _httpContextAccessor);
         _attachmentRepository = new BaseRepository<Attachment>(configuration, _httpContextAccessor);
         _employeeRepository = new BaseRepository<Employee>(configuration, _httpContextAccessor);
         _usersRepository = new BaseRepository<Users>(configuration, _httpContextAccessor);
         _userRolesRepository = new BaseRepository<UserRoles>(configuration, _httpContextAccessor);
         _rolesRepository = new BaseRepository<Roles>(configuration, _httpContextAccessor);
-        MANAGER_APP = configuration.GetSection("BusinessConfig:ManagerAppKey").Value;
-        APPROVER_APP = configuration.GetSection("BusinessConfig:ApproverAppKey").Value;
-        CHECKER_APP = configuration.GetSection("BusinessConfig:CheckerAppKey").Value;
-        USER_APP = configuration.GetSection("BusinessConfig:UserAppKey").Value;
         SUPER_USER = configuration.GetSection("SuperUser:SuperUser").Value;
         DOMAIN_NAME = configuration.GetSection("Domain:DCServer").Value;
         path = _BaseRepository._baseConfiguration.GetSection("BlobStorage:Path");
@@ -183,7 +180,10 @@ public class MailQueueController : BaseControllerApi<MailQueue>
             mailItem.TextBody = mailQueue.text_body;//mailQueue.HtmlBody;
             mailItem.CC = mailQueue.cc;
             MailUtil.SendEmail(emailSettings, mailItem, attachments).Wait();
-        }
+
+           
+
+}
         catch (Exception ex)
         {
             //throw new CustomException("Resend notify was failed.", ex);

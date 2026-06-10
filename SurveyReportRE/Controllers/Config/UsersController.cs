@@ -15,6 +15,7 @@ using System.Security.Claims;
 using System.Security.Principal;
 using ERPCore.Models.Migration.Business.HumanResource;
 using ERPCore.Common;
+using ERPCore.Models.Migration.Business.MasterData;
 
 namespace ERPCore.Controllers.Config
 {
@@ -44,7 +45,47 @@ namespace ERPCore.Controllers.Config
         [HttpGet]
         public override async Task<ActionResult<Users>> GetAll()
         {
-            var Base = await _BaseRepository.GetAll();
+            var queryParams = HttpContext.Request.Query;
+
+
+
+            // ===== PAGING =====
+            //int skip = 0;
+            //int take = 50;
+
+            //if (queryParams.ContainsKey("skip"))
+            //    int.TryParse(queryParams["skip"], out skip);
+
+            //if (queryParams.ContainsKey("take"))
+            //    int.TryParse(queryParams["take"], out take);
+
+            //take = Math.Clamp(take, 1, 200);
+
+            var requestParams = HttpContext.Request.Query.ToList();
+            IDictionary<string, object> dynamicObj = new ExpandoObject { };
+            foreach (var item in requestParams)
+            {
+                dynamicObj[item.Key] = item.Value;
+            }
+            var Base = new List<Users>();
+
+            if (requestParams.Count > 1)
+            {
+
+            }
+
+            if (dynamicObj.ContainsKey("key"))
+            {
+                var obj = dynamicObj["key"];
+                int result = 0;
+                int.TryParse(obj.ToString(), out result);
+                if (result != 0)
+                    Base = await _BaseRepository.GetManyObjectByIdAsync(int.Parse(obj.ToString()));
+            }
+            else
+            {
+                Base = await _BaseRepository.GetAll(requestParams);
+            }
             string userName = ControllerUtil.ControllerUtil.GetCurrentContextUser(_httpContextAccessor, _configuration);
             if (SUPER_USER.Contains(userName))
                 return Ok(Base);
@@ -63,6 +104,9 @@ namespace ERPCore.Controllers.Config
             return Ok(Base);
         }
 
+
+
+
         [HttpGet]
         public override async Task<ActionResult<Users>> DropDownLookup()
         {//work on form
@@ -74,7 +118,6 @@ namespace ERPCore.Controllers.Config
             }
             var Base = await _BaseRepository.GetAll();
             string userName = ControllerUtil.ControllerUtil.GetCurrentContextUser(_httpContextAccessor, _configuration);
-            Base = Base.Where(w => w.department == "RE" && w.username != userName).ToList();
             if (dynamicObj.ContainsKey("key"))
             {
                 var obj = dynamicObj["key"];

@@ -1,25 +1,63 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
-    @if (!string.IsNullOrEmpty(@ViewData["Title"]?.ToString()))
-    {
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>@ViewData["Title"] - Quotation Management</title>
-@*     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" /> *@
-    
-    @* <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script> *@
-    @* <script src="~/js/site.js" asp-append-version="true"></script> *@
-</head>
-    }
+@if (!string.IsNullOrEmpty(@ViewData["Title"]?.ToString()) && @ViewData["Title"]?.ToString() == "Management")
+{
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>@ViewData["Title"] - Workflow Management</title>
+    </head>
+}
 <body>
+
     @* <div class="container"> *@
-    <main role="main" class="container" class="pb-3">
-            @RenderBody()
-        </main>
+    @if (!string.IsNullOrEmpty(@ViewData["Title"]?.ToString()) && @ViewData["Title"]?.ToString() == "Management")
+    {
+        <nav class="main-sidebar">
+            <section class="sidebar" style="height: auto;">
+                @* <div class="sidebar-form"> *@
+                @* <div class="input-group"> *@
+                @* <input type="text" id="my-search" name="q" class="form-control" placeholder="Search..."> *@
+                @* <span class="input-group-btn">
+            <a href="#" id="remove-search-btn" class="btn btn-flat">
+            <i class="fa fa-remove"></i>
+            </a>
+            </span> *@
+                @* </div> *@
+                @* </div> *@
+                <ul class="sidebar-menu tree" data-widget="tree" id="my-tree">
+                </ul>
+
+            </section>
+        </nav>
+            <main role="main" class="container pb-3">
+                @RenderBody()
+            </main>
+                <aside id="rightCommentDock" class="rightDock">
+                    <div class="dockCard">
+                    <div class="dockHeader">
+                        <div>
+                            <div style="display:flex; position: relative; float: right;">
+                            <span id="headerWidgetsPanel" style="margin-top: -5px;"></span>
+                            <a href="javascript:void(0)" id="btnCloseRightComment" style="margin-left: 10px;" class="fa fa-times close-tab-btn"></a>
+
+                            </div>
+                            <span class="dockTitle"></span>
+                            <span id="rightCommentSub" class="dockSub">-</span>
+                        </div>
+                    </div>
+                <div id="rightCommentList" style="overflow: auto;max-height: 80vh;width:100%">
+
+                </div>
+            </div>
+        </aside>
+    }
+    else {
+        @RenderBody()
+    }
     @* </div> *@
     @* @if (!string.IsNullOrEmpty(@ViewData["Title"]?.ToString())) *@
     @* @await RenderSectionAsync("Scripts", required: false) *@
+    
 </body>
 </html>

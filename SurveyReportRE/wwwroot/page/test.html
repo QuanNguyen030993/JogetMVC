@@ -1,0 +1,420 @@
+<style>
+    body{
+        font-family: Arial;
+        background:#f5f7fb;
+        margin:0;
+        padding:20px;
+    }
+
+    .builder-layout{
+        display:flex;
+        gap:20px;
+        height:90vh;
+    }
+
+    .panel{
+        background:white;
+        border-radius:12px;
+        padding:16px;
+        box-shadow:0 2px 8px rgba(0,0,0,.08);
+        overflow:auto;
+    }
+
+    .left-panel{
+        width:320px;
+    }
+
+    .right-panel{
+        flex:1;
+    }
+
+    .panel-title{
+        font-size:18px;
+        font-weight:bold;
+        margin-bottom:16px;
+    }
+
+    .field-item{
+        padding:12px;
+        border:1px solid #ddd;
+        border-radius:8px;
+        margin-bottom:10px;
+        cursor:pointer;
+        background:#fafafa;
+        transition:.2s;
+    }
+
+    .field-item:hover{
+        background:#eef5ff;
+        border-color:#409eff;
+    }
+
+    .field-item.active{
+        border-color:#409eff;
+        background:#eef5ff;
+    }
+
+    .config-group{
+        margin-bottom:16px;
+    }
+
+    .preview-box{
+        border:1px dashed #bbb;
+        padding:20px;
+        border-radius:12px;
+        background:white;
+    }
+
+    .section-title{
+        font-size:16px;
+        font-weight:bold;
+        margin-bottom:12px;
+    }
+
+    .top-toolbar{
+        display:flex;
+        gap:10px;
+        margin-bottom:16px;
+    }
+
+    .preview-form{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:16px;
+    }
+
+    .preview-field{
+        display:flex;
+        flex-direction:column;
+    }
+
+    .preview-field label{
+        font-size:13px;
+        margin-bottom:6px;
+        color:#555;
+    }
+
+    .preview-field input,
+    .preview-field select{
+        padding:10px;
+        border:1px solid #ccc;
+        border-radius:8px;
+    }
+
+    .badge{
+        display:inline-block;
+        padding:3px 8px;
+        border-radius:20px;
+        background:#eee;
+        font-size:11px;
+        margin-left:6px;
+    }
+
+</style>
+
+<div class="builder-layout">
+
+    <!-- LEFT -->
+    <div class="panel left-panel">
+
+        <div class="panel-title">
+            Form Builder
+        </div>
+
+        <div class="top-toolbar">
+            <button onclick="addField()">+ Add</button>
+            <button onclick="renderPreview()">Refresh</button>
+        </div>
+
+        <div id="fieldList"></div>
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="panel right-panel">
+
+        <div class="panel-title">
+            Runtime Preview
+        </div>
+
+        <div class="preview-box">
+
+            <div class="section-title">
+                Quotation Form
+            </div>
+
+            <div id="previewForm" class="preview-form"></div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+    var formSchema = [
+
+        {
+            id:"clientName",
+            label:"Client Name",
+            editorType:"dxTextBox",
+            visible:true,
+            required:true
+        },
+
+        {
+            id:"requestType",
+            label:"Request Type",
+            editorType:"dxSelectBox",
+            visible:true,
+            required:false
+        },
+
+        {
+            id:"reinsurance",
+            label:"Reinsurance",
+            editorType:"dxTagBox",
+            visible:true,
+            required:false
+        },
+
+        {
+            id:"notes",
+            label:"Notes",
+            editorType:"dxTextArea",
+            visible:true,
+            required:false
+        }
+
+    ];
+
+    var selectedField = null;
+
+    function renderFieldList(){
+
+        var html = "";
+
+        formSchema.forEach((x,index)=>{
+
+            html += `
+                <div 
+                    class="field-item ${selectedField == x.id ? 'active' : ''}"
+                    onclick="selectField('${x.id}')"
+                >
+
+                    <div>
+                        <b>${x.label}</b>
+                    </div>
+
+                    <div style="margin-top:6px;">
+
+                        <span class="badge">
+                            ${x.editorType}
+                        </span>
+
+                        ${x.visible 
+                            ? '<span class="badge">Visible</span>' 
+                            : '<span class="badge">Hidden</span>'
+                        }
+
+                    </div>
+
+                </div>
+            `;
+
+        });
+
+        document.getElementById("fieldList").innerHTML = html;
+
+    }
+
+    function renderPreview(){
+
+        var html = "";
+
+        formSchema
+            .filter(x=>x.visible)
+            .forEach(x=>{
+
+                html += `
+                    <div class="preview-field">
+
+                        <label>
+                            ${x.label}
+                            ${x.required ? '*' : ''}
+                        </label>
+
+                        ${renderEditor(x)}
+
+                    </div>
+                `;
+
+            });
+
+        document.getElementById("previewForm").innerHTML = html;
+
+    }
+
+    function renderEditor(field){
+
+        switch(field.editorType){
+
+            case "dxSelectBox":
+                return `
+                    <select>
+                        <option>Select...</option>
+                    </select>
+                `;
+
+            case "dxTagBox":
+                return `
+                    <select multiple>
+                        <option>Option A</option>
+                        <option>Option B</option>
+                    </select>
+                `;
+
+            case "dxTextArea":
+                return `
+                    <textarea 
+                        style="
+                            padding:10px;
+                            border-radius:8px;
+                            border:1px solid #ccc;
+                            min-height:80px;
+                        "
+                    ></textarea>
+                `;
+
+            default:
+                return `<input type="text"/>`;
+        }
+
+    }
+
+    function selectField(id){
+
+        selectedField = id;
+
+        renderFieldList();
+
+        var field = formSchema.find(x=>x.id == id);
+
+        showConfig(field);
+
+    }
+
+    function showConfig(field){
+
+        var html = `
+            <div style="margin-top:20px;">
+
+                <hr/>
+
+                <h3>Field Config</h3>
+
+                <div class="config-group">
+                    <label>Label</label>
+                    <input 
+                        type="text"
+                        value="${field.label}"
+                        onchange="updateField('${field.id}','label',this.value)"
+                    />
+                </div>
+
+                <div class="config-group">
+                    <label>Editor Type</label>
+
+                    <select 
+                        onchange="updateField('${field.id}','editorType',this.value)"
+                    >
+
+                        <option ${field.editorType=="dxTextBox"?"selected":""}>
+                            dxTextBox
+                        </option>
+
+                        <option ${field.editorType=="dxSelectBox"?"selected":""}>
+                            dxSelectBox
+                        </option>
+
+                        <option ${field.editorType=="dxTagBox"?"selected":""}>
+                            dxTagBox
+                        </option>
+
+                        <option ${field.editorType=="dxTextArea"?"selected":""}>
+                            dxTextArea
+                        </option>
+
+                    </select>
+                </div>
+
+                <div class="config-group">
+
+                    <label>
+                        <input 
+                            type="checkbox"
+                            ${field.visible ? 'checked' : ''}
+                            onchange="updateField('${field.id}','visible',this.checked)"
+                        />
+                        Visible
+                    </label>
+
+                </div>
+
+                <div class="config-group">
+
+                    <label>
+                        <input 
+                            type="checkbox"
+                            ${field.required ? 'checked' : ''}
+                            onchange="updateField('${field.id}','required',this.checked)"
+                        />
+                        Required
+                    </label>
+
+                </div>
+
+            </div>
+        `;
+
+        document.getElementById("fieldList").innerHTML += html;
+
+    }
+
+    function updateField(id,key,value){
+
+        var field = formSchema.find(x=>x.id == id);
+
+        field[key] = value;
+
+        renderFieldList();
+        renderPreview();
+
+        if(selectedField){
+            selectField(selectedField);
+        }
+
+    }
+
+    function addField(){
+
+        var id = "field_" + new Date().getTime();
+
+        formSchema.push({
+            id:id,
+            label:"New Field",
+            editorType:"dxTextBox",
+            visible:true,
+            required:false
+        });
+
+        renderFieldList();
+        renderPreview();
+
+    }
+
+    renderFieldList();
+    renderPreview();
+
+</script>

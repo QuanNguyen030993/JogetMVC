@@ -1,0 +1,767 @@
+﻿<script>
+    var SLAForm = class SLAForm extends MForm {
+        constructor(id, childGridConfig, formConfig, mFormOption) {
+            super(id, childGridConfig, formConfig, mFormOption)
+        }
+
+        getSuccess(data) {
+            var that = this;
+            if (this.id > 0 && data != null) {
+                that.orgFormData = data;
+                that.formInstance.option("items[0].items", generateItems(JSON.parse(data.attributes)));
+                that.attributes = generateItems(JSON.parse(data.attributes));
+            }
+        }
+
+        doSaveData(isClose) {
+            try {
+                var that = this;
+                var form = that.formInstance;
+                var result = that.validateForm(form);
+                if (result == null || result.isValid) {
+                    var formData = form.option('formData');
+                    $.each(that.fieldConfigs, function (i, f) {
+                        delete formData[f.dataField];
+                    });
+                    delete formData["guid"];
+                    delete formData["id"];
+                    delete formData["rowOrder"];
+                    var ds = that.formInstance.option("dataSource");
+                    var store = ds;
+                    var data = new Object();
+                    const dataPost = new Object();
+                    $.each(that.attributes, function (index, field) {
+                        var key = field.dataField;
+                        if (formData.hasOwnProperty(key)) {
+                            dataPost[key] = formData[key];
+                        }
+                        else {
+                            dataPost[key] = oldAttributes[key];
+                        }
+                    });
+
+                    // var attributes = { //fix json if broken
+                    //     renewBeforeMonth: 2,
+                    //     urgentRenewLastDays: 5
+                    // };
+                    // data.attributes = JSON.stringify(attributes);
+                    data.attributes = JSON.stringify(dataPost);
+                    this.orgFormData = formData;
+                    store.update(this.id, data)
+                        .done(function () {
+                            //that.refreshForm();
+                        });
+                    //delete formData["Guid"];
+                }
+            } catch (err) {
+                appErrorHandling('Library error: call MForm.doSaveData() was failed.', err);
+                return;
+            }
+        }
+
+
+
+        groupingLayout(_formConfig, itemsArray, formInstance) {
+            var attributes = {
+                renewBeforeMonth: 2,
+                urgentRenewLastDays: 5
+            };
+            itemsArray = [
+
+                {
+                    itemType: "group",
+                    caption: "Config",
+                    colCount: 2,
+                    items: []
+                }
+            ];
+
+
+            return itemsArray;
+        }
+
+        initFormToolbar(formInstance) {
+            //Note: this is custom method not belong to Devextreme
+            var that = this;
+            if (that.allowFormActionButton) {
+                //var headerbox = formInstance.element().find(".dx-item.dx-box-item").first();
+                //var headerbox = formInstance.element().find(".dx-box-flex.dx-box.dx-widget.dx-visibility-change-handler.dx-collection").first();
+                var headerbox = formInstance.element().find(".dx-box-flex.dx-box.dx-widget.dx-collection").first();
+
+                var toolbarItems = $(`<div id="${that.ModelName}Toolbar" class="dExFormToolBar"'/>`)
+                    .dxToolbar({
+                        items: that.allowFormActionButton ? this.customizeToolbar() : [],
+                        width: "100%",
+                        onInitialized: tryExecute(function (e) {
+                            var that = this;
+                            //if (that.formPermissions.buttons.length > 0) {
+                            //    var toolbarItems = e.component.option("items");
+                            //    $.each(toolbarItems, function (index, it) {
+                            //        if ($.inArray(it.name, that.formPermissions.butt  ons) < 0) {
+                            //            it.options.disabled = true;
+                            //        }
+                            //    });
+                            //    e.component.option("items", toolbarItems);
+                            //}
+                        }.bind(this))
+                    })
+                // Nếu muốn đổi xuống dưới thì là appendTo(headerbox)
+                var $toolbarElement = toolbarItems.appendTo(headerbox);
+                return toolbarItems.dxToolbar('instance');
+                // Nếu muốn đổi xuống dưới thì là  return $toolbarElement.dxToolbar('instance');
+            }
+        }
+
+    }
+
+var ClientForm = class ClientForm extends MForm {
+    constructor(id, childGridConfig, formConfig, mFormConfig) {
+        super(id, childGridConfig, formConfig, mFormConfig)
+    }
+
+}
+var QuotationFormOption = class QuotationFormOption extends MFormOption {
+    constructor(params) {
+        super()
+        this.parentQuotationId = 0;
+        if (params.parentQuotationId) {
+            this.parentQuotationId = params.parentQuotationId;
+        }
+        if (params.surveyTypeId) {
+            this.surveyTypeId = params.surveyTypeId;
+        }
+    }
+}
+
+var QuotationForm = class QuotationForm extends MForm {
+    constructor(id, childGridConfig, formConfig, mFormOption) {
+        super(id, childGridConfig, formConfig, mFormOption)
+        //this.parentQuotationId = 0;
+        //if (formConfig.parentQuotationId)
+        //    this.parentQuotationId = formConfig.parentQuotationId;
+    }
+
+    groupingLayout(_formConfig, itemsArray, formInstance) {
+        super.groupingLayout(_formConfig, itemsArray, formInstance)
+        itemsArray = [
+
+            // =========================================================
+
+            // Header  Request
+            // =========================================================
+
+            {
+                itemType: "group",
+                caption: "Header  Request",
+                colCount: 4,
+                items: [
+                    { dataField: "requestNo", label: { template: labelTpl("RequestNo - Mã Quotation Request") } },
+                    { dataField: "requestRefNo", label: { template: labelTpl("RequestRefNo - Refversion của request") } },
+                    { dataField: "quotationCode", label: { template: labelTpl("QuotationCode - Mã quotation khi request vào xử lý (Joget)") } },
+                    { dataField: "requestedDate", label: { template: labelTpl("RequestedDate -  Ngày yêu cầu") } },
+                    { dataField: "dueDate", label: { template: labelTpl("DueDate - Due date") } },
+                    { dataField: "requestType", label: { template: labelTpl("RequestType - Loại request (ví dụ: New Quotation)") } },
+                    { dataField: "quotationType", label: { template: labelTpl("QuotationType - Loại đơn quotation type (ví dụ: New)") } },
+                    { dataField: "businessChannelName", label: { template: labelTpl("BusinessChannelName - Kênh kinh doanh (name)") } },
+                    { dataField: "sourceOfBusinessName", label: { template: labelTpl("SourceOfBusinessName - Nguồn business (name)") } },
+                    { dataField: "businessChannelDisplayName", label: { template: labelTpl("BusinessChannelDisplayName - Tên hiển thị kênh (name of biz)") } }
+                ]
+            },
+
+            // =========================================================
+
+            // PolicyHolder  Insured  Client
+            // =========================================================
+
+            {
+                itemType: "group",
+                caption: "PolicyHolder  Insured  Client (Multi-language)",
+                colCount: 3,
+                items: [
+                    { dataField: "policyHolderId", label: { template: labelTpl("PolicyHolderId - ID Policy Holder") } },
+                    { dataField: "insuredId", label: { template: labelTpl("InsuredId - ID Insured") } },
+                    { dataField: "clientCodePA", label: { template: labelTpl("ClientCodePA - Client Code (PA)") } },
+                    { dataField: "clientCodeJG", label: { template: labelTpl("ClientCodeJG - Client Code (JG)") } }
+                ]
+            },
+
+            // =========================================================
+
+            // Product  Line  CFE
+            // =========================================================
+
+            {
+                itemType: "group",
+                caption: "Product  Line  CFE",
+                colCount: 3,
+                items: [
+                    { dataField: "isCfe", label: { template: labelTpl("IsCfe - Flag CFE") } },
+                    { dataField: "showCfe", label: { template: labelTpl("ShowCfe - UI show CFE") } }
+                ]
+            },
+
+            // =========================================================
+
+            // Location  TSI  Sum Insured
+            // =========================================================
+
+            {
+                itemType: "group",
+                caption: "Location  TSI Sum Insured",
+                colCount: 4,
+                items: [
+                    { dataField: "locationCountDeclared", label: { template: labelTpl("LocationCountDeclared - Số location khai báo") } },
+                    { dataField: "quotationLocationCount", label: { template: labelTpl("QuotationLocationCount - Số location trên quotation") } },
+                    { dataField: "locationCountLegacy", label: { template: labelTpl("LocationCountLegacy - Số location (legacy)") } },
+                    { dataField: "locationCountAnnual", label: { template: labelTpl("LocationCountAnnual - Số location annual") } },
+                    { dataField: "locationCountActual", label: { template: labelTpl("LocationCountActual - Số location actual") } },
+                    { dataField: "locationSummary", label: { template: labelTpl("LocationSummary - Tóm tắt location (text)") } },
+                    { dataField: "locationMapRef", label: { template: labelTpl("LocationMapRef - Tham chiếu map location") } },
+                    { dataField: "locationAttachmentRef", label: { template: labelTpl("LocationAttachmentRef - Attachment location") } },
+                    { dataField: "locationSubAttachmentRef", label: { template: labelTpl("LocationSubAttachmentRef - Sub-attachment location") } },
+
+                    { dataField: "sumInsuredTotal", label: { template: labelTpl("SumInsuredTotal - Total Sum Insured (raw)") } },
+                    { dataField: "sumInsuredTotalUsd", label: { template: labelTpl("SumInsuredTotalUsd - Total Sum Insured (USD)") } },
+                    { dataField: "sumInsuredTotalVnd", label: { template: labelTpl("SumInsuredTotalVnd - Total Sum Insured (VND)") } },
+                    { dataField: "sumInsuredBI", label: { template: labelTpl("SumInsuredBI - Total Sum Insured BI") } },
+
+                    { dataField: "tsiTotal", label: { template: labelTpl("TsiTotal - TSI total") } },
+                    { dataField: "tsiFromBi", label: { template: labelTpl("TsiFromBi - TSI derived from BI") } },
+                    { dataField: "tsiFromBiForm", label: { template: labelTpl("TsiFromBiForm - TSI derived from BI form") } },
+
+                    { dataField: "topRisk", label: { template: labelTpl("TopRisk - Top risk (raw)") } },
+                    { dataField: "topRiskPd", label: { template: labelTpl("TopRiskPd - Top risk PD") } },
+                    { dataField: "topRiskPdQuotation", label: { template: labelTpl("TopRiskPdQuotation - Top risk PD quotation") } },
+                    { dataField: "topRiskPdBI", label: { template: labelTpl("TopRiskPdBI - Top risk PD BI") } },
+
+                    { dataField: "tsiPd", label: { template: labelTpl("TsiPd - TSI PD") } },
+                    { dataField: "tsiPdQuotation", label: { template: labelTpl("TsiPdQuotation - TSI PD quotation") } },
+                    { dataField: "tsiPdBI", label: { template: labelTpl("TsiPdBI - TSI PD BI") } },
+
+                    { dataField: "exposure", label: { template: labelTpl("Exposure - Exposure") } },
+                    { dataField: "geoLimitEng", label: { template: labelTpl("GeoLimitEng - Geo limit (EN)") } },
+                    { dataField: "geoLimitViet", label: { template: labelTpl("GeoLimitViet - Geo limit (VI)") } }
+                ]
+            },
+
+            // =========================================================
+
+            // Premium  Rate  VAT  Discount  Currency
+            // =========================================================
+
+            {
+                itemType: "group",
+                caption: "Premium  Rate  VAT  Discount  Currency",
+                colCount: 4,
+                items: [
+                    { dataField: "premiumTotal", label: { template: labelTpl("PremiumTotal - Tổng premium") } },
+                    { dataField: "premiumTotalBeforeVat", label: { template: labelTpl("PremiumTotalBeforeVat - Tổng premium trước VAT") } },
+                    { dataField: "totalDue", label: { template: labelTpl("TotalDue - Total due") } },
+
+                    { dataField: "premiumAnnual", label: { template: labelTpl("PremiumAnnual - Annual premium") } },
+                    { dataField: "premiumAnnualTotal", label: { template: labelTpl("PremiumAnnualTotal - Total annual premium") } },
+                    { dataField: "premiumActual", label: { template: labelTpl("PremiumActual - Actual premium") } },
+
+                    { dataField: "premiumTotalBI", label: { template: labelTpl("PremiumTotalBI - Premium BI") } },
+                    { dataField: "premiumVoluntary", label: { template: labelTpl("PremiumVoluntary - Voluntary premium") } },
+                    { dataField: "premiumVoluntaryValue", label: { template: labelTpl("PremiumVoluntaryValue - Voluntary premium (value)") } },
+                    { dataField: "premiumVoluntaryAnnual", label: { template: labelTpl("PremiumVoluntaryAnnual - Annual voluntary premium") } },
+
+                    { dataField: "premiumCfe", label: { template: labelTpl("PremiumCfe - CFE premium") } },
+                    { dataField: "premiumCfeAnnual", label: { template: labelTpl("PremiumCfeAnnual - Annual CFE premium") } },
+                    { dataField: "premiumCommission", label: { template: labelTpl("PremiumCommission - Commission premium") } },
+
+                    { dataField: "premiumRate", label: { template: labelTpl("PremiumRate - Premium rate") } },
+                    { dataField: "premiumRateBI", label: { template: labelTpl("PremiumRateBI - Premium rate BI") } },
+                    { dataField: "annualRate", label: { template: labelTpl("AnnualRate - Annual rate") } },
+
+                    { dataField: "discountPercentOrValue", label: { template: labelTpl("DiscountPercentOrValue - Discount (% hoặc số tiền)") } },
+                    { dataField: "premiumDiscount", label: { template: labelTpl("PremiumDiscount - Premium discount") } },
+
+                    { dataField: "vatFlagOrValue", label: { template: labelTpl("VatFlagOrValue - VAT flagvalue") } },
+                    { dataField: "vatPercent", label: { template: labelTpl("VatPercent - VAT %") } },
+                    { dataField: "vatAmount", label: { template: labelTpl("VatAmount - VAT amount") } },
+                    { dataField: "vatPercentBI", label: { template: labelTpl("VatPercentBI - VAT % BI") } },
+                    { dataField: "vatAmountBI", label: { template: labelTpl("VatAmountBI - VAT amount BI") } },
+
+                    { dataField: "currencyCode", label: { template: labelTpl("CurrencyCode - Currency code") } },
+                    { dataField: "exchangeRate", label: { template: labelTpl("ExchangeRate - Exchange rate") } }
+                ]
+            },
+
+            // =========================================================
+
+            // Terms  Conditions  Deductible  Jurisdiction
+            // =========================================================
+
+            {
+                itemType: "group",
+                caption: "Terms  Conditions  Deductible  Claim Basis  Jurisdiction",
+                colCount: 2,
+                items: [
+                    { dataField: "clauseName", label: { template: labelTpl("ClauseName - Tên clause") } },
+                    { dataField: "specialAppliedSpec", label: { template: labelTpl("SpecialAppliedSpec - Spec applied") } },
+                    { dataField: "deductible", label: { template: labelTpl("Deductible - Deductible") } },
+                    { dataField: "deductibleFire", label: { template: labelTpl("DeductibleFire - Deductible fire") } },
+                    { dataField: "limitOfLiability", label: { template: labelTpl("LimitOfLiability - Limit of liability") } }
+                ]
+            },
+
+            // =========================================================
+
+            // UW Evaluation  Referral  RI  Loss History
+            // =========================================================
+
+            {
+                itemType: "group",
+                caption: "UW Evaluation  Referral  RI  Loss History",
+                colCount: 3,
+                items: [
+                    { dataField: "referralRequiredFlag", label: { template: labelTpl("ReferralRequiredFlag - Referral required (YN)") } },
+                    { dataField: "referralReasonsText", label: { template: labelTpl("ReferralReasonsText - Referral reasons") } },
+                    { dataField: "referralType", label: { template: labelTpl("ReferralType - Type of referral") } },
+
+                    { dataField: "riskGrade", label: { template: labelTpl("RiskGrade - Risk grade") } },
+                    { dataField: "riskGradeType", label: { template: labelTpl("RiskGradeType - Type of grade") } },
+
+                    { dataField: "uwAcceptedFlag", label: { template: labelTpl("UwAcceptedFlag - UW accept flag") } },
+                    { dataField: "uwAcceptedDate", label: { template: labelTpl("UwAcceptedDate - UW accept date") } },
+
+                    { dataField: "riArrangementText", label: { template: labelTpl("RiArrangementText - RI arrangement") } },
+                    { dataField: "retentionValue", label: { template: labelTpl("RetentionValue - Retention") } },
+                    { dataField: "netRetentionValue", label: { template: labelTpl("NetRetentionValue - Net retention") } },
+                    { dataField: "treatySurplusValue", label: { template: labelTpl("TreatySurplusValue - Treaty surplus") } },
+
+                    { dataField: "coInsuranceOutValue", label: { template: labelTpl("CoInsuranceOutValue - Co-out") } }
+                ]
+            }
+        ];
+
+        return itemsArray;
+    }
+
+
+
+    //customizeForm(item) {
+    //    var that = this;
+    //    super.customizeForm(item);
+    //    if (item.dataField == "surveyTypeId" || item.dataField == "parentId") {
+    //        item.visible = false;
+    //    }
+    //    if (item.dataField == "content") {
+    //        item.editorOptions.width = "100%";
+    //    }
+    //}
+
+    //initDataNewForm() {
+    //    var that = this;
+    //    var newRowdata = {};
+    //    newRowdata[`parentId`] = that.formOptions.parentQuotationId;
+    //    newRowdata[`surveyTypeId`] = that.formOptions.surveyTypeId;
+    //    var listFieldHasDefaultValue = that.fieldConfigs.filter(
+    //        value => value.defaultValue
+    //    );
+
+    //    $(listFieldHasDefaultValue).each(function (i, field) {
+    //        newRowdata[`${field.dataField}`] = Function(field.defaultValue);
+    //    });
+
+    //    that.formInstance.option("formData", newRowdata);
+    //}
+
+}
+
+var ResFormQuotationForm = class ResFormQuotationForm extends MForm {
+    constructor(id, childGridConfig, formConfig, mFormOption) {
+        super(id, childGridConfig, formConfig, mFormOption)
+    }
+}
+
+        var PreviewQuotationForm = class PreviewQuotationForm extends MForm {
+        constructor(id, childGridConfig, formConfig, mFormOption) {
+            super(id, childGridConfig, formConfig, mFormOption)
+        }
+    }
+
+
+var ReferenceQuotationForm = class ReferenceQuotationForm extends MForm {
+    constructor(id, childGridConfig, formConfig, mFormOption) {
+        super(id, childGridConfig, formConfig, mFormOption)
+    }
+
+    groupingLayout(_formConfig, itemsArray, formInstance) {
+        super.groupingLayout(_formConfig, itemsArray, formInstance)
+        itemsArray = [
+            {
+                itemType: "group",
+                caption: "UW Follow Fields",
+                colCount: 1,
+                items: [
+                        { dataField: "reinsuranceId", label: {text:"Reinsurance" }, editorType: "dxSelectBox", editorOptions: { width: 200,  valueExpr: "id", displayExpr: "value", items: _enums.reInsuranceType } }
+                ]
+            },
+            {
+                itemType: "group",
+                caption: "PM Follow Fields",
+                colCount: 1,
+                items: [
+                    { dataField: "inceptionDate", label: { text: "Inception Date" } ,editorType: "dxDateBox", editorOptions: { width: 200, displayFormat: "dd/MM/yyyy" } }  
+                ]
+            }
+        ];
+        this.decorateItemsWithLockButton(itemsArray);
+        return itemsArray;
+    }
+
+    initFormToolbar(formInstance) {
+    }
+
+
+    decorateItemsWithLockButton(items) { 
+        const that = this;
+        if (!Array.isArray(items)) return;
+
+        items.forEach(function (item) {
+            if (item.items && Array.isArray(item.items)) {
+                that.decorateItemsWithLockButton(item.items);
+                return;
+            }
+
+            if (!item.dataField) return;
+            if (item.itemType === "button" || item.itemType === "empty" || item.itemType === "group" ) return;
+
+            that.wrapItemWithLockButton(item);
+        });
+    }
+
+    wrapItemWithLockButton(item) {
+        const that = this;
+        const originalEditorType = item.editorType || "dxTextBox";
+        const originalEditorOptions = $.extend(true, {}, item.editorOptions || {});
+        const dataField = item.dataField;
+        const dataFieldCaption = item.label.text;
+        // label vẫn để dxForm render bình thường
+        // chỉ thay phần editor bằng template custom
+        item.template = function (data, $container) {
+            const formData = data.component.option("formData") || {};
+            let fieldValue = formData[dataField];
+
+            if (originalEditorType === "dxDateBox" && fieldValue) {
+                fieldValue = new Date(fieldValue);
+            }
+
+            const $row = $("<div>").addClass("field-lock-wrap");
+            const $editorHost = $("<div>").addClass("field-lock-editor").appendTo($row);
+            const $btnHost = $("<div>").addClass("field-lock-btn").appendTo($row);
+            const $msgHost = $("<div>").addClass("field-lock-msg").appendTo($container);
+            const editorOptions = $.extend(true, {}, originalEditorOptions, {
+                value: fieldValue,
+                onInitialized: function (e) {
+                    setTimeout(() => {
+                        e.component.option("value", data.component.option("formData")[dataField]);
+                        var lockRefFields = JSON.parse(data.component.option("formData")["lockedReferenceFields"]);
+                        that.lockedReferenceFields = { ...lockRefFields };
+                        $btnHost.dxButton({
+                            icon: "fa fa-" + (that.lockedReferenceFields[dataField].isLock ? "lock" : "unlock") ,
+                            hint: (that.lockedReferenceFields[dataField].isLock ? "Unlock" : "Lock") + " this field",
+                            stylingMode: "outlined",
+                            onClick: function () {
+                                that.toggleFieldLock(dataField, dataFieldCaption, originalEditorType, e, $btnHost);
+                            }
+                        });
+                        that.applyFieldLockState(dataField, originalEditorType, that.lockedReferenceFields[dataField].isLock, e, $btnHost, $msgHost  );
+                    },100);
+                },
+
+                onValueChanged: function (e) {
+                    const currentData = data.component.option("formData") || {};
+                    currentData[dataField] = e.value;
+                    data.component.option("formData", currentData);
+                }
+            });
+
+            that.renderEditor($editorHost, originalEditorType, editorOptions);
+
+        
+            $container.append($row);
+        };
+    }
+
+    renderEditor($host, editorType, editorOptions) {
+        if (typeof $host[editorType] === "function") {
+            $host[editorType](editorOptions);
+        } else {
+            $host.dxTextBox(editorOptions);
+        }
+    }
+
+    toggleFieldLock(dataField, dataFieldCaption, editorType, $scope = null, $btnHost = null, $msgHost = null) {
+        const that = this;
+        const isLocked = !!that.lockedReferenceFields[dataField].isLock;
+        const nextLocked = !isLocked;
+
+        const msg = nextLocked
+            ? `Are you sure to lock field "${dataFieldCaption}"?`
+            : `Are you sure to unlock field "${dataFieldCaption}"?`;
+
+        DevExpress.ui.dialog.confirm(msg, "Confirm").done(function (ok) {
+            if (!ok) return;
+
+            that.lockedReferenceFields[dataField].isLock = nextLocked;
+            that.syncLockedReferenceFieldsToFormData();
+            that.applyFieldLockState(dataField, editorType, nextLocked, $scope, $btnHost, $msgHost);
+        });
+    }
+
+    applyFieldLockState(dataField, editorType, isLocked, $scope = null, $btnHost = null, $msgHost  =null) {
+        var that = this;
+        //let $editorHost = null;
+
+        // ưu tiên tìm trong scope gần nhất
+        if ($scope ) {
+            $scope.component.option("readOnly", isLocked);
+            $btnHost.dxButton("instance").option("icon", "fa fa-" + (that.lockedReferenceFields[dataField].isLock ? "lock" : "unlock"));
+            $btnHost.dxButton("instance").option("hint", (that.lockedReferenceFields[dataField].isLock ? "Unlock" : "Lock") + " this field");
+            $msgHost.text(that.lockedReferenceFields[dataField].message);
+            return;
+        }
+
+        //// fallback tìm toàn form ----> Not Working
+        //if ((!$editorHost || !$editorHost.length) && that.formInstance && that.formInstance.element) {
+        //    const $form = $(that.formInstance.element());
+        //    $editorHost = $form.find(`.field-lock-editor[data-field='${dataField}']`).first();
+        //}
+
+        //if (!$editorHost || !$editorHost.length) return;
+
+        //let editor = null;
+
+        //try {
+        //    if (typeof $editorHost[editorType] === "function") {
+        //        editor = $editorHost[editorType]("instance");
+        //    }
+        //} catch { }
+
+        //if (!editor) return;
+
+        //if (that.useDisabled(editorType)) {
+        //    editor.option("disabled", isLocked);
+        //} else {
+        //    editor.option("readOnly", isLocked);
+        //}
+
+        //if (editorType === "dxDateBox") {
+        //    editor.option("openOnFieldClick", !isLocked);
+        //    editor.option("showDropDownButton", !isLocked);
+        //}
+    }
+
+
+    //syncLockedReferenceFieldsToFormData() {
+    //    if (!this.formInstance) return;
+    //    const formData = this.formInstance.option("formData") || {};
+    //    const output = {};
+
+    //    Object.keys(this.lockedReferenceFields || {}).forEach(k => {
+    //        output[k] = !!this.lockedReferenceFields[k];
+    //    });
+
+    //    formData.lockedReferenceFields = JSON.stringify(output);
+    //    this.formInstance.option("formData", formData);
+    //    this.formInstance.updateData("lockedReferenceFields", JSON.stringify(output));
+    //    ajaxPut('/api/Quotation/UpdateData', { key: formData.id, values: JSON.stringify({ lockedReferenceFields: JSON.stringify(output) }) }, {
+    //        onSuccess: function (response) {
+    //        },
+    //        onError: function (err) {
+    //        }
+    //    });
+    //}
+
+    syncLockedReferenceFieldsToFormData() {
+        const that = this;
+        if (!that.formInstance) return;
+        const formData = that.formInstance.option("formData") || {};
+        const output = {};
+        const now = new Date();
+        const timeString =
+            String(now.getDate()).padStart(2, '0') + '/' +
+            String(now.getMonth() + 1).padStart(2, '0') + '/' +
+            now.getFullYear() + ' ' +
+            String(now.getHours()).padStart(2, '0') + ':' +
+            String(now.getMinutes()).padStart(2, '0');
+
+        Object.keys(that.lockedReferenceFields || {}).forEach(k => {
+            const isLock = !!that.lockedReferenceFields[k].isLock;
+
+            output[k] = {
+                isLock: isLock,
+                message: isLock
+                    ? ` is locked by ${_loginUser} at ${timeString}`
+                    : ""
+            };
+        });
+
+        const json = JSON.stringify(output);
+
+        formData.lockedReferenceFields = json;
+
+        that.formInstance.option("formData", formData);
+        that.formInstance.updateData("lockedReferenceFields", json);
+
+        ajaxPut('/api/Quotation/UpdateData',
+            {
+                key: formData.id,
+                values: JSON.stringify({
+                    lockedReferenceFields: json
+                })
+            },
+            {
+                onSuccess: function (response) { },
+                onError: function (err) { }
+            }
+        );
+    }
+
+
+    useDisabled(editorType) {
+        const disabledEditors = [
+            "dxCheckBox",
+            "dxSwitch",
+            "dxRadioGroup",
+            "dxTagBox",
+            "dxLookup",
+            "dxDropDownBox",
+            "dxFileUploader",
+            "dxHtmlEditor"
+        ];
+        return disabledEditors.includes(editorType);
+    }
+
+
+}
+var WorkflowDefinitionForm = class WorkflowDefinitionForm extends MForm {
+    constructor(id, childGridConfig, formConfig, mFormOption) {
+        super(id, childGridConfig, formConfig, mFormOption)
+        //this.parentQuotationId = 0;
+        //if (formConfig.parentQuotationId)
+        //    this.parentQuotationId = formConfig.parentQuotationId;
+    }
+
+    onRowRemoving (e) {
+        
+        
+        
+    }
+
+                
+       callApi(apiMethod, dataInput, isClose) {
+           try {
+               var that = this;
+               var efName = this.ModelName;
+
+               var thatOnScheme = { ...that };
+
+               thatOnScheme.ModelName = "WorkflowDefinition";
+               var url = buildApiUrl(apiMethod, thatOnScheme);
+
+               var dataVar = null;
+               //var httpMethod = this.buildHttpMethod(apiMethod);
+               if (dataInput) {
+                   dataVar = { values: dataInput.values };
+                   if (dataInput.key) {
+                       dataVar = { key: dataInput.key, values: dataInput.values };
+                   }
+                   if (apiMethod == "CustomQuery") {
+                       dataVar = JSON.stringify(dataInput.customQuery);
+                   }
+               }
+
+
+               var ajaxOptions = {
+                   url: url,
+                   headers: {
+                       'Content-Type': apiMethod == "CustomQuery" ? "application/json" : 'application/x-www-form-urlencoded; charset=UTF-8'
+                   },
+                   type: (apiMethod == "GetSingle") || (apiMethod == "GetFKMany") ? "GET" : (apiMethod == "CustomQuery" ? "POST" : apiMethod),
+                   data: dataVar,
+                   async: false,
+                   error: function (e) {
+                       if (e.responseText) {
+                           if (apiMethod != "GetFKMany")
+                               appErrorHandling(e.responseText, e);
+                           else
+                               console.warn(` FormCallApiException: ${url} endpoint not exist`);
+                       }
+                       else
+                           appErrorHandling("callApi Form fail!", e);
+                   },
+                   complete: function (e) {
+                       //không chèn thông báo tại đây
+                       //appLoadingPanel.hide(); // hide loading...
+                   }
+               };
+
+               apiMethod = (apiMethod == "GetSingle") || (apiMethod == "GetFKMany" || (apiMethod == "CustomQuery")) ? "GET" : apiMethod;
+               var onSuccess = null;
+               switch (apiMethod) {
+                   case 'GET':
+                       onSuccess = that.getSuccess.bind(this);
+                       break;
+                   case 'POST':
+                       onSuccess = that.postSuccess.bind(this);
+                       break;
+                   case 'PUT':
+                       onSuccess = that.putSuccess.bind(this);
+                       break;
+                   case 'DELETE':
+                       onSuccess = that.deleteSuccess.bind(this);
+                       break;
+                   case 'CLONE':
+                       onSuccess = that.cloneSuccess.bind(this);
+                       break;
+               }
+
+               ajaxOptions.success = function (data) {
+                   if (dataInput.customQuery)
+                       data = data.find(f => f.id == that.id);
+                   onSuccess(data);
+
+
+                   if (isClose) {
+                       that.closeForm(efName);
+                   }
+
+               };
+
+
+               $.ajax(ajaxOptions).fail(function (jqXHR, statusText, errorThrown) {
+                   appNotify({ message: `${errorThrown}. ${jqXHR.responseText}`, type: 'warning' });
+               });
+           } catch (err) {
+               appErrorHandling('Library error: call MForm.callApi() was failed.', err);
+               return;
+           }
+       }
+        }
+
+    var TSSLAForm = class TSSLAForm extends SLAForm {
+        constructor(id, childGridConfig, formConfig, mFormOption) {
+            super(id, childGridConfig, formConfig, mFormOption)
+        }
+    }
+
+
+         var UWSLAForm = class UWSLAForm extends SLAForm {
+        constructor(id, childGridConfig, formConfig, mFormOption) {
+        super(id, childGridConfig, formConfig, mFormOption)
+    }
+
+        }
+    var PMSLAForm = class PMSLAForm extends SLAForm {
+        constructor(id, childGridConfig, formConfig, mFormOption) {
+            super(id, childGridConfig, formConfig, mFormOption)
+        }
+
+    }
+</script>
+

@@ -999,6 +999,62 @@ td > .dx-scrollable-scroll-content {
     background-color: lightgreen;
 }
 
+/*** MGrid Layout Editor Styles ***/
+/* Edit layout mode indicator */
+.mgrid-edit-layout-mode {
+    border: 2px solid #ff6b6b;
+    box-shadow: 0 0 5px rgba(255, 107, 107, 0.3) inset;
+}
+
+.mgrid-edit-layout-mode .dx-datagrid-headers {
+    background-color: #fff3cd;
+}
+
+.mgrid-edit-layout-mode .dx-header-row .dx-datagrid-text-content {
+    cursor: move;
+    padding: 8px 4px;
+}
+
+.mgrid-edit-layout-mode .dx-header-row {
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+}
+
+.mgrid-edit-layout-mode .dx-header-row .dx-datagrid-text-content:hover {
+    background-color: #ffeaa7;
+    border-radius: 3px;
+}
+
+/* Column being dragged */
+.mgrid-col-dragging {
+    opacity: 0.7;
+    background-color: #ffe0e0;
+}
+
+/* Column drop zone */
+.mgrid-col-drop-zone {
+    background-color: #c3e6cb;
+    border-left: 2px solid #28a745;
+}
+
+/* Edit Layout Button specific styles */
+.dx-button.edit-layout-toggle {
+    transition: all 0.3s ease;
+}
+
+.dx-button.edit-layout-toggle.active {
+    background-color: #28a745 !important;
+    border-color: #28a745 !important;
+    color: white !important;
+}
+
+/* Notification styles for layout changes */
+.mgrid-layout-notify {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+}
+
 .dx-pivotgridfieldchooser .dx-area-fields {
     overflow: hidden;
     HEIGHT: 160px;

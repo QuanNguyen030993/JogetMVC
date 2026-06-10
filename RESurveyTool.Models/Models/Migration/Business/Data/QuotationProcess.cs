@@ -678,8 +678,8 @@ public class QuotationProcess : BaseModel
     public string c_clientCodePA { get; set; }
     [Column("c_businessAddressEng")]
     public string c_businessAddressEng { get; set; }
-    [Column("c_refId")]
-    public string c_refId { get; set; }
+    [Column("c_refKey")]
+    public string c_refKey { get; set; }
     [Column("c_numOfQuot")]
     public string c_numOfQuot { get; set; }
     [Column("c_uwDecisions")]

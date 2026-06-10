@@ -20,6 +20,8 @@ using Microsoft.Identity.Client;
 using System.Drawing.Text;
 using Core.Arango.Linq;
 using ERPCore.ControllerUtil;
+using TMIVHashing;
+using ERPCore.Models.Models.Parsing;
 public interface IBaseRepository<T> where T : class
 {
     Task<T> GetObjectByIdAsync(long id); //Use for Base processing 
@@ -31,13 +33,15 @@ public interface IBaseRepository<T> where T : class
     Task<List<T>> GetListObjectToClone(string connectionString, Expression<Func<T, bool>> predicate);
     Task<List<T>> GetListObjectFullInclude(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includeProperties);
     Task<List<T>> GetFKMany(int fkId, string fkField);
+    Task<List<T>> GetByDynamicField(List<DynamicFieldFilter> filters, IDictionary<string, string>? requestParams = null);
     Task<List<T>> GetManyObjectByIdAsync(int id);
     Task<List<T>> EnumData(string name);
-    Task<List<Dictionary<string, object>>> ExecuteCustomQuery(string query);
+    Task<List<Dictionary<string, object>>> ExecuteCustomQuery(string query, Dictionary<string, object>? parameters = null);
     Task<List<Dictionary<string, object>>> ExecuteCustomJogetQuery(string query);
+    Task<List<Dictionary<string, object>>> ExecuteCustomLogQuery(string query, Dictionary<string, object>? parameters = null);
     Task<List<dynamic>> EnumLookup(string refField, string enumName = null, bool isSameUsing = false);
     Task UpdateEnum(string refField, string valueKey, long sysTableId);
-    Task<List<T>> GetAll();
+    Task<List<T>> GetAll(System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> loadParams = null);
     Task<List<T>> GetAllInclude();
     Task<List<T>> GetAllActive();
     //Task<List<T>> AllIncluding(params Expression<Func<T, object>>[] includeProperties);
@@ -50,7 +54,7 @@ public interface IBaseRepository<T> where T : class
     //Task<List<T>> FindByCreator(string userName);
     //Task<List<T>> FindByOther(string userName);
     //int Count();
-    Task<dynamic> GetUserRoles(string accountName);
+    Task<dynamic> GetUserRoles(string accountName, bool isSuperUser = false);
     //bool Any(Expression<Func<T, bool>> predicate);
     //List<T> GetList(Expression<Func<T, bool>> predicate = null);
     //List<T> GetList(Expression<Func<T, bool>> predicate = null, params Expression<Func<T, object>>[] includeProperties);
@@ -120,7 +124,9 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
     public BaseRepository(IConfiguration config, IHttpContextAccessor httpContextAccessor)
     {
         _baseConfiguration = config;
-        _connectionString = _baseConfiguration.GetConnectionString("DefaultConnection");
+        
+        _connectionString = _baseConfiguration.GetConnectionString(ControllerUtil.tmivEnvironment + "Connection");
+        _connectionString = ControllerUtil.ParseConnectionString(_connectionString,config);
         _jogetConnectionString = _baseConfiguration.GetConnectionString(ControllerUtil.jogetEnvironment + "Connection");
         _logConnectionString = _baseConfiguration.GetConnectionString("LogConnection");
         _httpContextAccessor = httpContextAccessor;
@@ -564,8 +570,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
         using (var connection = new SqlConnection(_connectionString))
         {
             var sql = $@"SELECT EnumData.* FROM EnumData WITH (NOLOCK) 
-                        INNER JOIN SysTable ON SysTable.Id = EnumData.SysTableId
-                        WHERE SysTable.Name = '{name}' ORDER BY EnumOrder ASC";
+                        WHERE EnumData.Name = '{name}'";
             var result = await connection.QueryAsync<T>(sql, new { SysTableName = name });
             Util.QueryLogs(_connectionString, "sp_Querylogs",
                    ("@QueryString", $"EnumData: {sql}")
@@ -580,16 +585,16 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
         {
             var sql = $@"SELECT EnumData.* FROM EnumData WITH (NOLOCK) 
                         INNER JOIN SysTable ON SysTable.Id = EnumData.SysTableId
-                        WHERE SysTable.Name = '{typeof(T).Name}' AND EnumData.[Name] = '{refField}' ORDER BY EnumOrder ASC";
+                        WHERE SysTable.Name = '{typeof(T).Name}' AND EnumData.[Name] = '{refField}' ";
 
             if (!string.IsNullOrEmpty(enumName))
                 sql = $@"SELECT EnumData.* FROM EnumData WITH (NOLOCK) 
                         INNER JOIN SysTable ON SysTable.Id = EnumData.SysTableId
-                        WHERE EnumData.Name = '{enumName}' ORDER BY EnumOrder ASC";
+                        WHERE EnumData.Name = '{enumName}'";
 
             if (isSameUsing)
                 sql = $@"SELECT EnumData.* FROM EnumData WITH (NOLOCK) 
-                        WHERE EnumData.Name = '{enumName}' ORDER BY EnumOrder ASC";
+                        WHERE EnumData.Name = '{enumName}' ";
 
             var result = await connection.QueryAsync<dynamic>(sql);
             Util.QueryLogs(_connectionString, "sp_Querylogs",
@@ -600,14 +605,19 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
         }
     }
 
-    public async Task<dynamic> GetUserRoles(string accountName)
+    public async Task<dynamic> GetUserRoles(string accountName, bool isSuperUser = false)
     {
         using (var connection = new SqlConnection(_connectionString))
         {
-            var sql = $@"SELECT DISTINCT TOP 1 r.RoleName
+            var sql = $@"SELECT DISTINCT TOP 1 r.Department RoleName, u.name AS DisplayName, u.username AS LoginName, u.branch AS Branch, ro.RoleName AS RoleAppName
                     FROM UserRoles ur
-                    LEFT JOIN Users u ON ur.UserId = u.Id
-                    LEFT JOIN Roles r ON ur.RoleId = r.Id
+                    INNER JOIN Users u ON ur.UserId = u.Id
+                    INNER JOIN Employee r ON r.AccountName = u.[username]
+                    INNER JOIN Roles ro ON ro.Id = r.SystemRolesId
+                    WHERE u.[username] = '{accountName}'";
+            if (isSuperUser)
+                sql = $@"SELECT DISTINCT TOP 1 u.department RoleName, u.name AS DisplayName, u.username AS LoginName, u.branch AS Branch
+                    FROM Users u 
                     WHERE u.[username] = '{accountName}'";
             var result = await connection.QueryAsync<dynamic>(sql);
             Util.QueryLogs(_connectionString, "sp_Querylogs",
@@ -631,30 +641,47 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
         }
     }
 
-    public async Task<List<T>> GetAll()
+    public async Task<List<T>> GetAll(System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> loadParams = null)
     {
         using (var connection = new SqlConnection(_connectionString))
         {
+
             var (query, parameters) = Util.BuildSelectAllQuery<T>(typeof(T).Name);
-            var result = await connection.QueryAsync<T>(query);
-            var prop = typeof(T).GetProperty("RowOrder");
-            if (prop != null)
+            if (loadParams != null && loadParams.Count > 1)
             {
-                return result.OrderBy(x =>
-                {
-                    var val = prop.GetValue(x);
-                    if (val == null) return 0;
-                    return Convert.ToInt32(val);
-                }).ToList();
+                var built = Util.LoadParamsBuildSelectAllQuery<T>(
+                    //loadParams,
+                    typeof(T).Name,
+                    loadParams,
+                    //allowedColumns: allowed,
+                    defaultOrderBy: "CreatedDate",
+                    defaultOrderDir: "DESC",
+                    pkTieBreaker: "Id"
+                );
+                var data = await connection.QueryAsync<T>(built.Sql, built.Parameters);
+                return data.ToList();
             }
-            Util.QueryLogs(_connectionString, "sp_Querylogs",
-               ("@QueryString", $"GetAll: {query}")
-               , ("@Duration", "")
-               , ("@User", userName));
-            return result.ToList();
+            else
+            {
+                var result = await connection.QueryAsync<T>(query);
+                var prop = typeof(T).GetProperty("RowOrder");
+                if (prop != null)
+                {
+                    return result.OrderBy(x =>
+                    {
+                        var val = prop.GetValue(x);
+                        if (val == null) return 0;
+                        return Convert.ToInt32(val);
+                    }).ToList();
+                }
+                Util.QueryLogs(_connectionString, "sp_Querylogs",
+                   ("@QueryString", $"GetAll: {query}")
+                   , ("@Duration", "")
+                   , ("@User", userName));
+                return result.ToList();
+            }
         }
     }
-
     public async Task<List<T>> GetAllActive()
     {
         using (var connection = new SqlConnection(_connectionString))
@@ -859,7 +886,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
         {
             var entityType = typeof(T);
             var properties = entityType.GetProperties();
-
+            bool isSuccess = false;
             foreach (var property in properties)
             {
                 if (property.PropertyType.IsGenericType &&
@@ -884,6 +911,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
                         var list = (IList)Activator.CreateInstance(listType);
                         foreach (var item in result)
                         {
+                            isSuccess = true;
                             list.Add(item);
                         }
 
@@ -897,11 +925,113 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
                 }
             }
 
+            if (!isSuccess )
+            {
+                foreach (var property in properties)
+                {
+                    if (property.PropertyType.IsGenericType &&
+                        property.PropertyType.GetGenericTypeDefinition() == typeof(List<>))
+                    {
+                        var listItemType = property.PropertyType.GetGenericArguments()[0];
+
+                        var foreignKeyProperty = listItemType.GetProperty($"RecordGuid");
+                        if (foreignKeyProperty != null)
+                        {
+                            var tableName = listItemType.Name;
+                            var parentId = entity.GetType().GetProperty("Guid")?.GetValue(entity);
+                            string parentField = $"RecordGuid";
+                            var sql = Util.BuildSelectQuery<T>(tableName, parentField);
+
+                            var result = await connection.QueryAsync(listItemType, sql, new { Id = parentId });
+
+
+
+                            // Khởi tạo List mới và gán các kết quả truy vấn vào List này
+                            var listType = typeof(List<>).MakeGenericType(listItemType);
+                            var list = (IList)Activator.CreateInstance(listType);
+                            foreach (var item in result)
+                            {
+                                isSuccess = true;
+                                list.Add(item);
+                            }
+
+                            // Gán lại List vào thuộc tính của entity
+                            property.SetValue(entity, list);
+                            Util.QueryLogs(_connectionString, "sp_Querylogs",
+                              ("@QueryString", $"IncludeListsOnly: {sql}")
+                              , ("@Duration", "")
+                              , ("@User", userName));
+                        }
+                    }
+                }
+            }
+
             return entity;
         }
     }
 
-    public async Task<List<Dictionary<string, object>>> ExecuteCustomQuery(string query)
+    //public async Task<List<Dictionary<string, object>>> ExecuteCustomQuery(string query)
+    //{
+    //    try
+    //    {
+    //        var resultList = new List<Dictionary<string, object>>();
+
+    //        using (SqlConnection connection = new SqlConnection(_connectionString))
+    //        {
+    //            await connection.OpenAsync();
+
+    //            using (SqlCommand command = new SqlCommand(query, connection))
+    //            {
+    //                //using (var reader = await command.ExecuteReaderAsync())
+    //                //    {
+    //                //        // Đọc dữ liệu từ DataReader
+    //                //        while (await reader.ReadAsync())
+    //                //        {
+    //                //            var row = new Dictionary<string, object>();
+
+    //                //            for (int i = 0; i < reader.FieldCount; i++)
+    //                //            {
+    //                //                var columnName = Char.ToLowerInvariant(reader.GetName(i)[0]) + reader.GetName(i).Substring(1);
+
+    //                //                //var columnName = reader.GetName(i); // Tên cột
+    //                //                var value = reader.IsDBNull(i) ? null : reader.GetValue(i); // Giá trị cột
+    //                //                row[columnName] = value; // Thêm vào dictionary
+    //                //            }
+
+    //                //            resultList.Add(row);
+    //                //        }
+    //                //    }
+    //                //}
+    //                using var reader = await command.ExecuteReaderAsync();
+
+    //                var dt = new DataTable();
+    //                dt.Load(reader); // <-- không cần while
+    //                resultList = dt.AsEnumerable()
+    //                            .Select(row => dt.Columns.Cast<DataColumn>()
+    //                                .ToDictionary(
+    //                                    col => Char.ToLowerInvariant(col.ColumnName[0]) + col.ColumnName[1..],
+    //                                    col => row[col] == DBNull.Value ? null : row[col]
+    //                                ))
+    //                            .ToList();
+    //            }
+
+    //            Util.QueryLogs(_connectionString, "sp_Querylogs",
+    //                   ("@QueryString", $"ExecuteCustomQuery: {query}")
+    //                   , ("@Duration", "")
+    //                   , ("@User", userName));
+    //        }
+
+    //        return resultList;
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        Serilog.Log.Error(ex, ex.Message);
+    //        return null;
+    //    }
+    //}
+    public async Task<List<Dictionary<string, object>>> ExecuteCustomQuery(
+    string query,
+    Dictionary<string, object>? parameters = null)
     {
         try
         {
@@ -913,43 +1043,38 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
 
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    //using (var reader = await command.ExecuteReaderAsync())
-                    //    {
-                    //        // Đọc dữ liệu từ DataReader
-                    //        while (await reader.ReadAsync())
-                    //        {
-                    //            var row = new Dictionary<string, object>();
+                    if (parameters != null && parameters.Count > 0)
+                    {
+                        foreach (var kv in parameters)
+                        {
+                            command.Parameters.AddWithValue(
+                                kv.Key,
+                                kv.Value ?? DBNull.Value
+                            );
+                        }
+                    }
 
-                    //            for (int i = 0; i < reader.FieldCount; i++)
-                    //            {
-                    //                var columnName = Char.ToLowerInvariant(reader.GetName(i)[0]) + reader.GetName(i).Substring(1);
-
-                    //                //var columnName = reader.GetName(i); // Tên cột
-                    //                var value = reader.IsDBNull(i) ? null : reader.GetValue(i); // Giá trị cột
-                    //                row[columnName] = value; // Thêm vào dictionary
-                    //            }
-
-                    //            resultList.Add(row);
-                    //        }
-                    //    }
-                    //}
                     using var reader = await command.ExecuteReaderAsync();
 
                     var dt = new DataTable();
-                    dt.Load(reader); // <-- không cần while
+                    dt.Load(reader);
+
                     resultList = dt.AsEnumerable()
-                                .Select(row => dt.Columns.Cast<DataColumn>()
-                                    .ToDictionary(
-                                        col => Char.ToLowerInvariant(col.ColumnName[0]) + col.ColumnName[1..],
-                                        col => row[col] == DBNull.Value ? null : row[col]
-                                    ))
-                                .ToList();
+                        .Select(row => dt.Columns.Cast<DataColumn>()
+                            .ToDictionary(
+                                col => Char.ToLowerInvariant(col.ColumnName[0]) + col.ColumnName[1..],
+                                col => row[col] == DBNull.Value ? null : row[col]
+                            ))
+                        .ToList();
                 }
 
-                Util.QueryLogs(_connectionString, "sp_Querylogs",
-                       ("@QueryString", $"ExecuteCustomQuery: {query}")
-                       , ("@Duration", "")
-                       , ("@User", userName));
+                Util.QueryLogs(
+                    _connectionString,
+                    "sp_Querylogs",
+                    ("@QueryString", $"ExecuteCustomQuery: {query}"),
+                    ("@Duration", ""),
+                    ("@User", userName)
+                );
             }
 
             return resultList;
@@ -960,7 +1085,6 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
             return null;
         }
     }
-
     public async Task<List<Dictionary<string, object>>> ExecuteCustomJogetQuery(string query)
     {
         try
@@ -1008,6 +1132,103 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
         }
     }
 
+    public async Task<List<Dictionary<string, object>>> ExecuteCustomLogQuery(string query,
+    Dictionary<string, object>? parameters = null)
+    {
+        try
+        {
+            var resultList = new List<Dictionary<string, object>>();
+
+            using (SqlConnection connection = new SqlConnection(_logConnectionString))
+            {
+                await connection.OpenAsync();
+
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    if (parameters != null && parameters.Count > 0)
+                    {
+                        foreach (var kv in parameters)
+                        {
+                            command.Parameters.AddWithValue(
+                                kv.Key,
+                                kv.Value ?? DBNull.Value
+                            );
+                        }
+                    }
+
+                    using var reader = await command.ExecuteReaderAsync();
+
+                    var dt = new DataTable();
+                    dt.Load(reader);
+
+                    resultList = dt.AsEnumerable()
+                        .Select(row => dt.Columns.Cast<DataColumn>()
+                            .ToDictionary(
+                                col => Char.ToLowerInvariant(col.ColumnName[0]) + col.ColumnName[1..],
+                                col => row[col] == DBNull.Value ? null : row[col]
+                            ))
+                        .ToList();
+                }
+
+                Util.QueryLogs(
+                    _connectionString,
+                    "sp_Querylogs",
+                    ("@QueryString", $"ExecuteCustomQuery: {query}"),
+                    ("@Duration", ""),
+                    ("@User", userName)
+                );
+            }
+
+            return resultList;
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Error(ex, ex.Message);
+            return null;
+        }
+        //try
+        //{
+        //    var resultList = new List<Dictionary<string, object>>();
+
+        //    using (SqlConnection connection = new SqlConnection(_logConnectionString))
+        //    {
+        //        await connection.OpenAsync();
+
+        //        using (SqlCommand command = new SqlCommand(query, connection))
+        //        {
+        //            using (var reader = await command.ExecuteReaderAsync())
+        //            {
+        //                // Đọc dữ liệu từ DataReader
+        //                while (await reader.ReadAsync())
+        //                {
+        //                    var row = new Dictionary<string, object>();
+
+        //                    for (int i = 0; i < reader.FieldCount; i++)
+        //                    {
+        //                        var columnName = Char.ToLowerInvariant(reader.GetName(i)[0]) + reader.GetName(i).Substring(1);
+
+        //                        //var columnName = reader.GetName(i); // Tên cột
+        //                        var value = reader.IsDBNull(i) ? null : reader.GetValue(i); // Giá trị cột
+        //                        row[columnName] = value; // Thêm vào dictionary
+        //                    }
+
+        //                    resultList.Add(row);
+        //                }
+        //            }
+        //        }
+        //        Util.QueryLogs(_connectionString, "sp_Querylogs",
+        //               ("@QueryString", $"ExecuteCustomQuery: {query}")
+        //               , ("@Duration", "")
+        //               , ("@User", userName));
+        //    }
+        //    return resultList;
+        //}
+        //catch (Exception ex)
+        //{
+        //    Serilog.Log.Error(ex, ex.Message);
+        //    return null;
+        //}
+    }
 
     public async Task<List<T>> GetAllInclude()
     {
@@ -1038,6 +1259,40 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
         return entity;
     }
 
+    public async Task<List<T>> GetByDynamicField(
+        List<DynamicFieldFilter> filters,
+        IDictionary<string, string>? requestParams = null)
+    {
+        var build = Util.BuildSelectQueryByDynamicField<T>(
+            tableName: typeof(T).Name,
+            //filters: filters,
+            requestParams: requestParams,
+            useNoLock: true
+        );
+
+        try
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var result = await connection.QueryAsync<T>(build.Sql, build.Parameters);
+
+                Util.QueryLogs(
+                    _connectionString,
+                    "sp_Querylogs",
+                    ("@QueryString", $"GetByDynamicFieldFilters: {build.Sql}"),
+                    ("@Duration", ""),
+                    ("@User", userName)
+                );
+
+                return result.ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Error(ex, ex.Message);
+            throw new Exception($"GetByDynamicFieldFilters Exception Query: {build.Sql}. Details: {ex.Message}");
+        }
+    }
 
     //Last change date: 2025-02-21
     public async Task<List<T>> GetListObjectFullInclude(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includeProperties)
