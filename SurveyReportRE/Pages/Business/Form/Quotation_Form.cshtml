@@ -40,14 +40,14 @@ Note:
     state.nextStep.instanceWorkflow = new Object();
 
     state.currentUserRole = _role;
-    state.focusDept = _role == "IT" ? "FO" : _role;
+    var focusDept = _role == "IT" ? "FO" : _role    
 
     state.quotes = [];
     state.selectedId = null;
     state.selectedGuid = null;
     state.selectedCodeNo = null;
     state.selectedAttachmentId = null;
-    state.stageDept = null;
+    var stageDept = null;
     
     state.quotePaging = {
         skip: 0,
@@ -140,7 +140,7 @@ Note:
             state.selectedGuid = q.guid ?? null;
             state.selectedAttachmentId = q.documentId ?? null;
             state.selectedCodeNo = q.quotationCode ?? null;
-            state.stageDept = q.stageDept ?? null;
+            stageDept = q.stageDept ?? null;
             const params = new URLSearchParams();
             params.set("refKey", state.selectedGuid);
             params.set("refField", 'RecordGuid');
@@ -171,7 +171,7 @@ Note:
             PIC_JSON = pICs.find(f => f.quotationCode == state.selectedCodeNo)?.pIC ?? q.pIC ?? "{}";
             renderDeptCallouts(PIC_JSON);
             var map = parsePicMap(PIC_JSON);
-            stageAccount = map[state.stageDept] ? map[state.stageDept] : "(Unassigned)";
+            stageAccount = map[stageDept] ? map[stageDept] : "(Unassigned)";
 
 
         }
@@ -196,14 +196,23 @@ Note:
                                         var remarkBoxId = window.QuotationIdManager.remarkBox(item,@ViewData["Id"]);
                                         var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
                                         var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-                                         var tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
+                                         var tatObject = new Object();
+
+                                         try 
+                                         {
+                                            tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Problem");
+                                         }
+                                         catch 
+                                         {
+                                             console.log("TAT problem");
+                                         }
+                                         try {
+
+                                         if (findRouteReturn && tatObject)
                                          $(`#${returnButtonId}`).dxButton({
-                                             disabled: tatObject[item].AcceptDate ? false : true,
+                                             disabled: false,
                                             text: findRouteReturn ? findRouteReturn.displayStatus : "", icon: "undo", type: "danger", onClick:
                                                 function (e) {
-                                                    // var content = tinymce.get(`${remarkBoxId}`).getContent();
-                                                    deptData[item]
-                                                    debugger
                                                 var content = remarkBoxs[item].controlRemark.instance.option("value");
                                              
                                                     formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
@@ -211,17 +220,29 @@ Note:
                                                     returnToStep(`${formModuleKeyQt}`, state.nextStep, findRouteReturn, formItems);
                                                 }
                                         });
+                                         }
+                                         catch 
+                                         {
+                                             console.log("Return problem");
+                                         }
+                                         try
+                                         {
+                                              if (findRoute)
                                           $(`#${submitButtonId}`).dxButton({
                                                disabled: tatObject[item].AcceptDate ? false : true,
                                             text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
                                                 function (e) {
                                                 var content = remarkBoxs[item].controlRemark.instance.option("value");
-                                     
                                                     formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                                                     formItems.comment = content;
                                                     submitNextStep(`${formModuleKeyQt}`, state.nextStep, findRoute, formItems);
                                                 }
                                         });
+                                         }
+                                       catch 
+                                       {
+                                          console.log("Submit problem");
+                                       }
                                       
                                    }, 100);
                             });
@@ -373,7 +394,7 @@ Note:
                 setTimeout(() => {
                     $section.addClass("visible");
 
-                    const $assigneeCallout = $(`#${prefix}-treeStack .dept-node[data-key='${dept}'] .dept-callout`);
+                    const $assigneeCallout = $(`#${QuotationIdManager.treeStack(@ViewData["Id"])} .dept-node[data-key='${dept}'] .dept-callout`);
                     $assigneeCallout.addClass("animate-step");
                     setTimeout(() => {
                         $assigneeCallout.addClass("visible");
@@ -404,9 +425,7 @@ Note:
             setTimeout(() => {
                  $.each(qtDeptModuleCode, function (itemIndex, item) {
                        var saveButtonId = window.QuotationIdManager.btnSave(item,@ViewData["Id"]);
-                        var submitButtonId = window.QuotationIdManager.btnSubmitBranch(item,@ViewData["Id"]);
                     $(`#${saveButtonId}`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roleApply[item]);
-                    $(`#${submitButtonId}`).dxButton("instance")?.option("visible", _isSuperUser ? true :  !roleApply[item]);
                 });
                
             }, 1);
@@ -435,7 +454,7 @@ Note:
         }
 
         function updateHints() {
-            $(`#${formModuleKeyQt}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
+            $(`#${formModuleKeyQt}-focusDeptPill`).text(`Focus: ${focusDept}`);
 
             QtRoles.forEach(k => {
                 const canEdit = (state.currentUserRole === k);
@@ -498,33 +517,36 @@ Note:
 
         function applyNodeHighlights() {
             $(".dept-node").removeClass("status focus");
-            $(`.dept-node[data-key='${state.stageDept}']`).addClass("status");
-            $(`.dept-node[data-key='${state.focusDept}']`).addClass("focus");
+            $(`.dept-node[data-key='${stageDept}']`).addClass("status");
+            $(`.dept-node[data-key='${focusDept}']`).addClass("focus");
         }
 
         function applySectionFocusHighlight() {
             $(".dept-section").removeClass("focused");
-            $(`#${formModuleKeyQt}-sec_${state.focusDept}_@ViewData["Id"]`).addClass("focused");
+            $(`#${formModuleKeyQt}-sec_${focusDept}_@ViewData["Id"]`).addClass("focused");
         }
 
         function setupDeptTree() {
             $(`.${formModuleKeyQt}-dept-tree.dept-node`).off("click.tree").on("click.tree", function () {
                 const key = $(this).data("key");
-                state.focusDept = key;
+                focusDept = key;
 
                 applyNodeHighlights();
                 applySectionFocusHighlight();
                 applyEditLock();
                 updateHints();
-                scrollToDept(formModuleKeyQt, { id: `${state.focusDept}`, keyId: "@ViewData["Id"]" });
-                setSectionCollapsed(state.focusDept, false);
+                scrollToDept(formModuleKeyQt, { id: `${focusDept}`, keyId: "@ViewData["Id"]" });
+                setSectionCollapsed(focusDept, false);
             });
         }
 
         function layoutTreeLine() {
-            const $stack = $(`#${formModuleKeyQt}-treeStack`);
+            //             const $stack = $(`#${formModuleKeyQt}-treeStack`);
+            // const $nodes = $stack.find(".dept-node");
+            // const $line = $(`#${formModuleKeyQt}-treeVLine`);
+            const $stack = $(`#${QuotationIdManager.treeStack(@ViewData["Id"])}`);
             const $nodes = $stack.find(".dept-node");
-            const $line = $(`#${formModuleKeyQt}-treeVLine`);
+            const $line = $(`#${QuotationIdManager.treeVLine(@ViewData["Id"])}`);
             if (!$nodes.length) return;
 
             const stackRect = $stack[0].getBoundingClientRect();
@@ -789,7 +811,7 @@ Note:
                 //             $(`#${window.QuotationIdManager.flowHistoryPanel(@ViewData["Id"])}`).show();
                 //             $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).show();
                 //             toggleHideWorkflow = true;
-                //                 reloadWorkflow("@(ViewData["Guid"])", @(ViewData["Id"]), state.stageDept, formModuleKeyQt);
+                //                 reloadWorkflow("@(ViewData["Guid"])", @(ViewData["Id"]), stageDept, formModuleKeyQt);
                 //         } else {
                 //             $(`#${window.QuotationIdManager.flowHistoryPanel(@ViewData["Id"])}`).hide();
                 //             $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).hide();
@@ -820,7 +842,7 @@ Note:
                 .text(statusText(st))
                 .attr("class", `statusTag ${statusClass(st)}`);
 
-            // $(`#${formModuleKeyQt}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
+            // $(`#${formModuleKeyQt}-focusDeptPill`).text(`Focus: ${focusDept}`);
 
             // deptData.FO = { ...q,   id: q.id, sectionName: "FO", code: q.quotationCode };
             // deptData.TS = { ...q,   id: q.id, sectionName: "TS", code: q.quotationCode };
@@ -828,9 +850,20 @@ Note:
             // deptData.LMKT = { ...q, id: q.id, sectionName: "LMKT", code: q.quotationCode };
             // deptData.PM = { ...q,   id: q.id, sectionName: "PM", code: q.quotationCode };
             $.each(qtDeptModuleCode, function (itemIndex, item) {
-                var control = TinyMCEElementMaker(`.htmleditor`, item, @ViewData["Id"], control);
-                deptData[item] = { ...q, id: q.id, sectionName: item, code: q.quotationCode };
-                remarkBoxs[item] = { id: q.id, sectionName: item, controlRemark: control };
+                // var control = TinyMCEElementMaker(`.htmleditor`, item, @ViewData["Id"], control);
+                // deptData[item] = { ...q, id: q.id, sectionName: item, code: q.quotationCode };
+                // remarkBoxs[item] = { id: q.id, sectionName: item, controlRemark: control };
+
+                    deptData[item] = { ...q, id: q.id, sectionName: item, code: q.quotationCode };
+                if (q.stageDept == item)
+                {
+                    $(`#${QuotationIdManager.actionBarDept(item,@ViewData["Id"])}`).css({"display": "block"});
+                    var control = TinyMCEElementMaker(`.htmleditor`, item, @ViewData["Id"], control);
+                    remarkBoxs[item] = { id: q.id, sectionName: item, controlRemark: control };
+                }
+                else {
+                    $(`#${QuotationIdManager.actionBarDept(item,@ViewData["Id"])}`).css({"display": "none"});
+                }
             });
 
             renderDeptForms();
@@ -841,7 +874,7 @@ Note:
             updateSectionUpdatedTime(q);
             initDepartmentAssignees(formModuleKeyQt,deptData, firstRender ? null : 2000);
             animateOverviewSections(formModuleKeyQt);
-            scrollToDept(formModuleKeyQt, { id: `${state.focusDept}`, keyId: "@ViewData["Id"]" } );
+            scrollToDept(formModuleKeyQt, { id: `${focusDept}`, keyId: "@ViewData["Id"]" } );
             // TinyMCEElementMaker(`.htmleditor`);
 
 

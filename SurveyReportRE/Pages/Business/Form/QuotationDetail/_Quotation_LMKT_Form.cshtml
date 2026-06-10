@@ -32,9 +32,9 @@
     editorType: "dxRadioGroup",
     editorOptions: {
         items: [
-            { id: "AC_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Accept", value: true },
-            { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Assign", value: false },
-            { id: "RJ_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Reject", value: false }
+            { id: "AC_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Approve", value: true },
+            { id: "RJ_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Decline", value: false },
+            { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Return", value: false }
         ],
          displayExpr: "text",
          valueExpr: "id",
@@ -42,8 +42,8 @@
          itemTemplate: function(itemData, _, itemElement) {
          setTimeout(() => {
           var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-          var tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
-          if (tatObject[`@dept`].AcceptDate)
+          var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Problem");
+          if (tatObject) if (tatObject[`@dept`]?.AcceptDate)
           {
             $(`#AC_@QTViewIdHelper.Decision(dept, quotationId)`).addClass("btn-success");
             $(`#${itemData.id}`).dxButton("instance").option("disabled", true);
@@ -59,7 +59,7 @@
              if (_ == 0)
                  {
                       var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-                       var tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
+                       var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Problem");
                       tatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
                       formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
                       var passingObject = new Object();
@@ -75,7 +75,7 @@
                  if (_ == 2)
                  {
                       var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-                      var tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
+                      var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Problem");
                       tatObject[`@dept`].AcceptDate = "";
                       formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
                       var passingObject = new Object();

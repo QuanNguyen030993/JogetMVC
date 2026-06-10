@@ -1070,7 +1070,6 @@
         function connectEdge(t) {
           var color = colorForEdge(t);
           var label = safe(t.actionName || t.userDecisionLabel || t.actionCode || "");
-          debugger
           var statusName = _enums.OverallStatus.find(f => f.id == t.statusId);
                                   label = `${label} - <div class="statusTag ${normalizeStatus(statusName?.value || "").css}">${statusName?.value || ""}</div>`;
           var isSelfLoop = t.fromNodeId === t.toNodeId;

@@ -184,8 +184,9 @@ namespace JogetMVC.Model
         public static string RoleSelect => $"{Prefix}-roleSelect";
 
         // Tree navigation
-        public static string TreeStack => $"{Prefix}-treeStack";
-        public static string TreeVLine => $"{Prefix}-treeVLine";
+        public static string DeptTree(long quotationId) => $"{Prefix}-deptTree_{quotationId}";
+        public static string TreeStack(long quotationId) => $"{Prefix}-treeStack_{quotationId}";
+        public static string TreeVLine(long quotationId) => $"{Prefix}-treeVLine_{quotationId}";
 
         // Right panel
         public static string RightCommentDock => "rightCommentDock";
@@ -672,11 +673,10 @@ namespace JogetMVC.Model
         public static string RoleSelect
             => GenerateId("roleSelect");
 
-        public static string TreeStack
-            => GenerateId("treeStack");
-
-        public static string TreeVLine
-            => GenerateId("treeVLine");
+        // Tree navigation
+        public static string DeptTree(long quotationId) => $"{Prefix}-deptTree_{quotationId}";
+        public static string TreeStack(long quotationId) => $"{Prefix}-treeStack_{quotationId}";
+        public static string TreeVLine(long quotationId) => $"{Prefix}-treeVLine_{quotationId}";
 
         #endregion
 

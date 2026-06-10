@@ -1648,7 +1648,6 @@ async function makeFieldFeatures(item, obj, type) {
         ) {
 
             schCol.calculateFilterExpression = function (value, operation, target) {
-
                 if (value != null) {
 
                     if (value.indexOf(",") < 0) {
