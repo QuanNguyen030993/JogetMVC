@@ -125,7 +125,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
     {
         _baseConfiguration = config;
         
-        _connectionString = _baseConfiguration.GetConnectionString("DefaultConnection");
+        _connectionString = _baseConfiguration.GetConnectionString(ControllerUtil.tmivEnvironment + "Connection");
         _connectionString = ControllerUtil.ParseConnectionString(_connectionString,config);
         _jogetConnectionString = _baseConfiguration.GetConnectionString(ControllerUtil.jogetEnvironment + "Connection");
         _logConnectionString = _baseConfiguration.GetConnectionString("LogConnection");

@@ -139,8 +139,8 @@
         _isSuperUser =  `@Html.Raw(ViewData["IsSuperUser"])`;
         _isDebugMode = `@Html.Raw(ViewData["IsDebugMode"])`;
         var _notifyEnv = `@Html.Raw(ViewData["NotifyEnv"])`;
-        // if (_notifyEnv  == "true")
-        //     $("#environmentLabel").text(`(TMIV Environment: @ViewData["Environment"])`);
+        if (_notifyEnv  == "true")
+            $("#environmentLabel").text(`(TMIV Environment: @ViewData["Environment"])`);
         // if (_notifyEnv  == "true")
         //     $("#environmentJogetLabel").text(`(Joget Environment: @ViewData["JogetEnvironment"])`);
         if (_isDebugMode == "true"){
