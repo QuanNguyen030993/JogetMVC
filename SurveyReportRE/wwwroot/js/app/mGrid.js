@@ -463,6 +463,7 @@ var MGridOption = class MGridOption {
 
                 if (fc.dataType == "string" && fc.dataField.indexOf("Id") < 0 && fc.lookup == null && fc.mLookup == null) {
                     fc.calculateFilterExpression = function (value, operation, target) {
+                        debugger
                         if (value != null) {
                             if (value.indexOf(",") < 0) {
                                 value = typeof value === "string" ? value.trim() : value;

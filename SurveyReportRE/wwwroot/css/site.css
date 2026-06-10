@@ -1078,7 +1078,7 @@ aside {
     .statusTag.declined,
     .statusTag.client-refuse {
         background: rgba(239,68,68);
-        color: #7f1d1d;
+        color: #ffffff;
     }
 
     /* Done / Complete / Dispose / Archive */

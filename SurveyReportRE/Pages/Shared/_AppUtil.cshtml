@@ -1446,19 +1446,22 @@
             const s = String(raw ?? "").trim();
             const k = s.toLowerCase().replace(/\s+/g, " ");
 
-            if (k === "" || k === "new") return { css: "new", text: "New" };
-            if (k === "pending") return { css: "pending", text: "Pending" };
-            if (k === "in progress") return { css: "in-progress", text: "In Progress" };
-            if (k === "accept") return { css: "accepted", text: "Accept" };
-            if (k === "approved") return { css: "approved", text: "Approved" };
-            if (k === "reject") return { css: "rejected", text: "Reject" };
-            if (k === "decline" || k === "declined") return { css: "declined", text: "Decline" };
-            if (k === "clientaccept") return { css: "client-accept", text: "Client accept" };
-            if (k === "clientrefuse") return { css: "client-refuse", text: "Client refuse" };
-            if (k === "done") return { css: "done", text: "Done" };
-            if (k === "complete") return { css: "complete", text: "Complete" };
-            if (k === "dispose") return { css: "dispose", text: "Dispose" };
-            if (k === "archive") return { css: "archive", text: "Archive" };
+            if (k === "" || k === "new") return { css: "new", text: raw };
+            if (k === "pending") return { css: "pending", text: raw };
+            if (k.includes("pending")) return { css: "pending", text: raw };
+            if (k === "in progress") return { css: "in-progress", text: raw };
+            if (k === "accept") return { css: "accepted", text: raw };
+            if (k.includes("accept")) return { css: "accepted", text: raw };
+            if (k === "approved") return { css: "approved", text: raw };
+            if (k === "reject") return { css: "rejected", text: raw };
+            if (k === "decline" || k === "declined") return { css: "declined", text: raw };
+            if (k === "clientaccept") return { css: "client-accept", text: raw };
+            if (k === "clientrefuse") return { css: "client-refuse", text: raw };
+            if (k === "done") return { css: "done", text: raw };
+            if (k === "complete") return { css: "complete", text: raw };
+            if (k.includes("complete")) return { css: "complete", text: raw };
+            if (k === "dispose") return { css: "dispose", text: raw };
+            if (k === "archive") return { css: "archive", text: raw };
             if (k === "?" || k === "unknown") return { css: "unknown", text: "?" };
             return { css: "unknown", text: s || "?" };
         }
@@ -2995,6 +2998,7 @@
             if (addtionalOptions) {
                 item.editorOptions.acceptCustomValue = (addtionalOptions.acceptCustomValue != undefined || addtionalOptions.acceptCustomValue != null) ? addtionalOptions.acceptCustomValue : true;
                 item.editorOptions.searchEnabled = (addtionalOptions.searchEnabled != undefined || addtionalOptions.searchEnabled != null) ? addtionalOptions.searchEnabled : true;
+                item.editorOptions.calculateFilterExpression = (addtionalOptions.calculateFilterExpression != undefined || addtionalOptions.calculateFilterExpression != null) ? addtionalOptions.calculateFilterExpression : true;
             }
             return item;
             //});
@@ -3012,30 +3016,31 @@
             searchEnabled: true,
             width: 300,
             acceptCustomValue: acceptCustomValue,
-            onValueChanged: function (e) { // handle after select
-                if (gridInstance != null) {
-                    if (gridInstance.moreActionFromSelectedChangeSelectBox)
-                        gridInstance.moreActionFromSelectedChangeSelectBox(e, item, gridInstance);
-                    else {
-                        if (e.value) {
-                            // Cập nhật giá trị vào cell
-                            gridInstance.component.cellValue(
-                                gridInstance.row.rowIndex,
-                                item.dataField,
-                                e.value
-                            );
-                        } else {
-                            // Xóa giá trị trong cell
-                            gridInstance.component.cellValue(
-                                gridInstance.row.rowIndex,
-                                item.dataField,
-                                null
-                            );
-                        }
-                        //gridInstance.component.saveEditData();
-                    }
-                }
-                                        },
+            // onValueChanged: function (e) { // handle after select // impact filter datagrid column, note
+            //     if (gridInstance != null) {
+            //         if (gridInstance.moreActionFromSelectedChangeSelectBox)
+            //             gridInstance.moreActionFromSelectedChangeSelectBox(e, item, gridInstance);
+            //         else {
+            //             if (gridInstance.focusRowData)
+            //             if (e.value) {
+            //                 // Cập nhật giá trị vào cell
+            //                     gridInstance.mGridInstance.component.cellValue(
+            //                         gridInstance.focusData.rowIndex,
+            //                     item.dataField,
+            //                     e.value
+            //                 );
+            //             } else {
+            //                 // Xóa giá trị trong cell
+            //                 gridInstance.mGridInstance.component.cellValue(
+            //                      gridInstance.focusData.rowIndex,
+            //                     item.dataField,
+            //                     null
+            //                 );
+            //             }
+            //             //gridInstance.component.saveEditData();
+            //         }
+            //     }
+            //                             },
             onCustomItemCreating: function (e) {
                 //var dataSource = dataSourceLookup;
                 e.customItem = {}; //Avoid lib error
