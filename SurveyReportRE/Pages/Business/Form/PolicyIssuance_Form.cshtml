@@ -279,36 +279,61 @@ Note:
                               // setNextStep(state.nextStep);
                               $.each(piDeptModuleCode, function (itemIndex, item) {
                                       setTimeout(() => {
-                                          var findRoute = state.nextStep.flowSteps.find(f => f.fromNodeId == item && f.stepNo == state.nextStep.instanceWorkflow.currentStep);
-                                           var returnButtonId = window.PolicyIssuanceIdManager.btnReturnBranch(item,@ViewData["Id"]);
-                                          var submitButtonId = window.PolicyIssuanceIdManager.btnSubmitBranch(item,@ViewData["Id"]);
-                                         $(`#${returnButtonId}`).dxButton({
-                                            text: findRouteReturn ? findRouteReturn.displayStatus : "", icon: "check", type: "info", onClick:
-                                                function (e) {
-                                                    var content = tinymce.get(`qt-remarkBox_${item}`).getContent();
-                                                    var formItems = $(`#qt-form${item}`).dxForm("instance")?.option("formData") || {};
-                                                    formItems.comment = content;
-                                                    returnToStep(`${formModuleKeyPi}`, state.nextStep, findRouteReturn, formItems);
-                                                }
-                                          });
-                                          $(`#${submitButtonId}`).dxButton({
-                                            text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
-                                                function (e) {
-                                                    var content = tinymce.get(`qt-remarkBox_${item}`).getContent();
-                                                    var formItems = $(`#qt-form${item}`).dxForm("instance")?.option("formData") || {};
-                                                    formItems.comment = content;
-                                                    submitNextStep(`${formModuleKeyPi}`, state.nextStep, findRoute, formItems);
-                                                }
-                                        });
-                                          // $(`#pi-btnSubmitBranch_${item}`).dxButton({
-                                          //     text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
-                                          //         function (e) {
-                                          //             var content = tinymce.get(`pi-remarkBox_${item}`).getContent();
-                                          //             var formItems = $(`#pi-form${item}`).dxForm("instance")?.option("formData") || {};
-                                          //             formItems.comment = content;
-                                          //             submitNextStep(`${item}`, state.nextStep, findRoute, formItems);
-                                          //         }
-                                          // });
+                                               var findRoute = state.nextStep.flowSteps.find(f => !f.actionCode.includes("BACK_") && f.fromNodeId == item && f.fNodeId == state.nextStep.currentStep);
+                                             var findRouteReturn = state.nextStep.flowSteps.find(f => f.actionCode.includes("BACK_") && f.fromNodeId == item && f.fNodeId == state.nextStep.currentStep);
+                                             var returnButtonId = window.PolicyIssuanceIdManager.btnReturnBranch(item,@ViewData["Id"]);
+                                             var submitButtonId = window.PolicyIssuanceIdManager.btnSubmitBranch(item,@ViewData["Id"]);
+                                             var remarkBoxId = window.PolicyIssuanceIdManager.remarkBox(item,@ViewData["Id"]);
+                                             var formId = window.PolicyIssuanceIdManager.form(item,@ViewData["Id"]);
+                                             var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                                              var tatObject = new Object();
+
+                                              try
+                                              {
+                                                 tatObject = JSON.parse(formItems.turnAroundTimeAttributes);
+                                              }
+                                              catch
+                                              {
+                                                  console.log("TAT problem");
+                                              }
+                                              try {
+
+                                              if (findRouteReturn && tatObject)
+                                              $(`#${returnButtonId}`).dxButton({
+                                                  disabled: false,
+                                                 text: findRouteReturn ? findRouteReturn.displayStatus : "", icon: "undo", type: "danger", onClick:
+                                                     function (e) {
+                                                     var content = remarkBoxs[item].controlRemark.instance.option("value");
+
+                                                         formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                                                         formItems.comment = content;
+                                                         returnToStep(`${formModuleKeyPi}`, state.nextStep, findRouteReturn, formItems);
+                                                     }
+                                             });
+                                              }
+                                              catch
+                                              {
+                                                  console.log("Return problem");
+                                              }
+                                              try
+                                              {
+                                                   if (findRoute)
+                                               $(`#${submitButtonId}`).dxButton({
+                                                    disabled: tatObject[item].AcceptDate ? false : true,
+                                                 text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
+                                                     function (e) {
+                                                     var content = remarkBoxs[item].controlRemark.instance.option("value");
+
+                                                         formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                                                         formItems.comment = content;
+                                                         submitNextStep(`${formModuleKeyPi}`, state.nextStep, findRoute, formItems);
+                                                     }
+                                             });
+                                              }
+                                            catch
+                                            {
+                                               console.log("Submit problem");
+                                            }
                                      }, 100);
                               });
                           });
@@ -400,60 +425,7 @@ Note:
             updateHints();
         }
 
-        // function applyEditLock() {
-        //     const roMKT = !(state.currentUserRole === "FO");
-        //     const roTS = !(state.currentUserRole === "TS");
-        //     const roUW = !(state.currentUserRole === "UW");
-        //     const roLMKT = !(state.currentUserRole === "LMKT");
-        //     const roPM = !(state.currentUserRole === "PM");
-
-        //      setTimeout(() => {
-        //         $(`#${formModuleKeyPi}-btnSave_FO`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roMKT );
-        //         $(`#${formModuleKeyPi}-btnSave_TS`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roTS);
-        //         $(`#${formModuleKeyPi}-btnSave_UW`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roUW);
-        //         $(`#${formModuleKeyPi}-btnSave_LMKT`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roLMKT);
-        //         $(`#${formModuleKeyPi}-btnSave_PM`).dxButton("instance")?.option("visible",  _isSuperUser ? true :!roPM);
-
-        //         $(`#${formModuleKeyPi}-btnSubmitBranch_FO`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roMKT);
-        //         $(`#${formModuleKeyPi}-btnSubmitBranch_TS`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roTS);
-        //         $(`#${formModuleKeyPi}-btnSubmitBranch_UW`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roUW);
-        //         $(`#${formModuleKeyPi}-btnSubmitBranch_LMKT`).dxButton("instance")?.option("visible",  _isSuperUser ? true :!roLMKT);
-        //         $(`#${formModuleKeyPi}-btnSubmitBranch_PM`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roPM);
-
-        //         // $(`#${formModuleKeyPi}-btnSave_FO`).dxButton("instance")?.option("visible", !roMKT );
-        //         // $(`#${formModuleKeyPi}-btnSave_TS`).dxButton("instance")?.option("visible", !roTS);
-        //         // $(`#${formModuleKeyPi}-btnSave_UW`).dxButton("instance")?.option("visible", !roUW);
-        //         // $(`#${formModuleKeyPi}-btnSave_LMKT`).dxButton("instance")?.option("visible", !roLMKT);
-        //         // $(`#${formModuleKeyPi}-btnSave_PM`).dxButton("instance")?.option("visible", !roPM);
-
-        //         // $(`#${formModuleKeyPi}-btnSubmitBranch_FO`).dxButton("instance")?.option("visible", !roMKT);
-        //         // $(`#${formModuleKeyPi}-btnSubmitBranch_TS`).dxButton("instance")?.option("visible", !roTS);
-        //         // $(`#${formModuleKeyPi}-btnSubmitBranch_UW`).dxButton("instance")?.option("visible", !roUW);
-        //         // $(`#${formModuleKeyPi}-btnSubmitBranch_LMKT`).dxButton("instance")?.option("visible", !roLMKT);
-        //         // $(`#${formModuleKeyPi}-btnSubmitBranch_PM`).dxButton("instance")?.option("visible", !roPM);
-        //      }, 1);
-
-        //       setTimeout(() => {
-        //     $(`#${formModuleKeyPi}-formFO`).dxForm("instance")?.option("readOnly", roMKT);
-        //     $(`#${formModuleKeyPi}-formTS`).dxForm("instance")?.option("readOnly", roTS);
-        //     $(`#${formModuleKeyPi}-formUW`).dxForm("instance")?.option("readOnly", roUW);
-        //     $(`#${formModuleKeyPi}-formLMKT`).dxForm("instance")?.option("readOnly", roLMKT);
-        //     $(`#${formModuleKeyPi}-formPM`).dxForm("instance")?.option("readOnly", roPM);
-        //      }, 1);
-
-        //     $(`#${formModuleKeyPi}-roleSelect`).dxSelectBox({
-        //         items: QtRoles,
-        //         value: state.currentUserRole,
-        //         stylingMode: "outlined",
-        //         onValueChanged: (e) => {
-        //             state.currentUserRole = e.value;
-        //             $(`#${formModuleKeyPi}-loginRoleLabel`).text(state.currentUserRole);
-        //             applyEditLock();
-        //             updateHints();
-        //             DevExpress.ui.notify("Role switched: " + state.currentUserRole, "info", 1200);
-        //         }
-        //     });
-        // }
+        
         function applyEditLock() {
             const roleApply = {};
               $.each(piDeptModuleCode, function (itemIndex, item) {
@@ -465,9 +437,7 @@ Note:
             setTimeout(() => {
                  $.each(piDeptModuleCode, function (itemIndex, item) {
                        var saveButtonId = window.PolicyIssuanceIdManager.btnSave(item,@ViewData["Id"]);
-                        var submitButtonId = window.PolicyIssuanceIdManager.btnSubmitBranch(item,@ViewData["Id"]);
                     $(`#${saveButtonId}`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roleApply[item]);
-                    $(`#${submitButtonId}`).dxButton("instance")?.option("visible", _isSuperUser ? true :  !roleApply[item]);
                 });
                
             }, 1);
@@ -582,9 +552,9 @@ Note:
         }
 
         function layoutTreeLine() {
-            const $stack = $(`#${formModuleKeyPi}-treeStack`);
+            const $stack = $(`#${PolicyIssuanceIdManager.treeStack(@ViewData["Id"])}`);
             const $nodes = $stack.find(".dept-node");
-            const $line = $(`#${formModuleKeyPi}-treeVLine`);
+            const $line = $(`#${PolicyIssuanceIdManager.treeVLine(@ViewData["Id"])}`);
             if (!$nodes.length) return;
 
             const stackRect = $stack[0].getBoundingClientRect();
@@ -925,10 +895,14 @@ Note:
              $(`#${window.PolicyIssuanceIdManager.stageDeptPill(q.id)}`).html(`Pending at: ${state.stageDept} - ${stageAccount ?? ""}`);
 
             var control = new Object();
-            $.each(qtDeptModuleCode, function (itemIndex, item) {
-
-            deptData[item] = { ...q, id: q.id, sectionName: item, code: q.policyIssuanceCode };
-                TinyMCEElementMaker(`.htmleditor`, item, @ViewData["Id"], control);
+            $.each(piDeptModuleCode, function (itemIndex, item) {
+                if (q.stageDept == item)
+                {
+                    var control = TinyMCEElementMaker(`.htmleditor`, item, @ViewData["Id"], control);
+                    deptData[item] = { ...q, id: q.id, sectionName: item, code: q.quotationCode };
+                    remarkBoxs[item] = { id: q.id, sectionName: item, controlRemark: control };
+                }
+                
             });
 
             // deptData.FO = { ...q, id: q.id, sectionName: "FO", code: q.policyIssuanceCode };
@@ -1140,36 +1114,36 @@ Note:
             }, 250)
         });
 
-        $(`#${formModuleKeyPi}-btnClientConfirm`).dxButton({
-            text: "Submit To Policy Issuance",
-            icon: "check",
-            type: "success",
-            onClick: function () {
-               var policyIssuanceConvert = state.quotes.find(x => x.id == state.selectedId);
-                if (!policyIssuanceConvert) return;
+        // $(`#${formModuleKeyPi}-btnClientConfirm`).dxButton({
+        //     text: "Submit To Policy Issuance",
+        //     icon: "check",
+        //     type: "success",
+        //     onClick: function () {
+        //        var policyIssuanceConvert = state.quotes.find(x => x.id == state.selectedId);
+        //         if (!policyIssuanceConvert) return;
 
-                var policyIssuance = new Object();
-                policyIssuance = ObjectPopulateKey(policyIssuanceConvert, true, false);
-                policyIssuance.RequestDate = new Date();
-                policyIssuance.PIC = {
-                    FO: "",
-                    TS: "",
-                    PM: ""
-                };
+        //         var policyIssuance = new Object();
+        //         policyIssuance = ObjectPopulateKey(policyIssuanceConvert, true, false);
+        //         policyIssuance.RequestDate = new Date();
+        //         policyIssuance.PIC = {
+        //             FO: "",
+        //             TS: "",
+        //             PM: ""
+        //         };
 
-                policyIssuance.PIC = JSON.stringify(policyIssuance.PIC);
-                policyIssuance.StageDept = "FO";
-                policyIssuance.PolicyIssuanceStatus = "New";
-                policyIssuance.WorkflowStatus = "FO Pending";
+        //         policyIssuance.PIC = JSON.stringify(policyIssuance.PIC);
+        //         policyIssuance.StageDept = "FO";
+        //         policyIssuance.PolicyIssuanceStatus = "New";
+        //         policyIssuance.WorkflowStatus = "FO Pending";
 
-                ajaxPost('api/PolicyIssuance/CreatePolicyIssuance', policyIssuance, {
-                    onSuccess: function () {
-                        DevExpress.ui.notify("PolicyIssuance submitted!", "info", 1200);
-                    },
-                    onError: function () { }
-                });
-            }
-        });
+        //         ajaxPost('api/PolicyIssuance/CreatePolicyIssuance', policyIssuance, {
+        //             onSuccess: function () {
+        //                 DevExpress.ui.notify("PolicyIssuance submitted!", "info", 1200);
+        //             },
+        //             onError: function () { }
+        //         });
+        //     }
+        // });
 
         $("#branchOverlay .backdrop").on("click", function () {
             $("#branchOverlay").hide();

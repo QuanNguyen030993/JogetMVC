@@ -479,7 +479,7 @@ aside {
     padding: 5px;
     color: white;
     margin-right: 15px;
-    border-radius: 50%;
+    /*border-radius: 50%;*/
     border: solid;
 }
 

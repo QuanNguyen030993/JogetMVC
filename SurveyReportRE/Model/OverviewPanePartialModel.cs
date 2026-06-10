@@ -5,5 +5,6 @@
     public string Id { get; set; } = "";
     public string Title { get; set; } = "Overview";
     public string Guid { get; set; } = "";
+    public string StageDept { get; set; } = "";
 
 }
