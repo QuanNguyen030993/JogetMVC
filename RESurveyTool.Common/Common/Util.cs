@@ -1424,6 +1424,17 @@ namespace ERPCore.Common
             else
                 return $"DELETE FROM [{typeof(T).Name}] WHERE [{keyColumn}] = '{keyId}'";
         }
+
+        public static string BuildBulkDeleteQuery<T>(List<int> ids, string keyColumn, string userName, bool isRemove = true) where T : class
+        {
+            if (!isRemove)
+            {
+                //var userName = httpContextAccessor?.HttpContext?.User?.Identity?.Name;
+                return $"UPDATE [{typeof(T).Name}] SET Deleted = 1, DeletedBy = '{userName}', DeletedDate = GETDATE()  WHERE [{keyColumn}] IN ({string.Join(",", ids)})";
+            }
+            else
+                return $"DELETE FROM [{typeof(T).Name}] WHERE [{keyColumn}] IN ({string.Join(",", ids)})";
+        }
         public static (string sqlQuery, Dictionary<string, object> parameters) BuildSelectAllQuery<T>(string tableName, Expression<Func<T, bool>> predicate = null, bool nonCondition = false)
         {
             //return $"SELECT * FROM [{tableName}] WITH (NOLOCK) WHERE Deleted = 0 ORDER BY RowOrder ASC";

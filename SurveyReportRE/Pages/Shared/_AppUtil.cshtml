@@ -1655,43 +1655,78 @@
                 keyExpr
             };
         }
-            function getModelConfig(model, isFilter = true) {
-            //Parent method fetchConfigurationData
-            var modelConfig = null;
-            const configSTState = window.Config;
-            if (!(configSTState.loadedSTConfig.some(f => f.modelName == model)))
-            $.ajax({
-                url: `/api/Utility/GetSTConfig/${model}`,
-                type: 'GET',
-                async: true,
-                success: function (response) {
-                    configSTState.loadedSTConfig.push({modelName : model , data : response });
-                    // Case 1: response là ARRAY
-                    if (Array.isArray(response)) {
-                        if (isFilter) {
-                            modelConfig = response.find(f => f.name === model) || null;
-                        } else {
-                            modelConfig = response;
-                        }
-                    }
-                    // Case 2: response là OBJECT
-                    else if (typeof response === "object" && response !== null) {
-                        modelConfig = response;
-                    }
-                    // Case fallback
-                    else {
-                        modelConfig = null;
-                    }
-                },
-                error: function (error) {
-                    _genericExceptionMessage = error.responseText;
-                    modelConfig = null;
+        // function getModelConfig(model, isFilter = true) {
+        //     //Parent method fetchConfigurationData
+        //     var modelConfig = null;
+        //     const configSTState = window.Config;
+        //     if (!(configSTState.loadedSTConfig.some(f => f.modelName == model)))
+        //     $.ajax({
+        //         url: `/api/Utility/GetSTConfig/${model}`,
+        //         type: 'GET',
+        //         async: true,
+        //         success: function (response) {
+        //             configSTState.loadedSTConfig.push({modelName : model , data : response });
+        //             // Case 1: response là ARRAY
+        //             if (Array.isArray(response)) {
+        //                 if (isFilter) {
+        //                     modelConfig = response.find(f => f.name === model) || null;
+        //                 } else {
+        //                     modelConfig = response;
+        //                 }
+        //             }
+        //             // Case 2: response là OBJECT
+        //             else if (typeof response === "object" && response !== null) {
+        //                 modelConfig = response;
+        //             }
+        //             // Case fallback
+        //             else {
+        //                 modelConfig = null;
+        //             }
+        //         },
+        //         error: function (error) {
+        //             _genericExceptionMessage = error.responseText;
+        //             modelConfig = null;
+        //         }
+        //     });
+        //     else
+        //     modelConfig  = configSTState.loadedSTConfig.find(f => f.modelName == model).data;
+        //      return modelConfig;
+        // }
+            async function getModelConfig(model, isFilter = true) {
+        const configSTState = window.Config;
+
+        if (!(configSTState.loadedSTConfig.some(f => f.modelName == model))) {
+            try {
+                const response = await $.ajax({
+                    url: `/api/Utility/GetSTConfig/${model}`,
+                    type: 'GET'
+                });
+
+                configSTState.loadedSTConfig.push({
+                    modelName: model,
+                    data: response
+                });
+
+                // xử lý response
+                if (Array.isArray(response)) {
+                    return isFilter
+                        ? response.find(f => f.name === model) || null
+                        : response;
                 }
-            });
-            else
-            modelConfig  = configSTState.loadedSTConfig.find(f => f.modelName == model).data;
-             return modelConfig;
+                else if (typeof response === "object" && response !== null) {
+                    return response;
+                }
+
+                return null;
+
+            } catch (error) {
+                console.error(error);
+                return null;
+            }
+        } else {
+            return configSTState.loadedSTConfig.find(f => f.modelName == model).data;
         }
+    }
         async function RenderGridElement(_gridConfig, gridInstance) {
             for (var item of _gridConfig) {
                 item.lookup = null;

@@ -2190,93 +2190,68 @@
         }
             // ===== STATE =====
 
-    // ✅ 1. Khi user bấm Save (batch commit)
-    onSaving(e) {
-        const changes = e.changes || [];
+        // ✅ 1. Khi user bấm Save (batch commit)
+        onSaving(e) {
+            const changes = e.changes || [];
 
-        const deleteChanges = changes.filter(x => x.type === "remove");
+            const deleteChanges = changes.filter(x => x.type === "remove");
 
-        this.TotalSelected = deleteChanges.length;
-        this.DeletedCount = 0;
+            this.TotalSelected = deleteChanges.length;
+            this.DeletedCount = 0;
 
-        if (this.TotalSelected > 0) {
-            makeMiniLoadingPanel("Delete Quotation", "Please wait...");
+            if (this.TotalSelected > 0) {
+                makeMiniLoadingPanel("Delete Quotation", "Please wait...");
 
-            renderBrowserLoading({
-                payload: {
-                    progressvalue: 10
-                }
-            });
-        }
-        console.log("Total rows to delete:", this.TotalSelected);
-    }
-
-
-    // ✅ 2. Không nên dùng nhưng giữ lại cho fallback
-    onRowRemoving(e) {
-        const grid = e.component;
-
-        const changes = grid.option("editing.changes") || [];
-        const deleteChanges = changes.filter(x => x.type === "remove");
-
-        this.TotalSelected = deleteChanges.length + 1;
-
-        console.log("Removing row, estimated total:", this.TotalSelected);
-    }
-
-
-    // ✅ 3. Sau khi save hoàn tất
-    onSaved(e) {
-        if (this.TotalSelected > 0) {
-            renderBrowserLoading({
-                payload: {
-                    progressvalue: 100
-                }
-            });
+                renderBrowserLoading({
+                    payload: {
+                        progressvalue: 10
+                    }
+                });
+            }
+            console.log("Total rows to delete:", this.TotalSelected);
         }
 
-        this.TotalSelected = 0;
-        this.DeletedCount = 0;
-    }
-        // onRowRemoving(e){
 
-        //     const grid = e.component;
+        // ✅ 2. Không nên dùng nhưng giữ lại cho fallback
+        onRowRemoving(e) {
+            const grid = e.component;
 
-        //         const changes = grid.option("editing.changes") || [];
+            const changes = grid.option("editing.changes") || [];
+            const deleteChanges = changes.filter(x => x.type === "remove");
 
-        //         // ✅ tất cả row đang bị mark delete
-        //         const deleteChanges = changes.filter(x => x.type === "remove");
+            this.TotalSelected = deleteChanges.length + 1;
 
-        //         // + dòng đang delete hiện tại
-        //         const total = deleteChanges.length + 1;
-
-        //     this.TotalSelected = total;
-
-        //     if (this.TotalSelected > 0)
-        //     {
-        //         this.IsLoading = true;
-        //         if (this.IsLoading)
-        //         makeMiniLoadingPanel("Delete Quotation", "Please wait...");
-        //     }
-        //     var result = new Object();
-        //         result.payload = new Object();
-        //         result.payload.progressvalue = this.DeletedItems / this.TotalSelected;
-        //             renderBrowserLoading(result);
-        // }
+            console.log("Removing row, estimated total:", this.TotalSelected);
+        }
 
 
-        // onRowRemoved(e){
-        //     this.DeletedItems++;
-        //     var result = new Object();
-        //         result.payload = new Object();
-        //         result.payload.progressvalue = this.DeletedItems / this.TotalSelected;
-        //             renderBrowserLoading(result);
-        //             if ((this.DeletedItems / this.TotalSelected) == 1)
-        //             {
-        //                 this.DeletedItems = 0;
-        //                 this.TotalSelected = 0;
-        //             }
-        // }
+        // ✅ 3. Sau khi save hoàn tất
+        onSaved(e) {
+            if (this.TotalSelected > 0) {
+                renderBrowserLoading({
+                    payload: {
+                        progressvalue: 100
+                    }
+                });
+            }
+
+            this.TotalSelected = 0;
+            this.DeletedCount = 0;
+        }
+
+
+        onRowRemoved(e){
+            this.DeletedCount++;
+            var result = new Object();
+                result.payload = new Object();
+                result.payload.progressvalue = (this.DeletedCount / this.TotalSelected) * 100;
+                    renderBrowserLoading(result);
+                    if ((this.DeletedCount / this.TotalSelected) == 1)
+                    {
+                        this.DeletedItems = 0;
+                        this.TotalSelected = 0;
+                    }
+        }
 
            onEditorPrepared (e) {
                 if (e.dataField == "quotationStatus")
@@ -2563,7 +2538,8 @@
                 options: {
                     text: "Prepare Quotation",
                     onClick: function (e) {
-                        var seletedRows =  that.component.getSelectedRowsData();
+                        debugger
+                        var seletedRows =  that.dataGrid.getSelectedRowsData();
                         $.each(seletedRows, function(rowIndex, row) {
                         
                         var quotationData = new Object();

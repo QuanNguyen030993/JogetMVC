@@ -3594,3 +3594,48 @@ text-overflow: ellipsis;
     .quill-wrapper .ql-container {
         height: calc(100% - 42px);
     }
+
+
+.mgrid-bulk-mode .dx-data-row {
+    background-color: #fffbe6;
+}
+/* Tổng thể grid khi edit mode */
+
+
+.mgrid-edit-layout-mode {
+    position: relative;
+    border: 2px dashed #1976d2;
+    box-shadow: 0 0 8px rgba(25, 118, 210, 0.4);
+}
+
+    /* Header cột */
+    .mgrid-edit-layout-mode .dx-header-row > td {
+        background-color: #e3f2fd !important;
+        cursor: move;
+        transition: all 0.2s ease;
+    }
+
+        /* Hover header khi kéo */
+        .mgrid-edit-layout-mode .dx-header-row > td:hover {
+            background-color: #bbdefb !important;
+        }
+
+    /* Cell body (optional nhẹ thôi) */
+    .mgrid-edit-layout-mode .dx-data-row > td {
+        background-color: #fafafa;
+    }
+
+    /* Indicator badge */
+    .mgrid-edit-layout-mode::before {
+        content: "LAYOUT EDIT MODE";
+        position: absolute;
+        top: 5px;
+        right: 10px;
+        background: #1976d2;
+        color: white;
+        padding: 4px 10px;
+        font-size: 12px;
+        border-radius: 6px;
+        z-index: 10;
+        opacity: 0.85;
+    }

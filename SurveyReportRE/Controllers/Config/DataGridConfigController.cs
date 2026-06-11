@@ -80,22 +80,22 @@ namespace ERPCore.Controllers.Config
         /// <param name="gridVisibleIndexConfig">Dictionary with dataField as key and visible index as value</param>
         /// <returns>OK response with updated records count</returns>
         [HttpPost]
-        public async Task<IActionResult> UpdateGridVisibleIndex([FromBody] Dictionary<string, int> gridVisibleIndexConfig)
+        public async Task<IActionResult> UpdateGridVisibleIndex([FromBody] MGridRequest gridVisibleIndexConfig)
         {
             try
             {
-                if (gridVisibleIndexConfig == null || gridVisibleIndexConfig.Count == 0)
+                if (gridVisibleIndexConfig.Ids == null || gridVisibleIndexConfig.Ids.Count == 0)
                     return BadRequest("Grid visible index configuration is empty");
 
                 int updatedCount = 0;
 
-                foreach (var item in gridVisibleIndexConfig)
+                foreach (var item in gridVisibleIndexConfig.Ids)
                 {
                     string dataField = item.Key;
                     int visibleIndex = item.Value;
-
+                    
                     // Get existing record
-                    var existingConfig = await _BaseRepository.GetSingleObject(x => x.DataField == dataField);
+                    var existingConfig = await _BaseRepository.GetSingleObject(x => x.DataField == dataField && x.SysTableId == gridVisibleIndexConfig.ModelId);
                     
                     if (existingConfig != null)
                     {
@@ -105,7 +105,7 @@ namespace ERPCore.Controllers.Config
                         
                         // Update in database
                         await _BaseRepository.UpdateData(existingConfig, 
-                            JsonConvert.SerializeObject(new {Order = visibleIndex, gridVisibleIndex = visibleIndex }), 
+                            JsonConvert.SerializeObject(new {Order = visibleIndex, GridVisibleIndex = visibleIndex }), 
                             existingConfig.Id, "Id");
                         
                         updatedCount++;

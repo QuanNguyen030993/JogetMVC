@@ -9,7 +9,7 @@
             //contains Chuỗi có chứa notcontains Chuỗi không chứa startswith Bắt đầu với endswith Kết thúc với
             //! Phủ định and Và or Hoặc
             this.isAllowRowMenu = true;
-            
+            this.isBulkMode = false; // NEW
             // Layout editor mode properties
             this.isEditLayoutMode = false;
             this.gridIndexVisible = {}; // Stores visible column indexes
@@ -115,53 +115,66 @@
     toggleEditLayoutMode() {
         try {
             this.isEditLayoutMode = !this.isEditLayoutMode;
-            
+
             if (this.component) {
                 this.component.option('allowColumnReordering', this.isEditLayoutMode);
                 this.component.option('allowColumnResizing', this.isEditLayoutMode);
-                this.component.option('columnResizingMode', this.isEditLayoutMode ? 'widget' : 'nextColumn');
-                
-                // Apply visual style to indicate edit mode
+                this.component.option(
+                    'columnResizingMode',
+                    this.isEditLayoutMode ? 'widget' : 'nextColumn'
+                );
+
                 if (this.isEditLayoutMode) {
                     this.container.addClass('mgrid-edit-layout-mode');
-                    appNotifyInfo('Grid layout editing mode enabled');
+
+                    // highlight nhẹ toàn grid
+                    this.component.element().css({
+                        transition: "all 0.2s ease"
+                    });
+
+                    appNotifyInfo('Layout edit mode ON');
                 } else {
                     this.container.removeClass('mgrid-edit-layout-mode');
+
+                    this.component.element().css({
+                        transition: ""
+                    });
+
                     this.saveLayoutConfiguration();
-                    appNotifyInfo('Grid layout editing mode disabled. Layout saved.');
+                    appNotifyInfo('Layout saved');
                 }
             }
-            
+
             return this.isEditLayoutMode;
+
         } catch (err) {
-            appErrorHandling('Library error: call toggleEditLayoutMode was failed.', err);
+            appErrorHandling('toggleEditLayoutMode error', err);
         }
     }
-
     /**
      * Update gridIndexVisible based on current visible columns order from array elements
      */
     updateGridIndexVisible() {
-        //try {
-        //    if (!this.component) return;
+        try {
+            if (!this.component) return;
 
-        //    // Get columns from the component's column array (actual order in DOM)
-        //    const columns = this.component.option('columns');
-        //    this.gridIndexVisible = {};
+            // Get columns from the component's column array (actual order in DOM)
+            const columns = this.component.option('columns');
+            this.gridIndexVisible = {};
 
-        //    // Filter visible columns and assign index based on their position in the array
-        //    let visibleIndex = 0;
-        //    columns.forEach((col, arrayIndex) => {
-        //        if (col && col.dataField && col.visible !== false) {
-        //            this.gridIndexVisible[col.dataField] = visibleIndex;
-        //            visibleIndex++;
-        //        }
-        //    });
+            // Filter visible columns and assign index based on their position in the array
+            let visibleIndex = 0;
+            columns.forEach((col, arrayIndex) => {
+                if (col && col.dataField && col.visible !== false) {
+                    this.gridIndexVisible[col.dataField] = visibleIndex;
+                    visibleIndex++ * 100;
+                }
+            });
 
-        //    console.log('Grid Index Visible Updated from array order:', this.gridIndexVisible);
-        //} catch (err) {
-        //    appErrorHandling('Library error: call updateGridIndexVisible was failed.', err);
-        //}
+            console.log('Grid Index Visible Updated from array order:', this.gridIndexVisible);
+        } catch (err) {
+            appErrorHandling('Library error: call updateGridIndexVisible was failed.', err);
+        }
     }
 
     /**
@@ -177,21 +190,17 @@
     setGridIndexVisible(indexConfig) {
         try {
             if (!this.component || !indexConfig) return;
-            
             this.gridIndexVisible = indexConfig;
-            
-            // Apply the new column order
-            const columns = this.component.getVisibleColumns();
-            const sortedColumns = columns.sort((a, b) => {
-                const indexA = indexConfig[a.dataField] !== undefined ? indexConfig[a.dataField] : 999;
-                const indexB = indexConfig[b.dataField] !== undefined ? indexConfig[b.dataField] : 999;
-                return indexA - indexB;
+            var columns = this.component.getVisibleColumns();
+            var arrangeCols = {};
+            var count = 1;
+            columns.forEach(f => {
+                arrangeCols[f.dataField] = count * 100;
+                count++;
             });
-            
-            sortedColumns.forEach((col, index) => {
-                col.visibleIndex = index;
-            });
-            
+
+            indexConfig = arrangeCols;
+            this.gridIndexVisible = indexConfig;
             this.component.refresh();
         } catch (err) {
             appErrorHandling('Library error: call setGridIndexVisible was failed.', err);
@@ -203,13 +212,14 @@
      */
     saveLayoutConfiguration() {
         try {
-            const configKey = `mgrid_layout_${this.mGridOption.ModelName}`;
-            const layoutConfig = {
-                gridIndexVisible: this.gridIndexVisible,
-                timestamp: new Date().toISOString()
-            };
-            localStorage.setItem(configKey, JSON.stringify(layoutConfig));
-            console.log('Layout configuration saved to localStorage:', configKey);
+            this.setGridIndexVisible(this.gridIndexVisible)
+            //const configKey = `mgrid_layout_${this.mGridOption.ModelName}`;
+            //const layoutConfig = {
+            //    gridIndexVisible: this.gridIndexVisible,
+            //    timestamp: new Date().toISOString()
+            //};
+            //localStorage.setItem(configKey, JSON.stringify(layoutConfig));
+            //console.log('Layout configuration saved to localStorage:', configKey);
 
             // Save to server via API
             this.saveLayoutToServer(this.gridIndexVisible);
@@ -222,12 +232,16 @@
      * Save layout configuration to server (database)
      */
     saveLayoutToServer(gridVisibleIndexConfig) {
+        var passingObject = new Object();
+        passingObject.Ids = gridVisibleIndexConfig;
+        passingObject.ModelName = this.mGridOption.ModelName;
+        passingObject.ModelId = this.mGridOption.ModelId;
         try {
             $.ajax({
                 url: '/api/DataGridConfig/UpdateGridVisibleIndex',
                 method: 'POST',
                 contentType: 'application/json',
-                data: JSON.stringify(gridVisibleIndexConfig),
+                data: JSON.stringify(passingObject),
                 success: function(result) {
                     if (result.success) {
                         appNotifyInfo(`Grid layout saved successfully (${result.updatedCount} columns updated)`);
@@ -320,6 +334,74 @@
         }
     }
 
+    toggleBulkMode() {
+        try {
+            this.isBulkMode = !this.isBulkMode;
+
+            if (this.component) {
+                if (this.isBulkMode) {
+                    this.component.option("selection", {
+                        mode: "multiple",
+                        showCheckBoxesMode: "always"
+                    });
+
+                    appNotifyInfo("Bulk mode enabled");
+                } else {
+                    this.component.clearSelection();
+
+                    this.component.option("selection", {
+                        mode: "single"
+                    });
+
+                    appNotifyInfo("Bulk mode disabled");
+                }
+            }
+
+            return this.isBulkMode;
+        } catch (err) {
+            appErrorHandling("Error toggleBulkMode", err);
+        }
+    }
+
+    getSelectedRows() {
+        if (!this.component) return [];
+        return this.component.getSelectedRowsData();
+    }
+
+    executeBulkDelete() {
+        const rows = this.getSelectedRows();
+
+        if (!rows || rows.length === 0) {
+            appNotifyInfo("No rows selected");
+            return;
+        }
+
+        var that = this;
+
+        var dialog = DevExpress.ui.dialog.confirm(
+            `Delete ${rows.length} records?`
+        );
+
+        dialog.done(function (confirm) {
+            if (!confirm) return;
+
+            const ids = rows.map(x => x.id);
+
+            $.ajax({
+                url: `api/${that.mGridOption.ModelName}/BulkDelete`,
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(ids),
+                success: function () {
+                    that.component.refresh();
+                    appNotifyInfo("Bulk delete success");
+                },
+                error: function (err) {
+                    appErrorHandling("Bulk delete failed", err);
+                }
+            });
+        });
+    }
    
 
 };
@@ -547,7 +629,50 @@ var MGridOption = class MGridOption {
                 }
             }
         });
+        // Bulk Mode Toggle Button
+        e.toolbarOptions.items.unshift({
+            location: "after",
+            widget: "dxButton",
+            options: {
+                type: "default",
+                text: "Bulk Mode",
+                icon: "check",
+                onClick: function () {
+                    if (that.mGridInstance) {
+                        let isOn = that.mGridInstance.toggleBulkMode();
 
+                        const btn = $(this).dxButton("instance");
+
+                        if (isOn) {
+                            btn.option({
+                                type: "success",
+                                text: "Exit Bulk Mode"
+                            });
+                        } else {
+                            btn.option({
+                                type: "default",
+                                text: "Bulk Mode"
+                            });
+                        }
+                    }
+                }
+            }
+        });
+        // Bulk Delete Button
+        e.toolbarOptions.items.unshift({
+            location: "after",
+            widget: "dxButton",
+            options: {
+                type: "danger",
+                text: "Delete Selected",
+                icon: "trash",
+                onClick: function () {
+                    if (that.mGridInstance) {
+                        that.mGridInstance.executeBulkDelete();
+                    }
+                }
+            }
+        });
         if (this.GridConfig)
             if (this.GridConfig.toolbarItemsConfig) {
                 var gridToolBarConfig = JSON.parse(this.GridConfig.toolbarItemsConfig);
@@ -654,7 +779,7 @@ var MGridOption = class MGridOption {
                     $('<a>').addClass('dx-link dx-link-edit')
                         .text(options.text)
                         .css({ color: "#337ab7", textDecoration: "underline", cursor: "pointer" })
-                        .on('dxclick', function () {@
+                        .on('dxclick', function () {
                             if (Object.keys(options.key).length > 0)
                                 callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}`, `form_${controllerName}_Form_${options.key.id}`, `${controllerName} ${options.text}`);
                             else
@@ -771,6 +896,8 @@ var MGridOption = class MGridOption {
             info.data[this.refField2] = this.refKey2;
     }
 
+   
+
     async makeGridOptions(mGridConfigInstance = null) {
         var that = this;
        that.fromGrid = true;
@@ -803,8 +930,7 @@ var MGridOption = class MGridOption {
             this.GridConfig = fetchConfig;//getModelConfig(that.ModelName, false);
             if (that.gridType == "User")
                 this.GridConfig = fetchConfig;// getModelConfig(that.ModelName);
-                
-
+               this.ModelId = fetchConfig.sysTableConfig?.id || 0;
 
             if (mGridConfigInstance) {
                 if (mGridConfigInstance.gridEditorOptions != null || mGridConfigInstance.gridEditorOptions != undefined)

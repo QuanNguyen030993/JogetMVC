@@ -85,6 +85,7 @@ public interface IBaseRepository<T> where T : class
     /// <returns></returns>
     Task<T> UpdateData(T entity, string changeFields, long? keyId, string keyField);
     Task<T> DeleteData(T entity, object keyId, string keyField, bool isRemove);
+    Task<T> BulkDelete(List<int> ids, string keyField, bool isRemove);
     string GetConnection();
     Task ExecuteStoredProcedure(string storedProcedureName, params (string Key, object Value)[] parameters);
     Task<DataTable> ExecuteStoredProcedureReturn(string storedProcedureName, params (string Key, object Value)[] parameters);
@@ -514,7 +515,33 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
         }
     }
 
+    public async Task<T> BulkDelete(List<int> ids, string keyField, bool isRemove)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            var userName = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, _baseConfiguration);
+            var query = Util.BuildBulkDeleteQuery<T>(ids, keyField, userName, isRemove);
 
+            var parameters = new DynamicParameters();
+            try
+            {
+                connection.Execute(query, parameters);
+                Util.QueryLogs(_connectionString, "sp_Querylogs",
+                    ("@QueryString", $"DeleteData: {query}")
+                    , ("@Duration", "")
+                    , ("@User", userName));
+            }
+            catch (Exception ex)
+            {
+                Util.QueryLogs(_connectionString, "sp_Querylogs",
+                   ("@QueryString", $"Error DeleteData: {query}")
+                   , ("@Duration", "")
+                   , ("@User", userName));
+                Serilog.Log.Error(ex, ex.Message);
+            }
+        }
+        return null;
+    }
 
     public async Task<T> GetObjectByIdAsync(long id)
     {

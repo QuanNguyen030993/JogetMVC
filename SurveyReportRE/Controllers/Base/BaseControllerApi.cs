@@ -878,18 +878,30 @@ namespace ERPCore.Controllers.Base
         #endregion
 
 
-
-        
-
-       
+        #region Bulk Action
 
 
-      
+        // POST: api/YourModel/BulkDelete
+        [HttpPost]
+        public async Task<IActionResult> BulkDelete([FromBody] List<int> ids)
+        {
+             await _BaseRepository.BulkDelete(ids, "Id", true);
+            return Ok();
+        }
 
 
-        
+        #endregion
 
-        
+
+
+
+
+
+
+
+
+
+
 
         //public virtual async Task<ActionResult<List<DataGridConfig>>> GetScheme()
         //{
@@ -899,12 +911,12 @@ namespace ERPCore.Controllers.Base
         //    dataGridConfigs.AddRange(JsonConvert.DeserializeObject<List<DataGridConfig>>(JsonConvert.SerializeObject(Base)));
         //    return Ok(dataGridConfigs);
         //}
-        
-
-        
 
 
 
-       
+
+
+
+
     }
 }
