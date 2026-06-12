@@ -171,7 +171,7 @@
                 }
             });
 
-            console.log('Grid Index Visible Updated from array order:', this.gridIndexVisible);
+            //console.log('Grid Index Visible Updated from array order:', this.gridIndexVisible);
         } catch (err) {
             appErrorHandling('Library error: call updateGridIndexVisible was failed.', err);
         }
@@ -763,7 +763,22 @@ var MGridOption = class MGridOption {
     //    onRowUpdated(e) { }
 
     onRowInserted(e) { }
-    onRowPrepared(e) { }
+    onRowPrepared(e) {
+        if (e.rowType === "data") {
+            if (e.data.isView != null)
+                if (!e.data.isView) {
+                if (_isSuperUser == "true")
+                    e.rowElement
+                    .attr("style", `
+                        opacity: 0.4 !important;
+                        pointer-events: none !important;
+                    `);
+                else 
+                    e.rowElement
+                        .attr("style", `display: none;`);
+            }
+        }
+    }
     onRowUpdating(e) { }
     onRowInserting(e) { }
         onSaved(e) { }
@@ -864,10 +879,15 @@ var MGridOption = class MGridOption {
 
     onCellPrepared(e) {
         try {
+            var that = this
+            if (e.rowType === "data" && e.column.command && e.column.command != "drag") {
+                if (_isSuperUser == "true")
+                visibleCommentButtonCell(e, that);
+            }
             if (e.data && e.column.editorOptions != null && e.column.editorOptions.readOnly == true && e.component.option("editing.mode") === "batch") {
                 e.cellElement.css("background-color", "#F2F2F2");
             }
-
+            
 
         } catch (err) {
             appErrorHandling('Library error: call onCellPrepared was failed.', err);

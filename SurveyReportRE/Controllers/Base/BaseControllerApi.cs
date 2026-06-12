@@ -112,6 +112,14 @@ namespace ERPCore.Controllers.Base
             return Ok();
         }
 
+
+        [HttpGet("{guid}/{status}")]
+        public async Task<IActionResult> ToggleVisibleRows(Guid guid, bool status)
+        {
+            await _BaseRepository.ToggleVisibleRows<T>(status, guid);
+            return Ok();
+        }
+
         public async Task<string> GetHtmlString(long id, string fieldName)
         {
             T survey = new T();

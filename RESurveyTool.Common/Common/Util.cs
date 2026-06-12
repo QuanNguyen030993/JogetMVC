@@ -1413,6 +1413,34 @@ namespace ERPCore.Common
                 return "";
             }
         }
+
+        public static string BuildUpdateQueryV2<T>(string[] changeFields, T targetEntity, string keyColumn, string userName) where T : class
+        {
+            //var userName = httpContextAccessor?.HttpContext?.User?.Identity?.Name;
+            //HandleSystemAttribute(entity, httpContextAccessor, CommandQueryType.Update);
+            if (changeFields.Count() > 0)
+     
+            {
+                var properties = typeof(T).GetProperties();//typeof(T).GetProperties().Where(w => w.Name != w.PropertyType.Name).Where(w => w.PropertyType.Name != "List`1").Where(w => w.Name != "Id").Where(w => !w.Name.EndsWith("FK")).Where(w => !w.Name.EndsWith("Enum"));
+
+                PropertyInfo property = properties.FirstOrDefault(f => f.Name == keyColumn);
+                string fieldName = property.Name;
+                object fieldValue = property.GetValue((dynamic)targetEntity);
+                var setClause = string.Join(", ", properties
+                            .Where(p => changeFields.Contains(p.Name)).Select(p => $"[{p.Name}] = @{p.Name}"));
+                //setClause += $", ModifiedBy = '{userName}', ModifiedDate = GETDATE()";
+                if (!string.IsNullOrEmpty(setClause))
+                    return $"UPDATE [{targetEntity.GetType().Name}] SET {setClause} WHERE [{keyColumn}] = {fieldValue}";
+                else
+                    return "";
+            }
+            else
+            {
+                return "";
+            }
+        }
+
+
         public static string BuildDeleteQuery<T>(T entity, object keyId, string keyColumn, string userName, bool isRemove = true) where T : class
         {
             HandleSystemAttribute(entity, userName, CommandQueryType.Delete);

@@ -99,8 +99,9 @@ public class Quotation : BaseModel
     public string? BranchCode { get; set; }
     public string? TurnAroundTimeAttributes { get; set; }
     public long? StatusId { get; set; }
-    public bool? IsMakeOption { get; set; } = false;
+    public bool? IsNotMakeOption { get; set; } = false;
     public string? OptionParentCode { get; set; }
+    public bool? IsView { get; set; } = true;
     public EnumData? StatusEnum { get; set; }
     public InstanceWorkflow? InstanceWorkflowFK { get; set; }
     public TurnAroundAttributes? TurnAroundAttributes { get; set; }

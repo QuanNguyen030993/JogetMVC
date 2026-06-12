@@ -386,7 +386,7 @@
                 height: "95%",
                 title:"Quotation Request",
                 dragEnabled: true,
-                closeOnOutsideClick: true,
+                closeOnOutsideClick: false,
                 onHiding: function (e) {
                 },
                 contentTemplate: function (container) {
@@ -2575,6 +2575,71 @@
             };
         }
 
+
+        function renderAttachmentOptionListLazy(list, attList_Host, options) {
+            options = options || {};
+            const batchSize = options.batchSize || 8;
+            const delay = options.delay || 0;
+            const onDeleted = options.onDeleted;
+
+            if (!attList_Host || attList_Host.length === 0) return;
+
+            attList_Host.empty();
+
+            if (!list || list.length === 0) {
+                attList_Host.html("<div style='opacity:.7;padding:6px 2px;'>No attachments</div>");
+                return;
+            }
+            let index = 0;
+            let cancelled = false;
+
+            const token = Date.now() + "_" + Math.random().toString(36).slice(2);
+            attList_Host.data("lazyRenderToken", token);
+
+            function appendBatch() {
+                if (cancelled) return;
+                if (attList_Host.data("lazyRenderToken") !== token) return;
+
+                const frag = document.createDocumentFragment();
+                const itemsToAnimate = [];
+
+                for (let i = 0; i < batchSize && index < list.length; i++, index++) {
+                    const $item = createAttachmentItemOption(list[index], onDeleted, _entities.line, _entities.product);
+                    frag.appendChild($item[0]);
+                    itemsToAnimate.push($item);
+                }
+
+                attList_Host[0].appendChild(frag);
+
+                requestAnimationFrame(() => {
+                    itemsToAnimate.forEach(($item, idx) => {
+                        setTimeout(() => {
+                            $item.css({
+                                opacity: 1,
+                                transform: "translateY(0)"
+                            });
+                        }, idx * 20);
+                    });
+                });
+
+                if (index < list.length) {
+                    if (delay > 0) {
+                        setTimeout(() => requestAnimationFrame(appendBatch), delay);
+                    } else {
+                        requestAnimationFrame(appendBatch);
+                    }
+                }
+            }
+
+            appendBatch();
+
+            return {
+                cancel: function () {
+                    cancelled = true;
+                }
+            };
+        }
+
         function loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions) {
             const currentOptions = getCurrentFormOptions(editorOptions);
                  if(!editorOptions.isNotLoading)
@@ -2630,7 +2695,6 @@
 
             $(`#${editorOptions.previewId}`).remove();
             $(`#${editorOptions.uploaderId}`).remove();
-
             //const $preview =  $(`<div id="${previewId}" style="display:flex;flex-wrap:wrap;gap:25px;top:10px"></div>`)
             const $preview = $(`<div id="${editorOptions.previewId}" class="att-preview"></div>`)
                 .appendTo($container);
@@ -2645,9 +2709,9 @@
                     labelText: "",
                     uploadMode: editorOptions.uploadMode ? editorOptions.uploadMode : "instantly",
                     uploadUrl: options.uploadUrl || `/api/Attachment/AsyncUploadFile`,
-                    showFileList: editorOptions.uploadMode != "instantly" ? true : false,
+                    showFileList: false,//editorOptions.uploadMode != "instantly" ? true : false,
                     uploadHeaders: {
-                        //Only use for static string
+                        //Only use for static string    
                     },
                     onInitialized: function (e) {
                         //updateDxFileUploaderHeaders(editorOptions);
@@ -2672,7 +2736,32 @@
                         loadDxFileUploaderAttachments(editorOptions.controlId, controllerName, editorOptions)
 
 
+                    },
+
+                    // onContentReady: function (e) {
+                    //     if (!e.component.option("showFileList")) {
+                    //         $(e.element)
+                    //             .find(".dx-fileuploader-input-container")
+                    //             .remove();
+                    //     }
+                    // }
+
+                    onContentReady: function (e) {
+
+                        if (!e.component.option("showFileList")) {
+
+                            const $el = $(e.element);
+
+                            // ✅ Ẩn UI uploader
+                            $el.find(".dx-fileuploader-input-container").css({
+                                opacity: 0,
+                                height: 0,
+                                overflow: "hidden"
+                            });
+                        }
                     }
+
+
                 });
             loadDxFileUploaderAttachments(editorOptions.controlId, controllerName, editorOptions);
         }
@@ -2774,9 +2863,36 @@
                 //if (ext === "docx")
                 //    openWordMammothPopup(id);
             });
-
+            $(`<input type="hidden" value="${id}"></input>`).appendTo($item);
             return $item;
         }
+
+
+        function createAttachmentItemOption(x, onDeleted, lineOptions = [], productOptions = []) {
+            var $item = createAttachmentItem(x, onDeleted);
+                $(`
+                 <div class="att-extra" style="display:flex; gap:8px; margin-top:6px;">
+                                <select class="line-select"></select>
+                                <select class="product-select"></select>
+                            </div>
+                `).appendTo($item);
+
+            const $lineSelect = $item.find(".line-select");
+                const $productSelect = $item.find(".product-select");
+
+                // bind options Line
+                lineOptions.forEach(l => {
+                    $lineSelect.append(`<option value="${l.id}">${l.name}</option>`);
+                });
+
+                // bind options Product
+                productOptions.forEach(p => {
+                    $productSelect.append(`<option value="${p.id}">${p.name}</option>`);
+                });
+
+            return  ;
+        }
+
         function showUploaderLoader(idControlElement, message) {
             const $element = $("#" + idControlElement);
             if (!$element.length) return;
@@ -3883,5 +3999,18 @@
             console.log(msgIfFail);
             return null;
         }
+    }
+
+        function visibleCommentButtonCell(e, gridInstance) {
+        $(`<a class="dx-link dx-link-edit">`)
+            .addClass("dx-icon fas fa-eye")
+            .css({ marginRight: "5px", cursor: "pointer", color: "#337ab7" })
+            .on("click", function () {
+                debugger
+                var value = !e.data.isView;
+                ajaxGet(`api/${gridInstance.ModelName}/ToggleVisibleRows/${e.data.guid}/${value}`, null);
+                e.component.refresh();
+            })
+            .appendTo(e.cellElement);
     }
 </script>

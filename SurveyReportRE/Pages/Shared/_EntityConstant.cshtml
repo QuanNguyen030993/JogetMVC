@@ -1,10 +1,10 @@
 ﻿
 <script>
-      var _entitys = {
+      var _entities = {
       line: [], product: []
     };
 
-    $.each(_entitys, function(index, item) {
+    $.each(_entities, function(index, item) {
     if (!item.length)
             ajaxGet(`/api/${index}/GetAll`).done(res => {
                 if (res) {
@@ -18,7 +18,7 @@
                         obj.lineId = m.lineId;
                         return obj;
                     });
-                    _entitys[index] = objectParsing;
+                    _entities[index] = objectParsing;
                 }
         });
     });

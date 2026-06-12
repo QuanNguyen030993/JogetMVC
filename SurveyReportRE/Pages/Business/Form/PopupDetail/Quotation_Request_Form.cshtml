@@ -323,8 +323,8 @@
                     
                     caption: "Product",
                     items: [
-             { dataField: "lineId", isRequired: true, editorType: "dxSelectBox", editorOptions: {
-                        items: _entitys.line,
+                    { dataField: "lineId", isRequired: true, editorType: "dxSelectBox", editorOptions: {
+                        items: _entities.line,
                         keyExpr: "id",
                         displayExpr: "value",
                         searchEnabled: true,
@@ -338,11 +338,11 @@
                     { dataField: "lineCode", editorType: "dxTextBox", visible: true, editorOptions: { readOnly: true } },
                     { dataField: "productName", editorType: "dxTextBox", visible: false, editorOptions: { readOnly: true } },
                     {
-                 dataField: "productId", isRequired: true,
+                     dataField: "productId", isRequired: true,
                         editorType: "dxSelectBox",
                         editorOptions: {
                             label: { text: "Product Name" },
-                             items: _entitys.product,
+                            items: _entities.product,
                             labelMode: "floating",
                             searchEnabled: true,
                             keyExpr: "id",
@@ -661,7 +661,7 @@
                 },
                 onFieldDataChanged: function(e) {
                     if (e.dataField === "lineId") {
-                        let filtered = _entitys.product.filter(f => f.lineId === e.value.id);
+                        let filtered = _entities.product.filter(f => f.lineId === e.value.id);
                 
                         let form = e.component;
                         let editor = form.getEditor("productId");

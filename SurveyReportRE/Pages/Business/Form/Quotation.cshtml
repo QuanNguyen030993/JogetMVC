@@ -16,7 +16,9 @@
         if (_roleAppName == "Leader")
         mGridOption.refField = "leaderPIC";
         if (_roleAppName == "HOD")
-        mGridOption.refField = "hodpic";
+        mGridOption.refField = "hodpic";    
+        // mGridOption.refField2 = "isView";
+        // mGridOption.refKey2 = true;
         //Pending filterName refactor
         var mGrid = new MGrid(null, $(`#dataGrid_@QuotationModel.ModelName`), new QuotationGridOption('@QuotationModel.ModelName', "User", mGridOption), null);
         // var DS = mGrid.component.getDataSource();

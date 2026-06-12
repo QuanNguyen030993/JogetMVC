@@ -157,7 +157,7 @@ connectionSignR.start().then(async function () {
         showPopupNotification(items.title,
             items.message);
     });
-    connectionSignR.on("ItemSubmitted", function (items) {
+    connectionSignR.on("R_ItemSubmitted", function (items) {
         signalRBlink();
         //if (items.data.type === "Quotation") {
                     // Call the reload function for quotation components

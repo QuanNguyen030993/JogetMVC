@@ -51,6 +51,8 @@ public class QuotationController : BaseControllerApi<Quotation>
     private readonly IBaseRepository<Document> _documentRepository;
     private readonly IBaseRepository<Notification> _notificationRepository;
     private readonly IBaseRepository<EnumData> _enumDataRepository;
+    private readonly IBaseRepository<Product> _productRepository;
+    private readonly IBaseRepository<Line> _lineRepository;
     private readonly IHubContext<FileProcessingHub> _hubContext;
     private readonly ILogger<Quotation> _logger;
     private readonly IConfigurationSection path;
@@ -100,6 +102,8 @@ public class QuotationController : BaseControllerApi<Quotation>
         _documentRepository = new BaseRepository<Document>(configuration, _httpContextAccessor);
         _notificationRepository = new BaseRepository<Notification>(configuration, _httpContextAccessor);
         _enumDataRepository = new BaseRepository<EnumData>(configuration, _httpContextAccessor);
+        _productRepository = new BaseRepository<Product>(configuration, _httpContextAccessor);
+        _lineRepository = new BaseRepository<Line>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
         _messageSettings = configuration.GetSection("Message").Get<Message>();
 
@@ -136,6 +140,20 @@ public class QuotationController : BaseControllerApi<Quotation>
         }
         return Ok();
     }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> MarkNotAsOption(long id)
+    {
+        var entity = new Quotation();
+        entity = await _BaseRepository.GetSingleObject(s => s.Id == id);
+        entity.IsNotMakeOption = true;
+        await _BaseRepository.UpdateData(entity, JsonConvert.SerializeObject(new { IsNotMakeOption = true }), entity.Id, "Id");
+        ControllerHelper.SignalRResponse("R_ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+
+        return Ok();
+    }
+
+
 
     [HttpGet]
     public override async Task<ActionResult<Quotation>> GetAll()
@@ -204,6 +222,48 @@ public class QuotationController : BaseControllerApi<Quotation>
         }
 
         return Ok(Base);
+    }
+    [HttpPost]
+    public async Task<IActionResult> CreateOption([FromBody] QuotationOptionRequest quotationData)
+    {
+        Quotation quotation = new Quotation();
+        quotation = await _BaseRepository.GetSingleObject(s => s.Id == quotationData.QuotationId);
+        Quotation quotationNew = new Quotation();
+        quotationNew.IsView = false;
+        await _BaseRepository.UpdateData(quotationNew, quotation, ["IsView"],"Id"); 
+        int numberOfOptions = quotationData.QuotationData.Count;
+        int startNoOption = 1;
+        foreach (var item in quotationData.QuotationData)
+        {
+            Quotation quotationOp = new Quotation();
+            quotation.Id = 0;
+            JsonConvert.PopulateObject(JsonConvert.SerializeObject(quotation), quotationOp);
+            quotationOp.OptionParentCode = quotation.QuotationCode;
+            Product product = new Product();
+            product = await _productRepository.GetSingleObject(s => s.Id == item.ProductId);
+            Line line = new Line();
+            line = await _lineRepository.GetSingleObject(s => s.Id == item.LineId);
+            quotationOp.LineId = item.LineId;
+            quotationOp.LineCode = line.LineCode;
+            quotationOp.LineName = line.LineName;
+            quotationOp.ProductId = item.ProductId; 
+            quotationOp.ProductCode = product.ProductCode; 
+            quotationOp.ProductName = product.ProductName;
+            quotationOp.QuotationCode = $"{quotationOp.QuotationCode}-{startNoOption.ToString()}"; 
+            startNoOption++;
+            quotationOp.CreatedDate = DateTime.Now;
+            quotationOp.ModifiedDate = DateTime.Now;
+            quotationOp = await _BaseRepository.InsertData(quotationOp);
+
+            Document document = new Document();
+            document = await _documentRepository.GetSingleObject(s => s.Id == item.DocumentId);
+            Document documentNew = new Document();
+            documentNew.RecordGuid = quotationOp.Guid;
+            documentNew.Attributes = document.Attributes.Replace(quotationData.QuotationId.ToString(), quotationOp.Id.ToString());
+            await _documentRepository.UpdateData(documentNew, document, ["RecordGuid", "Attributes"],"Id");
+        }
+
+        return Ok();
     }
 
     [HttpPost]
@@ -964,7 +1024,7 @@ public class QuotationController : BaseControllerApi<Quotation>
 
             }
         });
-        ControllerHelper.SignalRResponse("ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        ControllerHelper.SignalRResponse("R_ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         return new HttpResponseMessage(HttpStatusCode.OK);
     }
     public async Task BulkInsertQuotationAsync(List<Quotation> data)

@@ -3134,6 +3134,7 @@ function LCparticipantListColRemake(col, gridInstance, that) {
 }
 
 function customCommandButtonCell(e) {
+
     $(`<a class="dx-link dx-link-edit">`)
        //.addClass("fa fa-arrow-up")
         .text("Edit JSON")

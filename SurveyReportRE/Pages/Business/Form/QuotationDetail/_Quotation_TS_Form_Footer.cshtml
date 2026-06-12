@@ -2,6 +2,7 @@
 @{
     string dept = "TS";
     long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
+    string prefix = "qt";
 }
 
 
@@ -17,42 +18,244 @@
 </div>
 
 <script>
+
+    function renderOptionQuotationGrid(element){
+        var data = [];
+        element
+         .each(function (index, el) {
+             const $el = $(el);
+
+             data.push({
+                    Index: index,
+                     QuotationId: @quotationId,
+                     DocumentId: Number($(el).find("input").val()),
+                     AttachmentElement: el,
+                     LineId: null,
+                     ProductId: null
+                 });
+             });
+
+             var grid = $(`<div id="gridOptionQuotation_@quotationId">`).dxDataGrid({
+             dataSource: data,
+             keyExpr: "Index",
+             showBorders: true,
+             editing: {
+                 mode: "cell",
+                 allowUpdating: true
+             },
+                 onEditorPreparing: function (e) {
+
+                if (e.parentType === "dataRow") {
+
+                    // 👉 Khi edit Product
+                    if (e.dataField === "ProductId") {
+
+                        // lấy LineId hiện tại của row
+                        let lineId = e.row.data.LineId;
+
+                        let filtered = _entities.product.filter(p => p.lineId === lineId);
+
+                        e.editorOptions.dataSource = filtered;
+                    }
+
+                    // 👉 Khi change Line → reset Product
+                    if (e.dataField === "LineId") {
+
+                        const defaultOnValueChanged = e.editorOptions.onValueChanged;
+
+                        e.editorOptions.onValueChanged = function (args) {
+
+                            // gọi default handler của DevExtreme
+                            if (defaultOnValueChanged) {
+                                defaultOnValueChanged(args);
+                            }
+
+                            // set value cho Line
+                            e.setValue(args.value);
+
+                            // reset ProductId
+                            e.component.cellValue(e.row.rowIndex, "ProductId", null);
+                        };
+                    }
+                }
+            },
+             columns: [
+                 {
+                     dataField: "AttachmentElement",
+                     caption: "Quotation",
+                     allowEditing: false,
+                     cellTemplate: function (container, options) {
+                         var inputElement = $(options.data.AttachmentElement).find("input");
+                         $(options.data.AttachmentElement).appendTo(container);
+                         inputElement.appendTo(container);
+                         return container;
+                     }
+                 },
+                 {
+                     dataField: "LineId",
+                     caption: "Line",
+                     lookup: {
+                         dataSource: _entities.line,
+                         valueExpr: "id",
+                         displayExpr: "value"
+                     },
+                     editorOptions:{
+                         dataSource: new DevExpress.data.DataSource({
+                            store: {
+                                data:_entities.line,
+                                type: 'array',
+                                key: 'id',
+                            },
+                        }),
+                         }
+                        ,
+                            cellTemplate: function(container, options) {
+                                const text = options.text || "Select...";
+
+                                $(`
+                                    <div style="display:flex; justify-content:space-between; align-items:center; padding:15px;">
+                                        <span>${text}</span>
+                                        <i class="dx-icon-chevron-down"></i>
+                                    </div>
+                                `).appendTo(container);
+                            }
+                        ,
+                         editorType: "dxSelectBox"
+                     },
+                    {
+                     dataField: "ProductId",
+                     caption: "Product",
+                     lookup: {
+                         dataSource: _entities.product,
+                         valueExpr: "id",
+                         displayExpr: "value"
+                     }, 
+                     editorOptions:{
+                         dataSource: new DevExpress.data.DataSource({
+                            store: {
+                                data:_entities.product,
+                                type: 'array',
+                                key: 'id',  
+                            },
+                        }),
+                         }
+                        ,
+                            cellTemplate: function(container, options) {
+                                const text = options.text || "Select...";
+
+                                $(`
+                                    <div style="display:flex; justify-content:space-between; align-items:center; padding:15px;">
+                                        <span>${text}</span>
+                                        <i class="dx-icon-chevron-down"></i>
+                                    </div>
+                                `).appendTo(container);
+                            }
+    ,
+                     editorType: "dxSelectBox"
+                 }
+             ]
+         });
+         return grid;
+    }
+
      setTimeout( () => {
-     var dept = "@dept";
-      var pageLayout = window.QuotationPage;
-       var stateLayout = pageLayout.state;
+     // var dept = "@dept";
+      // var pageLayout = window.QuotationPage;
+       // var stateLayout = pageLayout.state;
     $("#@QTViewIdHelper.BtnSave(dept, quotationId)").dxButton({ text: "Save", icon: "save", type: "default", onClick:
          function (e) {
-               var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-               var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
-                   shadingColor: "rgba(0,0,0,0.4)",
-                   visible: false,
-                   showIndicator: true,
-                   showPane: false,
-                   shading: true,
-                   closeOnOutsideClick: false,
-                    position: { of: `#@QTViewIdHelper.Form(dept, quotationId)`}
-                   // onShown: function () {
-                   //     setTimeout(function () {
-                   //         appLoadPanel.hide();
-                   //     }, 3000);
-                   // }
-               });
-              globalLoadPanel.dxLoadPanel("instance").show();
+                    const uploader1 = $(`#attList_@(prefix)_default_@(dept)_@(quotationId) .att-item.animate-step.visible`);
+                    const uploader2 = $(`#attList_@(prefix)_supportingDoc_@(dept)_@(quotationId) .att-item.animate-step.visible`);
 
-             ajaxPut('/api/Quotation/UpdateData',
-             {
-                 key: formItems.id,
-                 values: JSON.stringify(
-                     formItems
-                 )
-             },
-             {
-                 onSuccess: function (response) {
-                 },
-                 onError: function (err) { }
-             }
-         );
+                const fileCount1 = uploader1.length || 0; // number of quote docs
+                const fileCount2 = uploader2.length || 0; // number of sup docs
+                var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+                if (fileCount1 > 1 && !formItems.isNotMakeOption)
+                {
+                     var warningContent = `Would you like to make option of this quotation?`;
+                     var promptConfirm = appNotifyWarning(warningContent, true, "Yes", "Close");
+                     promptConfirm.then((result) => {
+                     if (result.isConfirmed){
+                                    var popupInstance = makePopupWithScroll(
+                                            renderOptionQuotationGrid($(`#attList_@(prefix)_default_@(dept)_@(quotationId) .att-item.animate-step.visible`))
+                                        ,"medium", "Select product options");
+                                        popupInstance.option("toolbarItems[0].options.onClick", function () {
+                                            popupInstance.hide();
+                                            var gridInstance = $(`#gridOptionQuotation_@quotationId`).dxDataGrid("instance");
+                                            var rows = gridInstance.getVisibleRows();
+                                            var passingObject = { QuotationId: @quotationId, QuotationData : rows.map(x => {
+                                                var c =  {
+                                                Index: x.data.Index,
+                                                 QuotationId: @quotationId,
+                                                 DocumentId: x.data.DocumentId,
+                                                 AttachmentElement: "",
+                                                 LineId:  x.data.LineId || 0 ,
+                                                 ProductId:  x.data.ProductId || 0 
+
+                                                };
+                                                return c;    
+                                            
+                                            })};
+                                            ajaxPost(`api/Quotation/CreateOption`, passingObject , {
+                                                onSuccess: function (response) {
+                                                    notify("Quotation option make success!", "success");
+                                                    
+                                                },
+                                                onError: function (err) {
+                                                    console.log(err);
+                                                    notify("Quotation option make fail!", "error");
+                                                }
+                                            });
+                                            setTimeout(() => {
+                                                nativeRemoveTab($(`li#form_@(nameof(Quotation))_Form_@(quotationId)_li_tab`))
+                                            },500);
+                                        });
+                                         popupInstance.option("toolbarItems[0].options.onClick", function () {
+                                          popupInstance.hide();
+                                         });
+                                    popupInstance.show();
+                     }
+                     else {
+                         warningContent = `Will you continue to make option?`;
+                         promptConfirm = appNotifyWarning(warningContent, true, "Yes", "No");
+                         promptConfirm.then((result) => {
+                            if(!result.isConfirmed) ajaxGet(`api/Quotation/MarkNotAsOption/@(quotationId)`, null);
+                         });
+                         
+                     }
+                     });
+                }
+
+         //       var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+         //       var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
+         //           shadingColor: "rgba(0,0,0,0.4)",
+         //           visible: false,
+         //           showIndicator: true,
+         //           showPane: false,
+         //           shading: true,
+         //           closeOnOutsideClick: false,
+         //            position: { of: `#@QTViewIdHelper.Form(dept, quotationId)`}
+         //           // onShown: function () {
+         //           //     setTimeout(function () {
+         //           //         appLoadPanel.hide();
+         //           //     }, 3000);
+         //           // }
+         //       });
+         //      globalLoadPanel.dxLoadPanel("instance").show();
+
+         //     ajaxPut('/api/Quotation/UpdateData',
+         //     {
+         //         key: formItems.id,
+         //         values: JSON.stringify(
+         //             formItems
+         //         )
+         //     },
+         //     {
+         //         onSuccess: function (response) {
+         //         },
+         //         onError: function (err) { }
+         //     }
+         // );
          }
      });
      }, _delayRenderSubmitButton);

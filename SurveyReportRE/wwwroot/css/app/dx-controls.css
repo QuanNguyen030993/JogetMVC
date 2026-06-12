@@ -11855,7 +11855,7 @@
 }
 
 .dx-fileuploader-wrapper {
-    padding: 7px;
+    /*padding: 7px;*/
 }
 
 .dx-fileuploader-content > .dx-fileuploader-upload-button {
@@ -11872,9 +11872,10 @@
     position: relative;
 }
 
-.dx-fileuploader-dragover .dx-fileuploader-input-wrapper {
+/*.dx-fileuploader-dragover .dx-fileuploader-input-wrapper {
     border: none;
     padding: 0;
+    
 }
 
     .dx-fileuploader-dragover .dx-fileuploader-input-wrapper .dx-fileuploader-button {
@@ -11890,6 +11891,7 @@
 .dx-fileuploader-dragover .dx-fileuploader-input {
     display: block;
     width: 100%;
+    height: inherit;
     padding: 14px 3px;
     margin-bottom: 1px;
     -webkit-box-sizing: content-box;
@@ -11899,7 +11901,7 @@
 .dx-fileuploader-dragover .dx-fileuploader-input-label {
     text-align: center;
     padding: 14px 9px;
-}
+}*/
 
 .dx-fileuploader-file-size,
 .dx-fileuploader-file-status-message {
