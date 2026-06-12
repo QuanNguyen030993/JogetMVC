@@ -1,17 +1,17 @@
-﻿@model DeptTreePartialModel
+﻿@using JogetMVC.Model
+@model DeptTreePartialModel
 
 @{
-    string Id(string name) => $"{Model.Prefix}-{name}";
     var moduleCode = (Model.ModuleCode ?? "").Trim().ToLower();
-
+    var quotationId = Convert.ToInt64(ViewData["Id"]);
     var deptCodes = moduleCode == "qt"
         ? new[] { "FO", "TS", "UW", "LMKT", "PM" }
         : new[] { "FO", "TS", "PM" };
 }
 
-<div id="@Id("deptTree")" class="dept-tree">
-    <div class="treeStack" id="@Id("treeStack")">
-        <div class="vline" id="@Id("treeVLine")"></div>
+<div id="@(moduleCode == "qt" ? QTViewIdHelper.DeptTree(quotationId) :  PIViewIdHelper.DeptTree(quotationId))" class="dept-tree">
+    <div class="treeStack" id="@(moduleCode == "qt" ? QTViewIdHelper.TreeStack(quotationId) :  PIViewIdHelper.TreeStack(quotationId))">
+        <div class="vline" id="@(moduleCode == "qt" ? QTViewIdHelper.TreeVLine(quotationId) :  PIViewIdHelper.TreeVLine(quotationId))"></div>
 
         @foreach (var deptCode in deptCodes)
         {

@@ -1312,7 +1312,7 @@
                                     return this.defaultCalculateFilterExpression(null, operation, target);
                                 }
                             }
-                        }
+                        }                      
                         else {
                             schCol.calculateFilterExpression = function (value, operation, target) {
                                 return this.defaultCalculateFilterExpression(value, operation, target);
@@ -2186,8 +2186,22 @@
             });
         }
 
+           onEditorPrepared (e) {
+                if (e.dataField == "quotationStatus")
+                    {
+                        var lookup = e.editorElement.dxSelectBox('instance');
+                        lookup.option("itemTemplate", function(data) {
+                            var st = normalizeStatus(data?.value || ""); // hoặc data.id tùy structure
 
-        onCustomizeColumns(columns) {
+                                   return `<div class="statusTag ${st.css}">
+                                               ${st.text}
+                                           </div>`;
+                        });
+                    }
+            }
+
+
+            onCustomizeColumns(columns) {
             var that = this;
             super.onCustomizeColumns(columns);
             this.hyperLinkCode(columns, "Business/Form", "Quotation", "id", "quotationCode");
@@ -2204,22 +2218,42 @@
                         }
                     }
                 });
-            if (col.dataField === "quotationStatus")
-            {
-                col.cellTemplate = function (container, options) {
-                var raw = options.value;
 
-                var st = normalizeStatus(raw); // dùng lại hàm bạn đã có
+                if (col.dataField === "quotationStatus")
+                {//string column text filter from selectbox first example 2026-06-10
+                    col.cellTemplate = function (container, options) {
+                    var raw = options.value;
 
-                var html = `
-                    <div class="statusTag ${st.css}">
-                        ${st.text}
-                    </div>
-                `;
+                    var st = normalizeStatus(raw); // dùng lại hàm bạn đã có
 
-                $(container).append(html);
-            };
-           
+                    var html = `
+                        <div class="statusTag ${st.css}">
+                            ${st.text}
+                        </div>
+                    `;
+                    $(container).append(html);
+                    };
+                    
+                    col.lookup.dataSource = _enums.OverallStatus;
+                    col.calculateFilterExpression = function (value, operation, target) {
+                        if (value != null) {
+                            var valueText  = _enums.OverallStatus.find(f => f.id == value).value;
+
+                            return this.defaultCalculateFilterExpression(
+                                valueText,
+                                operation,
+                                target
+                            );
+                        }
+                       }
+                    col.lookup.itemTemplate = function (data) {
+                           var st = normalizeStatus(data.value); // hoặc data.id tùy structure
+
+                           return `<div class="statusTag ${st.css}">
+                                       ${st.text}
+                                   </div>`;
+                     };
+
                 }
                  if (col.dataField == "requestedDate") {
                     col.sortOrder = "desc";

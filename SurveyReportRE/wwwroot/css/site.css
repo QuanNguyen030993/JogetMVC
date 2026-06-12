@@ -479,7 +479,7 @@ aside {
     padding: 5px;
     color: white;
     margin-right: 15px;
-    border-radius: 50%;
+    /*border-radius: 50%;*/
     border: solid;
 }
 
@@ -1078,7 +1078,7 @@ aside {
     .statusTag.declined,
     .statusTag.client-refuse {
         background: rgba(239,68,68);
-        color: #7f1d1d;
+        color: #ffffff;
     }
 
     /* Done / Complete / Dispose / Archive */

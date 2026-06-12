@@ -50,7 +50,7 @@ window.QuotationIdManager = {
     btnSubmitBranch: function (department, quotationId) { return this.generateId('btnSubmitBranch', department, quotationId); },
     btnReturnBranch: function (department, quotationId) { return this.generateId('btnReturnBranch', department, quotationId); },
     expandCollapsedBtn: function (department, quotationId) { return this.generateId('expandCollapsedBtn', department, quotationId); },
-
+    actionBarDept: function (department, quotationId) { return this.generateId('actionBarDept', department, quotationId); },
     // Section elements by department
     sec: function (department, quotationId) { return this.generateId('sec', department, quotationId); },
     upd: function (department, quotationId) { return this.generateId('upd', department, quotationId); },
@@ -62,8 +62,8 @@ window.QuotationIdManager = {
     roleSelect: function () { return `${this.prefix}-roleSelect`; },
 
     // Tree navigation
-    treeStack: function () { return `${this.prefix}-treeStack`; },
-    treeVLine: function () { return `${this.prefix}-treeVLine`; },
+    treeStack: function (quotationId) { return `${this.prefix}-treeStack_${quotationId}`; },
+    treeVLine: function (quotationId) { return `${this.prefix}-treeVLine_${quotationId}`; },
 
     // Right panel
     rightCommentDock: function () { return 'rightCommentDock'; },

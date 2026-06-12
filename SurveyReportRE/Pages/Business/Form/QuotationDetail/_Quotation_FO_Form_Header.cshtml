@@ -41,7 +41,7 @@
                     onClick: () => {
                             var resItems = [
 
-                                 {itemType: "group", caption: "Attachment",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
+                                 {itemType: "group", caption: "RES Document",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
             ,
             editorOptions: {
             name: "files"
@@ -56,6 +56,7 @@
                 item.moduleName = "qt"; item.sectionName = "FO";
                 item.code = window.QuotationPage.state.quotes[0].quotationCode; 
                 item.specificFolder = "RES";
+                item.titleName = "Upload RES Document";
                 createEditor(item, itemElement, $("<div>"), item);
                 }, 1000);
             }

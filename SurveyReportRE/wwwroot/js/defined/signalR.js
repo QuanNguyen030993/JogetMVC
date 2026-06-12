@@ -120,7 +120,6 @@ connectionSignR.start().then(async function () {
         userRender(users);
     });
     connectionSignR.on(`sectionRender_${_connectionId}`, (responseData) => {
-        debugger
         signalRBlink();
         const idx = window.QuotationPage.state.quotes.findIndex(x => x.id === responseData.data.id);
         window.QuotationPage.state.quotes[idx] = { ...responseData.data };

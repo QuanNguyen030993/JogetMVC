@@ -23,6 +23,7 @@ using Microsoft.SharePoint.Client;
 using iText.Kernel.Pdf.Canvas.Wmf;
 using static ERPCore.Models.Models.Parsing.JsonHandle;
 using ERPCore.Models.Business.Migration.Config;
+using ERPCore.Models.Migration.Business.Workflow;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -44,6 +45,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     private readonly IBaseRepository<TurnAroundTimeSession> _turnAroundTimeSessionRepository;
     private readonly IBaseRepository<Notification> _notificationRepository;
     private readonly IBaseRepository<UrlCall> _urlCallRepository;
+    private readonly IBaseRepository<StepsWorkflow> _stepsWorkflowRepository;
     private readonly IHubContext<FileProcessingHub> _hubContext;
     private readonly Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> _blobStorageSettings;
     private readonly Microsoft.Extensions.Options.IOptionsMonitor<BusinessConfig> _businessConfig;
@@ -75,6 +77,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         _turnAroundTimeSessionRepository = new BaseRepository<TurnAroundTimeSession>(configuration, _httpContextAccessor);
         _notificationRepository = new BaseRepository<Notification>(configuration, _httpContextAccessor);
         _urlCallRepository = new BaseRepository<UrlCall>(configuration, _httpContextAccessor);
+        _stepsWorkflowRepository = new BaseRepository<StepsWorkflow>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
         _hubContext = hubContext;
         _blobStorageSettings = blobStorageSettings;
@@ -89,6 +92,12 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         if (string.IsNullOrEmpty(submitRequest.StepsWorkflow.FromNodeId) || string.IsNullOrEmpty(submitRequest.StepsWorkflow.ToNodeId)) return StatusCode(500, "Submit problem, please contact IT Admin!!!!");
         //submitRequest.InstanceWorkflow.CurrentStep = ControllerHelper.UpStep(submitRequest.InstanceWorkflow).ToString();
         //submitRequest.InstanceWorkflow.CurrentStep = submitRequest.StepsWorkflow.JumpStepNo;
+
+        //StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid  && s.FromNodeId == quotationData.QuotationData.StartingDept);
+        //InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
+        //instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
+
+
         submitRequest.InstanceWorkflow.CurrentStep = submitRequest.StepsWorkflow.TNodeId;
         await _BaseRepository.UpdateData(submitRequest.InstanceWorkflow, JsonConvert.SerializeObject(submitRequest.InstanceWorkflow), submitRequest.InstanceWorkflow?.Id, "Id");
         Quotation quotation = new Quotation();
@@ -133,31 +142,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         await _quotationRepository.UpdateData(quotation, JsonConvert.SerializeObject(quotation), quotation?.Id, "Id");
         var userInfo = await ControllerHelper.FetchUserRoles(_httpContextAccessor, configuration, DOMAIN_NAME);
         await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
-//        string logQuery = $@"INSERT INTO QuotationCommentLog (QuotationId
-//,DeptCode,CommentOrder,CommentBy,CommentTime,CommentText,SourceSystem)
-//            VALUES ({quotation.Id},'{submitRequest.StepsWorkflow.FromNodeId}'
-//,{0}
-//,'{userInfo.Users?.name ?? "Anonymous"}'
-//,'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}'
-//,N'{submitRequest.Comment}'
-//,'WEB')
-//        ";
 
-
-//        string logFlowQuery = $@"INSERT INTO QuotationWorkflowHistory(QuotationId
-//,StepNo,DeptCode,ActionTime,ActionNote,FromDeptCode,ToDeptCode,ActionCode,Actor,SourceSystem)
-//            VALUES ({quotation.Id},'{submitRequest.InstanceWorkflow.CurrentStep}'
-//,'{submitRequest.StepsWorkflow.FromNodeId}'
-//,'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}'
-//,'{submitRequest.StepsWorkflow.DisplayStatus}'
-//,'{submitRequest.StepsWorkflow.FromNodeId}'
-//,'{submitRequest.StepsWorkflow.ToNodeId}'
-//,'{submitRequest.StepsWorkflow.ActionCode}'
-//,'{userInfo.Users?.name ?? "Anonymous"}','WEB')
-//        ";
-        //var quotationCommentLogApiController = new QuotationCommentLogController(_quotationCommentLogRepository, configuration, _httpContextAccessor, _logger, _optionsMonitor);
-        //await quotationCommentLogApiController.ExecuteCustomQuery(logQuery);
-        //await quotationCommentLogApiController.ExecuteCustomQuery(logFlowQuery);
 
 
         MailTemplate mailTemplate = new MailTemplate();
@@ -194,7 +179,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         {
             DOMAIN_NAME = DOMAIN_NAME,
             Title = "Assigning Task",
-            Subject = $"You have been submitted from {userInfo.Employee.FullName}",
+            Subject = $"{quotation.QuotationCode} have been submitted from {userInfo.Employee.FullName}",
             Resource = "Assign from ",
             Guid = quotation.Guid,
             ReceivedBy = accountName,
@@ -332,7 +317,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         {
             DOMAIN_NAME = DOMAIN_NAME,
             Title = "Assigning Task",
-            Subject = $"You have been returned from {employee.FullName}",
+            Subject = $"{quotation.QuotationCode} have been returned from {employee.FullName}",
             Resource = "Assign from ",
             Guid = quotation.Guid,
             ReceivedBy = accountName,
