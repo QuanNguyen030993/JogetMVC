@@ -958,7 +958,10 @@ var MGridOption = class MGridOption {
             }
             else {
                 try {
-                    gridEditorOptions = this.GridConfig.gridEditorOptions ? JSON.parse(this.GridConfig.gridEditorOptions) : {};
+                    if (this.GridConfig)
+                        gridEditorOptions = this.GridConfig.gridEditorOptions ? tryParseJSON(this.GridConfig.gridEditorOptions, "Grid Editors Options Problem") : {};
+                    if (this.GridConfig?.sysTableConfig)
+                        gridEditorOptions = this.GridConfig?.sysTableConfig?.gridEditorOptions ? tryParseJSON(this.GridConfig?.sysTableConfig?.gridEditorOptions, "Grid Editors Options Problem") : {};
                 }
                 catch {
 

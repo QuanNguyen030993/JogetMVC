@@ -118,7 +118,282 @@ var ClientForm = class ClientForm extends MForm {
     constructor(id, childGridConfig, formConfig, mFormConfig) {
         super(id, childGridConfig, formConfig, mFormConfig)
     }
+        getFormItems() {
 
+            return [
+
+                {
+                    itemType: "group",
+                    caption: "Client Information",
+                    colCount: 2,
+
+                    cssClass: "form-section",
+
+                    items: [
+
+                        {
+                            dataField: "clientCode",
+                            label: {
+                                text: "Client Code"
+                            },
+                            editorType: "dxTextBox",
+                            editorOptions: {
+                                stylingMode: "filled"
+                            }
+                        },
+
+
+                        {
+                            dataField: "clientName",
+                            label: {
+                                text: "Client Name"
+                            },
+                            editorType: "dxTextBox",
+                            editorOptions: {
+                                stylingMode: "filled"
+                            }
+                        },
+
+
+                        {
+                            dataField: "businessType",
+                            label: {
+                                text: "Business Type"
+                            },
+                            editorType: "dxSelectBox",
+                            editorOptions: {
+                                stylingMode: "filled"
+                            }
+                        },
+
+
+                        {
+                            dataField: "taxCode",
+                            label: {
+                                text: "Tax Code"
+                            },
+                            editorType: "dxTextBox",
+                            editorOptions: {
+                                stylingMode: "filled"
+                            }
+                        }
+
+                    ]
+                },
+
+
+
+                {
+                    itemType: "group",
+                    caption: "Address",
+                    colCount: 1,
+
+                    cssClass: "form-section",
+
+                    items: [
+
+                        {
+                            dataField: "businessAddress",
+                            label: {
+                                text: "Business Address"
+                            },
+
+                            editorType: "dxTextArea",
+
+                            editorOptions: {
+                                height: 90,
+                                stylingMode: "filled"
+                            }
+                        }
+
+                    ]
+                },
+
+
+
+                {
+                    itemType: "group",
+                    caption: "Contact",
+                    colCount: 2,
+
+                    cssClass: "form-section",
+
+                    items: [
+
+                        {
+                            dataField: "phone",
+                            label: {
+                                text: "Phone"
+                            },
+                            editorType: "dxTextBox",
+                            editorOptions: {
+                                stylingMode: "filled"
+                            }
+                        },
+
+
+                        {
+                            dataField: "email",
+                            label: {
+                                text: "Email"
+                            },
+                            editorType: "dxTextBox",
+                            editorOptions: {
+                                stylingMode: "filled"
+                            }
+                        }
+
+                    ]
+                }
+
+            ];
+
+        }
+        renderForm(formElement) {
+            try {
+                ////create html start
+                var that = this;
+                //this.getContainer();
+                var $scrollElement = $(`<div id='${that.ModelName}ScrollView'/>`).appendTo(this.container);
+                this.Outline = null;
+                if (this.outlineForm) {
+                    var outline = []
+                    if (this.outlineForm.surveyTypeId) {
+                        if (_cacheModels.includes(that.SchemeModelName)) {
+                            const cachedData = JSON.parse(sessionStorage.getItem(`${that.SchemeModelName}_${that.id}`));
+                            if (cachedData == null) {
+                                
+                                $.ajax({
+                                    url: `api/OutlineDynamic/GetFKMany?fkId=${this.outlineForm.surveyTypeId}&fkField=SurveyTypeId`,
+                                    type: 'GET',
+                                    async: false,
+                                    success: function (response) {
+                                        outline.concat(response);
+                                    },
+                                    error: function (exception) {
+                                    }
+                                });
+                                sessionStorage.setItem(`${that.SchemeModelName}_${that.id}`, JSON.stringify(outline));
+                            }
+                            outline = JSON.parse(sessionStorage.getItem(`${that.SchemeModelName}_${that.id}`));
+                        }
+                        else {
+                          
+
+                            $.ajax({
+                                url: `api/OutlineDynamic/GetFKMany?fkId=${this.outlineForm.surveyTypeId}&fkField=SurveyTypeId`,
+                                type: 'GET',
+                                async: false,
+                                success: function (response) {
+                                    outline.concat(response);
+                                },
+                                error: function (exception) {
+                                }
+                            });
+                        }
+                    }
+                    else {
+                        //console.log(`${this.ModelName} is missing Survey Type`);
+                    }
+                    this.Outline = outline;
+                }
+
+
+                var itemsConfig = this.buildFormItem(); //should not do the same time.
+                formElement.addClass("fade-slide-up");
+                var option = {
+                    dataSource: makeBasicDataSource(that, true),
+                    colCount: this.colCount,
+                    items: itemsConfig,
+                    height: "inherit",
+                    elementAttr: {
+                        class: "dExForm",
+                        id: formElement[0] ? formElement[0].id : `${this.ModelName}_${this.id}`,
+                    },
+                    readOnly: this.isReadOnly,
+                    changedFields: {},
+                    config: this,
+                    labelLocation: that.labelLocation,
+                    //toolbarItems:
+                    customizeItem: tryExecute(this.customizeForm.bind(this)),
+                    customFormOrgData: tryExecute(this.customFormOrgData.bind(this)),
+                    onContentReady: tryExecute(this.onContentReady.bind(this)),
+                    renderTabFormElement: tryExecute(this.renderTabFormElement.bind(this)),
+                    groupingLayout: tryExecute(this.groupingLayout.bind(this)),
+                    onFieldDataChanged: tryExecute(function (e) {
+                        var that = this;
+                        const changedFields = e.component.option("changedFields");
+                        const currentItem = e.component.itemOption(e.dataField);
+                        //if (e.dataField.includes("date") && that.isBindingData) {
+                        //    changedFields[e.dataField] = stringToUtcDate(e.value);
+                        //}
+                        if (that.isBindingData) {
+                            return;
+                        }
+                        if (e.value !== e.previousValue) {
+                            //if (e.dataField.includes("date")) {
+                            //    changedFields[e.dataField] = stringToUtcDate(e.value);
+                            //}
+                            changedFields[e.dataField] = e.value;
+                            if (that.fieldByOutlineGroup.length > 0) {
+                                var outlineObject = that.fieldByOutlineGroup.find(f => f.dataField == e.dataField);
+                                //changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance[0];
+                                changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance;
+                            }
+                            if (that.dynamicOutline) {
+                                var outlineObject = that.dynamicOutline.find(f => f.dataField == e.dataField);
+                                if (outlineObject)
+                                    changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance;
+                                else if (currentItem.outlineObject)
+                                    changedFields[e.dataField + "_outlineId"] = currentItem.outlineObject;
+                            }
+                            else if (currentItem) {
+                                if (currentItem.outlineObject)
+                                    changedFields[e.dataField + "_outlineId"] = currentItem.outlineObject;
+                            }
+                        } else {
+                            delete changedFields[e.dataField];
+                        }
+                        markAccordionAsChanged(`accordion_${that.refFieldId}_${e.dataField}`);
+                        // Cập nhật lại changedFields trong dxForm
+                        e.component.option("changedFields", changedFields);
+                    }.bind(this))
+                };
+                this.formInstance = formElement.dxForm(option).dxForm("instance");
+                if (this.formInstance)
+                    this.formInstance.option("config", this);
+                this.toolbarInstance = this.initFormToolbar(this.formInstance);
+
+                if (this.customizeFormOption) {
+                    this.customizeFormOption(option);
+                }
+
+                $(formElement).dxForm(option);
+
+
+                //$formElement.find(".dx-tabpanel-container").css("height", `100%`);
+                if (that.id > 0)
+                    this.loadData();
+                else
+                    this.initDataNewForm();
+            } catch (err) {
+                appErrorHandling('Library error: call MForm.renderForm() was failed.', err);
+                return;
+            }
+        }
+
+
+        customizeFormOption(option) {
+            option.colCount = 1;
+            option.items = this.getFormItems();
+            option.showColonAfterLabel = false;
+            option.labelLocation = "top";
+            option.elementAttr = {
+                class: "client-form"
+            };
+
+
+        }
 }
 var QuotationFormOption = class QuotationFormOption extends MFormOption {
     constructor(params) {

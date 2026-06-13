@@ -3652,3 +3652,77 @@ text-overflow: ellipsis;
     z-index: 10;
     pointer-events: all; /* chặn luôn click */
 }
+.json-tag-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+
+.tag-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+
+.tag-label {
+    min-width: 35px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    text-align: center;
+}
+
+
+    .tag-label.viet {
+        background: #e6f1ff;
+        color: #1677ff;
+    }
+
+
+    .tag-label.eng {
+        background: #eaf8e7;
+        color: #26943c;
+    }
+
+
+.tag-value {
+    max-width: 260px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 2px 8px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 12px;
+}
+
+.client-form {
+    background: #f7f8fa;
+    padding: 20px;
+}
+
+
+.form-section {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+
+    .form-section .dx-group-caption {
+        font-size: 15px;
+        font-weight: 600;
+        color: #1677ff;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+    }
+
+
+.dx-texteditor.dx-editor-filled {
+    border-radius: 8px;
+}
