@@ -218,10 +218,21 @@ var ClientForm = class ClientForm extends MForm {
                                                     Eng: eng
                                                 });
 
-                                                data.component.updateData(
-                                                    "clientName",
-                                                    jsonValue
-                                                );
+                                                var passingObject = {
+                                                };
+                                                passingObject.clientName = JSON.stringify({
+                                                    Viet: viet,
+                                                    Eng: eng
+                                                });
+                                                store.update(formItems.id, passingObject)
+                                                    .done(function () {
+                                                        DevExpress.ui.notify("Saved successfully", "success", 2000);
+                                                    })
+                                                    .fail(function (error) {
+                                                        console.error(error);
+                                                        DevExpress.ui.notify("Save failed", "error", 2000);
+                                                    });
+
                                             };
 
                                             $("#client_txtViet").dxTextArea({
@@ -289,7 +300,11 @@ var ClientForm = class ClientForm extends MForm {
                             colSpan: 2,
 
                             template: function (data, itemElement) {
-                                setTimeout(() => { 
+                                setTimeout(() => {
+                                    var that = this;
+                                    var formItems = that.option("formData");
+                                    var store = that.option("dataSource");
+
                                 const value = data.component.option("formData")
                                     .businessAddress;
 
@@ -331,7 +346,6 @@ var ClientForm = class ClientForm extends MForm {
                                 itemElement.append(html);
 
                                 const updateValue = () => {
-
                                     const viet =
                                         $("#businessAddress_txtViet")
                                             .dxTextArea("instance")
@@ -347,11 +361,22 @@ var ClientForm = class ClientForm extends MForm {
                                         Eng: eng
                                     });
 
-                                    data.component.updateData(
-                                        "businessAddress",
-                                        jsonValue
-                                    );
-                                };
+                                        var passingObject = {
+                                        };
+                                    passingObject.businessAddress = JSON.stringify({
+                                        Viet: viet,
+                                        Eng: eng
+                                    });
+                                        store.update(formItems.id, passingObject)
+                                                .done(function () {
+                                                    DevExpress.ui.notify("Saved successfully", "success", 2000);
+                                                })
+                                                .fail(function (error) {
+                                                    console.error(error);
+                                                    DevExpress.ui.notify("Save failed", "error", 2000);
+                                                });
+                                 
+                                    };
 
                                     $("#businessAddress_txtViet").dxTextArea({
                                     value: obj.Viet || "",
