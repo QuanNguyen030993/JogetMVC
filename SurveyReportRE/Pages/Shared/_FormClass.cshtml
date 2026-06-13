@@ -144,14 +144,103 @@ var ClientForm = class ClientForm extends MForm {
 
 
                         {
-                            dataField: "clientName",
-                            label: {
-                                text: "Client Name"
-                            },
-                            editorType: "dxTextBox",
-                            editorOptions: {
-                                stylingMode: "filled"
-                            }
+                            itemType: "group",
+                            caption: "Name",
+                            colCount: 1,
+
+                            cssClass: "form-section",
+
+                            items: [
+
+                                {
+                                    dataField: "clientName",
+                                    label: {
+                                        text: "Client Name"
+                                    },
+                                    colSpan: 2,
+
+                                    template: function (data, itemElement) {
+                                        setTimeout(() => {
+                                            const value = data.component.option("formData")
+                                                .clientName;
+
+                                            let obj = {};
+
+                                            try {
+                                                obj = JSON.parse(value || "{}");
+                                            }
+                                            catch {
+                                                obj = {};
+                                            }
+
+                                            const html = `
+                                                <div class="multi-lang-editor">
+
+                                                    <div class="lang-row">
+
+                                                        <div class="lang-tag viet">
+                                                            Viet
+                                                        </div>
+
+                                                            <div id="client_txtViet"></div>
+
+                                                    </div>
+
+                                                    <div class="lang-row">
+
+                                                        <div class="lang-tag eng">
+                                                            Eng
+                                                        </div>
+
+                                                            <div id="client_txtEng"></div>
+
+                                                    </div>
+
+                                                </div>
+                                            `;
+
+                                            itemElement.append(html);
+
+                                            const updateValue = () => {
+
+                                                const viet =
+                                                    $("#client_txtViet")
+                                                        .dxTextArea("instance")
+                                                        .option("value");
+
+                                                const eng =
+                                                    $("#client_txtEng")
+                                                        .dxTextArea("instance")
+                                                        .option("value");
+
+                                                const jsonValue = JSON.stringify({
+                                                    Viet: viet,
+                                                    Eng: eng
+                                                });
+
+                                                data.component.updateData(
+                                                    "clientName",
+                                                    jsonValue
+                                                );
+                                            };
+
+                                            $("#client_txtViet").dxTextArea({
+                                                value: obj.Viet || "",
+                                                height: 70,
+                                                onValueChanged: updateValue
+                                            });
+
+                                            $("#client_txtEng").dxTextArea({
+                                                value: obj.Eng || "",
+                                                height: 70,
+                                                onValueChanged: updateValue
+                                            });
+                                        }, 500);
+
+                                    }
+                                }
+
+                            ]
                         },
 
 
@@ -197,12 +286,86 @@ var ClientForm = class ClientForm extends MForm {
                             label: {
                                 text: "Business Address"
                             },
+                            colSpan: 2,
 
-                            editorType: "dxTextArea",
+                            template: function (data, itemElement) {
+                                setTimeout(() => { 
+                                const value = data.component.option("formData")
+                                    .businessAddress;
 
-                            editorOptions: {
-                                height: 90,
-                                stylingMode: "filled"
+                                let obj = {};
+
+                                try {
+                                    obj = JSON.parse(value || "{}");
+                                }
+                                catch {
+                                    obj = {};
+                                }
+
+                                const html = `
+                                    <div class="multi-lang-editor">
+
+                                        <div class="lang-row">
+
+                                            <div class="lang-tag viet">
+                                                Viet
+                                            </div>
+
+                                                <div id="businessAddress_txtViet"></div>
+
+                                        </div>
+
+                                        <div class="lang-row">
+
+                                            <div class="lang-tag eng">
+                                                Eng
+                                            </div>
+
+                                                <div id="businessAddress_txtEng"></div>
+
+                                        </div>
+
+                                    </div>
+                                `;
+
+                                itemElement.append(html);
+
+                                const updateValue = () => {
+
+                                    const viet =
+                                        $("#businessAddress_txtViet")
+                                            .dxTextArea("instance")
+                                            .option("value");
+
+                                    const eng =
+                                            $("#businessAddress_txtEng")
+                                            .dxTextArea("instance")
+                                            .option("value");
+
+                                    const jsonValue = JSON.stringify({
+                                        Viet: viet,
+                                        Eng: eng
+                                    });
+
+                                    data.component.updateData(
+                                        "businessAddress",
+                                        jsonValue
+                                    );
+                                };
+
+                                    $("#businessAddress_txtViet").dxTextArea({
+                                    value: obj.Viet || "",
+                                    height: 70,
+                                    onValueChanged: updateValue
+                                });
+
+                                    $("#businessAddress_txtEng").dxTextArea({
+                                    value: obj.Eng || "",
+                                    height: 70,
+                                    onValueChanged: updateValue
+                                });
+                                },500);
+
                             }
                         }
 
@@ -382,6 +545,14 @@ var ClientForm = class ClientForm extends MForm {
             }
         }
 
+                customizeForm(item) {
+           // var that = this;
+           // super.customizeForm(item);
+           // if (item.dataField ==="bussinessAddress")
+           //  {
+           //     item = 
+           //      };
+        }
 
         customizeFormOption(option) {
             option.colCount = 1;
@@ -391,7 +562,6 @@ var ClientForm = class ClientForm extends MForm {
             option.elementAttr = {
                 class: "client-form"
             };
-
 
         }
 }
