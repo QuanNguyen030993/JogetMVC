@@ -3726,3 +3726,47 @@ text-overflow: ellipsis;
 .dx-texteditor.dx-editor-filled {
     border-radius: 8px;
 }
+
+.client-multilang-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+
+.client-lang-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+
+
+.client-lang-tag {
+    width: 45px;
+    height: 26px;
+    line-height: 26px;
+    text-align: center;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+.client-viet {
+    background: #e6f3ff;
+    color: #1677ff;
+}
+
+
+
+.client-eng {
+    background: #eaf8e7;
+    color: #2f8f2f;
+}
+
+
+
+.client-lang-input {
+    flex: 1;
+}

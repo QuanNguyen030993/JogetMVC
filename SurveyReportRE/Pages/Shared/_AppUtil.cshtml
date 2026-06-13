@@ -3979,7 +3979,9 @@
                         item.label = {};
                     }
                     if (item.dataField != "decision")
+                    debugger
                     item.label.location = "top";
+                    styleModeChange(item.editorOptions || item);
                 }
             });
         }
@@ -4013,4 +4015,1018 @@
             })
             .appendTo(e.cellElement);
     }
+    //START FORM ELEMENT HANDLE
+   
+    // function RenderFormElement(gridConfig, itemsArray, props){
+
+    //     //prepareOutlineCache(props);
+
+    //     const fields = buildFieldConfigs(props);
+
+    //     props.fieldConfigs = sortObjectArray(fields);
+
+    //     buildFieldMetadata(props, fields);
+
+    //     fields.forEach((field,index)=>{
+
+    //         itemsArray.push(
+    //             createFormItem(
+    //                 field,
+    //                 props,
+    //                 index + 1
+    //             )
+    //         );
+
+    //     });
+
+
+    //     handleDynamicOutline(itemsArray, props);
+
+    //     applyFormTemplates(itemsArray, props);
+
+    // }
+
+    // function buildFieldConfigs(props){
+
+    //     return props.gridInstanceConfig.map(raw=>{
+
+    //         const item = ObjectPopulateKey(raw);
+
+
+    //         item.validationRules =
+    //             parseValidationRules(
+    //                 item.validationRules
+    //             );
+
+
+    //         item.editorOptionsConfig =
+    //             parseJsonConfig(
+    //                 item.editorOptions
+    //             );
+
+
+    //         item.formItemConfig =
+    //             parseJsonConfig(
+    //                 item.formItem
+    //             );
+
+
+    //         normalizeFieldSize(item);
+
+    //         normalizeFieldOrder(item);
+
+
+    //         item.editorType =
+    //             item.formDataType;
+
+
+    //         item.calculatedDisplayField =
+    //             item.dataField;
+
+
+    //         resolveOutline(item);
+
+
+    //         return item;
+
+    //     });
+
+    // }
+
+    // function parseValidationRules(value){
+
+    //     if(!value)
+    //         return [];
+
+
+    //     try{
+
+    //         let rules =
+    //             typeof value === "string"
+    //             ? JSON.parse(value)
+    //             : value;
+
+
+    //         return rules.map(rule=>{
+
+    //             if(
+    //                 rule.type === "custom"
+    //                 &&
+    //                 typeof rule.validationCallback === "string"
+    //             ){
+
+    //                 rule.validationCallback =
+    //                     createFunction(
+    //                         rule.validationCallback
+    //                     );
+    //             }
+
+
+    //             return rule;
+
+    //         });
+
+
+    //     }
+    //     catch(e){
+
+    //         console.error(
+    //             "Invalid validationRules",
+    //             e
+    //         );
+
+    //         return [];
+
+    //     }
+
+    // }
+
+    // function parseJsonConfig(value){
+
+    //     if(
+    //         !value
+    //         ||
+    //         typeof value === "object"
+    //     )
+    //         return value;
+
+
+    //     try{
+
+
+    //         const json =
+    //             JSON.parse(
+    //                 decodeBase64(value)
+    //             );
+
+
+    //         Object.keys(json)
+    //         .forEach(key=>{
+
+
+    //             if(key.startsWith("on")){
+
+
+    //                 json[key] =
+    //                     createFunction(
+    //                         json[key]
+    //                     );
+
+    //             }
+    //             else if(
+    //                 variableMapping[
+    //                     json[key]
+    //                 ]
+    //             ){
+
+    //                 json[key] =
+    //                     variableMapping[
+    //                         json[key]
+    //                     ];
+
+    //             }
+
+
+    //         });
+
+
+    //         return json;
+
+
+    //     }
+    //     catch(e){
+
+    //         console.error(e);
+
+    //         return null;
+
+    //     }
+
+    // }
+
+    // function decodeBase64(value){
+
+    //     const bytes =
+    //         Uint8Array.from(
+    //             atob(value),
+    //             c=>c.charCodeAt(0)
+    //         );
+
+
+    //     return new TextDecoder()
+    //         .decode(bytes);
+
+    // }
+
+    // function createFunction(script){
+
+    //     return Function(
+    //         "e",
+    //         script
+    //     );
+
+    // }
+
+    // function normalizeFieldOrder(item){
+
+    //     item.order =
+    //         item.formVisibleIndex != null
+    //         ? item.formVisibleIndex
+    //         : item.order;
+
+
+    //     if(item.order === -1){
+
+    //         item.visible = false;
+
+    //     }
+
+    // }
+
+    // function normalizeFieldSize(item){
+
+    //     item.width =
+    //         normalizeSize(
+    //             item.formWidth,
+    //             _defaultFormFieldWidth
+    //         );
+
+
+    //     item.height =
+    //         normalizeSize(
+    //             item.formHeight,
+    //             _defaultFormFieldHeight
+    //         );
+
+    // }
+
+    // function normalizeSize(value, defaultValue){
+
+    //     if(isNullOrEmpty(value))
+    //         return defaultValue;
+
+
+    //     return value.includes("%")
+    //         ? value
+    //         : parseInt(value);
+
+    // }
+
+    // function resolveOutline(item){
+
+    //     if(
+    //         !item.formItemConfig
+    //         ||
+    //         !item.formItemConfig.outline
+    //     )
+    //         return;
+
+
+    //     const ids =
+    //         item.formItemConfig
+    //         .outline
+    //         .id
+    //         .split(",")
+    //         .map(x=>x.trim());
+
+
+    //     item.outlineObject =
+    //         _cacheOutlines.find(x=>
+    //             ids.includes(
+    //                 x.id.toString()
+    //             )
+    //         );
+
+    // }
+
+    // function createFormItem(item,props,tabIndex){
+
+    //     return {
+
+    //         ...createBaseItem(
+    //             item,
+    //             props
+    //         ),
+
+    //         ...editorFactory(
+    //             item,
+    //             props,
+    //             tabIndex
+    //         )
+
+    //     };
+
+    // }
+
+    // function createBaseItem(item,props){
+
+    //     return {
+
+
+    //         formGroupName:
+    //             item.formGroupName,
+
+
+    //         dataField:
+    //             item.dataField,
+
+
+    //         editorType:
+    //             item.editorType,
+
+
+    //         formItem:
+    //             item.formItemConfig,
+
+
+    //         validationRules:
+    //             item.validationRules,
+
+
+    //         outlineObject:
+    //             item.outlineObject,
+
+
+    //         visible:
+    //             item.visible,
+
+
+    //         label:{
+
+    //             location:
+    //                 props.labelLocation,
+
+    //             text:
+    //                 item.caption,
+
+    //             visible:true
+
+    //         }
+
+    //     };
+
+    // }
+
+
+    // function editorFactory(item,props,tabIndex){
+
+    //     const factory = {
+
+    //         dxTextArea:createTextArea,
+
+    //         dxSelectBox:createSelectBox,
+
+    //         dxDropDownBox:createDropDownBox,
+
+    //         dxMultiDataGrid:createMultiGrid,
+
+    //         dxDateBox:createDateBox
+
+    //     };
+
+
+    //     const handler =
+    //         factory[item.editorType]
+    //         ||
+    //         createDefaultEditor;
+
+
+
+    //     return handler(
+    //         item,
+    //         props,
+    //         tabIndex
+    //     );
+
+    // }
+
+    // function defaultEditorOptions(item,tabIndex){
+
+    //     return {
+
+
+    //         tabIndex,
+
+    //         width:
+    //             item.width,
+
+
+    //         height:
+    //             item.height,
+
+
+    //         showClearButton:true,
+
+
+    //         stylingMode:
+    //             "filled",
+
+
+    //         value:
+    //             item.defaultValue ?? ""
+
+    //     };
+
+    // }
+
+    // function createDefaultEditor(item,props,tabIndex){
+
+    //     return {
+
+
+    //         editorOptions:{
+
+
+    //             ...defaultEditorOptions(
+    //                 item,
+    //                 tabIndex
+    //             ),
+
+
+    //             ...item.editorOptionsConfig
+
+    //         }
+
+    //     };
+
+    // }
+
+  
+
+    //END FORM ELEMENT HANDLE
+    
+function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
+
+   if (_cacheCompanyData)
+       if (_cacheCompanyData.some(f => f.table == "Outline"))
+           _cacheOutlines = _cacheCompanyData.find(f => f.table == "Outline").rows;
+   //if (_cacheOutlines.length > 0) {
+   //    formInstanceProps.Outline = formInstanceProps.Outline.concat(_cacheOutlines);
+   //}
+   if (formInstanceProps.outlineForm) {
+       if (formInstanceProps.outlineForm.surveyTypeId) {
+           _cacheOutlines = _cacheOutlines.filter(f => f.surveyTypeId == formInstanceProps.outlineForm.surveyTypeId);
+       }
+   }
+   var _formConfig = formInstanceProps.gridInstanceConfig.map(item => {
+       var validationRules = [];
+       //const result = {};
+       //Object.keys(item).forEach(key => {
+       //    if (key in item) {
+       //        result[key] = item[key];
+       //    }
+       //});
+       item = ObjectPopulateKey(item);
+
+
+       if (item != null && item != undefined)
+           if (item.validationRules != null && item.validationRules != undefined && item.validationRules != "") {
+               try {
+                   if (typeof item.validationRules === "string")
+                       validationRules = JSON.parse(item.validationRules);
+                   else
+                       validationRules = item.validationRules
+                   validationRules.forEach(rule => {
+                       if (rule.type === "custom" && typeof rule.validationCallback === "string") {
+                           rule.validationCallback = eval("(" + rule.validationCallback + ")");
+                       }
+                       return rule;
+                   });
+               }
+               catch {
+
+               }
+           }
+       //item.visible = true;
+       if (item.formVisibleIndex != null || item.formVisibleIndex != undefined) {
+           item.order = item.formVisibleIndex;
+       }
+       else
+           item.order = item.order;
+       if (item.order == -1) item.visible = false;
+       item.validationRules = validationRules
+       item.editorType = item.formDataType;
+       item.calculatedDisplayField = item.dataField;
+       item.width = isNullOrEmpty(item.formWidth) ? _defaultFormFieldWidth : (!(item.formWidth?.includes("%")) ? parseInt(item.formWidth) : item.formWidth);
+       item.height = isNullOrEmpty(item.formHeight) ? _defaultFormFieldHeight : (!(item.formHeight?.includes("%")) ? parseInt(item.formHeight) : item.formHeight);
+       if (!(typeof item.editorOptions === "object") && !(item.editorOptions == null)) {
+
+           const decodedBytes = Uint8Array.from(atob(item.editorOptions), c => c.charCodeAt(0));
+           const decodedString = new TextDecoder("utf-8").decode(decodedBytes);
+           try {
+               const jsonObject = JSON.parse(decodedString);
+               Object.keys(jsonObject).forEach(key => {
+                   const value = jsonObject[key];
+                   if (key.startsWith("on")) {
+                       var scriptFunctionHandle = jsonObject[key].replace("##id", formInstanceProps.id).replace("##datafield", item.dataField);
+                       jsonObject[key] = Function("e", scriptFunctionHandle);
+                   }
+                   else {
+                       if (jsonObject[key] in variableMapping) {
+                           jsonObject[key] = variableMapping[jsonObject[key]];
+                       }
+                   }
+               });
+
+               item.editorOptionsConfig = jsonObject;
+           }
+           catch (exception) {
+               console.log(exception);
+           }
+       }
+       if (item.formItem != null)
+           if (!(typeof item.formItem === "object") && !(item.formItem == null)) {
+               const decodedBytes = Uint8Array.from(atob(item.formItem), c => c.charCodeAt(0));
+               const decodedString = new TextDecoder("utf-8").decode(decodedBytes);
+               try {
+                   const jsonObject = JSON.parse(decodedString);
+                   Object.keys(jsonObject).forEach(key => {
+                       const value = jsonObject[key];
+                       if (jsonObject[key] in variableMapping) {
+                           jsonObject[key] = variableMapping[jsonObject[key]];
+                       }
+                   });
+
+                   item.formItemConfig = jsonObject;
+               }
+               catch {
+               }
+           }
+       if (item.formItemConfig) {
+           if (item.formItemConfig.outline) {
+               const outlineIds = item.formItemConfig.outline.id.split(',').map(id => id.trim());
+               const outlineObj = _cacheOutlines.find(outline =>
+                   outlineIds.includes(outline.id.toString())
+               )
+               item.outlineObject = outlineObj;
+           }
+       }
+       if (formInstanceProps.formOptions?.fieldTemplate) {
+           if (item.dataField == formInstanceProps.formOptions?.fieldTemplate.fieldName) {
+               item.template = formInstanceProps.formOptions?.fieldTemplate.template
+           }
+       }
+       return item;
+   });
+
+   formInstanceProps.fieldConfigs = sortObjectArray(_formConfig);
+
+   //formInstanceProps.fieldByOutline = _formConfig
+   //    .filter(item => item.formItemConfig && item.formItemConfig.outline)
+   //    .map(item => {
+   //        const outlineIds = item.formItemConfig.outline.id.split(',').map(id => id.trim());
+   //        const outlineObj = formInstanceProps.Outline.filter(outline =>
+   //            outlineIds.includes(outline.id.toString())
+   //        )
+
+   //        //outline static by surveyType
+   //        return {
+   //            dataField: item.dataField,
+   //            //outlineId: item.formItemConfig.outline.id,
+   //            outlineInstance: item.outlineObject
+   //        };
+   //    });
+
+   formInstanceProps.fieldByEnum = _formConfig
+       .filter(item => item.formItemConfig && item.formItemConfig.enum)
+       .map(item => {
+           return {
+               dataField: item.dataField,
+               enum: item.formItemConfig.enum,
+               //dataSource: dataSourceEnum(item, formInstanceProps)
+           };
+       });
+
+
+   if (formInstanceProps.outlineForm.isOutlineDynamic) {
+       if (formInstanceProps.formOptions.Params.additionalOutline != null) {
+           //outline dynamic not by surveyType
+           var additionalsOutline = parseParamsByteArrAsObject(formInstanceProps.formOptions.Params.additionalOutline);
+           var listfieldConfig = additionalsOutline.map(m => { return { dataGridConfig: convertKeysToLowerFirstChar(m.DataGridConfig), outline: convertKeysToLowerFirstChar(m.OutlineDynamic) } });
+           formInstanceProps.dynamicOutline = listfieldConfig.map(item => {
+               return {
+                   dataField: item.dataGridConfig.dataField,
+                   //outline: item.outline.id,
+                   outlineInstance: item.outline
+               };
+           });
+       }
+
+   }
+
+   formInstanceProps.fieldByOutlineGroup = _formConfig
+       .filter(item => item.formGroupName?.includes("AccordionGroup"))
+       .map(item => {
+           const groupName = item.formGroupName.split("@@")[1];
+           const groupItem = itemsArray.find(arrayItem =>
+               arrayItem.itemType === "group" && arrayItem.name === groupName
+           );
+           var outlineMatch = new Object();
+           if (groupItem) {
+               if (groupItem.formItem)
+                   outlineMatch = _cacheOutlines.find(outline => groupItem.formItem.outline?.id.includes(outline.id));
+           }
+
+           return {
+               dataField: item.dataField,
+               outlineId: outlineMatch ? outlineMatch?.id : null,
+               outlineObject: outlineMatch
+           };
+       });
+
+
+
+   var tabIndexNumber = 1;
+   $.each(formInstanceProps.fieldConfigs, function (i, item) {
+
+       var additionalEditorOptions = new Object();
+       var customEditorOptions = false;
+       var customFormItem = false;
+       if (item.editorOptionsConfig) {
+           additionalEditorOptions = item.editorOptionsConfig;
+           customEditorOptions = true;
+       }
+       item.formItem = item.formItemConfig;
+       var itemOptions = {};
+
+
+       if (item.editorType == "dxTextArea") {
+           itemOptions = ObjectPopulateKey(item);
+           itemOptions.customEditorOptions = customEditorOptions;
+           itemOptions.editorOptions = {
+                
+               tabIndex: tabIndexNumber,
+               onFocusIn: function (e) { //not required
+               },
+               onFocusOut: function (e) { //not required
+               },
+               height: (item.height != null || item.height != '' || item.height != undefined) ? ((item.height !== '' && !isNaN(parseFloat(item.height)) && isFinite(item.height)) ? parseInt(item.height) : item.height.replace("%", "") / 100 * 47) : _defaultTextAreaHeight,
+               width: (item.width != null || item.width != '' || item.width != undefined) ? ((item.width !== '' && !isNaN(parseFloat(item.width)) && isFinite(item.width)) ? parseInt(item.width) : item.width) : _defaultTextAreaWidth,
+               value: item.defaultValue ?? "",
+               ...additionalEditorOptions
+           };
+           itemOptions.label = {
+               location: formInstanceProps.labelLocation, text: item.caption, visible: true, template: function (text) { }
+           };
+
+           if ((itemOptions.editorOptions.height !== '' && !isNaN(parseFloat(itemOptions.editorOptions.height)) && isFinite(itemOptions.editorOptions.height)))
+               itemOptions.editorOptions.minHeight = item.height >= _defaultTextAreaHeight ? parseInt(item.height) : _defaultTextAreaHeight;
+       }
+       else if (item.editorType == "dxSelectBox") {
+           itemOptions = selectBoxRemakeOption(item, formInstanceProps, tabIndexNumber, additionalEditorOptions);
+       }
+       else if (item.editorType == "dxList") {
+           itemOptions = {
+               formGroupName: item.formGroupName,
+               dataField: item.dataField,
+               editorType: "dxTextBox",
+               customEditorOptions: customEditorOptions,
+               editorOptions: {
+                   tabIndex: tabIndexNumber,
+                   width: item.width,
+                   heigth: item.height,
+                   showClearButton: true,
+                   value: item.defaultValue ?? "",
+                   ...additionalEditorOptions
+               },
+               label: { location: formInstanceProps.labelLocation, text: item.caption, visible: true, template: function (text) { } },
+               formItem: item.formItem,
+               validationRules: item.validationRules,
+               outlineObject: item.outlineObject,
+               visible: item.visible
+           };
+       }
+       else if (item.editorType == "dxMultiDataGrid") {
+           var model = "Users";
+           var mDropDownDS = new MDropDownDataSource();
+           dataSource = mDropDownDS.getDropDownDS('Id', `api/${model}/DropDownLookUp`);
+           itemOptions = {
+               validationRules: item.validationRules,
+               formGroupName: item.formGroupName,
+               dataField: item.dataField,
+               editorType: "dxDropDownBox",
+               label: { location: formInstanceProps.labelLocation, text: item.caption, visible: true },
+               formItem: item.formItem,
+               customEditorOptions: customEditorOptions,
+               editorOptions: {
+                   showClearButton: true,
+                   tabIndex: tabIndexNumber,
+                   width: _defaultFormFieldWidth,
+                   dropDownOptions: {
+                       width: _defaultDropDownWidth,
+                       height: _defaultDropDownHeight,
+                   },
+                   //valueExpr: "id",
+                   //displayExpr: "username",
+                   //columns: ["mail", "username"],
+                   dataSource: dataSource,//configData.dataSource,
+                   onOpened: function (e) {
+                       formInstanceProps.moreActionOpenDropDown(e, dataSource, item);
+                   },
+                   contentTemplate: function (e) {
+                       const $dataGrid = $("<div>").dxDataGrid({
+                           selectionMode: 'all',
+                           // remoteOperations: { paging: true, filtering: true, sorting: true, grouping: true, summary: true, groupPaging: true },
+                           filterRow: { visible: true },
+                           dataSource: e.component.option("dataSource"),
+                           columns: e.component.option("columns"),
+                           selection: { mode: "multiple" },
+                           valueExpr: "id",
+                           scrolling: {
+                               mode: 'virtual',
+                               preloadEnabled: false,
+                               showScrollbar: 'always'
+                           },
+                           width: "100%",
+                           height: "100%",
+                           allowItemDeleting: false,
+                           showSelectionControls: true,
+                           sorting: {
+                               mode: 'multiple',
+                           },
+                           onContentReady: function (e) {
+                               e.component.option("selectedRowKeys", getGrantSurvey(formInstanceProps.id));
+                           },
+                           onSelectionChanged: function (selectedItems) {
+                               var keys = selectedItems.selectedRowKeys,
+                                   hasSelection = keys.length;
+                               if (hasSelection) {
+                                   e.component.selectedItem = selectedItems.selectedRowsData;
+                                   e.component.option("displayValue", selectedItems.selectedRowsData[0]);
+                                   e.component.option("value", keys);
+                                   formInstanceProps.moreActionFromSelectedChangeDropDown(selectedItems, item, formInstanceProps.formInstance);
+                               }
+                           },
+
+                           columnAutoWidth: true,
+                           customizeColumns: function (columns) {
+                           },
+                       });
+
+                       //var dtGrid = $dataGrid.dxDataGrid("instance");
+                       //e.component.on("valueChanged", function (args) {
+                       //    dtGrid.selectRows(args.value, false);
+                       //    if (args.value != null) {
+                       //        e.component.close();
+                       //    }
+                       //});
+                       return $dataGrid;
+                   },
+                   ...additionalEditorOptions
+               },
+               outlineObject: item.outlineObject,
+               visible: item.visible
+           };
+       }
+       else if (item.editorType == "dxDropDownBox") {
+           var configData = makeFieldFeatures(item, null, "form");
+           itemOptions = {
+               validationRules: item.validationRules,
+               formGroupName: item.formGroupName,
+               dataField: item.dataField,
+               editorType: "dxDropDownBox",
+               label: { location: formInstanceProps.labelLocation, text: item.caption, visible: true, template: function (text) { } },
+               formItem: item.formItem,
+               customEditorOptions: customEditorOptions,
+               editorOptions: {
+                   showClearButton: true,
+                   tabIndex: tabIndexNumber,
+                   width: _defaultFormFieldWidth,
+                   dropDownOptions: {
+                       width: _defaultDropDownWidth,
+                       height: _defaultDropDownHeight,
+                   },
+                   valueExpr: "id",
+                   displayExpr: configData.config.displayExp,
+                   dataSource: configData.dataSource,
+                   columns: configData.config.getScheme,
+                   onOpened: function (e) {
+                       formInstanceProps.moreActionOpenDropDown(e, configData.dataSource, item);
+                   },
+                   contentTemplate: function (e) {
+                       const $dataGrid = $("<div>").dxDataGrid({
+                           selectionMode: 'all',
+                           // remoteOperations: { paging: true, filtering: true, sorting: true, grouping: true, summary: true, groupPaging: true },
+                           filterRow: { visible: true },
+                           dataSource: e.component.option("dataSource"),
+                           columns: e.component.option("columns"),
+                           selection: { mode: "single" },
+                           valueExpr: "id",
+                           scrolling: {
+                               mode: 'virtual',
+                               preloadEnabled: false,
+                               showScrollbar: 'always'
+                           },
+                           width: "100%",
+                           height: "100%",
+                           allowItemDeleting: false,
+                           showSelectionControls: true,
+                           sorting: {
+                               mode: 'multiple',
+                           },
+                           onSelectionChanged: function (selectedItems) {
+                               var keys = selectedItems.selectedRowKeys,
+                                   hasSelection = keys.length;
+                               if (hasSelection) {
+                                   e.component.selectedItem = selectedItems.selectedRowsData;
+                                   e.component.option("displayValue", selectedItems.selectedRowsData[0][configData.config.displayExp]);
+                                   e.component.option("value", keys[0]);
+                                   formInstanceProps.moreActionFromSelectedChangeDropDown(selectedItems, item, formInstanceProps.formInstance);
+                               }
+                           },
+
+                           columnAutoWidth: true,
+                           customizeColumns: function (columns) {
+                           },
+                       });
+
+                       var dtGrid = $dataGrid.dxDataGrid("instance");
+                       e.component.on("valueChanged", function (args) {
+                           dtGrid.selectRows(args.value, false);
+                           if (args.value != null) {
+                               e.component.close();
+                           }
+                       });
+                       return $dataGrid;
+                   },
+                   ...additionalEditorOptions
+               },
+               outlineObject: item.outlineObject,
+               visible: item.visible
+           };
+       }
+       else if (item.editorType == "dxDataGrid") {
+       }
+       else if (item.editorType == "dxDateBox") {
+           itemOptions = {
+               formGroupName: item.formGroupName,
+               dataField: item.dataField,
+               editorType: item.editorType,
+               customEditorOptions: customEditorOptions,
+               editorOptions: {
+                   tabIndex: tabIndexNumber,
+                   width: item.width,
+                   heigth: item.height,
+                   showClearButton: true,
+                   value: item.defaultValue ?? "",
+                   //onValueChanged: function (e) {
+                   //    let localDate = e.value; // This is in the user's local time
+                   //    if (localDate instanceof Date) {
+                   //        localDate.setHours(localDate.getHours() + 7); // Add 7 hours for GMT+7
+                   //    }
+                   //    //stringToUtcDate(e.value);
+                   //},
+                   displayFormat: dateFormatter,
+                   dateSerializationFormat: "yyyy-MM-ddTHH:mm:ss",
+                   acceptCustomValue: false, // according to typing date
+                   //onFocusIn: function (e) {
+                   //    e.component.option("opened", true);
+                   //},
+                   ...additionalEditorOptions
+               },
+               label: { location: formInstanceProps.labelLocation, text: item.caption, visible: true, template: function (text) { } },
+               formItem: item.formItem,
+               validationRules: item.validationRules,
+               outlineObject: item.outlineObject,
+               visible: item.visible
+
+           };
+       }
+       else {
+           itemOptions = {
+               formGroupName: item.formGroupName,
+               dataField: item.dataField,
+               editorType: item.editorType,
+               customEditorOptions: customEditorOptions,
+               editorOptions: {
+                   tabIndex: tabIndexNumber,
+                   width: item.width,
+                   heigth: item.height,
+                   showClearButton: true,
+                   value: item.defaultValue ?? "",
+                   ...additionalEditorOptions
+               },
+               label: { location: formInstanceProps.labelLocation, text: item.caption, visible: true, template: function (text) {  } },
+               formItem: item.formItem,
+               validationRules: item.validationRules,
+               visible: item.visible,
+               outlineObject: item.outlineObject,
+               visible: item.visible,
+
+           };
+       }
+       itemOptions.template = item.template;
+            if (itemOptions.editorOptions)
+       styleModeChange(itemOptions.editorOptions || itemOptions);
+       itemsArray.push(itemOptions);
+       tabIndexNumber++;
+   });
+
+
+   var templateItem = new Object();
+
+   if (itemsArray.length > 0)
+       templateItem = _.cloneDeep(itemsArray.find(x => x.editorOptions !== undefined && x.editorType === "dxHtmlEditor"));
+
+   if (formInstanceProps.outlineForm.isOutlineDynamic) {
+       if (formInstanceProps.formOptions.Params) {
+           if (formInstanceProps.formOptions.Params.additionalOutline != null) {
+
+               formInstanceProps.formOptions.Params.additionalOutline = parseParamsByteArrAsObject(formInstanceProps.formOptions.Params.additionalOutline);
+               $.each(formInstanceProps.formOptions.Params.additionalOutline, function (outlineIndex, outlineItem) {
+                   var createItems = _.cloneDeep(templateItem);
+                   createItems.editorOptions.value = outlineItem.Content;
+                   createItems.dataField = outlineItem.DataGridConfig.DataField;
+                   createItems.editorType = outlineItem.DataGridConfig.FormDataType;
+                   createItems.label = { ...templateItem.label };
+                   createItems.label.text = outlineItem.Outline.Content;
+                   if (createItems.formItem != null || createItems.formItem != undefined) {
+                       createItems.formItem.outline = outlineItem.Outline;
+                       createItems.formItem.outline.outlineOptions = outlineItem.SurveyOutlineOptions;
+                       createItems.formItem.outline.id = outlineItem.OutlineDynamic.Id;
+                       createItems.formItem.outlineDynamic = outlineItem.OutlineDynamic;
+                       createItems.formItem.outlineDynamic.outlineOptions = outlineItem.SurveyOutlineOptions;
+                   }
+                   itemsArray.push(createItems);
+               });
+           }
+       }
+   }
+
+    
+
+
+   $.each(itemsArray, function (i, item) {
+       var editorOptions = { ...item.editorOptions };
+       if (formInstanceProps.isReadOnly)
+           item.readOnly = formInstanceProps.isReadOnly;
+       item.instanceProps = formInstanceProps;
+       if (item.formItem != null || item.formItem != undefined) {
+           if (item.formItem.outline) {
+               if (!item.formItem.isPreload) {
+                   if (isAccordionGroupSupportControls(item, editorOptions, formInstanceProps)) {
+                       item.template = function (data, itemElement) {
+                           //doubleClickDefaultPlaceHolderToText(editorOptions, data, item);
+                           editorOptions.onInitialized = function (e) {
+                               e.component.option("value", data.component.option("formData")[item.dataField]);
+                               $(e.element).on("dblclick", function () {
+                                   e.component.option("value", e.component.option("placeholder"));
+                               });
+                           }
+                           //if (!item.customEditorOptions)
+                           //editorOptions.onValueChanged = function (e) {
+                           //    data.component.updateData(item.dataField, e.value);
+                           //};
+
+                           createAccordionField(item, itemElement, editorOptions, formInstanceProps);
+                       }
+                       item.label.visible = false;
+                   }
+               }
+               else {
+                   if (item.editorType == "dxHtmlEditor") {
+                       item.editorOptions.readOnly = item.readOnly;
+
+                   }
+               }
+           }
+           if (item.formItem.groupName) {
+               item.formGroupName = `FormGroup@@${item.formItem.groupName}`;
+           }
+       }
+       else {
+           item.editorOptions = { ...editorOptions };
+           if (isAccordionGroupSupportControls(item, item.editorOptions, formInstanceProps)) {
+               if (item.editorType == "dxHtmlEditor")
+                   item.template = function (data, itemElement) {
+                       //doubleClickDefaultPlaceHolderToText(editorOptions, data, item);
+                       //if (!item.customEditorOptions)
+                       //item.editorOptions.onValueChanged = function (e) {
+                       //    data.component.updateData(item.dataField, e.value);
+                       //};
+                       var childProps = customChildProps(item.editorOptions, formInstanceProps); //Field lẻ không nhóm
+                       if (!childProps.value) {
+                           childProps.value = getHtmlEditorBeforeRender(item, formInstanceProps);
+                       }
+                       if (formInstanceProps.isReadOnly)
+                           childProps.readOnly = formInstanceProps.isReadOnly;
+                       createEditor(item, itemElement, $("<div>"), childProps);
+                   }
+           }
+       }
+   });
+}
+
+function styleModeChange(item){
+        if (!Object.prototype.hasOwnProperty.call(item, "editorOptions")) {
+            // có key editorOptions -> modify
+            item.editorOptions = {
+                stylingMode: "filled"
+            };
+        } else {
+            // không có key -> tạo mới
+            item.editorOptions.stylingMode = "filled";
+            
+        }
+}
 </script>
