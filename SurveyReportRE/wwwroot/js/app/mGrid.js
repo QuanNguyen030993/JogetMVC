@@ -893,8 +893,11 @@ var MGridOption = class MGridOption {
         try {
             var that = this
             if (e.rowType === "data" && e.column.command && e.column.command != "drag") {
-                if (_isSuperUser == "true")
-                    visibleCommentButtonCell(e, that);
+                if (_isSuperUser == "true") {
+                    if (e.data.isView != null) {
+                        visibleCommentButtonCell(e, that);
+                    }
+                }
             }
             if (e.data && e.column.editorOptions != null && e.column.editorOptions.readOnly == true && e.component.option("editing.mode") === "batch") {
                 e.cellElement.css("background-color", "#F2F2F2");
