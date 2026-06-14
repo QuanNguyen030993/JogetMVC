@@ -2024,12 +2024,13 @@
   align-items: stretch;
 }
 .dx-textarea .dx-texteditor-input {
-  resize: none;
-  font-family: inherit;
-  display: block;
-  overflow: auto;
-  white-space: pre-wrap;
-  margin: 0;
+    resize: vertical;
+    overflow: auto;
+    font-family: inherit;
+    display: block;
+    overflow: auto;
+    white-space: pre-wrap;
+    margin: 0;
 }
 .dx-textarea .dx-texteditor-input-auto-resize {
   overflow-y: hidden;

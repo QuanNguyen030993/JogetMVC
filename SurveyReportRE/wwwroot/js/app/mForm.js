@@ -34,9 +34,10 @@
                 if (formConfig.colCount != null || formConfig.colCount != undefined) {
                     this.colCount = formConfig.colCount;
                 }
-                if (formConfig.defaultTextAreaHeight != null || formConfig.defaultTextAreaHeight != undefined) {
-                    this.defaultTextAreaHeight = formConfig.defaultTextAreaHeight;
-                } if (formConfig.defaultTextAreaWidth != null || formConfig.defaultTextAreaWidth != undefined) {
+                //if (formConfig.defaultTextAreaHeight != null || formConfig.defaultTextAreaHeight != undefined) {
+                //    this.defaultTextAreaHeight = formConfig.defaultTextAreaHeight;
+            //}
+                if (formConfig.defaultTextAreaWidth != null || formConfig.defaultTextAreaWidth != undefined) {
                     this.defaultTextAreaWidth = formConfig.defaultTextAreaWidth;
                 }
                 if (formConfig.labelLocation != null || formConfig.labelLocation != undefined) {

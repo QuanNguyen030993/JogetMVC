@@ -869,7 +869,6 @@
                         editorType: "dxTextArea",
                         colSpan: 2,
                         editorOptions: {
-                            minHeight: 70,
                             maxLength: 1000
                         }
                     },
@@ -889,7 +888,6 @@
                         label: { text: "Static value" },
                         editorType: "dxTextArea",
                         editorOptions: {
-                            minHeight: 70,
                             maxLength: 1000
                         }
                     },
@@ -939,11 +937,8 @@
                     {
                         dataField: "customArgs",
                         label: { text: "Custom Args JSON" },
-                        editorType: "dxTextArea",
-                        editorOptions: {
-                            minHeight: 80
-                        }
-                    }
+                        editorType: "dxTextArea"
+                    }s
                 ],
                 onInitialized: function (e) {
                     conditionBuilderInstance = e.component;
@@ -1859,7 +1854,6 @@
                         dataField: "conditionJson",
                         label: { text: "Condition JSON" },
                         editorType: "dxTextArea",
-                        editorOptions: { minHeight: 100 },
                         colSpan: 2
                     }
            ]     ;

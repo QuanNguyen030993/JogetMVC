@@ -1013,7 +1013,7 @@
                                     label: { text: "Comment / Note" },
                                     editorType: "dxTextArea",
                                     editorOptions: {
-                                        height: 240,
+                               
                                         placeholder: "Write a long comment here. The list view will clamp long text and allow expand/collapse."
                                     }
                                 },
@@ -3979,15 +3979,16 @@
                         item.label = {};
                     }
                     if (item.dataField != "decision")
-                    debugger
+                    
                     item.label.location = "top";
-                    styleModeChange(item.editorOptions || item);
+
+  
                 }
             });
         }
 
         processItems(items);
-
+           itemsStyle(items);
         // set lại items sau khi chỉnh sửa
         form.option("items", items);
     }
@@ -4017,443 +4018,9 @@
     }
     //START FORM ELEMENT HANDLE
    
-    // function RenderFormElement(gridConfig, itemsArray, props){
-
-    //     //prepareOutlineCache(props);
-
-    //     const fields = buildFieldConfigs(props);
-
-    //     props.fieldConfigs = sortObjectArray(fields);
-
-    //     buildFieldMetadata(props, fields);
-
-    //     fields.forEach((field,index)=>{
-
-    //         itemsArray.push(
-    //             createFormItem(
-    //                 field,
-    //                 props,
-    //                 index + 1
-    //             )
-    //         );
-
-    //     });
-
-
-    //     handleDynamicOutline(itemsArray, props);
-
-    //     applyFormTemplates(itemsArray, props);
-
-    // }
-
-    // function buildFieldConfigs(props){
-
-    //     return props.gridInstanceConfig.map(raw=>{
-
-    //         const item = ObjectPopulateKey(raw);
-
-
-    //         item.validationRules =
-    //             parseValidationRules(
-    //                 item.validationRules
-    //             );
-
-
-    //         item.editorOptionsConfig =
-    //             parseJsonConfig(
-    //                 item.editorOptions
-    //             );
-
-
-    //         item.formItemConfig =
-    //             parseJsonConfig(
-    //                 item.formItem
-    //             );
-
-
-    //         normalizeFieldSize(item);
-
-    //         normalizeFieldOrder(item);
-
-
-    //         item.editorType =
-    //             item.formDataType;
-
-
-    //         item.calculatedDisplayField =
-    //             item.dataField;
-
-
-    //         resolveOutline(item);
-
-
-    //         return item;
-
-    //     });
-
-    // }
-
-    // function parseValidationRules(value){
-
-    //     if(!value)
-    //         return [];
-
-
-    //     try{
-
-    //         let rules =
-    //             typeof value === "string"
-    //             ? JSON.parse(value)
-    //             : value;
-
-
-    //         return rules.map(rule=>{
-
-    //             if(
-    //                 rule.type === "custom"
-    //                 &&
-    //                 typeof rule.validationCallback === "string"
-    //             ){
-
-    //                 rule.validationCallback =
-    //                     createFunction(
-    //                         rule.validationCallback
-    //                     );
-    //             }
-
-
-    //             return rule;
-
-    //         });
-
-
-    //     }
-    //     catch(e){
-
-    //         console.error(
-    //             "Invalid validationRules",
-    //             e
-    //         );
-
-    //         return [];
-
-    //     }
-
-    // }
-
-    // function parseJsonConfig(value){
-
-    //     if(
-    //         !value
-    //         ||
-    //         typeof value === "object"
-    //     )
-    //         return value;
-
-
-    //     try{
-
-
-    //         const json =
-    //             JSON.parse(
-    //                 decodeBase64(value)
-    //             );
-
-
-    //         Object.keys(json)
-    //         .forEach(key=>{
-
-
-    //             if(key.startsWith("on")){
-
-
-    //                 json[key] =
-    //                     createFunction(
-    //                         json[key]
-    //                     );
-
-    //             }
-    //             else if(
-    //                 variableMapping[
-    //                     json[key]
-    //                 ]
-    //             ){
-
-    //                 json[key] =
-    //                     variableMapping[
-    //                         json[key]
-    //                     ];
-
-    //             }
-
-
-    //         });
-
-
-    //         return json;
-
-
-    //     }
-    //     catch(e){
-
-    //         console.error(e);
-
-    //         return null;
-
-    //     }
-
-    // }
-
-    // function decodeBase64(value){
-
-    //     const bytes =
-    //         Uint8Array.from(
-    //             atob(value),
-    //             c=>c.charCodeAt(0)
-    //         );
-
-
-    //     return new TextDecoder()
-    //         .decode(bytes);
-
-    // }
-
-    // function createFunction(script){
-
-    //     return Function(
-    //         "e",
-    //         script
-    //     );
-
-    // }
-
-    // function normalizeFieldOrder(item){
-
-    //     item.order =
-    //         item.formVisibleIndex != null
-    //         ? item.formVisibleIndex
-    //         : item.order;
-
-
-    //     if(item.order === -1){
-
-    //         item.visible = false;
-
-    //     }
-
-    // }
-
-    // function normalizeFieldSize(item){
-
-    //     item.width =
-    //         normalizeSize(
-    //             item.formWidth,
-    //             _defaultFormFieldWidth
-    //         );
-
-
-    //     item.height =
-    //         normalizeSize(
-    //             item.formHeight,
-    //             _defaultFormFieldHeight
-    //         );
-
-    // }
-
-    // function normalizeSize(value, defaultValue){
-
-    //     if(isNullOrEmpty(value))
-    //         return defaultValue;
-
-
-    //     return value.includes("%")
-    //         ? value
-    //         : parseInt(value);
-
-    // }
-
-    // function resolveOutline(item){
-
-    //     if(
-    //         !item.formItemConfig
-    //         ||
-    //         !item.formItemConfig.outline
-    //     )
-    //         return;
-
-
-    //     const ids =
-    //         item.formItemConfig
-    //         .outline
-    //         .id
-    //         .split(",")
-    //         .map(x=>x.trim());
-
-
-    //     item.outlineObject =
-    //         _cacheOutlines.find(x=>
-    //             ids.includes(
-    //                 x.id.toString()
-    //             )
-    //         );
-
-    // }
-
-    // function createFormItem(item,props,tabIndex){
-
-    //     return {
-
-    //         ...createBaseItem(
-    //             item,
-    //             props
-    //         ),
-
-    //         ...editorFactory(
-    //             item,
-    //             props,
-    //             tabIndex
-    //         )
-
-    //     };
-
-    // }
-
-    // function createBaseItem(item,props){
-
-    //     return {
-
-
-    //         formGroupName:
-    //             item.formGroupName,
-
-
-    //         dataField:
-    //             item.dataField,
-
-
-    //         editorType:
-    //             item.editorType,
-
-
-    //         formItem:
-    //             item.formItemConfig,
-
-
-    //         validationRules:
-    //             item.validationRules,
-
-
-    //         outlineObject:
-    //             item.outlineObject,
-
-
-    //         visible:
-    //             item.visible,
-
-
-    //         label:{
-
-    //             location:
-    //                 props.labelLocation,
-
-    //             text:
-    //                 item.caption,
-
-    //             visible:true
-
-    //         }
-
-    //     };
-
-    // }
-
-
-    // function editorFactory(item,props,tabIndex){
-
-    //     const factory = {
-
-    //         dxTextArea:createTextArea,
-
-    //         dxSelectBox:createSelectBox,
-
-    //         dxDropDownBox:createDropDownBox,
-
-    //         dxMultiDataGrid:createMultiGrid,
-
-    //         dxDateBox:createDateBox
-
-    //     };
-
-
-    //     const handler =
-    //         factory[item.editorType]
-    //         ||
-    //         createDefaultEditor;
-
-
-
-    //     return handler(
-    //         item,
-    //         props,
-    //         tabIndex
-    //     );
-
-    // }
-
-    // function defaultEditorOptions(item,tabIndex){
-
-    //     return {
-
-
-    //         tabIndex,
-
-    //         width:
-    //             item.width,
-
-
-    //         height:
-    //             item.height,
-
-
-    //         showClearButton:true,
-
-
-    //         stylingMode:
-    //             "filled",
-
-
-    //         value:
-    //             item.defaultValue ?? ""
-
-    //     };
-
-    // }
-
-    // function createDefaultEditor(item,props,tabIndex){
-
-    //     return {
-
-
-    //         editorOptions:{
-
-
-    //             ...defaultEditorOptions(
-    //                 item,
-    //                 tabIndex
-    //             ),
-
-
-    //             ...item.editorOptionsConfig
-
-    //         }
-
-    //     };
-
-    // }
-
+    
   
 
-    //END FORM ELEMENT HANDLE
     
 function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
 
@@ -4660,7 +4227,7 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
                },
                onFocusOut: function (e) { //not required
                },
-               height: (item.height != null || item.height != '' || item.height != undefined) ? ((item.height !== '' && !isNaN(parseFloat(item.height)) && isFinite(item.height)) ? parseInt(item.height) : item.height.replace("%", "") / 100 * 47) : _defaultTextAreaHeight,
+               // height: (item.height != null || item.height != '' || item.height != undefined) ? ((item.height !== '' && !isNaN(parseFloat(item.height)) && isFinite(item.height)) ? parseInt(item.height) : item.height.replace("%", "") / 100 * 47) : _defaultTextAreaHeight,
                width: (item.width != null || item.width != '' || item.width != undefined) ? ((item.width !== '' && !isNaN(parseFloat(item.width)) && isFinite(item.width)) ? parseInt(item.width) : item.width) : _defaultTextAreaWidth,
                value: item.defaultValue ?? "",
                ...additionalEditorOptions
@@ -4917,7 +4484,7 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
        }
        itemOptions.template = item.template;
             if (itemOptions.editorOptions)
-       styleModeChange(itemOptions.editorOptions || itemOptions);
+       styleModeChange(itemOptions);
        itemsArray.push(itemOptions);
        tabIndexNumber++;
    });
@@ -5016,6 +4583,7 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
        }
    });
 }
+    //END FORM ELEMENT HANDLE
 
 function styleModeChange(item){
         if (!Object.prototype.hasOwnProperty.call(item, "editorOptions")) {
@@ -5024,9 +4592,25 @@ function styleModeChange(item){
                 stylingMode: "filled"
             };
         } else {
+            debugger
             // không có key -> tạo mới
             item.editorOptions.stylingMode = "filled";
-            
         }
 }
+
+    function itemsStyle(item) {
+        if (item.itemType == "group")
+            itemsStyle(item.items);
+        else {
+            $.each(item, function (itemChIn, itemCh) {
+                if (itemCh.itemType == "group")
+                    itemsStyle(itemCh.items);
+                    else
+                    styleModeChange(itemCh);
+            });
+        }
+    }
+
+
+
 </script>

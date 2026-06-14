@@ -118,326 +118,7 @@ var ClientForm = class ClientForm extends MForm {
     constructor(id, childGridConfig, formConfig, mFormConfig) {
         super(id, childGridConfig, formConfig, mFormConfig)
     }
-        // getFormItems() {
-
-        //     return [
-
-        //         {
-        //             itemType: "group",
-        //             caption: "Client Information",
-        //             colCount: 2,
-
-        //             cssClass: "form-section",
-
-        //             items: [
-
-        //                 {
-        //                     dataField: "clientCode",
-        //                     label: {
-        //                         text: "Client Code"
-        //                     },
-        //                     editorType: "dxTextBox",
-        //                     editorOptions: {
-        //                         stylingMode: "filled"
-        //                     }
-        //                 },
-
-
-        //                 {
-        //                     itemType: "group",
-        //                     caption: "Name",
-        //                     colCount: 1,
-
-        //                     cssClass: "form-section",
-
-        //                     items: [
-
-        //                         {
-        //                             dataField: "clientName",
-        //                             label: {
-        //                                 text: "Client Name"
-        //                             },
-        //                             colSpan: 2,
-
-        //                             template: function (data, itemElement) {
-        //                                 setTimeout(() => {
-        //                                     const value = data.component.option("formData")
-        //                                         .clientName;
-
-        //                                     let obj = {};
-
-        //                                     try {
-        //                                         obj = JSON.parse(value || "{}");
-        //                                     }
-        //                                     catch {
-        //                                         obj = {};
-        //                                     }
-
-        //                                     const html = `
-        //                                         <div class="multi-lang-editor">
-
-        //                                             <div class="lang-row">
-
-        //                                                 <div class="lang-tag viet">
-        //                                                     Viet
-        //                                                 </div>
-
-        //                                                     <div id="client_txtViet"></div>
-
-        //                                             </div>
-
-        //                                             <div class="lang-row">
-
-        //                                                 <div class="lang-tag eng">
-        //                                                     Eng
-        //                                                 </div>
-
-        //                                                     <div id="client_txtEng"></div>
-
-        //                                             </div>
-
-        //                                         </div>
-        //                                     `;
-
-        //                                     itemElement.append(html);
-
-        //                                     const updateValue = () => {
-
-        //                                         const viet =
-        //                                             $("#client_txtViet")
-        //                                                 .dxTextArea("instance")
-        //                                                 .option("value");
-
-        //                                         const eng =
-        //                                             $("#client_txtEng")
-        //                                                 .dxTextArea("instance")
-        //                                                 .option("value");
-
-        //                                         const jsonValue = JSON.stringify({
-        //                                             Viet: viet,
-        //                                             Eng: eng
-        //                                         });
-
-        //                                         var passingObject = {
-        //                                         };
-        //                                         passingObject.clientName = JSON.stringify({
-        //                                             Viet: viet,
-        //                                             Eng: eng
-        //                                         });
-        //                                         store.update(formItems.id, passingObject)
-        //                                             .done(function () {
-        //                                                 DevExpress.ui.notify("Saved successfully", "success", 2000);
-        //                                             })
-        //                                             .fail(function (error) {
-        //                                                 console.error(error);
-        //                                                 DevExpress.ui.notify("Save failed", "error", 2000);
-        //                                             });
-
-        //                                     };
-
-        //                                     $("#client_txtViet").dxTextArea({
-        //                                         value: obj.Viet || "",
-        //                                         height: 70,
-        //                                         onValueChanged: updateValue
-        //                                     });
-
-        //                                     $("#client_txtEng").dxTextArea({
-        //                                         value: obj.Eng || "",
-        //                                         height: 70,
-        //                                         onValueChanged: updateValue
-        //                                     });
-        //                                 }, 500);
-
-        //                             }
-        //                         }
-
-        //                     ]
-        //                 },
-
-
-        //                 {
-        //                     dataField: "businessType",
-        //                     label: {
-        //                         text: "Business Type"
-        //                     },
-        //                     editorType: "dxSelectBox",
-        //                     editorOptions: {
-        //                         stylingMode: "filled"
-        //                     }
-        //                 },
-
-
-        //                 {
-        //                     dataField: "taxCode",
-        //                     label: {
-        //                         text: "Tax Code"
-        //                     },
-        //                     editorType: "dxTextBox",
-        //                     editorOptions: {
-        //                         stylingMode: "filled"
-        //                     }
-        //                 }
-
-        //             ]
-        //         },
-
-
-
-        //         {
-        //             itemType: "group",
-        //             caption: "Address",
-        //             colCount: 1,
-
-        //             cssClass: "form-section",
-
-        //             items: [
-
-        //                 {
-        //                     dataField: "businessAddress",
-        //                     label: {
-        //                         text: "Business Address"
-        //                     },
-        //                     colSpan: 2,
-
-        //                     template: function (data, itemElement) {
-        //                         setTimeout(() => {
-        //                             var that = this;
-        //                             var formItems = that.option("formData");
-        //                             var store = that.option("dataSource");
-
-        //                         const value = data.component.option("formData")
-        //                             .businessAddress;
-
-        //                         let obj = {};
-
-        //                         try {
-        //                             obj = JSON.parse(value || "{}");
-        //                         }
-        //                         catch {
-        //                             obj = {};
-        //                         }
-
-        //                         const html = `
-        //                             <div class="multi-lang-editor">
-
-        //                                 <div class="lang-row">
-
-        //                                     <div class="lang-tag viet">
-        //                                         Viet
-        //                                     </div>
-
-        //                                         <div id="businessAddress_txtViet"></div>
-
-        //                                 </div>
-
-        //                                 <div class="lang-row">
-
-        //                                     <div class="lang-tag eng">
-        //                                         Eng
-        //                                     </div>
-
-        //                                         <div id="businessAddress_txtEng"></div>
-
-        //                                 </div>
-
-        //                             </div>
-        //                         `;
-
-        //                         itemElement.append(html);
-
-        //                         const updateValue = () => {
-        //                             const viet =
-        //                                 $("#businessAddress_txtViet")
-        //                                     .dxTextArea("instance")
-        //                                     .option("value");
-
-        //                             const eng =
-        //                                     $("#businessAddress_txtEng")
-        //                                     .dxTextArea("instance")
-        //                                     .option("value");
-
-        //                             const jsonValue = JSON.stringify({
-        //                                 Viet: viet,
-        //                                 Eng: eng
-        //                             });
-
-        //                                 var passingObject = {
-        //                                 };
-        //                             passingObject.businessAddress = JSON.stringify({
-        //                                 Viet: viet,
-        //                                 Eng: eng
-        //                             });
-        //                                 store.update(formItems.id, passingObject)
-        //                                         .done(function () {
-        //                                             DevExpress.ui.notify("Saved successfully", "success", 2000);
-        //                                         })
-        //                                         .fail(function (error) {
-        //                                             console.error(error);
-        //                                             DevExpress.ui.notify("Save failed", "error", 2000);
-        //                                         });
-                                 
-        //                             };
-
-        //                             $("#businessAddress_txtViet").dxTextArea({
-        //                             value: obj.Viet || "",
-        //                             height: 70,
-        //                             onValueChanged: updateValue
-        //                         });
-
-        //                             $("#businessAddress_txtEng").dxTextArea({
-        //                             value: obj.Eng || "",
-        //                             height: 70,
-        //                             onValueChanged: updateValue
-        //                         });
-        //                         },500);
-
-        //                     }
-        //                 }
-
-        //             ]
-        //         },
-
-
-
-        //         {
-        //             itemType: "group",
-        //             caption: "Contact",
-        //             colCount: 2,
-
-        //             cssClass: "form-section",
-
-        //             items: [
-
-        //                 {
-        //                     dataField: "phone",
-        //                     label: {
-        //                         text: "Phone"
-        //                     },
-        //                     editorType: "dxTextBox",
-        //                     editorOptions: {
-        //                         stylingMode: "filled"
-        //                     }
-        //                 },
-
-
-        //                 {
-        //                     dataField: "email",
-        //                     label: {
-        //                         text: "Email"
-        //                     },
-        //                     editorType: "dxTextBox",
-        //                     editorOptions: {
-        //                         stylingMode: "filled"
-        //                     }
-        //                 }
-
-        //             ]
-        //         }
-
-        //     ];
-
-        // }
-
+        
         getFormItems() {
 
             return [
@@ -468,11 +149,100 @@ var ClientForm = class ClientForm extends MForm {
                             },
                             colSpan: 2,
 
-                            template: (data, element) => {
-                                this.multiLangTemplate(
-                                    data,
-                                    element
-                                );
+                            template: function (data, itemElement) {
+                                setTimeout(() => {
+                                    var that = this;
+                                    var formItems = that.option("formData");
+                                    var store = that.option("dataSource");
+
+                                    const value = data.component.option("formData")
+                                        .clientName;
+
+                                    let obj = {};
+
+                                    try {
+                                        obj = JSON.parse(value || "{}");
+                                    }
+                                    catch {
+                                        obj = {};
+                                    }
+
+                                    const html = `
+                                    <div class="multi-lang-editor">
+
+                                        <div class="lang-row">
+
+                                            <div class="tag-label viet">
+                                                Viet
+                                            </div>
+
+                                                <div id="clientName_txtViet"></div>
+
+                                        </div>
+
+                                        <div class="lang-row">
+
+                                            <div class="tag-label eng">
+                                                Eng
+                                            </div>
+
+                                                <div id="clientName_txtEng"></div>
+
+                                        </div>
+
+                                    </div>
+                                `;
+
+                                    itemElement.append(html);
+
+                                    const updateValue = () => {
+                                        const viet =
+                                            $("#clientName_txtViet")
+                                                .dxTextArea("instance")
+                                                .option("value");
+
+                                        const eng =
+                                            $("#clientName_txtEng")
+                                                .dxTextArea("instance")
+                                                .option("value");
+
+                                        const jsonValue = JSON.stringify({
+                                            Viet: viet,
+                                            Eng: eng
+                                        });
+
+                                        var passingObject = {
+                                        };
+                                        passingObject.clientName = JSON.stringify({
+                                            Viet: viet,
+                                            Eng: eng
+                                        });
+                                        store.update(formItems.id, passingObject)
+                                            .done(function () {
+                                                DevExpress.ui.notify("Saved successfully", "success", 2000);
+                                            })
+                                            .fail(function (error) {
+                                                console.error(error);
+                                                DevExpress.ui.notify("Save failed", "error", 2000);
+                                            });
+
+                                    };
+
+                                    $("#clientName_txtViet").dxTextArea({
+                                        value: obj.Viet || "",
+                                            width: "100%",
+                                        onValueChanged: updateValue,
+                                        stylingMode: "filled"
+                                    });
+
+                                    $("#clientName_txtEng").dxTextArea({
+                                        value: obj.Eng || "",
+                                        width: "100%",
+                                        onValueChanged: updateValue,
+                                        stylingMode: "filled"
+                                    });
+                                }, 500);
+
                             }
                         },
 
@@ -626,7 +396,7 @@ var ClientForm = class ClientForm extends MForm {
                 {
                     itemType: "group",
                     caption: "Address",
-                    colCount: 1,
+                    colCount: 2,
                     cssClass: "form-section",
 
                     items: [
@@ -637,7 +407,7 @@ var ClientForm = class ClientForm extends MForm {
                             label: {
                                 text: "Business Address"
                             },
-                            colSpan: 2,
+                            colSpan: 1,
 
                             template: function (data, itemElement) {
                                 setTimeout(() => {
@@ -662,7 +432,7 @@ var ClientForm = class ClientForm extends MForm {
 
                                         <div class="lang-row">
 
-                                            <div class="lang-tag viet">
+                                            <div class="tag-label viet">
                                                 Viet
                                             </div>
 
@@ -672,7 +442,7 @@ var ClientForm = class ClientForm extends MForm {
 
                                         <div class="lang-row">
 
-                                            <div class="lang-tag eng">
+                                            <div class="tag-label eng">
                                                 Eng
                                             </div>
 
@@ -719,16 +489,18 @@ var ClientForm = class ClientForm extends MForm {
                                     };
 
                                     $("#businessAddress_txtViet").dxTextArea({
-                                    value: obj.Viet || "",
-                                    height: 70,
-                                    onValueChanged: updateValue
-                                });
+                                        value: obj.Viet || "",
+                                        width: "100%",
+                                        onValueChanged: updateValue,
+                                        stylingMode : "filled" 
+                                    });
 
                                     $("#businessAddress_txtEng").dxTextArea({
                                     value: obj.Eng || "",
-                                    height: 70,
-                                    onValueChanged: updateValue
-                                });
+                                        width: "100%",
+                                    onValueChanged: updateValue,
+                                        stylingMode: "filled"
+                                    });
                                 },500);
 
                             }
@@ -741,11 +513,7 @@ var ClientForm = class ClientForm extends MForm {
                                 text: "Tax Address"
                             },
 
-                            editorType: "dxTextArea",
-
-                            editorOptions: {
-                                height: 80
-                            }
+                            editorType: "dxTextArea"
                         }
 
 
@@ -846,11 +614,7 @@ var ClientForm = class ClientForm extends MForm {
 
                             colSpan: 3,
 
-                            editorType: "dxTextArea",
-
-                            editorOptions: {
-                                height: 80
-                            }
+                            editorType: "dxTextArea"
                         }
 
 
@@ -864,127 +628,6 @@ var ClientForm = class ClientForm extends MForm {
 
 
 
-
-
-
-        multiLangTemplate(data, element) {
-
-
-            let value =
-                data.component.option("formData")[data.dataField];
-
-
-            let obj = {};
-
-
-            try {
-
-                obj = JSON.parse(
-                    value || "{}"
-                );
-
-            }
-            catch (e) {
-
-                obj = {};
-
-            }
-
-
-
-            $(element).html(`
-
-                    <div class="client-multilang-editor">
-
-
-                        <div class="client-lang-row">
-
-
-                            <div class="client-lang-tag client-viet">
-                                Viet
-                            </div>
-
-
-                            <div class="client-lang-input viet-editor">
-                            </div>
-
-
-                        </div>
-
-
-
-                        <div class="client-lang-row">
-
-
-                            <div class="client-lang-tag client-eng">
-                                Eng
-                            </div>
-
-
-                            <div class="client-lang-input eng-editor">
-                            </div>
-
-
-                        </div>
-
-
-                    </div>
-
-                `);
-
-
-
-
-            let updateValue = () => {
-
-
-                let viet =
-                    $(".viet-editor", element)
-                        .dxTextBox("instance")
-                        .option("value");
-
-
-                let eng =
-                    $(".eng-editor", element)
-                        .dxTextBox("instance")
-                        .option("value");
-
-
-
-                data.component.updateData(
-                    data.dataField,
-                    JSON.stringify({
-                        Viet: viet,
-                        Eng: eng
-                    })
-                );
-
-            };
-
-
-
-
-            $(".viet-editor", element)
-                .dxTextBox({
-
-                    value: obj.Viet || "",
-
-                    onValueChanged: updateValue
-                });
-
-
-
-
-            $(".eng-editor", element)
-                .dxTextBox({
-
-                    value: obj.Eng || "",
-
-                    onValueChanged: updateValue
-                });
-
-
-        }
         renderForm(formElement) {
             try {
                 ////create html start
@@ -1119,31 +762,18 @@ var ClientForm = class ClientForm extends MForm {
         }
 
         customizeForm(option) {
-            // if (option.itemType == "group")
-            //     $.each(option.items, function (indexC, itemC) {
-            //             styleModeChange(itemC.editorOptions || null);
-            //         });
-            //     else {
-            styleModeChange(option.editorOptions || option);
-                // }
-           // var that = this;
-           // super.customizeForm(item);
-           // if (item.dataField ==="bussinessAddress")
-           //  {
-           //     item = 
-           //      };
+            styleModeChange(option);
         }
 
         customizeFormOption(option) {
             option.colCount = 1;
                 $.each(option.items, function (indexC, itemC) {
-                debugger
                 if (itemC.itemType == "group")
                     $.each(itemC.items, function (indexC, itemCh) {
-                        styleModeChange(itemCh.editorOptions || itemCh);
+                        styleModeChange(itemCh);
                     });
                         else {
-                    styleModeChange(itemC.editorOptions || itemC);
+                    styleModeChange(itemC);
                 }
                 });
             option.showColonAfterLabel = false;

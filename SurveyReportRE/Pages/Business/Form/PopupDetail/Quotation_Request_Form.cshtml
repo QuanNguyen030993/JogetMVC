@@ -370,7 +370,6 @@
                             dataField: "subject",
                             colSpan: 2,
                             editorType: "dxTextArea",
-                            editorOptions: { minHeight: 90 },
                             validationRules: [{ type: "required" }]
                         },
                         { dataField: "requestTypeId", label: { text: "Request Type" }, editorType: "dxSelectBox", isRequired: true, editorOptions: makeSelectBoxEditorOptions(_enums.requestType) },
@@ -685,7 +684,7 @@
                     isRequired: true,
                     editorOptions: { dataSource: _enums.assignee, displayExpr: "fullName", valueExpr: "accountName", searchEnabled: true }
                 },
-                { dataField: "notes", colCount: 2, editorType: "dxTextArea", editorOptions: { minHeight: 90 } }
+                { dataField: "notes", colCount: 2, editorType: "dxTextArea"}
             ];
 
             var currentEntry = entryTemplate();
@@ -850,18 +849,12 @@
                                     dataField: "branchId",
                                     visible: false,
                                     editorType: "dxNumberBox",
-                                    label: { text: "Branch" },
-                                    editorOptions: {
-                                        minHeight: 90
-                                    }
+                                    label: { text: "Branch" }
                                 },
                                     {
                                         dataField: "notes",
                                         editorType: "dxTextArea",
-                                        label: { text: "Notes" },
-                                        editorOptions: {
-                                            minHeight: 90
-                                        }
+                                        label: { text: "Notes" }
                                     }
                                 ]
                             });
