@@ -34,7 +34,7 @@
         items: [
             { id: "AC_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Approve", value: true },
             { id: "RJ_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Decline", value: false },
-            { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Return", value: false }
+            // { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Return", value: false }
         ],
          displayExpr: "text",
          valueExpr: "id",
@@ -72,7 +72,7 @@
                       passingObject.schemeName = `Quotation`;
                       acceptDecision(passingObject);
                  }
-                 if (_ == 2)
+                 if (_ == 1)
                  {
                       var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
                       var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Problem");

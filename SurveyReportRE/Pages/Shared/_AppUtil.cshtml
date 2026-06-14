@@ -4009,7 +4009,6 @@
             .addClass("dx-icon fas fa-eye")
             .css({ marginRight: "5px", cursor: "pointer", color: "#337ab7" })
             .on("click", function () {
-                debugger
                 var value = !e.data.isView;
                 ajaxGet(`api/${gridInstance.ModelName}/ToggleVisibleRows/${e.data.guid}/${value}`, null);
                 e.component.refresh();
@@ -4592,7 +4591,6 @@ function styleModeChange(item){
                 stylingMode: "filled"
             };
         } else {
-            debugger
             // không có key -> tạo mới
             item.editorOptions.stylingMode = "filled";
         }

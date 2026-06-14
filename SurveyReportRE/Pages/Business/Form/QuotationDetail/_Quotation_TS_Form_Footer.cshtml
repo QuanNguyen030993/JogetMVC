@@ -18,7 +18,7 @@
 </div>
 
 <script>
-
+    //????
     function renderOptionQuotationGrid(element){
         var data = [];
         element
@@ -207,10 +207,11 @@
                                                 }
                                             });
                                             setTimeout(() => {
+                                                debugger
                                                 nativeRemoveTab($(`li#form_@(nameof(Quotation))_Form_@(quotationId)_li_tab`))
                                             },500);
                                         });
-                                         popupInstance.option("toolbarItems[0].options.onClick", function () {
+                                         popupInstance.option("toolbarItems[1].options.onClick", function () {
                                           popupInstance.hide();
                                          });
                                     popupInstance.show();

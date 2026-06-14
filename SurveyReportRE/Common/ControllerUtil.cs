@@ -228,7 +228,105 @@ namespace ERPCore.ControllerUtil
            
             return Notification;
         }
+        public static async Task CloneAction(
+    IBaseRepository<QuotationCommentLog> _quotationCommentLogRepository,
+    List<Dictionary<string, object>> commentLogs,
+    List<Dictionary<string, object>> workflowHistories,
+    long quotationId
+)
+        {
+            foreach (var commentLog in commentLogs)
+            {
+                    var commentQuery = CloneQuery(
+                    commentLog,
+                   "QuotationCommentLog",
+                   quotationId
+               );
+                await _quotationCommentLogRepository
+                .ExecuteCustomLogQuery(commentQuery);
+            }
 
+            foreach (var workflowHistory in workflowHistories)
+            {
+                var workflowQuery = CloneQuery(
+                 workflowHistory,
+                 "QuotationWorkflowHistory",
+                 quotationId
+             );
+                await _quotationCommentLogRepository
+                .ExecuteCustomLogQuery(workflowQuery);
+            }
+
+
+
+        }
+
+
+        public static string CloneQuery(
+    Dictionary<string, object> row,
+    string tableName,
+    long quotationId)
+        {
+            var columns = new List<string>();
+            var values = new List<string>();
+
+
+            foreach (var item in row)
+            {
+                var column = item.Key;
+
+
+                // bỏ identity
+                if (column.Equals("id", StringComparison.OrdinalIgnoreCase)
+                    || column.Equals("commentId", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+
+                columns.Add(column);
+
+
+                object value =
+                    column.Equals("quotationId",
+                        StringComparison.OrdinalIgnoreCase)
+                        ? quotationId
+                        : item.Value;
+
+
+                values.Add(SqlValue(value));
+            }
+
+
+            return $@"
+        INSERT INTO {tableName}
+        (
+            {string.Join(",", columns)}
+        )
+        VALUES
+        (
+            {string.Join(",", values)}
+        )";
+        }
+
+
+
+        private static string SqlValue(object value)
+        {
+            if (value == null)
+                return "NULL";
+
+
+            if (value is DateTime dt)
+                return $"'{dt:yyyy-MM-dd HH:mm:ss}'";
+
+
+            if (value is string)
+                return $"N'{value.ToString().Replace("'", "''")}'";
+
+            if (value is long)
+                return $"{value.ToString().Replace("'", "''")}";
+
+            return value.ToString();
+        }
         public static async Task<IActionResult> LogAction(IBaseRepository<QuotationCommentLog> _quotationCommentLogRepository
             , IHttpContextAccessor httpContextAccessor
             , IConfiguration configuration

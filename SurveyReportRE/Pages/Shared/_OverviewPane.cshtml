@@ -23,6 +23,16 @@
                 <div id="@ViewIdHelper.BtnToggleReferenceFields(moduleCode,quotationId)"></div>
                 <div id="@ViewIdHelper.BtnToggleComment(moduleCode,quotationId)"></div>
                 <div id="@ViewIdHelper.BtnPreview(moduleCode,quotationId)"></div>
+                <!-- Admin Maintenance Floating -->
+                <div id="@Id("adminFloat")" class="admin-float">
+
+                    <div id="@Id("adminFloatBtn")"
+                            class="admin-tool-btn"
+                            title="Maintenance">
+                        🔧
+                    </div>
+
+                </div>
             </div>
         </div>
 
@@ -88,3 +98,103 @@
         </div>
     </section>
 </div>
+<script>
+    $(function () {
+
+        const btn =
+            $("#@Id("adminFloatBtn")");
+
+
+        const panelId =
+            "@Id("adminInfoPanel")";
+
+
+        // tạo panel bằng JS
+        const panel = $(`
+            <div id="${panelId}" class="admin-info-panel">
+
+                <div class="admin-title">
+                    <span>Maintenance Info</span>
+                    <span class="admin-close">✕</span>
+                </div>
+
+
+                <div class="admin-row">
+                    <label>ID</label>
+                    <span>${'@Model.Id'}</span>
+                </div>
+
+
+                <div class="admin-row">
+                    <label>GUID</label>
+                    <span>${'@Model.Guid'}</span>
+                </div>
+
+
+                <div class="admin-row">
+                    <label>Created By</label>
+                    <span class="createdBy">-</span>
+                </div>
+
+
+                <div class="admin-row">
+                    <label>Updated By</label>
+                    <span class="updatedBy">-</span>
+                </div>
+
+
+                <div class="admin-row">
+                    <label>Created Date</label>
+                    <span class="createdDate">-</span>
+                </div>
+
+
+                <div class="admin-row">
+                    <label>Updated Date</label>
+                    <span class="updatedDate">-</span>
+                </div>
+
+            </div>
+        `);
+
+
+        $("body").append(panel);
+
+
+
+        btn.on("click", function (e) {
+
+            e.stopPropagation();
+
+            panel.toggleClass("show");
+
+        });
+
+
+
+        panel.find(".admin-close")
+            .on("click", function () {
+
+                panel.removeClass("show");
+
+            });
+
+
+
+        $(document).on("click", function () {
+
+            panel.removeClass("show");
+
+        });
+
+
+
+        panel.on("click", function (e) {
+
+            e.stopPropagation();
+
+        });
+
+
+    });
+</script>
