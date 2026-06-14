@@ -4262,62 +4262,337 @@ function getScrollbarWidth() {
     return sw;
 }
 
-function stretchColumnsEvenly(e, opts) {
+//function stretchColumnsEvenly(e, opts = {}) {
+
+//    const grid = e.component;
+
+//    const defaultWidth =
+//        opts.defaultWidth ?? _defaultGridFieldWidth;
+
+
+//    const targetWidth =
+//        opts.targetWidth ??
+//        (
+//            window.innerWidth -
+//            _widthMenuWidth -
+//            _rightWindowPadding
+//        );
+
+
+//    const excludeFields =
+//        new Set(opts.excludeFields ?? []);
+
+
+
+//    grid.option("width", targetWidth);
+//    grid.updateDimensions();
+
+
+
+//    const cols = grid.getVisibleColumns()
+//        .filter(c => !c.command);
+
+
+//    if (!cols.length) return;
+
+
+
+//    const stretchCols = cols.filter(
+//        c => !excludeFields.has(c.dataField)
+//    );
+
+
+//    if (!stretchCols.length) return;
+
+
+
+//    // width hiện tại thực tế
+//    const usedWidth =
+//        cols.reduce((sum, c) => {
+
+//            return sum +
+//                (
+//                    Number(c.width) ||
+//                    defaultWidth
+//                );
+
+//        }, 0);
+
+
+
+//    const availableWidth =
+//        targetWidth -
+//        getScrollbarWidth();
+
+
+
+//    const remain =
+//        availableWidth - usedWidth;
+
+
+
+//    // chưa thiếu thì không làm gì
+//    if (remain <= 0) {
+//        return;
+//    }
+
+
+
+//    // phần dư chia đều
+//    const addWidth =
+//        Math.floor(
+//            remain / stretchCols.length
+//        );
+
+
+
+//    if (addWidth <= 0) {
+//        return;
+//    }
+
+
+
+//    grid.beginUpdate();
+
+//    try {
+
+//        stretchCols.forEach(col => {
+
+
+//            const oldWidth =
+//                Number(col.width) ||
+//                defaultWidth;
+
+
+//            grid.columnOption(
+//                col.visibleIndex,
+//                "width",
+//                oldWidth + addWidth
+//            );
+
+
+//        });
+
+
+//    }
+//    finally {
+
+//        grid.endUpdate();
+
+//        grid.updateDimensions();
+
+//    }
+//}
+
+function stretchColumnsEvenly(e, opts = {}) {
+
     const grid = e.component;
-    // chặn loop: chỉ chạy 1 lần mỗi lifecycle
-    const flagKey = "_stretched_evenly";
-    if (grid.__internalFlags?.[flagKey]) return;
-    grid.__internalFlags = grid.__internalFlags || {};
-    grid.__internalFlags[flagKey] = true;
 
-    const renderedWidth = getRenderedGridWidth(grid);
 
-    const targetWidth = opts?.targetWidth ?? window.innerWidth - _widthMenuWidth - _rightWindowPadding;
-    const minWidthEach = opts?.minWidthEach ?? 120;
-    const excludeFields = new Set(opts?.excludeFields ?? []); // vd ["_command", "Select", "Buttons"]
+    const defaultWidth =
+        opts.defaultWidth ??
+        _defaultGridFieldWidth;
 
-    // nếu bạn muốn ép grid width như bạn đang làm
-    if (renderedWidth > targetWidth) {
-        grid.option("width", targetWidth);
-        grid.updateDimensions();
+
+    const rawTargetWidth =
+        opts.targetWidth ??
+        "calc(100vw - var(--menu-width))";
+
+
+
+    // convert css width -> px
+    const targetWidth =
+        resolveWidth(rawTargetWidth);
+
+
+
+    grid.option(
+        "width",
+        "inherit"
+    );
+
+    grid.updateDimensions();
+
+
+
+    const result =
+        calcColumnWidthByViewport({
+
+            columns:
+                grid.getVisibleColumns(),
+
+            targetWidth,
+
+            defaultWidth,
+
+            excludeFields:
+                opts.excludeFields
+
+        });
+
+
+
+    if (!result.shouldStretch) {
+        return;
     }
 
-    // width cuối cùng sau khi set option width
-    const finalWidth = getRenderedGridWidth(grid);
 
-    // visible columns
-    const cols = grid.getVisibleColumns().filter(c => !c.command); // loại command column (edit/delete/buttons)
-    const stretchCols = cols.filter(c => !excludeFields.has(c.dataField));
 
-    if (!stretchCols.length) return;
+    const excludeSet =
+        new Set(opts.excludeFields ?? []);
 
-    // trừ scrollbar nếu có vertical scroll
-    const sw = getScrollbarWidth();
-    const hasVScroll = grid.getScrollable && (grid.getScrollable()?.scrollHeight() || 0) > (grid.getScrollable()?.clientHeight() || 0);
-    const available = finalWidth - (hasVScroll ? sw : 0);
 
-    // nếu bạn có cột fixed width muốn giữ, tính tổng width fixed trước
-    const fixedSum = cols
-        .filter(c => excludeFields.has(c.dataField))
-        .reduce((sum, c) => sum + (c.width || 0), 0);
 
-    const free = Math.max(0, available - fixedSum);
+    const cols =
+        grid.getVisibleColumns()
+            .filter(c =>
+                !c.command &&
+                !excludeSet.has(c.dataField)
+            );
 
-    const evenW = Math.max(minWidthEach, Math.floor(free / stretchCols.length));
+
 
     grid.beginUpdate();
+
     try {
-        stretchCols.forEach(c => {
-            // dùng visibleIndex / index chuẩn
-            grid.columnOption(c.index, "width", evenW);
+
+        cols.forEach(col => {
+
+            grid.columnOption(
+                col.visibleIndex,
+                "width",
+                result.width
+            );
+
         });
-    } finally {
+
+    }
+    finally {
+
         grid.endUpdate();
-        // update lại layout
+
         grid.updateDimensions();
+
     }
 }
+function resolveWidth(width) {
 
+    if (typeof width === "number") {
+        return width;
+    }
+
+
+    if (typeof width === "string") {
+
+        const el = document.createElement("div");
+
+        el.style.width = width;
+
+        el.style.position = "absolute";
+
+        el.style.visibility = "hidden";
+
+        document.body.appendChild(el);
+
+
+        const result =
+            el.getBoundingClientRect().width;
+
+
+        el.remove();
+
+
+        return Math.floor(result);
+    }
+
+
+    return window.innerWidth;
+}
+function calcColumnWidthByViewport({
+    columns,
+    targetWidth,
+    defaultWidth,
+    excludeFields = []
+}) {
+
+    const excludeSet = new Set(excludeFields);
+
+
+    const visibleCols = columns
+        .filter(c => !c.command);
+
+
+    const stretchCols = visibleCols
+        .filter(c => !excludeSet.has(c.dataField));
+
+
+    if (!stretchCols.length) {
+        return {
+            width: defaultWidth,
+            shouldStretch: false
+        };
+    }
+
+
+    // width thực tế đang có
+    const currentWidth =
+        visibleCols.reduce((sum, col) => {
+
+            return sum +
+                (
+                    Number(col.width) ||
+                    defaultWidth
+                );
+
+        }, 0);
+
+
+
+    const availableWidth =
+        targetWidth -
+        getScrollbarWidth();
+
+
+
+    const diff =
+        availableWidth -
+        currentWidth;
+
+
+
+    // không đủ -> giữ nguyên
+    if (diff <= 0) {
+
+        return {
+            width: defaultWidth,
+            shouldStretch: false,
+            reason: "column overflow"
+        };
+    }
+
+
+
+    const addPerColumn =
+        Math.floor(
+            diff / stretchCols.length
+        );
+
+
+    const newWidth =
+        defaultWidth +
+        addPerColumn;
+
+
+
+    return {
+        width: newWidth,
+        shouldStretch: true,
+        reason: "fill viewport",
+        columnCount: stretchCols.length,
+        totalBefore: currentWidth,
+        totalAfter: newWidth * stretchCols.length
+    };
+}
 
 function newKey() {
     if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
