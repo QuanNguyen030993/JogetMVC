@@ -3364,7 +3364,7 @@
                     nodeName: x.text,
                     nodeType: x.type,
                     nodeCode: x.code,
-                    orderNo: x.orderNo ?? (index + 1),
+                    orderNo: x.orderNo || 1,
                     stepRole: x.stepRole,
                     departmentName: x.departmentName,
                     levelNo: x.levelNo,
