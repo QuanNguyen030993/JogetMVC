@@ -2661,7 +2661,8 @@
                                 loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions);
                             }
                         });
-
+                            var uploader = $(`#${editorOptions.uploaderId}`).dxFileUploader("instance")
+                            uploader.option("storageData",data || {});
                         hideUploaderLoader( `${editorOptions.uploaderId}`);
                     },
                     error: function () {

@@ -19,23 +19,42 @@
 
 <script>
     //????
-    function renderOptionQuotationGrid(element){
         var data = [];
-        element
-         .each(function (index, el) {
+        var quotationId = @quotationId;
+        function prepareData(element) {
+            var uploaderId = "fileUpload_@(prefix)_default_@(dept)_@(quotationId)";
+             var uploader = $(`#${uploaderId}`).dxFileUploader("instance")
+                          var fileData =  uploader.option("storageData");
+            data = [];
+                    $.each(fileData,function (index, el) {
              const $el = $(el);
 
              data.push({
                     Index: index,
                      QuotationId: @quotationId,
-                     DocumentId: Number($(el).find("input").val()),
+                     DocumentId: el.id,//Number($(el).find("input").val()),
                      AttachmentElement: el,
                      LineId: null,
                      ProductId: null
                  });
-             });
+       });
+        }
+    function renderOptionQuotationGrid(){
+       //  element
+       //   .each(function (index, el) {
+       //       const $el = $(el);
 
-             var grid = $(`<div id="gridOptionQuotation_@quotationId">`).dxDataGrid({
+       //       data.push({
+       //              Index: index,
+       //               QuotationId: @quotationId,
+       //               DocumentId: Number($(el).find("input").val()),
+       //               AttachmentElement: el,
+       //               LineId: null,
+       //               ProductId: null
+       //           });
+       // });
+             var quotationId= @quotationId;
+             var grid = $(`<div id="gridOptionQuotation_${quotationId}">`).dxDataGrid({
              dataSource: data,
              keyExpr: "Index",
              showBorders: true,
@@ -74,7 +93,12 @@
                             e.setValue(args.value);
 
                             // reset ProductId
+                            // e.component.cellValue(e.row.rowIndex, "ProductId", null);
+
+                            e.component.beginUpdate();
                             e.component.cellValue(e.row.rowIndex, "ProductId", null);
+                            e.component.endUpdate();
+
                         };
                     }
                 }
@@ -85,10 +109,108 @@
                      caption: "Quotation",
                      allowEditing: false,
                      cellTemplate: function (container, options) {
-                         var inputElement = $(options.data.AttachmentElement).find("input");
-                         $(options.data.AttachmentElement).appendTo(container);
-                         inputElement.appendTo(container);
-                         return container;
+                        var x = options.data.AttachmentElement;
+                        const fileName = x.fileName || x.FileName || x.name || "Unnamed";
+                        const ext = (x.extension || x.Extension || getExt(fileName)).toLowerCase();
+                        const size = x.size || x.fileSize || x.FileSize || 0;
+                        const downloadUrl = x.downloadUrl || x.DownloadUrl || x.url;
+                        const id = x.id || x.Id || x.attachmentId;
+                        const author = x.author || x.author || x.author;
+                        const date = x.date || x.date || x.date;
+                        const $item = $("<div>")
+                            .addClass("att-item")
+                            .css({
+                                transition: "opacity .18s ease, transform .18s ease"
+                            });
+
+                        $("<div>")
+                            .addClass("att-ico")
+                            .text(getIconByExt(ext))
+                            .appendTo($item);
+
+                        const $meta = $("<div>").addClass("att-meta").appendTo($item);
+
+                        $("<div>")
+                            .addClass("att-name")
+                            .attr("title", fileName)
+                            .text(`${fileName}`)
+                            .appendTo($meta);
+
+                        $("<div>")
+                            .addClass("att-sub")
+                            .text((ext ? ext.toUpperCase() : "FILE") + " • " + formatBytes(size) + ` -  ${author}  -  ${fmtTimeLocal(date)}`)
+                            .appendTo($meta);
+
+                        const $actions = $("<div>").addClass("att-actions").appendTo($item);
+
+                            if (x.recordGuid)
+                        $("<div>").dxButton({
+                            icon: "download",
+                            hint: "Download",
+                            stylingMode: "contained",
+                            onClick: function (ev) {
+                                ev.event?.stopPropagation?.();
+                                if (downloadUrl) {
+                                    window.open(downloadUrl, "_blank");
+                                } else {
+                                    DevExpress.ui.notify("No download url", "warning", 2000);
+                                }
+                            }
+                        }).appendTo($actions);
+                            if (x.recordGuid)
+                        $("<div>").dxButton({
+                            icon: "trash",
+                            hint: "Delete",
+                            stylingMode: "outlined",
+                            onClick: async function (ev) {
+                                ev.event?.stopPropagation?.();
+
+                                if (!id) {
+                                    DevExpress.ui.notify("Missing id", "warning", 2000);
+                                    return;
+                                }
+
+                                try {
+                                    const res = await fetch(`/api/Document/DeleteDocumentData?id=${encodeURIComponent(id)}`, {
+                                        method: "GET"
+                                    });
+
+                                    if (!res.ok) throw new Error("Delete failed");
+
+                                    DevExpress.ui.notify("Deleted", "success", 1200);
+                                    if (typeof onDeleted === "function") {
+                                        onDeleted(x);
+                                    }
+                                } catch (err) {
+                                    DevExpress.ui.notify(err.message || "Delete error", "error", 2500);
+                                }
+                            }
+                        }).appendTo($actions);
+
+                        $item.css("cursor", downloadUrl ? "pointer" : "default");
+                            if (x.recordGuid)
+                        $item.on("click", async function (ev) {
+                            if (ext === "xlsx" || ext === "xls") {
+                                //libreConvert(id);
+                                openExcelPreviewPopup(id);
+                            }
+                            if (ext === "docx" || ext === "doc")
+                                openWordPreviewPopup(id);
+                            if (ext === "jpg" || ext === "jpeg" || ext === "png")
+                                openImagePreviewPopup(id);
+
+                            //if (ext === "docx")
+                            //    openWordMammothPopup(id);
+                        });
+                        $(`<input type="hidden" value="${id}"></input>`).appendTo($item);
+                            // var items =  createAttachmentItem(options.data.AttachmentElement,null);
+                            // console.log(items);
+                            $item.appendTo(container);
+                            return container;
+                         // var elementIn  = $(options.data.AttachmentElement);
+                         // var inputElement = $(elementIn).find("input");
+                         // $(elementIn).appendTo(container);
+                         // inputElement.appendTo(container);
                      }
                  },
                  {
@@ -100,6 +222,7 @@
                          displayExpr: "value"
                      },
                      editorOptions:{
+                         placeholder: "Select Line...",
                          dataSource: new DevExpress.data.DataSource({
                             store: {
                                 data:_entities.line,
@@ -131,6 +254,7 @@
                          displayExpr: "value"
                      }, 
                      editorOptions:{
+                         placeholder: "Select Product...",
                          dataSource: new DevExpress.data.DataSource({
                             store: {
                                 data:_entities.product,
@@ -141,7 +265,7 @@
                          }
                         ,
                             cellTemplate: function(container, options) {
-                                const text = options.text || "Select...";
+                                const text = options.text    || "Select...";
 
                                 $(`
                                     <div style="display:flex; justify-content:space-between; align-items:center; padding:15px;">
@@ -166,7 +290,6 @@
          function (e) {
                     const uploader1 = $(`#attList_@(prefix)_default_@(dept)_@(quotationId) .att-item.animate-step.visible`);
                     const uploader2 = $(`#attList_@(prefix)_supportingDoc_@(dept)_@(quotationId) .att-item.animate-step.visible`);
-
                 const fileCount1 = uploader1.length || 0; // number of quote docs
                 const fileCount2 = uploader2.length || 0; // number of sup docs
                 var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
@@ -176,8 +299,9 @@
                      var promptConfirm = appNotifyWarning(warningContent, true, "Yes", "Close");
                      promptConfirm.then((result) => {
                      if (result.isConfirmed){
+                                        prepareData($(`#attList_@(prefix)_default_@(dept)_@(quotationId) .att-item.animate-step.visible`))
                                     var popupInstance = makePopupWithScroll(
-                                            renderOptionQuotationGrid($(`#attList_@(prefix)_default_@(dept)_@(quotationId) .att-item.animate-step.visible`))
+                                            renderOptionQuotationGrid()
                                         ,"medium", "Select product options");
                                         popupInstance.option("toolbarItems[0].options.onClick", function () {
                                             popupInstance.hide();
@@ -207,8 +331,24 @@
                                                 }
                                             });
                                             setTimeout(() => {
-                                                debugger
-                                                nativeRemoveTab($(`li#form_@(nameof(Quotation))_Form_@(quotationId)_li_tab`))
+                                                var $tabDivId = $(`li#form_@(nameof(Quotation))_Form_@(quotationId)_li_tab`);
+                                                $tabDivId.animate({
+                                                    width: '0px',
+                                                    opacity: '0'
+                                                }, 220);
+                                                setTimeout(function () {
+                                                    var $li = $tabDivId.closest("li");
+                                                    var panelId = $li.attr("aria-controls");
+                                                    $li.remove();
+
+                                                    if (panelId) {
+                                                        $("#" + panelId).remove();
+                                                        $(`#${panelId}_content_wrapper`).remove();
+                                                        document.body.classList.remove("hasRightPanel");
+                                                        $("#btnCloseRightComment").click();
+                                                    }
+                                                    $("#tablist").tabs("refresh");
+                                                }, 150);
                                             },500);
                                         });
                                          popupInstance.option("toolbarItems[1].options.onClick", function () {
