@@ -2251,7 +2251,7 @@
 
         function reloadWorkflow(selectedGuid, selectedId, stageDept, moduleKey) {
                 $(`#${moduleKey}-flowPanel_${selectedId}`).empty();
-            ajaxGet(`/api/Quotation/GetQuotationWorkflowDefinition/${selectedGuid}`, null)
+                ajaxGet(`/api/Quotation/GetQuotationWorkflowDefinition/${selectedGuid}`, null)
                 .then(instance => {
                         if (instance)
                         {

@@ -56,6 +56,12 @@
              var quotationId= @quotationId;
              var grid = $(`<div id="gridOptionQuotation_${quotationId}">`).dxDataGrid({
              dataSource: data,
+             columnResizingMode: 'widget',
+             columnHidingEnabled: false,
+             columnAutoWidth: true,
+             showColumnLines: true,
+             columnChooser: { allowSearch: true, enabled: true },
+             columnFixing: { enabled: true },
              keyExpr: "Index",
              showBorders: true,
              editing: {

@@ -36,6 +36,7 @@ window.PolicyIssuanceIdManager = {
     btnToggleComment: function (quotationId) { return `${this.prefix}-btnToggleComment_${quotationId}`; },
     btnToggleReferenceFields: function (quotationId) { return `${this.prefix}-btnToggleReferenceFields_${quotationId}`; },
     btnPreview: function (quotationId) { return `${this.prefix}-btnPreview_${quotationId}`; },
+    btnAttachmentLog: function (quotationId) { return `${this.prefix}-btnAttachmentLog_${quotationId}`; },
     panelHoverInFlow: function (quotationId) { return `${this.prefix}-panelHoverInFlow_${quotationId}`; },
     stageDeptPill: function (quotationId) { return `${this.prefix}-stageDeptPill_${quotationId}`; },
     flowPanel: function (quotationId) { return `${this.prefix}-flowPanel_${quotationId}`; },
@@ -62,7 +63,6 @@ window.PolicyIssuanceIdManager = {
     btnCollapseAllTab: function () { return `${this.prefix}-btnCollapseAllTab`; },
     btnToggleComment: function () { return `${this.prefix}-btnToggleComment`; },
     btnToggleReferenceFields: function () { return `${this.prefix}-btnToggleReferenceFields`; },
-    btnPreview: function () { return `${this.prefix}-btnPreview`; },
     roleSelect: function () { return `${this.prefix}-roleSelect`; },
 
     // Tree navigation

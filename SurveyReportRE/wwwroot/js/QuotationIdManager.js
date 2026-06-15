@@ -37,6 +37,7 @@ window.QuotationIdManager = {
     btnToggleComment: function (quotationId) { return `${this.prefix}-btnToggleComment_${quotationId}`; },
     btnToggleReferenceFields: function (quotationId) { return `${this.prefix}-btnToggleReferenceFields_${quotationId}`; },
     btnPreview: function (quotationId) { return `${this.prefix}-btnPreview_${quotationId}`; },
+    btnAttachmentLog: function (quotationId) { return `${this.prefix}-btnAttachmentLog_${quotationId}`; },
     panelHoverInFlow: function (quotationId) { return `${this.prefix}-panelHoverInFlow_${quotationId}`; },
     stageDeptPill: function (quotationId) { return `${this.prefix}-stageDeptPill_${quotationId}`; },
     flowPanel: function (quotationId) { return `${this.prefix}-flowPanel_${quotationId}`; },

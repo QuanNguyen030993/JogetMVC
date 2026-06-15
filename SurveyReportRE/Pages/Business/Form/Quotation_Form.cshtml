@@ -626,10 +626,11 @@ Note:
                 return items.map((c) => `
                                 <div class="ct-item">
                                     <div class="ct-user">${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}</div>
-                                    <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
+                                    <div class="ct-time">${fmtTimeLocal(c.commentTime || "")}</div>
                                     <div class="ct-text">${c.commentText}</div>
                                 </div>
                             `).join("");
+                                    // <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
             }
 
             const loadComments = debounce(function (quoteNo, quoteId) {
@@ -686,12 +687,99 @@ Note:
                 });
             }, 180);
 
+            const attachmentLogLoad = debounce(function (quoteNo, quoteId, attachmentId) {
+                document.documentElement.style.setProperty("--rightdock-width", "70%");
+                $("#rightCommentSub").text(`Attachment log - ${quoteNo}`);
+                var guid = "@(ViewData["Guid"])";
+                 $.ajax({
+                    url: `/api/Document/GetByKey?recordGuid=${guid}`,
+                    method: "GET",
+                        success: function (data) {
+
+                    const $preview = $("#rightDockItem");
+
+
+                    // tạo container grid
+                    const $grid = $("<div>").appendTo($preview);
+
+                    $grid.dxDataGrid({
+                        dataSource: data,
+                        keyExpr: "id",
+                    
+                        //hoặc
+
+                        height: "95%",
+                        scrolling: {
+                            mode: "infinity" // hoặc "virtual"
+                        },
+
+
+                        filterBuilder: { fields: this.columns },
+                        filterBuilderPopup: { position: { of: window, at: "top", my: "top", offset: { y: 10 } }, },
+                        errorRowEnabled: true,
+                        hoverStateEnabled: true,
+                        allowColumnReordering: true,
+                        allowColumnResizing: true,
+                        columnResizingMode: 'widget',
+                        columnHidingEnabled: false,
+                        columnAutoWidth: true,
+                        showColumnLines: true,
+                        // columnChooser: { allowSearch: true, enabled: true },
+                        // columnFixing: { enabled: true },
+                        sorting: { mode: 'multiple' },
+                        showBorders: true,
+                         filterRow: { visible: true },
+                         loadPanel: { showPane: false, text: null },
+                        filterPanel: { visible: true },
+                        groupPanel: { visible: true, allowColumnDragging: true, emptyPanelText: "" },
+                        headerFilter: { visible: true, allowSearch: true },
+                        sorting: {
+                            mode: "single"
+                        },
+
+                        columns: [
+                            {
+                                dataField: "fileName",
+                                caption: "Attachment",
+                                cellTemplate: function (container, options) {
+                                    const $item = createAttachmentItem(options.data);
+                                    $item.css({
+                                        opacity: 1,
+                                        transform: "none",
+                                        transition: "none"
+                                    });
+                                    $(container).append($item);
+                                }
+
+                            },
+                            {
+                                dataField: "author",
+                                caption: "Author",
+                                width: 150
+                            },
+                            {
+                                dataField: "date",
+                                caption: "Date",
+                                dataType: "datetime",
+                                format: "dd/MM/yyyy HH:mm",
+                                sortOrder: "asc" // ✅ SORT TĂNG DẦN
+                            }
+                        ]
+                    });
+                },
+                    error: function () {
+                    }
+                });
+
+
+            }, 180);
+
+
             function openRightCommentPanel() {
                 const $dock = $("#rightCommentDock");
                 commentPanelOpened = true;
                 document.body.classList.add("hasRightPanel");
                 $dock.removeClass("is-closing").addClass("is-open");
-                $("#rightCommentList").empty();
             }
 
             function closeRightCommentPanel() {
@@ -705,17 +793,35 @@ Note:
                 }, 300);
             }
 
+            function clearContent()
+            {
+                $("#rightDockItem").empty();
+                $("#rightCommentSub").empty();
+                $("#rightCommentList").empty();
+            }
+
             function bind() {
                 setTimeout(() => {
                 $("#headerWidgetsPanel").empty();
 
-                $(`<div id="${formModuleKeyQt}-btnToggleReferenceFieldsMini">`).dxButton({
-                    icon: "fas fa-sliders-h",
+                // $(`<div id="${formModuleKeyQt}-btnToggleReferenceFieldsMini">`).dxButton({
+                //     icon: "fas fa-sliders-h",
+                //     type: "normal",
+                //     stylingMode: "contained",
+                //     onClick: () => {
+                //         openRightCommentPanel();
+                //         loadReferenceFields(state.selectedCodeNo, state.selectedId);
+                //     }
+                // }).appendTo($("#headerWidgetsPanel"));
+
+                  $(`<div id="${formModuleKeyQt}-btnAttachmentCommentMini" style="margin-left: 10px">`).dxButton({
+                    icon: "fas fa-paperclip",
                     type: "normal",
                     stylingMode: "contained",
                     onClick: () => {
+                        clearContent();
                         openRightCommentPanel();
-                        loadReferenceFields(state.selectedCodeNo, state.selectedId);
+                        attachmentLogLoad(state.selectedCodeNo, state.selectedId, state.selectedAttachmentId);
                     }
                 }).appendTo($("#headerWidgetsPanel"));
 
@@ -724,6 +830,7 @@ Note:
                     type: "normal",
                     stylingMode: "contained",
                     onClick: () => {
+                        clearContent();
                         openRightCommentPanel();
                         loadComments(state.selectedCodeNo, state.selectedId);
                     }
@@ -741,12 +848,14 @@ Note:
                 });
 
                 $(`#${window.QuotationIdManager.btnToggleComment(@ViewData["Id"])}`).dxButton({
-                    text: "Audit logs",
+                    text: "Audit log",
                     icon: "comment",
                     type: "normal",
                     stylingMode: "contained",
                     onClick: () => {
+                        clearContent();
                         if (!commentPanelOpened) {
+
                             openRightCommentPanel();
                             loadComments(state.selectedCodeNo, state.selectedId);
                         } else {
@@ -776,9 +885,26 @@ Note:
                     type: "normal",
                     stylingMode: "contained",
                     onClick: () => {
+                        clearContent();
                         if (!commentPanelOpened) {
                             openRightCommentPanel();
                             previewQuotation(state.selectedCodeNo, state.selectedId, state.selectedAttachmentId);
+                        } else {
+                            closeRightCommentPanel();
+                        }
+                    }
+                });
+
+                $(`#${window.QuotationIdManager.btnAttachmentLog(@ViewData["Id"])}`).dxButton({
+                    text: "Attachment log",
+                    icon: "fas fa-paperclip",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                        clearContent();
+                        if (!commentPanelOpened) {
+                            openRightCommentPanel();
+                            attachmentLogLoad(state.selectedCodeNo, state.selectedId, state.selectedAttachmentId);
                         } else {
                             closeRightCommentPanel();
                         }
@@ -808,6 +934,7 @@ Note:
                 // });
 
                 $("#btnCloseRightComment").off("click").on("click", function () {
+                    clearContent();
                     closeRightCommentPanel();
                 });
                 },500);

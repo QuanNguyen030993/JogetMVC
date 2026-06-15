@@ -224,6 +224,8 @@ public class DocumentController : BaseControllerApi<Document>
         // Nếu repo có method GetListObject(predicate) thì thay bằng query trực tiếp sẽ nhanh hơn
         var all = await _BaseRepository.GetListObject(l => l.RecordGuid == recordGuid && l.Attributes.Contains($"\"SectionName\":\"{folder}\""));
 
+        if (string.IsNullOrWhiteSpace(folder))
+            all = await _BaseRepository.GetListObject(l => l.RecordGuid == recordGuid);
         var docs = all
             .Where(d => (d.Deleted == null || d.Deleted == false)
                         && d.RecordGuid.HasValue
