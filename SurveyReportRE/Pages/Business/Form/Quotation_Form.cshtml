@@ -26,10 +26,10 @@ Note:
     var PIC_JSON = `{}`;
     var formModuleKeyQt = "qt";
     var pICs = [];
-    if ($('[data-toggle="push-menu"]').hasClass("sidebar-collapse")) {
-        $('[data-toggle="push-menu"]').click();
-        isToggleMenu = true;
-    }
+    // if ($('[data-toggle="push-menu"]').hasClass("sidebar-collapse")) {
+    //     $('[data-toggle="push-menu"]').click();
+    //     isToggleMenu = true;
+    // }
 
     var page = window.QuotationPage;
     var state = page.state;
@@ -359,16 +359,7 @@ Note:
         }
 
 
-        function initializeOverviewShell() {
-              $.each(qtDeptModuleCode, function (itemIndex, item) {
-                deptData[item]= { sectionName: item, code: "" };
-
-            });
-            resetOverviewAnimation(formModuleKeyQt);
-            applyNodeHighlights();
-            applySectionFocusHighlight();
-            updateHints();
-        }
+     
 
         function resetOverviewAnimation(prefix) {
             const $sections = $(`#${window.QuotationIdManager.overviewScroll(@ViewData["Id"])} section.dept-section`);
@@ -411,6 +402,7 @@ Note:
                     }, 360);
                 }, idx * 180);
             });
+            resetOverviewAnimation(prefix);
         }
 
         function applyEditLock() {
@@ -844,18 +836,12 @@ Note:
                 .text(statusText(st))
                 .attr("class", `statusTag ${statusClass(st)}`);
 
-            // $(`#${formModuleKeyQt}-focusDeptPill`).text(`Focus: ${focusDept}`);
-
-            // deptData.FO = { ...q,   id: q.id, sectionName: "FO", code: q.quotationCode };
-            // deptData.TS = { ...q,   id: q.id, sectionName: "TS", code: q.quotationCode };
-            // deptData.UW = { ...q,   id: q.id, sectionName: "UW", code: q.quotationCode };
-            // deptData.LMKT = { ...q, id: q.id, sectionName: "LMKT", code: q.quotationCode };
-            // deptData.PM = { ...q,   id: q.id, sectionName: "PM", code: q.quotationCode };
+           
             $.each(qtDeptModuleCode, function (itemIndex, item) {
                 // var control = TinyMCEElementMaker(`.htmleditor`, item, @ViewData["Id"], control);
                 // deptData[item] = { ...q, id: q.id, sectionName: item, code: q.quotationCode };
                 // remarkBoxs[item] = { id: q.id, sectionName: item, controlRemark: control };
-
+                    
                     deptData[item] = { ...q, id: q.id, sectionName: item, code: q.quotationCode };
                 if (q.stageDept == item)
                 {
@@ -869,13 +855,13 @@ Note:
             });
 
             renderDeptForms();
-            resetOverviewAnimation(formModuleKeyQt);
+            // resetOverviewAnimation(formModuleKeyQt);
             applyNodeHighlights();
             applySectionFocusHighlight();
             updateHints();
             updateSectionUpdatedTime(q);
             initDepartmentAssignees(formModuleKeyQt,deptData, firstRender ? null : 2000);
-            animateOverviewSections(formModuleKeyQt);
+            // animateOverviewSections(formModuleKeyQt);
             scrollToDept(formModuleKeyQt, { id: `${focusDept}`, keyId: "@ViewData["Id"]" } );
             // TinyMCEElementMaker(`.htmleditor`);
 
@@ -930,16 +916,21 @@ Note:
         });
 
         HoverAjax.bind();
+
+        //SkeletionUI
+
+
         bindSectionHeaderToggle();
-        // bindInfiniteScroll();
         setupDeptTree();
+        animateOverviewSections(formModuleKeyQt); //DevExtreme control layout
+
+        // bindInfiniteScroll();
         // initMainPaneSplitter();
 
         setTimeout(layoutTreeLine, 0);
         window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
 
-        initializeOverviewShell();
-        
+
         loadQuotePage(true).then(() => {
             applyNodeHighlights();
             applySectionFocusHighlight();
@@ -962,33 +953,16 @@ Note:
 <body>
     <div class="title">
         <partial name="_OverviewPane" model='new OverviewPanePartialModel
-{
-    Prefix = prefix,
-    ModuleCode = moduleCode,
-    Title = title,
-    Id = ViewData["Id"]?.ToString(),
-    Guid = ViewData["guid"]?.ToString()
-}' />
-@*         @Html.Partial("_OverviewPane", new OverviewPanePartialModel
-   {
-       Prefix = prefix,
-       ModuleCode = moduleCode,
-       Title = title,
-       Id = ViewData["Id"].ToString(),
-       Guid = ViewData["guid"].ToString()
-   }), *@
+        {
+            Prefix = prefix,
+            ModuleCode = moduleCode,
+            Title = title,
+            Id = ViewData["Id"]?.ToString(),
+            Guid = ViewData["guid"]?.ToString()
+        }' />
+
     </div>
 
-    @*  <div class="actionBar">
-        <div class="actionLeft">
-            <span class="pill">Record: <b id="qt-recordNo">Qu-10030</b></span>
-            <span class="pill">Login role: <b id="qt-loginRoleLabel"></b></span>
-            <span id="qt-focusDeptPill" class="pill">Focus section: </span>
-        </div>
-        <div class="actionRight">
-            <div id="qt-btnClientConfirm"></div>
-        </div>
-    </div> *@
 
     <div id="branchOverlay" class="branchOverlay">
         <div class="backdrop"></div>

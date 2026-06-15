@@ -85,10 +85,10 @@ Note:
     var PIC_JSON = `{}`;
     var formModuleKeyPi = "pi";
     var pICs = [];
-    if ($('[data-toggle="push-menu"]').hasClass("sidebar-collapse")) {
-        $('[data-toggle="push-menu"]').click();
-        isToggleMenu = true;
-    }
+    // if ($('[data-toggle="push-menu"]').hasClass("sidebar-collapse")) {
+    //     $('[data-toggle="push-menu"]').click();
+    //     isToggleMenu = true;
+    // }
 
     var page = window.PolicyIssuancePage;
     var state = page.state;
@@ -876,12 +876,13 @@ Note:
                     }, 360);
                 }, idx * 180);
             });
+            resetOverviewAnimation(prefix);
         }
 
         function renderDetail() {
             var q = getSelectedModel();
             if (!q) return;
-            resetOverviewAnimation();
+            // resetOverviewAnimation();
 
             $(`#${formModuleKeyPi}-recordNo`).text(q.policyIssuanceCode);
 
@@ -1151,14 +1152,29 @@ Note:
         });
 
         HoverAjax.bind();
-        bindSectionHeaderToggle();
-        // bindQuoteCardClick();
-        bindInfiniteScroll();
+
+
+         //SkeletionUI
+           bindSectionHeaderToggle();
         setupDeptTree();
-        initMainPaneSplitter();
+        animateOverviewSections(formModuleKeyPi); //DevExtreme control layout
+
+        // bindInfiniteScroll();
+        // initMainPaneSplitter();
 
         setTimeout(layoutTreeLine, 0);
         window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
+
+
+
+        // bindSectionHeaderToggle();
+        // // bindQuoteCardClick();
+        // // bindInfiniteScroll();
+        // setupDeptTree();
+        // // initMainPaneSplitter();
+
+        // setTimeout(layoutTreeLine, 0);
+        // window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
 
         loadQuotePage(true).then(() => {
             loadPIDetail(state.quotes[0].id);
