@@ -684,6 +684,7 @@ namespace ERPCore.Controllers.Base
             string folder = Request.Headers["Folder"];
             string guid = Request.Headers["RecordGuid"];
             string sectionName = Request.Headers["SectionName"];
+            string department = Request.Headers["Department"];
             IFormFile file = null;
             file = files.FirstOrDefault();
             if (file != null && file.Length > 0)
@@ -707,7 +708,7 @@ namespace ERPCore.Controllers.Base
                     document.FileName = file.FileName;
                     document.FileType = System.IO.Path.GetExtension(file.FileName);
                     document.Size = file.Length;
-                    document.Attributes = JsonConvert.SerializeObject((object)(new { SectionName = sectionName } ));
+                    document.Attributes = JsonConvert.SerializeObject((object)(new { SectionName = sectionName, Department = department } ));
                     document = await _documentRepository.InsertData(document);
                     //AttachmentForm attachmentForm = ControllerHelper.BindingAttachmentForm(attachment, BLOB_PATH);
                     //System.IO.File.WriteAllBytes(Path.Combine(path, folder, $"{unixMilliseconds}_{file.FileName}"), fileBytes);
@@ -730,6 +731,7 @@ namespace ERPCore.Controllers.Base
             string folder = Request.Headers["Folder"];
             string guid = Request.Headers["RecordGuid"];
             string sectionName = Request.Headers["SectionName"];
+            string department = Request.Headers["Department"];
             if (file != null && file.Length > 0)
             {
                 using (var ms = new MemoryStream())
@@ -751,7 +753,7 @@ namespace ERPCore.Controllers.Base
                     document.FileName = file.FileName;
                     document.FileType = System.IO.Path.GetExtension(file.FileName);
                     document.Size = file.Length;
-                    document.Attributes = JsonConvert.SerializeObject((object)(new { SectionName = sectionName }));
+                    document.Attributes = JsonConvert.SerializeObject((object)(new { SectionName = sectionName, Department = department }));
                     document = await _documentRepository.InsertData(document);
                     //AttachmentForm attachmentForm = ControllerHelper.BindingAttachmentForm(attachment, BLOB_PATH);
                     //System.IO.File.WriteAllBytes(Path.Combine(path, folder, $"{unixMilliseconds}_{file.FileName}"), fileBytes);

@@ -258,9 +258,10 @@ public class DocumentController : BaseControllerApi<Document>
                     recordGuid = d.RecordGuid,
                     fileName = fileName,
                     fileType = d.FileType,
-                    extension = ext.Replace(".",""),
+                    extension = ext.Replace(".", ""),
                     size = d.Size,
                     subDirectory = d.SubDirectory,
+                    attributes = d.Attributes,
                     downloadUrl = Url.Action(nameof(StreamDocument), new { id = d.Id }),
                     author = d.CreatedBy,
                     date = d.CreatedDate

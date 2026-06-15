@@ -2469,22 +2469,7 @@
 
             //     }];
         }
-        function resolveUploadOptions(sectionName,editorOptions) {
-            const latestOptions = getCurrentFormOptions(editorOptions) || {};
-            latestOptions.moduleName = editorOptions?.moduleName;
-            if (editorOptions?.code)
-                latestOptions.code = editorOptions?.code;
-            if (editorOptions?.specificFolder) {
-                latestOptions.code = `${editorOptions?.code}\\${editorOptions?.specificFolder}`;
-                sectionName = `${sectionName}_${editorOptions?.specificFolder}`
-            }
-            return {
-                guid: latestOptions.guid || "",
-                folder: buildFolder(latestOptions, sectionName) || "",
-                section: sectionName
-            };
-
-        }
+        
         function getCurrentFormOptions(editorOptions) {
             var form = new Object();
             if (editorOptions.moduleName.includes("qt"))
@@ -2682,7 +2667,6 @@
                                     //loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions);
                                 }
                             });
-
             }
         }
         function renderDxFileUploader(editorOptions, $container, options) {
@@ -2718,8 +2702,8 @@
                         //updateDxFileUploaderHeaders(editorOptions);
                     },
                     onUploadStarted: function (e) {
-                        console.log(e);
-                             makeMiniLoadingPanel(`Uploading file ${e.file.name}`, "Please wait...");
+                             // makeMiniLoadingPanel(`Uploading file ${e.file.name}`, "Please wait...");
+                             makeMiniLoadingPanel(`Uploading file`, "Please wait...");
                         showUploaderLoader(editorOptions.uploaderId, "File loading...");
                     },
                     onValueChanged: function(e){
@@ -2738,10 +2722,10 @@
                         renderBrowserLoading(result);
                     },
                     uploadFile: function (file) {
-                        const opts = resolveUploadOptions(editorOptions.controlId, editorOptions);
+                        debugger
                         return uploadFileAjax(file, {
                             url: "/api/Attachment/AsyncUploadFile",
-                            ...opts
+                                ...editorOptions
                         });
 
                     },
@@ -2943,10 +2927,22 @@
         }
 
         function uploadFileAjax(file, options) {
+            const specificFolder = "";
+            const latestOptions = getCurrentFormOptions(options) || {};
+            latestOptions.moduleName = options?.moduleName;
+            if (options?.code)
+                    latestOptions.code = options?.code;
+                if (options?.specificFolder) {
+                    latestOptions.code = `${options?.code}\\${options?.specificFolder}`;
+                        specificFolder = `_${options?.specificFolder}`;
+            }
+
+
             const url = options.url;
-            const guid = options.guid || "";
-            const folder = options.folder || "";
-            const sectionName = options.section || "";
+            const guid = latestOptions.guid || "";
+            const folder = buildFolder(latestOptions, options.controlId) || "";
+            const sectionName = `${options.controlId}${specificFolder}`;
+            const dept = options.dept || "";
 
             const formData = new FormData();
             formData.append("file", file);
@@ -2973,6 +2969,9 @@
                     if (sectionName) {
                         xhr.setRequestHeader("SectionName", sectionName);
                     }
+                   if (sectionName) {
+                      xhr.setRequestHeader("Department", dept);
+                     }
 
                 }
             });
@@ -3891,6 +3890,7 @@
                     items.guid = editorOptions?.guid || "";
                     items.moduleName = editorOptions?.moduleName || devExtremeItem.moduleName;
                     items.sectionName = editorOptions?.sectionName || devExtremeItem.sectionName;
+                    items.dept = editorOptions?.sectionName || devExtremeItem.sectionName;
                     items.code = editorOptions?.code || devExtremeItem.code;
                     items.specificFolder = editorOptions?.specificFolder || devExtremeItem.specificFolder;
                     items.titleName = editorOptions?.titleName || devExtremeItem.titleName;

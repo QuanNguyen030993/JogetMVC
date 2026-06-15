@@ -691,11 +691,29 @@ Note:
                 document.documentElement.style.setProperty("--rightdock-width", "70%");
                 $("#rightCommentSub").text(`Attachment log - ${quoteNo}`);
                 var guid = "@(ViewData["Guid"])";
+                
+
+
                  $.ajax({
                     url: `/api/Document/GetByKey?recordGuid=${guid}`,
                     method: "GET",
                         success: function (data) {
+                             const mappedData = data.map(x => {
+                        let dept = "";
+                        try {
+                            if (x.attributes) {
+                                const attr = tryParseJSON(x.attributes, "Attribute Problem");
+                                dept = attr.Department || "";
+                            }
+                        } catch (e) {
+                            console.warn("Invalid attributes JSON", x.attributes);
+                        }
 
+                        return {
+                            ...x,
+                            department: dept
+                        };
+                    });
                     const $preview = $("#rightDockItem");
 
 
@@ -703,7 +721,7 @@ Note:
                     const $grid = $("<div>").appendTo($preview);
 
                     $grid.dxDataGrid({
-                        dataSource: data,
+                        dataSource: mappedData,
                         keyExpr: "id",
                     
                         //hoặc
@@ -753,6 +771,11 @@ Note:
 
                             },
                             {
+                                dataField: "department",
+                                caption: "Department",
+                                width: 150
+                            },,
+                            {
                                 dataField: "author",
                                 caption: "Author",
                                 width: 150
@@ -762,7 +785,7 @@ Note:
                                 caption: "Date",
                                 dataType: "datetime",
                                 format: "dd/MM/yyyy HH:mm",
-                                sortOrder: "asc" // ✅ SORT TĂNG DẦN
+                                sortOrder: "desc" // ✅ SORT TĂNG DẦN
                             }
                         ]
                     });
