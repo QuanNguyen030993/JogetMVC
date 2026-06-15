@@ -33,7 +33,7 @@
              itemTemplate: function(itemData, _, itemElement) {
              setTimeout(() => {
               var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-              var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Problem");
+              var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
               if (tatObject) if (tatObject[`@dept`]?.AcceptDate)
               {
                 $(`#AC_@QTViewIdHelper.Decision(dept, quotationId)`).addClass("btn-info");
@@ -50,7 +50,7 @@
                  if (_ == 0)
                  {
                       var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-                       var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Problem");
+                       var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
                       tatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
                       formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
                       var passingObject = new Object(); 
@@ -66,7 +66,7 @@
                  if (_ == 1)
                  {
                       var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-                      var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Problem");
+                      var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
                       tatObject[`@dept`].AcceptDate = "";
                       formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
                       var passingObject = new Object();

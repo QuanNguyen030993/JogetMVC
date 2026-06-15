@@ -2648,7 +2648,7 @@
                 if (!currentOptions || !currentOptions.guid) return;
                 var combine = editorOptions?.specificFolder ? `${editorOptions.moduleName}_${currentOptions.sectionName}_${currentOptions.id}_${editorOptions?.specificFolder}` : `${editorOptions.controlId}`;
 
-                showUploaderLoader( `${editorOptions.uploaderId}`, "File loading...");
+                    showUploaderLoader(editorOptions.uploaderId, "File loading...");
                 $.ajax({
                     url: `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${(combine)} `,
                     method: "GET",
@@ -2662,11 +2662,11 @@
                             }
                         });
                             var uploader = $(`#${editorOptions.uploaderId}`).dxFileUploader("instance")
-                            uploader.option("storageData",data || {});
-                        hideUploaderLoader( `${editorOptions.uploaderId}`);
+                            uploader?.option("storageData",data || {});
+                            hideUploaderLoader(editorOptions.uploaderId);
                     },
                     error: function () {
-                        hideUploaderLoader(`${editorOptions.uploaderId}`);
+                            hideUploaderLoader(editorOptions.uploaderId);
                     }
                 });
           }
@@ -2718,11 +2718,24 @@
                         //updateDxFileUploaderHeaders(editorOptions);
                     },
                     onUploadStarted: function (e) {
+                        console.log(e);
+                             makeMiniLoadingPanel(`Uploading file ${e.file.name}`, "Please wait...");
                         showUploaderLoader(editorOptions.uploaderId, "File loading...");
                     },
                     onValueChanged: function(e){
-                            if (editorOptions.uploadMode != "instantly")
-                            loadDxFileUploaderAttachments(editorOptions.controlId, controllerName, editorOptions)
+                        if (editorOptions.uploadMode != "instantly")
+                        loadDxFileUploaderAttachments(editorOptions.controlId, controllerName, editorOptions)
+                    },
+                    onProgress: function(e) {
+                        // e.bytesLoaded: số byte đã upload
+                        // e.bytesTotal: tổng size file
+                        const percent = Math.round((e.bytesLoaded / e.bytesTotal) * 100);
+
+                        var result = {};
+                        result.payload = {};
+                        result.payload.progressvalue = percent;
+
+                        renderBrowserLoading(result);
                     },
                     uploadFile: function (file) {
                         const opts = resolveUploadOptions(editorOptions.controlId, editorOptions);
@@ -2733,6 +2746,10 @@
 
                     },
                     onUploaded: function (e) {
+                            var result = new Object();
+                                 result.payload = new Object();
+                                 result.payload.progressvalue = 100;
+                                 renderBrowserLoading(result);
                         hideUploaderLoader(editorOptions.uploaderId);
                         loadDxFileUploaderAttachments(editorOptions.controlId, controllerName, editorOptions)
 

@@ -198,14 +198,7 @@ Note:
                                         var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                                          var tatObject = new Object();
 
-                                         try 
-                                         {
-                                            tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Problem");
-                                         }
-                                         catch 
-                                         {
-                                             console.log("TAT problem");
-                                         }
+                                            tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Button Problem");
                                          try {
 
                                          if (findRouteReturn && tatObject)
