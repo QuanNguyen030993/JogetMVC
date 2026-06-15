@@ -228,6 +228,20 @@ public class QuotationController : BaseControllerApi<Quotation>
     {
         Quotation quotation = new Quotation();
         quotation = await _BaseRepository.GetSingleObject(s => s.Id == quotationData.QuotationId);
+        InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
+        instanceWorkflow = await _instanceWorkflowRepository.GetSingleObject(s => s.RecordGuid == quotation.Guid);
+        using var loggerFactory = LoggerFactory.Create(loggingBuilder => loggingBuilder
+         .SetMinimumLevel(LogLevel.Trace)
+         .AddConsole());
+
+        var logger = loggerFactory.CreateLogger<QuotationCommentLog>();
+        var quotationCommentLogApiController = new QuotationCommentLogController(_quotationCommentLogRepository, configuration, _httpContextAccessor, logger, _blobStorageSettings);
+        string logQuery = $"SELECT * FROM QuotationCommentLog WHERE {nameof(Quotation)}Id = {quotation.Id}";
+        string logHistoryQuery = $"SELECT * FROM QuotationWorkflowHistory WHERE {nameof(Quotation)}Id = {quotation.Id}";
+        var quotationCommentLogs =  await quotationCommentLogApiController.ExecuteCustomQuery(logQuery);
+        var quotaionWorkflowHistory = await quotationCommentLogApiController.ExecuteCustomQuery(logHistoryQuery);
+
+
         Quotation quotationNew = new Quotation();
         quotationNew.IsView = false;
         await _BaseRepository.UpdateData(quotationNew, quotation, ["IsView"],"Id"); 
@@ -261,6 +275,36 @@ public class QuotationController : BaseControllerApi<Quotation>
             documentNew.RecordGuid = quotationOp.Guid;
             documentNew.Attributes = document.Attributes.Replace(quotationData.QuotationId.ToString(), quotationOp.Id.ToString());
             await _documentRepository.UpdateData(documentNew, document, ["RecordGuid", "Attributes"],"Id");
+
+
+            InstanceWorkflow instanceWorkflowNew = new InstanceWorkflow();
+            JsonConvert.PopulateObject(JsonConvert.SerializeObject(instanceWorkflow),instanceWorkflowNew);
+            instanceWorkflowNew.Id = 0;
+            instanceWorkflowNew.RecordGuid = quotationOp.Guid;
+
+            instanceWorkflowNew.CurrentStepId = new Guid();
+            instanceWorkflowNew.IsCancelled = false;
+            instanceWorkflowNew.IsCompleted = false;
+            instanceWorkflowNew = await _instanceWorkflowRepository.InsertData(instanceWorkflowNew);
+
+            await ControllerUtil.CloneAction(
+                _quotationCommentLogRepository,
+                JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(JsonConvert.SerializeObject(quotationCommentLogs)),
+                JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(JsonConvert.SerializeObject(quotaionWorkflowHistory)),
+                quotationOp.Id
+            );
+            //StepsWorkflow
+
+            //SubmitRequest submitRequest = new SubmitRequest();
+            //submitRequest.StepsWorkflow = stepsWorkflow;
+            //submitRequest.Comment = $"{quotation.QuotationCode} created!";
+            //submitRequest.InstanceWorkflow = instanceWorkflow;
+
+
+
+
+            //await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
+
         }
 
         return Ok();
