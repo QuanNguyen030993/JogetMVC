@@ -14,6 +14,7 @@ public class Quotation : BaseModel
     // =========================================================
 
     public string? Subject { get; set; } = "";
+    public string? LeaderComment { get; set; } = "";
 
     // =========================================================
     // Ý 1 — Header/Request (rename)
