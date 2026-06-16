@@ -63,7 +63,7 @@
                       tatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
                       formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
                       var passingObject = new Object();
-                      passingObject.statusName = "Signature Process"; // base on Dept
+                      passingObject.statusName = "Signing Process"; // base on Dept
                       passingObject.Comment = `Quotation ${formItems.quotationCode} approved by ${_displayName}!`;  // base on Dept
                       passingObject.formItems = formItems;
                       passingObject.dept = `@dept`;

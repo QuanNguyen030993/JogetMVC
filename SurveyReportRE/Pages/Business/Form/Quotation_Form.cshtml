@@ -46,7 +46,7 @@ Note:
     state.selectedId = null;
     state.selectedGuid = null;
     state.selectedCodeNo = null;
-    state.selectedAttachmentId = null;
+    var selectedAttachmentId = null;
     var stageDept = null;
     
     state.quotePaging = {
@@ -138,7 +138,7 @@ Note:
 
             state.selectedId =  q.id ?? null;
             state.selectedGuid = q.guid ?? null;
-            state.selectedAttachmentId = q.documentId ?? null;
+            selectedAttachmentId = q.documentId ?? null;
             state.selectedCodeNo = q.quotationCode ?? null;
             stageDept = q.stageDept ?? null;
             const params = new URLSearchParams();
@@ -666,12 +666,14 @@ Note:
             }, 180);
 
             const previewQuotation = debounce(function (quoteNo, quoteId, attachmentId) {
+                if (attachmentId)
+                {
                 document.documentElement.style.setProperty("--rightdock-width", "70%");
                 $("#rightCommentSub").text(`Preview quotation - ${quoteNo}`);
                 $("<iframe>")
                     .attr("id", `${formModuleKeyQt}-pdfViewer_${quoteId}`)
                     .attr("src", "")
-                    .css({ width: "100%", height: "600px", border: "1px solid #ccc" })
+                    .css({ width: "100%", height: "800px", border: "1px solid #ccc" })
                     .appendTo($("#rightCommentList"));
 
                 $.ajax({
@@ -686,6 +688,10 @@ Note:
                         console.error("Error loading PDF:", error);
                     }
                 });
+                }
+                else {
+                    $(`<div>No preview of this quotation!</div>`).appendTo($("#rightCommentList"));
+                }
             }, 180);
 
             const attachmentLogLoad = debounce(function (quoteNo, quoteId, attachmentId) {
@@ -845,7 +851,7 @@ Note:
                     onClick: () => {
                         clearContent();
                         openRightCommentPanel();
-                        attachmentLogLoad(state.selectedCodeNo, state.selectedId, state.selectedAttachmentId);
+                        attachmentLogLoad(state.selectedCodeNo, state.selectedId, selectedAttachmentId);
                     }
                 }).appendTo($("#headerWidgetsPanel"));
 
@@ -912,7 +918,7 @@ Note:
                         clearContent();
                         if (!commentPanelOpened) {
                             openRightCommentPanel();
-                            previewQuotation(state.selectedCodeNo, state.selectedId, state.selectedAttachmentId);
+                            previewQuotation(state.selectedCodeNo, state.selectedId, selectedAttachmentId);
                         } else {
                             closeRightCommentPanel();
                         }
@@ -928,7 +934,7 @@ Note:
                         clearContent();
                         if (!commentPanelOpened) {
                             openRightCommentPanel();
-                            attachmentLogLoad(state.selectedCodeNo, state.selectedId, state.selectedAttachmentId);
+                            attachmentLogLoad(state.selectedCodeNo, state.selectedId, selectedAttachmentId);
                         } else {
                             closeRightCommentPanel();
                         }

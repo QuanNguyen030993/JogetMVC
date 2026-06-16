@@ -10,6 +10,10 @@ using ERPCore.Models.Models.Parsing;
 using Microsoft.AspNetCore.Authorization;
 using System.Text;
 using Microsoft.SharePoint.WebControls;
+using Newtonsoft.Json;
+using static ERPCore.Models.Models.Parsing.JsonHandle;
+using ERPCore.Models.Migration.Config;
+using ERPCore.Models.Request;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -82,6 +86,77 @@ public class DocumentController : BaseControllerApi<Document>
         }
     }
 
+    [HttpPost]
+    [AllowAnonymous]
+    //public async Task<IActionResult> TestCallBackUrl([FromBody] ConvertResult convertResult)
+    public async Task<IActionResult> CallBackFileDigisign([FromBody] ConvertResult convertResult)
+    {
+        try
+        {
+            Document document = new Document();
+            document = JsonConvert.DeserializeObject<Document>(JsonConvert.SerializeObject(convertResult.Metadata));
+            //Determine instance record
+ 
+
+            if (document != null)
+            {
+                document = await _BaseRepository.GetSingleObject(s => s.Id == document.Id);
+                Document newDocument = new Document();
+                JsonConvert.PopulateObject(JsonConvert.SerializeObject(document),newDocument);
+                newDocument.Id = 0;
+
+                //dynamic object 
+                Quotation quotation = new Quotation();
+                IBaseRepository<Quotation> _quotationRepository = new BaseRepository<Quotation>(configuration,_httpContextAccessor);
+                IBaseRepository<EnumData> _enumDataRepository = new BaseRepository<EnumData>(configuration,_httpContextAccessor);
+                quotation = await _quotationRepository.GetSingleObject(s => s.Guid == newDocument.RecordGuid);
+                List<EnumData> enumDatas = await _enumDataRepository.EnumData("OverallStatus");
+                EnumData completeSigning = enumDatas.FirstOrDefault(f => f.Code == "DGSC");
+                string approveDept = "LMKT";
+                PICAttributes pICAttributes = new PICAttributes();
+                pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
+                string accountApproveName = approveDept switch
+                {
+                    "FO" => pICAttributes.FO,
+                    "TS" => pICAttributes.TS,
+                    "UW" => pICAttributes.UW,
+                    "LMKT" => pICAttributes.LMKT,
+                    "PM" => pICAttributes.PM,
+                    _ => null
+                };
+                if (quotation != null)
+                {
+                    if (!Directory.Exists(path.Value + "\\Digisign"))
+                    {
+                        Directory.CreateDirectory(path.Value + "\\Digisign");
+                    }
+                    System.IO.File.WriteAllBytes(Path.Combine(path.Value,"Digisign", accountApproveName, quotation.QuotationCode,convertResult.FileName), Convert.FromBase64String(convertResult.FileBase64));
+                    newDocument.SubDirectory = $"Digisign\\{accountApproveName}\\{quotation.QuotationCode}";
+
+                    Quotation newQuotation = new Quotation();
+                    newQuotation.QuotationStatus = completeSigning.Name;
+                    newQuotation.WorkflowStatus = completeSigning.Name;
+                    newQuotation.StatusId = completeSigning.Id;
+
+
+
+                    newDocument = await _BaseRepository.InsertData(newDocument);
+
+                    newQuotation.DocumentId = newDocument.Id;
+                    await _quotationRepository.UpdateData(newQuotation, quotation, ["QuotationStatus", "WorkflowStatus", "StatusId"], "Id");
+                }
+            }
+            //Update status instance to complete 
+            //
+            return Ok();
+
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, ex.Message);
+            return StatusCode(500, ex.Message);
+        }
+    }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> LibreConvert(long? id)
@@ -183,16 +258,39 @@ public class DocumentController : BaseControllerApi<Document>
             });
         }
     }
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<IActionResult> CallBackGetFile(string fileName)
+    {
 
+        try
+        {
+            if (!Directory.Exists(path.Value + "\\CallBack"))
+            {
+                return StatusCode(500, "Directory not exist!");
+            }
+            string fullPath = path.Value + "\\CallBack\\" + fileName;
+            var mimeTypes = Util.GetMimeType(fileName);
+            var fileStream = System.IO.File.OpenRead(path.Value + "\\CallBack\\" + fileName);
+            return File(fileStream, mimeTypes, Path.GetFileName(fullPath));
+
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, ex.Message);
+            return StatusCode(500, ex.Message);
+        }
+    }
     [HttpGet("{id}")]
     public async Task<IActionResult> DigiSign(long? id)
     {
+
         return Ok();
         //string URL = _BaseRepository._baseConfiguration.GetSection("UrlConfig:DigiSignHost").Value;
 
         ////Change lại thành hàm của chính link host cho source này từ 
         ////TestCallBackUrl  -> CallbackFileHandle
-        //string callURL = _BaseRepository._baseConfiguration.GetSection("UrlConfig:CallbackHost").Value;
+        //string callURL = _BaseRepository._baseConfiguration.GetSection("UrlConfig:DigisignStorageHost").Value;
         //string endpoint = $"{URL}/api/convert";
         //string keyApi = _BaseRepository._baseConfiguration.GetSection("DigiSignServer:Key").Value;
         //try
@@ -229,7 +327,7 @@ public class DocumentController : BaseControllerApi<Document>
         //    // Các field form-data khác
         //    multipart.Add(new StringContent("pdf"), "outputFormat");
         //    multipart.Add(new StringContent(callURL), "callbackUrl");
-        //    multipart.Add(new StringContent("{}"), "metadata");
+        //    multipart.Add(new StringContent(JsonConvert.SerializeObject(new { Document = new Document() { Id = id  ?? 0} })), "metadata");
 
         //    var client = new HttpClient();
         //    client.Timeout = TimeSpan.FromMinutes(10);
