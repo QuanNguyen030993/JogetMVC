@@ -184,8 +184,111 @@ public class DocumentController : BaseControllerApi<Document>
         }
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> DigiSign(long? id)
+    {
+        return Ok();
+        //string URL = _BaseRepository._baseConfiguration.GetSection("UrlConfig:DigiSignHost").Value;
 
-        [HttpGet]
+        ////Change lại thành hàm của chính link host cho source này từ 
+        ////TestCallBackUrl  -> CallbackFileHandle
+        //string callURL = _BaseRepository._baseConfiguration.GetSection("UrlConfig:CallbackHost").Value;
+        //string endpoint = $"{URL}/api/convert";
+        //string keyApi = _BaseRepository._baseConfiguration.GetSection("DigiSignServer:Key").Value;
+        //try
+        //{
+        //    if (string.IsNullOrWhiteSpace(endpoint))
+        //        return BadRequest("Config UrlConfig:DigiSignHost is empty.");
+
+        //    // Ví dụ: lấy thông tin file theo id từ DB
+        //    // Bạn thay Attachment bằng model thực tế của bạn
+        //    var attachment = await _BaseRepository.GetObjectByIdAsync(id ?? 0);
+        //    if (attachment == null)
+        //        return NotFound($"Attachment id={id} not found.");
+
+        //    // Ví dụ: đường dẫn vật lý file
+        //    // Bạn sửa lại theo cấu trúc thật của hệ thống
+        //    string filePath = Path.Combine(
+        //        path.Value,
+        //        attachment.SubDirectory ?? ""
+        //    );
+
+        //    if (!System.IO.File.Exists(filePath))
+        //        return NotFound($"File not found: {filePath}");
+
+        //    await using var fileStream = System.IO.File.OpenRead(filePath);
+
+        //    using var multipart = new MultipartFormDataContent();
+
+        //    var fileContent = new StreamContent(fileStream);
+        //    fileContent.Headers.ContentType = new MediaTypeHeaderValue(Util.GetMimeType(filePath));
+
+        //    // "file" phải đúng tên field mà API bên convert yêu cầu
+        //    multipart.Add(fileContent, "file", Path.GetFileName(filePath));
+
+        //    // Các field form-data khác
+        //    multipart.Add(new StringContent("pdf"), "outputFormat");
+        //    multipart.Add(new StringContent(callURL), "callbackUrl");
+        //    multipart.Add(new StringContent("{}"), "metadata");
+
+        //    var client = new HttpClient();
+        //    client.Timeout = TimeSpan.FromMinutes(10);
+        //    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*"));
+        //    client.DefaultRequestHeaders.Add("X-API-KEY", keyApi);
+
+
+        //    var response = await client.PostAsync(endpoint, multipart);
+        //    var responseBytes = await response.Content.ReadAsByteArrayAsync();
+        //    var responseText = await response.Content.ReadAsStringAsync();
+
+        //    if (!response.IsSuccessStatusCode)
+        //    {
+        //        return StatusCode((int)response.StatusCode, new
+        //        {
+        //            message = "Signing server returned error.",
+        //            detail = responseText
+        //        });
+        //    }
+
+        //    // Nếu server convert trả thẳng file đã convert về
+        //    var outputFileName = Path.GetFileNameWithoutExtension(filePath) + ".pdf";
+
+        //    string getStreamHost = _BaseRepository._baseConfiguration.GetSection("UrlConfig:GetStreamHost").Value + $"?fileName={outputFileName}";
+        //    var responseGet = await client.GetAsync(getStreamHost);
+        //    var responseBytesGet = await responseGet.Content.ReadAsByteArrayAsync();
+        //    var responseTextGet = await responseGet.Content.ReadAsStringAsync();
+
+        //    if (!response.IsSuccessStatusCode)
+        //    {
+        //        return StatusCode((int)response.StatusCode, new
+        //        {
+        //            message = "Signing server returned error.",
+        //            detail = responseText
+        //        });
+        //    }
+
+
+        //    return File(responseBytesGet, "application/pdf", outputFileName);
+
+        //    // Nếu bạn chỉ muốn lưu xuống disk rồi return ok thì dùng đoạn này thay thế:
+        //    // var outputPath = Path.Combine(Path.GetDirectoryName(filePath)!, outputFileName);
+        //    // await System.IO.File.WriteAllBytesAsync(outputPath, responseBytes);
+        //    // return Ok(new { message = "Signing success", outputPath });
+        //}
+        //catch (Exception ex)
+        //{
+        //    return StatusCode(500, new
+        //    {
+        //        message = "Signing failed",
+
+        //        detail = ex.Message
+        //    });
+        //}
+    }
+
+
+
+    [HttpGet]
     public async Task<IActionResult> DeleteDocumentData(long id)
     {
         Document Document = new Document();

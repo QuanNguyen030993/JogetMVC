@@ -63,14 +63,19 @@
                       tatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
                       formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
                       var passingObject = new Object();
-                      passingObject.statusName = "@dept Process"; // base on Dept
-                      passingObject.Comment = `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`;  // base on Dept
+                      passingObject.statusName = "Signature Process"; // base on Dept
+                      passingObject.Comment = `Quotation ${formItems.quotationCode} approved by ${_displayName}!`;  // base on Dept
                       passingObject.formItems = formItems;
                       passingObject.dept = `@dept`;
                       passingObject.url = '/api/Quotation/UpdateData';
                       passingObject.urlLog = `/api/Quotation/LogAction`;
                       passingObject.schemeName = `Quotation`;
                       acceptDecision(passingObject);
+
+                      ajaxGet(`api/Document/DigiSign/${formItems.id}`, null).then(data => {
+                      });;
+
+
                  }
                  if (_ == 1)
                  {
