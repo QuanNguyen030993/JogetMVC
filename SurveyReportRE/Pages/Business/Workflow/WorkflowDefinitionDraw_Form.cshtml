@@ -237,7 +237,7 @@
         overflow: auto;
     }
 
-   /*  #canvas {
+    #canvas_@ViewData["Id"] {
         position: relative;
         min-width: 1400px;
         min-height: 760px;
@@ -248,7 +248,7 @@
         border-radius: 18px;
         box-shadow: 0 10px 28px rgba(15,23,42,0.06);
         overflow:  auto;
-        }*/
+        }
 
     .node {
         position: absolute;
@@ -759,7 +759,7 @@
             </div>
 
             <div class="canvas-wrap">
-                <div id="canvas_@Convert.ToInt32(ViewData["Guid"])" class="canvas"></div>
+                <div id="canvas_@(ViewData["Id"])" class="canvas"></div>
             </div>
         </main>
     </div>
@@ -771,9 +771,10 @@
 
         ajaxGet(`/api/WorkflowDefinition/GetSingle/${_id}`)
             .then(data => {
-        
+                debugger
         var jsonInput = document.getElementById("jsonInput_@Convert.ToInt32(ViewData["Id"])");
-        var canvas = document.getElementById("canvas_@Convert.ToInt32(ViewData["Guid"])");
+        var canvas = document.getElementById("canvas_@(ViewData["Id"])");
+                $(canvas).empty();
         var errorBox = document.getElementById("errorBox_@Convert.ToInt32(ViewData["Id"])");;
         // var wfCode = document.getElementById("wfCode_@Convert.ToInt32(ViewData["Id"])");
         // var flowType = document.getElementById("flowType_@Convert.ToInt32(ViewData["Id"])");

@@ -157,6 +157,676 @@
         background: #e0f2fe !important
     }
 
+    :root {
+        --bg: #f4f7fb;
+        --panel: #ffffff;
+        --border: #dbe2ea;
+        --text: #243447;
+        --muted: #6b7c93;
+        --quotation: #2563eb;
+        --policy: #16a34a;
+        --both: #7c3aed;
+        --return: #ef4444;
+        --loop: #f59e0b;
+        --active: #f59e0b;
+        --done: #10b981;
+        --pending: #94a3b8;
+    }
+
+    * {
+        box-sizing: border-box
+    }
+
+
+    .draw-container {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        height: 80%;
+        overflow: hidden;
+    }
+
+    .sidebar {
+        background: #fff;
+        border-right: 1px solid var(--border);
+        padding: 16px;
+        overflow: auto;
+    }
+
+    .main {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .toolbar {
+        min-height: 60px;
+        border-bottom: 1px solid var(--border);
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 16px;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .toolbar-left, .toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .title {
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0 0 6px 0;
+    }
+
+    .sub {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.5;
+        margin-bottom: 14px;
+    }
+    /*
+                .card {
+                    background: var(--panel);
+                    border: 1px solid var(--border);
+                    border-radius: 14px;
+                    padding: 12px;
+                    margin-bottom: 12px;
+                }
+
+                    .card h3 {
+                        margin: 0 0 10px 0;
+                        font-size: 14px;
+                    } */
+
+
+    .card-in-frame {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+
+
+        .card-in-frame .header-in-frame {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+        }
+
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 10px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: #fff;
+        font-size: 12px;
+        color: #334155;
+    }
+
+    .legend-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        font-size: 13px;
+    }
+
+    .dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 999px;
+        flex: 0 0 14px;
+    }
+
+        .dot.quotation {
+            background: var(--quotation)
+        }
+
+        .dot.policy {
+            background: var(--policy)
+        }
+
+        .dot.both {
+            background: var(--both)
+        }
+
+        .dot.active {
+            background: var(--active)
+        }
+
+        .dot.done {
+            background: var(--done)
+        }
+
+        .dot.pending {
+            background: var(--pending)
+        }
+
+    .line {
+        width: 28px;
+        border-top: 3px solid #64748b;
+        flex: 0 0 28px;
+    }
+
+        .line.return {
+            border-top-color: var(--return);
+            border-top-style: dashed;
+        }
+
+        .line.loop {
+            border-top-color: var(--loop);
+        }
+
+    textarea {
+        width: 100%;
+        min-height: 390px;
+        resize: vertical;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        font-family: Consolas, monospace;
+        font-size: 12px;
+        line-height: 1.5;
+        outline: none;
+    }
+
+    .btn-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+    }
+
+    button {
+        border: none;
+        background: #2563eb;
+        color: #fff;
+        padding: 9px 12px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+        button.secondary {
+            background: #475569;
+        }
+
+        button.success {
+            background: #16a34a;
+        }
+
+        button.warning {
+            background: #f59e0b;
+            color: #1f2937;
+        }
+
+    .error {
+        margin-top: 10px;
+        display: none;
+        white-space: pre-wrap;
+        background: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+
+    .canvas-wrap {
+        flex: 1;
+        min-height: 0;
+        padding: 16px;
+        overflow: auto;
+    }
+
+    /* #canvas_@ViewData["RandomNumber"] { */
+     #canvas_@ViewData["RandomNumber"].ToString() { 
+            position: relative;
+            min-width: 1400px;
+            min-height: 760px;
+            background: linear-gradient(to right, rgba(203,213,225,.35) 1px, transparent 1px), linear-gradient(to bottom, rgba(203,213,225,.35) 1px, transparent 1px);
+            background-size: 24px 24px;
+            background-color: #fff;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: 0 10px 28px rgba(15,23,42,0.06);
+            overflow:  auto;
+            }
+
+    .node {
+        position: absolute;
+        width: 180px;
+        min-height: 88px;
+        border-radius: 14px;
+        border: 2px solid #cfd8e3;
+        background: #fff;
+        padding: 10px 12px;
+        box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+        text-align: center;
+        z-index: 2;
+        transition: .15s ease;
+        cursor: move;
+        user-select: none;
+    }
+
+        .node .node-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .node .node-meta {
+            font-size: 12px;
+            line-height: 1.45;
+            color: #64748b;
+        }
+
+        .node.flow-quotation {
+            border-color: var(--quotation)
+        }
+
+        .node.flow-policy {
+            border-color: var(--policy)
+        }
+
+        .node.flow-both {
+            border-color: var(--both)
+        }
+
+        .node.active {
+            border-color: var(--active);
+            background: #fffaf0;
+            box-shadow: 0 0 0 4px rgba(245,158,11,0.15), 0 12px 22px rgba(245,158,11,0.18);
+        }
+
+        .node.done {
+            background: #f0fdf4;
+        }
+
+        .node.pending {
+            opacity: .94;
+        }
+
+    .layer-label {
+        position: absolute;
+        top: 14px;
+        font-size: 12px;
+        color: #64748b;
+        background: #f8fafc;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 4px 10px;
+        z-index: 1;
+    }
+
+    .jtk-overlay {
+        font-size: 11px !important;
+        color: #334155 !important;
+        background: rgba(255,255,255,0.96);
+        border: 1px solid #dbe2ea;
+        padding: 4px 8px;
+        border-radius: 999px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    }
+
+    .note {
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.5;
+    }
+
+    .status-ok {
+        color: #15803d;
+    }
+
+    code {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        padding: 2px 6px;
+        border-radius: 6px;
+    }
+
+    .page {
+        display: grid;
+        grid-template-columns: 240px 1fr 430px;
+        height: 100vh;
+    }
+
+    .sidebar {
+        border-right: 1px solid #dbe2ea;
+        background: #fff;
+        padding: 14px;
+        overflow: auto;
+    }
+
+        .sidebar h3 {
+            margin: 0 0 12px;
+            font-size: 16px;
+        }
+
+    .sidebarHint {
+        font-size: 12px;
+        color: #64748b;
+        line-height: 1.5;
+        margin-bottom: 12px;
+    }
+
+    .palette {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .paletteItem {
+        border: 1px solid #dbe2ea;
+        border-radius: 12px;
+        background: #fff;
+        padding: 12px;
+        cursor: grab;
+        user-select: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,.05);
+        transition: all .15s ease;
+    }
+
+        .paletteItem:hover {
+            background: #f8fafc;
+            transform: translateY(-1px);
+        }
+
+    .paletteTitle {
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .paletteMeta {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .mainPane {
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .toolbar {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+
+    .btn {
+        border: 1px solid #cfd6df;
+        background: #fff;
+        border-radius: 10px;
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 13px;
+    }
+
+        .btn:hover {
+            background: #f8fafc;
+        }
+
+    .legend {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+
+    .tag {
+        display: inline-flex;
+        align-items: center;
+        height: 24px;
+        padding: 0 9px;
+        border-radius: 999px;
+        border: 1px solid #dbe2ea;
+        background: #fff;
+        font-size: 11px;
+        color: #334155;
+    }
+
+        .tag.active {
+            background: #dbeafe;
+            border-color: #93c5fd;
+            color: #1d4ed8;
+        }
+
+        .tag.done {
+            background: #dcfce7;
+            border-color: #86efac;
+            color: #166534;
+        }
+
+        .tag.pending {
+            background: #fef3c7;
+            border-color: #fcd34d;
+            color: #92400e;
+        }
+
+        .tag.loop {
+            background: #ffedd5;
+            border-color: #fdba74;
+            color: #9a3412;
+        }
+
+        .tag.return {
+            background: #fee2e2;
+            border-color: #fca5a5;
+            color: #991b1b;
+        }
+
+        .tag.exit {
+            background: #ede9fe;
+            border-color: #c4b5fd;
+            color: #6d28d9;
+        }
+
+    .canvas {
+        position: relative;
+        flex: 1;
+        border: 1px solid #dbe2ea;
+        border-radius: 16px;
+        background: linear-gradient(to right, rgba(0,0,0,.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,.04) 1px, transparent 1px), #fff;
+        background-size: 24px 24px;
+        overflow: hidden;
+        min-height: 420px;
+    }
+
+        .canvas.dragOver {
+            background: linear-gradient(to right, rgba(59,130,246,.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(59,130,246,.08) 1px, transparent 1px), #eff6ff;
+            background-size: 24px 24px;
+        }
+
+    .rightPane {
+        border-left: 1px solid #dbe2ea;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .panelHeader {
+        padding: 14px 16px;
+        border-bottom: 1px solid #eef2f7;
+        font-weight: 700;
+    }
+
+    .panelBody {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-height: 0;
+        flex: 1;
+    }
+
+    .// statusBar {
+        font-size: 12px;
+        color: #475569;
+    }
+
+    .sectionTitle {
+        font-size: 12px;
+        font-weight: 700;
+        color: #475569;
+        margin-top: 4px;
+    }
+
+    .infoBox {
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 12px;
+        background: #fafafa;
+        font-size: 12px;
+        line-height: 1.5;
+        max-height: 220px;
+        overflow: auto;
+        white-space: pre-wrap;
+    }
+
+    textarea {
+        width: 100%;
+        flex: 1;
+        resize: none;
+        border: 1px solid #dbe2ea;
+        border-radius: 12px;
+        padding: 12px;
+        font-family: Consolas, monospace;
+        font-size: 12px;
+        line-height: 1.45;
+        outline: none;
+    }
+
+    .node {
+        position: absolute;
+        width: 200px;
+        min-height: 80px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: #fff;
+        border: 2px solid #cbd5e1;
+        box-shadow: 0 8px 18px rgba(0,0,0,.08);
+        cursor: move;
+        user-select: none;
+        transition: all .15s ease;
+    }
+
+        .node:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 22px rgba(0,0,0,.12);
+        }
+
+        .node.selected {
+            box-shadow: 0 0 0 4px rgba(37,99,235,.12), 0 10px 24px rgba(0,0,0,.12);
+            border-color: #2563eb;
+        }
+
+        .node.activeNode {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+
+        .node.completedNode {
+            border-color: #16a34a;
+            background: #f0fdf4;
+        }
+
+        .node.pendingNode {
+            border-color: #d97706;
+            background: #fff7ed;
+        }
+
+        .node.allowLoopNode::after {
+            content: "↻";
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 24px;
+            height: 24px;
+            border-radius: 999px;
+            background: #fb923c;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            box-shadow: 0 4px 10px rgba(0,0,0,.15);
+        }
+
+    .nodeTitle {
+        font-size: 15px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .nodeMeta {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .meta {
+        display: inline-flex;
+        align-items: center;
+        height: 22px;
+        padding: 0 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        border: 1px solid #dbe2ea;
+        background: #f8fafc;
+        color: #334155;
+    }
+
+    .flow-both {
+        background: #f8fafc;
+    }
+
+    .flow-quotation {
+        background: #ecfeff;
+        border-color: #a5f3fc;
+        color: #155e75;
+    }
+
+    .flow-policy {
+        background: #f5f3ff;
+        border-color: #c4b5fd;
+        color: #5b21b6;
+    }
+
+    .jtk-connector {
+        z-index: 4;
+    }
+
+    .jtk-endpoint {
+        z-index: 5;
+    }
+
+    .jtk-overlay {
+        z-index: 6;
+    }
+
+    .aLabel {
+        background: rgba(255,255,255,.94);
+        border: 1px solid #e5e7eb;
+        border-radius: 999px;
+        padding: 2px 8px;
+        font-size: 11px;
+        color: #334155;
+    }
 </style>
 <body>
     <div class="title">Workflow Designer</div>
@@ -254,7 +924,7 @@
                                     <div id="btnClearConditionBuilder_@Convert.ToInt32(ViewData["Id"])"></div>
                                 </div>
 
-                                <div class="section-title" style="margin-top:10px;" class="">Condition Preview</div>
+                                <div class="section-title" style="margin-top:10px;">Condition Preview</div>
                                 <div id="conditionPreviewBox_@Convert.ToInt32(ViewData["Id"])" class="condition-builder-preview json-box">{}</div>
                                 <div class="condition-builder-note">
                                     Chọn field/operator/value ở form mini, bấm Add Rule hoặc Generate JSON rồi review lại tại ô Condition JSON bên dưới trước khi Add Transition.
@@ -294,6 +964,33 @@
                 </div>
             </div>
 
+
+            <div class="card card-last" style="min-height:600px;">
+                <div class="card-header">
+                    <div class="card-title">Workflow Diagram</div>
+                    <div class="card-sub">Drag & Connect nodes</div>
+                </div>
+                <div class="card-body">
+                <div class="canvas-wrap">
+                        <div id="canvas_@(ViewData["RandomNumber"].ToString())" class="canvas"></div>
+                    @* <div id="canvas_@Convert.ToInt32(ViewData["Id"])" class="canvas"></div> *@
+                </div>
+
+                </div>
+            </div>
+            <div class="card card-last" style="min-height:600px;">
+                <div class="card-header">
+                    <div class="card-title">Json diagram</div>
+                </div>
+                <div class="card-body">
+                    <button id="btnRender_@Convert.ToInt32(ViewData["Id"])">Draw on diagram</button>
+                    <button class="secondary" id="btnUpdate_@Convert.ToInt32(ViewData["Id"])">Save Data</button>
+                    @* <button class="warning" id="btnAutoLayout_@Convert.ToInt32(ViewData["Id"])">Force Auto Layout</button> *@
+                    <button class="success" id="btnExport_@Convert.ToInt32(ViewData["Id"])">Export JSON</button>
+                    <textarea id="jsonInput_@Convert.ToInt32(ViewData["Id"])"></textarea>
+                </div>
+            </div>
+            
         </div>
     </div>
 
@@ -1258,6 +1955,7 @@
                 transitionGridInstance.refresh();
             }
             notify("Transition added", "success");
+            // renderDiagramFromTree();
         }
 
       
@@ -1444,6 +2142,7 @@
                     }, null, 2));
                 }
             }
+            renderDiagramFromTree();
         }
 
         
@@ -1835,5 +2534,1142 @@
             initPayloadBoxOnce().then(function () { 
                 initTransitionGrid();               
             });
+
+
+        // var diagramInstance = null;
+        // var canvasEl = document.getElementById("canvas_@Convert.ToInt32(ViewData["Id"])");
+        //         function renderDiagramFromTree() {
+
+        //     if (!canvasEl) return;
+        //     canvasEl.innerHTML = "";
+
+        //     if (diagramInstance) {
+        //         diagramInstance.reset();
+        //     }
+
+        //     diagramInstance = jsPlumb.getInstance({
+        //         Container: canvasEl
+        //     });
+
+        //     diagramInstance.importDefaults({
+        //         ConnectionsDetachable: false,
+        //         ReattachConnections: true
+        //     });
+
+        //     // ✅ render node
+        //     workflowTreeData.forEach(n => {
+        //         const el = document.createElement("div");
+        //         el.className = "node";
+        //         el.id = n.id;
+
+        //         el.style.left = (n.x || 100) + "px";
+        //         el.style.top = (n.y || 100) + "px";
+
+        //         el.innerHTML = `
+        //             <div><b>${n.text}</b></div>
+        //             <div>${n.flowType || "Both"}</div>
+        //         `;
+
+        //         canvasEl.appendChild(el);
+
+        //         diagramInstance.draggable(el, {
+        //             grid: [20, 20],
+        //             stop: function () {
+        //                 const left = parseInt(el.style.left);
+        //                 const top = parseInt(el.style.top);
+
+        //                 // ✅ sync ngược về tree
+        //                 const node = workflowTreeData.find(x => x.id === n.id);
+        //                 if (node) {
+        //                     node.x = left;
+        //                     node.y = top;
+        //                 }
+
+        //                 buildPayloadPreview();
+        //             }
+        //         });
+
+        //         diagramInstance.makeSource(el, {
+        //             anchor: "Continuous",
+        //             maxConnections: -1
+        //         });
+
+        //         diagramInstance.makeTarget(el, {
+        //             anchor: "Continuous"
+        //         });
+        //     });
+
+        //     // ✅ render transition
+        //     transitions.forEach(t => {
+        //         if (!t.fromNodeId || !t.toNodeId) return;
+
+        //         diagramInstance.connect({
+        //             source: t.fromNodeId,
+        //             target: t.toNodeId,
+        //             anchors: ["Continuous", "Continuous"],
+        //             overlays: [
+        //                 ["Arrow", { location: 1 }],
+        //                 ["Label", {
+        //                     label: t.actionName || "",
+        //                     location: 0.5
+        //                 }]
+        //             ]
+        //         });
+        //     });
+
+        //     bindConnectionEvent();
+        // }
+        //         function initCanvasDrop() {
+
+        //     canvasEl.addEventListener("dragover", function (e) {
+        //         e.preventDefault();
+        //     });
+
+        //     canvasEl.addEventListener("drop", function (e) {
+        //         e.preventDefault();
+
+        //         let data = dragToolData;
+
+        //         if (!data) return;
+
+        //         const rect = canvasEl.getBoundingClientRect();
+
+        //         const x = e.clientX - rect.left;
+        //         const y = e.clientY - rect.top;
+
+        //         // ✅ reuse createNode
+        //         createNodeFromTool(data, "#");
+
+        //         setTimeout(() => {
+        //             let last = workflowTreeData[workflowTreeData.length - 1];
+        //             if (last) {
+        //                 last.x = x;
+        //                 last.y = y;
+        //             }
+
+        //             renderDiagramFromTree();
+        //         }, 100);
+        //     });
+        // }
+
+        //         function bindConnectionEvent() {
+
+        //     diagramInstance.bind("connection", function (info, originalEvent) {
+
+        //         if (!originalEvent) return;
+
+        //         const from = info.sourceId;
+        //         const to = info.targetId;
+
+        //         const exist = transitions.find(t =>
+        //             t.fromNodeId === from && t.toNodeId === to
+        //         );
+
+        //         if (exist) return;
+
+        //         // transitions.push({
+        //         //     fromNodeId: from,
+        //         //     toNodeId: to,
+        //         //     actionCode: "AUTO_" + Date.now(),
+        //         //     actionName: from + " -> " + to,
+        //         //     flowType: "Both"
+        //         // });
+
+        //         buildPayloadPreview();
+        //         refreshTransitionGrid();
+        //     });
+        // }
+
+
+        // initCanvasDrop();
+
+        // setTimeout(() => {
+        //     renderDiagramFromTree();
+        // }, 300);
+        debugger
+                   _id = @Convert.ToInt32(ViewData["Id"]);
+
+
+                ajaxGet(`/api/WorkflowDefinition/GetSingle/${_id}`)
+                    .then(data => {
+                        debugger
+                var jsonInput = document.getElementById("jsonInput_@Convert.ToInt32(ViewData["Id"])");
+                var canvas = document.getElementById("canvas_@(ViewData["RandomNumber"].ToString())");
+                $(canvas).empty();
+                // var // errorBox = document.getElementById("// errorBox_@Convert.ToInt32(ViewData["Id"])");;
+                // var wfCode = document.getElementById("wfCode_@Convert.ToInt32(ViewData["Id"])");
+                // var flowType = document.getElementById("flowType_@Convert.ToInt32(ViewData["Id"])");
+                // var currentStep = document.getElementById("currentStep_@Convert.ToInt32(ViewData["Id"])");
+                // var layoutMode = document.getElementById("layoutMode_@Convert.ToInt32(ViewData["Id"])");
+                // var // saveHint = document.getElementById("// saveHint_@Convert.ToInt32(ViewData["Id"])");
+
+                var instance = null;
+                var currentJson = null;
+
+                function parseWorkflowNodes(value) {
+                  if (value == null) return null;
+                  if (typeof value === "string") {
+                    try {
+                      return JSON.parse(value);
+                    } catch (err) {
+                      try {
+                        return JSON.parse(value.replace(/\r?\n/g, "\\n"));
+                      } catch (err2) {
+                        console.warn("Failed to parse workflowNodes", err, err2);
+                        return null;
+                      }
+                    }
+                  }
+                  return value;
+                }
+
+                var workflowNodesJson = parseWorkflowNodes(data.workflowNodes);
+                if (workflowNodesJson) {
+                  jsonInput.value = JSON.stringify(workflowNodesJson, null, 2);
+                } else {
+                  // // errorBox.style.display = "block";
+                  // // errorBox.textContent = "Unable to parse workflowNodes from server response.";
+                  jsonInput.value = "{}";
+                }
+
+                function safe(v) {
+                  return String(v == null ? "" : v);
+                }
+
+                function hasNumber(v) {
+                  return typeof v === "number" && !Number.isNaN(v);
+                }
+
+                function snap(n, grid = 24) {
+                  return Math.round(n / grid) * grid;
+                }
+
+                function cloneJson(obj) {
+                  return JSON.parse(JSON.stringify(obj));
+                }
+
+                function getNodeFlowClass(flowType) {
+                  if (flowType === "Quotation") return "flow-quotation";
+                  if (flowType === "PolicyIssuance") return "flow-policy";
+                  return "flow-both";
+                }
+
+                function getNodeStateClass(nodeId, runtimeState) {
+                  var active = runtimeState?.activeNodeId;
+                  var done = runtimeState?.compvaredNodeIds || [];
+                  var pending = runtimeState?.pendingNodeIds || [];
+                  if (nodeId === active) return "active";
+                  if (done.includes(nodeId)) return "done";
+                  if (pending.includes(nodeId)) return "pending";
+                  return "pending";
+                }
+
+                function getNodesWithSavedPosition(nodes) {
+                  return (nodes || []).filter(n => hasNumber(n.x) && hasNumber(n.y));
+                }
+
+                function syncJsonToTextarea() {
+                  if (!currentJson) return;
+                  jsonInput.value = JSON.stringify(currentJson, null, 2);
+                }
+
+                function updateNodeCoordinateUi(nodeId, x, y) {
+                  var xEl = document.querySelector(`[data-x="${nodeId}"]`);
+                  var yEl = document.querySelector(`[data-y="${nodeId}"]`);
+                  if (xEl) xEl.textContent = x;
+                  if (yEl) yEl.textContent = y;
+                }
+
+                function updateNodePosition(nodeId, x, y) {
+                  if (!currentJson || !currentJson.workflowNodes) return;
+                  var node = currentJson.workflowNodes.find(n => n.id === nodeId);
+                  if (!node) return;
+
+                  node.x = x;
+                  node.y = y;
+
+                  updateNodeCoordinateUi(nodeId, x, y);
+                  syncJsonToTextarea();
+                }
+                function buildConnectionsFromNodes(nodes) {
+                    const edges = [];
+
+                    nodes.forEach(n => {
+                        if (n.parentId) {
+                            edges.push({
+                                source: n.parentId,
+                                target: n.id
+                            });
+                        }
+                    });
+
+                    return edges;
+                }
+               function buildAutoLayout(json) {
+                   debugger
+          const nodes = json.workflowNodes || [];
+          const transitions = json.workflowTransitions || [];
+
+          const nodeMap = new Map(nodes.map(n => [n.id, n]));
+          const graph = new Map();
+
+          nodes.forEach(n => graph.set(n.id, []));
+
+          // 🔥 Build graph SAFE (lọc edge gây loop)
+          transitions.forEach(t => {
+            if (!nodeMap.has(t.fromNodeId) || !nodeMap.has(t.toNodeId)) return;
+
+            // ❌ loại self loop
+            if (t.fromNodeId === t.toNodeId) return;
+
+            // ❌ loại return / loop
+            if (t.isReturn || t.isLoop) return;
+
+            // ❌ loại backward edge (quan trọng)
+            const from = nodeMap.get(t.fromNodeId);
+            const to = nodeMap.get(t.toNodeId);
+            if ((to.orderNo || 0) <= (from.orderNo || 0)) return;
+
+            graph.get(t.fromNodeId).push(t.toNodeId);
+          });
+
+          // 🔥 BFS layer (KHÔNG BAO GIỜ LOOP)
+          const layerMap = new Map();
+          const queue = [];
+
+          // root = node không có parent hoặc indegree = 0
+          const indegree = new Map();
+          nodes.forEach(n => indegree.set(n.id, 0));
+
+          graph.forEach((tos, from) => {
+            tos.forEach(to => indegree.set(to, indegree.get(to) + 1));
+          });
+
+          const roots = nodes.filter(n => indegree.get(n.id) === 0);
+
+          (roots.length ? roots : nodes.slice(0, 1)).forEach(r => {
+            layerMap.set(r.id, 0);
+            queue.push(r.id);
+          });
+
+          const visited = new Set();
+
+          while (queue.length) {
+            const current = queue.shift();
+            if (visited.has(current)) continue;
+            visited.add(current);
+
+            const currentLayer = layerMap.get(current) || 0;
+
+            (graph.get(current) || []).forEach(to => {
+              if (!layerMap.has(to)) {
+                layerMap.set(to, currentLayer + 1);
+                queue.push(to);
+              }
+            });
+          }
+
+          // 🔥 fallback cho node bị cycle / không reachable
+          nodes.forEach(n => {
+            if (!layerMap.has(n.id)) {
+              layerMap.set(n.id, 0); // hoặc max + 1 nếu muốn đẩy xuống cuối
+            }
+          });
+
+          // 🔥 group theo layer
+          const grouped = {};
+          nodes.forEach(n => {
+            const layer = layerMap.get(n.id) || 0;
+            if (!grouped[layer]) grouped[layer] = [];
+            grouped[layer].push(n);
+          });
+
+          Object.keys(grouped).forEach(layer => {
+            grouped[layer].sort((a, b) => (a.orderNo || 9999) - (b.orderNo || 9999));
+          });
+
+          // 🔥 layout position
+          const startX = 96;
+          const startY = 110;
+          const colGap = 280;
+          const rowGap = 150;
+
+
+          const SCALE_X = 1.9;   // ← Điều chỉnh để giãn ngang
+          const SCALE_Y = 2.0;   // ← Điều chỉnh để giãn dọc
+
+          const positions = {};
+
+          Object.keys(grouped)
+            .map(Number)
+            .sort((a, b) => a - b)
+            .forEach(layer => {
+              const arr = grouped[layer];
+              const totalHeight = (arr.length - 1) * rowGap;
+              const baseY = Math.max(startY, 200 - totalHeight / 2);
+
+              arr.forEach((n, index) => {
+                positions[n.id] = {
+                  x: n.posX ? n.posX * SCALE_X : startX + layer * colGap,
+                  y: n.posY ? n.posY * SCALE_Y : baseY + index * rowGap,
+                  layer
+                };
+              });
+            });
+
+          const maxLayer = Math.max(...Object.keys(grouped).map(Number));
+          const maxCount = Math.max(...Object.values(grouped).map(a => a.length));
+
+          return {
+            positions,
+            grouped,
+            canvasWidth: startX + (maxLayer + 1) * colGap + 300,
+            canvasHeight: Math.max(760, startY + maxCount * rowGap + 260)
+          };
+        }
+
+                function buildSavedLayout(json) {
+                  var nodes = json.workflowNodes || [];
+                  var positions = {};
+                  var maxX = 0;
+                  var maxY = 0;
+
+                  nodes.forEach(n => {
+                    var x = snap(Number(n.x || 0));
+                    var y = snap(Number(n.y || 0));
+                    positions[n.id] = { x, y, layer: null };
+                    maxX = Math.max(maxX, x);
+                    maxY = Math.max(maxY, y);
+                  });
+
+                  return {
+                    positions,
+                    grouped: {},
+                    canvasWidth: Math.max(window.innerWidth - (window.innerWidth * 0.1), maxX + 420),
+                    canvasHeight: Math.max(window.innerHeight - (window.innerHeight * -0.1), maxY + 260)
+                  };
+                }
+
+                function createNodeEl(node, pos, runtimeState) {
+                  var el = document.createElement("div");
+                  console.log(node);
+                  el.id = node.id;
+                  el.className = "node " + getNodeFlowClass(node.flowType) + " " + getNodeStateClass(node.id, runtimeState);
+                  el.style.left = pos.x + "px";
+                  el.style.top = pos.y + "px";
+                  el.innerHTML = `
+                    <div class="node-title">${safe(node.nodeName || node.id)}</div>
+                    <div class="node-meta">
+                      <div>Order: ${safe(node.orderNo)}</div>
+                      <div>Level: ${safe(node.levelNo)}</div>
+                      <div>Flow: ${safe(node.flowType || "Both")}</div>
+                      <div>X: <span data-x="${node.id}">${safe(node.x)}</span> | Y: <span data-y="${node.id}">${safe(node.y)}</span></div>
+                    </div>
+                  `;
+                  return el;
+                }
+
+                function createLayerLabel(layer, x) {
+                  var el = document.createElement("div");
+                  el.className = "layer-label";
+                  el.style.left = x + "px";
+                  el.textContent = "Layer " + layer;
+                  return el;
+                }
+
+                function colorForEdge(t) {
+                  if (t.isReturn) return "var(--return)";
+                  if (t.isLoop) return "var(--loop)";
+                  if (t.flowType === "Quotation") return "var(--quotation)";
+                  if (t.flowType === "PolicyIssuance") return "var(--policy)";
+                  return "var(--both)";
+                }
+
+                function chooseAnchors(t) {
+                  if (t.isReturn) return ["Top", "Top"];
+                  return ["Right", "Left"];
+                }
+
+                function connectEdge(t) {
+                  var color = colorForEdge(t);
+                  var label = safe(t.actionName || t.userDecisionLabel || t.actionCode || "");
+                  var statusName = _enums.OverallStatus.find(f => f.id == t.statusId);
+                                          label = `${label} - <div class="statusTag ${normalizeStatus(statusName?.value || "").css}">${statusName?.value || ""}</div>`;
+                  var isSelfLoop = t.fromNodeId === t.toNodeId;
+
+                  var overlays = [
+                    ["Arrow", { location: 1, width: 10, length: 10 }]
+                  ];
+
+                  if (label) {
+                    overlays.unshift(["Label", {
+                      label,
+                      location: 0.5,
+                      cssClass: "edge-label"
+                    }]);
+                  }
+
+                  if (isSelfLoop) {
+                    instance.connect({
+                      source: t.fromNodeId,
+                      target: t.toNodeId,
+                      anchors: ["Top", "Right"],
+                      connector: ["StateMachine", { margin: 12, curviness: 45, loopbackRadius: 32 }],
+                      endpoint: "Blank",
+                      paintStyle: {
+                        stroke: color,
+                        strokeWidth: 3,
+                        dashstyle: t.isReturn ? "4 4" : ""
+                      },
+                      overlays
+                    });
+                    return;
+                  }
+
+                  instance.connect({
+                    source: t.fromNodeId,
+                    target: t.toNodeId,
+                    anchors: chooseAnchors(t),
+                    connector: ["Bezier", { curviness: t.isReturn ? 95 : 60 }],
+                    endpoint: "Blank",
+                    paintStyle: {
+                      stroke: color,
+                      strokeWidth: (t.isReturn || t.isLoop) ? 3 : 2.5,
+                      dashstyle: t.isReturn ? "4 4" : ""
+                    },
+                    overlays
+                  });
+                }
+
+                function attachDrag() {
+                  (currentJson.workflowNodes || []).forEach(node => {
+                    instance.draggable(node.id, {
+                      grid: [24, 24],
+                      containment: true,
+                      stop: function() {
+                        var el = document.getElementById(node.id);
+                        if (!el) return;
+
+                        var left = snap(parseInt(el.style.left || "0", 10));
+                        var top = snap(parseInt(el.style.top || "0", 10));
+
+                        el.style.left = left + "px";
+                        el.style.top = top + "px";
+
+                        updateNodePosition(node.id, left, top);
+                        instance.revalidate(node.id);
+
+                        // saveHint.innerHTML = `Position: <span class="status-ok">updated ${node.id} (${left}, ${top})</span>`;
+                      }
+                    });
+                  });
+                }
+
+
+                function renderWorkflow(options = {}) {
+                  try {
+                    // errorBox.style.display = "none";
+                    // errorBox.textContent = "";
+
+                    currentJson = JSON.parse(jsonInput.value);
+
+                    if (instance) {
+                      instance.deleteEveryConnection();
+                      instance.reset();
+                    }
+
+                    canvas.innerHTML = "";
+                    var useSavedLayout =
+                      getNodesWithSavedPosition(currentJson.workflowNodes).length > 0;
+
+                    var layout = useSavedLayout
+                      ? buildSavedLayout(currentJson)
+                      : buildAutoLayout(currentJson);
+
+                    var { positions, grouped, canvasWidth, canvasHeight } = layout;
+
+                    canvas.style.width = canvasWidth + "px";
+                    canvas.style.height = canvasHeight + "px";
+
+                    if (!useSavedLayout) {
+                      Object.keys(grouped).map(Number).sort((a, b) => a - b).forEach(layer => {
+                        var arr = grouped[layer];
+                        if (arr.length) {
+                          canvas.appendChild(createLayerLabel(layer, positions[arr[0].id].x));
+                        }
+                      });
+                    }
+
+                    (currentJson.workflowNodes || []).forEach(node => {
+                      var pos = positions[node.id];
+                      if (!pos) return;
+
+                      if (!useSavedLayout || !hasNumber(node.x) || !hasNumber(node.y)) {
+                        node.x = pos.x;
+                        node.y = pos.y;
+                      }
+
+                      canvas.appendChild(createNodeEl(node, pos, currentJson.runtimeState || {}));
+                    });
+
+                    instance = jsPlumb.getInstance({
+                      Container: canvas
+                    });
+
+                    instance.importDefaults({
+                      ConnectionsDetachable: false,
+                      ReattachConnections: false,
+                      Endpoint: "Blank",
+                      PaintStyle: { stroke: "#64748b", strokeWidth: 2 },
+                      HoverPaintStyle: { stroke: "#334155", strokeWidth: 3 }
+                    });
+
+                    (currentJson.workflowTransitions || []).forEach(connectEdge);
+                    attachDrag();
+
+                    var def = currentJson.workflowDefinition || {};
+                    // wfCode.textContent = "Workflow: " + safe(def.workflowCode || "-");
+                    // flowType.textContent = "Flow: " + safe(def.flowType || "-");
+                    // currentStep.textContent = "Current: " + safe(currentJson.runtimeState?.activeNodeId || "-");
+                    // layoutMode.textContent = "Layout: " + (useSavedLayout ? "saved x,y" : "auto layout");
+
+                    syncJsonToTextarea();
+                  } catch (err) {
+                    // errorBox.style.display = "block";
+                    // errorBox.textContent = err && err.stack ? err.stack : String(err);
+                  }
+                }
+
+                function exportJson() {
+                  try {
+                    syncJsonToTextarea();
+                    navigator.clipboard?.writeText(jsonInput.value).catch(() => {});
+                    // saveHint.innerHTML = `Position: <span class="status-ok">JSON exported</span>`;
+                  } catch (err) {
+                    // errorBox.style.display = "block";
+                    // errorBox.textContent = err && err.stack ? err.stack : String(err);
+                  }
+                }
+
+
+                function updateData(){
+                      ajaxPut('/api/WorkflowDefinition/UpdateData',
+                     {
+                         key: _id,
+                         values: JSON.stringify(
+                             { workflowNodes : jsonInput.value }
+                         )
+                     },
+                     {
+                         onSuccess: function (response) {
+                              appNotifySuccess("Updated!", false);
+                         },
+                         onError: function (err) { }
+                     }
+                     );
+                }
+
+                document.getElementById("btnRender_@Convert.ToInt32(ViewData["Id"])").addEventListener("click", () => renderWorkflow());
+                document.getElementById("btnUpdate_@Convert.ToInt32(ViewData["Id"])").addEventListener("click", updateData);
+                document.getElementById("btnExport_@Convert.ToInt32(ViewData["Id"])").addEventListener("click", exportJson);
+
+                // document.getElementById("btnAutoLayout").addEventListener("click", () => {
+                //   try {
+                //     var tmp = JSON.parse(jsonInput.value);
+                //     (tmp.workflowNodes || []).forEach(n => {
+                //       n.x = null;
+                //       n.y = null;
+                //     });
+                //     jsonInput.value = JSON.stringify(tmp, null, 2);
+                //     renderWorkflow({ forceAuto: true });
+                //   } catch (err) {
+                //     // errorBox.style.display = "block";
+                //     // errorBox.textContent = err && err.stack ? err.stack : String(err);
+                //   }
+                // });
+
+                renderWorkflow();
+                // const jsonInput = document.getElementById("jsonInput");
+                // const canvas = document.getElementById("canvas");
+                // var // statusBar = document.getElementById("// statusBar_@Convert.ToInt32(ViewData["Id"])");
+                // var infoBox = document.getElementById("infoBox_@Convert.ToInt32(ViewData["Id"])");
+
+                // let instance = null;
+                let selectedNodeId = null;
+                let selectedTransitionKey = null;
+
+                function setStatus(text) {
+                    // statusBar.textContent = text;
+                }
+
+                function setInfo(obj, title) {
+                    infoBox.textContent = title + "\n\n" + JSON.stringify(obj, null, 2);
+                }
+
+                function ensureSeed() {
+                    if (!jsonInput.value.trim()) {
+                        jsonInput.value = JSON.stringify(sampleData, null, 2);
+                    }
+                }
+
+                function getData() {
+                    return JSON.parse(jsonInput.value || "{}");
+                }
+
+                function setData(data) {
+                    jsonInput.value = JSON.stringify(data, null, 2);
+                }
+
+                function normalizeFlowClass(flowType) {
+                    if (flowType === "Quotation") return "flow-quotation";
+                    if (flowType === "PolicyIssuance" || flowType === "Policy Issuance") return "flow-policy";
+                    return "flow-both";
+                }
+
+                function createNodeElement(node, runtimeState) {
+                    const el = document.createElement("div");
+                    el.id = node.id;
+                    el.className = "node";
+
+                    if (node.allowLoop) el.classList.add("allowLoopNode");
+                    if (runtimeState?.activeNodeId === node.id) el.classList.add("activeNode");
+                    if ((runtimeState?.completedNodeIds || []).includes(node.id)) el.classList.add("completedNode");
+                    if ((runtimeState?.pendingNodeIds || []).includes(node.id)) el.classList.add("pendingNode");
+
+                    el.style.left = (node.x ?? 0) + "px";
+                    el.style.top = (node.y ?? 0) + "px";
+
+                    el.innerHTML = `
+                        <div class="nodeTitle">${node.nodeName || node.id}</div>
+                        <div class="nodeMeta">
+                            <span class="meta">#${node.orderNo ?? ""}</span>
+                            <span class="meta ${normalizeFlowClass(node.flowType)}">${node.flowType || "Both"}</span>
+                            ${node.levelNo != null ? `<span class="meta">L${node.levelNo}</span>` : ""}
+                            ${node.loopGroup ? `<span class="meta">Loop:${node.loopGroup}</span>` : ""}
+                        </div>
+                    `;
+                    debugger
+                    el.addEventListener("click", function (ev) {
+                        ev.stopPropagation();
+                        clearNodeSelection();
+                        el.classList.add("selected");
+                        selectedNodeId = node.id;
+                        selectedTransitionKey = null;
+                        setInfo(node, "NODE");
+                    });
+
+                    return el;
+                }
+
+                function clearNodeSelection() {
+                    document.querySelectorAll(".node.selected").forEach(x => x.classList.remove("selected"));
+                }
+
+                function clearSelections() {
+                    clearNodeSelection();
+                    selectedNodeId = null;
+                    selectedTransitionKey = null;
+                }
+                debugger
+                function registerEndpoints(nodeId) {
+                    instance.makeSource(nodeId, {
+                        filter: ".nodeTitle",
+                        anchor: "Continuous",
+                        connector: ["Flowchart", { cornerRadius: 10, stub: 24 }],
+                        connectorStyle: { stroke: "#64748b", strokeWidth: 2 },
+                        maxConnections: -1
+                    });
+
+                    instance.makeTarget(nodeId, {
+                        anchor: "Continuous",
+                        allowLoopback: true
+                    });
+
+                    instance.draggable(nodeId, {
+                        grid: [12, 12],
+                        stop: function () {
+                            savePositions();
+                        }
+                    });
+                }
+
+                function getTransitionStyle(t) {
+                    if (t.isExitTransition) {
+                        return { stroke: "#7c3aed", strokeWidth: 3, dashstyle: "2 0" };
+                    }
+                    if (t.isLoop) {
+                        return { stroke: "#ea580c", strokeWidth: 3, dashstyle: "4 2" };
+                    }
+                    if (t.isReturn) {
+                        return { stroke: "#dc2626", strokeWidth: 2, dashstyle: "6 3" };
+                    }
+                    return { stroke: "#64748b", strokeWidth: 2, dashstyle: "2 0" };
+                }
+
+                function getConnectorConfig(t) {
+                    if (t.fromNodeId === t.toNodeId) {
+                        return ["StateMachine", { margin: 6, curviness: 40 }];
+                    }
+                    if (t.isReturn) {
+                        return ["Bezier", { curviness: 90 }];
+                    }
+                    if (t.isLoop) {
+                        return ["Bezier", { curviness: 70 }];
+                    }
+                    return ["Flowchart", { cornerRadius: 10, stub: 24 }];
+                }
+
+                function getTransitionLabel(t) {
+                    return t.userDecisionLabel || t.actionName || t.actionCode || "";
+                }
+
+                function makeTransitionKey(t) {
+                    return [t.fromNodeId, t.toNodeId, t.actionCode || "", t.actionName || ""].join("||");
+                }
+
+                function renderTransitions(data) {
+                    (data.workflowTransitions || []).forEach(function (t) {
+                        const style = getTransitionStyle(t);
+
+                        const conn = instance.connect({
+                            source: t.fromNodeId,
+                            target: t.toNodeId,
+                            anchors: t.fromNodeId === t.toNodeId ? ["Top", "Right"] : ["Continuous", "Continuous"],
+                            connector: getConnectorConfig(t),
+                            paintStyle: style,
+                            endpoint: "Dot",
+                            endpointStyle: { radius: 4, fill: style.stroke },
+                            overlays: [
+                                ["Arrow", { width: 10, length: 10, location: 1, foldback: 0.8 }],
+                                ["Label", {
+                                    label: getTransitionLabel(t),
+                                    location: 0.5,
+                                    cssClass: "aLabel"
+                                }]
+                            ]
+                        });
+
+                        conn.__transitionData = t;
+                        conn.__transitionKey = makeTransitionKey(t);
+
+                        conn.bind("click", function (connection, ev) {
+                            if (ev) ev.stopPropagation();
+                            selectedTransitionKey = conn.__transitionKey;
+                            selectedNodeId = null;
+                            clearNodeSelection();
+                            setInfo(t, "TRANSITION");
+                            setStatus("Selected transition: " + (t.actionCode || ""));
+                        });
+                    });
+                }
+
+                function savePositions() {
+                    const data = getData();
+                    (data.workflowNodes || []).forEach(function (n) {
+                        const el = document.getElementById(n.id);
+                        if (!el) return;
+                        n.x = parseInt(el.style.left, 10) || 0;
+                        n.y = parseInt(el.style.top, 10) || 0;
+                    });
+                    setData(data);
+                    setStatus("Saved x,y back to workflowNodes.");
+                }
+
+                function generateUniqueNodeId(data, baseName) {
+                    const rawBase = (baseName || "NODE").toUpperCase().replace(/[^A-Z0-9]+/g, "_");
+                    let candidate = rawBase;
+                    const existing = new Set((data.workflowNodes || []).map(x => x.id));
+
+                    if (!existing.has(candidate)) return candidate;
+
+                    candidate = rawBase + "_" + Date.now();
+                    while (existing.has(candidate)) {
+                        candidate = rawBase + "_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+                    }
+                    return candidate;
+                }
+
+                function addNodeFromPalette(template, x, y) {
+                    const data = getData();
+
+                    const id = generateUniqueNodeId(data, template.nodeName);
+                    const nextOrder = ((data.workflowNodes || []).reduce((m, n) => Math.max(m, n.orderNo || 0), 0)) + 1;
+
+                   var node = workflowNodesHandle(template);
+                   node.id = id;
+                   node.orderNo = nextOrder;
+                   node.x = x;
+                   node.y = y;
+
+                    data.workflowNodes.push(node);
+
+                    if (!data.runtimeState) {
+                        data.runtimeState = {
+                            activeNodeId: "",
+                            completedNodeIds: [],
+                            pendingNodeIds: []
+                        };
+                    }
+
+                    if (!Array.isArray(data.runtimeState.pendingNodeIds)) {
+                        data.runtimeState.pendingNodeIds = [];
+                    }
+
+                    if (!data.runtimeState.pendingNodeIds.includes(node.id)) {
+                        data.runtimeState.pendingNodeIds.push(node.id);
+                    }
+
+                    setData(data);
+                    // renderWorkflow();
+                    renderWorkflow();
+                    setStatus("Added node: " + node.id);
+                }
+
+                function removeSelectedNode() {
+                    if (!selectedNodeId) {
+                        setStatus("No node selected.");
+                        return;
+                    }
+
+                    const data = getData();
+                    data.workflowNodes = (data.workflowNodes || []).filter(n => n.id !== selectedNodeId);
+                    data.workflowTransitions = (data.workflowTransitions || []).filter(t =>
+                        t.fromNodeId !== selectedNodeId && t.toNodeId !== selectedNodeId
+                    );
+
+                    if (data.runtimeState) {
+                        if (data.runtimeState.activeNodeId === selectedNodeId) {
+                            data.runtimeState.activeNodeId = "";
+                        }
+                        data.runtimeState.completedNodeIds = (data.runtimeState.completedNodeIds || []).filter(x => x !== selectedNodeId);
+                        data.runtimeState.pendingNodeIds = (data.runtimeState.pendingNodeIds || []).filter(x => x !== selectedNodeId);
+                    }
+
+                    setData(data);
+                    clearSelections();
+                    renderWorkflow();
+                    setStatus("Deleted node: " + selectedNodeId);
+                }
+
+                function removeSelectedTransition() {
+                    if (!selectedTransitionKey) {
+                        setStatus("No transition selected.");
+                        return;
+                    }
+
+                    const data = getData();
+                    data.workflowTransitions = (data.workflowTransitions || []).filter(t => makeTransitionKey(t) !== selectedTransitionKey);
+                    setData(data);
+                    const deletedKey = selectedTransitionKey;
+                    clearSelections();
+                    renderWorkflow();
+                    setStatus("Deleted transition: " + deletedKey);
+                }
+
+                function simpleAutoLayout(data) {
+                    const map = {};
+                    const childrenMap = {};
+
+                    (data.workflowNodes || []).forEach(n => {
+                        map[n.id] = n;
+                        childrenMap[n.id] = [];
+                    });
+
+                    (data.workflowNodes || []).forEach(n => {
+                        if (n.parentId && childrenMap[n.parentId]) {
+                            childrenMap[n.parentId].push(n);
+                        }
+                    });
+
+                    const roots = (data.workflowNodes || []).filter(n => !n.parentId);
+                    const levels = [];
+                    const visited = new Set();
+
+                    function dfs(node, level) {
+                        if (!node || visited.has(node.id)) return;
+                        visited.add(node.id);
+                        if (!levels[level]) levels[level] = [];
+                        levels[level].push(node);
+                        (childrenMap[node.id] || []).forEach(child => dfs(child, level + 1));
+                    }
+
+                    roots.forEach(r => dfs(r, 0));
+
+                    levels.forEach((arr, level) => {
+                        arr.forEach((node, i) => {
+                            node.x = 120 + level * 300;
+                            node.y = 120 + i * 180;
+                        });
+                    });
+
+                    const remain = (data.workflowNodes || []).filter(n => !visited.has(n.id));
+                    remain.forEach((n, i) => {
+                        n.x = 120;
+                        n.y = 120 + (levels.flat().length + i) * 140;
+                    });
+                }
+                debugger
+                function bindConnectionEvent() {
+                    instance.bind("connection", function (info, originalEvent) {
+                        if (!originalEvent) return;
+
+                        const sourceId = info.sourceId;
+                        const targetId = info.targetId;
+                        const data = getData();
+
+                        const exists = (data.workflowTransitions || []).some(t =>
+                            t.fromNodeId === sourceId &&
+                            t.toNodeId === targetId
+                        );
+
+                        if (exists) {
+                            setStatus("Transition already exists: " + sourceId + " -> " + targetId);
+                            return;
+                        }
+
+                        const sourceNode = (data.workflowNodes || []).find(n => n.id === sourceId);
+                        const targetNode = (data.workflowNodes || []).find(n => n.id === targetId);
+
+                        const actionCode = "ACTION_" + ((data.workflowTransitions || []).length + 1);
+                        const actionName = sourceNode && targetNode
+                            ? (sourceNode.nodeName + " To " + targetNode.nodeName)
+                            : "New Transition";
+
+                        const transition = {
+                            fromNodeId: sourceId,
+                            toNodeId: targetId,
+                            actionCode: actionCode,
+                            actionName: actionName,
+                            flowType: (targetNode && targetNode.flowType) || "Both",
+                            isReturn: false,
+                            isLoop: sourceId === targetId,
+                            loopGroup: sourceId === targetId ? ((sourceNode && sourceNode.loopGroup) || "") : "",
+                            loopExitMode: sourceId === targetId ? "UserDecision" : "None",
+                            maxLoopCount: null,
+                            isExitTransition: false,
+                            userDecisionLabel: sourceId === targetId ? "Loop" : "",
+                            conditionJson: ""
+                        };
+
+                        data.workflowTransitions.push(transition);
+                        setData(data);
+
+                        setStatus("Added transition: " + sourceId + " -> " + targetId);
+                        renderWorkflow();
+                    });
+                }
+
+                function render() {
+                    const data = getData();
+
+                    canvas.innerHTML = "";
+
+                    if (instance) instance.reset();
+
+                    instance = jsPlumb.getInstance({
+                        Container: canvas
+                    });
+
+                    instance.importDefaults({
+                        ConnectionsDetachable: false,
+                        ReattachConnections: true
+                    });
+
+                    bindConnectionEvent();
+
+                    (data.workflowNodes || []).forEach(function (node) {
+                        const el = createNodeElement(node, data.runtimeState || {});
+                        canvas.appendChild(el);
+                    });
+
+                    (data.workflowNodes || []).forEach(function (node) {
+                        registerEndpoints(node.id);
+                    });
+
+                    renderTransitions(data);
+
+                    setStatus(
+                        "Rendered " +
+                        (data.workflowNodes || []).length +
+                        " nodes / " +
+                        (data.workflowTransitions || []).length +
+                        " transitions."
+                    );
+                }
+
+                // document.getElementById("btnRender").addEventListener("click", function () {
+                //     renderWorkflow();
+                // });
+
+                // document.getElementById("btnSavePositions").addEventListener("click", function () {
+                //     savePositions();
+                // });
+
+                // document.getElementById("btnReloadJson").addEventListener("click", function () {
+                //     renderWorkflow();
+                // });
+
+                // document.getElementById("btnAutoLayout").addEventListener("click", function () {
+                //     const data = getData();
+                //     simpleAutoLayout(data);
+                //     setData(data);
+                //     renderWorkflow();
+                //     setStatus("Auto layout applied.");
+                // });
+
+                // document.getElementById("btnDeleteNode").addEventListener("click", function () {
+                //     removeSelectedNode();
+                // });
+
+                // document.getElementById("btnDeleteTransition").addEventListener("click", function () {
+                //     removeSelectedTransition();
+                // });
+
+                document.querySelectorAll(".paletteItem").forEach(item => {
+                    item.addEventListener("dragstart", function (e) {
+                        e.dataTransfer.setData("text/plain", item.getAttribute("data-template"));
+                    });
+                });
+                debugger
+                canvas.addEventListener("dragover", function (e) {
+                    e.preventDefault();
+                    canvas.classList.add("dragOver");
+                });
+
+                canvas.addEventListener("dragleave", function () {
+                    canvas.classList.remove("dragOver");
+                });
+
+                canvas.addEventListener("drop", function (e) {
+                    e.preventDefault();
+                    canvas.classList.remove("dragOver");
+
+                    const raw = e.dataTransfer.getData("text/plain");
+                    if (!raw) return;
+
+                    let template = null;
+                    try {
+                        template = JSON.parse(raw);
+                    } catch {
+                        setStatus("Invalid palette template.");
+                        return;
+                    }
+
+                    const rect = canvas.getBoundingClientRect();
+                    const x = Math.max(20, Math.round((e.clientX - rect.left - 100) / 12) * 12);
+                    const y = Math.max(20, Math.round((e.clientY - rect.top - 35) / 12) * 12);
+
+                    addNodeFromPalette(template, x, y);
+                });
+
+                canvas.addEventListener("click", function () {
+                    clearSelections();
+                    // infoBox.textContent = "Click node hoặc line để xem chi tiết.";
+                });
+
+                ensureSeed();
+                renderWorkflow();
+                });
+
     </script>
 </body>
