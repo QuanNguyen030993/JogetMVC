@@ -207,9 +207,9 @@ Note:
                                             text: findRouteReturn ? findRouteReturn.displayStatus : "", icon: "undo", type: "danger", onClick:
                                                 function (e) {
                                                 var content = remarkBoxs[item].controlRemark.instance.option("value");
-                                             
+                                                 
                                                     formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-                                                    formItems.comment = content;
+                                                    formItems.comment = content || "";
                                                     returnToStep(`${formModuleKeyQt}`, state.nextStep, findRouteReturn, formItems);
                                                 }
                                         });
@@ -221,13 +221,14 @@ Note:
                                          try
                                          {
                                               if (findRoute)
-                                          $(`#${submitButtonId}`).dxButton({
+                                            $(`#${submitButtonId}`).dxButton({
                                                disabled: tatObject[item].AcceptDate ? false : true,
                                             text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
                                                 function (e) {
+                                                    debugger
                                                 var content = remarkBoxs[item].controlRemark.instance.option("value");
                                                     formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-                                                    formItems.comment = content;
+                                                    formItems.comment = content || "";
                                                     submitNextStep(`${formModuleKeyQt}`, state.nextStep, findRoute, formItems);
                                                 }
                                         });
@@ -237,7 +238,7 @@ Note:
                                           console.log("Submit problem");
                                        }
                                       
-                                   }, 100);
+                                   }, _delayRenderSubmitButton);
                             });
                         });
                 });

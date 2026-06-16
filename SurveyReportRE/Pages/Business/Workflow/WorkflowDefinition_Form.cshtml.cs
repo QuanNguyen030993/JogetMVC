@@ -32,6 +32,14 @@ public class WorkflowDefinition_FormModel : PageModel
         ViewData[nameof(Id)] = pageNum ?? 0;
         ViewData[nameof(Guid)] = guid ?? "";
         ViewData[nameof(RandomNumber)] = RandomHelper.Generate(10) ?? "";
+
+        ViewData["WorkflowCommand"] = Enum.GetValues(typeof(WorkflowCommand))
+            .Cast<WorkflowCommand>()
+            .Select(e => new {
+                id = (int)e,
+                value = e.ToString()
+            });
+
     }
     public static class RandomHelper
     {
@@ -57,4 +65,13 @@ public class WorkflowDefinition_FormModel : PageModel
             return result.ToString();
         }
     }
+
+    public enum WorkflowCommand
+    {
+        None = 0,
+        CopyFile = 1,
+        TransferFile = 2,
+        LockFileLocal = 3
+    }
+
 }

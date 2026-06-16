@@ -1030,7 +1030,6 @@
 
         function createNodeEl(node, pos, runtimeState) {
           var el = document.createElement("div");
-          console.log(node);
           el.id = node.id;
           el.className = "node " + getNodeFlowClass(node.flowType) + " " + getNodeStateClass(node.id, runtimeState);
           el.style.left = pos.x + "px";

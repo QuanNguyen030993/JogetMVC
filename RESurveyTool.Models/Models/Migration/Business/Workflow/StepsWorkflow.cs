@@ -29,6 +29,7 @@ namespace ERPCore.Models.Migration.Business.Workflow
 
         public string? UiMode { get; set; }            // ReadOnly / EditQuotation / Approval
         public string? Command { get; set; }            // ReadOnly / EditQuotation / Approval
+        public string? CommandConfig { get; set; }            // ReadOnly / EditQuotation / Approval
 
         public int? LevelNo { get; set; }
 

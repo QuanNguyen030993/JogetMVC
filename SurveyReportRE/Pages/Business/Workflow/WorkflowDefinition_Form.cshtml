@@ -996,6 +996,7 @@
 
     <script>
         var _id = @Convert.ToInt32(ViewData["Id"]);
+        _enums.WorkflowCommand = @Html.Raw(Json.Serialize(ViewData["WorkflowCommand"]))
         var selectedNodeId = null;
         var nodeFormInstance = null;
         // var workflowFormInstance = null;
@@ -1555,7 +1556,7 @@
                             },
                             onError: function (err) {
                                 console.log(err);
-                                notify("Workflow build fail!", "error");
+                                notify("Workflow builded but some errors!", "warning");
                             }
                         });
                     }
@@ -1702,7 +1703,6 @@
             return transitions.map(function (t, index) {
                 const fromNode = nodeMap[t.fromNodeId] || {};
                 const toNode = t.toNodeId ? (nodeMap[t.toNodeId] || {}) : null;
-
                 const isStart = fromNode.parent === "#" || fromNode.parent == null;
                 const isEnd = !t.toNodeId || !!t.isExitTransition;
 
@@ -1722,6 +1722,8 @@
                     canComment: true,
                     canEdit: !isEnd,
                     canUpload: !isEnd,
+                    command: t.command || null,
+                    commandConfig: t.commandConfig || null,
 
                     departmentCode: fromNode.departmentName || null,
                     displayStatus: t.actionName || null,
@@ -1735,7 +1737,6 @@
                     parentStepId: null,
                     posX: fromNode.x || null,
                     posY: fromNode.y || null,
-
                     roleCode: fromNode.code || fromNode.text || fromNode.id,
                     stepCode: `${t.fromNodeId}_${t.actionCode}`,
                     stepName: `${fromNode.text || t.fromNodeId} ${t.actionName || t.actionCode}`,
@@ -1743,7 +1744,7 @@
 
                     actionCode: t.actionCode || null,
                     data: JSON.stringify(
-                        t.conditionJson || "{}"
+                        t.conditionJson || {}
                     ),
 
                     fromNodeId: t.fromNodeId || null,
@@ -1937,7 +1938,6 @@
 
         function addTransition() {
             var fd = transitionFormInstance.option("formData");
-
             if (!fd.fromNodeId || !fd.toNodeId) {
                 return notify("Please choose From Node and To Node", "warning");
             }
@@ -2011,11 +2011,7 @@
             syncRuntimeState();
             var payload = {
                 workflowDefinition: {
-                    // workflowCode: workflowHeader?.workflowCode || "",
-                    // workflowName: workflowHeader?.workflowName|| "",
-                    // flowType: workflowHeader?.flowType|| "",
-                    // versionNo: workflowHeader?.versionNo|| "",
-                    // isActive: workflowHeader?.isActive|| "",
+                    
                 },
                 workflowNodes: workflowTreeData.map((x, index) => (
               
@@ -2294,7 +2290,29 @@
                         label: { text: "Condition JSON" },
                         editorType: "dxTextArea",
                         colSpan: 2
-                    }
+                            },{
+                        dataField: "command",
+                        label: { text: "Command" },
+                        editorType: "dxSelectBox",
+                        editorOptions: {
+                            dataSource: _enums.WorkflowCommand,
+                            valueExpr: "value",
+                            displayExpr: "value",
+                            searchEnabled: true
+                        }},
+                        {
+                        dataField: "commandConfig",
+                        label: { text: "Command Config" },
+                        editorType: "dxTextArea"}
+
+        //                         {
+        //   "sourceDepartment": "FO",
+        //   "strategy": "Latest",
+        //   "fileSelector": "First",
+        //   "allowOverride": false
+        // }
+        // }
+
            ]     ;
 
           function initTransitionForm() {
@@ -2393,11 +2411,7 @@
             return {
                 workflowDefinition: {
                     id: _id || 0,
-                    // workflowCode: workflowHeader?.workflowCode || "",
-                    // workflowName: workflowHeader?.workflowName || "",
-                    // flowType: workflowHeader?.flowType || "Both",
-                    // versionNo: workflowHeader?.versionNo ?? 1,
-                    // isActive: workflowHeader?.isActive ?? true
+                   
                 },
                 workflowNodes: workflowTreeData.map((x, index) => ({
                     id: x.id,
@@ -2471,11 +2485,7 @@
                         var dbPayload = safeParseJson(data.workflowNodes, null);
                         var overWriteHeader = new Object ();
 
-                        // overWriteHeader.workflowCode= workflowHeader?.workflowCode || "";
-                        // overWriteHeader.workflowName= workflowHeader?.workflowName || "";
-                        // overWriteHeader.flowType= workflowHeader?.flowType || "";
-                        // overWriteHeader.versionNo= workflowHeader?.versionNo|| "";
-                        // overWriteHeader.isActive= workflowHeader?.isActive|| "";
+    
 
                         dbPayload.workflowDefinition = overWriteHeader;
                         if (dbPayload) {
@@ -2686,13 +2696,13 @@
         // setTimeout(() => {
         //     renderDiagramFromTree();
         // }, 300);
-        debugger
+        
                    _id = @Convert.ToInt32(ViewData["Id"]);
 
 
                 ajaxGet(`/api/WorkflowDefinition/GetSingle/${_id}`)
                     .then(data => {
-                        debugger
+                        
                 var jsonInput = document.getElementById("jsonInput_@Convert.ToInt32(ViewData["Id"])");
                 var canvas = document.getElementById("canvas_@(ViewData["RandomNumber"].ToString())");
                 $(canvas).empty();
@@ -2806,7 +2816,7 @@
                     return edges;
                 }
                function buildAutoLayout(json) {
-                   debugger
+                   
           const nodes = json.workflowNodes || [];
           const transitions = json.workflowTransitions || [];
 
@@ -2952,7 +2962,6 @@
 
                 function createNodeEl(node, pos, runtimeState) {
                   var el = document.createElement("div");
-                  console.log(node);
                   el.id = node.id;
                   el.className = "node " + getNodeFlowClass(node.flowType) + " " + getNodeStateClass(node.id, runtimeState);
                   el.style.left = pos.x + "px";
@@ -2994,7 +3003,7 @@
                   var color = colorForEdge(t);
                   var label = safe(t.actionName || t.userDecisionLabel || t.actionCode || "");
                   var statusName = _enums.OverallStatus.find(f => f.id == t.statusId);
-                                          label = `${label} - <div class="statusTag ${normalizeStatus(statusName?.value || "").css}">${statusName?.value || ""}</div>`;
+                                          label = `${label} - <div class="statusTag ${normalizeStatus(statusName?.value || "").css}">${statusName?.value || ""} - ${getCommandIcon(t.command)} ${safe(t.actionName || "")}</div>`;
                   var isSelfLoop = t.fromNodeId === t.toNodeId;
 
                   var overlays = [
@@ -3248,7 +3257,7 @@
                             ${node.loopGroup ? `<span class="meta">Loop:${node.loopGroup}</span>` : ""}
                         </div>
                     `;
-                    debugger
+                    
                     el.addEventListener("click", function (ev) {
                         ev.stopPropagation();
                         clearNodeSelection();
@@ -3270,7 +3279,7 @@
                     selectedNodeId = null;
                     selectedTransitionKey = null;
                 }
-                debugger
+                
                 function registerEndpoints(nodeId) {
                     instance.makeSource(nodeId, {
                         filter: ".nodeTitle",
@@ -3508,7 +3517,7 @@
                         n.y = 120 + (levels.flat().length + i) * 140;
                     });
                 }
-                debugger
+                
                 function bindConnectionEvent() {
                     instance.bind("connection", function (info, originalEvent) {
                         if (!originalEvent) return;
@@ -3630,7 +3639,7 @@
                         e.dataTransfer.setData("text/plain", item.getAttribute("data-template"));
                     });
                 });
-                debugger
+                
                 canvas.addEventListener("dragover", function (e) {
                     e.preventDefault();
                     canvas.classList.add("dragOver");
@@ -3670,6 +3679,15 @@
                 ensureSeed();
                 renderWorkflow();
                 });
+
+        function getCommandIcon(command) {
+            switch (command) {
+                case 1: return "📄";
+                case 2: return "🔄";
+                case 3: return "🔒";
+                default: return "";
+            }
+        }
 
     </script>
 </body>
