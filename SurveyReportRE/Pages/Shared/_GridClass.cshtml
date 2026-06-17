@@ -2254,7 +2254,7 @@
         }
 
            onEditorPrepared (e) {
-                if (e.dataField == "quotationStatus")
+                if (e.dataField == "workflowStatus")
                     {
                         var lookup = e.editorElement.dxSelectBox('instance');
                         lookup.option("itemTemplate", function(data) {
@@ -2286,7 +2286,7 @@
                     }
                 });
 
-                if (col.dataField === "quotationStatus")
+                if (col.dataField === "workflowStatus")
                 {//string column text filter from selectbox first example 2026-06-10
                     col.cellTemplate = function (container, options) {
                     var raw = options.value;
@@ -2510,7 +2510,7 @@
                         }
                     }
                 });
-                    if (col.dataField === "quotationStatus")
+                    if (col.dataField === "workflowStatus")
                     {
                         col.cellTemplate = function (container, options) {
                         var raw = options.value;

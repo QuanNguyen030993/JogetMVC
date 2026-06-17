@@ -63,7 +63,7 @@
         that.ModelName = "Quotation";
           that.customQuery = "OnSystem";
         var DS = makeBasicDataSource(that, false, true);
-        DS.filter([["isArchived", "=", null], "or", ["isArchived", "=", false]], "and", ["quotationStatus", "=", "ClientAccept"]);
+        DS.filter([["isArchived", "=", null], "or", ["isArchived", "=", false]], "and", ["workflowStatus", "=", "ClientAccept"]);
         mGrid.component.option("dataSource",DS);
         mGrid.component.option("selection", { mode: "multiple" });
         mGrid.component.option("showSelectionControls", true);

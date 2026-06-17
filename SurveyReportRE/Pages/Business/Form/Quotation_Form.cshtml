@@ -125,7 +125,7 @@ Note:
             params.set("take", state.quotePaging.take);
 
             if (searchText) params.set("searchText", searchText);
-            if (filter && filter !== "all") params.set("quotationStatus", filter);
+            if (filter && filter !== "all") params.set("workflowStatus", filter);
             params.set("key", @Convert.ToInt32(ViewData["Id"]));
             return `/api/Quotation/GetAll?${params.toString()}`;
         }

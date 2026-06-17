@@ -434,7 +434,6 @@
                                     productCode:"PC8",
                                     productId:8,
                                     productName:"Business Package Policy",
-                                    quotationStatus:"New",
                                     reinsuranceId: 145,
                                     reqDate:new Date(),
                                     reqPerson:"quan.nh",
@@ -3426,7 +3425,7 @@
             var statusObject = _enums.OverallStatus.find(f => f.value == object.statusName);
                           object.formItems.statusId  = statusObject.id;
                           object.formItems.workflowStatus = statusObject.value;
-                          object.formItems.quotationStatus = statusObject.value;
+                          // object.formItems.quotationStatus = statusObject.value;
                            ajaxPut(object.url,
                             {
                                 key: object.formItems.id,
@@ -3473,7 +3472,7 @@
             var statusObject = _enums.OverallStatus.find(f => f.value == object.statusName);
                           object.formItems.statusId  = statusObject.id;
                           object.formItems.workflowStatus = statusObject.value;
-                          object.formItems.quotationStatus = statusObject.value;
+                          // object.formItems.quotationStatus = statusObject.value;
                            ajaxPut(object.url,
                             {
                                 key: object.formItems.id,

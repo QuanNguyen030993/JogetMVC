@@ -686,7 +686,7 @@ public class QuotationController : BaseControllerApi<Quotation>
 
             EnumData enumData = await _enumDataRepository.GetSingleObject(s => s.Id == stepsWorkflow.StatusId);
 
-            quotation.QuotationStatus = enumData?.Value ?? "";
+            quotation.WorkflowStatus = enumData?.Value ?? "";
             quotation = await _BaseRepository.InsertData(quotation);
             if (file != null)
             {

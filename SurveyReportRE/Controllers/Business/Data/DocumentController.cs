@@ -134,7 +134,6 @@ public class DocumentController : BaseControllerApi<Document>
                     newDocument.SubDirectory = $"Digisign\\{accountApproveName}\\{quotation.QuotationCode}";
 
                     Quotation newQuotation = new Quotation();
-                    newQuotation.QuotationStatus = completeSigning.Name;
                     newQuotation.WorkflowStatus = completeSigning.Name;
                     newQuotation.StatusId = completeSigning.Id;
 
