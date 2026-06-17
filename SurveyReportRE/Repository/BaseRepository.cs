@@ -326,6 +326,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
                       ("@QueryString", $"Error InsertData: {insertQuery}")
                       , ("@Duration", "")
                       , ("@User", userName));
+                Serilog.Log.Error(ex, ex.Message);
                 throw new Exception(ex.Message);
             }
         }

@@ -1069,36 +1069,38 @@ Note:
         }
 
 
-        $(`#${formModuleKeyQt}-btnClientConfirm`).dxButton({
-            text: "Submit To Policy Issuance",
-            icon: "check",
-            type: "success",
-            onClick: function () {
-                var quotationConvert = state.quotes.find(x => x.id == state.selectedId);
-                if (!quotationConvert) return;
+        // $(`#${formModuleKeyQt}-btnClientConfirm`).dxButton({
+        //     text: "Submit To Policy Issuance",
+        //     icon: "check",
+        //     type: "success",
+        //     onClick: function () {
+        //         var quotationConvert = state.quotes.find(x => x.id == state.selectedId);
+        //         if (!quotationConvert) return;
 
-                var policyIssuance = new Object();
-                policyIssuance = ObjectPopulateKey(quotationConvert, true, false);
-                policyIssuance.RequestDate = new Date();
-                policyIssuance.PIC = {
-                    FO: "",
-                    TS: "",
-                    PM: ""
-                };
+        //         var policyIssuance = new Object();
+        //         policyIssuance = ObjectPopulateKey(quotationConvert, true, false);
+        //         policyIssuance.RequestDate = new Date();
+        //         policyIssuance.PIC = {
+        //             FO: "",
+        //             TS: "",
+        //             PM: ""
+        //         };
 
-                policyIssuance.PIC = JSON.stringify(policyIssuance.PIC);
-                policyIssuance.StageDept = "FO";
-                policyIssuance.PolicyIssuanceStatus = "FO Pending";
-                policyIssuance.WorkflowStatus = "FO Pending";
+        //         policyIssuance.PIC = JSON.stringify(policyIssuance.PIC);
+        //         policyIssuance.StageDept = "FO";
+        //         policyIssuance.PolicyIssuanceStatus = "FO Pending";
+        //         policyIssuance.WorkflowStatus = "FO Pending";
 
-                ajaxPost('api/PolicyIssuance/CreatePolicyIssuance', policyIssuance, {
-                    onSuccess: function () {
-                        DevExpress.ui.notify("Quotation submitted!", "info", 1200);
-                    },
-                    onError: function () { }
-                });
-            }
-        });
+
+
+        //         ajaxPost('api/PolicyIssuance/CreatePolicyIssuance', policyIssuance, {
+        //             onSuccess: function () {
+        //                 DevExpress.ui.notify("Quotation submitted!", "info", 1200);
+        //             },
+        //             onError: function () { }
+        //         });
+        //     }
+        // });
 
         $("#branchOverlay .backdrop").on("click", function () {
             $("#branchOverlay").hide();

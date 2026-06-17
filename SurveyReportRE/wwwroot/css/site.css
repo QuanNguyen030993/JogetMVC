@@ -1070,7 +1070,7 @@ aside {
     .statusTag.approve,
     .statusTag.client-accept {
         background: rgba(16,185,129);
-        color: #065f46;
+        color: #ffffff;
     }
 
     /* Reject / Decline / Client Refuse */

@@ -71,12 +71,9 @@ public class PolicyIssuance : BaseModel
     public string? PIC { get; set; } = "";
     public string? LeaderPIC { get; set; } = "";
     public string? HODPIC { get; set; } = "";
-    public long? ProductId { get; set; }
-    public long? LineId { get; set; }
+ 
     public long? ReinsuranceId { get; set; }
     [MaxLength(4000)]
-    public long? LocationId { get; set; }
-    public long? ResId { get; set; } // backup
     public string? PolicyIssuanceCode { get; set; }
     public long? ClientId { get; set; }
     public long? AttachmentId { get; set; }

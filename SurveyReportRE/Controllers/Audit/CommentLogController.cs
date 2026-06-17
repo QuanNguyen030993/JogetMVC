@@ -94,6 +94,15 @@ public class CommentLogController : BaseControllerApi<CommentLog>
     //    return obj;
     //}
 
+
+    [HttpGet]
+    public async Task<IActionResult> GetSeriLog()
+    {
+        string query = "SELECT * FROM Logs";
+        var obj = await _BaseRepository.ExecuteCustomLogQuery(query);
+        return Ok(obj);
+    }
+
     [HttpPost]
     public override async Task<object> ExecuteCustomQuery([FromBody] string query)
     {

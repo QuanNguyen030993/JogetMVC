@@ -713,6 +713,7 @@
                             var selectedItems = gridInstance.getSelectedRowsData();
                             var policyIssuances = [];
                              $.each(selectedItems, function (itemIndex, item){
+                                 debugger
                                 var policyIssuance = new Object();
                                  policyIssuance = ObjectPopulateKey(item, true, false);
                                  policyIssuance.RequestDate = new Date();
@@ -733,12 +734,32 @@
                                 policyIssuances.push(policyIssuance);
                              });
 
-                               ajaxPost('api/PolicyIssuance/CreatePolicyIssuance', policyIssuances, {
-                                      onSuccess: function () {
-                                          // DevExpress.ui.notify("Quotation submitted!", "info", 1200);
-                                      },
-                                      onError: function () { }
-                                  });
+                                  var formData = new FormData();
+                                        formData.append("PolicyIssuanceData",JSON.stringify(policyIssuances));
+
+
+                                 $.ajax({
+                                            url: "/api/PolicyIssuance/CreatePolicyIssuance",
+                                    type: "POST",
+                                    data: formData,
+                                    processData: false,
+                                    contentType: false,
+                                    success: function (res) {
+                                            DevExpress.ui.notify("Quotation created!", "success", 1200);
+                                    },
+                                    error: function (xhr) {
+                                         result.payload.progressvalue = 100;
+                                         renderBrowserLoading(result);
+                                         appNotifyError(`${xhr.responseJSON?.detail || xhr.statusText} <br/>${xhr.responseJSON?.message || xhr.responseText}`);
+                                    }
+                                });
+
+                               // ajaxPost('api/PolicyIssuance/CreatePolicyIssuance', policyIssuances, {
+                               //        onSuccess: function () {
+                               //            // DevExpress.ui.notify("Quotation submitted!", "info", 1200);
+                               //        },
+                               //        onError: function () { }
+                               //    });
 
 
                             DevExpress.ui.notify("PolicyIssuance created!", "success", 1200);
@@ -1453,8 +1474,8 @@
             if (k === "approved") return { css: "approved", text: raw };
             if (k === "reject") return { css: "rejected", text: raw };
             if (k === "decline" || k === "declined") return { css: "declined", text: raw };
-            if (k === "clientaccept") return { css: "client-accept", text: raw };
-            if (k === "clientrefuse") return { css: "client-refuse", text: raw };
+            if (k === "quotation confirmed") return { css: "accepted", text: raw };
+            if (k === "quotation refused") return { css: "rejected", text: raw };
             if (k === "done") return { css: "done", text: raw };
             if (k === "complete") return { css: "complete", text: raw };
             if (k.includes("complete")) return { css: "complete", text: raw };

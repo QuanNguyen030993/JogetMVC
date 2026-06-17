@@ -96,30 +96,33 @@
 
                          {itemType: "group", caption: "Attachment",colCount: 1, items: attachmentDefault("pi","@(dept)",@(quotationId), "@(quotationGuid)") },
                          {itemType: "group",caption: "Checklist",colCount:1,items: [
-    {dataField: "policyNoCL",editorType: "dxCheckBox",visible:true},
-    {dataField: "theInsured",editorType: "dxCheckBox",visible:true},
-    {dataField: "occupation",editorType: "dxCheckBox",visible:true},
-    {dataField: "occupationFCICode",editorType: "dxCheckBox",visible:true},
-    {dataField: "riskGrading",editorType: "dxCheckBox",visible:true},
-    {dataField: "pOI",editorType: "dxCheckBox",visible:true},
-    {dataField: "tSI",editorType: "dxCheckBox",visible:true},
-    {dataField: "premium",editorType: "dxCheckBox",visible:true},
-    {dataField: "deductible",editorType: "dxCheckBox",visible:true},
-    {dataField: "tnCs",editorType: "dxCheckBox",visible:true},
-    {dataField: "occupationCode",editorType: "dxCheckBox",visible:true},
-    {dataField: "premiumRate",editorType: "dxCheckBox",visible:true}
-    ]},
-    ]
+                    {dataField: "policyNoCL",editorType: "dxCheckBox",visible:true},
+                    {dataField: "theInsured",editorType: "dxCheckBox",visible:true},
+                    {dataField: "occupation",editorType: "dxCheckBox",visible:true},
+                    {dataField: "occupationFCICode",editorType: "dxCheckBox",visible:true},
+                    {dataField: "riskGrading",editorType: "dxCheckBox",visible:true},
+                    {dataField: "pOI",editorType: "dxCheckBox",visible:true},
+                    {dataField: "tSI",editorType: "dxCheckBox",visible:true},
+                    {dataField: "premium",editorType: "dxCheckBox",visible:true},
+                    {dataField: "deductible",editorType: "dxCheckBox",visible:true},
+                    {dataField: "tnCs",editorType: "dxCheckBox",visible:true},
+                    {dataField: "occupationCode",editorType: "dxCheckBox",visible:true},
+                    {dataField: "premiumRate",editorType: "dxCheckBox",visible:true}
+                    ]},
+                    ]
 
        });
        var additionOptions = new Object();
         additionOptions.refKey = 1;
 
         var gridOptions = new PolicyIssuanceSubDetailsGridOption("PolicyIssuanceSubDetails", "User",additionOptions);
-        var grid = new MGrid(null, $("#gridPA_@quotationId"), gridOptions, null);
-        grid.component.option("height", 100);
-        grid.component.option("width", "100%");
+        setTimeout(() => {
+        
+        // var grid = new MGrid(null, $("#gridPA_@quotationId"), gridOptions, null);
+        // grid.component.option("height", 100);
+        // grid.component.option("width", "100%");
           
+        },200);
           //       $("#gridPA").dxDataGrid("instance").option("editing", {
           //   mode:"cell", allowUpdating: !roTS, allowAdding: !roTS, allowDeleting: !roTS
           // });

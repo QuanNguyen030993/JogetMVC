@@ -58,15 +58,17 @@
         var mGridOption = new Object();
         mGridOption.isAllowRowMenu = false;
         mGridOption.selection =  { mode: "multiple" };
+        mGridOption.refKey = "Quotation confirmed";
+        mGridOption.refField = "workflowStatus";
         var mGrid = new MGrid(null, $(`#dataGrid_Quotation_Request`), new QuotationGridOption('Quotation', "User", mGridOption), null);
-        var that = new Object();
-        that.ModelName = "Quotation";
-          that.customQuery = "OnSystem";
-        var DS = makeBasicDataSource(that, false, true);
-        DS.filter([["isArchived", "=", null], "or", ["isArchived", "=", false]], "and", ["workflowStatus", "=", "ClientAccept"]);
-        mGrid.component.option("dataSource",DS);
-        mGrid.component.option("selection", { mode: "multiple" });
-        mGrid.component.option("showSelectionControls", true);
+        // var that = new Object();
+        // that.ModelName = "Quotation";
+        //   that.customQuery = "OnSystem";
+        // var DS = makeBasicDataSource(that, false, true);
+        // DS.filter([["isArchived", "=", null], "or", ["isArchived", "=", false]], "and", ["workflowStatus", "=", "ClientAccept"]);
+        // mGrid.component.option("dataSource",DS);
+         // mGrid.component.option("selection", { mode: "multiple" });
+         // mGrid.component.option("showSelectionControls", true);
 
 
     </script>

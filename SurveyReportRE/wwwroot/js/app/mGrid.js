@@ -892,7 +892,7 @@ var MGridOption = class MGridOption {
     onCellPrepared(e) {
         try {
             var that = this
-            if (e.rowType === "data" && e.column.command && e.column.command != "drag") {
+            if (e.rowType === "data" && e.column.command && e.column.command != "drag" && e.column.command != "select") {
                 if (_isSuperUser == "true") {
                     if (e.data.isView != null) {
                         visibleCommentButtonCell(e, that);
@@ -993,6 +993,13 @@ var MGridOption = class MGridOption {
                     catch {
 
                     }
+                }
+                debugger
+
+                var defaultSelection = { mode: "single" };
+                var selection = {};
+                if (that.Params?.selection) {
+                    selection = that.Params?.selection;
                 }
 
 
@@ -1114,7 +1121,7 @@ var MGridOption = class MGridOption {
                     onContextMenuPreparing: tryExecute(this.onContextMenuPreparing.bind(this)),
                     //onDataErrorOccurred: tryExecute(this.onDataErrorOccurred.bind(this))
                     onCellPrepared: tryExecute(this.onCellPrepared.bind(this)),
-                    selection: { mode: "single" },
+                    selection: (Object.keys(selection).length > 0) ? selection : defaultSelection,
                     //onCellHoverChanged: tryExecute(this.onCellHoverChanged.bind(this)),
                     onRowClick: tryExecute(this.onRowClick.bind(this)),
                     //editing: {

@@ -837,19 +837,19 @@ Note:
             return { bind, loadComments, loadReferenceFields, openRightCommentPanel, closeRightCommentPanel };
         })();
 
-       function resetOverviewAnimation() {
-            const $sections = $(`#${window.PolicyIssuanceIdManager.overviewScroll(@ViewData["Id"])} section.dept-section`);
-            $sections.removeClass("visible");
-            $sections.each(function () {
-                const $section = $(this);
-                $section.find(".dept-header, .dept-upperbody, .dept-body, .dept-lowerbody, .dx-fileuploader, .attachment, .att-preview, .att-list, .att-item")
-                    .addClass("animate-step")
-                    .removeClass("visible");
-                // $(`#${prefix}-treeStack .dept-node[data-key='${$section.attr('id').replace(prefix + '-sec', '')}'] .dept-callout`)
-                //     .addClass("animate-step")
-                //     .removeClass("visible");
-            });
-        }
+       // function resetOverviewAnimation() {
+       //      const $sections = $(`#${window.PolicyIssuanceIdManager.overviewScroll(@ViewData["Id"])} section.dept-section`);
+       //      $sections.removeClass("visible");
+       //      $sections.each(function () {
+       //          const $section = $(this);
+       //          $section.find(".dept-header, .dept-upperbody, .dept-body, .dept-lowerbody, .dx-fileuploader, .attachment, .att-preview, .att-list, .att-item")
+       //              .addClass("animate-step")
+       //              .removeClass("visible");
+       //          // $(`#${prefix}-treeStack .dept-node[data-key='${$section.attr('id').replace(prefix + '-sec', '')}'] .dept-callout`)
+       //          //     .addClass("animate-step")
+       //          //     .removeClass("visible");
+       //      });
+       //  }
 
         function animateOverviewSections() {
             const sequence = piDeptModuleCode;
@@ -878,7 +878,7 @@ Note:
                     }, 360);
                 }, idx * 180);
             });
-            resetOverviewAnimation(prefix);
+            // resetOverviewAnimation(prefix);
         }
 
         function renderDetail() {
