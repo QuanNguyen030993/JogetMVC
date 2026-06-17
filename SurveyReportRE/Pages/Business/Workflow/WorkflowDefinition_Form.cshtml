@@ -38,25 +38,25 @@
         width: 100%;
     }
 
-    .card-last {
+    .card-h-last {
         min-width: 600px; /* transition bigger */
     }
 
 
 
 
-    .card-title {
+    .card-h-title {
         font-size: 15px;
         font-weight: 700;
         color: #1e293b
     }
 
-    .card-sub {
+    .card-h-sub {
         font-size: 12px;
         color: #64748b
     }
 
-    .card {
+    .card-h {
         min-width: 600px;
         background: #fff;
         border: 1px solid #e6ebf3;
@@ -69,7 +69,7 @@
     }
 
 
-    .card-header {
+    .card-h-header {
         width: 160px; /* vùng title */
         min-width: 160px;
         padding: 14px 18px;
@@ -82,7 +82,7 @@
     }
 
 
-    .card-body {
+    .card-h-body {
         flex: 1;
         padding: 14px;
         overflow: auto;
@@ -230,7 +230,7 @@
         margin-bottom: 14px;
     }
     /*
-                .card {
+                .card-h {
                     background: var(--panel);
                     border: 1px solid var(--border);
                     border-radius: 14px;
@@ -238,13 +238,13 @@
                     margin-bottom: 12px;
                 }
 
-                    .card h3 {
+                    .card-h h3 {
                         margin: 0 0 10px 0;
                         font-size: 14px;
                     } */
 
 
-    .card-in-frame {
+    .card-h-in-frame {
         background: var(--panel);
         border: 1px solid var(--border);
         border-radius: 14px;
@@ -253,7 +253,7 @@
     }
 
 
-        .card-in-frame .header-in-frame {
+        .card-h-in-frame .header-in-frame {
             margin: 0 0 10px 0;
             font-size: 14px;
         }
@@ -877,12 +877,12 @@
 
         <div class="layout">
             <!-- TOOLBOX -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">Toolbox</div>
-                    <div class="card-sub">Drag item</div>
+            <div class="card-h">
+                <div class="card-h-header">
+                    <div class="card-h-title">Toolbox</div>
+                    <div class="card-h-sub">Drag item</div>
                 </div>
-                <div class="card-body">
+                <div class="card-h-body">
                     <div class="toolbox">
                         <div class="tool-item" draggable="true" data-type="department" data-text="New Department">
                             <div class="name">Department</div>
@@ -899,12 +899,12 @@
             </div>
 
             <!-- TREE -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">Tree Designer</div>
-                    <div class="card-sub">jsTree</div>
+            <div class="card-h">
+                <div class="card-h-header">
+                    <div class="card-h-title">Tree Designer</div>
+                    <div class="card-h-sub">jsTree</div>
                 </div>
-                <div class="card-body">
+                <div class="card-h-body">
                     <div class="section-title">Workflow Header</div>
                     <div class="toolbar" style="margin-top:12px;">
                         <div id="btnAddRoot_@Convert.ToInt32(ViewData["Id"])"></div>
@@ -921,12 +921,12 @@
             </div>
 
             <!-- NODE EDITOR -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">Node Review</div>
-                    <div class="card-sub">Change node properties</div>
+            <div class="card-h">
+                <div class="card-h-header">
+                    <div class="card-h-title">Node Review</div>
+                    <div class="card-h-sub">Change node properties</div>
                 </div>
-                <div class="card-body">
+                <div class="card-h-body">
                     <div id="nodeForm_@Convert.ToInt32(ViewData["Id"])"></div>
 
                     <div class="section-title">Node JSON Raw</div>
@@ -944,17 +944,17 @@
       @*   </div>
         <div class="dExForm"> *@
             <!-- TRANSITION + PAYLOAD -->
-            <div class="card card-last" style="">
-                <div class="card-header">
-                    <div class="card-title">Transition / Loop / Payload Review</div>
-                    <div class="card-sub">Preview</div>
+            <div class="card-h card-h-last" style="">
+                <div class="card-h-header">
+                    <div class="card-h-title">Transition / Loop / Payload Review</div>
+                    <div class="card-h-sub">Preview</div>
                 </div>
-                <div class="card-body">
+                <div class="card-h-body">
                     <div style="">
                         <div>
                             <div class="section-title">Transition Editor</div>
 
-                            <div class="condition-builder-card">
+                            <div class="condition-builder-card-h">
                                 <div class="section-title">Mini Condition Builder</div>
                                 <div id="conditionBuilderForm_@Convert.ToInt32(ViewData["Id"])"></div>
 
@@ -990,13 +990,13 @@
                 </div>
             </div>
 
-            <!-- TRANSITION GRID CARD -->
-            <div class="card card-last" style="">
-                <div class="card-header">
-                    <div class="card-title">Transition List</div>
-                    <div class="card-sub">Preview & Manage</div>
+            <!-- TRANSITION GRID card-h -->
+            <div class="card-h card-h-last" style="">
+                <div class="card-h-header">
+                    <div class="card-h-title">Transition List</div>
+                    <div class="card-h-sub">Preview & Manage</div>
                 </div>
-                <div class="card-body">
+                <div class="card-h-body">
                     <div class="section-title">Flat Node Preview</div>
                     <div id="nodeGrid_@Convert.ToInt32(ViewData["Id"])"></div>
 
@@ -1007,12 +1007,12 @@
 
 
             
-            <div class="card card-last" style="min-height:600px;">
-                <div class="card-header">
-                    <div class="card-title">Workflow Pallete</div>
-                    <div class="card-sub">Drag & Connect nodes</div>
+            <div class="card-h card-h-last" style="min-height:600px;">
+                <div class="card-h-header">
+                    <div class="card-h-title">Workflow Pallete</div>
+                    <div class="card-h-sub">Drag & Connect nodes</div>
                 </div>
-                <div class="card-body">
+                <div class="card-h-body">
                 <div class="canvas-wrap">
                         <div class="title">Design Workflow</div>
                         <div class="palette">
@@ -1058,12 +1058,12 @@
                 </div>
             </div>
 
-            <div class="card card-last" style="min-height:600px;">
-                <div class="card-header">
-                    <div class="card-title">Workflow Diagram</div>
-                    <div class="card-sub">Drag & Connect nodes</div>
+            <div class="card-h card-h-last" style="min-height:600px;">
+                <div class="card-h-header">
+                    <div class="card-h-title">Workflow Diagram</div>
+                    <div class="card-h-sub">Drag & Connect nodes</div>
                 </div>
-                <div class="card-body">
+                <div class="card-h-body">
                     <div class="canvas-wrap">
                         <div id="canvas_@(ViewData["RandomNumber"].ToString())" class="canvas"></div>
                         @* <div id="canvas_@Convert.ToInt32(ViewData["Id"])" class="canvas"></div> *@
@@ -1071,11 +1071,11 @@
 
                 </div>
             </div>
-            <div class="card card-last" style="min-height:600px;">
-                <div class="card-header">
-                    <div class="card-title">Json diagram</div>
+            <div class="card-h card-h-last" style="min-height:600px;">
+                <div class="card-h-header">
+                    <div class="card-h-title">Json diagram</div>
                 </div>
-                <div class="card-body">
+                <div class="card-h-body">
                     <button id="btnRender_@Convert.ToInt32(ViewData["Id"])">Draw on diagram</button>
                     <button class="secondary" id="btnUpdate_@Convert.ToInt32(ViewData["Id"])">Save Data</button>
                     @* <button class="warning" id="btnAutoLayout_@Convert.ToInt32(ViewData["Id"])">Force Auto Layout</button> *@
@@ -1088,6 +1088,2914 @@
     </div>
 
     <script>
+        // var _id = @Convert.ToInt32(ViewData["Id"]);
+        // _enums.WorkflowCommand = @Html.Raw(Json.Serialize(ViewData["WorkflowCommand"]))
+        // var selectedNodeId = null;
+        // var nodeFormInstance = null;
+        // // var workflowFormInstance = null;
+        // var transitionFormInstance = null;
+        // var transitionGridInstance = null;
+        // var nodeGridInstance = null;
+        // var dragToolData = null;
+        // var conditionBuilderInstance = null;
+        // var conditionRuleState = {
+        //     rootOperator: "AND",
+        //     rules: []
+        // };
+        // var runtimeState = {
+        //     activeNodeId: "CLIENT",
+        //     completedNodeIds: ["FO", "TS", "UW"],
+        //     pendingNodeIds: ["PM", "NODE_1774258352695"]
+        // };
+        // // var workflowHeader = mainForm.formInstance.option("formData");
+        // var workflowHeader = null;
+        // var workflowTreeData = [];
+        // var transitions = [];
+        //  var instance = null;
+        //         var currentJson = null;
+
+
+
+
+        // function initNodeForm() {
+        //     $("#nodeForm_@Convert.ToInt32(ViewData["Id"])").dxForm({
+        //         formData: {},
+        //         labelLocation: "top",
+        //         colCount: 2,
+        //         items: [
+        //             { dataField: "id", label: { text: "Id" }, editorOptions: { readOnly: true } },
+        //             { dataField: "parent", label: { text: "Parent" }, editorOptions: { readOnly: true } },
+        //             { dataField: "text", label: { text: "Display Text" } },
+        //             { dataField: "code", label: { text: "Code" } },
+        //             {
+        //                 dataField: "type",
+        //                 label: { text: "Type" },
+        //                 editorType: "dxSelectBox",
+        //                 editorOptions: {
+        //                     dataSource: ["department", "actor", "condition", "system"]
+        //                 }
+        //             },
+        //             {
+        //                 dataField: "flowType",
+        //                 label: { text: "Node Flow Type" },
+        //                 editorType: "dxSelectBox",
+        //                 editorOptions: {
+        //                     dataSource: _enums.WorkflowType
+        //                 }
+        //             },
+        //             {
+        //                 dataField: "orderNo",
+        //                 label: { text: "Order No" },
+        //                 editorType: "dxNumberBox",
+        //                 editorOptions: { min: 0 }
+        //             },
+        //             { dataField: "stepRole", label: { text: "Step Role" } },
+        //             { dataField: "departmentName", label: { text: "Department Name" } },
+        //             {
+        //                 dataField: "levelNo",
+        //                 label: { text: "Level No" },
+        //                 editorType: "dxNumberBox",
+        //                 editorOptions: { min: 1 }
+        //             },
+        //             {
+        //                 dataField: "allowLoop",
+        //                 label: { text: "Allow Loop" },
+        //                 editorType: "dxSwitch"
+        //             },
+        //             {
+        //                 dataField: "loopGroup",
+        //                 label: { text: "Loop Group" }
+        //             }, {
+        //                 dataField: "x",
+        //                 label: { text: "Pos X" },
+        //                 editorType: "dxNumberBox"
+        //             },
+        //             {
+        //                 dataField: "y",
+        //                 label: { text: "Pos Y" },
+        //                 editorType: "dxNumberBox"
+        //             }
+        //         ],
+        //         onInitialized: function (e) {
+        //             nodeFormInstance = e.component;
+        //         }
+        //     });
+        // }
+
+        
+
+
+        // function getDefaultConditionBuilderData() {
+        //     return {
+        //         rootOperator: "AND",
+        //         source: "payload",
+        //         field: "totalPremiumTotal",
+        //         dataType: "number",
+        //         operator: ">",
+        //         value: "0",
+        //         customHandler: "",
+        //         customArgs: "{\n  \"folder\": \"FO\"\n}"
+        //     };
+        // }
+
+        // function safeParseJson(json, fallbackValue) {
+        //     try {
+        //         if (json == null || json === "") return fallbackValue;
+        //         return JSON.parse(json);
+        //     } catch (err) {
+        //         return fallbackValue;
+        //     }
+        // }
+
+        // function parseConditionValueByType(dataType, value) {
+        //     if (dataType === "number") {
+        //         var n = Number(value);
+        //         return isNaN(n) ? 0 : n;
+        //     }
+
+        //     if (dataType === "boolean") {
+        //         if (value === true || value === "true" || value === "1" || value === 1) return true;
+        //         return false;
+        //     }
+
+        //     if (dataType === "array") {
+        //         if (!value) return [];
+        //         try {
+        //             var parsed = JSON.parse(value);
+        //             return Array.isArray(parsed) ? parsed : [parsed];
+        //         } catch (err) {
+        //             return String(value)
+        //                 .split(",")
+        //                 .map(x => x.trim())
+        //                 .filter(Boolean);
+        //         }
+        //     }
+
+        //     return value ?? "";
+        // }
+
+        // function mapBuilderRuleToJson(rule) {
+        //     if ((rule.source || "") === "custom") {
+        //         return {
+        //             type: "rule",
+        //             validateStyle: rule.validateStyle,
+        //             staticValue:  rule.staticValue,
+        //             message: rule.message,
+        //             source: rule.source,
+        //             handler: rule.customHandler || "",
+        //             args: safeParseJson(rule.customArgs, {}) || {},
+        //             operator: rule.operator || "=",
+        //             value: parseConditionValueByType(rule.dataType, rule.value)
+        //         };
+        //     }
+
+        //     return {
+        //         type: rule.type,
+        //         validateStyle: rule.validateStyle,
+        //         staticValue:  rule.staticValue,
+        //         message: rule.message,
+        //         source: rule.source || "payload",
+        //         field: rule.field || "",
+        //         dataType: rule.dataType || "string",
+        //         operator: rule.operator || "=",
+        //         value: parseConditionValueByType(rule.dataType, rule.value)
+        //     };
+        // }
+
+        // function buildConditionJsonFromState() {
+        //     if (!conditionRuleState.rules.length) return "";
+
+        //     if (conditionRuleState.rules.length === 1) {
+        //         return JSON.stringify(mapBuilderRuleToJson(conditionRuleState.rules[0]), null, 2);
+        //     }
+
+        //     return JSON.stringify({
+        //         type: "group",
+        //         operator: conditionRuleState.rootOperator || "AND",
+        //         children: conditionRuleState.rules.map(mapBuilderRuleToJson)
+        //     }, null, 2);
+        // }
+
+        // function refreshConditionPreviewBox() {
+        //     var preview = buildConditionJsonFromState();
+        //     $("#conditionPreviewBox_@Convert.ToInt32(ViewData["Id"])").text(preview || "{}");
+        // }
+
+        // function syncConditionJsonToTransitionForm() {
+        //     if (!transitionFormInstance) return;
+        //     var fd = transitionFormInstance.option("formData") || {};
+        //     fd.conditionJson = buildConditionJsonFromState() || "";
+        //     transitionFormInstance.option("formData", fd);
+        // }
+
+        // function toggleConditionBuilderFields(source) {
+        //     if (!conditionBuilderInstance) return;
+        //     var isCustom = source === "custom";
+
+        //     conditionBuilderInstance.itemOption("field", "visible", !isCustom);
+        //     conditionBuilderInstance.itemOption("customHandler", "visible", isCustom);
+        //     conditionBuilderInstance.itemOption("customArgs", "visible", isCustom);
+        // }
+
+        // function clearConditionBuilder() {
+        //     conditionRuleState = {
+        //         rootOperator: "AND",
+        //         rules: []
+        //     };
+
+        //     if (conditionBuilderInstance) {
+        //         conditionBuilderInstance.option("formData", getDefaultConditionBuilderData());
+        //         toggleConditionBuilderFields("payload");
+        //     }
+
+        //     $("#conditionPreviewBox_@Convert.ToInt32(ViewData["Id"])").text("{}");
+
+        //     if (transitionFormInstance) {
+        //         var tf = transitionFormInstance.option("formData") || {};
+        //         tf.conditionJson = "";
+        //         transitionFormInstance.option("formData", tf);
+        //     }
+        // }
+
+        // function pushCurrentBuilderRule() {
+        //     if (!conditionBuilderInstance) return;
+
+        //     var fd = conditionBuilderInstance.option("formData") || {};
+        //     conditionRuleState.rootOperator = fd.rootOperator || "AND";
+        //     conditionRuleState.rules.push({
+        //         type: fd.type,
+        //         validateStyle: fd.validateStyle,
+        //         staticValue:  fd.staticValue,
+        //         message: fd.message,
+        //         source: fd.source || "payload",
+        //         field: fd.field || "",
+        //         dataType: fd.dataType || "string",
+        //         operator: fd.operator || "=",
+        //         value: fd.value ?? "",
+        //         customHandler: fd.customHandler || "",
+        //         customArgs: fd.customArgs || ""
+        //     });
+
+        //     refreshConditionPreviewBox();
+        // }
+
+        // function wrapLastRuleAsNotGroup() {
+        //     if (!conditionBuilderInstance) return;
+
+        //     var fd = conditionBuilderInstance.option("formData") || {};
+        //     var wrapped = {
+        //         type: "group",
+        //         operator: "NOT",
+        //         children: [mapBuilderRuleToJson(fd)]
+        //     };
+
+        //     $("#conditionPreviewBox_@Convert.ToInt32(ViewData["Id"])").text(JSON.stringify(wrapped, null, 2));
+
+        //     if (transitionFormInstance) {
+        //         var tf = transitionFormInstance.option("formData") || {};
+        //         tf.conditionJson = JSON.stringify(wrapped, null, 2);
+        //         transitionFormInstance.option("formData", tf);
+        //     }
+        // }
+
+        // function initConditionBuilderForm() {
+        //     $("#conditionBuilderForm_@Convert.ToInt32(ViewData["Id"])").dxForm({
+        //         formData: getDefaultConditionBuilderData(),
+        //         labelLocation: "top",
+        //         colCount: 2,
+        //         items: [
+        //             {
+        //                 dataField: "rootOperator",
+        //                 label: { text: "Group Operator" },
+        //                 editorType: "dxSelectBox",
+        //                 editorOptions: {
+        //                     dataSource: ["AND", "OR", "XOR"]
+        //                 }
+        //             }, {
+        //                 dataField: "type",
+        //                 label: { text: "Type" },
+        //                 editorType: "dxSelectBox",
+        //                 editorOptions: {
+        //                     dataSource: ["rule","compare"],
+        //                     value: "compare",
+        //                     disabled: false,
+        //                 },
+        //                 validationRules: [
+        //                     { type: "required", message: "Type is required" }
+        //                 ]
+        //             },
+        //             {
+        //                 dataField: "validateStyle",
+        //                 label: { text: "Validate Stype" },
+        //                 editorType: "dxSelectBox",
+        //                 editorOptions: {
+        //                     dataSource: ["success", "error", "warning", "info"]
+        //                 },
+        //                 validationRules: [
+        //                     { type: "required", message: "Validate Type is required" }
+        //                 ]
+        //             },
+        //             {
+        //                 dataField: "message",
+        //                 label: { text: "Message" },
+        //                 editorType: "dxTextArea",
+        //                 colSpan: 2,
+        //                 editorOptions: {
+        //                     maxLength: 1000
+        //                 }
+        //             },
+        //             {
+        //                 dataField: "source",
+        //                 label: { text: "Source" },
+        //                 editorType: "dxSelectBox",
+        //                 editorOptions: {
+        //                     dataSource: ["form", "payload", "server","ui" ,"custom"],
+        //                     onValueChanged: function (e) {
+        //                         toggleConditionBuilderFields(e.value);
+        //                     }
+        //                 }
+        //             },
+        //             {
+        //                 dataField: "staticValue",
+        //                 label: { text: "Static value" },
+        //                 editorType: "dxTextArea",
+        //                 editorOptions: {
+        //                     maxLength: 1000
+        //                 }
+        //             },
+        //             {
+        //                 dataField: "field",
+        //                 label: { text: "Field" },
+        //                 editorType: "dxSelectBox",
+        //                 editorOptions: {
+        //                     searchEnabled: true,
+        //                     acceptCustomValue: true,
+        //                     dataSource: [
+        //                         "totalPremiumTotal",
+        //                         "quotationStatus",
+        //                         "clientName",
+        //                         "hasAttachment",
+        //                         "hasResAttachment",
+        //                         "attachmentCount",
+        //                         "manualOverride",
+        //                         "currentUserRole"
+        //                     ]
+        //                 }
+        //             },
+        //             {
+        //                 dataField: "dataType",
+        //                 label: { text: "Data Type" },
+        //                 editorType: "dxSelectBox",
+        //                 editorOptions: {
+        //                     dataSource: ["number", "string", "boolean", "date", "array"]
+        //                 }
+        //             },
+        //             {
+        //                 dataField: "operator",
+        //                 label: { text: "Operator" },
+        //                 editorType: "dxSelectBox",
+        //                 editorOptions: {
+        //                     dataSource: ["=", "!=", ">", ">=", "<", "<=", "IN", "NOT_IN", "CONTAINS", "IS_NULL", "IS_NOT_NULL", "IS_EMPTY", "IS_NOT_EMPTY"]
+        //                 }
+        //             },
+        //             {
+        //                 dataField: "value",
+        //                 label: { text: "Value" }
+        //             },
+        //             {
+        //                 dataField: "customHandler",
+        //                 label: { text: "Custom Handler" }
+        //             },
+        //             {
+        //                 dataField: "customArgs",
+        //                 label: { text: "Custom Args JSON" },
+        //                 editorType: "dxTextArea"
+        //             }
+        //         ],
+        //         onInitialized: function (e) {
+        //             conditionBuilderInstance = e.component;
+        //             toggleConditionBuilderFields("payload");
+        //             refreshConditionPreviewBox();
+        //         }
+        //     });
+        // }
+
+
+        // function initButtons() {
+        //     $("#btnAddRoot_@Convert.ToInt32(ViewData["Id"])").dxButton({
+        //         text: "Add Root",
+        //         icon: "add",
+        //         onClick: function () {
+        //             createNodeFromTool({ type: "department", text: "New Root" }, "#");
+        //         }
+        //     });
+
+        //     $("#btnAddChild_@Convert.ToInt32(ViewData["Id"])").dxButton({
+        //         text: "Add Child",
+        //         icon: "plus",
+        //         onClick: function () {
+        //             if (!selectedNodeId) return notify("Please select parent node first", "warning");
+        //             createNodeFromTool({ type: "department", text: "New Child" }, selectedNodeId);
+        //         }
+        //     });
+
+
+        //     $("#btnDelete_@Convert.ToInt32(ViewData["Id"])").dxButton({
+        //         text: "Delete",
+        //         icon: "trash",
+        //         type: "danger",
+        //         onClick: function () {
+        //             var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
+        //             if (!selectedNodeId) return notify("Please select node first", "warning");
+
+        //             DevExpress.ui.dialog.confirm("Delete selected node and all children?", "Confirm")
+        //                 .done(function (ok) {
+        //                     if (!ok) return;
+
+        //                     var deletingIds = collectDescendantIds(tree, selectedNodeId);
+        //                     deletingIds.push(selectedNodeId);
+
+        //                     tree.delete_node(selectedNodeId);
+        //                     transitions = transitions.filter(x =>
+        //                         !deletingIds.includes(x.fromNodeId) &&
+        //                         !deletingIds.includes(x.toNodeId)
+        //                     );
+
+        //                     selectedNodeId = null;
+        //                     nodeFormInstance.option("formData", {});
+        //                     $("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val("");
+
+        //                     syncTreeDataFromJsTree();
+        //                     buildPayloadPreview();
+        //                 });
+        //         }
+        //     });
+
+        //     $("#btnExpand_@Convert.ToInt32(ViewData["Id"])").dxButton({
+        //         text: "Expand All",
+        //         icon: "chevrondown",
+        //         onClick: function () {
+        //             $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true).open_all();
+        //         }
+        //     });
+
+        //     $("#btnCollapse_@Convert.ToInt32(ViewData["Id"])").dxButton({
+        //         text: "Collapse All",
+        //         icon: "chevronup",
+        //         onClick: function () {
+        //             $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true).close_all();
+        //         }
+        //     });
+
+        //     $("#btnApplyNodeForm_@Convert.ToInt32(ViewData["Id"])").dxButton({
+        //         text: "Apply To Payload",
+        //         type: "success",
+        //         icon: "save",
+        //         onClick: function () { applyFormToSelectedNode(); }
+        //     });
+
+        //     $("#btnCreateflow_@Convert.ToInt32(ViewData["Id"])").dxButton({
+        //         text: _id == 0 ? "Create Flow" : "Save Flow",
+        //         type: "success",
+        //         icon: "save",
+        //         onClick: function () { saveFlow(); }
+        //     });
+
+        //     $("#btnApplyNodeJson_@Convert.ToInt32(ViewData["Id"])").dxButton({
+        //         text: "Apply JSON",
+        //         icon: "codeblock",
+        //         onClick: function () { applyJsonToSelectedNode(); }
+        //     });
+
+        //     $("#btnRefreshNodeJson_@Convert.ToInt32(ViewData["Id"])").dxButton({
+        //         text: "Refresh JSON",
+        //         icon: "refresh",
+        //         onClick: refreshNodeJson
+        //     });
+
+        //     $("#btnAddConditionRule_@Convert.ToInt32(ViewData["Id"])").dxButton({
+        //         text: "Add Rule",
+        //         icon: "plus",
+        //         onClick: function () {
+        //             pushCurrentBuilderRule();
+        //             notify("Rule added to preview", "success");
+        //         }
+        //     });
+
+        //     $("#btnGenerateConditionJson_@Convert.ToInt32(ViewData["Id"])").dxButton({
+        //         text: "Generate JSON",
+        //         icon: "codeblock",
+        //         type: "normal",
+        //         onClick: function () {
+        //             syncConditionJsonToTransitionForm();
+        //             refreshConditionPreviewBox();
+        //             notify("Condition JSON generated", "success");
+        //         }
+        //     });
+
+        //     $("#btnWrapNotCondition_@Convert.ToInt32(ViewData["Id"])").dxButton({
+        //         text: "Wrap NOT",
+        //         icon: "hierarchy",
+        //         onClick: function () {
+        //             wrapLastRuleAsNotGroup();
+        //             notify("NOT group generated", "success");
+        //         }
+        //     });
+
+        //     $("#btnClearConditionBuilder_@Convert.ToInt32(ViewData["Id"])").dxButton({
+        //         text: "Clear Builder",
+        //         icon: "clear",
+        //         onClick: function () {
+        //             clearConditionBuilder();
+        //             notify("Condition builder cleared", "warning");
+        //         }
+        //     });
+
+        //     $("#btnAddTransition_@Convert.ToInt32(ViewData["Id"])").dxButton({
+        //         text: "Add Transition",
+        //         type: "default",
+        //         icon: "arrowright",
+        //         onClick: function () { addTransition(); }
+        //     });
+
+        //     $("#btnResetTransitionForm_@Convert.ToInt32(ViewData["Id"])").dxButton({
+        //         text: "Reset Transition Form",
+        //         icon: "refresh",
+        //         onClick: function () {
+        //             // transitionFormInstance.option("formData", getEmptyTransition(selectedNodeId || ""));
+        //             clearConditionBuilder();
+        //         }
+        //     });
+
+       
+
+        //     $(`#btnBuild_@Convert.ToInt32(ViewData["Id"])`).dxButton(
+        //         {
+        //             text: "Build",
+        //             width: 300,
+        //             height: 50,
+        //             type:"info",
+        //             onClick: function (e) {
+        //                 // var mainFormData = mainForm.formInstance.option("formData");
+        //                 const workflowDefinitionId = "@ViewData["Guid"]";
+        //                 // 2. Build payload từ UI
+        //                 const payload = {
+        //                     WorkflowDefinitionId: workflowDefinitionId,
+        //                     Nodes: buildWorkflowNodesForSave(workflowDefinitionId),
+        //                     Steps: buildStepsWorkflowForSave(workflowDefinitionId)
+        //                 };
+        //                 ajaxPost('api/StepsWorkflow/BuildSteps', payload, {
+        //                     onSuccess: function (response) {
+        //                         notify("Workflow build success!", "success");
+        //                     },
+        //                     onError: function (err) {
+        //                         console.log(err);
+        //                         notify("Workflow builded but some errors!", "warning");
+        //                     }
+        //                 });
+        //             }
+        //         });
+
+        // }
+        // function buildWorkflowNodesForSave(workflowDefinitionId) {
+        //     return workflowTreeData.map(function (x, index) {
+        //         return {
+        //             workflowDefinitionId: workflowDefinitionId,
+        //             nodeId: x.id,
+        //             parentNodeId: x.parent === "#" ? null : x.parent,
+        //             nodeName: x.text || "",
+        //             nodeType: x.type || "",
+        //             flowType: x.flowType || "Both",
+        //             allowLoop: !!x.allowLoop,
+        //             loopGroup: x.loopGroup || null,
+        //             nodeCode: x.code || null,
+        //             stepRole: x.stepRole || null,
+        //             departmentCode: x.departmentName || null,
+        //             levelNo: x.levelNo || null,
+        //             posX: x.x || null,
+        //             posY: x.y || null,
+        //             sortOrder: x.orderNo || (index + 1),
+        //             isActive: true,
+        //             data: JSON.stringify({
+        //                 rawNode: x || "{}"
+        //             })
+        //         };
+        //     });
+        // }
+       
+        // function buildWorkflowSavePayload(workflowDefinitionId) {
+        //     return {
+        //         workflowDefinitionId: workflowDefinitionId,
+        //         nodes: buildWorkflowNodesForSave(workflowDefinitionId),
+        //         steps: buildStepsWorkflowForSave(workflowDefinitionId)
+        //     };
+        // }
+        // function initTree() {
+        //     if ($("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true)) {
+        //         $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true).destroy();
+        //     }
+
+        //     $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])")
+        //         .off("changed.jstree")
+        //         .off("dblclick.jstree")
+        //         .on("changed.jstree", function (e, data) {
+        //             if (!data || !data.selected || !data.selected.length) return;
+        //             selectedNodeId = data.selected[0];
+        //             var node = data.instance.get_node(selectedNodeId);
+        //             bindNodeToEditors(node);
+        //         })
+        //         .on("dblclick.jstree", ".jstree-anchor", function () {
+        //             var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
+        //             var nodeId = $(this).closest("li").attr("id");
+        //             if (nodeId) tree.edit(nodeId);
+        //         })
+        //         .jstree({
+        //             core: {
+        //                 check_callback: true,
+        //                 data: _id ? workflowTreeData.map(x => ({
+        //                     ...x,
+        //                     text: buildTreeNodeHtml(x)
+        //                 })) : [],
+        //                 themes: { stripes: true }
+        //             },
+        //             plugins: ["dnd", "contextmenu", "wholerow"]
+        //         });
+
+        //     setTimeout(function () {
+        //         // $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").css({backgroundColor: "red"})
+
+        //         var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
+        //         tree.open_all();
+        //         if (workflowTreeData.length) tree.select_node(workflowTreeData[0].id);
+        //         initDropZoneForTree();
+        //     }, 200);
+        // }
+
+        // function buildTreeNodeHtml(x) {
+        //     var flowClass = x.flowType === "Quotation" ? "q" :
+        //         x.flowType === "PolicyIssuance" ? "pi" : "both";
+
+        //     var loopBadge = x.allowLoop ? `<span class="tree-node-mini loop">LOOP</span>` : "";
+
+        //     return `
+        //                 <span class="tree-node-wrap">
+        //                     <span class="tree-node-text">${escapeHtml(x.text)}</span>
+        //                     <span class="tree-node-mini ${flowClass}">${escapeHtml(x.flowType || "Both")}</span>
+        //                     ${loopBadge}
+        //                 </span>
+        //             `;
+        // }
+
+        // function initToolboxDrag() {
+        //     $(".tool-item").on("dragstart", function (e) {
+        //         dragToolData = {
+        //             type: $(this).data("type"),
+        //             text: $(this).data("text")
+        //         };
+        //         e.originalEvent.dataTransfer.setData("text/plain", JSON.stringify(dragToolData));
+        //     });
+        // }
+
+        // function initDropZoneForTree() {
+        //     var treeContainer = document.getElementById("treeWorkflow_@(Convert.ToInt32(ViewData["Id"]))");
+
+        //     treeContainer.addEventListener("dragover", function (e) {
+        //         e.preventDefault();
+        //         treeContainer.classList.add("drag-over-zone");
+        //     });
+
+        //     treeContainer.addEventListener("dragleave", function () {
+        //         treeContainer.classList.remove("drag-over-zone");
+        //     });
+
+        //     treeContainer.addEventListener("drop", function (e) {
+        //         e.preventDefault();
+        //         treeContainer.classList.remove("drag-over-zone");
+
+        //         var data = dragToolData;
+        //         try {
+        //             var raw = e.dataTransfer.getData("text/plain");
+        //             if (raw) data = JSON.parse(raw);
+        //         } catch (ex) { }
+
+        //         if (!data) return;
+
+        //         var targetLi = $(e.target).closest("li");
+        //         var parentId = targetLi.length ? targetLi.attr("id") : "#";
+
+        //         createNodeFromTool(data, parentId);
+        //     });
+        // }
+        
+
+        // function buildStepsWorkflowForSave(workflowDefinitionId) {
+        //     const nodeMap = {};
+        //     workflowTreeData.forEach(function (n) {
+        //         nodeMap[n.id] = n;
+        //     });
+
+        //     return transitions.map(function (t, index) {
+        //         const fromNode = nodeMap[t.fromNodeId] || {};
+        //         const toNode = t.toNodeId ? (nodeMap[t.toNodeId] || {}) : null;
+        //         const isStart = fromNode.parent === "#" || fromNode.parent == null;
+        //         const isEnd = !t.toNodeId || !!t.isExitTransition;
+
+        //         let uiMode = "Start";
+        //         if ((t.actionCode || "").startsWith("SUBMIT")) uiMode = "Forward";
+        //         else if ((t.actionCode || "").startsWith("RETURN")) uiMode = "Withdraw";
+        //         else if ((t.actionCode || "").startsWith("COMPLETE")) uiMode = "Finish";
+                
+        //         return {
+        //             sortOrder: index + 1,
+        //             stepNo: t.stepNo?.toString(),// || (index + 1),
+        //             jumpStepNo: t.jumpStepNo?.toString(),// || (index + 1),
+        //             workflowDefinitionId: workflowDefinitionId,
+
+        //             stepType: isEnd ? 9 : (t.isLoop ? 3 : 2),
+        //             allowLoop: t.isLoop,
+        //             canComment: true,
+        //             canEdit: !isEnd,
+        //             canUpload: !isEnd,
+        //             command: t.command || null,
+        //             commandConfig: t.commandConfig || null,
+
+        //             departmentCode: fromNode.departmentName || null,
+        //             displayStatus: t.actionName || null,
+        //             flowType: t.flowType || "Both",
+        //             isActive: true,
+        //             isEnd: isEnd,
+        //             isStart: isStart,
+
+        //             levelNo: fromNode.levelNo || null,
+        //             loopGroup: t.loopGroup || null,
+        //             parentStepId: null,
+        //             posX: fromNode.x || null,
+        //             posY: fromNode.y || null,
+        //             roleCode: fromNode.code || fromNode.text || fromNode.id,
+        //             stepCode: `${t.fromNodeId}_${t.actionCode}`,
+        //             stepName: `${fromNode.text || t.fromNodeId} ${t.actionName || t.actionCode}`,
+        //             uiMode: uiMode,
+
+        //             actionCode: t.actionCode || null,
+        //             data: JSON.stringify(
+        //                 t.conditionJson || {}
+        //             ),
+
+        //             fromNodeId: t.fromNodeId || null,
+        //             fnodeId: t.fromNodeId || null,
+        //             tnodeId: t.toNodeId || null,
+        //             toNodeId: t.toNodeId || null,
+        //             statusId: t.statusId
+
+        //         };
+        //     });
+        // }
+        // function createNodeFromTool(tool, parentId) {
+        //     var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
+        //     var newId = generateNodeId();
+        //     var parentNode = parentId === "#" ? null : tree.get_node(parentId);
+
+        //     var currentWorkflowFlow = mainForm.formInstance.option("formData").flowType || "Both";
+
+        //     var nodeData = {
+        //         id: newId,
+        //         text: tool.text || "New Node",
+        //         type: tool.type || "department",
+        //         code: "",
+        //         orderNo: getNextOrderNo(parentId),
+        //         stepRole: "",
+        //         departmentName: "",
+        //         levelNo: parentNode ? ((parentNode.original.levelNo || 1) + 1) : 1,
+        //         flowType: currentWorkflowFlow === "Both" ? "Both" : currentWorkflowFlow,
+        //         allowLoop: false,
+        //         loopGroup: "",
+        //         x: 0,
+        //         y: 0
+        //     };
+
+        //     tree.create_node(parentId, {
+        //         ...nodeData,
+        //         text: buildTreeNodeHtml(nodeData)
+        //     }, "last", function (node) {
+        //         tree.open_node(parentId);
+        //         tree.deselect_all();
+        //         tree.select_node(node);
+        //         syncTreeDataFromJsTree();
+        //     });
+        // }
+
+        // function bindNodeToEditors(node) {
+        //     var original = node.original || {};
+        //     var formData = {
+        //         id: node.id,
+        //         parent: node.parent === "#" ? null : node.parent,
+        //         text: extractPlainTextFromNode(node.id),
+        //         type: original.type || "",
+        //         code: original.code || "",
+        //         orderNo: original.orderNo || 0,
+        //         stepRole: original.stepRole || "",
+        //         departmentName: original.departmentName || "",
+        //         levelNo: original.levelNo || 1,
+        //         flowType: original.flowType || "Both",
+        //         allowLoop: !!original.allowLoop,
+        //         loopGroup: original.loopGroup || "",
+        //         x: original.x ?? null,
+        //         y: original.y ?? null
+        //     };
+
+        //     nodeFormInstance.option("formData", formData);
+        //     $("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val(JSON.stringify(formData, null, 2));
+
+        //     var tf = transitionFormInstance.option("formData") || {};
+        //     if (!tf.fromNodeId) {
+        //         // transitionFormInstance.option("formData", {
+        //         //     ...getEmptyTransition(node.id),
+        //         //     flowType: formData.flowType || "Both"
+        //         // });
+        //     }
+        // }
+
+        // function saveFlow() {
+        //     var payload = getPayloadBoxObject();
+
+        //     if (!payload) {
+        //         return notify("Payload JSON is invalid", "error");
+        //     }
+
+        //     var workflowData = {
+        //         id: _id || payload.workflowDefinition?.id || 0,
+        //         // workflowCode: payload.workflowDefinition?.workflowCode || "",
+        //         // workflowName: payload.workflowDefinition?.workflowName || "",
+        //         // flowType: payload.workflowDefinition?.flowType || "Both",
+        //         // versionNo: payload.workflowDefinition?.versionNo ?? 1,
+        //         // isActive: payload.workflowDefinition?.isActive ?? true,
+        //         workflowNodes: JSON.stringify(payload)
+        //     };
+
+        //     var dataGrid = $(`#dataGrid_WorkflowDefinition`).dxDataGrid("instance");
+        //     var ds = dataGrid.getDataSource();
+        //     var store = ds.store();
+
+        //     if (!_id || _id == 0) {
+        //         store.insert(workflowData)
+        //             .done(function () {
+        //                 ds.reload();
+        //                 DevExpress.ui.notify("Saved successfully", "success", 2000);
+        //             })
+        //             .fail(function (error) {
+        //                 console.error(error);
+        //                 DevExpress.ui.notify("Save failed", "error", 2000);
+        //             });
+        //     } else {
+        //         store.update(_id, workflowData)
+        //             .done(function () {
+        //                 ds.reload();
+        //                 DevExpress.ui.notify("Saved successfully", "success", 2000);
+        //             })
+        //             .fail(function (error) {
+        //                 console.error(error);
+        //                 DevExpress.ui.notify("Save failed", "error", 2000);
+        //             });
+        //     }
+        // }
+
+           
+
+
+        // function applyFormToSelectedNode() {
+        //     debugger
+        //     if (!selectedNodeId)
+        //     buildPayloadFromCanvas();
+        //     else 
+        //     {
+        //     var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
+        //     var json = JSON.parse($("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val() || "{}");
+        //     var node = tree.get_node(selectedNodeId);
+        //     if (!node) return;
+
+        //     node.original.type = json.type || "";
+        //     node.original.code = json.code || "";
+        //     node.original.orderNo = json.orderNo || 0;
+        //     node.original.stepRole = json.stepRole || "";
+        //     node.original.departmentName = json.departmentName || "";
+        //     node.original.levelNo = json.levelNo || 1;
+        //     node.original.flowType = json.flowType || "Both";
+        //     node.original.allowLoop = !!json.allowLoop;
+        //     node.original.loopGroup = json.loopGroup || ""; 
+        //     node.original.x = json.x ?? 0;
+        //     node.original.y = json.y ?? 0;
+        //     var plainText = json.text || extractPlainTextFromNode(selectedNodeId);
+        //     tree.rename_node(node, buildTreeNodeHtml({
+        //         text: plainText,
+        //         flowType: json.flowType || "Both",
+        //         allowLoop: !!json.allowLoop
+        //     }));
+
+        //     // syncTreeDataFromJsTree(plainText);
+
+
+
+        //     tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
+        //     if (!selectedNodeId) return notify("Please select node first", "warning");
+
+        //     var fd = JSON.parse($("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val() || "{}");
+        //     var node = tree.get_node(selectedNodeId);
+        //     if (!node) return;
+
+         
+        //     var newHtml = buildTreeNodeHtml({
+        //         text: fd.text || extractPlainTextFromNode(selectedNodeId),
+        //         flowType: fd.flowType || "Both",
+        //         allowLoop: !!fd.allowLoop
+        //     });
+
+        //     tree.rename_node(node, newHtml);
+        //     syncTreeDataFromJsTree(fd.text || extractPlainTextFromNode(selectedNodeId), JSON.parse($("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val()));
+        //     }
+        //     notify("Node updated", "success");
+
+        // }
+
+        // function applyJsonToSelectedNode() {
+        //     var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
+        //     if (!selectedNodeId) return notify("Please select node first", "warning");
+
+        //     try {
+
+
+        //         var formData = JSON.stringify(nodeFormInstance.option("formData"));
+        //         $("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val(JSON.stringify(nodeFormInstance.option("formData")));
+        //         notify("Node JSON applied", "success");
+        //     } catch (err) {
+        //         notify("Invalid JSON", "error");
+        //     }
+        // }
+
+        // function refreshNodeJson() {
+        //     var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
+        //     if (!selectedNodeId) return notify("Please select node first", "warning");
+        //     var node = tree.get_node(selectedNodeId);
+        //     bindNodeToEditors(node);
+        //     notify("Node JSON refreshed", "success");
+        // }
+
+        //         function buildPayloadFromCanvas() {
+        //     if (!currentJson) {
+        //         return notify("Canvas data is empty", "warning");
+        //     }
+
+        //     const nodes = currentJson.workflowNodes || [];
+        //     const transitions = currentJson.workflowTransitions || [];
+
+        //     // ✅ map nodes chuẩn backend
+        //     const workflowNodes = nodes.map((n, index) => ({
+        //         id: n.id,
+        //         parentId: n.parentId ?? null,
+        //         nodeName: n.nodeName || "",
+        //         nodeType: n.nodeType || "",
+        //         nodeCode: n.nodeCode || "",
+        //         orderNo: n.orderNo ?? (index + 1),
+        //         stepRole: n.stepRole || "",
+        //         departmentName: n.departmentName || "",
+        //         levelNo: n.levelNo ?? 1,
+        //         flowType: n.flowType || "Both",
+        //         allowLoop: !!n.allowLoop,
+        //         loopGroup: n.loopGroup || "",
+        //         x: n.x ?? null,
+        //         y: n.y ?? null
+        //     }));
+
+        //     // ✅ map transitions chuẩn backend
+        //     const workflowTransitions = transitions.map(t => ({
+        //         fromNodeId: t.fromNodeId ?? null,
+        //         toNodeId: t.toNodeId ?? null,
+        //         statusId: t.statusId ?? 0,
+        //         statusCode: t.statusCode || "",
+        //         statusName: t.statusName || "",
+        //         actionCode: t.actionCode || "",
+        //         actionName: t.actionName || "",
+        //         flowType: t.flowType || "Both",
+        //         isReturn: !!t.isReturn,
+        //         isLoop: !!t.isLoop,
+        //         loopGroup: t.loopGroup || "",
+        //         loopExitMode: t.loopExitMode || "None",
+        //         maxLoopCount: t.maxLoopCount ?? null,
+        //         isExitTransition: !!t.isExitTransition,
+        //         userDecisionLabel: t.userDecisionLabel || "",
+        //         conditionJson: typeof t.conditionJson === "string"
+        //             ? JSON.parse(t.conditionJson || "{}")
+        //             : (t.conditionJson || {}),
+        //         command: t.command ?? null,
+        //         commandConfig: typeof t.commandConfig === "string"
+        //             ? JSON.parse(t.commandConfig || "{}")
+        //             : (t.commandConfig || null)
+        //     }));
+
+        //     // ✅ build payload full
+        //     const payload = {
+        //         workflowDefinition: currentJson.workflowDefinition || {},
+        //         workflowNodes,
+        //         workflowTransitions
+        //     };
+
+        //     // ✅ hiển thị hoặc dùng tiếp
+        //     console.log("Payload:", payload);
+
+        //     // nếu bạn có payloadBox:
+        //     $("#payloadBox_@Convert.ToInt32(ViewData["Id"])")
+        //         .text(JSON.stringify(payload, null, 2));
+
+        //     notify("Payload built from canvas", "success");
+
+        //     return payload;
+        // }
+        // function addTransition() {
+        //     var fd = transitionFormInstance.option("formData");
+        //     if (!fd.fromNodeId || !fd.toNodeId) {
+        //         return notify("Please choose From Node and To Node", "warning");
+        //     }
+        //     if (!fd.actionCode) {
+        //         return notify("Action Code is required", "warning");
+        //     }
+
+        //     var transitionObject = transitionMapeHandle(fd);
+        //     transitionObject.__rowKey =   crypto.randomUUID ? crypto.randomUUID() : `tr_${Date.now()}_${i}_${Math.random()}`;
+        //     transitions.push(transitionObject);
+        //     buildPayloadPreview();
+        //     // transitionFormInstance.option("formData", getEmptyTransition(selectedNodeId || ""));
+        //     clearConditionBuilder();
+        //     if (transitionGridInstance) {
+        //         transitionGridInstance.refresh();
+        //     }
+        //     notify("Transition added", "success");
+        //     // renderDiagramFromTree();
+        // }
+
+      
+
+        // window.removeTransition = function (index) {
+        //     transitions.splice(index, 1);
+        //     // console.log("removeTransition");
+        //     buildPayloadPreview();
+        // };
+        //         function ensureTransitionKeys() {
+        //     transitions.forEach((x, i) => {
+        //         if (!x.__rowKey) {
+        //             x.__rowKey = crypto.randomUUID ? crypto.randomUUID() : `tr_${Date.now()}_${i}_${Math.random()}`;
+        //         }
+        //     });
+        // }
+        // function initGrid() {
+        //     $("#nodeGrid_@Convert.ToInt32(ViewData["Id"])").dxDataGrid({
+        //         dataSource: workflowTreeData,
+        //         keyExpr: "id",
+        //         showBorders: true,
+        //         height: 280,
+        //         paging: { enabled: false },
+        //         columnAutoWidth: true,
+        //         columns: [
+        //             { dataField: "id", caption: "Id" },
+        //             { dataField: "parent", caption: "Parent" },
+        //             { dataField: "text", caption: "Text" },
+        //             { dataField: "type", caption: "Type" },
+        //             { dataField: "flowType", caption: "FlowType" },
+        //             { dataField: "allowLoop", caption: "AllowLoop" },
+        //             { dataField: "loopGroup", caption: "LoopGroup" },
+        //             { dataField: "code", caption: "Code" },
+        //             { dataField: "stepRole", caption: "StepRole" },
+        //             { dataField: "departmentName", caption: "Department" },
+        //             { dataField: "levelNo", caption: "Level" }
+        //         ],
+        //         onInitialized: function (e) {
+        //             nodeGridInstance = e.component;
+        //         }
+        //     });
+        // }
+
+        // function refreshGrid() {
+        //     if (nodeGridInstance) {
+        //         nodeGridInstance.option("dataSource", workflowTreeData);
+        //     }
+        // }
+
+
+        // function buildPayloadPreview() {
+        //     // syncWorkflowHeader();
+        //     syncRuntimeState();
+        //     var payload = {
+        //         workflowDefinition: {
+                    
+        //         },
+        //         workflowNodes: workflowTreeData.map((x, index) => (
+              
+        //         workflowNodesHandle(x)
+                
+        //         )),
+        //         workflowTransitions: transitions.map(x => (transitionMapeHandle(x)))
+        //     };
+
+        //     $("#payloadBox_@Convert.ToInt32(ViewData["Id"])").text(JSON.stringify(payload, null, 2));
+
+        //     refreshGrid();
+        // }
+        // function refreshTransitionNodeLookup() {
+        //     if (!transitionFormInstance) return;
+        //     var ds = workflowTreeData.map(x => ({ id: x.id, text: `${x.text} (${x.id} - ${x.orderNo})` }));
+
+        //     transitionFormInstance.itemOption("fromNodeId", "editorOptions", {
+        //         dataSource: ds,
+        //         valueExpr: "id",
+        //         displayExpr: "text",
+        //         searchEnabled: true
+        //     });
+
+        //     transitionFormInstance.itemOption("toNodeId", "editorOptions", {
+        //         dataSource: ds,
+        //         valueExpr: "id",
+        //         displayExpr: "text",
+        //         searchEnabled: true
+        //     });
+        // }
+        // function syncRuntimeState() {
+        //     var ids = workflowTreeData.map(x => x.id);
+
+        //     if (!runtimeState.activeNodeId || !ids.includes(runtimeState.activeNodeId)) {
+        //         runtimeState.activeNodeId = ids.length ? ids[0] : null;
+        //     }
+
+        //     runtimeState.completedNodeIds = (runtimeState.completedNodeIds || []).filter(x => ids.includes(x));
+        //     runtimeState.pendingNodeIds = (runtimeState.pendingNodeIds || []).filter(x => ids.includes(x));
+
+        //     var used = new Set([
+        //         runtimeState.activeNodeId,
+        //         ...runtimeState.completedNodeIds
+        //     ]);
+
+        //     runtimeState.pendingNodeIds = ids.filter(x => !used.has(x));
+        // }
+        // // function syncWorkflowHeader() {
+        // //      workflowHeader = mainForm.formInstance.option("formData") || workflowHeader|| "",
+        // // }
+
+
+        // function syncTreeDataFromJsTree(overrideTextForSelected, newObject) {
+        //     var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
+        //     var oldData = workflowTreeData || [];
+        //     var flat = tree.get_json("#", { flat: true });
+
+        //     workflowTreeData = flat.map((x, index) => {
+        //         var oldNode = oldData.find(n => n.id === x.id) || {};
+        //         var plainText = extractTextFromHtml(x.text);
+
+        //         if (overrideTextForSelected && x.id === selectedNodeId) {
+        //             plainText = overrideTextForSelected;
+        //         }
+        //         if (newObject.id == oldNode?.id && newObject && oldNode)
+        //             return {
+        //                 id: x.id,
+        //                 parent: x.parent,
+        //                 text: plainText,
+        //                 type: newObject.type || oldNode.type || "",
+        //                 code: newObject.code || "",
+        //                 orderNo: newObject.orderNo ?? oldNode.orderNo ?? (index + 1),
+        //                 stepRole: newObject.stepRole || oldNode.stepRole || "",
+        //                 departmentName: newObject.departmentName || oldNode.departmentName || "",
+        //                 levelNo: newObject.levelNo ?? oldNode.levelNo ?? 1,
+        //                 flowType: newObject.flowType || oldNode.flowType || "Both",
+        //                 allowLoop: !!(newObject.allowLoop ?? oldNode.allowLoop),
+        //                 loopGroup: newObject.loopGroup || oldNode.loopGroup || "",
+        //                 x: newObject.x ?? oldNode.x ?? null,
+        //                 y: newObject.y ?? oldNode.y ?? null
+        //             };
+        //         else
+        //             return {
+        //                 id: x.id,
+        //                 parent: x.parent,
+        //                 text: plainText,
+        //                 type: x.original?.type || oldNode.type || "",
+        //                 code: x.original?.code || oldNode.code || "",
+        //                 orderNo: x.original?.orderNo ?? oldNode.orderNo ?? (index + 1),
+        //                 stepRole: x.original?.stepRole || oldNode.stepRole || "",
+        //                 departmentName: x.original?.departmentName || oldNode.departmentName || "",
+        //                 levelNo: x.original?.levelNo ?? oldNode.levelNo ?? 1,
+        //                 flowType: x.original?.flowType || oldNode.flowType || "Both",
+        //                 allowLoop: !!(x.original?.allowLoop ?? oldNode.allowLoop),
+        //                 loopGroup: x.original?.loopGroup || oldNode.loopGroup || "",
+        //                 x: x.original?.x ?? oldNode.x ?? null,
+        //                 y: x.original?.y ?? oldNode.y ?? null
+        //             };
+        //     });
+
+        //     refreshTransitionNodeLookup();
+        //     refreshGrid();
+        //     buildPayloadPreview();
+
+        //     if (selectedNodeId) {
+        //         var cur = workflowTreeData.find(x => x.id === selectedNodeId);
+        //         if (cur) {
+        //             $("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val(JSON.stringify({
+        //                 id: cur.id,
+        //                 parent: cur.parent === "#" ? null : cur.parent,
+        //                 text: cur.text,
+        //                 type: cur.type,
+        //                 code: cur.code,
+        //                 orderNo: cur.orderNo,
+        //                 stepRole: cur.stepRole,
+        //                 departmentName: cur.departmentName,
+        //                 levelNo: cur.levelNo,
+        //                 flowType: cur.flowType,
+        //                 allowLoop: cur.allowLoop,
+        //                 loopGroup: cur.loopGroup,
+        //                 x: cur.x,
+        //                 y: cur.y
+        //             }, null, 2));
+        //         }
+        //     }
+        //     //renderDiagramFromTree();
+        // }
+
+        
+
+        
+
+        // function reloadAll() {
+        //     selectedNodeId = null;
+        //     // if (workflowFormInstance) workflowFormInstance.option("formData", workflowHeader);
+        //     if (nodeFormInstance) nodeFormInstance.option("formData", {});
+        //     if (transitionFormInstance) transitionFormInstance.option("formData", getEmptyTransition(""));
+        //     $("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val("");
+        //     initTree();
+        //     refreshTransitionNodeLookup();
+        //     buildPayloadPreview();
+
+        //     refreshGrid();
+        // }
+
+
+        // function getNextOrderNo(parentId) {
+        //     var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
+        //     if (!tree) return 1;
+
+        //     if (parentId === "#") {
+        //         var roots = tree.get_json("#");
+        //         return roots.length + 1;
+        //     }
+
+        //     var parent = tree.get_node(parentId);
+        //     return (parent && parent.children) ? (parent.children.length + 1) : 1;
+        // }
+
+        // function collectDescendantIds(tree, nodeId) {
+        //     var node = tree.get_node(nodeId);
+        //     return node && node.children_d ? node.children_d.slice() : [];
+        // }
+
+        // function extractPlainTextFromNode(nodeId) {
+        //     var found = workflowTreeData.find(x => x.id === nodeId);
+        //     return found ? found.text : nodeId;
+        // }
+
+        // function extractTextFromHtml(html) {
+        //     var div = document.createElement("div");
+        //     div.innerHTML = html || "";
+        //     var nodeText = div.querySelector(".tree-node-text");
+        //     if (nodeText) return nodeText.textContent.trim();
+        //     return div.textContent.trim();
+        // }
+
+        // function generateNodeId() {
+        //     return "NODE_" + Date.now();
+        // }
+
+        // function notify(message, type) {
+        //     DevExpress.ui.notify(message, type || "info", 1800);
+        // }
+
+        // var transitionItem = [
+        //             {
+        //                 dataField: "fromNodeId",
+        //                 label: { text: "From Node" },
+        //                 editorType: "dxSelectBox",
+        //                 editorOptions: {
+        //                     dataSource: [],
+        //                     valueExpr: "id",
+        //                     displayExpr: "text",
+        //                     searchEnabled: true
+        //                 }
+        //             },
+        //             {
+        //                 dataField: "toNodeId",
+        //                 label: { text: "To Node" },
+        //                 editorType: "dxSelectBox",
+        //                 editorOptions: {
+        //                     dataSource: [],
+        //                     valueExpr: "id",
+        //                     displayExpr: "text",
+        //                     searchEnabled: true
+        //                 }
+        //             },
+        //             { dataField: "statusId", caption: "Status" , editorType: "dxSelectBox",editorOptions: makeSelectBoxEditorOptions(_enums.OverallStatus) },
+        //             {
+        //                 dataField: "actionCode",
+        //                 label: { text: "Action Code" }
+        //             },
+        //             {
+        //                 dataField: "actionName",
+        //                 label: { text: "Action Name" }
+        //             },
+        //             {
+        //                 dataField: "stepNo",
+        //                 label: { text: "Step No" },
+        //                 editorType: "dxTextBox",
+        //             },
+        //             {
+        //                 dataField: "jumpStepNo",
+        //                 label: { text: "Jump Point" },
+        //                 editorType: "dxTextBox",
+        //             },
+        //             {
+        //                 dataField: "flowType",
+        //                 label: { text: "Transition Flow Type" },
+        //                 editorType: "dxSelectBox",
+        //                 editorOptions: {
+        //                     dataSource: ["Quotation", "PolicyIssuance", "Both"]
+        //                 }
+        //             },
+        //             {
+        //                 dataField: "isReturn",
+        //                 label: { text: "Return Flow" },
+        //                 editorType: "dxSwitch"
+        //             },
+        //             {
+        //                 dataField: "isLoop",
+        //                 label: { text: "Loop Flow" },
+        //                 editorType: "dxSwitch"
+        //             },
+        //             {
+        //                 dataField: "loopGroup",
+        //                 label: { text: "Loop Group" }
+        //             },
+        //             {
+        //                 dataField: "loopExitMode",
+        //                 label: { text: "Loop Exit Mode" },
+        //                 editorType: "dxSelectBox",
+        //                 editorOptions: {
+        //                     dataSource: ["None", "UserDecision", "Condition", "MaxIteration"]
+        //                 }
+        //             },
+        //             {
+        //                 dataField: "maxLoopCount",
+        //                 label: { text: "Max Loop Count" },
+        //                 editorType: "dxNumberBox",
+        //                 editorOptions: { min: 1 }
+        //             },
+        //             {
+        //                 dataField: "isExitTransition",
+        //                 label: { text: "Exit Transition" },
+        //                 editorType: "dxSwitch"
+        //             },
+        //             {
+        //                 dataField: "userDecisionLabel",
+        //                 label: { text: "User Decision Label" }
+        //             },
+        //             {
+        //                 dataField: "conditionJson",
+        //                 label: { text: "Condition JSON" },
+        //                 editorType: "dxTextArea",
+        //                 colSpan: 2
+        //                     },{
+        //                 dataField: "command",
+        //                 label: { text: "Command" },
+        //                 editorType: "dxSelectBox",
+        //                 editorOptions: {
+        //                     dataSource: _enums.WorkflowCommand,
+        //                     valueExpr: "value",
+        //                     displayExpr: "value",
+        //                     searchEnabled: true
+        //                 }},
+        //                 {
+        //                 dataField: "commandConfig",
+        //                 label: { text: "Command Config" },
+        //                 editorType: "dxTextArea"}
+
+        // //                         {
+        // //   "sourceDepartment": "FO",
+        // //   "strategy": "Latest",
+        // //   "fileSelector": "First",
+        // //   "allowOverride": false
+        // // }
+        // // }
+
+        //    ]     ;
+
+        //   function initTransitionForm() {
+        //     $("#transitionForm_@Convert.ToInt32(ViewData["Id"])").dxForm({
+        //         // formData: getEmptyTransition(),
+        //         labelLocation: "top",
+        //         colCount: 2,
+        //          items: transitionItem,
+                
+        //         onInitialized: function (e) {
+        //             transitionFormInstance = e.component;
+        //             refreshTransitionNodeLookup();
+        //         }
+        //     });
+        // }
+        //  function initTransitionGrid() {
+        //     ensureTransitionKeys();
+           
+        //     $("#transitionGrid_@Convert.ToInt32(ViewData["Id"])").dxDataGrid({
+        //         dataSource: transitions,
+        //         keyExpr: "__rowKey",
+        //         showBorders: true,
+        //         height: 420,
+        //         paging: { enabled: false },
+        //         filterRow: { visible: true },
+        //         searchPanel: { visible: true, width: 260, placeholder: "Search transition..." },
+        //         headerFilter: { visible: true },
+        //         columnAutoWidth: true,
+        //         allowColumnResizing: true,
+        //         rowAlternationEnabled: true,
+        //         editing: {
+        //             mode: "row",
+        //             allowUpdating: false,
+        //             allowAdding: false,
+        //             allowDeleting: true,
+        //             useIcons: true
+        //         },
+        //         columns: transitionItem,
+                
+        //         onRowRemoving: function (e) {
+        //             const rowIndex = transitions.findIndex(x => x.__rowKey === e.data.__rowKey);
+
+        //             if (rowIndex >= 0) {
+        //                 transitions.splice(rowIndex, 1);
+
+        //                 e.component.option("dataSource", [...transitions]);
+        //                 buildPayloadPreview();
+        //                 notify("Transition deleted", "success");
+        //             }
+
+        //             e.cancel = true;
+        //         },
+        //         onRowDblClick: function (e) {
+        //             if (!transitionFormInstance || !e.data) return;
+        //             transitionFormInstance.option("formData", { ...e.data });
+        //             notify("Transition loaded to editor", "success");
+        //         },
+        //         onInitialized: function (e) {
+        //             transitionGridInstance = e.component;
+        //         }
+        //     });
+        // }
+
+        // function refreshTransitionGrid() {
+
+
+        //     hydrateStateFromPayload($("#payloadBox_@Convert.ToInt32(ViewData["Id"])").text());
+        //     if (transitionGridInstance) {
+        //         transitionGridInstance.option("dataSource", [...transitions]);
+        //         transitionGridInstance.refresh();
+        //     }
+        // }
+
+        // var payloadInitialized = false;
+
+        // function safeParseJson(text, fallback = null) {
+        //     try {
+        //         return JSON.parse(text);
+        //     } catch (e) {
+        //         return fallback;
+        //     }
+        // }
+
+        // function getPayloadBoxObject() {
+        //     var raw = ($("#payloadBox_@Convert.ToInt32(ViewData["Id"])").text() || "").trim();
+        //     return safeParseJson(raw, null);
+        // }
+
+        // function setPayloadBoxObject(obj) {
+        //     $("#payloadBox_@Convert.ToInt32(ViewData["Id"])").text(JSON.stringify(obj, null, 2));
+        // }
+
+        // function buildPayloadObjectFromState() {
+        //     // syncWorkflowHeader();
+        //     syncRuntimeState();
+        //     return {
+        //         workflowDefinition: {
+        //             id: _id || 0,
+                   
+        //         },
+        //         workflowNodes: workflowTreeData.map((x, index) => ({
+        //             id: x.id,
+        //             parentId: x.parent === "#" ? null : x.parent,
+        //             nodeName: x.text,
+        //             nodeType: x.type || "",
+        //             nodeCode: x.code || "",
+        //             orderNo: x.orderNo ?? (index + 1),
+        //             stepRole: x.stepRole || "",
+        //             departmentName: x.departmentName || "",
+        //             levelNo: x.levelNo ?? 1,
+        //             flowType: x.flowType || "Both",
+        //             allowLoop: !!x.allowLoop,
+        //             loopGroup: x.loopGroup || "",
+        //             x: x.x ?? null,
+        //             y: x.y ?? null
+        //         })),
+        //         workflowTransitions: transitions.map(x => (transitionMapeHandle(x))),
+        //         runtimeState: {
+        //             activeNodeId: runtimeState.activeNodeId || null,
+        //             completedNodeIds: runtimeState.completedNodeIds || [],
+        //             pendingNodeIds: runtimeState.pendingNodeIds || []
+        //         }
+        //     };
+        // }
+
+        // function hydrateStateFromPayload(payload) {
+        //     if (!payload) return;
+
+        //     // workflowHeader = payload.workflowDefinition || workflowHeader;
+        //     runtimeState = payload.runtimeState || runtimeState;
+
+        //     workflowTreeData = (payload.workflowNodes || []).map(x => ({
+        //         id: x.id,
+        //         parent: x.parentId || "#",
+        //         text: x.nodeName || "",
+        //         type: x.nodeType || "",
+        //         code: x.nodeCode || "",
+        //         orderNo: x.orderNo ?? 0,
+        //         stepRole: x.stepRole || "",
+        //         departmentName: x.departmentName || "",
+        //         levelNo: x.levelNo ?? 1,
+        //         flowType: x.flowType || "Both",
+        //         allowLoop: !!x.allowLoop,
+        //         loopGroup: x.loopGroup || "",
+        //         x: x.x ?? null,
+        //         y: x.y ?? null
+        //     }));
+
+        //     transitions = (payload.workflowTransitions || []).map(x => (transitionMapeHandle(x)));
+
+        //     // if (transitionFormInstance) transitionFormInstance.option("formData", getEmptyTransition(""));
+        //     if (nodeFormInstance) nodeFormInstance.option("formData", {});
+
+        //     initTree();
+        //     refreshTransitionNodeLookup();
+        //     refreshGrid();
+        // }
+
+       
+
+
+        // function initPayloadBoxOnce() {
+        //     if (payloadInitialized) return $.Deferred().resolve().promise();
+
+        //     var d = $.Deferred();
+
+        //     if (_id && _id != 0) {
+        //         ajaxGet(`/api/WorkflowDefinition/GetSingle/${_id}`)
+        //             .then(function (data) {
+        //                 var dbPayload = safeParseJson(data.workflowNodes, null);
+        //                 var overWriteHeader = new Object ();
+
+    
+
+        //                 dbPayload.workflowDefinition = overWriteHeader;
+        //                 if (dbPayload) {
+        //                     setPayloadBoxObject(dbPayload);
+
+        //                     // nếu muốn, đồng bộ ngược từ payload về state để UI phản ánh đúng DB
+        //                     hydrateStateFromPayload(dbPayload);
+        //                 } else {
+        //                     var fallbackPayload = buildPayloadObjectFromState();
+        //                     setPayloadBoxObject(fallbackPayload);
+        //                 }
+
+        //                 payloadInitialized = true;
+        //                 refreshGrid();
+        //                 d.resolve();
+        //             })
+        //             .fail(function () {
+        //                 var fallbackPayload = buildPayloadObjectFromState();
+        //                 setPayloadBoxObject(fallbackPayload);
+        //                 payloadInitialized = true;
+        //                 refreshGrid();
+        //                 d.resolve();
+        //             });
+        //     } else {
+        //         var initPayload = buildPayloadObjectFromState();
+        //         setPayloadBoxObject(initPayload);
+        //         payloadInitialized = true;
+        //         refreshGrid();
+        //         d.resolve();
+        //     }
+
+        //     return d.promise();
+        // }
+
+        // function syncPayloadBoxFromCurrentState() {
+        //     if (!payloadInitialized) return;
+
+        //     var current = getPayloadBoxObject() || {};
+        //     var latest = buildPayloadObjectFromState();
+
+        //     current.workflowDefinition = workflowHeader || ""; 
+        //     current.workflowNodes = latest.workflowNodes;
+        //     current.workflowTransitions = latest.workflowTransitions;
+        //     current.runtimeState = latest.runtimeState;
+
+        //     setPayloadBoxObject(current) ;
+        //     refreshGrid();
+        // }
+        //     initNodeForm();                         
+        //     initConditionBuilderForm();         
+        //     initTransitionForm();                   
+        //     initButtons();                          
+        //     initTree();                             
+        //     initToolboxDrag();                      
+        //     initGrid();                             
+        //     initPayloadBoxOnce().then(function () { 
+        //         initTransitionGrid();               
+        //     });
+
+
+        // // var diagramInstance = null;
+        // // var canvasEl = document.getElementById("canvas_@Convert.ToInt32(ViewData["Id"])");
+        // //         function renderDiagramFromTree() {
+
+        // //     if (!canvasEl) return;
+        // //     canvasEl.innerHTML = "";
+
+        // //     if (diagramInstance) {
+        // //         diagramInstance.reset();
+        // //     }
+
+        // //     diagramInstance = jsPlumb.getInstance({
+        // //         Container: canvasEl
+        // //     });
+
+        // //     diagramInstance.importDefaults({
+        // //         ConnectionsDetachable: false,
+        // //         ReattachConnections: true
+        // //     });
+
+        // //     // ✅ render node
+        // //     workflowTreeData.forEach(n => {
+        // //         const el = document.createElement("div");
+        // //         el.className = "node";
+        // //         el.id = n.id;
+
+        // //         el.style.left = (n.x || 100) + "px";
+        // //         el.style.top = (n.y || 100) + "px";
+
+        // //         el.innerHTML = `
+        // //             <div><b>${n.text}</b></div>
+        // //             <div>${n.flowType || "Both"}</div>
+        // //         `;
+
+        // //         canvasEl.appendChild(el);
+
+        // //         diagramInstance.draggable(el, {
+        // //             grid: [20, 20],
+        // //             stop: function () {
+        // //                 const left = parseInt(el.style.left);
+        // //                 const top = parseInt(el.style.top);
+
+        // //                 // ✅ sync ngược về tree
+        // //                 const node = workflowTreeData.find(x => x.id === n.id);
+        // //                 if (node) {
+        // //                     node.x = left;
+        // //                     node.y = top;
+        // //                 }
+
+        // //                 buildPayloadPreview();
+        // //             }
+        // //         });
+
+        // //         diagramInstance.makeSource(el, {
+        // //             anchor: "Continuous",
+        // //             maxConnections: -1
+        // //         });
+
+        // //         diagramInstance.makeTarget(el, {
+        // //             anchor: "Continuous"
+        // //         });
+        // //     });
+
+        // //     // ✅ render transition
+        // //     transitions.forEach(t => {
+        // //         if (!t.fromNodeId || !t.toNodeId) return;
+
+        // //         diagramInstance.connect({
+        // //             source: t.fromNodeId,
+        // //             target: t.toNodeId,
+        // //             anchors: ["Continuous", "Continuous"],
+        // //             overlays: [
+        // //                 ["Arrow", { location: 1 }],
+        // //                 ["Label", {
+        // //                     label: t.actionName || "",
+        // //                     location: 0.5
+        // //                 }]
+        // //             ]
+        // //         });
+        // //     });
+
+        // //     bindConnectionEvent();
+        // // }
+        // //         function initCanvasDrop() {
+
+        // //     canvasEl.addEventListener("dragover", function (e) {
+        // //         e.preventDefault();
+        // //     });
+
+        // //     canvasEl.addEventListener("drop", function (e) {
+        // //         e.preventDefault();
+
+        // //         let data = dragToolData;
+
+        // //         if (!data) return;
+
+        // //         const rect = canvasEl.getBoundingClientRect();
+
+        // //         const x = e.clientX - rect.left;
+        // //         const y = e.clientY - rect.top;
+
+        // //         // ✅ reuse createNode
+        // //         createNodeFromTool(data, "#");
+
+        // //         setTimeout(() => {
+        // //             let last = workflowTreeData[workflowTreeData.length - 1];
+        // //             if (last) {
+        // //                 last.x = x;
+        // //                 last.y = y;
+        // //             }
+
+        // //             renderDiagramFromTree();
+        // //         }, 100);
+        // //     });
+        // // }
+
+        // //         function bindConnectionEvent() {
+
+        // //     diagramInstance.bind("connection", function (info, originalEvent) {
+
+        // //         if (!originalEvent) return;
+
+        // //         const from = info.sourceId;
+        // //         const to = info.targetId;
+
+        // //         const exist = transitions.find(t =>
+        // //             t.fromNodeId === from && t.toNodeId === to
+        // //         );
+
+        // //         if (exist) return;
+
+        // //         // transitions.push({
+        // //         //     fromNodeId: from,
+        // //         //     toNodeId: to,
+        // //         //     actionCode: "AUTO_" + Date.now(),
+        // //         //     actionName: from + " -> " + to,
+        // //         //     flowType: "Both"
+        // //         // });
+
+        // //         buildPayloadPreview();
+        // //         refreshTransitionGrid();
+        // //     });
+        // // }
+
+
+        // // initCanvasDrop();
+
+        // // setTimeout(() => {
+        // //     renderDiagramFromTree();
+        // // }, 300);
+        
+        //            _id = @Convert.ToInt32(ViewData["Id"]);
+
+
+        //         ajaxGet(`/api/WorkflowDefinition/GetSingle/${_id}`)
+        //             .then(data => {
+                        
+        //         var jsonInput = document.getElementById("jsonInput_@Convert.ToInt32(ViewData["Id"])");
+        //         var canvas = document.getElementById("canvas_@(ViewData["RandomNumber"].ToString())");
+        //         $(canvas).empty();
+        //         // var // errorBox = document.getElementById("// errorBox_@Convert.ToInt32(ViewData["Id"])");;
+        //         // var wfCode = document.getElementById("wfCode_@Convert.ToInt32(ViewData["Id"])");
+        //         // var flowType = document.getElementById("flowType_@Convert.ToInt32(ViewData["Id"])");
+        //         // var currentStep = document.getElementById("currentStep_@Convert.ToInt32(ViewData["Id"])");
+        //         // var layoutMode = document.getElementById("layoutMode_@Convert.ToInt32(ViewData["Id"])");
+        //         // var // saveHint = document.getElementById("// saveHint_@Convert.ToInt32(ViewData["Id"])");
+
+            
+        //         function parseWorkflowNodes(value) {
+        //           if (value == null) return null;
+        //           if (typeof value === "string") {
+        //             try {
+        //               return JSON.parse(value);
+        //             } catch (err) {
+        //               try {
+        //                 return JSON.parse(value.replace(/\r?\n/g, "\\n"));
+        //               } catch (err2) {
+        //                 console.warn("Failed to parse workflowNodes", err, err2);
+        //                 return null;
+        //               }
+        //             }
+        //           }
+        //           return value;
+        //         }
+
+        //         var workflowNodesJson = parseWorkflowNodes(data.workflowNodes);
+        //         if (workflowNodesJson) {
+        //           jsonInput.value = JSON.stringify(workflowNodesJson, null, 2);
+        //         } else {
+        //           // // errorBox.style.display = "block";
+        //           // // errorBox.textContent = "Unable to parse workflowNodes from server response.";
+        //           jsonInput.value = "{}";
+        //         }
+
+        //         function safe(v) {
+        //           return String(v == null ? "" : v);
+        //         }
+
+        //         function hasNumber(v) {
+        //           return typeof v === "number" && !Number.isNaN(v);
+        //         }
+
+        //         function snap(n, grid = 24) {
+        //           return Math.round(n / grid) * grid;
+        //         }
+
+        //         function cloneJson(obj) {
+        //           return JSON.parse(JSON.stringify(obj));
+        //         }
+
+        //         function getNodeFlowClass(flowType) {
+        //           if (flowType === "Quotation") return "flow-quotation";
+        //           if (flowType === "PolicyIssuance") return "flow-policy";
+        //           return "flow-both";
+        //         }
+        //         function getNodeFromCanvas(nodeId) {
+        //             if (!currentJson || !currentJson.workflowNodes) return null;
+
+        //             return currentJson.workflowNodes.find(x => x.id === nodeId);
+        //         }
+        //         function getNodeStateClass(nodeId, runtimeState) {
+        //           var active = runtimeState?.activeNodeId;
+        //           var done = runtimeState?.compvaredNodeIds || [];
+        //           var pending = runtimeState?.pendingNodeIds || [];
+        //           if (nodeId === active) return "active";
+        //           if (done.includes(nodeId)) return "done";
+        //           if (pending.includes(nodeId)) return "pending";
+        //           return "pending";
+        //         }
+
+        //         function getNodesWithSavedPosition(nodes) {
+        //           return (nodes || []).filter(n => hasNumber(n.x) && hasNumber(n.y));
+        //         }
+
+        //         function syncJsonToTextarea() {
+        //           if (!currentJson) return;
+        //           jsonInput.value = JSON.stringify(currentJson, null, 2);
+        //         }
+
+        //         function updateNodeCoordinateUi(nodeId, x, y) {
+        //           var xEl = document.querySelector(`[data-x="${nodeId}"]`);
+        //           var yEl = document.querySelector(`[data-y="${nodeId}"]`);
+        //           if (xEl) xEl.textContent = x;
+        //           if (yEl) yEl.textContent = y;
+        //         }
+
+        //         function updateNodePosition(nodeId, x, y) {
+        //           if (!currentJson || !currentJson.workflowNodes) return;
+        //           var node = currentJson.workflowNodes.find(n => n.id === nodeId);
+        //           if (!node) return;
+
+        //           node.x = x;
+        //           node.y = y;
+
+        //           updateNodeCoordinateUi(nodeId, x, y);
+        //           syncJsonToTextarea();
+        //         }
+        //         function buildConnectionsFromNodes(nodes) {
+        //             const edges = [];
+
+        //             nodes.forEach(n => {
+        //                 if (n.parentId) {
+        //                     edges.push({
+        //                         source: n.parentId,
+        //                         target: n.id
+        //                     });
+        //                 }
+        //             });
+
+        //             return edges;
+        //         }
+        //        function buildAutoLayout(json) {
+                   
+        //   const nodes = json.workflowNodes || [];
+        //   const transitions = json.workflowTransitions || [];
+
+        //   const nodeMap = new Map(nodes.map(n => [n.id, n]));
+        //   const graph = new Map();
+
+        //   nodes.forEach(n => graph.set(n.id, []));
+
+        //   // 🔥 Build graph SAFE (lọc edge gây loop)
+        //   transitions.forEach(t => {
+        //     if (!nodeMap.has(t.fromNodeId) || !nodeMap.has(t.toNodeId)) return;
+
+        //     // ❌ loại self loop
+        //     if (t.fromNodeId === t.toNodeId) return;
+
+        //     // ❌ loại return / loop
+        //     if (t.isReturn || t.isLoop) return;
+
+        //     // ❌ loại backward edge (quan trọng)
+        //     const from = nodeMap.get(t.fromNodeId);
+        //     const to = nodeMap.get(t.toNodeId);
+        //     if ((to.orderNo || 0) <= (from.orderNo || 0)) return;
+
+        //     graph.get(t.fromNodeId).push(t.toNodeId);
+        //   });
+
+        //   // 🔥 BFS layer (KHÔNG BAO GIỜ LOOP)
+        //   const layerMap = new Map();
+        //   const queue = [];
+
+        //   // root = node không có parent hoặc indegree = 0
+        //   const indegree = new Map();
+        //   nodes.forEach(n => indegree.set(n.id, 0));
+
+        //   graph.forEach((tos, from) => {
+        //     tos.forEach(to => indegree.set(to, indegree.get(to) + 1));
+        //   });
+
+        //   const roots = nodes.filter(n => indegree.get(n.id) === 0);
+
+        //   (roots.length ? roots : nodes.slice(0, 1)).forEach(r => {
+        //     layerMap.set(r.id, 0);
+        //     queue.push(r.id);
+        //   });
+
+        //   const visited = new Set();
+
+        //   while (queue.length) {
+        //     const current = queue.shift();
+        //     if (visited.has(current)) continue;
+        //     visited.add(current);
+
+        //     const currentLayer = layerMap.get(current) || 0;
+
+        //     (graph.get(current) || []).forEach(to => {
+        //       if (!layerMap.has(to)) {
+        //         layerMap.set(to, currentLayer + 1);
+        //         queue.push(to);
+        //       }
+        //     });
+        //   }
+
+        //   // 🔥 fallback cho node bị cycle / không reachable
+        //   nodes.forEach(n => {
+        //     if (!layerMap.has(n.id)) {
+        //       layerMap.set(n.id, 0); // hoặc max + 1 nếu muốn đẩy xuống cuối
+        //     }
+        //   });
+
+        //   // 🔥 group theo layer
+        //   const grouped = {};
+        //   nodes.forEach(n => {
+        //     const layer = layerMap.get(n.id) || 0;
+        //     if (!grouped[layer]) grouped[layer] = [];
+        //     grouped[layer].push(n);
+        //   });
+
+        //   Object.keys(grouped).forEach(layer => {
+        //     grouped[layer].sort((a, b) => (a.orderNo || 9999) - (b.orderNo || 9999));
+        //   });
+
+        //   // 🔥 layout position
+        //   const startX = 96;
+        //   const startY = 110;
+        //   const colGap = 280;
+        //   const rowGap = 150;
+
+
+        //   const SCALE_X = 1.9;   // ← Điều chỉnh để giãn ngang
+        //   const SCALE_Y = 2.0;   // ← Điều chỉnh để giãn dọc
+
+        //   const positions = {};
+
+        //   Object.keys(grouped)
+        //     .map(Number)
+        //     .sort((a, b) => a - b)
+        //     .forEach(layer => {
+        //       const arr = grouped[layer];
+        //       const totalHeight = (arr.length - 1) * rowGap;
+        //       const baseY = Math.max(startY, 200 - totalHeight / 2);
+
+        //       arr.forEach((n, index) => {
+        //         positions[n.id] = {
+        //           x: n.posX ? n.posX * SCALE_X : startX + layer * colGap,
+        //           y: n.posY ? n.posY * SCALE_Y : baseY + index * rowGap,
+        //           layer
+        //         };
+        //       });
+        //     });
+
+        //   const maxLayer = Math.max(...Object.keys(grouped).map(Number));
+        //   const maxCount = Math.max(...Object.values(grouped).map(a => a.length));
+
+        //   return {
+        //     positions,
+        //     grouped,
+        //     canvasWidth: startX + (maxLayer + 1) * colGap + 300,
+        //     canvasHeight: Math.max(760, startY + maxCount * rowGap + 260)
+        //   };
+        // }
+
+        //         function buildSavedLayout(json) {
+        //           var nodes = json.workflowNodes || [];
+        //           var positions = {};
+        //           var maxX = 0;
+        //           var maxY = 0;
+
+        //           nodes.forEach(n => {
+        //             var x = snap(Number(n.x || 0));
+        //             var y = snap(Number(n.y || 0));
+        //             positions[n.id] = { x, y, layer: null };
+        //             maxX = Math.max(maxX, x);
+        //             maxY = Math.max(maxY, y);
+        //           });
+
+        //           return {
+        //             positions,
+        //             grouped: {},
+        //             canvasWidth: Math.max(window.innerWidth - (window.innerWidth * 0.1), maxX + 420),
+        //             canvasHeight: Math.max(window.innerHeight - (window.innerHeight * -0.1), maxY + 260)
+        //           };
+        //         }
+
+              
+
+        //         function createLayerLabel(layer, x) {
+        //           var el = document.createElement("div");
+        //           el.className = "layer-label";
+        //           el.style.left = x + "px";
+        //           el.textContent = "Layer " + layer;
+        //           return el;
+        //         }
+
+        //         function colorForEdge(t) {
+        //           if (t.isReturn) return "var(--return)";
+        //           if (t.isLoop) return "var(--loop)";
+        //           if (t.flowType === "Quotation") return "var(--quotation)";
+        //           if (t.flowType === "PolicyIssuance") return "var(--policy)";
+        //           return "var(--both)";
+        //         }
+
+        //         function chooseAnchors(t) {
+        //           if (t.isReturn) return ["Top", "Top"];
+        //           return ["Right", "Left"];
+        //         }
+
+        //         function connectEdge(t) {
+        //           var color = colorForEdge(t);
+        //           var label = safe(t.actionName || t.userDecisionLabel || t.actionCode || "");
+        //           var statusName = _enums.OverallStatus.find(f => f.id == t.statusId);
+        //                                   label = `${label} - <div class="statusTag ${normalizeStatus(statusName?.value || "").css}">${statusName?.value || ""} - ${safe(t.actionName || "")} <span>${getCommandIcon(t.command)}</span></div>`;
+        //           var isSelfLoop = t.fromNodeId === t.toNodeId;
+
+        //           var overlays = [
+        //             ["Arrow", { location: 1, width: 10, length: 10 }]
+        //           ];
+
+        //           if (label) {
+        //             overlays.unshift(["Label", {
+        //               label,
+        //               location: 0.5,
+        //               cssClass: "edge-label"
+        //             }]);
+        //           }
+
+        //           if (isSelfLoop) {
+        //             instance.connect({
+        //               source: t.fromNodeId,
+        //               target: t.toNodeId,
+        //               anchors: ["Top", "Right"],
+        //               connector: ["StateMachine", { margin: 12, curviness: 45, loopbackRadius: 32 }],
+        //               endpoint: "Blank",
+        //               paintStyle: {
+        //                 stroke: color,
+        //                 strokeWidth: 3,
+        //                 dashstyle: t.isReturn ? "4 4" : ""
+        //               },
+        //               overlays
+        //             });
+        //             return;
+        //           }
+
+        //           instance.connect({
+        //             source: t.fromNodeId,
+        //             target: t.toNodeId,
+        //             anchors: chooseAnchors(t),
+        //             connector: ["Bezier", { curviness: t.isReturn ? 95 : 60 }],
+        //             endpoint: "Blank",
+        //             paintStyle: {
+        //               stroke: color,
+        //               strokeWidth: (t.isReturn || t.isLoop) ? 3 : 2.5,
+        //               dashstyle: t.isReturn ? "4 4" : ""
+        //             },
+        //             overlays
+        //           });
+        //         }
+
+        //         function attachDrag() {
+        //           (currentJson.workflowNodes || []).forEach(node => {
+        //             instance.draggable(node.id, {
+        //               grid: [24, 24],
+        //               containment: true,
+        //               stop: function() {
+        //                 var el = document.getElementById(node.id);
+        //                 if (!el) return;
+
+        //                 var left = snap(parseInt(el.style.left || "0", 10));
+        //                 var top = snap(parseInt(el.style.top || "0", 10));
+
+        //                 el.style.left = left + "px";
+        //                 el.style.top = top + "px";
+
+        //                 updateNodePosition(node.id, left, top);
+        //                 instance.revalidate(node.id);
+
+        //                 // saveHint.innerHTML = `Position: <span class="status-ok">updated ${node.id} (${left}, ${top})</span>`;
+        //               }
+        //             });
+        //           });
+        //         }
+
+
+        //         function renderWorkflow(options = {}) {
+        //           try {
+        //             // errorBox.style.display = "none";
+        //             // errorBox.textContent = "";
+
+        //             currentJson = JSON.parse(jsonInput.value);
+
+        //             if (instance) {
+        //               instance.deleteEveryConnection();
+        //               instance.reset();
+        //             }
+
+        //             canvas.innerHTML = "";
+        //             var useSavedLayout =
+        //               getNodesWithSavedPosition(currentJson.workflowNodes).length > 0;
+
+        //             var layout = useSavedLayout
+        //               ? buildSavedLayout(currentJson)
+        //               : buildAutoLayout(currentJson);
+
+        //             var { positions, grouped, canvasWidth, canvasHeight } = layout;
+
+        //             canvas.style.width = canvasWidth + "px";
+        //             canvas.style.height = canvasHeight + "px";
+
+        //             if (!useSavedLayout) {
+        //               Object.keys(grouped).map(Number).sort((a, b) => a - b).forEach(layer => {
+        //                 var arr = grouped[layer];
+        //                 if (arr.length) {
+        //                   canvas.appendChild(createLayerLabel(layer, positions[arr[0].id].x));
+        //                 }
+        //               });
+        //             }
+
+        //             (currentJson.workflowNodes || []).forEach(node => {
+        //               var pos = positions[node.id];
+        //               if (!pos) return;
+
+        //               if (!useSavedLayout || !hasNumber(node.x) || !hasNumber(node.y)) {
+        //                 node.x = pos.x;
+        //                 node.y = pos.y;
+        //               }
+
+        //               canvas.appendChild(createNodeEl(node, pos, currentJson.runtimeState || {}));
+        //             });
+
+        //             instance = jsPlumb.getInstance({
+        //               Container: canvas
+        //             });
+
+        //             instance.importDefaults({
+        //               ConnectionsDetachable: false,
+        //               ReattachConnections: false,
+        //               Endpoint: "Blank",
+        //               PaintStyle: { stroke: "#64748b", strokeWidth: 2 },
+        //               HoverPaintStyle: { stroke: "#334155", strokeWidth: 3 }
+        //             });
+
+        //             (currentJson.workflowTransitions || []).forEach(connectEdge);
+        //             attachDrag();
+
+        //             var def = currentJson.workflowDefinition || {};
+        //             // wfCode.textContent = "Workflow: " + safe(def.workflowCode || "-");
+        //             // flowType.textContent = "Flow: " + safe(def.flowType || "-");
+        //             // currentStep.textContent = "Current: " + safe(currentJson.runtimeState?.activeNodeId || "-");
+        //             // layoutMode.textContent = "Layout: " + (useSavedLayout ? "saved x,y" : "auto layout");
+
+        //             syncJsonToTextarea();
+        //           } catch (err) {
+        //             // errorBox.style.display = "block";
+        //             // errorBox.textContent = err && err.stack ? err.stack : String(err);
+        //           }
+        //         }
+
+        //         // function renderWorkflow(options = {}) {
+        //         //   try {
+        //         //     const {
+        //         //         skipLayout = false,   // ✅ NEW
+        //         //         forceAutoLayout = false // ✅ optional
+        //         //     } = options;
+
+        //         //     currentJson = JSON.parse(jsonInput.value);
+
+        //         //     if (instance) {
+        //         //       instance.deleteEveryConnection();
+        //         //       instance.reset();
+        //         //     }
+
+        //         //     canvas.innerHTML = "";
+
+        //         //     const nodes = currentJson.workflowNodes || [];
+
+        //         //     const nodesWithPos = getNodesWithSavedPosition(nodes).length;
+
+        //         //     // ✅ LOGIC QUAN TRỌNG
+        //         //     let useSavedLayout;
+
+        //         //     if (skipLayout) {
+        //         //         useSavedLayout = true; // ✅ ép dùng layout hiện tại
+        //         //     } else if (forceAutoLayout) {
+        //         //         useSavedLayout = false;
+        //         //     } else {
+        //         //         useSavedLayout = nodesWithPos > 0;
+        //         //     }
+        //         //     const layout = useSavedLayout
+        //         //         ? buildSavedLayout(currentJson)
+        //         //         : buildAutoLayout(currentJson);
+
+        //         //     const { positions, grouped, canvasWidth, canvasHeight } = layout;
+
+        //         //     canvas.style.width = canvasWidth + "px";
+        //         //     canvas.style.height = canvasHeight + "px";
+
+        //         //     // ✅ chỉ render layer khi auto layout
+        //         //     if (!useSavedLayout) {
+        //         //       Object.keys(grouped)
+        //         //         .map(Number)
+        //         //         .sort((a, b) => a - b)
+        //         //         .forEach(layer => {
+        //         //           var arr = grouped[layer];
+        //         //           if (arr.length) {
+        //         //             canvas.appendChild(
+        //         //                 createLayerLabel(layer, positions[arr[0].id].x)
+        //         //             );
+        //         //           }
+        //         //         });
+        //         //     }
+
+        //         //             (nodes || []).forEach(node => {
+        //         //     let pos = positions[node.id];
+
+        //         //     const hasPos = hasNumber(node.x) && hasNumber(node.y);
+
+        //         //     // ✅ CASE 1: skipLayout → giữ nguyên layout cũ
+        //         //     if (skipLayout) {
+
+        //         //         // ✅ node CHƯA có position → KHÔNG render (node mới)
+        //         //         if (!hasPos) {
+        //         //             return; // 🔥 skip hoàn toàn
+        //         //         }
+
+        //         //         // ✅ node đã có position → dùng chính node.x,y
+        //         //         pos = {
+        //         //             x: node.x,
+        //         //             y: node.y
+        //         //         };
+        //         //     }
+
+        //         //     // ✅ fallback nếu không có pos (trường hợp auto layout)
+        //         //     if (!pos) return;
+
+        //         //     // ✅ chỉ set lại position khi KHÔNG skip layout
+        //         //     if (!useSavedLayout && !skipLayout) {
+        //         //         node.x = pos.x;
+        //         //         node.y = pos.y;
+        //         //     }
+        //         //     canvas.appendChild(createNodeEl(node, pos, currentJson.runtimeState || {}));
+        //         //         // addNodeToCanvas(node, pos, currentJson.runtimeState);
+        //         //     });
+
+        //         //     instance = jsPlumb.getInstance({
+        //         //       Container: canvas
+        //         //     });
+
+        //         //     instance.importDefaults({
+        //         //       ConnectionsDetachable: false,
+        //         //       ReattachConnections: false,
+        //         //       Endpoint: "Blank",
+        //         //       PaintStyle: { stroke: "#64748b", strokeWidth: 2 },
+        //         //       HoverPaintStyle: { stroke: "#334155", strokeWidth: 3 }
+        //         //     });
+
+        //         //     (currentJson.workflowTransitions || []).forEach(connectEdge);
+
+        //         //     attachDrag();
+
+        //         //     syncJsonToTextarea();
+
+        //         //   } catch (err) {
+        //         //     // handle error nếu cần
+        //         //   }
+        //         // }
+
+
+        //         function addNodeToCanvas(node, pos, runtimeState) {
+        //     if (!node) return;
+
+        //     // ✅ fallback position
+        //     const safePos = {
+        //         x: pos?.x ?? node.x ?? 120,
+        //         y: pos?.y ?? node.y ?? 120
+        //     };
+
+        //     // ✅ tạo element
+        //     const el = createNodeEl(node, safePos, runtimeState || {});
+
+        //     canvas.appendChild(el);
+
+        //     // ✅ register jsPlumb endpoint
+        //     if (instance) {
+        //         registerEndpoints(node.id);
+        //         instance.revalidate(node.id);
+        //     }
+
+        //     return el;
+        // }
+        //         function exportJson() {
+        //           try {
+        //             syncJsonToTextarea();
+        //             navigator.clipboard?.writeText(jsonInput.value).catch(() => {});
+        //             // saveHint.innerHTML = `Position: <span class="status-ok">JSON exported</span>`;
+        //           } catch (err) {
+        //             // errorBox.style.display = "block";
+        //             // errorBox.textContent = err && err.stack ? err.stack : String(err);
+        //           }
+        //         }
+
+
+        //         function updateData(){
+        //               ajaxPut('/api/WorkflowDefinition/UpdateData',
+        //              {
+        //                  key: _id,
+        //                  values: JSON.stringify(
+        //                      { workflowNodes : jsonInput.value }
+        //                  )
+        //              },
+        //              {
+        //                  onSuccess: function (response) {
+        //                       appNotifySuccess("Updated!", false);
+        //                  },
+        //                  onError: function (err) { }
+        //              }
+        //              );
+        //         }
+
+        //         document.getElementById("btnRender_@Convert.ToInt32(ViewData["Id"])").addEventListener("click", () => renderWorkflow());
+        //         document.getElementById("btnUpdate_@Convert.ToInt32(ViewData["Id"])").addEventListener("click", updateData);
+        //         document.getElementById("btnExport_@Convert.ToInt32(ViewData["Id"])").addEventListener("click", exportJson);
+
+        //         // document.getElementById("btnAutoLayout").addEventListener("click", () => {
+        //         //   try {
+        //         //     var tmp = JSON.parse(jsonInput.value);
+        //         //     (tmp.workflowNodes || []).forEach(n => {
+        //         //       n.x = null;
+        //         //       n.y = null;
+        //         //     });
+        //         //     jsonInput.value = JSON.stringify(tmp, null, 2);
+        //         //     renderWorkflow({ forceAuto: true });
+        //         //   } catch (err) {
+        //         //     // errorBox.style.display = "block";
+        //         //     // errorBox.textContent = err && err.stack ? err.stack : String(err);
+        //         //   }
+        //         // });
+
+        //         renderWorkflow();
+        //         // const jsonInput = document.getElementById("jsonInput");
+        //         // const canvas = document.getElementById("canvas");
+        //         // var // statusBar = document.getElementById("// statusBar_@Convert.ToInt32(ViewData["Id"])");
+        //         // var infoBox = document.getElementById("infoBox_@Convert.ToInt32(ViewData["Id"])");
+
+        //         // let instance = null;
+        //         let selectedNodeId = null;
+        //         let selectedTransitionKey = null;
+
+        //         function setStatus(text) {
+        //             // statusBar.textContent = text;
+        //         }
+
+        //         function setInfo(obj, title) {
+        //             infoBox.textContent = title + "\n\n" + JSON.stringify(obj, null, 2);
+        //         }
+
+        //         function ensureSeed() {
+        //             if (!jsonInput.value.trim()) {
+        //                 jsonInput.value = JSON.stringify(sampleData, null, 2);
+        //             }
+        //         }
+
+        //         function getData() {
+        //             return JSON.parse(jsonInput.value || "{}");
+        //         }
+
+        //         function setData(data) {
+        //             jsonInput.value = JSON.stringify(data, null, 2);
+        //         }
+
+        //         function normalizeFlowClass(flowType) {
+        //             if (flowType === "Quotation") return "flow-quotation";
+        //             if (flowType === "PolicyIssuance" || flowType === "Policy Issuance") return "flow-policy";
+        //             return "flow-both";
+        //         }
+
+        //         function createNodeElement(node, runtimeState) {
+        //             const el = document.createElement("div");
+        //             el.id = node.id;
+        //             el.className = "node";
+
+        //             if (node.allowLoop) el.classList.add("allowLoopNode");
+        //             if (runtimeState?.activeNodeId === node.id) el.classList.add("activeNode");
+        //             if ((runtimeState?.completedNodeIds || []).includes(node.id)) el.classList.add("completedNode");
+        //             if ((runtimeState?.pendingNodeIds || []).includes(node.id)) el.classList.add("pendingNode");
+
+        //             el.style.left = (node.x ?? 0) + "px";
+        //             el.style.top = (node.y ?? 0) + "px";
+
+        //             el.innerHTML = `
+        //                 <div class="nodeTitle">${node.nodeName || node.id}</div>
+        //                 <div class="nodeMeta">
+        //                     <span class="meta">#${node.orderNo ?? ""}</span>
+        //                     <span class="meta ${normalizeFlowClass(node.flowType)}">${node.flowType || "Both"}</span>
+        //                     ${node.levelNo != null ? `<span class="meta">L${node.levelNo}</span>` : ""}
+        //                     ${node.loopGroup ? `<span class="meta">Loop:${node.loopGroup}</span>` : ""}
+        //                 </div>
+        //             `;
+                    
+        //             el.addEventListener("click", function (ev) {
+        //                 ev.stopPropagation();
+        //                 clearNodeSelection();
+        //                 el.classList.add("selected");
+        //                 selectedNodeId = node.id;
+        //                 selectedTransitionKey = null;
+        //                 setInfo(node, "NODE");
+        //             });
+
+        //             return el;
+        //         }
+
+        //         function clearNodeSelection() {
+        //             document.querySelectorAll(".node.selected").forEach(x => x.classList.remove("selected"));
+        //         }
+
+        //         function clearSelections() {
+        //             clearNodeSelection();
+        //             selectedNodeId = null;
+        //             selectedTransitionKey = null;
+        //         }
+                
+        //         function registerEndpoints(nodeId) {
+        //             instance.makeSource(nodeId, {
+        //                 filter: ".nodeTitle",
+        //                 anchor: "Continuous",
+        //                 connector: ["Flowchart", { cornerRadius: 10, stub: 24 }],
+        //                 connectorStyle: { stroke: "#64748b", strokeWidth: 2 },
+        //                 maxConnections: -1
+        //             });
+
+        //             instance.makeTarget(nodeId, {
+        //                 anchor: "Continuous",
+        //                 allowLoopback: true
+        //             });
+
+        //             instance.draggable(nodeId, {
+        //                 grid: [12, 12],
+        //                 stop: function () {
+        //                     savePositions();
+        //                 }
+        //             });
+        //         }
+
+        //         function getTransitionStyle(t) {
+        //             if (t.isExitTransition) {
+        //                 return { stroke: "#7c3aed", strokeWidth: 3, dashstyle: "2 0" };
+        //             }
+        //             if (t.isLoop) {
+        //                 return { stroke: "#ea580c", strokeWidth: 3, dashstyle: "4 2" };
+        //             }
+        //             if (t.isReturn) {
+        //                 return { stroke: "#dc2626", strokeWidth: 2, dashstyle: "6 3" };
+        //             }
+        //             return { stroke: "#64748b", strokeWidth: 2, dashstyle: "2 0" };
+        //         }
+
+        //         function getConnectorConfig(t) {
+        //             if (t.fromNodeId === t.toNodeId) {
+        //                 return ["StateMachine", { margin: 6, curviness: 40 }];
+        //             }
+        //             if (t.isReturn) {
+        //                 return ["Bezier", { curviness: 90 }];
+        //             }
+        //             if (t.isLoop) {
+        //                 return ["Bezier", { curviness: 70 }];
+        //             }
+        //             return ["Flowchart", { cornerRadius: 10, stub: 24 }];
+        //         }
+
+        //         function getTransitionLabel(t) {
+        //             return t.userDecisionLabel || t.actionName || t.actionCode || "";
+        //         }
+
+        //         function makeTransitionKey(t) {
+        //             return [t.fromNodeId, t.toNodeId, t.actionCode || "", t.actionName || ""].join("||");
+        //         }
+
+        //         function renderTransitions(data) {
+        //             (data.workflowTransitions || []).forEach(function (t) {
+        //                 const style = getTransitionStyle(t);
+
+        //                 const conn = instance.connect({
+        //                     source: t.fromNodeId,
+        //                     target: t.toNodeId,
+        //                     anchors: t.fromNodeId === t.toNodeId ? ["Top", "Right"] : ["Continuous", "Continuous"],
+        //                     connector: getConnectorConfig(t),
+        //                     paintStyle: style,
+        //                     endpoint: "Dot",
+        //                     endpointStyle: { radius: 4, fill: style.stroke },
+        //                     overlays: [
+        //                         ["Arrow", { width: 10, length: 10, location: 1, foldback: 0.8 }],
+        //                         ["Label", {
+        //                             label: getTransitionLabel(t),
+        //                             location: 0.5,
+        //                             cssClass: "aLabel"
+        //                         }]
+        //                     ]
+        //                 });
+
+        //                 conn.__transitionData = t;
+        //                 conn.__transitionKey = makeTransitionKey(t);
+
+        //                 conn.bind("click", function (connection, ev) {
+        //                     if (ev) ev.stopPropagation();
+        //                     selectedTransitionKey = conn.__transitionKey;
+        //                     selectedNodeId = null;
+        //                     clearNodeSelection();
+        //                     setInfo(t, "TRANSITION");
+        //                     setStatus("Selected transition: " + (t.actionCode || ""));
+        //                 });
+        //             });
+        //         }
+
+        //         function savePositions() {
+        //             const data = getData();
+        //             (data.workflowNodes || []).forEach(function (n) {
+        //                 const el = document.getElementById(n.id);
+        //                 if (!el) return;
+        //                 n.x = parseInt(el.style.left, 10) || 0;
+        //                 n.y = parseInt(el.style.top, 10) || 0;
+        //             });
+        //             setData(data);
+        //             setStatus("Saved x,y back to workflowNodes.");
+        //         }
+
+        //         function generateUniqueNodeId(data, baseName) {
+        //             const rawBase = (baseName || "NODE").toUpperCase().replace(/[^A-Z0-9]+/g, "_");
+        //             let candidate = rawBase;
+        //             const existing = new Set((data.workflowNodes || []).map(x => x.id));
+
+        //             if (!existing.has(candidate)) return candidate;
+
+        //             candidate = rawBase + "_" + Date.now();
+        //             while (existing.has(candidate)) {
+        //                 candidate = rawBase + "_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+        //             }
+        //             return candidate;
+        //         }
+
+        //                 function addNodeFromPalette(template, x, y) {
+        //                     const data = getData();
+
+        //                     // ✅ luôn dùng generator chuẩn NODE_
+        //                     const id = generateNodeId();
+
+        //                     const nextOrder = ((data.workflowNodes || [])
+        //                         .reduce((m, n) => Math.max(m, n.orderNo || 0), 0)) + 1;
+
+        //                     var node = workflowNodesHandle(template);
+
+        //                     node.id = id;
+
+        //                     // ✅ GIỮ nodeName riêng
+        //                     node.nodeName = template.nodeName || id;
+
+        //                     node.orderNo = nextOrder;
+
+        //                     node.x = x;
+        //                     node.y = y;
+
+        //                     data.workflowNodes.push(node);
+
+        //                     // ✅ runtime state
+        //                     if (!data.runtimeState) {
+        //                         data.runtimeState = {
+        //                             activeNodeId: "",
+        //                             completedNodeIds: [],
+        //                             pendingNodeIds: []
+        //                         };
+        //                     }
+
+        //                     if (!Array.isArray(data.runtimeState.pendingNodeIds)) {
+        //                         data.runtimeState.pendingNodeIds = [];
+        //                     }
+
+        //                     if (!data.runtimeState.pendingNodeIds.includes(node.id)) {
+        //                         data.runtimeState.pendingNodeIds.push(node.id);
+        //                     }
+
+        //                     setData(data);
+        //                     renderWorkflow(
+        //                     {
+        //                         skipLayout: true
+        //                     }
+        //                     );
+
+        //                     setStatus("Added node: " + node.nodeName + " (" + node.id + ")");
+        //                 }
+
+        //         function removeSelectedNode() {
+        //             if (!selectedNodeId) {
+        //                 setStatus("No node selected.");
+        //                 return;
+        //             }
+
+        //             const data = getData();
+        //             data.workflowNodes = (data.workflowNodes || []).filter(n => n.id !== selectedNodeId);
+        //             data.workflowTransitions = (data.workflowTransitions || []).filter(t =>
+        //                 t.fromNodeId !== selectedNodeId && t.toNodeId !== selectedNodeId
+        //             );
+
+        //             if (data.runtimeState) {
+        //                 if (data.runtimeState.activeNodeId === selectedNodeId) {
+        //                     data.runtimeState.activeNodeId = "";
+        //                 }
+        //                 data.runtimeState.completedNodeIds = (data.runtimeState.completedNodeIds || []).filter(x => x !== selectedNodeId);
+        //                 data.runtimeState.pendingNodeIds = (data.runtimeState.pendingNodeIds || []).filter(x => x !== selectedNodeId);
+        //             }
+
+        //             setData(data);
+        //             clearSelections();
+        //             renderWorkflow();
+        //             setStatus("Deleted node: " + selectedNodeId);
+        //         }
+
+        //         function removeSelectedTransition() {
+        //             if (!selectedTransitionKey) {
+        //                 setStatus("No transition selected.");
+        //                 return;
+        //             }
+
+        //             const data = getData();
+        //             data.workflowTransitions = (data.workflowTransitions || []).filter(t => makeTransitionKey(t) !== selectedTransitionKey);
+        //             setData(data);
+        //             const deletedKey = selectedTransitionKey;
+        //             clearSelections();
+        //             renderWorkflow();
+        //             setStatus("Deleted transition: " + deletedKey);
+        //         }
+
+        //         function simpleAutoLayout(data) {
+        //             const map = {};
+        //             const childrenMap = {};
+
+        //             (data.workflowNodes || []).forEach(n => {
+        //                 map[n.id] = n;
+        //                 childrenMap[n.id] = [];
+        //             });
+
+        //             (data.workflowNodes || []).forEach(n => {
+        //                 if (n.parentId && childrenMap[n.parentId]) {
+        //                     childrenMap[n.parentId].push(n);
+        //                 }
+        //             });
+
+        //             const roots = (data.workflowNodes || []).filter(n => !n.parentId);
+        //             const levels = [];
+        //             const visited = new Set();
+
+        //             function dfs(node, level) {
+        //                 if (!node || visited.has(node.id)) return;
+        //                 visited.add(node.id);
+        //                 if (!levels[level]) levels[level] = [];
+        //                 levels[level].push(node);
+        //                 (childrenMap[node.id] || []).forEach(child => dfs(child, level + 1));
+        //             }
+
+        //             roots.forEach(r => dfs(r, 0));
+
+        //             levels.forEach((arr, level) => {
+        //                 arr.forEach((node, i) => {
+        //                     node.x = 120 + level * 300;
+        //                     node.y = 120 + i * 180;
+        //                 });
+        //             });
+
+        //             const remain = (data.workflowNodes || []).filter(n => !visited.has(n.id));
+        //             remain.forEach((n, i) => {
+        //                 n.x = 120;
+        //                 n.y = 120 + (levels.flat().length + i) * 140;
+        //             });
+        //         }
+                
+        //         function bindConnectionEvent() {
+        //             instance.bind("connection", function (info, originalEvent) {
+        //                 if (!originalEvent) return;
+
+        //                 const sourceId = info.sourceId;
+        //                 const targetId = info.targetId;
+        //                 const data = getData();
+
+        //                 const exists = (data.workflowTransitions || []).some(t =>
+        //                     t.fromNodeId === sourceId &&
+        //                     t.toNodeId === targetId
+        //                 );
+
+        //                 if (exists) {
+        //                     setStatus("Transition already exists: " + sourceId + " -> " + targetId);
+        //                     return;
+        //                 }
+
+        //                 const sourceNode = (data.workflowNodes || []).find(n => n.id === sourceId);
+        //                 const targetNode = (data.workflowNodes || []).find(n => n.id === targetId);
+
+        //                 const actionCode = "ACTION_" + ((data.workflowTransitions || []).length + 1);
+        //                 const actionName = sourceNode && targetNode
+        //                     ? (sourceNode.nodeName + " To " + targetNode.nodeName)
+        //                     : "New Transition";
+
+        //                 const transition = {
+        //                     fromNodeId: sourceId,
+        //                     toNodeId: targetId,
+        //                     actionCode: actionCode,
+        //                     actionName: actionName,
+        //                     flowType: (targetNode && targetNode.flowType) || "Both",
+        //                     isReturn: false,
+        //                     isLoop: sourceId === targetId,
+        //                     loopGroup: sourceId === targetId ? ((sourceNode && sourceNode.loopGroup) || "") : "",
+        //                     loopExitMode: sourceId === targetId ? "UserDecision" : "None",
+        //                     maxLoopCount: null,
+        //                     isExitTransition: false,
+        //                     userDecisionLabel: sourceId === targetId ? "Loop" : "",
+        //                     conditionJson: ""
+        //                 };
+
+        //                 data.workflowTransitions.push(transition);
+        //                 setData(data);
+
+        //                 setStatus("Added transition: " + sourceId + " -> " + targetId);
+        //                 renderWorkflow();
+        //             });
+        //         }
+
+        //         function render() {
+        //             const data = getData();
+
+        //             canvas.innerHTML = "";
+
+        //             if (instance) instance.reset();
+
+        //             instance = jsPlumb.getInstance({
+        //                 Container: canvas
+        //             });
+
+        //             instance.importDefaults({
+        //                 ConnectionsDetachable: false,
+        //                 ReattachConnections: true
+        //             });
+
+        //             bindConnectionEvent();
+
+        //             (data.workflowNodes || []).forEach(function (node) {
+        //                 const el = createNodeElement(node, data.runtimeState || {});
+        //                 canvas.appendChild(el);
+        //             });
+
+        //             (data.workflowNodes || []).forEach(function (node) {
+        //                 registerEndpoints(node.id);
+        //             });
+
+        //             renderTransitions(data);
+
+        //             setStatus(
+        //                 "Rendered " +
+        //                 (data.workflowNodes || []).length +
+        //                 " nodes / " +
+        //                 (data.workflowTransitions || []).length +
+        //                 " transitions."
+        //             );
+        //         }
+
+        //         // document.getElementById("btnRender").addEventListener("click", function () {
+        //         //     renderWorkflow();
+        //         // });
+
+        //         // document.getElementById("btnSavePositions").addEventListener("click", function () {
+        //         //     savePositions();
+        //         // });
+
+        //         // document.getElementById("btnReloadJson").addEventListener("click", function () {
+        //         //     renderWorkflow();
+        //         // });
+
+        //         // document.getElementById("btnAutoLayout").addEventListener("click", function () {
+        //         //     const data = getData();
+        //         //     simpleAutoLayout(data);
+        //         //     setData(data);
+        //         //     renderWorkflow();
+        //         //     setStatus("Auto layout applied.");
+        //         // });
+
+        //         // document.getElementById("btnDeleteNode").addEventListener("click", function () {
+        //         //     removeSelectedNode();
+        //         // });
+
+        //         // document.getElementById("btnDeleteTransition").addEventListener("click", function () {
+        //         //     removeSelectedTransition();
+        //         // });
+
+        //         document.querySelectorAll(".paletteItem").forEach(item => {
+        //             item.addEventListener("dragstart", function (e) {
+        //                 e.dataTransfer.setData("text/plain", item.getAttribute("data-template"));
+        //             });
+        //         });
+                
+        //         canvas.addEventListener("dragover", function (e) {
+        //             e.preventDefault();
+        //             canvas.classList.add("dragOver");
+        //         });
+
+        //         canvas.addEventListener("dragleave", function () {
+        //             canvas.classList.remove("dragOver");
+        //         });
+
+        //         canvas.addEventListener("drop", function (e) {
+        //             e.preventDefault();
+        //             canvas.classList.remove("dragOver");
+
+        //             const raw = e.dataTransfer.getData("text/plain");
+        //             if (!raw) return;
+
+        //             let template = null;
+        //             try {
+        //                 template = JSON.parse(raw);
+        //             } catch {
+        //                 setStatus("Invalid palette template.");
+        //                 return;
+        //             }
+
+        //             const rect = canvas.getBoundingClientRect();
+        //             const x = Math.max(20, Math.round((e.clientX - rect.left - 100) / 12) * 12);
+        //             const y = Math.max(20, Math.round((e.clientY - rect.top - 35) / 12) * 12);
+
+        //             addNodeFromPalette(template, x, y);
+        //         });
+
+        //         canvas.addEventListener("click", function () {
+        //             clearSelections();
+        //             // infoBox.textContent = "Click node hoặc line để xem chi tiết.";
+        //         });
+
+        //         ensureSeed();
+        //         renderWorkflow();
+        //         });
+
+        // function getCommandIcon(command) {
+        //     switch (command) {
+        //         case 1: return "📄";
+        //         case 2: return "🔄";
+        //         case 3: return "🔒";
+        //         default: return "";
+        //     }
+        // }
+
+
+        // //old Code
         var _id = @Convert.ToInt32(ViewData["Id"]);
         _enums.WorkflowCommand = @Html.Raw(Json.Serialize(ViewData["WorkflowCommand"]))
         var selectedNodeId = null;
@@ -1111,8 +4019,7 @@
         var workflowHeader = null;
         var workflowTreeData = [];
         var transitions = [];
-         var instance = null;
-                var currentJson = null;
+     
 
 
 
@@ -1665,7 +4572,7 @@
                     parentNodeId: x.parent === "#" ? null : x.parent,
                     nodeName: x.text || "",
                     nodeType: x.type || "",
-                    flowType: x.flowType || "Both",
+                    nodeStatus: x.flowType || "Both",
                     allowLoop: !!x.allowLoop,
                     loopGroup: x.loopGroup || null,
                     nodeCode: x.code || null,
@@ -1959,15 +4866,8 @@
             }
         }
 
-           
-
 
         function applyFormToSelectedNode() {
-            debugger
-            if (!selectedNodeId)
-            buildPayloadFromCanvas();
-            else 
-            {
             var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
             var json = JSON.parse($("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val() || "{}");
             var node = tree.get_node(selectedNodeId);
@@ -1981,7 +4881,7 @@
             node.original.levelNo = json.levelNo || 1;
             node.original.flowType = json.flowType || "Both";
             node.original.allowLoop = !!json.allowLoop;
-            node.original.loopGroup = json.loopGroup || ""; 
+            node.original.loopGroup = json.loopGroup || "";
             node.original.x = json.x ?? 0;
             node.original.y = json.y ?? 0;
             var plainText = json.text || extractPlainTextFromNode(selectedNodeId);
@@ -2011,9 +4911,7 @@
 
             tree.rename_node(node, newHtml);
             syncTreeDataFromJsTree(fd.text || extractPlainTextFromNode(selectedNodeId), JSON.parse($("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val()));
-            }
             notify("Node updated", "success");
-
         }
 
         function applyJsonToSelectedNode() {
@@ -2039,76 +4937,6 @@
             notify("Node JSON refreshed", "success");
         }
 
-                function buildPayloadFromCanvas() {
-            if (!currentJson) {
-                return notify("Canvas data is empty", "warning");
-            }
-
-            const nodes = currentJson.workflowNodes || [];
-            const transitions = currentJson.workflowTransitions || [];
-
-            // ✅ map nodes chuẩn backend
-            const workflowNodes = nodes.map((n, index) => ({
-                id: n.id,
-                parentId: n.parentId ?? null,
-                nodeName: n.nodeName || "",
-                nodeType: n.nodeType || "",
-                nodeCode: n.nodeCode || "",
-                orderNo: n.orderNo ?? (index + 1),
-                stepRole: n.stepRole || "",
-                departmentName: n.departmentName || "",
-                levelNo: n.levelNo ?? 1,
-                flowType: n.flowType || "Both",
-                allowLoop: !!n.allowLoop,
-                loopGroup: n.loopGroup || "",
-                x: n.x ?? null,
-                y: n.y ?? null
-            }));
-
-            // ✅ map transitions chuẩn backend
-            const workflowTransitions = transitions.map(t => ({
-                fromNodeId: t.fromNodeId ?? null,
-                toNodeId: t.toNodeId ?? null,
-                statusId: t.statusId ?? 0,
-                statusCode: t.statusCode || "",
-                statusName: t.statusName || "",
-                actionCode: t.actionCode || "",
-                actionName: t.actionName || "",
-                flowType: t.flowType || "Both",
-                isReturn: !!t.isReturn,
-                isLoop: !!t.isLoop,
-                loopGroup: t.loopGroup || "",
-                loopExitMode: t.loopExitMode || "None",
-                maxLoopCount: t.maxLoopCount ?? null,
-                isExitTransition: !!t.isExitTransition,
-                userDecisionLabel: t.userDecisionLabel || "",
-                conditionJson: typeof t.conditionJson === "string"
-                    ? JSON.parse(t.conditionJson || "{}")
-                    : (t.conditionJson || {}),
-                command: t.command ?? null,
-                commandConfig: typeof t.commandConfig === "string"
-                    ? JSON.parse(t.commandConfig || "{}")
-                    : (t.commandConfig || null)
-            }));
-
-            // ✅ build payload full
-            const payload = {
-                workflowDefinition: currentJson.workflowDefinition || {},
-                workflowNodes,
-                workflowTransitions
-            };
-
-            // ✅ hiển thị hoặc dùng tiếp
-            console.log("Payload:", payload);
-
-            // nếu bạn có payloadBox:
-            $("#payloadBox_@Convert.ToInt32(ViewData["Id"])")
-                .text(JSON.stringify(payload, null, 2));
-
-            notify("Payload built from canvas", "success");
-
-            return payload;
-        }
         function addTransition() {
             var fd = transitionFormInstance.option("formData");
             if (!fd.fromNodeId || !fd.toNodeId) {
@@ -2311,7 +5139,7 @@
                     }, null, 2));
                 }
             }
-            //renderDiagramFromTree();
+            renderDiagramFromTree();
         }
 
         
@@ -2418,7 +5246,7 @@
                         label: { text: "Transition Flow Type" },
                         editorType: "dxSelectBox",
                         editorOptions: {
-                            dataSource: ["Quotation", "PolicyIssuance", "Both"]
+                            dataSource: _enums.TransitionType
                         }
                     },
                     {
@@ -2482,7 +5310,8 @@
         //   "sourceDepartment": "FO",
         //   "strategy": "Latest",
         //   "fileSelector": "First",
-        //   "allowOverride": false
+        //   "allowOverride": false,
+        //   "targetDepartment": "LMKT"
         // }
         // }
 
@@ -2886,7 +5715,9 @@
                 // var layoutMode = document.getElementById("layoutMode_@Convert.ToInt32(ViewData["Id"])");
                 // var // saveHint = document.getElementById("// saveHint_@Convert.ToInt32(ViewData["Id"])");
 
-            
+                var instance = null;
+                var currentJson = null;
+
                 function parseWorkflowNodes(value) {
                   if (value == null) return null;
                   if (typeof value === "string") {
@@ -2934,11 +5765,7 @@
                   if (flowType === "PolicyIssuance") return "flow-policy";
                   return "flow-both";
                 }
-                function getNodeFromCanvas(nodeId) {
-                    if (!currentJson || !currentJson.workflowNodes) return null;
 
-                    return currentJson.workflowNodes.find(x => x.id === nodeId);
-                }
                 function getNodeStateClass(nodeId, runtimeState) {
                   var active = runtimeState?.activeNodeId;
                   var done = runtimeState?.compvaredNodeIds || [];
@@ -3031,7 +5858,7 @@
           });
 
           const roots = nodes.filter(n => indegree.get(n.id) === 0);
-
+          
           (roots.length ? roots : nodes.slice(0, 1)).forEach(r => {
             layerMap.set(r.id, 0);
             queue.push(r.id);
@@ -3134,38 +5961,37 @@
                     canvasHeight: Math.max(window.innerHeight - (window.innerHeight * -0.1), maxY + 260)
                   };
                 }
+                  function createNodeEl(node, pos, runtimeState) {
+                        var el = document.createElement("div");
+                        el.id = node.id;
+                                let flowClass = "";
 
-                function createNodeEl(node, pos, runtimeState) {
-                  var el = document.createElement("div");
-                  el.id = node.id;
-                          let flowClass = "";
+                          // ✅ detect Start / End
+                          if (node.flowType === "Start") {
+                              flowClass = "flow-start";
+                          }
+                          else if (node.flowType === "End") {
+                              flowClass = "flow-end";
+                          }
+                          else {
+                              flowClass = getNodeFlowClass(node.flowType);
+                          }
 
-                    // ✅ detect Start / End
-                    if (node.flowType === "Start") {
-                        flowClass = "flow-start";
-                    }
-                    else if (node.flowType === "End") {
-                        flowClass = "flow-end";
-                    }
-                    else {
-                        flowClass = getNodeFlowClass(node.flowType);
-                    }
-
-                    el.className = "node " + flowClass + " " + getNodeStateClass(node.id, runtimeState);
-                  // el.className = "node " + getNodeFlowClass(node.flowType) + " " + getNodeStateClass(node.id, runtimeState);
-                  el.style.left = pos.x + "px";
-                  el.style.top = pos.y + "px";
-                  el.innerHTML = `
-                    <div class="node-title">${safe(node.nodeName || node.id)}</div>
-                    <div class="node-meta">
-                      <div>Order: ${safe(node.orderNo)}</div>
-                      <div>Level: ${safe(node.levelNo)}</div>
-                      <div>Flow: ${safe(node.flowType || "Both")}</div>
-                      <div>X: <span data-x="${node.id}">${safe(node.x)}</span> | Y: <span data-y="${node.id}">${safe(node.y)}</span></div>
-                    </div>
-                  `;
-                  return el;
-                }
+                          el.className = "node " + flowClass + " " + getNodeStateClass(node.id, runtimeState);
+                        // el.className = "node " + getNodeFlowClass(node.flowType) + " " + getNodeStateClass(node.id, runtimeState);
+                        el.style.left = pos.x + "px";
+                        el.style.top = pos.y + "px";
+                        el.innerHTML = `
+                          <div class="node-title">${safe(node.nodeName || node.id)}</div>
+                          <div class="node-meta">
+                            <div>Order: ${safe(node.orderNo)}</div>
+                            <div>Level: ${safe(node.levelNo)}</div>
+                            <div>Flow: ${safe(node.flowType || "Both")}</div>
+                            <div>X: <span data-x="${node.id}">${safe(node.x)}</span> | Y: <span data-y="${node.id}">${safe(node.y)}</span></div>
+                          </div>
+                        `;
+                        return el;
+                      }
 
                 function createLayerLabel(layer, x) {
                   var el = document.createElement("div");
@@ -3192,7 +6018,7 @@
                   var color = colorForEdge(t);
                   var label = safe(t.actionName || t.userDecisionLabel || t.actionCode || "");
                   var statusName = _enums.OverallStatus.find(f => f.id == t.statusId);
-                                          label = `${label} - <div class="statusTag ${normalizeStatus(statusName?.value || "").css}">${statusName?.value || ""} - ${safe(t.actionName || "")} <span>${getCommandIcon(t.command)}</span></div>`;
+                                          label = `${label} - <div class="statusTag ${normalizeStatus(statusName?.value || "").css}">${statusName?.value || ""} - ${getCommandIcon(t.command)} ${safe(t.actionName || "")}</div>`;
                   var isSelfLoop = t.fromNodeId === t.toNodeId;
 
                   var overlays = [
@@ -3264,86 +6090,10 @@
                 }
 
 
-                // function renderWorkflow(options = {}) {
-                //   try {
-                //     // errorBox.style.display = "none";
-                //     // errorBox.textContent = "";
-
-                //     currentJson = JSON.parse(jsonInput.value);
-
-                //     if (instance) {
-                //       instance.deleteEveryConnection();
-                //       instance.reset();
-                //     }
-
-                //     canvas.innerHTML = "";
-                //     var useSavedLayout =
-                //       getNodesWithSavedPosition(currentJson.workflowNodes).length > 0;
-
-                //     var layout = useSavedLayout
-                //       ? buildSavedLayout(currentJson)
-                //       : buildAutoLayout(currentJson);
-
-                //     var { positions, grouped, canvasWidth, canvasHeight } = layout;
-
-                //     canvas.style.width = canvasWidth + "px";
-                //     canvas.style.height = canvasHeight + "px";
-
-                //     if (!useSavedLayout) {
-                //       Object.keys(grouped).map(Number).sort((a, b) => a - b).forEach(layer => {
-                //         var arr = grouped[layer];
-                //         if (arr.length) {
-                //           canvas.appendChild(createLayerLabel(layer, positions[arr[0].id].x));
-                //         }
-                //       });
-                //     }
-
-                //     (currentJson.workflowNodes || []).forEach(node => {
-                //       var pos = positions[node.id];
-                //       if (!pos) return;
-
-                //       if (!useSavedLayout || !hasNumber(node.x) || !hasNumber(node.y)) {
-                //         node.x = pos.x;
-                //         node.y = pos.y;
-                //       }
-
-                //       canvas.appendChild(createNodeEl(node, pos, currentJson.runtimeState || {}));
-                //     });
-
-                //     instance = jsPlumb.getInstance({
-                //       Container: canvas
-                //     });
-
-                //     instance.importDefaults({
-                //       ConnectionsDetachable: false,
-                //       ReattachConnections: false,
-                //       Endpoint: "Blank",
-                //       PaintStyle: { stroke: "#64748b", strokeWidth: 2 },
-                //       HoverPaintStyle: { stroke: "#334155", strokeWidth: 3 }
-                //     });
-
-                //     (currentJson.workflowTransitions || []).forEach(connectEdge);
-                //     attachDrag();
-
-                //     var def = currentJson.workflowDefinition || {};
-                //     // wfCode.textContent = "Workflow: " + safe(def.workflowCode || "-");
-                //     // flowType.textContent = "Flow: " + safe(def.flowType || "-");
-                //     // currentStep.textContent = "Current: " + safe(currentJson.runtimeState?.activeNodeId || "-");
-                //     // layoutMode.textContent = "Layout: " + (useSavedLayout ? "saved x,y" : "auto layout");
-
-                //     syncJsonToTextarea();
-                //   } catch (err) {
-                //     // errorBox.style.display = "block";
-                //     // errorBox.textContent = err && err.stack ? err.stack : String(err);
-                //   }
-                // }
-
                 function renderWorkflow(options = {}) {
                   try {
-                    const {
-                        skipLayout = false,   // ✅ NEW
-                        forceAutoLayout = false // ✅ optional
-                    } = options;
+                    // errorBox.style.display = "none";
+                    // errorBox.textContent = "";
 
                     currentJson = JSON.parse(jsonInput.value);
 
@@ -3353,100 +6103,37 @@
                     }
 
                     canvas.innerHTML = "";
+                    var useSavedLayout =
+                      getNodesWithSavedPosition(currentJson.workflowNodes).length > 0;
 
-                    const nodes = currentJson.workflowNodes || [];
+                    var layout = useSavedLayout
+                      ? buildSavedLayout(currentJson)
+                      : buildAutoLayout(currentJson);
 
-                    const nodesWithPos = getNodesWithSavedPosition(nodes).length;
-
-                    // ✅ LOGIC QUAN TRỌNG
-                    let useSavedLayout;
-
-                    if (skipLayout) {
-                        useSavedLayout = true; // ✅ ép dùng layout hiện tại
-                    } else if (forceAutoLayout) {
-                        useSavedLayout = false;
-                    } else {
-                        useSavedLayout = nodesWithPos > 0;
-                    }
-                    const layout = useSavedLayout
-                        ? buildSavedLayout(currentJson)
-                        : buildAutoLayout(currentJson);
-
-                    const { positions, grouped, canvasWidth, canvasHeight } = layout;
+                    var { positions, grouped, canvasWidth, canvasHeight } = layout;
 
                     canvas.style.width = canvasWidth + "px";
                     canvas.style.height = canvasHeight + "px";
 
-                    // ✅ chỉ render layer khi auto layout
                     if (!useSavedLayout) {
-                      Object.keys(grouped)
-                        .map(Number)
-                        .sort((a, b) => a - b)
-                        .forEach(layer => {
-                          var arr = grouped[layer];
-                          if (arr.length) {
-                            canvas.appendChild(
-                                createLayerLabel(layer, positions[arr[0].id].x)
-                            );
-                          }
-                        });
+                      Object.keys(grouped).map(Number).sort((a, b) => a - b).forEach(layer => {
+                        var arr = grouped[layer];
+                        if (arr.length) {
+                          canvas.appendChild(createLayerLabel(layer, positions[arr[0].id].x));
+                        }
+                      });
                     }
 
-                    // (nodes || []).forEach(node => {
-                    //   let pos = positions[node.id];
+                    (currentJson.workflowNodes || []).forEach(node => {
+                      var pos = positions[node.id];
+                      if (!pos) return;
 
-                    //   // ✅ FIX: nếu skipLayout mà chưa có x,y → fallback nhẹ
-                    //   if (skipLayout && (!hasNumber(node.x) || !hasNumber(node.y))) {
-                    //     pos = {
-                    //       x: node.x ?? 120,
-                    //       y: node.y ?? 120
-                    //     };
-                    //   }
+                      if (!useSavedLayout || !hasNumber(node.x) || !hasNumber(node.y)) {
+                        node.x = pos.x;
+                        node.y = pos.y;
+                      }
 
-                    //   if (!pos) return;
-
-                    //   // ✅ chỉ set lại position khi KHÔNG skip layout
-                    //   if (!useSavedLayout) {
-                    //     node.x = pos.x;
-                    //     node.y = pos.y;
-                    //   }
-
-                    //   addNodeToCanvas(node, pos, currentJson.runtimeState);
-
-                    //   // canvas.appendChild(
-                    //   //   createNodeEl(node, pos, currentJson.runtimeState || {})
-                    //   // );
-                    // });
-                            (nodes || []).forEach(node => {
-                    let pos = positions[node.id];
-
-                    const hasPos = hasNumber(node.x) && hasNumber(node.y);
-
-                // ✅ CASE 1: skipLayout → giữ nguyên layout cũ
-                if (skipLayout) {
-
-                    // ✅ node CHƯA có position → KHÔNG render (node mới)
-                    if (!hasPos) {
-                        return; // 🔥 skip hoàn toàn
-                    }
-
-                    // ✅ node đã có position → dùng chính node.x,y
-                    pos = {
-                        x: node.x,
-                        y: node.y
-                    };
-                }
-
-                // ✅ fallback nếu không có pos (trường hợp auto layout)
-                if (!pos) return;
-
-                // ✅ chỉ set lại position khi KHÔNG skip layout
-                if (!useSavedLayout && !skipLayout) {
-                    node.x = pos.x;
-                    node.y = pos.y;
-                }
-
-                addNodeToCanvas(node, pos, currentJson.runtimeState);
+                      canvas.appendChild(createNodeEl(node, pos, currentJson.runtimeState || {}));
                     });
 
                     instance = jsPlumb.getInstance({
@@ -3462,39 +6149,21 @@
                     });
 
                     (currentJson.workflowTransitions || []).forEach(connectEdge);
-
                     attachDrag();
 
-                    syncJsonToTextarea();
+                    var def = currentJson.workflowDefinition || {};
+                    // wfCode.textContent = "Workflow: " + safe(def.workflowCode || "-");
+                    // flowType.textContent = "Flow: " + safe(def.flowType || "-");
+                    // currentStep.textContent = "Current: " + safe(currentJson.runtimeState?.activeNodeId || "-");
+                    // layoutMode.textContent = "Layout: " + (useSavedLayout ? "saved x,y" : "auto layout");
 
+                    syncJsonToTextarea();
                   } catch (err) {
-                    // handle error nếu cần
+                    // errorBox.style.display = "block";
+                    // errorBox.textContent = err && err.stack ? err.stack : String(err);
                   }
                 }
 
-
-                function addNodeToCanvas(node, pos, runtimeState) {
-            if (!node) return;
-
-            // ✅ fallback position
-            const safePos = {
-                x: pos?.x ?? node.x ?? 120,
-                y: pos?.y ?? node.y ?? 120
-            };
-
-            // ✅ tạo element
-            const el = createNodeEl(node, safePos, runtimeState || {});
-
-            canvas.appendChild(el);
-
-            // ✅ register jsPlumb endpoint
-            if (instance) {
-                registerEndpoints(node.id);
-                instance.revalidate(node.id);
-            }
-
-            return el;
-        }
                 function exportJson() {
                   try {
                     syncJsonToTextarea();
@@ -3744,55 +6413,41 @@
                     return candidate;
                 }
 
-                        function addNodeFromPalette(template, x, y) {
-                            const data = getData();
+                function addNodeFromPalette(template, x, y) {
+                    const data = getData();
 
-                            // ✅ luôn dùng generator chuẩn NODE_
-                            const id = generateNodeId();
+                    const id = generateUniqueNodeId(data, template.nodeName);
+                    const nextOrder = ((data.workflowNodes || []).reduce((m, n) => Math.max(m, n.orderNo || 0), 0)) + 1;
 
-                            const nextOrder = ((data.workflowNodes || [])
-                                .reduce((m, n) => Math.max(m, n.orderNo || 0), 0)) + 1;
+                   var node = workflowNodesHandle(template);
+                   node.id = id;
+                   node.orderNo = nextOrder;
+                   node.x = x;
+                   node.y = y;
 
-                            var node = workflowNodesHandle(template);
+                    data.workflowNodes.push(node);
 
-                            node.id = id;
+                    if (!data.runtimeState) {
+                        data.runtimeState = {
+                            activeNodeId: "",
+                            completedNodeIds: [],
+                            pendingNodeIds: []
+                        };
+                    }
 
-                            // ✅ GIỮ nodeName riêng
-                            node.nodeName = template.nodeName || id;
+                    if (!Array.isArray(data.runtimeState.pendingNodeIds)) {
+                        data.runtimeState.pendingNodeIds = [];
+                    }
 
-                            node.orderNo = nextOrder;
+                    if (!data.runtimeState.pendingNodeIds.includes(node.id)) {
+                        data.runtimeState.pendingNodeIds.push(node.id);
+                    }
 
-                            node.x = x;
-                            node.y = y;
-
-                            data.workflowNodes.push(node);
-
-                            // ✅ runtime state
-                            if (!data.runtimeState) {
-                                data.runtimeState = {
-                                    activeNodeId: "",
-                                    completedNodeIds: [],
-                                    pendingNodeIds: []
-                                };
-                            }
-
-                            if (!Array.isArray(data.runtimeState.pendingNodeIds)) {
-                                data.runtimeState.pendingNodeIds = [];
-                            }
-
-                            if (!data.runtimeState.pendingNodeIds.includes(node.id)) {
-                                data.runtimeState.pendingNodeIds.push(node.id);
-                            }
-
-                            setData(data);
-                            renderWorkflow(
-                            {
-                                skipLayout: true
-                            }
-                            );
-
-                            setStatus("Added node: " + node.nodeName + " (" + node.id + ")");
-                        }
+                    setData(data);
+                    // renderWorkflow();
+                    renderWorkflow();
+                    setStatus("Added node: " + node.id);
+                }
 
                 function removeSelectedNode() {
                     if (!selectedNodeId) {
@@ -4051,3 +6706,4 @@
 
     </script>
 </body>
+ 

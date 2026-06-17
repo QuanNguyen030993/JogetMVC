@@ -48,6 +48,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     private readonly IBaseRepository<UrlCall> _urlCallRepository;
     private readonly IBaseRepository<StepsWorkflow> _stepsWorkflowRepository;
     private readonly IBaseRepository<Document> _documentRepository;
+    private readonly IBaseRepository<WorkflowInstanceNode> _workflowInstanceNodeRepository;
     private readonly IHubContext<FileProcessingHub> _hubContext;
     private readonly Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> _blobStorageSettings;
     private readonly Microsoft.Extensions.Options.IOptionsMonitor<BusinessConfig> _businessConfig;
@@ -81,6 +82,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         _urlCallRepository = new BaseRepository<UrlCall>(configuration, _httpContextAccessor);
         _stepsWorkflowRepository = new BaseRepository<StepsWorkflow>(configuration, _httpContextAccessor);
         _documentRepository = new BaseRepository<Document>(configuration, _httpContextAccessor);
+        _workflowInstanceNodeRepository = new BaseRepository<WorkflowInstanceNode>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
         _hubContext = hubContext;
         _blobStorageSettings = blobStorageSettings;
@@ -133,6 +135,16 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         quotation.TurnAroundTimeAttributes = JsonConvert.SerializeObject(result);
 
         await TATLog(quotation, tatObject, submitRequest.StepsWorkflow.FromNodeId);
+
+        WorkflowInstanceNode workflowInstanceNode = new WorkflowInstanceNode();
+        workflowInstanceNode = await _workflowInstanceNodeRepository.GetSingleObject(s => s.Code == submitRequest.InstanceWorkflow.CurrentStep);
+
+        if (workflowInstanceNode == null) return StatusCode(500, "Cannot find node in workflow!");
+        if (workflowInstanceNode.NodeStatus == "End")
+        {
+            quotation.StageDept = "";
+            quotation.StageAccount = "";
+        }    
 
         await _quotationRepository.UpdateData(quotation, JsonConvert.SerializeObject(quotation), quotation?.Id, "Id");
 

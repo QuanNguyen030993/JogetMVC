@@ -26,6 +26,7 @@ Note:
     var PIC_JSON = `{}`;
     var formModuleKeyQt = "qt";
     var pICs = [];
+    var workflowStatus = "";
     // if ($('[data-toggle="push-menu"]').hasClass("sidebar-collapse")) {
     //     $('[data-toggle="push-menu"]').click();
     //     isToggleMenu = true;
@@ -106,6 +107,7 @@ Note:
                 const $co = $(this).find(".dept-callout");
                 if (!$co.length) return;
                 const pic = picMap[dept] || "-";
+                if (stageDept)
                 $co.find(".co-text").text(pic);
                 $co.css({ color: "rgba(17,24,39,.85)" });
             });
@@ -284,7 +286,6 @@ Note:
                     state.quotePaging.firstLoadDone = true;
                     syncSelectedState(state.quotes[0]);
                     await loadSelectedWorkflow();
-
                     renderDetail();
                 }
             } catch (err) {
@@ -320,7 +321,7 @@ Note:
             // Reload the selected detail if any
             if (state.selectedId) {
                 await loadSelectedWorkflow();
-                renderDetail();
+                // renderDetail();
             }
             // Reload state for attachments and comments
             reloadState();
@@ -504,6 +505,9 @@ Note:
 
         function applyNodeHighlights() {
             $(".dept-node").removeClass("status focus");
+            // if (stageDept == "")
+            //    $(`.dept-node[data-key='${workflowStatus}']`).addClass("status")
+            // else 
             $(`.dept-node[data-key='${stageDept}']`).addClass("status");
             $(`.dept-node[data-key='${focusDept}']`).addClass("focus");
         }
@@ -979,13 +983,16 @@ Note:
 
             $(`#${formModuleKeyQt}-recordNo`).text(q.quotationCode);
 
-            const st = q.quotationStatus ?? q.status;
-            $(`#${window.QuotationIdManager.stageDeptPill(q.id)}`).html(`<span id="@ViewIdHelper.DetailStatus(moduleCode, Convert.ToInt64(ViewData["Id"]))" class="pill">${q.workflowStatus}</span> - ${stageAccount ?? ""}`);
+            workflowStatus = q.workflowStatus ?? q.status;
+            $(`#${window.QuotationIdManager.stageDeptPill(q.id)}`).html(`<span id="@ViewIdHelper.DetailStatus(moduleCode, Convert.ToInt64(ViewData["Id"]))" class="pill">${workflowStatus}</span> - ${stageAccount ?? ""}`);
             $(`#${window.QuotationIdManager.detailStatus(q.id)}`)
-                .text(statusText(st))
-                .attr("class", `statusTag ${statusClass(st)}`);
+                .text(statusText(workflowStatus))
+                .attr("class", `statusTag ${statusClass(workflowStatus)}`);
 
-           
+
+
+
+
             $.each(qtDeptModuleCode, function (itemIndex, item) {
                 // var control = TinyMCEElementMaker(`.htmleditor`, item, @ViewData["Id"], control);
                 // deptData[item] = { ...q, id: q.id, sectionName: item, code: q.quotationCode };
@@ -1014,6 +1021,40 @@ Note:
             scrollToDept(formModuleKeyQt, { id: `${focusDept}`, keyId: "@ViewData["Id"]" } );
             // TinyMCEElementMaker(`.htmleditor`);
 
+
+                var stageDept = q.stageDept;
+                if (workflowStatus === "Quotation confirmed" || workflowStatus === "Quotation refused") {
+
+                    let icon, colorClass, text;
+
+                    if (workflowStatus === "Quotation confirmed") {
+                        icon = "✔";
+                        colorClass = "status-success";
+                        text = "Confirmed";
+                    }  
+                    if (workflowStatus === "Quotation refused") {
+                        icon = "✖";
+                        colorClass = "status-fail";
+                        text = "Refused";
+                    }
+
+                    // Tạo node mới
+                    var newNode = `
+
+                        <div class="${formModuleKeyQt}-dept-tree dept-node status" data-key="${workflowStatus}" data-target="#${formModuleKeyQt}-sec-${text}">
+
+                            <div class="dept-callout animate-step visible" data-pic-for="${text}" style="color: rgba(17, 24, 39, 0.85);">
+                                <span class="co-icon"></span>
+                                <span class="co-text">${workflowStatus}</span>
+                            </div>
+
+                            <div class="dept-circle ${colorClass}">${icon}</div>
+                        </div>
+                    `;
+
+                    $(`#${formModuleKeyQt}-treeStack_@Convert.ToInt32(ViewData["Id"])`).append(newNode);
+
+                }
 
             
         }

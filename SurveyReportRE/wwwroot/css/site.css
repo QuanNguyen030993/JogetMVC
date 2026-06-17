@@ -2944,7 +2944,20 @@ text-overflow: ellipsis;
     transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
     z-index: 2;
 }
+    .dept-circle.status-success {
+        background-color: #22c55e;
+        color: #fff;
+    }
 
+    .dept-circle.status-fail {
+        background-color: #ef4444;
+        color: #fff;
+    }
+
+.focus-error {
+    border: 2px solid red;
+    border-radius: 50%;
+}
 .dept-node:hover .dept-circle {
     transform: scale(1.06);
 }
