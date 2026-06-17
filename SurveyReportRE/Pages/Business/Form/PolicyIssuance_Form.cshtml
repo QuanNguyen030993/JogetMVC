@@ -640,18 +640,18 @@ Note:
                     .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
             }
 
-            function renderComments(items) {
-                if (!Array.isArray(items) || items.length === 0) {
-                    return `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No audit logs</div>`;
-                }
-                return items.map((c) => `
-                        <div class="ct-item">
-                            <div class="ct-user">${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}</div>
-                            <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
-                            <div class="ct-text">${escapeHtml(c.commentText || "")}</div>
-                        </div>
-                    `).join("");
-            }
+            // function renderComments(items) {
+            //     if (!Array.isArray(items) || items.length === 0) {
+            //         return `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No audit logs</div>`;
+            //     }
+            //     return items.map((c) => `
+            //             <div class="ct-item">
+            //                 <div class="ct-user">${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}</div>
+            //                 <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
+            //                 <div class="ct-text">${escapeHtml(c.commentText || "")}</div>
+            //             </div>
+            //         `).join("");
+            // }
 
             const loadComments = debounce(function (quoteNo, quoteId) {
                 document.documentElement.style.setProperty("--rightdock-width", "20%");

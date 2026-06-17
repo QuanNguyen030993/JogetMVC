@@ -229,7 +229,7 @@ namespace ERPCore.ControllerUtil
             return Notification;
         }
         public static async Task CloneAction(
-    IBaseRepository<QuotationCommentLog> _quotationCommentLogRepository,
+    IBaseRepository<CommentLog> _quotationCommentLogRepository,
     List<Dictionary<string, object>> commentLogs,
     List<Dictionary<string, object>> workflowHistories,
     long quotationId
@@ -239,7 +239,7 @@ namespace ERPCore.ControllerUtil
             {
                     var commentQuery = CloneQuery(
                     commentLog,
-                   "QuotationCommentLog",
+                   "CommentLog",
                    quotationId
                );
                 await _quotationCommentLogRepository
@@ -327,7 +327,7 @@ namespace ERPCore.ControllerUtil
 
             return value.ToString();
         }
-        public static async Task<IActionResult> LogAction(IBaseRepository<QuotationCommentLog> _quotationCommentLogRepository
+        public static async Task<IActionResult> LogAction(IBaseRepository<CommentLog> _quotationCommentLogRepository
             , IHttpContextAccessor httpContextAccessor
             , IConfiguration configuration
             , string DOMAIN_NAME
@@ -337,36 +337,36 @@ namespace ERPCore.ControllerUtil
             ) 
         {
             var userInfo = await ControllerHelper.FetchUserRoles(httpContextAccessor, configuration, DOMAIN_NAME);
-              string logQuery = $@"INSERT INTO QuotationCommentLog (QuotationId
-            ,DeptCode,CommentOrder,CommentBy,CommentTime,CommentText,SourceSystem)
-                        VALUES ({entity.Id},'{workflowEntity.StepsWorkflow.FromNodeId} - {workflowEntity.StepsWorkflow.StepName}'
+              string logQuery = $@"INSERT INTO CommentLog (RecordGuid
+            ,DeptCode,CommentOrder,CommentBy,CommentTime,CommentText,SourceSystem,CreatedAtUtc)
+                        VALUES ('{entity.Guid}','{workflowEntity.StepsWorkflow.FromNodeId} - {workflowEntity.StepsWorkflow.StepName}'
             ,{0}
             ,'{userInfo.Users.name}'
             ,'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}'
             ,N'{workflowEntity.Comment}'
-            ,'WEB')
+            ,'WEB', GETDATE())
                     ";
             string logFlowQuery = "";
             if (workflowEntity.isFullDetail)
             {
-                logFlowQuery = $@"INSERT INTO QuotationWorkflowHistory(QuotationId
-            ,StepNo,DeptCode,ActionTime,ActionNote,FromDeptCode,ToDeptCode,ActionCode,Actor,SourceSystem)
-                        VALUES ({entity.Id},{workflowEntity.InstanceWorkflow.CurrentStep}
+                logFlowQuery = $@"INSERT INTO QuotationWorkflowHistory(RecordGuid
+            ,StepNo,DeptCode,ActionTime,ActionNote,FromDeptCode,ToDeptCode,ActionCode,Actor,SourceSystem,CreatedAtUtc)
+                        VALUES ('{entity.Guid}',{workflowEntity.InstanceWorkflow.CurrentStep}
             ,'{workflowEntity.StepsWorkflow.FromNodeId}'
             ,'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}'
             ,'{workflowEntity.StepsWorkflow.DisplayStatus}'
             ,'{workflowEntity.StepsWorkflow.FromNodeId}'
             ,'{workflowEntity.StepsWorkflow.ToNodeId}'
             ,'{workflowEntity.StepsWorkflow.ActionCode}'
-            ,'{userInfo.Users.name}','WEB')
+            ,'{userInfo.Users.name}','WEB',GETDATE())
                     ";
             }
             using var loggerFactory = LoggerFactory.Create(loggingBuilder => loggingBuilder
           .SetMinimumLevel(LogLevel.Trace)
           .AddConsole());
 
-            var logger = loggerFactory.CreateLogger<QuotationCommentLog>();
-            var quotationCommentLogApiController = new QuotationCommentLogController(_quotationCommentLogRepository, configuration, httpContextAccessor, logger, optionsMonitor);
+            var logger = loggerFactory.CreateLogger<CommentLog>();
+            var quotationCommentLogApiController = new CommentLogController(_quotationCommentLogRepository, configuration, httpContextAccessor, logger, optionsMonitor);
                         await quotationCommentLogApiController.ExecuteCustomQuery(logQuery);
             if (workflowEntity.isFullDetail)
                 await quotationCommentLogApiController.ExecuteCustomQuery(logFlowQuery);

@@ -225,7 +225,6 @@ Note:
                                                disabled: tatObject[item].AcceptDate ? false : true,
                                             text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
                                                 function (e) {
-                                                    debugger
                                                 var content = remarkBoxs[item].controlRemark.instance.option("value");
                                                     formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                                                     formItems.comment = content || "";
@@ -620,28 +619,28 @@ Note:
                     .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
             }
 
-            function renderComments(items) {
-                if (!Array.isArray(items) || items.length === 0) {
-                    return `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No audit logs</div>`;
-                }
-                return items.map((c) => `
-                                <div class="ct-item">
-                                    <div class="ct-user">${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}</div>
-                                    <div class="ct-time">${fmtTimeLocal(c.commentTime || "")}</div>
-                                    <div class="ct-text">${c.commentText}</div>
-                                </div>
-                            `).join("");
-                                    // <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
-            }
+            // function renderComments(items) {
+            //     if (!Array.isArray(items) || items.length === 0) {
+            //         return `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No audit logs</div>`;
+            //     }
+            //     return items.map((c) => `
+            //                     <div class="ct-item">
+            //                         <div class="ct-user">${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}</div>
+            //                         <div class="ct-time">${fmtTimeLocal(c.commentTime || "")}</div>
+            //                         <div class="ct-text">${c.commentText}</div>
+            //                     </div>
+            //                 `).join("");
+            //                         // <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
+            // }
 
             const loadComments = debounce(function (quoteNo, quoteId) {
                 document.documentElement.style.setProperty("--rightdock-width", "20%");
                 $("#rightCommentSub").text(`Audit log - ${quoteNo}` || "-");
                 $("#rightCommentList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
-                // const q = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${quoteId}`;
+                // const q = `SELECT * FROM CommentLog WHERE QuotationId = ${quoteId}`;
                 const q = `OnSystem`;
                 $.ajax({
-                    url: `/api/QuotationCommentLog/ExecuteCustomQuery?refField=QuotationId&refKey=${quoteId}`,
+                    url: `/api/CommentLog/ExecuteCustomQuery?refField=QuotationId&refKey=${quoteId}`,
                     method: "POST",
                     async: true,
                     contentType: "application/json",

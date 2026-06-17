@@ -228,3 +228,14 @@ Nếu chưa có file final thì TS chỉ review tạm theo summary và có rủi
     NULL,
     NULL
 );
+
+INSERT INTO CommentLog (DeptCode,CommentOrder,CommentBy,CommentTime,CommentText,SourceSystem,SourceRef,RawJson,CreatedAtUtc,RecordGuid)
+SELECT DeptCode,CommentOrder,CommentBy,CommentTime,CommentText,SourceSystem,SourceRef,RawJson,CreatedAtUtc,q.Guid
+FROM QuotationCommentLog l
+LEFT JOIN WorkflowManagement.dbo.Quotation   q ON q.Id = l.QuotationId
+
+
+INSERT INTO WorkflowHistory (StepNo,DeptCode,ActionTime,ActionNote,FromDeptCode,ToDeptCode,ActionCode,Actor,SourceSystem,SourceRef,RawJson,CreatedAtUtc,RecordGuid)
+SELECT StepNo,DeptCode,ActionTime,ActionNote,FromDeptCode,ToDeptCode,ActionCode,Actor,SourceSystem,SourceRef,RawJson,CreatedAtUtc,q.Guid
+FROM QuotationWorkflowHistory l
+LEFT JOIN WorkflowManagement.dbo.Quotation   q ON q.Id = l.QuotationId

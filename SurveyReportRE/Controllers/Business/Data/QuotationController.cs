@@ -46,7 +46,7 @@ public class QuotationController : BaseControllerApi<Quotation>
     private readonly IBaseRepository<MailTemplate> _mailTemplateRepository;
     private readonly IBaseRepository<MailQueue> _mailQueueRepository;
     private readonly IBaseRepository<Res> _resRepository;
-    private readonly IBaseRepository<QuotationCommentLog> _quotationCommentLogRepository;
+    private readonly IBaseRepository<CommentLog> _quotationCommentLogRepository;
     private readonly IBaseRepository<StepsWorkflow> _stepsWorkflowRepository;
     private readonly IBaseRepository<Document> _documentRepository;
     private readonly IBaseRepository<Notification> _notificationRepository;
@@ -97,7 +97,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         _mailTemplateRepository = new BaseRepository<MailTemplate>(configuration, _httpContextAccessor);
         _mailQueueRepository = new BaseRepository<MailQueue>(configuration, _httpContextAccessor);
         _resRepository = new BaseRepository<Res>(configuration, _httpContextAccessor);
-        _quotationCommentLogRepository = new BaseRepository<QuotationCommentLog>(configuration, _httpContextAccessor);
+        _quotationCommentLogRepository = new BaseRepository<CommentLog>(configuration, _httpContextAccessor);
         _stepsWorkflowRepository = new BaseRepository<StepsWorkflow>(configuration, _httpContextAccessor);
         _documentRepository = new BaseRepository<Document>(configuration, _httpContextAccessor);
         _notificationRepository = new BaseRepository<Notification>(configuration, _httpContextAccessor);
@@ -234,9 +234,9 @@ public class QuotationController : BaseControllerApi<Quotation>
          .SetMinimumLevel(LogLevel.Trace)
          .AddConsole());
 
-        var logger = loggerFactory.CreateLogger<QuotationCommentLog>();
-        var quotationCommentLogApiController = new QuotationCommentLogController(_quotationCommentLogRepository, configuration, _httpContextAccessor, logger, _blobStorageSettings);
-        string logQuery = $"SELECT * FROM QuotationCommentLog WHERE {nameof(Quotation)}Id = {quotation.Id}";
+        var logger = loggerFactory.CreateLogger<CommentLog>();
+        var quotationCommentLogApiController = new CommentLogController(_quotationCommentLogRepository, configuration, _httpContextAccessor, logger, _blobStorageSettings);
+        string logQuery = $"SELECT * FROM CommentLog WHERE {nameof(Quotation)}Id = {quotation.Id}";
         string logHistoryQuery = $"SELECT * FROM QuotationWorkflowHistory WHERE {nameof(Quotation)}Id = {quotation.Id}";
         var quotationCommentLogs =  await quotationCommentLogApiController.ExecuteCustomQuery(logQuery);
         var quotaionWorkflowHistory = await quotationCommentLogApiController.ExecuteCustomQuery(logHistoryQuery);
@@ -751,6 +751,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         submitRequest.Comment = quotationData?.QuotationData?.SubmitRequest?.Comment;
         submitRequest.StepsWorkflow = new StepsWorkflow();
         submitRequest.StepsWorkflow.FromNodeId = quotationData?.QuotationData?.SubmitRequest?.StepsWorkflow?.FromNodeId;
+        submitRequest.StepsWorkflow.StepName = quotationData?.QuotationData?.SubmitRequest?.StepsWorkflow?.StepName;
         submitRequest.isFullDetail = quotationData?.QuotationData?.SubmitRequest?.isFullDetail;
         await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotationData.QuotationData.Quotation, submitRequest, _blobStorageSettings);
         return Ok();
@@ -1134,8 +1135,8 @@ public class QuotationController : BaseControllerApi<Quotation>
             using var loggerFactory = LoggerFactory.Create(loggingBuilder => loggingBuilder
         .SetMinimumLevel(LogLevel.Trace)
         .AddConsole());
-            var logger = loggerFactory.CreateLogger<QuotationCommentLog>();
-            var quotationCommentLogApiController = new QuotationCommentLogController(_quotationCommentLogRepository, configuration, _httpContextAccessor, logger, _blobStorageSettings);
+            var logger = loggerFactory.CreateLogger<CommentLog>();
+            var quotationCommentLogApiController = new CommentLogController(_quotationCommentLogRepository, configuration, _httpContextAccessor, logger, _blobStorageSettings);
             await quotationCommentLogApiController.ExecuteCustomQuery(logQuery);
             await quotationCommentLogApiController.ExecuteCustomQuery(logFlowQuery);
             ///

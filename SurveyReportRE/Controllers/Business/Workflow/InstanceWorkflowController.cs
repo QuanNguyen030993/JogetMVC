@@ -32,10 +32,10 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 {
     private readonly IBaseRepository<InstanceWorkflow> _BaseRepository;
     private readonly IBaseRepository<Quotation> _quotationRepository;
-    private readonly IBaseRepository<QuotationCommentLog> _quotationCommentLogRepository;
+    private readonly IBaseRepository<CommentLog> _quotationCommentLogRepository;
     private readonly IConfiguration configuration;
     private readonly IConfigurationSection path;
-    private readonly ILogger<QuotationCommentLog> _logger;
+    private readonly ILogger<CommentLog> _logger;
     private readonly IOptionsMonitor<BlobStorageSettings> _optionsMonitor;
     private readonly IBaseRepository<MailTemplate> _mailTemplateRepository;
     private readonly IBaseRepository<MailQueue> _mailQueueRepository;
@@ -56,7 +56,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     public InstanceWorkflowController(IBaseRepository<InstanceWorkflow> BaseRepository
         , IConfiguration config
         , IHttpContextAccessor httpContextAccessor
-        , ILogger<QuotationCommentLog> logger
+        , ILogger<CommentLog> logger
         , IOptionsMonitor<BlobStorageSettings> optionsMonitor
         , Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> blobStorageSettings
         , Microsoft.Extensions.Options.IOptionsMonitor<BusinessConfig> businessConfig
@@ -69,7 +69,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         _optionsMonitor = optionsMonitor;
         _BaseRepository = BaseRepository;
         _quotationRepository = new BaseRepository<Quotation>(configuration, _httpContextAccessor);
-        _quotationCommentLogRepository = new BaseRepository<QuotationCommentLog>(configuration, _httpContextAccessor);
+        _quotationCommentLogRepository = new BaseRepository<CommentLog>(configuration, _httpContextAccessor);
         _mailQueueRepository = new BaseRepository<MailQueue>(configuration, _httpContextAccessor);
         _mailTemplateRepository = new BaseRepository<MailTemplate>(configuration, _httpContextAccessor);
         _usersRepository = new BaseRepository<Users>(configuration, _httpContextAccessor);
@@ -316,32 +316,6 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         await _quotationRepository.UpdateData(quotation, JsonConvert.SerializeObject(quotation), quotation?.Id, "Id");
         var userInfo = await ControllerHelper.FetchUserRoles(_httpContextAccessor, configuration, DOMAIN_NAME);
         await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
-
-        //        string logQuery = $@"INSERT INTO QuotationCommentLog (QuotationId
-        //,DeptCode,CommentOrder,CommentBy,CommentTime,CommentText,SourceSystem)
-        //            VALUES ({quotation.Id},'{submitRequest.StepsWorkflow.FromNodeId}'
-        //,{0}
-        //,'{userInfo.Users?.name ?? "Anonymous"}'
-        //,'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}'
-        //,N'{submitRequest.Comment}'
-        //,'WEB')
-        //        ";
-
-
-        //        string logFlowQuery = $@"INSERT INTO QuotationWorkflowHistory(QuotationId
-        //,StepNo,DeptCode,ActionTime,ActionNote,FromDeptCode,ToDeptCode,ActionCode,Actor,SourceSystem)
-        //            VALUES ({quotation.Id},{submitRequest.InstanceWorkflow.CurrentStep}
-        //,'{submitRequest.StepsWorkflow.FromNodeId}'
-        //,'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}'
-        //,'{submitRequest.StepsWorkflow.DisplayStatus}'
-        //,'{submitRequest.StepsWorkflow.FromNodeId}'
-        //,'{submitRequest.StepsWorkflow.ToNodeId}'
-        //,'{submitRequest.StepsWorkflow.ActionCode}'
-        //,'{userInfo.Users?.name ?? "Anonymous"}','WEB')
-        //        ";
-        //        var quotationCommentLogApiController = new QuotationCommentLogController(_quotationCommentLogRepository, configuration, _httpContextAccessor, _logger, _optionsMonitor);
-        //        await quotationCommentLogApiController.ExecuteCustomQuery(logQuery);
-        //        await quotationCommentLogApiController.ExecuteCustomQuery(logFlowQuery);
 
 
         MailTemplate mailTemplate = new MailTemplate();

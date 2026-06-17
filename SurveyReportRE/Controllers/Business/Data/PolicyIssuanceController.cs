@@ -43,7 +43,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     private readonly IBaseRepository<Roles> _rolesRepository;
     private readonly IHubContext<FileProcessingHub> _hubContext;
     private readonly IBaseRepository<InstanceWorkflow> _instanceWorkflowRepository;
-    private readonly IBaseRepository<QuotationCommentLog> _quotationCommentLogRepository;
+    private readonly IBaseRepository<CommentLog> _quotationCommentLogRepository;
     private readonly IConfigurationSection path;
     public static string MANAGER_APP = "";
     public static string APPROVER_APP = "";
@@ -76,7 +76,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         _userRolesRepository = new BaseRepository<UserRoles>(configuration, _httpContextAccessor);
         _rolesRepository = new BaseRepository<Roles>(configuration, _httpContextAccessor);
         _instanceWorkflowRepository = new BaseRepository<InstanceWorkflow>(configuration, _httpContextAccessor);
-        _quotationCommentLogRepository = new BaseRepository<QuotationCommentLog>(configuration, _httpContextAccessor);
+        _quotationCommentLogRepository = new BaseRepository<CommentLog>(configuration, _httpContextAccessor);
         _hubContext = hubContext;
         MANAGER_APP = configuration.GetSection("BusinessConfig:ManagerAppKey").Value;
         APPROVER_APP = configuration.GetSection("BusinessConfig:ApproverAppKey").Value;

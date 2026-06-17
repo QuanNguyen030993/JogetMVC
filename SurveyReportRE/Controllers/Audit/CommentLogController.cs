@@ -19,9 +19,9 @@ using System.Dynamic;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
-public class QuotationCommentLogController : BaseControllerApi<QuotationCommentLog>
+public class CommentLogController : BaseControllerApi<CommentLog>
 {
-    private readonly IBaseRepository<QuotationCommentLog> _BaseRepository;
+    private readonly IBaseRepository<CommentLog> _BaseRepository;
     private readonly IConfiguration configuration;
     private readonly IBaseRepository<Survey> _surveyRepository;
     private readonly IBaseRepository<ERPCore.Models.Migration.Business.Data.Attachment> _attachmentRepository;
@@ -29,10 +29,10 @@ public class QuotationCommentLogController : BaseControllerApi<QuotationCommentL
     private readonly IConfigurationSection path;
     private readonly Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> _blobStorageSettings;
     private static string Query;
-    public QuotationCommentLogController(IBaseRepository<QuotationCommentLog> BaseRepository
+    public CommentLogController(IBaseRepository<CommentLog> BaseRepository
         , IConfiguration config
         , IHttpContextAccessor httpContextAccessor
-        , ILogger<QuotationCommentLog> logger
+        , ILogger<CommentLog> logger
         , Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> blobStorageSettings
         ) : base(BaseRepository, httpContextAccessor
             )
@@ -64,7 +64,7 @@ public class QuotationCommentLogController : BaseControllerApi<QuotationCommentL
     //    {
     //        dynamicObj[item.Key] = item.Value;
     //    }
-    //    var Base = new List<QuotationCommentLog>();
+    //    var Base = new List<CommentLog>();
     //    if (requestParams != null && requestParams.Count > 0)
     //    {
     //        if (dynamicObj.ContainsKey("key"))
@@ -102,7 +102,7 @@ public class QuotationCommentLogController : BaseControllerApi<QuotationCommentL
         {
             Query = query;
         }
-        var controllerName = ControllerContext.RouteData?.Values["controller"]?.ToString() ?? "QuotationCommentLog";
+        var controllerName = ControllerContext.RouteData?.Values["controller"]?.ToString() ?? "CommentLog";
         BaseRepository<SysTable> sysTableRepo = new BaseRepository<SysTable>(_BaseRepository._baseConfiguration, _httpContextAccessor);
         SysTable sysTable = await sysTableRepo.GetSingleObject(s => s.Name == controllerName);
       
@@ -140,7 +140,7 @@ public class QuotationCommentLogController : BaseControllerApi<QuotationCommentL
                    "CommentType",
                    "CommentBy",
                    "CommentText",
-                   "QuotationId",
+                   "RecordGuid",
                    "CommentId"
                     }
                 );
@@ -156,12 +156,12 @@ public class QuotationCommentLogController : BaseControllerApi<QuotationCommentL
     }
 
 
-    public async Task BulkInsertQuotationCommentLogAsync(List<QuotationCommentLog> data)
+    public async Task BulkInsertCommentLogAsync(List<CommentLog> data)
     {
         var dt = new DataTable();
 
         // Khởi tạo cột (phải khớp DB)
-        foreach (var prop in typeof(QuotationCommentLog).GetProperties())
+        foreach (var prop in typeof(CommentLog).GetProperties())
         {
             dt.Columns.Add(prop.Name, typeof(string));
         }
@@ -170,7 +170,7 @@ public class QuotationCommentLogController : BaseControllerApi<QuotationCommentL
         foreach (var item in data)
         {
             var row = dt.NewRow();
-            foreach (var prop in typeof(QuotationCommentLog).GetProperties())
+            foreach (var prop in typeof(CommentLog).GetProperties())
             {
                 row[prop.Name] = prop.GetValue(item) ?? DBNull.Value;
             }
@@ -182,7 +182,7 @@ public class QuotationCommentLogController : BaseControllerApi<QuotationCommentL
         await connection.OpenAsync();
         using var bulkCopy = new SqlBulkCopy(connection)
         {
-            DestinationTableName = "dbo.QuotationCommentLog", // Đảm bảo đúng tên bảng
+            DestinationTableName = "dbo.CommentLog", // Đảm bảo đúng tên bảng
             BulkCopyTimeout = 60
         };
 

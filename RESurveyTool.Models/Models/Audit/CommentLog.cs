@@ -9,11 +9,12 @@ using System.Threading.Tasks;
 
 namespace ERPCore.Models
 {
-    public class QuotationCommentLog
+    public class CommentLog
     {
         public long CommentId { get; set; }
 
-        public long QuotationId { get; set; }
+        //public long QuotationId { get; set; }
+        public Guid RecordGuid { get; set; }    
 
         public string QuotationCode { get; set; } = default!; // denormalize (optional)
         public string? DeptCode { get; set; }                 // MKT/TS/UW/...
@@ -32,7 +33,7 @@ namespace ERPCore.Models
 
         public string? RawJson { get; set; }                  // lưu raw item nếu cần
 
-        public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAtUtc { get; set; } = DateTime.Now;
         public virtual Quotation? Quotation { get; set; }
     }
 }
