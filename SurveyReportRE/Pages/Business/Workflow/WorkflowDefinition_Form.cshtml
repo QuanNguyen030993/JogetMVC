@@ -766,6 +766,47 @@
             font-size: 13px;
             box-shadow: 0 4px 10px rgba(0,0,0,.15);
         }
+    /* base node vẫn giữ */
+    .node {
+        position: absolute;
+        min-width: 140px;
+        padding: 10px;
+        border-radius: 8px;
+        background: #fff;
+        border: 1px solid #ccc;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+
+
+        .node.flow-start {
+            background-color: rgba(34, 197, 94, 0.1);
+            border: 2px solid #22c55e;
+            color: #166534;
+        }
+
+        .node.flow-end {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 2px solid #ef4444;
+            color: #7f1d1d;
+        }
+
+
+        .node.flow-start,
+        .node.flow-end {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 12px;
+            box-sizing: border-box;
+        }
+
+
 
     .nodeTitle {
         font-size: 15px;
@@ -965,16 +1006,68 @@
             </div>
 
 
+            
+            <div class="card card-last" style="min-height:600px;">
+                <div class="card-header">
+                    <div class="card-title">Workflow Pallete</div>
+                    <div class="card-sub">Drag & Connect nodes</div>
+                </div>
+                <div class="card-body">
+                <div class="canvas-wrap">
+                        <div class="title">Design Workflow</div>
+                        <div class="palette">
+                            <div class="paletteItem" draggable="true" data-template='{"nodeName":"FO","flowType":"Both","allowLoop":false,"loopGroup":"","nodeType":"","nodeCode":"","stepRole":"","departmentName":"","levelNo":1}'>
+                                <div class="paletteTitle">FO</div>
+                                <div class="paletteMeta">
+                                    <span class="tag">Both</span>
+                                </div>
+                            </div>
+
+                            <div class="paletteItem" draggable="true" data-template='{"nodeName":"TS","flowType":"Quotation","allowLoop":false,"loopGroup":"","nodeType":"","nodeCode":"","stepRole":"","departmentName":"","levelNo":1}'>
+                                <div class="paletteTitle">TS</div>
+                                <div class="paletteMeta">
+                                    <span class="tag">Quotation</span>
+                                </div>
+                            </div>
+
+                            <div class="paletteItem" draggable="true" data-template='{"nodeName":"UW","flowType":"Both","allowLoop":false,"loopGroup":"","nodeType":"","nodeCode":"","stepRole":"","departmentName":"","levelNo":1}'>
+                                <div class="paletteTitle">UW</div>
+                                <div class="paletteMeta">
+                                    <span class="tag">Both</span>
+                                </div>
+                            </div>
+
+                            <div class="paletteItem" draggable="true" data-template='{"nodeName":"Client","flowType":"Both","allowLoop":true,"loopGroup":"CLIENT_REVIEW","nodeType":"","nodeCode":"","stepRole":"","departmentName":"","levelNo":1}'>
+                                <div class="paletteTitle">Client</div>
+                                <div class="paletteMeta">
+                                    <span class="tag">Both</span>
+                                    <span class="tag loop">Loop</span>
+                                </div>
+                            </div>
+
+                            <div class="paletteItem" draggable="true" data-template='{"nodeName":"PM","flowType":"Both","allowLoop":false,"loopGroup":"","nodeType":"","nodeCode":"","stepRole":"","departmentName":"","levelNo":1}'>
+                                <div class="paletteTitle">PM</div>
+                                <div class="paletteMeta">
+                                    <span class="tag">Both</span>
+                                </div>
+                            </div>
+                        </div>
+
+                </div>
+
+                </div>
+            </div>
+
             <div class="card card-last" style="min-height:600px;">
                 <div class="card-header">
                     <div class="card-title">Workflow Diagram</div>
                     <div class="card-sub">Drag & Connect nodes</div>
                 </div>
                 <div class="card-body">
-                <div class="canvas-wrap">
+                    <div class="canvas-wrap">
                         <div id="canvas_@(ViewData["RandomNumber"].ToString())" class="canvas"></div>
-                    @* <div id="canvas_@Convert.ToInt32(ViewData["Id"])" class="canvas"></div> *@
-                </div>
+                        @* <div id="canvas_@Convert.ToInt32(ViewData["Id"])" class="canvas"></div> *@
+                    </div>
 
                 </div>
             </div>
@@ -1018,7 +1111,8 @@
         var workflowHeader = null;
         var workflowTreeData = [];
         var transitions = [];
-     
+         var instance = null;
+                var currentJson = null;
 
 
 
@@ -1046,7 +1140,7 @@
                         label: { text: "Node Flow Type" },
                         editorType: "dxSelectBox",
                         editorOptions: {
-                            dataSource: ["Quotation", "PolicyIssuance", "Both"]
+                            dataSource: _enums.WorkflowType
                         }
                     },
                     {
@@ -1865,8 +1959,15 @@
             }
         }
 
+           
+
 
         function applyFormToSelectedNode() {
+            debugger
+            if (!selectedNodeId)
+            buildPayloadFromCanvas();
+            else 
+            {
             var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
             var json = JSON.parse($("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val() || "{}");
             var node = tree.get_node(selectedNodeId);
@@ -1880,7 +1981,7 @@
             node.original.levelNo = json.levelNo || 1;
             node.original.flowType = json.flowType || "Both";
             node.original.allowLoop = !!json.allowLoop;
-            node.original.loopGroup = json.loopGroup || "";
+            node.original.loopGroup = json.loopGroup || ""; 
             node.original.x = json.x ?? 0;
             node.original.y = json.y ?? 0;
             var plainText = json.text || extractPlainTextFromNode(selectedNodeId);
@@ -1910,7 +2011,9 @@
 
             tree.rename_node(node, newHtml);
             syncTreeDataFromJsTree(fd.text || extractPlainTextFromNode(selectedNodeId), JSON.parse($("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val()));
+            }
             notify("Node updated", "success");
+
         }
 
         function applyJsonToSelectedNode() {
@@ -1936,6 +2039,76 @@
             notify("Node JSON refreshed", "success");
         }
 
+                function buildPayloadFromCanvas() {
+            if (!currentJson) {
+                return notify("Canvas data is empty", "warning");
+            }
+
+            const nodes = currentJson.workflowNodes || [];
+            const transitions = currentJson.workflowTransitions || [];
+
+            // ✅ map nodes chuẩn backend
+            const workflowNodes = nodes.map((n, index) => ({
+                id: n.id,
+                parentId: n.parentId ?? null,
+                nodeName: n.nodeName || "",
+                nodeType: n.nodeType || "",
+                nodeCode: n.nodeCode || "",
+                orderNo: n.orderNo ?? (index + 1),
+                stepRole: n.stepRole || "",
+                departmentName: n.departmentName || "",
+                levelNo: n.levelNo ?? 1,
+                flowType: n.flowType || "Both",
+                allowLoop: !!n.allowLoop,
+                loopGroup: n.loopGroup || "",
+                x: n.x ?? null,
+                y: n.y ?? null
+            }));
+
+            // ✅ map transitions chuẩn backend
+            const workflowTransitions = transitions.map(t => ({
+                fromNodeId: t.fromNodeId ?? null,
+                toNodeId: t.toNodeId ?? null,
+                statusId: t.statusId ?? 0,
+                statusCode: t.statusCode || "",
+                statusName: t.statusName || "",
+                actionCode: t.actionCode || "",
+                actionName: t.actionName || "",
+                flowType: t.flowType || "Both",
+                isReturn: !!t.isReturn,
+                isLoop: !!t.isLoop,
+                loopGroup: t.loopGroup || "",
+                loopExitMode: t.loopExitMode || "None",
+                maxLoopCount: t.maxLoopCount ?? null,
+                isExitTransition: !!t.isExitTransition,
+                userDecisionLabel: t.userDecisionLabel || "",
+                conditionJson: typeof t.conditionJson === "string"
+                    ? JSON.parse(t.conditionJson || "{}")
+                    : (t.conditionJson || {}),
+                command: t.command ?? null,
+                commandConfig: typeof t.commandConfig === "string"
+                    ? JSON.parse(t.commandConfig || "{}")
+                    : (t.commandConfig || null)
+            }));
+
+            // ✅ build payload full
+            const payload = {
+                workflowDefinition: currentJson.workflowDefinition || {},
+                workflowNodes,
+                workflowTransitions
+            };
+
+            // ✅ hiển thị hoặc dùng tiếp
+            console.log("Payload:", payload);
+
+            // nếu bạn có payloadBox:
+            $("#payloadBox_@Convert.ToInt32(ViewData["Id"])")
+                .text(JSON.stringify(payload, null, 2));
+
+            notify("Payload built from canvas", "success");
+
+            return payload;
+        }
         function addTransition() {
             var fd = transitionFormInstance.option("formData");
             if (!fd.fromNodeId || !fd.toNodeId) {
@@ -2138,7 +2311,7 @@
                     }, null, 2));
                 }
             }
-            renderDiagramFromTree();
+            //renderDiagramFromTree();
         }
 
         
@@ -2713,9 +2886,7 @@
                 // var layoutMode = document.getElementById("layoutMode_@Convert.ToInt32(ViewData["Id"])");
                 // var // saveHint = document.getElementById("// saveHint_@Convert.ToInt32(ViewData["Id"])");
 
-                var instance = null;
-                var currentJson = null;
-
+            
                 function parseWorkflowNodes(value) {
                   if (value == null) return null;
                   if (typeof value === "string") {
@@ -2763,7 +2934,11 @@
                   if (flowType === "PolicyIssuance") return "flow-policy";
                   return "flow-both";
                 }
+                function getNodeFromCanvas(nodeId) {
+                    if (!currentJson || !currentJson.workflowNodes) return null;
 
+                    return currentJson.workflowNodes.find(x => x.id === nodeId);
+                }
                 function getNodeStateClass(nodeId, runtimeState) {
                   var active = runtimeState?.activeNodeId;
                   var done = runtimeState?.compvaredNodeIds || [];
@@ -2963,7 +3138,21 @@
                 function createNodeEl(node, pos, runtimeState) {
                   var el = document.createElement("div");
                   el.id = node.id;
-                  el.className = "node " + getNodeFlowClass(node.flowType) + " " + getNodeStateClass(node.id, runtimeState);
+                          let flowClass = "";
+
+                    // ✅ detect Start / End
+                    if (node.flowType === "Start") {
+                        flowClass = "flow-start";
+                    }
+                    else if (node.flowType === "End") {
+                        flowClass = "flow-end";
+                    }
+                    else {
+                        flowClass = getNodeFlowClass(node.flowType);
+                    }
+
+                    el.className = "node " + flowClass + " " + getNodeStateClass(node.id, runtimeState);
+                  // el.className = "node " + getNodeFlowClass(node.flowType) + " " + getNodeStateClass(node.id, runtimeState);
                   el.style.left = pos.x + "px";
                   el.style.top = pos.y + "px";
                   el.innerHTML = `
@@ -3003,7 +3192,7 @@
                   var color = colorForEdge(t);
                   var label = safe(t.actionName || t.userDecisionLabel || t.actionCode || "");
                   var statusName = _enums.OverallStatus.find(f => f.id == t.statusId);
-                                          label = `${label} - <div class="statusTag ${normalizeStatus(statusName?.value || "").css}">${statusName?.value || ""} - ${getCommandIcon(t.command)} ${safe(t.actionName || "")}</div>`;
+                                          label = `${label} - <div class="statusTag ${normalizeStatus(statusName?.value || "").css}">${statusName?.value || ""} - ${safe(t.actionName || "")} <span>${getCommandIcon(t.command)}</span></div>`;
                   var isSelfLoop = t.fromNodeId === t.toNodeId;
 
                   var overlays = [
@@ -3075,10 +3264,86 @@
                 }
 
 
+                // function renderWorkflow(options = {}) {
+                //   try {
+                //     // errorBox.style.display = "none";
+                //     // errorBox.textContent = "";
+
+                //     currentJson = JSON.parse(jsonInput.value);
+
+                //     if (instance) {
+                //       instance.deleteEveryConnection();
+                //       instance.reset();
+                //     }
+
+                //     canvas.innerHTML = "";
+                //     var useSavedLayout =
+                //       getNodesWithSavedPosition(currentJson.workflowNodes).length > 0;
+
+                //     var layout = useSavedLayout
+                //       ? buildSavedLayout(currentJson)
+                //       : buildAutoLayout(currentJson);
+
+                //     var { positions, grouped, canvasWidth, canvasHeight } = layout;
+
+                //     canvas.style.width = canvasWidth + "px";
+                //     canvas.style.height = canvasHeight + "px";
+
+                //     if (!useSavedLayout) {
+                //       Object.keys(grouped).map(Number).sort((a, b) => a - b).forEach(layer => {
+                //         var arr = grouped[layer];
+                //         if (arr.length) {
+                //           canvas.appendChild(createLayerLabel(layer, positions[arr[0].id].x));
+                //         }
+                //       });
+                //     }
+
+                //     (currentJson.workflowNodes || []).forEach(node => {
+                //       var pos = positions[node.id];
+                //       if (!pos) return;
+
+                //       if (!useSavedLayout || !hasNumber(node.x) || !hasNumber(node.y)) {
+                //         node.x = pos.x;
+                //         node.y = pos.y;
+                //       }
+
+                //       canvas.appendChild(createNodeEl(node, pos, currentJson.runtimeState || {}));
+                //     });
+
+                //     instance = jsPlumb.getInstance({
+                //       Container: canvas
+                //     });
+
+                //     instance.importDefaults({
+                //       ConnectionsDetachable: false,
+                //       ReattachConnections: false,
+                //       Endpoint: "Blank",
+                //       PaintStyle: { stroke: "#64748b", strokeWidth: 2 },
+                //       HoverPaintStyle: { stroke: "#334155", strokeWidth: 3 }
+                //     });
+
+                //     (currentJson.workflowTransitions || []).forEach(connectEdge);
+                //     attachDrag();
+
+                //     var def = currentJson.workflowDefinition || {};
+                //     // wfCode.textContent = "Workflow: " + safe(def.workflowCode || "-");
+                //     // flowType.textContent = "Flow: " + safe(def.flowType || "-");
+                //     // currentStep.textContent = "Current: " + safe(currentJson.runtimeState?.activeNodeId || "-");
+                //     // layoutMode.textContent = "Layout: " + (useSavedLayout ? "saved x,y" : "auto layout");
+
+                //     syncJsonToTextarea();
+                //   } catch (err) {
+                //     // errorBox.style.display = "block";
+                //     // errorBox.textContent = err && err.stack ? err.stack : String(err);
+                //   }
+                // }
+
                 function renderWorkflow(options = {}) {
                   try {
-                    // errorBox.style.display = "none";
-                    // errorBox.textContent = "";
+                    const {
+                        skipLayout = false,   // ✅ NEW
+                        forceAutoLayout = false // ✅ optional
+                    } = options;
 
                     currentJson = JSON.parse(jsonInput.value);
 
@@ -3088,37 +3353,100 @@
                     }
 
                     canvas.innerHTML = "";
-                    var useSavedLayout =
-                      getNodesWithSavedPosition(currentJson.workflowNodes).length > 0;
 
-                    var layout = useSavedLayout
-                      ? buildSavedLayout(currentJson)
-                      : buildAutoLayout(currentJson);
+                    const nodes = currentJson.workflowNodes || [];
 
-                    var { positions, grouped, canvasWidth, canvasHeight } = layout;
+                    const nodesWithPos = getNodesWithSavedPosition(nodes).length;
+
+                    // ✅ LOGIC QUAN TRỌNG
+                    let useSavedLayout;
+
+                    if (skipLayout) {
+                        useSavedLayout = true; // ✅ ép dùng layout hiện tại
+                    } else if (forceAutoLayout) {
+                        useSavedLayout = false;
+                    } else {
+                        useSavedLayout = nodesWithPos > 0;
+                    }
+                    const layout = useSavedLayout
+                        ? buildSavedLayout(currentJson)
+                        : buildAutoLayout(currentJson);
+
+                    const { positions, grouped, canvasWidth, canvasHeight } = layout;
 
                     canvas.style.width = canvasWidth + "px";
                     canvas.style.height = canvasHeight + "px";
 
+                    // ✅ chỉ render layer khi auto layout
                     if (!useSavedLayout) {
-                      Object.keys(grouped).map(Number).sort((a, b) => a - b).forEach(layer => {
-                        var arr = grouped[layer];
-                        if (arr.length) {
-                          canvas.appendChild(createLayerLabel(layer, positions[arr[0].id].x));
-                        }
-                      });
+                      Object.keys(grouped)
+                        .map(Number)
+                        .sort((a, b) => a - b)
+                        .forEach(layer => {
+                          var arr = grouped[layer];
+                          if (arr.length) {
+                            canvas.appendChild(
+                                createLayerLabel(layer, positions[arr[0].id].x)
+                            );
+                          }
+                        });
                     }
 
-                    (currentJson.workflowNodes || []).forEach(node => {
-                      var pos = positions[node.id];
-                      if (!pos) return;
+                    // (nodes || []).forEach(node => {
+                    //   let pos = positions[node.id];
 
-                      if (!useSavedLayout || !hasNumber(node.x) || !hasNumber(node.y)) {
-                        node.x = pos.x;
-                        node.y = pos.y;
-                      }
+                    //   // ✅ FIX: nếu skipLayout mà chưa có x,y → fallback nhẹ
+                    //   if (skipLayout && (!hasNumber(node.x) || !hasNumber(node.y))) {
+                    //     pos = {
+                    //       x: node.x ?? 120,
+                    //       y: node.y ?? 120
+                    //     };
+                    //   }
 
-                      canvas.appendChild(createNodeEl(node, pos, currentJson.runtimeState || {}));
+                    //   if (!pos) return;
+
+                    //   // ✅ chỉ set lại position khi KHÔNG skip layout
+                    //   if (!useSavedLayout) {
+                    //     node.x = pos.x;
+                    //     node.y = pos.y;
+                    //   }
+
+                    //   addNodeToCanvas(node, pos, currentJson.runtimeState);
+
+                    //   // canvas.appendChild(
+                    //   //   createNodeEl(node, pos, currentJson.runtimeState || {})
+                    //   // );
+                    // });
+                            (nodes || []).forEach(node => {
+                    let pos = positions[node.id];
+
+                    const hasPos = hasNumber(node.x) && hasNumber(node.y);
+
+                // ✅ CASE 1: skipLayout → giữ nguyên layout cũ
+                if (skipLayout) {
+
+                    // ✅ node CHƯA có position → KHÔNG render (node mới)
+                    if (!hasPos) {
+                        return; // 🔥 skip hoàn toàn
+                    }
+
+                    // ✅ node đã có position → dùng chính node.x,y
+                    pos = {
+                        x: node.x,
+                        y: node.y
+                    };
+                }
+
+                // ✅ fallback nếu không có pos (trường hợp auto layout)
+                if (!pos) return;
+
+                // ✅ chỉ set lại position khi KHÔNG skip layout
+                if (!useSavedLayout && !skipLayout) {
+                    node.x = pos.x;
+                    node.y = pos.y;
+                }
+
+                addNodeToCanvas(node, pos, currentJson.runtimeState);
                     });
 
                     instance = jsPlumb.getInstance({
@@ -3134,21 +3462,39 @@
                     });
 
                     (currentJson.workflowTransitions || []).forEach(connectEdge);
+
                     attachDrag();
 
-                    var def = currentJson.workflowDefinition || {};
-                    // wfCode.textContent = "Workflow: " + safe(def.workflowCode || "-");
-                    // flowType.textContent = "Flow: " + safe(def.flowType || "-");
-                    // currentStep.textContent = "Current: " + safe(currentJson.runtimeState?.activeNodeId || "-");
-                    // layoutMode.textContent = "Layout: " + (useSavedLayout ? "saved x,y" : "auto layout");
-
                     syncJsonToTextarea();
+
                   } catch (err) {
-                    // errorBox.style.display = "block";
-                    // errorBox.textContent = err && err.stack ? err.stack : String(err);
+                    // handle error nếu cần
                   }
                 }
 
+
+                function addNodeToCanvas(node, pos, runtimeState) {
+            if (!node) return;
+
+            // ✅ fallback position
+            const safePos = {
+                x: pos?.x ?? node.x ?? 120,
+                y: pos?.y ?? node.y ?? 120
+            };
+
+            // ✅ tạo element
+            const el = createNodeEl(node, safePos, runtimeState || {});
+
+            canvas.appendChild(el);
+
+            // ✅ register jsPlumb endpoint
+            if (instance) {
+                registerEndpoints(node.id);
+                instance.revalidate(node.id);
+            }
+
+            return el;
+        }
                 function exportJson() {
                   try {
                     syncJsonToTextarea();
@@ -3398,41 +3744,55 @@
                     return candidate;
                 }
 
-                function addNodeFromPalette(template, x, y) {
-                    const data = getData();
+                        function addNodeFromPalette(template, x, y) {
+                            const data = getData();
 
-                    const id = generateUniqueNodeId(data, template.nodeName);
-                    const nextOrder = ((data.workflowNodes || []).reduce((m, n) => Math.max(m, n.orderNo || 0), 0)) + 1;
+                            // ✅ luôn dùng generator chuẩn NODE_
+                            const id = generateNodeId();
 
-                   var node = workflowNodesHandle(template);
-                   node.id = id;
-                   node.orderNo = nextOrder;
-                   node.x = x;
-                   node.y = y;
+                            const nextOrder = ((data.workflowNodes || [])
+                                .reduce((m, n) => Math.max(m, n.orderNo || 0), 0)) + 1;
 
-                    data.workflowNodes.push(node);
+                            var node = workflowNodesHandle(template);
 
-                    if (!data.runtimeState) {
-                        data.runtimeState = {
-                            activeNodeId: "",
-                            completedNodeIds: [],
-                            pendingNodeIds: []
-                        };
-                    }
+                            node.id = id;
 
-                    if (!Array.isArray(data.runtimeState.pendingNodeIds)) {
-                        data.runtimeState.pendingNodeIds = [];
-                    }
+                            // ✅ GIỮ nodeName riêng
+                            node.nodeName = template.nodeName || id;
 
-                    if (!data.runtimeState.pendingNodeIds.includes(node.id)) {
-                        data.runtimeState.pendingNodeIds.push(node.id);
-                    }
+                            node.orderNo = nextOrder;
 
-                    setData(data);
-                    // renderWorkflow();
-                    renderWorkflow();
-                    setStatus("Added node: " + node.id);
-                }
+                            node.x = x;
+                            node.y = y;
+
+                            data.workflowNodes.push(node);
+
+                            // ✅ runtime state
+                            if (!data.runtimeState) {
+                                data.runtimeState = {
+                                    activeNodeId: "",
+                                    completedNodeIds: [],
+                                    pendingNodeIds: []
+                                };
+                            }
+
+                            if (!Array.isArray(data.runtimeState.pendingNodeIds)) {
+                                data.runtimeState.pendingNodeIds = [];
+                            }
+
+                            if (!data.runtimeState.pendingNodeIds.includes(node.id)) {
+                                data.runtimeState.pendingNodeIds.push(node.id);
+                            }
+
+                            setData(data);
+                            renderWorkflow(
+                            {
+                                skipLayout: true
+                            }
+                            );
+
+                            setStatus("Added node: " + node.nodeName + " (" + node.id + ")");
+                        }
 
                 function removeSelectedNode() {
                     if (!selectedNodeId) {

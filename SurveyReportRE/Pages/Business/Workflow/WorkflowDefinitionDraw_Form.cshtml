@@ -771,7 +771,6 @@
 
         ajaxGet(`/api/WorkflowDefinition/GetSingle/${_id}`)
             .then(data => {
-                debugger
         var jsonInput = document.getElementById("jsonInput_@Convert.ToInt32(ViewData["Id"])");
         var canvas = document.getElementById("canvas_@(ViewData["Id"])");
                 $(canvas).empty();
