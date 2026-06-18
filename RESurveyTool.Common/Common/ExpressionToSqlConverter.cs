@@ -70,7 +70,11 @@ public static class ExpressionToSqlConverter<T>
         }
         else if (expression is ConstantExpression constantExpression)
         {
-            return FormatValue(constantExpression.Value, parameters);
+            if (constantExpression?.Value.ToString() == "false")
+                return FormatValue(0, parameters);
+            if (constantExpression?.Value.ToString() == "true")
+                return FormatValue(1, parameters);
+            return FormatValue(constantExpression?.Value, parameters);
         }
         else if (expression is MethodCallExpression methodCallExpression)
         {
@@ -169,6 +173,7 @@ public static class ExpressionToSqlConverter<T>
             ExpressionType.LessThanOrEqual => "<=",
             ExpressionType.AndAlso => "AND",
             ExpressionType.OrElse => "OR",
+            ExpressionType.Coalesce => "=",
             _ => throw new NotSupportedException($"Unsupported operator: {expressionType}")
         };
     }
