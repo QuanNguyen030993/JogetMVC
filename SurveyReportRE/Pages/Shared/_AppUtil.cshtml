@@ -713,7 +713,7 @@
                             var selectedItems = gridInstance.getSelectedRowsData();
                             var policyIssuances = [];
                              $.each(selectedItems, function (itemIndex, item){
-                                 
+                                 debugger
                                 var policyIssuance = new Object();
                                  policyIssuance = ObjectPopulateKey(item, true, false);
                                  policyIssuance.RequestDate = new Date();
@@ -723,11 +723,9 @@
                                      TS: pics.TS || "",
                                      PM: ""
                                  };
-
+                                  
                                   policyIssuance.PIC = JSON.stringify(policyIssuance.PIC);
-                                  policyIssuance.StageDept = "FO";
                                   policyIssuance.StageAccount = _loginUser;
-                                  policyIssuance.WorkflowStatus = "FO Pending";
                                   policyIssuance.CopyFromGuid = item.guid;
                                   policyIssuance.QuotationId = item.id;
 
@@ -2477,6 +2475,45 @@
 
             }]
         }
+
+                function attachmentByCase(...item){
+                    debugger
+                return [{
+                    dataField: "quotation", editorType: "dxFileUploader"
+                    ,
+                    editorOptions: {
+                        name: "files"
+                    }
+                    , template: function (data, itemElement) {
+
+                            // const item = new Object();
+                            // item.editorType = "dxFileUploader";
+                            // item.moduleName = moduleKey + "_default"; item.sectionName = dept;
+                            // item.id = id;
+                            // item.guid = guid;
+                            // item.titleName = "Upload Quotation";
+                                createEditor(item[0], itemElement, $(`<div>`), item[0]);
+                    }
+
+                },
+                {
+                    dataField: "supportingDocument", editorType: "dxFileUploader"
+                    ,
+                    editorOptions: {
+                            name: "sdfiles"
+                    }
+                    , template: function (data, itemElement) {
+                            //     const item = new Object();
+                            // item.editorType = "dxFileUploader";
+                            // item.moduleName = moduleKey+ "_supportingDoc"; item.sectionName = dept;
+                            // item.id = id;
+                            // item.guid = guid;;
+                            // item.titleName = "Upload Supporting Document";
+                            createEditor(item[1], itemElement, $(`<div>`), item[1]);
+                    }
+
+                }]
+            }
         function attachmentDefaultPi(moduleKey, deptName, id, guid, cloneId ,cloneGuid){
              
                     var attachmentControls = attachmentDefault("qt", deptName, cloneId, cloneGuid);

@@ -8,31 +8,21 @@ using ERPCore.ControllerUtil;
 using ERPCore.Common;
 using System.Net;
 using ERPCore.Models.Base;
-using DocumentFormat.OpenXml.Wordprocessing;
-using System.Text.RegularExpressions;
-using MimeKit;
-using DocumentFormat.OpenXml.Bibliography;
-using Microsoft.SharePoint.Taxonomy.WebServices;
 using ERPCore.Models.Migration.Config;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using ERPCore.Models.Business.Migration.Config;
 using ERPCore.Models.Migration.Business.HumanResource;
-using ERPCore.Repository;
 using ERPCore.Models.Request;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.SharePoint.WebControls;
 using RESurveyTool.Models.Models.Parsing;
-using Microsoft.AspNetCore.Http;
 using ERPCore.Models.Migration.Business.Workflow;
-using Microsoft.SharePoint.WorkflowActions;
 using ERPCore.Models;
 using System.Dynamic;
-using Org.BouncyCastle.Bcpg.Sig;
 using ERPCore.Models.Models.Parsing;
 using static ERPCore.Models.Models.Parsing.JsonHandle;
 using ERPCore.Models.Migration.Business.Social;
 using System.Reflection;
+using ERPCore.Models.Migration.Business.Data;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -54,6 +44,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     private readonly IBaseRepository<EnumData> _enumDataRepository;
     private readonly IBaseRepository<WorkflowDefinition> _workflowDefinitionRepository;
     private readonly IBaseRepository<Notification> _notificationRepository;
+    private readonly IBaseRepository<Document> _documentRepository;
     private readonly IConfigurationSection path;
     public static string MANAGER_APP = "";
     public static string APPROVER_APP = "";
@@ -94,6 +85,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         _stepsWorkflowRepository = new BaseRepository<StepsWorkflow>(configuration, _httpContextAccessor);
         _workflowDefinitionRepository = new BaseRepository<WorkflowDefinition>(configuration, _httpContextAccessor);
         _notificationRepository = new BaseRepository<Notification>(configuration, _httpContextAccessor);
+        _documentRepository = new BaseRepository<Document>(configuration, _httpContextAccessor);
         _hubContext = hubContext;
         MANAGER_APP = configuration.GetSection("BusinessConfig:ManagerAppKey").Value;
         APPROVER_APP = configuration.GetSection("BusinessConfig:ApproverAppKey").Value;
@@ -200,6 +192,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
                     EnumData enumData = await _enumDataRepository.GetSingleObject(s => s.Id == stepsWorkflow.StatusId);
 
                     PolicyIssuance.WorkflowStatus = enumData?.Value ?? "";
+                    PolicyIssuance.StageDept = stepsWorkflow.ToNodeId;
                     PolicyIssuance = await _BaseRepository.InsertData(PolicyIssuance);
 
 
@@ -718,5 +711,127 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
 
         return Ok(Base);
     }
+    [HttpDelete]
+    public override async Task<IActionResult> DeleteData([FromForm] DeleteFormCollection form)
+    {
+        try
+        {
+            // 1. Lấy quotation full data
+            var quotation = await _BaseRepository
+                .GetSingleObjectFullInclude(x => x.Id == form.key);
 
+            if (quotation == null)
+                return NotFound("PolicyIssuance not found");
+
+            Guid recordGuid = quotation.Guid;
+
+            // ===== 2. Xóa Workflow =====
+            var instance = await _instanceWorkflowRepository
+                .GetSingleObject(x => x.RecordGuid == recordGuid);
+
+            if (instance != null)
+            {
+                await _instanceWorkflowRepository
+                    .DeleteData(instance, instance.Id, "Id", true);
+            }
+
+            //// ===== 3. Xóa Log =====
+            string logQuery = $@"DELETE FROM CommentLog WHERE [RecordGuid] = {quotation.Guid}";
+            string logFlowQuery = $@"DELETE FROM WorkflowHistory WHERE [RecordGuid] = {quotation.Guid}";
+            using var loggerFactory = LoggerFactory.Create(loggingBuilder => loggingBuilder
+        .SetMinimumLevel(LogLevel.Trace)
+        .AddConsole());
+            var logger = loggerFactory.CreateLogger<CommentLog>();
+            var quotationCommentLogApiController = new CommentLogController(_quotationCommentLogRepository, configuration, _httpContextAccessor, logger, _blobStorageSettings);
+            await quotationCommentLogApiController.ExecuteCustomQuery(logQuery);
+            await quotationCommentLogApiController.ExecuteCustomQuery(logFlowQuery);
+            ///
+            //var logs = await _quotationCommentLogRepository
+            //    .GetAll(x => x.RecordGuid == recordGuid);
+
+            //foreach (var log in logs)
+            //{
+            //    await _quotationCommentLogRepository
+            //        .DeleteData(log, log.Id, "Id", true);
+            //}
+
+            // ===== 4. Xóa Notification =====
+            var notifications = await _notificationRepository
+                .GetListObject(x => x.RecordGuid == recordGuid);
+
+            foreach (var noti in notifications)
+            {
+                await _notificationRepository
+                    .DeleteData(noti, noti.Id, "Id", true);
+            }
+
+            // ===== 5. Xóa Documents + File =====
+            var documents = await _documentRepository
+                .GetListObject(x => x.RecordGuid == recordGuid);
+
+            foreach (var doc in documents)
+            {
+                // delete file vật lý
+                var filePath = Path.Combine(
+                    _blobStorageSettings.CurrentValue.Path,
+                    doc.SubDirectory ?? "",
+                    doc.Guid.ToString() + doc.FileType ?? ""
+                );
+
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                }
+
+                await _documentRepository.DeleteData(doc, doc.Id, "Id", true);
+            }
+
+            // ===== 6. Xóa Attachment =====
+            //var attachments = await _documentRepository
+            //    .GetListObject(x => x.RecordGuid == recordGuid);
+
+            //foreach (var att in attachments)
+            //{
+            //    await _documentRepository.DeleteData(att, att.Id, "Id", true);
+            //}
+
+            // ===== 7. Xóa Folder (optional) =====
+            //var folderPath = Path.Combine(
+            //    _blobStorageSettings.CurrentValue.Path,
+            //    _blobStorageSettings.CurrentValue.PolicyIssuanceAttachmentFolder,
+            //    quotation.PolicyIssuanceCode
+            //);
+
+            //if (Directory.Exists(folderPath))
+            //{
+            //    Directory.Delete(folderPath, true);
+            //}
+
+            // ===== 8. Xóa Res =====
+            //if (quotation.ResId != null)
+            //{
+            //    var res = await _resRepository
+            //        .GetSingleObject(x => x.Id == quotation.ResId);
+
+            //    if (res != null)
+            //    {
+            //        // check nếu res còn được dùng không
+            //        await _resRepository.DeleteData(res, res.Id, "Id", true);
+            //    }
+            //}
+
+            // ===== 9. Xóa PolicyIssuance =====
+            await _BaseRepository.DeleteData(quotation, quotation.Id, "Id", true);
+
+            return Ok(new { message = "Deleted successfully" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new
+            {
+                message = "Delete failed",
+                detail = ex.Message
+            });
+        }
+    }
 }

@@ -1130,8 +1130,8 @@ public class QuotationController : BaseControllerApi<Quotation>
             }
 
             //// ===== 3. Xóa Log =====
-            string logQuery = $@"DELETE FROM {nameof(Quotation)}CommentLog WHERE {nameof(Quotation)}Id = {quotation.Id}";
-            string logFlowQuery = $@"DELETE FROM {nameof(Quotation)}WorkflowHistory WHERE {nameof(Quotation)}Id = {quotation.Id}";
+            string logQuery = $@"DELETE FROM CommentLog WHERE [RecordGuid] = {quotation.Guid}";
+            string logFlowQuery = $@"DELETE FROM WorkflowHistory WHERE [RecordGuid] = {quotation.Guid}";
             using var loggerFactory = LoggerFactory.Create(loggingBuilder => loggingBuilder
         .SetMinimumLevel(LogLevel.Trace)
         .AddConsole());

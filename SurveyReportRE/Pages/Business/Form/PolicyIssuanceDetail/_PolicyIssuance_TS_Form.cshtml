@@ -16,6 +16,32 @@
 <script type="text/javascript">
     var that = new Object();
     that.ModelName = "PolicyIssuance";
+    that.moduleName = "qt_default";
+    that.editorType = "dxFileUploader"
+    that.id = @(quotationId);
+    that.guid ="@(quotationGuid)";
+    that.sectionName = "@(dept)";
+    that.titleName = "Upload Quotation";
+
+    var that2 = new Object();
+    that2.ModelName = "PolicyIssuance";
+    that2.moduleName = "qt_supportingDoc";
+    that2.editorType = "dxFileUploader"
+    that2.id = @(quotationId);
+    that2.guid ="@(quotationGuid)";
+    that2.sectionName = "@(dept)";
+    that2.titleName = "Upload Supporting Document";
+
+    var that3 = new Object();
+    that3.ModelName = "PolicyIssuance";
+    that3.moduleName = "pi_defaultDoc";
+    that3.editorType = "dxFileUploader"
+    that3.id = @(quotationId);
+    that3.guid ="@(quotationGuid)";
+    that3.cloneId = @cloneId;
+    that3.cloneGuid ="@(cloneQuotationGuid)";
+    that3.sectionName = "@(dept)";
+    that3.titleName = "Upload Document";
     $("#@PIViewIdHelper.Form(dept, quotationId)").dxForm({
         dataSource: makeBasicDataSource(that, true),
          items: [
