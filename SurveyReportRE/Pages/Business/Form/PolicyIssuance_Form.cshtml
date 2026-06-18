@@ -16,45 +16,20 @@ Note:
 -Remove app div for scroll
 *@
 
-<style>
-
-
-
-    /*.dept-callout {
-                    opacity: 0;
-                    visibility: hidden;
-                    transform: translateY(6px);
-                    transition: opacity .28s ease, transform .28s ease, visibility .28s ease;
-                }
-
-                    .dept-callout.visible {
-                        opacity: 1;
-                        visibility: visible;
-                        transform: translateY(0);
-                    }*/
-
-    /*     .animate-step {
-                    opacity: 0;
-                    transform: translateY(10px);
-                    transition: opacity .28s ease, transform .28s ease;
-                }
-
-                    .animate-step.visible {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }  */
-</style>
 
 <body>
+
+
     <div class="title">
-   @await Html.PartialAsync("_OverviewPane", new OverviewPanePartialModel
-   {
-       Prefix = prefix,
-       ModuleCode = moduleCode,
-       Title = title,
-       Id = ViewData["Id"].ToString(),
-       Guid = ViewData["guid"].ToString()
-   }),
+        <partial name="_OverviewPane" model='new OverviewPanePartialModel
+        {
+            Prefix = prefix,
+            ModuleCode = moduleCode,
+            Title = title,
+            Id = ViewData["Id"]?.ToString(),
+            Guid = ViewData["guid"]?.ToString()
+        }' />
+
     </div>
 @* 
     <div class="actionBar">
@@ -90,7 +65,7 @@ Note:
     //     $('[data-toggle="push-menu"]').click();
     //     isToggleMenu = true;
     // }
-
+    var prefix = "@prefix";
     var page = window.PolicyIssuancePage;
     var state = page.state;
 
@@ -125,13 +100,13 @@ Note:
         var searchText = "";
         var selectedGuid = null;
         var selectedFromGuid = null;
-        let selectedAttachmentId = null;
+        var selectedAttachmentId = null;
         var commentPanelOpened = false;
         let stageDept = null;
         var stageAccount = "";
 
-        var deptData = { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} };
-        var remarkBoxs = { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} };
+        var deptData = { FO: {}, TS: {}, PM: {} };
+        var remarkBoxs = { FO: {}, TS: {}, PM: {} };
 
         state.piDetails = {};
 
@@ -218,128 +193,123 @@ Note:
 
 
 
+
         function syncSelectedState(q) {
             if (!q) return;
 
-            // selectedId = q.id ?? null;
-            selectedGuid = q.guid ?? null;
+
+
+
+            state.selectedId =  q.id ?? null;
+            state.selectedGuid = q.guid ?? null;
             selectedAttachmentId = q.documentId ?? null;
-            // selectedCodeNo = q.policyIssuanceCode ?? null;
+            state.selectedCodeNo = q.quotationCode ?? null;
             stageDept = q.stageDept ?? null;
-
-
-
-            state.selectedId = q.id;
-            state.selectedGuid = selectedGuid;
-            state.selectedAttachmentId = selectedAttachmentId;
-            state.selectedCodeNo = q.policyIssuanceCode;
-            state.stageDept = stageDept;
             const params = new URLSearchParams();
             params.set("refKey", state.selectedGuid);
             params.set("refField", 'RecordGuid');
             ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null)
-            .then(res => {
-              var pinnedNotes = (res || []).map(x => ({
-                            id: x.id,
-                            section: x.currentDepartment,//target main
-                            fromSection: x.fromDepartment,//target pin
-                            toSection: x.toDepartment,
-                            type: x.type,
-                            unread: !x.isRead,
-                            isRead: !x.isRead,
-                            linkedPin: x.isPinned,
-                            isPinned: x.isPinned,
-                            body: x.content,
-                            text: x.content,
-                            replies: 0,
-                            fullText: x.content,
-                            urgent: false,
-                            author: x.author,
-                            time: parseToGMT7(x.createdDate, 0)
-                        }));
-                        state.comments = pinnedNotes;
+                .then(res => {
+                    var pinnedNotes = (res || []).map(x => ({
+                        id: x.id,
+                        section: x.currentDepartment,//target main
+                        fromSection: x.fromDepartment,//target pin
+                        toSection: x.toDepartment,
+                        type: x.type,
+                        unread: !x.isRead,
+                        isRead: !x.isRead,
+                        linkedPin: x.isPinned,
+                        isPinned: x.isPinned,
+                        body: x.content,
+                        text: x.content,
+                        replies: 0,
+                        fullText: x.content,
+                        author: x.author,
+                        urgent: false,
+                        time: parseToGMT7(x.createdDate, 0)
+                    }));
+                    state.comments = pinnedNotes;
                     state.pinNotes = pinnedNotes.filter(f => f.isPinned);
-            });
+                });
 
-
-            PIC_JSON = pICs.find(f => f.policyIssuanceCode == state.selectedCodeNo)?.pIC ?? q.pIC ?? "{}";
+            PIC_JSON = pICs.find(f => f.quotationCode == state.selectedCodeNo)?.pIC ?? q.pIC ?? "{}";
             renderDeptCallouts(PIC_JSON);
             var map = parsePicMap(PIC_JSON);
             stageAccount = map[stageDept] ? map[stageDept] : "(Unassigned)";
 
         }
-    function loadSelectedWorkflow() {
-              if (!state.selectedCopyGuid) return $.Deferred().resolve().promise();
+            function loadSelectedWorkflow() {
+              // if (!state.selectedCopyGuid) return $.Deferred().resolve().promise();
 
-              return ajaxGet(`/api/PolicyIssuance/GetPolicyIssuanceWorkflow/${state.selectedCopyGuid}`, null)
-                  .then(instance => {
-                      return ajaxGet(`/api/StepsWorkflow/GetNextStep/${instance?.workflowDefinitionId ?? "00000000-0000-0000-0000-000000000000"}/${instance?.currentStep ?? 0}`, null)
-                          .then(data => {
-                              state.nextStep.instanceWorkflow = instance;
-                              state.nextStep.flowSteps = data;
-                              state.nextStep.currentStep = instance?.currentStep ?? 0;
-                              // setNextStep(state.nextStep);
-                              $.each(piDeptModuleCode, function (itemIndex, item) {
-                                      setTimeout(() => {
-                                               var findRoute = state.nextStep.flowSteps.find(f => !f.actionCode.includes("BACK_") && f.fromNodeId == item && f.fNodeId == state.nextStep.currentStep);
-                                             var findRouteReturn = state.nextStep.flowSteps.find(f => f.actionCode.includes("BACK_") && f.fromNodeId == item && f.fNodeId == state.nextStep.currentStep);
-                                             var returnButtonId = window.PolicyIssuanceIdManager.btnReturnBranch(item,@ViewData["Id"]);
-                                             var submitButtonId = window.PolicyIssuanceIdManager.btnSubmitBranch(item,@ViewData["Id"]);
-                                             var remarkBoxId = window.PolicyIssuanceIdManager.remarkBox(item,@ViewData["Id"]);
-                                             var formId = window.PolicyIssuanceIdManager.form(item,@ViewData["Id"]);
-                                             var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-                                              var tatObject = new Object();
+              // return ajaxGet(`/api/PolicyIssuance/GetPolicyIssuanceWorkflow/${state.selectedCopyGuid}`, null)
+              //     .then(instance => {
+              //         return ajaxGet(`/api/StepsWorkflow/GetNextStep/${instance?.workflowDefinitionId ?? "00000000-0000-0000-0000-000000000000"}/${instance?.currentStep ?? 0}`, null)
+              //             .then(data => {
+              //                 state.nextStep.instanceWorkflow = instance;
+              //                 state.nextStep.flowSteps = data;
+              //                 state.nextStep.currentStep = instance?.currentStep ?? 0;
+              //                 // setNextStep(state.nextStep);
+              //                 $.each(piDeptModuleCode, function (itemIndex, item) {
+              //                         setTimeout(() => {
+              //                                  var findRoute = state.nextStep.flowSteps.find(f => !f.actionCode.includes("BACK_") && f.fromNodeId == item && f.fNodeId == state.nextStep.currentStep);
+              //                                var findRouteReturn = state.nextStep.flowSteps.find(f => f.actionCode.includes("BACK_") && f.fromNodeId == item && f.fNodeId == state.nextStep.currentStep);
+              //                                var returnButtonId = window.PolicyIssuanceIdManager.btnReturnBranch(item,@ViewData["Id"]);
+              //                                var submitButtonId = window.PolicyIssuanceIdManager.btnSubmitBranch(item,@ViewData["Id"]);
+              //                                var remarkBoxId = window.PolicyIssuanceIdManager.remarkBox(item,@ViewData["Id"]);
+              //                                var formId = window.PolicyIssuanceIdManager.form(item,@ViewData["Id"]);
+              //                                var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+              //                                 var tatObject = new Object();
 
-                                              try
-                                              {
-                                                 tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Problem");
-                                              }
-                                              catch
-                                              {
-                                                  console.log("TAT problem");
-                                              }
-                                              try {
+              //                                 try
+              //                                 {
+              //                                    tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Problem");
+              //                                 }
+              //                                 catch
+              //                                 {
+              //                                     console.log("TAT problem");
+              //                                 }
+              //                                 try {
 
-                                              if (findRouteReturn && tatObject)
-                                              $(`#${returnButtonId}`).dxButton({
-                                                  disabled: false,
-                                                 text: findRouteReturn ? findRouteReturn.displayStatus : "", icon: "undo", type: "danger", onClick:
-                                                     function (e) {
-                                                     var content = remarkBoxs[item].controlRemark.instance.option("value");
+              //                                 if (findRouteReturn && tatObject)
+              //                                 $(`#${returnButtonId}`).dxButton({
+              //                                     disabled: false,
+              //                                    text: findRouteReturn ? findRouteReturn.displayStatus : "", icon: "undo", type: "danger", onClick:
+              //                                        function (e) {
+              //                                        var content = remarkBoxs[item].controlRemark.instance.option("value");
 
-                                                         formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-                                                         formItems.comment = content;
-                                                         returnToStep(`${formModuleKeyPi}`, state.nextStep, findRouteReturn, formItems);
-                                                     }
-                                             });
-                                              }
-                                              catch
-                                              {
-                                                  console.log("Return problem");
-                                              }
-                                              try
-                                              {
-                                                   if (findRoute)
-                                               $(`#${submitButtonId}`).dxButton({
-                                                    disabled: tatObject[item].AcceptDate ? false : true,
-                                                 text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
-                                                     function (e) {
-                                                     var content = remarkBoxs[item].controlRemark.instance.option("value");
+              //                                            formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+              //                                            formItems.comment = content;
+              //                                            returnToStep(`${formModuleKeyPi}`, state.nextStep, findRouteReturn, formItems);
+              //                                        }
+              //                                });
+              //                                 }
+              //                                 catch
+              //                                 {
+              //                                     console.log("Return problem");
+              //                                 }
+              //                                 try
+              //                                 {
+              //                                      if (findRoute)
+              //                                  $(`#${submitButtonId}`).dxButton({
+              //                                       disabled: tatObject[item].AcceptDate ? false : true,
+              //                                    text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
+              //                                        function (e) {
+              //                                        var content = remarkBoxs[item].controlRemark.instance.option("value");
 
-                                                         formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-                                                         formItems.comment = content;
-                                                         submitNextStep(`${formModuleKeyPi}`, state.nextStep, findRoute, formItems);
-                                                     }
-                                             });
-                                              }
-                                            catch
-                                            {
-                                               console.log("Submit problem");
-                                            }
-                                     }, 100);
-                              });
-                          });
-                  });
+              //                                            formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+              //                                            formItems.comment = content;
+              //                                            submitNextStep(`${formModuleKeyPi}`, state.nextStep, findRoute, formItems);
+              //                                        }
+              //                                });
+              //                                 }
+              //                               catch
+              //                               {
+              //                                  console.log("Submit problem");
+              //                               }
+              //                        }, 100);
+              //                 });
+              //             });
+              //     });
           }
 
         async function loadQuotePage(reset = false) {
@@ -361,7 +331,6 @@ Note:
                     method: "GET",
                     contentType: "application/json"
                 });
-
                 data = data.map(m => { m.pIC = m.pic; return m; });
 
                 const rows = Array.isArray(data) ? data : [];
@@ -421,7 +390,6 @@ Note:
                  $(`#${formId}`).dxForm({ formData: deptData[item], readOnly: true, colCount: 1 });
 
             });
-
             reloadState();
             applyEditLock();
             updateHints();
@@ -446,7 +414,7 @@ Note:
 
             setTimeout(() => {
                   $.each(piDeptModuleCode, function (itemIndex, item) {
-                var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
+                var formId = window.PolicyIssuanceIdManager.form(item,@ViewData["Id"]);
                  $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
 
             });
@@ -837,19 +805,19 @@ Note:
             return { bind, loadComments, loadReferenceFields, openRightCommentPanel, closeRightCommentPanel };
         })();
 
-       // function resetOverviewAnimation() {
-       //      const $sections = $(`#${window.PolicyIssuanceIdManager.overviewScroll(@ViewData["Id"])} section.dept-section`);
-       //      $sections.removeClass("visible");
-       //      $sections.each(function () {
-       //          const $section = $(this);
-       //          $section.find(".dept-header, .dept-upperbody, .dept-body, .dept-lowerbody, .dx-fileuploader, .attachment, .att-preview, .att-list, .att-item")
-       //              .addClass("animate-step")
-       //              .removeClass("visible");
-       //          // $(`#${prefix}-treeStack .dept-node[data-key='${$section.attr('id').replace(prefix + '-sec', '')}'] .dept-callout`)
-       //          //     .addClass("animate-step")
-       //          //     .removeClass("visible");
-       //      });
-       //  }
+       function resetOverviewAnimation(prefix) {
+            const $sections = $(`#${window.PolicyIssuanceIdManager.overviewScroll(@ViewData["Id"])} section.dept-section`);
+            $sections.removeClass("visible");
+            $sections.each(function () {
+                const $section = $(this);
+                $section.find(".dept-header, .dept-upperbody, .dept-body, .dept-lowerbody, .dx-fileuploader, .attachment, .att-preview, .att-list, .att-item")
+                    .addClass("animate-step")
+                    .removeClass("visible");
+                // $(`#${prefix}-treeStack .dept-node[data-key='${$section.attr('id').replace(prefix + '-sec', '')}'] .dept-callout`)
+                //     .addClass("animate-step")
+                //     .removeClass("visible");
+            });
+        }
 
         function animateOverviewSections() {
             const sequence = piDeptModuleCode;
@@ -878,7 +846,7 @@ Note:
                     }, 360);
                 }, idx * 180);
             });
-            // resetOverviewAnimation(prefix);
+            resetOverviewAnimation(prefix);
         }
 
         function renderDetail() {
@@ -892,8 +860,8 @@ Note:
 
             $(`#${window.PolicyIssuanceIdManager.stageDeptPill(q.id)}`).html(`<span id="@ViewIdHelper.DetailStatus(moduleCode, Convert.ToInt64(ViewData["Id"]))" class="pill">${q.workflowStatus}</span> - ${stageAccount ?? ""}`);
             $(`#${window.PolicyIssuanceIdManager.detailStatus(q.id)}`)
-                .text(statusText(st))
-                .attr("class", `statusTag ${statusClass(st)}`);
+                .text(statusText(workflowStatus))
+                .attr("class", `statusTag ${statusClass(workflowStatus)}`);
 
              $(`#${window.PolicyIssuanceIdManager.stageDeptPill(q.id)}`).html(`Pending at: ${state.stageDept} - ${stageAccount ?? ""}`);
 
@@ -902,15 +870,12 @@ Note:
                 if (q.stageDept == item)
                 {
                     var control = TinyMCEElementMaker(`.htmleditor`, item, @ViewData["Id"], control);
-                    deptData[item] = { ...q, id: q.id, sectionName: item, code: q.quotationCode };
+                    deptData[item] = { ...q, id: q.id, sectionName: item, code: q.policyIssuanceCode };
                     remarkBoxs[item] = { id: q.id, sectionName: item, controlRemark: control };
                 }
                 
             });
 
-            // deptData.FO = { ...q, id: q.id, sectionName: "FO", code: q.policyIssuanceCode };
-            // deptData.TS = { ...q, id: q.id, sectionName: "TS", code: q.policyIssuanceCode };
-            // deptData.PM = { ...q, id: q.id, sectionName: "PM", code: q.policyIssuanceCode };
 
             renderDeptForms();
             applyNodeHighlights();
@@ -1219,5 +1184,5 @@ Note:
             renderDeptCallouts(PIC_JSON);
             firstRender = false;
         });
-    }, _delayPolicyIssuancesLoad);
+         }, _delayQuotationsLoadForm);
 </script>

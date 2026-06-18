@@ -11,7 +11,7 @@
     }
 </style>
 <script type="text/javascript">
-        var that = new Object();
+    var that = new Object();
     that.ModelName = "PolicyIssuance";
     $("#@PIViewIdHelper.Form(dept, quotationId)").dxForm({
         dataSource: makeBasicDataSource(that, true),
@@ -49,7 +49,7 @@
                  onClick: function (e){
                           if (_ == 0)
                  {
-                      var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+                      var formItems = $(`#@PIViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
                        var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
                       tatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
                       formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
@@ -65,7 +65,7 @@
                  }
                  if (_ == 1)
                  {
-                      var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+                      var formItems = $(`#@PIViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
                       var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
                       tatObject[`@dept`].AcceptDate = "";
                       formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);

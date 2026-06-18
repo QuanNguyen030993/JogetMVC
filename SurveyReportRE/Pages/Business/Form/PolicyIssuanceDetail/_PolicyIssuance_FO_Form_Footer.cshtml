@@ -5,22 +5,22 @@
 }
 
 
-<div class="actionBarDept" id="@PIViewIdHelper.ActionBarDept(dept,quotationId)>
-    <div class="actionLeft">
+<div class="actionBarDept" id="@PIViewIdHelper.ActionBarDept(dept,quotationId)">
+     <div class="actionLeft">
         <span class="dept-title">Remarks</span> <div id="@PIViewIdHelper.RemarkBox(dept,quotationId)" class="htmleditor"></div>
     </div>
     <div class="actionRight">
         <div id="@PIViewIdHelper.BtnSave(dept,quotationId)"></div>
         <div id="@PIViewIdHelper.BtnReturnBranch(dept,quotationId)"></div>
         <div id="@PIViewIdHelper.BtnSubmitBranch(dept,quotationId)"></div>
-    </div>
+    </div> 
 </div>
 
 <script>
     // var formItems = $("#pi-formFO").dxForm("instance")?.option("formData") || {};
     var dept = "@dept";
-         var pageLayout = window.PolicyIssuancePage;
-        var stateLayout = pageLayout.state;
+        //  var pageLayout = window.PolicyIssuancePage;
+        // var stateLayout = pageLayout.state;
          $("#@PIViewIdHelper.BtnSave(dept, quotationId)").dxButton({ text: "Save", icon: "save", type: "default", onClick:
         function (e) {
                var formItems = $(`#@PIViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
