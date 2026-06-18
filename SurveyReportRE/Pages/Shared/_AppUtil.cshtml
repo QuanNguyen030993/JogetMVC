@@ -713,7 +713,7 @@
                             var selectedItems = gridInstance.getSelectedRowsData();
                             var policyIssuances = [];
                              $.each(selectedItems, function (itemIndex, item){
-                                 debugger
+                                 
                                 var policyIssuance = new Object();
                                  policyIssuance = ObjectPopulateKey(item, true, false);
                                  policyIssuance.RequestDate = new Date();
@@ -726,7 +726,7 @@
 
                                   policyIssuance.PIC = JSON.stringify(policyIssuance.PIC);
                                   policyIssuance.StageDept = "FO";
-                                  policyIssuance.PolicyIssuanceStatus = "New";
+                                  policyIssuance.StageAccount = _loginUser;
                                   policyIssuance.WorkflowStatus = "FO Pending";
                                   policyIssuance.CopyFromGuid = item.guid;
                                   policyIssuance.QuotationId = item.id;
@@ -2448,12 +2448,13 @@
                     name: "files"
                 }
                 , template: function (data, itemElement) {
-                        var item = new Object();
+
+                        const item = new Object();
                         item.editorType = "dxFileUploader";
                         item.moduleName = moduleKey + "_default"; item.sectionName = dept;
                         item.id = id;
                         item.guid = guid;
-                        item.titleName = "Upload Quotation"
+                        item.titleName = "Upload Quotation";
                         createEditor(item, itemElement, $(`<div>`), item);
                 }
 
@@ -2465,33 +2466,62 @@
                         name: "sdfiles"
                 }
                 , template: function (data, itemElement) {
-                        var item = new Object();
+                            const item = new Object();
                         item.editorType = "dxFileUploader";
                         item.moduleName = moduleKey+ "_supportingDoc"; item.sectionName = dept;
                         item.id = id;
                         item.guid = guid;;
-                        item.titleName = "Upload Supporting Document"
+                        item.titleName = "Upload Supporting Document";
                     createEditor(item, itemElement, $(`<div>`), item);
                 }
 
             }]
-            // , {
-            //         dataField: "supportingDocument", editorType: "dxFileUploader"
-            //         ,
-            //         editorOptions: {
-            //             name: "sdfiles"
-            //         }
-            //         , template: function (data, itemElement) {
-            //                 var item = new Object();
-            //                 item.editorType = "dxFileUploader";
-            //                 item.moduleName = moduleKey; item.sectionName = dept;
-            //                 item.id = id;
-            //                 createEditor(item, itemElement, $(`<div>`), null);
-            //                 // loadAttachmentList("FO");
-            //         }
-
-            //     }];
         }
+        function attachmentDefaultPi(moduleKey, deptName, id, guid, cloneId ,cloneGuid){
+             
+                    var attachmentControls = attachmentDefault("qt", deptName, cloneId, cloneGuid);
+                    return attachmentControls;
+                //     {
+                //     dataField: moduleKey === "qt" ? "quotation" : "document", editorType: "dxFileUploader"
+                //     ,
+                //     editorOptions: {
+                //         name: "files"
+                //     }
+                //     , template: function (data, itemElement) {
+                //             var item = new Object();
+                //             item.editorType = "dxFileUploader";
+                //             item.moduleName = "qt" + "_default"; 
+                //             item.sectionName = dept;
+                //                 item.id = cloneId;
+                //             item.guid = cloneGuid;
+                //             item.titleName = "Upload Quotation"
+                //             createEditor(item, itemElement, $(`<div>`), item);
+                //     }
+
+                // },
+                // {
+                //     dataField: "supportingDocument", editorType: "dxFileUploader"
+                //     ,
+                //     editorOptions: {
+                //             name: "sdfiles"
+                //     }
+                //     , template: function (data, itemElement) {
+                //             var item = new Object();
+                //             item.editorType = "dxFileUploader";
+                //                 item.moduleName = "qt"+ "_supportingDoc"; item.sectionName = dept;
+                //                 item.id = cloneId;
+                //                 item.guid = cloneGuid;;
+                //             item.titleName = "Upload Supporting Document"
+                //         createEditor(item, itemElement, $(`<div>`), item);
+                //     }
+
+                // }
+                
+            
+            }
+
+
+            
         
         function getCurrentFormOptions(editorOptions) {
             var form = new Object();
@@ -2649,9 +2679,11 @@
         }
 
         function loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions) {
-            const currentOptions = getCurrentFormOptions(editorOptions);
+            debugger
+            var currentOptions = getCurrentFormOptions(editorOptions);
                  if(!editorOptions.isNotLoading)
                 {
+                    if (!currentOptions) currentOptions = {}; // formItems ko tim duoc neu bi chuyen prefix
                 currentOptions.guid = editorOptions.guid;
                 if (!currentOptions || !currentOptions.guid) return;
                 var combine = editorOptions?.specificFolder ? `${editorOptions.moduleName}_${currentOptions.sectionName}_${currentOptions.id}_${editorOptions?.specificFolder}` : `${editorOptions.controlId}`;
@@ -2745,7 +2777,7 @@
                         renderBrowserLoading(result);
                     },
                     uploadFile: function (file) {
-                        debugger
+                        
                         return uploadFileAjax(file, {
                             url: "/api/Attachment/AsyncUploadFile",
                                 ...editorOptions
@@ -3442,7 +3474,7 @@
        //  }
 
        function acceptDecision(object){
-           debugger
+           
             var statusObject = _enums.OverallStatus.find(f => f.value == object.statusName);
                           object.formItems.statusId  = statusObject.id;
                           object.formItems.workflowStatus = statusObject.value;

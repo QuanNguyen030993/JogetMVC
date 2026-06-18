@@ -9,9 +9,11 @@ public class PolicyIssuance : BaseModel
     // =========================
     // Ý 1 — Header / Request
     // =========================
-
+    public override Guid? CopyFromGuid { get; set; }
     public string? RequestType { get; set; }             // c_reqType
-
+    public long? RequestTypeId { get; set; }             // c_reqType
+    public string PolicyIssuanceRequest { get; set; } = "";
+    public EnumData? RequestTypeEnum { get; set; }
     public DateTime? RequestDate { get; set; }           // c_reqDate
     public DateTime? DueDate { get; set; }               // c_dueDate
     public DateTime? InsuredDate { get; set; }           // c_dateInsured

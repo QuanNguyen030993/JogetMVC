@@ -301,14 +301,6 @@ Note:
 
         function reloadState() {
             $.each(qtDeptModuleCode, function (itemIndex, item) {
-                var items = new Object();
-                items.moduleName = "@prefix";
-                items.sectionName = item;
-                items.id = @ViewData["Id"];
-                items.guid = "@ViewData["Guid"]";
-                const controlId = `${items.moduleName}_${items.sectionName}_${items.id}`;
-                items.controlId = controlId;
-                loadDxFileUploaderAttachments(item, "Document", items);
                 commentPinModule(formModuleKeyQt, item,  "@ViewData["Guid"]", state.pinNotes,@ViewData["Id"]);
                 commentModule(formModuleKeyQt, item,  "@ViewData["Guid"]", state.comments,@ViewData["Id"]);
             });

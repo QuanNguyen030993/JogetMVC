@@ -1,7 +1,10 @@
 @using JogetMVC.Model
 @{
     string dept = "TS";
-    long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
+    long quotationId = Convert.ToInt64(ViewData["Id"]); 
+    string quotationGuid = ViewData["Guid"].ToString();
+    long cloneId = Convert.ToInt64(ViewData["CloneId"]);
+    string cloneQuotationGuid = ViewData["CopyFromGuid"].ToString();
 }
 <style>
     .dx-tabpanel .dx-tabpanel-tabs .dx-tab {
@@ -24,7 +27,6 @@
             editorOptions: {
                 items: [
                     { id: "AC_@PIViewIdHelper.Decision(dept, quotationId)" , text: "Accept", value: true },
-                    // { id: "AS_@PIViewIdHelper.Decision(dept, quotationId)" , text: "Assign", value: false },
                     { id: "RJ_@PIViewIdHelper.Decision(dept, quotationId)" , text: "Reject", value: false }
                 ],
                  displayExpr: "text",
@@ -86,7 +88,7 @@
             isRequired: true
             }
         }]},
-            { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefault("pi", "@(dept)", @(quotationId),  "@(quotationGuid)") },
+            { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefaultPi("pi", "@(dept)", @(quotationId), "@(quotationGuid)" ,@(cloneId) ,"@(cloneQuotationGuid)") },
     {itemType: "group",caption: "Policy",colCount:1,items: [
     {dataField: "policyPackage",editorType: "dxCheckBox",visible:true},
     {dataField: "languageOfPolicy",editorType: "dxCheckBox",visible:true}

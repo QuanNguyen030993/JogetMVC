@@ -1,7 +1,10 @@
 ﻿@using JogetMVC.Model
 @{
     string dept = "PM";
-    long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
+    long quotationId = Convert.ToInt64(ViewData["Id"]);
+    string quotationGuid = ViewData["Guid"].ToString();
+    long cloneId = Convert.ToInt64(ViewData["CloneId"]);
+    string cloneQuotationGuid = ViewData["CopyFromGuid"].ToString();
 }
 
 <style>
@@ -94,7 +97,7 @@
         }
              ]},
 
-                         {itemType: "group", caption: "Attachment",colCount: 1, items: attachmentDefault("pi","@(dept)",@(quotationId), "@(quotationGuid)") },
+                         {itemType: "group", caption: "Attachment",colCount: 1, items: attachmentDefaultPi("pi", "@(dept)", @(quotationId), "@(quotationGuid)" ,@(cloneId) ,"@(cloneQuotationGuid)")  },
                          {itemType: "group",caption: "Checklist",colCount:1,items: [
                     {dataField: "policyNoCL",editorType: "dxCheckBox",visible:true},
                     {dataField: "theInsured",editorType: "dxCheckBox",visible:true},

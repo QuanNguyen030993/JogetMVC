@@ -4762,7 +4762,7 @@
             var newId = generateNodeId();
             var parentNode = parentId === "#" ? null : tree.get_node(parentId);
 
-            var currentWorkflowFlow = mainForm.formInstance.option("formData").flowType || "Both";
+            // var currentWorkflowFlow = mainForm.formInstance.option("formData").flowType || "Both";
 
             var nodeData = {
                 id: newId,
@@ -4773,7 +4773,7 @@
                 stepRole: "",
                 departmentName: "",
                 levelNo: parentNode ? ((parentNode.original.levelNo || 1) + 1) : 1,
-                flowType: currentWorkflowFlow === "Both" ? "Both" : currentWorkflowFlow,
+                flowType: "Both",
                 allowLoop: false,
                 loopGroup: "",
                 x: 0,
@@ -5486,20 +5486,17 @@
                     .then(function (data) {
                         var dbPayload = safeParseJson(data.workflowNodes, null);
                         var overWriteHeader = new Object ();
-
-    
-
-                        dbPayload.workflowDefinition = overWriteHeader;
+                        debugger
                         if (dbPayload) {
+                            dbPayload.workflowDefinition = overWriteHeader;
                             setPayloadBoxObject(dbPayload);
-
                             // nếu muốn, đồng bộ ngược từ payload về state để UI phản ánh đúng DB
                             hydrateStateFromPayload(dbPayload);
                         } else {
                             var fallbackPayload = buildPayloadObjectFromState();
                             setPayloadBoxObject(fallbackPayload);
                         }
-
+                        
                         payloadInitialized = true;
                         refreshGrid();
                         d.resolve();
@@ -5527,7 +5524,7 @@
 
             var current = getPayloadBoxObject() || {};
             var latest = buildPayloadObjectFromState();
-
+            debugger
             current.workflowDefinition = workflowHeader || ""; 
             current.workflowNodes = latest.workflowNodes;
             current.workflowTransitions = latest.workflowTransitions;
@@ -6150,8 +6147,8 @@
 
                     (currentJson.workflowTransitions || []).forEach(connectEdge);
                     attachDrag();
-
-                    var def = currentJson.workflowDefinition || {};
+                    debugger
+                    // var def = currentJson.workflowDefinition || {};
                     // wfCode.textContent = "Workflow: " + safe(def.workflowCode || "-");
                     // flowType.textContent = "Flow: " + safe(def.flowType || "-");
                     // currentStep.textContent = "Current: " + safe(currentJson.runtimeState?.activeNodeId || "-");

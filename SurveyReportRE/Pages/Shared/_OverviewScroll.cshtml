@@ -96,7 +96,9 @@
                     {
                         ["Id"] = Model.Id.ToString(),
                         ["Cd"] = Cd($"sec_{item}-header"),
-                        ["Guid"] = Model.Guid.ToString()
+                        ["Guid"] = Model.Guid.ToString(),
+                        ["CloneId"] = Model.CloneId,
+                        ["CopyFromGuid"] = Model.CopyFromGuid.ToString()
                     };
                     }
                     <partial name="@($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_Header")" view-data="viewDataHeader" />
@@ -108,7 +110,9 @@
                     {
                         ["Id"] = Model.Id.ToString(),
                         ["Cd"] = Cd($"sec_{item}-upperbody"),
-                        ["Guid"] = Model.Guid.ToString()
+                        ["Guid"] = Model.Guid.ToString(),
+                        ["CloneId"] = Model.CloneId,
+                        ["CopyFromGuid"] = Model.CopyFromGuid.ToString()
                     };
                     }
                     <partial name="@($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_UpperBody")" view-data="viewDataUpperBody" />
@@ -121,7 +125,8 @@
                     {
                         ["Id"] = Model.Id.ToString(),
                         ["Cd"] = Cd($"sec_{item}-body"),
-                        ["Guid"] = Model.Guid.ToString()
+                        ["Guid"] = Model.Guid.ToString(),
+                        ["CopyFromGuid"] = Model.CopyFromGuid.ToString()
                     };
                     }
                     <partial name="@($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form")" view-data="viewDataBody" />
@@ -134,7 +139,8 @@
                     {
                         ["Id"] = Model.Id.ToString(),
                         ["Cd"] = Cd($"sec_{item}-lowerbody"),
-                        ["Guid"] = Model.Guid.ToString()
+                        ["Guid"] = Model.Guid.ToString(),
+                        ["CopyFromGuid"] = Model.CopyFromGuid.ToString()
                     };
                     }
                     <partial name="@($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_LowerBody")" view-data="viewDataLowerBody" />
@@ -147,7 +153,8 @@
                     {
                         ["Id"] = Model.Id.ToString(),
                         ["Cd"] = Cd($"sec_{item}-footer"),
-                        ["Guid"] = Model.Guid.ToString()
+                        ["Guid"] = Model.Guid.ToString(),
+                        ["CopyFromGuid"] = Model.CopyFromGuid.ToString()
                     };
                     }
                      <partial name="@($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_Footer")" view-data="viewDataFooter" /> 

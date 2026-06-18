@@ -29,6 +29,10 @@ using Microsoft.SharePoint.WorkflowActions;
 using ERPCore.Models;
 using System.Dynamic;
 using Org.BouncyCastle.Bcpg.Sig;
+using ERPCore.Models.Models.Parsing;
+using static ERPCore.Models.Models.Parsing.JsonHandle;
+using ERPCore.Models.Migration.Business.Social;
+using System.Reflection;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -46,6 +50,10 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     private readonly IHubContext<FileProcessingHub> _hubContext;
     private readonly IBaseRepository<InstanceWorkflow> _instanceWorkflowRepository;
     private readonly IBaseRepository<CommentLog> _quotationCommentLogRepository;
+    private readonly IBaseRepository<StepsWorkflow> _stepsWorkflowRepository;
+    private readonly IBaseRepository<EnumData> _enumDataRepository;
+    private readonly IBaseRepository<WorkflowDefinition> _workflowDefinitionRepository;
+    private readonly IBaseRepository<Notification> _notificationRepository;
     private readonly IConfigurationSection path;
     public static string MANAGER_APP = "";
     public static string APPROVER_APP = "";
@@ -58,12 +66,15 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     private static string spUserName = "";
     private static string spPassword = "";
     private static string MAPPING_PATH = "";
+    private Message _messageSettings;
     private readonly Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> _blobStorageSettings;
+    private readonly Microsoft.Extensions.Options.IOptionsMonitor<BusinessConfig> _businessConfig;
     public PolicyIssuanceController(IBaseRepository<PolicyIssuance> BaseRepository
         , IConfiguration config
         , IHttpContextAccessor httpContextAccessor
         , ILogger<PolicyIssuance> logger
         , Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> blobStorageSettings
+         , Microsoft.Extensions.Options.IOptionsMonitor<BusinessConfig> businessConfig
          , IHubContext<FileProcessingHub> hubContext
         ) : base(BaseRepository, httpContextAccessor
             )
@@ -79,6 +90,10 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         _rolesRepository = new BaseRepository<Roles>(configuration, _httpContextAccessor);
         _instanceWorkflowRepository = new BaseRepository<InstanceWorkflow>(configuration, _httpContextAccessor);
         _quotationCommentLogRepository = new BaseRepository<CommentLog>(configuration, _httpContextAccessor);
+        _enumDataRepository = new BaseRepository<EnumData>(configuration, _httpContextAccessor);
+        _stepsWorkflowRepository = new BaseRepository<StepsWorkflow>(configuration, _httpContextAccessor);
+        _workflowDefinitionRepository = new BaseRepository<WorkflowDefinition>(configuration, _httpContextAccessor);
+        _notificationRepository = new BaseRepository<Notification>(configuration, _httpContextAccessor);
         _hubContext = hubContext;
         MANAGER_APP = configuration.GetSection("BusinessConfig:ManagerAppKey").Value;
         APPROVER_APP = configuration.GetSection("BusinessConfig:ApproverAppKey").Value;
@@ -87,12 +102,15 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         SUPER_USER = configuration.GetSection("SuperUser:SuperUser").Value;
         DOMAIN_NAME = configuration.GetSection("Domain:DCServer").Value;
         path = _BaseRepository._baseConfiguration.GetSection("BlobStorage:Path");
+        _messageSettings = configuration.GetSection("Message").Get<Message>();
+
         MAPPING_PATH = _BaseRepository._baseConfiguration.GetSection("MigrationConfig:MappingField").Value;
         BLOB_PATH = path.Value;
         CURRENT_USER = _httpContextAccessor.HttpContext.User.Identity.Name.Replace(DOMAIN_NAME, "");
         spUserName = configuration.GetSection("SharePoint:Username").Value;
         spPassword = configuration.GetSection("SharePoint:Password").Value;
         _blobStorageSettings = blobStorageSettings;
+        _businessConfig = businessConfig;
     }
 
     public async Task<IActionResult> GetIdsList()
@@ -125,16 +143,153 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     [HttpPost]
     public async Task<IActionResult> CreatePolicyIssuance([FromForm] List<PolicyIssuance> PolicyIssuanceData)
     {
+        IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
+        OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(DOMAIN_NAME, "") == ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration));
         PolicyIssuanceData = JsonConvert.DeserializeObject<List<PolicyIssuance>>(Request.Form["PolicyIssuanceData"]);
+        long? piCount = PolicyIssuanceData.Count;
+        SignalRResult result = new SignalRResult
+        {
+            status = "saving ...",
+            tabName = _messageSettings.OverviewMessageLoading.Title,
+            subTabContent = _messageSettings.OverviewMessageLoading.Content,
+            data = PolicyIssuanceData,
+            progressvalue = 0,
+            type = "inprogress"
+        };
+        int startCount = 1;
+        List<FormatCodeNo> tableRQConfig = new List<FormatCodeNo>();
+        PolicyIssuance PolicyIssuance = new PolicyIssuance();
+        tableRQConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(PolicyIssuance) + "RequestCode");
+        string requestNo = ControllerUtil.GenerateNumberSeq(tableRQConfig, _formatCodeNoRepository, nameof(PolicyIssuance));
+   
         foreach (PolicyIssuance item in PolicyIssuanceData)
         {
-            PolicyIssuance PolicyIssuance = new PolicyIssuance();
-            List<FormatCodeNo> tableConfig = new List<FormatCodeNo>();
-            tableConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(PolicyIssuance)+"Code");
+
+            PolicyIssuance = new PolicyIssuance();
             JsonConvert.PopulateObject(JsonConvert.SerializeObject(item), PolicyIssuance);
+            PolicyIssuance.PolicyIssuanceRequest = requestNo;
+            List<FormatCodeNo> tableConfig = new List<FormatCodeNo>();
+            tableConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(PolicyIssuance) + "Code");
             PolicyIssuance.PolicyIssuanceCode = await ControllerUtil.GenerateNumberSeqAsync(tableConfig, _formatCodeNoRepository, nameof(PolicyIssuance));
-            PolicyIssuance = await _BaseRepository.InsertData(PolicyIssuance);
+
+
+            //Pending at ajax 
+            List<EnumData> siteEnums = new List<EnumData>();
+            siteEnums = await _enumDataRepository.EnumData("BranchOffice");
+            //After insert quotation
+            WorkflowDefinition workflowDefinition = new WorkflowDefinition();
+            workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(s => s.WorkflowCode == _businessConfig.CurrentValue.Workflow.PolicyIssuance);
+
+
+            if (workflowDefinition != null) { 
+            
+
+
+                StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.IsStart == true);
+                InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
+                instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
+                //instanceWorkflow.CurrentStep = "2";
+                if (stepsWorkflow != null)
+
+                {
+                    (PICAttributes PICMain, PICSysHandleAttributes PICLeader, PICAttributes PICHOD) picS = ControllerUtil.PersonInChargeHandle(PolicyIssuance, stepsWorkflow, _businessConfig, siteEnums);
+                    //quotation.LeaderPIC = JsonConvert.SerializeObject(picS.PICLeader);
+                    //quotation.HODPIC = JsonConvert.SerializeObject(picS.PICHOD);
+                    PolicyIssuance.StatusId = stepsWorkflow.StatusId;
+
+                    EnumData enumData = await _enumDataRepository.GetSingleObject(s => s.Id == stepsWorkflow.StatusId);
+
+                    PolicyIssuance.WorkflowStatus = enumData?.Value ?? "";
+                    PolicyIssuance = await _BaseRepository.InsertData(PolicyIssuance);
+
+
+                    instanceWorkflow.RecordGuid = PolicyIssuance.Guid;
+                    instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
+                    instanceWorkflow.CurrentStepId = new Guid();
+                    instanceWorkflow.IsCancelled = false;
+                    instanceWorkflow.IsCompleted = false;
+                    instanceWorkflow = await _instanceWorkflowRepository.InsertData(instanceWorkflow);
+
+
+
+
+                    SubmitRequest submitRequest = new SubmitRequest();
+                    submitRequest.StepsWorkflow = stepsWorkflow;
+                    submitRequest.Comment = $"{PolicyIssuance.PolicyIssuanceCode} created!";
+                    submitRequest.InstanceWorkflow = instanceWorkflow;
+
+
+
+
+                    await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, PolicyIssuance, submitRequest, _blobStorageSettings);
+
+                    //loop multiple account tai day
+                    var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
+                    string picsStr = picS.PICMain.GetType().GetProperty(stepsWorkflow?.ToNodeId ?? "")?.GetValue(picS.PICMain ?? new PICAttributes()).ToString() ?? "";
+                    foreach (var memberName in picsStr.Split(","))
+                    {
+                        NotificationRequest notification = new NotificationRequest();
+                        Notification Notification = new Notification();
+                        Notification.Title = string.Format(_messageSettings.InitializeMessage.Title, PolicyIssuance.QuotationCode);
+                        Notification.Message = PolicyIssuance?.Subject ?? string.Format(_messageSettings.InitializeMessage.Content, "");
+                        Notification.IsRead = false;
+                        Notification.Resource = $"{memberName}_{stepsWorkflow.ToNodeId}";
+                        Notification.System = "WM";
+                        Notification.RecordGuid = PolicyIssuance.Guid;
+
+                        Notification.ReceivedBy = memberName;
+                        notification.Notification = Notification;
+                        notification.connectionId = memberName;
+                        notification.tabPublicUrl = Util.URLObjectMaking(PolicyIssuance);
+                        PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
+                        string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
+                        Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(PolicyIssuance));
+                        NotificationController.Notify(notification);
+                    }
+                }
+
+                //quotationComplete = quotationCount ?? 0 / i; //Pending at ajax
+                result = new SignalRResult
+            {
+                status = "saving ...",
+                data = PolicyIssuanceData,
+                tabName = _messageSettings.OverviewMessageLoading.Title,
+                subTabContent = _messageSettings.OverviewMessageLoading.Content,
+                progressvalue = 75,//quotationComplete,
+                type = "inprogress"
+            };
+            ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+            startCount++;
+            }
+            else
+            {
+                result = new SignalRResult
+                {
+                    status = "saving ...",
+                    data = PolicyIssuanceData,
+                    tabName = _messageSettings.OverviewMessageLoading.Title,
+                    subTabContent = _messageSettings.OverviewMessageLoading.Content,
+                    progressvalue = 100,//quotationComplete,
+                    type = "error"
+                };
+                ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+                return BadRequest(new { detail = "Initial Quotation Error", message = "Flow not found!" });
+            }
+
+
+
+
         }
+        result = new SignalRResult
+        {
+            status = "",
+            data = PolicyIssuanceData,
+            tabName = _messageSettings.OverviewMessageLoading.Title,
+            subTabContent = _messageSettings.OverviewMessageLoading.Content,
+            progressvalue = 100,
+            type = "complete"
+        };
+        ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         return Ok();
     }
 

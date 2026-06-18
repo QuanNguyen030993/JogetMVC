@@ -30,7 +30,7 @@ namespace ERPCore.Models.Migration.Base
         public DateTime? DeletedDate { get; set;} = DateTime.Now;   
         public long? RowOrder { get; set; }
         [JsonIgnore]
-        public Guid? CopyFromGuid { get; set; }
+        public virtual Guid? CopyFromGuid { get; set; }
         [JsonIgnore]
         public Guid? DraftGuid { get;set; } 
     }

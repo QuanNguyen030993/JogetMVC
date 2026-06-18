@@ -1,4 +1,4 @@
-﻿@page "{pageNum:int?}/{guid}"
+﻿@page "{pageNum:int?}/{guid}/{cloneId:long?}/{copyfromguid}"
 @using JogetMVC.Model
 @using Newtonsoft.Json
 @model PolicyIssuance_FormModel
@@ -27,7 +27,9 @@ Note:
             ModuleCode = moduleCode,
             Title = title,
             Id = ViewData["Id"]?.ToString(),
-            Guid = ViewData["guid"]?.ToString()
+            Guid = ViewData["Guid"]?.ToString(),
+            CloneId = Convert.ToInt64(ViewData["CloneId"]),
+            CopyFromGuid = ViewData["CopyFromGuid"]?.ToString()
         }' />
 
     </div>
@@ -370,14 +372,6 @@ Note:
 
         function reloadState(){
               $.each(piDeptModuleCode, function (itemIndex, item) {
-                var items = new Object();
-                items.moduleName = "@prefix";
-                items.sectionName = item;
-                items.id = @ViewData["Id"];
-                items.guid = "@ViewData["Guid"]";
-                const controlId = `${items.moduleName}_${items.sectionName}_${items.id}`;
-                items.controlId = controlId;
-                loadDxFileUploaderAttachments(item, "Document", items);
                 commentPinModule(formModuleKeyPi,item, "@ViewData["Guid"]", state.pinNotes,@ViewData["Id"]);
                 commentModule(formModuleKeyPi,item, "@ViewData["Guid"]", state.comments,@ViewData["Id"]);
             });
@@ -858,12 +852,11 @@ Note:
              workflowStatus = q.workflowStatus ?? q.status;
 
 
-            $(`#${window.PolicyIssuanceIdManager.stageDeptPill(q.id)}`).html(`<span id="@ViewIdHelper.DetailStatus(moduleCode, Convert.ToInt64(ViewData["Id"]))" class="pill">${q.workflowStatus}</span> - ${stageAccount ?? ""}`);
+
+            $(`#${window.PolicyIssuanceIdManager.stageDeptPill(q.id)}`).html(`<span id="@ViewIdHelper.DetailStatus(moduleCode, Convert.ToInt64(ViewData["Id"]))" class="pill">${workflowStatus}</span> - ${stageAccount ?? ""}`);
             $(`#${window.PolicyIssuanceIdManager.detailStatus(q.id)}`)
                 .text(statusText(workflowStatus))
                 .attr("class", `statusTag ${statusClass(workflowStatus)}`);
-
-             $(`#${window.PolicyIssuanceIdManager.stageDeptPill(q.id)}`).html(`Pending at: ${state.stageDept} - ${stageAccount ?? ""}`);
 
             var control = new Object();
             $.each(piDeptModuleCode, function (itemIndex, item) {
