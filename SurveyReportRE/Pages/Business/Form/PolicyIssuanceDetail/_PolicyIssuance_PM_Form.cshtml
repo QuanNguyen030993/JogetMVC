@@ -14,20 +14,20 @@
         padding-right: 18px;
     }
 </style>
-<div style="margin-top:10px;font-weight:800;font-size:12px;">PA Process</div>
 <div id="gridPA_@quotationId"></div>
 
 <div id="@PIViewIdHelper.Form(dept, quotationId)">
 </div>
 <script type="text/javascript">
-       var that = new Object();
-    that.ModelName = "PolicyIssuance";
-    that.moduleName = "qt_default";
-    that.editorType = "dxFileUploader"
-    that.id = @(quotationId);
-    that.guid ="@(quotationGuid)";
-    that.sectionName = "@(dept)";
-    that.titleName = "Upload Quotation";
+    //    var that = new Object();
+    // that.ModelName = "PolicyIssuance";
+    // that.moduleName = "qt_default";
+    // that.editorType = "dxFileUploader"
+    // that.id = @(cloneId);
+    // that.guid ="@(cloneQuotationGuid)";
+    // that.sectionName = "@(dept)";
+    // that.titleName = "Upload Quotation";
+    // that.uploaderAllow = false;
 
     var that2 = new Object();
     that2.ModelName = "PolicyIssuance";
@@ -51,10 +51,10 @@
     $(`#@PIViewIdHelper.Form(dept, quotationId)`).dxForm({
         dataSource: makeBasicDataSource(that, true),
          items: [
-             { itemType: "group" , dataField: "decision",items :[
+               
+             { itemType: "group" , caption: "Decision",items :[
         {
             dataField: "decision",
-            label: { text: "Decision" },
             editorType: "dxRadioGroup",
             editorOptions: {
                 items: [
@@ -123,7 +123,7 @@
         }
              ]},
 
-                         {itemType: "group", caption: "Attachment",colCount: 1, items: attachmentDefaultPi(that,that2,that3)  },
+                         {itemType: "group", caption: "Attachment",colCount: 1, items: attachmentDefaultPi(null,that2,that3)  },
                          {itemType: "group",caption: "Checklist",colCount:1,items: [
                     {dataField: "policyNoCL",editorType: "dxCheckBox",visible:true},
                     {dataField: "theInsured",editorType: "dxCheckBox",visible:true},
@@ -137,23 +137,28 @@
                     {dataField: "tnCs",editorType: "dxCheckBox",visible:true},
                     {dataField: "occupationCode",editorType: "dxCheckBox",visible:true},
                     {dataField: "premiumRate",editorType: "dxCheckBox",visible:true}
-                    ]},
+                    ]},{ itemType: "group" , caption: "PA Process",items :[
+                    {
+                        dataField: "paProcess", editorType: "simple"
+                        , template: function (data, itemElement) {
+                            var additionOptions = new Object();
+                            additionOptions.refKey = 1;
+                            var gridOptions = new PolicyIssuanceSubDetailsGridOption("PolicyIssuanceSubDetails", "User", additionOptions);
+                            new MGrid(null, itemElement, gridOptions, null);
+                                // grid.component.option("width", "100%");
+                                // grid.appendTo(itemElement);
+
+                                // $("#gridPA_@quotationId").dxDataGrid("instance").option("editing", {
+                                // mode:"cell", allowUpdating: !roTS, allowAdding: !roTS, allowDeleting: !roTS
+                                // });
+
+                        }
+
+                    }
+               ]}
                     ]
 
        });
-       var additionOptions = new Object();
-        additionOptions.refKey = 1;
-
-        var gridOptions = new PolicyIssuanceSubDetailsGridOption("PolicyIssuanceSubDetails", "User",additionOptions);
-        setTimeout(() => {
-        
-        // var grid = new MGrid(null, $("#gridPA_@quotationId"), gridOptions, null);
-        // grid.component.option("height", 100);
-        // grid.component.option("width", "100%");
-          
-        },200);
-          //       $("#gridPA").dxDataGrid("instance").option("editing", {
-          //   mode:"cell", allowUpdating: !roTS, allowAdding: !roTS, allowDeleting: !roTS
-          // });
+       
            viewFieldAdjust("@PIViewIdHelper.Form(dept, quotationId)");
 </script>

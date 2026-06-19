@@ -994,7 +994,6 @@ var MGridOption = class MGridOption {
 
                     }
                 }
-                debugger
 
                 var defaultSelection = { mode: "single" };
                 var selection = {};

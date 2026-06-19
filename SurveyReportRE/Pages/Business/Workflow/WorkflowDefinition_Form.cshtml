@@ -5486,7 +5486,6 @@
                     .then(function (data) {
                         var dbPayload = safeParseJson(data.workflowNodes, null);
                         var overWriteHeader = new Object ();
-                        debugger
                         if (dbPayload) {
                             dbPayload.workflowDefinition = overWriteHeader;
                             setPayloadBoxObject(dbPayload);
@@ -5524,7 +5523,6 @@
 
             var current = getPayloadBoxObject() || {};
             var latest = buildPayloadObjectFromState();
-            debugger
             current.workflowDefinition = workflowHeader || ""; 
             current.workflowNodes = latest.workflowNodes;
             current.workflowTransitions = latest.workflowTransitions;
@@ -6147,7 +6145,6 @@
 
                     (currentJson.workflowTransitions || []).forEach(connectEdge);
                     attachDrag();
-                    debugger
                     // var def = currentJson.workflowDefinition || {};
                     // wfCode.textContent = "Workflow: " + safe(def.workflowCode || "-");
                     // flowType.textContent = "Flow: " + safe(def.flowType || "-");

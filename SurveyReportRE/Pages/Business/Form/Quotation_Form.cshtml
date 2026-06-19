@@ -216,10 +216,10 @@ Note:
                                                 }
                                         });
                                          }
-                                         catch 
-                                         {
-                                             console.log("Return problem");
-                                         }
+                                         catch  (exception)
+                                        {
+                                           console.log("Submit problem",exception);
+                                        }
                                          try
                                          {
                                               if (findRoute)
@@ -234,9 +234,9 @@ Note:
                                                 }
                                         });
                                          }
-                                       catch 
+                                       catch (exception)
                                        {
-                                          console.log("Submit problem");
+                                          console.log("Submit problem",exception);
                                        }
                                       
                                    }, _delayRenderSubmitButton);
@@ -308,12 +308,9 @@ Note:
 
         // Global function for SignalR to reload quotation components
         window.reloadQuotationComponents = async function() {
-            // Reload the quotation list
             loadQuotePage(true).then(async () => {
-            // Reload the selected detail if any
             if (state.selectedId) {
                 await loadSelectedWorkflow();
-                // renderDetail();
             }
             // Reload state for attachments and comments
             reloadState();
@@ -818,12 +815,6 @@ Note:
                 }, 300);
             }
 
-            function clearContent()
-            {
-                $("#rightDockItem").empty();
-                $("#rightCommentSub").empty();
-                $("#rightCommentList").empty();
-            }
 
             function bind() {
                 setTimeout(() => {

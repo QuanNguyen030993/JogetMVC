@@ -159,13 +159,17 @@ connectionSignR.start().then(async function () {
     });
     connectionSignR.on("R_ItemSubmitted", function (items) {
         signalRBlink();
-        //if (items.data.type === "Quotation") {
+        if (items.data.type === "Quotation") {
                     // Call the reload function for quotation components
                     if (window.reloadQuotationComponents) {
                         window.reloadQuotationComponents();
                     }
-                //}
-        //alert("Submitted");
+        }
+        if (items.data.type === "PolicyIssuance") {
+            if (window.reloadPolicyIssuanceComponents) {
+                window.reloadPolicyIssuanceComponents();
+            }
+        }
     });
 
     connectionSignR.on("R_InitializeLoading", function (responseData) {

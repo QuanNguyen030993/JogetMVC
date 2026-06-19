@@ -45,6 +45,9 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     private readonly IBaseRepository<WorkflowDefinition> _workflowDefinitionRepository;
     private readonly IBaseRepository<Notification> _notificationRepository;
     private readonly IBaseRepository<Document> _documentRepository;
+    private readonly IBaseRepository<PolicyIssuanceDetails> _policyIssuanceDetailsRepository;
+    private readonly IBaseRepository<PolicyIssuanceChecklist> _policyIssuanceChecklistRepository;
+
     private readonly IConfigurationSection path;
     public static string MANAGER_APP = "";
     public static string APPROVER_APP = "";
@@ -86,6 +89,8 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         _workflowDefinitionRepository = new BaseRepository<WorkflowDefinition>(configuration, _httpContextAccessor);
         _notificationRepository = new BaseRepository<Notification>(configuration, _httpContextAccessor);
         _documentRepository = new BaseRepository<Document>(configuration, _httpContextAccessor);
+        _policyIssuanceDetailsRepository = new BaseRepository<PolicyIssuanceDetails>(configuration, _httpContextAccessor);
+        _policyIssuanceChecklistRepository = new BaseRepository<PolicyIssuanceChecklist>(configuration, _httpContextAccessor);
         _hubContext = hubContext;
         MANAGER_APP = configuration.GetSection("BusinessConfig:ManagerAppKey").Value;
         APPROVER_APP = configuration.GetSection("BusinessConfig:ApproverAppKey").Value;
@@ -158,12 +163,14 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         {
 
             PolicyIssuance = new PolicyIssuance();
+
             JsonConvert.PopulateObject(JsonConvert.SerializeObject(item), PolicyIssuance);
             PolicyIssuance.PolicyIssuanceRequest = requestNo;
             List<FormatCodeNo> tableConfig = new List<FormatCodeNo>();
             tableConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(PolicyIssuance) + "Code");
             PolicyIssuance.PolicyIssuanceCode = await ControllerUtil.GenerateNumberSeqAsync(tableConfig, _formatCodeNoRepository, nameof(PolicyIssuance));
-
+           
+            
 
             //Pending at ajax 
             List<EnumData> siteEnums = new List<EnumData>();
@@ -174,9 +181,6 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
 
 
             if (workflowDefinition != null) { 
-            
-
-
                 StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.IsStart == true);
                 InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
                 instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
@@ -193,8 +197,14 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
 
                     PolicyIssuance.WorkflowStatus = enumData?.Value ?? "";
                     PolicyIssuance.StageDept = stepsWorkflow.ToNodeId;
-                    PolicyIssuance = await _BaseRepository.InsertData(PolicyIssuance);
 
+                    PolicyIssuance = await _BaseRepository.InsertData(PolicyIssuance);
+                    PolicyIssuanceDetails policyIssuanceDetails = new PolicyIssuanceDetails();
+                    policyIssuanceDetails.PolicyIssuanceId = PolicyIssuance.Id;
+                    policyIssuanceDetails = await _policyIssuanceDetailsRepository.InsertData(policyIssuanceDetails);
+                    PolicyIssuanceChecklist policyIssuanceCheckList = new PolicyIssuanceChecklist();
+                    policyIssuanceCheckList.PolicyIssuanceId = PolicyIssuance.Id;
+                    policyIssuanceCheckList = await _policyIssuanceChecklistRepository.InsertData(policyIssuanceCheckList);
 
                     instanceWorkflow.RecordGuid = PolicyIssuance.Guid;
                     instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
@@ -571,12 +581,10 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     [HttpPut]
     public override HttpResponseMessage UpdateData([FromForm] UpdateFormCollection form)
     {
+
         var entity = new PolicyIssuance();
         JsonConvert.PopulateObject(form.values, entity);
         _BaseRepository.UpdateData(entity, form.values, form.key, "Id");
-
-   
-
 
         Task.Run(async () =>
         {
@@ -585,7 +593,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
             OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(DOMAIN_NAME, "") == CURRENT_USER);
             if (onlineUser != null)
             {
-            connectionId = onlineUser.ConnectionId;
+                connectionId = onlineUser.ConnectionId;
                 if (!string.IsNullOrEmpty(connectionId))
                     await _hubContext.Clients.Client(connectionId).SendAsync($"sectionRender_{connectionId}", new
                     {
@@ -595,6 +603,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
 
             }
         });
+        ControllerHelper.SignalRResponse("R_ItemSubmitted", new { type = nameof(PolicyIssuance) }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
 
         return new HttpResponseMessage(HttpStatusCode.OK);
     }
@@ -634,7 +643,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     [HttpPost]
     public async Task<IActionResult> LogAction([FromForm] QuotationRequest quotationData)
     {
-        quotationData.QuotationData = JsonConvert.DeserializeObject<QuotationData>(Request.Form["QuotationData"]);
+        quotationData.QuotationData = JsonConvert.DeserializeObject<QuotationData>(Request.Form[nameof(PolicyIssuance) + "Data"]);
         quotationData.QuotationData.SubmitRequest = JsonConvert.DeserializeObject<SubmitRequest>(Request.Form["SubmitRequest"]);
         SubmitRequest submitRequest = new SubmitRequest();
         submitRequest.Comment = quotationData?.QuotationData?.SubmitRequest?.Comment;

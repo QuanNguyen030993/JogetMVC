@@ -745,7 +745,7 @@ public class QuotationController : BaseControllerApi<Quotation>
     [HttpPost]
     public async Task<IActionResult> LogAction([FromForm] QuotationRequest quotationData)
     {
-        quotationData.QuotationData = JsonConvert.DeserializeObject<QuotationData>(Request.Form["QuotationData"]);
+        quotationData.QuotationData = JsonConvert.DeserializeObject<QuotationData>(Request.Form[nameof(Quotation) + "Data"]);
         quotationData.QuotationData.SubmitRequest = JsonConvert.DeserializeObject<SubmitRequest>(Request.Form["SubmitRequest"]);
         SubmitRequest submitRequest = new SubmitRequest();
         submitRequest.Comment = quotationData?.QuotationData?.SubmitRequest?.Comment;
@@ -1051,7 +1051,6 @@ public class QuotationController : BaseControllerApi<Quotation>
 
 
 
-
         Task.Run(async () =>
         {
             string connectionId = "";
@@ -1069,7 +1068,7 @@ public class QuotationController : BaseControllerApi<Quotation>
 
             }
         });
-        ControllerHelper.SignalRResponse("R_ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        ControllerHelper.SignalRResponse("R_ItemSubmitted", new { type = nameof(Quotation) }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         return new HttpResponseMessage(HttpStatusCode.OK);
     }
     public async Task BulkInsertQuotationAsync(List<Quotation> data)

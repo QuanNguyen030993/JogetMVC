@@ -19,14 +19,15 @@
 <div id="@PIViewIdHelper.Form(dept, quotationId)">
 </div>
 <script type="text/javascript">
-     var that = new Object();
+    var that = new Object();
     that.ModelName = "PolicyIssuance";
     that.moduleName = "qt_default";
     that.editorType = "dxFileUploader"
-    that.id = @(quotationId);
-    that.guid ="@(quotationGuid)";
+    that.id = @(cloneId);
+    that.guid ="@(cloneQuotationGuid)";
     that.sectionName = "@(dept)";
     that.titleName = "Upload Quotation";
+    that.uploaderAllow = false;
 
     var that2 = new Object();
     that2.ModelName = "PolicyIssuance";
