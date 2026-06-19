@@ -602,8 +602,7 @@ namespace JogetMVC.Model
         public static string RemarkBox(string department, long quotationId)
             => GenerateId("remarkBox", department, quotationId);
 
-        public static string AssigneeBox(string department, long quotationId)
-            => GenerateId("assigneeBox", department, quotationId);
+        public static string AssigneeBox(string department, long quotationId) => $"{Prefix}-AssigneeBox_{department}_{quotationId}";
 
         public static string StickPanel(string department, long quotationId)
             => GenerateId("stickPanel", department, quotationId);

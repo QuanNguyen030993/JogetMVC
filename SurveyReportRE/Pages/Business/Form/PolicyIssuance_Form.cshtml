@@ -1022,11 +1022,14 @@ Note:
 
             var control = new Object();
             $.each(piDeptModuleCode, function (itemIndex, item) {
-                if (q.stageDept == item)
-                {
+                deptData[item] = { ...q, id: q.id, sectionName: item, code: q.policyIssuanceCode };
+                if (q.stageDept == item) {
+                    $(`#${PolicyIssuanceIdManager.actionBarDept(item, @ViewData["Id"])}`).css({ "display": "block" });
                     var control = TinyMCEElementMaker(`.htmleditor`, item, @ViewData["Id"], control);
-                    deptData[item] = { ...q, id: q.id, sectionName: item, code: q.policyIssuanceCode };
                     remarkBoxs[item] = { id: q.id, sectionName: item, controlRemark: control };
+                }
+                else {
+                    $(`#${PolicyIssuanceIdManager.actionBarDept(item, @ViewData["Id"])}`).css({ "display": "none" });
                 }
                 
             });
@@ -1037,7 +1040,7 @@ Note:
             applySectionFocusHighlight();
             updateHints();
             updateSectionUpdatedTime(q);
-            initDepartmentAssignees(formModuleKeyPi, deptData, firstRender ? null : 0  );
+            initDepartmentAssignees(formModuleKeyPi, deptData, firstRender ? null : 2000  );
             scrollToDept(formModuleKeyPi, { id: `${state.focusDept}`, keyId: "@ViewData["Id"]" });
             // TinyMCEElementMaker(`.htmleditor`);
 

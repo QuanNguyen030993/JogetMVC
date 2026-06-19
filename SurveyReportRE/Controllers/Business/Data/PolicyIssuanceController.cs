@@ -23,6 +23,7 @@ using static ERPCore.Models.Models.Parsing.JsonHandle;
 using ERPCore.Models.Migration.Business.Social;
 using System.Reflection;
 using ERPCore.Models.Migration.Business.Data;
+using ERPCore.Models.Migration.Business.MasterData;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -47,6 +48,8 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     private readonly IBaseRepository<Document> _documentRepository;
     private readonly IBaseRepository<PolicyIssuanceDetails> _policyIssuanceDetailsRepository;
     private readonly IBaseRepository<PolicyIssuanceChecklist> _policyIssuanceChecklistRepository;
+    private readonly IBaseRepository<MailTemplate> _mailTemplateRepository;
+    private readonly IBaseRepository<MailQueue> _mailQueueRepository;
 
     private readonly IConfigurationSection path;
     public static string MANAGER_APP = "";
@@ -60,6 +63,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     private static string spUserName = "";
     private static string spPassword = "";
     private static string MAPPING_PATH = "";
+    private MailConfig _emailSettings;
     private Message _messageSettings;
     private readonly Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> _blobStorageSettings;
     private readonly Microsoft.Extensions.Options.IOptionsMonitor<BusinessConfig> _businessConfig;
@@ -91,6 +95,9 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         _documentRepository = new BaseRepository<Document>(configuration, _httpContextAccessor);
         _policyIssuanceDetailsRepository = new BaseRepository<PolicyIssuanceDetails>(configuration, _httpContextAccessor);
         _policyIssuanceChecklistRepository = new BaseRepository<PolicyIssuanceChecklist>(configuration, _httpContextAccessor);
+        _mailTemplateRepository = new BaseRepository<MailTemplate>(configuration, _httpContextAccessor);
+        _mailQueueRepository = new BaseRepository<MailQueue>(configuration, _httpContextAccessor);
+        _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
         _hubContext = hubContext;
         MANAGER_APP = configuration.GetSection("BusinessConfig:ManagerAppKey").Value;
         APPROVER_APP = configuration.GetSection("BusinessConfig:ApproverAppKey").Value;
@@ -296,7 +303,71 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         return Ok();
     }
 
+    [HttpGet("{id}/{toDept}/{loginUser}")]
+    public async Task<IActionResult> AssignTask(long id, string toDept, string loginUser)
+    {
+        MailTemplate mailTemplate = new MailTemplate();
+        mailTemplate = await _mailTemplateRepository.GetSingleObject(s => s.TemplateName == "Assign Mail");
+        PolicyIssuance quotation = new PolicyIssuance();
+        quotation = await _BaseRepository.GetSingleObject(s => s.Id == id);
+        Users flowUser = new Users();
+        PICAttributes pICAttributes = new PICAttributes();
+        pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
+        string accountName = toDept switch
+        {
+            "FO" => pICAttributes.FO,
+            "TS" => pICAttributes.TS,
+            "UW" => pICAttributes.UW,
+            "LMKT" => pICAttributes.LMKT,
+            "PM" => pICAttributes.PM,
+            _ => null
+        };
+        Employee employee = new Employee();
+        flowUser = await _usersRepository.GetSingleObject(s => s.username == accountName);
+        employee = await _employeeRepository.GetSingleObject(s => s.UsersId == flowUser.Id);
+        try
+        {
+            if (mailTemplate != null)
+            {
+                DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
+                Dictionary<string, object> flowDictionaryData = new Dictionary<string, object>();
+                if (query.Rows.Count > 0)
 
+                    flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
+                MailQueue mailQueue = new MailQueue();
+                mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
+                await _mailQueueRepository.InsertData(mailQueue);
+
+            }
+
+
+
+            dynamic transferObject = new
+            {
+                DOMAIN_NAME = DOMAIN_NAME,
+                Title = "Assigning Task",
+                Subject = $"You have been assigned from {loginUser}",
+                Resource = "Assign from ",
+                Guid = quotation.Guid,
+                ReceivedBy = accountName,
+                Id = quotation.Id,
+                Code = quotation.QuotationCode
+            };
+
+            Notification notification = await ControllerUtil.Notify(transferObject);
+
+
+
+            await _notificationRepository.InsertData(notification);
+
+
+            return Ok();
+        }
+        catch (Exception exception)
+        {
+            throw exception;
+        }
+    }
     [HttpGet("{listIds}/{jsessionId}")]
     public async Task<ActionResult<PolicyIssuance>> PullDataBySession(string listIds,string jsessionId)
     {

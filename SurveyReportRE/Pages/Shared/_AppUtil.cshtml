@@ -2119,19 +2119,39 @@
                                 dataForm: data[item],
                             //value: formItems.lmktAssigneeId || null,
                             onChanged: function (itemChild, editor) {
+                                
                                 if (!stateLayout.isAssigneeBoxRender) return;
                                 var formId = window.QuotationIdManager.form(item,this.dataForm.id);
-                                    var ds = $(`#${formId}`).dxForm("instance").option("dataSource");
+                                var ds = $(`#${formId}`).dxForm("instance").option("dataSource");
                                 var store = ds;
                                         var PICs = JSON.parse(this.dataForm.pic);
-                                if (!itemChild?.accountName) return;
-                                if (currentPic == itemChild?.accountName) return;
-                                PICs[item] = itemChild.accountName;
+                                // if (!itemChild?.accountName) return;
+                                // if (currentPic == itemChild?.accountName) return;
+                                // PICs[item] = itemChild.accountName;
+
+                                if (!itemChild || !Array.isArray(itemChild)) return;
+
+                                const accounts = itemChild
+                                    .map(x => x?.accountName)
+                                    .filter(Boolean);
+
+
+                                if (accounts.length === 0) return;
+
+
+                                // loại currentPic nếu cần
+                                const filteredAccounts = accounts.filter(x => x !== currentPic);
+
+
+                                PICs[item] = filteredAccounts.join(",");
+
+
+
                                 var data = new Object();
                                 data.pIC = JSON.stringify(PICs);
                                         store.update(this.dataForm.id, data)
                                     .done(function () {
-                                        DevExpress.ui.notify(`Assigned To ${itemChild.fullName}`, "success", 2000);
+                                        // DevExpress.ui.notify(`Assigned To ${itemChild.fullName}`, "success", 2000);
                                     });
                                         ajaxGet(`/api/Quotation/AssignTask/${this.dataForm.id}/${item}/${_loginUser}`,null )
                                     .then(list => {
@@ -2145,25 +2165,51 @@
             if (moduleKey == "pi")
                 $.each(piDeptModuleCode, function (itemIndex, item) {
                     setTimeout(() => {
-                            var currentPic = getDefaultPicByDept(item, data[item]);
-                                 if (data[item])
-                                    renderDepartmentAssigneeBox(`#${window.QuotationIdManager.assigneeBox(item, data[item].id)}`, {
-                            groupName: item,
+                    var currentPic = getDefaultPicByDept(item, data[item]);
+                    if (data[item])
+                            renderDepartmentAssigneeBox(`#${window.PolicyIssuanceIdManager.assigneeBox(item, data[item].id)}`, {
+                                groupName: item,
                                 dataForm: data[item],
-                            //value: formItems.lmktAssigneeId || null,
-                            onChanged: function (itemChild, editor) {
-                                    var formId = window.PolicyIssuanceIdManager.form(item,this.dataForm.id);
-                                        var ds = $(`#${formId}`).dxForm("instance").option("dataSource");
-                                   var store = ds;
-                                        var PICs = JSON.parse(this.dataForm.pic);
-                                if (!itemChild?.accountName) return;
-                                if (currentPic == itemChild?.accountName) return;
-                                PICs[item] = itemChild.accountName;
+                                //value: formItems.lmktAssigneeId || null,
+                                onChanged: function (itemChild, editor) {
+
+                                if (!stateLayout.isAssigneeBoxRender) return;
+                                var formId = window.PolicyIssuanceIdManager.form(item, this.dataForm.id);
+                                var ds = $(`#${formId}`).dxForm("instance").option("dataSource");
+                                var store = ds;
+                                var PICs = JSON.parse(this.dataForm.pic);
+                                // if (!itemChild?.accountName) return;
+                                // if (currentPic == itemChild?.accountName) return;
+                                // PICs[item] = itemChild.accountName;
+
+                                if (!itemChild || !Array.isArray(itemChild)) return;
+
+                                const accounts = itemChild
+                                    .map(x => x?.accountName)
+                                    .filter(Boolean);
+
+
+                                if (accounts.length === 0) return;
+
+
+                                // loại currentPic nếu cần
+                                const filteredAccounts = accounts.filter(x => x !== currentPic);
+
+
+                                PICs[item] = filteredAccounts.join(",");
+
+
+
                                 var data = new Object();
                                 data.pIC = JSON.stringify(PICs);
-                                        store.update(this.dataForm.id, data)
+                                store.update(this.dataForm.id, data)
                                     .done(function () {
-                                        DevExpress.ui.notify(`Assigned To ${itemChild.fullName}`, "success", 2000);
+                                        // DevExpress.ui.notify(`Assigned To ${itemChild.fullName}`, "success", 2000);
+                                    });
+                                ajaxGet(`/api/PolicyIssuance/AssignTask/${this.dataForm.id}/${item}/${_loginUser}`, null)
+                                    .then(list => {
+
+
                                     });
 
                             }
@@ -2175,96 +2221,272 @@
             }
 
 
-        function renderDepartmentAssigneeBox(selector, options) {
-            const settings = $.extend(true, {
-                groupName: "",
-                dataForm: {},
-                currentUserId: null,
-                value: null,
-                onChanged: null
-            }, options || {});
-            const store = new DevExpress.data.CustomStore({
-                key: "id",
-                loadMode: "raw",
-                load: function (loadOptions) {
-                    return $.ajax({
-                        url: "api/Employee/GetAssignableByGroup",
-                        type: "GET",
-                        dataType: "json",
-                        data: {
-                            group: settings.groupName,
-                            excludeCurrent: true,
-                            keyword: loadOptions.searchValue || ""
-                        }
-                    }).then(function (res) {
-                        return res && res.success ? res.data : [];
-                    });
-                },
-                byKey: function (key) {
-                    if (!key) return null;
+        // function renderDepartmentAssigneeBox(selector, options) {
+        //     const settings = $.extend(true, {
+        //         groupName: "",
+        //         dataForm: {},
+        //         currentUserId: null,
+        //         value: null,
+        //         onChanged: null
+        //     }, options || {});
+        //     const store = new DevExpress.data.CustomStore({
+        //         key: "id",
+        //         loadMode: "raw",
+        //         load: function (loadOptions) {
+        //             return $.ajax({
+        //                 url: "api/Employee/GetAssignableByGroup",
+        //                 type: "GET",
+        //                 dataType: "json",
+        //                 data: {
+        //                     group: settings.groupName,
+        //                     excludeCurrent: true,
+        //                     keyword: loadOptions.searchValue || ""
+        //                 }
+        //             }).then(function (res) {
+        //                 return res && res.success ? res.data : [];
+        //             });
+        //         },
+        //         byKey: function (key) {
+        //             if (!key) return null;
 
-                    return $.ajax({
-                        url: `api/Employee/EmployeeLookup/${key}`,
-                        type: "GET",
-                        dataType: "json"
-                    }).then(function (res) {
-                        return res && res.success ? res.data : null;
-                    });
-                }
-            });
+        //             return $.ajax({
+        //                 url: `api/Employee/EmployeeLookup/${key}`,
+        //                 type: "GET",
+        //                 dataType: "json"
+        //             }).then(function (res) {
+        //                 return res && res.success ? res.data : null;
+        //             });
+        //         }
+        //     });
 
-            const select = $(selector).dxSelectBox({
-                dataSource: store,
-                valueExpr: "accountName",
-                displayExpr: "fullName",
-                searchEnabled: true,
-                searchExpr: ["fullName", "accountName", "displayName"],
-                placeholder: "Select assignee...",
-                showClearButton: true,
-                value: getDefaultPicByDept(settings.groupName, settings.dataForm) || settings.value,
-                buttons: [
-                    "clear",
-                    "dropDown",
-                    {
-                        name: "assignToMe",
-                        location: "after",
-                        options: {
-                            type: "default",
-                            text: "Assign to me",
-                            onClick: function () {
-                                $.ajax({
-                                    url: "api/Employee/GetMyAssigneeProfile",
-                                    type: "GET",
-                                    dataType: "json"
-                                }).done(function (res) {
-                                    if (!res || !res.success || !res.data) return;
+        //     const select = $(selector).dxSelectBox({
+        //         dataSource: store,
+        //         valueExpr: "accountName",
+        //         displayExpr: "fullName",
+        //         searchEnabled: true,
+        //         searchExpr: ["fullName", "accountName", "displayName"],
+        //         placeholder: "Select assignee...",
+        //         showClearButton: true,
+        //         value: getDefaultPicByDept(settings.groupName, settings.dataForm) || settings.value,
+        //         buttons: [
+        //             "clear",
+        //             "dropDown",
+        //             {
+        //                 name: "assignToMe",
+        //                 location: "after",
+        //                 options: {
+        //                     type: "default",
+        //                     text: "Assign to me",
+        //                     onClick: function () {
+        //                         $.ajax({
+        //                             url: "api/Employee/GetMyAssigneeProfile",
+        //                             type: "GET",
+        //                             dataType: "json"
+        //                         }).done(function (res) {
+        //                             if (!res || !res.success || !res.data) return;
 
-                                    const me = res.data;
-                                    const editor = $(selector).dxSelectBox("instance");
+        //                             const me = res.data;
+        //                             const editor = $(selector).dxSelectBox("instance");
 
-                                    editor.option("value", me.id);
+        //                             editor.option("value", me.id);
 
-                                    if (typeof settings.onChanged === "function") {
-                                        settings.onChanged(me, editor, true);
-                                    }
-                                });
-                            }
+        //                             if (typeof settings.onChanged === "function") {
+        //                                 settings.onChanged(me, editor, true);
+        //                             }
+        //                         });
+        //                     }
+        //                 }
+        //             }
+        //         ],
+        //         onValueChanged: function (e) {
+        //             const item = e.component.option("selectedItem");
+        //             if (typeof settings.onChanged === "function") {
+        //                 settings.onChanged(item, e.component, false);
+        //             }
+        //         }
+        //     });
+        //     $(select).on("click", function (e) {
+        //         e.stopPropagation();
+
+        //     });
+        // }
+    function renderDepartmentAssigneeBox(selector, options) {
+        const settings = $.extend(true, {
+            groupName: "",
+            dataForm: {},
+            currentUserId: null,
+            value: null, // string: acc1,acc2
+            onChanged: null
+        }, options || {});
+
+
+        const store = new DevExpress.data.CustomStore({
+            key: "id",
+            loadMode: "raw",
+
+            load: function (loadOptions) {
+                return $.ajax({
+                    url: "api/Employee/GetAssignableByGroup",
+                    type: "GET",
+                    dataType: "json",
+                    data: {
+                        group: settings.groupName,
+                        excludeCurrent: true,
+                        keyword: loadOptions.searchValue || ""
+                    }
+                }).then(function (res) {
+                    return res && res.success ? res.data : [];
+                });
+            },
+
+            byKey: function (key) {
+                if (!key) return null;
+
+                return $.ajax({
+                    url: `api/Employee/EmployeeLookup/${key}`,
+                    type: "GET",
+                    dataType: "json"
+                }).then(function (res) {
+                    return res && res.success ? res.data : null;
+                });
+            }
+        });
+
+
+        const defaultValue =
+            getDefaultPicByDept(settings.groupName, settings.dataForm)
+            || settings.value;
+
+
+        const selectedValues = defaultValue
+            ? defaultValue.split(",").map(x => x.trim()).filter(Boolean)
+            : [];
+
+
+        const tagBox = $(selector).dxTagBox({
+
+            dataSource: store,
+
+            valueExpr: "accountName",
+             
+            displayExpr: "fullName",
+            height: 38,
+            value: selectedValues,
+            // value: getDefaultPicByDept(settings.groupName, settings.dataForm) || settings.value,
+
+            searchEnabled: true,
+            maxDisplayedTags: 1,
+            showMultiTagOnly: true,
+
+            onMultiTagPreparing: function (e) {
+
+                const items = e.selectedItems || [];
+
+                const hiddenItems = items.slice(1);
+
+                e.text = `+${hiddenItems.length} more`;
+
+
+                e.multiTagElement
+                    .attr("title",
+                        hiddenItems
+                            .map(x => x.fullName)
+                            .join("\n")
+                    );
+            },
+            searchExpr: [
+                "fullName",
+                "accountName",
+                "displayName"
+            ],
+
+            placeholder: "Select assignee...",
+
+            showClearButton: true,
+
+            showSelectionControls: true,
+
+            applyValueMode: "useButtons",
+
+
+            buttons: [
+                "clear",
+                "dropDown",
+                {
+                    name: "assignToMe",
+                    location: "after",
+
+                    options: {
+                        type: "default",
+                        text: "Assign to me",
+
+                        onClick: function () {
+
+                            $.ajax({
+                                url: "api/Employee/GetMyAssigneeProfile",
+                                type: "GET",
+                                dataType: "json"
+
+                            }).done(function (res) {
+
+                                if (!res || !res.success || !res.data)
+                                    return;
+
+
+                                const me = res.data;
+
+                                const editor = $(selector)
+                                    .dxTagBox("instance");
+
+
+                                let current = editor.option("value") || [];
+
+
+                                if (!current.includes(me.accountName)) {
+                                    current.push(me.accountName);
+                                }
+
+
+                                editor.option("value", current);
+
+
+                                if (typeof settings.onChanged === "function") {
+
+                                    settings.onChanged(
+                                        [me],
+                                        editor,
+                                        true
+                                    );
+                                }
+
+                            });
                         }
                     }
-                ],
-                onValueChanged: function (e) {
-                    const item = e.component.option("selectedItem");
-                    if (typeof settings.onChanged === "function") {
-                        settings.onChanged(item, e.component, false);
-                    }
                 }
-            });
-            $(select).on("click", function (e) {
-                e.stopPropagation();
+            ],
 
-            });
-        }
 
+            onValueChanged: function (e) {
+
+                const items = e.component.option("selectedItems") || [];
+
+
+                if (typeof settings.onChanged === "function") {
+
+                    settings.onChanged(
+                        items,
+                        e.component,
+                        false
+                    );
+                }
+            }
+        });
+
+
+        $(tagBox).on("click", function (e) {
+            e.stopPropagation();
+        });
+    }
 
         function reloadWorkflow(selectedGuid, selectedId, stageDept, moduleKey) {
                 $(`#${moduleKey}-flowPanel_${selectedId}`).empty();
