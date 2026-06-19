@@ -617,14 +617,33 @@ Note:
             //         `).join("");
             // }
 
+            // const loadComments = debounce(function (quoteNo, quoteId) {
+            //     document.documentElement.style.setProperty("--rightdock-width", "20%");
+            //     $("#rightCommentSub").text(`Audit log - ${quoteNo}` || "-");
+            //     $("#rightCommentList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
+
+            //     const q = `SELECT * FROM PolicyIssuanceCommentLog WHERE PolicyIssuanceId = ${quoteId}`;
+            //     $.ajax({
+            //         url: `/api/PolicyIssuanceCommentLog/ExecuteCustomQuery`,
+            //         method: "POST",
+            //         async: true,
+            //         contentType: "application/json",
+            //         data: JSON.stringify(q),
+            //         success: function (data) { $("#rightCommentList").html(renderComments(data)); },
+            //         error: function () {
+            //             $("#rightCommentList").html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load audit logs</div>`);
+            //         }
+            //     });
+            // }, 180);
+
             const loadComments = debounce(function (quoteNo, quoteId) {
                 document.documentElement.style.setProperty("--rightdock-width", "20%");
                 $("#rightCommentSub").text(`Audit log - ${quoteNo}` || "-");
                 $("#rightCommentList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
-
-                const q = `SELECT * FROM PolicyIssuanceCommentLog WHERE PolicyIssuanceId = ${quoteId}`;
+                // const q = `SELECT * FROM CommentLog WHERE QuotationId = ${quoteId}`;
+                const q = `OnSystem`;
                 $.ajax({
-                    url: `/api/PolicyIssuanceCommentLog/ExecuteCustomQuery`,
+                    url: `/api/CommentLog/ExecuteCustomQuery?refField=QuotationId&refKey=${quoteId}`,
                     method: "POST",
                     async: true,
                     contentType: "application/json",
@@ -634,6 +653,112 @@ Note:
                         $("#rightCommentList").html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load audit logs</div>`);
                     }
                 });
+            }, 180);
+            const attachmentLogLoad = debounce(function (quoteNo, quoteId, attachmentId) {
+                document.documentElement.style.setProperty("--rightdock-width", "70%");
+                $("#rightCommentSub").text(`Attachment log - ${quoteNo}`);
+                var guid = "@(ViewData["CopyFromGuid"])";
+                $.ajax({
+                    url: `/api/Document/GetByKey?recordGuid=${guid}`,
+                    method: "GET",
+                    success: function (data) {
+                        const mappedData = data.map(x => {
+                            let dept = "";
+                            try {
+                                if (x.attributes) {
+                                    const attr = tryParseJSON(x.attributes, "Attribute Problem");
+                                    dept = attr.Department || "";
+                                }
+                            } catch (e) {
+                                console.warn("Invalid attributes JSON", x.attributes);
+                            }
+
+                            return {
+                                ...x,
+                                department: dept
+                            };
+                        });
+                        const $preview = $("#rightDockItem");
+
+
+                        // tạo container grid
+                        const $grid = $("<div>").appendTo($preview);
+
+                        $grid.dxDataGrid({
+                            dataSource: mappedData,
+                            keyExpr: "id",
+
+                            //hoặc
+
+                            height: "95%",
+                            scrolling: {
+                                mode: "infinity" // hoặc "virtual"
+                            },
+
+
+                            filterBuilder: { fields: this.columns },
+                            filterBuilderPopup: { position: { of: window, at: "top", my: "top", offset: { y: 10 } }, },
+                            errorRowEnabled: true,
+                            hoverStateEnabled: true,
+                            allowColumnReordering: true,
+                            allowColumnResizing: true,
+                            columnResizingMode: 'widget',
+                            columnHidingEnabled: false,
+                            columnAutoWidth: true,
+                            showColumnLines: true,
+                            // columnChooser: { allowSearch: true, enabled: true },
+                            // columnFixing: { enabled: true },
+                            sorting: { mode: 'multiple' },
+                            showBorders: true,
+                            filterRow: { visible: true },
+                            loadPanel: { showPane: false, text: null },
+                            filterPanel: { visible: true },
+                            groupPanel: { visible: true, allowColumnDragging: true, emptyPanelText: "" },
+                            headerFilter: { visible: true, allowSearch: true },
+                            sorting: {
+                                mode: "single"
+                            },
+
+                            columns: [
+                                {
+                                    dataField: "fileName",
+                                    caption: "Attachment",
+                                    cellTemplate: function (container, options) {
+                                        const $item = createAttachmentItem(options.data);
+                                        $item.css({
+                                            opacity: 1,
+                                            transform: "none",
+                                            transition: "none"
+                                        });
+                                        $(container).append($item);
+                                    }
+
+                                },
+                                {
+                                    dataField: "department",
+                                    caption: "Department",
+                                    width: 150
+                                }, ,
+                                {
+                                    dataField: "author",
+                                    caption: "Author",
+                                    width: 150
+                                },
+                                {
+                                    dataField: "date",
+                                    caption: "Date",
+                                    dataType: "datetime",
+                                    format: "dd/MM/yyyy HH:mm",
+                                    sortOrder: "desc" // ✅ SORT TĂNG DẦN
+                                }
+                            ]
+                        });
+                    },
+                    error: function () {
+                    }
+                });
+
+
             }, 180);
 
             const loadReferenceFields = debounce(function (quoteNo, quoteId) {
@@ -712,6 +837,40 @@ Note:
                         loadComments(state.selectedCodeNo, state.selectedId);
                     }
                 }).appendTo($("#headerWidgetsPanel"));
+
+                $(`#${window.PolicyIssuanceIdManager.btnToggleComment(@ViewData["Id"])}`).dxButton({
+                    text: "Audit log",
+                    icon: "comment",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                        clearContent();
+                        if (!commentPanelOpened) {
+                            openRightCommentPanel();
+                            loadComments(state.selectedCodeNo, state.selectedId);
+                        } else {
+                            closeRightCommentPanel();
+                        }
+                    }
+                });
+
+
+                $(`#${window.PolicyIssuanceIdManager.btnAttachmentLog(@ViewData["Id"])}`).dxButton({
+                    text: "Attachment log",
+                    icon: "fas fa-paperclip",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                        clearContent();
+                        if (!commentPanelOpened) {
+                            openRightCommentPanel();
+                            attachmentLogLoad(state.selectedCodeNo, state.selectedId, selectedAttachmentId);
+                        } else {
+                            closeRightCommentPanel();
+                        }
+                    }
+                });
+
 
                 $(`#${formModuleKeyPi}-btnCollapseAllTab`).dxButton({
                     text: "Collapse All Sections",

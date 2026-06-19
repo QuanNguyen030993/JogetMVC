@@ -2280,8 +2280,8 @@
                      col.allowEditing = true;
                         if (col.dataField === `pic${item}`) {
                         col.cellTemplate = function (container, options) {
-                            col.value = JSON.parse(options.data.pic)[item];
-                             return $(`<div>`).text(JSON.parse(options.data.pic)[item]).appendTo(container);
+                            col.value = tryParseJSON(options.data.pic[item], "PIC Load Problem");
+                            return $(`<div>`).text(tryParseJSON(options.data.pic[item], "PIC Load Problem")).appendTo(container);
                         }
                     }
                 });
@@ -2505,8 +2505,8 @@
                      col.allowEditing = true;
                         if (col.dataField === `pic${item}`) {
                         col.cellTemplate = function (container, options) {
-                            col.value = JSON.parse(options.data.pic)[item];
-                             return $(`<div>`).text(JSON.parse(options.data.pic)[item]).appendTo(container);
+                            col.value = tryParseJSON(options.data.pic[item], "PIC Load Problem");
+                            return $(`<div>`).text(tryParseJSON(options.data.pic[item], "PIC Load Problem")).appendTo(container);
                         }
                     }
                 });
@@ -2688,8 +2688,6 @@
                 }
 
             });
-
-
         }
 
     }

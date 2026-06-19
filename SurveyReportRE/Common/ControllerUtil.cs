@@ -349,7 +349,7 @@ namespace ERPCore.ControllerUtil
             string logFlowQuery = "";
             if (workflowEntity.isFullDetail)
             {
-                logFlowQuery = $@"INSERT INTO QuotationWorkflowHistory(RecordGuid
+                logFlowQuery = $@"INSERT INTO WorkflowHistory(RecordGuid
             ,StepNo,DeptCode,ActionTime,ActionNote,FromDeptCode,ToDeptCode,ActionCode,Actor,SourceSystem,CreatedAtUtc)
                         VALUES ('{entity.Guid}',{workflowEntity.InstanceWorkflow.CurrentStep}
             ,'{workflowEntity.StepsWorkflow.FromNodeId}'
@@ -364,12 +364,17 @@ namespace ERPCore.ControllerUtil
             using var loggerFactory = LoggerFactory.Create(loggingBuilder => loggingBuilder
           .SetMinimumLevel(LogLevel.Trace)
           .AddConsole());
-
-            var logger = loggerFactory.CreateLogger<CommentLog>();
-            var quotationCommentLogApiController = new CommentLogController(_quotationCommentLogRepository, configuration, httpContextAccessor, logger, optionsMonitor);
-                        await quotationCommentLogApiController.ExecuteCustomQuery(logQuery);
-            if (workflowEntity.isFullDetail)
-                await quotationCommentLogApiController.ExecuteCustomQuery(logFlowQuery);
+            try
+            {
+                var logger = loggerFactory.CreateLogger<CommentLog>();
+                var quotationCommentLogApiController = new CommentLogController(_quotationCommentLogRepository, configuration, httpContextAccessor, logger, optionsMonitor);
+                await quotationCommentLogApiController.ExecuteCustomQuery(logQuery);
+                if (workflowEntity.isFullDetail)
+                    await quotationCommentLogApiController.ExecuteCustomQuery(logFlowQuery);
+            }
+            catch (Exception ex) {
+                Serilog.Log.Error(ex, ex.Message);
+            }
 
             return null; 
         }

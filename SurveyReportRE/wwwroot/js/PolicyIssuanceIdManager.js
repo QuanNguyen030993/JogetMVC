@@ -61,7 +61,6 @@ window.PolicyIssuanceIdManager = {
     // Control elements
     btnToggleLeftPane: function () { return `${this.prefix}-btnToggleLeftPane`; },
     btnCollapseAllTab: function () { return `${this.prefix}-btnCollapseAllTab`; },
-    btnToggleComment: function () { return `${this.prefix}-btnToggleComment`; },
     btnToggleReferenceFields: function () { return `${this.prefix}-btnToggleReferenceFields`; },
     roleSelect: function () { return `${this.prefix}-roleSelect`; },
 

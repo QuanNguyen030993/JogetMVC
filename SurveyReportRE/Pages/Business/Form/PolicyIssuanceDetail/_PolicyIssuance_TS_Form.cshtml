@@ -114,7 +114,7 @@
             isRequired: true
             }
         }]},
-            { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefaultPi("pi", "@(dept)", @(quotationId), "@(quotationGuid)" ,@(cloneId) ,"@(cloneQuotationGuid)") },
+            { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefaultPi(that,that2,that3) },
     {itemType: "group",caption: "Policy",colCount:1,items: [
     {dataField: "policyPackage",editorType: "dxCheckBox",visible:true},
     {dataField: "languageOfPolicy",editorType: "dxCheckBox",visible:true}
