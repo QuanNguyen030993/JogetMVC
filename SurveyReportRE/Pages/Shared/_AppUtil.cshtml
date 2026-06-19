@@ -612,9 +612,6 @@
         }
              function newPolicyIssuanceForm() {
               var popup = makePopup("large", "Res");
-
-
-
                 popup.option({
                     title: "Policy Issuance Request",
                     contentTemplate(container) {
@@ -654,39 +651,6 @@
                         })();
                     },
                 toolbarItems: [
-                //     {
-                //     widget: 'dxButton',
-                //     toolbar: 'bottom',
-                //     location: 'after',
-                //     options: {
-                //         stylingMode: 'contained',
-                //         type: 'normal',
-                //         text: "Fill Data",
-                //         onClick() {
-                //             var form = $(`#policyIssuanceRequestForm`).dxForm().dxForm("instance");
-                //             form.option("formData", {
-                //                 PIC: "quan.nh",
-                //                 assignedTeamOrRole: "TS",
-                //                 assignees: {},
-                //                 assignmentMode: "manual",
-                //                 businessChannel: "Direct (DIR)",
-                //                 clientId: 1124,
-                //                 clientName: "NGUYEN MANH CUONG",
-                //                 createDate: new Date(),
-                //                 dueDate: new Date(),
-                //                 lineName: "Liability",
-                //                 productId: 2,
-                //                 productName: "Industrial All Risks",
-                //                 reinsuranceId: 143,
-                //                 reqDate: new Date(),
-                //                 reqPerson: "quan.nh",
-                //                 requestTypeId: 149,
-                //                 subject: "Subject báo giá",
-                //                 workflowDefinitionId: 5,
-                //             });
-                //         },
-                //     },
-                // },
                 {
                     widget: 'dxButton',
                     toolbar: 'bottom',
@@ -769,6 +733,132 @@
                      popup.show();
 
         }
+
+
+    function newQuotationApprovalForm() {
+        var popup = makePopup("large", "Res");
+        popup.option({
+            title: "Quotation Approval Request",
+            contentTemplate(container) {
+
+                // const $host = $("<div>").css({
+                //     width: "100%",
+                //     height: "100%",
+                //     overflow: "auto",
+                //     padding: "20px",
+                //     background: "#fff",
+                //     lineHeight: "1.6",
+                //     fontFamily: "Calibri, Arial"
+                // }).html("Loading...").appendTo(container);
+
+                (async () => {
+                    try {
+                        var passingParams = { UITabId: `QuotationApproval_Request_Form`, pageNum: 0 };
+                        appendElementViewInsideAsync(`/Business/Form/PopupDetail/QuotationApproval_Request_Form`, passingParams, container, `QuotationApproval_Request_Form`, "appendTo")
+                            .then(form => {
+                                var scrollView = popupStandardContentByScroll(form.option("container"));
+                                scrollView.appendTo(container);
+                            })
+                            .catch(error => {
+                                try {
+                                    //sendClientErrorLog("Lỗi khi tải dữ liệu:", error);
+                                }
+                                catch {
+                                }
+                                console.error("Lỗi khi tải dữ liệu:", error);
+                            });
+                        return container;
+
+                    } catch (err) {
+                        console.error(err);
+                        $host.html(`<div style="color:red;">${err.message}</div>`);
+                    }
+                })();
+            },
+            toolbarItems: [
+                {
+                    widget: 'dxButton',
+                    toolbar: 'bottom',
+                    location: 'after',
+                    options: {
+                        stylingMode: 'contained',
+                        type: 'normal',
+                        text: "Save As Draft",
+                        onClick() {
+
+                            popupInstance.hide();
+                        },
+                    },
+                }, {
+                    widget: 'dxButton',
+                    toolbar: 'bottom',
+                    location: 'after',
+                    options: {
+                        stylingMode: 'contained',
+                        type: 'info',
+                        text: "Complete",
+                        onClick() {
+                            var gridInstance = $(`#dataGrid_QuotationApproval_Request`).dxDataGrid("instance");
+                            var selectedItems = gridInstance.getSelectedRowsData();
+                            // var policyIssuances = [];
+                            // $.each(selectedItems, function (itemIndex, item) {
+                            //     var policyIssuance = new Object();
+                            //     policyIssuance = ObjectPopulateKey(item, true, false);
+                            //     policyIssuance.RequestDate = new Date();
+                            //     var pics = JSON.parse(item.pic || "{}");
+                            //     policyIssuance.PIC = {
+                            //         FO: pics.FO || "",
+                            //         TS: pics.TS || "",
+                            //         PM: ""
+                            //     };
+
+                            //     policyIssuance.PIC = JSON.stringify(policyIssuance.PIC);
+                            //     policyIssuance.TurnAroundTimeAttributes = JSON.stringify({
+                            //         FO: { AcceptDate: new Date(), "CompleteDate": new Date() }
+                            //         , TS: { AcceptDate: "", CompleteDate: "" }
+                            //         , UW: { AcceptDate: "", CompleteDate: "" }
+                            //         , LMKT: { AcceptDate: "", CompleteDate: "" }
+                            //         , PM: { AcceptDate: "", CompleteDate: "" }
+                            //     });
+                            //     policyIssuance.StageAccount = _loginUser;
+                            //     policyIssuance.CopyFromGuid = item.guid;
+                            //     policyIssuance.QuotationId = item.id;
+
+                            //     policyIssuances.push(policyIssuance);
+                            // });
+
+                            // var formData = new FormData();
+                            // formData.append("PolicyIssuanceData", JSON.stringify(policyIssuances));
+
+
+                            // $.ajax({
+                            //     url: "/api/PolicyIssuance/CreatePolicyIssuance",
+                            //     type: "POST",
+                            //     data: formData,
+                            //     processData: false,
+                            //     contentType: false,
+                            //     success: function (res) {
+                            //         DevExpress.ui.notify("PolicyIssuance created!", "success", 1200);
+
+                            //     },
+                            //     error: function (xhr) {
+                            //         // result.payload.progressvalue = 100;
+                            //         // renderBrowserLoading(result);
+                            //         appNotifyError(`${xhr.responseJSON?.detail || xhr.statusText} <br/>${xhr.responseJSON?.message || xhr.responseText}`);
+                            //         // appNotifyError(`${xhr.responseJSON?.detail || xhr.statusText} <br/>${xhr.responseJSON?.message || xhr.responseText}`);
+                            //     }
+                            // });
+
+                            popup.hide();
+                        },
+                    },
+                }]
+        });
+
+        popup.show();
+
+    }
+
 
         function  commentModule(moduleKey, dept, guid, commentsIn, id) {
             var currentSection = `${dept}`;

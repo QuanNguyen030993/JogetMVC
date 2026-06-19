@@ -962,7 +962,7 @@
 
                
             </div>
-                    <div class="action-card quotation" id="btnQuotation">
+                    <div class="action-card quotation" id="btnQuotationApproval">
 
                         <div class="card-image">
                             <img src="img/Quotation_Approve.png">
@@ -1064,10 +1064,10 @@
                    newQuotationForm();
                    moduleLauncherPopup.hide();
                });
-               // $("#btnQuotationRequest").on("click", function () {
-               //     // newQuotationRequestForm();
-               //     moduleLauncherPopup.hide();
-               // });
+                    $("#btnQuotationApproval").on("click", function () {
+                   newQuotationApprovalForm();
+                   moduleLauncherPopup.hide();
+               });
                $("#btnPolicy").on("click", function () {
                    newPolicyIssuanceForm();
                    moduleLauncherPopup.hide();
