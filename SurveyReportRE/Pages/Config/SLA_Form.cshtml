@@ -11,16 +11,20 @@
                 _formConfig.originModelName = "@SLA_FormModel.ModelName";
                 _formConfig.formElementName = "@SLA_FormModel.ModelName";
                 _formConfig.colCount = 1;
+                _formConfig.refKey = _deptInput ;
+                _formConfig.refField = "dept"; 
+                _formConfig.sameRefKeyAsId = true;
+                debugger
                 var mFormOption = new MFormOption(_formConfig, null);
-    ajaxGet(`api/SLA/SLALookup/@(ViewData["Dept"].ToString())`, null).done(response => {
-        $(`#form_@(SLA_FormModel.ModelName)`).attr("id", `form_@(SLA_FormModel.ModelName)_${response.data.id}`)
+    //         ajaxGet(`api/SLA/SLALookup/@(ViewData["Dept"].ToString())`, null).done(response => {
+         $(`#form_@(SLA_FormModel.ModelName)`).attr("id", `form_@(SLA_FormModel.ModelName)_@(ViewData["Dept"].ToString())`)
             if (_deptInput == "TS")
-            new TSSLAForm(response.data.id, null, _formConfig, mFormOption);
+            new TSSLAForm(_deptInput, null, _formConfig, mFormOption);
             if (_deptInput == "UW")
-            new UWSLAForm(response.data.id, null, _formConfig, mFormOption);
+            new UWSLAForm(_deptInput, null, _formConfig, mFormOption);
             if (_deptInput == "PM")
-            new PMSLAForm(response.data.id, null, _formConfig, mFormOption);
-    });
+            new PMSLAForm(_deptInput, null, _formConfig, mFormOption);
+    // });
 </script>
 <div id="form_@(SLA_FormModel.ModelName)" class="dExForm"></div>
 

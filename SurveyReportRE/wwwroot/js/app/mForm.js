@@ -17,6 +17,9 @@
             this.outlineForm = { isUse: false, isOutlineChecked: false, isOutlineDynamic: false };
             this.isReadOnly = false;
             if (formConfig) {
+                if (formConfig.pk != null || formConfig.pk != undefined) {
+                    this.pk = formConfig.pk;
+                }
                 if (formConfig.isChildForeignKey != null || formConfig.isChildForeignKey != undefined) {
                     this.isChildForeignKey = formConfig.isChildForeignKey;
                 }
@@ -43,11 +46,11 @@
                 if (formConfig.labelLocation != null || formConfig.labelLocation != undefined) {
                     this.labelLocation = formConfig.labelLocation;
                 }
-                if (formConfig.refFieldId != null || formConfig.refFieldId != undefined) {
-                    this.refFieldId = formConfig.refFieldId;
+                if (formConfig.refKey != null || formConfig.refKey != undefined) {
+                    this.refKey = formConfig.refKey;
                 }
-                if (formConfig.refFieldName != null || formConfig.refFieldName != undefined) {
-                    this.refFieldName = formConfig.refFieldName;
+                if (formConfig.refField != null || formConfig.refField != undefined) {
+                    this.refField = formConfig.refField;
                 }
                 if (formConfig.sameRefKeyAsId != null || formConfig.sameRefKeyAsId != undefined) {
                     this.sameRefKeyAsId = formConfig.sameRefKeyAsId;
@@ -81,10 +84,10 @@
             this.ModelName = formConfig.originModelName;
             this.ReferenceModel = formConfig.originModelName;
             var formElement = $(`#form_${formConfig.formElementName}_${this.id}`);
-            if (this.refFieldId != null || this.refFieldId != undefined)
-                formElement = $(`#form_${formConfig.formElementName}_${this.refFieldId}_${this.id}`);
+            if (this.refKey != null || this.refKey != undefined)
+                formElement = $(`#form_${formConfig.formElementName}_${this.refKey}_${this.id}`);
             if (this.sameRefKeyAsId)
-                formElement = $(`#form_${formConfig.formElementName}_${this.refFieldId}`);
+                formElement = $(`#form_${formConfig.formElementName}_${this.refKey}`);
             if (formOptions != null || formOptions != undefined) 
                 this.formOptions = formOptions;
             else
@@ -278,6 +281,7 @@
     //after call API successfully start
     getSuccess(data) {
         var that = this;
+        debugger
         if (this.id > 0 && data != null) {
             that.orgFormData = data;
             // Workflow permission checking
@@ -448,7 +452,7 @@
                     } else {
                         delete changedFields[e.dataField];
                     }
-                    markAccordionAsChanged(`accordion_${that.refFieldId}_${e.dataField}`);
+                    markAccordionAsChanged(`accordion_${that.refKey}_${e.dataField}`);
                     // Cập nhật lại changedFields trong dxForm
                     e.component.option("changedFields", changedFields);
                 }.bind(this))

@@ -212,7 +212,7 @@
                                 key: "id",
                                 load: function () {
                                     if (instance.isQuery) {
-                                        if (instance.refFieldName && !instance.isChildForeignKey)
+                                        if (instance.refField && !instance.isChildForeignKey)
                                             instance.callApi('GetFKMany', null, null);
                                         else
                                             instance.callApi('GetSingle', null, null);
@@ -1402,7 +1402,7 @@
                         item.id = id;
                         item.editorType = "dxHtmlEditor";
                         item.instanceProps = new Object();
-                        item.instanceProps.refFieldId = id;
+                        item.instanceProps.refKey = id;
                        var itemElement = $(`#${moduleKey}-commentEditor_${dept}_${id}`);
                         createEditor(item, itemElement, $("<div>"), item);
                         control = item.control.instance;
@@ -1644,7 +1644,7 @@
                 item.id = id;
                 item.editorType = "dxHtmlEditor";
                 item.instanceProps = new Object();
-                item.instanceProps.refFieldId = id;
+                item.instanceProps.refKey = id;
                 var itemElement = $(`#${window.QuotationIdManager.remarkBox(dept, id)}`);
                 var $element = $(`#${window.QuotationIdManager.remarkBox(dept, id)}`);
                 if ($element.length > 0) {
@@ -3645,7 +3645,7 @@
                 item.id = id;
                 item.editorType = "dxHtmlEditor";
                 item.instanceProps = new Object();
-                item.instanceProps.refFieldId = id;
+                item.instanceProps.refKey = id;
                 var itemElement = $(`<div>`)
                 // item.moduleName = "qt"; item.sectionName = "SurveyResultAttachment";
                 createEditor(item, itemElement, $("<div>"), item);
@@ -3889,7 +3889,7 @@
             { char: "³" }
         ];
 
-        var controlId = editorOptions.instanceProps ? editorOptions.instanceProps.refFieldId : editorOptions.id;
+        var controlId = editorOptions.instanceProps ? editorOptions.instanceProps.refKey : editorOptions.id;
         var editor = $element.dxHtmlEditor({
             elementAttr: {
                 id: `dxHtmlEditor_${item.dataField}_${controlId}`
@@ -4105,9 +4105,9 @@
             case "dxImageUploader":
                 var controllerName = "Document";
 
-                if (editorOptions.refFieldId)
+                if (editorOptions.refKey)
                     $.ajax({
-                        url: `/api/${controllerName}/GetAttachtmentBySurvey?id=${editorOptions.refFieldId}`, // Replace with your actual API
+                        url: `/api/${controllerName}/GetAttachtmentBySurvey?id=${editorOptions.refKey}`, // Replace with your actual API
                         method: 'GET',
                         success: function (data) {
                             if (data.length > 0) {
@@ -4142,12 +4142,12 @@
                                     addImageToPreview(url, imageInstance);
                                 });
 
-                                $(`#imagePreview_${editorOptions.refFieldId}_${editorOptions.outline.id} .previewLoader`).remove();
+                                $(`#imagePreview_${editorOptions.refKey}_${editorOptions.outline.id} .previewLoader`).remove();
                             }
                         }
                     });
                 editorOptions.uploadTitle = "Images";
-                var $imagePreview = $(`<div id='imagePreview_${editorOptions.refFieldId}_${editorOptions.outline.id}' class='imagePreview' style='display: flex; flex-wrap: wrap; gap: 25px;top: 10px'>`).appendTo($container);
+                var $imagePreview = $(`<div id='imagePreview_${editorOptions.refKey}_${editorOptions.outline.id}' class='imagePreview' style='display: flex; flex-wrap: wrap; gap: 25px;top: 10px'>`).appendTo($container);
                    
                 $(`<div id="fileUpload_${editorOptions.ModelName}_${editorOptions.id}">`).dxFileUploader({
                     readOnly: editorOptions.isReadOnly ? editorOptions.isReadOnly : false,
@@ -4157,7 +4157,7 @@
                     dropZone: $imagePreview,
                     labelText: "",
                     uploadMode: "instantly",
-                    uploadUrl: `/api/${controllerName}/AsyncUploadPicture?surveyId=${editorOptions.refFieldId}&outlineId=${editorOptions.outline.id}&outlinePlaceHolder=${encodeURIComponent(editorOptions.outline?.placeHolder)}`,
+                    uploadUrl: `/api/${controllerName}/AsyncUploadPicture?surveyId=${editorOptions.refKey}&outlineId=${editorOptions.outline.id}&outlinePlaceHolder=${encodeURIComponent(editorOptions.outline?.placeHolder)}`,
                     showFileList: false,
                     onDropZoneEnter: function (e) {
                         //$(e.dropZoneElement).addClass("highlight-drop-zone");
@@ -4169,9 +4169,9 @@
                     //    //console.log("Files dropped:", e.event.dataTransfer.files);
                     //},
                     onUploadStarted: function (e) {
-                        $(`#imagePreview_${editorOptions.refFieldId}_${editorOptions.outline.id}`).css("position", "relative"); // đảm bảo relative
-                        $(`#imagePreview_${editorOptions.refFieldId}_${editorOptions.outline.id} .previewLoader`).remove(); // nếu có rồi
-                        $("<div>").addClass("previewLoader").appendTo(`#imagePreview_${editorOptions.refFieldId}_${editorOptions.outline.id}`)
+                        $(`#imagePreview_${editorOptions.refKey}_${editorOptions.outline.id}`).css("position", "relative"); // đảm bảo relative
+                        $(`#imagePreview_${editorOptions.refKey}_${editorOptions.outline.id} .previewLoader`).remove(); // nếu có rồi
+                        $("<div>").addClass("previewLoader").appendTo(`#imagePreview_${editorOptions.refKey}_${editorOptions.outline.id}`)
                             .dxLoadPanel({
                                 message: "Image loading...",
                                 visible: true,
@@ -4179,11 +4179,11 @@
                                 shadingColor: "rgba(255,255,255,0.7)",
                                 showPane: true,
                                 closeOnOutsideClick: false,
-                                position: { of: `#imagePreview_${editorOptions.refFieldId}_${editorOptions.outline.id}` }
+                                position: { of: `#imagePreview_${editorOptions.refKey}_${editorOptions.outline.id}` }
                             });
                     },
                     onUploaded: function (e) {
-                        $(`#imagePreview_${editorOptions.refFieldId}_${editorOptions.outline.id} .previewLoader`).remove();
+                        $(`#imagePreview_${editorOptions.refKey}_${editorOptions.outline.id} .previewLoader`).remove();
                         var response = e.request.response;
                         var responseObject = JSON.parse(response); // truy vấn attachment
                         var fr = new FileReader();
@@ -4209,7 +4209,7 @@
                             }
                             formData[formField].push(fileObject);
                             if (editorOptions.id) {
-                                fileObject.surveyId = editorOptions.refFieldId;
+                                fileObject.surveyId = editorOptions.refKey;
                                 var formObject = new Object();
                                 formObject[formField] = formData[formField];
                                 editorOptions.instanceProps.formInstance.option("changedFields", formObject);

@@ -15,10 +15,49 @@
 }
 
 .dExFormToolBar {
-    position: inherit;
-    top: auto;
-    right: 0;
-    padding-right: 25px;
+    width: 100%;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+
+
+.dExToolbar
+.dx-toolbar-items-container {
+    min-height: 42px;
+}
+
+
+
+.dExToolbarButton {
+    border-radius: 8px !important;
+    font-weight: 500;
+}
+
+
+
+    .dExToolbarButton
+    .dx-icon {
+        margin-right: 6px;
+    }
+
+
+
+@media(max-width:768px) {
+
+    .dExToolbar
+    .dx-toolbar-after {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+
+    .dExToolbarButton {
+        min-width: 40px;
+    }
 }
 main {
     flex: 3;

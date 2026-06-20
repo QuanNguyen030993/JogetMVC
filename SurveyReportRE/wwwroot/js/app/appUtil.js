@@ -371,7 +371,7 @@ var buildApiUrl = function (apiMethod, instanceObject) {
                     url = `/api/${instanceObject.ModelName}/GetSingle/${instanceObject.id}`;
                 }
                 else if (apiMethod === "GetFKMany") {
-                    url = `/api/${instanceObject.ReferenceModel}/GetFKMany?fkId=${instanceObject.refFieldId}&fkField=${instanceObject.refFieldName}`;
+                    url = `/api/${instanceObject.ReferenceModel}/GetFKMany?fkId=${instanceObject.refKey}&fkField=${instanceObject.refField}`;
                 }
                 else if (apiMethod === "CustomQuery") {
                     url = `/api/${instanceObject.ModelName}/ExecuteCustomQuery`;
@@ -1191,8 +1191,8 @@ function createAccordionGroup(item, $itemElement, formInstanceProps) {
 function createAccordionField(item, $itemElement, editorOptions, formInstanceProps) { // a field by a dxAccordion
     var outlineObject = null
     var masterId = formInstanceProps.id;
-    if (formInstanceProps.refFieldId) {
-        masterId = formInstanceProps.refFieldId;
+    if (formInstanceProps.refKey) {
+        masterId = formInstanceProps.refKey;
     }
     var accordionId = `accordion_${masterId}_${item.dataField}`;
     var outlineChildPrefix = "";
@@ -1372,10 +1372,10 @@ function customChildProps(editorOptions, instanceProps) {
     var childProps = { ...editorOptions, ...editorOptions.editorOptions };
     if (editorOptions.editorType == 'dxDataGrid' || editorOptions.editorType == 'dxFileUploader') {
         editorOptions.label.visible = false;
-        if (instanceProps.refFieldId != null || instanceProps.refFieldId != undefined)
-            childProps.refFieldId = instanceProps.refFieldId;
-        if (instanceProps.refFieldName != null || instanceProps.refFieldName != undefined)
-            childProps.refFieldName = instanceProps.refFieldName;
+        if (instanceProps.refKey != null || instanceProps.refKey != undefined)
+            childProps.refKey = instanceProps.refKey;
+        if (instanceProps.refField != null || instanceProps.refField != undefined)
+            childProps.refField = instanceProps.refField;
         if (editorOptions.ModelName != null || editorOptions.ModelName != undefined)
             childProps.ModelName = editorOptions.ModelName;
         else
@@ -1555,9 +1555,9 @@ function createRadioGroup(titleData, radioContainer, outlineObject, formInstance
 //                        jsonConfig.surveyTypeId = formInstanceProps?.outlineForm?.surveyTypeId;
 //                    if (formInstanceProps?.id)
 //                        jsonConfig.mainId = formInstanceProps?.id;
-//                    if (formInstanceProps?.refFieldId) {
-//                        surveyId = formInstanceProps?.refFieldId;
-//                        jsonConfig.surveyId = formInstanceProps?.refFieldId;
+//                    if (formInstanceProps?.refKey) {
+//                        surveyId = formInstanceProps?.refKey;
+//                        jsonConfig.surveyId = formInstanceProps?.refKey;
 //                    }
 //                    if (formInstanceProps?.Outline.length > 0) {
 //                        //jsonConfig.parentOutlineId = formInstanceProps?.Outline.find(f => formInstanceProps?.ModelName.toUpperCase() == f.content.replace(' ', '') && f.surveyTypeId == formInstanceProps?.outlineForm?.surveyTypeId).id;

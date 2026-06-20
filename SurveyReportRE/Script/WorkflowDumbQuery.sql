@@ -239,3 +239,114 @@ INSERT INTO WorkflowHistory (StepNo,DeptCode,ActionTime,ActionNote,FromDeptCode,
 SELECT StepNo,DeptCode,ActionTime,ActionNote,FromDeptCode,ToDeptCode,ActionCode,Actor,SourceSystem,SourceRef,RawJson,CreatedAtUtc,q.Guid
 FROM QuotationWorkflowHistory l
 LEFT JOIN WorkflowManagement.dbo.Quotation   q ON q.Id = l.QuotationId
+INSERT INTO SLA
+(
+    Dept,
+    Attributes,
+    Code,
+    Value,
+    DecimalValue,
+    Guid
+)
+VALUES
+(
+    'TS',
+    N'{
+        "fields":[
+            {
+                "name":"waitingDay",
+                "label":"Số ngày accept đơn",
+                "control":"number",
+                "required":true,
+                "min":0,
+                "max":30,
+                "value":3
+            }
+        ],
+        "calculation":{
+            "type":"manual",
+            "unit":"day"
+        }
+    }',
+    'WAIT_APCEPT_DAY',
+    '3',
+    3,
+    NEWID()
+),
+(
+    'TS',
+    N'{
+        "fields":[
+            {
+                "name":"processDay",
+                "label":"Số xử lý đơn",
+                "control":"number",
+                "required":true,
+                "min":0,
+                "max":30,
+                "value":3
+            }
+        ],
+        "calculation":{
+            "type":"manual",
+            "unit":"day"
+        }
+    }',
+    'WAIT_PROCESS_DAY',
+    '3',
+    3,
+    NEWID()
+),
+(
+    'UW',
+    N'{
+        "fields":[
+            {
+                "name":"waitingDay",
+                "label":"Số ngày chờ thông tin",
+                "control":"number",
+                "required":true,
+                "min":0,
+                "max":60,
+                "value":5
+            }
+        ],
+        "calculation":{
+            "type":"manual",
+            "unit":"day"
+        }
+    }',
+    'WAIT_INFORMATION_DAY',
+    '5',
+    5,
+    NEWID()
+),
+(
+    'PM',
+    N'{
+        "fields":[
+            {
+                "name":"fromDate",
+                "label":"Từ ngày",
+                "control":"date",
+                "required":true
+            },
+            {
+                "name":"toDate",
+                "label":"Đến ngày",
+                "control":"date",
+                "required":true
+            }
+        ],
+        "calculation":{
+            "type":"dateDiff",
+            "fieldFrom":"fromDate",
+            "fieldTo":"toDate",
+            "unit":"day"
+        }
+    }',
+    'WAIT_ACCEPT_CUSTOM',
+    '7',
+    7,
+    NEWID()
+);
