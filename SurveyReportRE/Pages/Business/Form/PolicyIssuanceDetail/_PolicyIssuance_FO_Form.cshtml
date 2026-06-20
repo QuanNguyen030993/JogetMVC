@@ -33,7 +33,7 @@
     that.sectionName = "@(dept)";
     that.titleName = "Upload Quotation";
     that.uploaderAllow = false;
-    that.data = { SectionName: `${sectionIdQt}_${that.moduleName}_@(cloneId)`, Dept: "@(dept)", FieldName: that.moduleName, FormId: "@(QTViewIdHelper.Form(dept, cloneId))" }; //{"SectionName":"default_FO_410"}
+    that.data = { SectionName: `${sectionIdQt}_${that.moduleName}_@(cloneId)`, Department: "@(dept)", FieldName: that.moduleName, FormId: "@(QTViewIdHelper.Form(dept, cloneId))" }; //{"SectionName":"default_FO_410"}
 
     var that2 = new Object();
     that2.ModelName = "PolicyIssuance";
@@ -43,7 +43,7 @@
     that2.guid = "@(cloneQuotationGuid)";
     that2.sectionName = "@(dept)";
     that2.titleName = "Upload Supporting Document";
-    that2.data = { SectionName: `${sectionIdQt}_${that2.moduleName}_@(cloneId)`, Dept: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept, cloneId))" }; //{"SectionName":"default_FO_410"}
+    that2.data = { SectionName: `${sectionIdQt}_${that2.moduleName}_@(cloneId)`, Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept, cloneId))" }; //{"SectionName":"default_FO_410"}
 
     var that3 = new Object();
     that3.ModelName = "PolicyIssuance";
@@ -55,7 +55,7 @@
     that3.cloneGuid = "@(cloneQuotationGuid)";
     that3.sectionName = "@(dept)";
     that3.titleName = "Upload Document";
-    that3.data = { SectionName: `${sectionId}_${that3.moduleName}_@(policyIssuanceId)`, Dept: "@(dept)", FieldName: that3.moduleName, FormId: "@(PIViewIdHelper.Form(dept, policyIssuanceId))" }; //{"SectionName":"default_FO_410"}
+    that3.data = { SectionName: `${sectionId}_${that3.moduleName}_@(policyIssuanceId)`, Department: "@(dept)", FieldName: that3.moduleName, FormId: "@(PIViewIdHelper.Form(dept, policyIssuanceId))" }; //{"SectionName":"default_FO_410"}
 
     $("#@PIViewIdHelper.Form(dept, policyIssuanceId)").dxForm({
         dataSource: makeBasicDataSource(thatObject, true),

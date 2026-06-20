@@ -665,6 +665,7 @@ Note:
                     url: `/api/Document/GetByKey?recordGuid=${guid}`,
                     method: "GET",
                     success: function (data) {
+                        debugger
                         const mappedData = data.map(x => {
                             let dept = "";
                             try {

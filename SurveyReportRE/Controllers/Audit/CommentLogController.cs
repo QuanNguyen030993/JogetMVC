@@ -131,7 +131,7 @@ public class CommentLogController : BaseControllerApi<CommentLog>
             if (dynamicObj.ContainsKey("refKey") || dynamicObj.ContainsKey("key"))
             {
                 var built = Util.LoadParamsBuildCustomQuery<object>(
-                    baseQuery: query == "OnSystem" ? sysTable.CustomQuery : Query,
+                    baseQuery: query == "OnSystem" ? sysTable?.CustomQuery : Query,
                     loadParams: normalizedParams,
                     defaultOrderBy: "CommentId",
                     defaultOrderDir: "DESC",
