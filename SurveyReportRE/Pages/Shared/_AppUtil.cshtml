@@ -2795,11 +2795,6 @@
         
         function getCurrentFormOptions(editorOptions) {
             var form = new Object();
-            //     if (editorOptions.moduleName.includes("qt"))
-            // form = $(`#${window.QuotationIdManager.form(editorOptions.sectionName, editorOptions.id)}`).dxForm("instance");
-            //     if (editorOptions.moduleName.includes("pi"))
-            // form = $(`#${window.PolicyIssuanceIdManager.form(editorOptions.sectionName, editorOptions.id)}`).dxForm("instance");
-
 
                 if (editorOptions.data.FormId)
                     form = $(`#${editorOptions.data.FormId}`).dxForm("instance");
@@ -2807,6 +2802,15 @@
                     return null
                 };
 
+                try
+                {
+                    form.option("formData");
+                }
+                catch
+                {
+                    console.log("Error at form Id",editorOptions.data.FormId );
+                    return null;
+                }
             return form.option("formData");
         }
             function buildFolder(latestOptions, sectionName) {
@@ -2967,7 +2971,6 @@
                     url: `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${(combine)} `,
                     method: "GET",
                     success: function (data) {
-                        debugger
                         const $preview = $(`#attList_${sectionName}`);
                         renderAttachmentListLazy(data, $preview, {
                             batchSize: 6,

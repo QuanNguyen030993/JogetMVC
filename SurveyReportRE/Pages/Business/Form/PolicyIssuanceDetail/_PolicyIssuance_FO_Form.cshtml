@@ -1,8 +1,8 @@
 ﻿@using JogetMVC.Model
 @{
     string dept = "FO";
-    long quotationId = Convert.ToInt64(ViewData["Id"]);
-    string quotationGuid = ViewData["Guid"].ToString();
+    long policyIssuanceId = Convert.ToInt64(ViewData["Id"]);
+    string policyIssuanceGuid = ViewData["Guid"].ToString();
     long cloneId = Convert.ToInt64(ViewData["CloneId"]);
     string cloneQuotationGuid = ViewData["CopyFromGuid"].ToString();
 }
@@ -16,40 +16,49 @@
    
 
 </style>
-<div id="@PIViewIdHelper.Form(dept, quotationId)">
+<div id="@PIViewIdHelper.Form(dept, policyIssuanceId)">
 </div>
 <script type="text/javascript">
+    var thatObject = new Object();
+    thatObject.ModelName = "PolicyIssuance";
+
+    var sectionId = "@ViewData["Cd"]";
+    var sectionIdQt = "qt-body_@(dept)_";
     var that = new Object();
     that.ModelName = "PolicyIssuance";
-    that.moduleName = "qt_default";
+    that.moduleName = "default";
     that.editorType = "dxFileUploader"
     that.id = @(cloneId);
-    that.guid ="@(cloneQuotationGuid)";
+    that.guid = "@(cloneQuotationGuid)";
     that.sectionName = "@(dept)";
     that.titleName = "Upload Quotation";
     that.uploaderAllow = false;
+    that.data = { SectionName: `${sectionIdQt}_${that.moduleName}_@(cloneId)`, Dept: "@(dept)", FieldName: that.moduleName, FormId: "@(QTViewIdHelper.Form(dept, cloneId))" }; //{"SectionName":"default_FO_410"}
 
     var that2 = new Object();
     that2.ModelName = "PolicyIssuance";
-    that2.moduleName = "qt_supportingDoc";
+    that2.moduleName = "supportingDoc";
     that2.editorType = "dxFileUploader"
-    that2.id = @(quotationId);
-    that2.guid ="@(quotationGuid)";
+    that2.id = @(cloneId);
+    that2.guid = "@(cloneQuotationGuid)";
     that2.sectionName = "@(dept)";
     that2.titleName = "Upload Supporting Document";
+    that2.data = { SectionName: `${sectionIdQt}_${that2.moduleName}_@(cloneId)`, Dept: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept, cloneId))" }; //{"SectionName":"default_FO_410"}
 
     var that3 = new Object();
     that3.ModelName = "PolicyIssuance";
-    that3.moduleName = "pi_defaultDoc";
+    that3.moduleName = "defaultDoc";
     that3.editorType = "dxFileUploader"
-    that3.id = @(quotationId);
-    that3.guid ="@(quotationGuid)";
+    that3.id = @(policyIssuanceId);
+    that3.guid = "@(policyIssuanceGuid)";
     that3.cloneId = @cloneId;
-    that3.cloneGuid ="@(cloneQuotationGuid)";
+    that3.cloneGuid = "@(cloneQuotationGuid)";
     that3.sectionName = "@(dept)";
     that3.titleName = "Upload Document";
-    $("#@PIViewIdHelper.Form(dept, quotationId)").dxForm({
-        dataSource: makeBasicDataSource(that, true),
+    that3.data = { SectionName: `${sectionId}_${that3.moduleName}_@(policyIssuanceId)`, Dept: "@(dept)", FieldName: that3.moduleName, FormId: "@(PIViewIdHelper.Form(dept, policyIssuanceId))" }; //{"SectionName":"default_FO_410"}
+
+    $("#@PIViewIdHelper.Form(dept, policyIssuanceId)").dxForm({
+        dataSource: makeBasicDataSource(thatObject, true),
     items: [
 
             
@@ -120,5 +129,5 @@
                ]
     
     });
-    viewFieldAdjust("@PIViewIdHelper.Form(dept, quotationId)");
+    viewFieldAdjust("@PIViewIdHelper.Form(dept, policyIssuanceId)");
 </script>

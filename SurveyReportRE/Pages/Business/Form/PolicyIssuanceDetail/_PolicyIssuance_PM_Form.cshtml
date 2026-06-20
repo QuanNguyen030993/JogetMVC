@@ -27,10 +27,10 @@
     thisObjectDetails.ModelName = "PolicyIssuanceCheckList";
     thisObjectDetails.refField = "PolicyIssuanceId";
     thisObjectDetails.refKey = @policyIssuanceId;
-    var detailsDataSource = makeBasicDataSource(thisObjectDetails, false);
+    var detailsDataSourceCL = makeBasicDataSource(thisObjectDetails, false);
+    var sectionId = "@(ViewData["Cd"])";
 
-
-    var dataSourceGrid = [
+    var dataSourceGridCL = [
         { field: "policyNoCL", label: "policyNoCL", checked: false, type: "checkbox" },
     { field: "theInsured", label: "theInsured", checked: false, type: "checkbox" },
     { field: "occupation", label: "occupation", checked: false, type: "checkbox" },
@@ -49,33 +49,37 @@
 
     //    var that = new Object();
     // that.ModelName = "PolicyIssuance";
-    // that.moduleName = "qt_default";
+    // that.moduleName = "default";
     // that.editorType = "dxFileUploader"
     // that.id = @(cloneId);
     // that.guid ="@(cloneQuotationGuid)";
     // that.sectionName = "@(dept)";
     // that.titleName = "Upload Quotation";
     // that.uploaderAllow = false;
+     var sectionId = "@ViewData["Cd"]";
+    var sectionIdQt = "qt-body_@(dept)_";
 
     var that2 = new Object();
     that2.ModelName = "PolicyIssuance";
-    that2.moduleName = "qt_supportingDoc";
+    that2.moduleName = "supportingDoc";
     that2.editorType = "dxFileUploader"
-    that2.id = @(policyIssuanceId);
-    that2.guid ="@(quotationGuid)";
+    that2.id = @(cloneId);
+    that2.guid = "@(cloneQuotationGuid)";
     that2.sectionName = "@(dept)";
     that2.titleName = "Upload Supporting Document";
+    that2.data = { SectionName: `${sectionIdQt}_${that2.moduleName}_@(cloneId)`, Dept: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept, cloneId))" }; //{"SectionName":"default_FO_410"}
 
     var that3 = new Object();
     that3.ModelName = "PolicyIssuance";
-    that3.moduleName = "pi_defaultDoc";
+    that3.moduleName = "defaultDoc";
     that3.editorType = "dxFileUploader"
     that3.id = @(policyIssuanceId);
-    that3.guid ="@(quotationGuid)";
+    that3.guid = "@(quotationGuid)";
     that3.cloneId = @cloneId;
-    that3.cloneGuid ="@(cloneQuotationGuid)";
+    that3.cloneGuid = "@(cloneQuotationGuid)";
     that3.sectionName = "@(dept)";
     that3.titleName = "Upload Document";
+    that3.data = { SectionName: `${sectionId}_${that3.moduleName}_@(policyIssuanceId)`, Dept: "@(dept)", FieldName: that3.moduleName, FormId: "@(PIViewIdHelper.Form(dept, policyIssuanceId))" }; //{"SectionName":"default_FO_410"}
     $(`#@PIViewIdHelper.Form(dept, policyIssuanceId)`).dxForm({
         dataSource: makeBasicDataSource(that, true),
          items: [
@@ -170,7 +174,7 @@
                         itemType: "simple",
                         template: function () {
                             return $("<div id='pi_checkList_@policyIssuanceId'>").dxDataGrid({
-                                dataSource: dataSourceGrid,
+                                dataSource: dataSourceGridCL,
                                 keyExpr: "field",
 
                                 paging: {
@@ -283,4 +287,22 @@
        });
        
            viewFieldAdjust("@PIViewIdHelper.Form(dept, policyIssuanceId)");
+
+    detailsDataSourceCL.load().done(function (data) {
+        if (!data || data.length === 0) return;
+
+        const dbRow = data[0];
+
+        dataSourceGridCL.forEach(item => {
+            // bind checkbox
+            item.checked = dbRow[item.field] ?? false;
+            item.ownId = dbRow.id;
+            // bind value (cho text/textarea/radio/select)
+            item.value = dbRow[item.field];
+        });
+
+        // refresh grid
+        $("#pi_checkList_@policyIssuanceId").dxDataGrid("instance").option("dataSource", dataSourceGridCL);
+        $("#pi_checkList_@policyIssuanceId").dxDataGrid("instance").option("id", data.id);
+    });
 </script>
