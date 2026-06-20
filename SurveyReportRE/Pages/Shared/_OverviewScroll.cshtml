@@ -3,10 +3,10 @@
 
 @{
     string Id(string name) => $"{Model.Prefix}-{name}_{Model.Id}";
-    string Cd(string name) => $"{Model.Prefix}-{name}";
+    string Cd(string name) => $"{Model.Prefix}-{name}_";
     var moduleCode = (Model.ModuleCode ?? "").Trim().ToLower();
     string[] qtDeptModuleCode = new string[] { "FO", "TS", "UW", "LMKT", "PM" };
-    string[] piDeptModuleCode = new string[] { "FO","TS", "PM"};
+    string[] piDeptModuleCode = new string[] { "FO", "TS", "PM" };
 }
 
 <div id="@ViewIdHelper.OverViewScroll(Model.Prefix,Model.Id)" class="overview-scroll">
@@ -14,7 +14,7 @@
     {
         @foreach (string item in qtDeptModuleCode)
         {
-          
+
             <section id="@Id($"sec_{item}")" class="dept-section">
                 <!-- 1. Header -->
                 <div id="@Id($"sec_{item}-header")" class="dept-header">
@@ -22,7 +22,7 @@
                         var viewDataHeader = new ViewDataDictionary(ViewData)
                     {
                         ["Id"] = Model.Id.ToString(),
-                        ["Cd"] = Cd($"sec_{item}-header"),
+                        ["Cd"] = Cd($"header_{item}"),
                         ["Guid"] = Model.Guid.ToString()
                     };
                     }
@@ -35,7 +35,7 @@
                         var viewDataUpperBody = new ViewDataDictionary(ViewData)
                     {
                         ["Id"] = Model.Id.ToString(),
-                        ["Cd"] = Cd($"sec_{item}-upperbody"),
+                        ["Cd"] = Cd($"upperbody_{item}"),
                         ["Guid"] = Model.Guid.ToString()
                     };
                     }
@@ -48,7 +48,7 @@
                         var viewDataBody = new ViewDataDictionary(ViewData)
                     {
                         ["Id"] = Model.Id.ToString(),
-                        ["Cd"] = Cd($"sec_{item}-body"),
+                        ["Cd"] = Cd($"body_{item}"),
                         ["Guid"] = Model.Guid.ToString()
                     };
                     }
@@ -61,7 +61,7 @@
                         var viewDataLowerBody = new ViewDataDictionary(ViewData)
                     {
                         ["Id"] = Model.Id.ToString(),
-                        ["Cd"] = Cd($"sec_{item}-lowerbody"),
+                        ["Cd"] = Cd($"lowerbody_{item}"),
                         ["Guid"] = Model.Guid.ToString()
                     };
                     }
@@ -74,7 +74,7 @@
                         var viewDataFooter = new ViewDataDictionary(ViewData)
                     {
                         ["Id"] = Model.Id.ToString(),
-                        ["Cd"] = Cd($"sec_{item}-footer"),
+                        ["Cd"] = Cd($"footer_{item}"),
                         ["Guid"] = Model.Guid.ToString()
                     };
                     }
@@ -82,7 +82,7 @@
                 </div>
             </section>
         }
-        
+
     }
     @if (moduleCode == "pi")
     {
@@ -95,7 +95,7 @@
                         var viewDataHeader = new ViewDataDictionary(ViewData)
                     {
                         ["Id"] = Model.Id.ToString(),
-                        ["Cd"] = Cd($"sec_{item}-header"),
+                        ["Cd"] = Cd($"header_{item}"),
                         ["Guid"] = Model.Guid.ToString(),
                         ["CloneId"] = Model.CloneId,
                         ["CopyFromGuid"] = Model.CopyFromGuid.ToString()
@@ -109,7 +109,7 @@
                         var viewDataUpperBody = new ViewDataDictionary(ViewData)
                     {
                         ["Id"] = Model.Id.ToString(),
-                        ["Cd"] = Cd($"sec_{item}-upperbody"),
+                        ["Cd"] = Cd($"upperbody_{item}"),
                         ["Guid"] = Model.Guid.ToString(),
                         ["CloneId"] = Model.CloneId,
                         ["CopyFromGuid"] = Model.CopyFromGuid.ToString()
@@ -124,7 +124,7 @@
                         var viewDataBody = new ViewDataDictionary(ViewData)
                     {
                         ["Id"] = Model.Id.ToString(),
-                        ["Cd"] = Cd($"sec_{item}-body"),
+                        ["Cd"] = Cd($"body_{item}"),
                         ["Guid"] = Model.Guid.ToString(),
                         ["CopyFromGuid"] = Model.CopyFromGuid.ToString()
                     };
@@ -138,7 +138,7 @@
                         var viewDataLowerBody = new ViewDataDictionary(ViewData)
                     {
                         ["Id"] = Model.Id.ToString(),
-                        ["Cd"] = Cd($"sec_{item}-lowerbody"),
+                        ["Cd"] = Cd($"lowerbody_{item}"),
                         ["Guid"] = Model.Guid.ToString(),
                         ["CopyFromGuid"] = Model.CopyFromGuid.ToString()
                     };
@@ -152,12 +152,12 @@
                         var viewDataFooter = new ViewDataDictionary(ViewData)
                     {
                         ["Id"] = Model.Id.ToString(),
-                        ["Cd"] = Cd($"sec_{item}-footer"),
+                        ["Cd"] = Cd($"footer_{item}"),
                         ["Guid"] = Model.Guid.ToString(),
                         ["CopyFromGuid"] = Model.CopyFromGuid.ToString()
                     };
                     }
-                     <partial name="@($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_Footer")" view-data="viewDataFooter" /> 
+                    <partial name="@($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_Footer")" view-data="viewDataFooter" />
                 </div>
 
             </section>

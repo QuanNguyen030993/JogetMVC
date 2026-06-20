@@ -11,23 +11,26 @@
     }
 </style>
 <script type="text/javascript">
-    var that = new Object();
-       that.ModelName = "Quotation";
-       that.moduleName = "qt_default";
-       that.editorType = "dxFileUploader"
-       that.id = @(quotationId);
-       that.guid ="@(quotationGuid)";
-       that.sectionName = "@(dept)";
-       that.titleName = "Upload Quotation";
+    var sectionId = "@(ViewData["Cd"])";
+    that.ModelName = "Quotation";
+    that.moduleName = "default";
+    that.editorType = "dxFileUploader"
+    that.id = @(quotationId);
+    that.guid = "@(quotationGuid)";
+    that.sectionName = "@(dept)";
+    that.titleName = "Upload Quotation";
+    that.data = { SectionName: `${sectionId}_${that.moduleName}_@(quotationId)`, Dept: "@(dept)", FieldName: that.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" };; //{"SectionName":"default_FO_410"}
 
-       var that2 = new Object();
-       that2.ModelName = "Quotation";
-       that2.moduleName = "qt_supportingDoc";
-       that2.editorType = "dxFileUploader"
-       that2.id = @(quotationId);
-       that2.guid ="@(quotationGuid)";
-       that2.sectionName = "@(dept)";
-       that2.titleName = "Upload Supporting Document";
+
+    var that2 = new Object();
+    that2.ModelName = "Quotation";
+    that2.moduleName = "supportingDoc";
+    that2.editorType = "dxFileUploader"
+    that2.id = @(quotationId);
+    that2.guid = "@(quotationGuid)";
+    that2.sectionName = "@(dept)";
+    that2.titleName = "Upload Supporting Document";
+    that2.data = { SectionName: `${sectionId}_${that2.moduleName}_@(quotationId)`, Dept: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" }; //{"SectionName":"default_FO_410"}
     $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
     dataSource: makeBasicDataSource(that, true),
      items: [

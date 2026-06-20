@@ -422,7 +422,7 @@ public class DocumentController : BaseControllerApi<Document>
 
         // Lấy toàn bộ rồi filter (vì repo bạn đang có GetAll)
         // Nếu repo có method GetListObject(predicate) thì thay bằng query trực tiếp sẽ nhanh hơn
-        var all = await _BaseRepository.GetListObject(l => l.RecordGuid == recordGuid && l.Attributes.Contains($"\"SectionName\":\"{folder}\""));
+        var all = await _BaseRepository.GetListObject(l => l.RecordGuid == recordGuid && l.Attributes.Contains($"{folder}"));
 
         if (string.IsNullOrWhiteSpace(folder))
             all = await _BaseRepository.GetListObject(l => l.RecordGuid == recordGuid);

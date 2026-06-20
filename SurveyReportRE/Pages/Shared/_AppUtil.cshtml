@@ -2795,29 +2795,34 @@
         
         function getCurrentFormOptions(editorOptions) {
             var form = new Object();
-            if (editorOptions.moduleName.includes("qt"))
-        form = $(`#${window.QuotationIdManager.form(editorOptions.sectionName, editorOptions.id)}`).dxForm("instance");
-            if (editorOptions.moduleName.includes("pi"))
-        form = $(`#${window.PolicyIssuanceIdManager.form(editorOptions.sectionName, editorOptions.id)}`).dxForm("instance");
-            if (!form) {
-                return null
-            };
-        return form.option("formData");
-    }
-        function buildFolder(latestOptions, sectionName) {
+            //     if (editorOptions.moduleName.includes("qt"))
+            // form = $(`#${window.QuotationIdManager.form(editorOptions.sectionName, editorOptions.id)}`).dxForm("instance");
+            //     if (editorOptions.moduleName.includes("pi"))
+            // form = $(`#${window.PolicyIssuanceIdManager.form(editorOptions.sectionName, editorOptions.id)}`).dxForm("instance");
+
+
+                if (editorOptions.data.FormId)
+                    form = $(`#${editorOptions.data.FormId}`).dxForm("instance");
+                if (!form) {
+                    return null
+                };
+
+            return form.option("formData");
+        }
+            function buildFolder(latestOptions, sectionName) {
             //return (latestOptions?.sectionName || sectionName) +
             return (latestOptions.moduleName.includes('qt') ? `Quotation` : `PolicyIssuance`) +
                 (latestOptions?.code ? `\\${latestOptions.code}` : "");
         }
 
-        function getDxFileUploaderIds(editorOptions) {
-            editorOptions.uploaderId= `fileUpload_${editorOptions.controlId}`;
-            editorOptions.previewId = `attList_${editorOptions.controlId}`;
-            return {
-                uploaderId: `fileUpload_${editorOptions.controlId}`,
-                    previewId: `attList_${editorOptions.controlId}`
-            };
-        }
+        // function getDxFileUploaderIds(editorOptions) {
+        //     editorOptions.uploaderId= `fileUpload_${editorOptions.controlId}`;
+        //     editorOptions.previewId = `attList_${editorOptions.controlId}`;
+        //     return {
+        //         uploaderId: `fileUpload_${editorOptions.controlId}`,
+        //             previewId: `attList_${editorOptions.controlId}`
+        //     };
+        // }
 
         function renderAttachmentListLazy(list, attList_Host, options) {
             options = options || {};
@@ -2952,17 +2957,18 @@
             var currentOptions = getCurrentFormOptions(editorOptions);
                  if(!editorOptions.isNotLoading)
                 {
-                    if (!currentOptions) currentOptions = {}; // formItems ko tim duoc neu bi chuyen prefix
+                if (!currentOptions) currentOptions = {}; // formItems ko tim duoc neu bi chuyen prefix
                 currentOptions.guid = editorOptions.guid;
                 if (!currentOptions || !currentOptions.guid) return;
                 var combine = editorOptions?.specificFolder ? `${editorOptions.moduleName}_${currentOptions.sectionName}_${currentOptions.id}_${editorOptions?.specificFolder}` : `${editorOptions.controlId}`;
-
-                    showUploaderLoader(editorOptions.uploaderId, "File loading...");
+                 if (editorOptions?.data) combine = sectionName;
+                    // showUploaderLoader(editorOptions.uploaderId, "File loading...");
                 $.ajax({
                     url: `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${(combine)} `,
                     method: "GET",
                     success: function (data) {
-                        const $preview = $(`#${editorOptions.previewId}`);
+                        debugger
+                        const $preview = $(`#attList_${sectionName}`);
                         renderAttachmentListLazy(data, $preview, {
                             batchSize: 6,
                             delay: 16,
@@ -2970,7 +2976,7 @@
                                 loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions);
                             }
                         });
-                            var uploader = $(`#${editorOptions.uploaderId}`).dxFileUploader("instance")
+                            var uploader = $(`#fileUpload_${sectionName}`).dxFileUploader("instance")
                             uploader?.option("storageData",data || {});
                             hideUploaderLoader(editorOptions.uploaderId);
                     },
@@ -2980,44 +2986,45 @@
                 });
           }
           else {
-                   const $preview = $(`#${editorOptions.previewId}`);
-                  var data = [];
-                  var uploader = $("#fileUpload_qt_default_FO_0").dxFileUploader("instance");
-                  data = uploader.option("value") || [];
-                            renderAttachmentListLazy(data, $preview, {
-                                batchSize: 6,
-                                delay: 16,
-                                onDeleted: function () {
-                                    //loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions);
-                                }
-                            });
+                  //  const $preview = $(`#${editorOptions.previewId}`);
+                  // var data = [];
+                  // var uploader = $("#fileUpload_qt_default_FO_0").dxFileUploader("instance");
+                  // data = uploader.option("value") || [];
+                  //           renderAttachmentListLazy(data, $preview, {
+                  //               batchSize: 6,
+                  //               delay: 16,
+                  //               onDeleted: function () {
+                  //                   //loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions);
+                  //               }
+                  //           });
             }
         }
         function renderDxFileUploader(editorOptions, $container, options) {
-            const controlId = `${editorOptions.moduleName}_${editorOptions.sectionName}_${editorOptions.id}`;
+            const controlId = `${editorOptions.data.SectionName}`;
+            const data =  editorOptions.data;
             editorOptions.controlId = controlId;
             options = options || {};
             const controllerName = options.controllerName || "Document";
-            const currentOptions = getCurrentFormOptions(editorOptions) || {};
-            currentOptions.guid = editorOptions.guid || "";
-            const ids = getDxFileUploaderIds(editorOptions);
-                var uploaderAllow = editorOptions.uploaderAllow == null ? true : editorOptions.uploaderAllow;
+            // const currentOptions = getCurrentFormOptions(editorOptions) || {};
+            // currentOptions.guid = editorOptions.guid || "";
+            // const ids = getDxFileUploaderIds(editorOptions);
+            var uploaderAllow = editorOptions.uploaderAllow == null ? true : editorOptions.uploaderAllow;
             editorOptions.uploaderAllow = uploaderAllow;
 
             $(`#${editorOptions.previewId}`).remove();
-            $(`#${editorOptions.uploaderId}`).remove();
+            $(`#${controlId}`).remove();
             //const $preview =  $(`<div id="${previewId}" style="display:flex;flex-wrap:wrap;gap:25px;top:10px"></div>`)
-            const $preview = $(`<div id="${editorOptions.previewId}" class="att-preview"></div>`)
+            const $preview = $(`<div id="attList_${controlId}" class="att-preview"></div>`)
                 .appendTo($container);
             if (editorOptions.uploaderAllow == true)
-            $(`<div id="${editorOptions.uploaderId}"></div>`)
+            $(`<div id="fileUpload_${controlId}"></div>`)
                 .appendTo($container)
                 .dxFileUploader({
-                    readOnly: !!currentOptions.isReadOnly,
+                    // readOnly: !!currentOptions.isReadOnly,
                     multiple: true,
                     accept: options.accept || "*/*",
                     selectButtonText: editorOptions.titleName || `Upload Attachments`,
-                    dropZone: `#${editorOptions.previewId}`,
+                    dropZone: `#attList_${controlId}`,
                     labelText: "",
                     uploadMode: editorOptions.uploadMode ? editorOptions.uploadMode : "instantly",
                     uploadUrl: options.uploadUrl || `/api/Attachment/AsyncUploadFile`,
@@ -3031,7 +3038,7 @@
                     onUploadStarted: function (e) {
                              // makeMiniLoadingPanel(`Uploading file ${e.file.name}`, "Please wait...");
                              makeMiniLoadingPanel(`Uploading file`, "Please wait...");
-                        showUploaderLoader(editorOptions.uploaderId, "File loading...");
+                        // showUploaderLoader(editorOptions.uploaderId, "File loading...");
                     },
                     onValueChanged: function(e){
                         if (editorOptions.uploadMode != "instantly")
@@ -3049,10 +3056,10 @@
                         renderBrowserLoading(result);
                     },
                     uploadFile: function (file) {
-                        
-                        return uploadFileAjax(file, {
+                        file.guid = editorOptions.guid;
+                        return uploadFileAjax(file,data ,{
                             url: "/api/Attachment/AsyncUploadFile",
-                                ...editorOptions
+                                ...editorOptions 
                         });
 
                     },
@@ -3061,8 +3068,8 @@
                                  result.payload = new Object();
                                  result.payload.progressvalue = 100;
                                  renderBrowserLoading(result);
-                        hideUploaderLoader(editorOptions.uploaderId);
-                        loadDxFileUploaderAttachments(editorOptions.controlId, controllerName, editorOptions)
+                        // hideUploaderLoader(editorOptions.uploaderId);
+                        loadDxFileUploaderAttachments(controlId, controllerName, editorOptions)
 
 
                     },
@@ -3092,7 +3099,7 @@
 
 
                 });
-            loadDxFileUploaderAttachments(editorOptions.controlId, controllerName, editorOptions);
+              loadDxFileUploaderAttachments(editorOptions.controlId, controllerName, editorOptions);
         }
 
 
@@ -3254,7 +3261,7 @@
             $(`#${idControlElement} .previewLoader`).remove();
         }
 
-        function uploadFileAjax(file, options) {
+        function uploadFileAjax(file, data, options) {
             const specificFolder = "";
             const latestOptions = getCurrentFormOptions(options) || {};
             latestOptions.moduleName = options?.moduleName;
@@ -3267,14 +3274,14 @@
 
 
             const url = options.url;
-            const guid = latestOptions.guid || "";
+            const guid = file.guid || "";
             const folder = buildFolder(latestOptions, options.controlId) || "";
             const sectionName = `${options.controlId}${specificFolder}`;
                 const dept = options.sectionName || "";
 
             const formData = new FormData();
             formData.append("file", file);
-
+            console.log(options.data);
             return $.ajax({
                 url: url,
                 method: "POST",
@@ -3300,6 +3307,10 @@
                    if (sectionName) {
                       xhr.setRequestHeader("Department", dept);
                      }
+                     if (options.data){
+                        xhr.setRequestHeader("Data", JSON.stringify(data));
+                     }
+
 
                 }
             });
@@ -4217,17 +4228,6 @@
                 break;
             case "dxFileUploader":
                 {
-                    // var items = new Object();
-                    // items.isNotLoading = editorOptions?.isNotLoading || false;
-                    // items.id = editorOptions?.id || devExtremeItem.id;
-                    // items.uploadMode = editorOptions?.uploadMode || devExtremeItem.uploadMode;
-                    // items.guid = editorOptions?.guid || "";
-                    // items.moduleName = editorOptions?.moduleName || devExtremeItem.moduleName;
-                    // items.sectionName = editorOptions?.sectionName || devExtremeItem.sectionName;
-                    // items.dept = editorOptions?.sectionName || devExtremeItem.sectionName;
-                    // items.code = editorOptions?.code || devExtremeItem.code;
-                    // items.specificFolder = editorOptions?.specificFolder || devExtremeItem.specificFolder;
-                    // items.titleName = editorOptions?.titleName || devExtremeItem.titleName;
                     renderDxFileUploader(editorOptions, $container, {
                         controllerName: "Document",
                         uploadTitle: "Files",

@@ -405,16 +405,16 @@ Note:
                
             }, 1);
 
-            setTimeout(() => {
-                  $.each(qtDeptModuleCode, function (itemIndex, item) {
-                    var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
-                 $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
-                 $(`#fileUpload_${formModuleKeyQt}_default_${item}_@ViewData["Id"]`).dxFileUploader("instance").option("readOnly",roleApply[item]);
-                 $(`#fileUpload_${formModuleKeyQt}_supportingDoc_${item}_@ViewData["Id"]`).dxFileUploader("instance").option("readOnly",roleApply[item]);
+            // setTimeout(() => {
+            //       $.each(qtDeptModuleCode, function (itemIndex, item) {
+            //         var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
+            //      $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
+            //      $(`#fileUpload_${formModuleKeyQt}_default_${item}_@ViewData["Id"]`).dxFileUploader("instance").option("readOnly",roleApply[item]);
+            //      $(`#fileUpload_${formModuleKeyQt}_supportingDoc_${item}_@ViewData["Id"]`).dxFileUploader("instance").option("readOnly",roleApply[item]);
 
-            });
+            // });
                 
-            }, 1);
+            // }, 1);
                 
             $(`#${formModuleKeyQt}-roleSelect`).dxSelectBox({
                 items: QtRoles,
