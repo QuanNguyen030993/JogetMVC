@@ -84,7 +84,8 @@
 
                     elementAttr: {
                         class: "dExForm"
-                    },
+                    }
+                    ,
 
 
                     onFieldDataChanged(e) {
@@ -106,126 +107,156 @@
         }
 
         loadSLA() {
+
             var that = this;
+
             var params = new URLSearchParams();
-                params.set("refKey", that?.refKey);
-                params.set("refField", that?.refField);
-                params.set("refOperator","=");
+
+            params.set("refKey", that.refKey);
+            params.set("refField", that.refField);
+            params.set("refOperator", "=");
+
+
             ajaxGet(
                 `api/SLA/GetAll/?${params.toString()}`
-            ).done(res => {
-
-                that.slaRows = res;
-
-
-                let items = [];
-                let formData = {};
+            )
+                .done(res => {
 
 
+                    that.slaRows = res;
 
-                $.each(that.slaRows, function (i, row) {
 
-
-                    let attr =
-                        JSON.parse(row.attributes);
+                    let items = [];
+                    let formData = {};
 
 
 
                     $.each(
-                        attr.fields,
-                        function (j, f) {
+                        that.slaRows,
+                        function (i, row) {
 
 
-                            let fieldName =
-                                row.code + "_" + f.name;
-
-
-
-                            items.push({
-
-                                dataField: fieldName,
-
-
-                                label: {
-                                    text: f.label
-                                },
-
-
-                                editorType:
-                                    f.control == "number"
-                                        ?
-                                        "dxNumberBox"
-                                        :
-                                        "dxTextBox",
-
-
-                                // quan trọng
-                                slaRowId: row.id,
-
-                                slaCode: row.code,
-
-
-                                slaField: f.name
-
-                            });
+                            let attr =
+                                JSON.parse(row.attributes);
 
 
 
-                            formData[fieldName] =
-                                f.value ?? row.value;
+                            $.each(
+                                attr.fields,
+                                function (j, f) {
+                                    // f.value = f.value !== undefined
+                                    //     ?
+                                    //     f.value
+                                    //     :
+                                    //     row.value || 0
 
+                                    let fieldName =
+                                        row.code + "_" + f.name;
+
+
+
+                                    items.push({
+
+                                        dataField: fieldName,
+
+
+                                        label: {
+                                            text: f.label
+                                        },
+
+
+                                        editorType:
+                                            f.control == "number"
+                                                ?
+                                                "dxNumberBox"
+                                                :
+                                                "dxTextBox",
+
+
+                                        editorOptions: {
+                                            min: f.min,
+                                            max: f.max,
+                                            showSpinButtons: true
+                                        },
+
+
+                                        slaRowId: row.id,
+
+                                        slaCode: row.code,
+
+                                        slaField: f.name
+
+                                    });
+
+                                    // f.value = f.value !== undefined
+                                    //     ?
+                                    //     f.value
+                                    //     :
+                                    //     row.value || 0
+
+                                    // // ưu tiên value trong json
+                                    // // fallback Value column
+
+                                    formData[fieldName] =
+                                        f.value !== undefined
+                                            ?
+                                            f.value
+                                            :
+                                            row.value || 0;
+
+
+
+                                });
 
 
                         });
 
 
 
-                });
-
-
-  
-                    that.formInstance.option(
-                        "items",
-                    items
-                    );
+                   
 
 
                     that.formInstance.option(
                         "formData",
                         formData
                     );
-                var toolbarItems = $(`<div id="${that.ModelName}Toolbar" class="dExFormToolBar"'/>`)
-                    .dxToolbar({
-                        items: that.allowFormActionButton ? this.customizeToolbar() : [],
-                        width: "100%",
-                        onItemRendered: function (e) {
-                            let $element =
-                                e.itemElement;
-                            if (e.itemData.widget === "dxButton") {
-                                let btn =
-                                    $element.find(".dx-button");
-                                btn.addClass(
-                                    "dExToolbarButton"
-                                );
-                                btn.dxButton("instance")
-                                    .option({
-                                        stylingMode: "contained"
-                                    });
-                            }
-                        },
-                        onInitialized: tryExecute(function (e) {
-                            var that = this;
-                        }.bind(this))
-                    })
-                toolbarItems.appendTo(that.container);
+
+                    that.formInstance.option(
+                        "items",
+                        items
+                    );
+                    var toolbarItems = $(`<div id="${that.ModelName}Toolbar" class="dExFormToolBar"'/>`)
+                        .dxToolbar({
+                            items: that.allowFormActionButton ? this.customizeToolbar() : [],
+                            width: "100%",
+                            onItemRendered: function (e) {
+                                let $element =
+                                    e.itemElement;
+                                if (e.itemData.widget === "dxButton") {
+                                    let btn =
+                                        $element.find(".dx-button");
+                                    btn.addClass(
+                                        "dExToolbarButton"
+                                    );
+                                    btn.dxButton("instance")
+                                        .option({
+                                            stylingMode: "contained"
+                                        });
+                                }
+                            },
+                            onInitialized: tryExecute(function (e) {
+                                var that = this;
+                            }.bind(this))
+                        })
+                    toolbarItems.appendTo(that.container);
 
                 });
-
         }
+
+
         doSaveData(isClose) {
 
             try {
-                debugger
 
                 let that = this;
 
@@ -242,9 +273,9 @@
 
 
                         let attributes =
-                            JSON.parse(row.attributes);
+                            tryParseJSON(row.attributes, "");
 
-
+                        let calculation = attributes.calculation;
 
                         $.each(
                             attributes.fields,
@@ -268,7 +299,7 @@
 
                         let value =
                             that.calculateSLA(
-                                attributes.fields[0],
+                                attributes,
                                 formData
                             );
 
@@ -277,10 +308,10 @@
                         let data = {
 
                             attributes:
-                                JSON.stringify({ fields: [ attributes.fields[0] ] }),
+                                JSON.stringify({ fields: [attributes.fields[0]], calculation: calculation }),
 
 
-                            value: value,
+                            value: value || 0,
 
 
                             decimalValue:
@@ -350,7 +381,7 @@
 
         calculateSLA(config, formData) {
 
-
+            
             if (!config.calculation)
                 return formData.slaValue;
 
@@ -365,12 +396,12 @@
 
 
                 case "manual":
-
+                debugger
                     let field =
                         config.fields[0].name;
+                    return config.fields[0].value || 0;
 
-
-                    return formData[field] || 0;
+                    // return formData[field] || 0;
 
 
 
@@ -419,7 +450,6 @@
             itemsArray,
             formInstance
         ) {
-            debugger
             return [
                 {
                     itemType: "group",
@@ -435,7 +465,6 @@
     }
     function generateSLAItems(fields) {
 
-        debugger
         return $.map(
             fields,
             function (f) {

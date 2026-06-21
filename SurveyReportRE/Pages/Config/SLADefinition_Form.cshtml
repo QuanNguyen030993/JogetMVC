@@ -1,0 +1,398 @@
+﻿ @page "{pageNum:int?}/{guid}"
+@model SLADefinition_FormModel
+@{
+
+
+}
+
+
+<script>
+
+    var params = new URLSearchParams();
+    debugger
+    params.set("refKey", @ViewData["Id"]);
+    params.set("refField", "Id");
+    params.set("refOperator", "=");
+
+    ajaxGet(
+        `api/SLA/GetAll/?${params.toString()}`,null
+    ).done(result => {
+
+        var res = result[0];
+
+
+
+
+    var slaDesigner = {
+
+        dept: "",
+        code: "",
+
+        fields: [
+            {
+                name: "",
+                label: "",
+                control: "number",
+                required: false,
+                min: 0,
+                max: 0,
+                value: 0
+            }
+        ],
+
+        calculation: {
+            type: "manual",
+            unit: "day"
+        }
+
+    };
+    $("#slaDesigner_@ViewData["Id"]").dxForm({
+
+        formData: res,
+            dataSource: res,
+        colCount: 1,
+
+
+        items: [
+
+            {
+                itemType: "group",
+                caption: "SLA Information",
+                colCount: 2,
+                items: [
+
+                    {
+                        dataField: "dept",
+                        editorType: "dxSelectBox",
+                        editorOptions: {
+                                value: res.dept,
+                            items: [
+                                "TS",
+                                "UW",
+                                "PM"
+                            ]
+                        }
+                    },
+
+
+                    {
+                        dataField: "code"
+                    }
+
+                ]
+            },
+
+
+            {
+                itemType: "group",
+                caption: "Fields",
+
+                template: function (data, itemElement) {
+
+                    $("<div id='slaGrid_@ViewData["Id"]'>")
+                        .dxDataGrid({
+
+                            dataSource:
+                                    tryParseJSON(res.attributes, "Parse Attributes Problem").fields || slaDesigner.fields,
+
+
+                            editing: {
+                                mode: "form",
+                                allowUpdating: true,
+                                allowAdding: true,
+                                allowDeleting: true
+                            },
+
+
+                            columns: [
+
+                                {
+                                    dataField: "name"
+                                },
+
+                                {
+                                    dataField: "label"
+                                },
+                                    {
+                                        dataField: "min"
+                                    },
+                                    {
+                                        dataField: "max"
+                                    },
+                                {
+                                    dataField: "control",
+                                    lookup: {
+                                        dataSource: [
+                                            "number",
+                                            "text",
+                                            "date"
+                                        ]
+                                    }
+                                },
+
+                                {
+                                    dataField: "required",
+                                    dataType: "boolean"
+                                }
+
+                            ]
+
+                        })
+                        .appendTo(itemElement);
+
+                }
+
+            },
+
+
+            {
+                itemType: "group",
+                caption: "Calculation",
+                colCount: 2,
+
+                items: [
+
+                    {
+                        dataField: "attributes.calculation.type",
+                        editorType: "dxSelectBox",
+                        editorOptions: {
+                            items: [
+                                "manual",
+                                "dateDiff"
+                            ]
+                        }
+                    },
+
+
+                    {
+                            dataField: "attributes.calculation.unit",
+                        editorType: "dxSelectBox",
+                        editorOptions: {
+                            items: [
+                                "day",
+                                "hour"
+                            ]
+                        }
+                    }
+
+                ]
+
+            },
+
+
+            {
+                itemType: "button",
+                buttonOptions: {
+                    text: "Save",
+                    type: "success",
+                    onClick: function () {
+
+                        saveSLA();
+
+                    }
+                }
+            }
+
+        ]
+
+    });
+    function saveSLA() {
+
+
+        let formData =
+                $("#slaDesigner_@ViewData["Id"]")
+                .dxForm("instance")
+                .option("formData");
+
+                debugger
+
+            // lấy dữ liệu từ grid designer
+            let gridData =
+                $("#slaGrid_@ViewData["Id"]")
+                    .dxDataGrid("instance")
+                    .getDataSource()
+                    .items();
+
+            let fields = $.map(
+                gridData,
+                function (row) {
+
+                    return {
+
+                        name:
+                            row.name,
+
+
+                        label:
+                            row.label,
+
+
+                        control:
+                            row.control,
+
+
+                        required:
+                            row.required || false,
+
+
+                        min:
+                            row.min ?? 0,
+
+
+                        max:
+                            row.max ?? 0,
+
+
+                        value:
+                            row.value ?? null
+                    };
+
+                }
+            );
+
+            // lấy calculation từ form
+            let calculation = {
+
+                type:
+                    formData.calculation?.type
+                    ||
+                    "manual",
+
+
+                unit:
+                    formData.calculation?.unit
+                    ||
+                    "day"
+
+            };
+
+            let attributes = {
+                fields: fields,
+                calculation: calculation
+            };
+
+
+
+        let dbModel = {
+
+            dept:
+                formData.dept,
+
+
+            code:
+                formData.code,
+
+
+            value:
+                formData.value,
+
+
+            decimalValue:
+                Number(
+                    formData.value
+                ),
+
+
+            attributes:
+                    JSON.stringify(attributes)
+
+
+        };
+        var that = new Object();
+        that.ModelName = "SLA";
+        var TmpDataSource = makeBasicDataSource(that, true);
+
+        var store = TmpDataSource;
+        store.insert(dbModel)
+                .done(function () {
+                })
+                .fail(function (error) {
+                });
+
+    }
+    });
+</script>
+<div id="slaDesigner_@ViewData["Id"]" class="sla-designer">
+
+    <!-- Header -->
+    <div class="sla-header">
+        <div class="sla-title">
+            SLA Configuration
+        </div>
+
+        <div class="sla-actions">
+            <button id="btnSaveSLA"></button>
+        </div>
+    </div>
+
+
+    <!-- Basic -->
+    <div class="sla-card">
+
+        <div class="sla-card-title">
+            General Information
+        </div>
+
+
+        <div id="basicForm"></div>
+
+    </div>
+
+
+
+    <!-- Fields -->
+    <div class="sla-card">
+
+        <div class="sla-card-header">
+
+            <div class="sla-card-title">
+                SLA Fields
+            </div>
+
+
+            <button id="btnAddField"></button>
+
+        </div>
+
+
+        <div id="fieldGrid"></div>
+
+    </div>
+
+
+
+    <!-- Calculation -->
+    <div class="sla-card">
+
+
+        <div class="sla-card-title">
+            Calculation
+        </div>
+
+
+        <div id="calculationForm"></div>
+
+
+    </div>
+
+
+
+
+    <!-- Preview -->
+    <div class="sla-card">
+
+
+        <div class="sla-card-title">
+            JSON Preview
+        </div>
+
+
+        <pre id="jsonPreview"
+             class="json-preview">
+        </pre>
+
+
+    </div>
+
+
+</div>

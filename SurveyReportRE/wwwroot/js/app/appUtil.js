@@ -2409,7 +2409,7 @@ function customCommandButtonCell(e) {
         .text("Edit JSON")
         .css({ marginRight: "5px", cursor: "pointer", color: "#337ab7" })
         .on("click", function () {
-            callElementView(`/Business/Workflow/WorkflowDefinition_Form/${e.key}/${e.data.guid}`, `WorkflowDenifition_Form_${e.key}`, `WorkflowDenifition ${e.data.workflowCode}`);
+            callElementView(`/${e.moduleFolder}/${e.modelName}_Form/${e.key}/${e.data.guid}`, `${e.modelName}_Form_${e.key}`, `${e.modelName} ${e.data[e.displayExpr]}`);
         })
         .appendTo(e.cellElement);
 }

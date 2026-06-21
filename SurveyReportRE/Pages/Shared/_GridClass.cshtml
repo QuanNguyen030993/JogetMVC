@@ -2065,6 +2065,9 @@
         };
         onCellPrepared(e) {
             if (e.rowType === "data" && e.column.command  && e.column.command != "drag") {
+                e.moduleFolder = "Business/Workflow";
+                e.modelName = this.ModelName;
+                e.displayExpr = "workflowCode";
                 customCommandButtonCell(e);
             }
         }
@@ -2085,6 +2088,34 @@
         }
     }
 
+    var SLAGridOption = class SLAGridOption extends MGridOption {
+        constructor(modelName, gridType, params) {
+            super(modelName, gridType, params);
+        };
+        onCellPrepared(e) {
+            if (e.rowType === "data" && e.column.command && e.column.command != "drag") {
+                e.moduleFolder = "Config";
+                e.modelName = this.ModelName + "Definition";
+                e.displayExpr = "code";
+                customCommandButtonCell(e);
+            }
+        }
+        // onRowClick(e) {
+        //     callElementView(`/Business/Workflow/SLADefinitionDraw_Form/${e.data.id}`, `form_SLADefinitionDraw_Form_${e.data.id}`, `SLADefinitionDraw   ${e.data.workflowCode}`);
+        // }
+        // onEditingStart(e) { callElementView không dùng chung dc
+        //     debugger
+        //     super.onEditingStart(e);
+        //     callElementView(`/Business/Workflow/WorkflowDefinitionDraw_Form/${e.data.id}`, `form_WorkflowDefinitionDraw_Form_${e.data.id}`, `WorkflowDefinitionDraw   ${e.data.workflowCode}`);
+        //     e.cancel = true;
+        // }
+        onContentReady(e) {
+            super.onContentReady(e);
+            e.component.columnOption("command:edit", "visibleIndex", -1);
+            e.component.option("editing.mode", "form");
+            e.component.option("editing.allowUpdating", true);
+        }
+    }
 
     //New version template class
     //var TemplateGridOption = class TemplateGridOption extends MGridOption {

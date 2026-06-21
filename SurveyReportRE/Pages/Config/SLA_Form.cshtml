@@ -14,7 +14,6 @@
                 _formConfig.refKey = _deptInput ;
                 _formConfig.refField = "dept"; 
                 _formConfig.sameRefKeyAsId = true;
-                debugger
                 var mFormOption = new MFormOption(_formConfig, null);
     //         ajaxGet(`api/SLA/SLALookup/@(ViewData["Dept"].ToString())`, null).done(response => {
          $(`#form_@(SLA_FormModel.ModelName)`).attr("id", `form_@(SLA_FormModel.ModelName)_@(ViewData["Dept"].ToString())`)

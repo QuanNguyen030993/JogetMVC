@@ -281,7 +281,6 @@
     //after call API successfully start
     getSuccess(data) {
         var that = this;
-        debugger
         if (this.id > 0 && data != null) {
             that.orgFormData = data;
             // Workflow permission checking
