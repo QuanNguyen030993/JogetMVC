@@ -14,4 +14,6 @@ public class SLA : BaseModel
     public DateTime? FromDate { get; set; } 
     public DateTime? ToDate { get; set; } 
     public TimeSpan? Duration { get; set; }
+    public bool? BooleanValue { get; set; } = false;
+    public string? Unit { get; set; }
 }

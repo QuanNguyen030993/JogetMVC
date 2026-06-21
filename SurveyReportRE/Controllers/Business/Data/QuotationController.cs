@@ -53,6 +53,7 @@ public class QuotationController : BaseControllerApi<Quotation>
     private readonly IBaseRepository<EnumData> _enumDataRepository;
     private readonly IBaseRepository<Product> _productRepository;
     private readonly IBaseRepository<Line> _lineRepository;
+    private readonly IBaseRepository<SLA> _slaRepository;
     private readonly IHubContext<FileProcessingHub> _hubContext;
     private readonly ILogger<Quotation> _logger;
     private readonly IConfigurationSection path;
@@ -104,6 +105,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         _enumDataRepository = new BaseRepository<EnumData>(configuration, _httpContextAccessor);
         _productRepository = new BaseRepository<Product>(configuration, _httpContextAccessor);
         _lineRepository = new BaseRepository<Line>(configuration, _httpContextAccessor);
+        _slaRepository = new BaseRepository<SLA>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
         _messageSettings = configuration.GetSection("Message").Get<Message>();
 
@@ -152,11 +154,33 @@ public class QuotationController : BaseControllerApi<Quotation>
 
         return Ok();
     }
-
-
-
     [HttpGet]
-    public override async Task<ActionResult<Quotation>> GetAll()
+    public  async Task<ActionResult<List<Quotation>>> RenewList()
+    {
+        var quotations = await GetAll(); 
+        SLA sLA = new SLA();
+        sLA = await _slaRepository.GetSingleObject(s => s.Code == _businessConfig.CurrentValue.SLA.RenewQuotation);
+        var days = sLA?.Value ?? 0;
+
+        var fromDate = DateTime.Now.Date;
+        var toDate = fromDate.AddDays(days);
+
+        var model = (OkObjectResult)quotations?.Result;
+
+        quotations = ((List<Quotation>)model?.Value).Where(q => q.InceptionDate >= fromDate &&
+                    q.InceptionDate <= toDate)
+        .ToList();
+
+        List<Quotation> quotationResult = ((List<Quotation>)model?.Value).Where(q => q.InceptionDate >= fromDate &&
+                    q.InceptionDate <= toDate)
+        .ToList();
+
+        return Ok(quotationResult);
+    }
+
+
+        [HttpGet]
+    public override async Task<ActionResult<List<Quotation>>> GetAll()
     {
         var queryParams = HttpContext.Request.Query;
 

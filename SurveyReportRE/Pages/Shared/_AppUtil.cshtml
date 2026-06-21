@@ -147,7 +147,7 @@
                                 // filter: filter,
                                 store: DevExpress.data.AspNet.createStore({
                                     key: "id",
-                                    loadUrl: `/api/${instance.ModelName}/GetAll?${params.toString()}`,
+                                loadUrl: instance?.mGridInstance?.overrideGetUrl ? `${instance?.mGridInstance?.overrideGetUrl}?${params.toString()}` : `/api/${instance.ModelName}/GetAll?${params.toString()}`,
                                     onBeforeSend: function (method, ajaxOptions) {
                                         if (method === "load") {
                                             ajaxOptions.data = ajaxOptions.data || {};
@@ -184,7 +184,7 @@
                             // filter: filter,
                             store: DevExpress.data.AspNet.createStore({
                                 key: "id",
-                                loadUrl: `/api/${instance.ModelName}/GetAll?${params.toString()}`,
+                            loadUrl: instance?.mGridInstance?.overrideGetUrl ? `${instance?.mGridInstance?.overrideGetUrl}?${params.toString()}` : `/api/${instance.ModelName}/GetAll?${params.toString()}`,
                                   onBeforeSend: function (method, ajaxOptions) {
                                         if (method === "load") {
                                             ajaxOptions.data = ajaxOptions.data || {};

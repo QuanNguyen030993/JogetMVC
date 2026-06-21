@@ -9,7 +9,6 @@
 <script>
 
     var params = new URLSearchParams();
-    debugger
     params.set("refKey", @ViewData["Id"]);
     params.set("refField", "Id");
     params.set("refOperator", "=");
@@ -204,7 +203,6 @@
                 .dxForm("instance")
                 .option("formData");
 
-                debugger
 
             // lấy dữ liệu từ grid designer
             let gridData =
@@ -291,7 +289,7 @@
                 Number(
                     formData.value
                 ),
-
+            unit: attributes.calculation.unit || "",
 
             attributes:
                     JSON.stringify(attributes)

@@ -18,9 +18,13 @@ namespace ERPCore.Models.Business.Migration.Config
         public string DefaultCurrencyType { get; set; } = "";
         public string DefaultStatusSurveyEvaluation { get; set; } = "";
         public Workflow? Workflow { get; set; }
+        public SLA? SLA { get; set; }
         public Dictionary<string, SiteConfig> Sites { get; set; } = new Dictionary<string, SiteConfig>();
     }
-
+    public class SLA
+    {
+        public string RenewQuotation { get; set; }
+    }
     public class SiteConfig
     {
         public string BranchCode { get; set; }

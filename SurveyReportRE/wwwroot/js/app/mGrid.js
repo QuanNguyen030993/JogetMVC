@@ -14,7 +14,6 @@
             this.isEditLayoutMode = false;
             this.gridIndexVisible = {}; // Stores visible column indexes
             this.originalColumnOrder = []; // Stores original column order
-
             //Note: 
             //refField correct in best practices column
             if (mGridOption) {
@@ -29,6 +28,10 @@
                     this.gridEditorOptions = mGridOption.gridEditorOptions;
                 if (mGridOption.enableEditLayoutMode != null || mGridOption.enableEditLayoutMode != undefined)
                     this.enableEditLayoutMode = mGridOption.enableEditLayoutMode;
+                if(mGridOption.ModelName != null || mGridOption.ModelName != undefined)
+                    this.overrideGetUrl = `api/${mGridOption.ModelName}/GetAll`;
+                if (mGridOption.overrideGetUrl != null || mGridOption.overrideGetUrl != undefined)
+                    this.overrideGetUrl = mGridOption.overrideGetUrl;
                 this.enableEditLayoutMode = true;
                 this.mGridOption = mGridOption;
             }

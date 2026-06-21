@@ -726,7 +726,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     }
 
     [HttpGet]
-    public override async Task<ActionResult<PolicyIssuance>> GetAll()
+    public override async Task<ActionResult<List<PolicyIssuance>>> GetAll()
     {
         var queryParams = HttpContext.Request.Query;
 

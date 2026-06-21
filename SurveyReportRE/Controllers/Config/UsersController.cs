@@ -43,7 +43,7 @@ namespace ERPCore.Controllers.Config
 
 
         [HttpGet]
-        public override async Task<ActionResult<Users>> GetAll()
+        public override async Task<ActionResult<List<Users>>> GetAll()
         {
             var queryParams = HttpContext.Request.Query;
 

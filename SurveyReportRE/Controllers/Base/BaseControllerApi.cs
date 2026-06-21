@@ -410,7 +410,7 @@ namespace ERPCore.Controllers.Base
 
 
         [HttpGet]
-        public virtual async Task<ActionResult<T>> GetAll()
+        public virtual async Task<ActionResult<List<T>>> GetAll()
         {
             var queryParams = HttpContext.Request.Query;
 
@@ -685,6 +685,7 @@ namespace ERPCore.Controllers.Base
             string guid = Request.Headers["RecordGuid"];
             string sectionName = Request.Headers["SectionName"];
             string department = Request.Headers["Department"];
+            string data = Request.Headers["Data"];
             IFormFile file = null;
             file = files.FirstOrDefault();
             if (file != null && file.Length > 0)
@@ -708,7 +709,23 @@ namespace ERPCore.Controllers.Base
                     document.FileName = file.FileName;
                     document.FileType = System.IO.Path.GetExtension(file.FileName);
                     document.Size = file.Length;
-                    document.Attributes = JsonConvert.SerializeObject((object)(new { SectionName = sectionName, Department = department } ));
+
+                  
+
+                    
+                    if ( !string.IsNullOrEmpty(data))
+                    {
+                        dynamic obj = new ExpandoObject();
+
+                        JsonConvert.PopulateObject(data, obj);
+                        document.Attributes = JsonConvert.SerializeObject(obj);
+                    }
+                    else
+                    document.Attributes = JsonConvert.SerializeObject(new
+                    {
+                        SectionName = sectionName,
+                        Department = department
+                    }); 
                     document = await _documentRepository.InsertData(document);
                     //AttachmentForm attachmentForm = ControllerHelper.BindingAttachmentForm(attachment, BLOB_PATH);
                     //System.IO.File.WriteAllBytes(Path.Combine(path, folder, $"{unixMilliseconds}_{file.FileName}"), fileBytes);
