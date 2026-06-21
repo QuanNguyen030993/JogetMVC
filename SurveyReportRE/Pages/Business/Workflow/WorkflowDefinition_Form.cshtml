@@ -387,7 +387,6 @@
         overflow: auto;
     }
 
-    /* #canvas_@ViewData["RandomNumber"] { */
      #canvas_@ViewData["RandomNumber"].ToString() { 
             position: relative;
             min-width: 1400px;
@@ -1963,7 +1962,7 @@
 
 
         // function applyFormToSelectedNode() {
-        //     debugger
+        //     
         //     if (!selectedNodeId)
         //     buildPayloadFromCanvas();
         //     else 
@@ -5973,6 +5972,7 @@
                           }
 
                           el.className = "node " + flowClass + " " + getNodeStateClass(node.id, runtimeState);
+                          
                         // el.className = "node " + getNodeFlowClass(node.flowType) + " " + getNodeStateClass(node.id, runtimeState);
                         el.style.left = pos.x + "px";
                         el.style.top = pos.y + "px";
@@ -6071,7 +6071,7 @@
 
                         var left = snap(parseInt(el.style.left || "0", 10));
                         var top = snap(parseInt(el.style.top || "0", 10));
-
+                        
                         el.style.left = left + "px";
                         el.style.top = top + "px";
 
@@ -6253,7 +6253,7 @@
                     if (runtimeState?.activeNodeId === node.id) el.classList.add("activeNode");
                     if ((runtimeState?.completedNodeIds || []).includes(node.id)) el.classList.add("completedNode");
                     if ((runtimeState?.pendingNodeIds || []).includes(node.id)) el.classList.add("pendingNode");
-
+                    
                     el.style.left = (node.x ?? 0) + "px";
                     el.style.top = (node.y ?? 0) + "px";
 
@@ -6408,13 +6408,15 @@
                 }
 
                 function addNodeFromPalette(template, x, y) {
+                    
                     const data = getData();
 
-                    const id = generateUniqueNodeId(data, template.nodeName);
+                    const id = generateUniqueNodeId(data, "NODE")//template.nodeName);
                     const nextOrder = ((data.workflowNodes || []).reduce((m, n) => Math.max(m, n.orderNo || 0), 0)) + 1;
 
                    var node = workflowNodesHandle(template);
                    node.id = id;
+                   node.nodeName = template.nodeName;
                    node.orderNo = nextOrder;
                    node.x = x;
                    node.y = y;

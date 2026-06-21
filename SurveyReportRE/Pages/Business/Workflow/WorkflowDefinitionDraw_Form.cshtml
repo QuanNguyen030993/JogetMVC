@@ -7,676 +7,13 @@
 
 
 <style>
-    :root {
-        --bg: #f4f7fb;
-        --panel: #ffffff;
-        --border: #dbe2ea;
-        --text: #243447;
-        --muted: #6b7c93;
-        --quotation: #2563eb;
-        --policy: #16a34a;
-        --both: #7c3aed;
-        --return: #ef4444;
-        --loop: #f59e0b;
-        --active: #f59e0b;
-        --done: #10b981;
-        --pending: #94a3b8;
-    }
 
     * {
         box-sizing: border-box
     }
 
-
-    .draw-container {
-        display: grid;
-        grid-template-columns: 380px 1fr;
-        height: 80%;
-        overflow: hidden;
-    }
-
-    .sidebar {
-        background: #fff;
-        border-right: 1px solid var(--border);
-        padding: 16px;
-        overflow: auto;
-    }
-
-    .main {
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
-    }
-
-    .toolbar {
-        min-height: 60px;
-        border-bottom: 1px solid var(--border);
-        background: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 8px 16px;
-        gap: 12px;
-        flex-wrap: wrap;
-    }
-
-    .toolbar-left, .toolbar-right {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-
-    .title {
-        font-size: 20px;
-        font-weight: 700;
-        margin: 0 0 6px 0;
-    }
-
-    .sub {
-        font-size: 13px;
-        color: var(--muted);
-        line-height: 1.5;
-        margin-bottom: 14px;
-    }
-    /*
-            .card {
-                background: var(--panel);
-                border: 1px solid var(--border);
-                border-radius: 14px;
-                padding: 12px;
-                margin-bottom: 12px;
-            }
-
-                .card h3 {
-                    margin: 0 0 10px 0;
-                    font-size: 14px;
-                } */
-
-
-    .card-in-frame {
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 12px;
-        margin-bottom: 12px;
-    }
-
-
-        .card-in-frame .header-in-frame {
-            margin: 0 0 10px 0;
-            font-size: 14px;
-        }
-
-
-    .badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 7px 10px;
-        border: 1px solid var(--border);
-        border-radius: 999px;
-        background: #fff;
-        font-size: 12px;
-        color: #334155;
-    }
-
-    .legend-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 8px;
-        font-size: 13px;
-    }
-
-    .dot {
-        width: 14px;
-        height: 14px;
-        border-radius: 999px;
-        flex: 0 0 14px;
-    }
-
-        .dot.quotation {
-            background: var(--quotation)
-        }
-
-        .dot.policy {
-            background: var(--policy)
-        }
-
-        .dot.both {
-            background: var(--both)
-        }
-
-        .dot.active {
-            background: var(--active)
-        }
-
-        .dot.done {
-            background: var(--done)
-        }
-
-        .dot.pending {
-            background: var(--pending)
-        }
-
-    .line {
-        width: 28px;
-        border-top: 3px solid #64748b;
-        flex: 0 0 28px;
-    }
-
-        .line.return {
-            border-top-color: var(--return);
-            border-top-style: dashed;
-        }
-
-        .line.loop {
-            border-top-color: var(--loop);
-        }
-
-    textarea {
-        width: 100%;
-        min-height: 390px;
-        resize: vertical;
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 12px;
-        font-family: Consolas, monospace;
-        font-size: 12px;
-        line-height: 1.5;
-        outline: none;
-    }
-
-    .btn-row {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        margin-top: 10px;
-    }
-
-    button {
-        border: none;
-        background: #2563eb;
-        color: #fff;
-        padding: 9px 12px;
-        border-radius: 10px;
-        cursor: pointer;
-        font-weight: 600;
-    }
-
-        button.secondary {
-            background: #475569;
-        }
-
-        button.success {
-            background: #16a34a;
-        }
-
-        button.warning {
-            background: #f59e0b;
-            color: #1f2937;
-        }
-
-    .error {
-        margin-top: 10px;
-        display: none;
-        white-space: pre-wrap;
-        background: #fef2f2;
-        color: #b91c1c;
-        border: 1px solid #fecaca;
-        border-radius: 10px;
-        padding: 10px 12px;
-        font-size: 12px;
-    }
-
-    .canvas-wrap {
-        flex: 1;
-        min-height: 0;
-        padding: 16px;
-        overflow: auto;
-    }
-
-    #canvas_@ViewData["Id"] {
-        position: relative;
-        min-width: 1400px;
-        min-height: 760px;
-        background: linear-gradient(to right, rgba(203,213,225,.35) 1px, transparent 1px), linear-gradient(to bottom, rgba(203,213,225,.35) 1px, transparent 1px);
-        background-size: 24px 24px;
-        background-color: #fff;
-        border: 1px solid var(--border);
-        border-radius: 18px;
-        box-shadow: 0 10px 28px rgba(15,23,42,0.06);
-        overflow:  auto;
-        }
-
-    .node {
-        position: absolute;
-        width: 180px;
-        min-height: 88px;
-        border-radius: 14px;
-        border: 2px solid #cfd8e3;
-        background: #fff;
-        padding: 10px 12px;
-        box-shadow: 0 8px 18px rgba(0,0,0,0.08);
-        text-align: center;
-        z-index: 2;
-        transition: .15s ease;
-        cursor: move;
-        user-select: none;
-    }
-
-        .node .node-title {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
-
-        .node .node-meta {
-            font-size: 12px;
-            line-height: 1.45;
-            color: #64748b;
-        }
-
-        .node.flow-quotation {
-            border-color: var(--quotation)
-        }
-
-        .node.flow-policy {
-            border-color: var(--policy)
-        }
-
-        .node.flow-both {
-            border-color: var(--both)
-        }
-
-        .node.active {
-            border-color: var(--active);
-            background: #fffaf0;
-            box-shadow: 0 0 0 4px rgba(245,158,11,0.15), 0 12px 22px rgba(245,158,11,0.18);
-        }
-
-        .node.done {
-            background: #f0fdf4;
-        }
-
-        .node.pending {
-            opacity: .94;
-        }
-
-    .layer-label {
-        position: absolute;
-        top: 14px;
-        font-size: 12px;
-        color: #64748b;
-        background: #f8fafc;
-        border: 1px solid var(--border);
-        border-radius: 999px;
-        padding: 4px 10px;
-        z-index: 1;
-    }
-
-    .jtk-overlay {
-        font-size: 11px !important;
-        color: #334155 !important;
-        background: rgba(255,255,255,0.96);
-        border: 1px solid #dbe2ea;
-        padding: 4px 8px;
-        border-radius: 999px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.06);
-    }
-
-    .note {
-        font-size: 12px;
-        color: var(--muted);
-        line-height: 1.5;
-    }
-
-    .status-ok {
-        color: #15803d;
-    }
-
-    code {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        padding: 2px 6px;
-        border-radius: 6px;
-    }
-
-    .page {
-        display: grid;
-        grid-template-columns: 240px 1fr 430px;
-        height: 100vh;
-    }
-
-    .sidebar {
-        border-right: 1px solid #dbe2ea;
-        background: #fff;
-        padding: 14px;
-        overflow: auto;
-    }
-
-        .sidebar h3 {
-            margin: 0 0 12px;
-            font-size: 16px;
-        }
-
-    .sidebarHint {
-        font-size: 12px;
-        color: #64748b;
-        line-height: 1.5;
-        margin-bottom: 12px;
-    }
-
-    .palette {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .paletteItem {
-        border: 1px solid #dbe2ea;
-        border-radius: 12px;
-        background: #fff;
-        padding: 12px;
-        cursor: grab;
-        user-select: none;
-        box-shadow: 0 4px 12px rgba(0,0,0,.05);
-        transition: all .15s ease;
-    }
-
-        .paletteItem:hover {
-            background: #f8fafc;
-            transform: translateY(-1px);
-        }
-
-    .paletteTitle {
-        font-size: 13px;
-        font-weight: 700;
-        margin-bottom: 6px;
-    }
-
-    .paletteMeta {
-        display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
-    }
-
-    .mainPane {
-        padding: 14px;
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
-    }
-
-    .toolbar {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        margin-bottom: 10px;
-    }
-
-    .btn {
-        border: 1px solid #cfd6df;
-        background: #fff;
-        border-radius: 10px;
-        padding: 8px 12px;
-        cursor: pointer;
-        font-size: 13px;
-    }
-
-        .btn:hover {
-            background: #f8fafc;
-        }
-
-    .legend {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        margin-bottom: 10px;
-    }
-
-    .tag {
-        display: inline-flex;
-        align-items: center;
-        height: 24px;
-        padding: 0 9px;
-        border-radius: 999px;
-        border: 1px solid #dbe2ea;
-        background: #fff;
-        font-size: 11px;
-        color: #334155;
-    }
-
-        .tag.active {
-            background: #dbeafe;
-            border-color: #93c5fd;
-            color: #1d4ed8;
-        }
-
-        .tag.done {
-            background: #dcfce7;
-            border-color: #86efac;
-            color: #166534;
-        }
-
-        .tag.pending {
-            background: #fef3c7;
-            border-color: #fcd34d;
-            color: #92400e;
-        }
-
-        .tag.loop {
-            background: #ffedd5;
-            border-color: #fdba74;
-            color: #9a3412;
-        }
-
-        .tag.return {
-            background: #fee2e2;
-            border-color: #fca5a5;
-            color: #991b1b;
-        }
-
-        .tag.exit {
-            background: #ede9fe;
-            border-color: #c4b5fd;
-            color: #6d28d9;
-        }
-
-    .canvas {
-        position: relative;
-        flex: 1;
-        border: 1px solid #dbe2ea;
-        border-radius: 16px;
-        background: linear-gradient(to right, rgba(0,0,0,.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,.04) 1px, transparent 1px), #fff;
-        background-size: 24px 24px;
-        overflow: hidden;
-        min-height: 420px;
-    }
-
-        .canvas.dragOver {
-            background: linear-gradient(to right, rgba(59,130,246,.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(59,130,246,.08) 1px, transparent 1px), #eff6ff;
-            background-size: 24px 24px;
-        }
-
-    .rightPane {
-        border-left: 1px solid #dbe2ea;
-        background: #fff;
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
-    }
-
-    .panelHeader {
-        padding: 14px 16px;
-        border-bottom: 1px solid #eef2f7;
-        font-weight: 700;
-    }
-
-    .panelBody {
-        padding: 12px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        min-height: 0;
-        flex: 1;
-    }
-
-    .statusBar {
-        font-size: 12px;
-        color: #475569;
-    }
-
-    .sectionTitle {
-        font-size: 12px;
-        font-weight: 700;
-        color: #475569;
-        margin-top: 4px;
-    }
-
-    .infoBox {
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 12px;
-        background: #fafafa;
-        font-size: 12px;
-        line-height: 1.5;
-        max-height: 220px;
-        overflow: auto;
-        white-space: pre-wrap;
-    }
-
-    textarea {
-        width: 100%;
-        flex: 1;
-        resize: none;
-        border: 1px solid #dbe2ea;
-        border-radius: 12px;
-        padding: 12px;
-        font-family: Consolas, monospace;
-        font-size: 12px;
-        line-height: 1.45;
-        outline: none;
-    }
-
-    .node {
-        position: absolute;
-        width: 200px;
-        min-height: 80px;
-        padding: 10px 12px;
-        border-radius: 14px;
-        background: #fff;
-        border: 2px solid #cbd5e1;
-        box-shadow: 0 8px 18px rgba(0,0,0,.08);
-        cursor: move;
-        user-select: none;
-        transition: all .15s ease;
-    }
-
-        .node:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 10px 22px rgba(0,0,0,.12);
-        }
-
-        .node.selected {
-            box-shadow: 0 0 0 4px rgba(37,99,235,.12), 0 10px 24px rgba(0,0,0,.12);
-            border-color: #2563eb;
-        }
-
-        .node.activeNode {
-            border-color: #2563eb;
-            background: #eff6ff;
-        }
-
-        .node.completedNode {
-            border-color: #16a34a;
-            background: #f0fdf4;
-        }
-
-        .node.pendingNode {
-            border-color: #d97706;
-            background: #fff7ed;
-        }
-
-        .node.allowLoopNode::after {
-            content: "↻";
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            width: 24px;
-            height: 24px;
-            border-radius: 999px;
-            background: #fb923c;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            box-shadow: 0 4px 10px rgba(0,0,0,.15);
-        }
-
-    .nodeTitle {
-        font-size: 15px;
-        font-weight: 700;
-        margin-bottom: 8px;
-    }
-
-    .nodeMeta {
-        display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
-    }
-
-    .meta {
-        display: inline-flex;
-        align-items: center;
-        height: 22px;
-        padding: 0 8px;
-        border-radius: 999px;
-        font-size: 11px;
-        border: 1px solid #dbe2ea;
-        background: #f8fafc;
-        color: #334155;
-    }
-
-    .flow-both {
-        background: #f8fafc;
-    }
-
-    .flow-quotation {
-        background: #ecfeff;
-        border-color: #a5f3fc;
-        color: #155e75;
-    }
-
-    .flow-policy {
-        background: #f5f3ff;
-        border-color: #c4b5fd;
-        color: #5b21b6;
-    }
-    .jtk-connector {
-
-        z-index: 4;
-    }
-
-    .jtk-endpoint {
-        z-index: 5;
-    }
-
-    .jtk-overlay {
-        z-index: 6;
-    }
-
-    .aLabel {
-        background: rgba(255,255,255,.94);
-        border: 1px solid #e5e7eb;
-        border-radius: 999px;
-        padding: 2px 8px;
-        font-size: 11px;
-        color: #334155;
-    }
 </style>
+
 <body>
     <div class="draw-container dExForm">
         <aside class="sidebar">
@@ -761,13 +98,18 @@
             <div class="canvas-wrap">
                 <div id="canvas_@(ViewData["Id"])" class="canvas"></div>
             </div>
+              <div class="mermaid-wrap">
+                    <div class="mermaid-header">Live Mermaid Diagram</div>
+                    <div id="mermaid_output_@Convert.ToInt32(ViewData["Id"])" class="mermaid">
+                        graph TD
+                        Start --> End
+                    </div>
+                </div>
         </main>
     </div>
 
-
     <script>
          var _id = @Convert.ToInt32(ViewData["Id"]);
-
 
         ajaxGet(`/api/WorkflowDefinition/GetSingle/${_id}`)
             .then(data => {
@@ -1131,7 +473,6 @@
 
                 el.style.left = left + "px";
                 el.style.top = top + "px";
-
                 updateNodePosition(node.id, left, top);
                 instance.revalidate(node.id);
 
@@ -1181,6 +522,7 @@
               if (!pos) return;
 
               if (!useSavedLayout || !hasNumber(node.x) || !hasNumber(node.y)) {
+               
                 node.x = pos.x;
                 node.y = pos.y;
               }
@@ -1444,6 +786,7 @@
             (data.workflowNodes || []).forEach(function (n) {
                 const el = document.getElementById(n.id);
                 if (!el) return;
+               
                 n.x = parseInt(el.style.left, 10) || 0;
                 n.y = parseInt(el.style.top, 10) || 0;
             });
@@ -1474,6 +817,7 @@
            var node = workflowNodesHandle(template);
            node.id = id;
            node.orderNo = nextOrder;
+        
            node.x = x;
            node.y = y;
 
@@ -1570,7 +914,7 @@
             }
 
             roots.forEach(r => dfs(r, 0));
-
+                    
             levels.forEach((arr, level) => {
                 arr.forEach((node, i) => {
                     node.x = 120 + level * 300;
@@ -1579,6 +923,7 @@
             });
 
             const remain = (data.workflowNodes || []).filter(n => !visited.has(n.id));
+            
             remain.forEach((n, i) => {
                 n.x = 120;
                 n.y = 120 + (levels.flat().length + i) * 140;
@@ -1745,7 +1090,300 @@
 
         ensureSeed();
         renderWorkflow();
+
+        // 1. Kiểm tra an toàn xem thư viện mermaid đã sẵn sàng chưa
+        var mermaidLib = window.mermaid || (typeof mermaid !== 'undefined' ? mermaid : null);
+        if (!mermaidLib) {
+            console.error("Thư viện Mermaid chưa được nạp vào trang. Hãy chắc chắn đã chèn thẻ script của Mermaid CDN.");
+            return;
+        }
+
+        // 2. Khởi tạo cấu hình (chỉ cần gọi 1 lần, tốt nhất nên an toàn bằng block try-catch)
+        try {
+            mermaidLib.initialize({ startOnLoad: false, theme: 'default' });
+        } catch(e) {
+            console.warn("Mermaid initialize warning:", e);
+        }
+
+        // // 3. Hàm convert nội bộ: Chuyển đổi trực tiếp object data nhận từ API thành mã Mermaid dạng String
+        function convertJsonToMermaidSyntax(wfData) {
+            let code = "graph TD\n";
+            
+            // Định nghĩa bảng màu sắc map theo styleColor
+            code += "    classDef orange fill:#ffe0b2,stroke:#fb8c00,stroke-width:2px;\n";
+            code += "    classDef lightOrange fill:#fff3e0,stroke:#ffb74d,stroke-width:1px;\n";
+            code += "    classDef blue fill:#e3f2fd,stroke:#2196f3,stroke-width:2px;\n";
+            code += "    classDef green fill:#e8f5e9,stroke:#4caf50,stroke-width:2px;\n";
+            code += "    classDef red fill:#ffebee,stroke:#f44336,stroke-width:2px;\n\n";
+
+            // Tạo Phân làn (subgraph) và gộp các Node vào làn tương ứng
+            if (wfData.lanes && wfData.workflowNodes) {
+                wfData.lanes.forEach(lane => {
+                    code += `    subgraph ${lane.id} [${lane.label}]\n`;
+                    
+                    var laneNodes = wfData.workflowNodes.filter(n => n.laneId === lane.id);
+                    laneNodes.forEach(node => {
+                        let label = node.nodeName;
+                        if (node.assignLabel) label += `<br><small><i>${node.assignLabel}</i></small>`;
+                        if (node.orderLabel) label += `<br><small><b>${node.orderLabel}</b></small>`;
+                        
+                        // Xác định hình dáng
+                        let openSign = "[", closeSign = "]";
+                        if (node.nodeType === 'decision' || node.shape === 'diamond') {
+                            openSign = "{"; closeSign = "}";
+                        } else if (['start', 'end', 'complete'].includes(node.nodeType) || node.shape === 'circle') {
+                            openSign = "(("; closeSign = "))";
+                        }
+                        
+                        var colorClass = node.styleColor ? `:::${node.styleColor}` : '';
+                        code += `        ${node.id}${openSign}${label}${closeSign}${colorClass}\n`;
+                    });
+                    code += "    end\n\n";
+                });
+            }
+
+            // Tạo các Đường kết nối (Transitions)
+            if (wfData.workflowTransitions) {
+                wfData.workflowTransitions.forEach(trans => {
+                    var isSpecial = trans.isReturn || trans.isReferral || trans.lineType === 'dashed';
+                    let label = trans.actionName || trans.conditionLabel || "";
+                    if (trans.conditionJson && trans.conditionJson.message) {
+                        label += ` (${trans.conditionJson.message})`;
+                    }
+
+                    if (label) {
+                        code += isSpecial 
+                            ? `    ${trans.fromNodeId} -. ${label} .-> ${trans.toNodeId}\n`
+                            : `    ${trans.fromNodeId} -->|${label}| ${trans.toNodeId}\n`;
+                    } else {
+                        code += isSpecial 
+                            ? `    ${trans.fromNodeId} -.-> ${trans.toNodeId}\n`
+                            : `    ${trans.fromNodeId} --> ${trans.toNodeId}\n`;
+                    }
+                });
+            }
+            return code;
+        }
+        function convertWorkflowToMermaidV1(jsonStr) {
+  const data = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr;
+  let mermaid = "graph TD\n";
+
+  // 1. Định nghĩa màu sắc hệ thống dựa trên flowType hoặc nodeName
+  mermaid += "    classDef orange fill:#ffe0b2,stroke:#fb8c00,stroke-width:2px;\n";
+  mermaid += "    classDef lightOrange fill:#fff3e0,stroke:#ffb74d,stroke-width:1px;\n";
+  mermaid += "    classDef blue fill:#e3f2fd,stroke:#2196f3,stroke-width:2px;\n";
+  mermaid += "    classDef green fill:#e8f5e9,stroke:#4caf50,stroke-width:2px;\n";
+  mermaid += "    classDef red fill:#ffebee,stroke:#f44336,stroke-width:2px;\n\n";
+
+  // Hàm tạo hình dáng Node (Tất cả label bọc nháy kép để an toàn tuyệt đối)
+  function getNodeShape(node) {
+    let label = node.nodeName;
+    
+    // Thêm thông tin loại Flow hỗ trợ nếu có để biểu đồ chi tiết hơn
+    if (node.flowType) {
+      label += `<br><small><i>(${node.flowType})</i></small>`;
+    }
+
+    // Nếu cấu trúc mới chưa chỉ định rõ hình dáng shape, mặc định quy định theo loại node
+    if (node.nodeType === 'decision') {
+      return `{"${label}"}`;
+    } else if (['start', 'end', 'complete'].includes(node.nodeType)) {
+      return `(("${label}"))`;
+    } else {
+      return `["${label}"]`;
+    }
+  }
+
+  // 2. TỰ ĐỘNG PHÂN LÀN (Gom nhóm các Node có cùng nodeName vào subgraph)
+  if (data.workflowNodes && data.workflowNodes.length > 0) {
+    // Trích xuất danh sách các phòng ban duy nhất xuất hiện trong danh sách nodes
+    const uniqueDepartments = [...new Set(data.workflowNodes.map(node => node.nodeName))];
+
+    uniqueDepartments.forEach(dept => {
+      // Khởi tạo một làn (subgraph) đại diện cho phòng ban này
+      mermaid += `    subgraph LANE_${dept} [${dept}]\n`;
+      
+      // Lấy toàn bộ danh sách node thuộc phòng ban đang duyệt
+      const deptNodes = data.workflowNodes.filter(node => node.nodeName === dept);
+      deptNodes.forEach(node => {
+        const shapeStr = getNodeShape(node);
+        
+        // Thiết lập màu sắc trực quan dựa theo phòng ban
+        let colorClass = ':::blue'; // Màu mặc định
+        if (dept === 'Client') colorClass = ':::orange';
+        if (dept === 'UW') colorClass = ':::lightOrange';
+        
+        mermaid += `        ${node.id}${shapeStr}${colorClass}\n`;
+      });
+      
+      mermaid += "    end\n\n";
+    });
+  }
+
+  mermaid += "    %% ==========================================\n";
+  mermaid += "    %% CÁC ĐƯỜNG NỐI (TRANSITIONS)\n";
+  mermaid += "    %% ==========================================\n";
+
+  // 3. Tạo các đường liên kết (Transitions)
+  if (data.workflowTransitions) {
+    data.workflowTransitions.forEach(trans => {
+      // Xác định kiểu mũi tên (Nét liền cho thông thường, nét đứt cho đường quay lại - isReturn)
+      const isSpecialLink = trans.isReturn || trans.isLoop || trans.lineType === 'dashed';
+      const arrow = isSpecialLink ? "-.->" : "-->";
+      
+      // Khởi tạo nhãn cho mũi tên
+      let label = trans.actionName || "";
+      
+      // Xử lý conditionJson (Dữ liệu mới trả về chuỗi String chứa JSON nên cần parse an toàn)
+      if (trans.conditionJson && typeof trans.conditionJson === 'string') {
+        try {
+          const condObj = JSON.parse(trans.conditionJson);
+          if (condObj && condObj.message) {
+            label += label ? ` <br> (${condObj.message})` : `(${condObj.message})`;
+          }
+        } catch (e) {
+          // Bỏ qua nếu chuỗi conditionJson rỗng hoặc lỗi cấu trúc format chuỗi thuần
+        }
+      }
+
+      // Khớp nối cú pháp chuỗi Mermaid
+      if (label) {
+        if (isSpecialLink) {
+          mermaid += `    ${trans.fromNodeId} -. "${label}" .-> ${trans.toNodeId}\n`;
+        } else {
+          mermaid += `    ${trans.fromNodeId} -->|"${label}"| ${trans.toNodeId}\n`;
+        }
+      } else {
+        mermaid += `    ${trans.fromNodeId} ${arrow} ${trans.toNodeId}\n`;
+      }
+    });
+  }
+
+  return mermaid;
+}
+
+       function convertWorkflowToMermaidV2(jsonStr) {
+  const data = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr;
+  let mermaid = "graph TD\n";
+
+  // 1. Định nghĩa màu sắc (classDef) dựa trên styleColor trong JSON
+  mermaid += "    classDef orange fill:#ffe0b2,stroke:#fb8c00,stroke-width:2px;\n";
+  mermaid += "    classDef lightOrange fill:#fff3e0,stroke:#ffb74d,stroke-width:1px;\n";
+  mermaid += "    classDef blue fill:#e3f2fd,stroke:#2196f3,stroke-width:2px;\n";
+  mermaid += "    classDef green fill:#e8f5e9,stroke:#4caf50,stroke-width:2px;\n";
+  mermaid += "    classDef red fill:#ffebee,stroke:#f44336,stroke-width:2px;\n\n";
+
+  // Bản đồ map shape/nodeType sang ký hiệu Mermaid
+  function getNodeShape(node) {
+    const name = node.nodeName;
+    let label = name;
+    
+    // Bổ sung label phụ nếu có
+    if (node.assignLabel) label += `<br><small><i>${node.assignLabel}</i></small>`;
+    if (node.orderLabel) label += `<br><small><b>${node.orderLabel}</b></small>`;
+
+    // BỌC DẤU NHÁY KÉP "" QUANH LABEL ĐỂ TRÁNH LỖI KÝ TỰ ĐẶC BIỆT NHƯ ( )
+    if (node.nodeType === 'decision' || node.shape === 'diamond') {
+      return `{"${label}"}`;
+    } else if (['start', 'end', 'complete'].includes(node.nodeType) || node.shape === 'circle') {
+      return `(("${label}"))`;
+    } else {
+      return `["${label}"]`;
+    }
+  }
+
+  // 2. Tạo các phân làn (Subgraphs) và gom nhóm Nodes vào đúng làn
+  data.lanes.forEach(lane => {
+    mermaid += `    subgraph ${lane.id} [${lane.label}]\n`;
+    
+    // Lọc các node thuộc lane này
+    const laneNodes = data.workflowNodes.filter(node => node.laneId === lane.id);
+    laneNodes.forEach(node => {
+      const shapeStr = getNodeShape(node);
+      const colorClass = node.styleColor ? `:::${node.styleColor}` : '';
+      mermaid += `        ${node.id}${shapeStr}${colorClass}\n`;
+    });
+    
+    mermaid += "    end\n\n";
+  });
+
+  // mermaid += "    %% ==========================================\n";
+  // mermaid += "    %% CÁC ĐƯỜNG NỐI (TRANSITIONS)\n";
+  // mermaid += "    %% ==========================================\n";
+
+  // 3. Tạo các đường liên kết (Transitions)
+  data.workflowTransitions.forEach(trans => {
+    // Xác định kiểu mũi tên (Nét liền cho thông thường, nét đứt cho referral/return)
+    const isSpecialLink = trans.isReturn || trans.isReferral || trans.lineType === 'dashed';
+    const arrow = isSpecialLink ? "-.->" : "-->";
+    
+    // Lấy label của hành động/điều kiện nếu có
+    let label = trans.actionName || trans.conditionLabel || "";
+    if (trans.conditionJson && trans.conditionJson.message) {
+      label += label ? ` <br> (${trans.conditionJson.message})` : `(${trans.conditionJson.message})`;
+    }
+
+    // Ghép thành dòng mã Mermaid
+    if (label) {
+      // BỌC DẤU NHÁY KÉP QUANH LABEL TRÊN ĐƯỜNG NỐI ĐỂ AN TOÀN TUYỆT ĐỐI
+      if (isSpecialLink) {
+        mermaid += `    ${trans.fromNodeId} -. "${label}" .-> ${trans.toNodeId}\n`;
+      } else {
+        mermaid += `    ${trans.fromNodeId} -->|"${label}"| ${trans.toNodeId}\n`;
+      }
+    } else {
+      // Đường nối không có chữ
+      mermaid += `    ${trans.fromNodeId} ${arrow} ${trans.toNodeId}\n`;
+    }
+  });
+
+  return mermaid;
+}
+
+        // // 4. Tiến hành sinh mã cú pháp và render trực quan lên giao diện
+        try {
+            // var mermaidSyntax = convertJsonToMermaidSyntax(data.workflowNodes);
+            if (data.versionNo == 1)
+            var mermaidSyntax = convertWorkflowToMermaidV1(data.workflowNodes); 
+             if (data.versionNo == 2)
+            var mermaidSyntax = convertWorkflowToMermaidV2(data.workflowNodes); 
+            var viewId = "@Convert.ToInt32(ViewData["Id"])"; // Định danh ID của view từ Razor
+            var container = document.getElementById(`mermaid_output_${viewId}`);
+            
+            if (container) {
+                // Xóa trạng thái đã xử lý trước đó của thẻ chứa để làm sạch bộ nhớ Mermaid
+                container.removeAttribute('data-processed');
+                
+                // Kích hoạt render bất đồng bộ của thư viện Mermaid v10+
+                var uniqueChartId = `mermaid_chart_svg_${viewId}_${Date.now()}`;
+                mermaidLib.render(uniqueChartId, mermaidSyntax).then(render  => {
+                // Trúng kết quả thành công, render lúc này là chuỗi SVG
+                console.log(render);
+                container.innerHTML = render.svg;
+                })
+                .catch((error) => {
+                    // Xử lý nếu mã vẽ lỗi
+                    console.error("Lỗi cú pháp Mermaid:", error);
+                });
+                // console.log(render);
+                // // Gán mã SVG trực tiếp vào thẻ HTML để hiển thị sơ đồ bản vẽ
+                // container.innerHTML = render;
+            } else {
+                console.error("Không tìm thấy thẻ div chứa mã Mermaid trên giao diện HTML.");
+            }
+        } catch (renderError) {
+            console.error("Lỗi trong quá trình biên dịch cú pháp hoặc render Mermaid:", renderError);
+        }
+
+
         });
+
+
+// // === CÁCH SỬ DỤNG ===
+// const myJsonData = { /* Paste toàn bộ Object JSON của bạn vào đây */ };
+// const mermaidResult = convertWorkflowToMermaid(myJsonData);
+// console.log(mermaidResult);
+
 
     </script>
 </body>
