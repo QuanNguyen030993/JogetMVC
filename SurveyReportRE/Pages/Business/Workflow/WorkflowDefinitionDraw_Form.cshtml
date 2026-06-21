@@ -1358,7 +1358,6 @@
                 var uniqueChartId = `mermaid_chart_svg_${viewId}_${Date.now()}`;
                 mermaidLib.render(uniqueChartId, mermaidSyntax).then(render  => {
                 // Trúng kết quả thành công, render lúc này là chuỗi SVG
-                console.log(render);
                 container.innerHTML = render.svg;
                 })
                 .catch((error) => {
