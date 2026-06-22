@@ -19,20 +19,7 @@
 
 <script>
 
-    setTimeout( () => {
-
-    var encodedFolder = encodeURIComponent(`@(prefix)_@(dept)_@(quotationId)_RES`);
-       $.get(`/api/Document/AttachmentSummary/@ViewData["Guid"].ToString()/${encodedFolder}`, null
-       ).done(function (res) {
-            window.QuotationPage.state.formFO.dxForm("instance").updateData("resAttachmentCount", res.attachmentCount);
-            window.QuotationPage.state.formFO.dxForm("instance").updateData("hasResAttachment", res.hasAttachment);
-            window.QuotationPage.state.hasResAttachment = res.hasAttachment;
-            if (res.hasAttachment)
-            $("#@QTViewIdHelper.BtnToggleResForm(dept, quotationId)").addClass("hasResAttachment");
-            else
-            $("#@QTViewIdHelper.BtnToggleResForm(dept, quotationId)").removeClass("hasResAttachment");
-       });
-    }, 200);
+   
     var dept = "@dept";
         $("#@QTViewIdHelper.BtnSave(dept, quotationId)").dxButton({ text: "Save", icon: "save", type: "default", onClick:
         function (e) {

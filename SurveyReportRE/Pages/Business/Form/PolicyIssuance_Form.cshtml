@@ -405,18 +405,13 @@ Note:
                  $.each(piDeptModuleCode, function (itemIndex, item) {
                        var saveButtonId = window.PolicyIssuanceIdManager.btnSave(item,@ViewData["Id"]);
                     $(`#${saveButtonId}`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roleApply[item]);
+                     var formId = window.PolicyIssuanceIdManager.form(item,@ViewData["Id"]);
+                 $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
                 });
                
             }, 1);
 
-            setTimeout(() => {
-                  $.each(piDeptModuleCode, function (itemIndex, item) {
-                var formId = window.PolicyIssuanceIdManager.form(item,@ViewData["Id"]);
-                 $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
-
-            });
-               
-            }, 1);
+           
 
             $(`#${formModuleKeyPi}-roleSelect`).dxSelectBox({
                 items: QtRoles,

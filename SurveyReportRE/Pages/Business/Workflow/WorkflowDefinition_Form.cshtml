@@ -171,18 +171,6 @@
         overflow: hidden;
     }
 
-   /*  .sidebar {
-        background: #fff;
-        border-right: 1px solid var(--border);
-        padding: 16px;
-        overflow: auto;
-    } */
-
-    .main {
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
-    }
 
     .toolbar {
         min-height: 60px;
@@ -269,66 +257,11 @@
 
   
 
-    textarea {
-        width: 100%;
-        min-height: 390px;
-        resize: vertical;
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 12px;
-        font-family: Consolas, monospace;
-        font-size: 12px;
-        line-height: 1.5;
-        outline: none;
-    }
-
     .btn-row {
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
         margin-top: 10px;
-    }
-
-    button {
-        border: none;
-        background: #2563eb;
-        color: #fff;
-        padding: 9px 12px;
-        border-radius: 10px;
-        cursor: pointer;
-        font-weight: 600;
-    }
-
-        button.secondary {
-            background: #475569;
-        }
-
-        button.success {
-            background: #16a34a;
-        }
-
-        button.warning {
-            background: #f59e0b;
-            color: #1f2937;
-        }
-
-    .error {
-        margin-top: 10px;
-        display: none;
-        white-space: pre-wrap;
-        background: #fef2f2;
-        color: #b91c1c;
-        border: 1px solid #fecaca;
-        border-radius: 10px;
-        padding: 10px 12px;
-        font-size: 12px;
-    }
-
-    .canvas-wrap {
-        flex: 1;
-        min-height: 0;
-        padding: 16px;
-        overflow: auto;
     }
 
      #canvas_@ViewData["RandomNumber"].ToString() { 
@@ -357,15 +290,6 @@
         z-index: 1;
     }
 
-    .jtk-overlay {
-        font-size: 11px !important;
-        color: #334155 !important;
-        background: rgba(255,255,255,0.96);
-        border: 1px solid #dbe2ea;
-        padding: 4px 8px;
-        border-radius: 999px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.06);
-    }
 
     .note {
         font-size: 12px;
@@ -390,18 +314,7 @@
         height: 100vh;
     }
 
-   /*  .sidebar {
-        border-right: 1px solid #dbe2ea;
-        background: #fff;
-        padding: 14px;
-        overflow: auto;
-    }
-
-        .sidebar h3 {
-            margin: 0 0 12px;
-            font-size: 16px;
-        }
- */
+  
     .sidebarHint {
         font-size: 12px;
         color: #64748b;
@@ -409,39 +322,7 @@
         margin-bottom: 12px;
     }
 
-    .palette {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .paletteItem {
-        border: 1px solid #dbe2ea;
-        border-radius: 12px;
-        background: #fff;
-        padding: 12px;
-        cursor: grab;
-        user-select: none;
-        box-shadow: 0 4px 12px rgba(0,0,0,.05);
-        transition: all .15s ease;
-    }
-
-        .paletteItem:hover {
-            background: #f8fafc;
-            transform: translateY(-1px);
-        }
-
-    .paletteTitle {
-        font-size: 13px;
-        font-weight: 700;
-        margin-bottom: 6px;
-    }
-
-    .paletteMeta {
-        display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
-    }
+    
 
     .mainPane {
         padding: 14px;
@@ -517,7 +398,7 @@
         flex: 1;
     }
 
-    . statusBar {
+    .statusBar {
         font-size: 12px;
         color: #475569;
     }
@@ -539,19 +420,6 @@
         max-height: 220px;
         overflow: auto;
         white-space: pre-wrap;
-    }
-
-    textarea {
-        width: 100%;
-        flex: 1;
-        resize: none;
-        border: 1px solid #dbe2ea;
-        border-radius: 12px;
-        padding: 12px;
-        font-family: Consolas, monospace;
-        font-size: 12px;
-        line-height: 1.45;
-        outline: none;
     }
 
     .node {
@@ -849,41 +717,7 @@
                 <div class="canvas-wrap">
                         <div class="title">Design Workflow</div>
                         <div class="palette">
-                            <div class="paletteItem" draggable="true" data-template='{"nodeName":"FO","flowType":"Both","allowLoop":false,"loopGroup":"","nodeType":"","nodeCode":"","stepRole":"","departmentName":"","levelNo":1}'>
-                                <div class="paletteTitle">FO</div>
-                                <div class="paletteMeta">
-                                    <span class="tag">Both</span>
-                                </div>
-                            </div>
-
-                            <div class="paletteItem" draggable="true" data-template='{"nodeName":"TS","flowType":"Quotation","allowLoop":false,"loopGroup":"","nodeType":"","nodeCode":"","stepRole":"","departmentName":"","levelNo":1}'>
-                                <div class="paletteTitle">TS</div>
-                                <div class="paletteMeta">
-                                    <span class="tag">Quotation</span>
-                                </div>
-                            </div>
-
-                            <div class="paletteItem" draggable="true" data-template='{"nodeName":"UW","flowType":"Both","allowLoop":false,"loopGroup":"","nodeType":"","nodeCode":"","stepRole":"","departmentName":"","levelNo":1}'>
-                                <div class="paletteTitle">UW</div>
-                                <div class="paletteMeta">
-                                    <span class="tag">Both</span>
-                                </div>
-                            </div>
-
-                            <div class="paletteItem" draggable="true" data-template='{"nodeName":"Client","flowType":"Both","allowLoop":true,"loopGroup":"CLIENT_REVIEW","nodeType":"","nodeCode":"","stepRole":"","departmentName":"","levelNo":1}'>
-                                <div class="paletteTitle">Client</div>
-                                <div class="paletteMeta">
-                                    <span class="tag">Both</span>
-                                    <span class="tag loop">Loop</span>
-                                </div>
-                            </div>
-
-                            <div class="paletteItem" draggable="true" data-template='{"nodeName":"PM","flowType":"Both","allowLoop":false,"loopGroup":"","nodeType":"","nodeCode":"","stepRole":"","departmentName":"","levelNo":1}'>
-                                <div class="paletteTitle">PM</div>
-                                <div class="paletteMeta">
-                                    <span class="tag">Both</span>
-                                </div>
-                            </div>
+                            <div class="paletteItem" data-template='...'>...</div>
                         </div>
 
                 </div>
@@ -2820,30 +2654,60 @@
                 }
 
 
-                function updateData(){
-                      ajaxPut('/api/WorkflowDefinition/UpdateData',
-                     {
-                         key: _id,
-                         values: JSON.stringify(
-                             { workflowNodes : jsonInput.value }
-                         )
-                     },
-                     {
-                         onSuccess: function (response) {
-                              appNotifySuccess("Updated!", false);
-                         },
-                         onError: function (err) { }
-                     }
-                     );
-                }
+                // function updateData(){
+                //       ajaxPut('/api/WorkflowDefinition/UpdateData',
+                //      {
+                //          key: _id,
+                //          values: JSON.stringify(
+                //              { workflowNodes : jsonInput.value }
+                //          )
+                //      },
+                //      {
+                //          onSuccess: function (response) {
+                //               appNotifySuccess("Updated!", false);
+                //          },
+                //          onError: function (err) { }
+                //      }
+                //      );
+                // }
 
                 document.getElementById("btnRender_@Convert.ToInt32(ViewData["Id"])").addEventListener("click", () => renderWorkflow());
-                document.getElementById("btnUpdate_@Convert.ToInt32(ViewData["Id"])").addEventListener("click", updateData);
+                // document.getElementById("btnUpdate_@Convert.ToInt32(ViewData["Id"])").addEventListener("click", updateData);
                 document.getElementById("btnExport_@Convert.ToInt32(ViewData["Id"])").addEventListener("click", exportJson);
 
                 renderWorkflow();
 
-                
+                function renderPalette(nodes) {
+                  var $palette = $(".palette");
+                  $palette.empty();
+
+                  nodes.forEach(n => {
+                    var template = JSON.stringify({
+                      nodeName: n.nodeName,
+                      flowType: n.flowType,
+                      allowLoop: n.allowLoop,
+                      loopGroup: n.loopGroup || "",
+                      nodeType: "",
+                      nodeCode: "",
+                      stepRole: "",
+                      departmentName: "",
+                      levelNo: 1
+                    });
+
+                    var html = `
+                      <div class="paletteItem" draggable="true" data-template='${template}'>
+                        <div class="paletteTitle">${n.nodeName}</div>
+                        <div class="paletteMeta">
+                          <span class="tag">${n.flowType}</span>
+                          ${n.allowLoop ? `<span class="tag loop">Loop</span>` : ""}
+                        </div>
+                      </div>
+                    `;
+
+                    $palette.append(html);
+                  });
+                }
+                renderPalette(currentJson.workflowNodes);
 
                 function ensureSeed() {
                     if (!jsonInput.value.trim()) {
@@ -3070,7 +2934,7 @@
                 default: return "";
             }
         }
-
+         
     </script>
 </body>
  

@@ -8,16 +8,15 @@
         var mGridOption = new Object();
         mGridOption.isAllowRowMenu = true;
         mGridOption.isShowingRenewButton = true;
- 
-        if (!_isSuperUser)
-        {
         mGridOption.refOperator = "contains";
         mGridOption.refKey = _loginUser;
         mGridOption.refField = "pic";
+        if (!_isSuperUser)
+        {
         if (_roleAppName == "Leader")
-        mGridOption.refField = "leaderPIC";
+            mGridOption.refField = "leaderPIC";
         if (_roleAppName == "HOD")
-        mGridOption.refField = "hodpic";    
+            mGridOption.refField = "hodpic";    
         }
         // mGridOption.refField2 = "isView";
         // mGridOption.refKey2 = true;

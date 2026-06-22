@@ -2311,8 +2311,8 @@
                      col.allowEditing = true;
                         if (col.dataField === `pic${item}`) {
                         col.cellTemplate = function (container, options) {
-                            col.value = tryParseJSON(options.data.pic[item], "PIC Load Problem");
-                            return $(`<div>`).text(tryParseJSON(options.data.pic[item], "PIC Load Problem")).appendTo(container);
+                            col.value = tryParseJSON(options.data.pic, "PIC Load Problem")[item];
+                            return $(`<div>`).text(tryParseJSON(options.data.pic, "PIC Load Problem")[item]).appendTo(container);
                         }
                     }
                 });
@@ -2484,7 +2484,6 @@
                                 mGridOption.overrideGetUrl = `api/Quotation/RenewList`;
 
                                 var mGrid = new MGrid(null, mGridOption.container, mGridOption, null);
-                                debugger
                                 var scrollView = popupStandardContentByScroll(mGrid.container);
                                 scrollView.appendTo(container);
                             });
@@ -2574,8 +2573,8 @@
                      col.allowEditing = true;
                         if (col.dataField === `pic${item}`) {
                         col.cellTemplate = function (container, options) {
-                            col.value = tryParseJSON(options.data.pic[item], "PIC Load Problem");
-                            return $(`<div>`).text(tryParseJSON(options.data.pic[item], "PIC Load Problem")).appendTo(container);
+                            col.value = tryParseJSON(options.data.pic, "PIC Load Problem")[item];
+                            return $(`<div>`).text(tryParseJSON(options.data.pic, "PIC Load Problem")[item]).appendTo(container);
                         }
                     }
                 });

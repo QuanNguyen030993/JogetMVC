@@ -159,13 +159,14 @@ connectionSignR.start().then(async function () {
     });
     connectionSignR.on("R_ItemSubmitted", function (items) {
         signalRBlink();
-        if (items.data.type === "Quotation") {
+        debugger
+        if (items.type === "Quotation") {
                     // Call the reload function for quotation components
                     if (window.reloadQuotationComponents) {
                         window.reloadQuotationComponents();
                     }
         }
-        if (items.data.type === "PolicyIssuance") {
+        if (items.type === "PolicyIssuance") {
             if (window.reloadPolicyIssuanceComponents) {
                 window.reloadPolicyIssuanceComponents();
             }

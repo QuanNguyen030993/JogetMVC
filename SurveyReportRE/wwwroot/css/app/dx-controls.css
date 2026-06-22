@@ -3606,8 +3606,8 @@
 }
 
 .dx-texteditor.dx-editor-filled {
-    background: rgba(51,51,51,.05);
-    border: 1px solid transparent;
+    background: #ffffff;
+    border: 1px solid #89a1be;
     border-radius: 4px;
 }
 
@@ -3617,7 +3617,7 @@
 
     .dx-texteditor.dx-state-readonly.dx-editor-filled {
         border-color: transparent;
-        background-color: rgba(51,51,51,.03);
+        background-color: rgba(51, 51, 51, .15);
     }
 
         .dx-texteditor.dx-state-readonly.dx-editor-filled.dx-state-focused {

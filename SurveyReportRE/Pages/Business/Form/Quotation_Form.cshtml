@@ -308,6 +308,7 @@ Note:
 
         // Global function for SignalR to reload quotation components
         window.reloadQuotationComponents = async function() {
+            debugger
             loadQuotePage(true).then(async () => {
             if (state.selectedId) {
                 await loadSelectedWorkflow();
@@ -344,19 +345,19 @@ Note:
 
      
 
-        function resetOverviewAnimation(prefix) {
-            const $sections = $(`#${window.QuotationIdManager.overviewScroll(@ViewData["Id"])} section.dept-section`);
-            $sections.removeClass("visible");
-            $sections.each(function () {
-                const $section = $(this);
-                $section.find(".dept-header, .dept-upperbody, .dept-body, .dept-lowerbody, .dx-fileuploader, .attachment, .att-preview, .att-list, .att-item")
-                    .addClass("animate-step")
-                    .removeClass("visible");
-                // $(`#${prefix}-treeStack .dept-node[data-key='${$section.attr('id').replace(prefix + '-sec', '')}'] .dept-callout`)
-                //     .addClass("animate-step")
-                //     .removeClass("visible");
-            });
-        }
+        // function resetOverviewAnimation(prefix) {
+        //     const $sections = $(`#${window.QuotationIdManager.overviewScroll(@ViewData["Id"])} section.dept-section`);
+        //     $sections.removeClass("visible");
+        //     $sections.each(function () {
+        //         const $section = $(this);
+        //         $section.find(".dept-header, .dept-upperbody, .dept-body, .dept-lowerbody, .dx-fileuploader, .attachment, .att-preview, .att-list, .att-item")
+        //             .addClass("animate-step")
+        //             .removeClass("visible");
+        //         // $(`#${prefix}-treeStack .dept-node[data-key='${$section.attr('id').replace(prefix + '-sec', '')}'] .dept-callout`)
+        //         //     .addClass("animate-step")
+        //         //     .removeClass("visible");
+        //     });
+        // }
 
         function animateOverviewSections(prefix) {
             const sequence = qtDeptModuleCode;
@@ -385,7 +386,7 @@ Note:
                     }, 360);
                 }, idx * 180);
             });
-            resetOverviewAnimation(prefix);
+            // resetOverviewAnimation(prefix);
         }
 
         function applyEditLock() {
@@ -401,6 +402,8 @@ Note:
                  $.each(qtDeptModuleCode, function (itemIndex, item) {
                        var saveButtonId = window.QuotationIdManager.btnSave(item,@ViewData["Id"]);
                     $(`#${saveButtonId}`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roleApply[item]);
+                    var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
+                    $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
                 });
                
             }, 1);
@@ -409,8 +412,6 @@ Note:
             //       $.each(qtDeptModuleCode, function (itemIndex, item) {
             //         var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
             //      $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
-            //      $(`#fileUpload_${formModuleKeyQt}_default_${item}_@ViewData["Id"]`).dxFileUploader("instance").option("readOnly",roleApply[item]);
-            //      $(`#fileUpload_${formModuleKeyQt}_supportingDoc_${item}_@ViewData["Id"]`).dxFileUploader("instance").option("readOnly",roleApply[item]);
 
             // });
                 
@@ -980,7 +981,6 @@ Note:
                 // var control = TinyMCEElementMaker(`.htmleditor`, item, @ViewData["Id"], control);
                 // deptData[item] = { ...q, id: q.id, sectionName: item, code: q.quotationCode };
                 // remarkBoxs[item] = { id: q.id, sectionName: item, controlRemark: control };
-                    
                     deptData[item] = { ...q, id: q.id, sectionName: item, code: q.quotationCode };
                 if (q.stageDept == item)
                 {

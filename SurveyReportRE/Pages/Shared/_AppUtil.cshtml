@@ -416,35 +416,83 @@
                         text: "Demo Data",
                         onClick() {
                             var form = $(`#quotationRequestForm`).dxForm().dxForm("instance");
-                                var payload={
-                                    assignedTeamOrRole:"TS",
-                                    assignees:{},
-                                    assignmentMode:"manual",
-                                    businessChannel:1,
-                                    businessOccupation:"AAAAAAA",
-                                    clientId:1128,
-                                    clientName:"DAO DUY THANG",
-                                    createDate:new Date(),
-                                    dueDate:new Date(),
-                                    lineId:1,
-                                    lineCode:"LI1",
-                                    lineName:"Fire & Property, BI",
-                                    PIC:"quan.nh",
-                                    policyNo:"PPPPPP",
-                                    productCode:"PC8",
-                                    productId:8,
-                                    productName:"Business Package Policy",
-                                    reinsuranceId: 145,
-                                    reqDate:new Date(),
-                                    reqPerson:"quan.nh",
-                                    requestTypeId:149,
-                                    requestedDate:new Date(),
-                                    stageAccount:"quan.nh",
-                                    stageDept:"TS",
-                                    subject:"Subject báo giá",
-                                    turnAroundTimeAttributes:"",
-                                    quotationQuantity:2,
-                                    startingDept:"FO"};
+                                    var payload = {
+                                            assignedTeamOrRole: "TS",
+                                            assignees: {},
+                                            assignmentMode: "manual",
+
+                                            businessChannel: {
+                                                name: "BusinessChannel",
+                                                value: "Direct (DIR)",
+                                                key: "",
+                                                code: "",
+                                                sysTableId: null,
+                                                sysTableName: "",
+                                                mappingField: "",
+                                                enumOrder: 0,
+                                                id: 173,
+                                                guid: "852bccc3-e537-4225-b686-2724beec518e",
+                                                rowOrder: null
+                                            },
+
+                                            businessOccupation: "AAAAAAA",
+                                            clientId: 1128,
+                                            clientName: "DAO DUY THANG",
+                                            createDate: "2026-06-22T06:32:57.860Z",
+                                            dueDate: "2026-06-22T06:32:57.860Z",
+
+                                            lineId: {
+                                                id: 1,
+                                                code: "LI1",
+                                                value: "Fire & Property, BI" // ✅ fix &amp;
+                                            },
+
+                                            lineCode: "LI1",
+                                            lineName: "Fire & Property, BI",
+
+                                            PIC: "quan.nh",
+                                            policyNo: "PPPPPP",
+
+                                            productCode: "PC2",
+                                            productId: {
+                                                id: 2,
+                                                code: "PC2",
+                                                value: "Industrial All Risks",
+                                                lineId: 1
+                                            },
+
+                                            productName: "Industrial All Risks",
+
+                                            reinsuranceId: {
+                                                name: "reInsuranceType",
+                                                value: "NO FAC OUT",
+                                                key: "",
+                                                code: "",
+                                                sysTableId: 10056,
+                                                sysTableName: "",
+                                                mappingField: "",
+                                                enumOrder: 0,
+                                                id: 144,
+                                                guid: "ca0e7c80-1fcc-4bdb-8cc7-3a4209b72f2b",
+                                                rowOrder: null
+                                            },
+
+                                            reqDate: "2026-06-22T06:32:57.860Z",
+                                            reqPerson: "quan.nh",
+                                            requestTypeId: 149,
+                                            requestedDate: "2026-06-22T06:32:57.860Z",
+
+                                            stageAccount: "quan.nh",
+                                            stageDept: "TS",
+
+                                            subject: "Subject báo giá new",
+                                            turnAroundTimeAttributes: "",
+
+                                            quotationQuantity: 2,
+
+                                            startingDept: "FO",
+                                            businessChannelName: "Direct (DIR)"
+                                        };
                                 form.option("formData", payload);
                             },
                         },
@@ -497,11 +545,11 @@
                             var entrySummaryForm = $(`#quotationRequestForm`).dxForm().dxForm("instance");
                             var submitData = entryForm?.option("formData") || {};
                             var submitSummaryData = entrySummaryForm.option("formData");
+                                // console.log(submitSummaryData);
                             var quotationData = new Object();
                             quotationData.Quotation = new Object();
                             quotationData.Quotation = ObjectPopulateKey(submitSummaryData, true, false);
                             var makeRequestAccount = _loginUser;
-                            // var makeRequestAccount = "thao.bp";
 
                             quotationData.Quotation.RequestedDate = submitSummaryData.createDate;
                             quotationData.Quotation.PIC = { FO: makeRequestAccount, TS: "", UW: "", LKMT: "" };
@@ -589,19 +637,7 @@
                                     }
                                 });
                             }
-                            //$.ajax({
-                            //    url: "api/Utility/NotifyAnother",
-                            //    method: "POST",
-                            //    dataType: "json",
-                            //    contentType: "application/json",
-                            //    data: JSON.stringify(notificationData)
-                            //}).done(res => {
-                            //}).fail(xhr => {
-                            //    console.log(xhr.status, xhr.responseText);
-                            //});
-
-
-                             popupInstance.hide();
+                                 popupInstance.hide();
                         }
                         },
                     },
@@ -2989,9 +3025,9 @@
                 });
           }
           else {
-                   const $preview = $(`#${editorOptions.controlId}`);
+                   const $preview = $(`#attList_${editorOptions.controlId}`);
                   var data = [];
-                  var uploader = $("#fileUpload_qt_default_FO_0").dxFileUploader("instance");
+                      var uploader = $(`#fileUpload_${editorOptions.controlId}`).dxFileUploader("instance");
                   data = uploader.option("value") || [];
                             renderAttachmentListLazy(data, $preview, {
                                 batchSize: 6,

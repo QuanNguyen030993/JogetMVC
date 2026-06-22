@@ -405,7 +405,7 @@ public class DocumentController : BaseControllerApi<Document>
     {
         var count = await _BaseRepository.GetListObject(x =>
             x.RecordGuid == recordGuid &&
-            x.Attributes.Contains($"\"SectionName\":\"{folder}\""));
+            x.Attributes.Contains($"{folder}"));
 
         return Ok(new
         {

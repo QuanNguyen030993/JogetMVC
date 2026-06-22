@@ -1,0 +1,23 @@
+﻿@page "{pageNum:int?}/{guid}"
+@using JogetMVC.Model
+@using Newtonsoft.Json
+@model Quotation_FormModel
+@{
+    var moduleCode = "qt";
+    var prefix = moduleCode;
+    var title = moduleCode == "qt" ? "Quotation Overview" : "Policy Issuance Overview";
+}
+@*
+Note:
+-Change style to site.css
+-Comment out menu topbar + sidebar
+-Call ajax to main table
+-Replace Quotation visible data fields, should replace by VS
+-Remove app div for scroll
+
+*@
+
+<style>
+
+
+</style>

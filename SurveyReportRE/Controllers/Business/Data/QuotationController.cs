@@ -696,7 +696,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         IFormFile file = null
         )
     {
-        StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && (s.IsStart ?? false));
+        StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.IsStart == true);
         InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
         instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
         //instanceWorkflow.CurrentStep = "2";
