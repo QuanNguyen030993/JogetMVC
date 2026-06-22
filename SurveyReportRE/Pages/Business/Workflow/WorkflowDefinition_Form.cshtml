@@ -1793,7 +1793,6 @@
         function applyFormToSelectedNode() {
             var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
             var json = JSON.parse($("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val() || "{}");
-            console.log(selectedNodeId);
             var node = tree.get_node(selectedNodeId);
             if (!node) return;
 
@@ -2701,44 +2700,14 @@
                       grid: [24, 24],
                       containment: true,
                       stop: function() {
-                        //   debugger
-                        // var el = document.getElementById(node.id);
-                        // if (!el) return;
-
                      
+                              var el = $(`div#${node.id}`);
+                              // var elLi = $(`li#${node.id}`);
+                            if (!el) return;
 
-                        // var left = snap(parseInt(el.style.left || "0", 10));
-                        // var top = snap(parseInt(el.style.top || "0", 10));
-                        
-                        //   // if (left == 0 && top == 0) {
-                        //       var pos = instance.getOffset(node.id);
-
-                        //       left = snap(Math.round(pos.left));
-                        //       top = snap(Math.round(pos.top));
-                        //   // }
-                        // el.style.left = left + "px";
-                        // el.style.top = top + "px";
-
-                        // updateNodePosition(node.id, left, top);
-                        // instance.revalidate(node.id);
-
-                        // saveHint.innerHTML = `Position: <span class="status-ok">updated ${node.id} (${left}, ${top})</span>`;
-                            //   var el = document.getElementById(node.id);
-                            // if (!el) return;
-
-                            // var left = snap(parseInt(el.style.left || "0", 10));
-                            // var top = snap(parseInt(el.style.top || "0", 10));
-                            debugger
-
-                            var pos = instance.getOffset(node.id);
-                            console.log(pos);
-                            var left = snap(Math.round(pos.left));
-                            var top = snap(Math.round(pos.top));
-
-
-
-                            // el.style.left = left + "px";
-                            // el.style.top = top + "px";
+                                var left = snap(parseInt(el.css("left") || "0", 10));
+                                var top = snap(parseInt(el.css("top") || "0", 10));
+                            // debugger
                             updateNodePosition(node.id, left, top);
                             instance.revalidate(node.id);
                       }
@@ -2757,22 +2726,10 @@
                     //                     el.style.top = top + "px";
 
                     // }
-    // ,
-
-    // stop:function(){
-    //     updateNodePosition(
-    //         node.id,
-    //         node.x,
-    //         node.y
-    //     );
-
-    //     instance.revalidate(node.id);
-    // }
                     });
                   });
                 }
                 function updateNodeCoordinateUi(nodeId, x, y) {
-                    console.log(nodeId);
                     var xEl = document.querySelector(`[data-x="${nodeId}"]`);
                     var yEl = document.querySelector(`[data-y="${nodeId}"]`);
                     if (xEl) xEl.textContent = x;
@@ -2784,13 +2741,11 @@
                   var node = currentJson.workflowNodes.find(n => n.id === nodeId);
                   if (!node) return;
 
-                  debugger
-
                   node.x = x;
                   node.y = y;
 
                   updateNodeCoordinateUi(nodeId, x, y);
-                  syncJsonToTextarea();
+                  setPayloadBoxObject(currentJson)
                 }
 
                 function renderWorkflow(options = {}) {
