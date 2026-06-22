@@ -5241,4 +5241,13 @@ function styleModeChange(item){
                     $("#rightCommentSub").empty();
                     $("#rightCommentList").empty();
                 }
+
+                //20260622 WorkflowDef
+                     function hasNumber(v) {
+              return typeof v === "number" && !Number.isNaN(v);
+            }
+
+                 function safe(v) {
+                      return String(v == null ? "" : v);
+                    }
 </script>

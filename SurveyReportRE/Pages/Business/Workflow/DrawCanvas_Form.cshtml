@@ -319,37 +319,14 @@
 
          jsonInput.value = JSON.stringify(sampleJson, null, 2);
 
-        function safe(v) {
-          return String(v == null ? "" : v);
-        }
+      
 
-        function hasNumber(v) {
-          return typeof v === "number" && !Number.isNaN(v);
-        }
 
         function snap(n, grid = 24) {
           return Math.round(n / grid) * grid;
         }
 
-        function cloneJson(obj) {
-          return JSON.parse(JSON.stringify(obj));
-        }
 
-        function getNodeFlowClass(flowType) {
-          if (flowType === "Quotation") return "flow-quotation";
-          if (flowType === "PolicyIssuance") return "flow-policy";
-          return "flow-both";
-        }
-
-        function getNodeStateClass(nodeId, runtimeState) {
-          var active = runtimeState?.activeNodeId;
-          var done = runtimeState?.compvaredNodeIds || [];
-          var pending = runtimeState?.pendingNodeIds || [];
-          if (nodeId === active) return "active";
-          if (done.includes(nodeId)) return "done";
-          if (pending.includes(nodeId)) return "pending";
-          return "pending";
-        }
 
         function getNodesWithSavedPosition(nodes) {
           return (nodes || []).filter(n => hasNumber(n.x) && hasNumber(n.y));
