@@ -103,7 +103,7 @@ connectionSignR.start().then(async function () {
         if (responseData.connectionId == _connectionId) {
             if (responseData.isCreate) {
                 appNotifySuccess(`LossControl created !`, false);
-                removeTab("LossControl");
+                //removeTab("LossControl");
                 callElementView(`/Business/LCForm/LossControl_Form/${responseData.responseData.id}`, `form_LossControl_Form_${responseData.responseData.id}`, `LossControl ${responseData.responseData.lossControlNo}`);
                 $(`#copyLossControlForm_${responseData.responseData.id}`).dxButton("instance").option("visible", responseData.copyVisibleStatus);
                 $(`#previewLossControlForm_${responseData.responseData.id}`).dxButton("instance").option("text", responseData.pdfButtonText);
@@ -159,7 +159,6 @@ connectionSignR.start().then(async function () {
     });
     connectionSignR.on("R_ItemSubmitted", function (items) {
         signalRBlink();
-        debugger
         if (items.type === "Quotation") {
                     // Call the reload function for quotation components
                     if (window.reloadQuotationComponents) {

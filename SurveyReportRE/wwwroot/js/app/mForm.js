@@ -39,7 +39,7 @@
                 }
                 //if (formConfig.defaultTextAreaHeight != null || formConfig.defaultTextAreaHeight != undefined) {
                 //    this.defaultTextAreaHeight = formConfig.defaultTextAreaHeight;
-            //}
+                //}
                 if (formConfig.defaultTextAreaWidth != null || formConfig.defaultTextAreaWidth != undefined) {
                     this.defaultTextAreaWidth = formConfig.defaultTextAreaWidth;
                 }
@@ -88,13 +88,13 @@
                 formElement = $(`#form_${formConfig.formElementName}_${this.refKey}_${this.id}`);
             if (this.sameRefKeyAsId)
                 formElement = $(`#form_${formConfig.formElementName}_${this.refKey}`);
-            if (formOptions != null || formOptions != undefined) 
+            if (formOptions != null || formOptions != undefined)
                 this.formOptions = formOptions;
             else
                 this.formOptions = new MFormOption();
-            if (this.formOptions.container != null || this.formOptions.container != undefined) 
+            if (this.formOptions.container != null || this.formOptions.container != undefined)
                 this.container = this.formOptions.container;
-                else 
+            else
                 this.container = formElement;
             if (formConfig != null || formConfig != undefined) {
                 this.tabCode = formConfig.tabCode ? formConfig.tabCode : 'form_' + this.ModelName + `_Form_${this.id}`;;
@@ -179,7 +179,7 @@
             //store.load();
             var store = that.formInstance.option("dataSource");
             store.load();
-            
+
         } catch (err) {
             appErrorHandling('Library error: call MForm.loadData() was failed.', err);
             this.formInstance = null;
@@ -201,7 +201,7 @@
     callApi(apiMethod, dataInput, isClose) {
         try {
             var that = this;
-            var efName = this.ModelName;
+            //var efName = this.ModelName;
             var url = buildApiUrl(apiMethod, that);
             var dataVar = null;
             //var httpMethod = this.buildHttpMethod(apiMethod);
@@ -264,7 +264,7 @@
             ajaxOptions.success = function (data) {
                 onSuccess(data);
                 if (isClose) {
-                    that.closeForm(efName);
+                    that.closeForm();
                 }
             };
 
@@ -294,7 +294,8 @@
         this.id = data.id;
         this.guid = data.guid;
         this.formInstance.repaint();
-        this.toolbarInstance = this.initFormToolbar(this.formInstance);
+        //this.toolbarInstance = this.initFormToolbar(this.formInstance);
+
         if (this.container != null) {//&& document.getElementById(`${this.config.MainObject}_0`)) {
             this.cloneUrl = this.cloneUrl.replace("/0", `/${this.id}`);
             this.tabCode = this.tabCode + `_${this.id}`;
@@ -333,70 +334,131 @@
             var that = this;
             //this.getContainer();
             var $scrollElement = $(`<div id='${that.ModelName}ScrollView'/>`).appendTo(this.container);
-            this.Outline = null;
-            if (this.outlineForm) {
-                var outline = []
-                if (this.outlineForm.surveyTypeId) {
-                    if (_cacheModels.includes(that.SchemeModelName)) {
-                        const cachedData = JSON.parse(sessionStorage.getItem(`${that.SchemeModelName}_${that.id}`));
-                        if (cachedData == null) {
-                            //$.ajax({
-                            //    url: `api/Outline/GetFKMany?fkId=${this.outlineForm.surveyTypeId}&fkField=SurveyTypeId`,
-                            //    type: 'GET',
-                            //    async: false,
-                            //    success: function (response) {
-                            //        outline = response;
-                            //    },
-                            //    error: function (exception) {
-                            //    }
-                            //});
+            //this.Outline = null;
+            //if (this.outlineForm) {
+            //    var outline = []
+            //    if (this.outlineForm.surveyTypeId) {
+            //        if (_cacheModels.includes(that.SchemeModelName)) {
+            //            const cachedData = JSON.parse(sessionStorage.getItem(`${that.SchemeModelName}_${that.id}`));
+            //            if (cachedData == null) {
+            //                //$.ajax({
+            //                //    url: `api/Outline/GetFKMany?fkId=${this.outlineForm.surveyTypeId}&fkField=SurveyTypeId`,
+            //                //    type: 'GET',
+            //                //    async: false,
+            //                //    success: function (response) {
+            //                //        outline = response;
+            //                //    },
+            //                //    error: function (exception) {
+            //                //    }
+            //                //});
 
-                            $.ajax({
-                                url: `api/OutlineDynamic/GetFKMany?fkId=${this.outlineForm.surveyTypeId}&fkField=SurveyTypeId`,
-                                type: 'GET',
-                                async: false,
-                                success: function (response) {
-                                    outline.concat(response);
-                                },
-                                error: function (exception) {
-                                }
-                            });
-                            sessionStorage.setItem(`${that.SchemeModelName}_${that.id}`, JSON.stringify(outline));
+            //                $.ajax({
+            //                    url: `api/OutlineDynamic/GetFKMany?fkId=${this.outlineForm.surveyTypeId}&fkField=SurveyTypeId`,
+            //                    type: 'GET',
+            //                    async: false,
+            //                    success: function (response) {
+            //                        outline.concat(response);
+            //                    },
+            //                    error: function (exception) {
+            //                    }
+            //                });
+            //                sessionStorage.setItem(`${that.SchemeModelName}_${that.id}`, JSON.stringify(outline));
+            //            }
+            //            outline = JSON.parse(sessionStorage.getItem(`${that.SchemeModelName}_${that.id}`));
+            //        }
+            //        else {
+            //            //$.ajax({
+            //            //    url: `api/Outline/GetFKMany?fkId=${this.outlineForm.surveyTypeId}&fkField=SurveyTypeId`,
+            //            //    type: 'GET',
+            //            //    async: false,
+            //            //    success: function (response) {
+            //            //        outline = response;
+            //            //    },
+            //            //    error: function (exception) {
+            //            //    }
+            //            //});
+
+            //            $.ajax({
+            //                url: `api/OutlineDynamic/GetFKMany?fkId=${this.outlineForm.surveyTypeId}&fkField=SurveyTypeId`,
+            //                type: 'GET',
+            //                async: false,
+            //                success: function (response) {
+            //                    outline.concat(response);
+            //                },
+            //                error: function (exception) {
+            //                }
+            //            });
+            //        }
+            //    }
+            //    else {
+            //        //console.log(`${this.ModelName} is missing Survey Type`);
+            //    }
+            //    this.Outline = outline;
+            //}
+
+
+            this.toolbarInstance = that.allowFormActionButton ? [
+
+                {
+                    itemType: "group",
+                    cssClass: "action-group",
+                    colCount: 3,
+                    items: [
+
+
+                {
+                    itemType: "button",
+                    horizontalAlignment: "right",
+                    buttonOptions: {
+                        text: "Save",
+                        icon: "save",
+                        type: "success",
+                        stylingMode: "contained",
+                        disabled: this.isReadonlyAllEditors,
+                        elementAttr: { role: 'SaveBtn', id: `btnSave_${that.ModelName}` },
+                        onClick() {
+                            that.doSaveData();
                         }
-                        outline = JSON.parse(sessionStorage.getItem(`${that.SchemeModelName}_${that.id}`));
                     }
-                    else {
-                        //$.ajax({
-                        //    url: `api/Outline/GetFKMany?fkId=${this.outlineForm.surveyTypeId}&fkField=SurveyTypeId`,
-                        //    type: 'GET',
-                        //    async: false,
-                        //    success: function (response) {
-                        //        outline = response;
-                        //    },
-                        //    error: function (exception) {
-                        //    }
-                        //});
-
-                        $.ajax({
-                            url: `api/OutlineDynamic/GetFKMany?fkId=${this.outlineForm.surveyTypeId}&fkField=SurveyTypeId`,
-                            type: 'GET',
-                            async: false,
-                            success: function (response) {
-                                outline.concat(response);
-                            },
-                            error: function (exception) {
-                            }
-                        });
+                },
+                {
+                    itemType: "button",
+                    horizontalAlignment: "right",
+                    buttonOptions: {
+                        text: "Close",
+                        icon: "close",
+                        type: "error",
+                        stylingMode: "contained",
+                        disabled: this.isReadonlyAllEditors,
+                        elementAttr: { role: 'CloseBtn', id: `btnClose_${that.ModelName}` },
+                        onClick() {
+                            that.closeForm();
+                        }
                     }
                 }
-                else {
-                    //console.log(`${this.ModelName} is missing Survey Type`);
+                , {
+                    itemType: "button",
+                    horizontalAlignment: "right",
+                    buttonOptions: {
+                        text: "Refresh",
+                        icon: "refresh",
+                        type: "default",
+                        stylingMode: "contained",
+                        disabled: this.isReadonlyAllEditors,
+                        elementAttr: { role: 'RefreshBtn', id: `btnRefresh_${that.ModelName}` },
+                        onClick() {
+                            that.refreshForm();
+                        }
+                    }
+                        }
+                    ]
                 }
-                this.Outline = outline;
-            }
+            ]: [];
 
 
-            var itemsConfig = this.buildFormItem(); //should not do the same time.
+            var itemsConfig = [] //should not do the same time.
+            itemsConfig.push(...this.toolbarInstance);
+            itemsConfig.push(...this.buildFormItem()); //should not do the same time.
             formElement.addClass("fade-slide-up");
             this.formInstance = formElement.dxForm({
                 dataSource: makeBasicDataSource(that, true),
@@ -432,35 +494,34 @@
                         //    changedFields[e.dataField] = stringToUtcDate(e.value);
                         //}
                         changedFields[e.dataField] = e.value;
-                        if (that.fieldByOutlineGroup.length > 0) {
-                            var outlineObject = that.fieldByOutlineGroup.find(f => f.dataField == e.dataField);
-                            //changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance[0];
-                            changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance;
-                        }
-                        if (that.dynamicOutline) {
-                            var outlineObject = that.dynamicOutline.find(f => f.dataField == e.dataField);
-                            if (outlineObject)
-                                changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance;
-                            else if (currentItem.outlineObject)
-                                changedFields[e.dataField + "_outlineId"] = currentItem.outlineObject;
-                        }
-                        else if (currentItem) {
-                            if (currentItem.outlineObject)
-                            changedFields[e.dataField + "_outlineId"] = currentItem.outlineObject;
-                        }
+                        //if (that.fieldByOutlineGroup.length > 0) {
+                        //    var outlineObject = that.fieldByOutlineGroup.find(f => f.dataField == e.dataField);
+                        //    //changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance[0];
+                        //    changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance;
+                        //}
+                        //if (that.dynamicOutline) {
+                        //    var outlineObject = that.dynamicOutline.find(f => f.dataField == e.dataField);
+                        //    if (outlineObject)
+                        //        changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance;
+                        //    else if (currentItem.outlineObject)
+                        //        changedFields[e.dataField + "_outlineId"] = currentItem.outlineObject;
+                        //}
+                        //else if (currentItem) {
+                        //    if (currentItem.outlineObject)
+                        //    changedFields[e.dataField + "_outlineId"] = currentItem.outlineObject;
+                        //}
                     } else {
                         delete changedFields[e.dataField];
                     }
-                    markAccordionAsChanged(`accordion_${that.refKey}_${e.dataField}`);
+                    //markAccordionAsChanged(`accordion_${that.refKey}_${e.dataField}`);
                     // Cập nhật lại changedFields trong dxForm
                     e.component.option("changedFields", changedFields);
                 }.bind(this))
             }).dxForm("instance");
             if (this.formInstance)
                 this.formInstance.option("config", this);
-            this.toolbarInstance = this.initFormToolbar(this.formInstance);
-        
-            
+            //this.toolbarInstance = this.initFormToolbar(this.formInstance);
+  
             //$formElement.find(".dx-tabpanel-container").css("height", `100%`);
             if (that.id > 0) 
                     this.loadData();
@@ -783,8 +844,10 @@
     //    }
     //}
 
-    closeForm(efName) {
-        removeTab(efName);
+    closeForm() {
+        //removeTab(efName);
+        var that = this;
+        nativeRemoveTabV2(`form_${that.ModelName}_Form_${that.id}`);
     }
 
     refreshForm() {

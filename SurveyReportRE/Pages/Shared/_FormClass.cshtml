@@ -128,7 +128,21 @@
 
                     let items = [];
                     let formData = {};
-
+                    items.push({
+                            itemType: "button",
+                            horizontalAlignment: "right",
+                            verticalAlignment: "top",
+                            buttonOptions: {
+                                text: "Save",
+                                icon: "save",
+                                type: "success",
+                                stylingMode: "contained",
+                                onClick() {
+                                      that.doSaveData(false);
+                                         DevExpress.ui.notify("Saved successfully", "success", 2000);
+                                }
+                            }
+                        });
 
 
                     $.each(
@@ -211,7 +225,7 @@
 
                         });
 
-
+  
 
                    
 
@@ -225,31 +239,7 @@
                         "items",
                         items
                     );
-                    var toolbarItems = $(`<div id="${that.ModelName}Toolbar" class="dExFormToolBar"'/>`)
-                        .dxToolbar({
-                            items: that.allowFormActionButton ? this.customizeToolbar() : [],
-                            width: "100%",
-                            onItemRendered: function (e) {
-                                let $element =
-                                    e.itemElement;
-                                if (e.itemData.widget === "dxButton") {
-                                    let btn =
-                                        $element.find(".dx-button");
-                                    btn.addClass(
-                                        "dExToolbarButton"
-                                    );
-                                    btn.dxButton("instance")
-                                        .option({
-                                            stylingMode: "contained"
-                                        });
-                                }
-                            },
-                            onInitialized: tryExecute(function (e) {
-                                var that = this;
-                            }.bind(this))
-                        })
-                    toolbarItems.appendTo(that.container);
-
+                      
                 });
         }
 
@@ -541,305 +531,44 @@ var ClientForm = class ClientForm extends MForm {
     constructor(id, childGridConfig, formConfig, mFormConfig) {
         super(id, childGridConfig, formConfig, mFormConfig)
     }
-        
-        getFormItems() {
+            getFormItems() {
 
-            return [
+        return [
 
-                // ================= Client =================
+            // ================= Client =================
 
-                {
-                    itemType: "group",
-                    caption: "Client Information",
-                    colCount: 3,
-                    cssClass: "form-section",
+            {
+                itemType: "group",
+                caption: "Client Information",
+                colCount: 3,
+                cssClass: "form-section",
 
-                    items: [
+                items: [
 
-                        {
-                            dataField: "ClientCode",
-                            label: {
-                                text: "Client Code"
-                            },
-                            editorType: "dxTextBox"
+                    {
+                        dataField: "clientCode",
+                        label: {
+                            text: "Client Code"
                         },
+                        editorType: "dxTextBox"
+                    },
 
 
-                        {
-                            dataField: "ClientName",
-                            label: {
-                                text: "Client Name"
-                            },
-                            colSpan: 2,
-
-                            template: function (data, itemElement) {
-                                setTimeout(() => {
-                                    var that = this;
-                                    var formItems = that.option("formData");
-                                    var store = that.option("dataSource");
-
-                                    const value = data.component.option("formData")
-                                        .clientName;
-
-                                    let obj = {};
-
-                                    try {
-                                        obj = JSON.parse(value || "{}");
-                                    }
-                                    catch {
-                                        obj = {};
-                                    }
-
-                                    const html = `
-                                    <div class="multi-lang-editor">
-
-                                        <div class="lang-row">
-
-                                            <div class="tag-label viet">
-                                                Viet
-                                            </div>
-
-                                                <div id="clientName_txtViet"></div>
-
-                                        </div>
-
-                                        <div class="lang-row">
-
-                                            <div class="tag-label eng">
-                                                Eng
-                                            </div>
-
-                                                <div id="clientName_txtEng"></div>
-
-                                        </div>
-
-                                    </div>
-                                `;
-
-                                    itemElement.append(html);
-
-                                    const updateValue = () => {
-                                        const viet =
-                                            $("#clientName_txtViet")
-                                                .dxTextArea("instance")
-                                                .option("value");
-
-                                        const eng =
-                                            $("#clientName_txtEng")
-                                                .dxTextArea("instance")
-                                                .option("value");
-
-                                        const jsonValue = JSON.stringify({
-                                            Viet: viet,
-                                            Eng: eng
-                                        });
-
-                                        var passingObject = {
-                                        };
-                                        passingObject.clientName = JSON.stringify({
-                                            Viet: viet,
-                                            Eng: eng
-                                        });
-                                        store.update(formItems.id, passingObject)
-                                            .done(function () {
-                                                DevExpress.ui.notify("Saved successfully", "success", 2000);
-                                            })
-                                            .fail(function (error) {
-                                                console.error(error);
-                                                DevExpress.ui.notify("Save failed", "error", 2000);
-                                            });
-
-                                    };
-
-                                    $("#clientName_txtViet").dxTextArea({
-                                        value: obj.Viet || "",
-                                            width: "100%",
-                                        onValueChanged: updateValue,
-                                        stylingMode: "filled"
-                                    });
-
-                                    $("#clientName_txtEng").dxTextArea({
-                                        value: obj.Eng || "",
-                                        width: "100%",
-                                        onValueChanged: updateValue,
-                                        stylingMode: "filled"
-                                    });
-                                }, 500);
-
-                            }
+                    {
+                        dataField: "clientName",
+                        label: {
+                            text: "Client Name"
                         },
+                        colSpan: 2,
 
-
-                        {
-                            dataField: "ShortName",
-                            label: {
-                                text: "Short Name"
-                            },
-                            editorType: "dxTextBox"
-                        },
-
-
-                        {
-                            dataField: "DisplayName",
-                            label: {
-                                text: "Display Name"
-                            },
-                            editorType: "dxTextBox"
-                        },
-
-
-                        {
-                            dataField: "PolicyCode",
-                            label: {
-                                text: "Policy Code"
-                            },
-                            editorType: "dxTextBox"
-                        }
-
-                    ]
-                },
-
-
-
-                // ================= Classification =================
-
-                {
-                    itemType: "group",
-                    caption: "Classification",
-                    colCount: 3,
-                    cssClass: "form-section",
-
-                    items: [
-
-                        {
-                            dataField: "ClientTypeId",
-                            label: {
-                                text: "Client Type"
-                            },
-                            editorType: "dxSelectBox"
-                        },
-
-
-                        {
-                            dataField: "TypeId",
-                            label: {
-                                text: "Type"
-                            },
-                            editorType: "dxSelectBox"
-                        },
-
-
-                        {
-                            dataField: "SourceOfBusinessId",
-                            label: {
-                                text: "Source Of Business"
-                            },
-                            editorType: "dxSelectBox"
-                        },
-
-
-                        {
-                            dataField: "BusinessOccupationId",
-                            label: {
-                                text: "Occupation"
-                            },
-                            editorType: "dxSelectBox"
-                        },
-
-
-                        {
-                            dataField: "Segment",
-                            label: {
-                                text: "Segment"
-                            },
-                            editorType: "dxTextBox"
-                        },
-
-
-                        {
-                            dataField: "Nationality",
-                            label: {
-                                text: "Nationality"
-                            },
-                            editorType: "dxTextBox"
-                        }
-
-                    ]
-                },
-
-
-
-
-                // ================= Contact =================
-
-                {
-                    itemType: "group",
-                    caption: "Contact",
-                    colCount: 3,
-                    cssClass: "form-section",
-
-                    items: [
-
-
-                        {
-                            dataField: "PhoneNumber",
-                            label: {
-                                text: "Phone"
-                            },
-                            editorType: "dxTextBox"
-                        },
-
-
-                        {
-                            dataField: "OfficePhoneNumber",
-                            label: {
-                                text: "Office Phone"
-                            },
-                            editorType: "dxTextBox"
-                        },
-
-
-                        {
-                            dataField: "Email",
-                            label: {
-                                text: "Email"
-                            },
-                            editorType: "dxTextBox"
-                        }
-
-                    ]
-                },
-
-
-
-
-                // ================= Address =================
-
-
-                {
-                    itemType: "group",
-                    caption: "Address",
-                    colCount: 2,
-                    cssClass: "form-section",
-
-                    items: [
-
-
-                       {
-                            dataField: "businessAddress",
-                            label: {
-                                text: "Business Address"
-                            },
-                            colSpan: 1,
-
-                            template: function (data, itemElement) {
-                                setTimeout(() => {
-                                    var that = this;
-                                    var formItems = that.option("formData");
-                                    var store = that.option("dataSource");
+                        template: function (data, itemElement) {
+                            setTimeout(() => {
+                                var that = this;
+                                var formItems = that.option("formData");
+                                var store = that.option("dataSource");
 
                                 const value = data.component.option("formData")
-                                    .businessAddress;
+                                    .clientName;
 
                                 let obj = {};
 
@@ -851,41 +580,41 @@ var ClientForm = class ClientForm extends MForm {
                                 }
 
                                 const html = `
-                                    <div class="multi-lang-editor">
+                                <div class="multi-lang-editor">
 
-                                        <div class="lang-row">
+                                    <div class="lang-row">
 
-                                            <div class="tag-label viet">
-                                                Viet
-                                            </div>
-
-                                                <div id="businessAddress_txtViet"></div>
-
+                                        <div class="tag-label viet">
+                                            Viet
                                         </div>
 
-                                        <div class="lang-row">
-
-                                            <div class="tag-label eng">
-                                                Eng
-                                            </div>
-
-                                                <div id="businessAddress_txtEng"></div>
-
-                                        </div>
+                                            <div id="clientName_txtViet"></div>
 
                                     </div>
-                                `;
+
+                                    <div class="lang-row">
+
+                                        <div class="tag-label eng">
+                                            Eng
+                                        </div>
+
+                                            <div id="clientName_txtEng"></div>
+
+                                    </div>
+
+                                </div>
+                            `;
 
                                 itemElement.append(html);
 
                                 const updateValue = () => {
                                     const viet =
-                                        $("#businessAddress_txtViet")
+                                        $("#clientName_txtViet")
                                             .dxTextArea("instance")
                                             .option("value");
 
                                     const eng =
-                                            $("#businessAddress_txtEng")
+                                        $("#clientName_txtEng")
                                             .dxTextArea("instance")
                                             .option("value");
 
@@ -894,162 +623,420 @@ var ClientForm = class ClientForm extends MForm {
                                         Eng: eng
                                     });
 
-                                        var passingObject = {
-                                        };
-                                    passingObject.businessAddress = JSON.stringify({
+                                    var passingObject = {
+                                    };
+                                    passingObject.clientName = JSON.stringify({
                                         Viet: viet,
                                         Eng: eng
                                     });
-                                        store.update(formItems.id, passingObject)
-                                                .done(function () {
-                                                    DevExpress.ui.notify("Saved successfully", "success", 2000);
-                                                })
-                                                .fail(function (error) {
-                                                    console.error(error);
-                                                    DevExpress.ui.notify("Save failed", "error", 2000);
-                                                });
-                                 
-                                    };
+                                    store.update(formItems.id, passingObject)
+                                        .done(function () {
+                                            DevExpress.ui.notify("Saved successfully", "success", 2000);
+                                        })
+                                        .fail(function (error) {
+                                            console.error(error);
+                                            DevExpress.ui.notify("Save failed", "error", 2000);
+                                        });
 
-                                    $("#businessAddress_txtViet").dxTextArea({
-                                        value: obj.Viet || "",
-                                        width: "100%",
-                                        onValueChanged: updateValue,
-                                        stylingMode : "filled" 
-                                    });
+                                };
 
-                                    $("#businessAddress_txtEng").dxTextArea({
-                                    value: obj.Eng || "",
+                                $("#clientName_txtViet").dxTextArea({
+                                    value: obj.Viet || "",
                                         width: "100%",
                                     onValueChanged: updateValue,
-                                        stylingMode: "filled"
-                                    });
-                                },500);
+                                    stylingMode: "filled"
+                                });
 
+                                $("#clientName_txtEng").dxTextArea({
+                                    value: obj.Eng || "",
+                                    width: "100%",
+                                    onValueChanged: updateValue,
+                                    stylingMode: "filled"
+                                });
+                            }, 500);
+
+                        }
+                    },
+
+
+                    {
+                        dataField: "shortName",
+                        label: {
+                            text: "Short Name"
+                        },
+                        editorType: "dxTextBox"
+                    },
+
+
+                    {
+                        dataField: "displayName",
+                        label: {
+                            text: "Display Name"
+                        },
+                        editorType: "dxTextBox"
+                    },
+
+
+                    {
+                        dataField: "policyCode",
+                        label: {
+                            text: "Policy Code"
+                        },
+                        editorType: "dxTextBox"
+                    }
+
+                ]
+            },
+
+
+
+            // ================= Classification =================
+
+            {
+                itemType: "group",
+                caption: "Classification",
+                colCount: 3,
+                cssClass: "form-section",
+
+                items: [
+
+                    {
+                        dataField: "clientTypeId",
+                        label: {
+                            text: "Client Type"
+                        },
+                        editorType: "dxSelectBox"
+                    },
+
+
+                    {
+                        dataField: "typeId",
+                        label: {
+                            text: "Type"
+                        },
+                        editorType: "dxSelectBox"
+                    },
+
+
+                    {
+                        dataField: "sourceOfBusinessId",
+                        label: {
+                            text: "Source Of Business"
+                        },
+                        editorType: "dxSelectBox"
+                    },
+
+
+                    {
+                        dataField: "businessOccupationId",
+                        label: {
+                            text: "Occupation"
+                        },
+                        editorType: "dxSelectBox"
+                    },
+
+
+                    {
+                        dataField: "segment",
+                        label: {
+                            text: "Segment"
+                        },
+                        editorType: "dxTextBox"
+                    },
+
+
+                    {
+                        dataField: "nationality",
+                        label: {
+                            text: "Nationality"
+                        },
+                        editorType: "dxTextBox"
+                    }
+
+                ]
+            },
+
+
+
+
+            // ================= Contact =================
+
+            {
+                itemType: "group",
+                caption: "Contact",
+                colCount: 3,
+                cssClass: "form-section",
+
+                items: [
+
+
+                    {
+                        dataField: "phoneNumber",
+                        label: {
+                            text: "Phone"
+                        },
+                        editorType: "dxTextBox"
+                    },
+
+
+                    {
+                        dataField: "officePhoneNumber",
+                        label: {
+                            text: "Office Phone"
+                        },
+                        editorType: "dxTextBox"
+                    },
+
+
+                    {
+                        dataField: "email",
+                        label: {
+                            text: "Email"
+                        },
+                        editorType: "dxTextBox"
+                    }
+
+                ]
+            },
+
+
+
+
+            // ================= Address =================
+
+
+            {
+                itemType: "group",
+                caption: "Address",
+                colCount: 2,
+                cssClass: "form-section",
+
+                items: [
+
+
+                   {
+                        dataField: "businessAddress",
+                        label: {
+                            text: "Business Address"
+                        },
+                        colSpan: 1,
+
+                        template: function (data, itemElement) {
+                            setTimeout(() => {
+                                var that = this;
+                                var formItems = that.option("formData");
+                                var store = that.option("dataSource");
+
+                            const value = data.component.option("formData")
+                                .businessAddress;
+
+                            let obj = {};
+
+                            try {
+                                obj = JSON.parse(value || "{}");
                             }
-                        },
+                            catch {
+                                obj = {};
+                            }
 
+                            const html = `
+                                <div class="multi-lang-editor">
 
-                        {
-                            dataField: "TaxAddress",
-                            label: {
-                                text: "Tax Address"
-                            },
+                                    <div class="lang-row">
 
-                            editorType: "dxTextArea"
+                                        <div class="tag-label viet">
+                                            Viet
+                                        </div>
+
+                                            <div id="businessAddress_txtViet"></div>
+
+                                    </div>
+
+                                    <div class="lang-row">
+
+                                        <div class="tag-label eng">
+                                            Eng
+                                        </div>
+
+                                            <div id="businessAddress_txtEng"></div>
+
+                                    </div>
+
+                                </div>
+                            `;
+
+                            itemElement.append(html);
+
+                            const updateValue = () => {
+                                const viet =
+                                    $("#businessAddress_txtViet")
+                                        .dxTextArea("instance")
+                                        .option("value");
+
+                                const eng =
+                                        $("#businessAddress_txtEng")
+                                        .dxTextArea("instance")
+                                        .option("value");
+
+                                const jsonValue = JSON.stringify({
+                                    Viet: viet,
+                                    Eng: eng
+                                });
+
+                                    var passingObject = {
+                                    };
+                                passingObject.businessAddress = JSON.stringify({
+                                    Viet: viet,
+                                    Eng: eng
+                                });
+                                    store.update(formItems.id, passingObject)
+                                            .done(function () {
+                                                DevExpress.ui.notify("Saved successfully", "success", 2000);
+                                            })
+                                            .fail(function (error) {
+                                                console.error(error);
+                                                DevExpress.ui.notify("Save failed", "error", 2000);
+                                            });
+
+                                };
+
+                                $("#businessAddress_txtViet").dxTextArea({
+                                    value: obj.Viet || "",
+                                    width: "100%",
+                                    onValueChanged: updateValue,
+                                    stylingMode : "filled"
+                                });
+
+                                $("#businessAddress_txtEng").dxTextArea({
+                                value: obj.Eng || "",
+                                    width: "100%",
+                                onValueChanged: updateValue,
+                                    stylingMode: "filled"
+                                });
+                            },500);
+
                         }
+                    },
 
 
-                    ]
-                },
-
-
-
-
-                // ================= Tax =================
-
-
-                {
-                    itemType: "group",
-                    caption: "Tax & Registration",
-                    colCount: 3,
-                    cssClass: "form-section",
-
-                    items: [
-
-                        {
-                            dataField: "TaxCode",
-                            label: {
-                                text: "Tax Code"
-                            },
-                            editorType: "dxTextBox"
+                    {
+                        dataField: "taxAddress",
+                        label: {
+                            text: "Tax Address"
                         },
 
+                        editorType: "dxTextArea"
+                    }
 
-                        {
-                            dataField: "PACode",
-                            label: {
-                                text: "PA Code"
-                            },
-                            editorType: "dxTextBox"
+
+                ]
+            },
+
+
+
+
+            // ================= Tax =================
+
+
+            {
+                itemType: "group",
+                caption: "Tax & Registration",
+                colCount: 3,
+                cssClass: "form-section",
+
+                items: [
+
+                    {
+                        dataField: "taxCode",
+                        label: {
+                            text: "Tax Code"
+                        },
+                        editorType: "dxTextBox"
+                    },
+
+
+                    {
+                        dataField: "pACode",
+                        label: {
+                            text: "PA Code"
+                        },
+                        editorType: "dxTextBox"
+                    },
+
+
+                    {
+                        dataField: "jGCode",
+                        label: {
+                            text: "JG Code"
+                        },
+                        editorType: "dxTextBox"
+                    }
+
+
+                ]
+
+            },
+
+
+
+            // ================= Status =================
+
+
+            {
+                itemType: "group",
+                caption: "Status",
+                colCount: 3,
+                cssClass: "form-section",
+
+                items: [
+
+
+                    {
+                        dataField: "active",
+                        label: {
+                            text: "Active"
+                        },
+                        editorType: "dxSwitch"
+                    },
+
+
+                    {
+                        dataField: "corporateDate",
+                        label: {
+                            text: "Corporate Date"
+                        },
+                        editorType: "dxDateBox"
+                    },
+
+
+                    {
+                        dataField: "startDate",
+                        label: {
+                            text: "Start Date"
+                        },
+                        editorType: "dxDateBox"
+                    },
+
+
+                    {
+                        dataField: "notes",
+                        label: {
+                            text: "Notes"
                         },
 
+                        colSpan: 3,
 
-                        {
-                            dataField: "JGCode",
-                            label: {
-                                text: "JG Code"
-                            },
-                            editorType: "dxTextBox"
-                        }
+                        editorType: "dxTextArea"
+                    }
 
 
-                    ]
+                ]
 
-                },
-
-
-
-                // ================= Status =================
+            }
 
 
-                {
-                    itemType: "group",
-                    caption: "Status",
-                    colCount: 3,
-                    cssClass: "form-section",
-
-                    items: [
-
-
-                        {
-                            dataField: "Active",
-                            label: {
-                                text: "Active"
-                            },
-                            editorType: "dxSwitch"
-                        },
-
-
-                        {
-                            dataField: "CorporateDate",
-                            label: {
-                                text: "Corporate Date"
-                            },
-                            editorType: "dxDateBox"
-                        },
-
-
-                        {
-                            dataField: "StartDate",
-                            label: {
-                                text: "Start Date"
-                            },
-                            editorType: "dxDateBox"
-                        },
-
-
-                        {
-                            dataField: "Notes",
-                            label: {
-                                text: "Notes"
-                            },
-
-                            colSpan: 3,
-
-                            editorType: "dxTextArea"
-                        }
-
-
-                    ]
-
-                }
-
-
-            ];
-        }
-
-
+        ];
+    }
 
         renderForm(formElement) {
             try {
@@ -1057,56 +1044,74 @@ var ClientForm = class ClientForm extends MForm {
                 var that = this;
                 //this.getContainer();
                 var $scrollElement = $(`<div id='${that.ModelName}ScrollView'/>`).appendTo(this.container);
-                this.Outline = null;
-                if (this.outlineForm) {
-                    var outline = []
-                    if (this.outlineForm.surveyTypeId) {
-                        if (_cacheModels.includes(that.SchemeModelName)) {
-                            const cachedData = JSON.parse(sessionStorage.getItem(`${that.SchemeModelName}_${that.id}`));
-                            if (cachedData == null) {
-                                
-                                $.ajax({
-                                    url: `api/OutlineDynamic/GetFKMany?fkId=${this.outlineForm.surveyTypeId}&fkField=SurveyTypeId`,
-                                    type: 'GET',
-                                    async: false,
-                                    success: function (response) {
-                                        outline.concat(response);
-                                    },
-                                    error: function (exception) {
-                                    }
-                                });
-                                sessionStorage.setItem(`${that.SchemeModelName}_${that.id}`, JSON.stringify(outline));
+          
+                     this.toolbarInstance = that.allowFormActionButton ? [
+
+                    {
+                        itemType: "group",
+                            cssClass: "action-group dExFormToolBar",
+                        colCount: 3,
+                        items: [
+
+
+                    {
+                        itemType: "button",
+                        horizontalAlignment: "right",
+                        buttonOptions: {
+                            text: "Save",
+                            icon: "save",
+                            type: "success",
+                            stylingMode: "contained",
+                            disabled: this.isReadonlyAllEditors,
+                            elementAttr: { role: 'SaveBtn', id: `btnSave_${that.ModelName}` },
+                            onClick() {
+                                that.doSaveData();
                             }
-                            outline = JSON.parse(sessionStorage.getItem(`${that.SchemeModelName}_${that.id}`));
                         }
-                        else {
-                          
-
-                            $.ajax({
-                                url: `api/OutlineDynamic/GetFKMany?fkId=${this.outlineForm.surveyTypeId}&fkField=SurveyTypeId`,
-                                type: 'GET',
-                                async: false,
-                                success: function (response) {
-                                    outline.concat(response);
-                                },
-                                error: function (exception) {
-                                }
-                            });
+                    },
+                    {
+                        itemType: "button",
+                        horizontalAlignment: "right",
+                        buttonOptions: {
+                            text: "Close",
+                            icon: "close",
+                            type: "error",
+                            stylingMode: "contained",
+                            disabled: this.isReadonlyAllEditors,
+                            elementAttr: { role: 'CloseBtn', id: `btnClose_${that.ModelName}` },
+                            onClick() {
+                                that.closeForm();
+                            }
                         }
                     }
-                    else {
-                        //console.log(`${this.ModelName} is missing Survey Type`);
+                    , {
+                        itemType: "button",
+                        horizontalAlignment: "right",
+                        buttonOptions: {
+                            text: "Refresh",
+                            icon: "refresh",
+                            type: "default",
+                            stylingMode: "contained",
+                            disabled: this.isReadonlyAllEditors,
+                            elementAttr: { role: 'RefreshBtn', id: `btnRefresh_${that.ModelName}` },
+                            onClick() {
+                                that.refreshForm();
+                            }
+                        }
+                            }
+                        ]
                     }
-                    this.Outline = outline;
-                }
+                ]: [];
 
 
-                var itemsConfig = this.buildFormItem(); //should not do the same time.
+                var itemsConfig = [] //should not do the same time.
+                itemsConfig.push(...this.toolbarInstance);
+                    itemsConfig.push(...this.getFormItems()); //should not do the same time.
                 formElement.addClass("fade-slide-up");
                 var option = {
                     dataSource: makeBasicDataSource(that, true),
                     colCount: this.colCount,
-                    items: this.getFormItems(),
+                        items: itemsConfig,
                     height: "inherit",
                     elementAttr: {
                         class: "dExForm",
@@ -1137,26 +1142,26 @@ var ClientForm = class ClientForm extends MForm {
                             //    changedFields[e.dataField] = stringToUtcDate(e.value);
                             //}
                             changedFields[e.dataField] = e.value;
-                            if (that.fieldByOutlineGroup.length > 0) {
-                                var outlineObject = that.fieldByOutlineGroup.find(f => f.dataField == e.dataField);
-                                //changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance[0];
-                                changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance;
-                            }
-                            if (that.dynamicOutline) {
-                                var outlineObject = that.dynamicOutline.find(f => f.dataField == e.dataField);
-                                if (outlineObject)
-                                    changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance;
-                                else if (currentItem.outlineObject)
-                                    changedFields[e.dataField + "_outlineId"] = currentItem.outlineObject;
-                            }
-                            else if (currentItem) {
-                                if (currentItem.outlineObject)
-                                    changedFields[e.dataField + "_outlineId"] = currentItem.outlineObject;
-                            }
+                            // if (that.fieldByOutlineGroup.length > 0) {
+                            //     var outlineObject = that.fieldByOutlineGroup.find(f => f.dataField == e.dataField);
+                            //     //changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance[0];
+                            //     changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance;
+                            // }
+                            // if (that.dynamicOutline) {
+                            //     var outlineObject = that.dynamicOutline.find(f => f.dataField == e.dataField);
+                            //     if (outlineObject)
+                            //         changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance;
+                            //     else if (currentItem.outlineObject)
+                            //         changedFields[e.dataField + "_outlineId"] = currentItem.outlineObject;
+                            // }
+                            // else if (currentItem) {
+                            //     if (currentItem.outlineObject)
+                            //         changedFields[e.dataField + "_outlineId"] = currentItem.outlineObject;
+                            // }
                         } else {
                             delete changedFields[e.dataField];
                         }
-                        markAccordionAsChanged(`accordion_${that.refKey}_${e.dataField}`);
+                        // markAccordionAsChanged(`accordion_${that.refKey}_${e.dataField}`);
                         // Cập nhật lại changedFields trong dxForm
                         e.component.option("changedFields", changedFields);
                     }.bind(this))
@@ -1745,7 +1750,7 @@ var WorkflowDefinitionForm = class WorkflowDefinitionForm extends MForm {
        callApi(apiMethod, dataInput, isClose) {
            try {
                var that = this;
-               var efName = this.ModelName;
+              
 
                var thatOnScheme = { ...that };
 
@@ -1815,9 +1820,6 @@ var WorkflowDefinitionForm = class WorkflowDefinitionForm extends MForm {
                    onSuccess(data);
 
 
-                   if (isClose) {
-                       that.closeForm(efName);
-                   }
 
                };
 

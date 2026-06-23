@@ -4599,4 +4599,31 @@ textarea {
     display: flex;
     justify-content: center;
     align-items: flex-start;
-} 
+}
+.action-group {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px 0;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+
+    .action-group .dx-button {
+        margin-left: 8px;
+    }
+
+.action-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px !important;
+    padding: 5px 0;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+
+    .action-group .dx-button {
+        display: inline-flex;
+        margin-left: 8px;
+    }

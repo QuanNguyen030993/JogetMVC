@@ -13,7 +13,6 @@ namespace ERPCore.Models.Migration.Business.MasterData
         
         public long? SourceOfBusinessId { get; set; }
         public EnumData? SourceOfBusinessEnum { get; set; } 
-        public string SourceOfBusiness { get; set; } = "";
         public long? BusinessOccupationId { get; set; }
         public EnumData? BusinessOccupationEnum { get; set; }
         public string ClientCode { get; set; } = "";

@@ -392,25 +392,48 @@
         $tabs.append($divContentWrapper);
         $tabs.tabs("refresh");
     }
+    //deactivate function 20260623
+    // var removeTab = function (activeId) {
+    //     try {
+    //         var li = $("#tablist > ul").find("[tabindex = '0']");
+    //         var panelId = li.remove().attr("aria-controls");
+    //         $("#" + panelId).remove();
 
-    var removeTab = function (activeId) {
-        try {
-            var li = $("#tablist > ul").find("[tabindex = '0']");
-            var panelId = li.remove().attr("aria-controls");
-            $("#" + panelId).remove();
 
 
+    //         var tabIndex = ($("#" + activeId).index()) - 1;
+    //         if (tabIndex >= 0) {
+    //             $("#tablist").tabs("option", "active", tabIndex);
+    //         }
+    //             $("#tablist").tabs("refresh");
+    //     } catch (err) {
+    //         appErrorHandling('Library error: call removeTab was failed.', err);
+    //         return;
+    //     }
+    // };
 
-            var tabIndex = ($("#" + activeId).index()) - 1;
-            if (tabIndex >= 0) {
-                $("#tablist").tabs("option", "active", tabIndex);
-            }
-                $("#tablist").tabs("refresh");
-        } catch (err) {
-            appErrorHandling('Library error: call removeTab was failed.', err);
-            return;
-        }
-    };
+    var nativeRemoveTabV2 = function(formId){
+
+        var $tabDivId = $(`li#${formId}_li_tab`);
+                                                $tabDivId.animate({
+                                                    width: '0px',
+                                                    opacity: '0'
+                                                }, 220);
+                                                setTimeout(function () {
+                                                    var $li = $tabDivId.closest("li");
+                                                    var panelId = $li.attr("aria-controls");
+                                                    $li.remove();
+
+                                                    if (panelId) {
+                                                        $("#" + panelId).remove();
+                                                        $(`#${panelId}_content_wrapper`).remove();
+                                                        document.body.classList.remove("hasRightPanel");
+                                                        $("#btnCloseRightComment").click();
+                                                    }
+                                                    $("#tablist").tabs("refresh");
+                                                }, 150);
+                                                };
+
 
     var nativeRemoveTab = function($tabDivId){
         $tabDivId.animate({
