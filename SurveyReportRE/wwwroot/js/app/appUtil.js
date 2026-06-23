@@ -3571,10 +3571,7 @@ function makeTheClientLocationGrid(instanceItems, dropdownControl, instanceProps
             const $radioHost = ctx.result.topPanel.find(".branch-radio-host");
 
             $radioHost.dxRadioGroup({
-                dataSource: [
-                    { id: 20, key: "Ha Noi" },
-                    { id: 10, key: "Ho Chi Minh" }
-                ],
+                dataSource: _enums.BranchOffice,
                 valueExpr: "id",
                 displayExpr: "key",
                 layout: "horizontal",

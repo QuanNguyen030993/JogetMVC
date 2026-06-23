@@ -677,8 +677,8 @@ var MGridOption = class MGridOption {
             }
         });
         if (this.GridConfig)
-            if (this.GridConfig.toolbarItemsConfig) {
-                var gridToolBarConfig = JSON.parse(this.GridConfig.toolbarItemsConfig);
+            if (this.GridConfig.sysTableConfig.toolbarItemsConfig) {
+                var gridToolBarConfig = tryParseJSON((this.GridConfig.sysTableConfig.toolbarItemsConfig),"toolbarItemsConfig Problem");
                 var toolbarItems = e.toolbarOptions.items;
                 $.each(toolbarItems, function (_, item) {
                     var configItem = gridToolBarConfig.find(function (config) {

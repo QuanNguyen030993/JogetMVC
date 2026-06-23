@@ -245,7 +245,6 @@
 
 
         doSaveData(isClose) {
-
             try {
 
                 let that = this;
@@ -308,6 +307,11 @@
                                 Number(value)
 
                         };
+                        if (row.id == 0)
+                             ds.insert(
+                                data
+                            );
+                        else 
                         ds.update(
                             row.id,
                             data
@@ -532,7 +536,7 @@ var ClientForm = class ClientForm extends MForm {
         super(id, childGridConfig, formConfig, mFormConfig)
     }
             getFormItems() {
-
+                var that = this;
         return [
 
             // ================= Client =================
@@ -618,10 +622,7 @@ var ClientForm = class ClientForm extends MForm {
                                             .dxTextArea("instance")
                                             .option("value");
 
-                                    const jsonValue = JSON.stringify({
-                                        Viet: viet,
-                                        Eng: eng
-                                    });
+                                  
 
                                     var passingObject = {
                                     };
@@ -629,6 +630,17 @@ var ClientForm = class ClientForm extends MForm {
                                         Viet: viet,
                                         Eng: eng
                                     });
+                                                var changedFields = this.option("changedFields");
+                                            var formData = this.option("formData");
+                                             changedFields["clientName"] = JSON.stringify({
+                                                Viet: viet,
+                                                Eng: eng
+                                            });
+                                             formData["clientName"] = changedFields["clientName"]
+                                            this.option("changedFields", changedFields);
+                                                    this.option("formData", formData);
+
+                                         if (formItems.id)
                                     store.update(formItems.id, passingObject)
                                         .done(function () {
                                             DevExpress.ui.notify("Saved successfully", "success", 2000);
@@ -878,17 +890,25 @@ var ClientForm = class ClientForm extends MForm {
                                         .dxTextArea("instance")
                                         .option("value");
 
-                                const jsonValue = JSON.stringify({
-                                    Viet: viet,
-                                    Eng: eng
-                                });
-
+                           
                                     var passingObject = {
                                     };
                                 passingObject.businessAddress = JSON.stringify({
                                     Viet: viet,
                                     Eng: eng
                                 });
+
+                                    var changedFields = this.option("changedFields");
+                                        var formData = this.option("formData");
+                                         changedFields["businessAddress"] = JSON.stringify({
+                                            Viet: viet,
+                                            Eng: eng
+                                        });
+                                                formData["businessAddress"] = changedFields["businessAddress"]
+                                        this.option("changedFields", changedFields);
+                                                this.option("formData", formData);
+
+                                    if (formItems.id)
                                     store.update(formItems.id, passingObject)
                                             .done(function () {
                                                 DevExpress.ui.notify("Saved successfully", "success", 2000);
@@ -1137,6 +1157,7 @@ var ClientForm = class ClientForm extends MForm {
                         if (that.isBindingData) {
                             return;
                         }
+            
                         if (e.value !== e.previousValue) {
                             //if (e.dataField.includes("date")) {
                             //    changedFields[e.dataField] = stringToUtcDate(e.value);

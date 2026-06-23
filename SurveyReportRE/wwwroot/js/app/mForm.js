@@ -115,17 +115,19 @@
         var that = this;
         var newRowdata = {};
 
-        var listFieldHasDefaultValue = that.fieldConfigs.filter(
-            value => value.defaultValue
-        );
+        if (that.fieldConfigs) {
+            var listFieldHasDefaultValue = that.fieldConfigs.filter(
+                value => value.defaultValue
+            );
 
-        $(listFieldHasDefaultValue).each(function (i, field) {
-            newRowdata[`${field.dataField}`] = Function(field.defaultValue);
-        });
-
+            $(listFieldHasDefaultValue).each(function (i, field) {
+                newRowdata[`${field.dataField}`] = Function(field.defaultValue);
+            });
+        }
         try {
             if (that.formInstance)
                 that.formInstance.option("formData", newRowdata);
+            this.isBindingData = false;
         }
         catch {
 
@@ -417,7 +419,7 @@
                         disabled: this.isReadonlyAllEditors,
                         elementAttr: { role: 'SaveBtn', id: `btnSave_${that.ModelName}` },
                         onClick() {
-                            that.doSaveData();
+                            that.doSaveData(that.id ? false : true);
                         }
                     }
                 },
@@ -479,7 +481,7 @@
                 onContentReady: tryExecute(this.onContentReady.bind(this)),
                 renderTabFormElement: tryExecute(this.renderTabFormElement.bind(this)),
                 groupingLayout: tryExecute(this.groupingLayout.bind(this)),
-                onFieldDataChanged: tryExecute(function (e) {
+                onFieldDataChanged: tryExecute(function (e) {//form
                     var that = this;
                     const changedFields = e.component.option("changedFields");
                     const currentItem = e.component.itemOption(e.dataField);
@@ -558,8 +560,15 @@
                 var data = new Object();;
                 if (id == null || id == undefined) {
                     delete formData[that.pk];
+                    var store = that.formInstance.option("dataSource");
                     data.values = JSON.stringify(appReplaceDoubleQuote(formData));
-                    that.callApi('POST', data, isClose);
+                    store.insert(formData).done(function () {
+                        DevExpress.ui.notify("Save success", "success", 2000);
+                    })
+                        .fail(function (error) {
+                            DevExpress.ui.notify("Save fail!", "error", 2000);
+                        });
+                    //that.callApi('POST', data, isClose);
                 } else {
                     data.key = formData[that.pk];
                     data.values = JSON.stringify(appReplaceDoubleQuote(formData));

@@ -308,7 +308,6 @@ Note:
 
         // Global function for SignalR to reload quotation components
         window.reloadQuotationComponents = async function() {
-            debugger
             loadQuotePage(true).then(async () => {
             if (state.selectedId) {
                 await loadSelectedWorkflow();
