@@ -2610,17 +2610,7 @@ function addBreadcrumb(action) {
     }
 }
 
-function parseDateTime(dateStr) {
-    const parts = dateStr.split(/[- :T]/);
-    return new Date(
-        parseInt(parts[0]),      // year
-        parseInt(parts[1]) - 1,  // month (0-based)
-        parseInt(parts[2]),      // day
-        parseInt(parts[3]),      // hour
-        parseInt(parts[4]),      // minute
-        parseInt(parts[5])     // second
-    );
-}
+
 
 function UserGuideExceptionHandle(xhr) {
     var typeError = xhr.getResponseHeader("X-Error-Type");
