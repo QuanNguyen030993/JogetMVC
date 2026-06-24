@@ -1108,7 +1108,7 @@
         const $el = $('li.active').prevObject.find('[aria-controls]');
 
         if (!$el.length) return;
-
+        var count = $('[aria-controls]');
         // reset trước để tránh bị dính nhiều element
         $('[aria-controls]').css({
             position: '',
@@ -1117,15 +1117,15 @@
             zIndex: ''
         });
 
-        if ($(window).scrollTop() > height) {
-            $el.css({
-                position: "fixed",
-                zIndex: "99999",
-                left: "43%",
-                transition: "opacity 0.5s ease",
-                opacity: 1
-            });
-        }
+        // if ($(window).scrollTop() > height) {  // selectbox collapse problem
+        //     $el.css({
+        //         position: "fixed",
+        //         zIndex: "99999",
+        //         left: "43%",
+        //         transition: "opacity 0.5s ease",
+        //         opacity: 1
+        //     });
+        // }
 
         // if ((responseData.surveyData.progressvalue == 100) && ($el.css("position") === "fixed")) {
         //     setTimeout(() => {

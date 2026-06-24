@@ -5,7 +5,8 @@
 }
 <script>
     $(function () {
-        new MGrid(null, $(`#dataGrid_@ClientModel.ModelName`), new ClientGridOption('@ClientModel.ModelName'), null);
+        var grid = new MGrid(null, $(`#dataGrid_@ClientModel.ModelName`), new ClientGridOption('@ClientModel.ModelName'), null);
+
     });
 </script>
 <div id="dataGrid_@ClientModel.ModelName"></div>

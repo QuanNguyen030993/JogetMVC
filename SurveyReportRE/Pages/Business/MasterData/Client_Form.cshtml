@@ -36,6 +36,7 @@
         });
         var mFormOption = new MFormOption(_formConfig, _childGridConfig);
         new ClientForm(_id, _childGridConfig, _formConfig, mFormOption);
+        viewFieldAdjust("form_@(Client_FormModel.ModelName)_@(Convert.ToInt32(ViewData["Id"]))");
     });
 </script>
 <div id="form_@(Client_FormModel.ModelName)_@(Convert.ToInt32(ViewData["Id"]))"></div>

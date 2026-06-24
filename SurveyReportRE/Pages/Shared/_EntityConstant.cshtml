@@ -1,7 +1,7 @@
 ﻿
 <script>
       var _entities = {
-      line: [], product: []
+      line: [], product: [], country: []
     };
 
     $.each(_entities, function(index, item) {
@@ -12,12 +12,14 @@
                     objectParsing = res.map(m => {
                         var obj  = new Object();
                         obj.id = m.id;
-                        obj.code =  m.hasOwnProperty("code") ||  m.hasOwnProperty(index+"Code") ?  m[index+"Code"] : "";
-                        obj.value = m.hasOwnProperty("name") ||  m.hasOwnProperty(index+"Name")  ? m[index+"Name"] : "";
+                        obj.code =  m.hasOwnProperty("code") ?  m["code"] : (m.hasOwnProperty(index+"Code")  ?  m[index+"Code"] : "");
+                        obj.value =   m.hasOwnProperty("name") ?  m["name"] :  (m.hasOwnProperty(index+"Name")  ? m[index+"Name"] : "");
                         if (index === "product")
                         obj.lineId = m.lineId;
                         return obj;
                     });
+                    console.log( objectParsing);
+
                     _entities[index] = objectParsing;
                 }
         });

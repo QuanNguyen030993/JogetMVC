@@ -1034,9 +1034,7 @@
             super.onCustomizeColumns(columns);
             super.hyperLinkCode(columns, "Business/MasterData", "Client", "id", "clientName");
             $.each(columns, function (colIndex, col)  { 
-
-                if (col.dataField === "businessAddress" || col.dataField === "clientName") {
-
+                if (col.dataField === "businessAddress" || col.dataField === "clientName" || col.dataField == "businessOccupation") {
                         col.cellTemplate = function (container, options) {
 
                             let data = options.value;
@@ -1087,13 +1085,17 @@
                         };
 
                     }
+
+                if (col.dataField == "startDate") {
+                    col.sortOrder = "desc";
+                }
             });
         }
         onRowClick(e) {
-            callElementView(`/Business/MasterData/Client_Form/${e.data.id}`, `form_Client_Form_${e.data.id}`, `Client ${e.data.clientId}`);
+            callElementView(`/Business/MasterData/Client_Form/${e.data.id}`, `form_Client_Form_${e.data.id}`, `Client ${e.data.clientCode}`);
         }
         onToolbarPreparing(e) {
-            super.onToolbarPreparing(e);
+            super.onToolbarPreparing(e);    
             var that = this;
             e.toolbarOptions.items.unshift({
                 location: "after",

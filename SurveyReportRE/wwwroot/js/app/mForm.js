@@ -114,7 +114,8 @@
     initDataNewForm() {
         var that = this;
         var newRowdata = {};
-
+        
+        //default value sync on formData
         if (that.fieldConfigs) {
             var listFieldHasDefaultValue = that.fieldConfigs.filter(
                 value => value.defaultValue
@@ -124,10 +125,25 @@
                 newRowdata[`${field.dataField}`] = Function(field.defaultValue);
             });
         }
+        
+
         try {
-            if (that.formInstance)
-                that.formInstance.option("formData", newRowdata);
-            this.isBindingData = false;
+            setTimeout(() => {
+                if (that.formInstance) {
+                    var formItemFieldChange = that.formInstance.option("changedFields") || {};
+
+                    // 👉 merge vào newRowdata
+                    Object.keys(formItemFieldChange).forEach(key => {
+                        newRowdata[key] = formItemFieldChange[key];
+                    });
+
+                    that.formInstance.option("changedFields", {});
+                    that.formInstance.option("formData", newRowdata);
+                }
+
+                this.isBindingData = false;
+
+            }, 200);
         }
         catch {
 
@@ -560,10 +576,12 @@
                 var data = new Object();;
                 if (id == null || id == undefined) {
                     delete formData[that.pk];
+                    debugger
                     var store = that.formInstance.option("dataSource");
                     data.values = JSON.stringify(appReplaceDoubleQuote(formData));
                     store.insert(formData).done(function () {
                         DevExpress.ui.notify("Save success", "success", 2000);
+                        that.closeForm(isClose);
                     })
                         .fail(function (error) {
                             DevExpress.ui.notify("Save fail!", "error", 2000);
