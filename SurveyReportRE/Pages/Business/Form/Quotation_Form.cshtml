@@ -26,10 +26,11 @@ Note:
     var PIC_JSON = `{}`;
     var formModuleKeyQt = "qt";
     var pICs = [];
-    if ($('[data-toggle="push-menu"]').hasClass("sidebar-collapse")) {
-        $('[data-toggle="push-menu"]').click();
-        isToggleMenu = true;
-    }
+    var workflowStatus = "";
+    // if ($('[data-toggle="push-menu"]').hasClass("sidebar-collapse")) {
+    //     $('[data-toggle="push-menu"]').click();
+    //     isToggleMenu = true;
+    // }
 
     var page = window.QuotationPage;
     var state = page.state;
@@ -46,7 +47,7 @@ Note:
     state.selectedId = null;
     state.selectedGuid = null;
     state.selectedCodeNo = null;
-    state.selectedAttachmentId = null;
+    var selectedAttachmentId = null;
     var stageDept = null;
     
     state.quotePaging = {
@@ -106,6 +107,7 @@ Note:
                 const $co = $(this).find(".dept-callout");
                 if (!$co.length) return;
                 const pic = picMap[dept] || "-";
+                if (stageDept)
                 $co.find(".co-text").text(pic);
                 $co.css({ color: "rgba(17,24,39,.85)" });
             });
@@ -123,7 +125,7 @@ Note:
             params.set("take", state.quotePaging.take);
 
             if (searchText) params.set("searchText", searchText);
-            if (filter && filter !== "all") params.set("quotationStatus", filter);
+            if (filter && filter !== "all") params.set("workflowStatus", filter);
             params.set("key", @Convert.ToInt32(ViewData["Id"]));
             return `/api/Quotation/GetAll?${params.toString()}`;
         }
@@ -138,7 +140,7 @@ Note:
 
             state.selectedId =  q.id ?? null;
             state.selectedGuid = q.guid ?? null;
-            state.selectedAttachmentId = q.documentId ?? null;
+            selectedAttachmentId = q.documentId ?? null;
             state.selectedCodeNo = q.quotationCode ?? null;
             stageDept = q.stageDept ?? null;
             const params = new URLSearchParams();
@@ -198,14 +200,7 @@ Note:
                                         var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                                          var tatObject = new Object();
 
-                                         try 
-                                         {
-                                            tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Problem");
-                                         }
-                                         catch 
-                                         {
-                                             console.log("TAT problem");
-                                         }
+                                            tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Button Problem");
                                          try {
 
                                          if (findRouteReturn && tatObject)
@@ -214,37 +209,37 @@ Note:
                                             text: findRouteReturn ? findRouteReturn.displayStatus : "", icon: "undo", type: "danger", onClick:
                                                 function (e) {
                                                 var content = remarkBoxs[item].controlRemark.instance.option("value");
-                                             
+                                                 
                                                     formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-                                                    formItems.comment = content;
+                                                    formItems.comment = content || "";
                                                     returnToStep(`${formModuleKeyQt}`, state.nextStep, findRouteReturn, formItems);
                                                 }
                                         });
                                          }
-                                         catch 
-                                         {
-                                             console.log("Return problem");
-                                         }
+                                         catch  (exception)
+                                        {
+                                           console.log("Submit problem",exception);
+                                        }
                                          try
                                          {
                                               if (findRoute)
-                                          $(`#${submitButtonId}`).dxButton({
+                                            $(`#${submitButtonId}`).dxButton({
                                                disabled: tatObject[item].AcceptDate ? false : true,
                                             text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
                                                 function (e) {
                                                 var content = remarkBoxs[item].controlRemark.instance.option("value");
                                                     formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-                                                    formItems.comment = content;
+                                                    formItems.comment = content || "";
                                                     submitNextStep(`${formModuleKeyQt}`, state.nextStep, findRoute, formItems);
                                                 }
                                         });
                                          }
-                                       catch 
+                                       catch (exception)
                                        {
-                                          console.log("Submit problem");
+                                          console.log("Submit problem",exception);
                                        }
                                       
-                                   }, 100);
+                                   }, _delayRenderSubmitButton);
                             });
                         });
                 });
@@ -291,7 +286,6 @@ Note:
                     state.quotePaging.firstLoadDone = true;
                     syncSelectedState(state.quotes[0]);
                     await loadSelectedWorkflow();
-
                     renderDetail();
                 }
             } catch (err) {
@@ -307,14 +301,6 @@ Note:
 
         function reloadState() {
             $.each(qtDeptModuleCode, function (itemIndex, item) {
-                var items = new Object();
-                items.moduleName = "@prefix";
-                items.sectionName = item;
-                items.id = @ViewData["Id"];
-                items.guid = "@ViewData["Guid"]";
-                const controlId = `${items.moduleName}_${items.sectionName}_${items.id}`;
-                items.controlId = controlId;
-                loadDxFileUploaderAttachments(item, "Document", items);
                 commentPinModule(formModuleKeyQt, item,  "@ViewData["Guid"]", state.pinNotes,@ViewData["Id"]);
                 commentModule(formModuleKeyQt, item,  "@ViewData["Guid"]", state.comments,@ViewData["Id"]);
             });
@@ -322,12 +308,9 @@ Note:
 
         // Global function for SignalR to reload quotation components
         window.reloadQuotationComponents = async function() {
-            // Reload the quotation list
             loadQuotePage(true).then(async () => {
-            // Reload the selected detail if any
             if (state.selectedId) {
                 await loadSelectedWorkflow();
-                renderDetail();
             }
             // Reload state for attachments and comments
             reloadState();
@@ -359,30 +342,21 @@ Note:
         }
 
 
-        function initializeOverviewShell() {
-              $.each(qtDeptModuleCode, function (itemIndex, item) {
-                deptData[item]= { sectionName: item, code: "" };
+     
 
-            });
-            resetOverviewAnimation(formModuleKeyQt);
-            applyNodeHighlights();
-            applySectionFocusHighlight();
-            updateHints();
-        }
-
-        function resetOverviewAnimation(prefix) {
-            const $sections = $(`#${window.QuotationIdManager.overviewScroll(@ViewData["Id"])} section.dept-section`);
-            $sections.removeClass("visible");
-            $sections.each(function () {
-                const $section = $(this);
-                $section.find(".dept-header, .dept-upperbody, .dept-body, .dept-lowerbody, .dx-fileuploader, .attachment, .att-preview, .att-list, .att-item")
-                    .addClass("animate-step")
-                    .removeClass("visible");
-                // $(`#${prefix}-treeStack .dept-node[data-key='${$section.attr('id').replace(prefix + '-sec', '')}'] .dept-callout`)
-                //     .addClass("animate-step")
-                //     .removeClass("visible");
-            });
-        }
+        // function resetOverviewAnimation(prefix) {
+        //     const $sections = $(`#${window.QuotationIdManager.overviewScroll(@ViewData["Id"])} section.dept-section`);
+        //     $sections.removeClass("visible");
+        //     $sections.each(function () {
+        //         const $section = $(this);
+        //         $section.find(".dept-header, .dept-upperbody, .dept-body, .dept-lowerbody, .dx-fileuploader, .attachment, .att-preview, .att-list, .att-item")
+        //             .addClass("animate-step")
+        //             .removeClass("visible");
+        //         // $(`#${prefix}-treeStack .dept-node[data-key='${$section.attr('id').replace(prefix + '-sec', '')}'] .dept-callout`)
+        //         //     .addClass("animate-step")
+        //         //     .removeClass("visible");
+        //     });
+        // }
 
         function animateOverviewSections(prefix) {
             const sequence = qtDeptModuleCode;
@@ -411,6 +385,7 @@ Note:
                     }, 360);
                 }, idx * 180);
             });
+            // resetOverviewAnimation(prefix);
         }
 
         function applyEditLock() {
@@ -426,19 +401,21 @@ Note:
                  $.each(qtDeptModuleCode, function (itemIndex, item) {
                        var saveButtonId = window.QuotationIdManager.btnSave(item,@ViewData["Id"]);
                     $(`#${saveButtonId}`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roleApply[item]);
+                    var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
+                    $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
                 });
                
             }, 1);
 
-            setTimeout(() => {
-                  $.each(qtDeptModuleCode, function (itemIndex, item) {
-                var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
-                 $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
+            // setTimeout(() => {
+            //       $.each(qtDeptModuleCode, function (itemIndex, item) {
+            //         var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
+            //      $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
 
-            });
+            // });
                 
-            }, 1);
-
+            // }, 1);
+                
             $(`#${formModuleKeyQt}-roleSelect`).dxSelectBox({
                 items: QtRoles,
                 value: state.currentUserRole,
@@ -517,6 +494,9 @@ Note:
 
         function applyNodeHighlights() {
             $(".dept-node").removeClass("status focus");
+            // if (stageDept == "")
+            //    $(`.dept-node[data-key='${workflowStatus}']`).addClass("status")
+            // else 
             $(`.dept-node[data-key='${stageDept}']`).addClass("status");
             $(`.dept-node[data-key='${focusDept}']`).addClass("focus");
         }
@@ -632,27 +612,28 @@ Note:
                     .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
             }
 
-            function renderComments(items) {
-                if (!Array.isArray(items) || items.length === 0) {
-                    return `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No audit logs</div>`;
-                }
-                return items.map((c) => `
-                                <div class="ct-item">
-                                    <div class="ct-user">${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}</div>
-                                    <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
-                                    <div class="ct-text">${c.commentText}</div>
-                                </div>
-                            `).join("");
-            }
+            // function renderComments(items) {
+            //     if (!Array.isArray(items) || items.length === 0) {
+            //         return `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No audit logs</div>`;
+            //     }
+            //     return items.map((c) => `
+            //                     <div class="ct-item">
+            //                         <div class="ct-user">${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}</div>
+            //                         <div class="ct-time">${fmtTimeLocal(c.commentTime || "")}</div>
+            //                         <div class="ct-text">${c.commentText}</div>
+            //                     </div>
+            //                 `).join("");
+            //                         // <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
+            // }
 
             const loadComments = debounce(function (quoteNo, quoteId) {
                 document.documentElement.style.setProperty("--rightdock-width", "20%");
                 $("#rightCommentSub").text(`Audit log - ${quoteNo}` || "-");
                 $("#rightCommentList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
-                // const q = `SELECT * FROM QuotationCommentLog WHERE QuotationId = ${quoteId}`;
+                // const q = `SELECT * FROM CommentLog WHERE QuotationId = ${quoteId}`;
                 const q = `OnSystem`;
                 $.ajax({
-                    url: `/api/QuotationCommentLog/ExecuteCustomQuery?refField=QuotationId&refKey=${quoteId}`,
+                    url: `/api/CommentLog/ExecuteCustomQuery?refField=QuotationId&refKey=${quoteId}`,
                     method: "POST",
                     async: true,
                     contentType: "application/json",
@@ -677,12 +658,14 @@ Note:
             }, 180);
 
             const previewQuotation = debounce(function (quoteNo, quoteId, attachmentId) {
+                if (attachmentId)
+                {
                 document.documentElement.style.setProperty("--rightdock-width", "70%");
                 $("#rightCommentSub").text(`Preview quotation - ${quoteNo}`);
                 $("<iframe>")
                     .attr("id", `${formModuleKeyQt}-pdfViewer_${quoteId}`)
                     .attr("src", "")
-                    .css({ width: "100%", height: "600px", border: "1px solid #ccc" })
+                    .css({ width: "100%", height: "800px", border: "1px solid #ccc" })
                     .appendTo($("#rightCommentList"));
 
                 $.ajax({
@@ -697,14 +680,128 @@ Note:
                         console.error("Error loading PDF:", error);
                     }
                 });
+                }
+                else {
+                    $(`<div>No preview of this quotation!</div>`).appendTo($("#rightCommentList"));
+                }
             }, 180);
+
+            const attachmentLogLoad = debounce(function (quoteNo, quoteId, attachmentId) {
+                document.documentElement.style.setProperty("--rightdock-width", "70%");
+                $("#rightCommentSub").text(`Attachment log - ${quoteNo}`);
+                var guid = "@(ViewData["Guid"])";
+                
+
+
+                 $.ajax({
+                    url: `/api/Document/GetByKey?recordGuid=${guid}`,
+                    method: "GET",
+                        success: function (data) {
+                             const mappedData = data.map(x => {
+                        let dept = "";
+                        try {
+                            if (x.attributes) {
+                                const attr = tryParseJSON(x.attributes, "Attribute Problem");
+                                dept = attr.Department || "";
+                            }
+                        } catch (e) {
+                            console.warn("Invalid attributes JSON", x.attributes);
+                        }
+
+                        return {
+                            ...x,
+                            department: dept
+                        };
+                    });
+                    const $preview = $("#rightDockItem");
+
+
+                    // tạo container grid
+                    const $grid = $("<div>").appendTo($preview);
+
+                    $grid.dxDataGrid({
+                        dataSource: mappedData,
+                        keyExpr: "id",
+                    
+                        //hoặc
+
+                        height: "95%",
+                        scrolling: {
+                            mode: "infinity" // hoặc "virtual"
+                        },
+
+
+                        filterBuilder: { fields: this.columns },
+                        filterBuilderPopup: { position: { of: window, at: "top", my: "top", offset: { y: 10 } }, },
+                        errorRowEnabled: true,
+                        hoverStateEnabled: true,
+                        allowColumnReordering: true,
+                        allowColumnResizing: true,
+                        columnResizingMode: 'widget',
+                        columnHidingEnabled: false,
+                        columnAutoWidth: true,
+                        showColumnLines: true,
+                        // columnChooser: { allowSearch: true, enabled: true },
+                        // columnFixing: { enabled: true },
+                        sorting: { mode: 'multiple' },
+                        showBorders: true,
+                         filterRow: { visible: true },
+                         loadPanel: { showPane: false, text: null },
+                        filterPanel: { visible: true },
+                        groupPanel: { visible: true, allowColumnDragging: true, emptyPanelText: "" },
+                        headerFilter: { visible: true, allowSearch: true },
+                        sorting: {
+                            mode: "single"
+                        },
+
+                        columns: [
+                            {
+                                dataField: "fileName",
+                                caption: "Attachment",
+                                cellTemplate: function (container, options) {
+                                    const $item = createAttachmentItem(options.data);
+                                    $item.css({
+                                        opacity: 1,
+                                        transform: "none",
+                                        transition: "none"
+                                    });
+                                    $(container).append($item);
+                                }
+
+                            },
+                            {
+                                dataField: "department",
+                                caption: "Department",
+                                width: 150
+                            },,
+                            {
+                                dataField: "author",
+                                caption: "Author",
+                                width: 150
+                            },
+                            {
+                                dataField: "date",
+                                caption: "Date",
+                                dataType: "datetime",
+                                format: "dd/MM/yyyy HH:mm",
+                                sortOrder: "desc" // ✅ SORT TĂNG DẦN
+                            }
+                        ]
+                    });
+                },
+                    error: function () {
+                    }
+                });
+
+
+            }, 180);
+
 
             function openRightCommentPanel() {
                 const $dock = $("#rightCommentDock");
                 commentPanelOpened = true;
                 document.body.classList.add("hasRightPanel");
                 $dock.removeClass("is-closing").addClass("is-open");
-                $("#rightCommentList").empty();
             }
 
             function closeRightCommentPanel() {
@@ -718,17 +815,29 @@ Note:
                 }, 300);
             }
 
+
             function bind() {
                 setTimeout(() => {
                 $("#headerWidgetsPanel").empty();
 
-                $(`<div id="${formModuleKeyQt}-btnToggleReferenceFieldsMini">`).dxButton({
-                    icon: "fas fa-sliders-h",
+                // $(`<div id="${formModuleKeyQt}-btnToggleReferenceFieldsMini">`).dxButton({
+                //     icon: "fas fa-sliders-h",
+                //     type: "normal",
+                //     stylingMode: "contained",
+                //     onClick: () => {
+                //         openRightCommentPanel();
+                //         loadReferenceFields(state.selectedCodeNo, state.selectedId);
+                //     }
+                // }).appendTo($("#headerWidgetsPanel"));
+
+                  $(`<div id="${formModuleKeyQt}-btnAttachmentCommentMini" style="margin-left: 10px">`).dxButton({
+                    icon: "fas fa-paperclip",
                     type: "normal",
                     stylingMode: "contained",
                     onClick: () => {
+                        clearContent();
                         openRightCommentPanel();
-                        loadReferenceFields(state.selectedCodeNo, state.selectedId);
+                        attachmentLogLoad(state.selectedCodeNo, state.selectedId, selectedAttachmentId);
                     }
                 }).appendTo($("#headerWidgetsPanel"));
 
@@ -737,6 +846,7 @@ Note:
                     type: "normal",
                     stylingMode: "contained",
                     onClick: () => {
+                        clearContent();
                         openRightCommentPanel();
                         loadComments(state.selectedCodeNo, state.selectedId);
                     }
@@ -754,12 +864,14 @@ Note:
                 });
 
                 $(`#${window.QuotationIdManager.btnToggleComment(@ViewData["Id"])}`).dxButton({
-                    text: "Audit logs",
+                    text: "Audit log",
                     icon: "comment",
                     type: "normal",
                     stylingMode: "contained",
                     onClick: () => {
+                        clearContent();
                         if (!commentPanelOpened) {
+
                             openRightCommentPanel();
                             loadComments(state.selectedCodeNo, state.selectedId);
                         } else {
@@ -789,9 +901,26 @@ Note:
                     type: "normal",
                     stylingMode: "contained",
                     onClick: () => {
+                        clearContent();
                         if (!commentPanelOpened) {
                             openRightCommentPanel();
-                            previewQuotation(state.selectedCodeNo, state.selectedId, state.selectedAttachmentId);
+                            previewQuotation(state.selectedCodeNo, state.selectedId, selectedAttachmentId);
+                        } else {
+                            closeRightCommentPanel();
+                        }
+                    }
+                });
+
+                $(`#${window.QuotationIdManager.btnAttachmentLog(@ViewData["Id"])}`).dxButton({
+                    text: "Attachment log",
+                    icon: "fas fa-paperclip",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                        clearContent();
+                        if (!commentPanelOpened) {
+                            openRightCommentPanel();
+                            attachmentLogLoad(state.selectedCodeNo, state.selectedId, selectedAttachmentId);
                         } else {
                             closeRightCommentPanel();
                         }
@@ -821,6 +950,7 @@ Note:
                 // });
 
                 $("#btnCloseRightComment").off("click").on("click", function () {
+                    clearContent();
                     closeRightCommentPanel();
                 });
                 },500);
@@ -836,24 +966,20 @@ Note:
 
             $(`#${formModuleKeyQt}-recordNo`).text(q.quotationCode);
 
-            const st = q.quotationStatus ?? q.status;
-            $(`#${window.QuotationIdManager.stageDeptPill(q.id)}`).html(`<span id="@ViewIdHelper.DetailStatus(moduleCode, Convert.ToInt64(ViewData["Id"]))" class="pill">${q.workflowStatus}</span> - ${stageAccount ?? ""}`);
+            workflowStatus = q.workflowStatus ?? q.status;
+            $(`#${window.QuotationIdManager.stageDeptPill(q.id)}`).html(`<span id="@ViewIdHelper.DetailStatus(moduleCode, Convert.ToInt64(ViewData["Id"]))" class="pill">${workflowStatus}</span> - ${stageAccount ?? ""}`);
             $(`#${window.QuotationIdManager.detailStatus(q.id)}`)
-                .text(statusText(st))
-                .attr("class", `statusTag ${statusClass(st)}`);
+                .text(statusText(workflowStatus))
+                .attr("class", `statusTag ${statusClass(workflowStatus)}`);
 
-            // $(`#${formModuleKeyQt}-focusDeptPill`).text(`Focus: ${focusDept}`);
 
-            // deptData.FO = { ...q,   id: q.id, sectionName: "FO", code: q.quotationCode };
-            // deptData.TS = { ...q,   id: q.id, sectionName: "TS", code: q.quotationCode };
-            // deptData.UW = { ...q,   id: q.id, sectionName: "UW", code: q.quotationCode };
-            // deptData.LMKT = { ...q, id: q.id, sectionName: "LMKT", code: q.quotationCode };
-            // deptData.PM = { ...q,   id: q.id, sectionName: "PM", code: q.quotationCode };
+
+
+
             $.each(qtDeptModuleCode, function (itemIndex, item) {
                 // var control = TinyMCEElementMaker(`.htmleditor`, item, @ViewData["Id"], control);
                 // deptData[item] = { ...q, id: q.id, sectionName: item, code: q.quotationCode };
                 // remarkBoxs[item] = { id: q.id, sectionName: item, controlRemark: control };
-
                     deptData[item] = { ...q, id: q.id, sectionName: item, code: q.quotationCode };
                 if (q.stageDept == item)
                 {
@@ -867,16 +993,50 @@ Note:
             });
 
             renderDeptForms();
-            resetOverviewAnimation(formModuleKeyQt);
+            // resetOverviewAnimation(formModuleKeyQt);
             applyNodeHighlights();
             applySectionFocusHighlight();
             updateHints();
             updateSectionUpdatedTime(q);
             initDepartmentAssignees(formModuleKeyQt,deptData, firstRender ? null : 2000);
-            animateOverviewSections(formModuleKeyQt);
+            // animateOverviewSections(formModuleKeyQt);
             scrollToDept(formModuleKeyQt, { id: `${focusDept}`, keyId: "@ViewData["Id"]" } );
             // TinyMCEElementMaker(`.htmleditor`);
 
+
+                var stageDept = q.stageDept;
+                if (workflowStatus === "Quotation confirmed" || workflowStatus === "Quotation refused") {
+
+                    let icon, colorClass, text;
+
+                    if (workflowStatus === "Quotation confirmed") {
+                        icon = "✔";
+                        colorClass = "status-success";
+                        text = "Confirmed";
+                    }  
+                    if (workflowStatus === "Quotation refused") {
+                        icon = "✖";
+                        colorClass = "status-fail";
+                        text = "Refused";
+                    }
+
+                    // Tạo node mới
+                    var newNode = `
+
+                        <div class="${formModuleKeyQt}-dept-tree dept-node status" data-key="${workflowStatus}" data-target="#${formModuleKeyQt}-sec-${text}">
+
+                            <div class="dept-callout animate-step visible" data-pic-for="${text}" style="color: rgba(17, 24, 39, 0.85);">
+                                <span class="co-icon"></span>
+                                <span class="co-text">${workflowStatus}</span>
+                            </div>
+
+                            <div class="dept-circle ${colorClass}">${icon}</div>
+                        </div>
+                    `;
+
+                    $(`#${formModuleKeyQt}-treeStack_@Convert.ToInt32(ViewData["Id"])`).append(newNode);
+
+                }
 
             
         }
@@ -891,36 +1051,38 @@ Note:
         }
 
 
-        $(`#${formModuleKeyQt}-btnClientConfirm`).dxButton({
-            text: "Submit To Policy Issuance",
-            icon: "check",
-            type: "success",
-            onClick: function () {
-                var quotationConvert = state.quotes.find(x => x.id == state.selectedId);
-                if (!quotationConvert) return;
+        // $(`#${formModuleKeyQt}-btnClientConfirm`).dxButton({
+        //     text: "Submit To Policy Issuance",
+        //     icon: "check",
+        //     type: "success",
+        //     onClick: function () {
+        //         var quotationConvert = state.quotes.find(x => x.id == state.selectedId);
+        //         if (!quotationConvert) return;
 
-                var policyIssuance = new Object();
-                policyIssuance = ObjectPopulateKey(quotationConvert, true, false);
-                policyIssuance.RequestDate = new Date();
-                policyIssuance.PIC = {
-                    FO: "",
-                    TS: "",
-                    PM: ""
-                };
+        //         var policyIssuance = new Object();
+        //         policyIssuance = ObjectPopulateKey(quotationConvert, true, false);
+        //         policyIssuance.RequestDate = new Date();
+        //         policyIssuance.PIC = {
+        //             FO: "",
+        //             TS: "",
+        //             PM: ""
+        //         };
 
-                policyIssuance.PIC = JSON.stringify(policyIssuance.PIC);
-                policyIssuance.StageDept = "FO";
-                policyIssuance.PolicyIssuanceStatus = "FO Pending";
-                policyIssuance.WorkflowStatus = "FO Pending";
+        //         policyIssuance.PIC = JSON.stringify(policyIssuance.PIC);
+        //         policyIssuance.StageDept = "FO";
+        //         policyIssuance.PolicyIssuanceStatus = "FO Pending";
+        //         policyIssuance.WorkflowStatus = "FO Pending";
 
-                ajaxPost('api/PolicyIssuance/CreatePolicyIssuance', policyIssuance, {
-                    onSuccess: function () {
-                        DevExpress.ui.notify("Quotation submitted!", "info", 1200);
-                    },
-                    onError: function () { }
-                });
-            }
-        });
+
+
+        //         ajaxPost('api/PolicyIssuance/CreatePolicyIssuance', policyIssuance, {
+        //             onSuccess: function () {
+        //                 DevExpress.ui.notify("Quotation submitted!", "info", 1200);
+        //             },
+        //             onError: function () { }
+        //         });
+        //     }
+        // });
 
         $("#branchOverlay .backdrop").on("click", function () {
             $("#branchOverlay").hide();
@@ -928,16 +1090,21 @@ Note:
         });
 
         HoverAjax.bind();
+
+        //SkeletionUI
+
+
         bindSectionHeaderToggle();
-        // bindInfiniteScroll();
         setupDeptTree();
+        animateOverviewSections(formModuleKeyQt); //DevExtreme control layout
+
+        // bindInfiniteScroll();
         // initMainPaneSplitter();
 
         setTimeout(layoutTreeLine, 0);
         window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
 
-        initializeOverviewShell();
-        
+
         loadQuotePage(true).then(() => {
             applyNodeHighlights();
             applySectionFocusHighlight();
@@ -960,33 +1127,16 @@ Note:
 <body>
     <div class="title">
         <partial name="_OverviewPane" model='new OverviewPanePartialModel
-{
-    Prefix = prefix,
-    ModuleCode = moduleCode,
-    Title = title,
-    Id = ViewData["Id"]?.ToString(),
-    Guid = ViewData["guid"]?.ToString()
-}' />
-@*         @Html.Partial("_OverviewPane", new OverviewPanePartialModel
-   {
-       Prefix = prefix,
-       ModuleCode = moduleCode,
-       Title = title,
-       Id = ViewData["Id"].ToString(),
-       Guid = ViewData["guid"].ToString()
-   }), *@
+        {
+            Prefix = prefix,
+            ModuleCode = moduleCode,
+            Title = title,
+            Id = ViewData["Id"]?.ToString(),
+            Guid = ViewData["guid"]?.ToString()
+        }' />
+
     </div>
 
-    @*  <div class="actionBar">
-        <div class="actionLeft">
-            <span class="pill">Record: <b id="qt-recordNo">Qu-10030</b></span>
-            <span class="pill">Login role: <b id="qt-loginRoleLabel"></b></span>
-            <span id="qt-focusDeptPill" class="pill">Focus section: </span>
-        </div>
-        <div class="actionRight">
-            <div id="qt-btnClientConfirm"></div>
-        </div>
-    </div> *@
 
     <div id="branchOverlay" class="branchOverlay">
         <div class="backdrop"></div>

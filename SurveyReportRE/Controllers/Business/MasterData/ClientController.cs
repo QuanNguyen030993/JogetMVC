@@ -11,6 +11,8 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using ERPCore.Models.Models.Parsing;
 using System.Globalization;
 using System.Reflection;
+using Newtonsoft.Json;
+using ERPCore.Models.Migration.Config;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -18,12 +20,14 @@ public class ClientController : BaseControllerApi<Client>
 {
     private readonly IBaseRepository<Client> _BaseRepository;
     private readonly IBaseRepository<Utility> _utilityRepository;
+    private readonly IBaseRepository<FormatCodeNo> _formatCodeNoRepository;
     private readonly IConfiguration configuration;
 
     public ClientController(IBaseRepository<Client> BaseRepository, IConfiguration config, IHttpContextAccessor httpContextAccessor) : base(BaseRepository, httpContextAccessor)
     {
         configuration = config;
         _BaseRepository = BaseRepository;
+        _formatCodeNoRepository = new BaseRepository<FormatCodeNo>(config,httpContextAccessor);
     }
 
     public async Task<IActionResult> Import(int surveyId)
@@ -139,10 +143,23 @@ public class ClientController : BaseControllerApi<Client>
         else
             return Ok(new { success = false, message = "No file uploaded" });
     }
- 
 
-   
-  
+
+    [HttpPost]
+    public override async Task<IActionResult> InsertData([FromForm] InsertFormCollection form)
+    {
+        var entity = new Client();
+        var clientNos = new List<FormatCodeNo>();
+        PolicyIssuance PolicyIssuance = new PolicyIssuance();
+        clientNos = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(Client) + "Code");
+        string clientNo = ControllerUtil.GenerateNumberSeq(clientNos, _formatCodeNoRepository, nameof(Client));
+        JsonConvert.PopulateObject(form.values, entity);
+        entity.ClientCode = clientNo;
+        entity = await _BaseRepository.InsertData(entity);
+        return Ok(entity);
+    }
+
+
 
 
 

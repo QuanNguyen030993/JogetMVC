@@ -17,7 +17,7 @@ namespace ERPCore.Models.Request
         public string? ParentNodeId { get; set; }
         public string? NodeName { get; set; }
         public string? NodeType { get; set; }
-        public string? FlowType { get; set; }
+        public string? NodeStatus { get; set; }
         public bool AllowLoop { get; set; }
         public string? LoopGroup { get; set; }
         public string? NodeCode { get; set; }

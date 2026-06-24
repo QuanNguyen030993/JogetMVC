@@ -27,7 +27,7 @@ namespace ERPCore.Common
                         .MinimumLevel.Information()
                         .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Error)
                         .Enrich.FromLogContext()
-                        .WriteTo.Console()
+                        
                         .WriteTo.File(Path.Combine(blobPath, "LibLogs", "common-log-.txt"), rollingInterval: RollingInterval.Day) // Log vào file
                         .WriteTo.MSSqlServer(
                             connectionString,
@@ -46,7 +46,7 @@ namespace ERPCore.Common
                         .MinimumLevel.Information()
                         .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Error)
                         .Enrich.FromLogContext()
-                        .WriteTo.Console()
+                        
                         .WriteTo.MSSqlServer(
                             connectionString,
                             sinkOptions: new Serilog.Sinks.MSSqlServer.MSSqlServerSinkOptions
@@ -74,7 +74,7 @@ namespace ERPCore.Common
                       .MinimumLevel.Information()
                       .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Error)
                       .Enrich.FromLogContext()
-                      .WriteTo.Console()
+                      
                       .WriteTo.MSSqlServer(
                           _connectionString,
                           sinkOptions: new Serilog.Sinks.MSSqlServer.MSSqlServerSinkOptions
@@ -106,7 +106,7 @@ namespace ERPCore.Common
                       .MinimumLevel.Information()
                       .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Error)
                       .Enrich.FromLogContext()
-                      .WriteTo.Console()
+                      
                       .WriteTo.MSSqlServer(
                           connection,
                           sinkOptions: new Serilog.Sinks.MSSqlServer.MSSqlServerSinkOptions

@@ -1,29 +1,29 @@
 ﻿@using JogetMVC.Model
 @{
     string dept = "TS";
-    long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
+    long policyIssuanceId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
 }
 
 
-<div class="actionBarDept" id="@PIViewIdHelper.ActionBarDept(dept,quotationId)">
+<div class="actionBarDept" id="@PIViewIdHelper.ActionBarDept(dept,policyIssuanceId)">
     <div class="actionLeft">
-        <span class="dept-title">Remarks</span> <div id="@PIViewIdHelper.RemarkBox(dept,quotationId)" class="htmleditor"></div>
+        <span class="dept-title">Remarks</span> <div id="@PIViewIdHelper.RemarkBox(dept,policyIssuanceId)" class="htmleditor"></div>
     </div>
     <div class="actionRight">
-        <div id="@PIViewIdHelper.BtnSave(dept,quotationId)"></div>
-        <div id="@PIViewIdHelper.BtnReturnBranch(dept,quotationId)"></div>
-        <div id="@PIViewIdHelper.BtnSubmitBranch(dept,quotationId)"></div>
+        <div id="@PIViewIdHelper.BtnSave(dept,policyIssuanceId)"></div>
+        <div id="@PIViewIdHelper.BtnReturnBranch(dept,policyIssuanceId)"></div>
+        <div id="@PIViewIdHelper.BtnSubmitBranch(dept,policyIssuanceId)"></div>
     </div>
 </div>
 
 <script>
-     setTimeout( () => {
      var dept = "@dept";
-             var pageLayout = window.PolicyIssuancePage;
-       var stateLayout = pageLayout.state;
-    $("#@PIViewIdHelper.BtnSave(dept, quotationId)").dxButton({ text: "Save", icon: "save", type: "default", onClick:
+       //       var pageLayout = window.PolicyIssuancePage;
+       // var stateLayout = pageLayout.state;
+    $("#@PIViewIdHelper.BtnSave(dept, policyIssuanceId)").dxButton({ text: "Save", icon: "save", type: "default", onClick:
          function (e) {
-               var formItems = $(`#@PIViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+                var formId = `@PIViewIdHelper.Form(dept, policyIssuanceId)`
+               var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
                    shadingColor: "rgba(0,0,0,0.4)",
                    visible: false,
@@ -31,7 +31,7 @@
                    showPane: false,
                    shading: true,
                    closeOnOutsideClick: false,
-                    position: { of: `#@PIViewIdHelper.Form(dept, quotationId)}`}
+                    position: { of: `#@PIViewIdHelper.Form(dept, policyIssuanceId)`}
                    // onShown: function () {
                    //     setTimeout(function () {
                    //         appLoadPanel.hide();
@@ -51,9 +51,58 @@
                  onSuccess: function (response) {
                  },
                  onError: function (err) { }
-             }
-         );
+             });
+
+             savePolicyIssuance();
+
          }
      });
-     }, _delayRenderSubmitButton);
+
+         function savePolicyIssuance() {
+        const grid =  $("#pi_fillList_@policyIssuanceId").dxDataGrid("instance");
+
+        const data = grid.option("dataSource");
+
+
+            const visibleRows = grid.getVisibleRows().map(r => r.data);
+
+            ajaxPut('/api/PolicyIssuanceDetails/UpdateData',
+            {
+                key: visibleRows[0].ownId,
+                values: JSON.stringify(mapGridToObject(visibleRows))
+            },
+            {
+                onSuccess: function (response) {
+                    DevExpress.ui.notify("Saved successfully", "success", 2000);
+                },
+                onError: function (err) {
+                    DevExpress.ui.notify("Save failed", "error", 2000);
+                }
+            });
+
+        }
+            function mapGridToObject(rows) {
+        const result = {};
+
+        rows.forEach(item => {
+            let val;
+
+            // ✅ checkbox → dùng checked
+            if (item.type === "checkbox") {
+                val = item.checked === true;
+            }
+            // ✅ field có value
+            else {
+                val = item.checked ? item.value : null;
+
+                // xử lý case "" (empty string)
+                if (val === "") val = null;
+            }
+
+            result[item.field] = val;
+        });
+
+        return result;
+    }
+    ``
 </script>

@@ -1,0 +1,11 @@
+﻿@page
+@model CountryModel
+@{
+
+}
+<script>
+    $(function () {
+        new MGrid(null, $(`#dataGrid_@CountryModel.ModelName`), new CountryGridOption('@CountryModel.ModelName'), null);
+    });
+</script>
+<div id="dataGrid_@CountryModel.ModelName"></div>

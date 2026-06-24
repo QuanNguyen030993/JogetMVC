@@ -18,20 +18,20 @@ namespace ERPCore.Controllers.Config
 
         }
 
-        [HttpGet("{dept}")]
-        public async Task<IActionResult> SLALookup(string dept)
-        {
+        //[HttpGet("{dept}")]
+        //public async Task<IActionResult> SLALookup(string dept)
+        //{
 
-            SLA data = await _BaseRepository.GetSingleObject(x =>
-                           x.Dept == dept
-                       );
+        //    List<SLA> data = await _BaseRepository.GetListObject(x =>
+        //                   x.Dept == dept
+        //               );
 
-            if (data == null)
-            {
-                return Ok(new { success = false, message = "Config not found" });
-            }
+        //    if (data == null)
+        //    {
+        //        return Ok(new { success = false, message = "Config not found" });
+        //    }
 
-            return Ok(new { success = true, data = data });
-        }
+        //    return Ok(new { success = true, data = data });
+        //}
     }
 }

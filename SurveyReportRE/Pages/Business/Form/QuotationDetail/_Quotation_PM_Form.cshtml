@@ -21,8 +21,26 @@
 <div id="@QTViewIdHelper.Form(dept, quotationId)">
 </div>
 <script type="text/javascript">
-        var that = new Object();
+    var sectionId = "@(ViewData["Cd"])";
     that.ModelName = "Quotation";
+    that.moduleName = "default";
+    that.editorType = "dxFileUploader"
+    that.id = @(quotationId);
+    that.guid = "@(quotationGuid)";
+    that.sectionName = "@(dept)";
+    that.titleName = "Upload Quotation";
+    that.data = { SectionName: `${sectionId}_${that.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: that.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" };; //{"SectionName":"default_FO_410"}
+
+
+    var that2 = new Object();
+    that2.ModelName = "Quotation";
+    that2.moduleName = "supportingDoc";
+    that2.editorType = "dxFileUploader"
+    that2.id = @(quotationId);
+    that2.guid = "@(quotationGuid)";
+    that2.sectionName = "@(dept)";
+    that2.titleName = "Upload Supporting Document";
+    that2.data = { SectionName: `${sectionId}_${that2.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" }; //{"SectionName":"default_FO_410"}
     $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
         dataSource: makeBasicDataSource(that, true),
                  items: [
@@ -34,7 +52,7 @@
     editorOptions: {
         items: [
             { id: "AC_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Accept", value: true },
-            { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Assign", value: false },
+            // { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Assign", value: false },
             { id: "RJ_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Reject", value: false }
         ],
          displayExpr: "text",
@@ -43,7 +61,7 @@
          itemTemplate: function(itemData, _, itemElement) {
          setTimeout(() => {
           var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-          var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Problem");
+          var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
           if (tatObject) if (tatObject[`@dept`]?.AcceptDate)
           {
             $(`#AC_@QTViewIdHelper.Decision(dept, quotationId)`).addClass("btn-success");
@@ -60,7 +78,7 @@
              if (_ == 0)
                  {
                       var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-                       var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Problem");
+                       var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
                       tatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
                       formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
                       var passingObject = new Object();
@@ -73,10 +91,10 @@
                       passingObject.schemeName = `Quotation`;
                       acceptDecision(passingObject);
                  }
-                 if (_ == 2)
+                 if (_ == 1)
                  {
                       var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-                      var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Problem");
+                      var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
                       tatObject[`@dept`].AcceptDate = "";
                       formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
                       var passingObject = new Object();
@@ -96,7 +114,7 @@
                 isRequired: true
                 }
             }]}, 
-            { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefault("qt", "@(dept)", @(quotationId), "@(quotationGuid)") },
+            { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentByCase(that , that2) },
             {itemType: "group",caption: "Checklist",colCount:1,items: [
             {dataField: "policyNoCL",editorType: "dxCheckBox",visible:true},
             {dataField: "theInsured",editorType: "dxCheckBox",visible:true},

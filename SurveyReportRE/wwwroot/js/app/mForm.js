@@ -17,6 +17,9 @@
             this.outlineForm = { isUse: false, isOutlineChecked: false, isOutlineDynamic: false };
             this.isReadOnly = false;
             if (formConfig) {
+                if (formConfig.pk != null || formConfig.pk != undefined) {
+                    this.pk = formConfig.pk;
+                }
                 if (formConfig.isChildForeignKey != null || formConfig.isChildForeignKey != undefined) {
                     this.isChildForeignKey = formConfig.isChildForeignKey;
                 }
@@ -34,19 +37,20 @@
                 if (formConfig.colCount != null || formConfig.colCount != undefined) {
                     this.colCount = formConfig.colCount;
                 }
-                if (formConfig.defaultTextAreaHeight != null || formConfig.defaultTextAreaHeight != undefined) {
-                    this.defaultTextAreaHeight = formConfig.defaultTextAreaHeight;
-                } if (formConfig.defaultTextAreaWidth != null || formConfig.defaultTextAreaWidth != undefined) {
+                //if (formConfig.defaultTextAreaHeight != null || formConfig.defaultTextAreaHeight != undefined) {
+                //    this.defaultTextAreaHeight = formConfig.defaultTextAreaHeight;
+                //}
+                if (formConfig.defaultTextAreaWidth != null || formConfig.defaultTextAreaWidth != undefined) {
                     this.defaultTextAreaWidth = formConfig.defaultTextAreaWidth;
                 }
                 if (formConfig.labelLocation != null || formConfig.labelLocation != undefined) {
                     this.labelLocation = formConfig.labelLocation;
                 }
-                if (formConfig.refFieldId != null || formConfig.refFieldId != undefined) {
-                    this.refFieldId = formConfig.refFieldId;
+                if (formConfig.refKey != null || formConfig.refKey != undefined) {
+                    this.refKey = formConfig.refKey;
                 }
-                if (formConfig.refFieldName != null || formConfig.refFieldName != undefined) {
-                    this.refFieldName = formConfig.refFieldName;
+                if (formConfig.refField != null || formConfig.refField != undefined) {
+                    this.refField = formConfig.refField;
                 }
                 if (formConfig.sameRefKeyAsId != null || formConfig.sameRefKeyAsId != undefined) {
                     this.sameRefKeyAsId = formConfig.sameRefKeyAsId;
@@ -80,17 +84,17 @@
             this.ModelName = formConfig.originModelName;
             this.ReferenceModel = formConfig.originModelName;
             var formElement = $(`#form_${formConfig.formElementName}_${this.id}`);
-            if (this.refFieldId != null || this.refFieldId != undefined)
-                formElement = $(`#form_${formConfig.formElementName}_${this.refFieldId}_${this.id}`);
+            if (this.refKey != null || this.refKey != undefined)
+                formElement = $(`#form_${formConfig.formElementName}_${this.refKey}_${this.id}`);
             if (this.sameRefKeyAsId)
-                formElement = $(`#form_${formConfig.formElementName}_${this.refFieldId}`);
-            if (formOptions != null || formOptions != undefined) 
+                formElement = $(`#form_${formConfig.formElementName}_${this.refKey}`);
+            if (formOptions != null || formOptions != undefined)
                 this.formOptions = formOptions;
             else
                 this.formOptions = new MFormOption();
-            if (this.formOptions.container != null || this.formOptions.container != undefined) 
+            if (this.formOptions.container != null || this.formOptions.container != undefined)
                 this.container = this.formOptions.container;
-                else 
+            else
                 this.container = formElement;
             if (formConfig != null || formConfig != undefined) {
                 this.tabCode = formConfig.tabCode ? formConfig.tabCode : 'form_' + this.ModelName + `_Form_${this.id}`;;
@@ -110,18 +114,36 @@
     initDataNewForm() {
         var that = this;
         var newRowdata = {};
+        
+        //default value sync on formData
+        if (that.fieldConfigs) {
+            var listFieldHasDefaultValue = that.fieldConfigs.filter(
+                value => value.defaultValue
+            );
 
-        var listFieldHasDefaultValue = that.fieldConfigs.filter(
-            value => value.defaultValue
-        );
-
-        $(listFieldHasDefaultValue).each(function (i, field) {
-            newRowdata[`${field.dataField}`] = Function(field.defaultValue);
-        });
+            $(listFieldHasDefaultValue).each(function (i, field) {
+                newRowdata[`${field.dataField}`] = Function(field.defaultValue);
+            });
+        }
+        
 
         try {
-            if (that.formInstance)
-                that.formInstance.option("formData", newRowdata);
+            setTimeout(() => {
+                if (that.formInstance) {
+                    var formItemFieldChange = that.formInstance.option("changedFields") || {};
+
+                    // 👉 merge vào newRowdata
+                    Object.keys(formItemFieldChange).forEach(key => {
+                        newRowdata[key] = formItemFieldChange[key];
+                    });
+
+                    that.formInstance.option("changedFields", {});
+                    that.formInstance.option("formData", newRowdata);
+                }
+
+                this.isBindingData = false;
+
+            }, 200);
         }
         catch {
 
@@ -175,7 +197,7 @@
             //store.load();
             var store = that.formInstance.option("dataSource");
             store.load();
-            
+
         } catch (err) {
             appErrorHandling('Library error: call MForm.loadData() was failed.', err);
             this.formInstance = null;
@@ -197,7 +219,7 @@
     callApi(apiMethod, dataInput, isClose) {
         try {
             var that = this;
-            var efName = this.ModelName;
+            //var efName = this.ModelName;
             var url = buildApiUrl(apiMethod, that);
             var dataVar = null;
             //var httpMethod = this.buildHttpMethod(apiMethod);
@@ -260,7 +282,7 @@
             ajaxOptions.success = function (data) {
                 onSuccess(data);
                 if (isClose) {
-                    that.closeForm(efName);
+                    that.closeForm();
                 }
             };
 
@@ -290,7 +312,8 @@
         this.id = data.id;
         this.guid = data.guid;
         this.formInstance.repaint();
-        this.toolbarInstance = this.initFormToolbar(this.formInstance);
+        //this.toolbarInstance = this.initFormToolbar(this.formInstance);
+
         if (this.container != null) {//&& document.getElementById(`${this.config.MainObject}_0`)) {
             this.cloneUrl = this.cloneUrl.replace("/0", `/${this.id}`);
             this.tabCode = this.tabCode + `_${this.id}`;
@@ -329,70 +352,131 @@
             var that = this;
             //this.getContainer();
             var $scrollElement = $(`<div id='${that.ModelName}ScrollView'/>`).appendTo(this.container);
-            this.Outline = null;
-            if (this.outlineForm) {
-                var outline = []
-                if (this.outlineForm.surveyTypeId) {
-                    if (_cacheModels.includes(that.SchemeModelName)) {
-                        const cachedData = JSON.parse(sessionStorage.getItem(`${that.SchemeModelName}_${that.id}`));
-                        if (cachedData == null) {
-                            //$.ajax({
-                            //    url: `api/Outline/GetFKMany?fkId=${this.outlineForm.surveyTypeId}&fkField=SurveyTypeId`,
-                            //    type: 'GET',
-                            //    async: false,
-                            //    success: function (response) {
-                            //        outline = response;
-                            //    },
-                            //    error: function (exception) {
-                            //    }
-                            //});
+            //this.Outline = null;
+            //if (this.outlineForm) {
+            //    var outline = []
+            //    if (this.outlineForm.surveyTypeId) {
+            //        if (_cacheModels.includes(that.SchemeModelName)) {
+            //            const cachedData = JSON.parse(sessionStorage.getItem(`${that.SchemeModelName}_${that.id}`));
+            //            if (cachedData == null) {
+            //                //$.ajax({
+            //                //    url: `api/Outline/GetFKMany?fkId=${this.outlineForm.surveyTypeId}&fkField=SurveyTypeId`,
+            //                //    type: 'GET',
+            //                //    async: false,
+            //                //    success: function (response) {
+            //                //        outline = response;
+            //                //    },
+            //                //    error: function (exception) {
+            //                //    }
+            //                //});
 
-                            $.ajax({
-                                url: `api/OutlineDynamic/GetFKMany?fkId=${this.outlineForm.surveyTypeId}&fkField=SurveyTypeId`,
-                                type: 'GET',
-                                async: false,
-                                success: function (response) {
-                                    outline.concat(response);
-                                },
-                                error: function (exception) {
-                                }
-                            });
-                            sessionStorage.setItem(`${that.SchemeModelName}_${that.id}`, JSON.stringify(outline));
+            //                $.ajax({
+            //                    url: `api/OutlineDynamic/GetFKMany?fkId=${this.outlineForm.surveyTypeId}&fkField=SurveyTypeId`,
+            //                    type: 'GET',
+            //                    async: false,
+            //                    success: function (response) {
+            //                        outline.concat(response);
+            //                    },
+            //                    error: function (exception) {
+            //                    }
+            //                });
+            //                sessionStorage.setItem(`${that.SchemeModelName}_${that.id}`, JSON.stringify(outline));
+            //            }
+            //            outline = JSON.parse(sessionStorage.getItem(`${that.SchemeModelName}_${that.id}`));
+            //        }
+            //        else {
+            //            //$.ajax({
+            //            //    url: `api/Outline/GetFKMany?fkId=${this.outlineForm.surveyTypeId}&fkField=SurveyTypeId`,
+            //            //    type: 'GET',
+            //            //    async: false,
+            //            //    success: function (response) {
+            //            //        outline = response;
+            //            //    },
+            //            //    error: function (exception) {
+            //            //    }
+            //            //});
+
+            //            $.ajax({
+            //                url: `api/OutlineDynamic/GetFKMany?fkId=${this.outlineForm.surveyTypeId}&fkField=SurveyTypeId`,
+            //                type: 'GET',
+            //                async: false,
+            //                success: function (response) {
+            //                    outline.concat(response);
+            //                },
+            //                error: function (exception) {
+            //                }
+            //            });
+            //        }
+            //    }
+            //    else {
+            //        //console.log(`${this.ModelName} is missing Survey Type`);
+            //    }
+            //    this.Outline = outline;
+            //}
+
+
+            this.toolbarInstance = that.allowFormActionButton ? [
+
+                {
+                    itemType: "group",
+                    cssClass: "action-group",
+                    colCount: 3,
+                    items: [
+
+
+                {
+                    itemType: "button",
+                    horizontalAlignment: "right",
+                    buttonOptions: {
+                        text: "Save",
+                        icon: "save",
+                        type: "success",
+                        stylingMode: "contained",
+                        disabled: this.isReadonlyAllEditors,
+                        elementAttr: { role: 'SaveBtn', id: `btnSave_${that.ModelName}` },
+                        onClick() {
+                            that.doSaveData(that.id ? false : true);
                         }
-                        outline = JSON.parse(sessionStorage.getItem(`${that.SchemeModelName}_${that.id}`));
                     }
-                    else {
-                        //$.ajax({
-                        //    url: `api/Outline/GetFKMany?fkId=${this.outlineForm.surveyTypeId}&fkField=SurveyTypeId`,
-                        //    type: 'GET',
-                        //    async: false,
-                        //    success: function (response) {
-                        //        outline = response;
-                        //    },
-                        //    error: function (exception) {
-                        //    }
-                        //});
-
-                        $.ajax({
-                            url: `api/OutlineDynamic/GetFKMany?fkId=${this.outlineForm.surveyTypeId}&fkField=SurveyTypeId`,
-                            type: 'GET',
-                            async: false,
-                            success: function (response) {
-                                outline.concat(response);
-                            },
-                            error: function (exception) {
-                            }
-                        });
+                },
+                {
+                    itemType: "button",
+                    horizontalAlignment: "right",
+                    buttonOptions: {
+                        text: "Close",
+                        icon: "close",
+                        type: "error",
+                        stylingMode: "contained",
+                        disabled: this.isReadonlyAllEditors,
+                        elementAttr: { role: 'CloseBtn', id: `btnClose_${that.ModelName}` },
+                        onClick() {
+                            that.closeForm();
+                        }
                     }
                 }
-                else {
-                    //console.log(`${this.ModelName} is missing Survey Type`);
+                , {
+                    itemType: "button",
+                    horizontalAlignment: "right",
+                    buttonOptions: {
+                        text: "Refresh",
+                        icon: "refresh",
+                        type: "default",
+                        stylingMode: "contained",
+                        disabled: this.isReadonlyAllEditors,
+                        elementAttr: { role: 'RefreshBtn', id: `btnRefresh_${that.ModelName}` },
+                        onClick() {
+                            that.refreshForm();
+                        }
+                    }
+                        }
+                    ]
                 }
-                this.Outline = outline;
-            }
+            ]: [];
 
 
-            var itemsConfig = this.buildFormItem(); //should not do the same time.
+            var itemsConfig = [] //should not do the same time.
+            itemsConfig.push(...this.toolbarInstance);
+            itemsConfig.push(...this.buildFormItem()); //should not do the same time.
             formElement.addClass("fade-slide-up");
             this.formInstance = formElement.dxForm({
                 dataSource: makeBasicDataSource(that, true),
@@ -413,7 +497,7 @@
                 onContentReady: tryExecute(this.onContentReady.bind(this)),
                 renderTabFormElement: tryExecute(this.renderTabFormElement.bind(this)),
                 groupingLayout: tryExecute(this.groupingLayout.bind(this)),
-                onFieldDataChanged: tryExecute(function (e) {
+                onFieldDataChanged: tryExecute(function (e) {//form
                     var that = this;
                     const changedFields = e.component.option("changedFields");
                     const currentItem = e.component.itemOption(e.dataField);
@@ -428,35 +512,34 @@
                         //    changedFields[e.dataField] = stringToUtcDate(e.value);
                         //}
                         changedFields[e.dataField] = e.value;
-                        if (that.fieldByOutlineGroup.length > 0) {
-                            var outlineObject = that.fieldByOutlineGroup.find(f => f.dataField == e.dataField);
-                            //changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance[0];
-                            changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance;
-                        }
-                        if (that.dynamicOutline) {
-                            var outlineObject = that.dynamicOutline.find(f => f.dataField == e.dataField);
-                            if (outlineObject)
-                                changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance;
-                            else if (currentItem.outlineObject)
-                                changedFields[e.dataField + "_outlineId"] = currentItem.outlineObject;
-                        }
-                        else if (currentItem) {
-                            if (currentItem.outlineObject)
-                            changedFields[e.dataField + "_outlineId"] = currentItem.outlineObject;
-                        }
+                        //if (that.fieldByOutlineGroup.length > 0) {
+                        //    var outlineObject = that.fieldByOutlineGroup.find(f => f.dataField == e.dataField);
+                        //    //changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance[0];
+                        //    changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance;
+                        //}
+                        //if (that.dynamicOutline) {
+                        //    var outlineObject = that.dynamicOutline.find(f => f.dataField == e.dataField);
+                        //    if (outlineObject)
+                        //        changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance;
+                        //    else if (currentItem.outlineObject)
+                        //        changedFields[e.dataField + "_outlineId"] = currentItem.outlineObject;
+                        //}
+                        //else if (currentItem) {
+                        //    if (currentItem.outlineObject)
+                        //    changedFields[e.dataField + "_outlineId"] = currentItem.outlineObject;
+                        //}
                     } else {
                         delete changedFields[e.dataField];
                     }
-                    markAccordionAsChanged(`accordion_${that.refFieldId}_${e.dataField}`);
+                    //markAccordionAsChanged(`accordion_${that.refKey}_${e.dataField}`);
                     // Cập nhật lại changedFields trong dxForm
                     e.component.option("changedFields", changedFields);
                 }.bind(this))
             }).dxForm("instance");
             if (this.formInstance)
                 this.formInstance.option("config", this);
-            this.toolbarInstance = this.initFormToolbar(this.formInstance);
-        
-            
+            //this.toolbarInstance = this.initFormToolbar(this.formInstance);
+  
             //$formElement.find(".dx-tabpanel-container").css("height", `100%`);
             if (that.id > 0) 
                     this.loadData();
@@ -493,8 +576,17 @@
                 var data = new Object();;
                 if (id == null || id == undefined) {
                     delete formData[that.pk];
+                    debugger
+                    var store = that.formInstance.option("dataSource");
                     data.values = JSON.stringify(appReplaceDoubleQuote(formData));
-                    that.callApi('POST', data, isClose);
+                    store.insert(formData).done(function () {
+                        DevExpress.ui.notify("Save success", "success", 2000);
+                        that.closeForm(isClose);
+                    })
+                        .fail(function (error) {
+                            DevExpress.ui.notify("Save fail!", "error", 2000);
+                        });
+                    //that.callApi('POST', data, isClose);
                 } else {
                     data.key = formData[that.pk];
                     data.values = JSON.stringify(appReplaceDoubleQuote(formData));
@@ -779,8 +871,10 @@
     //    }
     //}
 
-    closeForm(efName) {
-        removeTab(efName);
+    closeForm() {
+        //removeTab(efName);
+        var that = this;
+        nativeRemoveTabV2(`form_${that.ModelName}_Form_${that.id}`);
     }
 
     refreshForm() {

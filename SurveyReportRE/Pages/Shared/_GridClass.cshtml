@@ -1033,10 +1033,69 @@
             var that = this;
             super.onCustomizeColumns(columns);
             super.hyperLinkCode(columns, "Business/MasterData", "Client", "id", "clientName");
-        }
+            $.each(columns, function (colIndex, col)  { 
+                if (col.dataField === "businessAddress" || col.dataField === "clientName" || col.dataField == "businessOccupation") {
+                        col.cellTemplate = function (container, options) {
 
+                            let data = options.value;
+
+                            if (!data) return;
+
+
+                            try {
+                                data = typeof data === "string"
+                                    ? JSON.parse(data)
+                                    : data;
+                            }
+                            catch (e) {
+                                container.text(data);
+                                return;
+                            }
+
+
+                            let html = `
+                                    <div class="json-tag-container">
+                                `;
+
+
+                            Object.keys(data).forEach(key => {
+                                let css = key.toLowerCase();
+                                html += `
+                                    <div class="tag-group">
+
+                                        <div class="tag-label ${css}">
+                                            ${key}
+                                        </div>
+                                        <div class="tag-value"
+                                             title="${data[key] ?? ''}">
+                                            ${data[key] ?? '-'}
+                                        </div>
+
+                                    </div>
+                                    `;
+
+                            });
+
+
+                            html += `</div>`;
+
+
+                            $(container).html(html);
+
+                        };
+
+                    }
+
+                if (col.dataField == "startDate") {
+                    col.sortOrder = "desc";
+                }
+            });
+        }
+        onRowClick(e) {
+            callElementView(`/Business/MasterData/Client_Form/${e.data.id}`, `form_Client_Form_${e.data.id}`, `Client ${e.data.clientCode}`);
+        }
         onToolbarPreparing(e) {
-            super.onToolbarPreparing(e);
+            super.onToolbarPreparing(e);    
             var that = this;
             e.toolbarOptions.items.unshift({
                 location: "after",
@@ -1082,64 +1141,7 @@
             });
         }
     }
-    var ClientGridOption = class ClientGridOption extends MGridOption {
-        constructor(modelName, gridType) {
-            super(modelName, gridType);
-        };
-
-        onCustomizeColumns(columns) {
-            var that = this;
-            super.onCustomizeColumns(columns);
-            super.hyperLinkCode(columns, "Business/MasterData", "Client", "id", "clientName");
-        }
-
-        onToolbarPreparing(e) {
-            super.onToolbarPreparing(e);
-            var that = this;
-            e.toolbarOptions.items.unshift({
-                location: "after",
-                widget: "dxButton",
-                options: {
-                    text: "Import",
-                    onClick: function (e) {
-                        var popupInstance = makePopup("medium", "Documents");
-                        //popupInstance.option("toolbarItems[0].options.onClick", function () {
-                        //    that.refreshForm();
-                        //    popupInstance.hide();
-                        //});
-                        popupInstance.option("contentTemplate", function (container) {
-                            $("<div>").dxFileUploader({
-                                multiple: true,
-                                accept: "xlsx/*",
-                                selectButtonText: `Import Client`,
-                                labelText: "",
-                                uploadMode: "instantly",
-                                uploadUrl: `/api/${that.ModelName}/Import`,
-                                showFileList: false,
-                                onDropZoneEnter: function (e) {
-                                    //$(e.dropZoneElement).addClass("highlight-drop-zone");
-                                },
-                                onDropZoneLeave: function (e) {
-                                    //$(e.dropZoneElement).removeClass("highlight-drop-zone");
-                                },
-                                onBeforeSend: function (e) {
-                                    e.request.setRequestHeader("X-Folder-Path", "Attachment");
-                                },
-                                onUploaded: function (e) {
-                                    myGrid.dxDataGrid("instance").refresh();
-                                }
-                            }).appendTo(container);
-
-                        });
-                        popupInstance.show();
-                    },
-                    onInitialized: function (args) {
-                        this.btnExportInstance = args.component;
-                    }
-                }
-            });
-        }
-    }
+    
     var ProductGridOption = class ProductGridOption extends MGridOption {
         constructor(modelName, gridType) {
             super(modelName, gridType);
@@ -2065,6 +2067,9 @@
         };
         onCellPrepared(e) {
             if (e.rowType === "data" && e.column.command  && e.column.command != "drag") {
+                e.moduleFolder = "Business/Workflow";
+                e.modelName = this.ModelName;
+                e.displayExpr = "workflowCode";
                 customCommandButtonCell(e);
             }
         }
@@ -2085,6 +2090,34 @@
         }
     }
 
+    var SLAGridOption = class SLAGridOption extends MGridOption {
+        constructor(modelName, gridType, params) {
+            super(modelName, gridType, params);
+        };
+        onCellPrepared(e) {
+            if (e.rowType === "data" && e.column.command && e.column.command != "drag") {
+                e.moduleFolder = "Config";
+                e.modelName = this.ModelName + "Definition";
+                e.displayExpr = "code";
+                customCommandButtonCell(e);
+            }
+        }
+        // onRowClick(e) {
+        //     callElementView(`/Business/Workflow/SLADefinitionDraw_Form/${e.data.id}`, `form_SLADefinitionDraw_Form_${e.data.id}`, `SLADefinitionDraw   ${e.data.workflowCode}`);
+        // }
+        // onEditingStart(e) { callElementView không dùng chung dc
+        //     debugger
+        //     super.onEditingStart(e);
+        //     callElementView(`/Business/Workflow/WorkflowDefinitionDraw_Form/${e.data.id}`, `form_WorkflowDefinitionDraw_Form_${e.data.id}`, `WorkflowDefinitionDraw   ${e.data.workflowCode}`);
+        //     e.cancel = true;
+        // }
+        onContentReady(e) {
+            super.onContentReady(e);
+            e.component.columnOption("command:edit", "visibleIndex", -1);
+            e.component.option("editing.mode", "form");
+            e.component.option("editing.allowUpdating", true);
+        }
+    }
 
     //New version template class
     //var TemplateGridOption = class TemplateGridOption extends MGridOption {
@@ -2151,6 +2184,9 @@
         constructor(modelName, gridType, params) {
             super(modelName, gridType, params);
             this.Params = params;
+            this.TotalSelected = 0;
+            this.DeletedItems = 0;
+            this.IsLoading = false;
         };
 
 
@@ -2185,9 +2221,73 @@
                 }
             });
         }
+            // ===== STATE =====
+
+        // ✅ 1. Khi user bấm Save (batch commit)
+        onSaving(e) {
+            const changes = e.changes || [];
+
+            const deleteChanges = changes.filter(x => x.type === "remove");
+
+            this.TotalSelected = deleteChanges.length;
+            this.DeletedCount = 0;
+
+            if (this.TotalSelected > 0) {
+                makeMiniLoadingPanel("Delete Quotation", "Please wait...");
+
+                renderBrowserLoading({
+                    payload: {
+                        progressvalue: 10
+                    }
+                });
+            }
+            console.log("Total rows to delete:", this.TotalSelected);
+        }
+
+
+        // ✅ 2. Không nên dùng nhưng giữ lại cho fallback
+        onRowRemoving(e) {
+            const grid = e.component;
+
+            const changes = grid.option("editing.changes") || [];
+            const deleteChanges = changes.filter(x => x.type === "remove");
+
+            this.TotalSelected = deleteChanges.length + 1;
+
+            console.log("Removing row, estimated total:", this.TotalSelected);
+        }
+
+
+        // ✅ 3. Sau khi save hoàn tất
+        onSaved(e) {
+            if (this.TotalSelected > 0) {
+                renderBrowserLoading({
+                    payload: {
+                        progressvalue: 100
+                    }
+                });
+            }
+
+            this.TotalSelected = 0;
+            this.DeletedCount = 0;
+        }
+
+
+        onRowRemoved(e){
+            this.DeletedCount++;
+            var result = new Object();
+                result.payload = new Object();
+                result.payload.progressvalue = (this.DeletedCount / this.TotalSelected) * 100;
+                    renderBrowserLoading(result);
+                    if ((this.DeletedCount / this.TotalSelected) == 1)
+                    {
+                        this.DeletedItems = 0;
+                        this.TotalSelected = 0;
+                    }
+        }
 
            onEditorPrepared (e) {
-                if (e.dataField == "quotationStatus")
+                if (e.dataField == "workflowStatus")
                     {
                         var lookup = e.editorElement.dxSelectBox('instance');
                         lookup.option("itemTemplate", function(data) {
@@ -2213,13 +2313,13 @@
                      col.allowEditing = true;
                         if (col.dataField === `pic${item}`) {
                         col.cellTemplate = function (container, options) {
-                            col.value = JSON.parse(options.data.pic)[item];
-                             return $(`<div>`).text(JSON.parse(options.data.pic)[item]).appendTo(container);
+                            col.value = tryParseJSON(options.data.pic, "PIC Load Problem")[item];
+                            return $(`<div>`).text(tryParseJSON(options.data.pic, "PIC Load Problem")[item]).appendTo(container);
                         }
                     }
                 });
 
-                if (col.dataField === "quotationStatus")
+                if (col.dataField === "workflowStatus")
                 {//string column text filter from selectbox first example 2026-06-10
                     col.cellTemplate = function (container, options) {
                     var raw = options.value;
@@ -2260,6 +2360,9 @@
                 }
                 if (col.dataField === "pic" || col.dataField === "leaderPIC" || col.dataField === "hodpic")
                 {
+                    try
+                    {
+
                     col.cssClass = "col-pic-rows";
                     col.allowSorting = false;
                     col.width = 500;
@@ -2269,7 +2372,7 @@
                     // };
                       // phần này phục vụ search/filter
                     col.calculateCellValue = function (rowData) {
-                        return buildPicCategorySearchText(rowData[col.dataField]);
+                        return buildPicCategorySearchText(rowData ? rowData[col.dataField] : "{}");
                     };
 
                     // phần này phục vụ render đẹp
@@ -2289,6 +2392,10 @@
                     // col.cellTemplate = function (container, options) {
                     //     $(container).append(renderPicInline(options.value));
                     // };
+                    }
+                    catch {
+
+                    }
                 }
 
             });
@@ -2334,49 +2441,79 @@
                     options: {
                         text: "Renew List",
                         onClick: function (e) {
-                            var mGridOption = new Object();
-                            mGridOption.isAllowRowMenu = false;
-                            mGridOption.isShowingRenewButton = false;
+                            var popupInstance = makePopup("large", "Renew Quotation List");
+                            popupInstance.option("toolbarItems[0].options.onClick", function () {
+                                popupInstance.hide();
+                                var that = new Object();
+                                that.ModelName = "QuotationTmp";
+                                var TmpDataSource = makeBasicDataSource(that, true);
 
-                            var mGrid = new MGrid(null, $(`#dataGrid_@QuotationModel.ModelName`), new QuotationGridOption('@QuotationModel.ModelName', "User", mGridOption), null);
-                            setTimeout(() => {
-                                   var DS = mGrid.component.getDataSource();
-                                // 👉 Tính ngày hiện tại + 2 tháng
-                                    var today = new Date();
-                                    var twoMonthsLater = new Date(today);
-                                    twoMonthsLater.setMonth(today.getMonth() + 2);
-                                    // 👉 Apply filter
-
-
-                                     DS.filter([["inceptionDate", ">=", today] ,["inceptionDate", "<=", twoMonthsLater]]);
-                                      mGrid.component.option("selection", { mode: "multiple"});
-                                      mGrid.component.option("editing",   {
-                                        allowUpdating: false,
-                                        allowAdding: false,
-                                        allowDeleting: false
-                                    });
-                                    mGrid.component.option("dataSource", DS);
-                                    var popupInstance = makePopupWithScroll(
-                                        mGrid.container
-                                        ,"medium", "Renew quotation list");
-                                        popupInstance.option("toolbarItems[0].options.onClick", function () {
-                                            popupInstance.hide();
-                                        var that = new Object();
-                                         that.ModelName = "QuotationTmp";
-                                        var TmpDataSource = makeBasicDataSource(that,true);
-
-                                        var store = TmpDataSource;
-                                        var seletedRows =  mGrid.component.getSelectedRowsData();
-                                        $.each(seletedRows , function(itemIndex, item) {
-                                                 store.insert(item)
-                                                .done(function () {
-                                                })
-                                                .fail(function (error) {
-                                                });
+                                var store = TmpDataSource;
+                                var seletedRows = mGrid.component.getSelectedRowsData();
+                                $.each(seletedRows, function (itemIndex, item) {
+                                    store.insert(item)
+                                        .done(function () {
+                                        })
+                                        .fail(function (error) {
                                         });
-                                        });
-                                    popupInstance.show();
-                            },1000);
+                                });
+                            });
+                                popupInstance.option("contentTemplate", function (container) {
+                                var mGridOption = new Object();
+                                mGridOption.isAllowRowMenu = true;
+                                mGridOption.isShowingRenewButton = false;
+                                if (!_isSuperUser) {
+                                    mGridOption.refOperator = "contains";
+                                    mGridOption.refKey = _loginUser;
+                                    mGridOption.refField = "pic";
+                                    if (_roleAppName == "Leader")
+                                        mGridOption.refField = "leaderPIC";
+                                    if (_roleAppName == "HOD")
+                                        mGridOption.refField = "hodpic";
+                                }
+                                // _formConfig.container = $(`<div id = "form_${_formConfig.originModelName}_${parentFormData.resId}" style="padding: 10px; margin-right: 0px" >`);
+                                mGridOption.container = $(`<div style="height:100%; widht:100% ;padding: 10px; margin-right: 0px; position:relative" >`);
+
+                                // var scrollView = $(`<div>`);
+                                // scrollView.dxScrollView({
+                                //     width: "100%",
+                                //     height: "100%",
+                                //     useNative: false
+                                // });
+                                
+                                mGridOption.selection  = { msode : "multiple" };
+                                mGridOption = new QuotationGridOption('@QuotationModel.ModelName', "User", mGridOption)
+                                mGridOption.overrideGetUrl = `api/Quotation/RenewList`;
+
+                                var mGrid = new MGrid(null, mGridOption.container, mGridOption, null);
+                                var scrollView = popupStandardContentByScroll(mGrid.container);
+                                scrollView.appendTo(container);
+                            });
+                            popupInstance.show();
+                            // setTimeout(() => {
+                            //        var DS = mGrid.component.getDataSource();
+                            //     // 👉 Tính ngày hiện tại + 2 tháng
+                            //         var today = new Date();
+                            //         var twoMonthsLater = new Date(today);
+                            //         twoMonthsLater.setMonth(today.getMonth() + 2);
+                            //         // 👉 Apply filter
+
+
+                            //          DS.filter([["inceptionDate", ">=", today] ,["inceptionDate", "<=", twoMonthsLater]]);
+                            //           mGrid.component.option("selection", { mode: "multiple"});
+                            //           mGrid.component.option("editing",   {
+                            //             allowUpdating: false,
+                            //             allowAdding: false,
+                            //             allowDeleting: false
+                            //         });
+                            //         mGrid.component.option("dataSource", DS);
+                            //         var popupInstance = makePopupWithScroll(
+                            //             mGrid.container
+                            //             ,"medium", "Renew quotation list");
+
+                            //             });
+                            //         popupInstance.show();
+                            // },1000);
                      
                         },
                         onInitialized: function (args) {
@@ -2438,12 +2575,12 @@
                      col.allowEditing = true;
                         if (col.dataField === `pic${item}`) {
                         col.cellTemplate = function (container, options) {
-                            col.value = JSON.parse(options.data.pic)[item];
-                             return $(`<div>`).text(JSON.parse(options.data.pic)[item]).appendTo(container);
+                            col.value = tryParseJSON(options.data.pic, "PIC Load Problem")[item];
+                            return $(`<div>`).text(tryParseJSON(options.data.pic, "PIC Load Problem")[item]).appendTo(container);
                         }
                     }
                 });
-                    if (col.dataField === "quotationStatus")
+                    if (col.dataField === "workflowStatus")
                     {
                         col.cellTemplate = function (container, options) {
                         var raw = options.value;
@@ -2471,7 +2608,7 @@
                 options: {
                     text: "Prepare Quotation",
                     onClick: function (e) {
-                        var seletedRows =  that.component.getSelectedRowsData();
+                        var seletedRows =  that.dataGrid.getSelectedRowsData();
                         $.each(seletedRows, function(rowIndex, row) {
                         
                         var quotationData = new Object();
@@ -2511,25 +2648,58 @@
         };
         hyperLinkCode(columns, moduleName, controllerName, propertyName, specificLinkField = null) {
             $.each(columns, function (i, col) {
-                if (col.dataField == (specificLinkField != null ? specificLinkField : "Code")) {
+                if (col.dataField  == (specificLinkField != null ? specificLinkField : "Code")) {
                     col.cellTemplate = function (container, options) {
                         var selectedValue = options.data[propertyName];
+                        var selectedCloneId = options.data["quotationId"];
                         var selectedGuid = options.data["guid"];
+                        var selectedCopyGuid = options.data["copyFromGuid"];
                         $('<a>').addClass('dx-link dx-link-edit')
                             .text(options.text)
                             .css({ color: "#337ab7", textDecoration: "underline", cursor: "pointer" })
                             .on('dxclick', function () {
                                 if (Object.keys(options.key).length > 0)
-                                    callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}/${selectedGuid}`, `form_${controllerName}_Form_${options.key.id}`, `${controllerName} ${options.text}`);
+                                    callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}/${selectedGuid}/${selectedCloneId}/${selectedCopyGuid}`, `form_${controllerName}_Form_${options.key.id}`, `${controllerName} ${options.text}`);
                                 else
-                                    callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}/${selectedGuid}`, `form_${controllerName}_Form_${options.key}`, `${controllerName} ${options.text}`);
+                                    callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}/${selectedGuid}/${selectedCloneId}/${selectedCopyGuid}`, `form_${controllerName}_Form_${options.key}`, `${controllerName} ${options.text}`);
                                 //callElementView(`/Business/MasterData/Client_Form/2`, `${controllerName}_Form`, `${controllerName} ${options.text}`);
                             })
                             .appendTo(container);
                     }
-                } else {
-
+                } 
+                if (col.dataField == "quotationCode") {
+                    col.cellTemplate = function (container, options) {
+                        var selectedValue = options.data["quotationId"];
+                        var selectedGuid = options.data["copyFromGuid"];
+                        $('<a>').addClass('dx-link dx-link-edit')
+                            .text(options.text)
+                            .css({ color: "#337ab7", textDecoration: "underline", cursor: "pointer" })
+                            .on('dxclick', function () {
+                                if (Object.keys(options.key).length > 0)
+                                    callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}/${selectedGuid}`, `form_${controllerName}_Form_${selectedValue}`, `${controllerName} ${options.text}`);
+                                else
+                                    callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}/${selectedGuid}`, `form_${controllerName}_Form_${selectedValue}`, `${controllerName} ${options.text}`);
+                                //callElementView(`/Business/MasterData/Client_Form/2`, `${controllerName}_Form`, `${controllerName} ${options.text}`);
+                            })
+                            .appendTo(container);
+                    }
                 }
+                 if (col.dataField === "workflowStatus")
+                    {
+                        col.cellTemplate = function (container, options) {
+                        var raw = options.value;
+
+                        var st = normalizeStatus(raw); // dùng lại hàm bạn đã có
+
+                        var html = `
+                            <div class="statusTag ${st.css}">
+                                ${st.text}
+                            </div>
+                        `;
+
+                        $(container).append(html);
+                        };
+                    }
             });
         }
         onCustomizeColumns(columns) {
@@ -2554,7 +2724,7 @@
                 $(container).append(html);
             };
                 }
-                if (col.dataField === "pic")
+                if (col.dataField === "pic" || col.dataField === "leaderPIC" || col.dataField === "hodpic")
                 {
                     col.cssClass = "col-pic-rows";
                     col.allowSorting = false;
@@ -2565,14 +2735,14 @@
                     // };
                       // phần này phục vụ search/filter
                     col.calculateCellValue = function (rowData) {
-                        return buildPicCategorySearchText(rowData.pic);
+                        return buildPicCategorySearchText(rowData ? rowData[col.dataField] : "{}");
                     };
 
                     // phần này phục vụ render đẹp
                     col.cellTemplate = function (container, options) {
                         $(container)
-                            .attr("title", buildPicCategorySearchText(options.data.pic))
-                            .append(renderPicInline(options.data.pic));
+                            .attr("title", buildPicCategorySearchText(options.data[col.dataField]))
+                            .append(renderPicInline(options.data[col.dataField]));
                     };
                     // Nếu muốn filter row theo contains chắc hơn
                     // col.calculateFilterExpression = function (filterValue, selectedFilterOperation) {
@@ -2587,8 +2757,6 @@
                 }
 
             });
-
-
         }
 
     }

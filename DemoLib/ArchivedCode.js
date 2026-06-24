@@ -371,3 +371,499 @@
 //}
 
 //$.extend(ajaxSettings.data, { queryParams: params });
+
+
+
+//View chart diagram archived code
+
+// function removeSelectedNode() {
+//     if (!selectedNodeId) {
+//         setStatus("No node selected.");
+//         return;
+//     }
+
+//     const data = getData();
+//     data.workflowNodes = (data.workflowNodes || []).filter(n => n.id !== selectedNodeId);
+//     data.workflowTransitions = (data.workflowTransitions || []).filter(t =>
+//         t.fromNodeId !== selectedNodeId && t.toNodeId !== selectedNodeId
+//     );
+
+//     if (data.runtimeState) {
+//         if (data.runtimeState.activeNodeId === selectedNodeId) {
+//             data.runtimeState.activeNodeId = "";
+//         }
+//         data.runtimeState.completedNodeIds = (data.runtimeState.completedNodeIds || []).filter(x => x !== selectedNodeId);
+//         data.runtimeState.pendingNodeIds = (data.runtimeState.pendingNodeIds || []).filter(x => x !== selectedNodeId);
+//     }
+
+//     setData(data);
+//     clearSelections();
+//     renderWorkflow();
+//     setStatus("Deleted node: " + selectedNodeId);
+// }
+
+// function removeSelectedTransition() {
+//     if (!selectedTransitionKey) {
+//         setStatus("No transition selected.");
+//         return;
+//     }
+
+//     const data = getData();
+//     data.workflowTransitions = (data.workflowTransitions || []).filter(t => makeTransitionKey(t) !== selectedTransitionKey);
+//     setData(data);
+//     const deletedKey = selectedTransitionKey;
+//     clearSelections();
+//     renderWorkflow();
+//     setStatus("Deleted transition: " + deletedKey);
+// }
+
+// function simpleAutoLayout(data) {
+//     const map = {};
+//     const childrenMap = {};
+
+//     (data.workflowNodes || []).forEach(n => {
+//         map[n.id] = n;
+//         childrenMap[n.id] = [];
+//     });
+
+//     (data.workflowNodes || []).forEach(n => {
+//         if (n.parentId && childrenMap[n.parentId]) {
+//             childrenMap[n.parentId].push(n);
+//         }
+//     });
+
+//     const roots = (data.workflowNodes || []).filter(n => !n.parentId);
+//     const levels = [];
+//     const visited = new Set();
+
+//     function dfs(node, level) {
+//         if (!node || visited.has(node.id)) return;
+//         visited.add(node.id);
+//         if (!levels[level]) levels[level] = [];
+//         levels[level].push(node);
+//         (childrenMap[node.id] || []).forEach(child => dfs(child, level + 1));
+//     }
+
+//     roots.forEach(r => dfs(r, 0));
+
+//     levels.forEach((arr, level) => {
+//         arr.forEach((node, i) => {
+//             node.x = 120 + level * 300;
+//             node.y = 120 + i * 180;
+//         });
+//     });
+
+//     const remain = (data.workflowNodes || []).filter(n => !visited.has(n.id));
+
+//     remain.forEach((n, i) => {
+//         n.x = 120;
+//         n.y = 120 + (levels.flat().length + i) * 140;
+//     });
+// }
+
+// function bindConnectionEvent() {
+//     instance.bind("connection", function (info, originalEvent) {
+//         if (!originalEvent) return;
+
+//         const sourceId = info.sourceId;
+//         const targetId = info.targetId;
+//         const data = getData();
+
+//         const exists = (data.workflowTransitions || []).some(t =>
+//             t.fromNodeId === sourceId &&
+//             t.toNodeId === targetId
+//         );
+
+//         if (exists) {
+//             setStatus("Transition already exists: " + sourceId + " -> " + targetId);
+//             return;
+//         }
+
+//         const sourceNode = (data.workflowNodes || []).find(n => n.id === sourceId);
+//         const targetNode = (data.workflowNodes || []).find(n => n.id === targetId);
+
+//         const actionCode = "ACTION_" + ((data.workflowTransitions || []).length + 1);
+//         const actionName = sourceNode && targetNode
+//             ? (sourceNode.nodeName + " To " + targetNode.nodeName)
+//             : "New Transition";
+
+//         const transition = {
+//             fromNodeId: sourceId,
+//             toNodeId: targetId,
+//             actionCode: actionCode,
+//             actionName: actionName,
+//             flowType: (targetNode && targetNode.flowType) || "Both",
+//             isReturn: false,
+//             isLoop: sourceId === targetId,
+//             loopGroup: sourceId === targetId ? ((sourceNode && sourceNode.loopGroup) || "") : "",
+//             loopExitMode: sourceId === targetId ? "UserDecision" : "None",
+//             maxLoopCount: null,
+//             isExitTransition: false,
+//             userDecisionLabel: sourceId === targetId ? "Loop" : "",
+//             conditionJson: ""
+//         };
+
+//         data.workflowTransitions.push(transition);
+//         setData(data);
+
+//         setStatus("Added transition: " + sourceId + " -> " + targetId);
+//         renderWorkflow();
+//     });
+// }
+
+// function render() {
+//     const data = getData();
+
+//     canvas.innerHTML = "";
+
+//     if (instance) instance.reset();
+
+//     instance = jsPlumb.getInstance({
+//         Container: canvas
+//     });
+
+//     instance.importDefaults({
+//         ConnectionsDetachable: false,
+//         ReattachConnections: true
+//     });
+
+//     bindConnectionEvent();
+
+//     (data.workflowNodes || []).forEach(function (node) {
+//         const el = createNodeElement(node, data.runtimeState || {});
+//         canvas.appendChild(el);
+//     });
+
+//     (data.workflowNodes || []).forEach(function (node) {
+//         registerEndpoints(node.id);
+//     });
+
+//     renderTransitions(data);
+
+//     setStatus(
+//         "Rendered " +
+//         (data.workflowNodes || []).length +
+//         " nodes / " +
+//         (data.workflowTransitions || []).length +
+//         " transitions."
+//     );
+// }
+// function createNodeElement(node, runtimeState) {
+//     const el = document.createElement("div");
+//     el.id = node.id;
+//     el.className = "node";
+
+//     if (node.allowLoop) el.classList.add("allowLoopNode");
+//     if (runtimeState?.activeNodeId === node.id) el.classList.add("activeNode");
+//     if ((runtimeState?.completedNodeIds || []).includes(node.id)) el.classList.add("completedNode");
+//     if ((runtimeState?.pendingNodeIds || []).includes(node.id)) el.classList.add("pendingNode");
+
+//     el.style.left = (node.x ?? 0) + "px";
+//     el.style.top = (node.y ?? 0) + "px";
+
+//     el.innerHTML = `
+//         <div class="nodeTitle">${node.nodeName || node.id}</div>
+//         <div class="nodeMeta">
+//             <span class="meta">#${node.orderNo ?? ""}</span>
+//             <span class="meta ${normalizeFlowClass(node.flowType)}">${node.flowType || "Both"}</span>
+//             ${node.levelNo != null ? `<span class="meta">L${node.levelNo}</span>` : ""}
+//             ${node.loopGroup ? `<span class="meta">Loop:${node.loopGroup}</span>` : ""}
+//         </div>
+//     `;
+
+//     el.addEventListener("click", function (ev) {
+//         ev.stopPropagation();
+//         clearNodeSelection();
+//         el.classList.add("selected");
+//         selectedNodeId = node.id;
+//         selectedTransitionKey = null;
+//         setInfo(node, "NODE");
+//     });
+
+//     return el;
+// }
+// function registerEndpoints(nodeId) {
+//     instance.makeSource(nodeId, {
+//         filter: ".nodeTitle",
+//         anchor: "Continuous",
+//         connector: ["Flowchart", { cornerRadius: 10, stub: 24 }],
+//         connectorStyle: { stroke: "#64748b", strokeWidth: 2 },
+//         maxConnections: -1
+//     });
+
+//     instance.makeTarget(nodeId, {
+//         anchor: "Continuous",
+//         allowLoopback: true
+//     });
+
+//     instance.draggable(nodeId, {
+//         grid: [12, 12],
+//         stop: function () {
+//             savePositions();
+//         }
+//     });
+// }
+// document.getElementById("btnAutoLayout").addEventListener("click", () => {
+//   try {
+//     var tmp = JSON.parse(jsonInput.value);
+//     (tmp.workflowNodes || []).forEach(n => {
+//       n.x = null;
+//       n.y = null;
+//     });
+//     jsonInput.value = JSON.stringify(tmp, null, 2);
+//     renderWorkflow({ forceAuto: true });
+//   } catch (err) {
+//     errorBox.style.display = "block";
+//     errorBox.textContent = err && err.stack ? err.stack : String(err);
+//   }
+// });
+// function buildConnectionsFromNodes(nodes) {
+//     const edges = [];
+
+//     nodes.forEach(n => {
+//         if (n.parentId) {
+//             edges.push({
+//                 source: n.parentId,
+//                 target: n.id
+//             });
+//         }
+//     });
+
+//     return edges;
+// }
+
+// function cloneJson(obj) {
+//   return JSON.parse(JSON.stringify(obj));
+// }
+// var statusBar = document.getElementById("statusBar_@Convert.ToInt32(ViewData["Id"])");
+// var infoBox = document.getElementById("infoBox_@Convert.ToInt32(ViewData["Id"])");
+
+// let instance = null;
+// let selectedNodeId = null;
+// let selectedTransitionKey = null;
+
+// function setStatus(text) {
+//     statusBar.textContent = text;
+// }
+
+// function setInfo(obj, title) {
+//     infoBox.textContent = title + "\n\n" + JSON.stringify(obj, null, 2);
+// }
+//function normalizeFlowClass(flowType) {
+//    if (flowType === "Quotation") return "flow-quotation";
+//    if (flowType === "PolicyIssuance" || flowType === "Policy Issuance") return "flow-policy";
+//    return "flow-both";
+//}
+// var def = currentJson.workflowDefinition || {};
+// wfCode.textContent = "Workflow: " + safe(def.workflowCode || "-");
+// flowType.textContent = "Flow: " + safe(def.flowType || "-");
+// currentStep.textContent = "Current: " + safe(currentJson.runtimeState?.activeNodeId || "-");
+// layoutMode.textContent = "Layout: " + (useSavedLayout ? "saved x,y" : "auto layout");
+
+
+// function buildAutoLayout(json) {
+//   const nodes = json.workflowNodes || [];
+//   const transitions = json.workflowTransitions || [];
+
+//   const nodeMap = new Map(nodes.map(n => [n.id, n]));
+//   const graph = new Map();
+
+//   nodes.forEach(n => graph.set(n.id, []));
+
+//   // 🔥 Build graph SAFE (lọc edge gây loop)
+//   transitions.forEach(t => {
+//     if (!nodeMap.has(t.fromNodeId) || !nodeMap.has(t.toNodeId)) return;
+
+//     // ❌ loại self loop
+//     if (t.fromNodeId === t.toNodeId) return;
+
+//     // ❌ loại return / loop
+//     if (t.isReturn || t.isLoop) return;
+
+// // ❌ loại backward edge (quan trọng)
+// const from = nodeMap.get(t.fromNodeId);
+// const to = nodeMap.get(t.toNodeId);
+// if ((to.orderNo || 0) <= (from.orderNo || 0)) return;
+
+//     graph.get(t.fromNodeId).push(t.toNodeId);
+//   });
+
+//   // 🔥 BFS layer (KHÔNG BAO GIỜ LOOP)
+//   const layerMap = new Map();
+//   const queue = [];
+
+//   // root = node không có parent hoặc indegree = 0
+//   const indegree = new Map();
+//   nodes.forEach(n => indegree.set(n.id, 0));
+
+//   graph.forEach((tos, from) => {
+//     tos.forEach(to => indegree.set(to, indegree.get(to) + 1));
+//   });
+
+//   const roots = nodes.filter(n => indegree.get(n.id) === 0);
+
+//   (roots.length ? roots : nodes.slice(0, 1)).forEach(r => {
+//     layerMap.set(r.id, 0);
+//     queue.push(r.id);
+//   });
+
+//   const visited = new Set();
+
+//   while (queue.length) {
+//     const current = queue.shift();
+//     if (visited.has(current)) continue;
+//     visited.add(current);
+
+//     const currentLayer = layerMap.get(current) || 0;
+
+//     (graph.get(current) || []).forEach(to => {
+//       if (!layerMap.has(to)) {
+//         layerMap.set(to, currentLayer + 1);
+//         queue.push(to);
+//       }
+//     });
+//   }
+
+//   // 🔥 fallback cho node bị cycle / không reachable
+//   nodes.forEach(n => {
+//     if (!layerMap.has(n.id)) {
+//       layerMap.set(n.id, 0); // hoặc max + 1 nếu muốn đẩy xuống cuối
+//     }
+//   });
+
+// // 🔥 group theo layer
+//       const grouped = {};
+//       nodes.forEach(n => {
+//         const layer = layerMap.get(n.id) || 0;
+//         if (!grouped[layer]) grouped[layer] = [];
+//         grouped[layer].push(n);
+//       });
+
+//       Object.keys(grouped).forEach(layer => {
+//         grouped[layer].sort((a, b) => (a.orderNo || 9999) - (b.orderNo || 9999));
+//       });
+
+// // 🔥 layout position
+//   const startX = 96;
+//   const startY = 110;
+//   const colGap = 280;
+//   const rowGap = 150;
+
+
+//   const SCALE_X = 1.9;   // ← Điều chỉnh để giãn ngang
+//   const SCALE_Y = 2.0;   // ← Điều chỉnh để giãn dọc
+
+//   const positions = {};
+
+//   Object.keys(grouped)
+//     .map(Number)
+//     .sort((a, b) => a - b)
+//     .forEach(layer => {
+//       const arr = grouped[layer];
+//       const totalHeight = (arr.length - 1) * rowGap;
+//       const baseY = Math.max(startY, 200 - totalHeight / 2);
+
+//       arr.forEach((n, index) => {
+//         positions[n.id] = {
+//           x: n.posX ? n.posX * SCALE_X : startX + layer * colGap,
+//           y: n.posY ? n.posY * SCALE_Y : baseY + index * rowGap,
+//           layer
+//         };
+//       });
+//     });
+
+//   const maxLayer = Math.max(...Object.keys(grouped).map(Number));
+//   const maxCount = Math.max(...Object.values(grouped).map(a => a.length));
+
+//   return {
+//     positions,
+//     grouped,
+//     canvasWidth: startX + (maxLayer + 1) * colGap + 300,
+//     canvasHeight: Math.max(760, startY + maxCount * rowGap + 260)
+//   };
+// }
+
+
+// function renderTransitions(data) {
+//     (data.workflowTransitions || []).forEach(function (t) {
+//         const style = getTransitionStyle(t);
+
+//         const conn = instance.connect({
+//             source: t.fromNodeId,
+//             target: t.toNodeId,
+//             anchors: t.fromNodeId === t.toNodeId ? ["Top", "Right"] : ["Continuous", "Continuous"],
+//             connector: getConnectorConfig(t),
+//             paintStyle: style,
+//             endpoint: "Dot",
+//             endpointStyle: { radius: 4, fill: style.stroke },
+//             overlays: [
+//                 ["Arrow", { width: 10, length: 10, location: 1, foldback: 0.8 }],
+//                 ["Label", {
+//                     label: getTransitionLabel(t),
+//                     location: 0.5,
+//                     cssClass: "aLabel"
+//                 }]
+//             ]
+//         });
+
+//         conn.__transitionData = t;
+//         conn.__transitionKey = makeTransitionKey(t);
+
+//         conn.bind("click", function (connection, ev) {
+//             if (ev) ev.stopPropagation();
+//             selectedTransitionKey = conn.__transitionKey;
+//             selectedNodeId = null;
+//             clearNodeSelection();
+//             // setInfo(t, "TRANSITION");
+//             setStatus("Selected transition: " + (t.actionCode || ""));
+//         });
+//     });
+// }
+
+// function savePositions() {
+//     const data = getData();
+//     (data.workflowNodes || []).forEach(function (n) {
+//         const el = document.getElementById(n.id);
+//         if (!el) return;
+
+//         n.x = parseInt(el.style.left, 10) || 0;
+//         n.y = parseInt(el.style.top, 10) || 0;
+//     });
+//     setData(data);
+//     setStatus("Saved x,y back to workflowNodes.");
+// }
+// function getTransitionLabel(t) {
+//     return t.userDecisionLabel || t.actionName || t.actionCode || "";
+// }
+
+// function makeTransitionKey(t) {
+//     return [t.fromNodeId, t.toNodeId, t.actionCode || "", t.actionName || ""].join("||");
+// }
+
+
+
+// function getTransitionStyle(t) {
+//     if (t.isExitTransition) {
+//         return { stroke: "#7c3aed", strokeWidth: 3, dashstyle: "2 0" };
+//     }
+//     if (t.isLoop) {
+//         return { stroke: "#ea580c", strokeWidth: 3, dashstyle: "4 2" };
+//     }
+//     if (t.isReturn) {
+//         return { stroke: "#dc2626", strokeWidth: 2, dashstyle: "6 3" };
+//     }
+//     return { stroke: "#64748b", strokeWidth: 2, dashstyle: "2 0" };
+// }
+
+// function getConnectorConfig(t) {
+//     if (t.fromNodeId === t.toNodeId) {
+//         return ["StateMachine", { margin: 6, curviness: 40 }];
+//     }
+//     if (t.isReturn) {
+//         return ["Bezier", { curviness: 90 }];
+//     }
+//     if (t.isLoop) {
+//         return ["Bezier", { curviness: 70 }];
+//     }
+//     return ["Flowchart", { cornerRadius: 10, stub: 24 }];
+// }

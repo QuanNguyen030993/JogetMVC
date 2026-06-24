@@ -1,0 +1,152 @@
+﻿@page
+@model SerilogModel
+@{
+}
+
+<style>
+
+    .grid-wrapper {
+        height: calc(100vh - 140px);
+    }
+
+
+</style>
+<script>
+       function loadLogs() {
+            $.ajax({
+                url: 'api/CommentLog/GetSeriLog',
+                type: 'GET',
+                success: function (data) {
+
+                    const grid = $("#gridContainer").dxDataGrid("instance");
+
+                    // bind data (list Dictionary<string, object>)
+                    grid.option("dataSource", data);
+                },
+                error: function (err) {
+                    console.error("Error loading logs:", err);
+                }
+            });
+        }
+            $("#gridContainer").dxDataGrid({
+        dataSource: [],
+        keyExpr: "id",
+
+        // ✅ kích thước full
+        width: "100%",
+        height: "100%",
+
+        showBorders: true,
+        columnAutoWidth: true,
+        rowAlternationEnabled: true,
+
+        // ✅ paging
+        paging: {
+            pageSize: 20
+        },
+        pager: {
+            showPageSizeSelector: true,
+            allowedPageSizes: [20, 50, 100],
+            showInfo: true
+        },
+
+        // ✅ search + filter
+        searchPanel: {
+            visible: true,
+            width: 300,
+            placeholder: "Search logs..."
+        },
+
+        filterRow: {
+            visible: true
+        },
+
+        headerFilter: {
+            visible: true
+        },
+
+        // ✅ sorting
+        sorting: {
+            mode: "multiple"
+        },
+
+        // ✅ scroll mượt khi nhiều data
+        scrolling: {
+            mode: "virtual"
+        },
+
+        columns: [
+            { dataField: "id", width: 80 },
+
+            {
+                dataField: "message",
+                minWidth: 200
+            },
+
+            {
+                dataField: "messageTemplate",
+                visible: false // thường không cần show
+            },
+
+            {
+                dataField: "level",
+                width: 100
+            },
+
+            {
+                dataField: "timeStamp",
+                dataType: "datetime",
+                sortOrder: "desc",   // ✅ mới nhất lên đầu
+                width: 180
+            },
+
+            {
+                dataField: "exception",
+                visible: false
+            },
+
+            {
+                dataField: "properties",
+                minWidth: 200
+            },
+
+            {
+                dataField: "userId",
+                width: 120
+            }
+        ],
+
+        // ✅ highlight row theo level
+        onRowPrepared: function (e) {
+            if (e.rowType === "data") {
+                if (e.data.level === "Error") {
+                    e.rowElement.css("background-color", "#ffe6e6");
+                }
+                if (e.data.level === "Warning") {
+                    e.rowElement.css("background-color", "#fff5cc");
+                }
+            }
+        }
+    });
+
+        loadLogs(); // ✅ gọi API
+
+        // SignalR call (giữ lại)
+        connectionSignR.invoke("GetOnlineUsers");
+
+        // Sau này mở lại:
+        // connectionSignR.on("onlineUsersChanged", (users) => {
+        //     $("#gridContainer").dxDataGrid("instance").option("dataSource", users);
+        //     $("#count").text(users.length);
+        // });
+</script>
+
+<div style="margin: 8px 0;">
+    <span>Connected users: </span><b id="count">0</b>
+</div>
+
+
+<div class="grid-wrapper">
+    <div id="gridContainer"></div>
+</div>
+

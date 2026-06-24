@@ -11,20 +11,38 @@
     }
 </style>
 <script type="text/javascript">
-    var that = new Object();
+    var sectionId = "@(ViewData["Cd"])";
     that.ModelName = "Quotation";
+    that.moduleName = "default";
+    that.editorType = "dxFileUploader"
+    that.id = @(quotationId);
+    that.guid = "@(quotationGuid)";
+    that.sectionName = "@(dept)";
+    that.titleName = "Upload Quotation";
+    that.data = { SectionName: `${sectionId}_${that.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: that.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" };; //{"SectionName":"default_FO_410"}
+
+
+    var that2 = new Object();
+    that2.ModelName = "Quotation";
+    that2.moduleName = "supportingDoc";
+    that2.editorType = "dxFileUploader"
+    that2.id = @(quotationId);
+    that2.guid = "@(quotationGuid)";
+    that2.sectionName = "@(dept)";
+    that2.titleName = "Upload Supporting Document";
+    that2.data = { SectionName: `${sectionId}_${that2.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" }; //{"SectionName":"default_FO_410"}
     $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
     dataSource: makeBasicDataSource(that, true),
      items: [
          {itemType: "group",caption: "Decision",colCount:2,items: [
-    {
+        {
         dataField: "decision",
         label: { text: "Decision" },
         editorType: "dxRadioGroup",
         editorOptions: {
             items: [
                 { id: "AC_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Accept", value: true },
-                { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Assign", value: false },
+                // { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Assign", value: false },
                 { id: "RJ_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Reject", value: false }
             ],
              displayExpr: "text",
@@ -33,7 +51,7 @@
              itemTemplate: function(itemData, _, itemElement) {
              setTimeout(() => {
               var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-              var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Problem");
+              var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
               if (tatObject) if (tatObject[`@dept`]?.AcceptDate)
               {
                 $(`#AC_@QTViewIdHelper.Decision(dept, quotationId)`).addClass("btn-info");
@@ -50,7 +68,7 @@
                  if (_ == 0)
                  {
                       var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-                       var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Problem");
+                       var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
                       tatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
                       formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
                       var passingObject = new Object(); 
@@ -63,10 +81,10 @@
                       passingObject.schemeName = `Quotation`;
                       acceptDecision(passingObject);
                  }
-                 if (_ == 2)
+                 if (_ == 1)
                  {
                       var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-                      var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Problem");
+                      var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
                       tatObject[`@dept`].AcceptDate = "";
                       formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
                       var passingObject = new Object();
@@ -88,54 +106,49 @@
         }
     }]},
 
-    { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefault("qt", "@(dept)", @(quotationId), "@(quotationGuid)") },
+    { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentByCase(that , that2) },
+
     {dataField: "biQtNum",editorType: "dxSelectBox",visible:false},
     {dataField: "incBIQuoId",editorType: "dxTextBox",visible:false},
     {dataField: "iarQuotationNo",editorType: "dxTextBox",visible:false},
     {dataField: "IncIARQuoId",editorType: "dxSelectBox",visible:false},
-    {dataField: "tmiCode",editorType: "dxSelectBox",visible: true},
-
-    {dataField: "tmivShare",editorType: "dxNumberBox",visible:true},
-
-        { dataField: "currencyId", label: { template: labelTpl("CurrencyCode - Currency code") } },
-
-            {itemType: "group",caption: "Insurance Period",colCount:2,items: [
-    {dataField: "insPeriodId",editorType: "dxSelectBox",visible: true},
-    {dataField: "periodInsuranceStartDate",editorType: "dxTextBox",visible:true},
-    {dataField: "periodInsuranceEndDate",editorType: "dxTextBox",visible:true},
+    
+    {itemType: "group",caption: "Quotation Detail",colCount:2,items: [
+     {itemType: "group",caption: "",colCount:3, colSpan: 2,items: [
+    {dataField: "tmiCode",editorType: "dxSelectBox",visible: true, editorOptions: makeSelectBoxEditorOptions(_enums.TMICode)},
+    {dataField: "tmivShare",editorType: "dxNumberBox", visible:true},
+    {dataField: "currencyId",editorType: "dxSelectBox", label: { text: "Currency" } , editorOptions: makeSelectBoxEditorOptions(_enums.Currency) }]},
+    {itemType: "group",caption: "Insurance Period",colCount:4, colSpan: 2,items: [
+    {dataField: "insPeriodId", label: { text: "Insurance Period" },editorType: "dxSelectBox",visible: true , editorOptions: makeSelectBoxEditorOptions(_enums.InsPeriod) },
+    {dataField: "periodInsuranceStartDate",editorType: "dxDateBox", editorOptions: { displayFormat: "dd/MM/yyyy" } ,visible:true},
+    {dataField: "periodInsuranceEndDate",editorType: "dxDateBox", editorOptions: { displayFormat: "dd/MM/yyyy" },visible:true},
     {dataField: "actualDays",editorType: "dxNumberBox",visible:true}
     ]},
-    {itemType: "group",caption: "Coverage",colCount:2,items: [
-        {dataField: "coverageId",editorType:  "dxTextBox",visible:true} // "dxDataGrid"
+    
+    {itemType: "group",caption: "Sum Insured",colCount:4, colSpan: 2,items: [
+    { dataField: "sumInsuredTotalUsd", editorType:"dxNumberBox", label: { template: labelTpl("SumInsuredTotalUsd - Total Sum Insured (USD)") } },
+    { dataField: "exchangeRate", editorType:"dxNumberBox", label: { template: labelTpl("ExchangeRate - Exchange rate") } },
+    { dataField: "sumInsuredTotal", editorType:"dxNumberBox", editorOptions: {format: '#,##0'} },
     ]},
-
-
-
-        {itemType: "group",caption: "Sum Insured",colCount:2,items: [
-    { dataField: "sumInsuredTotal", editorType:"dxNumberBox", editorOptions: {format: '#,##0'
-         } },
-    { dataField: "sumInsuredTotalUsd", label: { template: labelTpl("SumInsuredTotalUsd - Total Sum Insured (USD)") } },
-    { dataField: "exchangeRate", label: { template: labelTpl("ExchangeRate - Exchange rate") } }
-    ]},
-    {itemType: "group",caption: "Premium",colCount:2,items: [
-                 { dataField: "deductibleId", label: { template: labelTpl("Deductible - Deductible") } },
-    { dataField: "premiumRate", label: { template: labelTpl("PremiumRate - Premium rate") } },
-    { dataField: "premiumCfe", label: { template: labelTpl("PremiumCfe - CFE premium") } },
-    { dataField: "premiumVoluntary", label: { template: labelTpl("PremiumVoluntary - Voluntary premium") } },
-    { dataField: "premiumTotalBeforeVat", label: { template: labelTpl("PremiumTotalBeforeVat - Tổng premium trước VAT") } },
-    { dataField: "premiumTotal", editorType:"dxNumberBox", editorOptions: {format: '#,##0'
-
+    {itemType: "group",caption: "Premium",colCount:5, colSpan: 2,items: [
+    // { dataField: "deductibleId", label: { template: labelTpl("Deductible - Deductible") } },// "dxDataGrid"
+    { dataField: "premiumCfe", editorType:"dxNumberBox", label: { template: labelTpl("PremiumCfe - CFE premium") } },
+    { dataField: "premiumVoluntary", editorType:"dxNumberBox", label: { template: labelTpl("PremiumVoluntary - Voluntary premium") } },
+    { dataField: "premiumRate", editorType:"dxNumberBox", label: { template: labelTpl("PremiumRate - Premium rate") } },
+    { dataField: "premiumTotalBeforeVat", editorType:"dxNumberBox", label: { template: labelTpl("PremiumTotalBeforeVat - Tổng premium trước VAT") } },
+    { dataField: "premiumTotal", editorType:"dxNumberBox", editorType:"dxNumberBox", editorOptions: {format: '#,##0'
          } }
     ]},
-    {itemType: "group",caption: "VAT",colCount:2,items: [
-    {dataField: "vat",editorType: "dxTextBox",visible:true},
-    {dataField: "vatValue",editorType: "dxTextBox",visible:true}
+    {itemType: "group",caption: "VAT",colCount:4, colSpan: 2,items: [
+    {dataField: "vat", editorType:"dxNumberBox",visible:true},
+    {dataField: "vatValue", editorType:"dxNumberBox",visible:true}
     ]},
 
      {
          itemType: "group",
          caption: "Due",
-         colCount: 2,
+         colCount: 4,
+         colSpan: 2,
          items: [
              { dataField: "totalDue", editorType:"dxNumberBox", editorOptions: {format: '#,##0'
 
@@ -143,24 +156,15 @@
          } },
              ]
      },
-    {itemType: "group",caption: "Installment",colCount:2,items: [
-    {dataField: "installmentId",editorType: "dxTextBox",visible:true} //dxDatagrid
+    {itemType: "group",caption: "Terms & Conditions",colCount:1, colSpan: 2,items: [
+    {dataField: "termsConditionsText",editorType: "dxTextArea",visible:true}
     ]},
-    {itemType: "group",caption: "Terms & Conditions",colCount:2,items: [
-    {dataField: "termsConditionsText",editorType: "dxTextBox",visible:true}
-    ]},
-    {itemType: "group",caption: "Clause",colCount:2,items: [
-    {dataField: "clauseId",editorType: "dxTextBox",visible:true}
-    ]},
-
-
-
-
 
     {
      itemType: "group",
      caption: "Risk",
      colCount: 3,
+     colSpan: 2,
      items: [
          { dataField: "riskGrade", label: { template: labelTpl("RiskGrade - Risk grade") } },
              { dataField: "topRiskPd", label: {text: "Top Risk (After Co)", template: labelTpl("TopRiskPd - Top risk PD") } },
@@ -168,6 +172,16 @@
 
      ]
     },
+    {itemType: "group",caption: "Installment",colCount:2, colSpan: 2,items: [
+    // {dataField: "installmentId",editorType: "dxTextBox",visible:true} //dxDatagrid
+    ]},
+    {itemType: "group",caption: "Coverage",colCount:4, colSpan: 2,items: [
+        // {dataField: "coverageId",editorType:  "dxTextBox",visible:true} // "dxDataGrid"
+    ]},
+    {itemType: "group",caption: "Clause",colCount:2, colSpan: 2,items: [
+    // {dataField: "clauseId",editorType: "dxTextBox",visible:true} //dxDatagrid
+    ]}
+    ]}
     
      ]
     });

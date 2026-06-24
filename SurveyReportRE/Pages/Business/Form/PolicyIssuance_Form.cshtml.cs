@@ -13,12 +13,14 @@ namespace ERPCore.Pages
         public static string ModelName { get; set; } = "";
         private static string Id { get; set; }
         private static string Guid { get; set; }
+        private static string CloneId { get; set; }
+        private static string CopyFromGuid { get; set; }
 
         public PolicyIssuance_FormModel()
         {
             //_logger = logger;
         }
-        public async void OnGet(int? pageNum, string guid)
+        public async void OnGet(int? pageNum, string guid,long? cloneId, string copyfromguid)
         {
             if (pageNum != 0)
             {
@@ -41,6 +43,8 @@ namespace ERPCore.Pages
             ModelName = nameof(PolicyIssuance);
             ViewData[nameof(Id)] = pageNum ?? 0;
             ViewData[nameof(Guid)] = guid ?? "";
+            ViewData[nameof(CloneId)] = cloneId ?? 0;
+            ViewData[nameof(CopyFromGuid)] = copyfromguid ?? "";
         }
     }
 }

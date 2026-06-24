@@ -106,7 +106,7 @@ public class QuotationWorkflowHistoryController : BaseControllerApi<QuotationWor
                     loadParams: normalizedParams,
                     defaultOrderBy: "HistoryId",
                     defaultOrderDir: "DESC",
-                    pkTieBreaker: "QuotationId",
+                    pkTieBreaker: "RecordGuid",
                     mainTableAlias: null,
                     allowedColumns: new HashSet<string>(StringComparer.OrdinalIgnoreCase)
                     {
@@ -120,7 +120,7 @@ public class QuotationWorkflowHistoryController : BaseControllerApi<QuotationWor
                    "CommentType",
                    "CommentBy",
                    "CommentText",
-                   "QuotationId",
+                   "RecordGuid",
                    "CommentId"
                     }
                 );
