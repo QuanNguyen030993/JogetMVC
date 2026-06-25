@@ -3093,7 +3093,7 @@
             // const currentOptions = getCurrentFormOptions(editorOptions) || {};
             // currentOptions.guid = editorOptions.guid || "";
             // const ids = getDxFileUploaderIds(editorOptions);
-            var uploaderAllow = editorOptions.uploaderAllow == null ? true : editorOptions.uploaderAllow;
+            // var uploaderAllow = editorOptions.uploaderAllow == null ? true : editorOptions.uploaderAllow;
             // editorOptions.uploaderAllow = uploaderAllow;
 
             $(`#${editorOptions.previewId}`).remove();
@@ -3105,10 +3105,10 @@
                 .appendTo($container)
 
                
-             if (isRenderUploader)
+             // if (isRenderUploader)
                $uploader
                 .dxFileUploader({
-                    disabled: !uploaderAllow,
+                    // disabled: !uploaderAllow,
                     multiple: true,
                     accept: options.accept || "*/*",
                     selectButtonText: editorOptions.titleName || `Upload Attachments`,
@@ -5463,7 +5463,7 @@ function styleModeChange(item){
                 return String(k || "").trim().toUpperCase();
             }
 
-                function renderFullFormIfAccepted(formInstance, dept) {
+                function renderFullFormIfAccepted(formInstance, dept, mainField) {
         var formData = formInstance.option("formData") || {};
         var tatObject = tryParseJSON(formData.turnAroundTimeAttributes);
 
