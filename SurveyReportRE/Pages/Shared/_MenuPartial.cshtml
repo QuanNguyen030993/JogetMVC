@@ -16,7 +16,9 @@
                 $("#rolename").text(result.userRoles.RoleName);
                  _loginUser =  result.userRoles.LoginName.replace("TOKIOMARINE\\", "");;
                 $("#accountLabel").text(_loginUser);
-                 _role = result.userRoles.RoleName;
+                 //_role = result.userRoles.RoleName;
+                 //Debug
+                 _role = "TS";
                  _roleAppName = result.userRoles.RoleAppName;
                  _branch = result.userRoles.Branch;
                 $("#roleLabel").text(`Department ${_role}`);

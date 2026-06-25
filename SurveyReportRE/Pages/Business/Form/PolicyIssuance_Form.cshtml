@@ -104,7 +104,7 @@ Note:
         var selectedFromGuid = null;
         var selectedAttachmentId = null;
         var commentPanelOpened = false;
-        let stageDept = null;
+        var stageDept = null;
         var stageAccount = "";
 
         var deptData = { FO: {}, TS: {}, PM: {} };
@@ -981,11 +981,13 @@ Note:
 
 
              getPersonInCharge(stageAccount).then(function (stageName) {
-            $(`#${window.PolicyIssuanceIdManager.stageDeptPill(q.id)}`).html(`<span id="@ViewIdHelper.DetailStatus(moduleCode, Convert.ToInt64(ViewData["Id"]))" class="pill">${workflowStatus}</span> <span style="padding-left:5px">- ${stageName ?? ""}</span>``);
+            $(`#${window.PolicyIssuanceIdManager.stageDeptPill(q.id)}`).html(`<span id="@ViewIdHelper.DetailStatus(moduleCode, Convert.ToInt64(ViewData["Id"]))" class="pill">${workflowStatus}</span> <span style="padding-left:5px">- ${stageName ?? ""}</span>`);
             $(`#${window.PolicyIssuanceIdManager.detailStatus(q.id)}`)
                 .text(statusText(workflowStatus))
                 .attr("class", `statusTag ${statusClass(workflowStatus)}`);
                    });
+
+
             var control = new Object();
             $.each(piDeptModuleCode, function (itemIndex, item) {
                 deptData[item] = { ...q, id: q.id, sectionName: item, code: q.policyIssuanceCode };

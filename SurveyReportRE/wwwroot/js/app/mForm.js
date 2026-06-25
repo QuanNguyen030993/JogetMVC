@@ -576,7 +576,6 @@
                 var data = new Object();;
                 if (id == null || id == undefined) {
                     delete formData[that.pk];
-                    debugger
                     var store = that.formInstance.option("dataSource");
                     data.values = JSON.stringify(appReplaceDoubleQuote(formData));
                     store.insert(formData).done(function () {

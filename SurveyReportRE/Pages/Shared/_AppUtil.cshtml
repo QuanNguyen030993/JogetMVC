@@ -2828,6 +2828,44 @@
 
                     } : {}]
             }
+
+
+                function attachmentByCase(...item){
+                        return [item[0] ? {
+                            dataField: "quotation", editorType: "dxFileUploader"
+                            ,
+                            editorOptions: {
+                                name: "files"
+                            }
+                            , template: function (data, itemElement) {
+                                createEditor(item[0], itemElement, $(`<div>`), item[0]);
+                            }
+
+                        } : {},
+                        item[1] ? {
+                            dataField: "supportingDocument", editorType: "dxFileUploader"
+                            ,
+                            editorOptions: {
+                                name: "sdfiles"
+                            }
+                            , template: function (data, itemElement) {
+                                createEditor(item[1], itemElement, $(`<div>`), item[1]);
+                            }
+
+                        } : {},
+                        item[2] ? {
+                            dataField: "document", editorType: "dxFileUploader"
+                            ,
+                            editorOptions: {
+                                name: "dfiles"
+                            }
+                            , template: function (data, itemElement) {
+                                createEditor(item[2], itemElement, $(`<div>`), item[2]);
+                            }
+
+                        } : {}]
+                }
+
         function attachmentDefaultPi(...item){
         var attachmentControls = attachmentByCase(...item);
                     return attachmentControls;
@@ -3045,7 +3083,7 @@
                             });
             }
         }
-        function renderDxFileUploader(editorOptions, $container, options) {
+        function renderDxFileUploader(editorOptions, $container, options, isRenderUploader = true, uploaderAllow = false)  {
             const renderTime = Date.now();
             const controlId = `${editorOptions.data.SectionName}`;
             const data =  editorOptions.data;
@@ -3056,18 +3094,21 @@
             // currentOptions.guid = editorOptions.guid || "";
             // const ids = getDxFileUploaderIds(editorOptions);
             var uploaderAllow = editorOptions.uploaderAllow == null ? true : editorOptions.uploaderAllow;
-            editorOptions.uploaderAllow = uploaderAllow;
+            // editorOptions.uploaderAllow = uploaderAllow;
 
             $(`#${editorOptions.previewId}`).remove();
             $(`#${controlId}`).remove();
             //const $preview =  $(`<div id="${previewId}" style="display:flex;flex-wrap:wrap;gap:25px;top:10px"></div>`)
             const $preview = $(`<div id="attList_${controlId}_${renderTime}" class="att-preview"></div>`)
                 .appendTo($container);
-            if (editorOptions.uploaderAllow == true)
-            $(`<div id="fileUpload_${controlId}_${renderTime}"></div>`)
+            const $uploader = $(`<div id="fileUpload_${controlId}_${renderTime}"></div>`)
                 .appendTo($container)
+
+               
+             if (isRenderUploader)
+               $uploader
                 .dxFileUploader({
-                    // readOnly: !!currentOptions.isReadOnly,
+                    disabled: !uploaderAllow,
                     multiple: true,
                     accept: options.accept || "*/*",
                     selectButtonText: editorOptions.titleName || `Upload Attachments`,
@@ -4283,7 +4324,7 @@
                         uploadTitle: "Files",
                         uploadUrl: "/api/Attachment/AsyncUploadFile",
                         accept: "*/*"
-                    });
+                        }, editorOptions.isRenderUploader, editorOptions.uploaderAllow);
 
                 }
                 break;
@@ -5330,7 +5371,6 @@ function styleModeChange(item){
 
             onGridReady: function (ctx) {
                 const $radioHost = ctx.result.topPanel.find(".branch-radio-host");
-                debugger
                 $radioHost.dxRadioGroup({
                     dataSource: _enums.BranchOffice,
                     valueExpr: "id",
@@ -5400,7 +5440,7 @@ function styleModeChange(item){
                     const pic = picMap[dept] || "";
                     if (pic)
                     getPersonInCharge(pic).then(function (stageName) {
-                    if (stageDept)
+                    // if (stageDept)
                         $co.find(".co-text").text(stageName);
                         $co.css({ color: "rgba(17,24,39,.85)" });
                         });
@@ -5422,4 +5462,16 @@ function styleModeChange(item){
                   function normalizeDeptKey(k) {
                 return String(k || "").trim().toUpperCase();
             }
+
+                function renderFullFormIfAccepted(formInstance, dept) {
+        var formData = formInstance.option("formData") || {};
+        var tatObject = tryParseJSON(formData.turnAroundTimeAttributes);
+
+        if (tatObject?.[dept]?.AcceptDate) {
+            formInstance.option("items", [
+                ...formInstance.option("items"),
+                ...mainField
+            ]);
+        }
+    }
 </script>

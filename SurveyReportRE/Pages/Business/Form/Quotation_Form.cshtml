@@ -372,26 +372,20 @@ Note:
 
             });
 
-           
+            
 
             setTimeout(() => {
                  $.each(qtDeptModuleCode, function (itemIndex, item) {
-                       var saveButtonId = window.QuotationIdManager.btnSave(item,@ViewData["Id"]);
+                    var saveButtonId = window.QuotationIdManager.btnSave(item,@ViewData["Id"]);
                     $(`#${saveButtonId}`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roleApply[item]);
                     var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
                     $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
+                     $(`#${formId}`).dxForm("instance")?.repaint();
                 });
                
             }, 1);
 
-            // setTimeout(() => {
-            //       $.each(qtDeptModuleCode, function (itemIndex, item) {
-            //         var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
-            //      $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
 
-            // });
-                
-            // }, 1);
                 
             $(`#${formModuleKeyQt}-roleSelect`).dxSelectBox({
                 items: QtRoles,
@@ -399,6 +393,7 @@ Note:
                 stylingMode: "outlined",
                 onValueChanged: (e) => {
                     state.currentUserRole = e.value;
+                    _role = e.value;
                     $(`#${formModuleKeyQt}-loginRoleLabel`).text(state.currentUserRole);
                     applyEditLock();
                     updateHints();
@@ -490,7 +485,7 @@ Note:
 
                 applyNodeHighlights();
                 applySectionFocusHighlight();
-                applyEditLock();
+                // applyEditLock();
                 updateHints();
                 scrollToDept(formModuleKeyQt, { id: `${focusDept}`, keyId: "@ViewData["Id"]" });
                 setSectionCollapsed(focusDept, false);
@@ -603,13 +598,14 @@ Note:
             //                         // <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
             // }
 
-            const loadComments = debounce(function (quoteNo, quoteId) {
+            const loadComments = debounce(function (quoteNo) {
                 document.documentElement.style.setProperty("--rightdock-width", "20%");
+                var guid = "@(ViewData["Guid"])";
                 $("#rightCommentSub").text(`Audit log - ${quoteNo}` || "-");
                 $("#rightCommentList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
                 const q = `OnSystem`;
                 $.ajax({
-                    url: `/api/CommentLog/ExecuteCustomQuery?refField=RecordGuid&refKey=${quoteId}`,
+                    url: `/api/CommentLog/ExecuteCustomQuery?refField=RecordGuid&refKey=${guid}`,
                     method: "POST",
                     async: true,
                     contentType: "application/json",
@@ -813,7 +809,7 @@ Note:
                     onClick: () => {
                         clearContent();
                         openRightCommentPanel();
-                        attachmentLogLoad(state.selectedCodeNo, state.selectedId, selectedAttachmentId);
+                        attachmentLogLoad(state.selectedCodeNo);
                     }
                 }).appendTo($("#headerWidgetsPanel"));
 
@@ -824,7 +820,7 @@ Note:
                     onClick: () => {
                         clearContent();
                         openRightCommentPanel();
-                        loadComments(state.selectedCodeNo, state.selectedId);
+                        loadComments(state.selectedCodeNo);
                     }
                 }).appendTo($("#headerWidgetsPanel"));
 
@@ -847,9 +843,8 @@ Note:
                     onClick: () => {
                         clearContent();
                         if (!commentPanelOpened) {
-
                             openRightCommentPanel();
-                            loadComments(state.selectedCodeNo, state.selectedId);
+                            loadComments(state.selectedCodeNo);
                         } else {
                             closeRightCommentPanel();
                         }
@@ -896,7 +891,7 @@ Note:
                         clearContent();
                         if (!commentPanelOpened) {
                             openRightCommentPanel();
-                            attachmentLogLoad(state.selectedCodeNo, state.selectedId, selectedAttachmentId);
+                            attachmentLogLoad(state.selectedCodeNo);
                         } else {
                             closeRightCommentPanel();
                         }
@@ -1091,6 +1086,8 @@ Note:
             updateHints();
             renderDeptCallouts(PIC_JSON);
             firstRender = false;
+            applyEditLock();
+
         });
     }, _delayQuotationsLoadForm);
 

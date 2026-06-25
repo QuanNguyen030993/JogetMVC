@@ -11,30 +11,15 @@
     }
 </style>
 <script type="text/javascript">
-    var sectionId = "@(ViewData["Cd"])";
-    that.ModelName = "Quotation";
-    that.moduleName = "default";
-    that.editorType = "dxFileUploader"
-    that.id = @(quotationId);
-    that.guid = "@(quotationGuid)";
-    that.sectionName = "@(dept)";
-    that.titleName = "Upload Quotation";
-    that.data = { SectionName: `${sectionId}_${that.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: that.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" };; //{"SectionName":"default_FO_410"}
-
-
-    var that2 = new Object();
-    that2.ModelName = "Quotation";
-    that2.moduleName = "supportingDoc";
-    that2.editorType = "dxFileUploader"
-    that2.id = @(quotationId);
-    that2.guid = "@(quotationGuid)";
-    that2.sectionName = "@(dept)";
-    that2.titleName = "Upload Supporting Document";
-    that2.data = { SectionName: `${sectionId}_${that2.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" }; //{"SectionName":"default_FO_410"}
-    $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
+    var items = [
+                { id: "AC_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Accept", value: true },
+                // { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Assign", value: false },
+                { id: "RJ_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Reject", value: false }
+            ];
+      var formInstance =  $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
     dataSource: makeBasicDataSource(that, true),
      items: [
-         {itemType: "group",caption: "Decision",colCount:2,items: [
+         {itemType: "group",caption: "Prepare Quotation",colCount:2,items: [
         {
         dataField: "decision",
         label: { text: "Decision" },
@@ -112,7 +97,7 @@
     {dataField: "incBIQuoId",editorType: "dxTextBox",visible:false},
     {dataField: "iarQuotationNo",editorType: "dxTextBox",visible:false},
     {dataField: "IncIARQuoId",editorType: "dxSelectBox",visible:false},
-    
+
     {itemType: "group",caption: "Quotation Detail",colCount:2,items: [
      {itemType: "group",caption: "",colCount:3, colSpan: 2,items: [
     {dataField: "tmiCode",editorType: "dxSelectBox",visible: true, editorOptions: makeSelectBoxEditorOptions(_enums.TMICode)},
@@ -124,7 +109,7 @@
     {dataField: "periodInsuranceEndDate",editorType: "dxDateBox", editorOptions: { displayFormat: "dd/MM/yyyy" },visible:true},
     {dataField: "actualDays",editorType: "dxNumberBox",visible:true}
     ]},
-    
+
     {itemType: "group",caption: "Sum Insured",colCount:4, colSpan: 2,items: [
     { dataField: "sumInsuredTotalUsd", editorType:"dxNumberBox", label: { template: labelTpl("SumInsuredTotalUsd - Total Sum Insured (USD)") } },
     { dataField: "exchangeRate", editorType:"dxNumberBox", label: { template: labelTpl("ExchangeRate - Exchange rate") } },
@@ -182,9 +167,9 @@
     // {dataField: "clauseId",editorType: "dxTextBox",visible:true} //dxDatagrid
     ]}
     ]}
-    
+
      ]
-    });
-    viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
+        });
+        viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
 </script>
 <div id="@QTViewIdHelper.Form(dept, quotationId)"></div>
