@@ -618,66 +618,101 @@
                                 visible: true,
                                 label: { text: "Assign PIC" },
                                 template: function (data, itemElement) {
-                                $(`<div id="btnNewAssignee">`).appendTo(itemElement);
-                                $(`<div id="btnClearAssignee">`).appendTo(itemElement);
-                                var assigneeStore = new DevExpress.data.ArrayStore({ key: "_key", data: vm.assignees });
+                              var deptData = {TS :  { pIC: JSON.stringify({TS: ""}), pic:JSON.stringify({TS: ""})},pic: JSON.stringify({TS:""} ) ,pIC: JSON.stringify({TS: ""}), id: 0, sectionName: "TS", code: "..." } ;
+                                 
+                              var assigneeBoxId = `${window.QuotationIdManager.assigneeBox('TS', deptData.id)}`;
+                             var assigneeBox = $(`<div id="${assigneeBoxId}">`)
+                                 debugger
+                                assigneeBox.appendTo(itemElement);
+                                $("<div id='assignBox' class='dExForm'>").appendTo(itemElement);
+                                renderDepartmentAssigneeBox(`#${assigneeBoxId}`, {
+                                           groupName: 'TS',
+                                          dataForm: deptData['TS'],
+                                       //value: formItems.lmktAssigneeId || null,
+                                       onChanged: function (itemChild, editor) {
 
-                                 $(`<div id="assigneeList" style="margin-top:10px;">`).dxDataGrid({
-                                    dataSource: assigneeStore,
-                                    keyExpr: "_key",
-                                    showBorders: true,
-                                    columnAutoWidth: true,
-                                    hoverStateEnabled: true,
-                                    noDataText: "No manual assignee entry. Switch to Manual assign and click New.",
-                                    paging: { pageSize: 10 },
-                                    pager: { showInfo: true },
-                                    columns: [
-                                        {
-                                            dataField: "to",
-                                            caption: "Assignee",
-                                            lookup: { dataSource: _enums.assignee, valueExpr: "accountName", displayExpr: "fullName" }
-                                        },
-                                        {
-                                            dataField: "notes",
-                                            caption: "Notes",
-                                            cellTemplate(container) {
-                                                $("<div/>").text("Hidden notes, open entry to view").appendTo(container);
-                                            }
-                                        },
-                                        {
-                                            type: "buttons",
-                                            width: 120,
-                                            buttons: [
-                                                { hint: "Edit", icon: "edit", onClick(e) { openPopupForEdit(e.row.data); } },
-                                                {
-                                                    hint: "Devare", icon: "trash",
-                                                    onClick(e) {
-                                                        assigneeStore.remove(e.row.data._key);
-                                                        $("#assigneeList").dxDataGrid("instance").refresh();
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                }).appendTo(itemElement);
-                                    $("#btnNewAssignee").dxButton({
-                                        text: "New",
-                                        icon: "plus",
-                                        type: "default",
-                                        onClick() {
-                                            openPopupForNew();
-                                        }
-                                    });
+                                         const items = editor.option("selectedItems") || [];
 
-                                    $("#btnClearAssignee").dxButton({
-                                        text: "Clear",
-                                        icon: "trash",
-                                        type: "normal",
-                                        onClick() {
-                                            vm.assignees.splice(0, vm.assignees.length);
-                                            $("#assigneeList").dxDataGrid("instance").refresh();
-                                        }
-                                    });
+                                        var result = itemChild
+                                          .map(x => x.accountName )
+                                          .join(',');
+
+                                
+
+                                       var form = $("#assignBox").dxForm({visible:false}).dxForm("instance");
+
+                                       form.option("formData", {
+                                         to: result,
+                                                 branchId: _enums.BranchOffice.find(f => f.code === _branch).id,
+                                                  notes: "",
+                                                  deptTarget: vm.assignedTeamOrRole
+                                       });
+                                       console.log(_branch);
+                                       console.log(_enums.BranchOffice);
+
+                                      console.log( form.option("formData"));
+                                   }
+                               });
+                                // $(`<div id="btnNewAssignee">`).appendTo(itemElement);
+                                // $(`<div id="btnClearAssignee">`).appendTo(itemElement);
+                                // var assigneeStore = new DevExpress.data.ArrayStore({ key: "_key", data: vm.assignees });
+
+                                //  $(`<div id="assigneeList" style="margin-top:10px;">`).dxDataGrid({
+                                //     dataSource: assigneeStore,
+                                //     keyExpr: "_key",
+                                //     showBorders: true,
+                                //     columnAutoWidth: true,
+                                //     hoverStateEnabled: true,
+                                //     noDataText: "No manual assignee entry. Switch to Manual assign and click New.",
+                                //     paging: { pageSize: 10 },
+                                //     pager: { showInfo: true },
+                                //     columns: [
+                                //         {
+                                //             dataField: "to",
+                                //             caption: "Assignee",
+                                //             lookup: { dataSource: _enums.assignee, valueExpr: "accountName", displayExpr: "fullName" }
+                                //         },
+                                //         {
+                                //             dataField: "notes",
+                                //             caption: "Notes",
+                                //             cellTemplate(container) {
+                                //                 $("<div/>").text("Hidden notes, open entry to view").appendTo(container);
+                                //             }
+                                //         },
+                                //         {
+                                //             type: "buttons",
+                                //             width: 120,
+                                //             buttons: [
+                                //                 { hint: "Edit", icon: "edit", onClick(e) { openPopupForEdit(e.row.data); } },
+                                //                 {
+                                //                     hint: "Devare", icon: "trash",
+                                //                     onClick(e) {
+                                //                         assigneeStore.remove(e.row.data._key);
+                                //                         $("#assigneeList").dxDataGrid("instance").refresh();
+                                //                     }
+                                //                 }
+                                //             ]
+                                //         }
+                                //     ]
+                                // }).appendTo(itemElement);
+                                //     $("#btnNewAssignee").dxButton({
+                                //         text: "New",
+                                //         icon: "plus",
+                                //         type: "default",
+                                //         onClick() {
+                                //             openPopupForNew();
+                                //         }
+                                //     });
+
+                                //     $("#btnClearAssignee").dxButton({
+                                //         text: "Clear",
+                                //         icon: "trash",
+                                //         type: "normal",
+                                //         onClick() {
+                                //             vm.assignees.splice(0, vm.assignees.length);
+                                //             $("#assigneeList").dxDataGrid("instance").refresh();
+                                //         }
+                                //     });
                                 }
                             }
                         ]
@@ -844,7 +879,7 @@
                 popupMode = "new";
                 currentEntry = entryTemplate();
                           var popup = $("#assigneePopup").dxPopup("instance");
-                 popup.option("title", "New Assignee Entry");
+                         popup.option("title", "New Assignee Entry");
                       $.ajax({
                             url: "api/Employee/GetAssignableByGroup",
                             type: "GET",
@@ -926,7 +961,7 @@
                 grid.option("disabled", !enabled);
             }
 
-            refreshAssignmentUI();
+            // refreshAssignmentUI();
            viewFieldAdjust("quotationRequestForm");
             // window.getQuotationRequestPayload = function () {
             //     var formIns = $("#quotationRequestForm").dxForm("instance");

@@ -2457,6 +2457,7 @@
                     dataType: "json",
                     data: {
                         group: settings.groupName,
+                        branchCode: _branch,
                         excludeCurrent: true,
                         keyword: loadOptions.searchValue || ""
                     }
@@ -5289,4 +5290,73 @@ function styleModeChange(item){
                  function safe(v) {
                       return String(v == null ? "" : v);
                     }
+
+                    //20260625
+                        function makeTheClientLocationGrid(instanceItems, dropdownControl, instanceProps, container, onSelectionChanged = null, sizeOptions = {}) {
+        return makeLookupGrid({
+            container: container,
+            dropdownControl: dropdownControl,
+            instanceProps: instanceProps,
+            dataSource: instanceItems.editorOptions.dataSource,
+            keyExpr: "id",
+
+            width: sizeOptions.width || "100%",
+            height: sizeOptions.height || "100%",
+            gridHeight: sizeOptions.gridHeight || "85%",
+            scrollHeight: sizeOptions.scrollHeight || "100%",
+
+            columns: [
+                { dataField: "clientCode", caption: "Client Code" },
+                { dataField: "englishName", caption: "English Name" },
+                { dataField: "vietnameseName", caption: "Vietnamese Name" },
+                { dataField: "clientType", caption: "Client Type" }
+            ],
+
+            topPanelBuilder: function () {
+                const $panel = $('<div style="display:flex;padding:10px;align-items:center;gap:10px;"></div>');
+                $('<div style="padding-right:10px;">Branch code:</div>').appendTo($panel);
+                $('<div class="branch-radio-host"></div>').appendTo($panel);
+                return $panel;
+            },
+
+            onGridReady: function (ctx) {
+                const $radioHost = ctx.result.topPanel.find(".branch-radio-host");
+                debugger
+                $radioHost.dxRadioGroup({
+                    dataSource: _enums.BranchOffice,
+                    valueExpr: "id",
+                    displayExpr: "value",
+                    layout: "horizontal",
+                    onValueChanged: function (e) {
+                        const ds = ctx.grid.getDataSource();
+                        ds.filter(["branchId", "=", e.value]);
+                        ds.load();
+                    }
+                });
+            },
+
+            defaultSelectionHandler: function (e, ctx) {
+                if (!ctx.selectedRow) return;
+
+                ctx.dropdownControl.component.option("value", ctx.selectedKey);
+
+                // ctx.instanceProps.formInstance.updateData("clientName", ctx.selectedRow.clientName || "");
+                // ctx.instanceProps.formInstance.updateData("locationAddress", ctx.selectedRow.clientAddress || "");
+                // ctx.instanceProps.formInstance.updateData("clientCode", ctx.selectedRow.clientCode || "");
+                // ctx.instanceProps.formInstance.updateData("locationId", ctx.selectedRow.locationId || 0);
+
+                ctx.dropdownControl.component.close();
+            },
+
+            onSelectionChanged: function (e, ctx) {
+                if (typeof onSelectionChanged === "function") {
+                    return onSelectionChanged(e, ctx);
+                }
+            },
+
+            gridOptions: {
+                allowItemDeleting: false
+            }
+        });
+    }
 </script>
