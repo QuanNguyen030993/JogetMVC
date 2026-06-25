@@ -1676,7 +1676,10 @@
 
         function TinyMCEElementMaker(classform, dept, id, control)
         {
-                var item = new Object();
+        var item = new Object();
+
+            try
+            {
                 item.id = id;
                 item.editorType = "dxHtmlEditor";
                 item.instanceProps = new Object();
@@ -1687,7 +1690,12 @@
                     $element.empty();
                     createEditor(item, itemElement, $("<div>"), item);
                 }
-            return item.control;
+                 return item.control;
+            }catch {
+                console.log("Remark box problem");
+                return  null;
+            }
+           
 
             // document.querySelectorAll(classform).forEach((el, idx) => {
             //     setTimeout(() => {
