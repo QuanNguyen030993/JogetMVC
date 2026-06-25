@@ -124,33 +124,9 @@ Note:
         function statusClass(raw) { return normalizeStatus(raw).css; }
         function statusText(raw) { return normalizeStatus(raw).text; }
 
-        function normalizeDeptKey(k) {
-            return String(k || "").trim().toUpperCase();
-        }
+      
 
-        function parsePicMap(picJson) {
-            try {
-                const obj = JSON.parse(picJson || "{}");
-                const map = {};
-                Object.keys(obj).forEach(k => map[normalizeDeptKey(k)] = obj[k]);
-                return map;
-            } catch {
-                return {};
-            }
-        }
-
-        function renderDeptCallouts(picJson) {
-            const picMap = parsePicMap(picJson);
-            $(".dept-node").each(function () {
-                const dept = normalizeDeptKey($(this).data("key"));
-                const $co = $(this).find(".dept-callout");
-                if (!$co.length) return;
-                const pic = picMap[dept] || "-";
-                if (stageDept)
-                $co.find(".co-text").text(pic);
-                $co.css({ color: "rgba(17,24,39,.85)" });
-            });
-        }
+      
 
         function getSelectedModel() {
             if (state.selectedId && state.quoteDetails[state.selectedId]) {
@@ -362,15 +338,10 @@ Note:
             applyNodeHighlights();
             applySectionFocusHighlight();
             updateHints();
-            renderDeptCallouts(PIC_JSON);
             firstRender = false;
         });
         };
 
-        function rerenderCurrentSelectionOnly() {
-            $(".pi-quoteCard").removeClass("selected");
-            $(`.pi-quoteCard[data-id="${state.selectedId}"]`).addClass("selected");
-        }
 
 
         function reloadState(){
@@ -457,15 +428,15 @@ Note:
             });
         }
 
-            function updateCurrentStep(stepNo) {
-                var pageLayout = window.PolicyIssuancePage;
-                pageLayout.state.nextStep.currentStep = stepNo;
-            }
+        //     function updateCurrentStep(stepNo) {
+        //         var pageLayout = window.PolicyIssuancePage;
+        //         pageLayout.state.nextStep.currentStep = stepNo;
+        //     }
 
-                function setNextStep(nextStep) {
-            var pageLayout = window.PolicyIssuancePage;
-            pageLayout.state.nextStep = nextStep;
-        }
+        //         function setNextStep(nextStep) {
+        //     var pageLayout = window.PolicyIssuancePage;
+        //     pageLayout.state.nextStep = nextStep;
+        // }
 
         function updateSectionUpdatedTime(q) {
             let tat = {};
@@ -596,11 +567,11 @@ Note:
                 };
             }
 
-            function escapeHtml(s) {
-                return String(s ?? "")
-                    .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
-                    .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
-            }
+            // function escapeHtml(s) {
+            //     return String(s ?? "")
+            //         .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+            //         .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+            // }
 
             // function renderComments(items) {
             //     if (!Array.isArray(items) || items.length === 0) {
@@ -1009,12 +980,12 @@ Note:
              workflowStatus = q.workflowStatus ?? q.status;
 
 
-
-            $(`#${window.PolicyIssuanceIdManager.stageDeptPill(q.id)}`).html(`<span id="@ViewIdHelper.DetailStatus(moduleCode, Convert.ToInt64(ViewData["Id"]))" class="pill">${workflowStatus}</span> - ${stageAccount ?? ""}`);
+             getPersonInCharge(stageAccount).then(function (stageName) {
+            $(`#${window.PolicyIssuanceIdManager.stageDeptPill(q.id)}`).html(`<span id="@ViewIdHelper.DetailStatus(moduleCode, Convert.ToInt64(ViewData["Id"]))" class="pill">${workflowStatus}</span> <span style="padding-left:5px">- ${stageName ?? ""}</span>``);
             $(`#${window.PolicyIssuanceIdManager.detailStatus(q.id)}`)
                 .text(statusText(workflowStatus))
                 .attr("class", `statusTag ${statusClass(workflowStatus)}`);
-
+                   });
             var control = new Object();
             $.each(piDeptModuleCode, function (itemIndex, item) {
                 deptData[item] = { ...q, id: q.id, sectionName: item, code: q.policyIssuanceCode };

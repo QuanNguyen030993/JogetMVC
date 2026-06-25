@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using ERPCore.Controllers.Base;
 using ERPCore.Models.Migration.Business.Config;
@@ -73,6 +73,35 @@ public class EmployeeController : BaseControllerApi<Employee>
 
         return Ok(new { success = true, data = data });
     }
+    [HttpGet("{id}")]
+    public async Task<IActionResult> PersonInChargeLookup(string id)
+    {
+        var accountList = id
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(x => x.Trim().ToLower())
+            .ToList();
+
+        var data = await _BaseRepository.GetListObject(x =>
+            accountList.Contains(x.AccountName.ToLower())
+        );
+
+        if (data == null || !data.Any())
+        {
+            return Ok(new { success = false, message = "Employee not found" });
+        }
+                                                 
+        // ✅ Ghép FullName thành chuỗi
+        var fullNames = string.Join(", ", data.Select(x => x.FullName));
+        if (data.Count == 0)
+            fullNames = "(Unassigned)";
+        return Ok(new
+        {
+            success = true,
+            data = data,
+            fullNames = fullNames
+        });
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetMyAssigneeProfile()
     {

@@ -3596,7 +3596,7 @@
 .dx-texteditor.dx-editor-outlined {
     background: #fff;
     border: 1px solid #ddd;
-    border-radius: 0px;
+    border-radius: 7px;
 }
 
 .dx-texteditor.dx-editor-underlined {

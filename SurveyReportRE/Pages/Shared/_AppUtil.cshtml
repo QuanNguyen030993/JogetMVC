@@ -2436,7 +2436,7 @@
 
         //     });
         // }
-    function renderDepartmentAssigneeBox(selector, options) {
+    function renderDepartmentAssigneeBox(selector, options, hideIfMuliple = true) {
         const settings = $.extend(true, {
             groupName: "",
             dataForm: {},
@@ -2492,6 +2492,10 @@
 
         const tagBox = $(selector).dxTagBox({
 
+            elementAttr: {
+                    class: "outlined-tagbox"
+                },
+
             dataSource: store,
 
             valueExpr: "accountName",
@@ -2502,10 +2506,11 @@
             // value: getDefaultPicByDept(settings.groupName, settings.dataForm) || settings.value,
 
             searchEnabled: true,
-            maxDisplayedTags: 1,
-            showMultiTagOnly: true,
+            maxDisplayedTags: hideIfMuliple ? 1 : 100,
+                showMultiTagOnly: hideIfMuliple,
 
             onMultiTagPreparing: function (e) {
+                if (hideIfMuliple){
 
                 const items = e.selectedItems || [];
 
@@ -2520,6 +2525,7 @@
                             .map(x => x.fullName)
                             .join("\n")
                     );
+                }
             },
             searchExpr: [
                 "fullName",
@@ -3549,7 +3555,10 @@
         }
 
 
-     function makeSelectBoxEditorOptions(dataSource, acceptCustomValue = false ,gridInstance = null, item = null) {
+     function makeSelectBoxEditorOptions(dataSource, acceptCustomValue = false ,gridInstance = null, item = null, callback = null) {
+
+              
+
         return {
             editorType: "dxSelectBox",
             //dropDownOptions : { minWidth: 200 },
@@ -3558,7 +3567,7 @@
             valueExpr: 'id',
             displayExpr: 'value',
             searchEnabled: true,
-            width: 300,
+            width: "100%",
             acceptCustomValue: acceptCustomValue,
             // onValueChanged: function (e) { // handle after select // impact filter datagrid column, note
             //     if (gridInstance != null) {
@@ -5359,4 +5368,58 @@ function styleModeChange(item){
             }
         });
     }
+
+        function getPersonInCharge(accountIds) {
+        var deferred = $.Deferred();
+
+        $.ajax({
+            url: `/api/Employee/PersonInChargeLookup/${encodeURIComponent(accountIds)}`,
+            type: "GET",
+            success: function (res) {
+                if (res.success) {
+                    deferred.resolve(res.fullNames); // ✅ trả về chuỗi đã ghép
+                } else {
+                    deferred.resolve(""); // fallback
+                }
+            },
+            error: function (err) {
+                console.error("API error:", err);
+                deferred.reject(err);
+            }
+        });
+
+        return deferred.promise();
+    }
+         //Popup hover
+            function renderDeptCallouts(picJson) {
+                const picMap = parsePicMap(picJson);
+                $(".dept-node").each(function () {
+                    const dept = normalizeDeptKey($(this).data("key"));
+                    const $co = $(this).find(".dept-callout");
+                    if (!$co.length) return;
+                    const pic = picMap[dept] || "";
+                    if (pic)
+                    getPersonInCharge(pic).then(function (stageName) {
+                    if (stageDept)
+                        $co.find(".co-text").text(stageName);
+                        $co.css({ color: "rgba(17,24,39,.85)" });
+                        });
+                });
+            }
+
+
+            function parsePicMap(picJson) {
+                try {
+                    const obj = JSON.parse(picJson || "{}");
+                    const map = {};
+                    Object.keys(obj).forEach(k => map[normalizeDeptKey(k)] = obj[k]);
+                    return map;
+                } catch {
+                    return {};
+                }
+            }
+
+                  function normalizeDeptKey(k) {
+                return String(k || "").trim().toUpperCase();
+            }
 </script>
