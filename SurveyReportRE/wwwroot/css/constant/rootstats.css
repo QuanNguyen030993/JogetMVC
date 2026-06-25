@@ -17,4 +17,18 @@
     --node: 30px;
     --nodeBorder: rgba(31,41,55,.28);
     --line: rgba(17,24,39,.18);
+    /*--diagram*/
+    --bg: #f4f7fb;
+    --panel: #ffffff;
+    --border: #dbe2ea;
+    --text: #243447;
+    --muted: #6b7c93;
+    --quotation: #2563eb;
+    --policy: #16a34a;
+    --both: #7c3aed;
+    --return: #ef4444;
+    --loop: #f59e0b;
+    --active: #f59e0b;
+    --done: #10b981;
+    --pending: #94a3b8;
 }

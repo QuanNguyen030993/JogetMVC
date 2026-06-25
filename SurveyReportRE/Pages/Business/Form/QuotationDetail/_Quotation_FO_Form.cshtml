@@ -18,12 +18,36 @@
 </div>
 <script type="text/javascript">
     var that = new Object();
+    var sectionId = "@(ViewData["Cd"])";
     that.ModelName = "Quotation";
+    that.moduleName = "default";
+    that.editorType = "dxFileUploader";
+    that.id = @(quotationId);
+    that.guid ="@(quotationGuid)";
+    that.sectionName = "@(dept)";
+    that.titleName = "Upload Quotation";
+    that.uploaderAllow = _role == "@dept";
+    that.data = { SectionName: `${sectionId}_${that.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: that.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" };; //{"SectionName":"default_FO_410"}
+
+
+    var that2 = new Object();
+    that2.ModelName = "Quotation";
+    that2.moduleName = "supportingDoc";
+    that2.editorType = "dxFileUploader";
+    that2.id = @(quotationId);
+    that2.guid ="@(quotationGuid)";
+    that2.sectionName = "@(dept)";
+    that2.titleName = "Upload Supporting Document";
+    // that2.uploaderAllow = _role == "@dept";
+    that2.uploaderAllow = _role == "@dept";
+    that2.data = { SectionName: `${sectionId}_${that2.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" }; //{"SectionName":"default_FO_410"}
+
+
     window.QuotationPage.state.formFO = $("#@QTViewIdHelper.Form(dept, quotationId)").dxForm({
     dataSource: makeBasicDataSource(that, true),
     items: [
 
-            { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefault("qt", "@(dept)", @(quotationId), "@(quotationGuid)") },
+            { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentByCase(that , that2)},
                 {itemType: "group",caption: "Request Date",colCount:2,items: [
             {
                                   dataField: "requestedDate",
@@ -82,7 +106,7 @@
                  },
                  
 
-                 { dataField:"subject", label:{text:"Subject"}, editorType:"dxTextArea", colSpan:3, editorOptions:{ height: 80 } },
+                 { dataField:"subject", label:{text:"Subject"}, editorType:"dxTextArea", colSpan:3},
                 
                             ]}
 

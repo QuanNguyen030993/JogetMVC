@@ -3596,7 +3596,7 @@
 .dx-texteditor.dx-editor-outlined {
     background: #fff;
     border: 1px solid #ddd;
-    border-radius: 0px;
+    border-radius: 7px;
 }
 
 .dx-texteditor.dx-editor-underlined {
@@ -3606,8 +3606,8 @@
 }
 
 .dx-texteditor.dx-editor-filled {
-    background: rgba(51,51,51,.05);
-    border: 1px solid transparent;
+    background: #ffffff;
+    border: 1px solid #89a1be;
     border-radius: 4px;
 }
 
@@ -3617,7 +3617,7 @@
 
     .dx-texteditor.dx-state-readonly.dx-editor-filled {
         border-color: transparent;
-        background-color: rgba(51,51,51,.03);
+        background-color: rgba(51, 51, 51, .15);
     }
 
         .dx-texteditor.dx-state-readonly.dx-editor-filled.dx-state-focused {
@@ -7368,6 +7368,7 @@
 
 .dx-radiobutton .dx-item-content {
     /*padding: 6px 12px;*/
+    padding: 3px;
     border: 1px solid #ccc;
     border-radius: 6px;
     background-color: #f7f7f7;
@@ -7384,6 +7385,7 @@
 .dx-radiobutton-checked .dx-item-content {
     border: 2px solid #215C98;
     background-color: #215C98;
+    padding: 3px;
     color: white;
     font-weight: bold;
 }
@@ -11855,7 +11857,7 @@
 }
 
 .dx-fileuploader-wrapper {
-    padding: 7px;
+    /*padding: 7px;*/
 }
 
 .dx-fileuploader-content > .dx-fileuploader-upload-button {
@@ -11872,9 +11874,10 @@
     position: relative;
 }
 
-.dx-fileuploader-dragover .dx-fileuploader-input-wrapper {
+/*.dx-fileuploader-dragover .dx-fileuploader-input-wrapper {
     border: none;
     padding: 0;
+    
 }
 
     .dx-fileuploader-dragover .dx-fileuploader-input-wrapper .dx-fileuploader-button {
@@ -11890,6 +11893,7 @@
 .dx-fileuploader-dragover .dx-fileuploader-input {
     display: block;
     width: 100%;
+    height: inherit;
     padding: 14px 3px;
     margin-bottom: 1px;
     -webkit-box-sizing: content-box;
@@ -11899,7 +11903,7 @@
 .dx-fileuploader-dragover .dx-fileuploader-input-label {
     text-align: center;
     padding: 14px 9px;
-}
+}*/
 
 .dx-fileuploader-file-size,
 .dx-fileuploader-file-status-message {

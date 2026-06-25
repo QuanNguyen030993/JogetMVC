@@ -12,6 +12,7 @@ using System.Data;
 using ERPCore.Models.Request;
 using Microsoft.SharePoint.WorkflowActions;
 using ERPCore.Models.Migration.Config;
+using static WorkflowDefinition_FormModel;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -66,6 +67,7 @@ public class StepsWorkflowController : BaseControllerApi<StepsWorkflow>
             stepsWorkflow.ToNodeId = toNodeId;
             stepsWorkflow.StatusCode = enumDatas.FirstOrDefault(x => x.Id == f.StatusId)?.Code ?? "";
             stepsWorkflow.StatusName = enumDatas.FirstOrDefault(x => x.Id == f.StatusId)?.Value ?? "";
+            stepsWorkflow.Command = f.Command ?? "";
             await _BaseRepository.InsertData(stepsWorkflow);
 
 

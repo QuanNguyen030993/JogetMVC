@@ -112,6 +112,14 @@ namespace ERPCore.Controllers.Base
             return Ok();
         }
 
+
+        [HttpGet("{guid}/{status}")]
+        public async Task<IActionResult> ToggleVisibleRows(Guid guid, bool status)
+        {
+            await _BaseRepository.ToggleVisibleRows<T>(status, guid);
+            return Ok();
+        }
+
         public async Task<string> GetHtmlString(long id, string fieldName)
         {
             T survey = new T();
@@ -402,7 +410,7 @@ namespace ERPCore.Controllers.Base
 
 
         [HttpGet]
-        public virtual async Task<ActionResult<T>> GetAll()
+        public virtual async Task<ActionResult<List<T>>> GetAll()
         {
             var queryParams = HttpContext.Request.Query;
 
@@ -676,6 +684,8 @@ namespace ERPCore.Controllers.Base
             string folder = Request.Headers["Folder"];
             string guid = Request.Headers["RecordGuid"];
             string sectionName = Request.Headers["SectionName"];
+            string department = Request.Headers["Department"];
+            string data = Request.Headers["Data"];
             IFormFile file = null;
             file = files.FirstOrDefault();
             if (file != null && file.Length > 0)
@@ -699,7 +709,23 @@ namespace ERPCore.Controllers.Base
                     document.FileName = file.FileName;
                     document.FileType = System.IO.Path.GetExtension(file.FileName);
                     document.Size = file.Length;
-                    document.Attributes = JsonConvert.SerializeObject((object)(new { SectionName = sectionName } ));
+
+                  
+
+                    
+                    if ( !string.IsNullOrEmpty(data))
+                    {
+                        dynamic obj = new ExpandoObject();
+
+                        JsonConvert.PopulateObject(data, obj);
+                        document.Attributes = JsonConvert.SerializeObject(obj);
+                    }
+                    else
+                    document.Attributes = JsonConvert.SerializeObject(new
+                    {
+                        SectionName = sectionName,
+                        Department = department
+                    }); 
                     document = await _documentRepository.InsertData(document);
                     //AttachmentForm attachmentForm = ControllerHelper.BindingAttachmentForm(attachment, BLOB_PATH);
                     //System.IO.File.WriteAllBytes(Path.Combine(path, folder, $"{unixMilliseconds}_{file.FileName}"), fileBytes);
@@ -722,6 +748,7 @@ namespace ERPCore.Controllers.Base
             string folder = Request.Headers["Folder"];
             string guid = Request.Headers["RecordGuid"];
             string sectionName = Request.Headers["SectionName"];
+            string department = Request.Headers["Department"];
             if (file != null && file.Length > 0)
             {
                 using (var ms = new MemoryStream())
@@ -743,7 +770,7 @@ namespace ERPCore.Controllers.Base
                     document.FileName = file.FileName;
                     document.FileType = System.IO.Path.GetExtension(file.FileName);
                     document.Size = file.Length;
-                    document.Attributes = JsonConvert.SerializeObject((object)(new { SectionName = sectionName }));
+                    document.Attributes = JsonConvert.SerializeObject((object)(new { SectionName = sectionName, Department = department }));
                     document = await _documentRepository.InsertData(document);
                     //AttachmentForm attachmentForm = ControllerHelper.BindingAttachmentForm(attachment, BLOB_PATH);
                     //System.IO.File.WriteAllBytes(Path.Combine(path, folder, $"{unixMilliseconds}_{file.FileName}"), fileBytes);
@@ -878,18 +905,30 @@ namespace ERPCore.Controllers.Base
         #endregion
 
 
-
-        
-
-       
+        #region Bulk Action
 
 
-      
+        // POST: api/YourModel/BulkDelete
+        [HttpPost]
+        public async Task<IActionResult> BulkDelete([FromBody] List<int> ids)
+        {
+             await _BaseRepository.BulkDelete(ids, "Id", true);
+            return Ok();
+        }
 
 
-        
+        #endregion
 
-        
+
+
+
+
+
+
+
+
+
+
 
         //public virtual async Task<ActionResult<List<DataGridConfig>>> GetScheme()
         //{
@@ -899,12 +938,12 @@ namespace ERPCore.Controllers.Base
         //    dataGridConfigs.AddRange(JsonConvert.DeserializeObject<List<DataGridConfig>>(JsonConvert.SerializeObject(Base)));
         //    return Ok(dataGridConfigs);
         //}
-        
-
-        
 
 
 
-       
+
+
+
+
     }
 }

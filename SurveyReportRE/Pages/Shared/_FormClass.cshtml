@@ -1,125 +1,1348 @@
 ﻿<script>
     var SLAForm = class SLAForm extends MForm {
+
         constructor(id, childGridConfig, formConfig, mFormOption) {
-            super(id, childGridConfig, formConfig, mFormOption)
+            super(id, childGridConfig, formConfig, mFormOption);
         }
+
 
         getSuccess(data) {
             var that = this;
-            if (this.id > 0 && data != null) {
-                that.orgFormData = data;
-                that.formInstance.option("items[0].items", generateItems(JSON.parse(data.attributes)));
-                that.attributes = generateItems(JSON.parse(data.attributes));
+            if (!data) return;
+            that.orgFormData = data;
+
+
+            let attributes = {};
+
+            try {
+                attributes = JSON.parse(data.attributes || "{}");
             }
+            catch (e) {
+                attributes = {
+                    fields: []
+                };
+            }
+
+
+            that.slaConfig = attributes;
+
+
+            let items = generateSLAItems(
+                attributes.fields
+            );
+
+
+            that.attributes = items;
+
+
+            that.formInstance.option(
+                "items[0].items",
+                items
+            );
+
+
+            // set default value
+            let formData = {};
+
+
+            $.each(attributes.fields, function (i, f) {
+
+                formData[f.name] =
+                    f.value ?? null;
+
+            });
+
+
+            // giá trị hiện tại DB
+            formData["slaValue"] =
+                data.value;
+
+
+            that.formInstance.option(
+                "formData",
+                formData
+            );
+
         }
+        renderForm(formElement) {
+            var that = this;
+           
+            // formElement.append($wrapper);
+            formElement.addClass("fade-slide-up");
+
+            // var $scrollElement = $(`<div id='${that.ModelName}ScrollView'/>`).appendTo(formElement);
+            this.formInstance =
+                formElement.dxForm({
+                    dataSource: makeBasicDataSource(that, true),
+                    formData: {},
+
+                    colCount: 1,
+
+                    items: [],
+
+                    height: "inherit",
+
+                    elementAttr: {
+                        class: "dExForm"
+                    }
+                    ,
+
+
+                    onFieldDataChanged(e) {
+
+                        that.changedData =
+                            e.component.option("formData");
+
+                    }
+
+                })
+                    .dxForm("instance");
+
+            if (this.formInstance)
+                this.formInstance.option("config", this);
+           
+
+            this.loadSLA();
+
+        }
+
+        loadSLA() {
+
+            var that = this;
+
+            var params = new URLSearchParams();
+
+            params.set("refKey", that.refKey);
+            params.set("refField", that.refField);
+            params.set("refOperator", "=");
+
+
+            ajaxGet(
+                `api/SLA/GetAll/?${params.toString()}`
+            )
+                .done(res => {
+
+
+                    that.slaRows = res;
+
+
+                    let items = [];
+                    let formData = {};
+                    items.push({
+                            itemType: "button",
+                            horizontalAlignment: "right",
+                            verticalAlignment: "top",
+                            buttonOptions: {
+                                text: "Save",
+                                icon: "save",
+                                type: "success",
+                                stylingMode: "contained",
+                                onClick() {
+                                      that.doSaveData(false);
+                                         DevExpress.ui.notify("Saved successfully", "success", 2000);
+                                }
+                            }
+                        });
+
+
+                    $.each(
+                        that.slaRows,
+                        function (i, row) {
+
+
+                            let attr =
+                                JSON.parse(row.attributes);
+
+
+
+                            $.each(
+                                attr.fields,
+                                function (j, f) {
+                                    // f.value = f.value !== undefined
+                                    //     ?
+                                    //     f.value
+                                    //     :
+                                    //     row.value || 0
+
+                                    let fieldName =
+                                        row.code + "_" + f.name;
+
+
+
+                                    items.push({
+
+                                        dataField: fieldName,
+
+
+                                        label: {
+                                            text: f.label
+                                        },
+
+
+                                        editorType:
+                                            f.control == "number"
+                                                ?
+                                                "dxNumberBox"
+                                                :
+                                                "dxTextBox",
+
+
+                                        editorOptions: {
+                                            min: f.min,
+                                            max: f.max,
+                                            showSpinButtons: true
+                                        },
+
+
+                                        slaRowId: row.id,
+
+                                        slaCode: row.code,
+
+                                        slaField: f.name
+
+                                    });
+
+                                    // f.value = f.value !== undefined
+                                    //     ?
+                                    //     f.value
+                                    //     :
+                                    //     row.value || 0
+
+                                    // // ưu tiên value trong json
+                                    // // fallback Value column
+
+                                    formData[fieldName] =
+                                        f.value !== undefined
+                                            ?
+                                            f.value
+                                            :
+                                            row.value || 0;
+
+
+
+                                });
+
+
+                        });
+
+  
+
+                   
+
+
+                    that.formInstance.option(
+                        "formData",
+                        formData
+                    );
+
+                    that.formInstance.option(
+                        "items",
+                        items
+                    );
+                      
+                });
+        }
+
 
         doSaveData(isClose) {
             try {
-                var that = this;
-                var form = that.formInstance;
-                var result = that.validateForm(form);
-                if (result == null || result.isValid) {
-                    var formData = form.option('formData');
-                    $.each(that.fieldConfigs, function (i, f) {
-                        delete formData[f.dataField];
-                    });
-                    delete formData["guid"];
-                    delete formData["id"];
-                    delete formData["rowOrder"];
-                    var ds = that.formInstance.option("dataSource");
-                    var store = ds;
-                    var data = new Object();
-                    const dataPost = new Object();
-                    $.each(that.attributes, function (index, field) {
-                        var key = field.dataField;
-                        if (formData.hasOwnProperty(key)) {
-                            dataPost[key] = formData[key];
-                        }
-                        else {
-                            dataPost[key] = oldAttributes[key];
-                        }
+
+                let that = this;
+
+
+                let formData =
+                    that.formInstance.option("formData");
+                let ds =
+                    that.formInstance.option("dataSource");
+
+                $.each(
+                    that.slaRows,
+                    function (i, row) {
+
+
+
+                        let attributes =
+                            tryParseJSON(row.attributes, "");
+
+                        let calculation = attributes.calculation;
+
+                        $.each(
+                            attributes.fields,
+                            function (j, f) {
+
+
+
+                                let key =
+                                    row.code + "_" + f.name;
+
+
+
+                                f.value =
+                                    formData[key];
+
+
+
+                            });
+
+
+
+                        let value =
+                            that.calculateSLA(
+                                attributes,
+                                formData
+                            );
+
+
+
+                        let data = {
+
+                            attributes:
+                                JSON.stringify({ fields: [attributes.fields[0]], calculation: calculation }),
+
+
+                            value: value || 0,
+
+
+                            decimalValue:
+                                Number(value)
+
+                        };
+                        if (row.id == 0)
+                             ds.insert(
+                                data
+                            );
+                        else 
+                        ds.update(
+                            row.id,
+                            data
+                        );
+
                     });
 
-                    // var attributes = { //fix json if broken
-                    //     renewBeforeMonth: 2,
-                    //     urgentRenewLastDays: 5
-                    // };
-                    // data.attributes = JSON.stringify(attributes);
-                    data.attributes = JSON.stringify(dataPost);
-                    this.orgFormData = formData;
-                    store.update(this.id, data)
-                        .done(function () {
-                            //that.refreshForm();
-                        });
-                    //delete formData["Guid"];
-                }
-            } catch (err) {
-                appErrorHandling('Library error: call MForm.doSaveData() was failed.', err);
-                return;
+
+               
+
+
+             
+
             }
+            catch (err) {
+
+                appErrorHandling(
+                    "SLA save error",
+                    err
+                );
+
+            }
+
+        }
+       
+       
+
+
+        calculateSLA(config, formData) {
+
+            
+            if (!config.calculation)
+                return formData.slaValue;
+
+
+
+            let c =
+                config.calculation;
+
+
+
+            switch (c.type) {
+
+
+                case "manual":
+                    let field =
+                        config.fields[0].name;
+                    return config.fields[0].value || 0;
+
+                    // return formData[field] || 0;
+
+
+
+                case "dateDiff":
+
+
+                    let from =
+                        new Date(
+                            formData[c.fieldFrom]
+                        );
+
+
+                    let to =
+                        new Date(
+                            formData[c.fieldTo]
+                        );
+
+
+                    if (!from || !to)
+                        return 0;
+
+
+
+                    let diff =
+                        to - from;
+
+
+
+                    return Math.floor(
+                        diff / (1000 * 60 * 60 * 24)
+                    );
+
+
+
+                default:
+
+                    return 0;
+            }
+
         }
 
 
 
-        groupingLayout(_formConfig, itemsArray, formInstance) {
-            var attributes = {
-                renewBeforeMonth: 2,
-                urgentRenewLastDays: 5
-            };
-            itemsArray = [
-
+        groupingLayout(
+            _formConfig,
+            itemsArray,
+            formInstance
+        ) {
+            return [
                 {
                     itemType: "group",
-                    caption: "Config",
+                    caption: "SLA Configuration",
                     colCount: 2,
-                    items: []
+                    items: itemsArray
                 }
             ];
 
-
-            return itemsArray;
         }
 
-        initFormToolbar(formInstance) {
-            //Note: this is custom method not belong to Devextreme
-            var that = this;
-            if (that.allowFormActionButton) {
-                //var headerbox = formInstance.element().find(".dx-item.dx-box-item").first();
-                //var headerbox = formInstance.element().find(".dx-box-flex.dx-box.dx-widget.dx-visibility-change-handler.dx-collection").first();
-                var headerbox = formInstance.element().find(".dx-box-flex.dx-box.dx-widget.dx-collection").first();
-
-                var toolbarItems = $(`<div id="${that.ModelName}Toolbar" class="dExFormToolBar"'/>`)
-                    .dxToolbar({
-                        items: that.allowFormActionButton ? this.customizeToolbar() : [],
-                        width: "100%",
-                        onInitialized: tryExecute(function (e) {
-                            var that = this;
-                            //if (that.formPermissions.buttons.length > 0) {
-                            //    var toolbarItems = e.component.option("items");
-                            //    $.each(toolbarItems, function (index, it) {
-                            //        if ($.inArray(it.name, that.formPermissions.butt  ons) < 0) {
-                            //            it.options.disabled = true;
-                            //        }
-                            //    });
-                            //    e.component.option("items", toolbarItems);
-                            //}
-                        }.bind(this))
-                    })
-                // Nếu muốn đổi xuống dưới thì là appendTo(headerbox)
-                var $toolbarElement = toolbarItems.appendTo(headerbox);
-                return toolbarItems.dxToolbar('instance');
-                // Nếu muốn đổi xuống dưới thì là  return $toolbarElement.dxToolbar('instance');
-            }
-        }
 
     }
+    function generateSLAItems(fields) {
 
+        return $.map(
+            fields,
+            function (f) {
+
+
+                let item = {
+
+                    dataField: f.name,
+
+                    label: {
+                        text: f.label
+                    }
+
+                };
+
+
+                switch (f.control) {
+
+
+                    case "number":
+
+                        item.editorType =
+                            "dxNumberBox";
+
+                        item.editorOptions = {
+
+                            min: f.min,
+                            max: f.max,
+                            showSpinButtons: true
+                        };
+
+                        break;
+
+
+
+                    case "date":
+
+                        item.editorType =
+                            "dxDateBox";
+
+                        break;
+
+
+
+                    default:
+
+                        item.editorType =
+                            "dxTextBox";
+
+                }
+
+
+
+                if (f.required) {
+
+                    item.validationRules = [
+                        {
+                            type: "required",
+                            message:
+                                f.label +
+                                " bắt buộc nhập"
+                        }
+                    ];
+
+                }
+
+
+                return item;
+
+            }
+        );
+
+    }
 var ClientForm = class ClientForm extends MForm {
     constructor(id, childGridConfig, formConfig, mFormConfig) {
         super(id, childGridConfig, formConfig, mFormConfig)
     }
+            getFormItems() {
+                var that = this;
+        return [
 
+            // ================= Client =================
+
+            {
+                itemType: "group",
+                caption: "Client Information",
+                colCount: 3,
+                cssClass: "form-section",
+
+                items: [
+                    {
+                        dataField: "clientCode",
+                        label: {
+                            text: "Client Code"
+                        },
+                        disabled: true,
+                        editorType: "dxTextBox"
+                    },
+
+                    // {
+                    //     dataField: "shortName",
+                    //     label: {
+                    //         text: "Short Name"
+                    //     },
+                    //     editorType: "dxTextBox"
+                    // },
+
+
+                    {
+                        dataField: "displayName",
+                        label: {
+                                text: "Representative Name"
+                        },
+                        editorType: "dxTextBox"
+                        } ,
+
+
+                                // {
+                                //     dataField: "staffFlag",
+                                //     label: {
+                                //             text: "Staff Flag"
+                                //     },
+
+                                //     colSpan: 3,
+
+                                //     editorType: "dxSwitch"
+                                //     } ,
+
+
+                                    {
+                                        dataField: "staffCode",
+                                        label: {
+                                                text: "Staff Code"
+                                        },
+
+                                        colSpan: 1,
+
+                                        editorType: "dxTextBox"
+                                        }
+                            ,
+
+
+                            {
+                                dataField: "branchId",
+                                label: {
+                                    text: "Branch Office"
+                                },
+
+                                colSpan:1,
+
+                                    editorType: "dxSelectBox"
+                                                    , editorOptions: makeSelectBoxEditorOptions(_enums.BranchOffice)
+
+                                },
+
+
+                            {
+                                dataField: "corporateDate",
+                                label: {
+                                    text: "Date of Corporate"
+                                },
+                                editorType: "dxDateBox",
+                                    editorOptions: { displayFormat: "dd-MM-yyyy" } 
+                            }
+
+                ]
+                },// ================= Status =================
+
+
+                {
+                    itemType: "group",
+                    caption: "Status",
+                    colCount: 3,
+                    cssClass: "form-section",
+
+                    items: [
+
+
+                        {
+                            dataField: "active",
+                            label: {
+                                text: "Active"
+                            },
+                            value: true,
+                            editorType: "dxSwitch"
+                        },
+
+
+                        {
+                            dataField: "startDate",
+                            label: {
+                                text: "Start Date"
+                            },
+                            editorType: "dxDateBox",
+                            editorOptions: { displayFormat: "dd-MM-yyyy", value: new Date(),dateSerializationFormat: "yyyy-MM-dd"
+                            
+                            }
+                        },
+
+                             // {
+                            //     dataField: "startDate",
+                            //     label: {
+                            //         text: "Start Date"
+                            //     },
+                            //     template: function (data, itemElement) {
+                            //         // tạo input
+                            //         const $input = $("<input>")
+                            //             .addClass("dx-texteditor-input")
+                            //             .css({
+                            //                 width: "100%",
+                            //                 padding: "8px"
+                            //             });
+
+                            //         itemElement.append($input);
+                            //         debugger
+                            //         // init flatpickr
+                            //         const fp = flatpickr($input[0], {
+                            //             enableTime: false,
+                            //             dateFormat: "d-m-Y",
+                            //             defaultDate: data.value || new Date(),
+                            //             onChange: function (selectedDates) {
+                            //                 // update lại formData giống dxForm
+                            //                 data.component.updateData("startDate", selectedDates[0]);
+                            //             }
+                            //         });
+
+                            //         // đồng bộ khi formData thay đổi bên ngoài
+                            //         if (data.value) {
+                            //             fp.setDate(data.value);
+                            //         }
+                            //     }
+                            // }
+                            // ,
+
+
+
+                        {
+                            dataField: "notes",
+                            label: {
+                                text: "Notes"
+                            },
+
+                            colSpan: 3,
+
+                            editorType: "dxTextArea"
+                        }
+
+
+
+                    ]
+
+                },
+
+
+                {
+                    itemType: "group",
+                    caption: "Multi-Language",
+                    colCount: 3,
+                    cssClass: "form-section",
+
+                    items: [
+                        {
+                            dataField: "clientName",
+                            label: {
+                                text: "Client Name"
+                            },
+                            colSpan: 1,
+
+                            template: function (data, itemElement) {
+                                setTimeout(() => {
+                                    var that = this;
+                                    var formItems = that.option("formData");
+                                    var store = that.option("dataSource");
+
+                                    const value = data.component.option("formData")
+                                        .clientName;
+
+                                    let obj = {};
+
+                                    try {
+                                        obj = JSON.parse(value || "{}");
+                                    }
+                                    catch {
+                                        obj = {};
+                                    }
+
+                                    const html = `
+                                    <div class="multi-lang-editor">
+
+                                        <div class="lang-row">
+
+                                            <div class="tag-label viet">
+                                                Viet
+                                            </div>
+
+                                                <div id="clientName_txtViet"></div>
+
+                                        </div>
+
+                                        <div class="lang-row">
+
+                                            <div class="tag-label eng">
+                                                Eng
+                                            </div>
+
+                                                <div id="clientName_txtEng"></div>
+
+                                        </div>
+
+                                    </div>
+                                `;
+
+                                    itemElement.append(html);
+
+                                    const updateValue = () => {
+                                        const viet =
+                                            $("#clientName_txtViet")
+                                                .dxTextArea("instance")
+                                                .option("value");
+
+                                        const eng =
+                                            $("#clientName_txtEng")
+                                                .dxTextArea("instance")
+                                                .option("value");
+
+
+
+                                        var passingObject = {
+                                        };
+                                        passingObject.clientName = JSON.stringify({
+                                            Viet: viet,
+                                            Eng: eng
+                                        });
+                                                    var changedFields = this.option("changedFields");
+                                                var formData = this.option("formData");
+                                                 changedFields["clientName"] = JSON.stringify({
+                                                    Viet: viet,
+                                                    Eng: eng
+                                                });
+                                                 formData["clientName"] = changedFields["clientName"]
+                                                this.option("changedFields", changedFields);
+                                                        this.option("formData", formData);
+
+                                        //      if (formItems.id)
+                                        // store.update(formItems.id, passingObject)
+                                        //     .done(function () {
+                                        //         DevExpress.ui.notify("Saved successfully", "success", 2000);
+                                        //     })
+                                        //     .fail(function (error) {
+                                        //         console.error(error);
+                                        //         DevExpress.ui.notify("Save failed", "error", 2000);
+                                        //     });
+
+                                    };
+
+                                    $("#clientName_txtViet").dxTextArea({
+                                        value: obj.Viet || "",
+                                            width: "100%",
+                                        onValueChanged: updateValue,
+                                        stylingMode: "filled"
+                                    });
+
+                                    $("#clientName_txtEng").dxTextArea({
+                                        value: obj.Eng || "",
+                                        width: "100%",
+                                        onValueChanged: updateValue,
+                                        stylingMode: "filled"
+                                    });
+                                }, 500);
+
+                            }
+                            },
+                       {
+                            dataField: "businessAddress",
+                            label: {
+                                text: "Business Address"
+                            },
+                            colSpan: 1,
+
+                            template: function (data, itemElement) {
+                                setTimeout(() => {
+                                    var that = this;
+                                    var formItems = that.option("formData");
+                                    var store = that.option("dataSource");
+
+                                const value = data.component.option("formData")
+                                    .businessAddress;
+
+                                let obj = {};
+
+                                try {
+                                    obj = JSON.parse(value || "{}");
+                                }
+                                catch {
+                                    obj = {};
+                                }
+
+                                const html = `
+                                    <div class="multi-lang-editor">
+
+                                        <div class="lang-row">
+
+                                            <div class="tag-label viet">
+                                                Viet
+                                            </div>
+
+                                                <div id="businessAddress_txtViet"></div>
+
+                                        </div>
+
+                                        <div class="lang-row">
+
+                                            <div class="tag-label eng">
+                                                Eng
+                                            </div>
+
+                                                <div id="businessAddress_txtEng"></div>
+
+                                        </div>
+
+                                    </div>
+                                `;
+
+                                itemElement.append(html);
+
+                                const updateValue = () => {
+                                    const viet =
+                                        $("#businessAddress_txtViet")
+                                            .dxTextArea("instance")
+                                            .option("value");
+
+                                    const eng =
+                                            $("#businessAddress_txtEng")
+                                            .dxTextArea("instance")
+                                            .option("value");
+
+
+                                        var passingObject = {
+                                        };
+                                    passingObject.businessAddress = JSON.stringify({
+                                        Viet: viet,
+                                        Eng: eng
+                                    });
+
+                                        var changedFields = this.option("changedFields");
+                                            var formData = this.option("formData");
+                                             changedFields["businessAddress"] = JSON.stringify({
+                                                Viet: viet,
+                                                Eng: eng
+                                            });
+                                                    formData["businessAddress"] = changedFields["businessAddress"]
+                                            this.option("changedFields", changedFields);
+                                                    this.option("formData", formData);
+
+                                        // if (formItems.id)
+                                        // store.update(formItems.id, passingObject)
+                                        //         .done(function () {
+                                        //             DevExpress.ui.notify("Saved successfully", "success", 2000);
+                                        //         })
+                                        //         .fail(function (error) {
+                                        //             console.error(error);
+                                        //             DevExpress.ui.notify("Save failed", "error", 2000);
+                                        //         });
+
+                                    };
+
+                                    $("#businessAddress_txtViet").dxTextArea({
+                                        value: obj.Viet || "",
+                                        width: "100%",
+                                        onValueChanged: updateValue,
+                                        stylingMode : "filled"
+                                    });
+
+                                    $("#businessAddress_txtEng").dxTextArea({
+                                    value: obj.Eng || "",
+                                        width: "100%",
+                                    onValueChanged: updateValue,
+                                        stylingMode: "filled"
+                                    });
+                                },500);
+
+                            }
+                            }    , {// change
+                            dataField: "businessOccupationId",
+                            visible: false,
+                            label: {
+                                text: "Occupation"
+                            },
+                            editorType: "dxSelectBox"
+                            },
+                           {
+                                 dataField: "businessOccupation",
+                                label: {
+                                        text: "Business Occupation"
+                                },
+                                colSpan: 1,
+
+                                template: function (data, itemElement) {
+                                    setTimeout(() => {
+                                        var that = this;
+                                        var formItems = that.option("formData");
+                                        var store = that.option("dataSource");
+
+                                    const value = data.component.option("formData")
+                                            .businessOccupation;
+
+                                    let obj = {};
+
+                                    try {
+                                        obj = JSON.parse(value || "{}");
+                                    }
+                                    catch {
+                                        obj = {};
+                                    }
+
+                                    const html = `
+                                        <div class="multi-lang-editor">
+
+                                            <div class="lang-row">
+
+                                                <div class="tag-label viet">
+                                                    Viet
+                                                </div>
+
+                                                        <div id="businessOccupation_txtViet"></div>
+
+                                            </div>
+
+                                            <div class="lang-row">
+
+                                                <div class="tag-label eng">
+                                                    Eng
+                                                </div>
+
+                                                        <div id="businessOccupation_txtEng"></div>
+
+                                            </div>
+
+                                        </div>
+                                    `;
+
+                                    itemElement.append(html);
+
+                                    const updateValue = () => {
+                                        const viet =
+                                                $("#businessOccupation_txtViet")
+                                                .dxTextArea("instance")
+                                                .option("value");
+
+                                        const eng =
+                                                    $("#businessOccupation_txtEng")
+                                                .dxTextArea("instance")
+                                                .option("value");
+
+
+                                            var passingObject = {
+                                            };
+                                            passingObject.businessOccupation = JSON.stringify({
+                                            Viet: viet,
+                                            Eng: eng
+                                        });
+
+                                            var changedFields = this.option("changedFields");
+                                                var formData = this.option("formData");
+                                                     changedFields["businessOccupation"] = JSON.stringify({
+                                                    Viet: viet,
+                                                    Eng: eng
+                                                });
+                                                            formData["businessOccupation"] = changedFields["businessOccupation"]
+                                                this.option("changedFields", changedFields);
+                                                        this.option("formData", formData);
+
+                                            // if (formItems.id)
+                                            // store.update(formItems.id, passingObject)
+                                            //         .done(function () {
+                                            //             DevExpress.ui.notify("Saved successfully", "success", 2000);
+                                            //         })
+                                            //         .fail(function (error) {
+                                            //             console.error(error);
+                                            //             DevExpress.ui.notify("Save failed", "error", 2000);
+                                            //         });
+
+                                        };
+
+                                            $("#businessOccupation_txtViet").dxTextArea({
+                                            value: obj.Viet || "",
+                                            width: "100%",
+                                            onValueChanged: updateValue,
+                                            stylingMode : "filled"
+                                        });
+
+                                            $("#businessOccupation_txtEng").dxTextArea({
+                                        value: obj.Eng || "",
+                                            width: "100%",
+                                        onValueChanged: updateValue,
+                                            stylingMode: "filled"
+                                        });
+                                    },500);
+
+                                }
+                                }
+
+]},
+
+            // ================= Classification =================
+
+            {
+                itemType: "group",
+                caption: "Classification",
+                colCount: 3,
+                cssClass: "form-section",
+
+                items: [
+
+                    {
+                        dataField: "clientTypeId",
+                        label: {
+                            text: "Client Type"
+                        },
+                        editorType: "dxSelectBox"
+                            , editorOptions: makeSelectBoxEditorOptions(_enums.ClientType)
+                        },
+                                     {
+                                    dataField: "segmentId",
+                                    label: {
+                                        text: "Segment"
+                                    },
+                                        editorType: "dxSelectBox"
+                                        , editorOptions: makeSelectBoxEditorOptions(_enums.Segment)
+
+                                     },
+
+
+                        {
+                            dataField: "countryId",
+                            label: {
+                                text: "Nationality"
+                            },
+                               editorType: "dxSelectBox",
+                             editorOptions: makeSelectBoxEditorOptions(_entities.country)
+                        },
+                    // ,
+                    // {
+                    //     dataField: "typeId",
+                    //     label: {
+                    //         text: "Type"
+                    //     },
+                    //     editorType: "dxSelectBox"
+                    // },
+
+
+                    // {
+                    //     dataField: "sourceOfBusinessId",
+                    //     label: {
+                    //         text: "Source Of Business"
+                    //     },
+                    //     editorType: "dxSelectBox"
+                    // },
+
+
+
+                    {
+                        dataField: "postCode",
+                        label: {
+                            text: "Post Code"
+                        },
+                        editorType: "dxTextBox"
+                            },
+                            {
+                            dataField: "taxCode",
+                            label: {
+                                text: "Tax Code"
+                            },
+                            editorType: "dxTextBox"
+                            } ,
+
+                            {
+                                dataField: "taxAddress",
+                                label: {
+                                    text: "VAT Address"
+                                },
+
+                                editorType: "dxTextArea"
+                            },
+
+                ]
+            },
+
+
+
+
+            // ================= Contact =================
+
+            {
+                itemType: "group",
+                caption: "Contact",
+                colCount: 3,
+                cssClass: "form-section",
+
+                items: [
+
+                            {
+                                dataField: "email",
+                                label: {
+                                    text: "Email"
+                                },
+                                editorType: "dxTextBox"
+                            },
+
+                    {
+                        dataField: "phoneNumber",
+                        label: {
+                                text: "Client/PIC Cellphone"
+                        },
+                        editorType: "dxTextBox"
+                    },
+
+
+                    {
+                        dataField: "officePhoneNumber",
+                        label: {
+                                text: "Office Phone No"
+                        },
+                        editorType: "dxTextBox"
+                    }
+
+                ]
+            }
+
+
+
+
+            
+
+
+        ];
+    }
+
+        renderForm(formElement) {
+            try {
+                ////create html start
+                var that = this;
+                //this.getContainer();
+                var $scrollElement = $(`<div id='${that.ModelName}ScrollView'/>`).appendTo(this.container);
+          
+                     this.toolbarInstance = that.allowFormActionButton ? [
+
+                    {
+                        itemType: "group",
+                            cssClass: "action-group dExFormToolBar",
+                        colCount: 3,
+                        items: [
+
+
+                    {
+                        itemType: "button",
+                        horizontalAlignment: "right",
+                        buttonOptions: {
+                            text: "Save",
+                            icon: "save",
+                            type: "success",
+                            stylingMode: "contained",
+                            disabled: this.isReadonlyAllEditors,
+                            elementAttr: { role: 'SaveBtn', id: `btnSave_${that.ModelName}` },
+                            onClick() {
+
+                                    var  currentData = that.formInstance.option("formData") || {};
+                                    // debugger
+                                    //      currentData["countryId"] = currentData["countryId"]?.id || 0;
+                                    //     that.formInstance.option("formData", currentData);
+                                    that.doSaveData(that.id > 0 ? false : true);
+                            }
+                        }
+                    },
+                    {
+                        itemType: "button",
+                        horizontalAlignment: "right",
+                        buttonOptions: {
+                            text: "Close",
+                            icon: "close",
+                            type: "error",
+                            stylingMode: "contained",
+                            disabled: this.isReadonlyAllEditors,
+                            elementAttr: { role: 'CloseBtn', id: `btnClose_${that.ModelName}` },
+                            onClick() {
+                                that.closeForm();
+                            }
+                        }
+                    }
+                    , {
+                        itemType: "button",
+                        horizontalAlignment: "right",
+                        buttonOptions: {
+                            text: "Refresh",
+                            icon: "refresh",
+                            type: "default",
+                            stylingMode: "contained",
+                            disabled: this.isReadonlyAllEditors,
+                            elementAttr: { role: 'RefreshBtn', id: `btnRefresh_${that.ModelName}` },
+                            onClick() {
+                                that.refreshForm();
+                            }
+                        }
+                            }
+                        ]
+                    }
+                ]: [];
+
+
+                var itemsConfig = [] //should not do the same time.
+                itemsConfig.push(...this.toolbarInstance);
+                    itemsConfig.push(...this.getFormItems()); //should not do the same time.
+                formElement.addClass("fade-slide-up");
+                var option = {
+                    dataSource: makeBasicDataSource(that, true),
+                    colCount: this.colCount,
+                        items: itemsConfig,
+                    height: "inherit",
+                    elementAttr: {
+                        class: "dExForm",
+                        id: formElement[0] ? formElement[0].id : `${this.ModelName}_${this.id}`,
+                    },
+                    readOnly: this.isReadOnly,
+                    changedFields: {},
+                    config: this,
+                    labelLocation: that.labelLocation,
+                    //toolbarItems:
+                    customizeItem: tryExecute(this.customizeForm.bind(this)),
+                    customFormOrgData: tryExecute(this.customFormOrgData.bind(this)),
+                    onContentReady: tryExecute(this.onContentReady.bind(this)),
+                    renderTabFormElement: tryExecute(this.renderTabFormElement.bind(this)),
+                    groupingLayout: tryExecute(this.groupingLayout.bind(this)),
+                    onFieldDataChanged: tryExecute(function (e) {
+                        var that = this;
+                        const changedFields = e.component.option("changedFields");
+                        if ((e.dataField.includes("date") || e.dataField.includes("Date")) && that.isBindingData) {
+                               changedFields[e.dataField] = e.value;
+                        }
+                        if (that.isBindingData) {
+                            return;
+                        }
+            
+                        if (e.value !== e.previousValue) {
+                            //if (e.dataField.includes("date")) {
+                            //    changedFields[e.dataField] = stringToUtcDate(e.value);
+                            //}
+                            changedFields[e.dataField] = e.value;
+                            // if (that.fieldByOutlineGroup.length > 0) {
+                            //     var outlineObject = that.fieldByOutlineGroup.find(f => f.dataField == e.dataField);
+                            //     //changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance[0];
+                            //     changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance;
+                            // }
+                            // if (that.dynamicOutline) {
+                            //     var outlineObject = that.dynamicOutline.find(f => f.dataField == e.dataField);
+                            //     if (outlineObject)
+                            //         changedFields[e.dataField + "_outlineId"] = outlineObject.outlineInstance;
+                            //     else if (currentItem.outlineObject)
+                            //         changedFields[e.dataField + "_outlineId"] = currentItem.outlineObject;
+                            // }
+                            // else if (currentItem) {
+                            //     if (currentItem.outlineObject)
+                            //         changedFields[e.dataField + "_outlineId"] = currentItem.outlineObject;
+                            // }
+                        } else {
+                            delete changedFields[e.dataField];
+                        }
+                        // markAccordionAsChanged(`accordion_${that.refKey}_${e.dataField}`);
+                        // Cập nhật lại changedFields trong dxForm
+                        e.component.option("changedFields", changedFields);
+                    }.bind(this))
+                };
+                this.formInstance = formElement.dxForm(option).dxForm("instance");
+                if (this.formInstance)
+                    this.formInstance.option("config", this);
+                this.toolbarInstance = this.initFormToolbar(this.formInstance);
+
+                if (this.customizeFormOption) {
+                    this.customizeFormOption(option);
+                }
+
+                $(formElement).dxForm(option);
+
+
+                //$formElement.find(".dx-tabpanel-container").css("height", `100%`);
+                if (that.id > 0)
+                    this.loadData();
+                else
+                    this.initDataNewForm();
+            } catch (err) {
+                appErrorHandling('Library error: call MForm.renderForm() was failed.', err);
+                return;
+            }
+        }
+
+        customizeForm(option) {
+            styleModeChange(option);
+        }
+
+        customizeFormOption(option) {
+            option.colCount = 1;
+                $.each(option.items, function (indexC, itemC) {
+                if (itemC.itemType == "group")
+                    $.each(itemC.items, function (indexC, itemCh) {
+                        styleModeChange(itemCh);
+                    });
+                        else {
+                    styleModeChange(itemC);
+                }
+                });
+            option.showColonAfterLabel = false;
+            option.labelLocation = "top";
+            option.elementAttr = {
+                class: "client-form"
+            };
+
+        }
 }
+
 var QuotationFormOption = class QuotationFormOption extends MFormOption {
     constructor(params) {
         super()
@@ -657,7 +1880,7 @@ var WorkflowDefinitionForm = class WorkflowDefinitionForm extends MForm {
        callApi(apiMethod, dataInput, isClose) {
            try {
                var that = this;
-               var efName = this.ModelName;
+              
 
                var thatOnScheme = { ...that };
 
@@ -727,9 +1950,6 @@ var WorkflowDefinitionForm = class WorkflowDefinitionForm extends MForm {
                    onSuccess(data);
 
 
-                   if (isClose) {
-                       that.closeForm(efName);
-                   }
 
                };
 

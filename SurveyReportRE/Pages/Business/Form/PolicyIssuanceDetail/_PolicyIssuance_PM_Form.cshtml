@@ -1,7 +1,10 @@
 ﻿@using JogetMVC.Model
 @{
     string dept = "PM";
-    long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
+    long policyIssuanceId = Convert.ToInt64(ViewData["Id"]);
+    string quotationGuid = ViewData["Guid"].ToString();
+    long cloneId = Convert.ToInt64(ViewData["CloneId"]);
+    string cloneQuotationGuid = ViewData["CopyFromGuid"].ToString();
 }
 
 <style>
@@ -11,40 +14,100 @@
         padding-right: 18px;
     }
 </style>
-<div style="margin-top:10px;font-weight:800;font-size:12px;">PA Process</div>
-<div id="gridPA_@quotationId"></div>
+<div id="gridPA_@policyIssuanceId"></div>
 
-<div id="@PIViewIdHelper.Form(dept, quotationId)">
+<div id="@PIViewIdHelper.Form(dept, policyIssuanceId)">
 </div>
 <script type="text/javascript">
-        var that = new Object();
-    that.ModelName = "PolicyIssuance";
-    $(`#@PIViewIdHelper.Form(dept, quotationId)`).dxForm({
+
+
+    var thisObject = new Object();
+    thisObject.ModelName = "PolicyIssuance";
+    var thisObjectDetails = new Object();
+    thisObjectDetails.ModelName = "PolicyIssuanceCheckList";
+    thisObjectDetails.refField = "PolicyIssuanceId";
+    thisObjectDetails.refKey = @policyIssuanceId;
+    var detailsDataSourceCL = makeBasicDataSource(thisObjectDetails, false);
+    var sectionId = "@(ViewData["Cd"])";
+
+    var dataSourceGridCL = [
+        { field: "policyNoCL", label: "policyNoCL", checked: false, type: "checkbox" },
+    { field: "theInsured", label: "theInsured", checked: false, type: "checkbox" },
+    { field: "occupation", label: "occupation", checked: false, type: "checkbox" },
+    { field: "occupationFCICode", label: "occupationFCICode", checked: false, type: "checkbox" },
+    { field: "riskGrading", label: "riskGrading", checked: false, type: "checkbox" },
+    { field: "pOI", label: "pOI", checked: false, type: "checkbox" },
+    { field: "tSI", label: "tSI", checked: false, type: "checkbox" },
+    { field: "premium", label: "premium", checked: false, type: "checkbox" },
+    { field: "deductible", label: "deductible", checked: false, type: "checkbox" },
+    { field: "tnCs", label: "tnCs", checked: false, type: "checkbox" },
+    { field: "occupationCode", label: "occupationCode", checked: false, type: "checkbox" },
+    { field: "premiumRate", label: "premiumRate", checked: false, type: "checkbox" }
+
+    ];
+
+
+    //    var that = new Object();
+    // that.ModelName = "PolicyIssuance";
+    // that.moduleName = "default";
+    // that.editorType = "dxFileUploader"
+    // that.id = @(cloneId);
+    // that.guid ="@(cloneQuotationGuid)";
+    // that.sectionName = "@(dept)";
+    // that.titleName = "Upload Quotation";
+    // that.uploaderAllow = false;
+     var sectionId = "@ViewData["Cd"]";
+    var sectionIdQt = "qt-body_@(dept)_";
+
+    var that2 = new Object();
+    that2.ModelName = "PolicyIssuance";
+    that2.moduleName = "supportingDoc";
+    that2.editorType = "dxFileUploader"
+    that2.id = @(cloneId);
+    that2.guid = "@(cloneQuotationGuid)";
+    that2.sectionName = "@(dept)";
+    that2.titleName = "Upload Supporting Document";
+    that2.uploaderAllow = _role == "@dept";
+    that2.data = { SectionName: `${sectionIdQt}_${that2.moduleName}_@(cloneId)`, Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept, cloneId))" }; //{"SectionName":"default_FO_410"}
+
+    var that3 = new Object();
+    that3.ModelName = "PolicyIssuance";
+    that3.moduleName = "defaultDoc";
+    that3.editorType = "dxFileUploader"
+    that3.id = @(policyIssuanceId);
+    that3.guid = "@(quotationGuid)";
+    that3.cloneId = @cloneId;
+    that3.cloneGuid = "@(cloneQuotationGuid)";
+    that3.sectionName = "@(dept)";
+    that3.titleName = "Upload Document";
+    that3.uploaderAllow = _role == "@dept";
+    that3.data = { SectionName: `${sectionId}_${that3.moduleName}_@(policyIssuanceId)`, Department: "@(dept)", FieldName: that3.moduleName, FormId: "@(PIViewIdHelper.Form(dept, policyIssuanceId))" }; //{"SectionName":"default_FO_410"}
+    $(`#@PIViewIdHelper.Form(dept, policyIssuanceId)`).dxForm({
         dataSource: makeBasicDataSource(that, true),
          items: [
-             { itemType: "group" , dataField: "decision",items :[
+               
+             { itemType: "group" , caption: "Decision",items :[
         {
             dataField: "decision",
-            label: { text: "Decision" },
             editorType: "dxRadioGroup",
             editorOptions: {
                 items: [
-                    { id: "AC_@PIViewIdHelper.Decision(dept, quotationId)" , text: "Accept", value: true },
-                    { id: "AS_@PIViewIdHelper.Decision(dept, quotationId)" , text: "Assign", value: false },
-                    { id: "RJ_@PIViewIdHelper.Decision(dept, quotationId)" , text: "Reject", value: false }
+                    { id: "AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)" , text: "Accept", value: true },
+                    // { id: "AS_@PIViewIdHelper.Decision(dept, policyIssuanceId)" , text: "Assign", value: false },
+                    { id: "RJ_@PIViewIdHelper.Decision(dept, policyIssuanceId)" , text: "Reject", value: false }
                 ],
                  displayExpr: "text",
                  valueExpr: "id",
                  layout: "horizontal",
                  itemTemplate: function(itemData, _, itemElement) {
                  setTimeout(() => {
-                  var formItems = $(`#@PIViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-                  var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Problem");
+                  var formItems = $(`#@PIViewIdHelper.Form(dept, policyIssuanceId)`).dxForm("instance")?.option("formData") || {};
+                  var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
                   if (tatObject) if (tatObject[`@dept`]?.AcceptDate)
                   {
-                    $(`#AC_@PIViewIdHelper.Decision(dept, quotationId)`).addClass("btn-info");
+                    $(`#AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`).addClass("btn-info");
                     $(`#${itemData.id}`).dxButton("instance").option("disabled", true);
-                    if (itemData.id === "RJ_@PIViewIdHelper.Decision(dept, quotationId)" ) $(`#RJ_@PIViewIdHelper.Decision(dept, quotationId)`).dxButton("instance").option("disabled", false);
+                    if (itemData.id === "RJ_@PIViewIdHelper.Decision(dept, policyIssuanceId)" ) $(`#RJ_@PIViewIdHelper.Decision(dept, policyIssuanceId)`).dxButton("instance").option("disabled", false);
                   }
                  },_delayRenderDecisionButton);
 
@@ -55,8 +118,8 @@
                  onClick: function (e){
                     if (_ == 0)
                  {
-                      var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-                       var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Problem");
+                      var formItems = $(`#@QTViewIdHelper.Form(dept, policyIssuanceId)`).dxForm("instance")?.option("formData") || {};
+                       var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
                       tatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
                       formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
                       var passingObject = new Object();
@@ -69,10 +132,10 @@
                       passingObject.schemeName = `PolicyIssuance`;
                       acceptDecision(passingObject);
                  }
-                 if (_ == 2)
+                 if (_ == 1)
                  {
-                      var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-                      var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Problem");
+                      var formItems = $(`#@QTViewIdHelper.Form(dept, policyIssuanceId)`).dxForm("instance")?.option("formData") || {};
+                      var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
                       tatObject[`@dept`].AcceptDate = "";
                       formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
                       var passingObject = new Object();
@@ -94,34 +157,154 @@
         }
              ]},
 
-                         {itemType: "group", caption: "Attachment",colCount: 1, items: attachmentDefault("pi","@(dept)",@(quotationId), "@(quotationGuid)") },
+                         {itemType: "group", caption: "Attachment",colCount: 1, items: attachmentDefaultPi(null,that2,that3)  },
                          {itemType: "group",caption: "Checklist",colCount:1,items: [
-    {dataField: "policyNoCL",editorType: "dxCheckBox",visible:true},
-    {dataField: "theInsured",editorType: "dxCheckBox",visible:true},
-    {dataField: "occupation",editorType: "dxCheckBox",visible:true},
-    {dataField: "occupationFCICode",editorType: "dxCheckBox",visible:true},
-    {dataField: "riskGrading",editorType: "dxCheckBox",visible:true},
-    {dataField: "pOI",editorType: "dxCheckBox",visible:true},
-    {dataField: "tSI",editorType: "dxCheckBox",visible:true},
-    {dataField: "premium",editorType: "dxCheckBox",visible:true},
-    {dataField: "deductible",editorType: "dxCheckBox",visible:true},
-    {dataField: "tnCs",editorType: "dxCheckBox",visible:true},
-    {dataField: "occupationCode",editorType: "dxCheckBox",visible:true},
-    {dataField: "premiumRate",editorType: "dxCheckBox",visible:true}
-    ]},
-    ]
+                    // {dataField: "policyNoCL",editorType: "dxCheckBox",visible:true},
+                    // {dataField: "theInsured",editorType: "dxCheckBox",visible:true},
+                    // {dataField: "occupation",editorType: "dxCheckBox",visible:true},
+                    // {dataField: "occupationFCICode",editorType: "dxCheckBox",visible:true},
+                    // {dataField: "riskGrading",editorType: "dxCheckBox",visible:true},
+                    // {dataField: "pOI",editorType: "dxCheckBox",visible:true},
+                    // {dataField: "tSI",editorType: "dxCheckBox",visible:true},
+                    // {dataField: "premium",editorType: "dxCheckBox",visible:true},
+                    // {dataField: "deductible",editorType: "dxCheckBox",visible:true},
+                    // {dataField: "tnCs",editorType: "dxCheckBox",visible:true},
+                    // {dataField: "occupationCode",editorType: "dxCheckBox",visible:true},
+                    // {dataField: "premiumRate",editorType: "dxCheckBox",visible:true}
+                             
+                    {
+                        itemType: "simple",
+                        template: function () {
+                            return $("<div id='pi_checkList_@policyIssuanceId'>").dxDataGrid({
+                                dataSource: dataSourceGridCL,
+                                keyExpr: "field",
+
+                                paging: {
+                                    enabled: false
+                                },
+                                pager: {
+                                    visible: false
+                                },
+
+                                editing: {
+                                    mode: "cell",
+                                    allowUpdating: true
+                                },
+
+                                columnAutoWidth: true,
+                                wordWrapEnabled: true,
+
+                                showBorders: true,
+                                columns: [
+                                    {
+                                        dataField: "label",
+                                        caption: "Content",
+                                        allowEditing: false,
+                                        width: 350
+                                    },
+                                    {
+                                        dataField: "checked",
+                                        caption: "Check",
+                                        width: 100,
+                                        dataType: "boolean"
+                                    },
+                                    {
+                                        caption: "Value",
+                                        cellTemplate: function (container, options) {
+                                            const data = options.data;
+
+                                            if (!data.checked) {
+                                                container.text("");
+                                                return;
+                                            }
+
+                                            let editor;
+
+                                            switch (data.type) {
+                                                case "number":
+                                                    editor = $("<div>").dxNumberBox({ value: data.value });
+                                                    break;
+                                                case "text":
+                                                    editor = $("<div>").dxTextBox({ value: data.value });
+                                                    break;
+                                                case "textarea":
+                                                    editor = $("<div>").dxTextArea({ value: data.value, height: 80 });
+                                                    break;
+                                                case "select":
+                                                    editor = $("<div>").dxSelectBox({ items: ["New", "Renewal", "Hold Cover", "Cover Note"] });
+                                                    break;
+                                                case "radio":
+                                                    editor = $("<div>").dxRadioGroup({
+                                                        displayExpr: "text",
+                                                        valueExpr: "id",
+                                                        layout: "horizontal", items: ["A", "B", "C", "D"]
+                                                    });
+                                                    break;
+                                                case "checkbox":
+                                                    var that = new Object();
+                                                    that.ModelName = "PolicyIssuance";
+                                                    that.moduleName = `pi_${data.field}`; //"pi field"
+                                                    that.editorType = "dxFileUploader";
+                                                    that.id = @(policyIssuanceId);
+                                                    that.guid = "@(quotationGuid)";
+                                                    that.sectionName = "@(dept)";
+                                                    that.titleName = "Upload Document";
+                                                    that.data = {};
+                                                    editor = $("<div>");
+                                                    createEditor(that, editor, $(`<div>`), that);
+                                                    break;
+                                                default:
+                                                    editor = "";
+                                            }
+
+                                            container.append(editor);
+                                        }
+                                    }
+                                ]
+                            });
+                        }
+                    }
+                    ]}
+                    ,{ itemType: "group" , caption: "PA Process",items :[
+                    {
+                        dataField: "paProcess", editorType: "simple"
+                        , template: function (data, itemElement) {
+                            var additionOptions = new Object();
+                            additionOptions.refKey = 1;
+                            var gridOptions = new PolicyIssuanceSubDetailsGridOption("PolicyIssuanceSubDetails", "User", additionOptions);
+                            new MGrid(null, itemElement, gridOptions, null);
+                                // grid.component.option("width", "100%");
+                                // grid.appendTo(itemElement);
+
+                                // $("#gridPA_@policyIssuanceId").dxDataGrid("instance").option("editing", {
+                                // mode:"cell", allowUpdating: !roTS, allowAdding: !roTS, allowDeleting: !roTS
+                                // });
+
+                        }
+
+                    }
+               ]}
+                    ]
 
        });
-       var additionOptions = new Object();
-        additionOptions.refKey = 1;
+       
+           viewFieldAdjust("@PIViewIdHelper.Form(dept, policyIssuanceId)");
 
-        var gridOptions = new PolicyIssuanceSubDetailsGridOption("PolicyIssuanceSubDetails", "User",additionOptions);
-        var grid = new MGrid(null, $("#gridPA_@quotationId"), gridOptions, null);
-        grid.component.option("height", 100);
-        grid.component.option("width", "100%");
-          
-          //       $("#gridPA").dxDataGrid("instance").option("editing", {
-          //   mode:"cell", allowUpdating: !roTS, allowAdding: !roTS, allowDeleting: !roTS
-          // });
-           viewFieldAdjust("@PIViewIdHelper.Form(dept, quotationId)");
+    detailsDataSourceCL.load().done(function (data) {
+        if (!data || data.length === 0) return;
+
+        const dbRow = data[0];
+
+        dataSourceGridCL.forEach(item => {
+            // bind checkbox
+            item.checked = dbRow[item.field] ?? false;
+            item.ownId = dbRow.id;
+            // bind value (cho text/textarea/radio/select)
+            item.value = dbRow[item.field];
+        });
+
+        // refresh grid
+        $("#pi_checkList_@policyIssuanceId").dxDataGrid("instance").option("dataSource", dataSourceGridCL);
+        $("#pi_checkList_@policyIssuanceId").dxDataGrid("instance").option("id", data.id);
+    });
 </script>

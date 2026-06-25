@@ -21,8 +21,19 @@
             <div style="display:flex;align-items:center;gap:8px;">
                 <div id="@ViewIdHelper.BtnCollapseAllTab(moduleCode,quotationId)"></div>
                 <div id="@ViewIdHelper.BtnToggleReferenceFields(moduleCode,quotationId)"></div>
+                <div id="@ViewIdHelper.BtnAttachmentLog(moduleCode,quotationId)"></div>
                 <div id="@ViewIdHelper.BtnToggleComment(moduleCode,quotationId)"></div>
                 <div id="@ViewIdHelper.BtnPreview(moduleCode,quotationId)"></div>
+                <!-- Admin Maintenance Floating -->
+                <div id="@Id("adminFloat")" class="admin-float">
+
+                    <div id="@Id("adminFloatBtn")"
+                            class="admin-tool-btn"
+                            title="Maintenance">
+                        🔧
+                    </div>
+
+                </div>
             </div>
         </div>
 
@@ -53,38 +64,125 @@
                 </div>
             </div>
 
-    @*         @Html.Partial("_DeptTree", new DeptTreePartialModel
-       {
-           Prefix = Model.Prefix,
-           ModuleCode = Model.ModuleCode,
-           Id = Model.Id,
-           Guid = Model.Guid
-       })
-
-            @Html.Partial("_OverviewScroll", new OverviewScrollPartialModel
-       {
-           Prefix = Model.Prefix,
-           ModuleCode = Model.ModuleCode,
-           Id = Model.Id,
-           Guid = Model.Guid
-       }) *@
             <!-- 1. DeptTree -->
             <partial name="_DeptTree" model='new DeptTreePartialModel
-{
-    Prefix = Model.Prefix,
-    ModuleCode = Model.ModuleCode,
-    Id = Model.Id,
-    Guid = Model.Guid
-}' />
+            {
+                Prefix = Model.Prefix,
+                ModuleCode = Model.ModuleCode,
+                Id = Model.Id,
+                Guid = Model.Guid
+            }' />
 
             <!-- 2. OverviewScroll -->
             <partial name="_OverviewScroll" model='new OverviewScrollPartialModel
-{
-    Prefix = Model.Prefix,
-    ModuleCode = Model.ModuleCode,
-    Id = Model.Id,
-    Guid = Model.Guid
-}' />
+            {
+                Prefix = Model.Prefix,
+                ModuleCode = Model.ModuleCode,
+                Id = Model.Id,
+                Guid = Model.Guid,
+                CloneId = Model.CloneId,
+                CopyFromGuid = Model.CopyFromGuid
+            }' />
         </div>
     </section>
 </div>
+<script>
+    $(function () {
+
+        const btn =
+            $("#@Id("adminFloatBtn")");
+
+
+        const panelId =
+            "@Id("adminInfoPanel")";
+
+
+        // tạo panel bằng JS
+        const panel = $(`
+            <div id="${panelId}" class="admin-info-panel">
+
+                <div class="admin-title">
+                    <span>Maintenance Info</span>
+                    <span class="admin-close">✕</span>
+                </div>
+
+
+                <div class="admin-row">
+                    <label>ID</label>
+                    <span>${'@Model.Id'}</span>
+                </div>
+
+
+                <div class="admin-row">
+                    <label>GUID</label>
+                    <span>${'@Model.Guid'}</span>
+                </div>
+
+
+                <div class="admin-row">
+                    <label>Created By</label>
+                    <span class="createdBy">-</span>
+                </div>
+
+
+                <div class="admin-row">
+                    <label>Updated By</label>
+                    <span class="updatedBy">-</span>
+                </div>
+
+
+                <div class="admin-row">
+                    <label>Created Date</label>
+                    <span class="createdDate">-</span>
+                </div>
+
+
+                <div class="admin-row">
+                    <label>Updated Date</label>
+                    <span class="updatedDate">-</span>
+                </div>
+
+            </div>
+        `);
+
+
+        $("body").append(panel);
+
+
+
+        btn.on("click", function (e) {
+
+            e.stopPropagation();
+
+            panel.toggleClass("show");
+
+        });
+
+
+
+        panel.find(".admin-close")
+            .on("click", function () {
+
+                panel.removeClass("show");
+
+            });
+
+
+
+        $(document).on("click", function () {
+
+            panel.removeClass("show");
+
+        });
+
+
+
+        panel.on("click", function (e) {
+
+            e.stopPropagation();
+
+        });
+
+
+    });
+</script>

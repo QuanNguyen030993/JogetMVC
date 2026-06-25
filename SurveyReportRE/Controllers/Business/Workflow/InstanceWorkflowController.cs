@@ -24,6 +24,7 @@ using iText.Kernel.Pdf.Canvas.Wmf;
 using static ERPCore.Models.Models.Parsing.JsonHandle;
 using ERPCore.Models.Business.Migration.Config;
 using ERPCore.Models.Migration.Business.Workflow;
+using static WorkflowDefinition_FormModel;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -31,10 +32,10 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 {
     private readonly IBaseRepository<InstanceWorkflow> _BaseRepository;
     private readonly IBaseRepository<Quotation> _quotationRepository;
-    private readonly IBaseRepository<QuotationCommentLog> _quotationCommentLogRepository;
+    private readonly IBaseRepository<CommentLog> _quotationCommentLogRepository;
     private readonly IConfiguration configuration;
     private readonly IConfigurationSection path;
-    private readonly ILogger<QuotationCommentLog> _logger;
+    private readonly ILogger<CommentLog> _logger;
     private readonly IOptionsMonitor<BlobStorageSettings> _optionsMonitor;
     private readonly IBaseRepository<MailTemplate> _mailTemplateRepository;
     private readonly IBaseRepository<MailQueue> _mailQueueRepository;
@@ -46,6 +47,8 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     private readonly IBaseRepository<Notification> _notificationRepository;
     private readonly IBaseRepository<UrlCall> _urlCallRepository;
     private readonly IBaseRepository<StepsWorkflow> _stepsWorkflowRepository;
+    private readonly IBaseRepository<Document> _documentRepository;
+    private readonly IBaseRepository<WorkflowInstanceNode> _workflowInstanceNodeRepository;
     private readonly IHubContext<FileProcessingHub> _hubContext;
     private readonly Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> _blobStorageSettings;
     private readonly Microsoft.Extensions.Options.IOptionsMonitor<BusinessConfig> _businessConfig;
@@ -54,7 +57,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     public InstanceWorkflowController(IBaseRepository<InstanceWorkflow> BaseRepository
         , IConfiguration config
         , IHttpContextAccessor httpContextAccessor
-        , ILogger<QuotationCommentLog> logger
+        , ILogger<CommentLog> logger
         , IOptionsMonitor<BlobStorageSettings> optionsMonitor
         , Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> blobStorageSettings
         , Microsoft.Extensions.Options.IOptionsMonitor<BusinessConfig> businessConfig
@@ -67,7 +70,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         _optionsMonitor = optionsMonitor;
         _BaseRepository = BaseRepository;
         _quotationRepository = new BaseRepository<Quotation>(configuration, _httpContextAccessor);
-        _quotationCommentLogRepository = new BaseRepository<QuotationCommentLog>(configuration, _httpContextAccessor);
+        _quotationCommentLogRepository = new BaseRepository<CommentLog>(configuration, _httpContextAccessor);
         _mailQueueRepository = new BaseRepository<MailQueue>(configuration, _httpContextAccessor);
         _mailTemplateRepository = new BaseRepository<MailTemplate>(configuration, _httpContextAccessor);
         _usersRepository = new BaseRepository<Users>(configuration, _httpContextAccessor);
@@ -78,6 +81,8 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         _notificationRepository = new BaseRepository<Notification>(configuration, _httpContextAccessor);
         _urlCallRepository = new BaseRepository<UrlCall>(configuration, _httpContextAccessor);
         _stepsWorkflowRepository = new BaseRepository<StepsWorkflow>(configuration, _httpContextAccessor);
+        _documentRepository = new BaseRepository<Document>(configuration, _httpContextAccessor);
+        _workflowInstanceNodeRepository = new BaseRepository<WorkflowInstanceNode>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
         _hubContext = hubContext;
         _blobStorageSettings = blobStorageSettings;
@@ -90,20 +95,11 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     {
 
         if (string.IsNullOrEmpty(submitRequest.StepsWorkflow.FromNodeId) || string.IsNullOrEmpty(submitRequest.StepsWorkflow.ToNodeId)) return StatusCode(500, "Submit problem, please contact IT Admin!!!!");
-        //submitRequest.InstanceWorkflow.CurrentStep = ControllerHelper.UpStep(submitRequest.InstanceWorkflow).ToString();
-        //submitRequest.InstanceWorkflow.CurrentStep = submitRequest.StepsWorkflow.JumpStepNo;
-
-        //StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid  && s.FromNodeId == quotationData.QuotationData.StartingDept);
-        //InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
-        //instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
-
-
         submitRequest.InstanceWorkflow.CurrentStep = submitRequest.StepsWorkflow.TNodeId;
         await _BaseRepository.UpdateData(submitRequest.InstanceWorkflow, JsonConvert.SerializeObject(submitRequest.InstanceWorkflow), submitRequest.InstanceWorkflow?.Id, "Id");
         Quotation quotation = new Quotation();
         quotation = await _quotationRepository.GetSingleObject(s => s.Id == submitRequest.QuotationId);
         quotation.StageDept = submitRequest.StepsWorkflow.ToNodeId;
-        quotation.QuotationStatus = submitRequest.StepsWorkflow.StatusName;
         quotation.WorkflowStatus = submitRequest.StepsWorkflow.StatusName;
         quotation.StatusId = submitRequest.StepsWorkflow.StatusId;
         TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(quotation.TurnAroundTimeAttributes);
@@ -139,7 +135,62 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 
         await TATLog(quotation, tatObject, submitRequest.StepsWorkflow.FromNodeId);
 
+        WorkflowInstanceNode workflowInstanceNode = new WorkflowInstanceNode();
+        workflowInstanceNode = await _workflowInstanceNodeRepository.GetSingleObject(s => s.Code == submitRequest.InstanceWorkflow.CurrentStep);
+
+        if (workflowInstanceNode == null) return StatusCode(500, "Cannot find node in workflow!");
+        if (workflowInstanceNode.NodeStatus == "End")
+        {
+            quotation.StageDept = "";
+            quotation.StageAccount = "";
+        }    
+
         await _quotationRepository.UpdateData(quotation, JsonConvert.SerializeObject(quotation), quotation?.Id, "Id");
+
+        if (submitRequest.StepsWorkflow.Command != null)
+        {
+            WorkflowCommand commandEnum = WorkflowCommand.None;
+
+            if (!string.IsNullOrEmpty(submitRequest.StepsWorkflow.Command))
+            {
+                Enum.TryParse(
+                    submitRequest.StepsWorkflow.Command,
+                    true, // ignore case
+                    out commandEnum
+                );
+            }
+            switch (commandEnum)
+            {
+                case WorkflowCommand.TransferFile:
+
+                    var config = JsonConvert.DeserializeObject<TransferFileConfig>(
+                        submitRequest.StepsWorkflow.CommandConfig ?? "{}"
+                    );
+
+                    await HandleTransferFile(config, quotation);
+                    break;
+
+                case WorkflowCommand.CopyFile:
+
+                    //await HandleCopyFile();
+                    break;
+
+                case WorkflowCommand.LockFileLocal:
+
+                    //await HandleLockFile();
+                    break;
+
+                default:
+                    // do nothing
+                    break;
+            }
+        }
+
+
+
+
+
+
         var userInfo = await ControllerHelper.FetchUserRoles(_httpContextAccessor, configuration, DOMAIN_NAME);
         await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
 
@@ -159,11 +210,11 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             "PM" => pICAttributes.PM,
             _ => null
         };
-        ControllerHelper.SignalRResponse( "ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        ControllerHelper.SignalRResponse("R_ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         Employee employee = new Employee();
         flowUser = await _usersRepository.GetSingleObject(s => s.username == accountName);
         employee = await _employeeRepository.GetSingleObject(s => s.UsersId == flowUser.Id);
-            MailQueue mailQueue = new MailQueue();
+        MailQueue mailQueue = new MailQueue();
         if (mailTemplate != null)
         {
             DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
@@ -204,7 +255,29 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         return Ok();
     }
 
+    private async Task HandleTransferFile(TransferFileConfig config, dynamic ObjectIn)
+    {//{   "sourceDepartment": "FO",   "strategy": "Latest",   "fileSelector": "First",   "allowOverride": false }
+        if (config == null)
+            throw new Exception("Invalid TransferFile config");
+        Guid guid = (Guid)ObjectIn.Guid;
+        List<Document> files = new List<Document>();
+        files = await _documentRepository.GetListObject(l => l.RecordGuid == guid);
+        List<Document> result = new List<Document>();
+        if (config.FileSelector == "First")
+            result.Add(files.OrderByDescending(x => x.CreatedDate).FirstOrDefault(x => x.Attributes.Contains(config.SourceDepartment)));
 
+
+        if (result == null)
+            throw new Exception($"No file found in department {config.SourceDepartment}");
+        foreach (Document item in result)
+        {
+            if (item == null || item.Attributes == null) continue;
+            Document newDocument = new Document();
+            newDocument.Attributes = item.Attributes.Replace(config.SourceDepartment, config.TargetDepartment);
+            await _documentRepository.UpdateData(newDocument, item, ["Attributes"], "Id");
+        }
+        
+    }
     public async Task<IActionResult> QuotationReturnToStep([FromBody] SubmitRequest submitRequest)
     {
 
@@ -215,7 +288,6 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         Quotation quotation = new Quotation();
         quotation = await _quotationRepository.GetSingleObject(s => s.Id == submitRequest.QuotationId);
         quotation.StageDept = submitRequest.StepsWorkflow.ToNodeId;
-        quotation.QuotationStatus = submitRequest.StepsWorkflow.StatusName;
         quotation.WorkflowStatus = submitRequest.StepsWorkflow.StatusName;
         quotation.StatusId = submitRequest.StepsWorkflow.StatusId;
         TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(quotation.TurnAroundTimeAttributes);
@@ -255,32 +327,6 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         var userInfo = await ControllerHelper.FetchUserRoles(_httpContextAccessor, configuration, DOMAIN_NAME);
         await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
 
-        //        string logQuery = $@"INSERT INTO QuotationCommentLog (QuotationId
-        //,DeptCode,CommentOrder,CommentBy,CommentTime,CommentText,SourceSystem)
-        //            VALUES ({quotation.Id},'{submitRequest.StepsWorkflow.FromNodeId}'
-        //,{0}
-        //,'{userInfo.Users?.name ?? "Anonymous"}'
-        //,'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}'
-        //,N'{submitRequest.Comment}'
-        //,'WEB')
-        //        ";
-
-
-        //        string logFlowQuery = $@"INSERT INTO QuotationWorkflowHistory(QuotationId
-        //,StepNo,DeptCode,ActionTime,ActionNote,FromDeptCode,ToDeptCode,ActionCode,Actor,SourceSystem)
-        //            VALUES ({quotation.Id},{submitRequest.InstanceWorkflow.CurrentStep}
-        //,'{submitRequest.StepsWorkflow.FromNodeId}'
-        //,'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}'
-        //,'{submitRequest.StepsWorkflow.DisplayStatus}'
-        //,'{submitRequest.StepsWorkflow.FromNodeId}'
-        //,'{submitRequest.StepsWorkflow.ToNodeId}'
-        //,'{submitRequest.StepsWorkflow.ActionCode}'
-        //,'{userInfo.Users?.name ?? "Anonymous"}','WEB')
-        //        ";
-        //        var quotationCommentLogApiController = new QuotationCommentLogController(_quotationCommentLogRepository, configuration, _httpContextAccessor, _logger, _optionsMonitor);
-        //        await quotationCommentLogApiController.ExecuteCustomQuery(logQuery);
-        //        await quotationCommentLogApiController.ExecuteCustomQuery(logFlowQuery);
-
 
         MailTemplate mailTemplate = new MailTemplate();
         mailTemplate = await _mailTemplateRepository.GetSingleObject(s => s.TemplateName == "Return Mail");
@@ -296,7 +342,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             "PM" => pICAttributes.PM,
             _ => null
         };
-        ControllerHelper.SignalRResponse( "ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        ControllerHelper.SignalRResponse( "R_ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         Employee employee = new Employee();
         flowUser = await _usersRepository.GetSingleObject(s => s.username == accountName);
         employee = await _employeeRepository.GetSingleObject(s => s.UsersId == flowUser.Id);
@@ -393,5 +439,12 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         await _turnAroundTimeDeptProcessingRepository.InsertData(deptProcessing);
 
         }
+    public class TransferFileConfig
+    {
+        public string SourceDepartment { get; set; }
+        public string TargetDepartment { get; set; }
+        public string Strategy { get; set; } // Latest
+        public string FileSelector { get; set; } // First
+    }
 }
 

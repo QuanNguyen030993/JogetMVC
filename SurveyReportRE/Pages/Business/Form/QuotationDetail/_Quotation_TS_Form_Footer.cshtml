@@ -2,6 +2,7 @@
 @{
     string dept = "TS";
     long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
+    string prefix = "qt";
 }
 
 
@@ -17,43 +18,390 @@
 </div>
 
 <script>
-     setTimeout( () => {
-     var dept = "@dept";
-      var pageLayout = window.QuotationPage;
-       var stateLayout = pageLayout.state;
+    //????
+        var data = [];
+        var quotationId = @quotationId;
+        function prepareData(element) {
+            var uploaderId = "fileUpload_@(prefix)_default_@(dept)_@(quotationId)";
+             var uploader = $(`#${uploaderId}`).dxFileUploader("instance")
+                          var fileData =  uploader.option("storageData");
+            data = [];
+                    $.each(fileData,function (index, el) {
+             const $el = $(el);
+
+             data.push({
+                    Index: index,
+                     QuotationId: @quotationId,
+                     DocumentId: el.id,//Number($(el).find("input").val()),
+                     AttachmentElement: el,
+                     LineId: null,
+                     ProductId: null
+                 });
+       });
+        }
+    function renderOptionQuotationGrid(){
+       //  element
+       //   .each(function (index, el) {
+       //       const $el = $(el);
+
+       //       data.push({
+       //              Index: index,
+       //               QuotationId: @quotationId,
+       //               DocumentId: Number($(el).find("input").val()),
+       //               AttachmentElement: el,
+       //               LineId: null,
+       //               ProductId: null
+       //           });
+       // });
+             var quotationId= @quotationId;
+             var grid = $(`<div id="gridOptionQuotation_${quotationId}">`).dxDataGrid({
+             dataSource: data,
+             columnResizingMode: 'widget',
+             columnHidingEnabled: false,
+             columnAutoWidth: true,
+             showColumnLines: true,
+             columnChooser: { allowSearch: true, enabled: true },
+             columnFixing: { enabled: true },
+             keyExpr: "Index",
+             showBorders: true,
+             editing: {
+                 mode: "cell",
+                 allowUpdating: true
+             },
+                 onEditorPreparing: function (e) {
+
+                if (e.parentType === "dataRow") {
+
+                    // 👉 Khi edit Product
+                    if (e.dataField === "ProductId") {
+
+                        // lấy LineId hiện tại của row
+                        let lineId = e.row.data.LineId;
+
+                        let filtered = _entities.product.filter(p => p.lineId === lineId);
+
+                        e.editorOptions.dataSource = filtered;
+                    }
+
+                    // 👉 Khi change Line → reset Product
+                    if (e.dataField === "LineId") {
+
+                        const defaultOnValueChanged = e.editorOptions.onValueChanged;
+
+                        e.editorOptions.onValueChanged = function (args) {
+
+                            // gọi default handler của DevExtreme
+                            if (defaultOnValueChanged) {
+                                defaultOnValueChanged(args);
+                            }
+
+                            // set value cho Line
+                            e.setValue(args.value);
+
+                            // reset ProductId
+                            // e.component.cellValue(e.row.rowIndex, "ProductId", null);
+
+                            e.component.beginUpdate();
+                            e.component.cellValue(e.row.rowIndex, "ProductId", null);
+                            e.component.endUpdate();
+
+                        };
+                    }
+                }
+            },
+             columns: [
+                 {
+                     dataField: "AttachmentElement",
+                     caption: "Quotation",
+                     allowEditing: false,
+                     cellTemplate: function (container, options) {
+                        var x = options.data.AttachmentElement;
+                        const fileName = x.fileName || x.FileName || x.name || "Unnamed";
+                        const ext = (x.extension || x.Extension || getExt(fileName)).toLowerCase();
+                        const size = x.size || x.fileSize || x.FileSize || 0;
+                        const downloadUrl = x.downloadUrl || x.DownloadUrl || x.url;
+                        const id = x.id || x.Id || x.attachmentId;
+                        const author = x.author || x.author || x.author;
+                        const date = x.date || x.date || x.date;
+                        const $item = $("<div>")
+                            .addClass("att-item")
+                            .css({
+                                transition: "opacity .18s ease, transform .18s ease"
+                            });
+
+                        $("<div>")
+                            .addClass("att-ico")
+                            .text(getIconByExt(ext))
+                            .appendTo($item);
+
+                        const $meta = $("<div>").addClass("att-meta").appendTo($item);
+
+                        $("<div>")
+                            .addClass("att-name")
+                            .attr("title", fileName)
+                            .text(`${fileName}`)
+                            .appendTo($meta);
+
+                        $("<div>")
+                            .addClass("att-sub")
+                            .text((ext ? ext.toUpperCase() : "FILE") + " • " + formatBytes(size) + ` -  ${author}  -  ${fmtTimeLocal(date)}`)
+                            .appendTo($meta);
+
+                        const $actions = $("<div>").addClass("att-actions").appendTo($item);
+
+                            if (x.recordGuid)
+                        $("<div>").dxButton({
+                            icon: "download",
+                            hint: "Download",
+                            stylingMode: "contained",
+                            onClick: function (ev) {
+                                ev.event?.stopPropagation?.();
+                                if (downloadUrl) {
+                                    window.open(downloadUrl, "_blank");
+                                } else {
+                                    DevExpress.ui.notify("No download url", "warning", 2000);
+                                }
+                            }
+                        }).appendTo($actions);
+                            if (x.recordGuid)
+                        $("<div>").dxButton({
+                            icon: "trash",
+                            hint: "Delete",
+                            stylingMode: "outlined",
+                            onClick: async function (ev) {
+                                ev.event?.stopPropagation?.();
+
+                                if (!id) {
+                                    DevExpress.ui.notify("Missing id", "warning", 2000);
+                                    return;
+                                }
+
+                                try {
+                                    const res = await fetch(`/api/Document/DeleteDocumentData?id=${encodeURIComponent(id)}`, {
+                                        method: "GET"
+                                    });
+
+                                    if (!res.ok) throw new Error("Delete failed");
+
+                                    DevExpress.ui.notify("Deleted", "success", 1200);
+                                    if (typeof onDeleted === "function") {
+                                        onDeleted(x);
+                                    }
+                                } catch (err) {
+                                    DevExpress.ui.notify(err.message || "Delete error", "error", 2500);
+                                }
+                            }
+                        }).appendTo($actions);
+
+                        $item.css("cursor", downloadUrl ? "pointer" : "default");
+                            if (x.recordGuid)
+                        $item.on("click", async function (ev) {
+                            if (ext === "xlsx" || ext === "xls") {
+                                //libreConvert(id);
+                                openExcelPreviewPopup(id);
+                            }
+                            if (ext === "docx" || ext === "doc")
+                                openWordPreviewPopup(id);
+                            if (ext === "jpg" || ext === "jpeg" || ext === "png")
+                                openImagePreviewPopup(id);
+
+                            //if (ext === "docx")
+                            //    openWordMammothPopup(id);
+                        });
+                        $(`<input type="hidden" value="${id}"></input>`).appendTo($item);
+                            // var items =  createAttachmentItem(options.data.AttachmentElement,null);
+                            // console.log(items);
+                            $item.appendTo(container);
+                            return container;
+                         // var elementIn  = $(options.data.AttachmentElement);
+                         // var inputElement = $(elementIn).find("input");
+                         // $(elementIn).appendTo(container);
+                         // inputElement.appendTo(container);
+                     }
+                 },
+                 {
+                     dataField: "LineId",
+                     caption: "Line",
+                     lookup: {
+                         dataSource: _entities.line,
+                         valueExpr: "id",
+                         displayExpr: "value"
+                     },
+                     editorOptions:{
+                         placeholder: "Select Line...",
+                         dataSource: new DevExpress.data.DataSource({
+                            store: {
+                                data:_entities.line,
+                                type: 'array',
+                                key: 'id',
+                            },
+                        }),
+                         }
+                        ,
+                            cellTemplate: function(container, options) {
+                                const text = options.text || "Select...";
+
+                                $(`
+                                    <div style="display:flex; justify-content:space-between; align-items:center; padding:15px;">
+                                        <span>${text}</span>
+                                        <i class="dx-icon-chevron-down"></i>
+                                    </div>
+                                `).appendTo(container);
+                            }
+                        ,
+                         editorType: "dxSelectBox"
+                     },
+                    {
+                     dataField: "ProductId",
+                     caption: "Product",
+                     lookup: {
+                         dataSource: _entities.product,
+                         valueExpr: "id",
+                         displayExpr: "value"
+                     }, 
+                     editorOptions:{
+                         placeholder: "Select Product...",
+                         dataSource: new DevExpress.data.DataSource({
+                            store: {
+                                data:_entities.product,
+                                type: 'array',
+                                key: 'id',  
+                            },
+                        }),
+                         }
+                        ,
+                            cellTemplate: function(container, options) {
+                                const text = options.text    || "Select...";
+
+                                $(`
+                                    <div style="display:flex; justify-content:space-between; align-items:center; padding:15px;">
+                                        <span>${text}</span>
+                                        <i class="dx-icon-chevron-down"></i>
+                                    </div>
+                                `).appendTo(container);
+                            }
+    ,
+                     editorType: "dxSelectBox"
+                 }
+             ]
+         });
+         return grid;
+    }
+
+     // var dept = "@dept";
+      // var pageLayout = window.QuotationPage;
+       // var stateLayout = pageLayout.state;
     $("#@QTViewIdHelper.BtnSave(dept, quotationId)").dxButton({ text: "Save", icon: "save", type: "default", onClick:
          function (e) {
-               var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-               var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
-                   shadingColor: "rgba(0,0,0,0.4)",
-                   visible: false,
-                   showIndicator: true,
-                   showPane: false,
-                   shading: true,
-                   closeOnOutsideClick: false,
-                    position: { of: `#@QTViewIdHelper.Form(dept, quotationId)`}
-                   // onShown: function () {
-                   //     setTimeout(function () {
-                   //         appLoadPanel.hide();
-                   //     }, 3000);
-                   // }
-               });
-              globalLoadPanel.dxLoadPanel("instance").show();
+                    const uploader1 = $(`#attList_@(prefix)_default_@(dept)_@(quotationId) .att-item.animate-step.visible`);
+                    const uploader2 = $(`#attList_@(prefix)_supportingDoc_@(dept)_@(quotationId) .att-item.animate-step.visible`);
+                const fileCount1 = uploader1.length || 0; // number of quote docs
+                const fileCount2 = uploader2.length || 0; // number of sup docs
+                var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+                if (fileCount1 > 1 && !formItems.isNotMakeOption)
+                {
+                     var warningContent = `Would you like to make option of this quotation?`;
+                     var promptConfirm = appNotifyWarning(warningContent, true, "Yes", "Close");
+                     promptConfirm.then((result) => {
+                     if (result.isConfirmed){
+                                        prepareData($(`#attList_@(prefix)_default_@(dept)_@(quotationId) .att-item.animate-step.visible`))
+                                    var popupInstance = makePopupWithScroll(
+                                            renderOptionQuotationGrid()
+                                        ,"medium", "Select product options");
+                                        popupInstance.option("toolbarItems[0].options.onClick", function () {
+                                            popupInstance.hide();
+                                            var gridInstance = $(`#gridOptionQuotation_@quotationId`).dxDataGrid("instance");
+                                            var rows = gridInstance.getVisibleRows();
+                                            var passingObject = { QuotationId: @quotationId, QuotationData : rows.map(x => {
+                                                var c =  {
+                                                Index: x.data.Index,
+                                                 QuotationId: @quotationId,
+                                                 DocumentId: x.data.DocumentId,
+                                                 AttachmentElement: "",
+                                                 LineId:  x.data.LineId || 0 ,
+                                                 ProductId:  x.data.ProductId || 0 
 
-             ajaxPut('/api/Quotation/UpdateData',
-             {
-                 key: formItems.id,
-                 values: JSON.stringify(
-                     formItems
-                 )
-             },
-             {
-                 onSuccess: function (response) {
-                 },
-                 onError: function (err) { }
-             }
-         );
+                                                };
+                                                return c;    
+                                            
+                                            })};
+                                            ajaxPost(`api/Quotation/CreateOption`, passingObject , {
+                                                onSuccess: function (response) {
+                                                    notify("Quotation option make success!", "success");
+                                                    
+                                                },
+                                                onError: function (err) {
+                                                    console.log(err);
+                                                    notify("Quotation option make fail!", "error");
+                                                }
+                                            });
+                                            setTimeout(() => {
+                                                var $tabDivId = $(`li#form_@(nameof(Quotation))_Form_@(quotationId)_li_tab`);
+                                                $tabDivId.animate({
+                                                    width: '0px',
+                                                    opacity: '0'
+                                                }, 220);
+                                                setTimeout(function () {
+                                                    var $li = $tabDivId.closest("li");
+                                                    var panelId = $li.attr("aria-controls");
+                                                    $li.remove();
+
+                                                    if (panelId) {
+                                                        $("#" + panelId).remove();
+                                                        $(`#${panelId}_content_wrapper`).remove();
+                                                        document.body.classList.remove("hasRightPanel");
+                                                        $("#btnCloseRightComment").click();
+                                                    }
+                                                    $("#tablist").tabs("refresh");
+                                                }, 150);
+                                            },500);
+                                        });
+                                         popupInstance.option("toolbarItems[1].options.onClick", function () {
+                                          popupInstance.hide();
+                                         });
+                                    popupInstance.show();
+                     }
+                     else {
+                         warningContent = `Will you continue to make option?`;
+                         promptConfirm = appNotifyWarning(warningContent, true, "Yes", "No");
+                         promptConfirm.then((result) => {
+                            if(!result.isConfirmed) ajaxGet(`api/Quotation/MarkNotAsOption/@(quotationId)`, null);
+                         });
+                         
+                     }
+                     });
+                }
+
+         //       var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+         //       var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
+         //           shadingColor: "rgba(0,0,0,0.4)",
+         //           visible: false,
+         //           showIndicator: true,
+         //           showPane: false,
+         //           shading: true,
+         //           closeOnOutsideClick: false,
+         //            position: { of: `#@QTViewIdHelper.Form(dept, quotationId)`}
+         //           // onShown: function () {
+         //           //     setTimeout(function () {
+         //           //         appLoadPanel.hide();
+         //           //     }, 3000);
+         //           // }
+         //       });
+         //      globalLoadPanel.dxLoadPanel("instance").show();
+
+         //     ajaxPut('/api/Quotation/UpdateData',
+         //     {
+         //         key: formItems.id,
+         //         values: JSON.stringify(
+         //             formItems
+         //         )
+         //     },
+         //     {
+         //         onSuccess: function (response) {
+         //         },
+         //         onError: function (err) { }
+         //     }
+         // );
          }
      });
-     }, _delayRenderSubmitButton);
 </script>

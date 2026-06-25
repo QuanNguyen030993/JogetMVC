@@ -30,6 +30,7 @@ var config = builder.Configuration.GetFileProvider();
 var logger = new LoggerConfiguration()
                     //.ReadFrom.Configuration(builder.Configuration)
                     .Enrich.FromLogContext()
+                    .WriteTo.Console()
                     .WriteTo.MSSqlServer(
                             connectionLogString,
                             sinkOptions: new Serilog.Sinks.MSSqlServer.MSSqlServerSinkOptions

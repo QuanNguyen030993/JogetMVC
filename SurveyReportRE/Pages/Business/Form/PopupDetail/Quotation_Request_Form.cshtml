@@ -1,4 +1,5 @@
 ﻿@page "{pageNum:int?}"
+@using JogetMVC.Model
 @using Newtonsoft.Json
 @model Quotation_Request_FormModel
 @{
@@ -92,8 +93,21 @@
     </div>
 
     <script>
-            var guid= crypto.randomUUID();
-            var clientQuery = `OnSystem`;
+        var shouldShow = false;
+           var guid= crypto.randomUUID();
+                var sectionId =  "qt-body_@(dept)_";
+                         var that = new Object();
+                         that.ModelName = "Quotation";
+                         that.moduleName = "default";
+                         that.editorType = "dxFileUploader"
+                         that.id = 0;
+                         that.guid =guid ;
+                         that.sectionName = "@(dept)";
+                         that.titleName = "Upload Quotation";
+                         that.uploaderAllow = true;
+                         that.data = { SectionName: `${sectionId}_${that.moduleName}_0`, Department: "@(dept)", FieldName: that.moduleName, FormId: "@(QTViewIdHelper.Form(dept, 0))" }; //{"SectionName":"default_FO_410"}
+
+     var clientQuery = `OnSystem`;
 
             var DEPTS = ["RE"];
             var REMEMS = ["quan.nh", "huan.lt", "minh.lh"];
@@ -306,7 +320,7 @@
                                 var selectedRow = selectedItems.selectedRowsData[0];
                                 e.component.option("value", selectedItems.selectedRowKeys[0]);
                                 that.formInstance.updateData("clientName", selectedRow.englishName);
-                  that.formInstance.updateData("businessOccupation", selectedRow.businessOccupation);
+                                that.formInstance.updateData("businessOccupation", selectedRow.businessOccupation);
                                 e.component.close();
                             });
 
@@ -323,8 +337,8 @@
                     
                     caption: "Product",
                     items: [
-             { dataField: "lineId", isRequired: true, editorType: "dxSelectBox", editorOptions: {
-                        items: _entitys.line,
+                    { dataField: "lineId", isRequired: true, editorType: "dxSelectBox", editorOptions: {
+                        items: _entities.line,
                         keyExpr: "id",
                         displayExpr: "value",
                         searchEnabled: true,
@@ -338,11 +352,11 @@
                     { dataField: "lineCode", editorType: "dxTextBox", visible: true, editorOptions: { readOnly: true } },
                     { dataField: "productName", editorType: "dxTextBox", visible: false, editorOptions: { readOnly: true } },
                     {
-                 dataField: "productId", isRequired: true,
+                     dataField: "productId", isRequired: true,
                         editorType: "dxSelectBox",
                         editorOptions: {
                             label: { text: "Product Name" },
-                             items: _entitys.product,
+                            items: _entities.product,
                             labelMode: "floating",
                             searchEnabled: true,
                             keyExpr: "id",
@@ -361,7 +375,7 @@
                 {
                     itemType: "group",
                     colCount: 2,
-
+                    name: "headerInformation",
                     caption: "Header Information",
                     items: [
                         { dataField: "PIC", editorType: "dxTextBox", editorOptions: { readOnly: true, value: _loginUser } },
@@ -369,17 +383,25 @@
                         {
                             dataField: "subject",
                             colSpan: 2,
-                            editorType: "dxTextArea",
-                            editorOptions: { minHeight: 90 },
-                            validationRules: [{ type: "required" }]
+                            editorType: "dxTextArea"//,
+                            // validationRules: [{ type: "required" }]
                         },
-                        { dataField: "requestTypeId", label: { text: "Request Type" }, editorType: "dxSelectBox", isRequired: true, editorOptions: makeSelectBoxEditorOptions(_enums.requestType) },
+
+                        {
+                                    dataField: "requestTypeId",
+                                    label: { text: "Request Type" },
+                                    editorType: "dxSelectBox",
+                                    editorOptions: {
+                                        ...makeSelectBoxEditorOptions(_enums.requestType),
+
+                                        onValueChanged: function (e) {
+                                            togglePolicyField(e);
+                                        }
+                                    }
+                                },
                         { dataField: "dueDate", editorType: "dxDateBox", editorOptions: { displayFormat: "dd-MM-yyyy" } },
-
-                        { dataField: "policyNo", label: { text: "Policy No" }, editorType: "dxTextBox" },
-
-
-                   { dataField: "businessChannel", isRequired: true, editorType: "dxSelectBox",
+                        { dataField: "policyNo",name: "policyNo", visible: shouldShow ,label: { text: "Policy No" }, editorType: "dxTextBox" },
+                        { dataField: "businessChannel", isRequired: true, editorType: "dxSelectBox",
                             editorOptions: { items: _enums.BusinessChannel,
                                 keyExpr: "id",
                                 displayExpr: "value",
@@ -435,7 +457,7 @@
                                     selectedIndex: fd.surveyNeeded ? 0 : -1,
                                     animationDuration: 180,
                                     dataSource: [{ key: "survey", title: "SURVEY PIC" }],
-                                itemTitleTemplate: (it) => $("<div>").addClass("acc-title").text(it.title),
+                                    itemTitleTemplate: (it) => $("<div>").addClass("acc-title").text(it.title),
                                     itemTemplate: (it, idx, el) => {
                                         var $body = $("<div>").addClass("acc-body");
                                         $("<div>").text("Title").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
@@ -496,54 +518,73 @@
                         }
 
             ]},
+                        
                             {
                         itemType: "group",
                         colCount: 1,
                         
                         caption: "Attachment",
-                        items: [
-                         {dataField: "quotationQuantity", isRequired: true,editorType: "dxNumberBox",editorOptions: { minValue: 1} ,validationRules : { isRequired:  true} },
-                            {
-                        dataField: "@prefix" === "@prefix" ? "quotation" : "document", editorType: "dxFileUploader"
-                        ,
-                        editorOptions: {
-                            name: "files"
-                        }
-                        , template: function (data, itemElement) {
-                                var item = new Object();
-                                var moduleKey = "@prefix";
-                                item.editorType = "dxFileUploader";
-                                item.uploadMode = "useForm";
-                                item.moduleName = moduleKey + "_default"; item.sectionName =  "@dept";
-                                item.id = @ViewData["Id"];
-                                item.guid = guid;
-                                item.isNotLoading = true;
-                                item.titleName = "Upload Quotation";
-                                createEditor(item, itemElement, $(`<div>`), item);
-                        }
+                            items:[
+                                
+                                    {
+                                        dataField: "quotationQuantity",
+                                        isRequired: true,
+                                        editorType: "dxNumberBox",
+                                        editorOptions: { min: 1 },
+                                        validationRules: [{ type: "required" }]
+                                   },...attachmentByCase(that)
+                                ]
 
+
+                         
+                           
+                        //     {
+                        // dataField: "@prefix" === "@prefix" ? "quotation" : "document", editorType: "dxFileUploader"
+                        // ,
+                        // editorOptions: {
+                        //     name: "files"
+                        // }
+                        // , template: function (data, itemElement) {
+                               
+                               
+                                
+                        //         editor = $("<div>");
+                        //         // var item = new Object();
+                        //         // var moduleKey = "@prefix";
+                        //         // item.editorType = "dxFileUploader";
+                        //         // item.uploadMode = "useForm";
+                        //         // item.moduleName = moduleKey + "_default"; item.sectionName =  "@dept";
+                        //         // item.id = @ViewData["Id"];
+                        //         // item.guid = guid;
+                        //         // item.isNotLoading = true;
+                        //         // item.titleName = "Upload Quotation";
+                        //  createEditor(that, editor, $(`<div>`), that)
+                        //  editor.appendTo(itemElement);
+                        // }
+
+                        // }
+                        // ,
+                        // {
+                        // dataField: "supportingDocument", editorType: "dxFileUploader"
+                        // ,
+                        // editorOptions: {
+                        //         name: "sdfiles"
+                        // }
+                        // , template: function (data, itemElement) {
+                        //         var item = new Object();
+                        //     var moduleKey = "@prefix";
+                        //         item.editorType = "dxFileUploader";
+                        //     item.uploadMode = "useForm";
+                        //         item.moduleName = moduleKey+ "_supportingDoc"; item.sectionName =  "@dept";
+                        //         item.id = @ViewData["Id"];
+                        //         item.guid = guid;
+                        //     item.isNotLoading = true;
+                        //         item.titleName = "Upload Supporting Document";
+                        //     createEditor(item, itemElement, $(`<div>`), item);
+                        // }
+
+                        //             }
                         },
-                        {
-                        dataField: "supportingDocument", editorType: "dxFileUploader"
-                        ,
-                        editorOptions: {
-                                name: "sdfiles"
-                        }
-                        , template: function (data, itemElement) {
-                                var item = new Object();
-                            var moduleKey = "@prefix";
-                                item.editorType = "dxFileUploader";
-                            item.uploadMode = "useForm";
-                                item.moduleName = moduleKey+ "_supportingDoc"; item.sectionName =  "@dept";
-                                item.id = @ViewData["Id"];
-                                item.guid = guid;
-                            item.isNotLoading = true;
-                                item.titleName = "Upload Supporting Document";
-                            createEditor(item, itemElement, $(`<div>`), item);
-                        }
-
-                                    }
-                        ]},
                         {
                         itemType: "group",
                         colCount: 2,
@@ -559,7 +600,7 @@
                             valueExpr: "id",
                             onValueChanged(e) {
                                 vm.assignmentMode = e.value;
-                                refreshAssignmentUI();
+                                // refreshAssignmentUI();
                                
                             }
                         }
@@ -586,66 +627,98 @@
                                 visible: true,
                                 label: { text: "Assign PIC" },
                                 template: function (data, itemElement) {
-                                $(`<div id="btnNewAssignee">`).appendTo(itemElement);
-                                $(`<div id="btnClearAssignee">`).appendTo(itemElement);
-                                var assigneeStore = new DevExpress.data.ArrayStore({ key: "_key", data: vm.assignees });
+                              var deptData = {TS :  { pIC: JSON.stringify({TS: ""}), pic:JSON.stringify({TS: ""})},pic: JSON.stringify({TS:""} ) ,pIC: JSON.stringify({TS: ""}), id: 0, sectionName: "TS", code: "..." } ;
+                                 
+                              var assigneeBoxId = `${window.QuotationIdManager.assigneeBox('TS', deptData.id)}`;
+                             var assigneeBox = $(`<div id="${assigneeBoxId}">`)
+                                assigneeBox.appendTo(itemElement);
+                                $("<div id='assignBox' class='dExForm'>").appendTo(itemElement);
+                                renderDepartmentAssigneeBox(`#${assigneeBoxId}`, {
+                                           groupName: 'TS',
+                                          dataForm: deptData['TS'],
+                                       //value: formItems.lmktAssigneeId || null,
+                                       onChanged: function (itemChild, editor) {
 
-                                 $(`<div id="assigneeList" style="margin-top:10px;">`).dxDataGrid({
-                                    dataSource: assigneeStore,
-                                    keyExpr: "_key",
-                                    showBorders: true,
-                                    columnAutoWidth: true,
-                                    hoverStateEnabled: true,
-                                    noDataText: "No manual assignee entry. Switch to Manual assign and click New.",
-                                    paging: { pageSize: 10 },
-                                    pager: { showInfo: true },
-                                    columns: [
-                                        {
-                                            dataField: "to",
-                                            caption: "Assignee",
-                                            lookup: { dataSource: _enums.assignee, valueExpr: "accountName", displayExpr: "fullName" }
-                                        },
-                                        {
-                                            dataField: "notes",
-                                            caption: "Notes",
-                                            cellTemplate(container) {
-                                                $("<div/>").text("Hidden notes, open entry to view").appendTo(container);
-                                            }
-                                        },
-                                        {
-                                            type: "buttons",
-                                            width: 120,
-                                            buttons: [
-                                                { hint: "Edit", icon: "edit", onClick(e) { openPopupForEdit(e.row.data); } },
-                                                {
-                                                    hint: "Devare", icon: "trash",
-                                                    onClick(e) {
-                                                        assigneeStore.remove(e.row.data._key);
-                                                        $("#assigneeList").dxDataGrid("instance").refresh();
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                }).appendTo(itemElement);
-                                    $("#btnNewAssignee").dxButton({
-                                        text: "New",
-                                        icon: "plus",
-                                        type: "default",
-                                        onClick() {
-                                            openPopupForNew();
-                                        }
-                                    });
+                                         const items = editor.option("selectedItems") || [];
 
-                                    $("#btnClearAssignee").dxButton({
-                                        text: "Clear",
-                                        icon: "trash",
-                                        type: "normal",
-                                        onClick() {
-                                            vm.assignees.splice(0, vm.assignees.length);
-                                            $("#assigneeList").dxDataGrid("instance").refresh();
-                                        }
-                                    });
+                                        var result = itemChild
+                                          .map(x => x.accountName )
+                                          .join(',');
+
+                                
+
+                                       var form = $("#assignBox").dxForm({visible:false}).dxForm("instance");
+
+                                       form.option("formData", {
+                                         to: result,
+                                                 branchId: _enums.BranchOffice.find(f => f.code === _branch).id,
+                                                  notes: "",
+                                                  deptTarget: vm.assignedTeamOrRole
+                                       });
+                                       console.log(_enums.BranchOffice);
+
+                                   }
+                               }, false);
+                                // $(`<div id="btnNewAssignee">`).appendTo(itemElement);
+                                // $(`<div id="btnClearAssignee">`).appendTo(itemElement);
+                                // var assigneeStore = new DevExpress.data.ArrayStore({ key: "_key", data: vm.assignees });
+
+                                //  $(`<div id="assigneeList" style="margin-top:10px;">`).dxDataGrid({
+                                //     dataSource: assigneeStore,
+                                //     keyExpr: "_key",
+                                //     showBorders: true,
+                                //     columnAutoWidth: true,
+                                //     hoverStateEnabled: true,
+                                //     noDataText: "No manual assignee entry. Switch to Manual assign and click New.",
+                                //     paging: { pageSize: 10 },
+                                //     pager: { showInfo: true },
+                                //     columns: [
+                                //         {
+                                //             dataField: "to",
+                                //             caption: "Assignee",
+                                //             lookup: { dataSource: _enums.assignee, valueExpr: "accountName", displayExpr: "fullName" }
+                                //         },
+                                //         {
+                                //             dataField: "notes",
+                                //             caption: "Notes",
+                                //             cellTemplate(container) {
+                                //                 $("<div/>").text("Hidden notes, open entry to view").appendTo(container);
+                                //             }
+                                //         },
+                                //         {
+                                //             type: "buttons",
+                                //             width: 120,
+                                //             buttons: [
+                                //                 { hint: "Edit", icon: "edit", onClick(e) { openPopupForEdit(e.row.data); } },
+                                //                 {
+                                //                     hint: "Devare", icon: "trash",
+                                //                     onClick(e) {
+                                //                         assigneeStore.remove(e.row.data._key);
+                                //                         $("#assigneeList").dxDataGrid("instance").refresh();
+                                //                     }
+                                //                 }
+                                //             ]
+                                //         }
+                                //     ]
+                                // }).appendTo(itemElement);
+                                //     $("#btnNewAssignee").dxButton({
+                                //         text: "New",
+                                //         icon: "plus",
+                                //         type: "default",
+                                //         onClick() {
+                                //             openPopupForNew();
+                                //         }
+                                //     });
+
+                                //     $("#btnClearAssignee").dxButton({
+                                //         text: "Clear",
+                                //         icon: "trash",
+                                //         type: "normal",
+                                //         onClick() {
+                                //             vm.assignees.splice(0, vm.assignees.length);
+                                //             $("#assigneeList").dxDataGrid("instance").refresh();
+                                //         }
+                                //     });
                                 }
                             }
                         ]
@@ -661,7 +734,7 @@
                 },
                 onFieldDataChanged: function(e) {
                     if (e.dataField === "lineId") {
-                        let filtered = _entitys.product.filter(f => f.lineId === e.value.id);
+                        let filtered = _entities.product.filter(f => f.lineId === e.value.id);
                 
                         let form = e.component;
                         let editor = form.getEditor("productId");
@@ -685,7 +758,7 @@
                     isRequired: true,
                     editorOptions: { dataSource: _enums.assignee, displayExpr: "fullName", valueExpr: "accountName", searchEnabled: true }
                 },
-                { dataField: "notes", colCount: 2, editorType: "dxTextArea", editorOptions: { minHeight: 90 } }
+                { dataField: "notes", colCount: 2, editorType: "dxTextArea"}
             ];
 
             var currentEntry = entryTemplate();
@@ -812,7 +885,7 @@
                 popupMode = "new";
                 currentEntry = entryTemplate();
                           var popup = $("#assigneePopup").dxPopup("instance");
-                 popup.option("title", "New Assignee Entry");
+                         popup.option("title", "New Assignee Entry");
                       $.ajax({
                             url: "api/Employee/GetAssignableByGroup",
                             type: "GET",
@@ -850,18 +923,12 @@
                                     dataField: "branchId",
                                     visible: false,
                                     editorType: "dxNumberBox",
-                                    label: { text: "Branch" },
-                                    editorOptions: {
-                                        minHeight: 90
-                                    }
+                                    label: { text: "Branch" }
                                 },
                                     {
                                         dataField: "notes",
                                         editorType: "dxTextArea",
-                                        label: { text: "Notes" },
-                                        editorOptions: {
-                                            minHeight: 90
-                                        }
+                                        label: { text: "Notes" }
                                     }
                                 ]
                             });
@@ -900,7 +967,7 @@
                 grid.option("disabled", !enabled);
             }
 
-            refreshAssignmentUI();
+            // refreshAssignmentUI();
            viewFieldAdjust("quotationRequestForm");
             // window.getQuotationRequestPayload = function () {
             //     var formIns = $("#quotationRequestForm").dxForm("instance");
@@ -918,5 +985,14 @@
             //     var r2 = validateAttachments();
             //     return !!(r1.isValid && r2);
             // };
+
+    function togglePolicyField(e) {
+        const form = $("#quotationRequestForm").dxForm("instance");
+        var getRequestType = _enums.requestType.find(f => f.id == e.value);
+        // Ví dụ: chỉ hiển thị khi value = 'POLICY'
+        shouldShow = getRequestType.value === "Endorsement";
+        form.itemOption("headerInformation.policyNo", "visible", shouldShow);
+        form.repaint();
+    }
 
     </script>

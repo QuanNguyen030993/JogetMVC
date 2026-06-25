@@ -371,7 +371,7 @@ var buildApiUrl = function (apiMethod, instanceObject) {
                     url = `/api/${instanceObject.ModelName}/GetSingle/${instanceObject.id}`;
                 }
                 else if (apiMethod === "GetFKMany") {
-                    url = `/api/${instanceObject.ReferenceModel}/GetFKMany?fkId=${instanceObject.refFieldId}&fkField=${instanceObject.refFieldName}`;
+                    url = `/api/${instanceObject.ReferenceModel}/GetFKMany?fkId=${instanceObject.refKey}&fkField=${instanceObject.refField}`;
                 }
                 else if (apiMethod === "CustomQuery") {
                     url = `/api/${instanceObject.ModelName}/ExecuteCustomQuery`;
@@ -428,8 +428,6 @@ function parseHexToIntArray(hexString) {
 //        parent.removeChild(parent.firstChild);
 //    }
 //}
-
-
 
 
 
@@ -761,737 +759,8 @@ function toggleCodeView(editor, button) {
     editor.option("isCodeView", !isCodeView);
 }
 
-function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
-
-    if (_cacheCompanyData)
-        if (_cacheCompanyData.some(f => f.table == "Outline"))
-            _cacheOutlines = _cacheCompanyData.find(f => f.table == "Outline").rows;
-    //if (_cacheOutlines.length > 0) {
-    //    formInstanceProps.Outline = formInstanceProps.Outline.concat(_cacheOutlines);
-    //}
-    if (formInstanceProps.outlineForm) {
-        if (formInstanceProps.outlineForm.surveyTypeId) {
-            _cacheOutlines = _cacheOutlines.filter(f => f.surveyTypeId == formInstanceProps.outlineForm.surveyTypeId);
-        }
-    }
-    var _formConfig = formInstanceProps.gridInstanceConfig.map(item => {
-        var validationRules = [];
-        //const result = {};
-        //Object.keys(item).forEach(key => {
-        //    if (key in item) {
-        //        result[key] = item[key];
-        //    }
-        //});
-        item = ObjectPopulateKey(item);
 
 
-        if (item != null && item != undefined)
-            if (item.validationRules != null && item.validationRules != undefined && item.validationRules != "") {
-                try {
-                    if (typeof item.validationRules === "string")
-                        validationRules = JSON.parse(item.validationRules);
-                    else
-                        validationRules = item.validationRules
-                    validationRules.forEach(rule => {
-                        if (rule.type === "custom" && typeof rule.validationCallback === "string") {
-                            rule.validationCallback = eval("(" + rule.validationCallback + ")");
-                        }
-                        return rule;
-                    });
-                }
-                catch {
-
-                }
-            }
-        //item.visible = true;
-        if (item.formVisibleIndex != null || item.formVisibleIndex != undefined) {
-            item.order = item.formVisibleIndex;
-        }
-        else
-            item.order = item.order;
-        if (item.order == -1) item.visible = false;
-        item.validationRules = validationRules
-        item.editorType = item.formDataType;
-        item.calculatedDisplayField = item.dataField;
-        item.width = isNullOrEmpty(item.formWidth) ? _defaultFormFieldWidth : (!(item.formWidth?.includes("%")) ? parseInt(item.formWidth) : item.formWidth);
-        item.height = isNullOrEmpty(item.formHeight) ? _defaultFormFieldHeight : (!(item.formHeight?.includes("%")) ? parseInt(item.formHeight) : item.formHeight);
-        if (!(typeof item.editorOptions === "object") && !(item.editorOptions == null)) {
-
-            const decodedBytes = Uint8Array.from(atob(item.editorOptions), c => c.charCodeAt(0));
-            const decodedString = new TextDecoder("utf-8").decode(decodedBytes);
-            try {
-                const jsonObject = JSON.parse(decodedString);
-                Object.keys(jsonObject).forEach(key => {
-                    const value = jsonObject[key];
-                    if (key.startsWith("on")) {
-                        var scriptFunctionHandle = jsonObject[key].replace("##id", formInstanceProps.id).replace("##datafield", item.dataField);
-                        jsonObject[key] = Function("e", scriptFunctionHandle);
-                    }
-                    else {
-                        if (jsonObject[key] in variableMapping) {
-                            jsonObject[key] = variableMapping[jsonObject[key]];
-                        }
-                    }
-                });
-
-                item.editorOptionsConfig = jsonObject;
-            }
-            catch (exception) {
-                console.log(exception);
-            }
-        }
-        if (item.formItem != null)
-            if (!(typeof item.formItem === "object") && !(item.formItem == null)) {
-                const decodedBytes = Uint8Array.from(atob(item.formItem), c => c.charCodeAt(0));
-                const decodedString = new TextDecoder("utf-8").decode(decodedBytes);
-                try {
-                    const jsonObject = JSON.parse(decodedString);
-                    Object.keys(jsonObject).forEach(key => {
-                        const value = jsonObject[key];
-                        if (jsonObject[key] in variableMapping) {
-                            jsonObject[key] = variableMapping[jsonObject[key]];
-                        }
-                    });
-
-                    item.formItemConfig = jsonObject;
-                }
-                catch {
-                }
-            }
-        if (item.formItemConfig) {
-            if (item.formItemConfig.outline) {
-                const outlineIds = item.formItemConfig.outline.id.split(',').map(id => id.trim());
-                const outlineObj = _cacheOutlines.find(outline =>
-                    outlineIds.includes(outline.id.toString())
-                )
-                item.outlineObject = outlineObj;
-            }
-        }
-        if (formInstanceProps.formOptions?.fieldTemplate) {
-            if (item.dataField == formInstanceProps.formOptions?.fieldTemplate.fieldName) {
-                item.template = formInstanceProps.formOptions?.fieldTemplate.template
-            }
-        }
-        return item;
-    });
-
-    formInstanceProps.fieldConfigs = sortObjectArray(_formConfig);
-
-    //formInstanceProps.fieldByOutline = _formConfig
-    //    .filter(item => item.formItemConfig && item.formItemConfig.outline)
-    //    .map(item => {
-    //        const outlineIds = item.formItemConfig.outline.id.split(',').map(id => id.trim());
-    //        const outlineObj = formInstanceProps.Outline.filter(outline =>
-    //            outlineIds.includes(outline.id.toString())
-    //        )
-
-    //        //outline static by surveyType
-    //        return {
-    //            dataField: item.dataField,
-    //            //outlineId: item.formItemConfig.outline.id,
-    //            outlineInstance: item.outlineObject
-    //        };
-    //    });
-
-    formInstanceProps.fieldByEnum = _formConfig
-        .filter(item => item.formItemConfig && item.formItemConfig.enum)
-        .map(item => {
-            return {
-                dataField: item.dataField,
-                enum: item.formItemConfig.enum,
-                //dataSource: dataSourceEnum(item, formInstanceProps)
-            };
-        });
-
-
-    if (formInstanceProps.outlineForm.isOutlineDynamic) {
-        if (formInstanceProps.formOptions.Params.additionalOutline != null) {
-            //outline dynamic not by surveyType
-            var additionalsOutline = parseParamsByteArrAsObject(formInstanceProps.formOptions.Params.additionalOutline);
-            var listfieldConfig = additionalsOutline.map(m => { return { dataGridConfig: convertKeysToLowerFirstChar(m.DataGridConfig), outline: convertKeysToLowerFirstChar(m.OutlineDynamic) } });
-            formInstanceProps.dynamicOutline = listfieldConfig.map(item => {
-                return {
-                    dataField: item.dataGridConfig.dataField,
-                    //outline: item.outline.id,
-                    outlineInstance: item.outline
-                };
-            });
-        }
-
-    }
-
-    formInstanceProps.fieldByOutlineGroup = _formConfig
-        .filter(item => item.formGroupName?.includes("AccordionGroup"))
-        .map(item => {
-            const groupName = item.formGroupName.split("@")[1];
-            const groupItem = itemsArray.find(arrayItem =>
-                arrayItem.itemType === "group" && arrayItem.name === groupName
-            );
-            var outlineMatch = new Object();
-            if (groupItem) {
-                if (groupItem.formItem)
-                    outlineMatch = _cacheOutlines.find(outline => groupItem.formItem.outline?.id.includes(outline.id));
-            }
-
-            return {
-                dataField: item.dataField,
-                outlineId: outlineMatch ? outlineMatch?.id : null,
-                outlineObject: outlineMatch
-            };
-        });
-
-
-
-    var tabIndexNumber = 1;
-    $.each(formInstanceProps.fieldConfigs, function (i, item) {
-
-
-
-        var additionalEditorOptions = new Object();
-        var customEditorOptions = false;
-        var customFormItem = false;
-        if (item.editorOptionsConfig) {
-            additionalEditorOptions = item.editorOptionsConfig;
-            customEditorOptions = true;
-        }
-        item.formItem = item.formItemConfig;
-        var itemOptions = {};
-
-
-        if (item.editorType == "dxTextArea") {
-            itemOptions = ObjectPopulateKey(item);
-            //itemOptions = {
-            //    validationRules: item.validationRules,
-            //    dataField: item.dataField,
-            //    editorType: item.editorType,
-            //    customEditorOptions: customEditorOptions,
-            //    editorOptions: {
-            //        //minHeight: item.height >= _defaultTextAreaHeight ? parseInt(item.height) : _defaultTextAreaHeight,
-            //        tabIndex: tabIndexNumber,
-            //        onFocusIn: function (e) { //not required
-            //            //e.component.option("autoResizeEnabled", true);
-            //            //e.component.option("maxHeight", 150);
-            //        },
-            //        onFocusOut: function (e) { //not reuuired
-            //            //e.component.option("autoResizeEnable
-            //            //e.component.option("autoResizeEnabled", false);
-            //        },
-            //        //height: item.height >= _defaultTextAreaHeight ? parseInt(item.height) : _defaultTextAreaHeight,
-            //        height: (item.height != null || item.height != '' || item.height != undefined) ? ((item.height !== '' && !isNaN(parseFloat(item.height)) && isFinite(item.height)) ? parseInt(item.height) : item.height.replace("%", "") / 100 * 47) : _defaultTextAreaHeight,
-            //        //width: item.width >= _defaultTextAreaWidth ? parseInt(item.width) : _defaultTextAreaWidth,
-            //        width: (item.width != null || item.width != '' || item.width != undefined) ? ((item.width !== '' && !isNaN(parseFloat(item.width)) && isFinite(item.width)) ? parseInt(item.width) : item.width) : _defaultTextAreaWidth,
-            //        value: item.defaultValue ?? "",
-            //        ...additionalEditorOptions
-            //    },
-            //    label: { location: formInstanceProps.labelLocation, text: item.caption, visible: true },
-            //    formGroupName: item.formGroupName,
-            //    formItem: item.formItem,
-            //    outlineObject: item.outlineObject,
-            //    visible: item.visible
-            //};
-            itemOptions.customEditorOptions = customEditorOptions;
-            itemOptions.editorOptions = {
-                tabIndex: tabIndexNumber,
-                onFocusIn: function (e) { //not required
-                },
-                onFocusOut: function (e) { //not required
-                },
-                height: (item.height != null || item.height != '' || item.height != undefined) ? ((item.height !== '' && !isNaN(parseFloat(item.height)) && isFinite(item.height)) ? parseInt(item.height) : item.height.replace("%", "") / 100 * 47) : _defaultTextAreaHeight,
-                width: (item.width != null || item.width != '' || item.width != undefined) ? ((item.width !== '' && !isNaN(parseFloat(item.width)) && isFinite(item.width)) ? parseInt(item.width) : item.width) : _defaultTextAreaWidth,
-                value: item.defaultValue ?? "",
-                ...additionalEditorOptions
-            };
-            itemOptions.label = {
-                location: formInstanceProps.labelLocation, text: item.caption, visible: true, template: function (text) { }
-            };
-
-            if ((itemOptions.editorOptions.height !== '' && !isNaN(parseFloat(itemOptions.editorOptions.height)) && isFinite(itemOptions.editorOptions.height)))
-                itemOptions.editorOptions.minHeight = item.height >= _defaultTextAreaHeight ? parseInt(item.height) : _defaultTextAreaHeight;
-        }
-        else if (item.editorType == "dxSelectBox") {
-            itemOptions = selectBoxRemakeOption(item, formInstanceProps, tabIndexNumber, additionalEditorOptions);
-        }
-        else if (item.editorType == "dxList") {
-            itemOptions = {
-                formGroupName: item.formGroupName,
-                dataField: item.dataField,
-                editorType: "dxTextBox",
-                customEditorOptions: customEditorOptions,
-                editorOptions: {
-                    tabIndex: tabIndexNumber,
-                    width: item.width,
-                    heigth: item.height,
-                    showClearButton: true,
-                    value: item.defaultValue ?? "",
-                    ...additionalEditorOptions
-                },
-                label: { location: formInstanceProps.labelLocation, text: item.caption, visible: true, template: function (text) { } },
-                formItem: item.formItem,
-                validationRules: item.validationRules,
-                outlineObject: item.outlineObject,
-                visible: item.visible
-            };
-        }
-        else if (item.editorType == "dxMultiDataGrid") {
-            var model = "Users";
-            var mDropDownDS = new MDropDownDataSource();
-            dataSource = mDropDownDS.getDropDownDS('Id', `api/${model}/DropDownLookUp`);
-            itemOptions = {
-                validationRules: item.validationRules,
-                formGroupName: item.formGroupName,
-                dataField: item.dataField,
-                editorType: "dxDropDownBox",
-                label: { location: formInstanceProps.labelLocation, text: item.caption, visible: true },
-                formItem: item.formItem,
-                customEditorOptions: customEditorOptions,
-                editorOptions: {
-                    showClearButton: true,
-                    tabIndex: tabIndexNumber,
-                    width: _defaultFormFieldWidth,
-                    dropDownOptions: {
-                        width: _defaultDropDownWidth,
-                        height: _defaultDropDownHeight,
-                    },
-                    //valueExpr: "id",
-                    //displayExpr: "username",
-                    //columns: ["mail", "username"],
-                    dataSource: dataSource,//configData.dataSource,
-                    onOpened: function (e) {
-                        formInstanceProps.moreActionOpenDropDown(e, dataSource, item);
-                    },
-                    contentTemplate: function (e) {
-                        const $dataGrid = $("<div>").dxDataGrid({
-                            selectionMode: 'all',
-                            // remoteOperations: { paging: true, filtering: true, sorting: true, grouping: true, summary: true, groupPaging: true },
-                            filterRow: { visible: true },
-                            dataSource: e.component.option("dataSource"),
-                            columns: e.component.option("columns"),
-                            selection: { mode: "multiple" },
-                            valueExpr: "id",
-                            scrolling: {
-                                mode: 'virtual',
-                                preloadEnabled: false,
-                                showScrollbar: 'always'
-                            },
-                            width: "100%",
-                            height: "100%",
-                            allowItemDeleting: false,
-                            showSelectionControls: true,
-                            sorting: {
-                                mode: 'multiple',
-                            },
-                            onContentReady: function (e) {
-                                e.component.option("selectedRowKeys", getGrantSurvey(formInstanceProps.id));
-                            },
-                            onSelectionChanged: function (selectedItems) {
-                                var keys = selectedItems.selectedRowKeys,
-                                    hasSelection = keys.length;
-                                if (hasSelection) {
-                                    e.component.selectedItem = selectedItems.selectedRowsData;
-                                    e.component.option("displayValue", selectedItems.selectedRowsData[0]);
-                                    e.component.option("value", keys);
-                                    formInstanceProps.moreActionFromSelectedChangeDropDown(selectedItems, item, formInstanceProps.formInstance);
-                                }
-                            },
-
-                            columnAutoWidth: true,
-                            customizeColumns: function (columns) {
-                            },
-                        });
-
-                        //var dtGrid = $dataGrid.dxDataGrid("instance");
-                        //e.component.on("valueChanged", function (args) {
-                        //    dtGrid.selectRows(args.value, false);
-                        //    if (args.value != null) {
-                        //        e.component.close();
-                        //    }
-                        //});
-                        return $dataGrid;
-                    },
-                    ...additionalEditorOptions
-                },
-                outlineObject: item.outlineObject,
-                visible: item.visible
-            };
-        }
-        else if (item.editorType == "dxDropDownBox") {
-            var configData = makeFieldFeatures(item, null, "form");
-            itemOptions = {
-                validationRules: item.validationRules,
-                formGroupName: item.formGroupName,
-                dataField: item.dataField,
-                editorType: "dxDropDownBox",
-                label: { location: formInstanceProps.labelLocation, text: item.caption, visible: true, template: function (text) { } },
-                formItem: item.formItem,
-                customEditorOptions: customEditorOptions,
-                editorOptions: {
-                    showClearButton: true,
-                    tabIndex: tabIndexNumber,
-                    width: _defaultFormFieldWidth,
-                    dropDownOptions: {
-                        width: _defaultDropDownWidth,
-                        height: _defaultDropDownHeight,
-                    },
-                    valueExpr: "id",
-                    displayExpr: configData.config.displayExp,
-                    dataSource: configData.dataSource,
-                    columns: configData.config.getScheme,
-                    onOpened: function (e) {
-                        formInstanceProps.moreActionOpenDropDown(e, configData.dataSource, item);
-                    },
-                    contentTemplate: function (e) {
-                        const $dataGrid = $("<div>").dxDataGrid({
-                            selectionMode: 'all',
-                            // remoteOperations: { paging: true, filtering: true, sorting: true, grouping: true, summary: true, groupPaging: true },
-                            filterRow: { visible: true },
-                            dataSource: e.component.option("dataSource"),
-                            columns: e.component.option("columns"),
-                            selection: { mode: "single" },
-                            valueExpr: "id",
-                            scrolling: {
-                                mode: 'virtual',
-                                preloadEnabled: false,
-                                showScrollbar: 'always'
-                            },
-                            width: "100%",
-                            height: "100%",
-                            allowItemDeleting: false,
-                            showSelectionControls: true,
-                            sorting: {
-                                mode: 'multiple',
-                            },
-                            onSelectionChanged: function (selectedItems) {
-                                var keys = selectedItems.selectedRowKeys,
-                                    hasSelection = keys.length;
-                                if (hasSelection) {
-                                    e.component.selectedItem = selectedItems.selectedRowsData;
-                                    e.component.option("displayValue", selectedItems.selectedRowsData[0][configData.config.displayExp]);
-                                    e.component.option("value", keys[0]);
-                                    formInstanceProps.moreActionFromSelectedChangeDropDown(selectedItems, item, formInstanceProps.formInstance);
-                                }
-                            },
-
-                            columnAutoWidth: true,
-                            customizeColumns: function (columns) {
-                            },
-                        });
-
-                        var dtGrid = $dataGrid.dxDataGrid("instance");
-                        e.component.on("valueChanged", function (args) {
-                            dtGrid.selectRows(args.value, false);
-                            if (args.value != null) {
-                                e.component.close();
-                            }
-                        });
-                        return $dataGrid;
-                    },
-                    ...additionalEditorOptions
-                },
-                outlineObject: item.outlineObject,
-                visible: item.visible
-            };
-        }
-        else if (item.editorType == "dxDataGrid") {
-        }
-        else if (item.editorType == "dxDateBox") {
-            itemOptions = {
-                formGroupName: item.formGroupName,
-                dataField: item.dataField,
-                editorType: item.editorType,
-                customEditorOptions: customEditorOptions,
-                editorOptions: {
-                    tabIndex: tabIndexNumber,
-                    width: item.width,
-                    heigth: item.height,
-                    showClearButton: true,
-                    value: item.defaultValue ?? "",
-                    //onValueChanged: function (e) {
-                    //    let localDate = e.value; // This is in the user's local time
-                    //    if (localDate instanceof Date) {
-                    //        localDate.setHours(localDate.getHours() + 7); // Add 7 hours for GMT+7
-                    //    }
-                    //    //stringToUtcDate(e.value);
-                    //},
-                    displayFormat: dateFormatter,
-                    dateSerializationFormat: "yyyy-MM-ddTHH:mm:ss",
-                    acceptCustomValue: false, // according to typing date
-                    //onFocusIn: function (e) {
-                    //    e.component.option("opened", true);
-                    //},
-                    ...additionalEditorOptions
-                },
-                label: { location: formInstanceProps.labelLocation, text: item.caption, visible: true, template: function (text) { } },
-                formItem: item.formItem,
-                validationRules: item.validationRules,
-                outlineObject: item.outlineObject,
-                visible: item.visible
-
-            };
-        }
-        else {
-            itemOptions = {
-                formGroupName: item.formGroupName,
-                dataField: item.dataField,
-                editorType: item.editorType,
-                customEditorOptions: customEditorOptions,
-                editorOptions: {
-                    tabIndex: tabIndexNumber,
-                    width: item.width,
-                    heigth: item.height,
-                    showClearButton: true,
-                    value: item.defaultValue ?? "",
-                    ...additionalEditorOptions
-                },
-                label: { location: formInstanceProps.labelLocation, text: item.caption, visible: true, template: function (text) {  } },
-                formItem: item.formItem,
-                validationRules: item.validationRules,
-                visible: item.visible,
-                outlineObject: item.outlineObject,
-                visible: item.visible,
-
-            };
-        }
-        itemOptions.template = item.template;
-        itemsArray.push(itemOptions);
-        tabIndexNumber++;
-    });
-
-
-    var templateItem = new Object();
-
-    if (itemsArray.length > 0)
-        templateItem = _.cloneDeep(itemsArray.find(x => x.editorOptions !== undefined && x.editorType === "dxHtmlEditor"));
-
-    if (formInstanceProps.outlineForm.isOutlineDynamic) {
-        if (formInstanceProps.formOptions.Params) {
-            if (formInstanceProps.formOptions.Params.additionalOutline != null) {
-
-                formInstanceProps.formOptions.Params.additionalOutline = parseParamsByteArrAsObject(formInstanceProps.formOptions.Params.additionalOutline);
-                $.each(formInstanceProps.formOptions.Params.additionalOutline, function (outlineIndex, outlineItem) {
-                    var createItems = _.cloneDeep(templateItem);
-                    createItems.editorOptions.value = outlineItem.Content;
-                    createItems.dataField = outlineItem.DataGridConfig.DataField;
-                    createItems.editorType = outlineItem.DataGridConfig.FormDataType;
-                    createItems.label = { ...templateItem.label };
-                    createItems.label.text = outlineItem.Outline.Content;
-                    if (createItems.formItem != null || createItems.formItem != undefined) {
-                        createItems.formItem.outline = outlineItem.Outline;
-                        createItems.formItem.outline.outlineOptions = outlineItem.SurveyOutlineOptions;
-                        createItems.formItem.outline.id = outlineItem.OutlineDynamic.Id;
-                        createItems.formItem.outlineDynamic = outlineItem.OutlineDynamic;
-                        createItems.formItem.outlineDynamic.outlineOptions = outlineItem.SurveyOutlineOptions;
-                    }
-                    itemsArray.push(createItems);
-                });
-            }
-        }
-    }
-
-    //if (formInstanceProps.isAllowAddOutline || formInstanceProps.isAllowAddOutline == null || formInstanceProps.isAllowAddOutline == undefined) {
-    //    var outlineTitle = "ADD OUTLINE";
-    //    if (formInstanceProps.formOptions)
-    //        if (formInstanceProps.formOptions.addOutlineTitle) outlineTitle = formInstanceProps.formOptions.addOutlineTitle;
-    //    var id = 0;
-    //    var surveyId = 0;
-    //    var jsonConfig = {};
-    //    var dataForm = null;
-    //    var addOutLine = {
-    //        itemType: "button",
-    //        alignment: "left",
-    //        name: "addOutline",
-    //        //dataField: "__addOutline__",
-    //        //editorType: "dxButton",
-    //        buttonOptions: {
-    //            height: _defaultButtonHeight,
-    //            width: "100%",
-    //            text: outlineTitle,
-    //            onClick: function (e) {
-    //                var popupInstance = $(`#outlinePopup`).dxPopup({
-    //                    width: "70%",
-    //                    height: "70%",
-    //                    showTitle: true,
-    //                    title: outlineTitle,
-    //                    dragEnabled: false,
-    //                    closeOnOutsideClick: true,
-    //                    contentTemplate: function (container) {
-    //                        var content = $("<div>").appendTo(container);
-    //                        if (formInstanceProps?.outlineForm?.surveyTypeId)
-    //                            jsonConfig.surveyTypeId = formInstanceProps?.outlineForm?.surveyTypeId;
-    //                        if (formInstanceProps?.id)
-    //                            jsonConfig.mainId = formInstanceProps?.id;
-    //                        if (formInstanceProps?.refFieldId) {
-    //                            surveyId = formInstanceProps?.refFieldId;
-    //                            jsonConfig.surveyId = formInstanceProps?.refFieldId;
-    //                        }
-    //                        if (formInstanceProps?.Outline.length > 0) {
-    //                            //jsonConfig.parentOutlineId = formInstanceProps?.Outline.find(f => formInstanceProps?.ModelName.toUpperCase() == f.content.replace(' ', '') && f.surveyTypeId == formInstanceProps?.outlineForm?.surveyTypeId).id;
-    //                        }
-    //                        if (_cacheOutlines.length > 0)
-    //                            jsonConfig.parentOutlineId = _cacheOutlines.find(f => formInstanceProps?.ModelName.toLowerCase() == f.placeHolder.toLowerCase() && f.surveyTypeId == formInstanceProps?.outlineForm?.surveyTypeId).id;
-    //                        var passingParams = { UITabId: `Outline_Form_${surveyId}_${id}`, refPageNum: surveyId, pageNum: id, jsonConfig: JSON.stringify(jsonConfig) };
-
-    //                        appendElementViewInsideAsync(`/Business/MasterData/Outline_Form`, passingParams, content, `Outline_Form_${surveyId}_${id}`, "appendTo").then(data => {
-    //                            dataForm = data;
-
-    //                        })
-    //                            .catch(error => {
-    //                                try {
-    //                                    sendClientErrorLog("Lỗi khi tải dữ liệu:", error);
-    //                                }
-    //                                catch {
-    //                                }
-    //                                console.error("Lỗi khi tải dữ liệu:", error);
-    //                            });
-
-
-    //                        //$("<div>").dxScrollView({
-    //                        //    height: "100%",
-    //                        //    width: "100%",
-    //                        //    showScrollbar: "always",
-    //                        //    useNative: false,
-    //                        //    direction: "both",
-    //                        //    contentTemplate: function (scrollViewContent) {
-    //                        //        return scrollViewContent;
-    //                        //    }
-    //                        //}).appendTo(container);
-
-
-    //                        return container;
-    //                    },
-    //                    onHiding: function (e) {
-
-    //                    }
-    //                    , toolbarItems: [{
-    //                        widget: 'dxButton',
-    //                        toolbar: 'bottom',
-    //                        location: 'after',
-    //                        options: {
-    //                            stylingMode: 'contained',
-    //                            type: 'normal',
-    //                            text: "Create",
-    //                            onClick() {
-    //                                //var outlineForm = $(`#Outline_Form_${surveyId}_${id}`).dxForm().dxForm("instance");
-    //                                var passingParams = {};
-    //                                passingParams.Survey = {};
-    //                                passingParams.Outline = {};
-    //                                passingParams.MasterId = jsonConfig.mainId;
-
-
-    //                                var formData = dataForm.option('formData');
-    //                                //requestPassingData.Management = formData;
-
-    //                                if (formData != null)
-    //                                    passingParams.Outline = formData;
-    //                                if (surveyId != 0)
-    //                                    passingParams.Survey.Id = surveyId;
-
-    //                                if (!formData.hasOwnProperty('content') || !formData.content || formData.content.trim() === "") {
-    //                                    appNotifyWarning("Outline content cannot be empty!");
-    //                                }
-    //                                else {
-    //                                    $.ajax({
-    //                                        url: 'api/Survey/AddCustomOutline',
-    //                                        headers: { 'Content-Type': 'application/json' },
-    //                                        type: 'POST',
-    //                                        data: JSON.stringify(passingParams)
-    //                                        , success: function (response) {
-    //                                            appNotifySuccess("Outline created success! Please refresh your survey. ");
-    //                                        },
-    //                                        error: function (err) {
-    //                                            appNotifyError("Outline created fail!");
-    //                                        }
-    //                                    });
-    //                                }
-    //                                popupInstance.hide();
-    //                            },
-    //                        },
-    //                    }, {
-    //                        widget: 'dxButton',
-    //                        toolbar: 'bottom',
-    //                        location: 'after',
-    //                        options: {
-    //                            stylingMode: 'contained',
-    //                            type: 'normal',
-    //                            text: "Close",
-    //                            onClick() {
-    //                                popupInstance.hide();
-    //                            },
-    //                        },
-    //                    }]
-    //                }).dxPopup("instance");
-    //                popupInstance.show();
-    //            }
-    //        },
-    //        editorOptions: {
-    //            height: _defaultButtonHeight,
-    //            width: "100%"
-    //        },
-    //    };
-    //    if (!formInstanceProps.isReadOnly)
-    //        itemsArray.push(addOutLine);
-    //}
-
-
-    $.each(itemsArray, function (i, item) {
-        var editorOptions = { ...item.editorOptions };
-        if (formInstanceProps.isReadOnly)
-            item.readOnly = formInstanceProps.isReadOnly;
-        item.instanceProps = formInstanceProps;
-        if (item.formItem != null || item.formItem != undefined) {
-            if (item.formItem.outline) {
-                if (!item.formItem.isPreload) {
-                    if (isAccordionGroupSupportControls(item, editorOptions, formInstanceProps)) {
-                        item.template = function (data, itemElement) {
-                            //doubleClickDefaultPlaceHolderToText(editorOptions, data, item);
-                            editorOptions.onInitialized = function (e) {
-                                e.component.option("value", data.component.option("formData")[item.dataField]);
-                                $(e.element).on("dblclick", function () {
-                                    e.component.option("value", e.component.option("placeholder"));
-                                });
-                            }
-                            //if (!item.customEditorOptions)
-                            //editorOptions.onValueChanged = function (e) {
-                            //    data.component.updateData(item.dataField, e.value);
-                            //};
-
-                            createAccordionField(item, itemElement, editorOptions, formInstanceProps);
-                        }
-                        item.label.visible = false;
-                    }
-                }
-                else {
-                    if (item.editorType == "dxHtmlEditor") {
-                        item.editorOptions.readOnly = item.readOnly;
-
-                    }
-                }
-            }
-            if (item.formItem.groupName) {
-                item.formGroupName = `FormGroup@${item.formItem.groupName}`;
-            }
-        }
-        else {
-            item.editorOptions = { ...editorOptions };
-            if (isAccordionGroupSupportControls(item, item.editorOptions, formInstanceProps)) {
-                if (item.editorType == "dxHtmlEditor")
-                    item.template = function (data, itemElement) {
-                        //doubleClickDefaultPlaceHolderToText(editorOptions, data, item);
-                        //if (!item.customEditorOptions)
-                        //item.editorOptions.onValueChanged = function (e) {
-                        //    data.component.updateData(item.dataField, e.value);
-                        //};
-                        var childProps = customChildProps(item.editorOptions, formInstanceProps); //Field lẻ không nhóm
-                        if (!childProps.value) {
-                            childProps.value = getHtmlEditorBeforeRender(item, formInstanceProps);
-                        }
-                        if (formInstanceProps.isReadOnly)
-                            childProps.readOnly = formInstanceProps.isReadOnly;
-                        createEditor(item, itemElement, $("<div>"), childProps);
-                    }
-            }
-        }
-    });
-}
 async function handlePaste(gridInstance, event, gridInstanceConfig) {
     //await navigator.clipboard.readText().then(text => {
     //    var rows = text.split("\r\n");
@@ -1922,8 +1191,8 @@ function createAccordionGroup(item, $itemElement, formInstanceProps) {
 function createAccordionField(item, $itemElement, editorOptions, formInstanceProps) { // a field by a dxAccordion
     var outlineObject = null
     var masterId = formInstanceProps.id;
-    if (formInstanceProps.refFieldId) {
-        masterId = formInstanceProps.refFieldId;
+    if (formInstanceProps.refKey) {
+        masterId = formInstanceProps.refKey;
     }
     var accordionId = `accordion_${masterId}_${item.dataField}`;
     var outlineChildPrefix = "";
@@ -2103,10 +1372,10 @@ function customChildProps(editorOptions, instanceProps) {
     var childProps = { ...editorOptions, ...editorOptions.editorOptions };
     if (editorOptions.editorType == 'dxDataGrid' || editorOptions.editorType == 'dxFileUploader') {
         editorOptions.label.visible = false;
-        if (instanceProps.refFieldId != null || instanceProps.refFieldId != undefined)
-            childProps.refFieldId = instanceProps.refFieldId;
-        if (instanceProps.refFieldName != null || instanceProps.refFieldName != undefined)
-            childProps.refFieldName = instanceProps.refFieldName;
+        if (instanceProps.refKey != null || instanceProps.refKey != undefined)
+            childProps.refKey = instanceProps.refKey;
+        if (instanceProps.refField != null || instanceProps.refField != undefined)
+            childProps.refField = instanceProps.refField;
         if (editorOptions.ModelName != null || editorOptions.ModelName != undefined)
             childProps.ModelName = editorOptions.ModelName;
         else
@@ -2286,9 +1555,9 @@ function createRadioGroup(titleData, radioContainer, outlineObject, formInstance
 //                        jsonConfig.surveyTypeId = formInstanceProps?.outlineForm?.surveyTypeId;
 //                    if (formInstanceProps?.id)
 //                        jsonConfig.mainId = formInstanceProps?.id;
-//                    if (formInstanceProps?.refFieldId) {
-//                        surveyId = formInstanceProps?.refFieldId;
-//                        jsonConfig.surveyId = formInstanceProps?.refFieldId;
+//                    if (formInstanceProps?.refKey) {
+//                        surveyId = formInstanceProps?.refKey;
+//                        jsonConfig.surveyId = formInstanceProps?.refKey;
 //                    }
 //                    if (formInstanceProps?.Outline.length > 0) {
 //                        //jsonConfig.parentOutlineId = formInstanceProps?.Outline.find(f => formInstanceProps?.ModelName.toUpperCase() == f.content.replace(' ', '') && f.surveyTypeId == formInstanceProps?.outlineForm?.surveyTypeId).id;
@@ -3134,12 +2403,13 @@ function LCparticipantListColRemake(col, gridInstance, that) {
 }
 
 function customCommandButtonCell(e) {
+
     $(`<a class="dx-link dx-link-edit">`)
        //.addClass("fa fa-arrow-up")
         .text("Edit JSON")
         .css({ marginRight: "5px", cursor: "pointer", color: "#337ab7" })
         .on("click", function () {
-            callElementView(`/Business/Workflow/WorkflowDefinition_Form/${e.key}/${e.data.guid}`, `WorkflowDenifition_Form_${e.key}`, `WorkflowDenifition ${e.data.workflowCode}`);
+            callElementView(`/${e.moduleFolder}/${e.modelName}_Form/${e.key}/${e.data.guid}`, `${e.modelName}_Form_${e.key}`, `${e.modelName} ${e.data[e.displayExpr]}`);
         })
         .appendTo(e.cellElement);
 }
@@ -3340,17 +2610,7 @@ function addBreadcrumb(action) {
     }
 }
 
-function parseDateTime(dateStr) {
-    const parts = dateStr.split(/[- :T]/);
-    return new Date(
-        parseInt(parts[0]),      // year
-        parseInt(parts[1]) - 1,  // month (0-based)
-        parseInt(parts[2]),      // day
-        parseInt(parts[3]),      // hour
-        parseInt(parts[4]),      // minute
-        parseInt(parts[5])     // second
-    );
-}
+
 
 function UserGuideExceptionHandle(xhr) {
     var typeError = xhr.getResponseHeader("X-Error-Type");
@@ -4270,76 +3530,7 @@ function renderWorkflowMiniPreview(container, rowData) {
 
     $container.append($wrap);
 }
-function makeTheClientLocationGrid(instanceItems, dropdownControl, instanceProps, container, onSelectionChanged = null, sizeOptions = {}) {
-    return makeLookupGrid({
-        container: container,
-        dropdownControl: dropdownControl,
-        instanceProps: instanceProps,
-        dataSource: instanceItems.editorOptions.dataSource,
-        keyExpr: "id",
 
-        width: sizeOptions.width || "100%",
-        height: sizeOptions.height || "100%",
-        gridHeight: sizeOptions.gridHeight || "85%",
-        scrollHeight: sizeOptions.scrollHeight || "100%",
-
-        columns: [
-            { dataField: "clientCode", caption: "Client Code" },
-            { dataField: "englishName", caption: "English Name" },
-            { dataField: "vietnameseName", caption: "Vietnamese Name" },
-            { dataField: "clientType", caption: "Client Type" }
-        ],
-
-        topPanelBuilder: function () {
-            const $panel = $('<div style="display:flex;padding:10px;align-items:center;gap:10px;"></div>');
-            $('<div style="padding-right:10px;">Branch code:</div>').appendTo($panel);
-            $('<div class="branch-radio-host"></div>').appendTo($panel);
-            return $panel;
-        },
-
-        onGridReady: function (ctx) {
-            const $radioHost = ctx.result.topPanel.find(".branch-radio-host");
-
-            $radioHost.dxRadioGroup({
-                dataSource: [
-                    { id: 20, key: "Ha Noi" },
-                    { id: 10, key: "Ho Chi Minh" }
-                ],
-                valueExpr: "id",
-                displayExpr: "key",
-                layout: "horizontal",
-                onValueChanged: function (e) {
-                    const ds = ctx.grid.getDataSource();
-                    ds.filter(["branchId", "=", e.value]);
-                    ds.load();
-                }
-            });
-        },
-
-        defaultSelectionHandler: function (e, ctx) {
-            if (!ctx.selectedRow) return;
-
-            ctx.dropdownControl.component.option("value", ctx.selectedKey);
-
-            // ctx.instanceProps.formInstance.updateData("clientName", ctx.selectedRow.clientName || "");
-            // ctx.instanceProps.formInstance.updateData("locationAddress", ctx.selectedRow.clientAddress || "");
-            // ctx.instanceProps.formInstance.updateData("clientCode", ctx.selectedRow.clientCode || "");
-            // ctx.instanceProps.formInstance.updateData("locationId", ctx.selectedRow.locationId || 0);
-
-            ctx.dropdownControl.component.close();
-        },
-
-        onSelectionChanged: function (e, ctx) {
-            if (typeof onSelectionChanged === "function") {
-                return onSelectionChanged(e, ctx);
-            }
-        },
-
-        gridOptions: {
-            allowItemDeleting: false
-        }
-    });
-}
 
 
 function makeLCPreviewPictureObject(imageInstance, imgContainerSizeObject, imgSizeObject, $imagePreview1, $imagePreview2, defaultMargin = "0%") {
@@ -4992,62 +4183,337 @@ function getScrollbarWidth() {
     return sw;
 }
 
-function stretchColumnsEvenly(e, opts) {
+//function stretchColumnsEvenly(e, opts = {}) {
+
+//    const grid = e.component;
+
+//    const defaultWidth =
+//        opts.defaultWidth ?? _defaultGridFieldWidth;
+
+
+//    const targetWidth =
+//        opts.targetWidth ??
+//        (
+//            window.innerWidth -
+//            _widthMenuWidth -
+//            _rightWindowPadding
+//        );
+
+
+//    const excludeFields =
+//        new Set(opts.excludeFields ?? []);
+
+
+
+//    grid.option("width", targetWidth);
+//    grid.updateDimensions();
+
+
+
+//    const cols = grid.getVisibleColumns()
+//        .filter(c => !c.command);
+
+
+//    if (!cols.length) return;
+
+
+
+//    const stretchCols = cols.filter(
+//        c => !excludeFields.has(c.dataField)
+//    );
+
+
+//    if (!stretchCols.length) return;
+
+
+
+//    // width hiện tại thực tế
+//    const usedWidth =
+//        cols.reduce((sum, c) => {
+
+//            return sum +
+//                (
+//                    Number(c.width) ||
+//                    defaultWidth
+//                );
+
+//        }, 0);
+
+
+
+//    const availableWidth =
+//        targetWidth -
+//        getScrollbarWidth();
+
+
+
+//    const remain =
+//        availableWidth - usedWidth;
+
+
+
+//    // chưa thiếu thì không làm gì
+//    if (remain <= 0) {
+//        return;
+//    }
+
+
+
+//    // phần dư chia đều
+//    const addWidth =
+//        Math.floor(
+//            remain / stretchCols.length
+//        );
+
+
+
+//    if (addWidth <= 0) {
+//        return;
+//    }
+
+
+
+//    grid.beginUpdate();
+
+//    try {
+
+//        stretchCols.forEach(col => {
+
+
+//            const oldWidth =
+//                Number(col.width) ||
+//                defaultWidth;
+
+
+//            grid.columnOption(
+//                col.visibleIndex,
+//                "width",
+//                oldWidth + addWidth
+//            );
+
+
+//        });
+
+
+//    }
+//    finally {
+
+//        grid.endUpdate();
+
+//        grid.updateDimensions();
+
+//    }
+//}
+
+function stretchColumnsEvenly(e, opts = {}) {
+
     const grid = e.component;
-    // chặn loop: chỉ chạy 1 lần mỗi lifecycle
-    const flagKey = "_stretched_evenly";
-    if (grid.__internalFlags?.[flagKey]) return;
-    grid.__internalFlags = grid.__internalFlags || {};
-    grid.__internalFlags[flagKey] = true;
 
-    const renderedWidth = getRenderedGridWidth(grid);
 
-    const targetWidth = opts?.targetWidth ?? window.innerWidth - _widthMenuWidth - _rightWindowPadding;
-    const minWidthEach = opts?.minWidthEach ?? 120;
-    const excludeFields = new Set(opts?.excludeFields ?? []); // vd ["_command", "Select", "Buttons"]
+    const defaultWidth =
+        opts.defaultWidth ??
+        _defaultGridFieldWidth;
 
-    // nếu bạn muốn ép grid width như bạn đang làm
-    if (renderedWidth > targetWidth) {
-        grid.option("width", targetWidth);
-        grid.updateDimensions();
+
+    const rawTargetWidth =
+        opts.targetWidth ??
+        "calc(100vw - var(--menu-width))";
+
+
+
+    // convert css width -> px
+    const targetWidth =
+        resolveWidth(rawTargetWidth);
+
+
+
+    grid.option(
+        "width",
+        "inherit"
+    );
+
+    grid.updateDimensions();
+
+
+
+    const result =
+        calcColumnWidthByViewport({
+
+            columns:
+                grid.getVisibleColumns(),
+
+            targetWidth,
+
+            defaultWidth,
+
+            excludeFields:
+                opts.excludeFields
+
+        });
+
+
+
+    if (!result.shouldStretch) {
+        return;
     }
 
-    // width cuối cùng sau khi set option width
-    const finalWidth = getRenderedGridWidth(grid);
 
-    // visible columns
-    const cols = grid.getVisibleColumns().filter(c => !c.command); // loại command column (edit/delete/buttons)
-    const stretchCols = cols.filter(c => !excludeFields.has(c.dataField));
 
-    if (!stretchCols.length) return;
+    const excludeSet =
+        new Set(opts.excludeFields ?? []);
 
-    // trừ scrollbar nếu có vertical scroll
-    const sw = getScrollbarWidth();
-    const hasVScroll = grid.getScrollable && (grid.getScrollable()?.scrollHeight() || 0) > (grid.getScrollable()?.clientHeight() || 0);
-    const available = finalWidth - (hasVScroll ? sw : 0);
 
-    // nếu bạn có cột fixed width muốn giữ, tính tổng width fixed trước
-    const fixedSum = cols
-        .filter(c => excludeFields.has(c.dataField))
-        .reduce((sum, c) => sum + (c.width || 0), 0);
 
-    const free = Math.max(0, available - fixedSum);
+    const cols =
+        grid.getVisibleColumns()
+            .filter(c =>
+                !c.command &&
+                !excludeSet.has(c.dataField)
+            );
 
-    const evenW = Math.max(minWidthEach, Math.floor(free / stretchCols.length));
+
 
     grid.beginUpdate();
+
     try {
-        stretchCols.forEach(c => {
-            // dùng visibleIndex / index chuẩn
-            grid.columnOption(c.index, "width", evenW);
+
+        cols.forEach(col => {
+
+            grid.columnOption(
+                col.visibleIndex,
+                "width",
+                result.width
+            );
+
         });
-    } finally {
+
+    }
+    finally {
+
         grid.endUpdate();
-        // update lại layout
+
         grid.updateDimensions();
+
     }
 }
+function resolveWidth(width) {
 
+    if (typeof width === "number") {
+        return width;
+    }
+
+
+    if (typeof width === "string") {
+
+        const el = document.createElement("div");
+
+        el.style.width = width;
+
+        el.style.position = "absolute";
+
+        el.style.visibility = "hidden";
+
+        document.body.appendChild(el);
+
+
+        const result =
+            el.getBoundingClientRect().width;
+
+
+        el.remove();
+
+
+        return Math.floor(result);
+    }
+
+
+    return window.innerWidth;
+}
+function calcColumnWidthByViewport({
+    columns,
+    targetWidth,
+    defaultWidth,
+    excludeFields = []
+}) {
+
+    const excludeSet = new Set(excludeFields);
+
+
+    const visibleCols = columns
+        .filter(c => !c.command);
+
+
+    const stretchCols = visibleCols
+        .filter(c => !excludeSet.has(c.dataField));
+
+
+    if (!stretchCols.length) {
+        return {
+            width: defaultWidth,
+            shouldStretch: false
+        };
+    }
+
+
+    // width thực tế đang có
+    const currentWidth =
+        visibleCols.reduce((sum, col) => {
+
+            return sum +
+                (
+                    Number(col.width) ||
+                    defaultWidth
+                );
+
+        }, 0);
+
+
+
+    const availableWidth =
+        targetWidth -
+        getScrollbarWidth();
+
+
+
+    const diff =
+        availableWidth -
+        currentWidth;
+
+
+
+    // không đủ -> giữ nguyên
+    if (diff <= 0) {
+
+        return {
+            width: defaultWidth,
+            shouldStretch: false,
+            reason: "column overflow"
+        };
+    }
+
+
+
+    const addPerColumn =
+        Math.floor(
+            diff / stretchCols.length
+        );
+
+
+    const newWidth =
+        defaultWidth +
+        addPerColumn;
+
+
+
+    return {
+        width: newWidth,
+        shouldStretch: true,
+        reason: "fill viewport",
+        columnCount: stretchCols.length,
+        totalBefore: currentWidth,
+        totalAfter: newWidth * stretchCols.length
+    };
+}
 
 function newKey() {
     if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
@@ -5861,186 +5327,6 @@ async function libreConvert(id) {
 
 }
 
-async function openExcelPreviewPopup(id) {
-    var popupInstance = makePopup("large", "Res");
-    popupInstance.option({
-        width: "90vw",
-        height: "90vh",
-        showTitle: true,
-        title: "Excel Preview",
-        dragEnabled: true,
-        resizeEnabled: true,
-        contentTemplate: function (container) {
-            const $container = $(container);
-
-            const $wrapper = $("<div>").css({
-                width: "100%",
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-                overflow: "hidden"
-            }).appendTo($container);
-
-            const $toolbar = $("<div>").css({
-                padding: "8px 12px",
-                borderBottom: "1px solid #ddd",
-                display: "flex",
-                gap: "8px",
-                alignItems: "center",
-                flexShrink: 0
-            }).appendTo($wrapper);
-
-            const $sheetSelect = $("<div>").css({
-                width: "260px"
-            }).appendTo($toolbar);
-
-            const $body = $("<div>").attr("id", "excelPreviewBody").css({
-                flex: 1,
-                overflow: "auto",
-                padding: "12px",
-                background: "#fff"
-            }).appendTo($wrapper);
-
-            $body.html("<div style='padding:20px'>Loading...</div>");
-
-            (async function () {
-                try {
-                    const fileRes = await fetch(`/api/Document/StreamDocument?id=${id}`);
-                   
-                    const arrayBuffer = await fileRes.arrayBuffer();
-
-                    // 4. đọc workbook
-                    const workbook = XLSX.read(arrayBuffer, {
-                        type: "array",
-                        cellStyles: true,
-                        cellDates: true
-                    });
-
-                    function renderSheet(sheetName) {
-                        const sheet = workbook.Sheets[sheetName];
-                        if (!sheet) return;
-
-                        // HTML cơ bản từ SheetJS
-                        let html = XLSX.utils.sheet_to_html(sheet, {
-                            editable: false
-                        });
-
-                        $body.html(`
-                            <div class="excel-html-wrap" style="overflow:auto;width:100%;height:100%">
-                                ${html}
-                            </div>
-                        `);
-
-                        // style tăng trải nghiệm nhìn giống grid hơn
-                        $body.find("table").css({
-                            borderCollapse: "collapse",
-                            width: "max-content",
-                            minWidth: "100%",
-                            background: "#fff"
-                        });
-
-                        $body.find("th, td").css({
-                            border: "1px solid #dcdcdc",
-                            padding: "6px 10px",
-                            whiteSpace: "nowrap",
-                            verticalAlign: "middle"
-                        });
-
-                        $body.find("tr:nth-child(even)").css({
-                            background: "#fafafa"
-                        });
-                    }
-
-                    // 5. dropdown chọn sheet
-                    $sheetSelect.dxSelectBox({
-                        dataSource: workbook.SheetNames,
-                        value: workbook.SheetNames[0],
-                        placeholder: "Select sheet",
-                        onValueChanged: function (e) {
-                            renderSheet(e.value);
-                        }
-                    });
-
-                    // render sheet đầu tiên
-                    renderSheet(workbook.SheetNames[0]);
-
-                } catch (err) {
-                    console.error(err);
-                    $body.html(`<div style="padding:20px;color:red;">${err.message}</div>`);
-                }
-            })();
-        }
-    });
-
-    popupInstance.show();
-}
-async function openWordPreviewPopup(id) {
-    const popup = makePopup("large", "Res");
-
-    popup.option({
-        width: "80vw",
-        height: "90vh",
-        title: "Word Preview",
-        contentTemplate(container) {
-            const $host = $("<div>")
-                .css({
-                    width: "100%",
-                    height: "100%",
-                    overflow: "auto",
-                    padding: 20,
-                    background: "#f5f6f8"
-                })
-                .html("Loading...")
-                .appendTo(container);
-
-            fetch(`/api/Document/StreamDocument?id=${id}`)
-                .then(r => {
-                    if (!r.ok) throw new Error(`Load file thất bại: ${r.status}`);
-                    return r.blob();
-                })
-                .then(blob => {
-                    const docEl = $("<div>")
-                        .css({
-                            background: "#fff",
-                            padding: 40,
-                            margin: "0 auto",
-                            maxWidth: 900,
-                            boxShadow: "0 4px 20px rgba(0,0,0,0.1)"
-                        })[0];
-
-                    $host.empty().append(docEl);
-
-                    return docx.renderAsync(blob, docEl, null, {
-                        className: "docx",
-                        inWrapper: true,
-                        breakPages: true
-                    });
-                })
-                .catch(err => {
-                    console.error(err);
-                    $host.html(`<div style="padding:20px;color:red;">${err.message}</div>`);
-                });
-        }
-    });
-
-    popup.show();
-}
-
-async function openImagePreviewPopup(id) {
-    const popup = makePopup("large", "Res");
-    popup.option({
-        width: "80vw",
-        height: "90vh",
-        title: "Image Preview",
-        contentTemplate(container) {
-            var scrollContent = popupStandardContentByScroll($("<img>")
-                .attr("src", `/api/Document/StreamDocument?id=${id}`)
-                .css({ width: '100%', height: 'auto', objectFit: 'cover', borderRadius: '5px' }));
-            scrollContent.appendTo(container);
-        }
-    });
-    popup.show();
-}
 function makePopupWithScroll($element,$size,$label) {
     const popup = makePopup($size, $label);
     popup.option({

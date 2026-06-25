@@ -1,4 +1,4 @@
-﻿@page "{pageNum:int?}/{guid}"
+﻿@page "{pageNum:int?}/{guid}/{cloneId:long?}/{copyfromguid}"
 @using JogetMVC.Model
 @using Newtonsoft.Json
 @model PolicyIssuance_FormModel
@@ -16,45 +16,22 @@ Note:
 -Remove app div for scroll
 *@
 
-<style>
-
-
-
-    /*.dept-callout {
-                    opacity: 0;
-                    visibility: hidden;
-                    transform: translateY(6px);
-                    transition: opacity .28s ease, transform .28s ease, visibility .28s ease;
-                }
-
-                    .dept-callout.visible {
-                        opacity: 1;
-                        visibility: visible;
-                        transform: translateY(0);
-                    }*/
-
-    /*     .animate-step {
-                    opacity: 0;
-                    transform: translateY(10px);
-                    transition: opacity .28s ease, transform .28s ease;
-                }
-
-                    .animate-step.visible {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }  */
-</style>
 
 <body>
+
+
     <div class="title">
-   @await Html.PartialAsync("_OverviewPane", new OverviewPanePartialModel
-   {
-       Prefix = prefix,
-       ModuleCode = moduleCode,
-       Title = title,
-       Id = ViewData["Id"].ToString(),
-       Guid = ViewData["guid"].ToString()
-   }),
+        <partial name="_OverviewPane" model='new OverviewPanePartialModel
+        {
+            Prefix = prefix,
+            ModuleCode = moduleCode,
+            Title = title,
+            Id = ViewData["Id"]?.ToString(),
+            Guid = ViewData["Guid"]?.ToString(),
+            CloneId = Convert.ToInt64(ViewData["CloneId"]),
+            CopyFromGuid = ViewData["CopyFromGuid"]?.ToString()
+        }' />
+
     </div>
 @* 
     <div class="actionBar">
@@ -85,11 +62,12 @@ Note:
     var PIC_JSON = `{}`;
     var formModuleKeyPi = "pi";
     var pICs = [];
-    if ($('[data-toggle="push-menu"]').hasClass("sidebar-collapse")) {
-        $('[data-toggle="push-menu"]').click();
-        isToggleMenu = true;
-    }
-
+    var workflowStatus = "";
+    // if ($('[data-toggle="push-menu"]').hasClass("sidebar-collapse")) {
+    //     $('[data-toggle="push-menu"]').click();
+    //     isToggleMenu = true;
+    // }
+    var prefix = "@prefix";
     var page = window.PolicyIssuancePage;
     var state = page.state;
 
@@ -124,13 +102,13 @@ Note:
         var searchText = "";
         var selectedGuid = null;
         var selectedFromGuid = null;
-        let selectedAttachmentId = null;
+        var selectedAttachmentId = null;
         var commentPanelOpened = false;
-        let stageDept = null;
+        var stageDept = null;
         var stageAccount = "";
 
-        var deptData = { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} };
-        var remarkBoxs = { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} };
+        var deptData = { FO: {}, TS: {}, PM: {} };
+        var remarkBoxs = { FO: {}, TS: {}, PM: {} };
 
         state.piDetails = {};
 
@@ -146,32 +124,9 @@ Note:
         function statusClass(raw) { return normalizeStatus(raw).css; }
         function statusText(raw) { return normalizeStatus(raw).text; }
 
-        function normalizeDeptKey(k) {
-            return String(k || "").trim().toUpperCase();
-        }
+      
 
-        function parsePicMap(picJson) {
-            try {
-                const obj = JSON.parse(picJson || "{}");
-                const map = {};
-                Object.keys(obj).forEach(k => map[normalizeDeptKey(k)] = obj[k]);
-                return map;
-            } catch {
-                return {};
-            }
-        }
-
-        function renderDeptCallouts(picJson) {
-            const picMap = parsePicMap(picJson);
-            $(".dept-node").each(function () {
-                const dept = normalizeDeptKey($(this).data("key"));
-                const $co = $(this).find(".dept-callout");
-                if (!$co.length) return;
-                const pic = picMap[dept] || "-";
-                $co.find(".co-text").text(pic);
-                $co.css({ color: "rgba(17,24,39,.85)" });
-            });
-        }
+      
 
         function getSelectedModel() {
             if (state.selectedId && state.quoteDetails[state.selectedId]) {
@@ -216,125 +171,110 @@ Note:
 
 
 
+
         function syncSelectedState(q) {
             if (!q) return;
 
-            // selectedId = q.id ?? null;
-            selectedGuid = q.guid ?? null;
+
+
+
+            state.selectedId =  q.id ?? null;
+            state.selectedGuid = q.guid ?? null;
             selectedAttachmentId = q.documentId ?? null;
-            // selectedCodeNo = q.policyIssuanceCode ?? null;
+            state.selectedCodeNo = q.quotationCode ?? null;
             stageDept = q.stageDept ?? null;
-
-
-
-            state.selectedId = q.id;
-            state.selectedGuid = selectedGuid;
-            state.selectedAttachmentId = selectedAttachmentId;
-            state.selectedCodeNo = q.policyIssuanceCode;
-            state.stageDept = stageDept;
             const params = new URLSearchParams();
             params.set("refKey", state.selectedGuid);
             params.set("refField", 'RecordGuid');
             ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null)
-            .then(res => {
-              var pinnedNotes = (res || []).map(x => ({
-                            id: x.id,
-                            section: x.currentDepartment,//target main
-                            fromSection: x.fromDepartment,//target pin
-                            toSection: x.toDepartment,
-                            type: x.type,
-                            unread: !x.isRead,
-                            isRead: !x.isRead,
-                            linkedPin: x.isPinned,
-                            isPinned: x.isPinned,
-                            body: x.content,
-                            text: x.content,
-                            replies: 0,
-                            fullText: x.content,
-                            urgent: false,
-                            author: x.author,
-                            time: parseToGMT7(x.createdDate, 0)
-                        }));
-                        state.comments = pinnedNotes;
+                .then(res => {
+                    var pinnedNotes = (res || []).map(x => ({
+                        id: x.id,
+                        section: x.currentDepartment,//target main
+                        fromSection: x.fromDepartment,//target pin
+                        toSection: x.toDepartment,
+                        type: x.type,
+                        unread: !x.isRead,
+                        isRead: !x.isRead,
+                        linkedPin: x.isPinned,
+                        isPinned: x.isPinned,
+                        body: x.content,
+                        text: x.content,
+                        replies: 0,
+                        fullText: x.content,
+                        author: x.author,
+                        urgent: false,
+                        time: parseToGMT7(x.createdDate, 0)
+                    }));
+                    state.comments = pinnedNotes;
                     state.pinNotes = pinnedNotes.filter(f => f.isPinned);
-            });
+                });
 
-
-            PIC_JSON = pICs.find(f => f.policyIssuanceCode == state.selectedCodeNo)?.pIC ?? q.pIC ?? "{}";
+            PIC_JSON = pICs.find(f => f.quotationCode == state.selectedCodeNo)?.pIC ?? q.pIC ?? "{}";
             renderDeptCallouts(PIC_JSON);
             var map = parsePicMap(PIC_JSON);
             stageAccount = map[stageDept] ? map[stageDept] : "(Unassigned)";
 
         }
-    function loadSelectedWorkflow() {
-              if (!state.selectedCopyGuid) return $.Deferred().resolve().promise();
+            function loadSelectedWorkflow() {
 
-              return ajaxGet(`/api/PolicyIssuance/GetPolicyIssuanceWorkflow/${state.selectedCopyGuid}`, null)
+              return ajaxGet(`/api/PolicyIssuance/GetPolicyIssuanceWorkflow/@ViewData["Guid"]`, null)
                   .then(instance => {
                       return ajaxGet(`/api/StepsWorkflow/GetNextStep/${instance?.workflowDefinitionId ?? "00000000-0000-0000-0000-000000000000"}/${instance?.currentStep ?? 0}`, null)
                           .then(data => {
                               state.nextStep.instanceWorkflow = instance;
                               state.nextStep.flowSteps = data;
                               state.nextStep.currentStep = instance?.currentStep ?? 0;
-                              // setNextStep(state.nextStep);
                               $.each(piDeptModuleCode, function (itemIndex, item) {
                                       setTimeout(() => {
-                                               var findRoute = state.nextStep.flowSteps.find(f => !f.actionCode.includes("BACK_") && f.fromNodeId == item && f.fNodeId == state.nextStep.currentStep);
-                                             var findRouteReturn = state.nextStep.flowSteps.find(f => f.actionCode.includes("BACK_") && f.fromNodeId == item && f.fNodeId == state.nextStep.currentStep);
-                                             var returnButtonId = window.PolicyIssuanceIdManager.btnReturnBranch(item,@ViewData["Id"]);
-                                             var submitButtonId = window.PolicyIssuanceIdManager.btnSubmitBranch(item,@ViewData["Id"]);
-                                             var remarkBoxId = window.PolicyIssuanceIdManager.remarkBox(item,@ViewData["Id"]);
-                                             var formId = window.PolicyIssuanceIdManager.form(item,@ViewData["Id"]);
-                                             var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-                                              var tatObject = new Object();
+                                             var findRoute = state.nextStep.flowSteps.find(f => !f.actionCode.includes("BACK_") && f.fromNodeId == item && f.fNodeId == state.nextStep.currentStep);
+                                            var findRouteReturn = state.nextStep.flowSteps.find(f => f.actionCode.includes("BACK_") && f.fromNodeId == item && f.fNodeId == state.nextStep.currentStep);
+                                            var returnButtonId = window.PolicyIssuanceIdManager.btnReturnBranch(item,@ViewData["Id"]);
+                                            var submitButtonId = window.PolicyIssuanceIdManager.btnSubmitBranch(item,@ViewData["Id"]);
+                                            var remarkBoxId = window.PolicyIssuanceIdManager.remarkBox(item,@ViewData["Id"]);
+                                            var formId = window.PolicyIssuanceIdManager.form(item,@ViewData["Id"]);
+                                            var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                                             var tatObject = new Object();
 
-                                              try
-                                              {
-                                                 tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Problem");
-                                              }
-                                              catch
-                                              {
-                                                  console.log("TAT problem");
-                                              }
-                                              try {
+                                                tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Button Problem");
+                                             try {
 
-                                              if (findRouteReturn && tatObject)
-                                              $(`#${returnButtonId}`).dxButton({
-                                                  disabled: false,
-                                                 text: findRouteReturn ? findRouteReturn.displayStatus : "", icon: "undo", type: "danger", onClick:
-                                                     function (e) {
-                                                     var content = remarkBoxs[item].controlRemark.instance.option("value");
+                                             if (findRouteReturn && tatObject)
+                                             $(`#${returnButtonId}`).dxButton({
+                                                 disabled: false,
+                                                text: findRouteReturn ? findRouteReturn.displayStatus : "", icon: "undo", type: "danger", onClick:
+                                                    function (e) {
+                                                    var content = remarkBoxs[item].controlRemark.instance.option("value");
 
-                                                         formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-                                                         formItems.comment = content;
-                                                         returnToStep(`${formModuleKeyPi}`, state.nextStep, findRouteReturn, formItems);
-                                                     }
-                                             });
-                                              }
-                                              catch
-                                              {
-                                                  console.log("Return problem");
-                                              }
-                                              try
-                                              {
-                                                   if (findRoute)
-                                               $(`#${submitButtonId}`).dxButton({
-                                                    disabled: tatObject[item].AcceptDate ? false : true,
-                                                 text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
-                                                     function (e) {
-                                                     var content = remarkBoxs[item].controlRemark.instance.option("value");
-
-                                                         formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-                                                         formItems.comment = content;
-                                                         submitNextStep(`${formModuleKeyPi}`, state.nextStep, findRoute, formItems);
-                                                     }
-                                             });
-                                              }
-                                            catch
-                                            {
-                                               console.log("Submit problem");
-                                            }
-                                     }, 100);
+                                                        formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                                                        formItems.comment = content || "";
+                                                        returnToStep(`${formModuleKeyPi}`, state.nextStep, findRouteReturn, formItems);
+                                                    }
+                                            });
+                                             }
+                                             catch (exception)
+                                               {
+                                                  console.log("Submit problem",exception);
+                                               }
+                                             try
+                                             {
+                                             if (findRoute)
+                                                $(`#${submitButtonId}`).dxButton({
+                                                   disabled: tatObject[item].AcceptDate ? false : true,
+                                                text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
+                                                    function (e) {
+                                                    var content = remarkBoxs[item].controlRemark.instance.option("value");
+                                                        formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                                                        formItems.comment = content || "";
+                                                        submitNextStep(`${formModuleKeyPi}`, state.nextStep, findRoute, formItems);
+                                                    }
+                                            });
+                                             }
+                                           catch (exception)
+                                           {
+                                              console.log("Submit problem",exception);
+                                           }
+                                     }, _delayRenderSubmitButton);
                               });
                           });
                   });
@@ -359,7 +299,6 @@ Note:
                     method: "GET",
                     contentType: "application/json"
                 });
-
                 data = data.map(m => { m.pIC = m.pic; return m; });
 
                 const rows = Array.isArray(data) ? data : [];
@@ -391,22 +330,22 @@ Note:
             }
         }
 
-        function rerenderCurrentSelectionOnly() {
-            $(".pi-quoteCard").removeClass("selected");
-            $(`.pi-quoteCard[data-id="${state.selectedId}"]`).addClass("selected");
-        }
+
+          // Global function for SignalR to reload quotation components
+        window.reloadPolicyIssuanceComponents = async function() {
+              loadQuotePage(true).then(() => {
+            loadPIDetail(@ViewData["Id"]);
+            applyNodeHighlights();
+            applySectionFocusHighlight();
+            updateHints();
+            firstRender = false;
+        });
+        };
+
 
 
         function reloadState(){
               $.each(piDeptModuleCode, function (itemIndex, item) {
-                var items = new Object();
-                items.moduleName = "@prefix";
-                items.sectionName = item;
-                items.id = @ViewData["Id"];
-                items.guid = "@ViewData["Guid"]";
-                const controlId = `${items.moduleName}_${items.sectionName}_${items.id}`;
-                items.controlId = controlId;
-                loadDxFileUploaderAttachments(item, "Document", items);
                 commentPinModule(formModuleKeyPi,item, "@ViewData["Guid"]", state.pinNotes,@ViewData["Id"]);
                 commentModule(formModuleKeyPi,item, "@ViewData["Guid"]", state.comments,@ViewData["Id"]);
             });
@@ -419,7 +358,6 @@ Note:
                  $(`#${formId}`).dxForm({ formData: deptData[item], readOnly: true, colCount: 1 });
 
             });
-
             reloadState();
             applyEditLock();
             updateHints();
@@ -438,18 +376,13 @@ Note:
                  $.each(piDeptModuleCode, function (itemIndex, item) {
                        var saveButtonId = window.PolicyIssuanceIdManager.btnSave(item,@ViewData["Id"]);
                     $(`#${saveButtonId}`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roleApply[item]);
+                     var formId = window.PolicyIssuanceIdManager.form(item,@ViewData["Id"]);
+                 $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
                 });
                
             }, 1);
 
-            setTimeout(() => {
-                  $.each(piDeptModuleCode, function (itemIndex, item) {
-                var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
-                 $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
-
-            });
-               
-            }, 1);
+           
 
             $(`#${formModuleKeyPi}-roleSelect`).dxSelectBox({
                 items: QtRoles,
@@ -495,15 +428,15 @@ Note:
             });
         }
 
-            function updateCurrentStep(stepNo) {
-                var pageLayout = window.PolicyIssuancePage;
-                pageLayout.state.nextStep.currentStep = stepNo;
-            }
+        //     function updateCurrentStep(stepNo) {
+        //         var pageLayout = window.PolicyIssuancePage;
+        //         pageLayout.state.nextStep.currentStep = stepNo;
+        //     }
 
-                function setNextStep(nextStep) {
-            var pageLayout = window.PolicyIssuancePage;
-            pageLayout.state.nextStep = nextStep;
-        }
+        //         function setNextStep(nextStep) {
+        //     var pageLayout = window.PolicyIssuancePage;
+        //     pageLayout.state.nextStep = nextStep;
+        // }
 
         function updateSectionUpdatedTime(q) {
             let tat = {};
@@ -634,33 +567,52 @@ Note:
                 };
             }
 
-            function escapeHtml(s) {
-                return String(s ?? "")
-                    .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
-                    .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
-            }
+            // function escapeHtml(s) {
+            //     return String(s ?? "")
+            //         .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+            //         .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+            // }
 
-            function renderComments(items) {
-                if (!Array.isArray(items) || items.length === 0) {
-                    return `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No audit logs</div>`;
-                }
-                return items.map((c) => `
-                        <div class="ct-item">
-                            <div class="ct-user">${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}</div>
-                            <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
-                            <div class="ct-text">${escapeHtml(c.commentText || "")}</div>
-                        </div>
-                    `).join("");
-            }
+            // function renderComments(items) {
+            //     if (!Array.isArray(items) || items.length === 0) {
+            //         return `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No audit logs</div>`;
+            //     }
+            //     return items.map((c) => `
+            //             <div class="ct-item">
+            //                 <div class="ct-user">${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}</div>
+            //                 <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
+            //                 <div class="ct-text">${escapeHtml(c.commentText || "")}</div>
+            //             </div>
+            //         `).join("");
+            // }
+
+            // const loadComments = debounce(function (quoteNo, quoteId) {
+            //     document.documentElement.style.setProperty("--rightdock-width", "20%");
+            //     $("#rightCommentSub").text(`Audit log - ${quoteNo}` || "-");
+            //     $("#rightCommentList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
+
+            //     const q = `SELECT * FROM PolicyIssuanceCommentLog WHERE PolicyIssuanceId = ${quoteId}`;
+            //     $.ajax({
+            //         url: `/api/PolicyIssuanceCommentLog/ExecuteCustomQuery`,
+            //         method: "POST",
+            //         async: true,
+            //         contentType: "application/json",
+            //         data: JSON.stringify(q),
+            //         success: function (data) { $("#rightCommentList").html(renderComments(data)); },
+            //         error: function () {
+            //             $("#rightCommentList").html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load audit logs</div>`);
+            //         }
+            //     });
+            // }, 180);
 
             const loadComments = debounce(function (quoteNo, quoteId) {
                 document.documentElement.style.setProperty("--rightdock-width", "20%");
                 $("#rightCommentSub").text(`Audit log - ${quoteNo}` || "-");
                 $("#rightCommentList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
-
-                const q = `SELECT * FROM PolicyIssuanceCommentLog WHERE PolicyIssuanceId = ${quoteId}`;
+                // const q = `SELECT * FROM CommentLog WHERE QuotationId = ${quoteId}`;
+                const q = `OnSystem`;
                 $.ajax({
-                    url: `/api/PolicyIssuanceCommentLog/ExecuteCustomQuery`,
+                    url: `/api/CommentLog/ExecuteCustomQuery?refField=QuotationId&refKey=${quoteId}`,
                     method: "POST",
                     async: true,
                     contentType: "application/json",
@@ -670,6 +622,112 @@ Note:
                         $("#rightCommentList").html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load audit logs</div>`);
                     }
                 });
+            }, 180);
+            const attachmentLogLoad = debounce(function (quoteNo, quoteId, attachmentId) {
+                document.documentElement.style.setProperty("--rightdock-width", "70%");
+                $("#rightCommentSub").text(`Attachment log - ${quoteNo}`);
+                var guid = "@(ViewData["CopyFromGuid"])";
+                $.ajax({
+                    url: `/api/Document/GetByKey?recordGuid=${guid}`,
+                    method: "GET",
+                    success: function (data) {
+                        const mappedData = data.map(x => {
+                            let dept = "";
+                            try {
+                                if (x.attributes) {
+                                    const attr = tryParseJSON(x.attributes, "Attribute Problem");
+                                    dept = attr.Department || "";
+                                }
+                            } catch (e) {
+                                console.warn("Invalid attributes JSON", x.attributes);
+                            }
+
+                            return {
+                                ...x,
+                                department: dept
+                            };
+                        });
+                        const $preview = $("#rightDockItem");
+
+
+                        // tạo container grid
+                        const $grid = $("<div>").appendTo($preview);
+
+                        $grid.dxDataGrid({
+                            dataSource: mappedData,
+                            keyExpr: "id",
+
+                            //hoặc
+
+                            height: "95%",
+                            scrolling: {
+                                mode: "infinity" // hoặc "virtual"
+                            },
+
+
+                            filterBuilder: { fields: this.columns },
+                            filterBuilderPopup: { position: { of: window, at: "top", my: "top", offset: { y: 10 } }, },
+                            errorRowEnabled: true,
+                            hoverStateEnabled: true,
+                            allowColumnReordering: true,
+                            allowColumnResizing: true,
+                            columnResizingMode: 'widget',
+                            columnHidingEnabled: false,
+                            columnAutoWidth: true,
+                            showColumnLines: true,
+                            // columnChooser: { allowSearch: true, enabled: true },
+                            // columnFixing: { enabled: true },
+                            sorting: { mode: 'multiple' },
+                            showBorders: true,
+                            filterRow: { visible: true },
+                            loadPanel: { showPane: false, text: null },
+                            filterPanel: { visible: true },
+                            groupPanel: { visible: true, allowColumnDragging: true, emptyPanelText: "" },
+                            headerFilter: { visible: true, allowSearch: true },
+                            sorting: {
+                                mode: "single"
+                            },
+
+                            columns: [
+                                {
+                                    dataField: "fileName",
+                                    caption: "Attachment",
+                                    cellTemplate: function (container, options) {
+                                        const $item = createAttachmentItem(options.data);
+                                        $item.css({
+                                            opacity: 1,
+                                            transform: "none",
+                                            transition: "none"
+                                        });
+                                        $(container).append($item);
+                                    }
+
+                                },
+                                {
+                                    dataField: "department",
+                                    caption: "Department",
+                                    width: 150
+                                }, ,
+                                {
+                                    dataField: "author",
+                                    caption: "Author",
+                                    width: 150
+                                },
+                                {
+                                    dataField: "date",
+                                    caption: "Date",
+                                    dataType: "datetime",
+                                    format: "dd/MM/yyyy HH:mm",
+                                    sortOrder: "desc" // ✅ SORT TĂNG DẦN
+                                }
+                            ]
+                        });
+                    },
+                    error: function () {
+                    }
+                });
+
+
             }, 180);
 
             const loadReferenceFields = debounce(function (quoteNo, quoteId) {
@@ -748,6 +806,40 @@ Note:
                         loadComments(state.selectedCodeNo, state.selectedId);
                     }
                 }).appendTo($("#headerWidgetsPanel"));
+
+                $(`#${window.PolicyIssuanceIdManager.btnToggleComment(@ViewData["Id"])}`).dxButton({
+                    text: "Audit log",
+                    icon: "comment",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                        clearContent();
+                        if (!commentPanelOpened) {
+                            openRightCommentPanel();
+                            loadComments(state.selectedCodeNo, state.selectedId);
+                        } else {
+                            closeRightCommentPanel();
+                        }
+                    }
+                });
+
+
+                $(`#${window.PolicyIssuanceIdManager.btnAttachmentLog(@ViewData["Id"])}`).dxButton({
+                    text: "Attachment log",
+                    icon: "fas fa-paperclip",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                        clearContent();
+                        if (!commentPanelOpened) {
+                            openRightCommentPanel();
+                            attachmentLogLoad(state.selectedCodeNo, state.selectedId, selectedAttachmentId);
+                        } else {
+                            closeRightCommentPanel();
+                        }
+                    }
+                });
+
 
                 $(`#${formModuleKeyPi}-btnCollapseAllTab`).dxButton({
                     text: "Collapse All Sections",
@@ -835,7 +927,7 @@ Note:
             return { bind, loadComments, loadReferenceFields, openRightCommentPanel, closeRightCommentPanel };
         })();
 
-       function resetOverviewAnimation() {
+       function resetOverviewAnimation(prefix) {
             const $sections = $(`#${window.PolicyIssuanceIdManager.overviewScroll(@ViewData["Id"])} section.dept-section`);
             $sections.removeClass("visible");
             $sections.each(function () {
@@ -876,49 +968,84 @@ Note:
                     }, 360);
                 }, idx * 180);
             });
+            resetOverviewAnimation(prefix);
         }
 
         function renderDetail() {
             var q = getSelectedModel();
             if (!q) return;
-            resetOverviewAnimation();
+            // resetOverviewAnimation();
 
             $(`#${formModuleKeyPi}-recordNo`).text(q.policyIssuanceCode);
+             workflowStatus = q.workflowStatus ?? q.status;
 
-            const st = q.policyIssuanceStatus ?? q.status;
 
-            $(`#${window.PolicyIssuanceIdManager.stageDeptPill(q.id)}`).html(`<span id="@ViewIdHelper.DetailStatus(moduleCode, Convert.ToInt64(ViewData["Id"]))" class="pill">${q.workflowStatus}</span> - ${stageAccount ?? ""}`);
+             getPersonInCharge(stageAccount).then(function (stageName) {
+            $(`#${window.PolicyIssuanceIdManager.stageDeptPill(q.id)}`).html(`<span id="@ViewIdHelper.DetailStatus(moduleCode, Convert.ToInt64(ViewData["Id"]))" class="pill">${workflowStatus}</span> <span style="padding-left:5px">- ${stageName ?? ""}</span>`);
             $(`#${window.PolicyIssuanceIdManager.detailStatus(q.id)}`)
-                .text(statusText(st))
-                .attr("class", `statusTag ${statusClass(st)}`);
+                .text(statusText(workflowStatus))
+                .attr("class", `statusTag ${statusClass(workflowStatus)}`);
+                   });
 
-             $(`#${window.PolicyIssuanceIdManager.stageDeptPill(q.id)}`).html(`Pending at: ${state.stageDept} - ${stageAccount ?? ""}`);
 
             var control = new Object();
             $.each(piDeptModuleCode, function (itemIndex, item) {
-                if (q.stageDept == item)
-                {
+                deptData[item] = { ...q, id: q.id, sectionName: item, code: q.policyIssuanceCode };
+                if (q.stageDept == item) {
+                    $(`#${PolicyIssuanceIdManager.actionBarDept(item, @ViewData["Id"])}`).css({ "display": "block" });
                     var control = TinyMCEElementMaker(`.htmleditor`, item, @ViewData["Id"], control);
-                    deptData[item] = { ...q, id: q.id, sectionName: item, code: q.quotationCode };
                     remarkBoxs[item] = { id: q.id, sectionName: item, controlRemark: control };
+                }
+                else {
+                    $(`#${PolicyIssuanceIdManager.actionBarDept(item, @ViewData["Id"])}`).css({ "display": "none" });
                 }
                 
             });
 
-            // deptData.FO = { ...q, id: q.id, sectionName: "FO", code: q.policyIssuanceCode };
-            // deptData.TS = { ...q, id: q.id, sectionName: "TS", code: q.policyIssuanceCode };
-            // deptData.PM = { ...q, id: q.id, sectionName: "PM", code: q.policyIssuanceCode };
 
             renderDeptForms();
             applyNodeHighlights();
             applySectionFocusHighlight();
             updateHints();
             updateSectionUpdatedTime(q);
-            initDepartmentAssignees(formModuleKeyPi, deptData, firstRender ? null : 0  );
+            initDepartmentAssignees(formModuleKeyPi, deptData, firstRender ? null : 2000  );
             scrollToDept(formModuleKeyPi, { id: `${state.focusDept}`, keyId: "@ViewData["Id"]" });
             // TinyMCEElementMaker(`.htmleditor`);
 
-            animateOverviewSections();
+            // animateOverviewSections();
+            // var stageDept = q.stageDept;
+            //     if (workflowStatus === "PolicyIssuance confirmed" || workflowStatus === "PolicyIssuance refused") {
+
+            //         let icon, colorClass, text;
+
+            //         if (workflowStatus === "PolicyIssuance confirmed") {
+            //             icon = "✔";
+            //             colorClass = "status-success";
+            //             text = "Confirmed";
+            //         }
+            //         if (workflowStatus === "PolicyIssuance refused") {
+            //             icon = "✖";
+            //             colorClass = "status-fail";
+            //             text = "Refused";
+            //         }
+
+            //         // Tạo node mới
+            //         var newNode = `
+
+            //             <div class="${formModuleKeyPi}-dept-tree dept-node status" data-key="${workflowStatus}" data-target="#${formModuleKeyPi}-sec-${text}">
+
+            //                 <div class="dept-callout animate-step visible" data-pic-for="${text}" style="color: rgba(17, 24, 39, 0.85);">
+            //                     <span class="co-icon"></span>
+            //                     <span class="co-text">${workflowStatus}</span>
+            //                 </div>
+
+            //                 <div class="dept-circle ${colorClass}">${icon}</div>
+            //             </div>
+            //         `;
+
+            //         $(`#${formModuleKeyPi}-treeStack_@Convert.ToInt32(ViewData["Id"])`).append(newNode);
+
+            //     }
         }
 
         //Select items
@@ -1151,22 +1278,37 @@ Note:
         });
 
         HoverAjax.bind();
-        bindSectionHeaderToggle();
-        // bindQuoteCardClick();
-        bindInfiniteScroll();
+
+
+         //SkeletionUI
+           bindSectionHeaderToggle();
         setupDeptTree();
-        initMainPaneSplitter();
+        animateOverviewSections(formModuleKeyPi); //DevExtreme control layout
+
+        // bindInfiniteScroll();
+        // initMainPaneSplitter();
 
         setTimeout(layoutTreeLine, 0);
         window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
 
+
+
+        // bindSectionHeaderToggle();
+        // // bindQuoteCardClick();
+        // // bindInfiniteScroll();
+        // setupDeptTree();
+        // // initMainPaneSplitter();
+
+        // setTimeout(layoutTreeLine, 0);
+        // window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
+
         loadQuotePage(true).then(() => {
-            loadPIDetail(state.quotes[0].id);
+            loadPIDetail(@ViewData["Id"]);
             applyNodeHighlights();
             applySectionFocusHighlight();
             updateHints();
             renderDeptCallouts(PIC_JSON);
             firstRender = false;
         });
-    }, _delayPolicyIssuancesLoad);
+         }, _delayQuotationsLoadForm);
 </script>

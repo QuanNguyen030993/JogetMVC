@@ -6,25 +6,25 @@ public class PolicyIssuanceChecklist : BaseModel
 {
     public long? PolicyIssuanceId { get; set; }
     public PolicyIssuance? PolicyIssuanceFK { get; set; }
-    public bool? RiScheme { get; set; } = false;
-    public bool? RiClosings { get; set; } = false;
-    public bool? FinalPremium { get; set; } = false;
-    public bool? PremiumBreakdown { get; set; } = false;
-    public bool? IsKycChecked { get; set; } = false;
-    public bool? DeclarationText { get; set; } = false;
-    public bool? IsBodApproved { get; set; } = false;
-    public bool? URFAttachment { get; set; } = false;
-    public bool? MachineryList { get; set; } = false;
-    public bool? FactoryOperationYears { get; set; } = false;
-    public bool? ChassisEngineNumber { get; set; } = false;
-    public bool? NewReplacementValue { get; set; } = false;
-    public bool? SumInsuredBreakdown { get; set; } = false;
-    public bool? IsGlobalCover { get; set; } = false;
-    public bool? EmailInformRi { get; set; } = false;
-    public bool? ResultAttachment { get; set; } = false;
-    public bool? ConfirmedQuotationFlag { get; set; } = false;
-    public bool? ProposalForm { get; set; } = false;
-    public bool? Ichigenka { get; set; } = false;
+    //public bool? RiScheme { get; set; } = false;
+    //public bool? RiClosings { get; set; } = false;
+    //public bool? FinalPremium { get; set; } = false;
+    //public bool? PremiumBreakdown { get; set; } = false;
+    //public bool? IsKycChecked { get; set; } = false;
+    //public bool? DeclarationText { get; set; } = false;
+    //public bool? IsBodApproved { get; set; } = false;
+    //public bool? URFAttachment { get; set; } = false;
+    //public bool? MachineryList { get; set; } = false;
+    //public bool? FactoryOperationYears { get; set; } = false;
+    //public bool? ChassisEngineNumber { get; set; } = false;
+    //public bool? NewReplacementValue { get; set; } = false;
+    //public bool? SumInsuredBreakdown { get; set; } = false;
+    //public bool? IsGlobalCover { get; set; } = false;
+    //public bool? EmailInformRi { get; set; } = false;
+    //public bool? ResultAttachment { get; set; } = false;
+    //public bool? ConfirmedQuotationFlag { get; set; } = false;
+    //public bool? ProposalForm { get; set; } = false;
+    //public bool? Ichigenka { get; set; } = false;
     public bool? PolicyNoCL { get; set; } = false;
     public bool? TheInsured { get; set; } = false;
     public bool? Occupation { get; set; } = false;

@@ -9,9 +9,11 @@ public class PolicyIssuance : BaseModel
     // =========================
     // Ý 1 — Header / Request
     // =========================
-
+    public override Guid? CopyFromGuid { get; set; }
     public string? RequestType { get; set; }             // c_reqType
-
+    public long? RequestTypeId { get; set; }             // c_reqType
+    public string PolicyIssuanceRequest { get; set; } = "";
+    public EnumData? RequestTypeEnum { get; set; }
     public DateTime? RequestDate { get; set; }           // c_reqDate
     public DateTime? DueDate { get; set; }               // c_dueDate
     public DateTime? InsuredDate { get; set; }           // c_dateInsured
@@ -68,16 +70,12 @@ public class PolicyIssuance : BaseModel
     public string? StageDept { get; set; } = "";
     public string? StageAccount { get; set; } = "";
     public string? WorkflowStatus { get; set; } = "";
-    public string? PolicyIssuanceStatus { get; set; } = "";
     public string? PIC { get; set; } = "";
     public string? LeaderPIC { get; set; } = "";
     public string? HODPIC { get; set; } = "";
-    public long? ProductId { get; set; }
-    public long? LineId { get; set; }
+ 
     public long? ReinsuranceId { get; set; }
     [MaxLength(4000)]
-    public long? LocationId { get; set; }
-    public long? ResId { get; set; } // backup
     public string? PolicyIssuanceCode { get; set; }
     public long? ClientId { get; set; }
     public long? AttachmentId { get; set; }

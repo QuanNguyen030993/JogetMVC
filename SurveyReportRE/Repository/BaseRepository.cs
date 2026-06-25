@@ -62,6 +62,7 @@ public interface IBaseRepository<T> where T : class
     Task<dynamic> GetAllScheme();
     Task<dynamic> GetSystemScheme(T entity);
     Task<bool> RecordExistsAsync<T>(string lookupField, object lookupValue);
+    Task<bool> ToggleVisibleRows<T>(bool isView, Guid guid);
     //Task<T> Include(T entity, params Expression<Func<T, object>>[] includeProperties);
     Task<T> IncludeSpecificField(T entity, string prefixMainField, params Expression<Func<T, object>>[] includeProperties); // Use for FK custom name as prefix
     Task<T> ObjectSpecificInclude(T entity, params Expression<Func<T, object>>[] includeProperties); //Normal FK Include
@@ -84,7 +85,9 @@ public interface IBaseRepository<T> where T : class
     /// VD: objectA = objectB, chuỗi là parse từ objectB toàn bộ
     /// <returns></returns>
     Task<T> UpdateData(T entity, string changeFields, long? keyId, string keyField);
+    Task<T> UpdateData(T sourceEntity, T targetEntity, string[] changeFields, string keyField);
     Task<T> DeleteData(T entity, object keyId, string keyField, bool isRemove);
+    Task<T> BulkDelete(List<int> ids, string keyField, bool isRemove);
     string GetConnection();
     Task ExecuteStoredProcedure(string storedProcedureName, params (string Key, object Value)[] parameters);
     Task<DataTable> ExecuteStoredProcedureReturn(string storedProcedureName, params (string Key, object Value)[] parameters);
@@ -323,6 +326,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
                       ("@QueryString", $"Error InsertData: {insertQuery}")
                       , ("@Duration", "")
                       , ("@User", userName));
+                Serilog.Log.Error(ex, ex.Message);
                 throw new Exception(ex.Message);
             }
         }
@@ -384,7 +388,32 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
             }
         }
     }
+    public async Task<bool> ToggleVisibleRows<T>(bool isView, Guid guid)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            var tableName = typeof(T).Name;
+            var sql = $"UPDATE {tableName} SET IsView = @isView WHERE [Guid] = '{guid.ToString()}'";
+            try
+            {
+                var result = await connection.ExecuteScalarAsync<int?>(sql, new { isView });
+                Util.QueryLogs(_connectionString, "sp_Querylogs",
+                       ("@QueryString", $"RecordExistsAsync: {sql}")
+                       , ("@Duration", "")
+                       , ("@User", userName));
 
+                return result.HasValue;
+            }
+            catch
+            {
+                Util.QueryLogs(_connectionString, "sp_Querylogs",
+                       ("@QueryString", $"Error RecordExistsAsync: {sql}")
+                       , ("@Duration", "")
+                       , ("@User", userName));
+                return false;
+            }
+        }
+    }
 
     public async Task<DataTable> ExecuteStoredProcedureReturn(string storedProcedureName, params (string Key, object Value)[] parameters)
     {
@@ -447,6 +476,36 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
                 Serilog.Log.Error(ex, ex.Message);
             }
             return entity;
+        }
+    }
+
+    public async Task<T> UpdateData(T sourceEntity,T targetEntity, string[] changeFields, string keyField)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            var userName = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, _baseConfiguration);
+            Util.HandleSystemAttribute(sourceEntity, userName, CommandQueryType.Update);
+            string updateQuery = Util.BuildUpdateQueryV2<T>(changeFields, targetEntity, keyField, userName);
+            try
+            {
+                if (!string.IsNullOrEmpty(updateQuery))
+                {
+                    connection.Execute(updateQuery, sourceEntity);
+                    Util.QueryLogs(_connectionString, "sp_Querylogs",
+                          ("@QueryString", $"UpdateData: {updateQuery}")
+                          , ("@Duration", "")
+                          , ("@User", userName));
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.QueryLogs(_connectionString, "sp_Querylogs",
+                      ("@QueryString", $"Error UpdateData: {updateQuery}")
+                      , ("@Duration", "")
+                      , ("@User", userName));
+                Serilog.Log.Error(ex, ex.Message);
+            }
+            return targetEntity;
         }
     }
 
@@ -514,7 +573,33 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
         }
     }
 
+    public async Task<T> BulkDelete(List<int> ids, string keyField, bool isRemove)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            var userName = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, _baseConfiguration);
+            var query = Util.BuildBulkDeleteQuery<T>(ids, keyField, userName, isRemove);
 
+            var parameters = new DynamicParameters();
+            try
+            {
+                connection.Execute(query, parameters);
+                Util.QueryLogs(_connectionString, "sp_Querylogs",
+                    ("@QueryString", $"DeleteData: {query}")
+                    , ("@Duration", "")
+                    , ("@User", userName));
+            }
+            catch (Exception ex)
+            {
+                Util.QueryLogs(_connectionString, "sp_Querylogs",
+                   ("@QueryString", $"Error DeleteData: {query}")
+                   , ("@Duration", "")
+                   , ("@User", userName));
+                Serilog.Log.Error(ex, ex.Message);
+            }
+        }
+        return null;
+    }
 
     public async Task<T> GetObjectByIdAsync(long id)
     {

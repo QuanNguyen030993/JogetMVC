@@ -1,10 +1,10 @@
 ﻿
 <script>
-      var _entitys = {
-      line: [], product: []
+      var _entities = {
+      line: [], product: [], country: []
     };
 
-    $.each(_entitys, function(index, item) {
+    $.each(_entities, function(index, item) {
     if (!item.length)
             ajaxGet(`/api/${index}/GetAll`).done(res => {
                 if (res) {
@@ -12,13 +12,13 @@
                     objectParsing = res.map(m => {
                         var obj  = new Object();
                         obj.id = m.id;
-                        obj.code =  m.hasOwnProperty("code") ||  m.hasOwnProperty(index+"Code") ?  m[index+"Code"] : "";
-                        obj.value = m.hasOwnProperty("name") ||  m.hasOwnProperty(index+"Name")  ? m[index+"Name"] : "";
+                        obj.code =  m.hasOwnProperty("code") ?  m["code"] : (m.hasOwnProperty(index+"Code")  ?  m[index+"Code"] : "");
+                        obj.value =   m.hasOwnProperty("name") ?  m["name"] :  (m.hasOwnProperty(index+"Name")  ? m[index+"Name"] : "");
                         if (index === "product")
                         obj.lineId = m.lineId;
                         return obj;
                     });
-                    _entitys[index] = objectParsing;
+                    _entities[index] = objectParsing;
                 }
         });
     });

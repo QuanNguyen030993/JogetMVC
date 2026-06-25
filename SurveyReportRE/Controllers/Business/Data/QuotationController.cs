@@ -25,6 +25,8 @@ using Document = ERPCore.Models.Migration.Business.Data.Document;
 using ERPCore.Models.Migration.Business.Social;
 using ERPCore.Models.Models.Parsing;
 using static ERPCore.Models.Models.Parsing.JsonHandle;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -44,11 +46,14 @@ public class QuotationController : BaseControllerApi<Quotation>
     private readonly IBaseRepository<MailTemplate> _mailTemplateRepository;
     private readonly IBaseRepository<MailQueue> _mailQueueRepository;
     private readonly IBaseRepository<Res> _resRepository;
-    private readonly IBaseRepository<QuotationCommentLog> _quotationCommentLogRepository;
+    private readonly IBaseRepository<CommentLog> _quotationCommentLogRepository;
     private readonly IBaseRepository<StepsWorkflow> _stepsWorkflowRepository;
     private readonly IBaseRepository<Document> _documentRepository;
     private readonly IBaseRepository<Notification> _notificationRepository;
     private readonly IBaseRepository<EnumData> _enumDataRepository;
+    private readonly IBaseRepository<Product> _productRepository;
+    private readonly IBaseRepository<Line> _lineRepository;
+    private readonly IBaseRepository<SLA> _slaRepository;
     private readonly IHubContext<FileProcessingHub> _hubContext;
     private readonly ILogger<Quotation> _logger;
     private readonly IConfigurationSection path;
@@ -93,11 +98,14 @@ public class QuotationController : BaseControllerApi<Quotation>
         _mailTemplateRepository = new BaseRepository<MailTemplate>(configuration, _httpContextAccessor);
         _mailQueueRepository = new BaseRepository<MailQueue>(configuration, _httpContextAccessor);
         _resRepository = new BaseRepository<Res>(configuration, _httpContextAccessor);
-        _quotationCommentLogRepository = new BaseRepository<QuotationCommentLog>(configuration, _httpContextAccessor);
+        _quotationCommentLogRepository = new BaseRepository<CommentLog>(configuration, _httpContextAccessor);
         _stepsWorkflowRepository = new BaseRepository<StepsWorkflow>(configuration, _httpContextAccessor);
         _documentRepository = new BaseRepository<Document>(configuration, _httpContextAccessor);
         _notificationRepository = new BaseRepository<Notification>(configuration, _httpContextAccessor);
         _enumDataRepository = new BaseRepository<EnumData>(configuration, _httpContextAccessor);
+        _productRepository = new BaseRepository<Product>(configuration, _httpContextAccessor);
+        _lineRepository = new BaseRepository<Line>(configuration, _httpContextAccessor);
+        _slaRepository = new BaseRepository<SLA>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
         _messageSettings = configuration.GetSection("Message").Get<Message>();
 
@@ -135,8 +143,44 @@ public class QuotationController : BaseControllerApi<Quotation>
         return Ok();
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> MarkNotAsOption(long id)
+    {
+        var entity = new Quotation();
+        entity = await _BaseRepository.GetSingleObject(s => s.Id == id);
+        entity.IsNotMakeOption = true;
+        await _BaseRepository.UpdateData(entity, JsonConvert.SerializeObject(new { IsNotMakeOption = true }), entity.Id, "Id");
+        ControllerHelper.SignalRResponse("R_ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+
+        return Ok();
+    }
     [HttpGet]
-    public override async Task<ActionResult<Quotation>> GetAll()
+    public  async Task<ActionResult<List<Quotation>>> RenewList()
+    {
+        var quotations = await GetAll(); 
+        SLA sLA = new SLA();
+        sLA = await _slaRepository.GetSingleObject(s => s.Code == _businessConfig.CurrentValue.SLA.RenewQuotation);
+        var days = sLA?.Value ?? 0;
+
+        var fromDate = DateTime.Now.Date;
+        var toDate = fromDate.AddDays(days);
+
+        var model = (OkObjectResult)quotations?.Result;
+
+        quotations = ((List<Quotation>)model?.Value).Where(q => q.InceptionDate >= fromDate &&
+                    q.InceptionDate <= toDate)
+        .ToList();
+
+        List<Quotation> quotationResult = ((List<Quotation>)model?.Value).Where(q => q.InceptionDate >= fromDate &&
+                    q.InceptionDate <= toDate)
+        .ToList();
+
+        return Ok(quotationResult);
+    }
+
+
+        [HttpGet]
+    public override async Task<ActionResult<List<Quotation>>> GetAll()
     {
         var queryParams = HttpContext.Request.Query;
 
@@ -202,6 +246,92 @@ public class QuotationController : BaseControllerApi<Quotation>
         }
 
         return Ok(Base);
+    }
+    [HttpPost]
+    public async Task<IActionResult> CreateOption([FromBody] QuotationOptionRequest quotationData)
+    {
+        Quotation quotation = new Quotation();
+        quotation = await _BaseRepository.GetSingleObject(s => s.Id == quotationData.QuotationId);
+        InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
+        instanceWorkflow = await _instanceWorkflowRepository.GetSingleObject(s => s.RecordGuid == quotation.Guid);
+        using var loggerFactory = LoggerFactory.Create(loggingBuilder => loggingBuilder
+         .SetMinimumLevel(LogLevel.Trace)
+         .AddConsole());
+
+        var logger = loggerFactory.CreateLogger<CommentLog>();
+        var quotationCommentLogApiController = new CommentLogController(_quotationCommentLogRepository, configuration, _httpContextAccessor, logger, _blobStorageSettings);
+        string logQuery = $"SELECT * FROM CommentLog WHERE {nameof(Quotation)}Id = {quotation.Id}";
+        string logHistoryQuery = $"SELECT * FROM QuotationWorkflowHistory WHERE {nameof(Quotation)}Id = {quotation.Id}";
+        var quotationCommentLogs =  await quotationCommentLogApiController.ExecuteCustomQuery(logQuery);
+        var quotaionWorkflowHistory = await quotationCommentLogApiController.ExecuteCustomQuery(logHistoryQuery);
+
+
+        Quotation quotationNew = new Quotation();
+        quotationNew.IsView = false;
+        await _BaseRepository.UpdateData(quotationNew, quotation, ["IsView"],"Id"); 
+        int numberOfOptions = quotationData.QuotationData.Count;
+        int startNoOption = 1;
+        foreach (var item in quotationData.QuotationData)
+        {
+            Quotation quotationOp = new Quotation();
+            quotation.Id = 0;
+            JsonConvert.PopulateObject(JsonConvert.SerializeObject(quotation), quotationOp);
+            quotationOp.OptionParentCode = quotation.QuotationCode;
+            Product product = new Product();
+            product = await _productRepository.GetSingleObject(s => s.Id == item.ProductId);
+            Line line = new Line();
+            line = await _lineRepository.GetSingleObject(s => s.Id == item.LineId);
+            quotationOp.LineId = item.LineId;
+            quotationOp.LineCode = line.LineCode;
+            quotationOp.LineName = line.LineName;
+            quotationOp.ProductId = item.ProductId; 
+            quotationOp.ProductCode = product.ProductCode; 
+            quotationOp.ProductName = product.ProductName;
+            quotationOp.QuotationCode = $"{quotationOp.QuotationCode}-{startNoOption.ToString()}"; 
+            startNoOption++;
+            quotationOp.CreatedDate = DateTime.Now;
+            quotationOp.ModifiedDate = DateTime.Now;
+            quotationOp = await _BaseRepository.InsertData(quotationOp);
+
+            Document document = new Document();
+            document = await _documentRepository.GetSingleObject(s => s.Id == item.DocumentId);
+            Document documentNew = new Document();
+            documentNew.RecordGuid = quotationOp.Guid;
+            documentNew.Attributes = document.Attributes.Replace(quotationData.QuotationId.ToString(), quotationOp.Id.ToString());
+            await _documentRepository.UpdateData(documentNew, document, ["RecordGuid", "Attributes"],"Id");
+
+
+            InstanceWorkflow instanceWorkflowNew = new InstanceWorkflow();
+            JsonConvert.PopulateObject(JsonConvert.SerializeObject(instanceWorkflow),instanceWorkflowNew);
+            instanceWorkflowNew.Id = 0;
+            instanceWorkflowNew.RecordGuid = quotationOp.Guid;
+
+            instanceWorkflowNew.CurrentStepId = new Guid();
+            instanceWorkflowNew.IsCancelled = false;
+            instanceWorkflowNew.IsCompleted = false;
+            instanceWorkflowNew = await _instanceWorkflowRepository.InsertData(instanceWorkflowNew);
+
+            await ControllerUtil.CloneAction(
+                _quotationCommentLogRepository,
+                JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(JsonConvert.SerializeObject(quotationCommentLogs)),
+                JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(JsonConvert.SerializeObject(quotaionWorkflowHistory)),
+                quotationOp.Id
+            );
+            //StepsWorkflow
+
+            //SubmitRequest submitRequest = new SubmitRequest();
+            //submitRequest.StepsWorkflow = stepsWorkflow;
+            //submitRequest.Comment = $"{quotation.QuotationCode} created!";
+            //submitRequest.InstanceWorkflow = instanceWorkflow;
+
+
+
+
+            //await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
+
+        }
+
+        return Ok();
     }
 
     [HttpPost]
@@ -435,7 +565,7 @@ public class QuotationController : BaseControllerApi<Quotation>
 
             if (workflowDefinition != null)
             {
-                StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.StepNo == "1" && s.FromNodeId == quotationData.QuotationData.StartingDept);
+                StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && (s.IsStart ?? false));
                 InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
                 instanceWorkflow.RecordGuid = quotation.Guid;
                 instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
@@ -566,7 +696,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         IFormFile file = null
         )
     {
-        StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.StepNo == "1" && s.FromNodeId == quotationData.QuotationData.StartingDept);
+        StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.IsStart == true);
         InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
         instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
         //instanceWorkflow.CurrentStep = "2";
@@ -580,7 +710,7 @@ public class QuotationController : BaseControllerApi<Quotation>
 
             EnumData enumData = await _enumDataRepository.GetSingleObject(s => s.Id == stepsWorkflow.StatusId);
 
-            quotation.QuotationStatus = enumData?.Value ?? "";
+            quotation.WorkflowStatus = enumData?.Value ?? "";
             quotation = await _BaseRepository.InsertData(quotation);
             if (file != null)
             {
@@ -639,12 +769,13 @@ public class QuotationController : BaseControllerApi<Quotation>
     [HttpPost]
     public async Task<IActionResult> LogAction([FromForm] QuotationRequest quotationData)
     {
-        quotationData.QuotationData = JsonConvert.DeserializeObject<QuotationData>(Request.Form["QuotationData"]);
+        quotationData.QuotationData = JsonConvert.DeserializeObject<QuotationData>(Request.Form[nameof(Quotation) + "Data"]);
         quotationData.QuotationData.SubmitRequest = JsonConvert.DeserializeObject<SubmitRequest>(Request.Form["SubmitRequest"]);
         SubmitRequest submitRequest = new SubmitRequest();
         submitRequest.Comment = quotationData?.QuotationData?.SubmitRequest?.Comment;
         submitRequest.StepsWorkflow = new StepsWorkflow();
         submitRequest.StepsWorkflow.FromNodeId = quotationData?.QuotationData?.SubmitRequest?.StepsWorkflow?.FromNodeId;
+        submitRequest.StepsWorkflow.StepName = quotationData?.QuotationData?.SubmitRequest?.StepsWorkflow?.StepName;
         submitRequest.isFullDetail = quotationData?.QuotationData?.SubmitRequest?.isFullDetail;
         await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotationData.QuotationData.Quotation, submitRequest, _blobStorageSettings);
         return Ok();
@@ -944,7 +1075,6 @@ public class QuotationController : BaseControllerApi<Quotation>
 
 
 
-
         Task.Run(async () =>
         {
             string connectionId = "";
@@ -962,7 +1092,7 @@ public class QuotationController : BaseControllerApi<Quotation>
 
             }
         });
-        ControllerHelper.SignalRResponse("ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        ControllerHelper.SignalRResponse("R_ItemSubmitted", new { type = nameof(Quotation) }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         return new HttpResponseMessage(HttpStatusCode.OK);
     }
     public async Task BulkInsertQuotationAsync(List<Quotation> data)
@@ -998,7 +1128,140 @@ public class QuotationController : BaseControllerApi<Quotation>
         await bulkCopy.WriteToServerAsync(dt);
     }
 
+    [HttpDelete]
+    public override async Task<IActionResult> DeleteData([FromForm] DeleteFormCollection form)
+    {
+        try
+        {
+            // 1. Lấy quotation full data
+            var quotation = await _BaseRepository
+                .GetSingleObjectFullInclude(x => x.Id == form.key);
 
+            if (quotation == null)
+                return NotFound("Quotation not found");
 
+            Guid recordGuid = quotation.Guid;
+
+            // ===== 2. Xóa Workflow =====
+            var instance = await _instanceWorkflowRepository
+                .GetSingleObject(x => x.RecordGuid == recordGuid);
+
+            if (instance != null)
+            {
+                await _instanceWorkflowRepository
+                    .DeleteData(instance, instance.Id, "Id", true);
+            }
+
+            //// ===== 3. Xóa Log =====
+            string logQuery = $@"DELETE FROM CommentLog WHERE [RecordGuid] = {quotation.Guid}";
+            string logFlowQuery = $@"DELETE FROM WorkflowHistory WHERE [RecordGuid] = {quotation.Guid}";
+            using var loggerFactory = LoggerFactory.Create(loggingBuilder => loggingBuilder
+        .SetMinimumLevel(LogLevel.Trace)
+        .AddConsole());
+            var logger = loggerFactory.CreateLogger<CommentLog>();
+            var quotationCommentLogApiController = new CommentLogController(_quotationCommentLogRepository, configuration, _httpContextAccessor, logger, _blobStorageSettings);
+            await quotationCommentLogApiController.ExecuteCustomQuery(logQuery);
+            await quotationCommentLogApiController.ExecuteCustomQuery(logFlowQuery);
+            ///
+            //var logs = await _quotationCommentLogRepository
+            //    .GetAll(x => x.RecordGuid == recordGuid);
+
+            //foreach (var log in logs)
+            //{
+            //    await _quotationCommentLogRepository
+            //        .DeleteData(log, log.Id, "Id", true);
+            //}
+
+            // ===== 4. Xóa Notification =====
+            var notifications = await _notificationRepository
+                .GetListObject(x => x.RecordGuid == recordGuid);
+
+            foreach (var noti in notifications)
+            {
+                await _notificationRepository
+                    .DeleteData(noti, noti.Id, "Id", true);
+            }
+
+            // ===== 5. Xóa Documents + File =====
+            var documents = await _documentRepository
+                .GetListObject(x => x.RecordGuid == recordGuid);
+
+            foreach (var doc in documents)
+            {
+                // delete file vật lý
+                var filePath = Path.Combine(
+                    _blobStorageSettings.CurrentValue.Path,
+                    doc.SubDirectory ?? "",
+                    doc.Guid.ToString() + doc.FileType ?? ""
+                );
+
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                }
+
+                await _documentRepository.DeleteData(doc, doc.Id, "Id", true);
+            }
+
+            // ===== 6. Xóa Attachment =====
+            //var attachments = await _documentRepository
+            //    .GetListObject(x => x.RecordGuid == recordGuid);
+
+            //foreach (var att in attachments)
+            //{
+            //    await _documentRepository.DeleteData(att, att.Id, "Id", true);
+            //}
+
+            // ===== 7. Xóa Folder (optional) =====
+            //var folderPath = Path.Combine(
+            //    _blobStorageSettings.CurrentValue.Path,
+            //    _blobStorageSettings.CurrentValue.QuotationAttachmentFolder,
+            //    quotation.QuotationCode
+            //);
+
+            //if (Directory.Exists(folderPath))
+            //{
+            //    Directory.Delete(folderPath, true);
+            //}
+
+            // ===== 8. Xóa Res =====
+            if (quotation.ResId != null)
+            {
+                var res = await _resRepository
+                    .GetSingleObject(x => x.Id == quotation.ResId);
+
+                if (res != null)
+                {
+                    // check nếu res còn được dùng không
+                        await _resRepository.DeleteData(res, res.Id, "Id", true);
+                }
+            }
+
+            // ===== 9. Xóa Quotation =====
+            await _BaseRepository.DeleteData(quotation, quotation.Id, "Id", true);
+
+            return Ok(new { message = "Deleted successfully" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new
+            {
+                message = "Delete failed",
+                detail = ex.Message
+            });
+        }
+    }
+    //[HttpDelete]
+    //public override async Task<IActionResult> DeleteData([FromForm] DeleteFormCollection form)
+    //{
+    //    var entity = new Quotation();
+    //    entity = await _BaseRepository.GetSingleObjectFullInclude(s => s.Id == form.key);
+    //    //await _resRepository.DeleteData(entity?.ResFK, entity?.ResId, "Id", true);
+    //    //await _instanceWorkflowRepository.DeleteData(entity?.InstanceWorkflowFK, entity?.InstanceWorkflowFK.Id, "Id", true);
+    //    ////await _mailQueueRepository.DeleteData(entity, form.key, "Id", true);
+    //    ////await _notificationRepository.DeleteData(entity, form.key, "Id", true);
+    //    //entity = await _BaseRepository.DeleteData(entity, form.key, "Id", true);
+    //    return Ok(entity);
+    //}
 
 }

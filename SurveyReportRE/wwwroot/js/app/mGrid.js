@@ -9,12 +9,11 @@
             //contains Chuỗi có chứa notcontains Chuỗi không chứa startswith Bắt đầu với endswith Kết thúc với
             //! Phủ định and Và or Hoặc
             this.isAllowRowMenu = true;
-            
+            this.isBulkMode = false; // NEW
             // Layout editor mode properties
             this.isEditLayoutMode = false;
             this.gridIndexVisible = {}; // Stores visible column indexes
             this.originalColumnOrder = []; // Stores original column order
-            
             //Note: 
             //refField correct in best practices column
             if (mGridOption) {
@@ -29,6 +28,10 @@
                     this.gridEditorOptions = mGridOption.gridEditorOptions;
                 if (mGridOption.enableEditLayoutMode != null || mGridOption.enableEditLayoutMode != undefined)
                     this.enableEditLayoutMode = mGridOption.enableEditLayoutMode;
+                if(mGridOption.ModelName != null || mGridOption.ModelName != undefined)
+                    this.overrideGetUrl = `api/${mGridOption.ModelName}/GetAll`;
+                if (mGridOption.overrideGetUrl != null || mGridOption.overrideGetUrl != undefined)
+                    this.overrideGetUrl = mGridOption.overrideGetUrl;
                 this.enableEditLayoutMode = true;
                 this.mGridOption = mGridOption;
             }
@@ -115,53 +118,66 @@
     toggleEditLayoutMode() {
         try {
             this.isEditLayoutMode = !this.isEditLayoutMode;
-            
+
             if (this.component) {
                 this.component.option('allowColumnReordering', this.isEditLayoutMode);
                 this.component.option('allowColumnResizing', this.isEditLayoutMode);
-                this.component.option('columnResizingMode', this.isEditLayoutMode ? 'widget' : 'nextColumn');
-                
-                // Apply visual style to indicate edit mode
+                this.component.option(
+                    'columnResizingMode',
+                    this.isEditLayoutMode ? 'widget' : 'nextColumn'
+                );
+
                 if (this.isEditLayoutMode) {
                     this.container.addClass('mgrid-edit-layout-mode');
-                    appNotifyInfo('Grid layout editing mode enabled');
+
+                    // highlight nhẹ toàn grid
+                    this.component.element().css({
+                        transition: "all 0.2s ease"
+                    });
+
+                    appNotifyInfo('Layout edit mode ON');
                 } else {
                     this.container.removeClass('mgrid-edit-layout-mode');
+
+                    this.component.element().css({
+                        transition: ""
+                    });
+
                     this.saveLayoutConfiguration();
-                    appNotifyInfo('Grid layout editing mode disabled. Layout saved.');
+                    appNotifyInfo('Layout saved');
                 }
             }
-            
+
             return this.isEditLayoutMode;
+
         } catch (err) {
-            appErrorHandling('Library error: call toggleEditLayoutMode was failed.', err);
+            appErrorHandling('toggleEditLayoutMode error', err);
         }
     }
-
     /**
      * Update gridIndexVisible based on current visible columns order from array elements
      */
     updateGridIndexVisible() {
-        //try {
-        //    if (!this.component) return;
+        try {
+            if (!this.component) return;
 
-        //    // Get columns from the component's column array (actual order in DOM)
-        //    const columns = this.component.option('columns');
-        //    this.gridIndexVisible = {};
+            // Get columns from the component's column array (actual order in DOM)
+            const columns = this.component.option('columns');
+            this.gridIndexVisible = {};
 
-        //    // Filter visible columns and assign index based on their position in the array
-        //    let visibleIndex = 0;
-        //    columns.forEach((col, arrayIndex) => {
-        //        if (col && col.dataField && col.visible !== false) {
-        //            this.gridIndexVisible[col.dataField] = visibleIndex;
-        //            visibleIndex++;
-        //        }
-        //    });
+            // Filter visible columns and assign index based on their position in the array
+            let visibleIndex = 0;
+            columns.forEach((col, arrayIndex) => {
+                if (col && col.dataField && col.visible !== false) {
+                    this.gridIndexVisible[col.dataField] = visibleIndex;
+                    visibleIndex++ * 100;
+                }
+            });
 
-        //    console.log('Grid Index Visible Updated from array order:', this.gridIndexVisible);
-        //} catch (err) {
-        //    appErrorHandling('Library error: call updateGridIndexVisible was failed.', err);
-        //}
+            //console.log('Grid Index Visible Updated from array order:', this.gridIndexVisible);
+        } catch (err) {
+            appErrorHandling('Library error: call updateGridIndexVisible was failed.', err);
+        }
     }
 
     /**
@@ -177,21 +193,17 @@
     setGridIndexVisible(indexConfig) {
         try {
             if (!this.component || !indexConfig) return;
-            
             this.gridIndexVisible = indexConfig;
-            
-            // Apply the new column order
-            const columns = this.component.getVisibleColumns();
-            const sortedColumns = columns.sort((a, b) => {
-                const indexA = indexConfig[a.dataField] !== undefined ? indexConfig[a.dataField] : 999;
-                const indexB = indexConfig[b.dataField] !== undefined ? indexConfig[b.dataField] : 999;
-                return indexA - indexB;
+            var columns = this.component.getVisibleColumns();
+            var arrangeCols = {};
+            var count = 1;
+            columns.forEach(f => {
+                arrangeCols[f.dataField] = count * 100;
+                count++;
             });
-            
-            sortedColumns.forEach((col, index) => {
-                col.visibleIndex = index;
-            });
-            
+
+            indexConfig = arrangeCols;
+            this.gridIndexVisible = indexConfig;
             this.component.refresh();
         } catch (err) {
             appErrorHandling('Library error: call setGridIndexVisible was failed.', err);
@@ -203,13 +215,14 @@
      */
     saveLayoutConfiguration() {
         try {
-            const configKey = `mgrid_layout_${this.mGridOption.ModelName}`;
-            const layoutConfig = {
-                gridIndexVisible: this.gridIndexVisible,
-                timestamp: new Date().toISOString()
-            };
-            localStorage.setItem(configKey, JSON.stringify(layoutConfig));
-            console.log('Layout configuration saved to localStorage:', configKey);
+            this.setGridIndexVisible(this.gridIndexVisible)
+            //const configKey = `mgrid_layout_${this.mGridOption.ModelName}`;
+            //const layoutConfig = {
+            //    gridIndexVisible: this.gridIndexVisible,
+            //    timestamp: new Date().toISOString()
+            //};
+            //localStorage.setItem(configKey, JSON.stringify(layoutConfig));
+            //console.log('Layout configuration saved to localStorage:', configKey);
 
             // Save to server via API
             this.saveLayoutToServer(this.gridIndexVisible);
@@ -222,13 +235,17 @@
      * Save layout configuration to server (database)
      */
     saveLayoutToServer(gridVisibleIndexConfig) {
+        var passingObject = new Object();
+        passingObject.Ids = gridVisibleIndexConfig;
+        passingObject.ModelName = this.mGridOption.ModelName;
+        passingObject.ModelId = this.mGridOption.ModelId;
         try {
             $.ajax({
                 url: '/api/DataGridConfig/UpdateGridVisibleIndex',
                 method: 'POST',
                 contentType: 'application/json',
-                data: JSON.stringify(gridVisibleIndexConfig),
-                success: function(result) {
+                data: JSON.stringify(passingObject),
+                success: function (result) {
                     if (result.success) {
                         appNotifyInfo(`Grid layout saved successfully (${result.updatedCount} columns updated)`);
                         //console.log('Layout configuration saved to server:', result);
@@ -236,7 +253,7 @@
                         console.warn('Server response:', result);
                     }
                 },
-                error: function(err) {
+                error: function (err) {
                     console.error('Failed to save layout to server:', err);
                     appErrorHandling('Failed to save grid layout to server', err);
                 }
@@ -251,7 +268,7 @@
      */
     loadLayoutFromServer(sysTableId = null) {
         try {
-            const url = sysTableId 
+            const url = sysTableId
                 ? `/api/DataGridConfig/GetGridVisibleIndex?sysTableId=${sysTableId}`
                 : '/api/DataGridConfig/GetGridVisibleIndex';
 
@@ -259,7 +276,7 @@
                 url: url,
                 method: 'GET',
                 dataType: 'json',
-                success: function(result) {
+                success: function (result) {
                     if (result.success && result.data) {
                         this.setGridIndexVisible(result.data);
                         appNotifyInfo(`Grid layout loaded from server (${result.count} columns)`);
@@ -268,7 +285,7 @@
                         //console.warn('No layout configuration found on server');
                     }
                 }.bind(this),
-                error: function(err) {
+                error: function (err) {
                     console.error('Failed to load layout from server:', err);
                     // Continue with localStorage fallback
                 }
@@ -289,7 +306,7 @@
             // Fallback to localStorage if server load fails
             const configKey = `mgrid_layout_${this.mGridOption.ModelName}`;
             const savedConfig = localStorage.getItem(configKey);
-            
+
             if (savedConfig) {
                 const layoutConfig = JSON.parse(savedConfig);
                 if (layoutConfig.gridIndexVisible) {
@@ -309,7 +326,7 @@
         try {
             const configKey = `mgrid_layout_${this.mGridOption.ModelName}`;
             localStorage.removeItem(configKey);
-            
+
             if (this.component) {
                 this.component.refresh();
                 this.updateGridIndexVisible();
@@ -320,7 +337,75 @@
         }
     }
 
-   
+    toggleBulkMode() {
+        try {
+            this.isBulkMode = !this.isBulkMode;
+
+            if (this.component) {
+                if (this.isBulkMode) {
+                    this.component.option("selection", {
+                        mode: "multiple",
+                        showCheckBoxesMode: "always"
+                    });
+
+                    appNotifyInfo("Bulk mode enabled");
+                } else {
+                    this.component.clearSelection();
+
+                    this.component.option("selection", {
+                        mode: "single"
+                    });
+
+                    appNotifyInfo("Bulk mode disabled");
+                }
+            }
+
+            return this.isBulkMode;
+        } catch (err) {
+            appErrorHandling("Error toggleBulkMode", err);
+        }
+    }
+
+    getSelectedRows() {
+        if (!this.component) return [];
+        return this.component.getSelectedRowsData();
+    }
+
+    executeBulkDelete() {
+        const rows = this.getSelectedRows();
+
+        if (!rows || rows.length === 0) {
+            appNotifyInfo("No rows selected");
+            return;
+        }
+
+        var that = this;
+
+        var dialog = DevExpress.ui.dialog.confirm(
+            `Delete ${rows.length} records?`
+        );
+
+        dialog.done(function (confirm) {
+            if (!confirm) return;
+
+            const ids = rows.map(x => x.id);
+
+            $.ajax({
+                url: `api/${that.mGridOption.ModelName}/BulkDelete`,
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(ids),
+                success: function () {
+                    that.component.refresh();
+                    appNotifyInfo("Bulk delete success");
+                },
+                error: function (err) {
+                    appErrorHandling("Bulk delete failed", err);
+                }
+            });
+        });
+    }
+
 
 };
 var MGridOption = class MGridOption {
@@ -547,10 +632,53 @@ var MGridOption = class MGridOption {
                 }
             }
         });
+        // Bulk Mode Toggle Button
+        e.toolbarOptions.items.unshift({
+            location: "after",
+            widget: "dxButton",
+            options: {
+                type: "default",
+                text: "Bulk Mode",
+                icon: "check",
+                onClick: function () {
+                    if (that.mGridInstance) {
+                        let isOn = that.mGridInstance.toggleBulkMode();
 
+                        const btn = $(this).dxButton("instance");
+
+                        if (isOn) {
+                            btn.option({
+                                type: "success",
+                                text: "Exit Bulk Mode"
+                            });
+                        } else {
+                            btn.option({
+                                type: "default",
+                                text: "Bulk Mode"
+                            });
+                        }
+                    }
+                }
+            }
+        });
+        // Bulk Delete Button
+        e.toolbarOptions.items.unshift({
+            location: "after",
+            widget: "dxButton",
+            options: {
+                type: "danger",
+                text: "Delete Selected",
+                icon: "trash",
+                onClick: function () {
+                    if (that.mGridInstance) {
+                        that.mGridInstance.executeBulkDelete();
+                    }
+                }
+            }
+        });
         if (this.GridConfig)
-            if (this.GridConfig.toolbarItemsConfig) {
-                var gridToolBarConfig = JSON.parse(this.GridConfig.toolbarItemsConfig);
+            if (this.GridConfig.sysTableConfig.toolbarItemsConfig) {
+                var gridToolBarConfig = tryParseJSON((this.GridConfig.sysTableConfig.toolbarItemsConfig),"toolbarItemsConfig Problem");
                 var toolbarItems = e.toolbarOptions.items;
                 $.each(toolbarItems, function (_, item) {
                     var configItem = gridToolBarConfig.find(function (config) {
@@ -586,7 +714,7 @@ var MGridOption = class MGridOption {
             appErrorHandling('Library error: call onEditorPrepared was failed.', err);
             console.trace();
         }
-    } 
+    }
     onBeforeSend(operation, ajaxSettings) {
         if (this.queryParams != null)
             $.extend(ajaxSettings.data, { queryParams: this.queryParams });
@@ -638,13 +766,29 @@ var MGridOption = class MGridOption {
     //    onRowUpdated(e) { }
 
     onRowInserted(e) { }
-    onRowPrepared(e) { }
+    onRowPrepared(e) {
+        if (e.rowType === "data") {
+            if (e.data.isView != null)
+                if (!e.data.isView) {
+                    if (_isSuperUser == "true")
+                        e.rowElement
+                            .attr("style", `
+                        opacity: 0.4 !important;
+                        pointer-events: none !important;
+                    `);
+                    else
+                        e.rowElement
+                            .attr("style", `display: none;`);
+                }
+        }
+    }
     onRowUpdating(e) { }
     onRowInserting(e) { }
-    //    onSaved(e) { }
-    //    onSaving(e) { }
-    //    onRowRemoving(e) { }
-    //    onRowRemoved(e) { }
+    onSaved(e) { }
+    onSaving(e) { }
+    onRowRemoving(e) { }
+    onRowRemoved(e) { }
+    onSelectionChanged(e) { }
     hyperLinkCode(columns, moduleName, controllerName, propertyName, specificLinkField = null) {
         $.each(columns, function (i, col) {
             if (col.dataField == (specificLinkField != null ? specificLinkField : "Code")) {
@@ -678,33 +822,45 @@ var MGridOption = class MGridOption {
     }
 
     onContentReady(e) {
-        //function getRenderedGridWidth(grid) {
-        //    const el = grid.element().get(0);
-        //    console.log(el);
-        //    return Math.ceil(el.getBoundingClientRect().width);
-        //}
 
-        //const grid = e.component;
-        //const renderedWidth = getRenderedGridWidth(grid);
+        const grid = e.component;
 
-        //const vw = window.innerWidth;
-        ////if (renderedWidth > vw) {
-        //if (renderedWidth > 1600) {
-        //    const host = document.getElementById(this.ModelName);
-        //    if (!host) return;
-        //    //host.style.setProperty('margin-right','var(--collapsed-grid-max-mr)');
-        //    grid.option("width", 1600);
-        //    grid.updateDimensions();
-        //}
-        //stretchColumnsEvenly(e, {
-        //    targetWidth: window.innerWidth - _widthMenuWidth - _rightWindowPadding,
-        //    minWidthEach: 120,
-        //    excludeFields: [
-        //        // nếu bạn có cột action/checkbox riêng và muốn giữ nguyên
-        //        // ví dụ: "Actions", "Select"
-        //    ]
-        //});
-        
+
+        const targetWidth =
+            window.innerWidth -
+            _widthMenuWidth -
+            _rightWindowPadding;
+
+
+        const cols =
+            grid.getVisibleColumns()
+                .filter(c => !c.command);
+
+
+
+        const totalDefault =
+            cols.length *
+            _defaultGridFieldWidth;
+
+
+
+        // 85% rule
+        if (totalDefault < targetWidth * 0.85) {
+
+            stretchColumnsEvenly(e, {
+
+                targetWidth,
+
+                defaultWidth:
+                    _defaultGridFieldWidth,
+
+                excludeFields: []
+
+            });
+
+        }
+
+
         // Load saved layout configuration
         if (this.loadLayoutConfiguration) {
             this.loadLayoutConfiguration();
@@ -714,11 +870,11 @@ var MGridOption = class MGridOption {
     onInitialized(e) {
         var that = this;
         that.dataGrid = e.component;
-        
+
         // Set up column reordering handler
         var gridInstance = e.component;
         var originalOnOptionChanged = gridInstance.option('onOptionChanged');
-        
+
         gridInstance.on('optionChanged', function (eventArgs) {
             if (eventArgs.name === 'columns' && that.isEditLayoutMode) {
                 // Delay update to ensure all column movements are processed
@@ -726,7 +882,7 @@ var MGridOption = class MGridOption {
                     that.updateGridIndexVisible();
                 }, 100);
             }
-            
+
             if (typeof originalOnOptionChanged === 'function') {
                 originalOnOptionChanged(eventArgs);
             }
@@ -738,6 +894,14 @@ var MGridOption = class MGridOption {
 
     onCellPrepared(e) {
         try {
+            var that = this
+            if (e.rowType === "data" && e.column.command && e.column.command != "drag" && e.column.command != "select") {
+                if (_isSuperUser == "true") {
+                    if (e.data.isView != null) {
+                        visibleCommentButtonCell(e, that);
+                    }
+                }
+            }
             if (e.data && e.column.editorOptions != null && e.column.editorOptions.readOnly == true && e.component.option("editing.mode") === "batch") {
                 e.cellElement.css("background-color", "#F2F2F2");
             }
@@ -770,208 +934,219 @@ var MGridOption = class MGridOption {
             info.data[this.refField2] = this.refKey2;
     }
 
+
+
     async makeGridOptions(mGridConfigInstance = null) {
         var that = this;
-       that.fromGrid = true;
-       return fetchConfigurationData(that.ModelName, that.gridType, that).then(fetchConfig => {
-           try {
-            this.isAllowRowMenu = true;
-            var summary = new Object();
-            var gridEditorOptions = {};
+        that.fromGrid = true;
+        return fetchConfigurationData(that.ModelName, that.gridType, that).then(fetchConfig => {
+            try {
+                this.isAllowRowMenu = true;
+                var summary = new Object();
+                var gridEditorOptions = {};
 
-            that.customQuery = fetchConfig?.sysTableConfig?.customQuery ?? "";
-            var gridDataSource = makeBasicDataSource(that, false, that.customQuery != "" ? true : false);
-            if (that.mGridDetailOption != null || that.mGridDetailOption != undefined) {
-                if (that.mGridDetailOption.visibleColumns != null || that.mGridDetailOption.visibleColumns != undefined) {
-                    fetchConfig.getScheme = fetchConfig.getScheme.filter(field =>
-                        that.mGridDetailOption.visibleColumns.includes(field.dataField)
-                    );
+                that.customQuery = fetchConfig?.sysTableConfig?.customQuery ?? "";
+                var gridDataSource = makeBasicDataSource(that, false, that.customQuery != "" ? true : false);
+                if (that.mGridDetailOption != null || that.mGridDetailOption != undefined) {
+                    if (that.mGridDetailOption.visibleColumns != null || that.mGridDetailOption.visibleColumns != undefined) {
+                        fetchConfig.getScheme = fetchConfig.getScheme.filter(field =>
+                            that.mGridDetailOption.visibleColumns.includes(field.dataField)
+                        );
 
+                    }
+                    if (that.mGridDetailOption.summary != null || that.mGridDetailOption.summary != undefined) {
+                        summary = that.mGridDetailOption.summary;
+                    }
+                    if (that.mGridDetailOption.container != null || that.mGridDetailOption.container != undefined) {
+                        that.container = that.mGridDetailOption.container;
+                    }
                 }
-                if (that.mGridDetailOption.summary != null || that.mGridDetailOption.summary != undefined) {
-                    summary = that.mGridDetailOption.summary;
+                this.buildGridColumn(fetchConfig.getScheme);
+                this.columns = fetchConfig.getScheme;
+
+
+                this.GridConfig = fetchConfig;//getModelConfig(that.ModelName, false);
+                if (that.gridType == "User")
+                    this.GridConfig = fetchConfig;// getModelConfig(that.ModelName);
+                this.ModelId = fetchConfig.sysTableConfig?.id || 0;
+
+                if (mGridConfigInstance) {
+                    if (mGridConfigInstance.gridEditorOptions != null || mGridConfigInstance.gridEditorOptions != undefined)
+                        gridEditorOptions = mGridConfigInstance.gridEditorOptions;
                 }
-                if (that.mGridDetailOption.container != null || that.mGridDetailOption.container != undefined) {
-                    that.container = that.mGridDetailOption.container;
+                else {
+                    try {
+                        if (this.GridConfig)
+                            gridEditorOptions = this.GridConfig.gridEditorOptions ? tryParseJSON(this.GridConfig.gridEditorOptions, "Grid Editors Options Problem") : {};
+                        if (this.GridConfig?.sysTableConfig)
+                            gridEditorOptions = this.GridConfig?.sysTableConfig?.gridEditorOptions ? tryParseJSON(this.GridConfig?.sysTableConfig?.gridEditorOptions, "Grid Editors Options Problem") : {};
+                    }
+                    catch {
+
+                    }
                 }
-            }
-            this.buildGridColumn(fetchConfig.getScheme);
-            this.columns = fetchConfig.getScheme;
+                if (this.gridEditorOptions != null || this.gridEditorOptions != undefined)
+                    gridEditorOptions = this.gridEditorOptions;
+                var defaultEditing = new Object();
+                var exportConfig = new Object();
+                if (fetchConfig.sysTableConfig) {
+                    try {
+                        exportConfig = JSON.parse(fetchConfig.sysTableConfig.export);
+                    }
+                    catch {
 
-
-            this.GridConfig = fetchConfig;//getModelConfig(that.ModelName, false);
-            if (that.gridType == "User")
-                this.GridConfig = fetchConfig;// getModelConfig(that.ModelName);
-                
-
-
-            if (mGridConfigInstance) {
-                if (mGridConfigInstance.gridEditorOptions != null || mGridConfigInstance.gridEditorOptions != undefined)
-                    gridEditorOptions = mGridConfigInstance.gridEditorOptions;
-            }
-            else {
-                try {
-                    gridEditorOptions = this.GridConfig.gridEditorOptions ? JSON.parse(this.GridConfig.gridEditorOptions) : {};
+                    }
                 }
-                catch {
 
+                var defaultSelection = { mode: "single" };
+                var selection = {};
+                if (that.Params?.selection) {
+                    selection = that.Params?.selection;
                 }
-            }
-            if (this.gridEditorOptions != null || this.gridEditorOptions != undefined)
-                gridEditorOptions = this.gridEditorOptions;
-            var defaultEditing = new Object();
-            var exportConfig = new Object();
-            if (fetchConfig.sysTableConfig) {
-                try {
-                    exportConfig = JSON.parse(fetchConfig.sysTableConfig.export);
-                }
-                catch {
-
-                }
-            }
 
 
-            defaultEditing.editing = {
-                mode: "batch",
-                allowUpdating: true,
-                allowDeleting: true,
-                allowAdding: true,
-                selectTextOnEditStart: true,
-                startEditAction: "click"
-            };
-            var properties = {
-                dataSource: gridDataSource,
-                repaintChangesOnly: true,
-                filterBuilder: { fields: this.columns },
-                filterBuilderPopup: { position: { of: window, at: "top", my: "top", offset: { y: 10 } }, },
-                errorRowEnabled: true,
-                hoverStateEnabled: true,
-                allowColumnReordering: true,
-                allowColumnResizing: true,
-                columnResizingMode: 'widget',
-                columnHidingEnabled: false,
-                columnAutoWidth: true,
-                showColumnLines: true,
-                columnChooser: { allowSearch: true, enabled: true },
-                columnFixing: { enabled: true },
-                sorting: { mode: 'multiple' },
-                //rowDragging: {
-                //    allowReordering: false,
-                //    onReorder: function (e) {
-                //        const gridInstance = e.component;
-                //        const dataSource = gridInstance.getDataSource();
+                defaultEditing.editing = {
+                    mode: "batch",
+                    allowUpdating: true,
+                    allowDeleting: true,
+                    allowAdding: true,
+                    selectTextOnEditStart: true,
+                    startEditAction: "click"
+                };
+                var properties = {
+                    dataSource: gridDataSource,
+                    repaintChangesOnly: true,
+                    filterBuilder: { fields: this.columns },
+                    filterBuilderPopup: { position: { of: window, at: "top", my: "top", offset: { y: 10 } }, },
+                    errorRowEnabled: true,
+                    hoverStateEnabled: true,
+                    allowColumnReordering: true,
+                    allowColumnResizing: true,
+                    columnResizingMode: 'widget',
+                    columnHidingEnabled: false,
+                    columnAutoWidth: true,
+                    showColumnLines: true,
+                    columnChooser: { allowSearch: true, enabled: true },
+                    columnFixing: { enabled: true },
+                    sorting: { mode: 'multiple' },
+                    //rowDragging: {
+                    //    allowReordering: false,
+                    //    onReorder: function (e) {
+                    //        const gridInstance = e.component;
+                    //        const dataSource = gridInstance.getDataSource();
 
-                //        let visibleRows = gridInstance.getVisibleRows();
+                    //        let visibleRows = gridInstance.getVisibleRows();
 
-                //        const fromIndex = dataSource._items.findIndex((item) => item.id === e.itemData.id);
-                //        const toIndex = dataSource._items.findIndex((item) => item.id === visibleRows[e.toIndex].data.id);
+                    //        const fromIndex = dataSource._items.findIndex((item) => item.id === e.itemData.id);
+                    //        const toIndex = dataSource._items.findIndex((item) => item.id === visibleRows[e.toIndex].data.id);
 
-                //        const movedItem = dataSource._items.splice(fromIndex, 1)[0];
-                //        dataSource._items.splice(toIndex, 0, movedItem);
+                    //        const movedItem = dataSource._items.splice(fromIndex, 1)[0];
+                    //        dataSource._items.splice(toIndex, 0, movedItem);
 
-                //        const updatedData = dataSource._items.map((item, index) => ({
-                //            id: item.id,
-                //            rowOrder: index + 1
-                //        }));
-                //        $.each(updatedData, function (_, row) {
-                //            dataSource.store().update(row.id, { rowOrder: row.rowOrder })
-                //                .then(() => {
-                //                })
-                //                .catch(error => console.error("Error updating rowOrder:", error));
-                //        });
+                    //        const updatedData = dataSource._items.map((item, index) => ({
+                    //            id: item.id,
+                    //            rowOrder: index + 1
+                    //        }));
+                    //        $.each(updatedData, function (_, row) {
+                    //            dataSource.store().update(row.id, { rowOrder: row.rowOrder })
+                    //                .then(() => {
+                    //                })
+                    //                .catch(error => console.error("Error updating rowOrder:", error));
+                    //        });
 
-                //        dataSource.reload().then(() => {
-                //            gridInstance.refresh();
-                //        });
-                //    }
-                //},
-                rowDragging: null,
-                keyExpr: (gridDataSource instanceof DevExpress.data.DataSource || gridDataSource instanceof DevExpress.data.CustomStore) ? null : (fetchConfig?.keyExpr ?? "id"),
-                //scrolling: { mode: 'infinite', showScrollbar: 'always' },
-                scrolling: {
-                    mode: 'virtual',
-                    // renderingThreshold: 500,
-                    preloadEnabled: false,
-                    showScrollbar: 'always'
-                },
-                filterRow: { visible: true },
-                headerFilter: { visible: true, allowSearch: true },
-                remoteOperations: fetchConfig?.sysTableConfig?.customQuery == "OnSystem" ? { paging: false, sorting: false, filtering: false } : null,
-                filterPanel: { visible: true },
-                groupPanel: { visible: true, allowColumnDragging: true, emptyPanelText: "" },
-                grouping: {
-                    contextMenuEnabled: true,
-                    allowCollapsing: true,
-                    expandMode: "rowClick",
-                    texts: { groupContinuesMessage: "", groupContinuedMessage: "" }
-                },
-                loadPanel: { showPane: false, text: null },
-                rowAlternationEnabled: false,
-                paging: { enabled: true, pageSize: 50 }, // điều chỉnh nếu data nhiều
-                pager: { visible: true, allowedPageSizes: [5, 10, 'all'], showPageSizeSelector: true, allowedPageSizes: 50, showInfo: true },// điều chỉnh nếu data nhiều
-                showBorders: true,
-                summary: summary,
-                export: (Object.keys(exportConfig)).length > 0 ? exportConfig : {
-                    //allowExportSelectedData: true,
-                    //enabled: true,
-                    //excelFilterEnable: false,
-                    //excelWrapTextEnable: false,
-                    ////fileName: gConfig.MainObject,
-                    //texts: { exportAll: 'Export all', exportSelectedRows: 'Export selected rows', exportTo: 'Export' }
-                },
-                masterDetail: this.masterDetail,
-                width: "inherit", //Change to margin left - right, must be without width, must not set 100% here
-                height: this.height ? this.height : window.innerHeight - 130, // == null ? "inherit"
-                columns: this.columns,
-                customizeColumns: tryExecute(this.onCustomizeColumns.bind(this)),
-                onKeyDown: tryExecute(this.onKeyDown.bind(this)),
-                onEditorPreparing: tryExecute(this.onEditorPreparing.bind(this)),
-                onRowUpdating: tryExecute(this.onRowUpdating.bind(this)),
-                onRowInserting: tryExecute(this.onRowInserting.bind(this)),
-                //onSaved: tryExecute(this.onSaved.bind(this)),
-                //onSaving: tryExecute(this.onSaving.bind(this)),
-                onCellClick: tryExecute(this.onCellClick.bind(this)),
-                //onRowExpanding: tryExecute(this.onRowExpanding.bind(this)),
-                onRowInserted: tryExecute(this.onRowInserted.bind(this)),
-                onRowPrepared: tryExecute(this.onRowPrepared.bind(this)),
-                //onRowUpdated: tryExecute(this.onRowUpdated.bind(this)),
-                //onRowRemoving: tryExecute(this.onRowRemoving.bind(this)),
-                //onRowRemoved: tryExecute(this.onRowRemoved.bind(this)),
-                onToolbarPreparing: tryExecute(this.onToolbarPreparing.bind(this)),
-                onEditorPrepared: tryExecute(this.onEditorPrepared.bind(this)),
-                onEditingStart: tryExecute(this.onEditingStart.bind(this)),
-                onContentReady: tryExecute(this.onContentReady.bind(this)),
-                onInitialized: tryExecute(this.onInitialized.bind(this)),
-                //onRowValidating: tryExecute(this.onRowValidating.bind(this)),
-                onInitNewRow: tryExecute(this.onInitNewRow.bind(this)),
-                makeGridOptions: tryExecute(this.makeGridOptions.bind(this)),
-                onContextMenuPreparing: tryExecute(this.onContextMenuPreparing.bind(this)),
-                //onDataErrorOccurred: tryExecute(this.onDataErrorOccurred.bind(this))
-                onCellPrepared: tryExecute(this.onCellPrepared.bind(this)),
-                selection: { mode: "single" },
-                //onCellHoverChanged: tryExecute(this.onCellHoverChanged.bind(this)),
-                onRowClick: tryExecute(this.onRowClick.bind(this)), 
-                //editing: {
-                //    ...((Object.keys(gridEditorOptions).length > 0) ? gridEditorOptions.edit : defaultEditing.edit)
-                //},
+                    //        dataSource.reload().then(() => {
+                    //            gridInstance.refresh();
+                    //        });
+                    //    }
+                    //},
+                    rowDragging: null,
+                    keyExpr: (gridDataSource instanceof DevExpress.data.DataSource || gridDataSource instanceof DevExpress.data.CustomStore) ? null : (fetchConfig?.keyExpr ?? "id"),
+                    //scrolling: { mode: 'infinite', showScrollbar: 'always' },
+                    scrolling: {
+                        mode: 'virtual',
+                        // renderingThreshold: 500,
+                        preloadEnabled: false,
+                        showScrollbar: 'always'
+                    },
+                    filterRow: { visible: true },
+                    headerFilter: { visible: true, allowSearch: true },
+                    remoteOperations: fetchConfig?.sysTableConfig?.customQuery == "OnSystem" ? { paging: false, sorting: false, filtering: false } : null,
+                    filterPanel: { visible: true },
+                    groupPanel: { visible: true, allowColumnDragging: true, emptyPanelText: "" },
+                    grouping: {
+                        contextMenuEnabled: true,
+                        allowCollapsing: true,
+                        expandMode: "rowClick",
+                        texts: { groupContinuesMessage: "", groupContinuedMessage: "" }
+                    },
+                    loadPanel: { showPane: false, text: null },
+                    rowAlternationEnabled: false,
+                    paging: { enabled: true, pageSize: 50 }, // điều chỉnh nếu data nhiều
+                    pager: { visible: true, allowedPageSizes: [5, 10, 'all'], showPageSizeSelector: true, allowedPageSizes: 50, showInfo: true },// điều chỉnh nếu data nhiều
+                    showBorders: true,
+                    summary: summary,
+                    export: (Object.keys(exportConfig)).length > 0 ? exportConfig : {
+                        //allowExportSelectedData: true,
+                        //enabled: true,
+                        //excelFilterEnable: false,
+                        //excelWrapTextEnable: false,
+                        ////fileName: gConfig.MainObject,
+                        //texts: { exportAll: 'Export all', exportSelectedRows: 'Export selected rows', exportTo: 'Export' }
+                    },
+                    masterDetail: this.masterDetail,
+                    width: "inherit", //Change to margin left - right, must be without width, must not set 100% here
+                    height: this.height ? this.height : window.innerHeight - 130, // == null ? "inherit"
+                    columns: this.columns,
+                    customizeColumns: tryExecute(this.onCustomizeColumns.bind(this)),
+                    onKeyDown: tryExecute(this.onKeyDown.bind(this)),
+                    onEditorPreparing: tryExecute(this.onEditorPreparing.bind(this)),
+                    onRowUpdating: tryExecute(this.onRowUpdating.bind(this)),
+                    onRowInserting: tryExecute(this.onRowInserting.bind(this)),
+                    onSaved: tryExecute(this.onSaved.bind(this)),
+                    onSaving: tryExecute(this.onSaving.bind(this)),
+                    onCellClick: tryExecute(this.onCellClick.bind(this)),
+                    //onRowExpanding: tryExecute(this.onRowExpanding.bind(this)),
+                    onRowInserted: tryExecute(this.onRowInserted.bind(this)),
+                    onRowPrepared: tryExecute(this.onRowPrepared.bind(this)),
+                    //onRowUpdated: tryExecute(this.onRowUpdated.bind(this)),
+                    onRowRemoving: tryExecute(this.onRowRemoving.bind(this)),
+                    onRowRemoved: tryExecute(this.onRowRemoved.bind(this)),
+                    onSelectionChanged: tryExecute(this.onSelectionChanged.bind(this)),
+                    onToolbarPreparing: tryExecute(this.onToolbarPreparing.bind(this)),
+                    onEditorPrepared: tryExecute(this.onEditorPrepared.bind(this)),
+                    onEditingStart: tryExecute(this.onEditingStart.bind(this)),
+                    onContentReady: tryExecute(this.onContentReady.bind(this)),
+                    onInitialized: tryExecute(this.onInitialized.bind(this)),
+                    //onRowValidating: tryExecute(this.onRowValidating.bind(this)),
+                    onInitNewRow: tryExecute(this.onInitNewRow.bind(this)),
+                    makeGridOptions: tryExecute(this.makeGridOptions.bind(this)),
+                    onContextMenuPreparing: tryExecute(this.onContextMenuPreparing.bind(this)),
+                    //onDataErrorOccurred: tryExecute(this.onDataErrorOccurred.bind(this))
+                    onCellPrepared: tryExecute(this.onCellPrepared.bind(this)),
+                    selection: (Object.keys(selection).length > 0) ? selection : defaultSelection,
+                    //onCellHoverChanged: tryExecute(this.onCellHoverChanged.bind(this)),
+                    onRowClick: tryExecute(this.onRowClick.bind(this)),
+                    //editing: {
+                    //    ...((Object.keys(gridEditorOptions).length > 0) ? gridEditorOptions.edit : defaultEditing.edit)
+                    //},
 
-                //...(Object.keys(gridEditorOptions).length > 0 ? gridEditorOptions : {})
-                ...((Object.keys(gridEditorOptions).length > 0) ? gridEditorOptions : defaultEditing)
-            };
+                    //...(Object.keys(gridEditorOptions).length > 0 ? gridEditorOptions : {})
+                    ...((Object.keys(gridEditorOptions).length > 0) ? gridEditorOptions : defaultEditing)
+                };
 
-            if (!properties.editing.allowAdding && !properties.editing.allowUpdating && !properties.editing.allowDeleting)
-                this.isAllowRowMenu = false;
-            //else
-            //    properties.rowDragging.allowReordering = true;
+                if (!properties.editing.allowAdding && !properties.editing.allowUpdating && !properties.editing.allowDeleting)
+                    this.isAllowRowMenu = false;
+                //else
+                //    properties.rowDragging.allowReordering = true;
 
 
-            if (that.Params)
-                if (that.Params.isAllowRowMenu)
-                    this.isAllowRowMenu = that.Params.isAllowRowMenu;
+                if (that.Params)
+                    if (that.Params.isAllowRowMenu)
+                        this.isAllowRowMenu = that.Params.isAllowRowMenu;
                 return properties;
 
-        } catch (err) {
-            appErrorHandling('Library error: call GetGridOptions was failed.', err);
+            } catch (err) {
+                appErrorHandling('Library error: call GetGridOptions was failed.', err);
             }
         });
     };
@@ -1054,7 +1229,7 @@ var MDropDownDataSource = class MDropDownDataSource {
                 if (filter.length > 0) {
                     params.filter = JSON.stringify(filter);
                 }
-                $.getJSON(ApiMethod.replace("DropDownLookUp","GetAll"), params)
+                $.getJSON(ApiMethod.replace("DropDownLookUp", "GetAll"), params)
                     .done(function (result) {
                         if (result != undefined) {
                             if (result.data != null) {
@@ -1097,7 +1272,7 @@ var MDropDownDataSource = class MDropDownDataSource {
                             d.resolve(result[0]);
                         else
                             d.resolve(result);
-                            //return Array.isArray(result) ? result[0] : result;
+                        //return Array.isArray(result) ? result[0] : result;
                     })
                     .fail(function (xhr) {
                         d.reject(xhr);

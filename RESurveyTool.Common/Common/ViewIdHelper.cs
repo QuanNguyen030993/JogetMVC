@@ -90,6 +90,7 @@ namespace JogetMVC.Model
         public static string BtnToggleReferenceFields(string prefix, long quotationId) => $"{prefix}-btnToggleReferenceFields_{quotationId}";
         public static string BtnToggleComment(string prefix, long quotationId) => $"{prefix}-btnToggleComment_{quotationId}";
         public static string BtnPreview(string prefix, long quotationId) => $"{prefix}-btnPreview_{quotationId}";
+        public static string BtnAttachmentLog(string prefix, long quotationId) => $"{prefix}-btnAttachmentLog_{quotationId}";
         public static string FlowPanel(string prefix, long quotationId) => $"{prefix}-flowPanel_{quotationId}";
         public static string FlowHistoryPanel(string prefix, long quotationId) => $"{prefix}-flowHistoryPanel_{quotationId}";
         public static string FlowSummary(string prefix, long quotationId) => $"{prefix}-flowSummary_{quotationId}";
@@ -601,8 +602,7 @@ namespace JogetMVC.Model
         public static string RemarkBox(string department, long quotationId)
             => GenerateId("remarkBox", department, quotationId);
 
-        public static string AssigneeBox(string department, long quotationId)
-            => GenerateId("assigneeBox", department, quotationId);
+        public static string AssigneeBox(string department, long quotationId) => $"{Prefix}-AssigneeBox_{department}_{quotationId}";
 
         public static string StickPanel(string department, long quotationId)
             => GenerateId("stickPanel", department, quotationId);

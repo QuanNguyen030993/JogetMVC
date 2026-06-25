@@ -1,0 +1,31 @@
+﻿@page
+@model QuotationModel
+@{
+
+}
+<script>
+    $(function () {
+        var mGridOption = new Object();
+        mGridOption.isAllowRowMenu = true;
+        mGridOption.isShowingRenewButton = true;
+        mGridOption.refKey = _loginUser;
+        mGridOption.refField = "pic";
+        mGridOption.refKey2 = "Quotation confirmed";
+        mGridOption.refField2 = "workflowStatus";
+        mGridOption.refOperator = "contains";
+        if (!_isSuperUser)
+        {
+            if (_roleAppName == "Leader")
+                mGridOption.refField = "leaderPIC";
+            if (_roleAppName == "HOD")
+                mGridOption.refField = "hodpic";    
+            }
+            // mGridOption = new QuotationGridOption('@QuotationModel.ModelName', "User", mGridOption);
+        // mGridOption.refField2 = "isView";
+        // mGridOption.refKey2 = true;
+        //Pending filterName refactor
+        var mGrid = new MGrid(null, $(`#dataGrid_@(QuotationModel.ModelName)_Approval`), new QuotationGridOption('@QuotationModel.ModelName', "User", mGridOption), null);
+
+    });
+</script>
+<div id="dataGrid_@(QuotationModel.ModelName)_Approval"></div>

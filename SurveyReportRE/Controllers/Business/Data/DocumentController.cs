@@ -10,6 +10,10 @@ using ERPCore.Models.Models.Parsing;
 using Microsoft.AspNetCore.Authorization;
 using System.Text;
 using Microsoft.SharePoint.WebControls;
+using Newtonsoft.Json;
+using static ERPCore.Models.Models.Parsing.JsonHandle;
+using ERPCore.Models.Migration.Config;
+using ERPCore.Models.Request;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -82,6 +86,76 @@ public class DocumentController : BaseControllerApi<Document>
         }
     }
 
+    [HttpPost]
+    [AllowAnonymous]
+    //public async Task<IActionResult> TestCallBackUrl([FromBody] ConvertResult convertResult)
+    public async Task<IActionResult> CallBackFileDigisign([FromBody] ConvertResult convertResult)
+    {
+        try
+        {
+            Document document = new Document();
+            document = JsonConvert.DeserializeObject<Document>(JsonConvert.SerializeObject(convertResult.Metadata));
+            //Determine instance record
+ 
+
+            if (document != null)
+            {
+                document = await _BaseRepository.GetSingleObject(s => s.Id == document.Id);
+                Document newDocument = new Document();
+                JsonConvert.PopulateObject(JsonConvert.SerializeObject(document),newDocument);
+                newDocument.Id = 0;
+
+                //dynamic object 
+                Quotation quotation = new Quotation();
+                IBaseRepository<Quotation> _quotationRepository = new BaseRepository<Quotation>(configuration,_httpContextAccessor);
+                IBaseRepository<EnumData> _enumDataRepository = new BaseRepository<EnumData>(configuration,_httpContextAccessor);
+                quotation = await _quotationRepository.GetSingleObject(s => s.Guid == newDocument.RecordGuid);
+                List<EnumData> enumDatas = await _enumDataRepository.EnumData("OverallStatus");
+                EnumData completeSigning = enumDatas.FirstOrDefault(f => f.Code == "DGSC");
+                string approveDept = "LMKT";
+                PICAttributes pICAttributes = new PICAttributes();
+                pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
+                string accountApproveName = approveDept switch
+                {
+                    "FO" => pICAttributes.FO,
+                    "TS" => pICAttributes.TS,
+                    "UW" => pICAttributes.UW,
+                    "LMKT" => pICAttributes.LMKT,
+                    "PM" => pICAttributes.PM,
+                    _ => null
+                };
+                if (quotation != null)
+                {
+                    if (!Directory.Exists(path.Value + "\\Digisign"))
+                    {
+                        Directory.CreateDirectory(path.Value + "\\Digisign");
+                    }
+                    System.IO.File.WriteAllBytes(Path.Combine(path.Value,"Digisign", accountApproveName, quotation.QuotationCode,convertResult.FileName), Convert.FromBase64String(convertResult.FileBase64));
+                    newDocument.SubDirectory = $"Digisign\\{accountApproveName}\\{quotation.QuotationCode}";
+
+                    Quotation newQuotation = new Quotation();
+                    newQuotation.WorkflowStatus = completeSigning.Name;
+                    newQuotation.StatusId = completeSigning.Id;
+
+
+
+                    newDocument = await _BaseRepository.InsertData(newDocument);
+
+                    newQuotation.DocumentId = newDocument.Id;
+                    await _quotationRepository.UpdateData(newQuotation, quotation, ["QuotationStatus", "WorkflowStatus", "StatusId"], "Id");
+                }
+            }
+            //Update status instance to complete 
+            //
+            return Ok();
+
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, ex.Message);
+            return StatusCode(500, ex.Message);
+        }
+    }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> LibreConvert(long? id)
@@ -183,9 +257,135 @@ public class DocumentController : BaseControllerApi<Document>
             });
         }
     }
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<IActionResult> CallBackGetFile(string fileName)
+    {
+
+        try
+        {
+            if (!Directory.Exists(path.Value + "\\CallBack"))
+            {
+                return StatusCode(500, "Directory not exist!");
+            }
+            string fullPath = path.Value + "\\CallBack\\" + fileName;
+            var mimeTypes = Util.GetMimeType(fileName);
+            var fileStream = System.IO.File.OpenRead(path.Value + "\\CallBack\\" + fileName);
+            return File(fileStream, mimeTypes, Path.GetFileName(fullPath));
+
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, ex.Message);
+            return StatusCode(500, ex.Message);
+        }
+    }
+    [HttpGet("{id}")]
+    public async Task<IActionResult> DigiSign(long? id)
+    {
+
+        return Ok();
+        //string URL = _BaseRepository._baseConfiguration.GetSection("UrlConfig:DigiSignHost").Value;
+
+        ////Change lại thành hàm của chính link host cho source này từ 
+        ////TestCallBackUrl  -> CallbackFileHandle
+        //string callURL = _BaseRepository._baseConfiguration.GetSection("UrlConfig:DigisignStorageHost").Value;
+        //string endpoint = $"{URL}/api/convert";
+        //string keyApi = _BaseRepository._baseConfiguration.GetSection("DigiSignServer:Key").Value;
+        //try
+        //{
+        //    if (string.IsNullOrWhiteSpace(endpoint))
+        //        return BadRequest("Config UrlConfig:DigiSignHost is empty.");
+
+        //    // Ví dụ: lấy thông tin file theo id từ DB
+        //    // Bạn thay Attachment bằng model thực tế của bạn
+        //    var attachment = await _BaseRepository.GetObjectByIdAsync(id ?? 0);
+        //    if (attachment == null)
+        //        return NotFound($"Attachment id={id} not found.");
+
+        //    // Ví dụ: đường dẫn vật lý file
+        //    // Bạn sửa lại theo cấu trúc thật của hệ thống
+        //    string filePath = Path.Combine(
+        //        path.Value,
+        //        attachment.SubDirectory ?? ""
+        //    );
+
+        //    if (!System.IO.File.Exists(filePath))
+        //        return NotFound($"File not found: {filePath}");
+
+        //    await using var fileStream = System.IO.File.OpenRead(filePath);
+
+        //    using var multipart = new MultipartFormDataContent();
+
+        //    var fileContent = new StreamContent(fileStream);
+        //    fileContent.Headers.ContentType = new MediaTypeHeaderValue(Util.GetMimeType(filePath));
+
+        //    // "file" phải đúng tên field mà API bên convert yêu cầu
+        //    multipart.Add(fileContent, "file", Path.GetFileName(filePath));
+
+        //    // Các field form-data khác
+        //    multipart.Add(new StringContent("pdf"), "outputFormat");
+        //    multipart.Add(new StringContent(callURL), "callbackUrl");
+        //    multipart.Add(new StringContent(JsonConvert.SerializeObject(new { Document = new Document() { Id = id  ?? 0} })), "metadata");
+
+        //    var client = new HttpClient();
+        //    client.Timeout = TimeSpan.FromMinutes(10);
+        //    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*"));
+        //    client.DefaultRequestHeaders.Add("X-API-KEY", keyApi);
 
 
-        [HttpGet]
+        //    var response = await client.PostAsync(endpoint, multipart);
+        //    var responseBytes = await response.Content.ReadAsByteArrayAsync();
+        //    var responseText = await response.Content.ReadAsStringAsync();
+
+        //    if (!response.IsSuccessStatusCode)
+        //    {
+        //        return StatusCode((int)response.StatusCode, new
+        //        {
+        //            message = "Signing server returned error.",
+        //            detail = responseText
+        //        });
+        //    }
+
+        //    // Nếu server convert trả thẳng file đã convert về
+        //    var outputFileName = Path.GetFileNameWithoutExtension(filePath) + ".pdf";
+
+        //    string getStreamHost = _BaseRepository._baseConfiguration.GetSection("UrlConfig:GetStreamHost").Value + $"?fileName={outputFileName}";
+        //    var responseGet = await client.GetAsync(getStreamHost);
+        //    var responseBytesGet = await responseGet.Content.ReadAsByteArrayAsync();
+        //    var responseTextGet = await responseGet.Content.ReadAsStringAsync();
+
+        //    if (!response.IsSuccessStatusCode)
+        //    {
+        //        return StatusCode((int)response.StatusCode, new
+        //        {
+        //            message = "Signing server returned error.",
+        //            detail = responseText
+        //        });
+        //    }
+
+
+        //    return File(responseBytesGet, "application/pdf", outputFileName);
+
+        //    // Nếu bạn chỉ muốn lưu xuống disk rồi return ok thì dùng đoạn này thay thế:
+        //    // var outputPath = Path.Combine(Path.GetDirectoryName(filePath)!, outputFileName);
+        //    // await System.IO.File.WriteAllBytesAsync(outputPath, responseBytes);
+        //    // return Ok(new { message = "Signing success", outputPath });
+        //}
+        //catch (Exception ex)
+        //{
+        //    return StatusCode(500, new
+        //    {
+        //        message = "Signing failed",
+
+        //        detail = ex.Message
+        //    });
+        //}
+    }
+
+
+
+    [HttpGet]
     public async Task<IActionResult> DeleteDocumentData(long id)
     {
         Document Document = new Document();
@@ -205,7 +405,7 @@ public class DocumentController : BaseControllerApi<Document>
     {
         var count = await _BaseRepository.GetListObject(x =>
             x.RecordGuid == recordGuid &&
-            x.Attributes.Contains($"\"SectionName\":\"{folder}\""));
+            x.Attributes.Contains($"{folder}"));
 
         return Ok(new
         {
@@ -222,8 +422,10 @@ public class DocumentController : BaseControllerApi<Document>
 
         // Lấy toàn bộ rồi filter (vì repo bạn đang có GetAll)
         // Nếu repo có method GetListObject(predicate) thì thay bằng query trực tiếp sẽ nhanh hơn
-        var all = await _BaseRepository.GetListObject(l => l.RecordGuid == recordGuid && l.Attributes.Contains($"\"SectionName\":\"{folder}\""));
+        var all = await _BaseRepository.GetListObject(l => l.RecordGuid == recordGuid && l.Attributes.Contains($"{folder}"));
 
+        if (string.IsNullOrWhiteSpace(folder))
+            all = await _BaseRepository.GetListObject(l => l.RecordGuid == recordGuid);
         var docs = all
             .Where(d => (d.Deleted == null || d.Deleted == false)
                         && d.RecordGuid.HasValue
@@ -256,9 +458,10 @@ public class DocumentController : BaseControllerApi<Document>
                     recordGuid = d.RecordGuid,
                     fileName = fileName,
                     fileType = d.FileType,
-                    extension = ext.Replace(".",""),
+                    extension = ext.Replace(".", ""),
                     size = d.Size,
                     subDirectory = d.SubDirectory,
+                    attributes = d.Attributes,
                     downloadUrl = Url.Action(nameof(StreamDocument), new { id = d.Id }),
                     author = d.CreatedBy,
                     date = d.CreatedDate

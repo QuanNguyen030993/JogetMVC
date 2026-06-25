@@ -9,369 +9,565 @@
 
 
 <style>
+
+
     * {
-        box-sizing: border-box;
+        box-sizing: border-box
     }
 
-  
-    .page {
-        padding: 14px;
+    body {
+        font-family: Segoe UI, sans-serif;
+        background: #f5f7fb;
+        margin: 0
     }
 
     .title {
         font-size: 24px;
         font-weight: 700;
-        margin-bottom: 6px;
+        margin: 12px
     }
-
-    .sub {
-        color: #6b7280;
-        margin-bottom: 14px;
-    }
-
+    /* ✅ NEW: horizontal scroll layout */
     .layout {
-        display: grid;
-        grid-template-columns: 270px 450px 430px 1fr;
-        gap: 14px;
-        min-height: calc(100vh - 90px);
+        display: flex;
+        flex-direction: column; /* đổi từ row -> column */
+
+        gap: 16px;
+        padding: 12px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        width: 100%;
     }
 
-    /*    .card {
-                        background: #fff;
-                        border: 1px solid #e5e7eb;
-                        border-radius: 14px;
-                        box-shadow: 0 8px 24px rgba(0,0,0,.06);
-                        overflow: hidden;
-                        display: flex;
-                        flex-direction: column;
-                        min-height: 0;
-                    }
+    .card-h-last {
+        min-width: 600px; /* transition bigger */
+    }
 
-                    .card-header {
-                        padding: 14px 16px;
-                        border-bottom: 1px solid #edf0f5;
-                    } */
 
-    .card-title {
-        font-size: 16px;
+
+
+    .card-h-title {
+        font-size: 15px;
         font-weight: 700;
+        color: #1e293b
     }
 
-    .card-sub {
+    .card-h-sub {
         font-size: 12px;
-        color: #6b7280;
-        margin-top: 4px;
+        color: #64748b
     }
 
-    .card-body {
-        padding: 14px;
+    .card-h {
+        min-width: 600px;
+        background: #fff;
+        border: 1px solid #e6ebf3;
+        border-radius: 16px;
+        box-shadow: 0 6px 18px rgba(0,0,0,.05);
+        display: flex;
+        flex-direction: row; /* đổi từ column -> row */
+
+        overflow: hidden;
+    }
+
+
+    .card-h-header {
+        width: 160px; /* vùng title */
+        min-width: 160px;
+        padding: 14px 18px;
+        border-bottom: none;
+        border-right: 1px solid #edf2f7;
+        background: linear-gradient(#fff,#f9fbff);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+
+    .card-h-body {
         flex: 1;
+        padding: 14px;
         overflow: auto;
-        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
     }
 
     .toolbox {
         display: grid;
-        gap: 10px;
+        gap: 10px
     }
 
+
     .tool-item {
-        border: 1px dashed #9db7ff;
-        background: #f4f8ff;
-        color: #264b96;
-        border-radius: 12px;
+        border: 1px solid #dbe7ff;
+        background: #f6faff;
+        border-radius: 14px;
         padding: 12px;
         cursor: grab;
-        user-select: none;
-        transition: .2s ease;
     }
 
         .tool-item:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(59,130,246,.12);
+            background: #eef4ff;
+            border-color: #3b82f6;
         }
 
-        .tool-item .name {
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-
-        .tool-item .desc {
-            font-size: 12px;
-            color: #52627d;
-        }
-
-    .toolbar {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-bottom: 10px;
-    }
 
     #treeWorkflow {
-        border: 1px solid #dbe1ea;
+        border: 1px solid #e2e8f0;
         border-radius: 12px;
-        background: #fcfdff;
-        min-height: 600px;
+        min-height: 450px;
+        background: #fff;
         padding: 8px;
     }
 
-    .drop-hint {
-        margin-top: 10px;
-        font-size: 12px;
-        color: #6b7280;
-        background: #f9fafb;
-        border: 1px solid #eceff5;
-        padding: 10px;
-        border-radius: 10px;
-        line-height: 1.5;
-    }
-
-    .section-tit
-    le {
-        margin: 14px 0 8px 0;
-        font-size: 13px;
-        font-weight: 700;
-        color: #334155;
-    }
-
     .json-box {
-        height: 1000px;
-        min-height: 200px;
-        max-height: 800px;
-        overflow: auto;
+        background: #020617;
+        color: #38bdf8;
         border-radius: 12px;
-        background: #0f172a;
-        color: #dbeafe;
         padding: 12px;
-        font-family: Consolas, monospace;
         font-size: 12px;
-        white-space: pre-wrap;
-        word-break: break-word;
+        max-height: 250px;
+        overflow: auto;
     }
 
     .node-json-editor {
-        width: 100%;
-        min-height: 160px;
-        resize: vertical;
-        border: 1px solid #d8dfeb;
+        border: 1px solid #dbe0ea;
+        background: #f8fafc;
         border-radius: 12px;
         padding: 10px;
-        font-family: Consolas, monospace;
-        font-size: 12px;
-        outline: none;
     }
 
-    .transition-list {
-        display: grid;
-        gap: 8px;
-    }
-
-    .transition-item {
-        border: 1px solid #e5e7eb;
-        background: #fafbff;
-        border-radius: 12px;
-        padding: 10px 12px;
-    }
-
-    .transition-route {
-        font-weight: 700;
-        color: #1d4ed8;
-        margin-bottom: 6px;
-    }
-
-    .transition-meta {
-        font-size: 12px;
-        color: #475569;
-        line-height: 1.5;
-    }
-
-    .badge-row {
+    .toolbar, .mini-row {
         display: flex;
+        gap: 8px;
         flex-wrap: wrap;
-        gap: 6px;
-        margin-bottom: 6px;
     }
+
+    /* scrollbar đẹp */
+    .layout::-webkit-scrollbar {
+        height: 8px
+    }
+
+    .layout::-webkit-scrollbar-thumb {
+        background: #cbd5f5;
+        border-radius: 6px
+    }
+
+
+    .jstree-clicked {
+        background: #e0f2fe !important
+    }
+
+
+
+    * {
+        box-sizing: border-box
+    }
+
+
+    .draw-container {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        height: 80%;
+        overflow: hidden;
+    }
+
+
+    .toolbar {
+        min-height: 60px;
+        border-bottom: 1px solid var(--border);
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 16px;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .toolbar-left, .toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .title {
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0 0 6px 0;
+    }
+
+    .sub {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.5;
+        margin-bottom: 14px;
+    }
+    /*
+                .card-h {
+                    background: var(--panel);
+                    border: 1px solid var(--border);
+                    border-radius: 14px;
+                    padding: 12px;
+                    margin-bottom: 12px;
+                }
+
+                    .card-h h3 {
+                        margin: 0 0 10px 0;
+                        font-size: 14px;
+                    } */
+
+
+    .card-h-in-frame {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+
+
+        .card-h-in-frame .header-in-frame {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+        }
+
 
     .badge {
         display: inline-flex;
         align-items: center;
-        padding: 3px 8px;
-        border-radius: 999px;
-        font-size: 11px;
-        font-weight: 700;
-        border: 1px solid transparent;
-    }
-
-        .badge.q {
-            background: #eef4ff;
-            color: #1d4ed8;
-            border-color: #bfdbfe;
-        }
-
-        .badge.pi {
-            background: #fff7ed;
-            color: #c2410c;
-            border-color: #fdba74;
-        }
-
-        .badge.both {
-            background: #f3f4f6;
-            color: #374151;
-            border-color: #d1d5db;
-        }
-
-        .badge.return {
-            background: #fee2e2;
-            color: #b91c1c;
-            border-color: #fecaca;
-        }
-
-        .badge.loop {
-            background: #ede9fe;
-            color: #6d28d9;
-            border-color: #c4b5fd;
-        }
-
-        .badge.exit {
-            background: #dcfce7;
-            color: #15803d;
-            border-color: #86efac;
-        }
-
-        .badge.user {
-            background: #ecfeff;
-            color: #0f766e;
-            border-color: #99f6e4;
-        }
-
-    .legend-box {
-        display: grid;
         gap: 6px;
+        padding: 7px 10px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: #fff;
+        font-size: 12px;
+        color: #334155;
     }
 
-    .legend-item {
+    .legend-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        font-size: 13px;
+    }
+
+   
+
+  
+
+    .btn-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+    }
+
+     #canvas_@ViewData["RandomNumber"].ToString() { 
+            position: relative;
+            min-width: 1400px;
+            min-height: 760px;
+            background: linear-gradient(to right, rgba(203,213,225,.35) 1px, transparent 1px), linear-gradient(to bottom, rgba(203,213,225,.35) 1px, transparent 1px);
+            background-size: 24px 24px;
+            background-color: #fff;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: 0 10px 28px rgba(15,23,42,0.06);
+            overflow:  auto;
+            }
+
+    
+    .layer-label {
+        position: absolute;
+        top: 14px;
+        font-size: 12px;
+        color: #64748b;
+        background: #f8fafc;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 4px 10px;
+        z-index: 1;
+    }
+
+
+    .note {
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.5;
+    }
+
+    .status-ok {
+        color: #15803d;
+    }
+
+    code {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        padding: 2px 6px;
+        border-radius: 6px;
+    }
+
+    .page {
+        display: grid;
+        grid-template-columns: 240px 1fr 430px;
+        height: 100vh;
+    }
+
+  
+    .sidebarHint {
+        font-size: 12px;
+        color: #64748b;
+        line-height: 1.5;
+        margin-bottom: 12px;
+    }
+
+    
+
+    .mainPane {
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .toolbar {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+
+    .btn {
+        border: 1px solid #cfd6df;
+        background: #fff;
+        border-radius: 10px;
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 13px;
+    }
+
+        .btn:hover {
+            background: #f8fafc;
+        }
+
+    .legend {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+
+    
+    .canvas {
+        position: relative;
+        flex: 1;
+        border: 1px solid #dbe2ea;
+        border-radius: 16px;
+        background: linear-gradient(to right, rgba(0,0,0,.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,.04) 1px, transparent 1px), #fff;
+        background-size: 24px 24px;
+        overflow: hidden;
+        min-height: 420px;
+    }
+
+        .canvas.dragOver {
+            background: linear-gradient(to right, rgba(59,130,246,.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(59,130,246,.08) 1px, transparent 1px), #eff6ff;
+            background-size: 24px 24px;
+        }
+
+    .rightPane {
+        border-left: 1px solid #dbe2ea;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .panelHeader {
+        padding: 14px 16px;
+        border-bottom: 1px solid #eef2f7;
+        font-weight: 700;
+    }
+
+    .panelBody {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-height: 0;
+        flex: 1;
+    }
+
+    .statusBar {
         font-size: 12px;
         color: #475569;
     }
 
-    .loop-box {
-        border: 1px dashed #c4b5fd;
-        background: #faf5ff;
-        border-radius: 12px;
-        padding: 10px;
-        margin-top: 10px;
+    .sectionTitle {
         font-size: 12px;
-        color: #5b21b6;
+        font-weight: 700;
+        color: #475569;
+        margin-top: 4px;
     }
 
-    .jstree-anchor {
-        border-radius: 6px;
-        display: inline-flex !important;
-        align-items: center;
-        gap: 6px;
-        max-width: 100%;
+    .infoBox {
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 12px;
+        background: #fafafa;
+        font-size: 12px;
+        line-height: 1.5;
+        max-height: 220px;
+        overflow: auto;
+        white-space: pre-wrap;
     }
 
-    .jstree-clicked {
-        background: #dbeafe !important;
-        color: #111827 !important;
+    .node {
+        position: absolute;
+        width: 200px;
+        min-height: 80px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: #fff;
+        border: 2px solid #cbd5e1;
+        box-shadow: 0 8px 18px rgba(0,0,0,.08);
+        cursor: move;
+        user-select: none;
+        transition: all .15s ease;
     }
 
-    .tree-node-wrap {
-        display: inline-flex;
-        align-items: center;
+        .node:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 22px rgba(0,0,0,.12);
+        }
+
+        .node.selected {
+            box-shadow: 0 0 0 4px rgba(37,99,235,.12), 0 10px 24px rgba(0,0,0,.12);
+            border-color: #2563eb;
+        }
+
+        .node.activeNode {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+
+        .node.completedNode {
+            border-color: #16a34a;
+            background: #f0fdf4;
+        }
+
+        .node.pendingNode {
+            border-color: #d97706;
+            background: #fff7ed;
+        }
+
+        .node.allowLoopNode::after {
+            content: "↻";
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 24px;
+            height: 24px;
+            border-radius: 999px;
+            background: #fb923c;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            box-shadow: 0 4px 10px rgba(0,0,0,.15);
+        }
+    /* base node vẫn giữ */
+    .node {
+        position: absolute;
+        min-width: 140px;
+        padding: 10px;
+        border-radius: 8px;
+        background: #fff;
+        border: 1px solid #ccc;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+
+
+        .node.flow-start {
+            background-color: rgba(34, 197, 94, 0.1);
+            border: 2px solid #22c55e;
+            color: #166534;
+        }
+
+        .node.flow-end {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 2px solid #ef4444;
+            color: #7f1d1d;
+        }
+
+
+        .node.flow-start,
+        .node.flow-end {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 12px;
+            box-sizing: border-box;
+        }
+
+
+
+    .nodeTitle {
+        font-size: 15px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .nodeMeta {
+        display: flex;
         gap: 6px;
         flex-wrap: wrap;
     }
 
-    .tree-node-text {
-        font-weight: 600;
-    }
-
-    .tree-node-mini {
-        font-size: 10px;
+    .meta {
+        display: inline-flex;
+        align-items: center;
+        height: 22px;
+        padding: 0 8px;
         border-radius: 999px;
-        padding: 2px 6px;
-        border: 1px solid #ddd;
-        background: #fff;
-        line-height: 1;
+        font-size: 11px;
+        border: 1px solid #dbe2ea;
+        background: #f8fafc;
+        color: #334155;
     }
 
-        .tree-node-mini.q {
-            color: #1d4ed8;
-            border-color: #bfdbfe;
-            background: #eff6ff;
-        }
-
-        .tree-node-mini.pi {
-            color: #c2410c;
-            border-color: #fdba74;
-            background: #fff7ed;
-        }
-
-        .tree-node-mini.both {
-            color: #374151;
-            border-color: #d1d5db;
-            background: #f9fafb;
-        }
-
-        .tree-node-mini.loop {
-            color: #6d28d9;
-            border-color: #c4b5fd;
-            background: #f5f3ff;
-        }
-
-    .drag-over-zone {
-        outline: 2px dashed #60a5fa;
-        outline-offset: 2px;
+    .flow-both {
+        background: #f8fafc;
     }
 
+    .flow-quotation {
+        background: #ecfeff;
+        border-color: #a5f3fc;
+        color: #155e75;
+    }
 
-    .condition-builder-card {
+    .flow-policy {
+        background: #f5f3ff;
+        border-color: #c4b5fd;
+        color: #5b21b6;
+    }
+
+   
+
+    .aLabel {
+        background: rgba(255,255,255,.94);
         border: 1px solid #e5e7eb;
-        background: #ffffff;
-        border-radius: 14px;
-        padding: 12px;
-        margin-bottom: 12px;
-        box-shadow: 0 4px 14px rgba(0,0,0,.04);
-    }
-
-    .condition-builder-preview {
-        min-height: 180px;
-        max-height: 260px;
-        overflow: auto;
-        border-radius: 12px;
-        background: #0f172a;
-        color: #dbeafe;
-        padding: 12px;
-        font-family: Consolas, monospace;
-        font-size: 12px;
-        white-space: pre-wrap;
-        word-break: break-word;
-        border: 1px solid #1e293b;
-    }
-
-    .condition-builder-note {
-        font-size: 12px;
-        color: #64748b;
-        margin-top: 6px;
-    }
-
-    @@media (max-width: 1680px) {
-        .layout {
-            grid-template-columns: 270px 380px 1fr;
-        }
-
-        .card-last {
-            grid-column: 2;
-        }
-    }
-
-    @@media (max-width: 1280px) {
-        .layout {
-            grid-template-columns: 1fr;
-        }
+        border-radius: 999px;
+        padding: 2px 8px;
+        font-size: 11px;
+        color: #334155;
     }
 </style>
 <body>
@@ -382,29 +578,17 @@
 
         <div class="layout">
             <!-- TOOLBOX -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">Toolbox</div>
-                    <div class="card-sub">Drag item</div>
+            <div class="card-h">
+                <div class="card-h-header">
+                    <div class="card-h-title">Toolbox</div>
+                    <div class="card-h-sub">Drag item</div>
                 </div>
-                <div class="card-body">
+                <div class="card-h-body">
                     <div class="toolbox">
                         <div class="tool-item" draggable="true" data-type="department" data-text="New Department">
                             <div class="name">Department</div>
                             <div class="desc">Ví dụ FO / TS / UW / LMKT / PM</div>
                         </div>
-                        @*  <div class="tool-item" draggable="true" data-type="actor" data-text="New Actor">
-                        <div class="name">Actor</div>
-                        <div class="desc">Ví dụ Client / External / Approver</div>
-                        </div>
-                        <div class="tool-item" draggable="true" data-type="condition" data-text="New Condition">
-                        <div class="name">Condition</div>
-                        <div class="desc">Rule node / branching / decision</div>
-                        </div>
-                        <div class="tool-item" draggable="true" data-type="system" data-text="New System">
-                        <div class="name">System</div>
-                        <div class="desc">Auto process / service / scheduler</div>
-                        </div> *@
                     </div>
 
                     
@@ -412,50 +596,17 @@
                         <div class="section-title">Payload Preview</div>
                         <div id="payloadBox_@Convert.ToInt32(ViewData["Id"])" class="json-box"></div>
                     </div>
-                    @* <div class="section-title">Legend</div>
-                    <div class="legend-box">
-                    <div class="legend-item"><span class="badge q">Quotation</span> node/flow dùng cho quotation</div>
-                    <div class="legend-item"><span class="badge pi">PolicyIssuance</span> node/flow dùng cho policy issuance</div>
-                    <div class="legend-item"><span class="badge both">Both</span> dùng chung</div>
-                    <div class="legend-item"><span class="badge return">RETURN</span> flow trả về</div>
-                    <div class="legend-item"><span class="badge loop">LOOP</span> flow lặp</div>
-                    <div class="legend-item"><span class="badge exit">EXIT</span> flow thoát loop</div>
-                    <div class="legend-item"><span class="badge user">UserDecision</span> user tự quyết định thoát loop</div>
-                    </div> *@
-
-                    @* <div class="loop-box">
-                    Mockup này chưa vẽ line graph thật.
-                    <br>Phần “vòng tròn” đang thể hiện qua:
-                    <br>- transition `From -> To`
-                    <br>- badge `LOOP`
-                    <br>- self-loop hoặc loop-group
-                    <br>- nút thoát `EXIT`
-                    </div>
-
-                    <div class="drop-hint">
-                    Cách test nhanh:
-                    <br>1. Chọn Workflow Flow Type ở panel giữa
-                    <br>2. Kéo object từ toolbox sang tree
-                    <br>3. Click node để sửa data / flow type
-                    <br>4. Tạo transition ở panel bên phải
-                    <br>5. Thử case loop với UserDecision
-                    <br>6. Xem payload JSON cuối màn hình
-                    </div> *@
                 </div>
             </div>
 
             <!-- TREE -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">Tree Designer</div>
-                    <div class="card-sub">jsTree</div>
+            <div class="card-h">
+                <div class="card-h-header">
+                    <div class="card-h-title">Tree Designer</div>
+                    <div class="card-h-sub">jsTree</div>
                 </div>
-                <div class="card-body">
+                <div class="card-h-body">
                     <div class="section-title">Workflow Header</div>
-                    @* <div id="form_@(WorkflowDefinition_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])" class="dExForm"></div> *@
-
-                    @* <div id="workflowForm_@Convert.ToInt32(ViewData["Id"])"></div> *@
-
                     <div class="toolbar" style="margin-top:12px;">
                         <div id="btnAddRoot_@Convert.ToInt32(ViewData["Id"])"></div>
                         <div id="btnAddChild_@Convert.ToInt32(ViewData["Id"])"></div>
@@ -471,12 +622,12 @@
             </div>
 
             <!-- NODE EDITOR -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">Node Review</div>
-                    <div class="card-sub">Change node properties</div>
+            <div class="card-h">
+                <div class="card-h-header">
+                    <div class="card-h-title">Node Review</div>
+                    <div class="card-h-sub">Change node properties</div>
                 </div>
-                <div class="card-body">
+                <div class="card-h-body">
                     <div id="nodeForm_@Convert.ToInt32(ViewData["Id"])"></div>
 
                     <div class="section-title">Node JSON Raw</div>
@@ -494,17 +645,17 @@
       @*   </div>
         <div class="dExForm"> *@
             <!-- TRANSITION + PAYLOAD -->
-            <div class="card card-last" style="width: 800px;">
-                <div class="card-header">
-                    <div class="card-title">Transition / Loop / Payload Review</div>
-                    <div class="card-sub">Preview</div>
+            <div class="card-h card-h-last" style="">
+                <div class="card-h-header">
+                    <div class="card-h-title">Transition / Loop / Payload Review</div>
+                    <div class="card-h-sub">Preview</div>
                 </div>
-                <div class="card-body">
-                    <div style="display:grid;grid-template-columns:420px 1fr;gap:14px;">
+                <div class="card-h-body">
+                    <div style="">
                         <div>
                             <div class="section-title">Transition Editor</div>
 
-                            <div class="condition-builder-card">
+                            <div class="condition-builder-card-h">
                                 <div class="section-title">Mini Condition Builder</div>
                                 <div id="conditionBuilderForm_@Convert.ToInt32(ViewData["Id"])"></div>
 
@@ -516,7 +667,7 @@
                                 </div>
 
                                 <div class="section-title" style="margin-top:10px;">Condition Preview</div>
-                                <div id="conditionPreviewBox_@Convert.ToInt32(ViewData["Id"])" class="condition-builder-preview">{}</div>
+                                <div id="conditionPreviewBox_@Convert.ToInt32(ViewData["Id"])" class="condition-builder-preview json-box">{}</div>
                                 <div class="condition-builder-note">
                                     Chọn field/operator/value ở form mini, bấm Add Rule hoặc Generate JSON rồi review lại tại ô Condition JSON bên dưới trước khi Add Transition.
                                 </div>
@@ -537,28 +688,76 @@
 
                     </div>
 
+                </div>
+            </div>
+
+            <!-- TRANSITION GRID card-h -->
+            <div class="card-h card-h-last" style="">
+                <div class="card-h-header">
+                    <div class="card-h-title">Transition List</div>
+                    <div class="card-h-sub">Preview & Manage</div>
+                </div>
+                <div class="card-h-body">
                     <div class="section-title">Flat Node Preview</div>
                     <div id="nodeGrid_@Convert.ToInt32(ViewData["Id"])"></div>
+
+                    <div class="section-title" style="margin-top:12px;">Transition Grid</div>
                     <div id="transitionGrid_@Convert.ToInt32(ViewData["Id"])"></div>
                 </div>
             </div>
+
+
+            
+            <div class="card-h card-h-last" style="min-height:600px;">
+                <div class="card-h-header">
+                    <div class="card-h-title">Workflow Pallete</div>
+                    <div class="card-h-sub">Drag & Connect nodes</div>
+                </div>
+                <div class="card-h-body">
+                <div class="canvas-wrap">
+                        <div class="title">Design Workflow</div>
+                        <div class="palette">
+                            <div class="paletteItem" data-template='...'>...</div>
+                        </div>
+
+                </div>
+
+                </div>
+            </div>
+
+            <div class="card-h card-h-last" style="min-height:600px;">
+                <div class="card-h-header">
+                    <div class="card-h-title">Workflow Diagram</div>
+                    <div class="card-h-sub">Drag & Connect nodes</div>
+                </div>
+                <div class="card-h-body">
+                    <div class="canvas-wrap">
+                        <div id="canvas_@(ViewData["RandomNumber"].ToString())" class="canvas"></div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="card-h card-h-last" style="min-height:600px;">
+                <div class="card-h-header">
+                    <div class="card-h-title">Json diagram</div>
+                </div>
+                <div class="card-h-body">
+                    <button id="btnRender_@Convert.ToInt32(ViewData["Id"])">Draw on diagram</button>
+                    <button class="secondary" id="btnUpdate_@Convert.ToInt32(ViewData["Id"])">Save Data</button>
+                    <button class="success" id="btnExport_@Convert.ToInt32(ViewData["Id"])">Export JSON</button>
+                    <textarea id="jsonInput_@Convert.ToInt32(ViewData["Id"])"></textarea>
+                </div>
+            </div>
+            @* @await Component.InvokeAsync("WorkflowDefinitionDraw_Form", new { pageNum = Convert.ToInt32(ViewData["Id"]) }) *@
         </div>
     </div>
 
     <script>
-        var _id = @Convert.ToInt32(ViewData["Id"]);
-        // var _formConfig = new MFormOption();
-        // _formConfig.cloneUrl = '/Business/Workflow/WorkflowDefinition_Form/' + _id;
-        // _formConfig.tabCode = `form_WorkflowDefinition_Form_${_id}`;
-        // _formConfig.tabName = '@HttpContext.Request.Query["Caption"].ToString()';
-        // _formConfig.originModelName = "@WorkflowDefinition_FormModel.ModelName";
-        // _formConfig.formElementName = "@WorkflowDefinition_FormModel.ModelName";
-        // _formConfig.schemeBasedOn = `@(WorkflowDefinition_FormModel.SchemeModelName)`;
-        // _formConfig.allowFormActionButton = false;
-        // _formConfig.colCount = 1;
-        // _formConfig.isCustomQuery = false;
-        // var mainForm = new WorkflowDefinitionForm(_id, null, _formConfig);
+        
 
+        // //old Code
+        var _id = @Convert.ToInt32(ViewData["Id"]);
+        _enums.WorkflowCommand = @Html.Raw(Json.Serialize(ViewData["WorkflowCommand"]))
         var selectedNodeId = null;
         var nodeFormInstance = null;
         // var workflowFormInstance = null;
@@ -571,11 +770,8 @@
             rootOperator: "AND",
             rules: []
         };
-        var runtimeState = {
-            activeNodeId: "CLIENT",
-            completedNodeIds: ["FO", "TS", "UW"],
-            pendingNodeIds: ["PM", "NODE_1774258352695"]
-        };
+        var runtimeState = {}
+        ;
         // var workflowHeader = mainForm.formInstance.option("formData");
         var workflowHeader = null;
         var workflowTreeData = [];
@@ -608,7 +804,7 @@
                         label: { text: "Node Flow Type" },
                         editorType: "dxSelectBox",
                         editorOptions: {
-                            dataSource: ["Quotation", "PolicyIssuance", "Both"]
+                            dataSource: _enums.WorkflowType
                         }
                     },
                     {
@@ -869,7 +1065,6 @@
                         editorType: "dxTextArea",
                         colSpan: 2,
                         editorOptions: {
-                            minHeight: 70,
                             maxLength: 1000
                         }
                     },
@@ -889,7 +1084,6 @@
                         label: { text: "Static value" },
                         editorType: "dxTextArea",
                         editorOptions: {
-                            minHeight: 70,
                             maxLength: 1000
                         }
                     },
@@ -902,7 +1096,7 @@
                             acceptCustomValue: true,
                             dataSource: [
                                 "totalPremiumTotal",
-                                "quotationStatus",
+                                "workflowStatus",
                                 "clientName",
                                 "hasAttachment",
                                 "hasResAttachment",
@@ -939,10 +1133,7 @@
                     {
                         dataField: "customArgs",
                         label: { text: "Custom Args JSON" },
-                        editorType: "dxTextArea",
-                        editorOptions: {
-                            minHeight: 80
-                        }
+                        editorType: "dxTextArea"
                     }
                 ],
                 onInitialized: function (e) {
@@ -1123,7 +1314,7 @@
                             },
                             onError: function (err) {
                                 console.log(err);
-                                notify("Workflow build fail!", "error");
+                                notify("Workflow builded but some errors!", "warning");
                             }
                         });
                     }
@@ -1138,7 +1329,7 @@
                     parentNodeId: x.parent === "#" ? null : x.parent,
                     nodeName: x.text || "",
                     nodeType: x.type || "",
-                    flowType: x.flowType || "Both",
+                    nodeStatus: x.flowType || "Both",
                     allowLoop: !!x.allowLoop,
                     loopGroup: x.loopGroup || null,
                     nodeCode: x.code || null,
@@ -1270,7 +1461,6 @@
             return transitions.map(function (t, index) {
                 const fromNode = nodeMap[t.fromNodeId] || {};
                 const toNode = t.toNodeId ? (nodeMap[t.toNodeId] || {}) : null;
-
                 const isStart = fromNode.parent === "#" || fromNode.parent == null;
                 const isEnd = !t.toNodeId || !!t.isExitTransition;
 
@@ -1290,6 +1480,8 @@
                     canComment: true,
                     canEdit: !isEnd,
                     canUpload: !isEnd,
+                    command: t.command || null,
+                    commandConfig: t.commandConfig || null,
 
                     departmentCode: fromNode.departmentName || null,
                     displayStatus: t.actionName || null,
@@ -1303,7 +1495,6 @@
                     parentStepId: null,
                     posX: fromNode.x || null,
                     posY: fromNode.y || null,
-
                     roleCode: fromNode.code || fromNode.text || fromNode.id,
                     stepCode: `${t.fromNodeId}_${t.actionCode}`,
                     stepName: `${fromNode.text || t.fromNodeId} ${t.actionName || t.actionCode}`,
@@ -1311,7 +1502,7 @@
 
                     actionCode: t.actionCode || null,
                     data: JSON.stringify(
-                        t.conditionJson || "{}"
+                        t.conditionJson || {}
                     ),
 
                     fromNodeId: t.fromNodeId || null,
@@ -1328,7 +1519,7 @@
             var newId = generateNodeId();
             var parentNode = parentId === "#" ? null : tree.get_node(parentId);
 
-            var currentWorkflowFlow = mainForm.formInstance.option("formData").flowType || "Both";
+            // var currentWorkflowFlow = mainForm.formInstance.option("formData").flowType || "Both";
 
             var nodeData = {
                 id: newId,
@@ -1339,7 +1530,7 @@
                 stepRole: "",
                 departmentName: "",
                 levelNo: parentNode ? ((parentNode.original.levelNo || 1) + 1) : 1,
-                flowType: currentWorkflowFlow === "Both" ? "Both" : currentWorkflowFlow,
+                flowType: "Both",
                 allowLoop: false,
                 loopGroup: "",
                 x: 0,
@@ -1505,7 +1696,6 @@
 
         function addTransition() {
             var fd = transitionFormInstance.option("formData");
-
             if (!fd.fromNodeId || !fd.toNodeId) {
                 return notify("Please choose From Node and To Node", "warning");
             }
@@ -1523,6 +1713,7 @@
                 transitionGridInstance.refresh();
             }
             notify("Transition added", "success");
+            // renderDiagramFromTree();
         }
 
       
@@ -1578,11 +1769,7 @@
             syncRuntimeState();
             var payload = {
                 workflowDefinition: {
-                    // workflowCode: workflowHeader?.workflowCode || "",
-                    // workflowName: workflowHeader?.workflowName|| "",
-                    // flowType: workflowHeader?.flowType|| "",
-                    // versionNo: workflowHeader?.versionNo|| "",
-                    // isActive: workflowHeader?.isActive|| "",
+                    
                 },
                 workflowNodes: workflowTreeData.map((x, index) => (
               
@@ -1709,6 +1896,7 @@
                     }, null, 2));
                 }
             }
+            // renderDiagramFromTree();
         }
 
         
@@ -1815,7 +2003,7 @@
                         label: { text: "Transition Flow Type" },
                         editorType: "dxSelectBox",
                         editorOptions: {
-                            dataSource: ["Quotation", "PolicyIssuance", "Both"]
+                            dataSource: _enums.TransitionType
                         }
                     },
                     {
@@ -1859,9 +2047,31 @@
                         dataField: "conditionJson",
                         label: { text: "Condition JSON" },
                         editorType: "dxTextArea",
-                        editorOptions: { minHeight: 100 },
                         colSpan: 2
-                    }
+                            },{
+                        dataField: "command",
+                        label: { text: "Command" },
+                        editorType: "dxSelectBox",
+                        editorOptions: {
+                            dataSource: _enums.WorkflowCommand,
+                            valueExpr: "value",
+                            displayExpr: "value",
+                            searchEnabled: true
+                        }},
+                        {
+                        dataField: "commandConfig",
+                        label: { text: "Command Config" },
+                        editorType: "dxTextArea"}
+
+        //                         {
+        //   "sourceDepartment": "FO",
+        //   "strategy": "Latest",
+        //   "fileSelector": "First",
+        //   "allowOverride": false,
+        //   "targetDepartment": "LMKT"
+        // }
+        // }
+
            ]     ;
 
           function initTransitionForm() {
@@ -1960,11 +2170,7 @@
             return {
                 workflowDefinition: {
                     id: _id || 0,
-                    // workflowCode: workflowHeader?.workflowCode || "",
-                    // workflowName: workflowHeader?.workflowName || "",
-                    // flowType: workflowHeader?.flowType || "Both",
-                    // versionNo: workflowHeader?.versionNo ?? 1,
-                    // isActive: workflowHeader?.isActive ?? true
+                   
                 },
                 workflowNodes: workflowTreeData.map((x, index) => ({
                     id: x.id,
@@ -2037,24 +2243,16 @@
                     .then(function (data) {
                         var dbPayload = safeParseJson(data.workflowNodes, null);
                         var overWriteHeader = new Object ();
-
-                        // overWriteHeader.workflowCode= workflowHeader?.workflowCode || "";
-                        // overWriteHeader.workflowName= workflowHeader?.workflowName || "";
-                        // overWriteHeader.flowType= workflowHeader?.flowType || "";
-                        // overWriteHeader.versionNo= workflowHeader?.versionNo|| "";
-                        // overWriteHeader.isActive= workflowHeader?.isActive|| "";
-
-                        dbPayload.workflowDefinition = overWriteHeader;
                         if (dbPayload) {
+                            dbPayload.workflowDefinition = overWriteHeader;
                             setPayloadBoxObject(dbPayload);
-
                             // nếu muốn, đồng bộ ngược từ payload về state để UI phản ánh đúng DB
                             hydrateStateFromPayload(dbPayload);
                         } else {
                             var fallbackPayload = buildPayloadObjectFromState();
                             setPayloadBoxObject(fallbackPayload);
                         }
-
+                        
                         payloadInitialized = true;
                         refreshGrid();
                         d.resolve();
@@ -2082,7 +2280,6 @@
 
             var current = getPayloadBoxObject() || {};
             var latest = buildPayloadObjectFromState();
-
             current.workflowDefinition = workflowHeader || ""; 
             current.workflowNodes = latest.workflowNodes;
             current.workflowTransitions = latest.workflowTransitions;
@@ -2101,5 +2298,643 @@
             initPayloadBoxOnce().then(function () { 
                 initTransitionGrid();               
             });
+
+
+                   _id = @Convert.ToInt32(ViewData["Id"]);
+                ajaxGet(`/api/WorkflowDefinition/GetSingle/${_id}`)
+                    .then(data => {
+                        
+                var jsonInput = document.getElementById("jsonInput_@Convert.ToInt32(ViewData["Id"])");
+                var canvas = document.getElementById("canvas_@(ViewData["RandomNumber"].ToString())");
+                $(canvas).empty();
+               
+                var instance = null;
+                var currentJson = null;
+
+                function parseWorkflowNodes(value) {
+                  if (value == null) return null;
+                  if (typeof value === "string") {
+                    try {
+                      return JSON.parse(value);
+                    } catch (err) {
+                      try {
+                        return JSON.parse(value.replace(/\r?\n/g, "\\n"));
+                      } catch (err2) {
+                        console.warn("Failed to parse workflowNodes", err, err2);
+                        return null;
+                      }
+                    }
+                  }
+                  return value;
+                }
+
+                var workflowNodesJson = parseWorkflowNodes(data.workflowNodes);
+                if (workflowNodesJson) {
+                  jsonInput.value = JSON.stringify(workflowNodesJson, null, 2);
+                } else {
+                  jsonInput.value = "{}";
+                }
+
+               
+
+                function snap(n, grid = 24) {
+                  return Math.round(n / grid) * grid;
+                }
+
+
+                function getNodeFlowClass(flowType) {
+                  if (flowType === "Quotation") return "flow-quotation";
+                  if (flowType === "PolicyIssuance") return "flow-policy";
+                  return "flow-both";
+                }
+
+                function getNodeStateClass(nodeId, runtimeState) {
+                  var active = runtimeState?.activeNodeId;
+                  var done = runtimeState?.compvaredNodeIds || [];
+                  var pending = runtimeState?.pendingNodeIds || [];
+                  if (nodeId === active) return "active";
+                  if (done.includes(nodeId)) return "done";
+                  if (pending.includes(nodeId)) return "pending";
+                  return "pending";
+                }
+
+                function getNodesWithSavedPosition(nodes) {
+                  return (nodes || []).filter(n => hasNumber(n.x) && hasNumber(n.y));
+                }
+
+                function syncJsonToTextarea() {
+                  if (!currentJson) return;
+                  jsonInput.value = JSON.stringify(currentJson, null, 2);
+                }
+
+
+                function buildSavedLayout(json) {
+                  var nodes = json.workflowNodes || [];
+                  var positions = {};
+                  var maxX = 0;
+                  var maxY = 0;
+
+                  nodes.forEach(n => {
+                    var x = snap(Number(n.x || 0));
+                    var y = snap(Number(n.y || 0));
+                    positions[n.id] = { x, y, layer: null };
+                    maxX = Math.max(maxX, x);
+                    maxY = Math.max(maxY, y);
+                  });
+
+                  return {
+                    positions,
+                    grouped: {},
+                    canvasWidth: Math.max(window.innerWidth - (window.innerWidth * 0.1), maxX + 420),
+                    canvasHeight: Math.max(window.innerHeight - (window.innerHeight * -0.1), maxY + 260)
+                  };
+                }
+                  function createNodeEl(node, pos, runtimeState) {
+                        var el = document.createElement("div");
+                        el.id = node.id;
+                                let flowClass = "";
+
+                          // ✅ detect Start / End
+                          if (node.flowType === "Start") {
+                              flowClass = "flow-start";
+                          }
+                          else if (node.flowType === "End") {
+                              flowClass = "flow-end";
+                          }
+                          else {
+                              flowClass = getNodeFlowClass(node.flowType);
+                          }
+
+                          el.className = "node " + flowClass + " " + getNodeStateClass(node.id, runtimeState);
+                          
+                        // el.className = "node " + getNodeFlowClass(node.flowType) + " " + getNodeStateClass(node.id, runtimeState);
+                        el.style.left = pos.x + "px";
+                        el.style.top = pos.y + "px";
+                        el.innerHTML = `
+                          <div class="node-title">${safe(node.nodeName || node.id)}</div>
+                          <div class="node-meta">
+                            <div>Order: ${safe(node.orderNo)}</div>
+                            <div>Level: ${safe(node.levelNo)}</div>
+                            <div>Flow: ${safe(node.flowType || "Both")}</div>
+                            <div>X: <span data-x="${node.id}">${safe(node.x)}</span> | Y: <span data-y="${node.id}">${safe(node.y)}</span></div>
+                          </div>
+                        `;
+                        return el;
+                      }
+
+                function createLayerLabel(layer, x) {
+                  var el = document.createElement("div");
+                  el.className = "layer-label";
+                  el.style.left = x + "px";
+                  el.textContent = "Layer " + layer;
+                  return el;
+                }
+
+                function colorForEdge(t) {
+                  if (t.isReturn) return "var(--return)";
+                  if (t.isLoop) return "var(--loop)";
+                  if (t.flowType === "Quotation") return "var(--quotation)";
+                  if (t.flowType === "PolicyIssuance") return "var(--policy)";
+                  return "var(--both)";
+                }
+
+                function chooseAnchors(t) {
+                  if (t.isReturn) return ["Top", "Top"];
+                  return ["Right", "Left"];
+                }
+
+                function connectEdge(t) {
+                  var color = colorForEdge(t);
+                  var label = safe(t.actionName || t.userDecisionLabel || t.actionCode || "");
+                  var statusName = _enums.OverallStatus.find(f => f.id == t.statusId);
+                                          label = `${label} - <div class="statusTag ${normalizeStatus(statusName?.value || "").css}">${statusName?.value || ""} - ${getCommandIcon(t.command)} ${safe(t.actionName || "")}</div>`;
+                  var isSelfLoop = t.fromNodeId === t.toNodeId;
+
+                  var overlays = [
+                    ["Arrow", { location: 1, width: 10, length: 10 }]
+                  ];
+
+                  if (label) {
+                    overlays.unshift(["Label", {
+                      label,
+                      location: 0.5,
+                      cssClass: "edge-label"
+                    }]);
+                  }
+
+                  if (isSelfLoop) {
+                    instance.connect({
+                      source: t.fromNodeId,
+                      target: t.toNodeId,
+                      anchors: ["Top", "Right"],
+                      connector: ["StateMachine", { margin: 12, curviness: 45, loopbackRadius: 32 }],
+                      endpoint: "Blank",
+                      paintStyle: {
+                        stroke: color,
+                        strokeWidth: 3,
+                        dashstyle: t.isReturn ? "4 4" : ""
+                      },
+                      overlays
+                    });
+                    return;
+                  }
+
+                  instance.connect({
+                    source: t.fromNodeId,
+                    target: t.toNodeId,
+                    anchors: chooseAnchors(t),
+                    connector: ["Bezier", { curviness: t.isReturn ? 95 : 60 }],
+                    endpoint: "Blank",
+                    paintStyle: {
+                      stroke: color,
+                      strokeWidth: (t.isReturn || t.isLoop) ? 3 : 2.5,
+                      dashstyle: t.isReturn ? "4 4" : ""
+                    },
+                    overlays
+                  });
+                }
+
+                function attachDrag() {
+                  (currentJson.workflowNodes || []).forEach(node => {
+
+                    instance.addEndpoint(node.id, {
+                        anchor: "Right",
+                        isSource: true,
+                        maxConnections: -1,
+                        endpoint: ["Dot", { radius: 5 }]
+                    });
+
+                    
+                    instance.addEndpoint(node.id, {
+                        anchor: "Left",
+                        isSource: true,
+                        maxConnections: -1,
+                        endpoint: ["Dot", { radius: 5 }]
+                    });
+
+                    instance.makeSource(node.id, {
+                        filter: ".wf-node",
+                        anchor: "Continuous",
+                        connector: [
+                            "Flowchart",
+                            {
+                                cornerRadius: 5
+                            }
+                        ],
+                        maxConnections: -1
+                    });
+
+
+                    instance.makeTarget(node.id, {
+                        anchor: "Continuous",
+                        allowLoopback: true
+                    });
+
+                    instance.draggable(node.id, {
+                      grid: [24, 24],
+                      containment: true,
+                      stop: function() {
+                     
+                              var el = $(`div#${node.id}`);
+                              // var elLi = $(`li#${node.id}`);
+                            if (!el) return;
+
+                                var left = snap(parseInt(el.css("left") || "0", 10));
+                                var top = snap(parseInt(el.css("top") || "0", 10));
+                            // debugger
+                            updateNodePosition(node.id, left, top);
+                            instance.revalidate(node.id);
+                      }
+                    //   ,
+                    //     drag:function(){
+                    //     let pos = instance.getOffset(node.id);
+
+                    //     let left = snap(Math.round(pos.left));
+                    //     let top = snap(Math.round(pos.top));
+
+
+                    //     node.x = left;
+                    //     node.y = top;
+                    //      var el = document.getElementById(node.id);
+                    //              el.style.left = left + "px";
+                    //                     el.style.top = top + "px";
+
+                    // }
+                    });
+                  });
+                }
+                function updateNodeCoordinateUi(nodeId, x, y) {
+                    var xEl = document.querySelector(`[data-x="${nodeId}"]`);
+                    var yEl = document.querySelector(`[data-y="${nodeId}"]`);
+                    if (xEl) xEl.textContent = x;
+                    if (yEl) yEl.textContent = y;
+                }
+
+                function updateNodePosition(nodeId, x, y) {
+                  if (!currentJson || !currentJson.workflowNodes) return;
+                  var node = currentJson.workflowNodes.find(n => n.id === nodeId);
+                  if (!node) return;
+
+                  node.x = x;
+                  node.y = y;
+
+                  updateNodeCoordinateUi(nodeId, x, y);
+                  setPayloadBoxObject(currentJson)
+                }
+
+                function renderWorkflow(options = {}) {
+                  try {
+                    currentJson = JSON.parse(jsonInput.value);
+
+                    if (instance) {
+                          instance.deleteEveryConnection();
+                          instance.reset();
+                    }
+
+                    canvas.innerHTML = "";
+                    var useSavedLayout =
+                      getNodesWithSavedPosition(currentJson.workflowNodes).length > 0;
+
+                    var layout = useSavedLayout
+                      ? buildSavedLayout(currentJson)
+                      : {};
+
+                    var { positions, grouped, canvasWidth, canvasHeight } = layout;
+
+                    canvas.style.width = canvasWidth + "px";
+                    canvas.style.height = canvasHeight + "px";
+
+                    if (!useSavedLayout) {
+                      Object.keys(grouped).map(Number).sort((a, b) => a - b).forEach(layer => {
+                        var arr = grouped[layer];
+                        if (arr.length) {
+                          canvas.appendChild(createLayerLabel(layer, positions[arr[0].id].x));
+                        }
+                      });
+                    }
+
+                    (currentJson.workflowNodes || []).forEach(node => {
+                      var pos = positions[node.id];
+                      if (!pos) return;
+
+                      if (!useSavedLayout || !hasNumber(node.x) || !hasNumber(node.y)) {
+                        node.x = pos.x;
+                        node.y = pos.y;
+                      }
+
+                      canvas.appendChild(createNodeEl(node, pos, currentJson.runtimeState || {}));
+                    });
+
+                    instance = jsPlumb.getInstance({
+                      Container: canvas
+                    });
+
+                    instance.importDefaults({
+                      ConnectionsDetachable: false,
+                      ReattachConnections: false,
+                      Endpoint: "Blank",
+                      PaintStyle: { stroke: "#64748b", strokeWidth: 2 },
+                      HoverPaintStyle: { stroke: "#334155", strokeWidth: 3 }
+                    });
+
+                    (currentJson.workflowTransitions || []).forEach(connectEdge);
+                    attachDrag();
+
+                    syncJsonToTextarea();
+                  } catch (err) {
+                  }
+                }
+
+                function exportJson() {
+                  try {
+                    syncJsonToTextarea();
+                    navigator.clipboard?.writeText(jsonInput.value).catch(() => {});
+                  } catch (err) {
+                  }
+                }
+
+
+                // function updateData(){
+                //       ajaxPut('/api/WorkflowDefinition/UpdateData',
+                //      {
+                //          key: _id,
+                //          values: JSON.stringify(
+                //              { workflowNodes : jsonInput.value }
+                //          )
+                //      },
+                //      {
+                //          onSuccess: function (response) {
+                //               appNotifySuccess("Updated!", false);
+                //          },
+                //          onError: function (err) { }
+                //      }
+                //      );
+                // }
+
+                document.getElementById("btnRender_@Convert.ToInt32(ViewData["Id"])").addEventListener("click", () => renderWorkflow());
+                // document.getElementById("btnUpdate_@Convert.ToInt32(ViewData["Id"])").addEventListener("click", updateData);
+                document.getElementById("btnExport_@Convert.ToInt32(ViewData["Id"])").addEventListener("click", exportJson);
+
+                renderWorkflow();
+
+                function renderPalette(nodes) {
+                  var $palette = $(".palette");
+                  $palette.empty();
+
+                  nodes.forEach(n => {
+                    var template = JSON.stringify({
+                      nodeName: n.nodeName,
+                      flowType: n.flowType,
+                      allowLoop: n.allowLoop,
+                      loopGroup: n.loopGroup || "",
+                      nodeType: "",
+                      nodeCode: "",
+                      stepRole: "",
+                      departmentName: "",
+                      levelNo: 1
+                    });
+
+                    var html = `
+                      <div class="paletteItem" draggable="true" data-template='${template}'>
+                        <div class="paletteTitle">${n.nodeName}</div>
+                        <div class="paletteMeta">
+                          <span class="tag">${n.flowType}</span>
+                          ${n.allowLoop ? `<span class="tag loop">Loop</span>` : ""}
+                        </div>
+                      </div>
+                    `;
+
+                    $palette.append(html);
+                  });
+                }
+                renderPalette(currentJson.workflowNodes);
+
+                function ensureSeed() {
+                    if (!jsonInput.value.trim()) {
+                        jsonInput.value = JSON.stringify(sampleData, null, 2);
+                    }
+                }
+
+                function getData() {
+                    return JSON.parse(jsonInput.value || "{}");
+                }
+
+                function setData(data) {
+                    
+                    jsonInput.value = JSON.stringify(data, null, 2);
+                }
+
+                
+                function clearNodeSelection() {
+                    document.querySelectorAll(".node.selected").forEach(x => x.classList.remove("selected"));
+                }
+
+                function clearSelections() {
+                    clearNodeSelection();
+                    selectedNodeId = null;
+                    selectedTransitionKey = null;
+                }
+               
+
+                function generateUniqueNodeId(data, baseName) {
+                    const rawBase = (baseName || "NODE").toUpperCase().replace(/[^A-Z0-9]+/g, "_");
+                    let candidate = rawBase;
+                    const existing = new Set((data.workflowNodes || []).map(x => x.id));
+
+                    if (!existing.has(candidate)) return candidate;
+
+                    candidate = rawBase + "_" + Date.now();
+                    while (existing.has(candidate)) {
+                        candidate = rawBase + "_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+                    }
+                    return candidate;
+                }
+
+                function addNodeFromPalette(template, x, y) {
+                    
+                    const data = getData();
+
+                    const id = generateUniqueNodeId(data, "NODE")//template.nodeName);
+                    const nextOrder = ((data.workflowNodes || []).reduce((m, n) => Math.max(m, n.orderNo || 0), 0)) + 1;
+
+                   var node = workflowNodesHandle(template);
+                   node.id = id;
+                   node.nodeName = template.nodeName;
+                   node.orderNo = nextOrder;
+                   node.x = x;
+                   node.y = y;
+                    // $("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val(JSON.stringify(node));
+
+                    var tree = $("#treeWorkflow_@Convert.ToInt32(ViewData["Id"])").jstree(true);
+                    var parentNode = "#";
+
+                    // var currentWorkflowFlow = mainForm.formInstance.option("formData").flowType || "Both";
+
+                    var nodeData = {
+                        id: node.id,
+                        text: node.nodeName,
+                        displayText: node.nodeName,
+                        type: "department",
+                        code: "",
+                        orderNo: nextOrder,
+                        stepRole: "",
+                        departmentName:  node.nodeName,
+                        levelNo: 1,
+                        flowType: "Both",
+                        allowLoop: false,
+                        loopGroup: "",
+                        x: 0,
+                        y: 0
+                    };
+                    data.workflowNodes.push(node);
+                    selectedNodeId = node.id;
+                    tree.create_node(parentNode, {
+                        ...nodeData,
+                        text: buildTreeNodeHtml(nodeData)
+                    }, "last", function (node) {
+                        tree.open_node(parentNode);
+                        tree.deselect_all();
+                        tree.select_node(node);
+                         $("#nodeForm_@Convert.ToInt32(ViewData["Id"])").dxForm("instance").option("formData", nodeData)
+                         $("#nodeJsonEditor_@Convert.ToInt32(ViewData["Id"])").val(JSON.stringify(nodeData, null, 2));
+                    });
+
+
+                    if (!data.runtimeState) {
+                        data.runtimeState = {
+                            activeNodeId: "",
+                            completedNodeIds: [],
+                            pendingNodeIds: []
+                        };
+                    }
+
+                    if (!Array.isArray(data.runtimeState.pendingNodeIds)) {
+                        data.runtimeState.pendingNodeIds = [];
+                    }
+
+                    if (!data.runtimeState.pendingNodeIds.includes(node.id)) {
+                        data.runtimeState.pendingNodeIds.push(node.id);
+                    }
+
+                    setData(data);
+                    // renderWorkflow();
+                    renderWorkflow();
+                }
+
+               
+                
+                function bindConnectionEvent() {
+                    instance.bind("connectionDrag", function(info){ 
+                        console.log("đang kéo");
+                    });
+                    instance.bind("connectionDragStop", function(info){ 
+                        console.log("stop");
+                    });
+
+                    instance.bind("connection", function (info, originalEvent) {
+                        
+                        if (!originalEvent) return;
+                        const sourceId = info.sourceId;
+                        const targetId = info.targetId;
+                        const data = getData();
+
+                        const exists = (data.workflowTransitions || []).some(t =>
+                            t.fromNodeId === sourceId &&
+                            t.toNodeId === targetId
+                        );
+
+                        if (exists) {
+                            return;
+                        }
+
+                        const sourceNode = (data.workflowNodes || []).find(n => n.id === sourceId);
+                        const targetNode = (data.workflowNodes || []).find(n => n.id === targetId);
+
+                        const actionCode = "ACTION_" + ((data.workflowTransitions || []).length + 1);
+                        const actionName = sourceNode && targetNode
+                            ? (sourceNode.nodeName + " To " + targetNode.nodeName)
+                            : "New Transition";
+
+                        const transition = {
+                            fromNodeId: sourceId,
+                            toNodeId: targetId,
+                            actionCode: actionCode,
+                            actionName: actionName,
+                            flowType: (targetNode && targetNode.flowType) || "Both",
+                            isReturn: false,
+                            isLoop: sourceId === targetId,
+                            loopGroup: sourceId === targetId ? ((sourceNode && sourceNode.loopGroup) || "") : "",
+                            loopExitMode: sourceId === targetId ? "UserDecision" : "None",
+                            maxLoopCount: null,
+                            isExitTransition: false,
+                            userDecisionLabel: sourceId === targetId ? "Loop" : "",
+                            conditionJson: ""
+                        };
+
+                        data.workflowTransitions.push(transition);
+                        setData(data);
+
+                        renderWorkflow();
+                    });
+                }
+
+                
+               
+                document.querySelectorAll(".paletteItem").forEach(item => {
+                    item.addEventListener("dragstart", function (e) {
+                        e.dataTransfer.setData("text/plain", item.getAttribute("data-template"));
+                    });
+                });
+                
+                canvas.addEventListener("dragover", function (e) {
+                    e.preventDefault();
+                    canvas.classList.add("dragOver");
+                });
+
+                canvas.addEventListener("dragleave", function () {
+                    canvas.classList.remove("dragOver");
+                });
+
+                canvas.addEventListener("drop", function (e) {
+                    e.preventDefault();
+                    canvas.classList.remove("dragOver");
+
+                    const raw = e.dataTransfer.getData("text/plain");
+                    if (!raw) return;
+
+                    let template = null;
+                    try {
+                        template = JSON.parse(raw);
+                    } catch {
+                        return;
+                    }
+
+                    const rect = canvas.getBoundingClientRect();
+                    const x = Math.max(20, Math.round((e.clientX - rect.left - 100) / 12) * 12);
+                    const y = Math.max(20, Math.round((e.clientY - rect.top - 35) / 12) * 12);
+
+                    addNodeFromPalette(template, x, y);
+                });
+
+                canvas.addEventListener("click", function () {
+                    clearSelections();
+                    // infoBox.textContent = "Click node hoặc line để xem chi tiết.";
+                });
+
+                ensureSeed();
+                renderWorkflow();
+                bindConnectionEvent();
+                });
+
+        function getCommandIcon(command) {
+            switch (command) {
+                case 1: return "📄";
+                case 2: return "🔄";
+                case 3: return "🔒";
+                default: return "";
+            }
+        }
+         
     </script>
 </body>
+ 
