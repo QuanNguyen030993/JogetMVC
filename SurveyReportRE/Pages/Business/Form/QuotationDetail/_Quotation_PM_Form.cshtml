@@ -1,15 +1,10 @@
 ﻿@using JogetMVC.Model
-@* @page "{pageNum:int?}"
-@using Newtonsoft.Json *@
-@* @model Quotation_PM_FormModel *@
-@* @{
-   
-    ViewBag.Title = "Quotation";
-    ViewData["Id"] = 0;
-} *@
+
 @{
     string dept = "PM";
     long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
+    long policyIssuanceId = 0;
+    string cloneQuotationGuid = "";
 }
 <style>
     .dx-tabpanel .dx-tabpanel-tabs .dx-tab {
@@ -22,14 +17,18 @@
 </div>
 <script type="text/javascript">
     var sectionId = "@(ViewData["Cd"])";
-    that.ModelName = "Quotation";
-    that.moduleName = "default";
-    that.editorType = "dxFileUploader"
-    that.id = @(quotationId);
-    that.guid = "@(quotationGuid)";
-    that.sectionName = "@(dept)";
-    that.titleName = "Upload Quotation";
-    that.data = { SectionName: `${sectionId}_${that.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: that.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" };; //{"SectionName":"default_FO_410"}
+    var modelObject = new Object();
+    modelObject.ModelName = "Quotation"; 
+    // var that = new Object();
+    // that.ModelName = "Quotation";
+    // that.moduleName = "default";
+    // that.editorType = "dxFileUploader"
+    // that.id = @(quotationId);
+    // that.guid = "@(quotationGuid)";
+    // that.sectionName = "@(dept)";
+    // that.titleName = "Upload Quotation";
+    // that.uploaderAllow = _role == "@dept";
+    // that.data = { SectionName: `${sectionId}_${that.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: that.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" };; //{"SectionName":"default_FO_410"}
 
 
     var that2 = new Object();
@@ -40,9 +39,25 @@
     that2.guid = "@(quotationGuid)";
     that2.sectionName = "@(dept)";
     that2.titleName = "Upload Supporting Document";
+    that2.uploaderAllow = _role == "@dept";
     that2.data = { SectionName: `${sectionId}_${that2.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" }; //{"SectionName":"default_FO_410"}
+    
+    
+    var that3 = new Object();
+    that3.ModelName = "PolicyIssuance";
+    that3.moduleName = "defaultDoc";
+    that3.editorType = "dxFileUploader"
+    that3.id = @(policyIssuanceId);
+    that3.guid = "@(quotationGuid)";
+    that3.cloneId = @quotationId;
+    that3.cloneGuid = "@(cloneQuotationGuid)";
+    that3.sectionName = "@(dept)";
+    that3.titleName = "Upload Document";
+    that3.uploaderAllow = _role == "@dept";
+    that3.data = { SectionName: `${sectionId}_${that3.moduleName}_@(policyIssuanceId)`, Department: "@(dept)", FieldName: that3.moduleName, FormId: "@(PIViewIdHelper.Form(dept, policyIssuanceId))" }; //{"SectionName":"default_FO_410"}
+
     $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
-        dataSource: makeBasicDataSource(that, true),
+        dataSource: makeBasicDataSource(modelObject, true),
                  items: [
                       {itemType: "group",caption: "Decision",colCount:2,items: [
          {
@@ -114,21 +129,8 @@
                 isRequired: true
                 }
             }]}, 
-            { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentByCase(that , that2) },
-            {itemType: "group",caption: "Checklist",colCount:1,items: [
-            {dataField: "policyNoCL",editorType: "dxCheckBox",visible:true},
-            {dataField: "theInsured",editorType: "dxCheckBox",visible:true},
-            {dataField: "occupation",editorType: "dxCheckBox",visible:true},
-            {dataField: "occupationFCICode",editorType: "dxCheckBox",visible:true},
-            {dataField: "riskGrading",editorType: "dxCheckBox",visible:true},
-            {dataField: "pOI",editorType: "dxCheckBox",visible:true},
-            {dataField: "tSI",editorType: "dxCheckBox",visible:true},
-            {dataField: "premium",editorType: "dxCheckBox",visible:true},
-            {dataField: "deductible",editorType: "dxCheckBox",visible:true},
-            {dataField: "tnCs",editorType: "dxCheckBox",visible:true},
-            {dataField: "occupationCode",editorType: "dxCheckBox",visible:true},
-            {dataField: "premiumRate",editorType: "dxCheckBox",visible:true}
-            ]} ]
+            { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentByCase(null ,null ,that3) },
+          ]
        });
        viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
 </script>

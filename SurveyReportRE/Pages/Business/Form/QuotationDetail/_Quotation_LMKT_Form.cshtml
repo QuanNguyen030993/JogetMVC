@@ -27,6 +27,7 @@
     that.guid = "@(quotationGuid)";
     that.sectionName = "@(dept)";
     that.titleName = "Upload Quotation";
+    that.uploaderAllow = _role == "@dept";
     that.data = { SectionName: `${sectionId}_${that.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: that.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" };; //{"SectionName":"default_FO_410"}
 
 
@@ -38,88 +39,140 @@
     that2.guid = "@(quotationGuid)";
     that2.sectionName = "@(dept)";
     that2.titleName = "Upload Supporting Document";
+    that2.uploaderAllow = _role == "@dept";
     that2.data = { SectionName: `${sectionId}_${that2.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" }; //{"SectionName":"default_FO_410"}
+
+     var mainFields =  [
+                {itemType: "group",caption: "MGR Review",colCount:1,items: [
+                    { itemType: "group", caption: "Attachment", colCount: 1, items:  attachmentByCase(that , that2) },
+                     { dataField:"leaderComment", label:{text:"Comment"}, editorType:"dxTextArea", colSpan:2 }
+                ]}
+        ];
 
     $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
         dataSource: makeBasicDataSource(that, true),
                items: [
                     {itemType: "group",caption: "Decision",colCount:2,items: [
-        {
-    dataField: "decision",
-    label: { text: "Decision" },
-    editorType: "dxRadioGroup",
-    editorOptions: {
-        items: [
-            { id: "AC_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Approve", value: true },
-            { id: "RJ_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Decline", value: false },
-            // { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Return", value: false }
-        ],
-         displayExpr: "text",
-         valueExpr: "id",
-         layout: "horizontal",
-         itemTemplate: function(itemData, _, itemElement) {
-         setTimeout(() => {
-          var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-          var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
-          if (tatObject) if (tatObject[`@dept`]?.AcceptDate)
-          {
-            $(`#AC_@QTViewIdHelper.Decision(dept, quotationId)`).addClass("btn-success");
-            $(`#${itemData.id}`).dxButton("instance").option("disabled", true);
-            if (itemData.id === "RJ_@QTViewIdHelper.Decision(dept, quotationId)" ) $(`#RJ_@QTViewIdHelper.Decision(dept, quotationId)`).dxButton("instance").option("disabled", false);
-          }
-         },_delayRenderDecisionButton);
+    //     {
+    // dataField: "decision",
+    // label: { text: "Decision" },
+    // editorType: "dxRadioGroup",
+    // editorOptions: {
+    //     items: [
+    //         { id: "AC_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Approve", value: true },
+    //         { id: "RJ_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Decline", value: false },
+    //         // { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Return", value: false }
+    //     ],
+    //      displayExpr: "text",
+    //      valueExpr: "id",
+    //      layout: "horizontal",
+    //      itemTemplate: function(itemData, _, itemElement) {
+    //      setTimeout(() => {
+    //       var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+    //       var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
+    //       if (tatObject) if (tatObject[`@dept`]?.AcceptDate)
+    //       {
+    //         $(`#AC_@QTViewIdHelper.Decision(dept, quotationId)`).addClass("btn-success");
+    //         $(`#${itemData.id}`).dxButton("instance").option("disabled", true);
+    //         if (itemData.id === "RJ_@QTViewIdHelper.Decision(dept, quotationId)" ) $(`#RJ_@QTViewIdHelper.Decision(dept, quotationId)`).dxButton("instance").option("disabled", false);
+    //       }
+    //      },_delayRenderDecisionButton);
 
-         $(`<div id='${itemData.id}'>`).dxButton({
-         text: itemData.text,
-         width: "100%",
-         height: "100%",
-         onClick: function (e){
-             if (_ == 0)
-                 {
-                      var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-                       var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
-                      tatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
-                      formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
-                      var passingObject = new Object();
-                      passingObject.statusName = "Signing Process"; // base on Dept
-                      passingObject.Comment = `Quotation ${formItems.quotationCode} approved by ${_displayName}!`;  // base on Dept
-                      passingObject.formItems = formItems;
-                      passingObject.dept = `@dept`;
-                      passingObject.url = '/api/Quotation/UpdateData';
-                      passingObject.urlLog = `/api/Quotation/LogAction`;
-                      passingObject.schemeName = `Quotation`;
-                      acceptDecision(passingObject);
+    //      $(`<div id='${itemData.id}'>`).dxButton({
+    //      text: itemData.text,
+    //      width: "100%",
+    //      height: "100%",
+    //      onClick: function (e){
+    //          if (_ == 0)
+    //              {
+    //                   var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+    //                    var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
+    //                   tatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
+    //                   formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+    //                   var passingObject = new Object();
+    //                   passingObject.statusName = "Signing Process"; // base on Dept
+    //                   passingObject.Comment = `Quotation ${formItems.quotationCode} approved by ${_displayName}!`;  // base on Dept
+    //                   passingObject.formItems = formItems;
+    //                   passingObject.dept = `@dept`;
+    //                   passingObject.url = '/api/Quotation/UpdateData';
+    //                   passingObject.urlLog = `/api/Quotation/LogAction`;
+    //                   passingObject.schemeName = `Quotation`;
+    //                   acceptDecision(passingObject);
 
-                      ajaxGet(`api/Document/DigiSign/${formItems.id}`, null).then(data => {
-                      });;
+    //                   ajaxGet(`api/Document/DigiSign/${formItems.id}`, null).then(data => {
+    //                   });;
 
+
+    //              }
+    //              if (_ == 1)
+    //              {
+    //                   var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+    //                   var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
+    //                   tatObject[`@dept`].AcceptDate = "";
+    //                   formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+    //                   var passingObject = new Object();
+    //                   passingObject.statusName = "@dept Pending"; // base on Dept
+    //                   passingObject.Comment = `Quotation ${formItems.quotationCode} rejected by ${_displayName}!`;  // base on Dept
+    //                   passingObject.formItems = formItems;
+    //                   passingObject.dept = `@dept`;
+    //                   passingObject.url = '/api/Quotation/UpdateData';
+    //                   passingObject.urlLog = `/api/Quotation/LogAction`;
+    //                   passingObject.schemeName = `Quotation`;
+    //                   rejectDecision(passingObject);
+    //              }
+    //              }
+    //                  }).appendTo(itemElement);
+    //               itemElement
+    //             },
+    //             isRequired: true
+    //             }
+    //         }
+    // 
+    //
+    
+                {
+                     dataField: "decision",
+
+                     label: {
+                         text: "Decision"
+                     },
+                     itemType: "simple",
+
+                     template: function (data, itemElement) {
+                                         $(`<div id='#AC_@QTViewIdHelper.Decision(dept, quotationId)}'>`)
+                                    .dxButton({
+                                     elementAttr: {
+                                             id: `AC_@QTViewIdHelper.Decision(dept, quotationId)`
+                                     },
+                                     text: "Approve",
+                                     icon: "check",
+                                     onClick: function (e) {
+                                             var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+                                           var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
+                                          tatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
+                                          formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+                                          var passingObject = new Object();
+                                          passingObject.statusName = "Signing Process"; // base on Dept
+                                          passingObject.Comment = `Quotation ${formItems.quotationCode} approved by ${_displayName}!`;  // base on Dept
+                                          passingObject.formItems = formItems;
+                                          passingObject.dept = `@dept`;
+                                          passingObject.url = '/api/Quotation/UpdateData';
+                                          passingObject.urlLog = `/api/Quotation/LogAction`;
+                                          passingObject.schemeName = `Quotation`;
+                                          acceptDecision(passingObject);
+
+                                          ajaxGet(`api/Document/DigiSign/${formItems.id}`, null).then(data => {
+                                          });;
+
+                                     }
+                                        }).appendTo(itemElement);
+                                                    $(`#AC_Status_@QTViewIdHelper.Decision(dept, quotationId)`).appendTo(itemElement);
+                         }
 
                  }
-                 if (_ == 1)
-                 {
-                      var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-                      var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
-                      tatObject[`@dept`].AcceptDate = "";
-                      formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
-                      var passingObject = new Object();
-                      passingObject.statusName = "@dept Pending"; // base on Dept
-                      passingObject.Comment = `Quotation ${formItems.quotationCode} rejected by ${_displayName}!`;  // base on Dept
-                      passingObject.formItems = formItems;
-                      passingObject.dept = `@dept`;
-                      passingObject.url = '/api/Quotation/UpdateData';
-                      passingObject.urlLog = `/api/Quotation/LogAction`;
-                      passingObject.schemeName = `Quotation`;
-                      rejectDecision(passingObject);
-                 }
-                 }
-                     }).appendTo(itemElement);
-                  itemElement
-                },
-                isRequired: true
-                }
-            }]}, 
-            { itemType: "group", caption: "Attachment", colCount: 1, items:  attachmentByCase(that , that2) },
-            { dataField:"leaderComment", label:{text:"Comment"}, editorType:"dxTextArea", colSpan:2 }
+    ]}, 
+            ...mainFields
+           
            ]
     });
     viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");

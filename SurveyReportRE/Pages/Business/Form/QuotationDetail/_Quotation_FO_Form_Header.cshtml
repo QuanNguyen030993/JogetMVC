@@ -35,15 +35,15 @@
                          var sectionId =  "qt-body_@(dept)_RES";
 
      var thatRes = new Object();
-                         thatRes.ModelName = "Quotation";
-                         thatRes.moduleName = "default";
-                         thatRes.editorType = "dxFileUploader"
-                         thatRes.id = @quotationId;
-                         thatRes.guid = "@quotationGuid" ;
-                         thatRes.sectionName = "@(dept)";
-                         thatRes.titleName = "Upload RES Form";
-                         thatRes.uploaderAllow = true;
-                         thatRes.data = { SectionName: `${sectionId}_${thatRes.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: thatRes.moduleName, FormId: "@(QTViewIdHelper.Form(dept, quotationId))" }; //{"SectionName":"default_FO_410"}
+      thatRes.ModelName = "Quotation";
+      thatRes.moduleName = "default";
+      thatRes.editorType = "dxFileUploader"
+      thatRes.id = @quotationId;
+      thatRes.guid = "@quotationGuid" ;
+      thatRes.sectionName = "@(dept)";
+      thatRes.titleName = "Upload RES Form";
+      thatRes.uploaderAllow = _role == "@dept";
+      thatRes.data = { SectionName: `${sectionId}_${thatRes.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: thatRes.moduleName, FormId: "@(QTViewIdHelper.Form(dept, quotationId))" }; //{"SectionName":"default_FO_410"}
 
 
      // window.QuotationPage.resButtonComponent = 
@@ -56,33 +56,6 @@
 
 
                           var resItems = attachmentByCase(that);
-                         
-    //                      var resItems = [
-
-    //                              {itemType: "group", caption: "RES Document",colCount: 1, items: [{ dataField: "attachment", editorType:"dxFileUploader"
-    //         ,
-    //         editorOptions: {
-    //         name: "files"
-    //     }
-    //     ,template: function (data, itemElement) {
-    //         setTimeout(function () {
-
-    //             var item = new Object();
-    //             item.id = @quotationId;
-    //             item.guid = "@quotationGuid";
-    //             item.editorType = "dxFileUploader";
-    //             item.moduleName = "qt"; item.sectionName = "FO";
-    //             item.code = window.QuotationPage.state.quotes[0].quotationCode; 
-    //             item.specificFolder = "RES";
-    //             item.titleName = "Upload RES Document";
-    //             createEditor(item, itemElement, $("<div>"), item);
-    //             }, 1000);
-    //         }
-
-    //     }
-    //     ]}
-       
-    // ];
 
                        var popupInstance = makePopup("large", "Res");
                         popupInstance.option("contentTemplate", function (container) {

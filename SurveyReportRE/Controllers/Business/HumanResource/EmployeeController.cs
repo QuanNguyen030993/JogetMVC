@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using ERPCore.Controllers.Base;
 using ERPCore.Models.Migration.Business.Config;
@@ -6,6 +6,7 @@ using ERPCore.Models.Migration.Business.HumanResource;
 using System.Dynamic;
 using System.Text.RegularExpressions;
 using Microsoft.Data.SqlClient;
+using ERPCore.Models.Migration.Config;
 
 [Route("api/[controller]/[action]")]
 [ApiController]
@@ -13,6 +14,7 @@ public class EmployeeController : BaseControllerApi<Employee>
 {
     private readonly IBaseRepository<Employee> _BaseRepository;
     private readonly IBaseRepository<Users> _usersRepository;
+    private readonly IBaseRepository<EnumData> _enumDataRepository;
     private readonly IConfiguration _configuration;
 
     public EmployeeController(IBaseRepository<Employee> BaseRepository, IHttpContextAccessor httpContextAccessor, IConfiguration configuration) : base(BaseRepository, httpContextAccessor)
@@ -20,13 +22,14 @@ public class EmployeeController : BaseControllerApi<Employee>
         _BaseRepository = BaseRepository;
         _configuration = configuration;
         _usersRepository = new BaseRepository<Users>(configuration, httpContextAccessor);
+        _enumDataRepository = new BaseRepository<EnumData>(configuration, httpContextAccessor);
     }
     [HttpGet]
-    public async Task<IActionResult> GetAssignableByGroup(string group, bool excludeCurrent = true, string keyword = "")
+    public async Task<IActionResult> GetAssignableByGroup(string group, string branchCode, bool excludeCurrent = true, string keyword = "")
     {
         var currentLogin = (User?.Identity?.Name ?? "").Trim();
-
-        List<Employee> data = await _BaseRepository.GetListObject(l => l.Department == group);
+        EnumData enumData = await _enumDataRepository.GetSingleObject(s => s.Code == branchCode);
+        List<Employee> data = await _BaseRepository.GetListObject(l => l.Department == group && l.AreaId == enumData.Id);
 
         if (excludeCurrent)
         {
@@ -70,6 +73,35 @@ public class EmployeeController : BaseControllerApi<Employee>
 
         return Ok(new { success = true, data = data });
     }
+    [HttpGet("{id}")]
+    public async Task<IActionResult> PersonInChargeLookup(string id)
+    {
+        var accountList = id
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(x => x.Trim().ToLower())
+            .ToList();
+
+        var data = await _BaseRepository.GetListObject(x =>
+            accountList.Contains(x.AccountName.ToLower())
+        );
+
+        if (data == null || !data.Any())
+        {
+            return Ok(new { success = false, message = "Employee not found" });
+        }
+                                                 
+        // ✅ Ghép FullName thành chuỗi
+        var fullNames = string.Join(", ", data.Select(x => x.FullName));
+        if (data.Count == 0)
+            fullNames = "(Unassigned)";
+        return Ok(new
+        {
+            success = true,
+            data = data,
+            fullNames = fullNames
+        });
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetMyAssigneeProfile()
     {

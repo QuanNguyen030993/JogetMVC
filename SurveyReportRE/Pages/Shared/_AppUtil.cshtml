@@ -1676,7 +1676,10 @@
 
         function TinyMCEElementMaker(classform, dept, id, control)
         {
-                var item = new Object();
+        var item = new Object();
+
+            try
+            {
                 item.id = id;
                 item.editorType = "dxHtmlEditor";
                 item.instanceProps = new Object();
@@ -1687,7 +1690,12 @@
                     $element.empty();
                     createEditor(item, itemElement, $("<div>"), item);
                 }
-            return item.control;
+                 return item.control;
+            }catch {
+                console.log("Remark box problem");
+                return  null;
+            }
+           
 
             // document.querySelectorAll(classform).forEach((el, idx) => {
             //     setTimeout(() => {
@@ -2436,7 +2444,7 @@
 
         //     });
         // }
-    function renderDepartmentAssigneeBox(selector, options) {
+    function renderDepartmentAssigneeBox(selector, options, hideIfMuliple = true) {
         const settings = $.extend(true, {
             groupName: "",
             dataForm: {},
@@ -2457,6 +2465,7 @@
                     dataType: "json",
                     data: {
                         group: settings.groupName,
+                        branchCode: _branch,
                         excludeCurrent: true,
                         keyword: loadOptions.searchValue || ""
                     }
@@ -2491,6 +2500,10 @@
 
         const tagBox = $(selector).dxTagBox({
 
+            elementAttr: {
+                    class: "outlined-tagbox"
+                },
+
             dataSource: store,
 
             valueExpr: "accountName",
@@ -2501,10 +2514,11 @@
             // value: getDefaultPicByDept(settings.groupName, settings.dataForm) || settings.value,
 
             searchEnabled: true,
-            maxDisplayedTags: 1,
-            showMultiTagOnly: true,
+            maxDisplayedTags: hideIfMuliple ? 1 : 100,
+                showMultiTagOnly: hideIfMuliple,
 
             onMultiTagPreparing: function (e) {
+                if (hideIfMuliple){
 
                 const items = e.selectedItems || [];
 
@@ -2519,6 +2533,7 @@
                             .map(x => x.fullName)
                             .join("\n")
                     );
+                }
             },
             searchExpr: [
                 "fullName",
@@ -2821,6 +2836,44 @@
 
                     } : {}]
             }
+
+
+                function attachmentByCase(...item){
+                        return [item[0] ? {
+                            dataField: "quotation", editorType: "dxFileUploader"
+                            ,
+                            editorOptions: {
+                                name: "files"
+                            }
+                            , template: function (data, itemElement) {
+                                createEditor(item[0], itemElement, $(`<div>`), item[0]);
+                            }
+
+                        } : {},
+                        item[1] ? {
+                            dataField: "supportingDocument", editorType: "dxFileUploader"
+                            ,
+                            editorOptions: {
+                                name: "sdfiles"
+                            }
+                            , template: function (data, itemElement) {
+                                createEditor(item[1], itemElement, $(`<div>`), item[1]);
+                            }
+
+                        } : {},
+                        item[2] ? {
+                            dataField: "document", editorType: "dxFileUploader"
+                            ,
+                            editorOptions: {
+                                name: "dfiles"
+                            }
+                            , template: function (data, itemElement) {
+                                createEditor(item[2], itemElement, $(`<div>`), item[2]);
+                            }
+
+                        } : {}]
+                }
+
         function attachmentDefaultPi(...item){
         var attachmentControls = attachmentByCase(...item);
                     return attachmentControls;
@@ -3038,7 +3091,7 @@
                             });
             }
         }
-        function renderDxFileUploader(editorOptions, $container, options) {
+        function renderDxFileUploader(editorOptions, $container, options, isRenderUploader = true, uploaderAllow = false)  {
             const renderTime = Date.now();
             const controlId = `${editorOptions.data.SectionName}`;
             const data =  editorOptions.data;
@@ -3048,19 +3101,22 @@
             // const currentOptions = getCurrentFormOptions(editorOptions) || {};
             // currentOptions.guid = editorOptions.guid || "";
             // const ids = getDxFileUploaderIds(editorOptions);
-            var uploaderAllow = editorOptions.uploaderAllow == null ? true : editorOptions.uploaderAllow;
-            editorOptions.uploaderAllow = uploaderAllow;
+            // var uploaderAllow = editorOptions.uploaderAllow == null ? true : editorOptions.uploaderAllow;
+            // editorOptions.uploaderAllow = uploaderAllow;
 
             $(`#${editorOptions.previewId}`).remove();
             $(`#${controlId}`).remove();
             //const $preview =  $(`<div id="${previewId}" style="display:flex;flex-wrap:wrap;gap:25px;top:10px"></div>`)
             const $preview = $(`<div id="attList_${controlId}_${renderTime}" class="att-preview"></div>`)
                 .appendTo($container);
-            if (editorOptions.uploaderAllow == true)
-            $(`<div id="fileUpload_${controlId}_${renderTime}"></div>`)
+            const $uploader = $(`<div id="fileUpload_${controlId}_${renderTime}"></div>`)
                 .appendTo($container)
+
+               
+             // if (isRenderUploader)
+               $uploader
                 .dxFileUploader({
-                    // readOnly: !!currentOptions.isReadOnly,
+                    // disabled: !uploaderAllow,
                     multiple: true,
                     accept: options.accept || "*/*",
                     selectButtonText: editorOptions.titleName || `Upload Attachments`,
@@ -3548,7 +3604,10 @@
         }
 
 
-     function makeSelectBoxEditorOptions(dataSource, acceptCustomValue = false ,gridInstance = null, item = null) {
+     function makeSelectBoxEditorOptions(dataSource, acceptCustomValue = false ,gridInstance = null, item = null, callback = null) {
+
+              
+
         return {
             editorType: "dxSelectBox",
             //dropDownOptions : { minWidth: 200 },
@@ -3557,7 +3616,7 @@
             valueExpr: 'id',
             displayExpr: 'value',
             searchEnabled: true,
-            width: 300,
+            width: "100%",
             acceptCustomValue: acceptCustomValue,
             // onValueChanged: function (e) { // handle after select // impact filter datagrid column, note
             //     if (gridInstance != null) {
@@ -4273,7 +4332,7 @@
                         uploadTitle: "Files",
                         uploadUrl: "/api/Attachment/AsyncUploadFile",
                         accept: "*/*"
-                    });
+                        }, editorOptions.isRenderUploader, editorOptions.uploaderAllow);
 
                 }
                 break;
@@ -5289,4 +5348,204 @@ function styleModeChange(item){
                  function safe(v) {
                       return String(v == null ? "" : v);
                     }
+
+                    //20260625
+                        function makeTheClientLocationGrid(instanceItems, dropdownControl, instanceProps, container, onSelectionChanged = null, sizeOptions = {}) {
+        return makeLookupGrid({
+            container: container,
+            dropdownControl: dropdownControl,
+            instanceProps: instanceProps,
+            dataSource: instanceItems.editorOptions.dataSource,
+            keyExpr: "id",
+
+            width: sizeOptions.width || "100%",
+            height: sizeOptions.height || "100%",
+            gridHeight: sizeOptions.gridHeight || "85%",
+            scrollHeight: sizeOptions.scrollHeight || "100%",
+
+            columns: [
+                { dataField: "clientCode", caption: "Client Code" },
+                { dataField: "englishName", caption: "English Name" },
+                { dataField: "vietnameseName", caption: "Vietnamese Name" },
+                { dataField: "clientType", caption: "Client Type" }
+            ],
+
+            topPanelBuilder: function () {
+                const $panel = $('<div style="display:flex;padding:10px;align-items:center;gap:10px;"></div>');
+                $('<div style="padding-right:10px;">Branch code:</div>').appendTo($panel);
+                $('<div class="branch-radio-host"></div>').appendTo($panel);
+                return $panel;
+            },
+
+            onGridReady: function (ctx) {
+                const $radioHost = ctx.result.topPanel.find(".branch-radio-host");
+                $radioHost.dxRadioGroup({
+                    dataSource: _enums.BranchOffice,
+                    valueExpr: "id",
+                    displayExpr: "value",
+                    layout: "horizontal",
+                    onValueChanged: function (e) {
+                        const ds = ctx.grid.getDataSource();
+                        ds.filter(["branchId", "=", e.value]);
+                        ds.load();
+                    }
+                });
+            },
+
+            defaultSelectionHandler: function (e, ctx) {
+                if (!ctx.selectedRow) return;
+
+                ctx.dropdownControl.component.option("value", ctx.selectedKey);
+
+                // ctx.instanceProps.formInstance.updateData("clientName", ctx.selectedRow.clientName || "");
+                // ctx.instanceProps.formInstance.updateData("locationAddress", ctx.selectedRow.clientAddress || "");
+                // ctx.instanceProps.formInstance.updateData("clientCode", ctx.selectedRow.clientCode || "");
+                // ctx.instanceProps.formInstance.updateData("locationId", ctx.selectedRow.locationId || 0);
+
+                ctx.dropdownControl.component.close();
+            },
+
+            onSelectionChanged: function (e, ctx) {
+                if (typeof onSelectionChanged === "function") {
+                    return onSelectionChanged(e, ctx);
+                }
+            },
+
+            gridOptions: {
+                allowItemDeleting: false
+            }
+        });
+    }
+
+        function getPersonInCharge(accountIds) {
+        var deferred = $.Deferred();
+
+        $.ajax({
+            url: `/api/Employee/PersonInChargeLookup/${encodeURIComponent(accountIds)}`,
+            type: "GET",
+            success: function (res) {
+                if (res.success) {
+                    deferred.resolve(res.fullNames); // ✅ trả về chuỗi đã ghép
+                } else {
+                    deferred.resolve(""); // fallback
+                }
+            },
+            error: function (err) {
+                console.error("API error:", err);
+                deferred.reject(err);
+            }
+        });
+
+        return deferred.promise();
+    }
+         //Popup hover
+            function renderDeptCallouts(picJson) {
+                const picMap = parsePicMap(picJson);
+                $(".dept-node").each(function () {
+                    const dept = normalizeDeptKey($(this).data("key"));
+                    const $co = $(this).find(".dept-callout");
+                    if (!$co.length) return;
+                    const pic = picMap[dept] || "";
+                    if (pic)
+                    getPersonInCharge(pic).then(function (stageName) {
+                    // if (stageDept)
+                        $co.find(".co-text").text(stageName);
+                        $co.css({ color: "rgba(17,24,39,.85)" });
+                        });
+                });
+            }
+
+
+            function parsePicMap(picJson) {
+                try {
+                    const obj = JSON.parse(picJson || "{}");
+                    const map = {};
+                    Object.keys(obj).forEach(k => map[normalizeDeptKey(k)] = obj[k]);
+                    return map;
+                } catch {
+                    return {};
+                }
+            }
+
+                  function normalizeDeptKey(k) {
+                return String(k || "").trim().toUpperCase();
+            }
+
+                function renderFullFormIfAccepted(formInstance, dept, mainField) {
+        var formData = formInstance.option("formData") || {};
+        var tatObject = tryParseJSON(formData.turnAroundTimeAttributes);
+
+        if (tatObject?.[dept]?.AcceptDate) {
+            formInstance.option("items", [
+                ...formInstance.option("items"),
+                ...mainField
+            ]);
+        }
+    }
+
+             function delayAcceptStatus(mainFields,formId,dept, acceptButtonId, acceptButtonIdStatus,rejectButtonId, rejectButtonIdStatus ){
+              setTimeout(() => {
+                var formIns = $(`#${formId}`).dxForm("instance");
+                    renderFullFormIfAccepted(formIns, dept, mainFields);
+                 var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                     var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
+                 if (tatObject) if (tatObject[dept]?.AcceptDate)
+             {
+                     if (acceptButtonId)
+                     {
+                        $(`#${acceptButtonId}`).css("background-color","#17a2b8");
+                        $(`#${acceptButtonIdStatus}`).text(`Accepted at: ${tatObject[dept]?.AcceptDate}`);
+                        $(`#${acceptButtonId}`).dxButton("instance").option("disabled", true);
+                     }
+                      if (rejectButtonId)
+                     {
+                        $(`#${rejectButtonId}`).css("background-color","#17a2b8");
+                        $(`#${rejectButtonIdStatus}`).text(`Accepted at: ${tatObject[dept]?.AcceptDate}`);
+                            $(`#${rejectButtonId}`).dxButton("instance").option("disabled", true);
+                     }
+            }
+            },_delayRenderDecisionButton);
+    }
+
+    function decisionField(formId,dept,acceptButtonId, acceptStatusElement,rejectButtonId, rejectStatusElement ){
+          return   {
+                     dataField: "decision",
+
+                     label: {
+                         text: "Decision"
+                     },
+                     itemType: "simple",
+
+                     template: function (data, itemElement) {
+                             if (acceptButtonId){
+                                         $(`<div id='${acceptButtonId}'>`)
+                                    .dxButton({
+                                     elementAttr: {
+                                             id: acceptButtonId
+                                     },
+                                     text: "Accept",
+                                     icon: "check",
+                                     onClick: function (e) {
+                                             var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                                         var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
+                                             tatObject[dept].AcceptDate = formatDateToString(new Date()).gmt7;
+                                         formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+                                         var passingObject = new Object();
+                                         passingObject.statusName = `${dept} Process`; // base on Dept
+                                         passingObject.Comment = `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`;  // base on Dept
+                                         passingObject.formItems = formItems;
+                                             passingObject.dept = dept;
+                                         passingObject.url = '/api/Quotation/UpdateData';
+                                         passingObject.urlLog = `/api/Quotation/LogAction`;
+                                         passingObject.schemeName = `Quotation`;
+                                         acceptDecision(passingObject);
+                                     }
+                                        }).appendTo(itemElement);
+                                                    $(`#${acceptStatusElement}`).appendTo(itemElement);
+                         }
+                                
+                     }
+                 }
+    }
+
 </script>

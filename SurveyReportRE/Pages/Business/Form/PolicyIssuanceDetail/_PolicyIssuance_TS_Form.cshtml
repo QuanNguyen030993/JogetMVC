@@ -64,7 +64,8 @@
     that.guid = "@(cloneQuotationGuid)";
     that.sectionName = "@(dept)";
     that.titleName = "Upload Quotation";
-    that.uploaderAllow = false;
+    that.isRenderUploader = false;
+    that.uploaderAllow = _role == "@dept";
     that.data = { SectionName: `${sectionIdQt}_${that.moduleName}_@(cloneId)`, Department: "@(dept)", FieldName: that.moduleName, FormId: "@(QTViewIdHelper.Form(dept, cloneId))" }; //{"SectionName":"default_FO_410"}
 
     var that2 = new Object();
@@ -75,6 +76,7 @@
     that2.guid = "@(cloneQuotationGuid)";
     that2.sectionName = "@(dept)";
     that2.titleName = "Upload Supporting Document";
+    that2.uploaderAllow = _role == "@dept";
     that2.data = { SectionName: `${sectionIdQt}_${that2.moduleName}_@(cloneId)`, Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept, cloneId))" }; //{"SectionName":"default_FO_410"}
 
     var that3 = new Object();
@@ -87,6 +89,7 @@
     that3.cloneGuid ="@(cloneQuotationGuid)";
     that3.sectionName = "@(dept)";
     that3.titleName = "Upload Document";
+    that3.uploaderAllow = _role == "@dept";
     that3.data = { SectionName: `${sectionId}_${that3.moduleName}_@(policyIssuanceId)`, Department: "@(dept)", FieldName: that3.moduleName, FormId: "@(PIViewIdHelper.Form(dept, policyIssuanceId))" }; //{"SectionName":"default_FO_410"}
 
    

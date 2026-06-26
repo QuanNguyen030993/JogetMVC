@@ -85,33 +85,10 @@ Note:
         function statusClass(raw) { return normalizeStatus(raw).css; }
         function statusText(raw) { return normalizeStatus(raw).text; }
 
-        function normalizeDeptKey(k) {
-            return String(k || "").trim().toUpperCase();
-        }
+       
 
-        function parsePicMap(picJson) {
-            try {
-                const obj = JSON.parse(picJson || "{}");
-                const map = {};
-                Object.keys(obj).forEach(k => map[normalizeDeptKey(k)] = obj[k]);
-                return map;
-            } catch {
-                return {};
-            }
-        }
 
-        function renderDeptCallouts(picJson) {
-            const picMap = parsePicMap(picJson);
-            $(".dept-node").each(function () {
-                const dept = normalizeDeptKey($(this).data("key"));
-                const $co = $(this).find(".dept-callout");
-                if (!$co.length) return;
-                const pic = picMap[dept] || "-";
-                if (stageDept)
-                $co.find(".co-text").text(pic);
-                $co.css({ color: "rgba(17,24,39,.85)" });
-            });
-        }
+
     function getSelectedModel() {
              const q = state.quotes.find(x => x.id === state.selectedId) || state.quotes[0];
              return q || null;
@@ -395,26 +372,20 @@ Note:
 
             });
 
-           
+            
 
             setTimeout(() => {
                  $.each(qtDeptModuleCode, function (itemIndex, item) {
-                       var saveButtonId = window.QuotationIdManager.btnSave(item,@ViewData["Id"]);
+                    var saveButtonId = window.QuotationIdManager.btnSave(item,@ViewData["Id"]);
                     $(`#${saveButtonId}`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roleApply[item]);
                     var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
                     $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
+                     $(`#${formId}`).dxForm("instance")?.repaint();
                 });
                
             }, 1);
 
-            // setTimeout(() => {
-            //       $.each(qtDeptModuleCode, function (itemIndex, item) {
-            //         var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
-            //      $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
 
-            // });
-                
-            // }, 1);
                 
             $(`#${formModuleKeyQt}-roleSelect`).dxSelectBox({
                 items: QtRoles,
@@ -422,6 +393,7 @@ Note:
                 stylingMode: "outlined",
                 onValueChanged: (e) => {
                     state.currentUserRole = e.value;
+                    _role = e.value;
                     $(`#${formModuleKeyQt}-loginRoleLabel`).text(state.currentUserRole);
                     applyEditLock();
                     updateHints();
@@ -461,15 +433,15 @@ Note:
             });
         }
 
-        function updateCurrentStep(stepNo) {
-            var pageLayout = window.QuotationPage;
-            pageLayout.state.nextStep.currentStep = stepNo;
-        }
+        // function updateCurrentStep(stepNo) {
+        //     var pageLayout = window.QuotationPage;
+        //     pageLayout.state.nextStep.currentStep = stepNo;
+        // }
 
-        function setNextStep(nextStep) {
-            var pageLayout = window.QuotationPage;
-            pageLayout.state.nextStep = nextStep;
-        }
+        // function setNextStep(nextStep) {
+        //     var pageLayout = window.QuotationPage;
+        //     pageLayout.state.nextStep = nextStep;
+        // }
 
         function updateSectionUpdatedTime(q) {
             let tat = {};
@@ -513,7 +485,7 @@ Note:
 
                 applyNodeHighlights();
                 applySectionFocusHighlight();
-                applyEditLock();
+                // applyEditLock();
                 updateHints();
                 scrollToDept(formModuleKeyQt, { id: `${focusDept}`, keyId: "@ViewData["Id"]" });
                 setSectionCollapsed(focusDept, false);
@@ -606,11 +578,11 @@ Note:
                 };
             }
 
-            function escapeHtml(s) {
-                return String(s ?? "")
-                    .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
-                    .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
-            }
+            // function escapeHtml(s) {
+            //     return String(s ?? "")
+            //         .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+            //         .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+            // }
 
             // function renderComments(items) {
             //     if (!Array.isArray(items) || items.length === 0) {
@@ -626,14 +598,14 @@ Note:
             //                         // <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
             // }
 
-            const loadComments = debounce(function (quoteNo, quoteId) {
+            const loadComments = debounce(function (quoteNo) {
                 document.documentElement.style.setProperty("--rightdock-width", "20%");
+                var guid = "@(ViewData["Guid"])";
                 $("#rightCommentSub").text(`Audit log - ${quoteNo}` || "-");
                 $("#rightCommentList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
-                // const q = `SELECT * FROM CommentLog WHERE QuotationId = ${quoteId}`;
                 const q = `OnSystem`;
                 $.ajax({
-                    url: `/api/CommentLog/ExecuteCustomQuery?refField=QuotationId&refKey=${quoteId}`,
+                    url: `/api/CommentLog/ExecuteCustomQuery?refField=RecordGuid&refKey=${guid}`,
                     method: "POST",
                     async: true,
                     contentType: "application/json",
@@ -686,7 +658,7 @@ Note:
                 }
             }, 180);
 
-            const attachmentLogLoad = debounce(function (quoteNo, quoteId, attachmentId) {
+            const attachmentLogLoad = debounce(function (quoteNo) {
                 document.documentElement.style.setProperty("--rightdock-width", "70%");
                 $("#rightCommentSub").text(`Attachment log - ${quoteNo}`);
                 var guid = "@(ViewData["Guid"])";
@@ -837,7 +809,7 @@ Note:
                     onClick: () => {
                         clearContent();
                         openRightCommentPanel();
-                        attachmentLogLoad(state.selectedCodeNo, state.selectedId, selectedAttachmentId);
+                        attachmentLogLoad(state.selectedCodeNo);
                     }
                 }).appendTo($("#headerWidgetsPanel"));
 
@@ -848,7 +820,7 @@ Note:
                     onClick: () => {
                         clearContent();
                         openRightCommentPanel();
-                        loadComments(state.selectedCodeNo, state.selectedId);
+                        loadComments(state.selectedCodeNo);
                     }
                 }).appendTo($("#headerWidgetsPanel"));
 
@@ -871,9 +843,8 @@ Note:
                     onClick: () => {
                         clearContent();
                         if (!commentPanelOpened) {
-
                             openRightCommentPanel();
-                            loadComments(state.selectedCodeNo, state.selectedId);
+                            loadComments(state.selectedCodeNo);
                         } else {
                             closeRightCommentPanel();
                         }
@@ -920,7 +891,7 @@ Note:
                         clearContent();
                         if (!commentPanelOpened) {
                             openRightCommentPanel();
-                            attachmentLogLoad(state.selectedCodeNo, state.selectedId, selectedAttachmentId);
+                            attachmentLogLoad(state.selectedCodeNo);
                         } else {
                             closeRightCommentPanel();
                         }
@@ -967,10 +938,14 @@ Note:
             $(`#${formModuleKeyQt}-recordNo`).text(q.quotationCode);
 
             workflowStatus = q.workflowStatus ?? q.status;
-            $(`#${window.QuotationIdManager.stageDeptPill(q.id)}`).html(`<span id="@ViewIdHelper.DetailStatus(moduleCode, Convert.ToInt64(ViewData["Id"]))" class="pill">${workflowStatus}</span> - ${stageAccount ?? ""}`);
-            $(`#${window.QuotationIdManager.detailStatus(q.id)}`)
-                .text(statusText(workflowStatus))
-                .attr("class", `statusTag ${statusClass(workflowStatus)}`);
+            getPersonInCharge(stageAccount).then(function (stageName) {
+                $(`#${window.QuotationIdManager.stageDeptPill(q.id)}`).html(`<span id="@ViewIdHelper.DetailStatus(moduleCode, Convert.ToInt64(ViewData["Id"]))" class="pill">${workflowStatus}</span> <span style="padding-left:5px">- ${stageName ?? ""}</span>`);
+                $(`#${window.QuotationIdManager.detailStatus(q.id)}`)
+                    .text(statusText(workflowStatus))
+                    .attr("class", `statusTag ${statusClass(workflowStatus)}`);
+            
+            });
+
 
 
 
@@ -1111,6 +1086,8 @@ Note:
             updateHints();
             renderDeptCallouts(PIC_JSON);
             firstRender = false;
+            applyEditLock();
+
         });
     }, _delayQuotationsLoadForm);
 

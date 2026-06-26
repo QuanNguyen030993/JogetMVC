@@ -3596,7 +3596,7 @@
 .dx-texteditor.dx-editor-outlined {
     background: #fff;
     border: 1px solid #ddd;
-    border-radius: 0px;
+    border-radius: 7px;
 }
 
 .dx-texteditor.dx-editor-underlined {
@@ -7368,6 +7368,7 @@
 
 .dx-radiobutton .dx-item-content {
     /*padding: 6px 12px;*/
+    padding: 3px;
     border: 1px solid #ccc;
     border-radius: 6px;
     background-color: #f7f7f7;
@@ -7384,6 +7385,7 @@
 .dx-radiobutton-checked .dx-item-content {
     border: 2px solid #215C98;
     background-color: #215C98;
+    padding: 3px;
     color: white;
     font-weight: bold;
 }
