@@ -24,7 +24,7 @@
         {dataField: "iarQuotationNo",editorType: "dxTextBox",visible:false},
         {dataField: "IncIARQuoId",editorType: "dxSelectBox",visible:false},
 
-        {itemType: "group",caption: "Quotation Detail",colCount:2,items: [
+        {itemType: "group",caption: "Fill Task",colCount:2,items: [
          {itemType: "group",caption: "",colCount:3, colSpan: 2,items: [
         {dataField: "tmiCode",editorType: "dxSelectBox",visible: true, editorOptions: makeSelectBoxEditorOptions(_enums.TMICode)},
         {dataField: "tmivShare",editorType: "dxNumberBox", visible:true},
@@ -174,41 +174,42 @@
 
                     //     }
                     // }
-             {
-                 dataField: "decision",
+                    decisionField(`@QTViewIdHelper.Form(dept, quotationId)`, "@dept",`AC_@QTViewIdHelper.Decision(dept, quotationId)`,`AC_Status_@QTViewIdHelper.Decision(dept, quotationId)`,null,null  )
+             // {
+             //     dataField: "decision",
 
-                 label: {
-                     text: "Decision"
-                 },
-                 itemType: "simple",
+             //     label: {
+             //         text: "Decision"
+             //     },
+             //     itemType: "simple",
 
-                 template: function (data, itemElement) {
-                            $("<div id='AC_@QTViewIdHelper.Decision(dept, quotationId)'>")
-                         .dxButton({
-                             elementAttr: {
-                                 id: "AC_@QTViewIdHelper.Decision(dept, quotationId)"
-                             },
-                             text: "Accept",
-                             icon: "check",
-                             onClick: function (e) {
-                                 var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-                                 var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
-                                 tatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
-                                 formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
-                                 var passingObject = new Object();
-                                 passingObject.statusName = "@dept Process"; // base on Dept
-                                 passingObject.Comment = `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`;  // base on Dept
-                                 passingObject.formItems = formItems;
-                                 passingObject.dept = `@dept`;
-                                 passingObject.url = '/api/Quotation/UpdateData';
-                                 passingObject.urlLog = `/api/Quotation/LogAction`;
-                                 passingObject.schemeName = `Quotation`;
-                                 acceptDecision(passingObject);
-                             }
-                                }).appendTo(itemElement);
-                            $("<div id='AC_Status_@QTViewIdHelper.Decision(dept, quotationId)'>").appendTo(itemElement);
-                 }
-             }
+             //     template: function (data, itemElement) {
+             //                $("<div id='AC_@QTViewIdHelper.Decision(dept, quotationId)'>")
+             //                .dxButton({
+             //                 elementAttr: {
+             //                     id: "AC_@QTViewIdHelper.Decision(dept, quotationId)"
+             //                 },
+             //                 text: "Accept",
+             //                 icon: "check",
+             //                 onClick: function (e) {
+             //                     var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+             //                     var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
+             //                     tatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
+             //                     formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+             //                     var passingObject = new Object();
+             //                     passingObject.statusName = "@dept Process"; // base on Dept
+             //                     passingObject.Comment = `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`;  // base on Dept
+             //                     passingObject.formItems = formItems;
+             //                     passingObject.dept = `@dept`;
+             //                     passingObject.url = '/api/Quotation/UpdateData';
+             //                     passingObject.urlLog = `/api/Quotation/LogAction`;
+             //                     passingObject.schemeName = `Quotation`;
+             //                     acceptDecision(passingObject);
+             //                 }
+             //                    }).appendTo(itemElement);
+             //                $("<div id='AC_Status_@QTViewIdHelper.Decision(dept, quotationId)'>").appendTo(itemElement);
+             //     }
+             // }
 
     ]}//,
     ///...mainFields
@@ -216,21 +217,6 @@
      ]
         });
         viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
-
-
-    setTimeout(() => {
-        var formIns = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance");
-        renderFullFormIfAccepted(formIns, "@dept", mainFields);
-         var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-         var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
-         if (tatObject) if (tatObject[`@dept`]?.AcceptDate)
-         {
-            $(`#AC_@QTViewIdHelper.Decision(dept, quotationId)`).css("background-color","#17a2b8");
-            $(`#AC_Status_@QTViewIdHelper.Decision(dept, quotationId)`).text(`Accepted at: ${tatObject[`@dept`]?.AcceptDate}`);
-            $(`#AC_@QTViewIdHelper.Decision(dept, quotationId)`).dxButton("instance").option("disabled", true);
-            //$(`#RJ_@QTViewIdHelper.Decision(dept, quotationId)`).dxButton("instance").option("disabled", true);
-        }
-        },_delayRenderDecisionButton);
+    delayAcceptStatus(mainFields,`@QTViewIdHelper.Form(dept, quotationId)`,"@dept", `AC_@QTViewIdHelper.Decision(dept, quotationId)`, `AC_Status_@QTViewIdHelper.Decision(dept, quotationId)`,null,null);
 </script>
-<div id="quotationDecision"></div>
 <div id="@QTViewIdHelper.Form(dept, quotationId)"></div>

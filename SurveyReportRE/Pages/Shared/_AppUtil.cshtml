@@ -5482,4 +5482,70 @@ function styleModeChange(item){
             ]);
         }
     }
+
+             function delayAcceptStatus(mainFields,formId,dept, acceptButtonId, acceptButtonIdStatus,rejectButtonId, rejectButtonIdStatus ){
+              setTimeout(() => {
+                var formIns = $(`#${formId}`).dxForm("instance");
+                    renderFullFormIfAccepted(formIns, dept, mainFields);
+                 var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                     var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
+                 if (tatObject) if (tatObject[dept]?.AcceptDate)
+             {
+                     if (acceptButtonId)
+                     {
+                        $(`#${acceptButtonId}`).css("background-color","#17a2b8");
+                        $(`#${acceptButtonIdStatus}`).text(`Accepted at: ${tatObject[dept]?.AcceptDate}`);
+                        $(`#${acceptButtonId}`).dxButton("instance").option("disabled", true);
+                     }
+                      if (rejectButtonId)
+                     {
+                        $(`#${rejectButtonId}`).css("background-color","#17a2b8");
+                        $(`#${rejectButtonIdStatus}`).text(`Accepted at: ${tatObject[dept]?.AcceptDate}`);
+                            $(`#${rejectButtonId}`).dxButton("instance").option("disabled", true);
+                     }
+            }
+            },_delayRenderDecisionButton);
+    }
+
+    function decisionField(formId,dept,acceptButtonId, acceptStatusElement,rejectButtonId, rejectStatusElement ){
+          return   {
+                     dataField: "decision",
+
+                     label: {
+                         text: "Decision"
+                     },
+                     itemType: "simple",
+
+                     template: function (data, itemElement) {
+                             if (acceptButtonId){
+                                         $(`<div id='${acceptButtonId}'>`)
+                                    .dxButton({
+                                     elementAttr: {
+                                             id: acceptButtonId
+                                     },
+                                     text: "Accept",
+                                     icon: "check",
+                                     onClick: function (e) {
+                                             var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                                         var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
+                                             tatObject[dept].AcceptDate = formatDateToString(new Date()).gmt7;
+                                         formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+                                         var passingObject = new Object();
+                                         passingObject.statusName = `${dept} Process`; // base on Dept
+                                         passingObject.Comment = `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`;  // base on Dept
+                                         passingObject.formItems = formItems;
+                                             passingObject.dept = dept;
+                                         passingObject.url = '/api/Quotation/UpdateData';
+                                         passingObject.urlLog = `/api/Quotation/LogAction`;
+                                         passingObject.schemeName = `Quotation`;
+                                         acceptDecision(passingObject);
+                                     }
+                                        }).appendTo(itemElement);
+                                                    $(`#${acceptStatusElement}`).appendTo(itemElement);
+                         }
+                                
+                     }
+                 }
+    }
+
 </script>
