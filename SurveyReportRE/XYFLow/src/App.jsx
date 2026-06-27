@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ReactFlow,
   Background,
@@ -12,7 +12,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
-const initialNodes = [
+const defaultNodes = [
   {
     id: '1',
     position: { x: 60, y: 80 },
@@ -48,7 +48,7 @@ const initialNodes = [
   },
 ];
 
-const initialEdges = [
+const defaultEdges = [
   {
     id: 'e1-2',
     source: '1',
@@ -65,15 +65,100 @@ const initialEdges = [
   },
 ];
 
+const nodeStyle = ({ nodeType }) => {
+  if (nodeType === 'department') {
+    return {
+      background: '#e0f2fe',
+      border: '1px solid #0284c7',
+      borderRadius: '10px',
+      color: '#0f172a',
+    };
+  }
+
+  return {
+    background: '#f8fafc',
+    border: '1px solid #94a3b8',
+    borderRadius: '10px',
+    color: '#0f172a',
+  };
+};
+
+const mapWorkflowNodes = (workflowNodes) =>
+  workflowNodes.map((node) => ({
+    id: node.id,
+    position: { x: node.x ?? 0, y: node.y ?? 0 },
+    data: {
+      label: `${node.nodeName || node.departmentName || node.nodeCode || node.id}`,
+      subtitle: node.departmentName ? `${node.departmentName}` : '',
+      type: node.nodeType || 'default',
+    },
+    style: nodeStyle(node),
+  }));
+
+const mapWorkflowEdges = (workflowTransitions) =>
+  workflowTransitions.map((transition, index) => ({
+    id: `e-${transition.fromNodeId}-${transition.toNodeId}-${index}`,
+    source: transition.fromNodeId,
+    target: transition.toNodeId,
+    animated: true,
+    type: 'smoothstep',
+    label: transition.actionName || transition.statusName || transition.stepNo || '',
+  }));
+
 function App() {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState(defaultNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(defaultEdges);
   const [selectedNode, setSelectedNode] = useState(null);
+  const [workflowId, setWorkflowId] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const onConnect = useCallback(
     (params) => setEdges((currentEdges) => addEdge({ ...params, animated: true, type: 'smoothstep' }, currentEdges)),
     [setEdges],
   );
+
+  const loadWorkflow = useCallback(
+    async (id) => {
+      const workflowDefinitionId = id || workflowId;
+      if (!workflowDefinitionId) {
+        setError('Please enter a workflow id');
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch(`/api/WorkflowDefinition/GetSingle/${encodeURIComponent(workflowDefinitionId)}`);
+        if (!response.ok) {
+          throw new Error(`API error ${response.status}`);
+        }
+
+        const data = await response.json();
+        const nextNodes = Array.isArray(data.workflowNodes) ? mapWorkflowNodes(data.workflowNodes) : [];
+        const nextEdges = Array.isArray(data.workflowTransitions) ? mapWorkflowEdges(data.workflowTransitions) : [];
+
+        setNodes(nextNodes.length ? nextNodes : []);
+        setEdges(nextEdges.length ? nextEdges : []);
+        setSelectedNode(null);
+      } catch (fetchError) {
+        setError(fetchError.message || 'Failed to load workflow data');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [workflowId, setEdges, setNodes],
+  );
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    if (id) {
+      setWorkflowId(id);
+      loadWorkflow(id);
+    }
+  }, [loadWorkflow]);
 
   const addNode = useCallback(() => {
     const id = `node-${Math.random().toString(36).slice(2, 8)}`;
@@ -98,6 +183,25 @@ function App() {
 
   return (
     <div className="app-shell">
+      <Panel position="top-left" className="panel">
+        <h2>XY Flow React demo</h2>
+        <p>Load workflow data from API, then view it as a graph.</p>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <input
+            type="text"
+            placeholder="Workflow id"
+            value={workflowId}
+            onChange={(event) => setWorkflowId(event.target.value)}
+            style={{ minWidth: 240, padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+          />
+          <button onClick={() => loadWorkflow()} disabled={loading}>
+            {loading ? 'Loading…' : 'Load workflow'}
+          </button>
+          <button onClick={addNode}>Add node</button>
+        </div>
+        {error && <p style={{ color: '#b91c1c', marginTop: 8 }}>{error}</p>}
+      </Panel>
+
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -108,11 +212,6 @@ function App() {
         connectionLineType={ConnectionLineType.SmoothStep}
         fitView
       >
-        <Panel position="top-left" className="panel">
-          <h2>XY Flow React demo</h2>
-          <p>Drag nodes, connect them, and add a new step.</p>
-          <button onClick={addNode}>Add node</button>
-        </Panel>
         <Panel position="top-right" className="info-panel">
           <strong>{selectedNode ? `Selected: ${selectedNode.data.label}` : 'Select a node'}</strong>
         </Panel>
