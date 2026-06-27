@@ -15,9 +15,11 @@
             }
         }
     }
-
     Quill.register(CustomList, true);
-
+    DevExpress.Quill.register({
+                    'modules/better-table': quillBetterTable,
+                    'formats/custom-list': CustomList
+                }, true);
         //Performance check query in need
         function makeBasicDataSource(instance, isForm = false, configBefore = false) {
             try {
@@ -1440,11 +1442,21 @@
                         item.instanceProps = new Object();
                         item.instanceProps.refKey = id;
                        var itemElement = $(`#${moduleKey}-commentEditor_${dept}_${id}`);
-                        createEditor(item, itemElement, $("<div>"), item);
-                        control = item.control.instance;
-                       control.option("onValueChanged", function (e) {
-                           parentForm.updateData("content", e.value);
-                       });
+                       if (itemElement.length > 0)
+                       {
+                           try
+                           {
+                            createEditor(item, itemElement, $("<div>"), item);
+                           }
+                           catch 
+                           {
+                               console.log("Render comment box problem");
+                           }
+                            control = item.control.instance;
+                           control.option("onValueChanged", function (e) {
+                               parentForm.updateData("content", e.value);
+                           });
+                       }
                         //     onValueChanged: function (e) {
                         //         parentForm.updateData("content", e.value);
                         //     },
@@ -2453,7 +2465,6 @@
             onChanged: null
         }, options || {});
 
-
         const store = new DevExpress.data.CustomStore({
             key: "id",
             loadMode: "raw",
@@ -2802,77 +2813,81 @@
         //Attachment handle
         
                 function attachmentByCase(...item){
-                    return [item[0] ? {
-                        dataField: "quotation", editorType: "dxFileUploader"
-                        ,
-                        editorOptions: {
-                            name: "files"
-                        }
-                        , template: function (data, itemElement) {
-                            createEditor(item[0], itemElement, $(`<div>`), item[0]);
-                        }
+                    const items = [];
 
-                    } : {},
-                    item[1] ? {
-                        dataField: "supportingDocument", editorType: "dxFileUploader"
-                        ,
-                        editorOptions: {
-                            name: "sdfiles"
-                        }
-                        , template: function (data, itemElement) {
-                            createEditor(item[1], itemElement, $(`<div>`), item[1]);
-                        }
-
-                    } : {},
-                    item[2] ? {
-                        dataField: "document", editorType: "dxFileUploader"
-                        ,
-                        editorOptions: {
-                            name: "dfiles"
-                        }
-                        , template: function (data, itemElement) {
-                            createEditor(item[2], itemElement, $(`<div>`), item[2]);
-                        }
-
-                    } : {}]
-            }
-
-
-                function attachmentByCase(...item){
-                        return [item[0] ? {
-                            dataField: "quotation", editorType: "dxFileUploader"
-                            ,
-                            editorOptions: {
-                                name: "files"
-                            }
-                            , template: function (data, itemElement) {
+                    if (item[0]) {
+                        items.push({
+                            dataField: "quotation",
+                            editorType: "dxFileUploader",
+                            editorOptions: { name: "files" },
+                            template: function (data, itemElement) {
                                 createEditor(item[0], itemElement, $(`<div>`), item[0]);
                             }
+                        });
+                    }
 
-                        } : {},
-                        item[1] ? {
-                            dataField: "supportingDocument", editorType: "dxFileUploader"
-                            ,
-                            editorOptions: {
-                                name: "sdfiles"
-                            }
-                            , template: function (data, itemElement) {
+                    if (item[1]) {
+                        items.push({
+                            dataField: "supportingDocument",
+                            editorType: "dxFileUploader",
+                            editorOptions: { name: "sdfiles" },
+                            template: function (data, itemElement) {
                                 createEditor(item[1], itemElement, $(`<div>`), item[1]);
                             }
+                        });
+                    }
 
-                        } : {},
-                        item[2] ? {
-                            dataField: "document", editorType: "dxFileUploader"
-                            ,
-                            editorOptions: {
-                                name: "dfiles"
-                            }
-                            , template: function (data, itemElement) {
+                    if (item[2]) {
+                        items.push({
+                            dataField: "document",
+                            editorType: "dxFileUploader",
+                            editorOptions: { name: "dfiles" },
+                            template: function (data, itemElement) {
                                 createEditor(item[2], itemElement, $(`<div>`), item[2]);
                             }
+                        });
+                    }
 
-                        } : {}]
+                    return items;
+                    // return [item[0] ? {
+                    //     dataField: "quotation"
+                    //     , editorType: "dxFileUploader"
+                    //     ,
+                    //     editorOptions: {
+                    //         name: "files"
+                    //     }
+                    //     , template: function (data, itemElement) {
+                    //         createEditor(item[0], itemElement, $(`<div>`), item[0]);
+                    //     }
+
+                    // } : {}
+                    // ,
+                    // item[1] ? {
+                    //     dataField: "supportingDocument"
+                    //     , editorType: "dxFileUploader"
+                    //     ,
+                    //     editorOptions: {
+                    //         name: "sdfiles"
+                    //     }
+                    //     , template: function (data, itemElement) {
+                    //         createEditor(item[1], itemElement, $(`<div>`), item[1]);
+                    //     }
+
+                    // } : {},
+                    // item[2] ? {
+                    //     dataField: "document"
+                    //     , editorType: "dxFileUploader"
+                    //     ,
+                    //     editorOptions: {
+                    //         name: "dfiles"
+                    //     }
+                    //     , template: function (data, itemElement) {
+                    //         createEditor(item[2], itemElement, $(`<div>`), item[2]);
+                    //     }
+
+                    // } : {}]
                 }
+
 
         function attachmentDefaultPi(...item){
         var attachmentControls = attachmentByCase(...item);
@@ -4174,20 +4189,24 @@
                 ]
             },
             onInitialized: function (e) {
-                quillInstance = e.component;
-                quillInstance.on("selection-change", function (range) {
-                    if (range) {
-                        currentRange = range;
-                    }
-                });
+                if (quillInstance)
+                {
+                                quillInstance = e.component;
+                                quillInstance.on("selection-change", function (range) {
+                                    if (range) {
+                                        currentRange = range;
+                                    }
+                                });
 
-                lockTabPanel(e.element, editorOptions.isReadOnly);
+                                lockTabPanel(e.element, editorOptions.isReadOnly);
+                }
             },
             customizeModules: function (cfg) {
                 cfg.table = false;
                 cfg['better-table'] = { operationMenu: [] };
             },
             onFocusOut: function () {
+                if (quillInstance)
                 currentRange = quillInstance.getSelection();
             },
             onValueChanged: defaultOnValueChanged
@@ -4372,13 +4391,8 @@
                     $(`<div id='dataGrid_${elementName}_${editorOptions.id}' style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid(mGridOption.makeGridOptions()).appendTo($container);
                 break;
             case "dxHtmlEditor":
-                DevExpress.Quill.register({
-                    'modules/better-table': quillBetterTable,
-                    'formats/custom-list': CustomList
-                }, true);
                 $container.addClass("quill-wrapper");
                 devExtremeItem.control = createHtmlEditor($container, $element, devExtremeItem, editorOptions);
-
                 break;
             case "dxDateBox":
                 $element.dxDateBox({
@@ -5418,26 +5432,26 @@ function styleModeChange(item){
     }
 
         function getPersonInCharge(accountIds) {
-        var deferred = $.Deferred();
+            var deferred = $.Deferred();
 
-        $.ajax({
-            url: `/api/Employee/PersonInChargeLookup/${encodeURIComponent(accountIds)}`,
-            type: "GET",
-            success: function (res) {
-                if (res.success) {
-                    deferred.resolve(res.fullNames); // ✅ trả về chuỗi đã ghép
-                } else {
-                    deferred.resolve(""); // fallback
+            $.ajax({
+                url: `/api/Employee/PersonInChargeLookup/${encodeURIComponent(accountIds)}`,
+                type: "GET",
+                success: function (res) {
+                    if (res.success) {
+                        deferred.resolve(res.fullNames); // ✅ trả về chuỗi đã ghép
+                    } else {
+                        deferred.resolve(""); // fallback
+                    }
+                },
+                error: function (err) {
+                    console.error("API error:", err);
+                    deferred.reject(err);
                 }
-            },
-            error: function (err) {
-                console.error("API error:", err);
-                deferred.reject(err);
-            }
-        });
+            });
 
-        return deferred.promise();
-    }
+            return deferred.promise();
+        }
          //Popup hover
             function renderDeptCallouts(picJson) {
                 const picMap = parsePicMap(picJson);
@@ -5485,6 +5499,8 @@ function styleModeChange(item){
 
              function delayAcceptStatus(mainFields,formId,dept, acceptButtonId, acceptButtonIdStatus,rejectButtonId, rejectButtonIdStatus ){
               setTimeout(() => {
+                  try {
+
                 var formIns = $(`#${formId}`).dxForm("instance");
                     renderFullFormIfAccepted(formIns, dept, mainFields);
                  var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
@@ -5504,6 +5520,11 @@ function styleModeChange(item){
                             $(`#${rejectButtonId}`).dxButton("instance").option("disabled", true);
                      }
             }
+                  }
+
+                  catch {
+                      console.log("Accept status problem");
+                  }
             },_delayRenderDecisionButton);
     }
 
