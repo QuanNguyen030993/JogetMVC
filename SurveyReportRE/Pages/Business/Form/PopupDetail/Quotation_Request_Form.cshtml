@@ -262,7 +262,7 @@
                 items: [
                     
                 { itemType: "group",items:[
-            {
+                {
                 itemType: "group",
                 colCount: 2,
 
@@ -413,7 +413,7 @@
                        { dataField: "reinsuranceId", isRequired: true, label: { text: "Reinsurance" }, editorType: "dxSelectBox", editorOptions: { keyExpr: "id", displayExpr: "value", items: _enums.reInsuranceType } },
 
                         {
-                            itemType: "simple",
+                            itemType: "empty",
                             colCount: 2,
                             visible: false,
                             label: { text: "Is Survey ?" },
@@ -537,53 +537,7 @@
 
 
                          
-                           
-                        //     {
-                        // dataField: "@prefix" === "@prefix" ? "quotation" : "document", editorType: "dxFileUploader"
-                        // ,
-                        // editorOptions: {
-                        //     name: "files"
-                        // }
-                        // , template: function (data, itemElement) {
-                               
-                               
-                                
-                        //         editor = $("<div>");
-                        //         // var item = new Object();
-                        //         // var moduleKey = "@prefix";
-                        //         // item.editorType = "dxFileUploader";
-                        //         // item.uploadMode = "useForm";
-                        //         // item.moduleName = moduleKey + "_default"; item.sectionName =  "@dept";
-                        //         // item.id = @ViewData["Id"];
-                        //         // item.guid = guid;
-                        //         // item.isNotLoading = true;
-                        //         // item.titleName = "Upload Quotation";
-                        //  createEditor(that, editor, $(`<div>`), that)
-                        //  editor.appendTo(itemElement);
-                        // }
-
-                        // }
-                        // ,
-                        // {
-                        // dataField: "supportingDocument", editorType: "dxFileUploader"
-                        // ,
-                        // editorOptions: {
-                        //         name: "sdfiles"
-                        // }
-                        // , template: function (data, itemElement) {
-                        //         var item = new Object();
-                        //     var moduleKey = "@prefix";
-                        //         item.editorType = "dxFileUploader";
-                        //     item.uploadMode = "useForm";
-                        //         item.moduleName = moduleKey+ "_supportingDoc"; item.sectionName =  "@dept";
-                        //         item.id = @ViewData["Id"];
-                        //         item.guid = guid;
-                        //     item.isNotLoading = true;
-                        //         item.titleName = "Upload Supporting Document";
-                        //     createEditor(item, itemElement, $(`<div>`), item);
-                        // }
-
-                        //             }
+                      
                         },
                         {
                         itemType: "group",
@@ -659,66 +613,6 @@
 
                                    }
                                }, false);
-                                // $(`<div id="btnNewAssignee">`).appendTo(itemElement);
-                                // $(`<div id="btnClearAssignee">`).appendTo(itemElement);
-                                // var assigneeStore = new DevExpress.data.ArrayStore({ key: "_key", data: vm.assignees });
-
-                                //  $(`<div id="assigneeList" style="margin-top:10px;">`).dxDataGrid({
-                                //     dataSource: assigneeStore,
-                                //     keyExpr: "_key",
-                                //     showBorders: true,
-                                //     columnAutoWidth: true,
-                                //     hoverStateEnabled: true,
-                                //     noDataText: "No manual assignee entry. Switch to Manual assign and click New.",
-                                //     paging: { pageSize: 10 },
-                                //     pager: { showInfo: true },
-                                //     columns: [
-                                //         {
-                                //             dataField: "to",
-                                //             caption: "Assignee",
-                                //             lookup: { dataSource: _enums.assignee, valueExpr: "accountName", displayExpr: "fullName" }
-                                //         },
-                                //         {
-                                //             dataField: "notes",
-                                //             caption: "Notes",
-                                //             cellTemplate(container) {
-                                //                 $("<div/>").text("Hidden notes, open entry to view").appendTo(container);
-                                //             }
-                                //         },
-                                //         {
-                                //             type: "buttons",
-                                //             width: 120,
-                                //             buttons: [
-                                //                 { hint: "Edit", icon: "edit", onClick(e) { openPopupForEdit(e.row.data); } },
-                                //                 {
-                                //                     hint: "Devare", icon: "trash",
-                                //                     onClick(e) {
-                                //                         assigneeStore.remove(e.row.data._key);
-                                //                         $("#assigneeList").dxDataGrid("instance").refresh();
-                                //                     }
-                                //                 }
-                                //             ]
-                                //         }
-                                //     ]
-                                // }).appendTo(itemElement);
-                                //     $("#btnNewAssignee").dxButton({
-                                //         text: "New",
-                                //         icon: "plus",
-                                //         type: "default",
-                                //         onClick() {
-                                //             openPopupForNew();
-                                //         }
-                                //     });
-
-                                //     $("#btnClearAssignee").dxButton({
-                                //         text: "Clear",
-                                //         icon: "trash",
-                                //         type: "normal",
-                                //         onClick() {
-                                //             vm.assignees.splice(0, vm.assignees.length);
-                                //             $("#assigneeList").dxDataGrid("instance").refresh();
-                                //         }
-                                //     });
                                 }
                             }
                         ]
@@ -877,69 +771,69 @@
                 ]
             });
 
-            function openPopupForNew() {
-                if (!isManual()) {
-                    DevExpress.ui.notify("Switch Assignment Mode to 'Manual assign' to add entries.", "warning", 1800);
-                    return;
-                }
-                popupMode = "new";
-                currentEntry = entryTemplate();
-                          var popup = $("#assigneePopup").dxPopup("instance");
-                         popup.option("title", "New Assignee Entry");
-                      $.ajax({
-                            url: "api/Employee/GetAssignableByGroup",
-                            type: "GET",
-                            dataType: "json",
-                            data: {
-                                group:  vm.assignedTeamOrRole || "TS",
-                                excludeCurrent: true,
-                                keyword: ""
-                            }
-                        }).then(function (res) {
-                            _enums.assignee.push(...res.data);
-                            popup.option("contentTemplate", function (content) {
-                              $("<div id='assignBox' class='dExForm'>").appendTo(content).dxForm({
-                                formData: {
-                                    to: _enums.assignee[0].accountName,
-                                    branchId: _enums.assignee[0].areaId,
-                                    notes: "",
-                                    deptTarget: vm.assignedTeamOrRole
-                                },
-                                colCount: 1,
-                                labelMode: "floating",
-                                items: [
-                                    {
-                                        dataField: "to",
-                                        editorType: "dxSelectBox",
-                                        validationRules: [{ type: "required" }],
-                                        editorOptions: {
-                                            dataSource: res.data,
-                                            displayExpr: "fullName",
-                                            valueExpr: "accountName",
-                                            searchEnabled: true
-                                        }
-                                },
-                                {
-                                    dataField: "branchId",
-                                    visible: false,
-                                    editorType: "dxNumberBox",
-                                    label: { text: "Branch" }
-                                },
-                                    {
-                                        dataField: "notes",
-                                        editorType: "dxTextArea",
-                                        label: { text: "Notes" }
-                                    }
-                                ]
-                            });
-                      });
+            // function openPopupForNew() {
+            //     if (!isManual()) {
+            //         DevExpress.ui.notify("Switch Assignment Mode to 'Manual assign' to add entries.", "warning", 1800);
+            //         return;
+            //     }
+            //     popupMode = "new";
+            //     currentEntry = entryTemplate();
+            //               var popup = $("#assigneePopup").dxPopup("instance");
+            //              popup.option("title", "New Assignee Entry");
+            //           $.ajax({
+            //                 url: "api/Employee/GetAssignableByGroup",
+            //                 type: "GET",
+            //                 dataType: "json",
+            //                 data: {
+            //                     group:  vm.assignedTeamOrRole || "TS",
+            //                     excludeCurrent: true,
+            //                     keyword: ""
+            //                 }
+            //             }).then(function (res) {
+            //                 _enums.assignee.push(...res.data);
+            //                 popup.option("contentTemplate", function (content) {
+            //                   $("<div id='assignBox' class='dExForm'>").appendTo(content).dxForm({
+            //                     formData: {
+            //                         to: _enums.assignee[0].accountName,
+            //                         branchId: _enums.assignee[0].areaId,
+            //                         notes: "",
+            //                         deptTarget: vm.assignedTeamOrRole
+            //                     },
+            //                     colCount: 1,
+            //                     labelMode: "floating",
+            //                     items: [
+            //                         {
+            //                             dataField: "to",
+            //                             editorType: "dxSelectBox",
+            //                             validationRules: [{ type: "required" }],
+            //                             editorOptions: {
+            //                                 dataSource: res.data,
+            //                                 displayExpr: "fullName",
+            //                                 valueExpr: "accountName",
+            //                                 searchEnabled: true
+            //                             }
+            //                     },
+            //                     {
+            //                         dataField: "branchId",
+            //                         visible: false,
+            //                         editorType: "dxNumberBox",
+            //                         label: { text: "Branch" }
+            //                     },
+            //                         {
+            //                             dataField: "notes",
+            //                             editorType: "dxTextArea",
+            //                             label: { text: "Notes" }
+            //                         }
+            //                     ]
+            //                 });
+            //           });
 
-                            popup.show();
-                        });
+            //                 popup.show();
+            //             });
                             
                             
                
-            }
+            // }
 
             function openPopupForEdit(row) {
                 if (!isManual()) {
@@ -969,22 +863,6 @@
 
             // refreshAssignmentUI();
            viewFieldAdjust("quotationRequestForm");
-            // window.getQuotationRequestPayload = function () {
-            //     var formIns = $("#quotationRequestForm").dxForm("instance");
-            //     var formData = formIns.option("formData") || {};
-
-            //     formData.attachments = buildAttachmentPayload();
-            //     formData.assignees = vm.assignees;
-
-            //     return formData;
-            // };
-
-            // window.validateQuotationRequestForm = function () {
-            //     var formIns = $("#quotationRequestForm").dxForm("instance");
-            //     var r1 = formIns.validate();
-            //     var r2 = validateAttachments();
-            //     return !!(r1.isValid && r2);
-            // };
 
     function togglePolicyField(e) {
         const form = $("#quotationRequestForm").dxForm("instance");
