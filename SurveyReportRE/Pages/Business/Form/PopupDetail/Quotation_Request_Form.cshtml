@@ -329,7 +329,22 @@
                     }
                 }
             ,
-            { dataField: "businessOccupation", label: { text: "Business Occupation" }, editorType: "dxTextBox" },
+            { dataField: "businessOccupation", label: { text: "Business Occupation" },
+            
+                 template: function (data, itemElement) {
+
+                                    itemElement.addClass("business-occupation-template");
+
+                                    renderOccupationTag(
+                                        data.editorOptions.value,
+                                        itemElement
+                                    );
+
+                                    // lưu lại để update sau
+                                    that.businessOccupationElement = itemElement;
+                 }
+            
+            },
             ]},
                     {
                     itemType: "group",
@@ -636,6 +651,12 @@
                         editor.option("items", filtered);
                         editor.option("value", null); // reset nếu cần
                     }
+                    if (e.dataField === "businessOccupation") {
+                        renderOccupationTag(
+                            e.value,
+                            that.businessOccupationElement
+                        );
+                    }
                 }
             });
             // var attachmentStore = new DevExpress.data.ArrayStore({
@@ -863,7 +884,53 @@
 
             // refreshAssignmentUI();
            viewFieldAdjust("quotationRequestForm");
+    function renderOccupationTag(value, container) {
 
+        var obj = {};
+
+        try {
+            obj = JSON.parse(value || "{}");
+        }
+        catch (e) { }
+        const html = `
+                                        <div class="multi-lang-editor">
+
+                                            <div class="lang-row">
+
+                                                <div class="tag-label viet">
+                                                    Viet
+                                                </div>
+
+                                                       <span class="lang-text">${obj.Viet || ""}</span>
+
+                                            </div>
+
+                                            <div class="lang-row">
+
+                                                <div class="tag-label eng">
+                                                    Eng
+                                                </div>
+
+                                                        <span class="lang-text">${obj.Eng || ""}</span>
+
+                                            </div>
+
+                                        </div>`;
+
+        // container.html(`
+
+
+
+        //     <div class="lang-box">
+        //         <span class="lang-tag viet">Viet</span>
+        //         <span class="lang-text">${obj.Viet || ""}</span>
+
+        //         <span class="lang-tag eng">Eng</span>
+        //         <span class="lang-text">${obj.Eng || ""}</span>
+        //     </div>
+        // `);
+        container.html(html);
+    }
     function togglePolicyField(e) {
         const form = $("#quotationRequestForm").dxForm("instance");
         var getRequestType = _enums.requestType.find(f => f.id == e.value);
