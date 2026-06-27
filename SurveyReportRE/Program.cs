@@ -125,6 +125,8 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseSerilogRequestLogging();
 app.UseStaticFiles();
+app.UseDefaultFiles();
+app.MapFallbackToFile("XYFLow/index.html");
 
 app.UseRouting();
 
