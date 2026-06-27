@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import CustomGrid from './components/CustomGrid';
 import HtmlEditor from './components/HtmlEditor';
-
 const defaultRows = [
   { id: 1, name: 'Alice', role: 'Developer', status: 'Active' },
   { id: 2, name: 'Bob', role: 'Designer', status: 'Pending' },
@@ -40,6 +39,13 @@ function App() {
         <div className="section-title">HTML Editor</div>
         <HtmlEditor value={editorValue} onChange={setEditorValue} />
       </section>
+
+      <section className="section">
+        <div className="section-title">Editor Output</div>
+        <div className="output-box" dangerouslySetInnerHTML={{ __html: editorValue }} />
+      </section>
+
+
 
       <section className="section">
         <div className="section-title">Editor Output</div>

@@ -5,15 +5,20 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node move-to-wwwroot.js",
+    "build": "vite build",
+    "build:lib": "vite build --config vite.config.lib.js",
     "preview": "vite preview"
   },
   "dependencies": {
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-scripts": "^5.0.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
     "vite": "^5.4.10"
+  },
+  "resolutions": {
+    "react-error-overlay": "6.0.9"
   }
 }
