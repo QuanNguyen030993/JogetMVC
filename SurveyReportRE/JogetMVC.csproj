@@ -10,6 +10,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="TMIVCom\**" />
+	  <Content Remove="TMIVCom\**" />
+	  <EmbeddedResource Remove="TMIVCom\**" />
+	  <None Remove="TMIVCom\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<Compile Remove="Controllers\RiskEvaluationController .cs" />
 		<Compile Remove="Controllers\SurveyResultStatusController.cs" />
 		<Compile Remove="Controllers\UWSurveyController.cs" />

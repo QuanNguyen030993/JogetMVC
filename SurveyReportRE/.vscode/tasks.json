@@ -25,6 +25,31 @@
         "kind": "build",
         "isDefault": true
       }
+    },
+    {
+      "label": "Start TMIVCom Dev Server",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "dev", "--", "--host", "0.0.0.0", "--port", "5174"],
+      "options": {
+        "cwd": "${workspaceFolder}/TMIVCom"
+      },
+      "isBackground": true,
+      "problemMatcher": [
+        {
+          "owner": "vite",
+          "pattern": {
+            "regexp": ".*",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        }
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
     }
   ]
 }

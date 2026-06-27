@@ -16,6 +16,21 @@
                 "/*": "${workspaceFolder}/XYFLow/*",
                 "src/*": "${workspaceFolder}/XYFLow/src/*"
             }
+        },  {
+            "name": "Start  TMIVCom Dev and Debug",
+            "type": "pwa-chrome",
+            "request": "launch",
+            "url": "http://localhost:5174",
+            "webRoot": "${workspaceFolder}/TMIVCom",
+            "sourceMaps": true,
+            "skipFiles": ["<node_internals>/**"],
+            "sourceMapPathOverrides": {
+                "vite:///*": "${workspaceFolder}/TMIVCom/*",
+                "webpack:///*": "${workspaceFolder}/TMIVCom/*",
+                "./*": "${workspaceFolder}/TMIVCom/*",
+                "/*": "${workspaceFolder}/TMIVCom/*",
+                "src/*": "${workspaceFolder}/TMIVCom/src/*"
+            }
         }
     ]
 }
