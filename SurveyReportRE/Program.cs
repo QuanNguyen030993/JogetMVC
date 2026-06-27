@@ -113,7 +113,17 @@ builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(@"C:\AppKeys\MyApp"))
     .SetApplicationName("TMIV.MyApp");
 builder.Host.UseSerilog(logger);
-
+builder.Services.AddCors(options => // React debug
+{
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        });
+});
 var app = builder.Build();
 //app.MapGet("/", () => "Hello World!");
 // Configure the HTTP request pipeline.
@@ -122,15 +132,14 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
+app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
 app.UseSerilogRequestLogging();
 app.UseStaticFiles();
-app.UseDefaultFiles();
-app.MapFallbackToFile("XYFLow/index.html");
 
 app.UseRouting();
 
-app.UseCors();
+//app.UseCors(); // not debug React
 
 //-------------------------------------------
 //Comment out if Allow anomymous for debugging 
