@@ -130,12 +130,12 @@ function App() {
       setError(null);
 
       try {
-        const response = await fetch(`/api/WorkflowDefinition/GetSingle/${encodeURIComponent(workflowDefinitionId)}`);
+        const response = await fetch(`https://localhost:7254/api/WorkflowDefinition/GetSingle/${workflowDefinitionId}`);
         if (!response.ok) {
           throw new Error(`API error ${response.status}`);
         }
 
-        const data = await response.json();
+        const data = await response.text();
         const nextNodes = Array.isArray(data.workflowNodes) ? mapWorkflowNodes(data.workflowNodes) : [];
         const nextEdges = Array.isArray(data.workflowTransitions) ? mapWorkflowEdges(data.workflowTransitions) : [];
 
