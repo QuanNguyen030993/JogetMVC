@@ -141,6 +141,7 @@ namespace ERPCore.Controllers.Base
             }
             return returnValue ?? "";
         }
+        //[AllowAnonymous] // Debug Nodejs
         [HttpGet("{id}")]
         public virtual async Task<ActionResult<T>> GetSingle(int id)
         {

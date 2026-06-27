@@ -1,0 +1,21 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Start XYFLow Dev and Debug",
+            "type": "pwa-chrome",
+            "request": "launch",
+            "url": "http://localhost:5173",
+            "webRoot": "${workspaceFolder}/XYFLow",
+            "sourceMaps": true,
+            "skipFiles": ["<node_internals>/**"],
+            "sourceMapPathOverrides": {
+                "vite:///*": "${workspaceFolder}/XYFLow/*",
+                "webpack:///*": "${workspaceFolder}/XYFLow/*",
+                "./*": "${workspaceFolder}/XYFLow/*",
+                "/*": "${workspaceFolder}/XYFLow/*",
+                "src/*": "${workspaceFolder}/XYFLow/src/*"
+            }
+        }
+    ]
+}

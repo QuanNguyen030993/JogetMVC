@@ -135,9 +135,10 @@ function App() {
           throw new Error(`API error ${response.status}`);
         }
 
-        const data = await response.text();
-        const nextNodes = Array.isArray(data.workflowNodes) ? mapWorkflowNodes(data.workflowNodes) : [];
-        const nextEdges = Array.isArray(data.workflowTransitions) ? mapWorkflowEdges(data.workflowTransitions) : [];
+        const data = await response.json();
+        const nodes = JSON.parse(data.workflowNodes);
+        const nextNodes = Array.isArray(nodes.workflowNodes) ? mapWorkflowNodes(nodes.workflowNodes) : [];
+        const nextEdges = Array.isArray(nodes.workflowTransitions) ? mapWorkflowEdges(nodes.workflowTransitions) : [];
 
         setNodes(nextNodes.length ? nextNodes : []);
         setEdges(nextEdges.length ? nextEdges : []);
