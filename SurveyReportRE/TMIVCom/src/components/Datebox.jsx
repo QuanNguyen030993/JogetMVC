@@ -1,44 +1,77 @@
-import React, {useState} from "react";
-import {createRoot} from "react-dom/client";
+import React, { useState } from "react";
+import { createRoot } from "react-dom/client";
 
 
-function DateBox({value="", onChange}) {
+function DateBox({
+    value = "",
+    onChange,
+    placeholder = "Select date"
+}) {
 
-    const [val,setVal] = useState(value);
+    const [val, setVal] = useState(value);
+
+
+    const change = (e) => {
+
+        const v = e.target.value;
+
+        setVal(v);
+
+        onChange?.(v);
+    };
 
 
     return (
-        <input
-            type="date"
-            value={val}
-            onChange={e=>{
-                setVal(e.target.value);
-                onChange?.(e.target.value);
-            }}
-        />
+
+        <div className="tmivcom-datebox">
+
+            <div className="tmivcom-datebox-input">
+
+                <input
+                    type="date"
+                    value={val}
+                    placeholder={placeholder}
+                    onChange={change}
+                />
+
+                <span className="tmivcom-datebox-button">
+                    📅
+                </span>
+
+            </div>
+
+        </div>
+
     );
 }
+
 
 
 const roots = new Map();
 
 
+
 window.TMIVCom = {
 
-    DateBox(selector, options={}) {
+    DateBox(selector, options = {}) {
 
         const el = document.querySelector(selector);
 
-        if(!el)
-            throw new Error("element not found");
+        if (!el)
+            throw new Error(
+                `TMIVCom DateBox target not found: ${selector}`
+            );
 
 
         let root = roots.get(el);
 
 
-        if(!root){
+        if (!root) {
+
             root = createRoot(el);
-            roots.set(el,root);
+
+            roots.set(el, root);
+
         }
 
 
@@ -53,8 +86,8 @@ window.TMIVCom = {
 
                 root.render(
                     <DateBox
-                       {...options}
-                       value={value}
+                        {...options}
+                        value={value}
                     />
                 );
 

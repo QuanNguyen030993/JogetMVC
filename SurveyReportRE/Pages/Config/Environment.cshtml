@@ -62,7 +62,18 @@
                   });
         }})
     });
-    // TMIVCom.DateBox("#startDate"); Test
+    // TMIVCom.DateBox("#birthDate"); Test
+    TMIVCom.DateBox(
+        "#birthDate",
+        {
+            value: "2026-06-28",
+
+            onChange: function (v) {
+                console.log("date=", v);
+            }
+        }
+    );
+
 
 </script>
 <div>TMIV environment
@@ -80,4 +91,4 @@
 <div id="DecryptPassword"></div>
 <div id="inputPassword"></div>
     <div id="passwordResult"></div>
-<div id="startDate"></div>
+<div id="birthDate"></div>
