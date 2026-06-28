@@ -1,13 +1,69 @@
 import { useEffect, useMemo, useState } from 'react';
+import { register } from "./Core";
 
-function CustomGrid({ columns, rows, onRowsChange, onAddRow }) {
+function CustomGrid({
+  columns,
+  rows,
+  onRowsChange,
+  onAddRow,
+  dataSource,
+  editMode = 'batch',
+  toolbarItems = [],
+  rowTemplate,
+}) 
+{
   const [selectedRowId, setSelectedRowId] = useState(null);
+  const [draftRows, setDraftRows] = useState(rows ?? []);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [sortInfo, setSortInfo] = useState({ field: null, direction: 'asc' });
   const [filters, setFilters] = useState({});
   const [groupColumns, setGroupColumns] = useState([]);
   const [pageSize, setPageSize] = useState(5);
   const [pageIndex, setPageIndex] = useState(0);
   const [expandedGroups, setExpandedGroups] = useState({});
+  const [editingRowId, setEditingRowId] = useState(null);
+  const [activeCell, setActiveCell] = useState(null);
+  const [isDirty, setIsDirty] = useState(false);
+
+  useEffect(() => {
+    const loadRows = async () => {
+      if (dataSource && typeof dataSource.load === 'function') {
+        setLoading(true);
+        setError(null);
+        try {
+          const loaded = await dataSource.load();
+          setDraftRows(Array.isArray(loaded) ? loaded : loaded?.data ?? []);
+        } catch (err) {
+          setError(err);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setDraftRows(rows ?? []);
+      }
+    };
+
+    loadRows();
+    if (editMode !== 'batch') {
+      setIsDirty(false);
+    }
+  }, [rows, dataSource, editMode]);
+
+  const refreshData = async () => {
+    if (dataSource && typeof dataSource.load === 'function') {
+      setLoading(true);
+      setError(null);
+      try {
+        const loaded = await dataSource.load();
+        setDraftRows(Array.isArray(loaded) ? loaded : loaded?.data ?? []);
+      } catch (err) {
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
 
   const normalizedColumns = useMemo(
     () =>
@@ -20,6 +76,7 @@ function CustomGrid({ columns, rows, onRowsChange, onAddRow }) {
             width: column === 'id' ? '90px' : column === 'status' ? '140px' : '1fr',
             sortable: true,
             groupable: true,
+            editable: true,
           };
         }
 
@@ -29,14 +86,54 @@ function CustomGrid({ columns, rows, onRowsChange, onAddRow }) {
           width: column.width || '1fr',
           sortable: column.sortable !== false,
           groupable: column.groupable !== false,
+          editable: column.editable !== false,
+          template: column.template,
+          actions: column.actions,
+          editorType: column.editorType || 'text',
+          lookup: column.lookup,
         };
       }),
     [columns],
   );
 
+  const commitRows = (nextRows) => {
+    setDraftRows(nextRows);
+    if (editMode !== 'batch') {
+      onRowsChange?.(nextRows);
+    } else {
+      setIsDirty(true);
+    }
+  };
+
+  const saveChanges = async () => {
+    if (isDirty) {
+      if (dataSource && typeof dataSource.update === 'function') {
+        try {
+          await Promise.all(
+            draftRows.map((row) => dataSource.update(row.id, row)).filter(Boolean),
+          );
+        } catch (err) {
+          setError(err);
+        }
+      }
+      onRowsChange?.(draftRows);
+      setIsDirty(false);
+    }
+    setEditingRowId(null);
+    setActiveCell(null);
+  };
+
+  const cancelChanges = () => {
+    setDraftRows(rows);
+    setIsDirty(false);
+    setEditingRowId(null);
+    setActiveCell(null);
+  };
+
   const filteredRows = useMemo(() => {
-    return rows.filter((row) =>
+    return draftRows.filter((row) =>
       normalizedColumns.every((column) => {
+        if (column.actions) return true;
         const value = row[column.field];
         const filterValue = filters[column.field];
         if (!filterValue) return true;
@@ -45,7 +142,7 @@ function CustomGrid({ columns, rows, onRowsChange, onAddRow }) {
           .includes(String(filterValue).toLowerCase());
       }),
     );
-  }, [rows, filters, normalizedColumns]);
+  }, [draftRows, filters, normalizedColumns]);
 
   const sortedRows = useMemo(() => {
     if (!sortInfo.field) {
@@ -122,12 +219,50 @@ function CustomGrid({ columns, rows, onRowsChange, onAddRow }) {
     return groupColumns.length ? buildGroups(pagedRows) : pagedRows;
   }, [pagedRows, groupColumns]);
 
+  const isCellEditable = (rowId, field) => {
+    if (!field) return false;
+    if (editMode === 'batch') return true;
+    if (editMode === 'row') return editingRowId === rowId;
+    if (editMode === 'cell') return activeCell?.rowId === rowId && activeCell?.field === field;
+    if (editMode === 'form') return selectedRowId === rowId;
+    return false;
+  };
+
   const handleCellChange = (rowId, field, value) => {
-    onRowsChange(rows.map((row) => (row.id === rowId ? { ...row, [field]: value } : row)));
+    const nextRows = draftRows.map((row) => (row.id === rowId ? { ...row, [field]: value } : row));
+    commitRows(nextRows);
+  };
+
+  const handleRowEdit = (rowId) => {
+    setEditingRowId(rowId);
+    setSelectedRowId(rowId);
+  };
+
+  const handleRowSave = () => {
+    saveChanges();
+  };
+
+  const handleRowCancel = () => {
+    cancelChanges();
+  };
+
+  const handleSelectRow = (rowId) => {
+    setSelectedRowId(rowId === selectedRowId ? null : rowId);
+    if (editMode === 'form') {
+      setActiveCell(null);
+    }
+  };
+
+  const handleDeleteRow = (rowId) => {
+    const nextRows = draftRows.filter((row) => row.id !== rowId);
+    commitRows(nextRows);
+    if (selectedRowId === rowId) {
+      setSelectedRowId(null);
+    }
   };
 
   const handleHeaderClick = (column) => {
-    if (!column.sortable) return;
+    if (!column.sortable || column.actions) return;
 
     setSortInfo((current) => {
       if (current.field === column.field) {
@@ -168,6 +303,111 @@ function CustomGrid({ columns, rows, onRowsChange, onAddRow }) {
     setExpandedGroups((prev) => ({ ...prev, [groupKey]: !prev[groupKey] }));
   };
 
+  const renderCellValue = (row, column) => {
+    const isEditing = isCellEditable(row.id, column.field);
+    const value = row[column.field];
+
+    if (column.actions) {
+      return (
+        <div className="grid-action-cell">
+          {column.actions.map((action) => (
+            <button
+              key={action.text}
+              type="button"
+              className="action-button"
+              onClick={(event) => {
+                event.stopPropagation();
+                action.onClick?.(row);
+              }}
+            >
+              {action.icon ? <span className="action-icon">{action.icon}</span> : null}
+              {action.text}
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    if (isEditing) {
+      const inputType = column.editorType === 'number' ? 'number' : 'text';
+      if (column.lookup && Array.isArray(column.lookup.dataSource)) {
+        return (
+          <select
+            value={value ?? ''}
+            onChange={(event) => handleCellChange(row.id, column.field, event.target.value)}
+          >
+            <option value="">--</option>
+            {column.lookup.dataSource.map((item) => (
+              <option key={item[column.lookup.valueExpr]} value={item[column.lookup.valueExpr]}>
+                {item[column.lookup.displayExpr]}
+              </option>
+            ))}
+          </select>
+        );
+      }
+
+      return (
+        <input
+          type={inputType}
+          value={value ?? ''}
+          onChange={(event) => handleCellChange(row.id, column.field, event.target.value)}
+          onFocus={() => {
+            if (editMode === 'cell') {
+              setActiveCell({ rowId: row.id, field: column.field });
+            }
+          }}
+          onBlur={() => {
+            if (editMode === 'cell') {
+              setActiveCell(null);
+            }
+          }}
+        />
+      );
+    }
+
+    if (column.template) {
+      return column.template({ row, value, onChange: (nextValue) => handleCellChange(row.id, column.field, nextValue) });
+    }
+
+    return <span>{value ?? ''}</span>;
+  };
+
+  const renderRow = (node) => {
+    const rowClasses = `grid-row dx-data-row ${selectedRowId === node.id ? 'dx-selection' : ''}`;
+    const rowProps = {
+      key: node.id,
+      className: rowClasses,
+      style: { gridTemplateColumns: normalizedColumns.map((column) => column.width).join(' ') },
+      onClick: () => handleSelectRow(node.id),
+    };
+
+    if (rowTemplate) {
+      return rowTemplate({
+        row: node,
+        columns: normalizedColumns,
+        defaultRowProps: rowProps,
+        isEditing: editingRowId === node.id || (editMode === 'form' && selectedRowId === node.id),
+        onCellChange: handleCellChange,
+        onEditRow: handleRowEdit,
+        onDeleteRow: handleDeleteRow,
+      });
+    }
+
+    return (
+      <div {...rowProps}>
+        {normalizedColumns.map((column) => (
+          <div key={column.field || `col-${column.caption}`} className="grid-cell dx-cell" onClick={() => {
+            if (editMode === 'cell' && column.editable) {
+              setActiveCell({ rowId: node.id, field: column.field });
+            }
+          }}>
+            {renderCellValue(node, column)}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   const renderGroupNodes = (nodes) => {
     if (!Array.isArray(nodes)) return null;
 
@@ -188,31 +428,77 @@ function CustomGrid({ columns, rows, onRowsChange, onAddRow }) {
         );
       }
 
-      return (
-        <div
-          key={node.id}
-          className={`grid-row dx-data-row ${selectedRowId === node.id ? 'dx-selection' : ''}`}
-          style={{ gridTemplateColumns: normalizedColumns.map((column) => column.width).join(' ') }}
-          onClick={() => setSelectedRowId(node.id === selectedRowId ? null : node.id)}
-        >
-          {normalizedColumns.map((column) => (
-            <div key={column.field} className="grid-cell dx-cell">
-              <input
-                type="text"
-                value={node[column.field] ?? ''}
-                onChange={(event) => handleCellChange(node.id, column.field, event.target.value)}
-              />
-            </div>
-          ))}
-        </div>
-      );
+      return renderRow(node);
     });
   };
 
   const templateColumns = normalizedColumns.map((column) => column.width).join(' ');
 
+  const defaultToolbarItems = [
+    {
+      location: 'before',
+      text: 'Refresh',
+      onClick: refreshData,
+      disabled: loading,
+    },
+    {
+      location: 'before',
+      text: 'Save',
+      onClick: saveChanges,
+      disabled: !isDirty,
+    },
+    {
+      location: 'before',
+      text: 'Cancel',
+      onClick: cancelChanges,
+      disabled: !isDirty,
+    },
+    {
+      location: 'after',
+      text: 'Add Row',
+      onClick: onAddRow,
+    },
+  ];
+
+  const renderedToolbarItems = [...defaultToolbarItems, ...toolbarItems];
+
   return (
     <div className="custom-grid dx-datagrid" style={{ '--grid-template-columns': templateColumns }}>
+      <div className="grid-toolbar">
+        <div className="toolbar-group toolbar-group-before">
+          {renderedToolbarItems
+            .filter((item) => item.location !== 'after')
+            .map((item) => (
+              <button
+                key={item.text}
+                type="button"
+                className="toolbar-item"
+                onClick={item.onClick}
+                disabled={item.disabled}
+              >
+                {item.icon ? <span className="toolbar-icon">{item.icon}</span> : null}
+                {item.text}
+              </button>
+            ))}
+        </div>
+        <div className="toolbar-group toolbar-group-after">
+          {renderedToolbarItems
+            .filter((item) => item.location === 'after')
+            .map((item) => (
+              <button
+                key={item.text}
+                type="button"
+                className="toolbar-item"
+                onClick={item.onClick}
+                disabled={item.disabled}
+              >
+                {item.icon ? <span className="toolbar-icon">{item.icon}</span> : null}
+                {item.text}
+              </button>
+            ))}
+        </div>
+      </div>
+
       <div className="grid-group-panel" onDragOver={(event) => event.preventDefault()} onDrop={handleGroupDrop}>
         {groupColumns.length === 0 ? (
           <span className="group-placeholder">Drag a column header here to group by that column</span>
@@ -234,7 +520,7 @@ function CustomGrid({ columns, rows, onRowsChange, onAddRow }) {
       <div className="grid-header dx-header-row" style={{ gridTemplateColumns: templateColumns }}>
         {normalizedColumns.map((column) => (
           <button
-            key={column.field}
+            key={column.field || `header-${column.caption}`}
             type="button"
             draggable={column.groupable}
             onDragStart={(event) => handleDragStart(event, column)}
@@ -253,28 +539,40 @@ function CustomGrid({ columns, rows, onRowsChange, onAddRow }) {
 
       <div className="grid-filter-row" style={{ gridTemplateColumns: templateColumns }}>
         {normalizedColumns.map((column) => (
-          <div key={column.field} className="grid-filter-cell">
-            <input
-              type="text"
-              value={filters[column.field] ?? ''}
-              placeholder={`Filter ${column.caption}`}
-              onChange={(event) => handleFilterChange(column.field, event.target.value)}
-            />
+          <div key={column.field || `filter-${column.caption}`} className="grid-filter-cell">
+            {column.actions ? null : (
+              <input
+                type="text"
+                value={filters[column.field] ?? ''}
+                placeholder={`Filter ${column.caption}`}
+                onChange={(event) => handleFilterChange(column.field, event.target.value)}
+              />
+            )}
           </div>
         ))}
       </div>
 
-      <div className="grid-body">
-        {filteredRows.length === 0 ? (
-          <div className="grid-row no-data" style={{ gridTemplateColumns: templateColumns }}>
-            <div className="grid-cell" style={{ gridColumn: `span ${normalizedColumns.length}` }}>
-              No data available
+      {loading ? (
+        <div className="grid-loading" style={{ padding: '20px', textAlign: 'center' }}>
+          Loading data...
+        </div>
+      ) : error ? (
+        <div className="grid-error" style={{ padding: '20px', textAlign: 'center', color: '#b91c1c' }}>
+          {String(error)}
+        </div>
+      ) : (
+        <div className="grid-body">
+          {filteredRows.length === 0 ? (
+            <div className="grid-row no-data" style={{ gridTemplateColumns: templateColumns }}>
+              <div className="grid-cell" style={{ gridColumn: `span ${normalizedColumns.length}` }}>
+                No data available
+              </div>
             </div>
-          </div>
-        ) : (
-          renderGroupNodes(groupedRows)
-        )}
-      </div>
+          ) : (
+            renderGroupNodes(groupedRows)
+          )}
+        </div>
+      )}
 
       <div className="grid-footer dx-toolbar">
         <div className="pager-info">
@@ -313,12 +611,8 @@ function CustomGrid({ columns, rows, onRowsChange, onAddRow }) {
             ))}
           </select>
         </div>
-        <button type="button" onClick={onAddRow} className="add-row-button">
-          Add row
-        </button>
       </div>
     </div>
   );
 }
-
-export default CustomGrid;
+export default CustomGrid;  

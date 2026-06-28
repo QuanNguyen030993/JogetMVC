@@ -3,9 +3,8 @@ import React, {
     useState,
     useEffect
 } from "react";
-
+import { register } from "./Core";
 import { createRoot } from "react-dom/client";
-
 
 function HtmlEditor({
     value = "",
@@ -255,89 +254,97 @@ const editorRef = useRef();
     );
 
 }
-const roots = new WeakMap();
 
 
-window.TMIVCom = {
+register(
+    "HtmlEditor",
+    HtmlEditor
+);
+// const roots = new WeakMap();
 
 
-    HtmlEditor(selector, options={}) {
+// window.TMIVCom = {
 
 
-        const el =
-            document.querySelector(selector);
+//     HtmlEditor(selector, options={}) {
 
 
-
-        if(!el)
-
-            throw new Error(
-                `TMIVCom HtmlEditor target not found: ${selector}`
-            );
-
-
-
-        let root =
-            roots.get(el);
+//         const el =
+//             document.querySelector(selector);
 
 
 
-        if(!root){
+//         if(!el)
 
-            root = createRoot(el);
-
-            roots.set(
-                el,
-                root
-            );
-
-        }
+//             throw new Error(
+//                 `TMIVCom HtmlEditor target not found: ${selector}`
+//             );
 
 
 
-        root.render(
-
-            <HtmlEditor
-                {...options}
-            />
-
-        );
+//         let root =
+//             roots.get(el);
 
 
 
-        return {
+//         if(!root){
+
+//             root = createRoot(el);
+
+//             roots.set(
+//                 el,
+//                 root
+//             );
+
+//         }
 
 
-            setValue(value){
+
+//         root.render(
+
+//             <HtmlEditor
+//                 {...options}
+//             />
+
+//         );
 
 
-                root.render(
 
-                    <HtmlEditor
-
-                        {...options}
-
-                        value={value}
-
-                    />
-
-                );
-
-            },
+//         return {
 
 
-            destroy(){
-
-                root.unmount();
-
-                roots.delete(el);
-
-            }
+//             setValue(value){
 
 
-        };
+//                 root.render(
 
-    }
+//                     <HtmlEditor
+
+//                         {...options}
+
+//                         value={value}
+
+//                     />
+
+//                 );
+
+//             },
 
 
-};
+//             destroy(){
+
+//                 root.unmount();
+
+//                 roots.delete(el);
+
+//             }
+
+
+//         };
+
+//     }
+
+
+// };
+
+export default HtmlEditor;  

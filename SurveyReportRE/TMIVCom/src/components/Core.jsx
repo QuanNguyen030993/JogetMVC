@@ -13,9 +13,6 @@ export function register(name, component){
     controls[name] = component;
 
 }
-console.log("render mount");
-
-
 // mount react
 export function mount(
     element,
