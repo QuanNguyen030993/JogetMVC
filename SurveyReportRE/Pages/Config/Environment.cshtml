@@ -63,18 +63,29 @@
         }})
     });
     // TMIVCom.DateBox("#birthDate"); Test
-    TMIVCom.DateBox(
-        "#birthDate",
-        {
-            value: "2026-06-28",
+    // TMIVCom.DateBox(
+    //     "#birthDate",
+    //     {
+    //         value: "2026-06-28",
 
-            onChange: function (v) {
-                console.log("date=", v);
-            }
+    //         onChange: function (v) {
+    //             console.log("date=", v);
+    //         }
+    //     }
+    // );
+    TMIVCom.HtmlEditor("#remarkEditor", {
+
+        value:
+            "<p>Hello</p>",
+
+
+        onChange: function (html) {
+
+            console.log(html);
+
         }
-    );
 
-
+    });
 </script>
 <div>TMIV environment
     <div id="tabPanel">
@@ -92,3 +103,4 @@
 <div id="inputPassword"></div>
     <div id="passwordResult"></div>
 <div id="birthDate"></div>
+<div id="remarkEditor"></div>

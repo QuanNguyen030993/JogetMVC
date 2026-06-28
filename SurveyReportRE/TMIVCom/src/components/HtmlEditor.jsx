@@ -1,48 +1,343 @@
-import { useCallback } from 'react';
+import React, {
+    useRef,
+    useState,
+    useEffect
+} from "react";
 
-const toolbarItems = [
-  { label: 'Bold', style: 'font-weight: bold;' },
-  { label: 'Italic', style: 'font-style: italic;' },
-  { label: 'Underline', style: 'text-decoration: underline;' },
-  { label: 'Heading', style: 'font-size: 1.25rem; font-weight: bold;' },
-];
+import { createRoot } from "react-dom/client";
 
-function HtmlEditor({ value, onChange }) {
-  const applyFormat = useCallback(
-    (style) => {
-      const selection = window.getSelection();
-      if (!selection || selection.isCollapsed) return;
 
-      const range = selection.getRangeAt(0);
-      const span = document.createElement('span');
-      span.style.cssText = style;
-      span.appendChild(range.extractContents());
-      range.insertNode(span);
-      selection.removeAllRanges();
-      selection.addRange(range);
-      onChange(document.getElementById('editor').innerHTML);
-    },
-    [onChange],
-  );
+function HtmlEditor({
+    value = "",
+    height = 300,
+    onChange
+}) {
 
-  return (
-    <div className="html-editor">
-      <div className="editor-toolbar">
-        {toolbarItems.map((item) => (
-          <button key={item.label} type="button" onClick={() => applyFormat(item.style)}>
-            {item.label}
-          </button>
-        ))}
-      </div>
-      <div
-        id="editor"
-        className="editor-area"
-        contentEditable
-        dangerouslySetInnerHTML={{ __html: value }}
-        onInput={(event) => onChange(event.currentTarget.innerHTML)}
-      />
+const editorRef = useRef();
+
+
+    const [html,setHtml] =
+        useState(value);
+
+
+
+    useEffect(()=>{
+
+        setHtml(value);
+
+    },[value]);
+
+
+
+    const command=(cmd,param=null)=>{
+
+
+        editorRef.current.focus();
+
+
+        document.execCommand(
+            cmd,
+            false,
+            param
+        );
+
+
+        update();
+
+
+    };
+
+
+
+    const update=()=>{
+
+
+        let result =
+            editorRef.current.innerHTML;
+
+
+        setHtml(result);
+
+
+        onChange?.(result);
+
+    };
+
+
+    const change = () => {
+
+        let html = editorRef.current.innerHTML;
+
+        onChange?.(html);
+    };
+
+
+    return (
+<div className="jira-comment-box">
+<div className="jira-comment-editor-wrap">
+
+
+        <div className="tmiv-html-editor">
+
+<div className="tmiv-html-toolbar">
+
+    <div
+        className="tmiv-tool-item"
+        onClick={()=>command("undo")}
+    >
+        ↶
     </div>
-  );
-}
 
-export default HtmlEditor;
+
+    <div
+        className="tmiv-tool-item"
+        onClick={()=>command("redo")}
+    >
+        ↷
+    </div>
+
+
+    <div className="tmiv-toolbar-separator"/>
+
+
+    <select
+        className="tmiv-select"
+        onChange={
+            e=>command(
+                "formatBlock",
+                e.target.value
+            )
+        }
+    >
+        <option value="p">
+            Normal
+        </option>
+
+        <option value="h1">
+            Heading 1
+        </option>
+
+        <option value="h2">
+            Heading 2
+        </option>
+
+    </select>
+
+
+
+    <div
+        className="tmiv-tool-item"
+        onClick={()=>command("bold")}
+    >
+        <b>B</b>
+    </div>
+
+
+    <div
+        className="tmiv-tool-item"
+        onClick={()=>command("italic")}
+    >
+        <i>I</i>
+    </div>
+
+
+    <div
+        className="tmiv-tool-item"
+        onClick={()=>command("underline")}
+    >
+        <u>U</u>
+    </div>
+
+
+
+    <div className="tmiv-toolbar-separator"/>
+
+
+
+    <div
+        className="tmiv-tool-item fa fa-align-left"
+        onClick={()=>command("justifyLeft")}
+    >
+        
+    </div>
+
+
+    <div
+        className="tmiv-tool-item fa fa-align-center"
+        onClick={()=>command("justifyCenter")}
+    >
+        
+    </div>
+
+
+    <div
+        className="tmiv-tool-item fa fa-align-right"
+        onClick={()=>command("justifyRight")}
+    >
+        
+    </div>
+
+
+    <div
+        className="tmiv-tool-item"
+        onClick={()=>
+            command("insertUnorderedList")
+        }
+    >
+        •
+    </div>
+
+
+    <div
+        className="tmiv-tool-item"
+        onClick={()=>
+            command("insertOrderedList")
+        }
+    >
+        1.
+    </div>
+
+
+
+    <div className="tmiv-toolbar-separator"/>
+
+
+    <div
+        className="tmiv-tool-item"
+        onClick={()=>{
+            let url=prompt("URL");
+
+            if(url)
+                command(
+                    "createLink",
+                    url
+                );
+        }}
+    >
+        🔗
+    </div>
+
+</div>
+
+
+
+
+
+            <div 
+
+                ref={editorRef}
+
+                contentEditable
+
+                suppressContentEditableWarning
+
+
+                dangerouslySetInnerHTML={{
+                    __html:value
+                }}
+
+
+                onInput={change}
+
+
+                className="tmiv-html-content"
+
+
+                style={{
+                    minHeight: "150px"
+                }}
+
+            />
+
+        </div>
+</div>
+</div>
+    );
+
+}
+const roots = new WeakMap();
+
+
+window.TMIVCom = {
+
+
+    HtmlEditor(selector, options={}) {
+
+
+        const el =
+            document.querySelector(selector);
+
+
+
+        if(!el)
+
+            throw new Error(
+                `TMIVCom HtmlEditor target not found: ${selector}`
+            );
+
+
+
+        let root =
+            roots.get(el);
+
+
+
+        if(!root){
+
+            root = createRoot(el);
+
+            roots.set(
+                el,
+                root
+            );
+
+        }
+
+
+
+        root.render(
+
+            <HtmlEditor
+                {...options}
+            />
+
+        );
+
+
+
+        return {
+
+
+            setValue(value){
+
+
+                root.render(
+
+                    <HtmlEditor
+
+                        {...options}
+
+                        value={value}
+
+                    />
+
+                );
+
+            },
+
+
+            destroy(){
+
+                root.unmount();
+
+                roots.delete(el);
+
+            }
+
+
+        };
+
+    }
+
+
+};

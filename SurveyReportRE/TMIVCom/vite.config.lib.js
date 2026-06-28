@@ -12,14 +12,14 @@ export default defineConfig(({ mode }) => {
 
       entry: path.resolve(
         __dirname,
-        'src/components/Datebox.jsx'
+        'src/components/HtmlEditor.jsx'
       ),
 
-      name: 'TMIVComDateBox',
+      name: 'TMIVCom',
 
       formats: ['iife'],
 
-      fileName: () => 'datebox.js'
+      fileName: () => 'htmleditor.js'
     },
 
 
@@ -34,7 +34,7 @@ export default defineConfig(({ mode }) => {
     //         "react-dom"
     //     ]
     // },
-    emptyOutDir:true
+    emptyOutDir:false
   },define: {
       'process.env': env,
     },
