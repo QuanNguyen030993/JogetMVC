@@ -12,14 +12,14 @@ export default defineConfig(({ mode }) => {
 
       entry: path.resolve(
         __dirname,
-        'src/components/HtmlEditor.jsx'
+        'src/index.jsx'
       ),
 
       name: 'TMIVCom',
 
       formats: ['iife'],
 
-      fileName: () => 'htmleditor.js'
+      fileName: () => 'core.js'
     },
 
 

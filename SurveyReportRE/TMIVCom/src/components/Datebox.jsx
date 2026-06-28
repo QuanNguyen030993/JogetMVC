@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
+import { register } from "./Core";
 
 
 function DateBox({
@@ -51,49 +52,54 @@ const roots = new Map();
 
 
 
-window.TMIVCom = {
+register(
+    "DateBox",
+    DateBox
+);
+// window.TMIVCom = {
 
-    DateBox(selector, options = {}) {
+//     DateBox(selector, options = {}) {
 
-        const el = document.querySelector(selector);
+//         const el = document.querySelector(selector);
 
-        if (!el)
-            throw new Error(
-                `TMIVCom DateBox target not found: ${selector}`
-            );
-
-
-        let root = roots.get(el);
-
-
-        if (!root) {
-
-            root = createRoot(el);
-
-            roots.set(el, root);
-
-        }
+//         if (!el)
+//             throw new Error(
+//                 `TMIVCom DateBox target not found: ${selector}`
+//             );
 
 
-        root.render(
-            <DateBox {...options}/>
-        );
+//         let root = roots.get(el);
 
 
-        return {
+//         if (!root) {
 
-            setValue(value){
+//             root = createRoot(el);
 
-                root.render(
-                    <DateBox
-                        {...options}
-                        value={value}
-                    />
-                );
+//             roots.set(el, root);
 
-            }
+//         }
 
-        };
-    }
 
-};
+//         root.render(
+//             <DateBox {...options}/>
+//         );
+
+
+//         return {
+
+//             setValue(value){
+
+//                 root.render(
+//                     <DateBox
+//                         {...options}
+//                         value={value}
+//                     />
+//                 );
+
+//             }
+
+//         };
+//     }
+
+// };
+export default DateBox; 
