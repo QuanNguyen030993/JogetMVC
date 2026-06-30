@@ -1,25 +1,32 @@
+/* =========================
+   GLOBAL
+========================= */
+
 html,
 body,
-#root{
+#root {
 
     margin:0;
-
     width:100%;
-
     height:100%;
 
     overflow:hidden;
 
+    font-family:
+    Inter,
+    Segoe UI,
+    Arial,
+    sans-serif;
+
 }
-
-
 
 
 .mail-template-designer{
 
     width:100%;
-
     height:100vh;
+
+    background:#f5f7fb;
 
 }
 
@@ -27,8 +34,12 @@ body,
 
 
 
-.designer-container{
+/* =========================
+   MAIN LAYOUT
+========================= */
 
+
+.designer-container{
 
     display:flex;
 
@@ -36,25 +47,27 @@ body,
 
     height:100vh;
 
-
 }
 
 
 
+/* =========================
+   LEFT FIELD PANEL
+========================= */
 
 
 .field-panel{
 
 
-    width:240px;
+    width:250px;
 
-    min-width:240px;
-
-
-    background:#fafafa;
+    min-width:250px;
 
 
-    border-right:1px solid #ddd;
+    background:#fff;
+
+
+    border-right:1px solid #e5e7eb;
 
 
     display:flex;
@@ -67,18 +80,26 @@ body,
 
 
 
-
 .panel-header{
 
 
-    padding:16px;
+    height:52px;
 
-    font-size:16px;
+
+    display:flex;
+
+    align-items:center;
+
+
+    padding:0 18px;
+
+
+    font-size:15px;
 
     font-weight:600;
 
 
-    border-bottom:1px solid #ddd;
+    border-bottom:1px solid #eee;
 
 
 }
@@ -92,9 +113,11 @@ body,
 
     flex:1;
 
-    overflow:auto;
 
-    padding:12px;
+    padding:14px;
+
+
+    overflow:auto;
 
 
 }
@@ -106,34 +129,56 @@ body,
 .field-item{
 
 
-    background:white;
+    height:38px;
 
 
-    border:1px solid #ddd;
+    display:flex;
+
+    align-items:center;
 
 
-    padding:10px;
+    padding:0 12px;
 
 
     margin-bottom:10px;
 
 
-    border-radius:6px;
+    background:#f9fafb;
+
+
+    border:1px solid #e5e7eb;
+
+
+    border-radius:8px;
+
+
+    color:#374151;
+
+
+    font-size:14px;
 
 
     cursor:grab;
 
 
+    transition:.2s;
+
+
 }
+
 
 
 
 .field-item:hover{
 
-    background:#eef6ff;
+
+    background:#eff6ff;
+
+
+    border-color:#93c5fd;
+
 
 }
-
 
 
 
@@ -141,9 +186,11 @@ body,
 .panel-actions{
 
 
-    padding:12px;
+    padding:14px;
 
-    border-top:1px solid #ddd;
+
+    border-top:1px solid #eee;
+
 
 }
 
@@ -154,24 +201,29 @@ body,
 .btn{
 
 
+    height:36px;
+
+
     width:100%;
 
 
-    padding:9px;
+    border:0;
+
+
+    border-radius:8px;
 
 
     margin-bottom:8px;
 
 
-    border:none;
-
-
-    border-radius:6px;
-
-
     cursor:pointer;
 
+
+    font-weight:500;
+
+
     color:white;
+
 
 }
 
@@ -179,27 +231,33 @@ body,
 
 .primary{
 
-    background:#1677ff;
+    background:#2563eb;
 
 }
 
 
 .secondary{
 
-    background:#555;
+    background:#64748b;
 
 }
 
 
 .danger{
 
-    background:#d9534f;
+    background:#ef4444;
 
 }
 
 
 
 
+
+
+
+/* =========================
+   CENTER EDITOR
+========================= */
 
 
 .editor-wrapper{
@@ -207,10 +265,14 @@ body,
 
     flex:1;
 
-    min-width:0;
-
 
     height:100vh;
+
+
+    display:flex;
+
+
+    min-width:0;
 
 
 }
@@ -221,9 +283,14 @@ body,
 .grapesjs-container{
 
 
-    width:100%;
+    flex:1;
+
 
     height:100%;
+
+
+    min-width:0;
+
 
 }
 
@@ -234,9 +301,14 @@ body,
 .gjs{
 
 
-    height:100% !important;
+    height:100%!important;
+
+
+    border:0!important;
+
 
 }
+
 
 
 
@@ -244,22 +316,237 @@ body,
 .gjs-cv-canvas{
 
 
-    width:100% !important;
+    width:100%!important;
 
-    height:100% !important;
+    height:100%!important;
+
+
+    top:0!important;
 
 
 }
+
+
 
 
 
 .gjs-frame{
 
 
-    background:white;
+    background:#f3f4f6!important;
+
 
 }
 
+
+
+
+
+
+/* =========================
+   RIGHT TOOL PANEL
+========================= */
+
+
+
+.tool-panel{
+
+
+    width:230px;
+
+    min-width:230px;
+
+
+    background:#fff;
+
+
+    border-left:1px solid #e5e7eb;
+
+
+    display:flex;
+
+    flex-direction:column;
+
+
+}
+
+
+
+
+
+.tool-title{
+
+
+    height:52px;
+
+
+    display:flex;
+
+
+    align-items:center;
+
+
+    padding:0 16px;
+
+
+    font-size:15px;
+
+
+    font-weight:600;
+
+
+    border-bottom:1px solid #eee;
+
+
+}
+
+
+
+
+
+
+#gjs-blocks{
+
+
+    flex:1;
+
+
+    overflow:auto;
+
+
+    padding:14px;
+
+
+}
+
+
+
+
+
+#gjs-blocks .gjs-blocks-c{
+
+
+    display:grid!important;
+
+
+    grid-template-columns:1fr 1fr;
+
+
+    gap:10px;
+
+
+}
+
+
+
+
+
+/* block card */
+
+
+#gjs-blocks .gjs-block{
+
+
+    width:auto!important;
+
+
+    min-height:80px!important;
+
+
+    margin:0!important;
+
+
+    background:#fff!important;
+
+
+    border:1px solid #e5e7eb!important;
+
+
+    border-radius:12px!important;
+
+
+    box-shadow:
+    0 2px 8px rgba(0,0,0,.05);
+
+
+    display:flex!important;
+
+    flex-direction:column!important;
+
+    justify-content:center!important;
+
+    align-items:center!important;
+
+
+    transition:.2s;
+
+
+}
+
+
+
+
+#gjs-blocks .gjs-block:hover{
+
+
+    border-color:#60a5fa!important;
+
+
+    transform:translateY(-2px);
+
+
+}
+
+
+
+
+
+.gjs-block-label{
+
+
+    font-size:13px!important;
+
+    color:#374151!important;
+
+
+}
+
+
+
+
+
+
+/* =========================
+   MAIL ELEMENT
+========================= */
+
+
+.mail-content{
+
+
+    width:700px;
+
+
+    min-height:420px;
+
+
+    margin:40px auto;
+
+
+    padding:40px;
+
+
+    background:white;
+
+
+    border-radius:14px;
+
+
+    box-shadow:
+    0 15px 40px rgba(0,0,0,.08);
+
+
+}
 
 
 
@@ -268,28 +555,41 @@ body,
 .tmiv-field{
 
 
-    background:#e3f2fd;
-
-    color:#1976d2;
+    display:inline-block;
 
 
-    border:1px solid #2196f3;
+    background:#eff6ff;
+
+
+    color:#2563eb;
+
+
+    border:1px dashed #60a5fa;
 
 
     padding:3px 8px;
 
 
-    border-radius:5px;
+    border-radius:6px;
 
 
-    font-weight:500;
+    font-size:13px;
+
+
+    font-weight:600;
+
 
 }
 
 
 
-.mail-content{
 
-    padding:20px;
+
+/* hide grapes badge */
+
+
+.gjs-badge{
+
+    display:none!important;
 
 }

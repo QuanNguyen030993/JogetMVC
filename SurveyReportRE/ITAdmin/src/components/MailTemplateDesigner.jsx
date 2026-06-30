@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import grapesjs from "grapesjs";
 import "../styles/mailTemplateDesigner.css";
-
+import "grapesjs/dist/css/grapes.min.css";
 
 
 const FIELDS = [
@@ -46,34 +46,88 @@ function MailTemplateDesigner(){
 
         const editor = grapesjs.init({
 
-            container:editorRef.current,
+    container: editorRef.current,
 
-            height:"100vh",
+    height:"100vh",
 
-            width:"100%",
-
-
-            storageManager:false,
+    width:"100%",
 
 
-            fromElement:false,
+    storageManager:false,
 
 
-            panels:{
-                defaults:[]
-            },
+    fromElement:false,
 
 
-            blockManager:{
-                appendTo:false
-            },
+    // TOOLBAR
+    panels: {
+        defaults: []
+    },
 
 
-            canvas:{
-                styles:[]
-            }
+    blockManager: {
 
-        });
+        appendTo: "#gjs-blocks"
+
+    },
+
+
+    canvas: {
+
+        frameStyle: `
+
+        body {
+
+            background:#f3f4f6;
+
+            padding:40px;
+
+            font-family:Arial;
+
+        }
+
+
+        .mail-content {
+
+            width:700px;
+
+            min-height:400px;
+
+            margin:auto;
+
+            padding:40px;
+
+            background:white;
+
+            border-radius:12px;
+
+            box-shadow:
+            0 5px 20px #ddd;
+
+        }
+
+
+
+        .tmiv-field {
+
+            background:#e8f3ff;
+
+            border:1px dashed #1677ff;
+
+            padding:3px 8px;
+
+            border-radius:5px;
+
+            color:#1677ff;
+
+        }
+
+        `
+
+    }
+
+
+});
 
 
 
@@ -128,40 +182,75 @@ function MailTemplateDesigner(){
 
         editor.setComponents(`
 
-            <div class="mail-content">
+
+<div class="mail-content">
 
 
-                <h2>
-                    Approval Mail
-                </h2>
+    <h2>
+        Approval Mail
+    </h2>
 
 
-                <p>
-                    Dear {{checkerName}}
-                </p>
+
+    <p>
+        Dear 
+        <span 
+        class="tmiv-field"
+        data-bind="checkerName">
+
+        {{checkerName}}
+
+        </span>
+    </p>
 
 
-                <p>
-                    Your report was approved!
-                </p>
+
+    <p>
+
+        Your report was approved!
+
+    </p>
 
 
-                <p>
-                    Client:
-                    {{shortName}}
-                </p>
 
 
-                <p>
-                    Location:
-                    {{shortLocationName}}
-                </p>
+    <p>
+
+        Client:
+
+        <span
+        class="tmiv-field"
+        data-bind="shortName">
+
+        {{shortName}}
+
+        </span>
+
+    </p>
 
 
-            </div>
 
-        `);
+    <p>
 
+        Location:
+
+        <span
+        class="tmiv-field"
+        data-bind="shortLocationName">
+
+        {{shortLocationName}}
+
+        </span>
+
+
+    </p>
+
+
+
+</div>
+
+
+`);
 
 
 
@@ -197,65 +286,145 @@ function MailTemplateDesigner(){
 
 
         });
+editor.BlockManager.add(
+"text",
+{
+    label:"Text",
+
+    category:"Basic",
+
+    content:
+    `
+    <p>
+        New text
+    </p>
+    `
+});
+
+
+editor.BlockManager.add(
+"heading",
+{
+
+    label:"Heading",
+
+    category:"Basic",
+
+    content:
+    `
+    <h2>
+        Title
+    </h2>
+    `
+
+});
+
+
+
+editor.BlockManager.add(
+"button",
+{
+
+    label:"Button",
+
+    category:"Basic",
+
+    content:
+    `
+    <div class="mail-button">
+        Click here
+    </div>
+    `
+
+});
+
+
+
+editor.BlockManager.add(
+"divider",
+{
+
+    label:"Divider",
+
+    category:"Basic",
+
+    content:
+    `
+    <hr/>
+    `
+
+});
+
+editor.on("load",()=>{
+
+
+    const canvas =
+        editor.Canvas.getBody();
+
+
+
+    if(!canvas)
+        return;
+
+
+
+    canvas.addEventListener(
+        "dragover",
+        e=>{
+
+            e.preventDefault();
+
+            e.dataTransfer.dropEffect="copy";
+
+        }
+    );
 
 
 
 
-        const canvas =
-            editor.Canvas.getBody();
+    canvas.addEventListener(
+        "drop",
+        e=>{
+
+
+            e.preventDefault();
 
 
 
-        canvas.addEventListener(
-            "dragover",
-            e=>{
+            const field =
+                e.dataTransfer.getData(
+                    "field"
+                );
 
-                e.preventDefault();
+
+
+            if(!field)
+                return;
+
+
+
+            editor.addComponents({
+
+                type:"tmiv-field",
+
+                content:
+                    `{{${field}}}`,
+
+                attributes:{
+
+                    "data-bind":
+                        field
+
+                }
 
             });
 
 
-
-        canvas.addEventListener(
-            "drop",
-            e=>{
+        }
+    );
 
 
-                e.preventDefault();
-
-
-
-                const field =
-                    e.dataTransfer.getData(
-                        "field"
-                    );
-
-
-
-                if(!field)
-                    return;
-
-
-
-                editor.addComponents({
-
-                    type:"tmiv-field",
-
-                    content:
-                        `{{${field}}}`,
-
-                    attributes:{
-
-                        "data-bind":
-                            field
-
-                    }
-
-                });
-
-
-            });
-
+});
 
 
         return ()=>{
@@ -530,20 +699,30 @@ function MailTemplateDesigner(){
 
 
 
-                <main className="editor-wrapper">
+           <div className="editor-wrapper">
 
 
-                    <div
-                    ref={editorRef}
-                    className="grapesjs-container"
-                    />
+            <div
+                ref={editorRef}
+                className="grapesjs-container"
+            />
 
 
-                </main>
+            <aside className="tool-panel">
+
+                <div className="tool-title">
+                    Components
+                </div>
 
 
+                <div id="gjs-blocks"></div>
 
-            </div>
+
+            </aside>
+
+
+        </div>
+                    </div>
 
 
 
