@@ -7,6 +7,7 @@ using System.Dynamic;
 using System.Text.RegularExpressions;
 using Microsoft.Data.SqlClient;
 using ERPCore.Models.Migration.Config;
+using JogetMVC.Models.Models.Request;
 
 [Route("api/[controller]/[action]")]
 [ApiController]
@@ -25,13 +26,13 @@ public class EmployeeController : BaseControllerApi<Employee>
         _enumDataRepository = new BaseRepository<EnumData>(configuration, httpContextAccessor);
     }
     [HttpGet]
-    public async Task<IActionResult> GetAssignableByGroup(string group, string branchCode, bool excludeCurrent = true, string keyword = "")
+    public async Task<IActionResult> GetAssignableByGroup([FromQuery] GetAssignableByGroupRequest request)
     {
         var currentLogin = (User?.Identity?.Name ?? "").Trim();
-        EnumData enumData = await _enumDataRepository.GetSingleObject(s => s.Code == branchCode);
-        List<Employee> data = await _BaseRepository.GetListObject(l => l.Department == group && l.AreaId == enumData.Id);
+        EnumData enumData = await _enumDataRepository.GetSingleObject(s => s.Code == request.branchCode);
+        List<Employee> data = await _BaseRepository.GetListObject(l => l.Department == request.group && l.AreaId == enumData.Id);
 
-        if (excludeCurrent)
+        if (request.excludeCurrent ?? false)
         {
             data = data.Where(x =>
                 !string.Equals(x.AccountName?.Trim(), currentLogin, StringComparison.OrdinalIgnoreCase) 
