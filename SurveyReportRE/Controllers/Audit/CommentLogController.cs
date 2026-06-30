@@ -98,7 +98,7 @@ public class CommentLogController : BaseControllerApi<CommentLog>
     [HttpGet]
     public async Task<IActionResult> GetSeriLog()
     {
-        string query = "SELECT * FROM Logs";
+        string query = "SELECT TOP 1000 * FROM Logs ORDER BY Id DESC";
         var obj = await _BaseRepository.ExecuteCustomLogQuery(query);
         return Ok(obj);
     }
