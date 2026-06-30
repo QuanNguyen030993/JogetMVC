@@ -59,7 +59,7 @@ button {
   padding: 24px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .topbar {
@@ -130,6 +130,14 @@ button {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 24px;
+}
+
+.user-stats-card {
+  margin-bottom: 24px;
+}
+
+.user-stats-card .cards-grid {
+  grid-template-columns: 1fr;
 }
 
 .card {
@@ -244,12 +252,14 @@ button {
 
 .mail-template-designer {
   width: 100%;
-  height: 100%;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  flex: 1;
   overflow: hidden;
+  margin: 0 -24px -24px -24px;
 }
+
+@media (max-width: 1024px) {
   .app-shell {
     grid-template-columns: 1fr;
   }
@@ -274,17 +284,6 @@ button {
   }
 
   .chart-row {
-    grid-template-columns: 1fr;
-  }
-
-  .mail-template-designer {
-    height: 100%;
-  }
-
-  .designer-container {
-    height: 100%;
-  }
-}
     grid-template-columns: 1fr;
   }
 }

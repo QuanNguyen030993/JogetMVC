@@ -1,218 +1,557 @@
-import { useEffect, useRef } from 'react';
-import '../styles/mailTemplateDesigner.css';
+import { useEffect, useRef } from "react";
+import grapesjs from "grapesjs";
+import "../styles/mailTemplateDesigner.css";
+
+
 
 const FIELDS = [
-  { id: 'checkerName', label: 'Checker Name' },
-  { id: 'makerName', label: 'Maker Name' },
-  { id: 'shortName', label: 'Client Name' },
-  { id: 'shortLocationName', label: 'Location' },
-  { id: 'typeCheckerApprove', label: 'Approval Type' }
+    {
+        id:"checkerName",
+        label:"Checker Name"
+    },
+    {
+        id:"makerName",
+        label:"Maker Name"
+    },
+    {
+        id:"shortName",
+        label:"Client Name"
+    },
+    {
+        id:"shortLocationName",
+        label:"Location"
+    },
+    {
+        id:"typeCheckerApprove",
+        label:"Approval Type"
+    }
 ];
 
-let editor = null;
-let previewWindow = null;
 
-function MailTemplateDesigner() {
-  const editorRef = useRef(null);
 
-  useEffect(() => {
-    const loadGrapesJS = async () => {
-      // Load GrapesJS library dynamically
-      if (!window.grapesjs) {
-        const script = document.createElement('script');
-        script.src = 'https://unpkg.com/grapesjs';
-        script.async = true;
-        script.onload = () => {
-          initializeEditor();
-        };
-        document.head.appendChild(script);
-      } else {
-        initializeEditor();
-      }
-    };
+function MailTemplateDesigner(){
 
-    const initializeEditor = () => {
-      if (editor) editor.destroy();
 
-      editor = window.grapesjs.init({
-        container: '#gjs',
-        height: '100%',
-        fromElement: false,
-        storageManager: false,
-        canvas: {
-          styles: ['https://unpkg.com/grapesjs/dist/css/grapes.min.css']
-        }
-      });
+    const editorRef = useRef(null);
+    const editorInstance = useRef(null);
 
-      // Register custom field component
-      editor.DomComponents.addType('tmiv-field', {
-        model: {
-          defaults: {
-            tagName: 'span',
-            content: '{{field}}',
-            attributes: {
-              'data-bind': '',
-              class: 'tmiv-field'
+
+    useEffect(()=>{
+
+
+        if(!editorRef.current)
+            return;
+
+
+
+        const editor = grapesjs.init({
+
+            container:editorRef.current,
+
+            height:"100vh",
+
+            width:"100%",
+
+
+            storageManager:false,
+
+
+            fromElement:false,
+
+
+            panels:{
+                defaults:[]
+            },
+
+
+            blockManager:{
+                appendTo:false
+            },
+
+
+            canvas:{
+                styles:[]
             }
-          }
-        }
-      });
 
-      // Set initial content
-      editor.setComponents(`
-        <h2>Approval Mail</h2>
-        <p>Dear {{checkerName}}</p>
-        <p>Your report was approved!</p>
-        <p>Client: {{shortName}}</p>
-      `);
-
-      // Setup drag and drop
-      setupDragDrop();
-    };
-
-    loadGrapesJS();
-
-    return () => {
-      // Clean up
-      if (previewWindow && !previewWindow.closed) {
-        previewWindow.close();
-      }
-    };
-  }, []);
-
-  const setupDragDrop = () => {
-    const fieldPanelItems = document.querySelectorAll('.field-item');
-    const canvas = editor.Canvas.getBody();
-
-    fieldPanelItems.forEach(el => {
-      el.addEventListener('dragstart', e => {
-        e.dataTransfer.effectAllowed = 'copy';
-        e.dataTransfer.setData('field', el.dataset.field);
-      });
-    });
-
-    canvas.addEventListener('dragover', e => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'copy';
-    });
-
-    canvas.addEventListener('drop', e => {
-      e.preventDefault();
-      const field = e.dataTransfer.getData('field');
-
-      if (field) {
-        editor.addComponents({
-          type: 'tmiv-field',
-          content: `{{${field}}}`,
-          attributes: {
-            'data-bind': field
-          }
         });
-      }
-    });
-  };
 
-  const saveTemplate = () => {
-    const projectData = editor.getProjectData();
-    const html = editor.getHtml();
 
-    console.log('Project Data:', projectData);
-    console.log('HTML:', html);
 
-    // In a real app, send to backend
-    // await fetch('/api/mail-template/save', { method: 'POST', body: JSON.stringify({ html, projectData }) });
+        editorInstance.current = editor;
 
-    alert('Template saved successfully!');
-  };
 
-  const previewTemplate = () => {
-    const html = editor.getHtml();
-    const css = editor.getCss();
 
-    // Sample data for preview
-    const sampleData = {
-      checkerName: 'Nguyễn Văn A',
-      makerName: 'Trần Thị B',
-      shortName: 'ABC Insurance',
-      shortLocationName: 'Hà Nội',
-      typeCheckerApprove: 'Manager Approval'
+
+        /*
+            Custom field component
+        */
+
+        editor.DomComponents.addType(
+            "tmiv-field",
+            {
+
+                model:{
+
+                    defaults:{
+
+                        tagName:"span",
+
+                        content:"{{field}}",
+
+
+                        draggable:true,
+
+                        droppable:false,
+
+
+                        attributes:{
+
+                            class:"tmiv-field",
+
+                            "data-bind":""
+
+                        }
+
+                    }
+
+                }
+
+            }
+        );
+
+
+
+        /*
+            Initial template
+        */
+
+
+        editor.setComponents(`
+
+            <div class="mail-content">
+
+
+                <h2>
+                    Approval Mail
+                </h2>
+
+
+                <p>
+                    Dear {{checkerName}}
+                </p>
+
+
+                <p>
+                    Your report was approved!
+                </p>
+
+
+                <p>
+                    Client:
+                    {{shortName}}
+                </p>
+
+
+                <p>
+                    Location:
+                    {{shortLocationName}}
+                </p>
+
+
+            </div>
+
+        `);
+
+
+
+
+
+        /*
+            Drag field
+        */
+
+
+        const items =
+            document.querySelectorAll(
+                ".field-item"
+            );
+
+
+
+        items.forEach(item=>{
+
+
+            item.addEventListener(
+                "dragstart",
+                e=>{
+
+
+                    e.dataTransfer.setData(
+                        "field",
+                        item.dataset.field
+                    );
+
+
+                }
+            );
+
+
+        });
+
+
+
+
+        const canvas =
+            editor.Canvas.getBody();
+
+
+
+        canvas.addEventListener(
+            "dragover",
+            e=>{
+
+                e.preventDefault();
+
+            });
+
+
+
+        canvas.addEventListener(
+            "drop",
+            e=>{
+
+
+                e.preventDefault();
+
+
+
+                const field =
+                    e.dataTransfer.getData(
+                        "field"
+                    );
+
+
+
+                if(!field)
+                    return;
+
+
+
+                editor.addComponents({
+
+                    type:"tmiv-field",
+
+                    content:
+                        `{{${field}}}`,
+
+                    attributes:{
+
+                        "data-bind":
+                            field
+
+                    }
+
+                });
+
+
+            });
+
+
+
+        return ()=>{
+
+            editor.destroy();
+
+            editorInstance.current=null;
+
+        };
+
+
+    },[]);
+
+
+
+
+
+
+    const saveTemplate = ()=>{
+
+
+        const editor =
+            editorInstance.current;
+
+
+        if(!editor)
+            return;
+
+
+
+        const data = {
+
+            html:
+                editor.getHtml(),
+
+
+            css:
+                editor.getCss(),
+
+
+            json:
+                editor.getProjectData()
+
+        };
+
+
+        console.log(
+            "TEMPLATE",
+            data
+        );
+
+
+        alert(
+            "Template saved"
+        );
+
     };
 
-    let previewHtml = html.replace(/\{\{(.*?)\}\}/g, (_, k) => sampleData[k.trim()] || _);
 
-    if (previewWindow && !previewWindow.closed) {
-      previewWindow.close();
-    }
 
-    previewWindow = window.open('', 'preview', 'width=800,height=600');
-    previewWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <title>Mail Template Preview</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
-            .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-            .tmiv-field { background: #e8f4f8; padding: 2px 4px; border-radius: 3px; }
-            ${css}
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            ${previewHtml}
-          </div>
-        </body>
-      </html>
-    `);
-    previewWindow.document.close();
-  };
 
-  const clearTemplate = () => {
-    if (confirm('Are you sure you want to clear the template?')) {
-      editor.setComponents('');
-    }
-  };
 
-  return (
-    <div className="mail-template-designer">
-      <div className="designer-container">
-        <div className="field-panel">
-          <div className="panel-header">
-            <h3>Database Fields</h3>
-          </div>
-          <div className="fields-list">
-            {FIELDS.map(field => (
-              <div
-                key={field.id}
-                className="field-item"
-                draggable="true"
-                data-field={field.id}
-                title="Drag to canvas"
-              >
-                {field.label}
-              </div>
-            ))}
-          </div>
-          <div className="panel-actions">
-            <button className="btn btn-primary" onClick={saveTemplate}>
-              Save Template
-            </button>
-            <button className="btn btn-secondary" onClick={previewTemplate}>
-              Preview
-            </button>
-            <button className="btn btn-danger" onClick={clearTemplate}>
-              Clear
-            </button>
-          </div>
+
+    const previewTemplate = ()=>{
+
+
+        const editor =
+            editorInstance.current;
+
+
+        if(!editor)
+            return;
+
+
+
+        let html =
+            editor.getHtml();
+
+
+
+
+        const data={
+
+            checkerName:
+                "Nguyễn Văn A",
+
+            makerName:
+                "Trần Thị B",
+
+            shortName:
+                "ABC Insurance",
+
+            shortLocationName:
+                "Hồ Chí Minh",
+
+            typeCheckerApprove:
+                "Manager Approval"
+
+        };
+
+
+
+
+        html =
+        html.replace(
+            /\{\{(.*?)\}\}/g,
+            (_,key)=>{
+
+                return data[key.trim()]
+                    ?? _;
+
+            });
+
+
+
+        const w =
+            window.open("");
+
+
+
+        w.document.write(`
+
+
+            <html>
+
+            <head>
+
+            <style>
+
+            body{
+                font-family:Arial;
+                padding:30px;
+            }
+
+
+            </style>
+
+
+            </head>
+
+
+            <body>
+
+
+            ${html}
+
+
+            </body>
+
+
+            </html>
+
+
+        `);
+
+
+        w.document.close();
+
+
+    };
+
+
+
+
+
+
+
+    const clearTemplate=()=>{
+
+
+        const editor =
+            editorInstance.current;
+
+
+        if(editor)
+            editor.setComponents("");
+
+    };
+
+
+
+
+
+
+    return (
+
+        <div className="mail-template-designer">
+
+
+            <div className="designer-container">
+
+
+                <aside className="field-panel">
+
+
+                    <div className="panel-header">
+
+                        Database Fields
+
+                    </div>
+
+
+
+                    <div className="fields-list">
+
+
+                    {
+                        FIELDS.map(f=>(
+
+
+                            <div
+
+                            key={f.id}
+
+                            className="field-item"
+
+                            draggable
+
+                            data-field={f.id}
+
+                            >
+
+                                {f.label}
+
+
+                            </div>
+
+
+                        ))
+                    }
+
+
+                    </div>
+
+
+
+
+                    <div className="panel-actions">
+
+
+                        <button
+                        className="btn primary"
+                        onClick={saveTemplate}
+                        >
+                            Save
+                        </button>
+
+
+                        <button
+                        className="btn secondary"
+                        onClick={previewTemplate}
+                        >
+                            Preview
+                        </button>
+
+
+
+                        <button
+                        className="btn danger"
+                        onClick={clearTemplate}
+                        >
+                            Clear
+                        </button>
+
+
+                    </div>
+
+
+
+                </aside>
+
+
+
+
+                <main className="editor-wrapper">
+
+
+                    <div
+                    ref={editorRef}
+                    className="grapesjs-container"
+                    />
+
+
+                </main>
+
+
+
+            </div>
+
+
+
         </div>
 
-        <div className="editor-wrapper">
-          <div id="gjs" ref={editorRef}></div>
-        </div>
-      </div>
-    </div>
-  );
+    );
+
 }
+
 
 export default MailTemplateDesigner;
