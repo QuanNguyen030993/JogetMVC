@@ -1,3 +1,5 @@
+import { useCallback, useEffect, useState } from 'react';
+
 import {
   Area,
   AreaChart,
@@ -8,53 +10,473 @@ import {
   ResponsiveContainer,
   Tooltip,
   XAxis,
-  YAxis
+  YAxis,
+  PieChart,
+  Pie,
+  Cell
 } from 'recharts';
 
-const ChartPanel = ({ cpuData, ticketData }) => (
-  <section className="panel chart-panel">
-    <div className="chart-row">
-      <div className="chart-card">
-        <div className="chart-card-header">
-          <h3>Tải CPU theo ngày</h3>
-          <span>Đơn vị: %</span>
-        </div>
-        <ResponsiveContainer width="100%" height={240}>
-          <AreaChart data={cpuData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-            <defs>
-              <linearGradient id="colorCpu" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#2563eb" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#2563eb" stopOpacity={0.1} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis dataKey="day" />
-            <YAxis />
-            <Tooltip />
-            <Area type="monotone" dataKey="usage" stroke="#2563eb" fill="url(#colorCpu)" />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
 
-      <div className="chart-card">
-        <div className="chart-card-header">
-          <h3>Ticket IT trong tuần</h3>
-          <span>Mở / Đã đóng</span>
-        </div>
-        <ResponsiveContainer width="100%" height={240}>
-          <BarChart data={ticketData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis dataKey="day" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="open" stackId="a" fill="#f59e0b" />
-            <Bar dataKey="closed" stackId="a" fill="#10b981" />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
-  </section>
+
+const ChartPanel = ({
+  cpuData,
+  ticketData,
+  loginStats = [],
+  disk = 0
+}) => {
+
+
+const months=[
+ ...new Set(
+  loginStats.map(x=>x.month)
+ )
+];
+
+
+const hours=[
+ ...new Set(
+  loginStats.map(x=>x.hour)
+ )
+];
+const chartColors = [
+  "#2563eb",
+  "#16a34a",
+  "#f59e0b",
+  "#dc2626",
+  "#9333ea",
+  "#0891b2",
+  "#db2777",
+  "#65a30d",
+  "#ea580c",
+  "#4f46e5",
+  "#0d9488",
+  "#be123c"
+];
+
+const monthColors=[
+ "#2563eb",
+ "#16a34a",
+ "#f59e0b",
+ "#dc2626"
+];
+
+const pivotData = hours.map(h=>{
+ 
+  
+ let row={
+   hour:`${h}:00`
+ };
+
+
+ months.forEach(m=>{
+
+   const item =
+   loginStats.find(
+     x =>
+       x.month === m &&
+       x.hour === h
+   );
+
+
+   row[m] =
+      item?.loginCount || 0;
+
+
+ });
+
+
+ return row;
+
+});
+
+
+
+
+const diskData=[
+
+{
+ name:"Used",
+ value:292-disk
+},
+
+{
+ name:"Available",
+ value:disk
+}
+
+];
+
+
+
+
+
+return (
+
+<section className="panel chart-panel">
+
+
+<div className="chart-row">
+
+
+
+{/* CPU */}
+
+<div className="chart-card">
+
+<div className="chart-card-header">
+
+<h3>
+Tải CPU theo ngày
+</h3>
+
+<span>
+%
+</span>
+
+</div>
+
+
+
+<ResponsiveContainer
+ width="100%"
+ height={240}
+>
+
+<AreaChart
+data={cpuData}
+>
+
+<defs>
+
+<linearGradient
+id="colorCpu"
+x1="0"
+y1="0"
+x2="0"
+y2="1"
+>
+
+<stop
+offset="5%"
+stopColor="#2563eb"
+stopOpacity={0.8}
+/>
+
+<stop
+offset="95%"
+stopColor="#2563eb"
+stopOpacity={0.1}
+/>
+
+</linearGradient>
+
+</defs>
+
+
+<CartesianGrid
+strokeDasharray="3 3"
+/>
+
+
+<XAxis dataKey="day"/>
+
+<YAxis/>
+
+
+<Tooltip/>
+
+
+<Area
+
+type="monotone"
+
+dataKey="usage"
+
+stroke="#2563eb"
+
+fill="url(#colorCpu)"
+
+/>
+
+
+</AreaChart>
+
+
+</ResponsiveContainer>
+
+
+</div>
+
+
+
+
+
+
+
+
+{/* Ticket */}
+
+
+<div className="chart-card">
+
+
+<div className="chart-card-header">
+
+<h3>
+Ticket IT
+</h3>
+
+<span>
+Open / Closed
+</span>
+
+</div>
+
+
+
+<ResponsiveContainer
+width="100%"
+height={240}
+>
+
+
+<BarChart
+data={ticketData}
+>
+
+
+<CartesianGrid
+strokeDasharray="3 3"
+/>
+
+
+<XAxis dataKey="day"/>
+
+<YAxis/>
+
+
+<Tooltip/>
+
+<Legend/>
+
+
+<Bar
+
+dataKey="open"
+
+fill="#f59e0b"
+
+/>
+
+
+<Bar
+
+dataKey="closed"
+
+fill="#10b981"
+
+/>
+
+
+</BarChart>
+
+
+</ResponsiveContainer>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+{/* LOGIN PIVOT */}
+
+
+
+<div className="chart-card wide">
+
+
+<div className="chart-card-header">
+
+<h3>
+User Login Monitoring
+</h3>
+
+<span>
+Hour
+</span>
+
+</div>
+
+
+
+
+<ResponsiveContainer
+width="100%"
+height={260}
+>
+
+
+<BarChart
+data={pivotData}
+>
+
+
+<CartesianGrid
+strokeDasharray="3 3"
+/>
+
+
+<XAxis
+dataKey="month"
+/>
+
+
+<YAxis/>
+
+
+<Tooltip/>
+
+
+<Legend/>
+
+
+{
+months.map((m,index)=>
+
+<Bar
+
+key={m}
+
+dataKey={m}
+
+name={m}
+
+fill={
+ monthColors[index % monthColors.length]
+}
+
+/>
+
+)
+}
+
+
+</BarChart>
+
+
+</ResponsiveContainer>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+{/* DISK GAUGE */}
+
+<div className="chart-card">
+
+
+<div className="chart-card-header">
+
+<h3>
+Disk Capacity
+</h3>
+
+<span>
+GB
+</span>
+
+</div>
+
+
+
+
+<ResponsiveContainer
+width="100%"
+height={240}
+>
+
+
+<PieChart>
+
+
+<Pie
+
+data={diskData}
+
+dataKey="value"
+
+cx="50%"
+
+cy="50%"
+
+innerRadius={60}
+
+outerRadius={90}
+
+>
+
+
+{
+diskData.map(
+(_,index)=>
+
+<Cell
+key={index}
+/>
+
+)
+}
+
+
+</Pie>
+
+
+<Tooltip/>
+
+</PieChart>
+
+
+
+</ResponsiveContainer>
+
+
+
+<div className="disk-value">
+
+{disk} GB Available
+
+</div>
+
+
+
+</div>
+
+
+
+
+</div>
+
+
+</section>
+
 );
+
+
+};
+
 
 export default ChartPanel;

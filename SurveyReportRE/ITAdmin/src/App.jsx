@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useState,useMemo  } from 'react';
+
 import ChartPanel from './components/ChartPanel';
 import MailTemplateDesigner from './components/MailTemplateDesigner';
 import Flow from './components/Flow';
@@ -35,6 +36,64 @@ const ticketData = [
 ];
 
 function App() {
+  const [loginStats,setLoginStats]=useState([]);
+   const [disk,setDisk]=useState(0);
+   
+useEffect(()=>{
+
+fetch("https://localhost:7254/api/UsersSession/ExecuteCustomQuery",{
+ method:"POST",
+ headers:{
+  "Content-Type":"application/json"
+ },
+ body:JSON.stringify("1")
+})
+.then(r=>r.json())
+.then(data=>{
+
+let result=[];
+
+data.forEach(row=>{
+
+let month=row.Month || row.month;
+
+Object.keys(row).forEach(k=>{
+
+if(k.startsWith("h")){
+
+result.push({
+ month,
+ hour:parseInt(k.substring(1)),
+ loginCount:Number(row[k])||0
+});
+
+}
+
+});
+
+});
+
+
+setLoginStats(result);
+
+});
+
+
+
+fetch("https://localhost:7254/api/UsersSession/ExecuteCustomQuery",{
+method:"POST",
+headers:{
+ "Content-Type":"application/json"
+},
+body:JSON.stringify("2")
+})
+.then(r=>r.json())
+.then(d=>
+ setDisk(d[0]?.availableSpace||0)
+);
+
+
+},[]);
   const [activeSection, setActiveSection] = useState('dashboard');
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard' },
@@ -70,7 +129,17 @@ function App() {
                 <p>{userCount.detail}</p>
               </article>
             </section>
-            <ChartPanel cpuData={cpuData} ticketData={ticketData} />
+            <ChartPanel
+
+            cpuData={cpuData}
+
+            ticketData={ticketData}
+
+            loginStats={loginStats}
+
+            disk={disk}
+
+            />
           </>
         );
     }
