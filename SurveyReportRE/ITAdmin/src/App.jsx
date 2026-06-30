@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import OverviewPanel from './components/OverviewPanel';
 import UserManagement from './components/UserManagement';
 import ChartPanel from './components/ChartPanel';
+import MailTemplateDesigner from './components/MailTemplateDesigner';
 
 const cards = [
   { label: 'Người dùng hoạt động', value: '128', detail: '20 người dùng IT đang online' },
@@ -56,7 +57,8 @@ function App() {
     { id: 'dashboard', label: 'Bảng điều khiển' },
     { id: 'users', label: 'Quản lý người dùng' },
     { id: 'systems', label: 'Giám sát hệ thống' },
-    { id: 'alerts', label: 'Cảnh báo' }
+    { id: 'alerts', label: 'Cảnh báo' },
+    { id: 'mail-template', label: 'Cấu hình Mail Template' }
   ];
 
   const content = useMemo(() => {
@@ -67,6 +69,8 @@ function App() {
         return <OverviewPanel cards={cards} systemStatus={systemStatus} alerts={alerts} showStatusOnly />;
       case 'alerts':
         return <OverviewPanel cards={[]} systemStatus={[]} alerts={alerts} showAlertsOnly />;
+      case 'mail-template':
+        return <MailTemplateDesigner />;
       default:
         return <OverviewPanel cards={cards} systemStatus={systemStatus} alerts={alerts} />;
     }
