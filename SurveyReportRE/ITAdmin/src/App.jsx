@@ -27,8 +27,8 @@ const ticketData = [
 function App() {
   const [activeSection, setActiveSection] = useState('dashboard');
   const menuItems = [
-    { id: 'dashboard', label: 'Bảng điều khiển' },
-    { id: 'mail-template', label: 'Cấu hình Mail Template' }
+    { id: 'dashboard', label: 'Dashboard' },
+    { id: 'mail-template', label: 'Mail Template config' }
   ];
 
   const content = useMemo(() => {
@@ -72,7 +72,7 @@ function App() {
       <main className="main-content">
         <header className="topbar">
           <div>
-            <h1>Admintrator</h1>
+            <h1>Administrator</h1>
           </div>
         </header>
 

@@ -16,6 +16,9 @@ function MailTemplateDesigner(){
 
 const [templates, setTemplates] = useState([]);
 const [dynamicFields, setDynamicFields] = useState([]);
+const [selectedTemplate, setSelectedTemplate] = useState(null);
+
+
 const FIELDS = [
     {
         id:"checkerName",
@@ -101,6 +104,10 @@ const convertFieldsToEditor = (fields) => {
 //     `);
 // };
 const loadTemplate = (template) => {
+    
+
+
+
     const editor = editorInstance.current;
     if (!editor) return;
 
@@ -111,7 +118,7 @@ const loadTemplate = (template) => {
             ${html}
         </div>
     `);
-
+    setSelectedTemplate(template);
     // ✅ parse SQL
     const fields = extractFieldsFromQuery(template.mailQuery);
 
@@ -547,54 +554,90 @@ editor.on("load",()=>{
 
 
 
+// const saveTemplate = () => {
+//     const editor = editorInstance.current;
+//     if (!editor) return;
 
+//     if (!selectedTemplate) {
+//         alert("Please select template");
+//         return;
+//     }
 
+//     // ✅ lấy HTML từ editor
+//     let html = editor.getHtml();
 
-    const saveTemplate = ()=>{
+//     // ✅ convert về @@
+//     // html = convertToApiFormat(html);
 
+//     // ✅ build object gửi backend
+//     const formItems = {
+//         ...selectedTemplate, // giữ nguyên data cũ
+//         id: selectedTemplate.id,
+//         templateContent: html
+//     };
 
-        const editor =
-            editorInstance.current;
+//     const payload = {
+//         key: formItems.id,
+//         values: JSON.stringify(formItems)
+//     };
 
+//     // ✅ CALL API PUT
+//    fetch("https://localhost:7254/api/MailTemplate/UpdateData", {
+//     method: "PUT",
+//     headers: {
+//         "Content-Type": "application/json"
+//     },
+//     body: JSON.stringify(payload)
+//     })
+//     .then(res => {
+//         if (!res.ok) throw new Error("Network error");
+//         return res.json();
+//     })
+//     .then(data => {
+//         console.log("SAVE SUCCESS", data);
+//         alert("Saved successfully ✅");
+//     })
+//     .catch(err => {
+//         console.error("SAVE ERROR", err);
+//         alert("Save failed ❌");
+//     });
+// };
 
-        if(!editor)
-            return;
+const saveTemplate = async () => {
+    try {
+        const editor = editorInstance.current;
+        if (!editor || !selectedTemplate) return;
 
+        let html = editor.getHtml();
 
+        // convert {{}} → @@
+        html = html.replace(/\{\{(.*?)\}\}/g, (_, key) => `@@${key}`);
 
-        const data = {
-
-            html:
-                editor.getHtml(),
-
-
-            css:
-                editor.getCss(),
-
-
-            json:
-                editor.getProjectData()
-
+        const formItems = {
+            ...selectedTemplate,
+            templateContent: html
         };
 
+        // ✅ dùng FormData
+        const formData = new FormData();
+        formData.append("key", formItems.id);
+        formData.append("values", JSON.stringify(formItems));
 
-        console.log(
-            "TEMPLATE",
-            data
-        );
+        const res = await fetch("https://localhost:7254/api/MailTemplate/UpdateData", {
+            method: "PUT",
+            body: formData // ✅ KHÔNG set header
+        });
 
+        if (!res.ok) throw new Error("Save failed");
 
-        alert(
-            "Template saved"
-        );
+        console.log("SAVE SUCCESS");
+        alert("Saved successfully ✅");
 
-    };
-
-
-
-
-
-
+    } catch (err) {
+        console.error("SAVE ERROR", err);
+        alert("Save failed ❌");
+    }
+};
     const previewTemplate = ()=>{
 
 

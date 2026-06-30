@@ -26,6 +26,7 @@ using MimeMapping;
 using ERPCore.Models.Models.Parsing;
 using ERPCore.Models.Migration.Business.Config;
 using Serilog;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace ERPCore.Controllers.Base
@@ -409,7 +410,7 @@ namespace ERPCore.Controllers.Base
         }
 
 
-
+        //[AllowAnonymous] // test
         [HttpGet]
         public virtual async Task<ActionResult<List<T>>> GetAll()
         {
@@ -895,6 +896,7 @@ namespace ERPCore.Controllers.Base
             _attachmentRepository.UpdateData(entity, form.values, form.key, "Id");
             return new HttpResponseMessage(HttpStatusCode.OK);
         }
+        //[AllowAnonymous] // test
         [HttpPut]
         public virtual HttpResponseMessage UpdateData([FromForm] UpdateFormCollection form)
         {
