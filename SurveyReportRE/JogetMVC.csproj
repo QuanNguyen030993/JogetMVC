@@ -31,6 +31,16 @@
 	  <Content Remove="wwwroot\css\app\menu.css" />
 	  <Content Remove="wwwroot\css\app\site.less.css" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="TMIVCom\buildsource.txt" />
+	  <Content Include="TMIVCom\index.html" />
+	  <Content Include="TMIVCom\package-lock.json" />
+	  <Content Include="TMIVCom\package.json" />
+	  <Content Include="TMIVCom\src\css\datagrid.css" />
+	  <Content Include="TMIVCom\src\css\datebox.css" />
+	  <Content Include="TMIVCom\src\css\htmleditor.css" />
+	</ItemGroup>
 	<ItemGroup>
 		<Content Update="Pages\**\*.cshtml">
 			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
@@ -73,6 +83,17 @@
 
 	<ItemGroup>
 	  <None Include="App.config" />
+	  <None Include="TMIVCom\move-to-wwwroot.js" />
+	  <None Include="TMIVCom\src\App.jsx" />
+	  <None Include="TMIVCom\src\components\Core.jsx" />
+	  <None Include="TMIVCom\src\components\CustomGrid.jsx" />
+	  <None Include="TMIVCom\src\components\Datebox.jsx" />
+	  <None Include="TMIVCom\src\components\HtmlEditor.jsx" />
+	  <None Include="TMIVCom\src\index.jsx" />
+	  <None Include="TMIVCom\src\js\datebox.js" />
+	  <None Include="TMIVCom\src\main.jsx" />
+	  <None Include="TMIVCom\vite.config.js" />
+	  <None Include="TMIVCom\vite.config.lib.js" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -1,93 +1,67 @@
-// tmiv-core.jsx
+import { useState } from 'react';
+import CustomGrid from './components/CustomGrid';
+import HtmlEditor from './components/HtmlEditor';
+import DateBox from './components/DateBox';
+import './css/com.all.css';
+// import HtmlEditor from './components/HtmlEditor';
+const defaultRows = [
+  { id: 1, name: 'Alice', role: 'Developer', status: 'Active' },
+  { id: 2, name: 'Bob', role: 'Designer', status: 'Pending' },
+  { id: 3, name: 'Charlie', role: 'QA', status: 'Active' },
+];
 
-import { createRoot } from "react-dom/client";
+function App() {
+  const [rows, setRows] = useState(defaultRows);
+  const [editorValue, setEditorValue] = useState('<p>Write a description here...</p>');
 
+  const addRow = () => {
+    const nextId = rows.length ? Math.max(...rows.map((row) => row.id)) + 1 : 1;
+    setRows([...rows, { id: nextId, name: '', role: '', status: 'Active' }]);
+  };
 
-const components = {};
+  return (
+    <div className="tmivcom-app">
+      <header className="header">
+        <div>
+          <h1>TMIVCom Reusable Controls</h1>
+          <p>Custom React controls for ASP.NET integration: grid and HTML editor.</p>
+        </div>
+      </header>
 
-const instances = {};
-
-
-TMIVCom = window.TMIVCom || {};
-
-
-
-TMIVCom.register = function(
-    name,
-    component,
-    options={}
-){
-
-    components[name] = component;
-
-
-    // mỗi control có WeakMap riêng
-    instances[name] = new WeakMap();
-
-};
-
-
-
-TMIVCom.mount = function(
-    element,
-    name,
-    props
-){
-
-    const Component = components[name];
-
-
-    if(!Component){
-        throw new Error(
-          `${name} not registered`
-        );
-    }
-
-
-    let instance =
-        instances[name].get(element);
-
-
-
-    if(!instance){
-
-        const root =
-            createRoot(element);
-
-
-        instance = {
-            root,
-            props
-        };
-
-
-        instances[name].set(
-            element,
-            instance
-        );
-
-    }
-
-
-
-    instance.root.render(
-        <Component
-            {...props}
+      <section className="section">
+        <div className="section-title">Custom Grid</div>
+        <CustomGrid
+          columns={['id', 'name', 'role', 'status']}
+          rows={rows}
+          onRowsChange={setRows}
+          onAddRow={addRow}
         />
-    );
+      </section>
+
+      <section className="section">
+        <div className="section-title">HTML Editor</div>
+        <HtmlEditor value={editorValue} onChange={setEditorValue} />
+      </section>
+
+        <section className="section">
+        <div className="section-title">Date box</div>
+        <DateBox value={editorValue} onChange={setEditorValue} />
+      </section>
+
+
+      {/* <section className="section">
+        <div className="section-title">Editor Output</div>
+        <div className="output-box" dangerouslySetInnerHTML={{ __html: editorValue }} />
+      </section>
 
 
 
-    return {
+      <section className="section">
+        <div className="section-title">Editor Output</div>
+        <div className="output-box" dangerouslySetInnerHTML={{ __html: editorValue }} />
+      </section> */}
+    </div>
+  );
+}
 
-        destroy(){
-
-            instance.root.unmount();
-
-            instances[name].delete(
-                element
-            );
-        }
-
-    };
-};
+export default App;
