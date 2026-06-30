@@ -35,10 +35,6 @@ function DateBox({
                     onChange={change}
                 />
 
-                <span className="tmivcom-datebox-button">
-                    📅
-                </span>
-
             </div>
 
         </div>
