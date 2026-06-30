@@ -15,6 +15,7 @@ function MailTemplateDesigner(){
 
 
 const [templates, setTemplates] = useState([]);
+const [dynamicFields, setDynamicFields] = useState([]);
 const FIELDS = [
     {
         id:"checkerName",
@@ -48,10 +49,57 @@ useEffect(() => {
         });
 }, []);
 
-const convertToEditorFormat = (html) => {
-    return html.replace(/@@(.*?)\b/g, (_, key) => `{{${key}}}`);
-};
 
+const convertToEditorFormat = (html) => {
+    return html.replace(/@@([a-zA-Z0-9_]+)/g, (_, key) => `{{${key}}}`);
+};
+const extractFieldsFromQuery = (query) => {
+    if (!query) return [];
+
+    const fields = [];
+
+    // lấy phần SELECT ... FROM
+    const match = query.match(/select([\s\S]*?)from/i);
+    if (!match) return [];
+
+    let selectPart = match[1];
+
+    // split theo dấu ,
+    const parts = selectPart.split(",");
+
+    parts.forEach(p => {
+        // lấy alias nếu có
+        const aliasMatch = p.match(/as\s+([a-zA-Z0-9_]+)/i);
+
+        if (aliasMatch) {
+            fields.push(aliasMatch[1]);
+        } else {
+            // nếu không có alias → lấy tên cuối
+            const raw = p.trim().split(".").pop().trim();
+            fields.push(raw);
+        }
+    });
+
+    return fields;
+};
+const convertFieldsToEditor = (fields) => {
+    return fields.map(f => ({
+        id: f.charAt(0).toLowerCase() + f.slice(1),
+        label: f
+    }));
+};
+// const loadTemplate = (template) => {
+//     const editor = editorInstance.current;
+//     if (!editor) return;
+
+//     const html = convertToEditorFormat(template.templateContent);
+
+//     editor.setComponents(`
+//         <div class="mail-content">
+//             ${html}
+//         </div>
+//     `);
+// };
 const loadTemplate = (template) => {
     const editor = editorInstance.current;
     if (!editor) return;
@@ -63,8 +111,30 @@ const loadTemplate = (template) => {
             ${html}
         </div>
     `);
-};
 
+    // ✅ parse SQL
+    const fields = extractFieldsFromQuery(template.mailQuery);
+
+    // ✅ clear block cũ (tránh duplicate)
+    const bm = editor.BlockManager;
+    const existing = bm.getAll().filter(b => b.get("category") === "Fields");
+    existing.forEach(b => bm.remove(b));
+
+    // ✅ add block mới
+    fields.forEach(f => {
+        bm.add(`field-${f}`, {
+            label: f,
+            category: "Fields",
+            content: {
+                type: "tmiv-field",
+                content: `{{${f}}}`,
+                attributes: {
+                    "data-bind": f
+                }
+            }
+        });
+    });
+};
     useEffect(()=>{
 
 
@@ -294,6 +364,14 @@ const loadTemplate = (template) => {
                 ".field-item"
             );
 
+
+document.addEventListener("dragstart", (e) => {
+    const target = e.target;
+
+    if (target.classList.contains("field-item")) {
+        e.dataTransfer.setData("field", target.dataset.field);
+    }
+});
 
 
         items.forEach(item=>{
