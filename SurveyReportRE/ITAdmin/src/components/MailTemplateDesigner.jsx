@@ -1,9 +1,20 @@
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import grapesjs from "grapesjs";
 import "../styles/mailTemplateDesigner.css";
 import "grapesjs/dist/css/grapes.min.css";
 
 
+
+
+
+function MailTemplateDesigner(){
+
+
+    const editorRef = useRef(null);
+    const editorInstance = useRef(null);
+
+
+const [templates, setTemplates] = useState([]);
 const FIELDS = [
     {
         id:"checkerName",
@@ -26,15 +37,33 @@ const FIELDS = [
         label:"Approval Type"
     }
 ];
+useEffect(() => {
+    fetch("https://localhost:7254/api/MailTemplate/GetAll")
+        .then(res => res.json())
+        .then(data => {
+            setTemplates(data);
+        })
+        .catch(err => {
+            console.error("Fetch template error", err);
+        });
+}, []);
 
+const convertToEditorFormat = (html) => {
+    return html.replace(/@@(.*?)\b/g, (_, key) => `{{${key}}}`);
+};
 
+const loadTemplate = (template) => {
+    const editor = editorInstance.current;
+    if (!editor) return;
 
-function MailTemplateDesigner(){
+    const html = convertToEditorFormat(template.templateContent);
 
-
-    const editorRef = useRef(null);
-    const editorInstance = useRef(null);
-
+    editor.setComponents(`
+        <div class="mail-content">
+            ${html}
+        </div>
+    `);
+};
 
     useEffect(()=>{
 
@@ -621,42 +650,19 @@ editor.on("load",()=>{
 
 
                     <div className="panel-header">
-
-                        Database Fields
-
+                        Templates
                     </div>
 
-
-
                     <div className="fields-list">
-
-
-                    {
-                        FIELDS.map(f=>(
-
-
+                        {templates.map(t => (
                             <div
-
-                            key={f.id}
-
-                            className="field-item"
-
-                            draggable
-
-                            data-field={f.id}
-
+                                key={t.id}
+                                className="field-item"
+                                onClick={() => loadTemplate(t)}
                             >
-
-                                {f.label}
-
-
+                                {t.templateName}
                             </div>
-
-
-                        ))
-                    }
-
-
+                        ))}
                     </div>
 
 

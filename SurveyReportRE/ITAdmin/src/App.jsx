@@ -72,8 +72,7 @@ function App() {
       <main className="main-content">
         <header className="topbar">
           <div>
-            <h1>Quản trị IT</h1>
-            <p>Giám sát hạ tầng và cấu hình hệ thống.</p>
+            <h1>Admintrator</h1>
           </div>
         </header>
 
