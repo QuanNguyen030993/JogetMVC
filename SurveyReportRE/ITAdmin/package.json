@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-     "build": "vite build && node move-to-wwwroot.js" ,
+    "build": "vite build && node move-to-wwwroot.js",
     "preview": "vite preview"
   },
   "dependencies": {
     "@xyflow/react": "^12.3.3",
+    "grapejs": "^2.1.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
