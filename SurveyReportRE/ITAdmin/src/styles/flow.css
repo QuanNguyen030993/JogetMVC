@@ -1,64 +1,231 @@
-.flow-shell{
-    width:100%;
-    height:100%;
-    position:relative;
+.flow-shell {
+  width: 100%;
+  height: 100%;
+  min-height: 760px;
 }
 
-
-.workflow-canvas{
-    width:100%;
-    height:100%;
+.flow-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 320px;
+  gap: 14px;
+  height: 100%;
 }
 
-
-.flow-toolbar{
-    background:white;
-    border:1px solid #e2e8f0;
-    border-radius:12px;
-    padding:16px;
-    min-width:600px;
-    box-shadow:0 8px 24px rgba(0,0,0,.08);
+.flow-sidebar,
+.flow-properties-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-
-.flow-toolbar h2{
-    margin:0;
+.flow-sidebar-card,
+.flow-form-card,
+.flow-empty-state {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
 }
 
-
-.flow-toolbar p{
-    margin:5px 0 12px;
-    color:#64748b;
+.flow-sidebar-card h3,
+.flow-form-card h3,
+.flow-empty-state h3 {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
 }
 
-
-.flow-actions{
-    display:flex;
-    align-items:center;
-    gap:10px;
+.flow-sidebar-card p,
+.flow-empty-state p {
+  margin: 0 0 10px;
+  color: #64748b;
+  font-size: 0.9rem;
+  line-height: 1.45;
 }
 
-
-.flow-actions input{
-    width:240px;
-    height:36px;
-    padding:0 10px;
-    border-radius:8px;
-    border:1px solid #cbd5e1;
+.flow-palette-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-
-.flow-actions button{
-    height:36px;
-    padding:0 14px;
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
+.flow-palette-item {
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #f8fbff;
+  cursor: grab;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
+.flow-palette-item strong {
+  color: #0f172a;
+}
 
-.info-panel{
-    background:white;
-    border-radius:10px;
-    padding:10px 14px;
+.flow-palette-item span {
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.flow-action-btn {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  margin-bottom: 8px;
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+}
+
+.flow-action-btn.secondary {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.flow-canvas-panel {
+  min-height: 700px;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.06);
+}
+
+.workflow-canvas {
+  width: 100%;
+  height: 100%;
+  min-height: 700px;
+  background: linear-gradient(to right, rgba(148, 163, 184, 0.16) 1px, transparent 1px), linear-gradient(to bottom, rgba(148, 163, 184, 0.16) 1px, transparent 1px), #ffffff;
+  background-size: 24px 24px;
+}
+
+.flow-toolbar {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px 16px;
+  min-width: 560px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.flow-toolbar h2 {
+  margin: 0;
+}
+
+.flow-toolbar p {
+  margin: 5px 0 0;
+  color: #64748b;
+}
+
+.flow-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.flow-actions input,
+.flow-form-card input,
+.flow-form-card select,
+.flow-form-card textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  background: #fff;
+}
+
+.flow-actions button {
+  height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+}
+
+.flow-actions button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.info-panel {
+  background: white;
+  border-radius: 10px;
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+}
+
+.flow-form-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.flow-form-card label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #334155;
+}
+
+.flow-form-card textarea {
+  resize: vertical;
+  min-height: 72px;
+}
+
+.flow-checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.flow-error {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 1280px) {
+  .flow-layout {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
+  .flow-properties-panel {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .flow-form-card,
+  .flow-empty-state {
+    flex: 1 1 300px;
+  }
+}
+
+@media (max-width: 900px) {
+  .flow-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .flow-sidebar {
+    order: 2;
+  }
+
+  .flow-canvas-panel {
+    order: 1;
+  }
+
+  .flow-toolbar {
+    min-width: auto;
+  }
 }

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState,useMemo  } from 'react';
 
 import ChartPanel from './components/ChartPanel';
 import MailTemplateDesigner from './components/MailTemplateDesigner';
+import MailQueue from './components/MailQueue';
 import Flow from './components/Flow';
 import SerilogViewer from './components/SerilogViewer';
 import SysTable from './components/SysTable';
@@ -12,6 +13,7 @@ import './styles/serilogs.css';
 import './styles/systable.css';
 import './styles/datagridfielddesigner.css';
 import './styles/mailtemplatedesigner.css'
+import './styles/mailqueue.css';
 import './styles/menudesigner.css';
 import "./fonts/css/all.min.css";
 const userCount = { label: 'Người dùng hoạt động', value: '128', detail: '20 người dùng IT đang online' };
@@ -99,6 +101,7 @@ body:JSON.stringify("2")
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard' },
     { id: 'mail-template', label: 'Mail Template config' },
+    { id: 'mail-queue', label: 'Mail Queue' },
     { id: 'flow', label: 'Flow' },
     { id: 'serilog', label: 'Serilogs' },
     { id: 'systable', label: 'System Tables' } ,
@@ -110,6 +113,8 @@ body:JSON.stringify("2")
     switch (activeSection) {
       case 'mail-template':
         return <MailTemplateDesigner />;
+      case 'mail-queue':
+        return <MailQueue />;
       case 'flow':
         return <Flow />;
       case 'serilog':
