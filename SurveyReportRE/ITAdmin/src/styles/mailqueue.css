@@ -1,0 +1,262 @@
+.mailqueue-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.mailqueue-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #0f172a 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 20px 45px rgba(37, 99, 235, 0.22);
+}
+
+.mailqueue-eyebrow {
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.mailqueue-hero h2 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.mailqueue-subtitle {
+  margin: 8px 0 0;
+  color: rgba(255,255,255,0.85);
+  max-width: 560px;
+}
+
+.mailqueue-refresh-btn,
+.mailqueue-outline-btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mailqueue-refresh-btn {
+  background: rgba(255,255,255,0.18);
+  color: white;
+}
+
+.mailqueue-outline-btn {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.mailqueue-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.mailqueue-card {
+  border-radius: 18px;
+  padding: 16px 18px;
+  color: #111827;
+  background: white;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.mailqueue-card.blue {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+}
+
+.mailqueue-card.green {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+}
+
+.mailqueue-card.red {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+.mailqueue-card.purple {
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+}
+
+.mailqueue-card span {
+  display: block;
+  color: #6b7280;
+  font-size: 0.92rem;
+}
+
+.mailqueue-card strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 1.45rem;
+}
+
+.mailqueue-content-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+.mailqueue-panel {
+  background: white;
+  border-radius: 20px;
+  padding: 18px;
+  box-shadow: 0 12px 35px rgba(15, 23, 42, 0.06);
+}
+
+.mailqueue-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.mailqueue-panel-header.compact {
+  margin-bottom: 12px;
+}
+
+.mailqueue-panel-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.mailqueue-panel-header p {
+  margin: 4px 0 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.mailqueue-table-wrap {
+  overflow-x: auto;
+}
+
+.mailqueue-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.mailqueue-table th,
+.mailqueue-table td {
+  padding: 12px 10px;
+  text-align: left;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.mailqueue-table th {
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.06em;
+}
+
+.mailqueue-subject {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mailqueue-subject span {
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.mailqueue-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.mailqueue-status.sent {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.mailqueue-status.pending {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.mailqueue-status.failed {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.mailqueue-status.queued {
+  background: #f3e8ff;
+  color: #7c3aed;
+}
+
+.mailqueue-side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.mailqueue-health-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mailqueue-health-list div {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.mailqueue-health-list span {
+  color: #64748b;
+}
+
+.mailqueue-activity-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mailqueue-activity-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #374151;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.dot.green { background: #16a34a; }
+.dot.amber { background: #f59e0b; }
+.dot.blue { background: #2563eb; }
+
+@media (max-width: 1000px) {
+  .mailqueue-content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .mailqueue-summary-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .mailqueue-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
