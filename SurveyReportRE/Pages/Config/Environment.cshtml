@@ -113,7 +113,31 @@
         }
     );
 
+    var comments = [
+        {
+            id: 1,
+            author: 'Alice',
+            role: 'Reviewer',
+            text: 'Please confirm phase 2 before moving forward.',
+            time: '10:15',
+        },
+        {
+            id: 2,
+            author: 'Bob',
+            role: 'Owner',
+            text: 'Looks good. I will update the summary soon.',
+            time: '10:28',
+        },
+    ];
 
+    $("#commentBox").commenteditor({
+        items: comments,
+        showComposer: true,
+        emptyText: "No comments.",
+        onSubmit: function (item, allItems) {
+            console.log("new comment", item, allItems);
+        }
+    });
         var surveyDataSource = {
 
             load: function(){
@@ -238,3 +262,4 @@
 <div id="birthDate"></div>
 <div id="remarkEditor"></div>
 <div id="surveyGrid"></div>
+<div id="commentBox"></div>
