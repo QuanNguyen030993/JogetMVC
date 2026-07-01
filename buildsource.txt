@@ -8,3 +8,9 @@ npm error A complete log of this run can be found in: C:\Users\quan.nh\AppData\L
 npm config set strict-ssl false 
 
 npm install problem
+
+
+npm config set strict-ssl false
+npm config set registry https://registry.npmjs.org/
+npm install
+npm audit fix --force

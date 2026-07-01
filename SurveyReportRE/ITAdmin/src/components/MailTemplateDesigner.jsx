@@ -17,29 +17,29 @@ function MailTemplateDesigner(){
 const [templates, setTemplates] = useState([]);
 const [dynamicFields, setDynamicFields] = useState([]);
 const [selectedTemplate, setSelectedTemplate] = useState(null);
-
+const [sqlQuery, setSqlQuery] = useState("");
 
 const FIELDS = [
-    {
-        id:"checkerName",
-        label:"Checker Name"
-    },
-    {
-        id:"makerName",
-        label:"Maker Name"
-    },
-    {
-        id:"shortName",
-        label:"Client Name"
-    },
-    {
-        id:"shortLocationName",
-        label:"Location"
-    },
-    {
-        id:"typeCheckerApprove",
-        label:"Approval Type"
-    }
+    // {
+    //     id:"checkerName",
+    //     label:"Checker Name"
+    // },
+    // {
+    //     id:"makerName",
+    //     label:"Maker Name"
+    // },
+    // {
+    //     id:"shortName",
+    //     label:"Client Name"
+    // },
+    // {
+    //     id:"shortLocationName",
+    //     label:"Location"
+    // },
+    // {
+    //     id:"typeCheckerApprove",
+    //     label:"Approval Type"
+    // }
 ];
 useEffect(() => {
     fetch("https://localhost:7254/api/MailTemplate/GetAll")
@@ -108,17 +108,28 @@ const loadTemplate = (template) => {
 
 
 
+
+
     const editor = editorInstance.current;
     if (!editor) return;
 
     const html = convertToEditorFormat(template.templateContent);
+    const components = convertToGrapesComponents(html, editor);
 
-    editor.setComponents(`
-        <div class="mail-content">
-            ${html}
-        </div>
-    `);
+    // editor.setComponents(`
+    //     <div class="mail-content">
+    //         ${html}
+    //     </div>
+    // `);
+    
+    editor.setComponents({
+            tagName: "div",
+            attributes: { class: "mail-content" },
+            components
+        });
+
     setSelectedTemplate(template);
+    setSqlQuery(template.mailQuery || "");
     // ✅ parse SQL
     const fields = extractFieldsFromQuery(template.mailQuery);
 
@@ -258,7 +269,6 @@ const loadTemplate = (template) => {
 
                         content:"{{field}}",
 
-
                         draggable:true,
 
                         droppable:false,
@@ -273,12 +283,28 @@ const loadTemplate = (template) => {
                         }
 
                     }
-
                 }
-
             }
         );
+        // editor.DomComponents.addType('default', {
+        //     model: {
+        //         defaults: {
+        //             editable: true,
+        //         },
 
+        //         init() {
+        //             // nếu có text bên trong thì convert thành text component
+        //             const content = this.get('content');
+
+        //             if (content && typeof content === 'string') {
+        //                 this.set({
+        //                     type: 'text',
+        //                     editable: true
+        //                 });
+        //             }
+        //         }
+        //     }
+        // });
 
 
         /*
@@ -470,10 +496,20 @@ editor.BlockManager.add(
 });
 
 editor.on("load",()=>{
+    const comps = editor.getComponents();
+
+    comps.forEach(comp => {
+        comp.components().forEach(child => {
+            if (child.is('text')) {
+                child.set('editable', true);
+            }
+        });
+    });
 
 
     const canvas =
         editor.Canvas.getBody();
+
 
 
 
@@ -552,56 +588,67 @@ editor.on("load",()=>{
 
     },[]);
 
+const convertToGrapesComponents = (html) => {
+    const container = document.createElement("div");
+    container.innerHTML = html;
 
+    const walk = (node) => {
 
-// const saveTemplate = () => {
-//     const editor = editorInstance.current;
-//     if (!editor) return;
+        // ✅ TEXT NODE
+        if (node.nodeType === Node.TEXT_NODE) {
+            const text = node.nodeValue;
 
-//     if (!selectedTemplate) {
-//         alert("Please select template");
-//         return;
-//     }
+            if (!text) return null;
 
-//     // ✅ lấy HTML từ editor
-//     let html = editor.getHtml();
+            const parts = text.split(/(\{\{.*?\}\})/g);
 
-//     // ✅ convert về @@
-//     // html = convertToApiFormat(html);
+            return parts.map(p => {
+                const match = p.match(/\{\{(.*?)\}\}/);
+      
+                // ✅ FIELD → component
+                if (match) {
+                    const key = match[1].trim();
+        
+                    return {
+                        type: "tmiv-field",
+                        content: `{{${key}}}`,
+                        attributes: {
+                            class: "tmiv-field",
+                            "data-bind": key
+                        }
+                    };
+                }
 
-//     // ✅ build object gửi backend
-//     const formItems = {
-//         ...selectedTemplate, // giữ nguyên data cũ
-//         id: selectedTemplate.id,
-//         templateContent: html
-//     };
+                // ✅ TEXT → RETURN STRING (NOT textnode)
+                return p;
+            });
+        }
 
-//     const payload = {
-//         key: formItems.id,
-//         values: JSON.stringify(formItems)
-//     };
+        // ✅ ELEMENT NODE
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            return {
+                tagName: node.tagName.toLowerCase(),
 
-//     // ✅ CALL API PUT
-//    fetch("https://localhost:7254/api/MailTemplate/UpdateData", {
-//     method: "PUT",
-//     headers: {
-//         "Content-Type": "application/json"
-//     },
-//     body: JSON.stringify(payload)
-//     })
-//     .then(res => {
-//         if (!res.ok) throw new Error("Network error");
-//         return res.json();
-//     })
-//     .then(data => {
-//         console.log("SAVE SUCCESS", data);
-//         alert("Saved successfully ✅");
-//     })
-//     .catch(err => {
-//         console.error("SAVE ERROR", err);
-//         alert("Save failed ❌");
-//     });
-// };
+                attributes: Array.from(node.attributes).reduce((acc, attr) => {
+                    acc[attr.name] = attr.value;
+                    return acc;
+                }, {}),
+
+                components: Array.from(node.childNodes)
+                    .map(child => walk(child))
+                    .flat()
+                    .filter(c => c !== null && c !== undefined)
+            };
+        }
+
+        return null;
+    };
+
+    return Array.from(container.childNodes)
+        .map(n => walk(n))
+        .flat()
+        .filter(Boolean);
+};
 
 const saveTemplate = async () => {
     try {
@@ -609,9 +656,19 @@ const saveTemplate = async () => {
         if (!editor || !selectedTemplate) return;
 
         let html = editor.getHtml();
+        // ✅ remove wrapper div.mail-content
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
 
+        const mailContent = doc.querySelector(".mail-content");
+
+        if (mailContent) {
+            html = mailContent.innerHTML; // ✅ chỉ lấy nội dung bên trong
+        }
         // convert {{}} → @@
         html = html.replace(/\{\{(.*?)\}\}/g, (_, key) => `@@${key}`);
+
+
 
         const formItems = {
             ...selectedTemplate,
@@ -846,7 +903,16 @@ const saveTemplate = async () => {
 
 
             </aside>
+            <div className="sql-box">
+                <div className="panel-header">SQL Query</div>
 
+                <textarea
+                    className="sql-input"
+                    value={sqlQuery}
+                    onChange={(e) => setSqlQuery(e.target.value)}
+                    placeholder="SELECT name AS customerName FROM table..."
+                />
+            </div>
 
         </div>
                     </div>

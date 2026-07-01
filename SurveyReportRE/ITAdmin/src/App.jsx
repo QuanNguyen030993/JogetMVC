@@ -11,6 +11,7 @@ import './styles/flow.css';
 import './styles/serilogs.css';
 import './styles/systable.css';
 import './styles/datagridfielddesigner.css';
+import './styles/mailtemplatedesigner.css'
 import './styles/menudesigner.css';
 import "./fonts/css/all.min.css";
 const userCount = { label: 'Người dùng hoạt động', value: '128', detail: '20 người dùng IT đang online' };

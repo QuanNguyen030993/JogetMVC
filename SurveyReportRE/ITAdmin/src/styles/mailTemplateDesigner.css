@@ -30,7 +30,40 @@ body,
 
 }
 
+ .mail-content {
 
+            width:700px;
+
+            min-height:400px;
+
+            margin:auto;
+
+            padding:40px;
+
+            background:white;
+
+            border-radius:12px;
+
+            box-shadow:
+            0 5px 20px #ddd;
+
+        }
+
+
+
+        .tmiv-field {
+
+            background:#e8f3ff;
+
+            border:1px dashed #1677ff;
+
+            padding:3px 8px;
+
+            border-radius:5px;
+
+            color:#1677ff;
+
+        }
 
 
 
@@ -298,48 +331,6 @@ body,
 
 
 
-.gjs{
-
-
-    height:100%!important;
-
-
-    border:0!important;
-
-
-}
-
-
-
-
-
-.gjs-cv-canvas{
-
-
-    width:100%!important;
-
-    height:100%!important;
-
-
-    top:0!important;
-
-
-}
-
-
-
-
-
-.gjs-frame{
-
-
-    background:#f3f4f6!important;
-
-
-}
-
-
-
 
 
 
@@ -400,196 +391,142 @@ body,
 
 }
 
+/* PANEL BACKGROUND */
+#gjs-blocks {
+    flex: 1;
+    overflow: auto;
+    padding: 16px;
+    background: #2f2f2f; /* nền tối mềm hơn */
+}
 
+/* GRID */
+#gjs-blocks .gjs-blocks-c {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
 
+/* BLOCK CARD */
+#gjs-blocks .gjs-block {
+    width: auto !important;
+    min-height: 60px !important;
+    flex-wrap: wrap;
+    background: #ffffff !important;
+    border: 1px solid transparent !important;
+    border-radius: 14px !important;
 
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
 
+    cursor: grab;
 
-#gjs-blocks{
+    /* shadow mềm hơn */
+    box-shadow: 
+        0 4px 12px rgba(0,0,0,0.08);
 
+    transition: all 0.2s ease;
+}
 
-    flex:1;
+/* HOVER */
+#gjs-blocks .gjs-block:hover {
+    border-color: #3b82f6 !important;
+    box-shadow: 
+        0 6px 18px rgba(59,130,246,0.25);
+    transform: translateY(-3px) scale(1.02);
+}
 
-
-    overflow:auto;
-
-
-    padding:14px;
-
-
+/* CLICK (drag feel) */
+#gjs-blocks .gjs-block:active {
+    cursor: grabbing;
+    transform: scale(0.98);
 }
 
 
+/* LABEL TEXT */
+.gjs-block-label {
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    color: #374151 !important;
+    text-align: center;
+    flex-wrap: wrap;
+     white-space: normal !important;   /* cho phép xuống dòng */
+    word-break: break-word;           /* bẻ từ dài */
+    overflow-wrap: break-word;        /* chuẩn mới */
 
+    
+}
 
+/* SECTION TITLE (Basic, Fields) */
+.gjs-title {
+    color: #d1d5db !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    padding: 6px 2px;
+}
 
-#gjs-blocks .gjs-blocks-c{
+/* SCROLL BAR đẹp hơn */
+#gjs-blocks::-webkit-scrollbar {
+    width: 6px;
+}
+#gjs-blocks::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+#gjs-blocks::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
 
-
-    display:grid!important;
-
-
-    grid-template-columns:1fr 1fr;
-
-
-    gap:10px;
-
-
+/* HIDE BADGE */
+.gjs-badge {
+    display: none !important;
 }
 
 
-
-
-
-/* block card */
-
-
-#gjs-blocks .gjs-block{
-
-
-    width:auto!important;
-
-
-    min-height:80px!important;
-
-
-    margin:0!important;
-
-
-    background:#fff!important;
-
-
-    border:1px solid #e5e7eb!important;
-
-
-    border-radius:12px!important;
-
-
-    box-shadow:
-    0 2px 8px rgba(0,0,0,.05);
-
-
-    display:flex!important;
-
-    flex-direction:column!important;
-
-    justify-content:center!important;
-
-    align-items:center!important;
-
-
-    transition:.2s;
-
-
+.field-panel {
+    width: 250px;
+    background: #fff;
+    border-right: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
 }
 
-
-
-
-#gjs-blocks .gjs-block:hover{
-
-
-    border-color:#60a5fa!important;
-
-
-    transform:translateY(-2px);
-
-
+.panel-header {
+    font-weight: bold;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
 }
 
-
-
-
-
-.gjs-block-label{
-
-
-    font-size:13px!important;
-
-    color:#374151!important;
-
-
+.fields-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
 }
 
-
-
-
-
-
-/* =========================
-   MAIL ELEMENT
-========================= */
-
-
-.mail-content{
-
-
-    width:700px;
-
-
-    min-height:420px;
-
-
-    margin:40px auto;
-
-
-    padding:40px;
-
-
-    background:white;
-
-
-    border-radius:14px;
-
-
-    box-shadow:
-    0 15px 40px rgba(0,0,0,.08);
-
-
+.field-item {
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 6px;
 }
 
-
-
-
-
-.tmiv-field{
-
-
-    display:inline-block;
-
-
-    background:#eff6ff;
-
-
-    color:#2563eb;
-
-
-    border:1px dashed #60a5fa;
-
-
-    padding:3px 8px;
-
-
-    border-radius:6px;
-
-
-    font-size:13px;
-
-
-    font-weight:600;
-
-
+.field-item:hover {
+    background: #f0f5ff;
 }
 
+.sql-box {
+    padding: 10px;
+    border-top: 1px solid #eee;
+}
 
-
-
-
-/* hide grapes badge */
-
-
-.gjs-badge{
-
-    display:none!important;
-
+.sql-input {
+    width: 100%;
+    min-height: 120px;
+    font-family: monospace;
+    font-size: 13px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    min-height: 200px;
 }
