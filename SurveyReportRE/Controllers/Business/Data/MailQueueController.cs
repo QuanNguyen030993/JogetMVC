@@ -147,12 +147,12 @@ public class MailQueueController : BaseControllerApi<MailQueue>
             List<string> attachments = null;
             //MailQueue mailQueue = new MailQueue();//await _BaseRepository.GetSingleObject(s => s.Id == key);
             MailItem mailItem = new MailItem();
-            mailItem.ToName = mailQueue.to_name;
-            mailItem.ToEmail = mailQueue.to_email;
-            mailItem.Subject = mailQueue.subject;
-            mailItem.HtmlBody = mailQueue.html_body;// mailQueue.HtmlBody;
-            mailItem.TextBody = mailQueue.text_body;//mailQueue.HtmlBody;
-            mailItem.CC = mailQueue.cc;
+            mailItem.ToName = mailQueue.ToName;
+            mailItem.ToEmail = mailQueue.ToEmail;
+            mailItem.Subject = mailQueue.Subject;
+            mailItem.HtmlBody = mailQueue.HtmlBody;// mailQueue.HtmlBody;
+            mailItem.TextBody = mailQueue.TextBody;//mailQueue.HtmlBody;
+            mailItem.CC = mailQueue.CC;
             MailUtil.SendEmail(emailSettings, mailItem, attachments).Wait();
         }
         catch (Exception ex)
@@ -173,12 +173,12 @@ public class MailQueueController : BaseControllerApi<MailQueue>
             List<string> attachments = null;
             //MailQueue mailQueue = new MailQueue();//await _BaseRepository.GetSingleObject(s => s.Id == key);
             MailItem mailItem = new MailItem();
-            mailItem.ToName = mailQueue.to_name;
-            mailItem.ToEmail = mailQueue.to_email;
-            mailItem.Subject = mailQueue.subject;
-            mailItem.HtmlBody = mailQueue.html_body;// mailQueue.HtmlBody;
-            mailItem.TextBody = mailQueue.text_body;//mailQueue.HtmlBody;
-            mailItem.CC = mailQueue.cc;
+            mailItem.ToName = mailQueue.ToName;
+            mailItem.ToEmail = mailQueue.ToEmail;
+            mailItem.Subject = mailQueue.Subject;
+            mailItem.HtmlBody = mailQueue.HtmlBody;// mailQueue.HtmlBody;
+            mailItem.TextBody = mailQueue.TextBody;//mailQueue.HtmlBody;
+            mailItem.CC = mailQueue.CC;
             MailUtil.SendEmail(emailSettings, mailItem, attachments).Wait();
 
            

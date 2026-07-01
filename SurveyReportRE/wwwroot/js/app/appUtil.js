@@ -5394,7 +5394,8 @@ function openMessageDialog(item) {
     const createdText = fmtTimeLocal(item.createdDate);
     const title = escapeHtml(item.title || "Message");
     // ưu tiên message; nếu bạn có field khác như item.body/item.content thì thay ở đây
-    const body = escapeHtml(item.message || "");
+    //const body = escapeHtml(item.message || "");
+    const body = item.message;
     var popup = makePopup("small", "Title")
 
     popup.option("contentTemplate", function (container) {

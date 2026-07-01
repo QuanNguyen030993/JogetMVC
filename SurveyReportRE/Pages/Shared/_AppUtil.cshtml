@@ -3869,6 +3869,66 @@
         );
     }
 
+    function uwDecision(object){
+            debugger
+            var statusObject = _enums.OverallStatus.find(f => f.value == object.statusName);
+                          // object.formItems.statusId  = statusObject.id;
+                                  var passingObject = new Object();
+                             passingObject.RecordStatus  =  object.statusName; // sbase on Dept
+                                     passingObject.QuotationId = object.formItems.id;
+                                         passingObject.RouteAction = `UW_NNTF`;  // base on Dept
+                              passingObject.TemplateMailName = `NO_NEED_TO_FEFER`;
+
+
+                                  ajaxPost(object.url, passingObject, {processData: true}).then(
+                         data => {alert("call");
+                         });
+
+
+                          // object.formItems.quotationStatus = statusObject.value;
+                           // ajaxPut(object.url,
+                           //  {
+                           //      key: object.formItems.id,
+                           //      values: JSON.stringify(
+                           //          object.formItems
+                           //      )
+                           //  },
+                           //  {
+                           //      onSuccess: function (response) {
+                           //      },
+                           //      onError: function (err) { }
+                           //  });
+
+                        // var submitRequest = new Object();
+                        //     submitRequest.Comment = object.Comment;
+                        //     submitRequest.StepsWorkflow = new Object()
+                        //     submitRequest.StepsWorkflow.FromNodeId = object.dept;
+                        //     submitRequest.StepsWorkflow.StepName = "Internal Workflow";
+                        //     submitRequest.isFullDetail = false;
+                        //  var quotationData = new Object();
+
+                        //     quotationData.Quotation = new Object();
+                        //     quotationData.Quotation.Id = object.formItems.id;
+                        //     quotationData.Quotation.Guid = object.formItems.guid;
+                        //     quotationData.Quotation.BranchCode = _branch;
+                        //     quotationData.Attributes = new Object();
+                        //     quotationData.Attributes.SectionName = object.dept;
+                        //      var formData = new FormData();
+                        //     formData.append(`${object.schemeName}Data`,JSON.stringify(quotationData));
+                        //     formData.append("SubmitRequest",JSON.stringify(submitRequest));
+                        //       $.ajax({
+                        //         url:`${object.urlLog}`,
+                        //         type: "POST",
+                        //         data: formData,
+                        //         processData: false,
+                        //         contentType: false,
+                        //         success: function (res) {
+                        //         },
+                        //         error: function (xhr) {
+                        //         }
+                        //     });
+       }
+
 
        function acceptDecision(object){
            

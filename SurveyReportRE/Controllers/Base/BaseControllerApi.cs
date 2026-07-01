@@ -31,6 +31,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace ERPCore.Controllers.Base
 {
+    //[AllowAnonymous]
     public class BaseControllerApi<T> : ControllerBase where T : class, new()
     {
         private readonly IBaseRepository<T> _BaseRepository;

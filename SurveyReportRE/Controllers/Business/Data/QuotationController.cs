@@ -27,6 +27,8 @@ using ERPCore.Models.Models.Parsing;
 using static ERPCore.Models.Models.Parsing.JsonHandle;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
+using Microsoft.SharePoint.Taxonomy.WebServices;
+using System.Collections.Generic;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -119,12 +121,13 @@ public class QuotationController : BaseControllerApi<Quotation>
         path = _BaseRepository._baseConfiguration.GetSection("BlobStorage:Path");
         MAPPING_PATH = _BaseRepository._baseConfiguration.GetSection("MigrationConfig:MappingField").Value;
         BLOB_PATH = path.Value;
-        CURRENT_USER = _httpContextAccessor.HttpContext.User.Identity.Name.Replace(DOMAIN_NAME, "");
+        CURRENT_USER = _httpContextAccessor.HttpContext.User.Identity.Name?.Replace(DOMAIN_NAME, "") ?? "Anomymous";
         spUserName = configuration.GetSection("SharePoint:Username").Value;
         spPassword = configuration.GetSection("SharePoint:Password").Value;
         _blobStorageSettings = blobStorageSettings;
         _businessConfig = businessConfig;
         _logger = logger;
+        
     }
 
     public async Task<IActionResult> GetIdsList()
@@ -247,6 +250,104 @@ public class QuotationController : BaseControllerApi<Quotation>
 
         return Ok(Base);
     }
+
+    [HttpPost]
+    public async Task<IActionResult> UWReferal([FromBody] UWActionRequest uwAction)
+    {
+        MailTemplate mailTemplate = new MailTemplate();
+        mailTemplate = await _mailTemplateRepository.GetSingleObject(s => s.TemplateName == uwAction.TemplateMailName);
+        Quotation quotation = new Quotation();
+        quotation = await _BaseRepository.GetSingleObject(s => s.Id == uwAction.QuotationId);
+        List<EnumData> siteEnums = new List<EnumData>();
+        siteEnums = await _enumDataRepository.EnumData("BranchOffice");
+
+        StepsWorkflow stepsWorkflow = null;
+        if (!string.IsNullOrEmpty(uwAction.RouteAction))
+            stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.ActionCode == uwAction.RouteAction);
+
+        (PICAttributes PICMain, PICSysHandleAttributes PICLeader, PICAttributes PICHOD) picS = ControllerUtil.PersonInChargeHandle(quotation, null, _businessConfig, siteEnums);
+        var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
+        string requestPIC = picS.PICMain.GetType().GetProperty("FO")?.GetValue(picS.PICMain ?? new PICAttributes()).ToString() ?? "";
+        Employee rqEmployee = new Employee();
+        Users rqFlowUser = await _usersRepository.GetSingleObject(s => s.username == requestPIC);
+        rqEmployee = await _employeeRepository.GetSingleObject(s => s.UsersId == rqFlowUser.Id);
+
+        var result = picS.PICMain
+            .GetType()
+            .GetProperties()
+            .Select(p => p.GetValue(picS.PICMain)?.ToString())
+            .Where(v => !string.IsNullOrEmpty(v)) // bỏ null
+            .Distinct() // lọc trùng
+            .ToList();
+
+        string ccMails = "";
+        
+       
+            if (mailTemplate != null)
+            {
+                DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
+                Dictionary<string, object> flowDictionaryData = new Dictionary<string, object>();
+                if (query.Rows.Count > 0)
+                {
+                    flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
+                    MailQueue mailQueue = new MailQueue();
+
+                    string contentHandle = MailUtil.BodyContentHandle(mailTemplate.TemplateContent, new Dictionary<string, object> ());
+                    mailTemplate.TemplateMailTitle = MailUtil.TitleContentHandle(mailTemplate.TemplateMailTitle, new Dictionary<string, object>());
+                    mailTemplate.PrefixTitleMail = MailUtil.TitleContentHandle(mailTemplate.PrefixTitleMail, new Dictionary<string, object>());
+                    if (mailTemplate != null && rqEmployee != null)
+                    {
+                        if (mailTemplate.IsActive ?? false)
+                        {
+                            MailItem mailItem = new MailItem();
+                            mailItem.ToName = !string.IsNullOrEmpty(rqEmployee.FullName) ? rqEmployee.FullName : mailTemplate.To;
+                            mailItem.ToEmail = !string.IsNullOrEmpty(rqEmployee.Email) ? rqEmployee.Email : mailTemplate.To;
+                            mailItem.Subject = $"{mailTemplate.PrefixTitleMail} {mailTemplate.TemplateMailTitle}";
+                            mailItem.HtmlBody = contentHandle;
+                            mailItem.TextBody = "";
+
+                            string ccAddresses = string.Join(';', mailTemplate.CC.Split(';').Concat(Util.CCAllEmail(_emailSettings.FollowCC, "").Split(';')).Where(w => !string.IsNullOrEmpty(w)));
+                            mailItem.CC = ccAddresses;
+                            //MailUtil.SendEmail(_emailSettings, mailItem, null).Wait();
+                            foreach (var memberName in result)
+                            {
+                                Employee employee = new Employee();
+                                Users flowUser = await _usersRepository.GetSingleObject(s => s.username == memberName);
+                                employee = await _employeeRepository.GetSingleObject(s => s.UsersId == flowUser.Id);
+                                ccMails += employee.Email + ";";
+
+
+                                NotificationRequest notification = new NotificationRequest();
+                                Notification Notification = new Notification();
+                                Notification.Title = mailItem.Subject;
+                                Notification.Message = contentHandle;
+                                Notification.IsRead = false;
+                                Notification.Resource = $"{memberName}_{stepsWorkflow?.ToNodeId}";
+                                Notification.System = "WM";
+                                Notification.RecordGuid = quotation.Guid;
+
+                                Notification.ReceivedBy = memberName;
+                                notification.Notification = Notification;
+                                notification.connectionId = memberName;
+                                notification.tabPublicUrl = Util.URLObjectMaking(quotation);
+                                PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
+                                string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
+                                Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
+                                NotificationController.Notify(notification);
+
+                            }
+
+                            mailQueue = Util.NotifySession(rqEmployee, mailTemplate, _emailSettings, flowDictionaryData, ccMails, null);
+                            await _mailQueueRepository.InsertData(mailQueue);
+                        }
+                    }
+
+            }
+        }
+        return Ok();
+    }
+
+
     [HttpPost]
     public async Task<IActionResult> CreateOption([FromBody] QuotationOptionRequest quotationData)
     {

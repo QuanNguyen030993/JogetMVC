@@ -759,14 +759,14 @@ const saveTemplate = async () => {
         // convert {{}} → @@
         html = html.replace(/\{\{(.*?)\}\}/g, (_, key) => `@@${key}`);
 
-
+        debugger
 
         const formItems = {
             ...selectedTemplate,
             templateContent: html,
             mailQuery: sqlQuery ,  // ✅ thêm dòng này
-            title: title,     // ✅ thêm
-                prefix: prefix,   // ✅ thêm
+            templateMailTitle: title,     // ✅ thêm
+                prefixTitleMail: prefix,   // ✅ thêm
                 cc: cc            // ✅ thêm
 
         };

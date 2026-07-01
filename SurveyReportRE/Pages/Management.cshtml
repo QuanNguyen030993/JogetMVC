@@ -762,11 +762,11 @@
             },
             contentTemplate: function (contentEl) {
                const $toolbar = $(`
-                    <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
+                    <div style="padding:10px;display:flex; gap:8px; align-items:center; margin-bottom:10px;">
                       <div id="notifMarkAllBtn"></div>
                       <div style="margin-left:auto; opacity:.7; font-size:12px;" id="notifHint"></div>
                     </div>
-                    <div id="notifList"></div>
+                    <div id="notifList" style="padding: 10px"></div>
                 `);
 
                 $(contentEl).append($toolbar);
@@ -807,7 +807,7 @@
                                     <div style="opacity:.6; font-size:12px; white-space:nowrap;">${timeText}</div>
                                   </div>
                                   <div style="opacity:.85; margin-top:4px; font-size:13px;">
-                                    ${escapeHtml(itemData.message || "")}
+                                    ${itemData.message} 
                                   </div>
                                   <div style="margin-top:8px; display:flex; gap:8px;">
                                     <a href="javascript:void(0)" class="notif-open">Open</a>

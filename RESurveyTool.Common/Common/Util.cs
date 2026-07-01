@@ -1569,9 +1569,9 @@ namespace ERPCore.Common
             notification.Url = $"/Business/Form/{nameof(Quotation)}_Form/{objectIn.Id}";
             notification.Resource = $"{objectIn.Resource}";
             notification.System = "WM";
-            notification.Title = mailQueue.subject;
-            notification.Message = mailQueue.html_body;
-            notification.ReceivedBy = $"{mailQueue.ToName},{mailQueue.cc}";
+            notification.Title = mailQueue.Subject;
+            notification.Message = mailQueue.HtmlBody;
+            notification.ReceivedBy = $"{mailQueue.ToName},{mailQueue.CC}";
             notification.RecordGuid = objectIn.Guid;
 
             return notification;
