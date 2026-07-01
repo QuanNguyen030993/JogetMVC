@@ -2,6 +2,7 @@ import { useState } from 'react';
 import CustomGrid from './components/CustomGrid';
 import HtmlEditor from './components/HtmlEditor';
 import DateBox from './components/DateBox';
+import CommentEditor from './components/CommentEditor';
 import './css/com.all.css';
 // import HtmlEditor from './components/HtmlEditor';
 const defaultRows = [
@@ -48,6 +49,10 @@ function App() {
         <DateBox value={editorValue} onChange={setEditorValue} />
       </section>
 
+      <section className="section">
+        <div className="section-title">Comment Editor</div>
+        <CommentEditor value={editorValue} onChange={setEditorValue} />
+      </section>
 
       {/* <section className="section">
         <div className="section-title">Editor Output</div>

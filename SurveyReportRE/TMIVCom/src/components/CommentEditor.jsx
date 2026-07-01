@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react';
+import { register } from './Core';
+import '../css/com.all.css';
 
 const initialComments = [
   {
@@ -79,5 +81,7 @@ function CommentEditor({ value = '', onChange, placeholder = 'Add comment...' })
     </div>
   );
 }
+
+register('CommentEditor', CommentEditor);
 
 export default CommentEditor;

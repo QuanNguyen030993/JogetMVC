@@ -1,6 +1,7 @@
 import DateBox from "./components/Datebox.jsx"; 
 import HtmlEditor from "./components/HtmlEditor.jsx"; 
 import CustomGrid from "./components/CustomGrid.jsx"; 
+import CommentEditor from "./components/CommentEditor.jsx";
 
 import { install } from "./components/Core";
 import { register } from "./components/Core";
@@ -40,6 +41,18 @@ const $ = window.jQuery;
         });
     };
 
+    $.fn.commenteditor = function(options){
+        return this.each(function(){
+            mount(
+                this,
+                "CommentEditor",
+                options
+            );
+
+        });
+    };
+
+
 register(
     "DateBox",
     DateBox
@@ -54,4 +67,9 @@ register(
     CustomGrid
 );
 
-export default DateBox;
+register(
+    "CommentEditor",
+    CommentEditor
+);
+
+export default { DateBox, HtmlEditor, CustomGrid, CommentEditor };
