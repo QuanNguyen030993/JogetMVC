@@ -18,28 +18,45 @@ const [templates, setTemplates] = useState([]);
 const [dynamicFields, setDynamicFields] = useState([]);
 const [selectedTemplate, setSelectedTemplate] = useState(null);
 const [sqlQuery, setSqlQuery] = useState("");
+const [title, setTitle] = useState("");
+const [prefix, setPrefix] = useState("");
+const [cc, setCc] = useState("");
 
+const onSqlChange = (query) => {
+    const editor = editorInstance.current;
+    if (!editor) return;
+
+    const fields = extractFieldsFromQuery(query);
+
+    const bm = editor.BlockManager;
+
+    // ✅ clear field cũ (dùng prefix cho chắc)
+    bm.getAll().forEach(block => {
+        if (block.getId().startsWith("field-")) {
+            bm.remove(block);
+        }
+    });
+
+    // ✅ add field mới
+    fields.forEach(f => {
+        bm.add(`field-${f}`, {
+            label: f,
+            category: "Fields",
+            content: {
+                type: "tmiv-field",
+                content: `{{${f}}}`,
+                attributes: {
+                    "data-bind": f
+                }
+            }
+        });
+    });
+
+    // ✅ force render lại panel (tránh UI không update)
+    bm.render();
+};
 const FIELDS = [
-    // {
-    //     id:"checkerName",
-    //     label:"Checker Name"
-    // },
-    // {
-    //     id:"makerName",
-    //     label:"Maker Name"
-    // },
-    // {
-    //     id:"shortName",
-    //     label:"Client Name"
-    // },
-    // {
-    //     id:"shortLocationName",
-    //     label:"Location"
-    // },
-    // {
-    //     id:"typeCheckerApprove",
-    //     label:"Approval Type"
-    // }
+   
 ];
 useEffect(() => {
     fetch("https://localhost:7254/api/MailTemplate/GetAll")
@@ -56,53 +73,100 @@ useEffect(() => {
 const convertToEditorFormat = (html) => {
     return html.replace(/@@([a-zA-Z0-9_]+)/g, (_, key) => `{{${key}}}`);
 };
+
 const extractFieldsFromQuery = (query) => {
     if (!query) return [];
 
     const fields = [];
 
-    // lấy phần SELECT ... FROM
     const match = query.match(/select([\s\S]*?)from/i);
     if (!match) return [];
 
     let selectPart = match[1];
 
-    // split theo dấu ,
     const parts = selectPart.split(",");
 
     parts.forEach(p => {
-        // lấy alias nếu có
-        const aliasMatch = p.match(/as\s+([a-zA-Z0-9_]+)/i);
+        const clean = p.trim();
+
+        // ✅ bỏ phần rỗng (do dấu , cuối)
+        if (!clean) return;
+
+        // ✅ bắt alias: AS 'Name' hoặc AS Name
+        const aliasMatch = clean.match(/as\s+['"`]?([a-zA-Z0-9_]+)['"`]?/i);
 
         if (aliasMatch) {
             fields.push(aliasMatch[1]);
         } else {
-            // nếu không có alias → lấy tên cuối
-            const raw = p.trim().split(".").pop().trim();
-            fields.push(raw);
+            // ✅ fallback
+            const raw = clean.split(".").pop().trim();
+            if (raw) fields.push(raw);
         }
     });
 
     return fields;
 };
+
+
 const convertFieldsToEditor = (fields) => {
     return fields.map(f => ({
         id: f.charAt(0).toLowerCase() + f.slice(1),
         label: f
     }));
 };
-// const loadTemplate = (template) => {
-//     const editor = editorInstance.current;
-//     if (!editor) return;
 
-//     const html = convertToEditorFormat(template.templateContent);
+const createTemplate = async () => {
+    try {
+        
+        const name = prompt("Enter template name");
 
-//     editor.setComponents(`
-//         <div class="mail-content">
-//             ${html}
-//         </div>
-//     `);
-// };
+        if (!name) return;
+
+        const newTemplate = {
+            templateName: name,   // ✅ cho user đổi sau
+            title: "",
+            prefix: "",
+            cc: "",
+            active: true,
+            templateContent: "",
+            mailQuery: ""
+        };
+
+        const formData = new FormData();
+        formData.append("values", JSON.stringify(newTemplate));
+
+        const res = await fetch(
+            "https://localhost:7254/api/MailTemplate/InsertData",
+            {
+                method: "POST",
+                body: formData
+            }
+        );
+
+        if (!res.ok) throw new Error("Insert failed");
+
+        const created = await res.json();
+
+setTitle("");
+setPrefix("");
+setCc("");
+setSqlQuery("");
+
+        // ✅ add vào list UI
+        setTemplates(prev => [created, ...prev]);
+
+        // ✅ select luôn
+        loadTemplate(created);
+
+        alert("Template created ✅");
+
+    } catch (err) {
+        console.error("CREATE ERROR", err);
+        alert("Create failed ❌");
+    }
+};
+
+
 const loadTemplate = (template) => {
     
 
@@ -113,7 +177,18 @@ const loadTemplate = (template) => {
     const editor = editorInstance.current;
     if (!editor) return;
 
-    const html = convertToEditorFormat(template.templateContent);
+    var html = convertToEditorFormat(template.templateContent);
+    
+    // html = html.replace(
+    //     />([^<>]+)</g,
+    //     (match, text) => {
+    //         if (text.trim()) {
+    //             return ` data-gjs-type="text">${text}<`;
+    //         }
+    //         return match;
+    //     }
+    // );
+
     const components = convertToGrapesComponents(html, editor);
 
     // editor.setComponents(`
@@ -130,13 +205,23 @@ const loadTemplate = (template) => {
 
     setSelectedTemplate(template);
     setSqlQuery(template.mailQuery || "");
+    setTitle(template.templateMailTitle || "");
+    setPrefix(template.prefixTitleMail || "");
+    setCc(template.cc || "");
+
+
     // ✅ parse SQL
     const fields = extractFieldsFromQuery(template.mailQuery);
 
     // ✅ clear block cũ (tránh duplicate)
     const bm = editor.BlockManager;
-    const existing = bm.getAll().filter(b => b.get("category") === "Fields");
-    existing.forEach(b => bm.remove(b));
+    
+    bm.getAll().forEach(block => {
+        if (block.getId().startsWith("field-")) {
+            bm.remove(block);
+        }
+    });
+
 
     // ✅ add block mới
     fields.forEach(f => {
@@ -169,7 +254,7 @@ const loadTemplate = (template) => {
 
     width:"100%",
 
-
+    richTextEditor: {},
     storageManager:false,
 
 
@@ -495,86 +580,86 @@ editor.BlockManager.add(
 
 });
 
-editor.on("load",()=>{
-    const comps = editor.getComponents();
+// editor.on("load",()=>{
+//     const comps = editor.getComponents();
 
-    comps.forEach(comp => {
-        comp.components().forEach(child => {
-            if (child.is('text')) {
-                child.set('editable', true);
-            }
-        });
-    });
-
-
-    const canvas =
-        editor.Canvas.getBody();
+//     comps.forEach(comp => {
+//         comp.components().forEach(child => {
+//             if (child.is('default')) {
+//                 child.set('editable', true);
+//             }
+//         });
+//     });
 
 
-
-
-    if(!canvas)
-        return;
-
-
-
-    canvas.addEventListener(
-        "dragover",
-        e=>{
-
-            e.preventDefault();
-
-            e.dataTransfer.dropEffect="copy";
-
-        }
-    );
+//     const canvas =
+//         editor.Canvas.getBody();
 
 
 
 
-    canvas.addEventListener(
-        "drop",
-        e=>{
-
-
-            e.preventDefault();
+//     if(!canvas)
+//         return;
 
 
 
-            const field =
-                e.dataTransfer.getData(
-                    "field"
-                );
+//     canvas.addEventListener(
+//         "dragover",
+//         e=>{
+
+//             e.preventDefault();
+
+//             e.dataTransfer.dropEffect="copy";
+
+//         }
+//     );
 
 
 
-            if(!field)
-                return;
+
+//     canvas.addEventListener(
+//         "drop",
+//         e=>{
+
+
+//             e.preventDefault();
 
 
 
-            editor.addComponents({
-
-                type:"tmiv-field",
-
-                content:
-                    `{{${field}}}`,
-
-                attributes:{
-
-                    "data-bind":
-                        field
-
-                }
-
-            });
+//             const field =
+//                 e.dataTransfer.getData(
+//                     "field"
+//                 );
 
 
-        }
-    );
+
+//             if(!field)
+//                 return;
 
 
-});
+
+//             editor.addComponents({
+
+//                 type:"tmiv-field",
+
+//                 content:
+//                     `{{${field}}}`,
+
+//                 attributes:{
+
+//                     "data-bind":
+//                         field
+
+//                 }
+
+//             });
+
+
+//         }
+//     );
+
+
+// });
 
 
         return ()=>{
@@ -620,9 +705,15 @@ const convertToGrapesComponents = (html) => {
                 }
 
                 // ✅ TEXT → RETURN STRING (NOT textnode)
-                return p;
-            });
-        }
+                
+        return {
+                    type: "text",
+                    content: p,
+                    editable: true
+                };
+
+                    });
+                }
 
         // ✅ ELEMENT NODE
         if (node.nodeType === Node.ELEMENT_NODE) {
@@ -672,7 +763,12 @@ const saveTemplate = async () => {
 
         const formItems = {
             ...selectedTemplate,
-            templateContent: html
+            templateContent: html,
+            mailQuery: sqlQuery ,  // ✅ thêm dòng này
+            title: title,     // ✅ thêm
+                prefix: prefix,   // ✅ thêm
+                cc: cc            // ✅ thêm
+
         };
 
         // ✅ dùng FormData
@@ -831,7 +927,16 @@ const saveTemplate = async () => {
                         Templates
                     </div>
 
+
                     <div className="fields-list">
+                        <div
+                                key="new"
+                                className="field-item"
+                                onClick={createTemplate}
+                                style={{justifyContent: "center"}}
+                            >
+                            +
+                            </div>
                         {templates.map(t => (
                             <div
                                 key={t.id}
@@ -903,14 +1008,50 @@ const saveTemplate = async () => {
 
 
             </aside>
+
+
+
+
+
             <div className="sql-box">
+                {/* TITLE */}
+                <input
+                    
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Title"
+                />
+
+                {/* PREFIX */}
+                <input
+                
+                    value={prefix}
+                    onChange={(e) => setPrefix(e.target.value)}
+                    placeholder="Prefix"
+                />
+
+                {/* CC */}
+                <input
+                
+                    value={cc}
+                    onChange={(e) => setCc(e.target.value)}
+                    placeholder="CC (email1; email2...)"
+                />
+
                 <div className="panel-header">SQL Query</div>
 
                 <textarea
-                    className="sql-input"
+                    
+                className="sql-input"
                     value={sqlQuery}
-                    onChange={(e) => setSqlQuery(e.target.value)}
+                    onChange={(e) => {
+                        const value = e.target.value;
+                        setSqlQuery(value);
+
+                        onSqlChange(value); // ✅ gọi xử lý
+                    }}
                     placeholder="SELECT name AS customerName FROM table..."
+
                 />
             </div>
 
