@@ -1,22 +1,21 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { register } from './Core';
-import '../css/com.all.css';
 
 const initialComments = [
-  {
-    id: 1,
-    author: 'Alice',
-    role: 'Reviewer',
-    text: 'Please confirm phase 2 before moving forward.',
-    time: '10:15',
-  },
-  {
-    id: 2,
-    author: 'Bob',
-    role: 'Owner',
-    text: 'Looks good. I will update the summary soon.',
-    time: '10:28',
-  },
+  // {
+  //   id: 1,
+  //   author: 'Alice',
+  //   role: 'Reviewer',
+  //   text: 'Please confirm phase 2 before moving forward.',
+  //   time: '10:15',
+  // },
+  // {
+  //   id: 2,
+  //   author: 'Bob',
+  //   role: 'Owner',
+  //   text: 'Looks good. I will update the summary soon.',
+  //   time: '10:28',
+  // },
 ];
 
 function CommentEditor({
@@ -32,7 +31,7 @@ function CommentEditor({
   showComposer = true,
   submitLabel = 'Send',
   headerTitle = 'Comments',
-  headerSubtitle = 'Review thread and add notes',
+  headerSubtitle = '',
   authorName = 'You',
   roleName = 'Contributor',
   className = '',
@@ -40,6 +39,17 @@ function CommentEditor({
   const sourceItems = Array.isArray(items) ? items : Array.isArray(commentsProp) ? commentsProp : initialComments;
   const [comments, setComments] = useState(sourceItems);
   const [draft, setDraft] = useState(value || '');
+const editorRef = useRef();
+    const change = () => {
+
+        let html = editorRef.current.innerHTML;
+
+        onChange?.(html);
+    };
+
+const handleBlur = () => {
+    onChange?.(editorRef.current.innerHTML);
+};
 
   useEffect(() => {
     if (Array.isArray(items) || Array.isArray(commentsProp)) {
@@ -71,14 +81,38 @@ function CommentEditor({
     onChange?.(trimmed);
   };
 
+    const command=(cmd,param=null)=>{
+
+
+        editorRef.current.focus();
+
+
+        document.execCommand(
+            cmd,
+            false,
+            param
+        );
+
+
+        update();
+
+
+    };
   return (
     <div className={`comment-editor-card ${className}`.trim()}>
       <div className="comment-editor-header">
+        
+    {headerSubtitle?.trim() && (
         <div>
           <h4>{headerTitle}</h4>
           <p>{headerSubtitle}</p>
         </div>
-        <span className="comment-editor-badge">{comments.length} items</span>
+      )}
+
+      <span className="comment-editor-badge">
+        {comments.length} items
+      </span>
+
       </div>
 
       <div className="comment-list">
@@ -111,14 +145,179 @@ function CommentEditor({
         )}
       </div>
 
+
+     
       {showComposer ? (
+        
         <div className="comment-compose">
-          <textarea
+
+                <div class="tmiv-mini-toolbar">
+
+<div
+        className="tmiv-tool-item"
+        onClick={()=>command("undo")}
+    >
+        ↶
+    </div>
+
+
+    <div
+        className="tmiv-tool-item"
+        onClick={()=>command("redo")}
+    >
+        ↷
+    </div>
+
+
+    <div className="tmiv-toolbar-separator"/>
+
+
+    <select
+        className="tmiv-select"
+        onChange={
+            e=>command(
+                "formatBlock",
+                e.target.value
+            )
+        }
+    >
+        <option value="p">
+            Normal
+        </option>
+
+        <option value="h1">
+            Heading 1
+        </option>
+
+        <option value="h2">
+            Heading 2
+        </option>
+
+    </select>
+
+
+
+    <div
+        className="tmiv-tool-item"
+        onClick={()=>command("bold")}
+    >
+        <b>B</b>
+    </div>
+
+
+    <div
+        className="tmiv-tool-item"
+        onClick={()=>command("italic")}
+    >
+        <i>I</i>
+    </div>
+
+
+    <div
+        className="tmiv-tool-item"
+        onClick={()=>command("underline")}
+    >
+        <u>U</u>
+    </div>
+
+
+
+    <div className="tmiv-toolbar-separator"/>
+
+
+
+    <div
+        className="tmiv-tool-item fa fa-align-left"
+        onClick={()=>command("justifyLeft")}
+    >
+        
+    </div>
+
+
+    <div
+        className="tmiv-tool-item fa fa-align-center"
+        onClick={()=>command("justifyCenter")}
+    >
+        
+    </div>
+
+
+    <div
+        className="tmiv-tool-item fa fa-align-right"
+        onClick={()=>command("justifyRight")}
+    >
+        
+    </div>
+
+
+    <div
+        className="tmiv-tool-item"
+        onClick={()=>
+            command("insertUnorderedList")
+        }
+    >
+        •
+    </div>
+
+
+    <div
+        className="tmiv-tool-item"
+        onClick={()=>
+            command("insertOrderedList")
+        }
+    >
+        1.
+    </div>
+
+
+
+    <div className="tmiv-toolbar-separator"/>
+
+
+    <div
+        className="tmiv-tool-item"
+        onClick={()=>{
+            let url=prompt("URL");
+
+            if(url)
+                command(
+                    "createLink",
+                    url
+                );
+        }}
+    >
+        🔗
+    </div>
+<button
+    className="comment-send-btn"
+    onClick={addComment}
+    title={submitLabel}
+>
+    <i className="fa fa-paper-plane"></i>
+</button>
+      </div>
+        <div class="tmiv-mini-editor"
+                ref={editorRef}
+                contentEditable="true"
+                suppressContentEditableWarning
+                dangerouslySetInnerHTML={{
+                    __html:value
+                }}
+                // onInput={change}
+                style={{
+                    minHeight: "100px"
+                }}
+                onBlur={handleBlur}
+            
+            >
+              
+        </div>
+          {/* <textarea
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             placeholder={placeholder}
-          />
-          <button type="button" onClick={addComment}>{submitLabel}</button>
+          /> */}
+          
         </div>
       ) : null}
     </div>
