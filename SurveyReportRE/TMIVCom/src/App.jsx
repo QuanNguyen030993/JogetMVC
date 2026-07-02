@@ -13,7 +13,7 @@ const defaultRows = [
 
 function App() {
   const [rows, setRows] = useState(defaultRows);
-  const [editorValue, setEditorValue] = useState('<p>Write a description here...</p>');
+  const [editorValue, setEditorValue] = useState('');
 
   const addRow = () => {
     const nextId = rows.length ? Math.max(...rows.map((row) => row.id)) + 1 : 1;

@@ -35,9 +35,35 @@ function CommentEditor({
   authorName = 'You',
   roleName = 'Contributor',
   className = '',
-}) {
-  const sourceItems = Array.isArray(items) ? items : Array.isArray(commentsProp) ? commentsProp : initialComments;
-  const [comments, setComments] = useState(sourceItems);
+  onClick,
+  onValueChanged,
+  }) {
+    console.log(items);
+    const [comments, setComments] = useState(items || []);
+    // const [comments, setComments] = useState(initialComments);
+    
+    // useEffect(() => {
+    //     fetch(
+    //         "https://localhost:7254/api/SectionCommentNote/GetAll?refKey=d3ed59f0-b9bd-4a70-8cb0-c7c4daee50c8&refField=RecordGuid"
+    //     )
+    //         .then(r => r.json())
+    //         .then(res => {
+    //             const mapped = (res || []).map(x => ({
+    //                 id: x.id,
+    //                 author: x.author,
+    //                 role: x.currentDepartment,
+    //                 text: x.content,
+    //                 time: x.createdDate
+    //             }));
+    
+    //             setComments(mapped);
+    //         })
+    //         .catch(err => {
+    //             console.error(err);
+    //         });
+    // }, []);
+
+
   const [draft, setDraft] = useState(value || '');
 const editorRef = useRef();
     const change = () => {
@@ -52,14 +78,16 @@ const handleBlur = () => {
 };
 
   useEffect(() => {
-    if (Array.isArray(items) || Array.isArray(commentsProp)) {
-      setComments(Array.isArray(items) ? items : commentsProp);
+    if (Array.isArray(comments) || Array.isArray(commentsProp)) {
+      setComments(Array.isArray(comments) ? comments : commentsProp);
     }
-  }, [items, commentsProp]);
+  }, [comments, commentsProp]);
 
   const initials = useMemo(() => {
     return comments.map((item) => item.author?.charAt(0).toUpperCase() || 'U');
   }, [comments]);
+
+  
 
   const addComment = () => {
     const trimmed = draft.trim();
@@ -73,7 +101,7 @@ const handleBlur = () => {
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
-    const nextComments = [nextComment, ...comments];
+      const nextComments = [nextComment, ...comments];
     setComments(nextComments);
     setDraft('');
     onItemsChange?.(nextComments);
@@ -123,7 +151,7 @@ const handleBlur = () => {
             </div>
           </div>
         ) : (
-          comments.map((item, index) => {
+                      comments.map((item, index) => {
             if (typeof renderItem === 'function') {
               return renderItem(item, index, initials[index] || 'U');
             }
@@ -290,7 +318,7 @@ const handleBlur = () => {
     </div>
 <button
     className="comment-send-btn"
-    onClick={addComment}
+    onClick={onClick}
     title={submitLabel}
 >
     <i className="fa fa-paper-plane"></i>
@@ -308,7 +336,7 @@ const handleBlur = () => {
                     minHeight: "100px"
                 }}
                 onBlur={handleBlur}
-            
+                onChange={onChange}
             >
               
         </div>

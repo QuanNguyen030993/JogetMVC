@@ -41,17 +41,56 @@ const $ = window.jQuery;
         });
     };
 
-    $.fn.commenteditor = function(options){
-        return this.each(function(){
+    // $.fn.commenteditor = function(options){
+    //     return this.each(function(){
+    //         mount(
+    //             this,
+    //             "CommentEditor",
+    //             options
+    //         );
+
+    //     });
+    // };
+
+    $.fn.commenteditor = function(method, value){
+
+    if (method === "option") {
+
+        const instance = this.data("commenteditor");
+
+        if (instance) {
+
+            instance.props = {
+                ...instance.props,
+                [value.name]: value.value
+            };
+
             mount(
-                this,
+                instance.element,
                 "CommentEditor",
-                options
+                instance.props
             );
+        }
 
-        });
-    };
+        return this;
+    }
 
+    return this.each(function(){
+
+        const instance = {
+            element: this,
+            props: method
+        };
+
+        $(this).data("commenteditor", instance);
+
+        mount(
+            this,
+            "CommentEditor",
+            method
+        );
+    });
+};
 
 register(
     "DateBox",

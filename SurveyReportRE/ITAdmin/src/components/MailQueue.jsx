@@ -53,7 +53,7 @@ const loadData = async () => {
 
       body: item.htmlBody ?? "",
 
-      attempts: item.retryCount ?? 0,
+      attempts: item.isSent,
 
       createdAt: item.createdDate
         ? new Date(item.createdDate).toLocaleString()
@@ -61,7 +61,7 @@ const loadData = async () => {
 
       status: item.isSend
         ? "Sent"
-        : item.retryCount > 0
+        : item.isSent
         ? "Failed"
         : "Pending",
 
@@ -108,10 +108,9 @@ useEffect(() => {
     <section className="mailqueue-page">
       <div className="mailqueue-hero">
         <div>
-          <p className="mailqueue-eyebrow">Email delivery center</p>
-          <h2>Mail Queue Monitor</h2>
+          <p className="mailqueue-eyebrow"></p>
+          <h2>Mail Queue Delivery</h2>
           <p className="mailqueue-subtitle">
-            Theo dõi trạng thái gửi mail, lỗi và hàng đợi một cách trực quan.
           </p>
         </div>
         <button type="button" className="mailqueue-refresh-btn" onClick={loadData}>
