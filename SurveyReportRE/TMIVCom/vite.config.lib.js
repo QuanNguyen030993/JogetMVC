@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
 
       entry: path.resolve(
         __dirname,
-        'src/index.jsx'
+        'src/components/Core.jsx'
       ),
 
       name: 'TMIVCom',

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
-import { register } from "./Core";
 
 
 function DateBox({
@@ -48,10 +47,10 @@ const roots = new Map();
 
 
 
-register(
-    "DateBox",
-    DateBox
-);
+// register(
+//     "DateBox",
+//     DateBox
+// );
 // window.TMIVCom = {
 
 //     DateBox(selector, options = {}) {

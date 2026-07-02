@@ -3,7 +3,6 @@ import React, {
     useState,
     useEffect
 } from "react";
-import { register } from "./Core";
 import { createRoot } from "react-dom/client";
 
 function HtmlEditor({
@@ -256,10 +255,10 @@ const editorRef = useRef();
 }
 
 
-register(
-    "HtmlEditor",
-    HtmlEditor
-);
+// register(
+//     "HtmlEditor",
+//     HtmlEditor
+// );
 // const roots = new WeakMap();
 
 

@@ -110,7 +110,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
 
         MAPPING_PATH = _BaseRepository._baseConfiguration.GetSection("MigrationConfig:MappingField").Value;
         BLOB_PATH = path.Value;
-        CURRENT_USER = _httpContextAccessor.HttpContext.User.Identity.Name.Replace(DOMAIN_NAME, "");
+        CURRENT_USER = _httpContextAccessor.HttpContext.User.Identity.Name?.Replace(DOMAIN_NAME, "") ?? "Anonymous";
         spUserName = configuration.GetSection("SharePoint:Username").Value;
         spPassword = configuration.GetSection("SharePoint:Password").Value;
         _blobStorageSettings = blobStorageSettings;

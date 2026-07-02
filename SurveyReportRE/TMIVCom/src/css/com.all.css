@@ -689,7 +689,7 @@
 .timeline .active::before{background:#3b82f6}
 .timeline a{text-decoration:none;color:#333}
 .content{flex:1;padding:30px}
-.card{background:#fff;border-radius:12px;padding:24px;margin-bottom:30px;box-shadow:0 4px 16px rgba(0,0,0,.08)}
+/* .card{background:#fff;border-radius:12px;padding:24px;margin-bottom:30px;box-shadow:0 4px 16px rgba(0,0,0,.08)} */
 .card-header{display:flex;justify-content:space-between;align-items:center}
 .badge{padding:6px 12px;border-radius:20px;font-size:12px}
 .progress{background:#dbeafe;color:#2563eb}

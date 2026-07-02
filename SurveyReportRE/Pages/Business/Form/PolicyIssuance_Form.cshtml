@@ -347,7 +347,7 @@ Note:
         function reloadState(){
               $.each(piDeptModuleCode, function (itemIndex, item) {
                 commentPinModule(formModuleKeyPi,item, "@ViewData["Guid"]", state.pinNotes,@ViewData["Id"]);
-                commentModule(formModuleKeyPi,item, "@ViewData["Guid"]", state.comments,@ViewData["Id"]);
+                loadCommentModule(formModuleKeyPi,item, "@ViewData["Guid"]", state.comments,@ViewData["Id"]);
             });
         }
 

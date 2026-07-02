@@ -39,7 +39,6 @@ function CommentEditor({
   onValueChanged,
   }) {
     console.log(items);
-    const [comments, setComments] = useState(items || []);
     // const [comments, setComments] = useState(initialComments);
     
     // useEffect(() => {
@@ -62,7 +61,12 @@ function CommentEditor({
     //             console.error(err);
     //         });
     // }, []);
-
+const [comments, setComments] = useState(items || []);
+useEffect(() => {
+   if (Array.isArray(items)) {
+       setComments(items);
+   }
+}, [items]);
 
   const [draft, setDraft] = useState(value || '');
 const editorRef = useRef();
@@ -77,11 +81,6 @@ const handleBlur = () => {
     onChange?.(editorRef.current.innerHTML);
 };
 
-  useEffect(() => {
-    if (Array.isArray(comments) || Array.isArray(commentsProp)) {
-      setComments(Array.isArray(comments) ? comments : commentsProp);
-    }
-  }, [comments, commentsProp]);
 
   const initials = useMemo(() => {
     return comments.map((item) => item.author?.charAt(0).toUpperCase() || 'U');
@@ -165,7 +164,17 @@ const handleBlur = () => {
                     <span>{item.role || 'Comment'}</span>
                     <em>{item.time || ''}</em>
                   </div>
-                  <p>{item.text || item.body || ''}</p>
+                  <div 
+
+                    suppressContentEditableWarning
+
+
+                    dangerouslySetInnerHTML={{
+                        __html:item.text
+                    }}
+
+                  ></div>
+                  
                 </div>
               </div>
             );
@@ -352,6 +361,125 @@ const handleBlur = () => {
   );
 }
 
-register('CommentEditor', CommentEditor);
+// register('CommentEditor', CommentEditor);
 
 export default CommentEditor;
+
+
+
+// var updateField = "content";
+// var comments = [];
+
+//     const params = new URLSearchParams();
+//      params.set("refKey", guid);
+//      params.set("refField", 'RecordGuid');
+
+
+//      var d = $.Deferred();
+
+//      // ajaxGet(url, null)
+//      //     .then(res => {
+//      //         d.resolve(res);
+//      //     })
+//      //     .catch(err => {
+//      //         d.reject(err);
+//      //     });
+
+//      // d.done(function(res) {
+//      //     // create commenteditor here
+//      // });
+
+//      ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`,null,null)
+//          .then(res => {
+
+//                  var pinnedNotes = (res || []).map(x => ({
+//                   id: x.id,
+//                author: x.author,
+//                role: x.currentDepartment,
+//                text: x.content,
+//                time: parseToGMT7(x.createdDate, 0)
+//                  }));
+
+//                   d.resolve(
+//                          (res || []).map(x => ({
+//                              id: x.id,
+//                              author: x.author,
+//                              role: x.currentDepartment,
+//                              text: x.content,
+//                              time: parseToGMT7(x.createdDate, 0)
+//                          }))
+//                      );
+
+//                  // comments = pinnedNotes;
+//              // var pinnedNotes = (res || []).map(x => ({
+//              //     id: x.id,
+//              //     section: x.currentDepartment,//target main
+//              //     fromSection: x.fromDepartment,//target pin
+//              //     toSection: x.toDepartment,
+//              //     type: x.type,
+//              //     unread: !x.isRead,
+//              //     isRead: !x.isRead,
+//              //     linkedPin: x.isPinned,
+//              //     isPinned: x.isPinned,
+//              //     body: x.content,
+//              //     text: x.content,
+//              //     replies: 0,
+//              //     fullText: x.content,
+//              //     author: x.author,
+//              //     urgent: false,
+//              //     time: parseToGMT7(x.createdDate, 0)
+//              // }));
+                
+//          });
+//                item.control = $(itemElement).commenteditor({
+//                          items: initialComments,
+//                      showComposer: true,
+//                      emptyText: "No comments.",
+//                      headerTitle: "",
+//                      onSubmit: function (item, allItems) {
+
+//                      },
+//                      onChange: function (e){
+//                              parentForm.updateData(updateField, e);
+//                      },
+//                      onClick: function (e) {
+
+
+//                                        // var commentDataForm = $(`#${moduleKey}-commentPanelControl_${dept}_${id}`).dxForm("instance").option("formData");
+//                              const commentDataForm    = parentForm.option("formData");
+//                        const commentText = parentForm.option("formData")[updateField];
+//                    if (!commentText) {
+//                        DevExpress.ui.notify("Please enter comment content", "warning", 2000);
+//                        return;
+//                    }
+//                   var commentData = new Object();
+//                   commentData = ObjectPopulateKey(commentDataForm, true, false);
+//                           commentData.FromDepartment = _role; // comment out
+//                           // commentData.FromDepartment = "FO";
+//                       commentData.CurrentDepartment = dept;
+//                       commentData.Author = _displayName;
+//                   commentData.RecordGuid = guid;
+//                   commentData.IsPinned = commentData.Type == "Pinned" ? true :  false;
+//                        store.insert(commentData)
+//                       .done(function () {
+//                           DevExpress.ui.notify("Send message successfully", "success", 2000);
+//                       })
+//                       .fail(function (error) {
+//                           console.error(error);
+//                           DevExpress.ui.notify("Send message failed", "error", 2000);
+//                       });
+//                      }
+//                  });
+
+//  // createEditor(item, itemElement, $("<div>"), item); // replace new editor
+
+
+//  // d.done(function(comments){
+//  //     $(itemElement).commenteditor(
+//  //             "option",
+//  //             {
+//  //                 name: "items",
+//  //                 value: comments
+//  //             }
+//  //         );
+//  // });
