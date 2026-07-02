@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
-import { register } from './Core';
 
 const initialComments = [
   // {

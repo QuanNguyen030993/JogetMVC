@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { register } from "./Core";
 
 function CustomGrid({
   columns,
