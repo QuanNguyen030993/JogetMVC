@@ -6,7 +6,6 @@ import React, {
     useState
 } from "react";
 
-import Cropper from "cropperjs";
 
 const HtmlEditor = forwardRef(({
     value = "",
@@ -349,33 +348,78 @@ useEffect(() => {
         )
             return;
 
-        const deltaX =
-            e.clientX -
-            resizeState.current.startX;
+        const img = selectedImage;
 
-        const width =
-            resizeState.current
-                .startWidth +
-            deltaX;
+        if (resizeState.current.type === "horizontal") {
+            const deltaX =
+                e.clientX -
+                resizeState.current.startX;
 
-        const ratio =
-            resizeState.current
-                .startHeight /
-            resizeState.current
-                .startWidth;
+            const width =
+                Math.max(
+                    20,
+                    resizeState.current.startWidth +
+                    deltaX
+                );
 
-        const height =
-            width * ratio;
+            img.style.width =
+                width + "px";
+        }
+        else if (
+            resizeState.current.type ===
+            "vertical"
+        ) {
+            const deltaY =
+                e.clientY -
+                resizeState.current.startY;
 
-        selectedImage.style.width =
-            width + "px";
+            const height =
+                Math.max(
+                    20,
+                    resizeState.current.startHeight +
+                    deltaY
+                );
 
-        selectedImage.style.height =
-            height + "px";
+            img.style.height =
+                height + "px";
+        }
+        else if (
+            resizeState.current.type ===
+            "corner"
+        ) {
+            const deltaX =
+                e.clientX -
+                resizeState.current.startX;
+
+            const deltaY =
+                e.clientY -
+                resizeState.current.startY;
+
+            const width =
+                Math.max(
+                    20,
+                    resizeState.current.startWidth +
+                    deltaX
+                );
+
+            const height =
+                Math.max(
+                    20,
+                    resizeState.current.startHeight +
+                    deltaY
+                );
+
+            img.style.width =
+                width + "px";
+            img.style.height =
+                height + "px";
+        }
+        else {
+            return;
+        }
 
         const rect =
-            selectedImage
-                .getBoundingClientRect();
+            img.getBoundingClientRect();
 
         setImageRect({
             left: rect.left,
@@ -419,21 +463,42 @@ useEffect(() => {
 
 }, [selectedImage]);
 
-const rotateLeft = () => {
+const rotateImage = (direction) => {
 
-    cropperRef.current?.rotate(
-        -90
-    );
+    if (!selectedImage)
+        return;
 
+    const current =
+        parseInt(
+            selectedImage.dataset.rotation ||
+            "0",
+            10
+        );
+
+    const next =
+        (current + direction + 360) %
+        360;
+
+    selectedImage.dataset.rotation =
+        next;
+    selectedImage.style.transform =
+        `rotate(${next}deg)`;
+
+    const rect =
+        selectedImage.getBoundingClientRect();
+
+    setImageRect({
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height
+    });
+
+    change();
 };
 
-const rotateRight = () => {
-
-    cropperRef.current?.rotate(
-        90
-    );
-
-};
+const rotateLeft = () => rotateImage(-90);
+const rotateRight = () => rotateImage(90);
 
 const zoomIn = () => {
 
@@ -512,21 +577,19 @@ useEffect(() => {
             const rect =
                 img.getBoundingClientRect();
 
-if (
-    !resizeState.current ||
-    !selectedImage
-)
-    return;
-
-selectedImage.style.width =
-    width + "px";
-
-selectedImage.style.height =
-    height + "px";
-
+            selectedImageRef.current = img;
+            setSelectedImage(img);
+            setImageRect({
+                left: rect.left,
+                top: rect.top,
+                width: rect.width,
+                height: rect.height
+            });
         }
         else {
+            selectedImageRef.current = null;
             setSelectedImage(null);
+            setImageRect(null);
         }
     };
 
@@ -855,6 +918,22 @@ selectedImage.style.height =
             🖼️
         </div>
 
+        <div
+            className="tmiv-tool-item"
+            onClick={rotateLeft}
+            title="Rotate selected image left"
+        >
+            ⟲
+        </div>
+
+        <div
+            className="tmiv-tool-item"
+            onClick={rotateRight}
+            title="Rotate selected image right"
+        >
+            ⟳
+        </div>
+
     <div
         className="tmiv-tool-item"
         onClick={() => {
@@ -937,8 +1016,7 @@ selectedImage.style.height =
 </div>
 
                     <div
-                    
-                    ref={editorRef}
+                        ref={editorRef}
                         contentEditable
                         suppressContentEditableWarning
                         dangerouslySetInnerHTML={{
@@ -949,8 +1027,35 @@ selectedImage.style.height =
                         style={{
                             minHeight: height
                         }}
-
                     />
+
+                    {selectedImage && imageRect && (
+                        <div
+                            className="tmiv-image-overlay"
+                            style={{
+                                left: imageRect.left,
+                                top: imageRect.top,
+                                width: imageRect.width,
+                                height: imageRect.height
+                            }}
+                        >
+                            <div
+                                className="resize-r"
+                                onMouseDown={startResizeHorizontal}
+                            />
+                            <div
+                                className="resize-b"
+                                onMouseDown={startResizeVertical}
+                            />
+                            <div
+                                className="resize-br"
+                                onMouseDown={startResizeCorner}
+                            />
+                            <div className="size-label">
+                                {Math.round(imageRect.width)} x {Math.round(imageRect.height)}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
      
