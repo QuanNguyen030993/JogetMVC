@@ -38,6 +38,7 @@ const CommentEditor = forwardRef(({
     onClick,
     onValueChanged
 }, ref) => {
+const [comments, setComments] = useState(items || []);
 
      
     // const [comments, setComments] = useState(initialComments);
@@ -62,7 +63,7 @@ const CommentEditor = forwardRef(({
     //             console.error(err);
     //         });
     // }, []);
-const [comments, setComments] = useState(items || []);
+
 useEffect(() => {
    if (Array.isArray(items)) {
        setComments(items);

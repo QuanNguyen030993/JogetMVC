@@ -10,7 +10,6 @@ const defaultRows = [
   { id: 2, name: 'Bob', role: 'Designer', status: 'Pending' },
   { id: 3, name: 'Charlie', role: 'QA', status: 'Active' },
 ];
-const value = "AAA";
 function App() {
   const [rows, setRows] = useState(defaultRows);
   const [editorValue, setEditorValue] = useState('');
@@ -74,17 +73,7 @@ function App() {
 
       <section className="section">
         <div className="section-title">Comment Editor</div>
-        <CommentEditor value={value} 
- items={[
-            {
-                id: 1,
-                author: "Quan",
-                role: "IT",
-                text: "<b>Hello</b>",
-                time: "10:00"
-            }
-        ]}
- onChange={setEditorValue} />
+        <CommentEditor onChange={setEditorValue} />
       </section>
 
       {/* <section className="section">

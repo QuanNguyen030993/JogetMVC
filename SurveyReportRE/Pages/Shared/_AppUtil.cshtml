@@ -1478,7 +1478,9 @@
                                                             author: x.author,
                                                             role: x.fromDepartment,
                                                             text: x.content
-                                                            ,time: x.createdDate
+                                                            ,time:
+                                                                fmtTimeLocal(x.createdDate)
+
                                                         }))
                                                     );
                                                

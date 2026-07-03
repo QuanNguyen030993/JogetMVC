@@ -37,6 +37,7 @@
 	  <Content Include="TMIVCom\index.html" />
 	  <Content Include="TMIVCom\package-lock.json" />
 	  <Content Include="TMIVCom\package.json" />
+	  <Content Include="TMIVCom\src\css\com.all.css" />
 	  <Content Include="TMIVCom\src\css\datagrid.css" />
 	  <Content Include="TMIVCom\src\css\datebox.css" />
 	  <Content Include="TMIVCom\src\css\htmleditor.css" />
@@ -85,6 +86,7 @@
 	  <None Include="App.config" />
 	  <None Include="TMIVCom\move-to-wwwroot.js" />
 	  <None Include="TMIVCom\src\App.jsx" />
+	  <None Include="TMIVCom\src\components\CommentEditor.jsx" />
 	  <None Include="TMIVCom\src\components\Core.jsx" />
 	  <None Include="TMIVCom\src\components\CustomGrid.jsx" />
 	  <None Include="TMIVCom\src\components\Datebox.jsx" />
