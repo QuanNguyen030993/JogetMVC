@@ -165,46 +165,35 @@ const $ = window.jQuery;
         });
     };
 
-    // $.fn.commenteditor = function(options){
-    //     return this.each(function(){
-    //         mount(
-    //             this,
-    //             "CommentEditor",
-    //             options
-    //         );
-
-    //     });
-    // };
-
    $.fn.commenteditor = function(arg1,arg2){
-   if(typeof arg1==="string"){
-       if(arg1==="option"){
-           return this.each(function(){
-               const instance = roots.get(this);
-               if(!instance) return;
-               instance.options[arg2.name]=arg2.value;
-               instance.root.render(
-                   React.createElement(
-                       controls[instance.name],
-                       instance.options
-                   )
-               );
-           });
-       }
-        if(arg1==="value"){
-           return this.each(function(){
-               const instance = roots.get(this);
-               if(!instance) return;
-               instance.options[arg2.name]=arg2.value;
-               instance.root.render(
-                   React.createElement(
-                       controls[instance.name],
-                       instance.options
-                   )
-               );
-           });
-       }
+        if(typeof arg1==="string"){
+            if (arg1 === "option" || arg1 === "value"){
+                return this.each(function(){
+                    const instance = roots.get(this);
+                    if(!instance) return;
+                    instance.options[arg2.name]=arg2.value;
+                    instance.root.render(
+                        React.createElement(
+                            controls[instance.name],
+                            instance.options
+                        )
+                    );
+                    
+                    // const instance = roots.get(this);
+
+                    //         if (!instance?.ref?.current)
+                    //             return;
+
+                    //         instance.ref.current.option(
+                    //             arg2.name,
+                    //             arg2.value
+                    //         );
+
+                });
+            }
    }
+
+
    return this.each(function(){
        mount(
            this,

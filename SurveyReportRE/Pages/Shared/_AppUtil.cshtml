@@ -1426,22 +1426,9 @@
                             // </div>
                        // TextArea comment
 
-    const initialComments = [
-      {
-        id: 1,
-        author: 'Alice',
-        role: 'Reviewer',
-        text: 'Please confirm phase 2 before moving forward.',
-        time: '10:15',
-      },
-      {
-        id: 2,
-        author: 'Bob',
-        role: 'Owner',
-        text: 'Looks good. I will update the summary soon.',
-        time: '10:28',
-      },
-    ];
+                        const initialComments = [
+      
+                        ];
                         var item = new Object();
                         item.id = id;
                         item.editorType = "dxHtmlEditor";
@@ -1508,7 +1495,7 @@
                                                             parentForm.updateData(updateField, e);
                                                     },
                                                     onClick: function (e) {
-                                                            const commentDataForm    = parentForm.option("formData");
+                                                            const commentDataForm  = parentForm.option("formData");
                                                       const commentText = parentForm.option("formData")[updateField];
                                                   if (!commentText) {
                                                       DevExpress.ui.notify("Please enter comment content", "warning", 2000);
@@ -1529,22 +1516,22 @@
                                                          console.error(error);
                                                          DevExpress.ui.notify("Send message failed", "error", 2000);
                                                      });
-                                                    $(itemElement).commenteditor(
-                                                        "value",
-                                                        {
-                                                            name: "items",
-                                                            value: ""
-                                                        }
-                                                    );
+
+                                                            item.control.option("value", null);
                                                     }
                                                 });
+
+                                                 item.control.option = function (name, value) {
+                                                    $(itemElement).commenteditor("option", {
+                                                        name,
+                                                        value
+                                                    });
+                                                }
 
                                 // createEditor(item, itemElement, $("<div>"), item); // replace new editor
 
 
                                 d.done(function(comments){
-                                    console.log("deferred comments");
-                                    console.log(comments);
                                     $(itemElement).commenteditor(
                                             "option",
                                             {

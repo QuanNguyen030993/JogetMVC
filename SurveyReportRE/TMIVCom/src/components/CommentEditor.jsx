@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef, useImperativeHandle, forwardRef } from 'react';
 
 const initialComments = [
   // {
@@ -17,27 +17,29 @@ const initialComments = [
   // },
 ];
 
-function CommentEditor({
-  value = '',
-  onChange,
-  placeholder = 'Add comment...',
-  items = null,
-  comments: commentsProp = null,
-  onSubmit,
-  onItemsChange,
-  emptyText = 'No comments.',
-  renderItem,
-  showComposer = true,
-  submitLabel = 'Send',
-  headerTitle = 'Comments',
-  headerSubtitle = '',
-  authorName = 'You',
-  roleName = 'Contributor',
-  className = '',
-  onClick,
-  onValueChanged,
-  }) {
-    console.log(items);
+
+const CommentEditor = forwardRef(({
+    value = '',
+    onChange,
+    placeholder = 'Add comment...',
+    items = null,
+    comments: commentsProp = null,
+    onSubmit,
+    onItemsChange,
+    emptyText = 'No comments.',
+    renderItem,
+    showComposer = true,
+    submitLabel = 'Send',
+    headerTitle = 'Comments',
+    headerSubtitle = '',
+    authorName = 'You',
+    roleName = 'Contributor',
+    className = '',
+    onClick,
+    onValueChanged
+}, ref) => {
+
+     
     // const [comments, setComments] = useState(initialComments);
     
     // useEffect(() => {
@@ -66,19 +68,48 @@ useEffect(() => {
        setComments(items);
    }
 }, [items]);
+  // Keep editor synced with parent value
 
-  const [draft, setDraft] = useState(value || '');
-const editorRef = useRef();
+
+    const [draft, setDraft] = useState(value || '');
+    const editorRef = useRef();
     const change = () => {
-
         let html = editorRef.current.innerHTML;
-
         onChange?.(html);
     };
+    useEffect(() => {
+        if (!editorRef.current) return;
+        const html = value || '';
 
+
+        if (editorRef.current.innerHTML !== html) {
+        editorRef.current.innerHTML = html;
+        }
+    }, [value]);
+
+  
+
+    // useImperativeHandle(ref, () => ({
+    //         option(name, value) {
+    //             switch (name) {
+    //                 case "value":
+
+    //                     if (editorRef.current) {
+    //                         editorRef.current.innerHTML =
+    //                             value || "";
+    //                     }
+
+    //                     break;
+    //             }
+    //         }
+    //     }));
+
+
+    
 const handleBlur = () => {
     onChange?.(editorRef.current.innerHTML);
 };
+
 
 
   const initials = useMemo(() => {
@@ -358,127 +389,9 @@ const handleBlur = () => {
       ) : null}
     </div>
   );
-}
+})
 
 // register('CommentEditor', CommentEditor);
 
 export default CommentEditor;
 
-
-
-// var updateField = "content";
-// var comments = [];
-
-//     const params = new URLSearchParams();
-//      params.set("refKey", guid);
-//      params.set("refField", 'RecordGuid');
-
-
-//      var d = $.Deferred();
-
-//      // ajaxGet(url, null)
-//      //     .then(res => {
-//      //         d.resolve(res);
-//      //     })
-//      //     .catch(err => {
-//      //         d.reject(err);
-//      //     });
-
-//      // d.done(function(res) {
-//      //     // create commenteditor here
-//      // });
-
-//      ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`,null,null)
-//          .then(res => {
-
-//                  var pinnedNotes = (res || []).map(x => ({
-//                   id: x.id,
-//                author: x.author,
-//                role: x.currentDepartment,
-//                text: x.content,
-//                time: parseToGMT7(x.createdDate, 0)
-//                  }));
-
-//                   d.resolve(
-//                          (res || []).map(x => ({
-//                              id: x.id,
-//                              author: x.author,
-//                              role: x.currentDepartment,
-//                              text: x.content,
-//                              time: parseToGMT7(x.createdDate, 0)
-//                          }))
-//                      );
-
-//                  // comments = pinnedNotes;
-//              // var pinnedNotes = (res || []).map(x => ({
-//              //     id: x.id,
-//              //     section: x.currentDepartment,//target main
-//              //     fromSection: x.fromDepartment,//target pin
-//              //     toSection: x.toDepartment,
-//              //     type: x.type,
-//              //     unread: !x.isRead,
-//              //     isRead: !x.isRead,
-//              //     linkedPin: x.isPinned,
-//              //     isPinned: x.isPinned,
-//              //     body: x.content,
-//              //     text: x.content,
-//              //     replies: 0,
-//              //     fullText: x.content,
-//              //     author: x.author,
-//              //     urgent: false,
-//              //     time: parseToGMT7(x.createdDate, 0)
-//              // }));
-                
-//          });
-//                item.control = $(itemElement).commenteditor({
-//                          items: initialComments,
-//                      showComposer: true,
-//                      emptyText: "No comments.",
-//                      headerTitle: "",
-//                      onSubmit: function (item, allItems) {
-
-//                      },
-//                      onChange: function (e){
-//                              parentForm.updateData(updateField, e);
-//                      },
-//                      onClick: function (e) {
-
-
-//                                        // var commentDataForm = $(`#${moduleKey}-commentPanelControl_${dept}_${id}`).dxForm("instance").option("formData");
-//                              const commentDataForm    = parentForm.option("formData");
-//                        const commentText = parentForm.option("formData")[updateField];
-//                    if (!commentText) {
-//                        DevExpress.ui.notify("Please enter comment content", "warning", 2000);
-//                        return;
-//                    }
-//                   var commentData = new Object();
-//                   commentData = ObjectPopulateKey(commentDataForm, true, false);
-//                           commentData.FromDepartment = _role; // comment out
-//                           // commentData.FromDepartment = "FO";
-//                       commentData.CurrentDepartment = dept;
-//                       commentData.Author = _displayName;
-//                   commentData.RecordGuid = guid;
-//                   commentData.IsPinned = commentData.Type == "Pinned" ? true :  false;
-//                        store.insert(commentData)
-//                       .done(function () {
-//                           DevExpress.ui.notify("Send message successfully", "success", 2000);
-//                       })
-//                       .fail(function (error) {
-//                           console.error(error);
-//                           DevExpress.ui.notify("Send message failed", "error", 2000);
-//                       });
-//                      }
-//                  });
-
-//  // createEditor(item, itemElement, $("<div>"), item); // replace new editor
-
-
-//  // d.done(function(comments){
-//  //     $(itemElement).commenteditor(
-//  //             "option",
-//  //             {
-//  //                 name: "items",
-//  //                 value: comments
-//  //             }
-//  //         );
-//  // });

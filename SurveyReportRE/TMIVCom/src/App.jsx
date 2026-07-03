@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect  } from 'react';
 import CustomGrid from './components/CustomGrid';
 import HtmlEditor from './components/HtmlEditor';
 import DateBox from './components/DateBox';
@@ -10,7 +10,7 @@ const defaultRows = [
   { id: 2, name: 'Bob', role: 'Designer', status: 'Pending' },
   { id: 3, name: 'Charlie', role: 'QA', status: 'Active' },
 ];
-
+const value = "AAA";
 function App() {
   const [rows, setRows] = useState(defaultRows);
   const [editorValue, setEditorValue] = useState('');
@@ -19,6 +19,29 @@ function App() {
     const nextId = rows.length ? Math.max(...rows.map((row) => row.id)) + 1 : 1;
     setRows([...rows, { id: nextId, name: '', role: '', status: 'Active' }]);
   };
+// const editorRef = useRef();
+
+//     useEffect(() => {
+
+//         const comments = [
+//             {
+//                 id: 1,
+//                 author: "Quan",
+//                 text: "Hello"
+//             },
+//             {
+//                 id: 2,
+//                 author: "Admin",
+//                 text: "Welcome"
+//             }
+//         ];
+
+//         editorRef.current.option({
+//             name: "items",
+//             value: comments
+//         });
+
+//     }, []);
 
   return (
     <div className="tmivcom-app">
@@ -51,7 +74,17 @@ function App() {
 
       <section className="section">
         <div className="section-title">Comment Editor</div>
-        <CommentEditor value={editorValue} onChange={setEditorValue} />
+        <CommentEditor value={value} 
+ items={[
+            {
+                id: 1,
+                author: "Quan",
+                role: "IT",
+                text: "<b>Hello</b>",
+                time: "10:00"
+            }
+        ]}
+ onChange={setEditorValue} />
       </section>
 
       {/* <section className="section">
@@ -70,3 +103,6 @@ function App() {
 }
 
 export default App;
+
+
+
