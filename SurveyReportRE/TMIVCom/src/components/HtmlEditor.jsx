@@ -64,17 +64,20 @@ const cropperRef =
    
     useEffect(() => {
 
-    if (!editorRef.current)
-        return;
+        if (!editorRef.current)
+            return;
 
-    if (
-        document.activeElement !==
-        editorRef.current
-    ) {
+        if (
+            document.activeElement !==
+            editorRef.current &&
+            editorRef.current.innerHTML !==
+            (value ?? "")
+        ) {
 
-        editorRef.current.innerHTML =
-            value ?? "";
-    }});
+            editorRef.current.innerHTML =
+                value ?? "";
+        }
+    }, [value]);
 
 
     const update = () => {
@@ -87,9 +90,23 @@ const cropperRef =
         onChange?.(result);
     };
 
+    const focusEditor = () => {
+        editorRef.current?.focus();
+    };
+
+    const insertHtml = (html) => {
+        focusEditor();
+        document.execCommand(
+            "insertHTML",
+            false,
+            html
+        );
+        update();
+    };
+
     const command = (cmd, param = null) => {
 
-        editorRef.current?.focus();
+        focusEditor();
 
         document.execCommand(
             cmd,
@@ -463,44 +480,73 @@ useEffect(() => {
 
 }, [selectedImage]);
 
-const rotateImage = (direction) => {
+const [rotationDegrees, setRotationDegrees] =
+        useState(0);
 
-    if (!selectedImage)
-        return;
+    const rotateImage = (direction) => {
 
-    const current =
-        parseInt(
-            selectedImage.dataset.rotation ||
-            "0",
-            10
-        );
+        if (!selectedImage)
+            return;
 
-    const next =
-        (current + direction + 360) %
-        360;
+        const current =
+            parseInt(
+                selectedImage.dataset.rotation ||
+                "0",
+                10
+            );
 
-    selectedImage.dataset.rotation =
-        next;
-    selectedImage.style.transform =
-        `rotate(${next}deg)`;
+        const next =
+            (current + direction + 360) %
+            360;
 
-    const rect =
-        selectedImage.getBoundingClientRect();
+        selectedImage.dataset.rotation =
+            next;
+        selectedImage.style.transform =
+            `rotate(${next}deg)`;
+        setRotationDegrees(next);
 
-    setImageRect({
-        left: rect.left,
-        top: rect.top,
-        width: rect.width,
-        height: rect.height
-    });
+        const rect =
+            selectedImage.getBoundingClientRect();
 
-    change();
-};
+        setImageRect({
+            left: rect.left,
+            top: rect.top,
+            width: rect.width,
+            height: rect.height
+        });
 
-const rotateLeft = () => rotateImage(-90);
-const rotateRight = () => rotateImage(90);
+        change();
+    };
 
-const zoomIn = () => {
+    const setImageRotation = (degrees) => {
+        if (!selectedImage) return;
+
+        const next =
+            ((degrees % 360) + 360) % 360;
+
+        selectedImage.dataset.rotation =
+            next;
+        selectedImage.style.transform =
+            `rotate(${next}deg)`;
+        setRotationDegrees(next);
+
+        const rect =
+            selectedImage.getBoundingClientRect();
+
+        setImageRect({
+            left: rect.left,
+            top: rect.top,
+            width: rect.width,
+            height: rect.height
+        });
+
+        change();
+    };
+
+    const rotateLeft = () => rotateImage(-90);
+    const rotateRight = () => rotateImage(90);
+
+    const zoomIn = () => {
 
     cropperRef.current?.zoom(
         0.1
@@ -900,19 +946,9 @@ useEffect(() => {
 
                 if (!url) return;
 
-                document.execCommand(
-                    "insertHTML",
-                    false,
-                    `<img
-                        src="${url}"
-                        style="
-                            max-width:100%;
-                            height:auto;
-                        "
-                    />`
+                insertHtml(
+                    `<img src="${url}" style="max-width:100%; height:auto;"/>`
                 );
-
-                change();
             }}
         >
             🖼️
@@ -934,14 +970,49 @@ useEffect(() => {
             ⟳
         </div>
 
+        <div className="tmiv-tool-item">
+            <input
+                type="number"
+                value={rotationDegrees}
+                onChange={(e) =>
+                    setRotationDegrees(
+                        Number(e.target.value)
+                    )
+                }
+                onBlur={() =>
+                    setImageRotation(rotationDegrees)
+                }
+                style={{
+                    width: 56,
+                    border: "1px solid #ccc",
+                    borderRadius: 4,
+                    padding: "2px 4px",
+                    fontSize: 12,
+                    marginRight: 4,
+                    height: 26
+                }}
+                title="Rotate selected image degree"
+            />
+            <button
+                type="button"
+                onClick={() => setImageRotation(rotationDegrees)}
+                style={{
+                    border: "1px solid #ccc",
+                    borderRadius: 4,
+                    padding: "2px 6px",
+                    fontSize: 12,
+                    cursor: "pointer"
+                }}
+            >
+                ↻
+            </button>
+        </div>
+
     <div
         className="tmiv-tool-item"
         onClick={() => {
 
-            document.execCommand(
-                "insertHTML",
-                false,
-                `
+            insertHtml(`
                 <table border="1" style="border-collapse:collapse;width:100%">
                     <tr>
                         <td>&nbsp;</td>
@@ -959,10 +1030,7 @@ useEffect(() => {
                         <td>&nbsp;</td>
                     </tr>
                 </table>
-                `
-            );
-
-            change();
+                `);
         }}
     >
         ⊞
