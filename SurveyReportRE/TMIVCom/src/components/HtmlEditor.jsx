@@ -661,21 +661,25 @@ useEffect(() => {
             switch (name) {
 
                 case "value":
+                    if (arguments.length === 1) {
+                        return editorRef.current?.innerHTML || "";
+                    }
 
                     if (editorRef.current) {
-
                         editorRef.current.innerHTML =
                             value ?? "";
+
+                        lastValueRef.current =
+                            editorRef.current.innerHTML;
 
                         onChange?.(
                             value ?? ""
                         );
                     }
-
-                    break;
+                    return;
 
                 default:
-                    break;
+                    return undefined;
             }
         },
 

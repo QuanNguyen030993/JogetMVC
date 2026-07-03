@@ -61,7 +61,8 @@ function mount(element, name, options){
        instance = {
            root,
            name,
-           options:{}
+           options:{},
+           ref: React.createRef()
        };
        roots.set(element, instance);
    }
@@ -71,7 +72,7 @@ function mount(element, name, options){
    };
    const Component = controls[name];
    instance.root.render(
-<Component {...instance.options}/>
+       <Component ref={instance.ref} {...instance.options}/>
    );
 }
 
@@ -143,12 +144,28 @@ const $ = window.jQuery;
         });
     };
 
- $.fn.htmleditor = function(options){
+ $.fn.htmleditor = function(arg1,arg2){
+        if (typeof arg1 === "string") {
+            if (arg1 === "option") {
+                return this.map(function(){
+                    const instance = roots.get(this);
+                    if (!instance) return null;
+
+                    if (arg2 === "value") {
+                        const editor = instance.ref?.current;
+                        return editor?.value?.() ?? null;
+                    }
+
+                    return null;
+                }).get();
+            }
+        }
+
         return this.each(function(){
             mount(
                 this,
                 "HtmlEditor",
-                options
+                arg1
             );
 
         });
