@@ -147,17 +147,26 @@ const $ = window.jQuery;
  $.fn.htmleditor = function(arg1,arg2){
         if (typeof arg1 === "string") {
             if (arg1 === "option") {
-                return this.map(function(){
-                    const instance = roots.get(this);
-                    if (!instance) return null;
-
-                    if (arg2 === "value") {
+                if (arg2 === "value") {
+                    // single element -> return scalar, multiple -> return array
+                    if (this.length === 1) {
+                        const el = this[0];
+                        const instance = roots.get(el);
+                        if (!instance) return null;
                         const editor = instance.ref?.current;
                         return editor?.value?.() ?? null;
                     }
 
-                    return null;
-                }).get();
+                    return this.map(function(){
+                        const instance = roots.get(this);
+                        if (!instance) return null;
+                        const editor = instance.ref?.current;
+                        return editor?.value?.() ?? null;
+                    }).get();
+                }
+
+                // unsupported option -> return undefined for chaining compatibility
+                return undefined;
             }
         }
 
