@@ -1,6 +1,7 @@
 import React, {
     useRef,
     useEffect,
+    useLayoutEffect,
     forwardRef,
     useImperativeHandle,
     useState
@@ -14,9 +15,8 @@ const HtmlEditor = forwardRef(({
 }, ref) => {
 
     const editorRef = useRef();
-
-    const [html,setHtml] =
-        useState(value);
+    const lastValueRef = useRef(value);
+    const isComposingRef = useRef(false);
 
     const [showCropper, setShowCropper] =
     useState(false);
@@ -43,7 +43,7 @@ const change = () => {
     const html =
         editorRef.current.innerHTML;
 
-    setHtml(html);
+    lastValueRef.current = html;
 
     onChange?.(html);
 };
@@ -62,20 +62,22 @@ const cropperRef =
     // });
 
    
-    useEffect(() => {
+    useLayoutEffect(() => {
 
         if (!editorRef.current)
             return;
 
+        const nextValue = value ?? "";
+
         if (
             document.activeElement !==
             editorRef.current &&
-            editorRef.current.innerHTML !==
-            (value ?? "")
+            lastValueRef.current !== nextValue
         ) {
 
             editorRef.current.innerHTML =
-                value ?? "";
+                nextValue;
+            lastValueRef.current = nextValue;
         }
     }, [value]);
 
@@ -87,6 +89,7 @@ const cropperRef =
         const result =
             editorRef.current.innerHTML;
 
+        lastValueRef.current = result;
         onChange?.(result);
     };
 
@@ -1087,10 +1090,18 @@ useEffect(() => {
                         ref={editorRef}
                         contentEditable
                         suppressContentEditableWarning
-                        dangerouslySetInnerHTML={{
-                            __html: value
+                        onCompositionStart={() => {
+                            isComposingRef.current = true;
                         }}
-                        onInput={update}
+                        onCompositionEnd={() => {
+                            isComposingRef.current = false;
+                            update();
+                        }}
+                        onInput={() => {
+                            if (!isComposingRef.current) {
+                                update();
+                            }
+                        }}
                         className="tmiv-html-content"
                         style={{
                             minHeight: height
