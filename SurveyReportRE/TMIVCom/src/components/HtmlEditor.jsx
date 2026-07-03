@@ -7,7 +7,7 @@ import React, {
 
 const HtmlEditor = forwardRef(({
     value = "",
-    height = 300,
+    height = 150,
     onChange
 }, ref) => {
 
@@ -90,148 +90,361 @@ const HtmlEditor = forwardRef(({
 
                     <div className="tmiv-html-toolbar">
 
-                        <div
-                            className="tmiv-tool-item"
-                            onClick={() => command("undo")}
-                        >
-                            ↶
-                        </div>
+    <div
+        className="tmiv-tool-item"
+        onClick={() => command("undo")}
+    >
+        ↶
+    </div>
 
-                        <div
-                            className="tmiv-tool-item"
-                            onClick={() => command("redo")}
-                        >
-                            ↷
-                        </div>
+    <div
+        className="tmiv-tool-item"
+        onClick={() => command("redo")}
+    >
+        ↷
+    </div>
 
-                        <div className="tmiv-toolbar-separator" />
+    <div className="tmiv-toolbar-separator" />
 
-                        <select
-                            className="tmiv-select"
-                            onChange={e =>
-                                command(
-                                    "formatBlock",
-                                    e.target.value
-                                )
-                            }
-                        >
-                            <option value="p">
-                                Normal
-                            </option>
+    <select
+        className="tmiv-select"
+        onChange={e =>
+            command(
+                "fontName",
+                e.target.value
+            )
+        }
+    >
+         <option value="Asap">
+            Asap
+        </option>
+        <option value="Arial">
+            Arial
+        </option>
 
-                            <option value="h1">
-                                Heading 1
-                            </option>
+        <option value="Tahoma">
+            Tahoma
+        </option>
 
-                            <option value="h2">
-                                Heading 2
-                            </option>
-                        </select>
+        <option value="Verdana">
+            Verdana
+        </option>
 
-                        <div
-                            className="tmiv-tool-item"
-                            onClick={() =>
-                                command("bold")
-                            }
-                        >
-                            <b>B</b>
-                        </div>
+        <option value="Times New Roman">
+            Times
+        </option>
+    </select>
 
-                        <div
-                            className="tmiv-tool-item"
-                            onClick={() =>
-                                command("italic")
-                            }
-                        >
-                            <i>I</i>
-                        </div>
+    <select
+        className="tmiv-select"
+        onChange={e =>
+            command(
+                "fontSize",
+                e.target.value
+            )
+        }
+    >
+        <option value="1">8</option>
+        <option value="2">10</option>
+        <option value="3">12</option>
+        <option value="4">16</option>
+        <option value="5">24</option>
+        <option value="6">32</option>
+        <option value="7">48</option>
+    </select>
 
-                        <div
-                            className="tmiv-tool-item"
-                            onClick={() =>
-                                command("underline")
-                            }
-                        >
-                            <u>U</u>
-                        </div>
+    <div className="tmiv-toolbar-separator" />
 
-                        <div className="tmiv-toolbar-separator" />
+    <select
+        className="tmiv-select"
+        onChange={e =>
+            command(
+                "formatBlock",
+                e.target.value
+            )
+        }
+    >
+        <option value="p">
+            Normal
+        </option>
 
-                        <div
-                            className="tmiv-tool-item fa fa-align-left"
-                            onClick={() =>
-                                command("justifyLeft")
-                            }
-                        />
+        <option value="h1">
+            H1
+        </option>
 
-                        <div
-                            className="tmiv-tool-item fa fa-align-center"
-                            onClick={() =>
-                                command("justifyCenter")
-                            }
-                        />
+        <option value="h2">
+            H2
+        </option>
 
-                        <div
-                            className="tmiv-tool-item fa fa-align-right"
-                            onClick={() =>
-                                command("justifyRight")
-                            }
-                        />
+        <option value="h3">
+            H3
+        </option>
 
-                        <div
-                            className="tmiv-tool-item"
-                            onClick={() =>
-                                command(
-                                    "insertUnorderedList"
-                                )
-                            }
-                        >
-                            •
-                        </div>
+        <option value="blockquote">
+            Quote
+        </option>
+    </select>
 
-                        <div
-                            className="tmiv-tool-item"
-                            onClick={() =>
-                                command(
-                                    "insertOrderedList"
-                                )
-                            }
-                        >
-                            1.
-                        </div>
+    <div className="tmiv-toolbar-separator" />
 
-                        <div className="tmiv-toolbar-separator" />
+    <div
+        className="tmiv-tool-item"
+        onClick={() => command("bold")}
+    >
+        <b>B</b>
+    </div>
 
-                        <div
-                            className="tmiv-tool-item"
-                            onClick={() => {
+    <div
+        className="tmiv-tool-item"
+        onClick={() => command("italic")}
+    >
+        <i>I</i>
+    </div>
 
-                                const url =
-                                    prompt("URL");
+    <div
+        className="tmiv-tool-item"
+        onClick={() => command("underline")}
+    >
+        <u>U</u>
+    </div>
 
-                                if (url) {
-                                    command(
-                                        "createLink",
-                                        url
-                                    );
-                                }
+    <div
+        className="tmiv-tool-item"
+        onClick={() => command("strikeThrough")}
+    >
+        <s>S</s>
+    </div>
 
-                            }}
-                        >
-                            🔗
-                        </div>
+    <div
+        className="tmiv-tool-item"
+        onClick={() => command("superscript")}
+    >
+        x²
+    </div>
 
-                    </div>
+    <div
+        className="tmiv-tool-item"
+        onClick={() => command("subscript")}
+    >
+        x₂
+    </div>
+
+    <div className="tmiv-toolbar-separator" />
+
+    <input
+        type="color"
+        title="Text Color"
+        onChange={e =>
+            command(
+                "foreColor",
+                e.target.value
+            )
+        }
+    />
+
+    <input
+        type="color"
+        title="Background Color"
+        onChange={e =>
+            command(
+                "hiliteColor",
+                e.target.value
+            )
+        }
+    />
+
+    <div className="tmiv-toolbar-separator" />
+
+    <div
+        className="tmiv-tool-item fa fa-align-left"
+        onClick={() => command("justifyLeft")}
+    />
+
+    <div
+        className="tmiv-tool-item fa fa-align-center"
+        onClick={() => command("justifyCenter")}
+    />
+
+    <div
+        className="tmiv-tool-item fa fa-align-right"
+        onClick={() => command("justifyRight")}
+    />
+
+    <div
+        className="tmiv-tool-item"
+        onClick={() => command("justifyFull")}
+    >
+        J
+    </div>
+
+    <div className="tmiv-toolbar-separator" />
+
+    <div
+        className="tmiv-tool-item"
+        onClick={() =>
+            command("insertUnorderedList")
+        }
+    >
+        •
+    </div>
+
+    <div
+        className="tmiv-tool-item"
+        onClick={() =>
+            command("insertOrderedList")
+        }
+    >
+        1.
+    </div>
+
+    <div
+        className="tmiv-tool-item"
+        onClick={() =>
+            command("indent")
+        }
+    >
+        ⇥
+    </div>
+
+    <div
+        className="tmiv-tool-item"
+        onClick={() =>
+            command("outdent")
+        }
+    >
+        ⇤
+    </div>
+
+    <div className="tmiv-toolbar-separator" />
+
+    <div
+        className="tmiv-tool-item"
+        onClick={() => {
+            const url = prompt("URL");
+
+            if (url) {
+                command(
+                    "createLink",
+                    url
+                );
+            }
+        }}
+    >
+        🔗
+    </div>
+
+    <div
+        className="tmiv-tool-item"
+        onClick={() => {
+            const url =
+                prompt("Image URL");
+
+            if (url) {
+                command(
+                    "insertImage",
+                    url
+                );
+            }
+        }}
+    >
+        🖼️
+    </div>
+
+    <div
+        className="tmiv-tool-item"
+        onClick={() => {
+
+            document.execCommand(
+                "insertHTML",
+                false,
+                `
+                <table border="1" style="border-collapse:collapse;width:100%">
+                    <tr>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                    </tr>
+                </table>
+                `
+            );
+
+            change();
+        }}
+    >
+        ⊞
+    </div>
+
+    <div className="tmiv-toolbar-separator" />
+
+    <div
+        className="tmiv-tool-item"
+        onClick={() => {
+
+            const text =
+                window
+                    .getSelection()
+                    ?.toString() || "";
+
+            document.execCommand(
+                "insertHTML",
+                false,
+                `<pre><code>${text}</code></pre>`
+            );
+
+            change();
+        }}
+    >
+        {"</>"}
+    </div>
+
+    <div
+        className="tmiv-tool-item"
+        onClick={() =>
+            command(
+                "insertHorizontalRule"
+            )
+        }
+    >
+        ─
+    </div>
+
+    <div className="tmiv-toolbar-separator" />
+
+    <div
+        className="tmiv-tool-item"
+        onClick={() =>
+            command("removeFormat")
+        }
+    >
+        Tx
+    </div>
+
+</div>
 
                     <div
-                        ref={editorRef}
+                    
+                    ref={editorRef}
                         contentEditable
                         suppressContentEditableWarning
+                        dangerouslySetInnerHTML={{
+                            __html: value
+                        }}
                         onInput={update}
                         className="tmiv-html-content"
                         style={{
                             minHeight: height
                         }}
+
                     />
                 </div>
 
