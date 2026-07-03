@@ -1,37 +1,43 @@
 import React, {
     useRef,
-    useState,
-    useEffect
+    useEffect,
+    forwardRef,
+    useImperativeHandle
 } from "react";
-import { createRoot } from "react-dom/client";
 
-function HtmlEditor({
+const HtmlEditor = forwardRef(({
     value = "",
     height = 300,
     onChange
-}) {
+}, ref) => {
 
-const editorRef = useRef();
+    const editorRef = useRef();
 
+    useEffect(() => {
 
-    const [html,setHtml] =
-        useState(value);
+        if (!editorRef.current) return;
 
+        const html = value ?? "";
 
+        if (editorRef.current.innerHTML !== html) {
+            editorRef.current.innerHTML = html;
+        }
 
-    useEffect(()=>{
+    }, [value]);
 
-        setHtml(value);
+    const update = () => {
 
-    },[value]);
+        if (!editorRef.current) return;
 
+        const result =
+            editorRef.current.innerHTML;
 
+        onChange?.(result);
+    };
 
-    const command=(cmd,param=null)=>{
+    const command = (cmd, param = null) => {
 
-
-        editorRef.current.focus();
-
+        editorRef.current?.focus();
 
         document.execCommand(
             cmd,
@@ -39,311 +45,459 @@ const editorRef = useRef();
             param
         );
 
-
         update();
-
-
     };
 
+    useImperativeHandle(ref, () => ({
 
+        option(name, value) {
 
-    const update=()=>{
+            switch (name) {
 
+                case "value":
 
-        let result =
-            editorRef.current.innerHTML;
+                    if (editorRef.current) {
 
+                        editorRef.current.innerHTML =
+                            value ?? "";
 
-        setHtml(result);
+                        onChange?.(
+                            value ?? ""
+                        );
+                    }
 
+                    break;
 
-        onChange?.(result);
+                default:
+                    break;
+            }
+        },
 
-    };
+        value() {
+            return (
+                editorRef.current?.innerHTML ||
+                ""
+            );
+        }
 
-
-    const change = () => {
-
-        let html = editorRef.current.innerHTML;
-
-        onChange?.(html);
-    };
-
+    }));
 
     return (
-<div className="jira-comment-box">
-<div className="jira-comment-editor-wrap">
+        <div className="jira-comment-box">
+            <div className="jira-comment-editor-wrap">
 
+                <div className="tmiv-html-editor">
 
-        <div className="tmiv-html-editor">
+                    <div className="tmiv-html-toolbar">
 
-<div className="tmiv-html-toolbar">
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() => command("undo")}
+                        >
+                            ↶
+                        </div>
 
-    <div
-        className="tmiv-tool-item"
-        onClick={()=>command("undo")}
-    >
-        ↶
-    </div>
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() => command("redo")}
+                        >
+                            ↷
+                        </div>
 
+                        <div className="tmiv-toolbar-separator" />
 
-    <div
-        className="tmiv-tool-item"
-        onClick={()=>command("redo")}
-    >
-        ↷
-    </div>
+                        <select
+                            className="tmiv-select"
+                            onChange={e =>
+                                command(
+                                    "formatBlock",
+                                    e.target.value
+                                )
+                            }
+                        >
+                            <option value="p">
+                                Normal
+                            </option>
 
+                            <option value="h1">
+                                Heading 1
+                            </option>
 
-    <div className="tmiv-toolbar-separator"/>
+                            <option value="h2">
+                                Heading 2
+                            </option>
+                        </select>
 
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() =>
+                                command("bold")
+                            }
+                        >
+                            <b>B</b>
+                        </div>
 
-    <select
-        className="tmiv-select"
-        onChange={
-            e=>command(
-                "formatBlock",
-                e.target.value
-            )
-        }
-    >
-        <option value="p">
-            Normal
-        </option>
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() =>
+                                command("italic")
+                            }
+                        >
+                            <i>I</i>
+                        </div>
 
-        <option value="h1">
-            Heading 1
-        </option>
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() =>
+                                command("underline")
+                            }
+                        >
+                            <u>U</u>
+                        </div>
 
-        <option value="h2">
-            Heading 2
-        </option>
+                        <div className="tmiv-toolbar-separator" />
 
-    </select>
+                        <div
+                            className="tmiv-tool-item fa fa-align-left"
+                            onClick={() =>
+                                command("justifyLeft")
+                            }
+                        />
 
+                        <div
+                            className="tmiv-tool-item fa fa-align-center"
+                            onClick={() =>
+                                command("justifyCenter")
+                            }
+                        />
 
+                        <div
+                            className="tmiv-tool-item fa fa-align-right"
+                            onClick={() =>
+                                command("justifyRight")
+                            }
+                        />
 
-    <div
-        className="tmiv-tool-item"
-        onClick={()=>command("bold")}
-    >
-        <b>B</b>
-    </div>
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() =>
+                                command(
+                                    "insertUnorderedList"
+                                )
+                            }
+                        >
+                            •
+                        </div>
 
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() =>
+                                command(
+                                    "insertOrderedList"
+                                )
+                            }
+                        >
+                            1.
+                        </div>
 
-    <div
-        className="tmiv-tool-item"
-        onClick={()=>command("italic")}
-    >
-        <i>I</i>
-    </div>
+                        <div className="tmiv-toolbar-separator" />
 
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() => {
 
-    <div
-        className="tmiv-tool-item"
-        onClick={()=>command("underline")}
-    >
-        <u>U</u>
-    </div>
+                                const url =
+                                    prompt("URL");
 
+                                if (url) {
+                                    command(
+                                        "createLink",
+                                        url
+                                    );
+                                }
 
+                            }}
+                        >
+                            🔗
+                        </div>
 
-    <div className="tmiv-toolbar-separator"/>
+                    </div>
 
+                    <div
+                        ref={editorRef}
+                        contentEditable
+                        suppressContentEditableWarning
+                        onInput={update}
+                        className="tmiv-html-content"
+                        style={{
+                            minHeight: height
+                        }}
+                    />
+                </div>
 
-
-    <div
-        className="tmiv-tool-item fa fa-align-left"
-        onClick={()=>command("justifyLeft")}
-    >
-        
-    </div>
-
-
-    <div
-        className="tmiv-tool-item fa fa-align-center"
-        onClick={()=>command("justifyCenter")}
-    >
-        
-    </div>
-
-
-    <div
-        className="tmiv-tool-item fa fa-align-right"
-        onClick={()=>command("justifyRight")}
-    >
-        
-    </div>
-
-
-    <div
-        className="tmiv-tool-item"
-        onClick={()=>
-            command("insertUnorderedList")
-        }
-    >
-        •
-    </div>
-
-
-    <div
-        className="tmiv-tool-item"
-        onClick={()=>
-            command("insertOrderedList")
-        }
-    >
-        1.
-    </div>
-
-
-
-    <div className="tmiv-toolbar-separator"/>
-
-
-    <div
-        className="tmiv-tool-item"
-        onClick={()=>{
-            let url=prompt("URL");
-
-            if(url)
-                command(
-                    "createLink",
-                    url
-                );
-        }}
-    >
-        🔗
-    </div>
-
-</div>
-
-
-
-
-
-            <div 
-
-                ref={editorRef}
-
-                contentEditable
-
-                suppressContentEditableWarning
-
-
-                dangerouslySetInnerHTML={{
-                    __html:value
-                }}
-
-
-                onInput={change}
-
-
-                className="tmiv-html-content"
-
-
-                style={{
-                    minHeight: "150px"
-                }}
-
-            />
-
+            </div>
         </div>
-</div>
-</div>
     );
+});
 
-}
-
-
-// register(
-//     "HtmlEditor",
-//     HtmlEditor
-// );
-// const roots = new WeakMap();
+export default HtmlEditor;
 
 
-// window.TMIVCom = {
+// import React, {
+//     useRef,
+//     useState,
+//     useEffect
+// } from "react";
+// import { createRoot } from "react-dom/client";
+
+// function HtmlEditor({
+//     value = "",
+//     height = 300,
+//     onChange
+// }) {
+
+// const editorRef = useRef();
 
 
-//     HtmlEditor(selector, options={}) {
-
-
-//         const el =
-//             document.querySelector(selector);
-
-
-
-//         if(!el)
-
-//             throw new Error(
-//                 `TMIVCom HtmlEditor target not found: ${selector}`
-//             );
+//     const [html,setHtml] =
+//         useState(value);
 
 
 
-//         let root =
-//             roots.get(el);
+//     useEffect(()=>{
+
+//         setHtml(value);
+
+//     },[value]);
 
 
 
-//         if(!root){
-
-//             root = createRoot(el);
-
-//             roots.set(
-//                 el,
-//                 root
-//             );
-
-//         }
+//     const command=(cmd,param=null)=>{
 
 
+//         editorRef.current.focus();
 
-//         root.render(
 
-//             <HtmlEditor
-//                 {...options}
-//             />
-
+//         document.execCommand(
+//             cmd,
+//             false,
+//             param
 //         );
 
 
-
-//         return {
-
-
-//             setValue(value){
+//         update();
 
 
-//                 root.render(
+//     };
 
-//                     <HtmlEditor
 
-//                         {...options}
 
-//                         value={value}
+//     const update=()=>{
 
-//                     />
 
+//         let result =
+//             editorRef.current.innerHTML;
+
+
+//         setHtml(result);
+
+
+//         onChange?.(result);
+
+//     };
+
+
+//     const change = () => {
+
+//         let html = editorRef.current.innerHTML;
+
+//         onChange?.(html);
+//     };
+
+
+//     return (
+// <div className="jira-comment-box">
+// <div className="jira-comment-editor-wrap">
+
+
+//         <div className="tmiv-html-editor">
+
+// <div className="tmiv-html-toolbar">
+
+//     <div
+//         className="tmiv-tool-item"
+//         onClick={()=>command("undo")}
+//     >
+//         ↶
+//     </div>
+
+
+//     <div
+//         className="tmiv-tool-item"
+//         onClick={()=>command("redo")}
+//     >
+//         ↷
+//     </div>
+
+
+//     <div className="tmiv-toolbar-separator"/>
+
+
+//     <select
+//         className="tmiv-select"
+//         onChange={
+//             e=>command(
+//                 "formatBlock",
+//                 e.target.value
+//             )
+//         }
+//     >
+//         <option value="p">
+//             Normal
+//         </option>
+
+//         <option value="h1">
+//             Heading 1
+//         </option>
+
+//         <option value="h2">
+//             Heading 2
+//         </option>
+
+//     </select>
+
+
+
+//     <div
+//         className="tmiv-tool-item"
+//         onClick={()=>command("bold")}
+//     >
+//         <b>B</b>
+//     </div>
+
+
+//     <div
+//         className="tmiv-tool-item"
+//         onClick={()=>command("italic")}
+//     >
+//         <i>I</i>
+//     </div>
+
+
+//     <div
+//         className="tmiv-tool-item"
+//         onClick={()=>command("underline")}
+//     >
+//         <u>U</u>
+//     </div>
+
+
+
+//     <div className="tmiv-toolbar-separator"/>
+
+
+
+//     <div
+//         className="tmiv-tool-item fa fa-align-left"
+//         onClick={()=>command("justifyLeft")}
+//     >
+        
+//     </div>
+
+
+//     <div
+//         className="tmiv-tool-item fa fa-align-center"
+//         onClick={()=>command("justifyCenter")}
+//     >
+        
+//     </div>
+
+
+//     <div
+//         className="tmiv-tool-item fa fa-align-right"
+//         onClick={()=>command("justifyRight")}
+//     >
+        
+//     </div>
+
+
+//     <div
+//         className="tmiv-tool-item"
+//         onClick={()=>
+//             command("insertUnorderedList")
+//         }
+//     >
+//         •
+//     </div>
+
+
+//     <div
+//         className="tmiv-tool-item"
+//         onClick={()=>
+//             command("insertOrderedList")
+//         }
+//     >
+//         1.
+//     </div>
+
+
+
+//     <div className="tmiv-toolbar-separator"/>
+
+
+//     <div
+//         className="tmiv-tool-item"
+//         onClick={()=>{
+//             let url=prompt("URL");
+
+//             if(url)
+//                 command(
+//                     "createLink",
+//                     url
 //                 );
+//         }}
+//     >
+//         🔗
+//     </div>
 
-//             },
-
-
-//             destroy(){
-
-//                 root.unmount();
-
-//                 roots.delete(el);
-
-//             }
+// </div>
 
 
-//         };
-
-//     }
 
 
-// };
 
-export default HtmlEditor;  
+//             <div 
+
+//                 ref={editorRef}
+
+//                 contentEditable
+
+//                 suppressContentEditableWarning
+
+
+//                 dangerouslySetInnerHTML={{
+//                     __html:value
+//                 }}
+
+
+//                 onInput={change}
+
+
+//                 className="tmiv-html-content"
+
+
+//                 style={{
+//                     minHeight: "150px"
+//                 }}
+
+//             />
+
+//         </div>
+// </div>
+// </div>
+//     );
+
+// }
+
+// export default HtmlEditor;  
+
