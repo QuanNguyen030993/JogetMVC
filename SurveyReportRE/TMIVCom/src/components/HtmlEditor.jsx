@@ -2,8 +2,11 @@ import React, {
     useRef,
     useEffect,
     forwardRef,
-    useImperativeHandle
+    useImperativeHandle,
+    useState
 } from "react";
+
+import Cropper from "cropperjs";
 
 const HtmlEditor = forwardRef(({
     value = "",
@@ -12,6 +15,52 @@ const HtmlEditor = forwardRef(({
 }, ref) => {
 
     const editorRef = useRef();
+
+    const [html,setHtml] =
+        useState(value);
+
+    const [showCropper, setShowCropper] =
+    useState(false);
+
+const [imageSrc, setImageSrc] =
+    useState("");
+
+const selectedImageRef =
+    useRef(null);
+
+
+const [selectedImage, setSelectedImage] =
+    useState(null);
+
+const [imageRect, setImageRect] =
+    useState(null);
+
+const resizeState =
+    useRef(null);
+
+
+const change = () => {
+
+    const html =
+        editorRef.current.innerHTML;
+
+    setHtml(html);
+
+    onChange?.(html);
+};
+
+const cropImageRef =
+    useRef(null);
+
+const cropperRef =
+    useRef(null);
+
+    // const resizeState = useRef({
+    //     active: false,
+    //     startX: 0,
+    //     startWidth: 0,
+    //     startHeight: 0
+    // });
 
     useEffect(() => {
 
@@ -47,7 +96,435 @@ const HtmlEditor = forwardRef(({
 
         update();
     };
+//     const startResize = (e, img) => {
 
+//     const startX = e.clientX;
+//     const startWidth = img.offsetWidth;
+
+//     const move = (ev) => {
+
+//         const width =
+//             startWidth +
+//             (ev.clientX - startX);
+
+//         img.style.width =
+//             width + "px";
+
+//         sizeLabel.innerText =
+//             `${Math.round(width)}px`;
+//     };
+
+//     const up = () => {
+
+//         document.removeEventListener(
+//             "mousemove",
+//             move
+//         );
+
+//         document.removeEventListener(
+//             "mouseup",
+//             up
+//         );
+
+//         change();
+//     };
+
+//     document.addEventListener(
+//         "mousemove",
+//         move
+//     );
+
+//     document.addEventListener(
+//         "mouseup",
+//         up
+//     );
+// };
+const startResize = e => {
+
+    e.preventDefault();
+
+    resizeState.current = {
+
+        startX:
+            e.clientX,
+
+        startWidth:
+            imageRect.width,
+
+        startHeight:
+            imageRect.height
+    };
+};
+useEffect(() => {
+
+    const editor =
+        editorRef.current;
+
+    const click = e => {
+
+        if (
+            e.target.tagName === "IMG"
+        ) {
+
+            const rect =
+                e.target.getBoundingClientRect();
+
+            setSelectedImage(
+                e.target
+            );
+
+            setImageRect({
+                left: rect.left,
+                top: rect.top,
+                width: rect.width,
+                height: rect.height
+            });
+        }
+        else {
+
+            setSelectedImage(null);
+
+        }
+
+    };
+
+    editor.addEventListener(
+        "click",
+        click
+    );
+
+    return () =>
+        editor.removeEventListener(
+            "click",
+            click
+        );
+
+}, []);
+useEffect(() => {
+
+    if (
+        !showCropper ||
+        !cropImageRef.current
+    )
+        return;
+
+    cropperRef.current =
+        new Cropper(
+            cropImageRef.current,
+            {
+                viewMode: 1,
+                autoCropArea: 1,
+                responsive: true,
+                movable: true,
+                zoomable: true,
+                rotatable: true,
+                scalable: true
+            }
+        );
+
+    return () => {
+
+        cropperRef.current?.destroy();
+
+        cropperRef.current = null;
+    };
+
+}, [showCropper]);
+// useEffect(() => {
+
+//     const move = (e) => {
+
+//         if (!resizeState.current.active)
+//             return;
+
+//         const deltaX =
+//             e.clientX -
+//             resizeState.current.startX;
+
+//         const width =
+//             Math.max(
+//                 50,
+//                 resizeState.current.startWidth +
+//                 deltaX
+//             );
+
+//         const ratio =
+//             resizeState.current.startHeight /
+//             resizeState.current.startWidth;
+
+//         const height =
+//             Math.round(width * ratio);
+
+//         const img =
+//             selectedImage?.element;
+
+//         if (!img)
+//             return;
+
+//         img.style.width =
+//             width + "px";
+
+//         img.style.height =
+//             height + "px";
+
+//         const rect =
+//             img.getBoundingClientRect();
+
+//         setSelectedImage({
+//             element: img,
+//             width,
+//             height,
+//             x:
+//                 rect.left +
+//                 window.scrollX,
+//             y:
+//                 rect.top +
+//                 window.scrollY
+//         });
+//     };
+
+//     const up = () => {
+
+//         if (
+//             resizeState.current.active
+//         ) {
+
+//             resizeState.current.active =
+//                 false;
+
+//             change();
+//         }
+//     };
+
+//     document.addEventListener(
+//         "mousemove",
+//         move
+//     );
+
+//     document.addEventListener(
+//         "mouseup",
+//         up
+//     );
+
+//     return () => {
+
+//         document.removeEventListener(
+//             "mousemove",
+//             move
+//         );
+
+//         document.removeEventListener(
+//             "mouseup",
+//             up
+//         );
+
+//     };
+
+// }, [selectedImage]);
+
+useEffect(() => {
+
+    const move = e => {
+
+        if (
+            !resizeState.current ||
+            !selectedImage
+        )
+            return;
+
+        const deltaX =
+            e.clientX -
+            resizeState.current.startX;
+
+        const width =
+            resizeState.current
+                .startWidth +
+            deltaX;
+
+        const ratio =
+            resizeState.current
+                .startHeight /
+            resizeState.current
+                .startWidth;
+
+        const height =
+            width * ratio;
+
+        selectedImage.style.width =
+            width + "px";
+
+        selectedImage.style.height =
+            height + "px";
+
+        const rect =
+            selectedImage
+                .getBoundingClientRect();
+
+        setImageRect({
+            left: rect.left,
+            top: rect.top,
+            width: rect.width,
+            height: rect.height
+        });
+    };
+
+    const up = () => {
+
+        resizeState.current =
+            null;
+
+        change();
+    };
+
+    document.addEventListener(
+        "mousemove",
+        move
+    );
+
+    document.addEventListener(
+        "mouseup",
+        up
+    );
+
+    return () => {
+
+        document.removeEventListener(
+            "mousemove",
+            move
+        );
+
+        document.removeEventListener(
+            "mouseup",
+            up
+        );
+
+    };
+
+}, [selectedImage]);
+
+const rotateLeft = () => {
+
+    cropperRef.current?.rotate(
+        -90
+    );
+
+};
+
+const rotateRight = () => {
+
+    cropperRef.current?.rotate(
+        90
+    );
+
+};
+
+const zoomIn = () => {
+
+    cropperRef.current?.zoom(
+        0.1
+    );
+
+};
+
+const zoomOut = () => {
+
+    cropperRef.current?.zoom(
+        -0.1
+    );
+
+};
+const applyCrop = () => {
+
+    if (
+        !cropperRef.current
+    )
+        return;
+
+    const canvas =
+        cropperRef.current
+            .getCroppedCanvas();
+
+    const base64 =
+        canvas.toDataURL(
+            "image/png"
+        );
+
+    if (
+        selectedImageRef.current
+    ) {
+
+        selectedImageRef.current.src =
+            base64;
+
+    }
+
+    change();
+
+    setShowCropper(false);
+};
+
+const cancelCrop = () => {
+
+    setShowCropper(false);
+
+};
+useEffect(() => {
+
+    const editor = editorRef.current;
+
+    if (!editor) return;
+
+    const handleClick = (e) => {
+
+        editor
+            .querySelectorAll("img")
+            .forEach(img =>
+                img.classList.remove(
+                    "tmiv-selected-image"
+                )
+            );
+
+        if (e.target.tagName === "IMG") {
+
+            const img = e.target;
+
+            img.classList.add(
+                "tmiv-selected-image"
+            );
+
+            const rect =
+                img.getBoundingClientRect();
+
+if (
+    !resizeState.current ||
+    !selectedImage
+)
+    return;
+
+selectedImage.style.width =
+    width + "px";
+
+selectedImage.style.height =
+    height + "px";
+
+        }
+        else {
+            setSelectedImage(null);
+        }
+    };
+
+    editor.addEventListener(
+        "click",
+        handleClick
+    );
+
+    return () =>
+        editor.removeEventListener(
+            "click",
+            handleClick
+        );
+
+}, []);
     useImperativeHandle(ref, () => ({
 
         option(name, value) {
@@ -333,22 +810,33 @@ const HtmlEditor = forwardRef(({
         🔗
     </div>
 
-    <div
-        className="tmiv-tool-item"
-        onClick={() => {
-            const url =
-                prompt("Image URL");
+   
+        <div
+            className="tmiv-tool-item"
+            onClick={() => {
 
-            if (url) {
-                command(
-                    "insertImage",
-                    url
+                const url =
+                    prompt("Image URL");
+
+                if (!url) return;
+
+                document.execCommand(
+                    "insertHTML",
+                    false,
+                    `<img
+                        src="${url}"
+                        style="
+                            max-width:100%;
+                            height:auto;
+                        "
+                    />`
                 );
-            }
-        }}
-    >
-        🖼️
-    </div>
+
+                change();
+            }}
+        >
+            🖼️
+        </div>
 
     <div
         className="tmiv-tool-item"
@@ -448,6 +936,118 @@ const HtmlEditor = forwardRef(({
                     />
                 </div>
 
+                   {
+    selectedImage &&
+    imageRect && (
+
+        <div
+            className="tmiv-image-overlay"
+            style={{
+                left: imageRect.left,
+                top: imageRect.top,
+                width: imageRect.width,
+                height: imageRect.height
+            }}
+        >
+
+            <div
+                className="resize-br"
+                onMouseDown={
+                    startResize
+                }
+            />
+
+            <div className="size-label">
+                {Math.round(
+                    imageRect.width
+                )}
+                ×
+                {Math.round(
+                    imageRect.height
+                )}
+            </div>
+
+        </div>
+
+    )
+}
+{
+    showCropper && (
+
+        <div
+            className="tmiv-cropper-overlay"
+        >
+
+            <div
+                className="tmiv-cropper-dialog"
+            >
+
+                <div
+                    className="tmiv-cropper-toolbar"
+                >
+
+                    <button
+                        onClick={
+                            rotateLeft
+                        }
+                    >
+                        ↺
+                    </button>
+
+                    <button
+                        onClick={
+                            rotateRight
+                        }
+                    >
+                        ↻
+                    </button>
+
+                    <button
+                        onClick={
+                            zoomIn
+                        }
+                    >
+                        +
+                    </button>
+
+                    <button
+                        onClick={
+                            zoomOut
+                        }
+                    >
+                        -
+                    </button>
+
+                    <button
+                        onClick={
+                            applyCrop
+                        }
+                    >
+                        Apply
+                    </button>
+
+                    <button
+                        onClick={
+                            cancelCrop
+                        }
+                    >
+                        Close
+                    </button>
+
+                </div>
+
+                <img
+                    ref={cropImageRef}
+                    src={imageSrc}
+                    alt=""
+                />
+
+            </div>
+
+        </div>
+
+    )
+}
             </div>
         </div>
     );
