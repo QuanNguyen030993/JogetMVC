@@ -62,17 +62,21 @@ const cropperRef =
     //     startHeight: 0
     // });
 
+   
     useEffect(() => {
 
-        if (!editorRef.current) return;
+    if (!editorRef.current)
+        return;
 
-        const html = value ?? "";
+    if (
+        document.activeElement !==
+        editorRef.current
+    ) {
 
-        if (editorRef.current.innerHTML !== html) {
-            editorRef.current.innerHTML = html;
-        }
+        editorRef.current.innerHTML =
+            value ?? "";
+    }});
 
-    }, [value]);
 
     const update = () => {
 
@@ -96,49 +100,21 @@ const cropperRef =
 
         update();
     };
-//     const startResize = (e, img) => {
 
-//     const startX = e.clientX;
-//     const startWidth = img.offsetWidth;
+    const startResizeTop = (e) => {
 
-//     const move = (ev) => {
+    e.preventDefault();
+    e.stopPropagation();
 
-//         const width =
-//             startWidth +
-//             (ev.clientX - startX);
+    const img =
+        selectedImageRef.current;
 
-//         img.style.width =
-//             width + "px";
-
-//         sizeLabel.innerText =
-//             `${Math.round(width)}px`;
-//     };
-
-//     const up = () => {
-
-//         document.removeEventListener(
-//             "mousemove",
-//             move
-//         );
-
-//         document.removeEventListener(
-//             "mouseup",
-//             up
-//         );
-
-//         change();
-//     };
-
-//     document.addEventListener(
-//         "mousemove",
-//         move
-//     );
-
-//     document.addEventListener(
-//         "mouseup",
-//         up
-//     );
-// };
+    resizeState.current = {
+        type: "top",
+        startY: e.clientY,
+        startHeight: img.offsetHeight
+    };
+};
 const startResize = e => {
 
     e.preventDefault();
@@ -147,7 +123,8 @@ const startResize = e => {
 
         startX:
             e.clientX,
-
+        startY:
+            e.clientY,
         startWidth:
             imageRect.width,
 
@@ -155,6 +132,46 @@ const startResize = e => {
             imageRect.height
     };
 };
+const startResizeHorizontal = (e) => {
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    resizeState.current = {
+        type: "horizontal",
+        startX: e.clientX,
+        startWidth: imageRect.width
+    };
+};
+
+const startResizeVertical = (e) => {
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const img = selectedImageRef.current;
+
+    resizeState.current = {
+        type: "vertical",
+        startY: e.clientY,
+        startHeight: img.offsetHeight,
+        startWidth: img.offsetWidth
+    };
+};
+const startResizeCorner = (e) => {
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    resizeState.current = {
+        type: "corner",
+        startX: e.clientX,
+        startY: e.clientY,
+        startWidth: imageRect.width,
+        startHeight: imageRect.height
+    };
+};
+
 useEffect(() => {
 
     const editor =
@@ -936,118 +953,8 @@ selectedImage.style.height =
                     />
                 </div>
 
-                   {
-    selectedImage &&
-    imageRect && (
+     
 
-        <div
-            className="tmiv-image-overlay"
-            style={{
-                left: imageRect.left,
-                top: imageRect.top,
-                width: imageRect.width,
-                height: imageRect.height
-            }}
-        >
-
-            <div
-                className="resize-br"
-                onMouseDown={
-                    startResize
-                }
-            />
-
-            <div className="size-label">
-                {Math.round(
-                    imageRect.width
-                )}
-                ×
-                {Math.round(
-                    imageRect.height
-                )}
-            </div>
-
-        </div>
-
-    )
-}
-{
-    showCropper && (
-
-        <div
-            className="tmiv-cropper-overlay"
-        >
-
-            <div
-                className="tmiv-cropper-dialog"
-            >
-
-                <div
-                    className="tmiv-cropper-toolbar"
-                >
-
-                    <button
-                        onClick={
-                            rotateLeft
-                        }
-                    >
-                        ↺
-                    </button>
-
-                    <button
-                        onClick={
-                            rotateRight
-                        }
-                    >
-                        ↻
-                    </button>
-
-                    <button
-                        onClick={
-                            zoomIn
-                        }
-                    >
-                        +
-                    </button>
-
-                    <button
-                        onClick={
-                            zoomOut
-                        }
-                    >
-                        -
-                    </button>
-
-                    <button
-                        onClick={
-                            applyCrop
-                        }
-                    >
-                        Apply
-                    </button>
-
-                    <button
-                        onClick={
-                            cancelCrop
-                        }
-                    >
-                        Close
-                    </button>
-
-                </div>
-
-                <img
-                    ref={cropImageRef}
-                    src={imageSrc}
-                    alt=""
-                />
-
-            </div>
-
-        </div>
-
-    )
-}
             </div>
         </div>
     );
