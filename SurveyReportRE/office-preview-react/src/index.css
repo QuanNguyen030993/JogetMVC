@@ -33,13 +33,25 @@ body {
   align-items: center;
 }
 
-button {
+button, .download-btn {
   border: 0;
   border-radius: 999px;
-  padding: 10px 16px;
+  padding: 10px 18px;
   background: #2563eb;
   color: white;
   cursor: pointer;
+  font-weight: 500;
+  text-decoration: none;
+  font-size: 14px;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+button:hover, .download-btn:hover {
+  background: #1d4ed8;
+}
+
+button:active, .download-btn:active {
+  transform: scale(0.98);
 }
 
 button:disabled {
@@ -58,3 +70,163 @@ button:disabled {
   border: 1px solid #d1d5db;
   border-radius: 12px;
 }
+
+/* Local Preview Component Styling */
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+
+.preview-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #1e293b;
+  word-break: break-all;
+}
+
+.preview-body {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 20px;
+  min-height: 400px;
+}
+
+/* Spinner & Loading */
+.spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  color: #4f46e5;
+  font-weight: 500;
+}
+
+.error-message {
+  padding: 16px;
+  background-color: #fef2f2;
+  border: 1px solid #fee2e2;
+  color: #b91c1c;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+/* Word Preview (.docx) Styling */
+.docx-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-height: 700px;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.docx-render-area {
+  width: 100%;
+  max-width: 850px;
+}
+
+/* Overriding default docx-preview styling for realistic pages */
+.docx-viewer {
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.docx-viewer section.docx {
+  background: white !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  margin: 0 auto 20px auto !important;
+  border-radius: 4px !important;
+  padding: 20mm 15mm 20mm 15mm !important; /* Standard Word margins */
+  border: 1px solid #e2e8f0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Excel Preview (.xlsx, .xls) Styling */
+.excel-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.sheet-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.sheet-tab {
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.sheet-tab:hover {
+  background: #e2e8f0;
+}
+
+.sheet-tab.active {
+  background: #4f46e5;
+  color: white;
+}
+
+.excel-render-wrapper {
+  width: 100%;
+  max-height: 600px;
+  overflow: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: white;
+}
+
+.excel-render-area table {
+  border-collapse: collapse;
+  width: max-content;
+  min-width: 100%;
+  font-size: 13px;
+  color: #334155;
+}
+
+.excel-render-area th, .excel-render-area td {
+  border: 1px solid #e2e8f0;
+  padding: 8px 12px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.excel-render-area tr:nth-child(even) {
+  background-color: #f8fafc;
+}
+
+.excel-render-area tr:hover {
+  background-color: #f1f5f9;
+}
+
+/* Unsupported Preview Style */
+.unsupported-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: #475569;
+}
+
+.unsupported-preview p {
+  margin: 8px 0;
+}
+

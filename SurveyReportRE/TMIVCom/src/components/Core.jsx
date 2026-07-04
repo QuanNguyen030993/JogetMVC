@@ -144,24 +144,41 @@ const $ = window.jQuery;
         });
     };
 
- $.fn.htmleditor = function(arg1,arg2){
+  $.fn.htmleditor = function(arg1,arg2,arg3){
         if (typeof arg1 === "string") {
             if (arg1 === "option") {
                 if (arg2 === "value") {
+                    if (arguments.length >= 3) {
+                        this.each(function(){
+                            const instance = roots.get(this);
+                            if (!instance) return;
+                            if (instance.ref?.current) {
+                                instance.ref.current.option("value", arg3);
+                            } else {
+                                instance.options.value = arg3;
+                                const Component = controls[instance.name];
+                                instance.root.render(
+                                    <Component ref={instance.ref} {...instance.options}/>
+                                );
+                            }
+                        });
+                        return this;
+                    }
+
                     // single element -> return scalar, multiple -> return array
                     if (this.length === 1) {
                         const el = this[0];
                         const instance = roots.get(el);
                         if (!instance) return null;
                         const editor = instance.ref?.current;
-                        return editor?.value?.() ?? null;
+                        return editor?.value?.() ?? instance.options.value ?? null;
                     }
 
                     return this.map(function(){
                         const instance = roots.get(this);
                         if (!instance) return null;
                         const editor = instance.ref?.current;
-                        return editor?.value?.() ?? null;
+                        return editor?.value?.() ?? instance.options.value ?? null;
                     }).get();
                 }
 
@@ -170,14 +187,81 @@ const $ = window.jQuery;
             }
         }
 
-        return this.each(function(){
-            mount(
-                this,
-                "HtmlEditor",
-                arg1
-            );
+        // Initialization: accept options object (or no args). For single element, return the
+        // React instance wrapper so callers can do `var control = $(el).htmleditor({...}); control.option("value");`
+        if (typeof arg1 === "object" || typeof arg1 === "undefined") {
+            if (this.length === 1) {
+                mount(this[0], "HtmlEditor", arg1 || {});
+                const el = this[0];
+                return {
+                    option(name, value) {
+                        const instance = roots.get(el);
+                        if (!instance) return;
+                        if (instance.ref?.current) {
+                            if (arguments.length === 1) {
+                                return instance.ref.current.option(name);
+                            }
+                            instance.ref.current.option(name, value);
+                        } else {
+                            if (arguments.length === 1) {
+                                return instance.options[name];
+                            }
+                            instance.options[name] = value;
+                            const Component = controls[instance.name];
+                            instance.root.render(
+                                <Component ref={instance.ref} {...instance.options}/>
+                            );
+                        }
+                    },
+                    value() {
+                        const instance = roots.get(el);
+                        if (!instance) return "";
+                        if (instance.ref?.current) {
+                            return instance.ref.current.value();
+                        }
+                        return instance.options.value ?? "";
+                    }
+                };
+            }
 
-        });
+            const instances = [];
+            this.each(function(){
+                mount(this, "HtmlEditor", arg1 || {});
+                const el = this;
+                instances.push({
+                    option(name, value) {
+                        const instance = roots.get(el);
+                        if (!instance) return;
+                        if (instance.ref?.current) {
+                            if (arguments.length === 1) {
+                                return instance.ref.current.option(name);
+                            }
+                            instance.ref.current.option(name, value);
+                        } else {
+                            if (arguments.length === 1) {
+                                return instance.options[name];
+                            }
+                            instance.options[name] = value;
+                            const Component = controls[instance.name];
+                            instance.root.render(
+                                <Component ref={instance.ref} {...instance.options}/>
+                            );
+                        }
+                    },
+                    value() {
+                        const instance = roots.get(el);
+                        if (!instance) return "";
+                        if (instance.ref?.current) {
+                            return instance.ref.current.value();
+                        }
+                        return instance.options.value ?? "";
+                    }
+                });
+            });
+            return instances;
+        }
+
+        return this;
     };
 
      $.fn.datagrid = function(options){

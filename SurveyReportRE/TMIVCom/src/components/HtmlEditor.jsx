@@ -15,7 +15,7 @@ const HtmlEditor = forwardRef(({
 }, ref) => {
 
     const editorRef = useRef();
-    const lastValueRef = useRef(value);
+    const lastValueRef = useRef(null);
     const isComposingRef = useRef(false);
 
     const [showCropper, setShowCropper] =
