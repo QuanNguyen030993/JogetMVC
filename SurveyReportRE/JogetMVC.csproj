@@ -84,6 +84,7 @@
 
 	<ItemGroup>
 	  <None Include="App.config" />
+	  <None Include="TMIVCom\.env" />
 	  <None Include="TMIVCom\move-to-wwwroot.js" />
 	  <None Include="TMIVCom\src\App.jsx" />
 	  <None Include="TMIVCom\src\components\CommentEditor.jsx" />
@@ -91,6 +92,7 @@
 	  <None Include="TMIVCom\src\components\CustomGrid.jsx" />
 	  <None Include="TMIVCom\src\components\Datebox.jsx" />
 	  <None Include="TMIVCom\src\components\HtmlEditor.jsx" />
+	  <None Include="TMIVCom\src\config.js" />
 	  <None Include="TMIVCom\src\index.jsx" />
 	  <None Include="TMIVCom\src\js\datebox.js" />
 	  <None Include="TMIVCom\src\main.jsx" />
