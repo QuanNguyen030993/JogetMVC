@@ -253,6 +253,77 @@ function Flow() {
         [workflowId, setEdges, setNodes],
     );
 
+    const saveWorkflow = useCallback(async () => {
+        const workflowDefinitionId = workflowId;
+        if (!workflowDefinitionId) {
+            setError('Please load or enter a workflow id first');
+            return;
+        }
+        setLoading(true);
+        setError(null);
+        try {
+            // Re-map nodes to database structure
+            const workflowNodes = nodes.map((node, index) => {
+                const idNum = parseInt(node.id.replace('node-', ''));
+                return {
+                    id: isNaN(idNum) ? node.id : idNum,
+                    nodeName: node.data.label,
+                    nodeCode: node.data.label,
+                    nodeType: node.data.nodeType || 'task',
+                    departmentName: node.data.departmentName || '',
+                    description: node.data.description || '',
+                    x: Math.round(node.position.x),
+                    y: Math.round(node.position.y)
+                };
+            });
+
+            // Re-map edges to database structure
+            const workflowTransitions = edges.map((edge, index) => {
+                const sourceNum = parseInt(edge.source.replace('node-', ''));
+                const targetNum = parseInt(edge.target.replace('node-', ''));
+                return {
+                    fromNodeId: isNaN(sourceNum) ? edge.source : sourceNum,
+                    toNodeId: isNaN(targetNum) ? edge.target : targetNum,
+                    actionName: edge.data?.actionName || edge.label || 'Transition',
+                    actionCode: edge.data?.actionCode || '',
+                    stepNo: parseInt(edge.data?.stepNo) || null,
+                    jumpStepNo: parseInt(edge.data?.jumpStepNo) || null,
+                    transitionType: edge.data?.transitionType || 'Normal',
+                    conditionJson: edge.data?.conditionJson || '{}',
+                    isExitTransition: edge.data?.isExitTransition === true,
+                    statusId: edge.data?.statusId || ''
+                };
+            });
+
+            const payload = {
+                workflowNodes,
+                workflowTransitions
+            };
+
+            const formData = new FormData();
+            formData.append("key", workflowDefinitionId);
+            formData.append("values", JSON.stringify({
+                workflowNodes: JSON.stringify(payload)
+            }));
+
+            const response = await fetch(`${API_BASE_URL}/api/WorkflowDefinition/UpdateData`, {
+                method: "PUT",
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`API error ${response.status}`);
+            }
+
+            alert("Lưu quy trình thành công! ✅");
+        } catch (saveError) {
+            setError(saveError.message || 'Failed to save workflow data');
+            alert("Lưu quy trình thất bại! ❌");
+        } finally {
+            setLoading(false);
+        }
+    }, [workflowId, nodes, edges]);
+
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const id = params.get('id');
@@ -590,6 +661,9 @@ function Flow() {
                                 />
                                 <button type="button" onClick={() => loadWorkflow()} disabled={loading}>
                                     {loading ? 'Loading…' : 'Load workflow'}
+                                </button>
+                                <button type="button" onClick={saveWorkflow} disabled={loading || !workflowId} style={{ background: '#10b981', color: 'white', marginLeft: '10px', padding: '8px 16px', borderRadius: '8px', fontWeight: '600' }}>
+                                    Lưu (Save)
                                 </button>
                             </div>
                         </Panel>

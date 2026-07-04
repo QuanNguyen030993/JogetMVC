@@ -11,6 +11,7 @@ import DataGridFieldDesigner from './components/DataGridFieldDesigner';
 import MenuDesigner from './components/MenuDesigner';
 import UserManagement from './components/UserManagement';
 import OverviewPanel from './components/OverviewPanel';
+import EnumDesign from './components/EnumDesign';
 import './styles/flow.css';
 import './styles/serilogs.css';
 import './styles/systable.css';
@@ -111,7 +112,8 @@ body:JSON.stringify("2")
     { id: 'serilog', label: 'Nhật ký hệ thống (Serilogs)' },
     { id: 'systable', label: 'Bảng hệ thống' } ,
     { id: 'datagridfielddesigner', label: 'Thiết kế trường DataGrid' },
-    { id: 'menudesigner', label: 'Thiết kế Menu' }
+    { id: 'menudesigner', label: 'Thiết kế Menu' },
+    { id: 'enum-design', label: 'Cấu hình danh mục Enum' }
   ];
 
   const systemStatus = useMemo(() => [
@@ -152,6 +154,8 @@ body:JSON.stringify("2")
         return <DataGridFieldDesigner />;
       case 'menudesigner':
         return <MenuDesigner />;
+      case 'enum-design':
+        return <EnumDesign />;
       default:
         return (
           <>

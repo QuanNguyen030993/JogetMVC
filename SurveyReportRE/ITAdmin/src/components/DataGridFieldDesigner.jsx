@@ -43,13 +43,13 @@ export default function DataGridFieldDesigner() {
     }
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/api/DataGridConfig/GetAll`);
+      const res = await fetch(`${API_BASE_URL}/api/DataGridConfig/GetAll?take=9999`);
       if (!res.ok) throw new Error("Load grid configs failed");
       const data = await res.json();
       
       // Filter columns belonging to the selected SysTable
       const filtered = (data || [])
-        .filter((c) => c.sysTableId === table.id || c.SysTableId === table.id)
+        .filter((c) => c.sysTableId == table.id || c.SysTableId == table.id)
         .map((c) => ({
           id: c.id,
           AllowGrouping: c.allowGrouping !== false,
