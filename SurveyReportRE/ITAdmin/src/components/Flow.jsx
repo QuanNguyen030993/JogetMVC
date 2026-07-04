@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { API_BASE_URL } from '../config';
 import {
     ReactFlow,
     Background,
@@ -225,7 +226,7 @@ function Flow() {
             setError(null);
 
             try {
-                const response = await fetch(`https://localhost:7254/api/WorkflowDefinition/GetSingle/${workflowDefinitionId}`);
+                const response = await fetch(`${API_BASE_URL}/api/WorkflowDefinition/GetSingle/${workflowDefinitionId}`);
                 if (!response.ok) {
                     throw new Error(`API error ${response.status}`);
                 }

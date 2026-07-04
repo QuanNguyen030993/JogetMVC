@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState,useMemo  } from 'react';
+import { API_BASE_URL } from './config';
 
 import ChartPanel from './components/ChartPanel';
 import MailTemplateDesigner from './components/MailTemplateDesigner';
@@ -8,6 +9,8 @@ import SerilogViewer from './components/SerilogViewer';
 import SysTable from './components/SysTable';
 import DataGridFieldDesigner from './components/DataGridFieldDesigner';
 import MenuDesigner from './components/MenuDesigner';
+import UserManagement from './components/UserManagement';
+import OverviewPanel from './components/OverviewPanel';
 import './styles/flow.css';
 import './styles/serilogs.css';
 import './styles/systable.css';
@@ -44,7 +47,7 @@ function App() {
    
 useEffect(()=>{
 
-fetch("https://localhost:7254/api/UsersSession/ExecuteCustomQuery",{
+fetch(`${API_BASE_URL}/api/UsersSession/ExecuteCustomQuery`,{
  method:"POST",
  headers:{
   "Content-Type":"application/json"
@@ -83,7 +86,7 @@ setLoginStats(result);
 
 
 
-fetch("https://localhost:7254/api/UsersSession/ExecuteCustomQuery",{
+fetch(`${API_BASE_URL}/api/UsersSession/ExecuteCustomQuery`,{
 method:"POST",
 headers:{
  "Content-Type":"application/json"
@@ -99,18 +102,42 @@ body:JSON.stringify("2")
 },[]);
   const [activeSection, setActiveSection] = useState('dashboard');
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard' },
-    { id: 'mail-template', label: 'Mail Template config' },
-    { id: 'mail-queue', label: 'Mail Queue' },
-    { id: 'flow', label: 'Flow' },
-    { id: 'serilog', label: 'Serilogs' },
-    { id: 'systable', label: 'System Tables' } ,
-    { id: 'datagridfielddesigner', label: 'DataGrid Field Designer' },
-    { id: 'menudesigner', label: 'Menu Designer' }
+    { id: 'dashboard', label: 'Bảng điều khiển (Dashboard)' },
+    { id: 'overview', label: 'Tổng quan hệ thống (Overview)' },
+    { id: 'users', label: 'Quản lý người dùng (Users)' },
+    { id: 'mail-template', label: 'Cấu hình mẫu Email' },
+    { id: 'mail-queue', label: 'Hàng đợi Email' },
+    { id: 'flow', label: 'Luồng quy trình (Flow)' },
+    { id: 'serilog', label: 'Nhật ký hệ thống (Serilogs)' },
+    { id: 'systable', label: 'Bảng hệ thống' } ,
+    { id: 'datagridfielddesigner', label: 'Thiết kế trường DataGrid' },
+    { id: 'menudesigner', label: 'Thiết kế Menu' }
   ];
+
+  const systemStatus = useMemo(() => [
+    { name: 'Cơ sở dữ liệu (Database)', value: 'Kết nối tốt', state: 'online' },
+    { name: 'Dịch vụ Email (Mail Service)', value: 'Hoạt động', state: 'online' },
+    { name: 'Liên kết LDAP', value: 'Hoạt động', state: 'online' }
+  ], []);
+
+  const alerts = useMemo(() => [
+    { title: 'Phát hiện đăng nhập bất thường từ IP 192.168.1.100', time: '10 phút trước' },
+    { title: 'Hàng đợi mail vượt quá 100 email chưa gửi', time: '30 phút trước' },
+    { title: 'Bộ nhớ đệm Redis sắp đầy', time: '1 giờ trước' }
+  ], []);
 
   const content = useMemo(() => {
     switch (activeSection) {
+      case 'overview':
+        return (
+          <OverviewPanel
+            cards={[userCount, { label: 'Dung lượng đĩa khả dụng', value: `${disk} GB`, detail: 'Trạng thái lưu trữ' }]}
+            systemStatus={systemStatus}
+            alerts={alerts}
+          />
+        );
+      case 'users':
+        return <UserManagement />;
       case 'mail-template':
         return <MailTemplateDesigner />;
       case 'mail-queue':
@@ -119,7 +146,7 @@ body:JSON.stringify("2")
         return <Flow />;
       case 'serilog':
         return <SerilogViewer />;
-          case 'systable':
+      case 'systable':
         return <SysTable />;
       case 'datagridfielddesigner':
         return <DataGridFieldDesigner />;

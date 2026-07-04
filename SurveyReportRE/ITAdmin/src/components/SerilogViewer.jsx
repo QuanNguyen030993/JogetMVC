@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from "react";
+import { API_BASE_URL } from "../config";
 
 
 export default function SerilogViewer(){
@@ -11,7 +12,7 @@ export default function SerilogViewer(){
     const loadLogs = async()=>{
 
         const res = await fetch(
-            "https://localhost:7254/api/CommentLog/GetSeriLog"
+            `${API_BASE_URL}/api/CommentLog/GetSeriLog`
         );
 
         const data = await res.json();

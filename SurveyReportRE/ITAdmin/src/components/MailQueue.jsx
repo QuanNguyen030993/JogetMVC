@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { API_BASE_URL } from "../config";
 
 
 const statusClassName = (status) => {
@@ -24,7 +25,7 @@ const loadData = async () => {
     setLoading(true);
 
     const response = await fetch(
-      "https://localhost:7254/api/MailQueue/GetAll"
+      `${API_BASE_URL}/api/MailQueue/GetAll`
     );
 
     if (!response.ok)

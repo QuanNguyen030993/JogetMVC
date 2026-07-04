@@ -44,8 +44,9 @@ const [comments, setComments] = useState(items || []);
     // const [comments, setComments] = useState(initialComments);
     
     // useEffect(() => {
+    //     const apiUrl = import.meta.env.VITE_API_URL || "https://localhost:7254";
     //     fetch(
-    //         "https://localhost:7254/api/SectionCommentNote/GetAll?refKey=d3ed59f0-b9bd-4a70-8cb0-c7c4daee50c8&refField=RecordGuid"
+    //         `${apiUrl}/api/SectionCommentNote/GetAll?refKey=d3ed59f0-b9bd-4a70-8cb0-c7c4daee50c8&refField=RecordGuid`
     //     )
     //         .then(r => r.json())
     //         .then(res => {
@@ -56,7 +57,7 @@ const [comments, setComments] = useState(items || []);
     //                 text: x.content,
     //                 time: x.createdDate
     //             }));
-    
+    // 
     //             setComments(mapped);
     //         })
     //         .catch(err => {
