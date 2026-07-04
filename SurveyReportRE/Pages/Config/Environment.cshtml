@@ -106,12 +106,13 @@
 
             onChange: function (html) {
 
-                console.log(html);
-
+                console.log($("#remarkEditor").htmleditor("option", "value"));
             }
 
         }
     );
+    
+    $("#remarkEditor").htmleditor("option", "value", "<p>Hello</p>");
 
     var comments = [
         {
@@ -138,6 +139,8 @@
             console.log("new comment", item, allItems);
         }
     });
+
+
         var surveyDataSource = {
 
             load: function(){

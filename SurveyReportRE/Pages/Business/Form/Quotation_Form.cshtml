@@ -204,7 +204,8 @@ Note:
                                                disabled: tatObject[item].AcceptDate ? false : true,
                                             text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
                                                 function (e) {
-                                                var content = remarkBoxs[item].controlRemark.instance.option("value");
+                                                // var content = remarkBoxs[item].controlRemark.instance.option("value");
+                                                var content = $(remarkBoxs[item].controlRemark[0]).htmleditor("option","value");
                                                     formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                                                     formItems.comment = content || "";
                                                     submitNextStep(`${formModuleKeyQt}`, state.nextStep, findRoute, formItems);

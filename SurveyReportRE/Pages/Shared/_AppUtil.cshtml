@@ -1747,7 +1747,22 @@
                 var $element = $(`#${window.QuotationIdManager.remarkBox(dept, id)}`);
                 if ($element.length > 0) {
                     $element.empty();
-                    createEditor(item, itemElement, $("<div>"), item);
+                    item.control = $element.htmleditor(
+                                {
+
+                                    // value:
+                                    //     "<p>Hello</p>",
+
+
+                                    // onChange: function (html) {
+
+                                    //     console.log(html);
+
+                                    // }
+
+                                }
+                            );
+                    // createEditor(item, itemElement, $("<div>"), item);
                     
                 }
                  return item.control;
