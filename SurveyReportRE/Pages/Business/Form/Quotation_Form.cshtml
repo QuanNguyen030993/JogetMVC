@@ -185,8 +185,8 @@ Note:
                                              disabled: false,
                                             text: findRouteReturn ? findRouteReturn.displayStatus : "", icon: "undo", type: "danger", onClick:
                                                 function (e) {
-                                                var content = remarkBoxs[item].controlRemark.instance.option("value");
-                                                 
+                                                // var content = remarkBoxs[item].controlRemark.instance.option("value");
+                                                 var content = $(remarkBoxs[item].controlRemark[0]).htmleditor("option","value");
                                                     formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                                                     formItems.comment = content || "";
                                                     returnToStep(`${formModuleKeyQt}`, state.nextStep, findRouteReturn, formItems);

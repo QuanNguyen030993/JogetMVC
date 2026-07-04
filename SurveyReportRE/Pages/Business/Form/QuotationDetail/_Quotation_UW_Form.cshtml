@@ -124,22 +124,23 @@
                                              elementAttr: {
                                                              id: declinedButtonId
                                              },
-                                             text: "Return",
+                                             text: "Decline",
                                              icon: "check",
                                              onClick: function (e) {
-                                                     var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-                                                 var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
-                                                     tatObject[dept].AcceptDate = formatDateToString(new Date()).gmt7;
-                                                 formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
-                                                 // var passingObject = new Object();
-                                                 // passingObject.statusName = `${dept} Process`; // base on Dept
-                                                 // passingObject.Comment = `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`;  // base on Dept
-                                                 // passingObject.formItems = formItems;
-                                                 //     passingObject.dept = dept;
-                                                 // passingObject.url = '/api/Quotation/UpdateData';
-                                                 // passingObject.urlLog = `/api/Quotation/LogAction`;
-                                                 // passingObject.schemeName = `Quotation`;
-                                                     // uwDecision(passingObject);
+                                                var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                                                var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
+                                                tatObject[dept].AcceptDate = formatDateToString(new Date()).gmt7;
+                                                formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+
+                                                var passingObject = new Object();
+                                                passingObject.statusName = `${dept} No Need To Refer`; // base on Dept
+                                                passingObject.Comment = `Quotation ${formItems.quotationCode} marked Declined by ${_displayName}!`;  // base on Dept
+                                                passingObject.formItems = formItems;
+                                                passingObject.dept = "@dept";
+                                                passingObject.url = '/api/Quotation/UWReferal';
+                                                passingObject.urlLog = `/api/Quotation/LogAction`;
+                                                passingObject.schemeName = `Quotation`;
+                                                uwDecision(passingObject);
                                              }
                                                 }).appendTo(itemElement);
 
