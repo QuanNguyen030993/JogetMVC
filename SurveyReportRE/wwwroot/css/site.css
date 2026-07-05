@@ -1,4 +1,4 @@
-﻿.dExForm {
+.dExForm {
     padding: 10px;
     margin-right: var(--collapsed-form-mr);
 }
@@ -1150,13 +1150,20 @@ aside {
 
 .dept-section {
     background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 12px;
-    margin-bottom: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,.04);
-    transition: box-shadow .12s ease, border-color .12s ease;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border-left: 6px solid #cbd5e1;
 }
+
+.dept-section[id*="sec_FO"] { border-left-color: #3b82f6; }
+.dept-section[id*="sec_TS"] { border-left-color: #10b981; }
+.dept-section[id*="sec_UW"] { border-left-color: #8b5cf6; }
+.dept-section[id*="sec_LMKT"] { border-left-color: #f97316; }
+.dept-section[id*="sec_PM"] { border-left-color: #06b6d4; }
 
     .dept-section.focused {
         border-color: rgba(37,99,235,.45);
@@ -1209,23 +1216,21 @@ aside {
 
 
 .dept-lowerbody {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
+    display: block;
+    margin-bottom: 15px;
 }
 
 
 
 .dept-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
+    display: block;
+    margin-bottom: 15px;
 }
 .dept-title {
-    font-weight: 900;
-    font-size: 13px;
+    font-weight: 800;
+    font-size: 18px;
+    color: #1e293b;
+    margin-bottom: 8px;
 }
 
 /*.dept-hint {
@@ -4641,4 +4646,62 @@ textarea {
 
 .outlined-tagbox .dx-tag {
     border-radius: 4px;
+}
+
+/* ==================== Premium Quotation Form Styling ==================== */
+.dept-body .dx-form-group {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    padding: 18px !important;
+    margin-bottom: 20px !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05) !important;
+}
+
+.dept-body .dx-form-group-caption {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: #2563eb !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 14px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+}
+
+.dept-body .dx-field-item-label-text {
+    font-weight: 600 !important;
+    color: #334155 !important;
+}
+
+/* Make custom dxForm caption items cleaner */
+.dept-body .dx-form-group-with-caption {
+    margin-top: 10px !important;
+}
+
+/* Make DevExtreme text area & text box borders soft and modern */
+.dept-body .dx-texteditor {
+    border-radius: 6px !important;
+    border-color: #cbd5e1 !important;
+}
+
+.dept-body .dx-texteditor.dx-state-focused {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
+}
+
+/* Beautiful Action Bar styling */
+.actionBarDept {
+    border-radius: 12px !important;
+    border: 1px solid rgba(226, 232, 240, 0.8) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+    padding: 16px 20px !important;
+    margin-top: 24px !important;
+    background: #f8fafc !important;
+}
+
+.actionBarDept .dx-button {
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    padding: 2px 8px !important;
 }
