@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using System.Text;
 using System.Text.Json;
 using Dapper;
@@ -269,11 +269,43 @@ public interface IHttpRequestAuditLogWriter
 
 public sealed class HttpRequestAuditLogWriter : IHttpRequestAuditLogWriter
 {
+    private static string? SafeSubstring(string? val, int maxLen)
+    {
+        if (string.IsNullOrEmpty(val)) return val;
+        return val.Length <= maxLen ? val : val.Substring(0, maxLen);
+    }
 
     public Task WriteAsync(HttpRequestAuditLog log, string _connectionString, bool AUDIT_LOG)
     {
         if (AUDIT_LOG)
         {
+            // Truncate fields to prevent SQL Server database truncation errors
+            log.TraceId = SafeSubstring(log.TraceId, 120);
+            log.Scheme = SafeSubstring(log.Scheme, 120);
+            log.Method = SafeSubstring(log.Method, 120);
+            log.Path = SafeSubstring(log.Path, 120);
+            log.QueryString = SafeSubstring(log.QueryString, 120);
+            log.FullUrl = SafeSubstring(log.FullUrl, 2000);
+            log.Controller = SafeSubstring(log.Controller, 120);
+            log.Action = SafeSubstring(log.Action, 120);
+            log.RouteValues = SafeSubstring(log.RouteValues, 120);
+            log.ClientIp = SafeSubstring(log.ClientIp, 120);
+            log.UserAgent = SafeSubstring(log.UserAgent, 120);
+            log.Referer = SafeSubstring(log.Referer, 120);
+            log.UserName = SafeSubstring(log.UserName, 120);
+            log.AuthenticationType = SafeSubstring(log.AuthenticationType, 120);
+            log.Claims = SafeSubstring(log.Claims, 120);
+            log.ContentType = SafeSubstring(log.ContentType, 120);
+            log.RequestBody = SafeSubstring(log.RequestBody, 120);
+            log.Exception = SafeSubstring(log.Exception, 120);
+            log.Source = SafeSubstring(log.Source, 120);
+            log.CustomTags = SafeSubstring(log.CustomTags, 120);
+            log.Token = SafeSubstring(log.Token, 120);
+            log.EncryptMethod = SafeSubstring(log.EncryptMethod, 120);
+            log.CreatedBy = SafeSubstring(log.CreatedBy, 120);
+            log.ModifiedBy = SafeSubstring(log.ModifiedBy, 120);
+            log.DeletedBy = SafeSubstring(log.DeletedBy, 120);
+
             using (var connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
@@ -304,7 +336,7 @@ public sealed class HttpRequestAuditLogWriter : IHttpRequestAuditLogWriter
                 }
                 catch (Exception ex)
                 {
-
+                    Serilog.Log.Error(ex, "HttpRequestAuditLogMiddleware: Failed to write audit log to database.");
                 }
                 connection.Close();
             }

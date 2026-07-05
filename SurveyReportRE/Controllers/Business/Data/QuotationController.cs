@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office2013.Excel;
+using DocumentFormat.OpenXml.Office2013.Excel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using ERPCore.Controllers.Base;
@@ -602,6 +602,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         }
         catch (Exception ex)
         {
+            Serilog.Log.Error(ex, "QuotationController.OverviewLoading failed.");
             SignalRResult result = new SignalRResult();
             result = new SignalRResult
             {
@@ -1345,6 +1346,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         }
         catch (Exception ex)
         {
+            Serilog.Log.Error(ex, "QuotationController.DeleteQuotation failed.");
             return BadRequest(new
             {
                 message = "Delete failed",

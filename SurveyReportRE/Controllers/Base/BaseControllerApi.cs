@@ -42,11 +42,16 @@ namespace ERPCore.Controllers.Base
 
         public BaseControllerApi(IBaseRepository<T> BaseRepository, IHttpContextAccessor httpContextAccessor)
         {
-            using var loggerFactory = LoggerFactory.Create(loggingBuilder => loggingBuilder
-            .SetMinimumLevel(LogLevel.Trace)
-            .AddConsole());
-
+            var services = httpContextAccessor.HttpContext?.RequestServices;
+            var loggerFactory = (ILoggerFactory?)services?.GetService(typeof(ILoggerFactory));
+            if (loggerFactory != null)
+            {
             _loggerT = loggerFactory.CreateLogger<T>();
+            }
+            else
+            {
+                _loggerT = new Serilog.Extensions.Logging.SerilogLoggerFactory().CreateLogger<T>();
+            }
             _httpContextAccessor = httpContextAccessor;
             _BaseRepository = BaseRepository;
             var domainName = _BaseRepository._baseConfiguration.GetSection("Domain:DCServer").Value;

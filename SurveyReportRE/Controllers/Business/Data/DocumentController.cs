@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using ERPCore.Controllers.Base;
 using ERPCore.Models.Migration.Business.Data;
 using ERPCore.Common;
@@ -249,6 +249,7 @@ public class DocumentController : BaseControllerApi<Document>
         }
         catch (Exception ex)
         {
+            Serilog.Log.Error(ex, "DocumentController.ConvertToPdf failed.");
             return StatusCode(500, new
             {
                 message = "Convert failed",
