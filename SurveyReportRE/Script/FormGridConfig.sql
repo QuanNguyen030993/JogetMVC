@@ -1,4 +1,4 @@
-SET QUOTED_IDENTIFIER ON
+﻿SET QUOTED_IDENTIFIER ON
 SET ANSI_NULLS ON
 GO
 
@@ -62,4 +62,49 @@ BEGIN
 END  
 
 
+GO
+
+CREATE TABLE [dbo].[HttpRequestAuditLog]
+(
+[Id] [bigint] NOT NULL IDENTITY(1, 1),
+[TraceId] [nvarchar] (120) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+[RequestTimeUtc] [datetimeoffset] NOT NULL,
+[Scheme] [nvarchar] (120) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+[Method] [nvarchar] (120) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+[Path] [nvarchar] (1000) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,          -- Tăng từ 120 -> 1000 (Cho URL Path dài)
+[QueryString] [nvarchar] (2000) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,   -- Tăng từ 120 -> 2000 (Cho Query parameters)
+[FullUrl] [nvarchar] (2000) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+[Controller] [nvarchar] (120) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+[Action] [nvarchar] (120) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+[RouteValues] [nvarchar] (max) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,    -- Tăng từ 120 -> MAX (Chứa JSON Route data)
+[ClientIp] [nvarchar] (120) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+[UserAgent] [nvarchar] (1000) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,     -- Tăng từ 120 -> 1000 (Chứa User-Agent trình duyệt)
+[Referer] [nvarchar] (2000) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,       -- Tăng từ 120 -> 2000 (Chứa Referrer URL)
+[UserName] [nvarchar] (120) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+[IsAuthenticated] [bit] NOT NULL CONSTRAINT [DF__HttpReque__IsAut__690797E6] DEFAULT ((0)),
+[AuthenticationType] [nvarchar] (120) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+[Claims] [nvarchar] (max) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,         -- Tăng từ 120 -> MAX (Chứa JSON Claims của User)
+[ContentType] [nvarchar] (120) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+[ContentLength] [bigint] NULL,
+[RequestBody] [nvarchar] (max) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,    -- Tăng từ 120 -> MAX (Chứa JSON Request Body)
+[StatusCode] [int] NOT NULL,
+[ElapsedMilliseconds] [bigint] NOT NULL,
+[HasException] [bit] NOT NULL CONSTRAINT [DF__HttpReque__HasEx__69FBBC1F] DEFAULT ((0)),
+[Exception] [nvarchar] (max) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,      -- Tăng từ 120 -> MAX (Chứa Stack trace khi crash)
+[Source] [nvarchar] (120) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+[CustomTags] [nvarchar] (max) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,     -- Tăng từ 120 -> MAX (Cho tags tùy chỉnh dạng JSON)
+[Token] [nvarchar] (max) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,          -- Tăng từ 120 -> MAX (Chứa Bearer JWT Tokens dài)
+[EncryptMethod] [nvarchar] (120) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+[Guid] [uniqueidentifier] NOT NULL CONSTRAINT [DF__HttpReques__Guid__6AEFE058] DEFAULT (newid()),
+[CreatedBy] [nvarchar] (120) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+[CreatedDate] [datetime2] NULL CONSTRAINT [DF__HttpReque__Creat__6BE40491] DEFAULT (getdate()),
+[ModifiedBy] [nvarchar] (120) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+[ModifiedDate] [datetime2] NULL,
+[Deleted] [bit] NOT NULL CONSTRAINT [DF__HttpReque__Delet__6CD828CA] DEFAULT ((0)),
+[DeletedBy] [nvarchar] (120) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+[DeletedDate] [datetime2] NULL,
+[RowOrder] [bigint] NULL,
+[CopyFromGuid] [uniqueidentifier] NULL,
+[DraftGuid] [uniqueidentifier] NULL
+) ON [PRIMARY]
 GO

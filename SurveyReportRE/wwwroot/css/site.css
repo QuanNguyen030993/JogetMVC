@@ -4705,3 +4705,92 @@ textarea {
     font-weight: 600 !important;
     padding: 2px 8px !important;
 }
+
+/* ==================== Custom Assignee & Header Styling ==================== */
+.dept-section .dept-header {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 20px !important;
+    background: #f8fafc !important;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
+    border-top-left-radius: 16px !important;
+    border-top-right-radius: 16px !important;
+    margin: -24px -24px 20px -24px !important;
+}
+
+/* Override title in header */
+.dept-header .dept-title {
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+    text-transform: uppercase;
+}
+
+/* Middle wrapper for assignee selectbox and action buttons */
+.dept-header .dept-form-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    flex: 1 1 auto !important;
+    justify-content: flex-start !important;
+}
+
+/* Narrow the assignee select box to fit perfectly inline */
+.dept-header .dept-form-header__assign {
+    min-width: 180px !important;
+    max-width: 280px !important;
+    width: 220px !important;
+    margin: 0 !important;
+}
+
+/* Ensure DevExtreme select box in header fits nicely */
+.dept-header .dept-form-header__assign .dx-dropdowneditor {
+    border-radius: 6px !important;
+    background-color: #fff !important;
+    border-color: #cbd5e1 !important;
+}
+
+/* Stick panel (sticky notes alert) container in header */
+.dept-header div[id*="StickPanel"] {
+    display: inline-flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+}
+
+/* Right-side metadata (Hints, Updated time, Caret) */
+.dept-header .dept-hint-wrap {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+    margin-left: auto !important;
+    flex-shrink: 0 !important;
+}
+
+.dept-header .dept-hint {
+    font-size: 12px !important;
+    color: #64748b !important;
+    margin: 0 !important;
+}
+
+.dept-header .dept-updated {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #94a3b8 !important;
+}
+
+.dept-header .dept-toggle-icon {
+    font-size: 14px !important;
+    color: #64748b !important;
+    cursor: pointer !important;
+    padding: 4px !important;
+    transition: transform 0.2s ease !important;
+}
