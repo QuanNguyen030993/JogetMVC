@@ -5,6 +5,8 @@ import CommentEditor from "../components/CommentEditor.jsx";
 import TextBox from "../components/TextBox.jsx";
 import NumberBox from "../components/NumberBox.jsx";
 import CheckBox from "../components/CheckBox.jsx";
+import SelectBox from "../components/SelectBox.jsx";
+import DropDownBox from "../components/DropDownBox.jsx";
 import React from "react";
 
 import { createRoot } from "react-dom/client";
@@ -432,6 +434,8 @@ function createJQueryPlugin(pluginName, componentName) {
 createJQueryPlugin("textbox", "TextBox");
 createJQueryPlugin("numberbox", "NumberBox");
 createJQueryPlugin("checkbox", "CheckBox");
+createJQueryPlugin("selectbox", "SelectBox");
+createJQueryPlugin("dropdownbox", "DropDownBox");
 
 register(
     "DateBox",
@@ -467,4 +471,14 @@ register(
     CheckBox
 );
 
-export default { DateBox, HtmlEditor, CustomGrid, CommentEditor, TextBox, NumberBox, CheckBox };
+register(
+    "SelectBox",
+    SelectBox
+);
+
+register(
+    "DropDownBox",
+    DropDownBox
+);
+
+export default { DateBox, HtmlEditor, CustomGrid, CommentEditor, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox };

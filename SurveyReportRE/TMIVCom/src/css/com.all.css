@@ -318,7 +318,8 @@
     background: #ffffff;
 }
 
-    .grid-filter-cell input {
+    .grid-filter-cell input,
+    .grid-filter-cell select {
         width: 100%;
         border: 1px solid #cbd5e1;
         border-radius: 8px;
@@ -327,9 +328,11 @@
         color: #111827;
         font-size: 0.95rem;
         outline: none;
+        box-sizing: border-box;
     }
 
-        .grid-filter-cell input:focus {
+        .grid-filter-cell input:focus,
+        .grid-filter-cell select:focus {
             border-color: #93c5fd;
             background: #ffffff;
         }
@@ -1160,4 +1163,137 @@ button {
     font-size: 0.95rem;
     color: #334155;
     font-weight: 500;
+}
+
+/* SelectBox styling */
+.tmivcom-selectbox {
+    position: relative;
+    display: inline-flex;
+    flex-direction: column;
+    gap: 8px;
+    font-family: Inter, system-ui, sans-serif;
+    width: 100%;
+    max-width: 320px;
+}
+
+.tmivcom-selectbox select {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 8px 12px;
+    background: #ffffff;
+    font-size: 0.95rem;
+    color: #1e293b;
+    outline: none;
+    transition: all 0.2s ease-in-out;
+    width: 100%;
+    box-sizing: border-box;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 36px;
+}
+
+.tmivcom-selectbox select:hover {
+    border-color: #94a3b8;
+}
+
+.tmivcom-selectbox select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.tmivcom-selectbox select:disabled {
+    background: #f1f5f9;
+    color: #94a3b8;
+    cursor: not-allowed;
+    border-color: #e2e8f0;
+}
+
+/* DropDownBox styling */
+.tmivcom-dropdownbox {
+    position: relative;
+    display: inline-flex;
+    flex-direction: column;
+    font-family: Inter, system-ui, sans-serif;
+    width: 100%;
+    max-width: 320px;
+}
+
+.tmivcom-dropdownbox-input {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    background: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.tmivcom-dropdownbox-input:hover {
+    border-color: #94a3b8;
+}
+
+.tmivcom-dropdownbox-input:focus-within {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.tmivcom-dropdownbox-input.disabled {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+    cursor: not-allowed;
+}
+
+.tmivcom-dropdownbox-input input {
+    border: none;
+    background: transparent;
+    outline: none;
+    padding: 8px 12px;
+    font-size: 0.95rem;
+    color: #1e293b;
+    width: 100%;
+    cursor: pointer;
+}
+
+.tmivcom-dropdownbox-input.disabled input {
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+.tmivcom-dropdownbox-button {
+    border: none;
+    background: transparent;
+    padding: 0 12px;
+    font-size: 0.9rem;
+    color: #475569;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tmivcom-dropdownbox-popup {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    margin-top: 4px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    padding: 8px;
+    min-width: 400px;
+    max-height: 400px;
+    overflow: auto;
 }

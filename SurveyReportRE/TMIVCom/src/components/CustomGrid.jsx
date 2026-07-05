@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useImperativeHandle, forwardRef } from 'react';
 import { CONFIG } from '../config';
+import DropDownBox from './DropDownBox';
 
 const API_BASE_URL = CONFIG.API_URL || 'https://localhost:7254';
 
@@ -147,7 +148,11 @@ const CustomGrid = forwardRef(({
             const dt = (col.dataType || 'string').toLowerCase();
             if (dt === 'number') {
               editorType = 'numberbox';
-            } else if (dt === 'boolean' || dt === 'enum' || dt === 'customenum') {
+            } else if (dt === 'enum') {
+              editorType = 'selectbox';
+            } else if (dt === 'table') {
+              editorType = 'dropdownbox';
+            } else if (dt === 'boolean' || dt === 'customenum') {
               editorType = 'checkbox';
             } else {
               editorType = 'textbox';
@@ -262,7 +267,11 @@ const CustomGrid = forwardRef(({
         const dt = (column.dataType || 'string').toLowerCase();
         if (dt === 'number') {
           editorType = 'numberbox';
-        } else if (dt === 'boolean' || dt === 'enum' || dt === 'customenum') {
+        } else if (dt === 'enum') {
+          editorType = 'selectbox';
+        } else if (dt === 'table') {
+          editorType = 'dropdownbox';
+        } else if (dt === 'boolean' || dt === 'customenum') {
           editorType = 'checkbox';
         } else {
           editorType = 'textbox';
@@ -449,7 +458,20 @@ const CustomGrid = forwardRef(({
         if (column.actions) return true;
         const value = row[column.field];
         const filterValue = filters[column.field];
-        if (!filterValue) return true;
+        if (filterValue === undefined || filterValue === null || filterValue === '') return true;
+
+        // Boolean column filter
+        if (column.editorType === 'dxCheckBox' || column.editorType === 'checkbox' || column.dataType === 'boolean') {
+          const targetBool = filterValue === 'true';
+          return !!value === targetBool;
+        }
+
+        // Lookup column filter (exact match)
+        if (column.lookup && Array.isArray(column.lookup.dataSource)) {
+          return String(value) === String(filterValue);
+        }
+
+        // Default text search (substring match)
         return String(value ?? '')
           .toLowerCase()
           .includes(String(filterValue).toLowerCase());
@@ -650,6 +672,45 @@ const CustomGrid = forwardRef(({
         );
       }
 
+      if (column.editorType === 'dxSelectBox' || column.editorType === 'selectbox') {
+        const ds = column.lookup?.dataSource || column.editorOptions?.dataSource || [];
+        const valExpr = column.lookup?.valueExpr || column.editorOptions?.valueExpr || 'id';
+        const dispExpr = column.lookup?.displayExpr || column.editorOptions?.displayExpr || 'name';
+
+        return (
+          <select
+            value={value ?? ''}
+            onChange={(event) => handleCellChange(rowId, column.field, event.target.value)}
+          >
+            <option value="">--</option>
+            {ds.map((item, idx) => {
+              const itemVal = typeof item === 'object' ? (item[valExpr] ?? item.id ?? item.key ?? '') : item;
+              const itemText = typeof item === 'object' ? (item[dispExpr] ?? item.value ?? item.text ?? item.name ?? '') : item;
+              return (
+                <option key={idx} value={itemVal}>
+                  {itemText}
+                </option>
+              );
+            })}
+          </select>
+        );
+      }
+
+      if (column.editorType === 'dxDropDownBox' || column.editorType === 'dropdownbox') {
+        const gridModelName = column.editorOptions?.modelName || column.editorOptions?.gridOption?.modelName || column.field;
+        const ds = column.lookup?.dataSource || column.editorOptions?.dataSource;
+        return (
+          <DropDownBox
+            value={value}
+            modelName={gridModelName}
+            dataSource={ds}
+            valueExpr={column.editorOptions?.valueExpr || column.lookup?.valueExpr || 'Id'}
+            displayExpr={column.editorOptions?.displayExpr || column.lookup?.displayExpr || 'name'}
+            onChange={(nextVal) => handleCellChange(rowId, column.field, nextVal)}
+          />
+        );
+      }
+
       if (column.editorType === 'dxNumberBox' || column.editorType === 'numberbox') {
         return (
           <input
@@ -702,6 +763,32 @@ const CustomGrid = forwardRef(({
     // dxCheckBox boolean display
     if (column.editorType === 'dxCheckBox' || column.editorType === 'checkbox') {
       return <span>{value ? '✅' : '❌'}</span>;
+    }
+
+    if (column.editorType === 'dxSelectBox' || column.editorType === 'selectbox') {
+      const ds = column.lookup?.dataSource || column.editorOptions?.dataSource || [];
+      const valExpr = column.lookup?.valueExpr || column.editorOptions?.valueExpr || 'id';
+      const dispExpr = column.lookup?.displayExpr || column.editorOptions?.displayExpr || 'name';
+      const selectedItem = ds.find(item => {
+        const itemVal = typeof item === 'object' ? (item[valExpr] ?? item.id ?? item.key ?? '') : item;
+        return String(itemVal) === String(value);
+      });
+      if (selectedItem) {
+        const displayVal = typeof selectedItem === 'object' ? (selectedItem[dispExpr] ?? selectedItem.value ?? selectedItem.text ?? selectedItem.name ?? '') : selectedItem;
+        return <span>{displayVal}</span>;
+      }
+    }
+
+    if (column.editorType === 'dxDropDownBox' || column.editorType === 'dropdownbox') {
+      const ds = column.lookup?.dataSource || column.editorOptions?.dataSource;
+      if (Array.isArray(ds)) {
+        const valExpr = column.lookup?.valueExpr || column.editorOptions?.valueExpr || 'Id';
+        const dispExpr = column.lookup?.displayExpr || column.editorOptions?.displayExpr || 'name';
+        const selectedItem = ds.find(item => String(item[valExpr] ?? item.id ?? item.Id) === String(value));
+        if (selectedItem) {
+          return <span>{selectedItem[dispExpr] ?? selectedItem.name}</span>;
+        }
+      }
     }
 
     return <span>{value ?? ''}</span>;
@@ -876,7 +963,28 @@ const CustomGrid = forwardRef(({
       <div className="grid-filter-row" style={{ gridTemplateColumns: templateColumns }}>
         {normalizedColumns.map((column) => (
           <div key={column.field || `filter-${column.caption}`} className="grid-filter-cell">
-            {column.actions ? null : (
+            {column.actions ? null : column.lookup && Array.isArray(column.lookup.dataSource) ? (
+              <select
+                value={filters[column.field] ?? ''}
+                onChange={(event) => handleFilterChange(column.field, event.target.value)}
+              >
+                <option value="">All</option>
+                {column.lookup.dataSource.map((item) => (
+                  <option key={item[column.lookup.valueExpr]} value={item[column.lookup.valueExpr]}>
+                    {item[column.lookup.displayExpr]}
+                  </option>
+                ))}
+              </select>
+            ) : (column.editorType === 'dxCheckBox' || column.editorType === 'checkbox' || column.dataType === 'boolean') ? (
+              <select
+                value={filters[column.field] ?? ''}
+                onChange={(event) => handleFilterChange(column.field, event.target.value)}
+              >
+                <option value="">All</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            ) : (
               <input
                 type="text"
                 value={filters[column.field] ?? ''}
