@@ -141,20 +141,33 @@ const CustomGrid = forwardRef(({
         if (!schemeRes.ok) throw new Error("Load scheme config failed");
         const schemeData = await schemeRes.json();
 
-        const mappedColumns = (schemeData || []).map((col) => ({
-          field: col.dataField,
-          caption: col.caption || col.dataField,
-          dataType: col.dataType || 'string',
-          sortable: col.allowSorting !== false,
-          groupable: col.allowGrouping !== false,
-          editable: col.visible !== false,
-          visible: col.visible !== false,
-          editorType: col.editor || 'dxTextBox',
-          lookup: col.lookup,
-          validationRules: col.validationRules ? safeParseBinaryJson(col.validationRules) : [],
-          editorOptions: col.editorOptions ? safeParseBinaryJson(col.editorOptions) : {},
-          formItem: col.formItem ? safeParseBinaryJson(col.formItem) : {}
-        }));
+        const mappedColumns = (schemeData || []).map((col) => {
+          let editorType = col.editor;
+          if (!editorType) {
+            const dt = (col.dataType || 'string').toLowerCase();
+            if (dt === 'number') {
+              editorType = 'numberbox';
+            } else if (dt === 'boolean' || dt === 'enum' || dt === 'customenum') {
+              editorType = 'checkbox';
+            } else {
+              editorType = 'textbox';
+            }
+          }
+          return {
+            field: col.dataField,
+            caption: col.caption || col.dataField,
+            dataType: col.dataType || 'string',
+            sortable: col.allowSorting !== false,
+            groupable: col.allowGrouping !== false,
+            editable: col.visible !== false,
+            visible: col.visible !== false,
+            editorType: editorType,
+            lookup: col.lookup,
+            validationRules: col.validationRules ? safeParseBinaryJson(col.validationRules) : [],
+            editorOptions: col.editorOptions ? safeParseBinaryJson(col.editorOptions) : {},
+            formItem: col.formItem ? safeParseBinaryJson(col.formItem) : {}
+          };
+        });
 
         setColumns(mappedColumns);
       } catch (err) {
@@ -240,7 +253,20 @@ const CustomGrid = forwardRef(({
           sortable: true,
           groupable: true,
           editable: true,
+          editorType: 'textbox',
         };
+      }
+
+      let editorType = column.editorType || column.editor;
+      if (!editorType) {
+        const dt = (column.dataType || 'string').toLowerCase();
+        if (dt === 'number') {
+          editorType = 'numberbox';
+        } else if (dt === 'boolean' || dt === 'enum' || dt === 'customenum') {
+          editorType = 'checkbox';
+        } else {
+          editorType = 'textbox';
+        }
       }
 
       return {
@@ -252,7 +278,7 @@ const CustomGrid = forwardRef(({
         editable: column.editable !== false,
         template: column.template,
         actions: column.actions,
-        editorType: column.editorType || column.editor || 'dxTextBox',
+        editorType: editorType,
         lookup: column.lookup,
       };
     });
@@ -604,7 +630,7 @@ const CustomGrid = forwardRef(({
 
     if (isEditing) {
       // Mimic DevExtreme editors dynamically
-      if (column.editorType === 'dxCheckBox') {
+      if (column.editorType === 'dxCheckBox' || column.editorType === 'checkbox') {
         return (
           <input
             type="checkbox"
@@ -614,7 +640,7 @@ const CustomGrid = forwardRef(({
         );
       }
 
-      if (column.editorType === 'dxDateBox') {
+      if (column.editorType === 'dxDateBox' || column.editorType === 'datebox') {
         return (
           <input
             type="date"
@@ -624,7 +650,7 @@ const CustomGrid = forwardRef(({
         );
       }
 
-      if (column.editorType === 'dxNumberBox') {
+      if (column.editorType === 'dxNumberBox' || column.editorType === 'numberbox') {
         return (
           <input
             type="number"
@@ -674,7 +700,7 @@ const CustomGrid = forwardRef(({
     }
 
     // dxCheckBox boolean display
-    if (column.editorType === 'dxCheckBox') {
+    if (column.editorType === 'dxCheckBox' || column.editorType === 'checkbox') {
       return <span>{value ? '✅' : '❌'}</span>;
     }
 
