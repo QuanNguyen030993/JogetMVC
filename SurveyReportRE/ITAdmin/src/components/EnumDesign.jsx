@@ -1,6 +1,36 @@
 import React, { useState, useEffect } from "react";
 import { API_BASE_URL } from "../config";
 
+const safeParseBinaryJson = (val) => {
+  if (!val) return {};
+  if (typeof val === 'object') return val;
+  if (typeof val === 'string') {
+    try {
+      return JSON.parse(val);
+    } catch (e) {
+      try {
+        const decoded = decodeURIComponent(escape(atob(val)));
+        return JSON.parse(decoded);
+      } catch (e2) {
+        console.error("Failed to parse binary JSON:", e2);
+        return {};
+      }
+    }
+  }
+  return {};
+};
+
+const safeStringifyBinaryJson = (obj) => {
+  if (!obj) return "";
+  try {
+    const jsonStr = JSON.stringify(obj);
+    return btoa(unescape(encodeURIComponent(jsonStr)));
+  } catch (e) {
+    console.error("Failed to stringify binary JSON:", e);
+    return "";
+  }
+};
+
 export default function EnumDesign() {
   const [enumData, setEnumData] = useState([]);
   const [gridFields, setGridFields] = useState([]);
@@ -184,12 +214,7 @@ export default function EnumDesign() {
   const handleUpdateFieldMapping = async (field, enumValue) => {
     try {
       setSaving(true);
-      let parsedFormItem = {};
-      try {
-        if (field.formItem) {
-          parsedFormItem = typeof field.formItem === 'string' ? JSON.parse(field.formItem) : field.formItem;
-        }
-      } catch (e) {}
+      const parsedFormItem = safeParseBinaryJson(field.formItem);
 
       const updatedFormItem = {
         ...parsedFormItem,
@@ -200,7 +225,7 @@ export default function EnumDesign() {
       formData.append("key", field.id);
       formData.append("values", JSON.stringify({
         ...field,
-        formItem: JSON.stringify(updatedFormItem)
+        formItem: safeStringifyBinaryJson(updatedFormItem)
       }));
 
       const res = await fetch(`${API_BASE_URL}/api/DataGridConfig/UpdateData`, {
@@ -330,12 +355,7 @@ export default function EnumDesign() {
           
           <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
             {gridFields.map((f) => {
-              let parsedFormItem = {};
-              try {
-                if (f.formItem) {
-                  parsedFormItem = typeof f.formItem === 'string' ? JSON.parse(f.formItem) : f.formItem;
-                }
-              } catch (e) {}
+              const parsedFormItem = safeParseBinaryJson(f.formItem);
 
               return (
                 <div 

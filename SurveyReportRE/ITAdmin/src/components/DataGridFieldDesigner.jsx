@@ -1,6 +1,38 @@
 import React, { useState, useEffect } from "react";
 import { API_BASE_URL } from "../config";
 
+const safeParseBinaryJson = (val) => {
+  if (!val) return {};
+  if (typeof val === 'object') return val;
+  if (typeof val === 'string') {
+    try {
+      return JSON.parse(val || "{}");
+    } catch (e) {
+      try {
+         const decodedBytes = Uint8Array.from(atob(val || "{}" ), c => c.charCodeAt(0));
+        const decodedString = new TextDecoder("utf-8").decode(decodedBytes);
+        // const decoded = decodeURIComponent(escape(atob(val)));
+        return JSON.parse(decodedString);
+      } catch (e2) {
+        console.error("Failed to parse binary JSON:", e2);
+        return {};
+      }
+    }
+  }
+  return {};
+};
+
+const safeStringifyBinaryJson = (obj) => {
+  if (!obj) return "";
+  try {
+    const jsonStr = JSON.stringify(obj);
+    return btoa(unescape(encodeURIComponent(jsonStr)));
+  } catch (e) {
+    console.error("Failed to stringify binary JSON:", e);
+    return "";
+  }
+};
+
 const controlTypes = [
   "dxTextBox",
   "dxSelectBox",
@@ -21,6 +53,7 @@ export default function DataGridFieldDesigner() {
     try {
       setLoading(true);
       const res = await fetch(`${API_BASE_URL}/api/SysTable/GetAll`);
+      console.log(res);
       if (!res.ok) throw new Error("Load tables failed");
       const data = await res.json();
       setTables(data || []);
@@ -46,7 +79,7 @@ export default function DataGridFieldDesigner() {
       const res = await fetch(`${API_BASE_URL}/api/DataGridConfig/GetAll?take=9999`);
       if (!res.ok) throw new Error("Load grid configs failed");
       const data = await res.json();
-      
+      console.log(res);
       // Filter columns belonging to the selected SysTable
       const filtered = (data || [])
         .filter((c) => c.sysTableId == table.id || c.SysTableId == table.id)
@@ -60,9 +93,9 @@ export default function DataGridFieldDesigner() {
           Editor: c.editor || "dxTextBox",
           Visible: c.visible !== false,
           Fixed: c.fixed === true,
-          ValidationRules: typeof c.validationRules === 'string' ? JSON.parse(c.validationRules) : c.validationRules || [],
-          EditorOptions: typeof c.editorOptions === 'string' ? JSON.parse(c.editorOptions) : c.editorOptions || {},
-          FormItem: typeof c.formItem === 'string' ? JSON.parse(c.formItem) : c.formItem || {}
+          ValidationRules: typeof c.validationRules === 'string' ? JSON.parse(c.validationRules || "{}") : c.validationRules || [],
+          EditorOptions: safeParseBinaryJson(c.editorOptions || "{}"),
+          FormItem: safeParseBinaryJson(c.formItem || "{}")
         }));
       setFields(filtered);
       setDeletedIds([]);
@@ -140,8 +173,8 @@ export default function DataGridFieldDesigner() {
           allowHeaderFiltering: f.AllowHeaderFiltering,
           fixed: f.Fixed,
           validationRules: JSON.stringify(f.ValidationRules),
-          editorOptions: JSON.stringify(f.EditorOptions),
-          formItem: JSON.stringify(f.FormItem)
+          editorOptions: safeStringifyBinaryJson(f.EditorOptions),
+          formItem: safeStringifyBinaryJson(f.FormItem)
         };
 
         const formData = new FormData();
