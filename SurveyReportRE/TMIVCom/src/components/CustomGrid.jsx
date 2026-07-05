@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState, useImperativeHandle, forwardRef } from 'react';
 import { CONFIG } from '../config';
 import DropDownBox from './DropDownBox';
+import SelectBox from './SelectBox';
+import CheckBox from './CheckBox';
 
 const API_BASE_URL = CONFIG.API_URL || 'https://localhost:7254';
 
@@ -654,10 +656,9 @@ const CustomGrid = forwardRef(({
       // Mimic DevExtreme editors dynamically
       if (column.editorType === 'dxCheckBox' || column.editorType === 'checkbox') {
         return (
-          <input
-            type="checkbox"
-            checked={!!value}
-            onChange={(event) => handleCellChange(rowId, column.field, event.target.checked)}
+          <CheckBox
+            value={value}
+            onChange={(nextVal) => handleCellChange(rowId, column.field, nextVal)}
           />
         );
       }
@@ -676,34 +677,31 @@ const CustomGrid = forwardRef(({
         const ds = column.lookup?.dataSource || column.editorOptions?.dataSource || [];
         const valExpr = column.lookup?.valueExpr || column.editorOptions?.valueExpr || 'id';
         const dispExpr = column.lookup?.displayExpr || column.editorOptions?.displayExpr || 'name';
+        const itemTemplate = column.lookup?.itemTemplate || column.editorOptions?.itemTemplate;
 
         return (
-          <select
-            value={value ?? ''}
-            onChange={(event) => handleCellChange(rowId, column.field, event.target.value)}
-          >
-            <option value="">--</option>
-            {ds.map((item, idx) => {
-              const itemVal = typeof item === 'object' ? (item[valExpr] ?? item.id ?? item.key ?? '') : item;
-              const itemText = typeof item === 'object' ? (item[dispExpr] ?? item.value ?? item.text ?? item.name ?? '') : item;
-              return (
-                <option key={idx} value={itemVal}>
-                  {itemText}
-                </option>
-              );
-            })}
-          </select>
+          <SelectBox
+            value={value}
+            dataSource={ds}
+            valueExpr={valExpr}
+            displayExpr={dispExpr}
+            placeholder="Select..."
+            itemTemplate={itemTemplate}
+            onChange={(nextVal) => handleCellChange(rowId, column.field, nextVal)}
+          />
         );
       }
 
       if (column.editorType === 'dxDropDownBox' || column.editorType === 'dropdownbox') {
         const gridModelName = column.editorOptions?.modelName || column.editorOptions?.gridOption?.modelName || column.field;
         const ds = column.lookup?.dataSource || column.editorOptions?.dataSource;
+        const cols = column.editorOptions?.columns || column.lookup?.columns;
         return (
           <DropDownBox
             value={value}
             modelName={gridModelName}
             dataSource={ds}
+            columns={cols}
             valueExpr={column.editorOptions?.valueExpr || column.lookup?.valueExpr || 'Id'}
             displayExpr={column.editorOptions?.displayExpr || column.lookup?.displayExpr || 'name'}
             onChange={(nextVal) => handleCellChange(rowId, column.field, nextVal)}
@@ -762,7 +760,13 @@ const CustomGrid = forwardRef(({
 
     // dxCheckBox boolean display
     if (column.editorType === 'dxCheckBox' || column.editorType === 'checkbox') {
-      return <span>{value ? '✅' : '❌'}</span>;
+      return (
+        <CheckBox
+          value={value}
+          readOnly={true}
+          disabled={true}
+        />
+      );
     }
 
     if (column.editorType === 'dxSelectBox' || column.editorType === 'selectbox') {
@@ -774,6 +778,10 @@ const CustomGrid = forwardRef(({
         return String(itemVal) === String(value);
       });
       if (selectedItem) {
+        const itemTemplate = column.lookup?.itemTemplate || column.editorOptions?.itemTemplate;
+        if (itemTemplate) {
+          return <div className="tmivcom-selectbox-item-templated">{itemTemplate(selectedItem)}</div>;
+        }
         const displayVal = typeof selectedItem === 'object' ? (selectedItem[dispExpr] ?? selectedItem.value ?? selectedItem.text ?? selectedItem.name ?? '') : selectedItem;
         return <span>{displayVal}</span>;
       }
@@ -818,15 +826,22 @@ const CustomGrid = forwardRef(({
 
     return (
       <div {...rowProps}>
-        {normalizedColumns.map((column) => (
-          <div key={column.field || `col-${column.caption}`} className="grid-cell dx-cell" onClick={() => {
-            if (editMode === 'cell' && column.editable) {
-              setActiveCell({ rowId, field: column.field });
-            }
-          }}>
-            {renderCellValue(node, column)}
-          </div>
-        ))}
+        {normalizedColumns.map((column) => {
+          const isEditing = isCellEditable(rowId, column.field);
+          return (
+            <div 
+              key={column.field || `col-${column.caption}`} 
+              className={`grid-cell dx-cell ${isEditing ? 'editing-cell' : ''}`} 
+              onClick={() => {
+                if (editMode === 'cell' && column.editable) {
+                  setActiveCell({ rowId, field: column.field });
+                }
+              }}
+            >
+              {renderCellValue(node, column)}
+            </div>
+          );
+        })}
       </div>
     );
   };

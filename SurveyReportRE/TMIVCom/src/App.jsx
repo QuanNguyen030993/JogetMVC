@@ -41,7 +41,19 @@ const gridColumns = [
     lookup: {
       dataSource: departmentEnum,
       valueExpr: 'id',
-      displayExpr: 'value'
+      displayExpr: 'value',
+      itemTemplate: (item) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ 
+            display: 'inline-block', 
+            width: '8px', 
+            height: '8px', 
+            borderRadius: '50%', 
+            background: item.key === 'HR' ? '#f43f5e' : item.key === 'DEV' ? '#10b981' : '#3b82f6'
+          }} />
+          <strong>{item.key}</strong> - <span style={{ color: '#64748b' }}>{item.value}</span>
+        </div>
+      )
     }
   },
   {
@@ -51,12 +63,14 @@ const gridColumns = [
     lookup: {
       dataSource: projectsTable,
       valueExpr: 'Id',
-      displayExpr: 'name'
+      displayExpr: 'name',
+      columns: ['Id', 'name', 'client']
     },
     editorOptions: {
       dataSource: projectsTable,
       valueExpr: 'Id',
-      displayExpr: 'name'
+      displayExpr: 'name',
+      columns: ['Id', 'name', 'client']
     }
   }
 ];
@@ -121,6 +135,18 @@ function App() {
             dataSource={departmentEnum} 
             valueExpr="id" 
             displayExpr="value" 
+            itemTemplate={(item) => (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ 
+                  display: 'inline-block', 
+                  width: '8px', 
+                  height: '8px', 
+                  borderRadius: '50%', 
+                  background: item.key === 'HR' ? '#f43f5e' : item.key === 'DEV' ? '#10b981' : '#3b82f6'
+                }} />
+                <strong>{item.key}</strong> - {item.value}
+              </div>
+            )}
           />
           <p style={{ marginTop: '8px', fontSize: '0.9rem', color: '#64748b' }}>Selected ID: {selectValue}</p>
         </section>
@@ -131,6 +157,7 @@ function App() {
             value={dropValue} 
             onChange={setDropValue} 
             dataSource={projectsTable} 
+            columns={['Id', 'name', 'client']}
             valueExpr="Id" 
             displayExpr="name" 
           />

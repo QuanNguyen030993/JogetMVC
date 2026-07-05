@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle, useMemo } from "react";
 import CustomGrid from "./CustomGrid";
 
 const DropDownBox = forwardRef(({
@@ -6,6 +6,7 @@ const DropDownBox = forwardRef(({
     onChange,
     modelName,
     dataSource,
+    columns,
     valueExpr = "Id",
     displayExpr = "name",
     placeholder = "Select...",
@@ -95,6 +96,14 @@ const DropDownBox = forwardRef(({
         setIsOpen(false);
     };
 
+    const resolvedColumns = useMemo(() => {
+        if (columns) return columns;
+        if (Array.isArray(dataSource) && dataSource.length > 0) {
+            return Object.keys(dataSource[0]).filter(key => key !== 'id' && key !== 'Id');
+        }
+        return ['Id', 'name'];
+    }, [columns, dataSource]);
+
     return (
         <div className="tmivcom-dropdownbox" ref={containerRef}>
             <div 
@@ -118,6 +127,7 @@ const DropDownBox = forwardRef(({
                         ref={gridRef}
                         modelName={modelName}
                         dataSource={dataSource}
+                        columns={resolvedColumns}
                         gridOption={gridOption}
                         onRowsChange={() => {}}
                         rowTemplate={({ row, columns, defaultRowProps }) => (
