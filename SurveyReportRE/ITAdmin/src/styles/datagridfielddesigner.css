@@ -22,7 +22,7 @@ grid-template-columns:
 
 gap:16px;
 
-height:calc(100vh - 100px);
+height:calc(70vh);
 
 }
 
@@ -42,7 +42,10 @@ border:1px solid #e2e8f0;
 
 padding:16px;
 
-overflow:auto;
+overflow-y:auto;
+overflow-x:hidden;
+
+min-height:0;
 
 }
 

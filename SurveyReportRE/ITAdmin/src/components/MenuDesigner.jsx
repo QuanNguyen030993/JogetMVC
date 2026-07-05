@@ -148,6 +148,41 @@ export default function MenuDesigner() {
     return parent ? ` (${parent.Name})` : "";
   };
 
+  const hierarchicalMenus = React.useMemo(() => {
+    const roots = menus.filter((m) => !m.ParentId);
+    const children = menus.filter((m) => m.ParentId);
+
+    // Sắp xếp các menu cha theo Order
+    roots.sort((a, b) => (a.Order || 0) - (b.Order || 0));
+
+    const result = [];
+
+    const traverse = (parent, level = 0) => {
+      result.push({ ...parent, level });
+
+      // Tìm và sắp xếp con của menu này
+      const myChildren = children.filter((c) => c.ParentId == parent.id);
+      myChildren.sort((a, b) => (a.Order || 0) - (b.Order || 0));
+
+      myChildren.forEach((child) => {
+        traverse(child, level + 1);
+      });
+    };
+
+    roots.forEach((root) => {
+      traverse(root, 0);
+    });
+
+    // Gom các menu con mồ côi (nếu có cha bị xóa/không tồn tại)
+    const processedIds = new Set(result.map((x) => x.id));
+    const orphans = menus.filter((m) => !processedIds.has(m.id));
+    orphans.forEach((orphan) => {
+      result.push({ ...orphan, level: 0 });
+    });
+
+    return result;
+  }, [menus]);
+
   if (loading && menus.length === 0) {
     return <div style={{ padding: "20px", color: "#6b7280" }}>Đang tải danh sách menu...</div>;
   }
@@ -192,7 +227,7 @@ export default function MenuDesigner() {
           onDrop={addMenu}
         >
           <h3>Danh sách Menu (Xem trước)</h3>
-          {menus.map((m) => (
+          {hierarchicalMenus.map((m) => (
             <div
               key={m.id}
               className={selected?.id === m.id ? "menu-row active" : "menu-row"}
@@ -202,14 +237,16 @@ export default function MenuDesigner() {
                 alignItems: "center",
                 gap: "10px",
                 padding: "10px 14px",
+                paddingLeft: `${14 + m.level * 20}px`,
                 borderBottom: "1px solid #e2e8f0",
                 cursor: "pointer",
                 background: selected?.id === m.id ? "#f1f5f9" : "transparent"
               }}
             >
+              {m.level > 0 && <span style={{ color: "#cbd5e1", marginRight: "4px" }}>└─</span>}
               <i className={m.Icon}></i>
-              <span style={{ fontWeight: m.ParentId ? "400" : "600", marginLeft: m.ParentId ? "18px" : "0", color: "#334155" }}>
-                {m.Name} {m.ParentId && <small style={{ color: "#94a3b8", fontWeight: "400" }}>{getParentName(m.ParentId)}</small>}
+              <span style={{ fontWeight: m.level > 0 ? "400" : "600", color: "#334155" }}>
+                {m.Name}
               </span>
             </div>
           ))}

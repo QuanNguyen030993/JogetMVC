@@ -29,11 +29,13 @@
 
     gap:16px;
 
-    height:calc(100vh - 90px);
+    height:calc(100vh - 220px);
 
 }
 
-
+.panel {
+    max-height:calc(80vh)
+}
 
 
 
@@ -49,7 +51,10 @@
 
     padding:16px;
 
-    overflow:auto;
+    overflow-y:auto;
+    overflow-x:hidden;
+
+    min-height:0;
 
     box-shadow:
         0 8px 24px
