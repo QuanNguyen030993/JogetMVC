@@ -1,20 +1,60 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useImperativeHandle, forwardRef } from 'react';
+import { CONFIG } from '../config';
 
-function CustomGrid({
-  columns,
-  rows,
+const API_BASE_URL = CONFIG.API_URL || 'https://localhost:7254';
+
+const safeParseBinaryJson = (val) => {
+  if (!val) return null;
+  if (typeof val === 'object') return val;
+  if (typeof val === 'string') {
+    try {
+      return JSON.parse(val);
+    } catch (e) {
+      try {
+        const decoded = decodeURIComponent(escape(atob(val)));
+        return JSON.parse(decoded);
+      } catch (e2) {
+        console.error("Failed to parse binary JSON:", e2);
+        return null;
+      }
+    }
+  }
+  return null;
+};
+
+const safeStringifyBinaryJson = (obj) => {
+  if (!obj) return "";
+  try {
+    const jsonStr = JSON.stringify(obj);
+    return btoa(unescape(encodeURIComponent(jsonStr)));
+  } catch (e) {
+    console.error("Failed to stringify binary JSON:", e);
+    return "";
+  }
+};
+
+const CustomGrid = forwardRef(({
+  modelName,
+  gridType = 'User',
+  gridOption = {},
+  dataSource,
+  columns: initialColumns,
+  rows: initialRows,
   onRowsChange,
   onAddRow,
-  dataSource,
-  editMode = 'batch',
+  editMode: initialEditMode = 'batch',
   toolbarItems = [],
   rowTemplate,
-}) 
-{
-  const [selectedRowId, setSelectedRowId] = useState(null);
-  const [draftRows, setDraftRows] = useState(rows ?? []);
+}, ref) => {
+  const [columns, setColumns] = useState(initialColumns ?? []);
+  const [rows, setRows] = useState(initialRows ?? []);
+  const [draftRows, setDraftRows] = useState(initialRows ?? []);
+  const [editMode, setEditMode] = useState(initialEditMode);
+  const [displayExpr, setDisplayExpr] = useState('name');
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedRowId, setSelectedRowId] = useState(null);
   const [sortInfo, setSortInfo] = useState({ field: null, direction: 'asc' });
   const [filters, setFilters] = useState({});
   const [groupColumns, setGroupColumns] = useState([]);
@@ -25,76 +65,200 @@ function CustomGrid({
   const [activeCell, setActiveCell] = useState(null);
   const [isDirty, setIsDirty] = useState(false);
 
+  // Extract grid reference / parameter properties similar to mGrid.js & _AppUtil.cshtml
+  const refKey = gridOption?.refKey ?? gridOption?.mGridDetailOption?.refKey ?? null;
+  const refField = gridOption?.refField ?? gridOption?.mGridDetailOption?.refField ?? 'Id';
+  const refOperator = gridOption?.refOperator ?? gridOption?.mGridDetailOption?.refOperator ?? '=';
+  const refKey2 = gridOption?.refKey2 ?? gridOption?.mGridDetailOption?.refKey2 ?? null;
+  const refField2 = gridOption?.refField2 ?? gridOption?.mGridDetailOption?.refField2 ?? null;
+  const refOperator2 = gridOption?.refOperator2 ?? gridOption?.mGridDetailOption?.refOperator2 ?? null;
+  const overrideGetUrl = gridOption?.overrideGetUrl ?? gridOption?.mGridDetailOption?.overrideGetUrl ?? null;
+
+  // Imperative handle to allow jQuery or parent components to get data or call options
+  useImperativeHandle(ref, () => ({
+    getData: () => draftRows,
+    option: (name, value) => {
+      if (name === 'value') {
+        if (value !== undefined) {
+          setDraftRows(value || []);
+          setRows(value || []);
+        } else {
+          return draftRows;
+        }
+      }
+    },
+    value: () => draftRows
+  }));
+
+  // Fetch Table Metadata & Columns Schema
   useEffect(() => {
-    const loadRows = async () => {
+    if (!modelName) {
+      if (initialColumns) {
+        setColumns(initialColumns);
+      }
+      return;
+    }
+
+    const loadConfigAndScheme = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // 1. Fetch SysTable Config
+        let stConfig = null;
+        try {
+          const stRes = await fetch(`${API_BASE_URL}/api/Utility/GetSTConfig/${modelName}`);
+          if (stRes.ok) {
+            stConfig = await stRes.json();
+          }
+        } catch (e) {
+          console.warn("Fetch ST Config failed", e);
+        }
+
+        let parsedGridOptions = {};
+        if (stConfig) {
+          const stItem = Array.isArray(stConfig) ? stConfig.find(x => x.name === modelName) : stConfig;
+          if (stItem) {
+            if (stItem.displayExpr) {
+              setDisplayExpr(stItem.displayExpr);
+            }
+            if (stItem.gridEditorOptions) {
+              parsedGridOptions = safeParseBinaryJson(stItem.gridEditorOptions) || {};
+            }
+          }
+        }
+
+        // Apply editing mode from database stConfig
+        if (parsedGridOptions?.editing?.mode) {
+          setEditMode(parsedGridOptions.editing.mode);
+        }
+
+        // 2. Fetch Columns Scheme
+        const schemeUrl = gridType === 'System' 
+          ? `${API_BASE_URL}/api/${modelName}/GetSystemScheme` 
+          : `${API_BASE_URL}/api/${modelName}/GetScheme`;
+        
+        const schemeRes = await fetch(schemeUrl);
+        if (!schemeRes.ok) throw new Error("Load scheme config failed");
+        const schemeData = await schemeRes.json();
+
+        const mappedColumns = (schemeData || []).map((col) => ({
+          field: col.dataField,
+          caption: col.caption || col.dataField,
+          dataType: col.dataType || 'string',
+          sortable: col.allowSorting !== false,
+          groupable: col.allowGrouping !== false,
+          editable: col.visible !== false,
+          visible: col.visible !== false,
+          editorType: col.editor || 'dxTextBox',
+          lookup: col.lookup,
+          validationRules: col.validationRules ? safeParseBinaryJson(col.validationRules) : [],
+          editorOptions: col.editorOptions ? safeParseBinaryJson(col.editorOptions) : {},
+          formItem: col.formItem ? safeParseBinaryJson(col.formItem) : {}
+        }));
+
+        setColumns(mappedColumns);
+      } catch (err) {
+        console.error("Load config and scheme failed", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadConfigAndScheme();
+  }, [modelName, gridType, initialColumns]);
+
+  // Fetch Rows Data
+  const loadData = async () => {
+    if (!modelName) {
       if (dataSource && typeof dataSource.load === 'function') {
         setLoading(true);
         setError(null);
         try {
           const loaded = await dataSource.load();
-          setDraftRows(Array.isArray(loaded) ? loaded : loaded?.data ?? []);
+          const loadedRows = Array.isArray(loaded) ? loaded : loaded?.data ?? [];
+          setRows(loadedRows);
+          setDraftRows(loadedRows);
         } catch (err) {
-          setError(err);
+          setError(err.message);
         } finally {
           setLoading(false);
         }
-      } else {
-        setDraftRows(rows ?? []);
+      } else if (initialRows) {
+        setRows(initialRows);
+        setDraftRows(initialRows);
       }
-    };
-
-    loadRows();
-    if (editMode !== 'batch') {
-      setIsDirty(false);
+      return;
     }
-  }, [rows, dataSource, editMode]);
 
-  const refreshData = async () => {
-    if (dataSource && typeof dataSource.load === 'function') {
-      setLoading(true);
-      setError(null);
-      try {
-        const loaded = await dataSource.load();
-        setDraftRows(Array.isArray(loaded) ? loaded : loaded?.data ?? []);
-      } catch (err) {
-        setError(err);
-      } finally {
-        setLoading(false);
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams();
+      if (refKey) params.set("refKey", refKey);
+      if (refField) params.set("refField", refField);
+      if (refOperator) params.set("refOperator", refOperator);
+      if (refKey2) params.set("refKey2", refKey2);
+      if (refField2) params.set("refField2", refField2);
+      if (refOperator2) params.set("refOperator2", refOperator2);
+
+      let url = `${API_BASE_URL}/api/${modelName}/GetAll`;
+      if (overrideGetUrl) {
+        url = overrideGetUrl.startsWith("http") ? overrideGetUrl : `${API_BASE_URL}/${overrideGetUrl}`;
       }
+
+      const separator = url.includes("?") ? "&" : "?";
+      const fetchUrl = params.toString() ? `${url}${separator}${params.toString()}` : url;
+
+      const res = await fetch(fetchUrl);
+      if (!res.ok) throw new Error("Load rows data failed");
+      const data = await res.json();
+      const loadedRows = Array.isArray(data) ? data : data?.data ?? [];
+      setRows(loadedRows);
+      setDraftRows(loadedRows);
+    } catch (err) {
+      console.error("Load rows failed", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const normalizedColumns = useMemo(
-    () =>
-      columns.map((column) => {
-        if (typeof column === 'string') {
-          const captions = { id: 'ID', name: 'Name', role: 'Role', status: 'Status' };
-          return {
-            field: column,
-            caption: captions[column] || column,
-            width: column === 'id' ? '90px' : column === 'status' ? '140px' : '1fr',
-            sortable: true,
-            groupable: true,
-            editable: true,
-          };
-        }
+  useEffect(() => {
+    loadData();
+  }, [modelName, refKey, refField, refOperator, refKey2, refField2, refOperator2, overrideGetUrl, initialRows, dataSource]);
 
+  // Normalize Columns Definitions for Rendering
+  const normalizedColumns = useMemo(() => {
+    return columns.map((column) => {
+      if (typeof column === 'string') {
+        const captions = { id: 'ID', name: 'Name', role: 'Role', status: 'Status' };
         return {
-          field: column.field,
-          caption: column.caption || column.field,
-          width: column.width || '1fr',
-          sortable: column.sortable !== false,
-          groupable: column.groupable !== false,
-          editable: column.editable !== false,
-          template: column.template,
-          actions: column.actions,
-          editorType: column.editorType || 'text',
-          lookup: column.lookup,
+          field: column,
+          caption: captions[column] || column,
+          width: column === 'id' ? '90px' : column === 'status' ? '140px' : '1fr',
+          sortable: true,
+          groupable: true,
+          editable: true,
         };
-      }),
-    [columns],
-  );
+      }
 
+      return {
+        field: column.field ?? column.dataField,
+        caption: column.caption || column.field || column.dataField,
+        width: column.width || '1fr',
+        sortable: column.sortable !== false,
+        groupable: column.groupable !== false,
+        editable: column.editable !== false,
+        template: column.template,
+        actions: column.actions,
+        editorType: column.editorType || column.editor || 'dxTextBox',
+        lookup: column.lookup,
+      };
+    });
+  }, [columns]);
+
+  // Row Manipulation & Saving
   const commitRows = (nextRows) => {
     setDraftRows(nextRows);
     if (editMode !== 'batch') {
@@ -104,15 +268,106 @@ function CustomGrid({
     }
   };
 
+  const handleAddRow = async () => {
+    if (onAddRow) {
+      onAddRow();
+      return;
+    }
+
+    const nextId = draftRows.length ? Math.max(...draftRows.map((row) => row.id || row.Id || 0)) + 1 : 1;
+    const newRow = { id: nextId, Id: nextId };
+    normalizedColumns.forEach(col => {
+      if (col.field && col.field !== 'id' && col.field !== 'Id') {
+        newRow[col.field] = '';
+      }
+    });
+
+    if (!modelName) {
+      const nextRows = [...draftRows, newRow];
+      commitRows(nextRows);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const formData = new FormData();
+      formData.append("values", JSON.stringify(newRow));
+
+      const res = await fetch(`${API_BASE_URL}/api/${modelName}/InsertData`, {
+        method: "POST",
+        body: formData
+      });
+      if (!res.ok) throw new Error("Insert row failed");
+      alert("Thêm dòng mới thành công! ✅");
+      loadData();
+    } catch (err) {
+      console.error("Insert failed", err);
+      alert("Thêm dòng thất bại! ❌");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateRow = async (rowId, updatedRow) => {
+    if (!modelName) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const formData = new FormData();
+      formData.append("key", rowId);
+      formData.append("values", JSON.stringify(updatedRow));
+
+      const res = await fetch(`${API_BASE_URL}/api/${modelName}/UpdateData`, {
+        method: "PUT",
+        body: formData
+      });
+      if (!res.ok) throw new Error("Update row failed");
+      loadData();
+    } catch (err) {
+      console.error("Update failed", err);
+      alert("Cập nhật dòng thất bại! ❌");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const saveChanges = async () => {
     if (isDirty) {
-      if (dataSource && typeof dataSource.update === 'function') {
+      if (modelName) {
+        const modifiedRows = draftRows.filter((row) => {
+          const original = rows.find(r => (r.id || r.Id) === (row.id || row.Id));
+          return !original || JSON.stringify(original) !== JSON.stringify(row);
+        });
+
+        setLoading(true);
+        try {
+          for (const row of modifiedRows) {
+            const rowId = row.id || row.Id;
+            const formData = new FormData();
+            formData.append("key", rowId);
+            formData.append("values", JSON.stringify(row));
+            await fetch(`${API_BASE_URL}/api/${modelName}/UpdateData`, {
+              method: "PUT",
+              body: formData
+            });
+          }
+          alert("Lưu tất cả thay đổi thành công! ✅");
+          loadData();
+        } catch (e) {
+          console.error("Batch save failed", e);
+          alert("Lưu thay đổi thất bại! ❌");
+        } finally {
+          setLoading(false);
+        }
+      } else if (dataSource && typeof dataSource.update === 'function') {
         try {
           await Promise.all(
-            draftRows.map((row) => dataSource.update(row.id, row)).filter(Boolean),
+            draftRows.map((row) => dataSource.update(row.id || row.Id, row)).filter(Boolean),
           );
         } catch (err) {
-          setError(err);
+          setError(err.message);
         }
       }
       onRowsChange?.(draftRows);
@@ -129,6 +384,39 @@ function CustomGrid({
     setActiveCell(null);
   };
 
+  const handleDeleteRow = async (rowId) => {
+    if (!modelName) {
+      const nextRows = draftRows.filter((row) => (row.id || row.Id) !== rowId);
+      commitRows(nextRows);
+      if (selectedRowId === rowId) {
+        setSelectedRowId(null);
+      }
+      return;
+    }
+
+    if (!confirm("Bạn có chắc chắn muốn xóa dòng này không?")) return;
+
+    try {
+      setLoading(true);
+      const formData = new FormData();
+      formData.append("key", rowId);
+
+      const res = await fetch(`${API_BASE_URL}/api/${modelName}/DeleteData`, {
+        method: "DELETE",
+        body: formData
+      });
+      if (!res.ok) throw new Error("Delete row failed");
+      alert("Xóa dòng thành công! ✅");
+      loadData();
+    } catch (err) {
+      console.error("Delete failed", err);
+      alert("Xóa dòng thất bại! ❌");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Sorting & Filtering
   const filteredRows = useMemo(() => {
     return draftRows.filter((row) =>
       normalizedColumns.every((column) => {
@@ -187,6 +475,7 @@ function CustomGrid({
     return sortedRows.slice(start, start + pageSize);
   }, [sortedRows, pageIndex, pageSize, groupColumns.length]);
 
+  // Grouping
   const buildGroups = (items, groupIndex = 0, parentPath = []) => {
     if (groupIndex >= groupColumns.length) {
       return items;
@@ -228,7 +517,7 @@ function CustomGrid({
   };
 
   const handleCellChange = (rowId, field, value) => {
-    const nextRows = draftRows.map((row) => (row.id === rowId ? { ...row, [field]: value } : row));
+    const nextRows = draftRows.map((row) => ((row.id || row.Id) === rowId ? { ...row, [field]: value } : row));
     commitRows(nextRows);
   };
 
@@ -237,26 +526,10 @@ function CustomGrid({
     setSelectedRowId(rowId);
   };
 
-  const handleRowSave = () => {
-    saveChanges();
-  };
-
-  const handleRowCancel = () => {
-    cancelChanges();
-  };
-
   const handleSelectRow = (rowId) => {
     setSelectedRowId(rowId === selectedRowId ? null : rowId);
     if (editMode === 'form') {
       setActiveCell(null);
-    }
-  };
-
-  const handleDeleteRow = (rowId) => {
-    const nextRows = draftRows.filter((row) => row.id !== rowId);
-    commitRows(nextRows);
-    if (selectedRowId === rowId) {
-      setSelectedRowId(null);
     }
   };
 
@@ -302,8 +575,10 @@ function CustomGrid({
     setExpandedGroups((prev) => ({ ...prev, [groupKey]: !prev[groupKey] }));
   };
 
+  // Rendering Helper Methods
   const renderCellValue = (row, column) => {
-    const isEditing = isCellEditable(row.id, column.field);
+    const rowId = row.id || row.Id;
+    const isEditing = isCellEditable(rowId, column.field);
     const value = row[column.field];
 
     if (column.actions) {
@@ -328,12 +603,42 @@ function CustomGrid({
     }
 
     if (isEditing) {
-      const inputType = column.editorType === 'number' ? 'number' : 'text';
+      // Mimic DevExtreme editors dynamically
+      if (column.editorType === 'dxCheckBox') {
+        return (
+          <input
+            type="checkbox"
+            checked={!!value}
+            onChange={(event) => handleCellChange(rowId, column.field, event.target.checked)}
+          />
+        );
+      }
+
+      if (column.editorType === 'dxDateBox') {
+        return (
+          <input
+            type="date"
+            value={value ? value.substring(0, 10) : ''}
+            onChange={(event) => handleCellChange(rowId, column.field, event.target.value)}
+          />
+        );
+      }
+
+      if (column.editorType === 'dxNumberBox') {
+        return (
+          <input
+            type="number"
+            value={value ?? ''}
+            onChange={(event) => handleCellChange(rowId, column.field, Number(event.target.value))}
+          />
+        );
+      }
+
       if (column.lookup && Array.isArray(column.lookup.dataSource)) {
         return (
           <select
             value={value ?? ''}
-            onChange={(event) => handleCellChange(row.id, column.field, event.target.value)}
+            onChange={(event) => handleCellChange(rowId, column.field, event.target.value)}
           >
             <option value="">--</option>
             {column.lookup.dataSource.map((item) => (
@@ -347,12 +652,12 @@ function CustomGrid({
 
       return (
         <input
-          type={inputType}
+          type="text"
           value={value ?? ''}
-          onChange={(event) => handleCellChange(row.id, column.field, event.target.value)}
+          onChange={(event) => handleCellChange(rowId, column.field, event.target.value)}
           onFocus={() => {
             if (editMode === 'cell') {
-              setActiveCell({ rowId: row.id, field: column.field });
+              setActiveCell({ rowId, field: column.field });
             }
           }}
           onBlur={() => {
@@ -365,19 +670,25 @@ function CustomGrid({
     }
 
     if (column.template) {
-      return column.template({ row, value, onChange: (nextValue) => handleCellChange(row.id, column.field, nextValue) });
+      return column.template({ row, value, onChange: (nextValue) => handleCellChange(rowId, column.field, nextValue) });
+    }
+
+    // dxCheckBox boolean display
+    if (column.editorType === 'dxCheckBox') {
+      return <span>{value ? '✅' : '❌'}</span>;
     }
 
     return <span>{value ?? ''}</span>;
   };
 
   const renderRow = (node) => {
-    const rowClasses = `grid-row dx-data-row ${selectedRowId === node.id ? 'dx-selection' : ''}`;
+    const rowId = node.id || node.Id;
+    const rowClasses = `grid-row dx-data-row ${selectedRowId === rowId ? 'dx-selection' : ''}`;
     const rowProps = {
-      key: node.id,
+      key: rowId,
       className: rowClasses,
       style: { gridTemplateColumns: normalizedColumns.map((column) => column.width).join(' ') },
-      onClick: () => handleSelectRow(node.id),
+      onClick: () => handleSelectRow(rowId),
     };
 
     if (rowTemplate) {
@@ -385,7 +696,7 @@ function CustomGrid({
         row: node,
         columns: normalizedColumns,
         defaultRowProps: rowProps,
-        isEditing: editingRowId === node.id || (editMode === 'form' && selectedRowId === node.id),
+        isEditing: editingRowId === rowId || (editMode === 'form' && selectedRowId === rowId),
         onCellChange: handleCellChange,
         onEditRow: handleRowEdit,
         onDeleteRow: handleDeleteRow,
@@ -397,7 +708,7 @@ function CustomGrid({
         {normalizedColumns.map((column) => (
           <div key={column.field || `col-${column.caption}`} className="grid-cell dx-cell" onClick={() => {
             if (editMode === 'cell' && column.editable) {
-              setActiveCell({ rowId: node.id, field: column.field });
+              setActiveCell({ rowId, field: column.field });
             }
           }}>
             {renderCellValue(node, column)}
@@ -437,7 +748,7 @@ function CustomGrid({
     {
       location: 'before',
       text: 'Refresh',
-      onClick: refreshData,
+      onClick: loadData,
       disabled: loading,
     },
     {
@@ -455,7 +766,7 @@ function CustomGrid({
     {
       location: 'after',
       text: 'Add Row',
-      onClick: onAddRow,
+      onClick: handleAddRow,
     },
   ];
 
@@ -613,5 +924,6 @@ function CustomGrid({
       </div>
     </div>
   );
-}
-export default CustomGrid;  
+});
+
+export default CustomGrid;
