@@ -131,7 +131,7 @@ const DropDownBox = forwardRef(({
                         gridOption={gridOption}
                         onRowsChange={() => {}}
                         rowTemplate={({ row, columns, defaultRowProps }) => (
-                            <div 
+                            <tr 
                                 {...defaultRowProps} 
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -140,11 +140,13 @@ const DropDownBox = forwardRef(({
                                 style={{ ...defaultRowProps.style, cursor: 'pointer' }}
                             >
                                 {columns.map((column) => (
-                                    <div key={column.field || `col-${column.caption}`} className="grid-cell dx-cell">
-                                        <span>{row[column.field] ?? ''}</span>
-                                    </div>
+                                    <td key={column.field || `col-${column.caption}`} className="grid-cell dx-cell">
+                                        <div className="grid-cell-content">
+                                            {row[column.field] ?? ''}
+                                        </div>
+                                    </td>
                                 ))}
-                            </div>
+                            </tr>
                         )}
                     />
                 </div>
