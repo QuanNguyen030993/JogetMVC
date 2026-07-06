@@ -29,20 +29,23 @@ namespace ERPCore.ControllerUtil
 
         public async static Task<UserInfo> FetchUserRoles(IHttpContextAccessor httpContextAccessor, IConfiguration configuration, string DOMAIN_NAME)
         {
-            string userName = httpContextAccessor.HttpContext.User.Identity.Name.Replace(DOMAIN_NAME, "");
+            string userName = httpContextAccessor.HttpContext.User.Identity.Name?.Replace(DOMAIN_NAME, "") ?? "anonymous" ;
             var userInfo = new UserInfo();
-            IBaseRepository<Users> _usersRepository = new BaseRepository<Users>(configuration, httpContextAccessor);
-            userInfo.Users = await _usersRepository.GetSingleObject(s => s.username == userName);
-            if (userInfo.Users != null)
+            if (userName == "anonymous")
             {
-                IBaseRepository<Employee> _employeeRepository = new BaseRepository<Employee>(configuration, httpContextAccessor);
-                userInfo.Employee = await _employeeRepository.GetSingleObject(s => s.AccountName == userInfo.Users.username);
-                IBaseRepository<UserRoles> _userRolesRepository = new BaseRepository<UserRoles>(configuration, httpContextAccessor);
-                userInfo.UserRoles = await _userRolesRepository.GetSingleObject(s => s.UserId == userInfo.Users.Id);
-                if (userInfo.UserRoles != null)
+                IBaseRepository<Users> _usersRepository = new BaseRepository<Users>(configuration, httpContextAccessor);
+                userInfo.Users = await _usersRepository.GetSingleObject(s => s.username == userName);
+                if (userInfo.Users != null)
                 {
-                    IBaseRepository<Roles> _rolesRepository = new BaseRepository<Roles>(configuration, httpContextAccessor);
-                    userInfo.Roles = await _rolesRepository.GetSingleObject(s => s.Id == userInfo.UserRoles.RoleId);
+                    IBaseRepository<Employee> _employeeRepository = new BaseRepository<Employee>(configuration, httpContextAccessor);
+                    userInfo.Employee = await _employeeRepository.GetSingleObject(s => s.AccountName == userInfo.Users.username);
+                    IBaseRepository<UserRoles> _userRolesRepository = new BaseRepository<UserRoles>(configuration, httpContextAccessor);
+                    userInfo.UserRoles = await _userRolesRepository.GetSingleObject(s => s.UserId == userInfo.Users.Id);
+                    if (userInfo.UserRoles != null)
+                    {
+                        IBaseRepository<Roles> _rolesRepository = new BaseRepository<Roles>(configuration, httpContextAccessor);
+                        userInfo.Roles = await _rolesRepository.GetSingleObject(s => s.Id == userInfo.UserRoles.RoleId);
+                    }
                 }
             }
             return userInfo;

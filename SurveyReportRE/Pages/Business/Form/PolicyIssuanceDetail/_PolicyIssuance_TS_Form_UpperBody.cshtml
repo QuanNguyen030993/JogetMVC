@@ -4,7 +4,7 @@
     long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
 }
 <!-- COMPOSER -->
-<div id="@PIViewIdHelper.PinZone(dept, quotationId)" class="composer">
+@* <div id="@PIViewIdHelper.PinZone(dept, quotationId)" class="composer">
     <div class="pinned-zone">
         <div class="pinned-zone-header">
             <div class="pinned-zone-title">Pinned notes</div>
@@ -17,7 +17,7 @@
         <div class="pin-list" id="@PIViewIdHelper.PinList(dept, quotationId)"></div>
     </div>
 
-</div>
+</div> *@
 
 <script>
 

@@ -230,7 +230,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         {
             DOMAIN_NAME = DOMAIN_NAME,
             Title = "Assigning Task",
-            Subject = $"{quotation.QuotationCode} have been submitted from {userInfo.Employee.FullName}",
+            Subject = $"{quotation.QuotationCode} have been submitted from {userInfo.Employee?.FullName ?? "anonymous" }",
             Resource = "Assign from ",
             Guid = quotation.Guid,
             ReceivedBy = accountName,

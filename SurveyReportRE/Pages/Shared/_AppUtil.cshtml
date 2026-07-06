@@ -556,7 +556,7 @@
                             quotationData.Quotation.RequestedDate = submitSummaryData.createDate;
                             quotationData.Quotation.PIC = { FO: makeRequestAccount, TS: "", UW: "", LKMT: "" };
                             quotationData.Quotation.TurnAroundTimeAttributes = {
-                                        FO: { AcceptDate: new Date(), "CompleteDate": new Date() }
+                                        FO: { AcceptDate: new Date(), CompleteDate: new Date() }
                                         , TS: { AcceptDate: "", CompleteDate: "" }
                                         , UW: { AcceptDate: "", CompleteDate: "" }
                                         , LMKT: { AcceptDate: "", CompleteDate: "" }
@@ -1363,7 +1363,7 @@
                             onClick: function (e) {
                                 urgentPinsOnly = !urgentPinsOnly;
                                 e.component.option("type", urgentPinsOnly ? "default" : "normal");
-                                renderPins();
+                                // renderPins();
                             }
                         });
                     }
@@ -1376,12 +1376,12 @@
                     if (commentsIn.length > 0)
                     {
                         pinnedNotes = commentsIn.filter(f => f.section == dept);
-                        renderPins();
+                        // renderPins();
                     }
 
 
                     buildTopButtons();
-                    renderPins();
+                    // renderPins();
                     }
 
 
@@ -2326,9 +2326,8 @@
                                         renderDepartmentAssigneeBox(`#${window.QuotationIdManager.assigneeBox(item, data[item].id)}`, {
                             groupName: item,
                                 dataForm: data[item],
-                            //value: formItems.lmktAssigneeId || null,
-                            onChanged: function (itemChild, editor) {
-                                
+                                     onValueChanged: function (itemChild) { //onChanged: function (itemChild, editor) {
+                                    // var  itemChild =    e.component.option("selectedItems") || []
                                 if (!stateLayout.isAssigneeBoxRender) return;
                                 var formId = window.QuotationIdManager.form(item,this.dataForm.id);
                                 var ds = $(`#${formId}`).dxForm("instance").option("dataSource");
@@ -2355,7 +2354,6 @@
                                 PICs[item] = filteredAccounts.join(",");
 
 
-
                                 var data = new Object();
                                 data.pIC = JSON.stringify(PICs);
                                         store.update(this.dataForm.id, data)
@@ -2380,7 +2378,7 @@
                                 groupName: item,
                                 dataForm: data[item],
                                 //value: formItems.lmktAssigneeId || null,
-                                onChanged: function (itemChild, editor) {
+                                    onValueChanged: function (itemChild) {
 
                                 if (!stateLayout.isAssigneeBoxRender) return;
                                 var formId = window.PolicyIssuanceIdManager.form(item, this.dataForm.id);
@@ -2429,96 +2427,6 @@
 
             }
 
-
-        // function renderDepartmentAssigneeBox(selector, options) {
-        //     const settings = $.extend(true, {
-        //         groupName: "",
-        //         dataForm: {},
-        //         currentUserId: null,
-        //         value: null,
-        //         onChanged: null
-        //     }, options || {});
-        //     const store = new DevExpress.data.CustomStore({
-        //         key: "id",
-        //         loadMode: "raw",
-        //         load: function (loadOptions) {
-        //             return $.ajax({
-        //                 url: "api/Employee/GetAssignableByGroup",
-        //                 type: "GET",
-        //                 dataType: "json",
-        //                 data: {
-        //                     group: settings.groupName,
-        //                     excludeCurrent: true,
-        //                     keyword: loadOptions.searchValue || ""
-        //                 }
-        //             }).then(function (res) {
-        //                 return res && res.success ? res.data : [];
-        //             });
-        //         },
-        //         byKey: function (key) {
-        //             if (!key) return null;
-
-        //             return $.ajax({
-        //                 url: `api/Employee/EmployeeLookup/${key}`,
-        //                 type: "GET",
-        //                 dataType: "json"
-        //             }).then(function (res) {
-        //                 return res && res.success ? res.data : null;
-        //             });
-        //         }
-        //     });
-
-        //     const select = $(selector).dxSelectBox({
-        //         dataSource: store,
-        //         valueExpr: "accountName",
-        //         displayExpr: "fullName",
-        //         searchEnabled: true,
-        //         searchExpr: ["fullName", "accountName", "displayName"],
-        //         placeholder: "Select assignee...",
-        //         showClearButton: true,
-        //         value: getDefaultPicByDept(settings.groupName, settings.dataForm) || settings.value,
-        //         buttons: [
-        //             "clear",
-        //             "dropDown",
-        //             {
-        //                 name: "assignToMe",
-        //                 location: "after",
-        //                 options: {
-        //                     type: "default",
-        //                     text: "Assign to me",
-        //                     onClick: function () {
-        //                         $.ajax({
-        //                             url: "api/Employee/GetMyAssigneeProfile",
-        //                             type: "GET",
-        //                             dataType: "json"
-        //                         }).done(function (res) {
-        //                             if (!res || !res.success || !res.data) return;
-
-        //                             const me = res.data;
-        //                             const editor = $(selector).dxSelectBox("instance");
-
-        //                             editor.option("value", me.id);
-
-        //                             if (typeof settings.onChanged === "function") {
-        //                                 settings.onChanged(me, editor, true);
-        //                             }
-        //                         });
-        //                     }
-        //                 }
-        //             }
-        //         ],
-        //         onValueChanged: function (e) {
-        //             const item = e.component.option("selectedItem");
-        //             if (typeof settings.onChanged === "function") {
-        //                 settings.onChanged(item, e.component, false);
-        //             }
-        //         }
-        //     });
-        //     $(select).on("click", function (e) {
-        //         e.stopPropagation();
-
-        //     });
-        // }
     function renderDepartmentAssigneeBox(selector, options, hideIfMuliple = true) {
         const settings = $.extend(true, {
             groupName: "",
@@ -2584,6 +2492,7 @@
              
             displayExpr: "fullName",
             height: 38,
+            width: 400,
             value: selectedValues,
             // value: getDefaultPicByDept(settings.groupName, settings.dataForm) || settings.value,
 
@@ -2681,14 +2590,15 @@
             ],
 
 
-            onValueChanged: function (e) {
+            // onValueChanged: function (e) {
+                onClosed: function (e) {
 
                 const items = e.component.option("selectedItems") || [];
 
 
-                if (typeof settings.onChanged === "function") {
+                if (typeof settings.onValueChanged === "function") {
 
-                    settings.onChanged(
+                        settings.onValueChanged(
                         items,
                         e.component,
                         false
@@ -2784,15 +2694,19 @@
                 var condition = safeJsonParse(findRoute.data);
                 if (condition){
             if (condition.source == "form") {
-                formItems = window.QuotationPage.state.formFO.dxForm("instance").option("formData");
-                formItems.hasResAttachment = window.QuotationPage.state.hasResAttachment;
+                    const uploader1 = $(`[id^='attList_qt-body_FO_RES_default_${formItems.id}_'] .att-item.animate-step.visible`);
+                    const fileCount1 = uploader1.length || 0; // number of quote docs
+                     formItems.hasResAttachment =  fileCount1 > 0 ? true : false;
+                // formItems = window.QuotationPage.state.formFO.dxForm("instance").option("formData");
+                // formItems.hasResAttachment = window.QuotationPage.state.hasResAttachment;
             }
+
             if (evaluateConditionRule(condition, formItems)) {
                 var flowName = "";
                 if (moduleName === "qt") flowName = "Quotation";
                 if (moduleName === "pi") flowName = "PolicyIssuance";
 
-                        ajaxPost(`/api/InstanceWorkflow/${flowName}SubmitNextStep`, sendData, {
+                        ajaxPost(`/api/InstanceWorkflow/${flowName}SubmitNextStep`, sendData, {processData: true,
                     onSuccess: function (response) {
                         appNotifySuccess(`Submitted to ${findRoute.toNodeId}`, false);
                     },
@@ -2818,10 +2732,10 @@
             //var formItemsRes = $(`#qt-formRES`).dxForm("instance")?.option("formData") || {};
             var condition = safeJsonParse(findRoute.data);
             if (condition){
-            if (condition.source == "form") {
-                formItems = window.QuotationPage.state.formFO.dxForm("instance").option("formData");
-                formItems.hasResAttachment = window.QuotationPage.state.hasResAttachment;
-            }
+            // if (condition.source == "form") {
+            //     formItems = window.QuotationPage.state.formFO.dxForm("instance").option("formData");
+            //     formItems.hasResAttachment = window.QuotationPage.state.hasResAttachment;
+            // }
             if (evaluateConditionRule(condition, formItems)) {
                      var flowName = "";
                     if (moduleName === "qt") flowName = "Quotation";
@@ -2912,43 +2826,7 @@
                     }
 
                     return items;
-                    // return [item[0] ? {
-                    //     dataField: "quotation"
-                    //     , editorType: "dxFileUploader"
-                    //     ,
-                    //     editorOptions: {
-                    //         name: "files"
-                    //     }
-                    //     , template: function (data, itemElement) {
-                    //         createEditor(item[0], itemElement, $(`<div>`), item[0]);
-                    //     }
-
-                    // } : {}
-                    // ,
-                    // item[1] ? {
-                    //     dataField: "supportingDocument"
-                    //     , editorType: "dxFileUploader"
-                    //     ,
-                    //     editorOptions: {
-                    //         name: "sdfiles"
-                    //     }
-                    //     , template: function (data, itemElement) {
-                    //         createEditor(item[1], itemElement, $(`<div>`), item[1]);
-                    //     }
-
-                    // } : {},
-                    // item[2] ? {
-                    //     dataField: "document"
-                    //     , editorType: "dxFileUploader"
-                    //     ,
-                    //     editorOptions: {
-                    //         name: "dfiles"
-                    //     }
-                    //     , template: function (data, itemElement) {
-                    //         createEditor(item[2], itemElement, $(`<div>`), item[2]);
-                    //     }
-
-                    // } : {}]
+                    
                 }
 
 
@@ -2963,14 +2841,14 @@
         function getCurrentFormOptions(editorOptions) {
             var form = new Object();
 
+                    try
+                    {
                 if (editorOptions.data.FormId)
                     form = $(`#${editorOptions.data.FormId}`).dxForm("instance");
                 if (!form) {
                     return null
                 };
 
-                try
-                {
                     form.option("formData");
                 }
                 catch
@@ -3933,7 +3811,6 @@
     }
 
     function uwDecision(object){
-            debugger
             var statusObject = _enums.OverallStatus.find(f => f.value == object.statusName);
                           // object.formItems.statusId  = statusObject.id;
                                   var passingObject = new Object();
@@ -3994,11 +3871,28 @@
 
 
        function acceptDecision(object){
-           
             var statusObject = _enums.OverallStatus.find(f => f.value == object.statusName);
                           object.formItems.statusId  = statusObject.id;
                           object.formItems.workflowStatus = statusObject.value;
-                          // object.formItems.quotationStatus = statusObject.value;
+
+                                   object.formItems.turnAroundTimeAttributes = object.formItems.turnAroundTimeAttributes
+                                        ? tryParseJSON(object.formItems.turnAroundTimeAttributes, "Parse Accept TAT Problem" )
+                                    : {};
+
+                                var currentDate = new Date().toISOString();
+
+
+                                        if (! object.formItems.turnAroundTimeAttributes[object.dept]) {
+                                             object.formItems.turnAroundTimeAttributes[object.dept] = {
+                                            AcceptDate: "",
+                                            CompleteDate: ""
+                                        };
+                                    }
+
+                                      object.formItems.turnAroundTimeAttributes[object.dept].AcceptDate = currentDate;
+                                      object.formItems.turnAroundTimeAttributes[object.dept].CompleteDate = currentDate;
+                                      object.formItems.turnAroundTimeAttributes = JSON.stringify( object.formItems.turnAroundTimeAttributes);
+
                            ajaxPut(object.url,
                             {
                                 key: object.formItems.id,
@@ -4024,6 +3918,7 @@
                             quotationData.Quotation.Id = object.formItems.id;
                             quotationData.Quotation.Guid = object.formItems.guid;
                             quotationData.Quotation.BranchCode = _branch;
+                                
                             quotationData.Attributes = new Object();
                             quotationData.Attributes.SectionName = object.dept;
                              var formData = new FormData();
@@ -4045,7 +3940,30 @@
             var statusObject = _enums.OverallStatus.find(f => f.value == object.statusName);
                           object.formItems.statusId  = statusObject.id;
                           object.formItems.workflowStatus = statusObject.value;
-                          // object.formItems.quotationStatus = statusObject.value;
+
+
+                          //TAT handle if need
+                                    //      object.formItems.turnAroundTimeAttributes = object.formItems.turnAroundTimeAttributes
+                                    //         ? tryParseJSON(object.formItems.turnAroundTimeAttributes, "Parse Accept TAT Problem" )
+                                    //     : {};
+
+                                    // var currentDate = new Date().toISOString();
+
+
+                                    //         if (! object.formItems.turnAroundTimeAttributes[object.dept]) {
+                                    //              object.formItems.turnAroundTimeAttributes[object.dept] = {
+                                    //             AcceptDate: "",
+                                    //             CompleteDate: ""
+                                    //         };
+                                    //     }
+
+                                    //       object.formItems.turnAroundTimeAttributes[object.dept].AcceptDate = currentDate;
+                                    //       object.formItems.turnAroundTimeAttributes[object.dept].CompleteDate = currentDate;
+                                    //       object.formItems.turnAroundTimeAttributes = JSON.stringify( object.formItems.turnAroundTimeAttributes);
+
+
+
+
                            ajaxPut(object.url,
                             {
                                 key: object.formItems.id,
@@ -5608,56 +5526,62 @@ function styleModeChange(item){
                 return String(k || "").trim().toUpperCase();
             }
 
-                function renderFullFormIfAccepted(formInstance, dept, mainField) {
-        var formData = formInstance.option("formData") || {};
-        var tatObject = tryParseJSON(formData.turnAroundTimeAttributes);
+                // function renderFullFormIfAccepted(formInstance, dept, mainField) {
+                //     var formData = formInstance.option("formData") || {};
+                //     var tatObject = tryParseJSON(formData.turnAroundTimeAttributes);
 
-        if (tatObject?.[dept]?.AcceptDate) {
-            formInstance.option("items", [
-                ...formInstance.option("items"),
-                ...mainField
-            ]);
-        }
-    }
+                //     if (tatObject?.[dept]?.AcceptDate) {
+                //         formInstance.option("items", [
+                //             ...formInstance.option("items"),
+                //             ...mainField
+                //         ]);
+                //     }
+                // }
 
              function delayAcceptStatus(mainFields,formId,dept, acceptButtonId, acceptButtonIdStatus,rejectButtonId, rejectButtonIdStatus ){
               setTimeout(() => {
-                  try {
+                  // try {
+                     
+                  renderDecisionDeferred(formId, dept, "decisionGroup.acceptButton",mainFields, acceptButtonId, acceptButtonIdStatus)
+            //     var formIns = $(`#${formId}`).dxForm("instance");
+            //      var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+            //          var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
 
-                var formIns = $(`#${formId}`).dxForm("instance");
-                    renderFullFormIfAccepted(formIns, dept, mainFields);
-                 var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-                     var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
-                 if (tatObject) if (tatObject[dept]?.AcceptDate)
-             {
-                     if (acceptButtonId)
-                     {
-                        $(`#${acceptButtonId}`).css("background-color","#17a2b8");
-                        $(`#${acceptButtonIdStatus}`).text(`Accepted at: ${tatObject[dept]?.AcceptDate}`);
-                        $(`#${acceptButtonId}`).dxButton("instance").option("disabled", true);
-                     }
-                      if (rejectButtonId)
-                     {
-                        $(`#${rejectButtonId}`).css("background-color","#17a2b8");
-                        $(`#${rejectButtonIdStatus}`).text(`Accepted at: ${tatObject[dept]?.AcceptDate}`);
-                            $(`#${rejectButtonId}`).dxButton("instance").option("disabled", true);
-                     }
-            }
-                  }
+                      
 
-                  catch {
-                      console.log("Accept status problem");
-                  }
+            //      if (tatObject) if (tatObject[dept]?.AcceptDate)
+            //  {
+            //          if (acceptButtonId)
+            //          {
+            //             $(`#${acceptButtonId}`).css("background-color","#17a2b8");
+            //             $(`#${acceptButtonIdStatus}`).text(`Accepted at: ${tatObject[dept]?.AcceptDate}`);
+            //             $(`#${acceptButtonId}`).dxButton("instance").option("disabled", true);
+            //                 // renderFullFormIfAccepted(formIns, dept, mainFields);
+            //          }
+            //           if (rejectButtonId)
+            //          {
+            //             $(`#${rejectButtonId}`).css("background-color","#17a2b8");
+            //             $(`#${rejectButtonIdStatus}`).text(`Accepted at: ${tatObject[dept]?.AcceptDate}`);
+            //                 $(`#${rejectButtonId}`).dxButton("instance").option("disabled", true);
+            //          }
+            // }
+            //       }
+
+            //       catch {
+            //           console.log("Accept status problem");
+            //       }
             },_delayRenderDecisionButton);
     }
 
     function decisionField(formId,dept,acceptButtonId, acceptStatusElement,rejectButtonId, rejectStatusElement ){
-          return   {
+              
+                return   {
                      dataField: "decision",
-
+                     name:"acceptButton",
                      label: {
                          text: "Decision"
                      },
+                     visible: false,
                      itemType: "simple",
 
                      template: function (data, itemElement) {
@@ -5670,19 +5594,16 @@ function styleModeChange(item){
                                      text: "Accept",
                                      icon: "check",
                                      onClick: function (e) {
-                                             var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-                                         var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
-                                             tatObject[dept].AcceptDate = formatDateToString(new Date()).gmt7;
-                                         formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
-                                         var passingObject = new Object();
-                                         passingObject.statusName = `${dept} Process`; // base on Dept
-                                         passingObject.Comment = `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`;  // base on Dept
-                                         passingObject.formItems = formItems;
-                                             passingObject.dept = dept;
-                                         passingObject.url = '/api/Quotation/UpdateData';
-                                         passingObject.urlLog = `/api/Quotation/LogAction`;
-                                         passingObject.schemeName = `Quotation`;
-                                         acceptDecision(passingObject);
+                                             
+                                         // var passingObject = new Object();
+                                         // passingObject.statusName = `${dept} Process`; // base on Dept
+                                         // passingObject.Comment = `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`;  // base on Dept
+                                         // passingObject.formItems = formItems;
+                                         //     passingObject.dept = dept;
+                                         // passingObject.url = '/api/Quotation/UpdateData';
+                                         // passingObject.urlLog = `/api/Quotation/LogAction`;
+                                         // passingObject.schemeName = `Quotation`;
+                                         // acceptDecision(passingObject);
                                      }
                                         }).appendTo(itemElement);
                                                     $(`#${acceptStatusElement}`).appendTo(itemElement);
@@ -5690,6 +5611,101 @@ function styleModeChange(item){
                                 
                      }
                  }
+               
     }
+
+
+
+       
+
+    function renderDecisionDeferred(formId, dept, groupName, mainField, acceptButtonId, acceptStatusElement) {
+
+        // setTimeout(function () {
+
+            var form = $(`#${formId}`).dxForm("instance");
+            if (!form) return;
+
+            var formItems = form.option("formData") || {};
+
+            var picObject = tryParseJSON(formItems.pic, "PIC Load Problem") || {};
+                var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
+            var pic = picObject[dept];
+            if (!pic) {
+
+                return;
+
+            }
+
+            form.itemOption(groupName, "visible", pic ? true : false);
+            setTimeout(() => {
+            
+            
+                       $(`#${acceptButtonId}`).dxButton("instance").option("onClick", function (e){
+                            var passingObject = {
+
+                                       statusName: `${dept} Process`,
+
+                                       Comment: `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`,
+
+                                       formItems: formItems,
+
+                                       dept: dept,
+
+                                       url: "/api/Quotation/UpdateData",
+
+                                       urlLog: "/api/Quotation/LogAction",
+
+                                       schemeName: "Quotation"
+
+                                   };
+
+                                   acceptDecision(passingObject);
+                       } )
+                // form.itemOption(groupName, "onClick", );
+            // form.itemOption(groupName, "items", [
+
+            //     ...form.itemOption(groupName, "items"),
+
+            //     decisionItem
+
+            // ]);
+
+            // }, _delayRenderDecisionButton);
+     //             var formData = formInstance.option("formData") || {};
+     // var tatObject = tryParseJSON(formData.turnAroundTimeAttributes);
+
+     // if (tatObject?.[dept]?.AcceptDate) {
+     //     formInstance.option("items", [
+     //         ...formInstance.option("items"),
+     //         ...mainField
+     //     ]);
+     // }
+                      if (tatObject) if (tatObject[dept]?.AcceptDate)
+                 {
+                         if (acceptButtonId)
+                         {
+                                 form.option("items", [
+                                     ...form.option("items"),
+                                     ...mainField
+                                 ]);
+                            $(`#${acceptButtonId}`).css("background-color","#17a2b8");
+                                $(`#${acceptStatusElement}`).text(`Accepted at: ${tatObject[dept]?.AcceptDate}`);
+                            $(`#${acceptButtonId}`).dxButton("instance").option("disabled", true);
+                                // renderFullFormIfAccepted(formIns, dept, mainFields);
+                             
+                         }
+                         //  if (rejectButtonId)
+                         // {
+                         //    $(`#${rejectButtonId}`).css("background-color","#17a2b8");
+                         //    $(`#${rejectButtonIdStatus}`).text(`Accepted at: ${tatObject[dept]?.AcceptDate}`);
+                         //        $(`#${rejectButtonId}`).dxButton("instance").option("disabled", true);
+                         // }
+                }
+                               }, 100);
+
+
+    }
+
+
 
 </script>

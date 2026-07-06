@@ -169,7 +169,7 @@ const handleBlur = () => {
       )}
 
       <span className="comment-editor-badge">
-        {comments.length} items
+        {comments.length} comments
       </span>
 
       </div>

@@ -4,7 +4,8 @@
     long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
 }
     <!-- COMPOSER -->
-<div id="@QTViewIdHelper.PinZone(dept, quotationId)" class="composer">
+<div id="@QTViewIdHelper.BtnToggleResForm(dept,quotationId)"></div>
+@* <div id="@QTViewIdHelper.PinZone(dept, quotationId)" class="composer">
         <div class="pinned-zone">
             <div class="pinned-zone-header">
                 <div  class="pinned-zone-title">Pinned notes</div>
@@ -16,11 +17,92 @@
             </div>
         <div class="pin-list" id="@QTViewIdHelper.PinList(dept, quotationId)"></div>
         </div>
-
-    </div>
-    
+    </div> *@
 <script>
-    
+             var sectionId =  "qt-body_@(dept)_RES";
+
+     var thatRes = new Object();
+      thatRes.ModelName = "Quotation";
+      thatRes.moduleName = "default";
+      thatRes.editorType = "dxFileUploader"
+      thatRes.id = @quotationId;
+      thatRes.guid = "@quotationGuid" ;
+      thatRes.sectionName = "@(dept)";
+      thatRes.titleName = "Upload RES Form";
+      thatRes.uploaderAllow = _role == "@dept";
+      thatRes.data = { SectionName: `${sectionId}_${thatRes.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: thatRes.moduleName, FormId: "@(QTViewIdHelper.Form(dept, quotationId))" }; //{"SectionName":"default_FO_410"}
+      $(`<div class="dExForm">`).dxForm({
+        items:  [{ itemType: "group", caption: "RES Attachment", colCount: 1, items:  attachmentByCase(thatRes) }],
+         // items: [{ itemType: "group", items: searchFormControls }],
+      }).appendTo($(`#@QTViewIdHelper.BtnToggleResForm(dept, quotationId)`));
+
+    //  // window.QuotationPage.resButtonComponent =
+    //  $("#@QTViewIdHelper.BtnToggleResForm(dept, quotationId)").dxButton({
+    //                 text: "Res Form",
+    //                 icon: "file",
+    //                 type: "normal",
+    //                 stylingMode: "contained",
+    //                 onClick: () => {
+
+
+    //                       var resItems = attachmentByCase(that);
+
+    //                    var popupInstance = makePopup("large", "Res");
+    //                     popupInstance.option("contentTemplate", function (container) {
+
+    //                    var _formConfig = new MFormOption();
+    //                         _formConfig.originModelName = "Res";
+    //                         _formConfig.formElementName = "Res";
+    //                         _formConfig.colCount = 1;
+    //                         var parentFormData = $("#@QTViewIdHelper.Form(dept, quotationId)").dxForm("instance")?.option("formData");
+    //                         // _formConfig.container = $(`<div id = "form_${_formConfig.originModelName}_${parentFormData.resId}" style="padding: 10px; margin-right: 0px" >`);
+    //                         _formConfig.container = $(`<div id = "${window.QuotationIdManager.resForm('RES', parentFormData.resId)}" style="padding: 10px; margin-right: 0px" >`);
+    //                         var form =  new ResFormQuotationForm(parentFormData.resId, null, _formConfig, _formConfig);
+
+
+    //                         // var scrollView = $(`<div>`);
+    //                         // scrollView.dxScrollView({
+    //                         //     width: "100%",
+    //                         //     height: "100%",
+    //                         //     useNative: false
+    //                         // });
+    //                         var scrollView = popupStandardContentByScroll(form.container);
+    //                         scrollView.appendTo(container);
+    //                         form.formInstance.option("items", resItems);
+    //                         form.formInstance.updateData("sectionName", "RES");
+    //                         form.formInstance.updateData("specificFolder", `RES\\${parentFormData.quotationCode}`);
+    //                         form.formInstance.updateData("guid", parentFormData.guid);
+
+    //                 });
+
+
+    //                  popupInstance.option("toolbarItems[0].options.onClick", function () {
+    //                        popupInstance.hide();
+    //                    });
+    //                    popupInstance.option("toolbarItems[1].options.onClick", function () {
+    //                        //Cancel
+    //                        popupInstance.hide();
+    //                    });
+
+    //                 popupInstance.show();
+
+    //                 }
+    //                 });
+
+    //                  setTimeout( () => {
+
+    // var encodedFolder = encodeURIComponent(thatRes.data.SectionName);
+    //    $.get(`/api/Document/AttachmentSummary/@ViewData["Guid"].ToString()/${encodedFolder}`, null
+    //    ).done(function (res) {
+    //         window.QuotationPage.state.formFO.dxForm("instance").updateData("resAttachmentCount", res.attachmentCount);
+    //         window.QuotationPage.state.formFO.dxForm("instance").updateData("hasResAttachment", res.hasAttachment);
+    //         window.QuotationPage.state.hasResAttachment = res.hasAttachment;
+    //         if (res.hasAttachment)
+    //         $("#@QTViewIdHelper.BtnToggleResForm(dept, quotationId)").addClass("hasResAttachment");
+    //         else
+    //         $("#@QTViewIdHelper.BtnToggleResForm(dept, quotationId)").removeClass("hasResAttachment");
+    //    });
+    // }, 200);
 
 </script> 
 

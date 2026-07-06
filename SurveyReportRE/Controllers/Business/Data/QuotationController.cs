@@ -1173,7 +1173,7 @@ public class QuotationController : BaseControllerApi<Quotation>
     {
         var entity = new Quotation();
         JsonConvert.PopulateObject(form.values, entity);
-        _BaseRepository.UpdateData(entity, form.values, form.key, "Id");
+        _BaseRepository.UpdateData(entity, form.values, form.key, "Id"); 
 
 
 

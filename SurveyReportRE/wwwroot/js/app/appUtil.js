@@ -4130,7 +4130,7 @@ function ajaxCore(method, url, {
             onError: opt.onError,
             onFinally: opt.onFinally,
             beforeSend: opt.beforeSend,
-
+            processData: opt.processData, 
             // misc
             dataType: opt.dataType || "json",
             timeout: opt.timeout || 30000,

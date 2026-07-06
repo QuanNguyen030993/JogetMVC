@@ -186,7 +186,8 @@ Note:
                                             text: findRouteReturn ? findRouteReturn.displayStatus : "", icon: "undo", type: "danger", onClick:
                                                 function (e) {
                                                 // var content = remarkBoxs[item].controlRemark.instance.option("value");
-                                                 var content = $(remarkBoxs[item].controlRemark[0]).htmleditor("option","value");
+                                                 // var content = $(remarkBoxs[item].controlRemark[0]).htmleditor("option","value");
+                                                    var content = remarkBoxs[item].controlRemark.value();
                                                     formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                                                     formItems.comment = content || "";
                                                     returnToStep(`${formModuleKeyQt}`, state.nextStep, findRouteReturn, formItems);
@@ -205,7 +206,8 @@ Note:
                                             text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
                                                 function (e) {
                                                 // var content = remarkBoxs[item].controlRemark.instance.option("value");
-                                                var content = $(remarkBoxs[item].controlRemark[0]).htmleditor("option","value");
+                                                // var content = $(remarkBoxs[item].controlRemark[0]).htmleditor("option","value");
+                                                    var content = remarkBoxs[item].controlRemark.value();
                                                     formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                                                     formItems.comment = content || "";
                                                     submitNextStep(`${formModuleKeyQt}`, state.nextStep, findRoute, formItems);

@@ -341,7 +341,7 @@ namespace ERPCore.ControllerUtil
             ,DeptCode,CommentOrder,CommentBy,CommentTime,CommentText,SourceSystem,CreatedAtUtc)
                         VALUES ('{entity.Guid}','{workflowEntity.StepsWorkflow.FromNodeId} - {workflowEntity.StepsWorkflow.StepName}'
             ,{0}
-            ,'{userInfo.Users.name}'
+            ,'{userInfo.Users?.name ?? "anonymous"}'
             ,'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}'
             ,N'{workflowEntity.Comment}'
             ,'WEB', GETDATE())
@@ -358,7 +358,7 @@ namespace ERPCore.ControllerUtil
             ,'{workflowEntity.StepsWorkflow.FromNodeId}'
             ,'{workflowEntity.StepsWorkflow.ToNodeId}'
             ,'{workflowEntity.StepsWorkflow.ActionCode}'
-            ,'{userInfo.Users.name}','WEB',GETDATE())
+            ,'{userInfo.Users?.name ?? "anonymous"}','WEB',GETDATE())
                     ";
             }
             using var loggerFactory = LoggerFactory.Create(loggingBuilder => loggingBuilder
