@@ -8,6 +8,7 @@ import NumberBox from './components/NumberBox';
 import CheckBox from './components/CheckBox';
 import SelectBox from './components/SelectBox';
 import DropDownBox from './components/DropDownBox';
+import CustomForm from './components/CustomForm';
 import './css/com.all.css';
 
 const departmentEnum = [
@@ -20,6 +21,42 @@ const projectsTable = [
   { Id: 101, name: 'Joget Survey Module', client: 'Joget Inc.' },
   { Id: 102, name: 'SurveyReport MVC API', client: 'TMIV Inc.' },
   { Id: 103, name: 'DevExpress Migration', client: 'internal' }
+];
+
+const demoFormFields = [
+  { dataField: 'name', caption: 'Full Name', formDataType: 'string', defaultValue: "'John Doe'", validationRules: [{ type: 'required', message: 'Name is required' }] },
+  { dataField: 'age', caption: 'Age', formDataType: 'number', defaultValue: 30, colSpan: 1 },
+  { dataField: 'active', caption: 'Is Active', formDataType: 'boolean', defaultValue: true, colSpan: 1 },
+  { 
+    dataField: 'deptId', 
+    caption: 'Department', 
+    formDataType: 'enum', 
+    defaultValue: 2,
+    lookup: {
+      dataSource: departmentEnum,
+      valueExpr: 'id',
+      displayExpr: 'value'
+    }
+  },
+  {
+    dataField: 'projectId',
+    caption: 'Project Assigned',
+    formDataType: 'table',
+    defaultValue: 101,
+    lookup: {
+      dataSource: projectsTable,
+      valueExpr: 'Id',
+      displayExpr: 'name',
+      columns: ['Id', 'name', 'client']
+    },
+    editorOptions: {
+      dataSource: projectsTable,
+      valueExpr: 'Id',
+      displayExpr: 'name',
+      columns: ['Id', 'name', 'client']
+    }
+  },
+  { dataField: 'bio', caption: 'Biography', formDataType: 'textarea', colSpan: 2, height: '80px' }
 ];
 
 const defaultRows = [
@@ -178,6 +215,22 @@ function App() {
       <section className="section">
         <div className="section-title">Comment Editor</div>
         <CommentEditor onChange={setEditorValue} />
+      </section>
+
+      <section className="section">
+        <div className="section-title">Custom Form (Dynamic MForm Simulation)</div>
+        <CustomForm
+          id={0}
+          formConfig={{
+            originModelName: "Employee",
+            colCount: 2,
+            labelLocation: "top",
+            allowFormActionButton: true
+          }}
+          columns={demoFormFields}
+          onSaveSuccess={(data) => console.log("Form Saved successfully:", data)}
+          onClose={() => alert("Form closed")}
+        />
       </section>
     </div>
   );

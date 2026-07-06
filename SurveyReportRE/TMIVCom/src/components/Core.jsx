@@ -7,6 +7,7 @@ import NumberBox from "../components/NumberBox.jsx";
 import CheckBox from "../components/CheckBox.jsx";
 import SelectBox from "../components/SelectBox.jsx";
 import DropDownBox from "../components/DropDownBox.jsx";
+import CustomForm from "../components/CustomForm.jsx";
 import React from "react";
 
 import { createRoot } from "react-dom/client";
@@ -437,6 +438,120 @@ createJQueryPlugin("checkbox", "CheckBox");
 createJQueryPlugin("selectbox", "SelectBox");
 createJQueryPlugin("dropdownbox", "DropDownBox");
 
+$.fn.customform = function(arg1, arg2, arg3) {
+    if (typeof arg1 === "string") {
+        if (arg1 === "option") {
+            if (arg2 === "value") {
+                if (arguments.length >= 3) {
+                    this.each(function() {
+                        const instance = roots.get(this);
+                        if (!instance) return;
+                        if (instance.ref?.current) {
+                            instance.ref.current.option("value", arg3);
+                        } else {
+                            instance.options.value = arg3;
+                            const Component = controls[instance.name];
+                            instance.root.render(
+                                <Component ref={instance.ref} {...instance.options}/>
+                            );
+                        }
+                    });
+                    return this;
+                }
+                if (this.length === 1) {
+                    const el = this[0];
+                    const instance = roots.get(el);
+                    if (!instance) return null;
+                    const controlInstance = instance.ref?.current;
+                    return controlInstance?.option("value") ?? instance.options.value ?? null;
+                }
+            }
+            return undefined;
+        }
+    }
+
+    if (typeof arg1 === "object" || typeof arg1 === "undefined") {
+        if (this.length === 1) {
+            mount(this[0], "CustomForm", arg1 || {});
+            const el = this[0];
+            return {
+                option(name, value) {
+                    const instance = roots.get(el);
+                    if (!instance) return;
+                    if (instance.ref?.current) {
+                        if (arguments.length === 1) {
+                            return instance.ref.current.option(name);
+                        }
+                        instance.ref.current.option(name, value);
+                    } else {
+                        if (arguments.length === 1) {
+                            return instance.options[name];
+                        }
+                        instance.options[name] = value;
+                        const Component = controls[instance.name];
+                        instance.root.render(
+                            <Component ref={instance.ref} {...instance.options}/>
+                        );
+                    }
+                },
+                validate() {
+                    const instance = roots.get(el);
+                    return instance?.ref?.current?.validate() ?? false;
+                },
+                save() {
+                    const instance = roots.get(el);
+                    instance?.ref?.current?.save();
+                },
+                load() {
+                    const instance = roots.get(el);
+                    instance?.ref?.current?.load();
+                }
+            };
+        }
+
+        const instances = [];
+        this.each(function() {
+            mount(this, "CustomForm", arg1 || {});
+            const el = this;
+            instances.push({
+                option(name, value) {
+                    const instance = roots.get(el);
+                    if (!instance) return;
+                    if (instance.ref?.current) {
+                        if (arguments.length === 1) {
+                            return instance.ref.current.option(name);
+                        }
+                        instance.ref.current.option(name, value);
+                    } else {
+                        if (arguments.length === 1) {
+                            return instance.options[name];
+                        }
+                        instance.options[name] = value;
+                        const Component = controls[instance.name];
+                        instance.root.render(
+                            <Component ref={instance.ref} {...instance.options}/>
+                        );
+                    }
+                },
+                validate() {
+                    const instance = roots.get(el);
+                    return instance?.ref?.current?.validate() ?? false;
+                },
+                save() {
+                    const instance = roots.get(el);
+                    instance?.ref?.current?.save();
+                },
+                load() {
+                    const instance = roots.get(el);
+                    instance?.ref?.current?.load();
+                }
+            });
+        });
+        return instances;
+    }
+    return this;
+};
+
 register(
     "DateBox",
     DateBox
@@ -481,4 +596,9 @@ register(
     DropDownBox
 );
 
-export default { DateBox, HtmlEditor, CustomGrid, CommentEditor, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox };
+register(
+    "CustomForm",
+    CustomForm
+);
+
+export default { DateBox, HtmlEditor, CustomGrid, CommentEditor, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm };

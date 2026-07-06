@@ -1505,3 +1505,166 @@ button {
 .grid-cell:last-child {
     border-right: none !important;
 }
+
+/* CustomForm styling */
+.tmivcom-form-container {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.025);
+    font-family: Inter, system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.tmivcom-form-toolbar {
+    display: flex;
+    gap: 12px;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 16px;
+    margin-bottom: 8px;
+}
+
+.tmivcom-form-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    outline: none;
+}
+
+.tmivcom-form-btn .btn-icon {
+    font-size: 1.1rem;
+}
+
+.tmivcom-form-btn.save-btn {
+    background: #10b981;
+    color: #ffffff;
+}
+
+.tmivcom-form-btn.save-btn:hover {
+    background: #059669;
+}
+
+.tmivcom-form-btn.close-btn {
+    background: #ef4444;
+    color: #ffffff;
+}
+
+.tmivcom-form-btn.close-btn:hover {
+    background: #dc2626;
+}
+
+.tmivcom-form-btn.refresh-btn {
+    background: #3b82f6;
+    color: #ffffff;
+}
+
+.tmivcom-form-btn.refresh-btn:hover {
+    background: #2563eb;
+}
+
+.tmivcom-form-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.tmivcom-form-loading {
+    padding: 40px;
+    text-align: center;
+    color: #64748b;
+    font-size: 1.1rem;
+}
+
+.tmivcom-form {
+    width: 100%;
+}
+
+.tmivcom-form-grid {
+    display: grid;
+    gap: 20px 24px;
+    width: 100%;
+}
+
+.tmivcom-form-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.tmivcom-form-field-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 2px;
+}
+
+.tmivcom-form-field-label .required-star {
+    color: #ef4444;
+    font-weight: bold;
+}
+
+.tmivcom-form-field-editor {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Validation styles */
+.tmivcom-form-field-group.has-error input,
+.tmivcom-form-field-group.has-error select,
+.tmivcom-form-field-group.has-error .tmivcom-selectbox-input,
+.tmivcom-form-field-group.has-error .tmivcom-dropdownbox-input,
+.tmivcom-form-field-group.has-error textarea {
+    border-color: #ef4444 !important;
+    background-color: #fef2f2 !important;
+}
+
+.tmivcom-form-error-msg {
+    color: #ef4444;
+    font-size: 0.8rem;
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+/* Textarea override styling */
+.tmivcom-textarea {
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    color: #1e293b;
+    outline: none;
+    transition: all 0.2s ease-in-out;
+    background: #ffffff;
+    box-sizing: border-box;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.tmivcom-textarea:hover {
+    border-color: #94a3b8;
+}
+
+.tmivcom-textarea:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.tmivcom-textarea:disabled {
+    background: #f1f5f9;
+    color: #94a3b8;
+    cursor: not-allowed;
+    border-color: #e2e8f0;
+}
