@@ -1,12 +1,4 @@
 ﻿@using JogetMVC.Model
-@* @page "{pageNum:int?}"
-@using Newtonsoft.Json *@
-@* @model Quotation_LMKT_FormModel *@
-@* @{
-   
-    ViewBag.Title = "Quotation";
-    ViewData["Id"] = 0;
-} *@
 @{
     string dept = "LMKT";
     long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
@@ -19,7 +11,9 @@
     }
 </style>
 <script type="text/javascript">
+    $(function() {
     var sectionId = "@(ViewData["Cd"])";
+    var that = new Object();
     that.ModelName = "Quotation";
     that.moduleName = "default";
     that.editorType = "dxFileUploader"
@@ -176,6 +170,7 @@
            ]
     });
     viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
+    })
 </script>
 <div id="@QTViewIdHelper.Form(dept, quotationId)">
 </div>

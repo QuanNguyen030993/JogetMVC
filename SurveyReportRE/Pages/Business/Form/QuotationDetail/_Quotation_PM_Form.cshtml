@@ -16,6 +16,9 @@
 <div id="@QTViewIdHelper.Form(dept, quotationId)">
 </div>
 <script type="text/javascript">
+    $(function() {
+    
+
     var sectionId = "@(ViewData["Cd"])";
     var modelObject = new Object();
     modelObject.ModelName = "Quotation"; 
@@ -133,4 +136,6 @@
           ]
        });
        viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
+    })
+
 </script>

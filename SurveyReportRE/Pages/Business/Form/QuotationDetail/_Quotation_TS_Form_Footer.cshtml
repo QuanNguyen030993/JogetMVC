@@ -293,8 +293,9 @@
        // var stateLayout = pageLayout.state;
     $("#@QTViewIdHelper.BtnSave(dept, quotationId)").dxButton({ text: "Save", icon: "save", type: "default", onClick:
          function (e) {
-                    const uploader1 = $(`#attList_@(prefix)_default_@(dept)_@(quotationId) .att-item.animate-step.visible`);
-                    const uploader2 = $(`#attList_@(prefix)_supportingDoc_@(dept)_@(quotationId) .att-item.animate-step.visible`);
+             debugger
+                    const uploader1 = $(`[id^='attList_@(prefix)_default_@(dept)_@(quotationId)_'] .att-item.animate-step.visible`);
+                    const uploader2 = $(`[id^='attList_@(prefix)_supportingDoc_@(dept)_@(quotationId)_'] .att-item.animate-step.visible`);
                 const fileCount1 = uploader1.length || 0; // number of quote docs
                 const fileCount2 = uploader2.length || 0; // number of sup docs
                 var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
@@ -304,7 +305,7 @@
                      var promptConfirm = appNotifyWarning(warningContent, true, "Yes", "Close");
                      promptConfirm.then((result) => {
                      if (result.isConfirmed){
-                                        prepareData($(`#attList_@(prefix)_default_@(dept)_@(quotationId) .att-item.animate-step.visible`))
+                                        prepareData($(`[id^='attList_@(prefix)_default_@(dept)_@(quotationId)_'] .att-item.animate-step.visible`))
                                     var popupInstance = makePopupWithScroll(
                                             renderOptionQuotationGrid()
                                         ,"medium", "Select product options");

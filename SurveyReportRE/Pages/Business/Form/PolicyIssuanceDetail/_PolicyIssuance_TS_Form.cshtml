@@ -14,7 +14,7 @@
     }
 </style>
 <script type="text/javascript">
-
+    $(function() {
     var thisObject = new Object();
     thisObject.ModelName =  "PolicyIssuance";       
     var thisObjectDetails = new Object();
@@ -313,6 +313,7 @@
         $("#pi_fillList_@policyIssuanceId").dxDataGrid("instance").option("dataSource", dataSourceGrid);
         $("#pi_fillList_@policyIssuanceId").dxDataGrid("instance").option("id", data.id);
     });
+    })
 </script>
 <div id="@PIViewIdHelper.Form(dept, policyIssuanceId)">
 </div>

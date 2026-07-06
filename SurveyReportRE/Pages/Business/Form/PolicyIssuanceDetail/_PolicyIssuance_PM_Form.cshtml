@@ -19,7 +19,7 @@
 <div id="@PIViewIdHelper.Form(dept, policyIssuanceId)">
 </div>
 <script type="text/javascript">
-
+    $(function() {
 
     var thisObject = new Object();
     thisObject.ModelName = "PolicyIssuance";
@@ -307,4 +307,5 @@
         $("#pi_checkList_@policyIssuanceId").dxDataGrid("instance").option("dataSource", dataSourceGridCL);
         $("#pi_checkList_@policyIssuanceId").dxDataGrid("instance").option("id", data.id);
     });
+    })
 </script>

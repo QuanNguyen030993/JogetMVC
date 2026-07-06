@@ -11,6 +11,37 @@
     }
 </style>
 <script type="text/javascript">
+    $(function () {
+        var that = new Object();
+    var sectionId = "@(ViewData["Cd"])";
+    that.ModelName = "Quotation";
+    that.moduleName = "default";
+    that.editorType = "dxFileUploader";
+    that.id = @(quotationId);
+    that.guid ="@(quotationGuid)";
+    that.sectionName = "@(dept)";
+    that.titleName = "Upload Quotation";
+    that.uploaderAllow = _role == "@dept";
+    that.data = { SectionName: `${sectionId}_${that.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: that.moduleName, FormId: "@(QTViewIdHelper.Form(dept, quotationId))" };; //{"SectionName":"default_FO_410"}
+
+
+    var that2 = new Object();
+    that2.ModelName = "Quotation";
+    that2.moduleName = "supportingDoc";
+    that2.editorType = "dxFileUploader";
+    that2.id = @(quotationId);
+    that2.guid ="@(quotationGuid)";
+    that2.sectionName = "@(dept)";
+    that2.titleName = "Upload Supporting Document";
+    // that2.uploaderAllow = _role == "@dept";
+    that2.uploaderAllow = _role == "@dept";
+    that2.data = { SectionName: `${sectionId}_${that2.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept, quotationId))" }; //{"SectionName":"default_FO_410"}
+
+
+
+
+
+
     var items = [
                 { id: "AC_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Accept", value: true },
                 // { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Assign", value: false },
@@ -98,17 +129,23 @@
     var formInstance =  $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
     dataSource: makeBasicDataSource(that, true),
      items: [
-         {itemType: "group",caption: "Prepare Quotation",colCount:2,items: [
-                   
-                    decisionField(`@QTViewIdHelper.Form(dept, quotationId)`, "@dept",`AC_@QTViewIdHelper.Decision(dept, quotationId)`,`AC_Status_@QTViewIdHelper.Decision(dept, quotationId)`,null,null  )
-            
+         {itemType: "group", name: "decisionGroup" ,caption: "Prepare Quotation",colCount:2,items: [
+    
+           decisionField(`@QTViewIdHelper.Form(dept, quotationId)`, "@dept",`AC_@QTViewIdHelper.Decision(dept, quotationId)`,`AC_Status_@QTViewIdHelper.Decision(dept, quotationId)`,null,null  )
 
-    ]}//,
-    ///...mainFields
+
+    ]}
   
-     ]
-        });
-        viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
+     ]});
+    viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
     delayAcceptStatus(mainFields,`@QTViewIdHelper.Form(dept, quotationId)`,"@dept", `AC_@QTViewIdHelper.Decision(dept, quotationId)`, `AC_Status_@QTViewIdHelper.Decision(dept, quotationId)`,null,null);
+    //     renderDecisionDeferred(
+    //    "formFO",
+    //    "FO",
+    //    "decisionGroup",
+    //    "btnAcceptFO",
+    //    "acceptStatusFO"
+    // );
+    })
 </script>
 <div id="@QTViewIdHelper.Form(dept, quotationId)"></div>

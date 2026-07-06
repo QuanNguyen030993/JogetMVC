@@ -11,7 +11,7 @@
     }
 </style>
 <script type="text/javascript">
-
+        $(function() {
          var items = [
                     { id: "AC_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Accept", value: true },
                     // { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Assign", value: false },
@@ -20,6 +20,7 @@
 
 
     var sectionId = "@(ViewData["Cd"])";
+    var that = new Object();
     that.ModelName = "Quotation";
     that.moduleName = "default";
     that.editorType = "dxFileUploader"
@@ -197,7 +198,7 @@
           //   }
           // { dataField:"surveyRefer", label:{text:"Survey Refer"}, editorType:"dxLink", editorOptions:{ items:[{text:"Refer",value:true, onClick:function(e){alert("Refer")}}] }}
                   delayAcceptStatus(mainFields,`@QTViewIdHelper.Form(dept, quotationId)`,"@dept", `AC_@QTViewIdHelper.Decision(dept, quotationId)`, `AC_Status_@QTViewIdHelper.Decision(dept, quotationId)`,null,null);
-
+})
 </script>
 
 <div id="@QTViewIdHelper.Form(dept, quotationId)"></div>

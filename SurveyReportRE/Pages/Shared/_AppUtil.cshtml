@@ -2326,13 +2326,14 @@
                                         renderDepartmentAssigneeBox(`#${window.QuotationIdManager.assigneeBox(item, data[item].id)}`, {
                             groupName: item,
                                 dataForm: data[item],
-                                     onValueChanged: function (itemChild) { //onChanged: function (itemChild, editor) {
+                                         onClosed: function (itemChild) { //onChanged: function (itemChild, editor) {
+                                    
                                     // var  itemChild =    e.component.option("selectedItems") || []
                                 if (!stateLayout.isAssigneeBoxRender) return;
                                 var formId = window.QuotationIdManager.form(item,this.dataForm.id);
                                 var ds = $(`#${formId}`).dxForm("instance").option("dataSource");
                                 var store = ds;
-                                        var PICs = JSON.parse(this.dataForm.pic);
+                                var PICs = JSON.parse(this.dataForm.pic);
                                 // if (!itemChild?.accountName) return;
                                 // if (currentPic == itemChild?.accountName) return;
                                 // PICs[item] = itemChild.accountName;
@@ -2596,9 +2597,9 @@
                 const items = e.component.option("selectedItems") || [];
 
 
-                if (typeof settings.onValueChanged === "function") {
+                if (typeof settings.onClosed === "function") {
 
-                        settings.onValueChanged(
+                            settings.onClosed(
                         items,
                         e.component,
                         false

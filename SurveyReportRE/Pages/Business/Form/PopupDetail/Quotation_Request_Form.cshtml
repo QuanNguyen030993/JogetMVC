@@ -606,7 +606,7 @@
                                            groupName: 'TS',
                                           dataForm: deptData['TS'],
                                        //value: formItems.lmktAssigneeId || null,
-                                       onChanged: function (itemChild, editor) {
+                                       onClosed: function (itemChild, editor) {
 
                                          const items = editor.option("selectedItems") || [];
 
@@ -624,7 +624,7 @@
                                                   notes: "",
                                                   deptTarget: vm.assignedTeamOrRole
                                        });
-                                       console.log(_enums.BranchOffice);
+                                     
 
                                    }
                                }, false);
@@ -883,7 +883,7 @@
             }
 
             // refreshAssignmentUI();
-           viewFieldAdjust("quotationRequestForm");
+    viewFieldAdjust("quotationRequestForm");
     function renderOccupationTag(value, container) {
 
         var obj = {};
