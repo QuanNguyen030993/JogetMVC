@@ -58,12 +58,35 @@ body,
         line-height: 1;
     }
 
-.grid-header,
-.grid-row,
-.grid-filter-row {
-    display: grid;
-    gap: 0;
-    align-items: stretch;
+.grid-table-container {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+.grid-table {
+    width: 100%;
+    min-width: max-content;
+    border-collapse: collapse;
+    table-layout: fixed;
+    border-spacing: 0;
+}
+
+.grid-table .grid-header,
+.grid-table .grid-body,
+.grid-table .grid-row,
+.grid-table .grid-filter-row,
+.grid-table .dx-header-row,
+.grid-table tr {
+    display: table-row;
+}
+
+.grid-table .grid-header-cell,
+.grid-table .grid-filter-cell,
+.grid-table .grid-cell,
+.grid-table .group-header-cell {
+    display: table-cell;
+    overflow: hidden;
 }
 
 .custom-grid .grid-header {
@@ -96,6 +119,32 @@ body,
     background: #f8fafc;
     cursor: pointer;
     user-select: none;
+    position: relative;
+}
+
+.grid-header-cell.resizable {
+    padding-right: 14px;
+}
+
+.grid-column-resizer {
+    position: absolute;
+    top: 0;
+    right: -3px;
+    width: 7px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 5;
+    touch-action: none;
+}
+
+.grid-column-resizer:hover,
+.tmivcom-column-resizing .grid-column-resizer {
+    background: rgba(37, 99, 235, 0.28);
+}
+
+.tmivcom-column-resizing {
+    cursor: col-resize !important;
+    user-select: none !important;
 }
 
     .grid-header-cell.sortable:hover {
@@ -116,21 +165,45 @@ body,
     background: #ffffff;
 }
 
-    .grid-filter-cell input {
-        width: 100%;
-        border: 1px solid #cbd5e1;
-        border-radius: 8px;
-        padding: 8px 10px;
-        background: #f8fafc;
-        color: #111827;
-        font-size: 0.95rem;
-        outline: none;
-    }
+.filter-input-wrap {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 2px 6px;
+    background: #f8fafc;
+    height: 30px;
+    box-sizing: border-box;
+}
 
-        .grid-filter-cell input:focus {
-            border-color: #93c5fd;
-            background: #ffffff;
-        }
+.filter-input-wrap input,
+.filter-input-wrap select {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    border: none;
+    padding: 2px 0;
+    background: transparent;
+    color: #111827;
+    font-size: clamp(9px, 0.82vw, 12px);
+    outline: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.filter-input-wrap input::placeholder {
+    color: #6b7280;
+    font-size: clamp(8px, 0.78vw, 11px);
+    opacity: 0.85;
+}
+
+.filter-input-wrap:focus-within {
+    border-color: #93c5fd;
+    background: #ffffff;
+}
 
 .grid-body .grid-row {
     transition: background 0.2s ease;
@@ -144,10 +217,25 @@ body,
     background: #eef2ff;
 }
 
+.grid-row.row-dragging,
+.grid-row.row-dragging td {
+    opacity: 0.65;
+    background: #f9fafb !important;
+}
+
 .grid-cell {
     padding: 12px 12px;
     border-bottom: 1px solid #e5e7eb;
     background: transparent;
+}
+
+.drag-handle-cell {
+    cursor: grab;
+    user-select: none;
+}
+
+.drag-handle-cell:active {
+    cursor: grabbing;
 }
 
     .grid-cell input {

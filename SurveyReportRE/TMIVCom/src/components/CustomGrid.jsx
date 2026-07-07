@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useImperativeHandle, forwardRef } from 'react';
+import { useEffect, useMemo, useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import { CONFIG } from '../config';
 import DropDownBox from './DropDownBox';
 import SelectBox from './SelectBox';
@@ -25,6 +25,16 @@ const safeParseBinaryJson = (val) => {
   return null;
 };
 
+// Helper for case-insensitive row value lookup
+const getCellValue = (row, fieldName) => {
+  if (!row || !fieldName) return undefined;
+  if (fieldName in row) return row[fieldName];
+  
+  const lowerField = fieldName.toLowerCase();
+  const matchingKey = Object.keys(row).find(key => key.toLowerCase() === lowerField);
+  return matchingKey ? row[matchingKey] : undefined;
+};
+
 const getAvatarBgColor = (name) => {
   const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6', '#06b6d4', '#f43f5e'];
   if (!name) return colors[0];
@@ -33,6 +43,37 @@ const getAvatarBgColor = (name) => {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);
   }
   return colors[Math.abs(hash) % colors.length];
+};
+
+const InlineCellEditor = ({ value, onChange, onFocus, onBlur }) => {
+  const editorRef = useRef(null);
+
+  useEffect(() => {
+    if (!editorRef.current) return;
+    const nextText = value == null ? '' : String(value);
+    if (editorRef.current.textContent !== nextText) {
+      editorRef.current.textContent = nextText;
+    }
+  }, [value]);
+
+  useEffect(() => {
+    editorRef.current?.focus();
+  }, []);
+
+  return (
+    <div
+      ref={editorRef}
+      className="grid-inline-editor"
+      contentEditable
+      suppressContentEditableWarning
+      role="textbox"
+      tabIndex={0}
+      onInput={(event) => onChange?.(event.currentTarget.textContent ?? '')}
+      onFocus={onFocus}
+      onBlur={onBlur}
+      onClick={(event) => event.stopPropagation()}
+    />
+  );
 };
 
 const CustomGrid = forwardRef(({
@@ -73,7 +114,11 @@ const CustomGrid = forwardRef(({
   const [isDirty, setIsDirty] = useState(false);
 
   // Drag row reorder state
-  const [draggedRowIndex, setDraggedRowIndex] = useState(null);
+  const [draggedRowKey, setDraggedRowKey] = useState(null);
+
+  // Column resize state
+  const [columnWidths, setColumnWidths] = useState({});
+  const [resizingColumn, setResizingColumn] = useState(null);
 
   // Theme support
   const [theme, setTheme] = useState(propTheme || 'light');
@@ -281,6 +326,7 @@ const CustomGrid = forwardRef(({
           field: column,
           caption: captions[column] || column,
           width: column === 'id' ? '60px' : column === 'status' ? '120px' : '1fr',
+          visible: true,
           sortable: true,
           groupable: true,
           editable: true,
@@ -308,6 +354,7 @@ const CustomGrid = forwardRef(({
         field: column.field ?? column.dataField,
         caption: column.caption || column.field || column.dataField,
         width: column.width || '1fr',
+        visible: column.visible !== false,
         sortable: column.sortable !== false,
         groupable: column.groupable !== false,
         editable: column.editable !== false,
@@ -324,7 +371,7 @@ const CustomGrid = forwardRef(({
 
   // Columns specifically used for grid rendering structure
   const renderingColumns = useMemo(() => {
-    const list = [...normalizedColumns];
+    const list = normalizedColumns.filter((column) => column.visible !== false);
 
     // Drag handle gripper column on the left
     if (allowRowReordering && groupColumns.length === 0) {
@@ -367,6 +414,60 @@ const CustomGrid = forwardRef(({
 
     return list;
   }, [normalizedColumns, allowRowReordering, showSelectionCheckbox, showCommandsColumn, groupColumns.length]);
+
+  const resolveColumnWidth = (column) => {
+    const key = column.field || column.caption;
+    if (columnWidths[key]) {
+      return `${columnWidths[key]}px`;
+    }
+
+    const rawWidth = column.width;
+    if (typeof rawWidth === 'number') {
+      return `${rawWidth}px`;
+    }
+    if (typeof rawWidth === 'string') {
+      const value = rawWidth.trim();
+      if (value.endsWith('px') || value.endsWith('%') || value.endsWith('rem') || value.endsWith('em')) {
+        return value;
+      }
+      if (/^\d+$/.test(value)) {
+        return `${value}px`;
+      }
+    }
+    if (column.field === 'row-selection-checkbox' || column.field === 'row-drag-handle') {
+      return '40px';
+    }
+    if (column.field === 'row-commands') {
+      return '120px';
+    }
+    return '160px';
+  };
+
+  useEffect(() => {
+    if (!resizingColumn) return;
+
+    const handleMouseMove = (event) => {
+      const delta = event.clientX - resizingColumn.startX;
+      const nextWidth = Math.max(48, resizingColumn.startWidth + delta);
+      setColumnWidths((current) => ({
+        ...current,
+        [resizingColumn.key]: nextWidth,
+      }));
+    };
+
+    const handleMouseUp = () => {
+      setResizingColumn(null);
+      document.body.classList.remove('tmivcom-column-resizing');
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.classList.remove('tmivcom-column-resizing');
+    };
+  }, [resizingColumn]);
 
   // Row Manipulation & Saving
   const commitRows = (nextRows) => {
@@ -537,26 +638,40 @@ const CustomGrid = forwardRef(({
   };
 
   // Drag and drop handlers
-  const handleRowDragStart = (event, index) => {
-    setDraggedRowIndex(index);
+  const handleRowDragStart = (event, row) => {
+    const rowKey = row.id || row.Id;
+    setDraggedRowKey(rowKey);
     event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData('text/plain', String(index));
+    event.dataTransfer.setData('application/x-tmivcom-row-key', String(rowKey));
   };
 
-  const handleRowDragOver = (event, index) => {
+  const handleRowDragOver = (event) => {
     event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
   };
 
-  const handleRowDrop = (event, index) => {
+  const handleRowDrop = (event, targetRow) => {
     event.preventDefault();
-    if (draggedRowIndex === null || draggedRowIndex === index) return;
-    
+    const sourceKey = event.dataTransfer.getData('application/x-tmivcom-row-key') || draggedRowKey;
+    const targetKey = targetRow.id || targetRow.Id;
+    if (!sourceKey || String(sourceKey) === String(targetKey)) {
+      setDraggedRowKey(null);
+      return;
+    }
+
     const reordered = [...draftRows];
-    const draggedRow = reordered[draggedRowIndex];
-    reordered.splice(draggedRowIndex, 1);
-    reordered.splice(index, 0, draggedRow);
-    
-    setDraggedRowIndex(null);
+    const sourceIndex = reordered.findIndex((row) => String(row.id || row.Id) === String(sourceKey));
+    const targetIndex = reordered.findIndex((row) => String(row.id || row.Id) === String(targetKey));
+    if (sourceIndex < 0 || targetIndex < 0) {
+      setDraggedRowKey(null);
+      return;
+    }
+
+    const [draggedRow] = reordered.splice(sourceIndex, 1);
+    reordered.splice(targetIndex, 0, draggedRow);
+
+    setDraggedRowKey(null);
+    setSortInfo({ field: null, direction: 'asc' });
     commitRows(reordered);
   };
 
@@ -577,18 +692,19 @@ const CustomGrid = forwardRef(({
     }
   };
 
-  // Sorting & Filtering
+  // Sorting & Filtering (Case-Insensitive getCellValue fixes filters not working)
   const filteredRows = useMemo(() => {
     return draftRows.filter((row) =>
       normalizedColumns.every((column) => {
         if (column.actions) return true;
-        const value = row[column.field];
+        const value = getCellValue(row, column.field);
         const filterValue = filters[column.field];
         if (filterValue === undefined || filterValue === null || filterValue === '') return true;
 
         if (column.editorType === 'dxCheckBox' || column.editorType === 'checkbox' || column.dataType === 'boolean') {
           const targetBool = filterValue === 'true';
-          return !!value === targetBool;
+          const valBool = value === true || value === 'true' || Number(value) === 1;
+          return valBool === targetBool;
         }
 
         if (column.lookup && Array.isArray(column.lookup.dataSource)) {
@@ -608,8 +724,8 @@ const CustomGrid = forwardRef(({
     }
 
     return [...filteredRows].sort((a, b) => {
-      const left = a[sortInfo.field];
-      const right = b[sortInfo.field];
+      const left = getCellValue(a, sortInfo.field);
+      const right = getCellValue(b, sortInfo.field);
 
       if (left === right) return 0;
       if (left == null) return 1;
@@ -656,7 +772,7 @@ const CustomGrid = forwardRef(({
     const groups = {};
 
     items.forEach((item) => {
-      const key = item[field] ?? '(Blanks)';
+      const key = getCellValue(item, field) ?? '(Blanks)';
       const path = [...parentPath, key];
       const groupKey = `${field}:${path.join('>')}`;
 
@@ -719,6 +835,21 @@ const CustomGrid = forwardRef(({
     });
   };
 
+  const handleColumnResizeStart = (event, column) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const key = column.field || column.caption;
+    const headerCell = event.currentTarget.closest('th');
+    const currentWidth = columnWidths[key] || headerCell?.offsetWidth || 160;
+    document.body.classList.add('tmivcom-column-resizing');
+    setResizingColumn({
+      key,
+      startX: event.clientX,
+      startWidth: currentWidth,
+    });
+  };
+
   const handleFilterChange = (field, value) => {
     setFilters((prev) => ({ ...prev, [field]: value }));
     setPageIndex(0);
@@ -750,7 +881,7 @@ const CustomGrid = forwardRef(({
   const renderCellValue = (row, column) => {
     const rowId = row.id || row.Id;
     const isEditing = isCellEditable(rowId, column.field);
-    const value = row[column.field];
+    const value = getCellValue(row, column.field);
 
     if (column.actions) {
       return (
@@ -815,10 +946,19 @@ const CustomGrid = forwardRef(({
 
       if (column.editorType === 'dxDateBox' || column.editorType === 'datebox') {
         return (
-          <input
-            type="date"
+          <InlineCellEditor
             value={value ? value.substring(0, 10) : ''}
-            onChange={(event) => handleCellChange(rowId, column.field, event.target.value)}
+            onChange={(nextValue) => handleCellChange(rowId, column.field, nextValue)}
+            onFocus={() => {
+              if (editMode === 'cell') {
+                setActiveCell({ rowId, field: column.field });
+              }
+            }}
+            onBlur={() => {
+              if (editMode === 'cell') {
+                setActiveCell(null);
+              }
+            }}
           />
         );
       }
@@ -861,10 +1001,19 @@ const CustomGrid = forwardRef(({
 
       if (column.editorType === 'dxNumberBox' || column.editorType === 'numberbox') {
         return (
-          <input
-            type="number"
+          <InlineCellEditor
             value={value ?? ''}
-            onChange={(event) => handleCellChange(rowId, column.field, Number(event.target.value))}
+            onChange={(nextValue) => handleCellChange(rowId, column.field, Number(nextValue))}
+            onFocus={() => {
+              if (editMode === 'cell') {
+                setActiveCell({ rowId, field: column.field });
+              }
+            }}
+            onBlur={() => {
+              if (editMode === 'cell') {
+                setActiveCell(null);
+              }
+            }}
           />
         );
       }
@@ -886,10 +1035,9 @@ const CustomGrid = forwardRef(({
       }
 
       return (
-        <input
-          type="text"
+        <InlineCellEditor
           value={value ?? ''}
-          onChange={(event) => handleCellChange(rowId, column.field, event.target.value)}
+          onChange={(nextValue) => handleCellChange(rowId, column.field, nextValue)}
           onFocus={() => {
             if (editMode === 'cell') {
               setActiveCell({ rowId, field: column.field });
@@ -904,10 +1052,11 @@ const CustomGrid = forwardRef(({
       );
     }
 
-    if (column.editorType === 'dxCheckBox' || column.editorType === 'checkbox') {
+    if (column.editorType === 'dxCheckBox' || column.editorType === 'checkbox' || column.dataType === 'boolean') {
+      const valBool = value === true || value === 'true' || Number(value) === 1;
       return (
         <CheckBox
-          value={value}
+          value={valBool}
           readOnly={true}
           disabled={true}
         />
@@ -949,89 +1098,82 @@ const CustomGrid = forwardRef(({
 
   const renderRow = (node) => {
     const rowId = node.id || node.Id;
-    const rowIndex = draftRows.findIndex((r) => (r.id || r.Id) === rowId);
-    const rowClasses = `grid-row dx-data-row ${selectedRowId === rowId ? 'dx-selection' : ''} ${draggedRowIndex === rowIndex ? 'row-dragging' : ''}`;
+    const rowClasses = `grid-row dx-data-row ${selectedRowId === rowId ? 'dx-selection' : ''} ${String(draggedRowKey) === String(rowId) ? 'row-dragging' : ''}`;
     const rowProps = {
       key: rowId,
       className: rowClasses,
-      style: { gridTemplateColumns: templateColumns },
       onClick: () => handleSelectRow(rowId),
-      onDragOver: (e) => handleRowDragOver(e, rowIndex),
-      onDrop: (e) => handleRowDrop(e, rowIndex),
+      onDragOver: handleRowDragOver,
+      onDrop: (e) => handleRowDrop(e, node),
     };
 
-    if (rowTemplate) {
-      return rowTemplate({
-        row: node,
-        columns: renderingColumns,
-        defaultRowProps: rowProps,
-        isEditing: editingRowId === rowId || (editMode === 'form' && selectedRowId === rowId),
-        onCellChange: handleCellChange,
-        onEditRow: handleRowEdit,
-        onDeleteRow: handleDeleteRow,
-      });
-    }
-
     return (
-      <div {...rowProps}>
+      <tr {...rowProps}>
         {renderingColumns.map((column) => {
           if (column.field === 'row-drag-handle') {
             return (
-              <div 
+              <td 
                 key="cell-drag" 
                 className="grid-cell drag-handle-cell" 
                 draggable={true} 
-                onDragStart={(e) => handleRowDragStart(e, rowIndex)}
+                onDragStart={(e) => handleRowDragStart(e, node)}
+                onDragEnd={() => setDraggedRowKey(null)}
                 onClick={(e) => e.stopPropagation()}
               >
-                <span className="drag-gripper">⁞⁞</span>
-              </div>
+                <div className="grid-cell-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                  <span className="drag-gripper">⁞⁞</span>
+                </div>
+              </td>
             );
           }
           if (column.field === 'row-selection-checkbox') {
             return (
-              <div key="cell-select" className="grid-cell selection-cell" onClick={(e) => e.stopPropagation()}>
-                <input 
-                  type="checkbox" 
-                  checked={selectedRowKeys.includes(rowId)}
-                  onChange={(e) => handleSelectRowCheckbox(e, rowId)}
-                />
-              </div>
+              <td key="cell-select" className="grid-cell selection-cell" onClick={(e) => e.stopPropagation()}>
+                <div className="grid-cell-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={selectedRowKeys.includes(rowId)}
+                    onChange={(e) => handleSelectRowCheckbox(e, rowId)}
+                  />
+                </div>
+              </td>
             );
           }
           if (column.field === 'row-commands') {
             const isEditing = editingRowId === rowId;
             return (
-              <div key="cell-commands" className="grid-cell commands-cell" onClick={(e) => e.stopPropagation()}>
-                {isEditing ? (
-                  <>
-                    <button type="button" className="command-btn save-btn" onClick={saveChanges} title="Lưu">
-                      <span className="btn-text">Lưu</span>
-                    </button>
-                    <button type="button" className="command-btn cancel-btn" onClick={cancelChanges} title="Hủy">
-                      <span className="btn-text">Hủy</span>
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button type="button" className="command-btn view-btn" onClick={() => handleViewRow(node)} title="Xem chi tiết">
-                      <span className="btn-text">Xem</span>
-                    </button>
-                    <button type="button" className="command-btn edit-btn" onClick={() => handleRowEdit(rowId)} title="Sửa dòng">
-                      <span className="btn-text">Sửa</span>
-                    </button>
-                    <button type="button" className="command-btn delete-btn" onClick={() => handleDeleteRow(rowId)} title="Xóa dòng">
-                      <span className="btn-text">Xóa</span>
-                    </button>
-                  </>
-                )}
-              </div>
+              <td key="cell-commands" className="grid-cell commands-cell" onClick={(e) => e.stopPropagation()}>
+                <div className="grid-cell-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', width: '100%', height: '100%' }}>
+                  {isEditing ? (
+                    <>
+                      <button type="button" className="command-btn save-btn" onClick={saveChanges} title="Lưu">
+                        <i className="fa fa-check"></i>
+                      </button>
+                      <button type="button" className="command-btn cancel-btn" onClick={cancelChanges} title="Hủy">
+                        <i className="fa fa-times"></i>
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button type="button" className="command-btn view-btn" onClick={() => handleViewRow(node)} title="Xem chi tiết">
+                        <i className="fa fa-eye"></i>
+                      </button>
+                      <button type="button" className="command-btn edit-btn" onClick={() => handleRowEdit(rowId)} title="Sửa dòng">
+                        <i className="fa fa-pencil"></i>
+                      </button>
+                      <button type="button" className="command-btn delete-btn" onClick={() => handleDeleteRow(rowId)} title="Xóa dòng">
+                        <i className="fa fa-trash-o"></i>
+                      </button>
+                    </>
+                  )}
+                </div>
+              </td>
             );
           }
 
           const isEditing = isCellEditable(rowId, column.field);
           return (
-            <div 
+            <td 
               key={column.field || `col-${column.caption}`} 
               className={`grid-cell dx-cell ${isEditing ? 'editing-cell' : ''}`} 
               onClick={() => {
@@ -1040,62 +1182,74 @@ const CustomGrid = forwardRef(({
                 }
               }}
             >
-              {renderCellValue(node, column)}
-            </div>
+              <div className="grid-cell-content" style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', height: '100%' }}>
+                {renderCellValue(node, column)}
+              </div>
+            </td>
           );
         })}
-      </div>
+      </tr>
     );
   };
 
   const renderGroupNodes = (nodes) => {
     if (!Array.isArray(nodes)) return null;
 
-    return nodes.map((node) => {
+    const list = [];
+    nodes.forEach((node) => {
       if (node.type === 'group') {
         const isExpanded = expandedGroups[node.groupKey] !== false;
-
-        return (
-          <div key={node.groupKey} className="group-block">
-            <div className="group-header" onClick={() => toggleGroup(node.groupKey)}>
-              <span className="group-toggle">{isExpanded ? '▾' : '▸'}</span>
+        list.push(
+          <tr 
+            key={node.groupKey} 
+            className="group-header-row" 
+            onClick={() => toggleGroup(node.groupKey)}
+            style={{ cursor: 'pointer', background: 'var(--grid-header-bg)' }}
+          >
+            <td colSpan={renderingColumns.length} className="group-header-cell" style={{ padding: '8px 12px', paddingLeft: `${node.level * 16 + 12}px`, fontWeight: '600', borderBottom: '1px solid var(--grid-border-cells)' }}>
+              <span className="group-toggle" style={{ marginRight: '6px' }}>{isExpanded ? '▾' : '▸'}</span>
               <span>
                 {node.field}: {node.key} ({node.count})
               </span>
-            </div>
-            {isExpanded ? <div className="group-children">{renderGroupNodes(node.items)}</div> : null}
-          </div>
+            </td>
+          </tr>
         );
+        if (isExpanded) {
+          list.push(...renderGroupNodes(node.items));
+        }
+      } else {
+        list.push(renderRow(node));
       }
-
-      return renderRow(node);
     });
+    return list;
   };
-
-  const templateColumns = renderingColumns.map((column) => column.width).join(' ');
 
   const defaultToolbarItems = [
     {
       location: 'before',
       text: 'Refresh',
+      icon: 'fa-refresh',
       onClick: loadData,
       disabled: loading,
     },
     {
       location: 'before',
       text: 'Save',
+      icon: 'fa-save',
       onClick: saveChanges,
       disabled: !isDirty && editingRowId === null,
     },
     {
       location: 'before',
       text: 'Cancel',
+      icon: 'fa-undo',
       onClick: cancelChanges,
       disabled: !isDirty && editingRowId === null,
     },
     {
       location: 'after',
       text: 'Add Row',
+      icon: 'fa-plus',
       onClick: handleAddRow,
     },
   ];
@@ -1106,7 +1260,7 @@ const CustomGrid = forwardRef(({
   const showingEnd = Math.min(filteredRows.length, (pageIndex + 1) * pageSize);
 
   return (
-    <div className={`custom-grid dx-datagrid custom-grid-${theme}`} style={{ '--grid-template-columns': templateColumns }}>
+    <div className={`custom-grid dx-datagrid custom-grid-${theme}`}>
       <div className="grid-toolbar">
         <div className="toolbar-group toolbar-group-before">
           {renderedToolbarItems
@@ -1118,9 +1272,9 @@ const CustomGrid = forwardRef(({
                 className="toolbar-item"
                 onClick={item.onClick}
                 disabled={item.disabled}
+                title={item.text}
               >
-                {item.icon ? <span className="toolbar-icon">{item.icon}</span> : null}
-                {item.text}
+                {item.icon ? <span className="toolbar-icon"><i className={`fa ${item.icon}`}></i></span> : null}
               </button>
             ))}
         </div>
@@ -1134,9 +1288,9 @@ const CustomGrid = forwardRef(({
                 className="toolbar-item"
                 onClick={item.onClick}
                 disabled={item.disabled}
+                title={item.text}
               >
-                {item.icon ? <span className="toolbar-icon">{item.icon}</span> : null}
-                {item.text}
+                {item.icon ? <span className="toolbar-icon"><i className={`fa ${item.icon}`}></i></span> : null}
               </button>
             ))}
         </div>
@@ -1160,137 +1314,154 @@ const CustomGrid = forwardRef(({
         )}
       </div>
 
-      <div className="grid-header dx-header-row" style={{ gridTemplateColumns: templateColumns }}>
-        {renderingColumns.map((column) => {
-          if (column.field === 'row-selection-checkbox') {
-            return (
-              <div key="header-select-all" className="grid-header-cell selection-header-cell">
-                <input 
-                  type="checkbox" 
-                  checked={draftRows.length > 0 && selectedRowKeys.length === draftRows.length}
-                  onChange={handleSelectAllCheckbox}
-                />
-              </div>
-            );
-          }
-          if (column.field === 'row-drag-handle') {
-            return (
-              <div key="header-drag-handle" className="grid-header-cell drag-header-cell">
-              </div>
-            );
-          }
-          if (column.field === 'row-commands') {
-            return (
-              <div key="header-commands" className="grid-header-cell commands-header-cell">
-                <span>Actions</span>
-              </div>
-            );
-          }
+      {/* Styled Grid using native HTML <table> structure for perfect alignment */}
+      <div className="grid-table-container" style={{ overflowX: 'auto', width: '100%' }}>
+        <table className="grid-table">
+          <colgroup>
+            {renderingColumns.map((column, idx) => (
+              <col key={idx} style={{ width: resolveColumnWidth(column) }} />
+            ))}
+          </colgroup>
 
-          return (
-            <button
-              key={column.field || `header-${column.caption}`}
-              type="button"
-              draggable={column.groupable}
-              onDragStart={(event) => handleDragStart(event, column)}
-              className={`grid-header-cell dx-header-cell ${column.sortable ? 'sortable' : ''} ${sortInfo.field === column.field ? 'sorted' : ''}`}
-              onClick={() => handleHeaderClick(column)}
-            >
-              {column.headerIcon ? (
-                <span className="header-icon-wrap">
-                  <i className={`fa ${column.headerIcon}`}></i>
-                </span>
-              ) : column.dataType === 'avatar' || column.editorType === 'avatar' || column.field === 'avatar' || column.field === 'photo' ? (
-                <span className="header-icon-wrap">
-                  <i className="fa fa-picture-o"></i>
-                </span>
-              ) : null}
-              <span>{column.caption}</span>
-              {column.sortable && (
-                <span className="sort-indicator">
-                  {sortInfo.field === column.field ? (sortInfo.direction === 'asc' ? '▲' : '▼') : '⇅'}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+          <thead className="grid-header">
+            <tr className="dx-header-row">
+              {renderingColumns.map((column) => {
+                if (column.field === 'row-selection-checkbox') {
+                  return (
+                    <th key="header-select-all" className="grid-header-cell selection-header-cell">
+                      <div className="grid-header-cell-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={draftRows.length > 0 && selectedRowKeys.length === draftRows.length}
+                          onChange={handleSelectAllCheckbox}
+                        />
+                      </div>
+                    </th>
+                  );
+                }
+                if (column.field === 'row-drag-handle') {
+                  return (
+                    <th key="header-drag-handle" className="grid-header-cell drag-header-cell">
+                      <div className="grid-header-cell-content" style={{ width: '100%', height: '100%' }}></div>
+                    </th>
+                  );
+                }
+                if (column.field === 'row-commands') {
+                  return (
+                    <th key="header-commands" className="grid-header-cell commands-header-cell">
+                      <div className="grid-header-cell-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', fontWeight: '600' }}>
+                        <span>Actions</span>
+                      </div>
+                    </th>
+                  );
+                }
 
-      <div className="grid-filter-row" style={{ gridTemplateColumns: templateColumns }}>
-        {renderingColumns.map((column) => (
-          <div key={column.field || `filter-${column.caption}`} className="grid-filter-cell">
-            {column.isCommand ? null : column.lookup && Array.isArray(column.lookup.dataSource) ? (
-              <div className="filter-input-wrap">
-                <select
-                  value={filters[column.field] ?? ''}
-                  onChange={(event) => handleFilterChange(column.field, event.target.value)}
-                >
-                  <option value="">All</option>
-                  {column.lookup.dataSource.map((item) => (
-                    <option key={item[column.lookup.valueExpr]} value={item[column.lookup.valueExpr]}>
-                      {item[column.lookup.displayExpr]}
-                    </option>
-                  ))}
-                </select>
-                <button type="button" className="filter-operator-btn">
-                  <i className="fa fa-filter"></i>
-                </button>
-              </div>
-            ) : (column.editorType === 'dxCheckBox' || column.editorType === 'checkbox' || column.dataType === 'boolean') ? (
-              <div className="filter-input-wrap">
-                <select
-                  value={filters[column.field] ?? ''}
-                  onChange={(event) => handleFilterChange(column.field, event.target.value)}
-                >
-                  <option value="">All</option>
-                  <option value="true">Yes</option>
-                  <option value="false">No</option>
-                </select>
-                <button type="button" className="filter-operator-btn">
-                  <i className="fa fa-filter"></i>
-                </button>
-              </div>
+                return (
+                  <th
+                    key={column.field || `header-${column.caption}`}
+                    className={`grid-header-cell dx-header-cell sortable resizable ${sortInfo.field === column.field ? 'sorted' : ''}`}
+                    onClick={() => handleHeaderClick(column)}
+                  >
+                    <div 
+                      className="grid-header-cell-content" 
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', height: '100%', fontWeight: '600' }}
+                      draggable={column.groupable}
+                      onDragStart={(event) => handleDragStart(event, column)}
+                    >
+                      {column.headerIcon ? (
+                        <span className="header-icon-wrap">
+                          <i className={`fa ${column.headerIcon}`}></i>
+                        </span>
+                      ) : column.dataType === 'avatar' || column.editorType === 'avatar' || column.field === 'avatar' || column.field === 'photo' ? (
+                        <span className="header-icon-wrap">
+                          <i className="fa fa-picture-o"></i>
+                        </span>
+                      ) : null}
+                      <span>{column.caption}</span>
+                      {column.sortable && (
+                        <span className="sort-indicator">
+                          {sortInfo.field === column.field ? (sortInfo.direction === 'asc' ? '▲' : '▼') : '⇅'}
+                        </span>
+                      )}
+                    </div>
+                    <span
+                      className="grid-column-resizer"
+                      onMouseDown={(event) => handleColumnResizeStart(event, column)}
+                      title="Resize column"
+                    />
+                  </th>
+                );
+              })}
+            </tr>
+
+            <tr className="grid-filter-row">
+              {renderingColumns.map((column) => (
+                <th key={column.field || `filter-${column.caption}`} className="grid-filter-cell">
+                  {column.isCommand || column.field === 'row-commands' || column.field === 'row-selection-checkbox' || column.field === 'row-drag-handle' ? null : column.lookup && Array.isArray(column.lookup.dataSource) ? (
+                    <div className="filter-input-wrap">
+                      <select
+                        value={filters[column.field] ?? ''}
+                        onChange={(event) => handleFilterChange(column.field, event.target.value)}
+                      >
+                        <option value="">All</option>
+                        {column.lookup.dataSource.map((item) => (
+                          <option key={item[column.lookup.valueExpr]} value={item[column.lookup.valueExpr]}>
+                            {item[column.lookup.displayExpr]}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (column.editorType === 'dxCheckBox' || column.editorType === 'checkbox' || column.dataType === 'boolean') ? (
+                    <div className="filter-input-wrap">
+                      <select
+                        value={filters[column.field] ?? ''}
+                        onChange={(event) => handleFilterChange(column.field, event.target.value)}
+                      >
+                        <option value="">All</option>
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                      </select>
+                    </div>
+                  ) : (
+                    <div className="filter-input-wrap">
+                      <input
+                        type="text"
+                        value={filters[column.field] ?? ''}
+                        placeholder={`Filter ${column.caption}`}
+                        onChange={(event) => handleFilterChange(column.field, event.target.value)}
+                      />
+                    </div>
+                  )}
+                </th>
+              ))}
+            </tr>
+          </thead>
+
+          <tbody className="grid-body">
+            {loading ? (
+              <tr>
+                <td colSpan={renderingColumns.length} className="grid-loading" style={{ padding: '20px', textAlign: 'center' }}>
+                  Loading data...
+                </td>
+              </tr>
+            ) : error ? (
+              <tr>
+                <td colSpan={renderingColumns.length} className="grid-error" style={{ padding: '20px', textAlign: 'center', color: '#b91c1c' }}>
+                  {String(error)}
+                </td>
+              </tr>
+            ) : filteredRows.length === 0 ? (
+              <tr className="grid-row no-data">
+                <td colSpan={renderingColumns.length} className="grid-cell" style={{ textAlign: 'center', padding: '20px' }}>
+                  No data available
+                </td>
+              </tr>
             ) : (
-              <div className="filter-input-wrap">
-                <input
-                  type="text"
-                  value={filters[column.field] ?? ''}
-                  placeholder={`Filter ${column.caption}`}
-                  onChange={(event) => handleFilterChange(column.field, event.target.value)}
-                />
-                {column.editorType === 'dxDateBox' || column.editorType === 'datebox' || column.dataType === 'date' ? (
-                  <i className="fa fa-calendar filter-field-icon"></i>
-                ) : null}
-                <button type="button" className="filter-operator-btn">
-                  <i className="fa fa-filter"></i>
-                </button>
-              </div>
+              renderGroupNodes(groupedRows)
             )}
-          </div>
-        ))}
+          </tbody>
+        </table>
       </div>
-
-      {loading ? (
-        <div className="grid-loading" style={{ padding: '20px', textAlign: 'center' }}>
-          Loading data...
-        </div>
-      ) : error ? (
-        <div className="grid-error" style={{ padding: '20px', textAlign: 'center', color: '#b91c1c' }}>
-          {String(error)}
-        </div>
-      ) : (
-        <div className="grid-body">
-          {filteredRows.length === 0 ? (
-            <div className="grid-row no-data" style={{ gridTemplateColumns: templateColumns }}>
-              <div className="grid-cell" style={{ gridColumn: `span ${renderingColumns.length}` }}>
-                No data available
-              </div>
-            </div>
-          ) : (
-            renderGroupNodes(groupedRows)
-          )}
-        </div>
-      )}
 
       {/* Styled Footer to match mockup exactly */}
       <div className="grid-footer dx-toolbar">
@@ -1302,7 +1473,7 @@ const CustomGrid = forwardRef(({
             disabled={pageIndex === 0}
             title="First page"
           >
-            &lt;&lt;
+            <i className="fa fa-angle-double-left"></i>
           </button>
           <button 
             type="button" 
@@ -1311,7 +1482,7 @@ const CustomGrid = forwardRef(({
             disabled={pageIndex === 0}
             title="Previous page"
           >
-            &lt;
+            <i className="fa fa-angle-left"></i>
           </button>
           
           <span className="pager-nav-text">Page</span>
@@ -1337,7 +1508,7 @@ const CustomGrid = forwardRef(({
             disabled={pageIndex >= pageCount - 1}
             title="Next page"
           >
-            &gt;
+            <i className="fa fa-angle-right"></i>
           </button>
           <button 
             type="button" 
@@ -1346,7 +1517,7 @@ const CustomGrid = forwardRef(({
             disabled={pageIndex >= pageCount - 1}
             title="Last page"
           >
-            &gt;&gt;
+            <i className="fa fa-angle-double-right"></i>
           </button>
 
           <span className="pager-separator">|</span>

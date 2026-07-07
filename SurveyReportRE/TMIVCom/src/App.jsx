@@ -136,14 +136,21 @@ function App() {
       </header>
 
       <section className="section">
-        <div className="section-title">Custom Grid (DataType Mappings: string to textbox, number to numberbox, boolean to checkbox, enum to selectbox, table to dropdownbox)</div>
-        <CustomGrid
-          columns={gridColumns}
-          rows={rows}
-          onRowsChange={setRows}
-          onAddRow={addRow}
-        />
+        <div className="section-title">Custom Grid - DARK Mode (Mockup Style, drag rows, selection, compact)</div>
+        <div style={{ padding: '16px', background: '#1e293b', borderRadius: '8px' }}>
+          <CustomGrid
+            columns={gridColumns}
+            rows={rows}
+            onRowsChange={setRows}
+            onAddRow={addRow}
+            theme="dark"
+            allowRowReordering={true}
+            showSelectionCheckbox={true}
+            showCommandsColumn={true}
+          />
+        </div>
       </section>
+
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
         <section className="section">

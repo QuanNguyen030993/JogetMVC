@@ -334,9 +334,21 @@
 .grid-header,
 .grid-row,
 .grid-filter-row {
-    display: grid;
-    gap: 0;
-    align-items: stretch;
+    /* standard table row display */
+}
+
+.grid-table-container {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+.grid-table {
+    width: 100%;
+    min-width: max-content;
+    border-collapse: collapse;
+    table-layout: fixed;
+    border-spacing: 0;
 }
 
 .grid-header-cell,
@@ -345,11 +357,27 @@
     padding: 6px 8px;
     border-right: 1px solid var(--grid-border-cells);
     border-bottom: 1px solid var(--grid-border-cells);
-    min-height: 38px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    min-height: 42px !important;
+    height: 42px !important;
     box-sizing: border-box;
+    text-align: left;
+    vertical-align: middle;
+    line-height: 1.4;
+}
+
+.grid-table .grid-row,
+.grid-table .grid-header,
+.grid-table .grid-body,
+.grid-table .dx-header-row,
+.grid-table tr {
+    height: auto;
+}
+
+.grid-table .grid-row > .grid-cell,
+.grid-table .grid-row > th,
+.grid-table .grid-row > td {
+    height: 42px !important;
+    min-height: 42px !important;
 }
 
 .grid-header-cell:last-child,
@@ -363,17 +391,46 @@
     font-weight: 600;
     color: var(--grid-header-color);
     background: var(--grid-header-bg);
-    border: none;
-    border-right: 1px solid var(--grid-border-cells);
-    border-bottom: 1px solid var(--grid-border-cells);
     cursor: pointer;
     user-select: none;
-    text-align: left;
     outline: none;
+    box-sizing: border-box;
+    vertical-align: middle;
+    position: relative;
+}
+
+.grid-header-cell.resizable {
+    padding-right: 14px;
+}
+
+.grid-column-resizer {
+    position: absolute;
+    top: 0;
+    right: -3px;
+    width: 7px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 5;
+    touch-action: none;
+}
+
+.grid-column-resizer:hover,
+.tmivcom-column-resizing .grid-column-resizer {
+    background: rgba(59, 130, 246, 0.35);
+}
+
+.tmivcom-column-resizing {
+    cursor: col-resize !important;
+    user-select: none !important;
+}
+
+.grid-header-cell-content,
+.grid-cell-content {
     display: flex;
     align-items: center;
     gap: 6px;
     width: 100%;
+    min-height: 100%;
     height: 100%;
     box-sizing: border-box;
 }
@@ -400,11 +457,12 @@
     display: flex;
     align-items: center;
     width: 100%;
+    min-width: 0;
     position: relative;
     background: var(--grid-filter-input-bg);
     border: 1px solid var(--grid-filter-input-border);
     border-radius: 4px;
-    padding: 2px 4px;
+    padding: 2px 6px;
     height: 28px;
     box-sizing: border-box;
 }
@@ -412,37 +470,24 @@
 .filter-input-wrap input,
 .filter-input-wrap select {
     flex: 1;
+    min-width: 0;
     border: none !important;
     background: transparent !important;
     color: var(--grid-filter-input-color) !important;
-    font-size: 12px !important;
+    font-size: clamp(9px, 0.82vw, 12px) !important;
     outline: none !important;
-    padding: 2px 4px !important;
+    padding: 2px 0 !important;
     height: 100% !important;
     box-sizing: border-box !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.filter-operator-btn {
-    border: none;
-    background: transparent;
-    cursor: pointer;
+.filter-input-wrap input::placeholder {
     color: var(--grid-drag-handle-color);
-    font-size: 11px;
-    padding: 0 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.filter-operator-btn:hover {
-    color: var(--grid-header-color);
-}
-
-.filter-field-icon {
-    position: absolute;
-    right: 32px;
-    color: var(--grid-drag-handle-color);
-    font-size: 12px;
+    font-size: clamp(8px, 0.78vw, 11px);
+    opacity: 0.85;
 }
 
 .grid-body .grid-row {
@@ -454,13 +499,46 @@
     background: var(--grid-row-hover);
 }
 
-.grid-row.dx-selection {
+.grid-row.dx-selection,
+.grid-row.dx-selection td {
     background: var(--grid-row-selected) !important;
-    color: var(--grid-row-selected-color);
+    color: var(--grid-row-selected-color) !important;
 }
 
 .grid-cell {
     background: transparent;
+}
+
+.grid-inline-editor {
+    width: 100%;
+    min-height: 100%;
+    padding: 3px 8px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.82);
+    color: inherit;
+    font: inherit;
+    line-height: 1.4;
+    outline: none;
+    box-sizing: border-box;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: text;
+    flex: 1 1 auto;
+    display: block;
+}
+
+.grid-inline-editor:focus {
+    border-color: #3b82f6;
+    background: #ffffff;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.12);
+}
+
+.grid-cell.editing-cell .grid-inline-editor {
+    min-height: 100%;
+    height: 100%;
+    padding: 4px 8px;
 }
 
 .grid-cell input[type="text"],
@@ -496,11 +574,17 @@
 }
 
 /* drag/selection/commands cells */
+/* drag/selection/commands cells */
 .drag-handle-cell {
-    justify-content: center;
     color: var(--grid-drag-handle-color);
     font-size: 16px;
     user-select: none;
+    text-align: center;
+    cursor: grab;
+}
+
+.drag-handle-cell:active {
+    cursor: grabbing;
 }
 
 .drag-gripper {
@@ -509,14 +593,15 @@
     font-weight: bold;
 }
 
-.row-dragging {
+.row-dragging,
+.row-dragging td {
     opacity: 0.5;
     background: var(--grid-row-hover) !important;
 }
 
 .selection-cell,
 .selection-header-cell {
-    justify-content: center;
+    text-align: center;
 }
 
 .selection-cell input[type="checkbox"],
@@ -566,31 +651,29 @@
 }
 
 .commands-cell {
-    display: flex;
-    gap: 4px;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
+    text-align: center;
+    vertical-align: middle;
 }
 
 .command-btn {
     border: 1px solid var(--grid-btn-border);
     background: var(--grid-command-btn-bg);
     color: var(--grid-command-btn-color);
-    padding: 3px 6px;
-    font-size: 11px;
+    width: 24px;
+    height: 24px;
     border-radius: 4px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.15s, border-color 0.15s;
-    height: 22px;
+    transition: all 0.15s ease;
+    padding: 0;
+    font-size: 12px;
 }
 
 .command-btn:hover {
     background: var(--grid-command-btn-hover);
+    transform: scale(1.05);
 }
 
 .command-btn.save-btn {
@@ -1754,14 +1837,20 @@ button {
 /* Editing cells style overrides */
 .grid-cell.editing-cell {
     padding: 0 !important;
+}
+
+.grid-cell.editing-cell .grid-cell-content {
     align-items: stretch !important;
+    height: 100% !important;
 }
 
 /* Center checkboxes inside grid cells in both read and edit modes */
-.grid-cell:has(.tmivcom-checkbox),
-.grid-cell.editing-cell:has(.tmivcom-checkbox) {
+.grid-cell-content:has(.tmivcom-checkbox) {
     justify-content: center !important;
     align-items: center !important;
+}
+
+.grid-cell:has(.tmivcom-checkbox) {
     padding: 6px !important; /* soft padding around checkboxes */
 }
 
