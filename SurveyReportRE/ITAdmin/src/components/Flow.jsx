@@ -544,8 +544,13 @@ const WorkflowNode = ({ data, selected }) => {
                 minWidth: '120px',
                 textAlign: 'center',
                 position: 'relative',
-                boxShadow: selected ? '0 0 0 2px #2563eb' : (style.boxShadow || '0 1px 3px rgba(0,0,0,0.1)'),
-                border: selected ? '2px solid #2563eb' : style.border
+                boxShadow: data?.isTraced
+                    ? '0 0 20px #f59e0b'
+                    : (selected ? '0 0 0 2px #2563eb' : (style.boxShadow || '0 1px 3px rgba(0,0,0,0.1)')),
+                border: data?.isTraced
+                    ? '3px solid #f59e0b'
+                    : (selected ? '2px solid #2563eb' : style.border),
+                animation: data?.isTraced ? 'pulse 1.5s infinite alternate' : 'none'
             }}
         >
             <div>{data.label}</div>
@@ -1126,10 +1131,20 @@ function Flow({ id: propId }) {
                 return;
             }
 
-            // Highlight the node matching currentStep
+            // Highlight the node matching currentStep using data.isTraced flag
             setTracedStep(currentStep);
             setSelectedNode(null);
             setSelectedEdge(null);
+
+            setNodes((currentNodes) =>
+                currentNodes.map((n) => ({
+                    ...n,
+                    data: {
+                        ...n.data,
+                        isTraced: n.id === currentStep
+                    }
+                }))
+            );
 
             // Let's find if the node exists on our canvas
             const nodeExists = nodes.find(n => n.id === currentStep);
@@ -1146,53 +1161,7 @@ function Flow({ id: propId }) {
         } finally {
             setLoading(false);
         }
-    }, [searchRecordGuid, nodes]);
-
-    useEffect(() => {
-        if (tracedStep) {
-            setNodes((currentNodes) =>
-                currentNodes.map((node) => {
-                    if (node.id === tracedStep) {
-                        return {
-                            ...node,
-                            style: {
-                                ...createNodeStyle({
-                                    nodeType: node.data?.nodeType,
-                                    flowType: node.data?.flowType,
-                                    nodeName: node.data?.label,
-                                    styleColor: node.data?.styleColor
-                                }),
-                                border: '3px solid #f59e0b',
-                                boxShadow: '0 0 20px #f59e0b',
-                                animation: 'pulse 1.5s infinite alternate'
-                            }
-                        };
-                    }
-                    return {
-                        ...node,
-                        style: createNodeStyle({
-                            nodeType: node.data?.nodeType,
-                            flowType: node.data?.flowType,
-                            nodeName: node.data?.label,
-                            styleColor: node.data?.styleColor
-                        })
-                    };
-                })
-            );
-        } else {
-            setNodes((currentNodes) =>
-                currentNodes.map((node) => ({
-                    ...node,
-                    style: createNodeStyle({
-                        nodeType: node.data?.nodeType,
-                        flowType: node.data?.flowType,
-                        nodeName: node.data?.label,
-                        styleColor: node.data?.styleColor
-                    })
-                }))
-            );
-        }
-    }, [tracedStep, setNodes]);
+    }, [searchRecordGuid, nodes, setNodes]);
 
     useEffect(() => {
         if (propId) {
