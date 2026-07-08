@@ -280,3 +280,68 @@
   border: 1px solid #e2e8f0;
   font-weight: 500;
 }
+
+/* Stats Tables styling */
+.flow-stats-container {
+  margin-top: 20px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+
+.flow-stats-tabs {
+  display: flex;
+  gap: 10px;
+  border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+}
+
+.flow-stats-tab-btn {
+  background: none;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.flow-stats-tab-btn.active {
+  color: #2563eb;
+  background: #eff6ff;
+}
+
+.flow-stats-table-wrapper {
+  overflow-x: auto;
+  max-height: 300px;
+}
+
+.flow-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.flow-stats-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.flow-stats-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+}
+
+.flow-stats-table tr:hover {
+  background: #f8fafc;
+}

@@ -12,6 +12,7 @@ import {
     useNodesState,
     getSmoothStepPath,
     EdgeLabelRenderer,
+    useReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -57,15 +58,61 @@ const CustomEdge = ({
     style = {},
     markerEnd,
     label,
+    selected,
+    data = {},
 }) => {
-    const [edgePath, labelX, labelY] = getSmoothStepPath({
-        sourceX,
-        sourceY,
-        targetX,
-        targetY,
-        sourcePosition,
-        targetPosition,
-    });
+    const { setEdges, getZoom } = useReactFlow();
+
+    const controlX = Number.isFinite(data?.controlX) ? data.controlX : (sourceX + targetX) / 2;
+    const controlY = Number.isFinite(data?.controlY) ? data.controlY : (sourceY + targetY) / 2;
+
+    const edgePath = `M ${sourceX},${sourceY} Q ${controlX},${controlY} ${targetX},${targetY}`;
+
+    const labelX = 0.25 * sourceX + 0.5 * controlX + 0.25 * targetX;
+    const labelY = 0.25 * sourceY + 0.5 * controlY + 0.25 * targetY;
+
+    const onControlPointMouseDown = (event) => {
+        event.stopPropagation();
+        event.preventDefault();
+
+        const startMouseX = event.clientX;
+        const startMouseY = event.clientY;
+        const startControlX = controlX;
+        const startControlY = controlY;
+        const zoom = getZoom();
+
+        const handleMouseMove = (moveEvent) => {
+            const dx = moveEvent.clientX - startMouseX;
+            const dy = moveEvent.clientY - startMouseY;
+
+            const nextControlX = startControlX + dx / zoom;
+            const nextControlY = startControlY + dy / zoom;
+
+            setEdges((currentEdges) =>
+                currentEdges.map((edge) => {
+                    if (edge.id === id) {
+                        return {
+                            ...edge,
+                            data: {
+                                ...edge.data,
+                                controlX: nextControlX,
+                                controlY: nextControlY,
+                            },
+                        };
+                    }
+                    return edge;
+                })
+            );
+        };
+
+        const handleMouseUp = () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+    };
 
     return (
         <>
@@ -75,6 +122,16 @@ const CustomEdge = ({
                 className="react-flow__edge-path"
                 d={edgePath}
                 markerEnd={markerEnd}
+            />
+            <circle
+                cx={controlX}
+                cy={controlY}
+                r={selected ? 7 : 5}
+                fill={selected ? '#2563eb' : '#94a3b8'}
+                stroke="#fff"
+                strokeWidth={1.5}
+                style={{ cursor: 'move', pointerEvents: 'all', opacity: selected ? 1.0 : 0.6 }}
+                onMouseDown={onControlPointMouseDown}
             />
             {label && (
                 <EdgeLabelRenderer>
@@ -101,19 +158,10 @@ const edgeTypes = {
 const createNodeStyle = (node = {}) => {
     const type = (node.nodeType || '').toLowerCase();
     const flowType = (node.flowType || '').toLowerCase();
-    const name = (node.nodeName || '').toLowerCase();
+    const name = (node.nodeName || node.label || '').toLowerCase();
+    const styleColor = (node.styleColor || '').toLowerCase();
 
-    if (type === 'start' || flowType === 'start' || name === 'start') {
-        return {
-            background: '#ecfdf5',
-            border: '2px solid #10b981',
-            borderRadius: '50px',
-            color: '#065f46',
-            fontWeight: '600',
-            padding: '10px 20px',
-        };
-    }
-    if (type === 'end' || flowType === 'end' || name === 'end' || flowType === 'complete' || name === 'client') {
+    if (styleColor === 'red' || type === 'end' || flowType === 'end' || name === 'end' || flowType === 'complete' || name === 'client') {
         return {
             background: '#fef2f2',
             border: '2px solid #ef4444',
@@ -123,7 +171,35 @@ const createNodeStyle = (node = {}) => {
             padding: '10px 20px',
         };
     }
-    if (type === 'department') {
+    if (styleColor === 'green' || type === 'start' || flowType === 'start' || name === 'start') {
+        return {
+            background: '#ecfdf5',
+            border: '2px solid #10b981',
+            borderRadius: '50px',
+            color: '#065f46',
+            fontWeight: '600',
+            padding: '10px 20px',
+        };
+    }
+    if (styleColor === 'orange' || type === 'decision') {
+        return {
+            background: '#fff7ed',
+            border: '1px solid #f97316',
+            borderRadius: '14px',
+            color: '#c2410c',
+            padding: '10px',
+        };
+    }
+    if (styleColor === 'lightorange') {
+        return {
+            background: '#fffbeb',
+            border: '1px solid #f59e0b',
+            borderRadius: '14px',
+            color: '#b45309',
+            padding: '10px',
+        };
+    }
+    if (styleColor === 'blue' || type === 'department') {
         return {
             background: '#e0f2fe',
             border: '1px solid #0284c7',
@@ -142,10 +218,10 @@ const createNodeStyle = (node = {}) => {
         };
     }
     return {
-        background: '#fff7ed',
-        border: '1px solid #f97316',
+        background: '#ffffff',
+        border: '1px solid #cbd5e1',
         borderRadius: '14px',
-        color: '#c2410c',
+        color: '#1e293b',
         padding: '10px',
     };
 };
@@ -211,16 +287,18 @@ const layoutNodes = (nodes = [], edges = [], forceLayout = false) => {
     });
 };
 
-const mapWorkflowNodes = (workflowNodes = []) =>
+const mapWorkflowNodes = (workflowNodes = [], scaleX = 1.0, scaleY = 1.0) =>
     workflowNodes.map((node, index) => {
         const id = String(node.id ?? `node-${index + 1}`);
-        const hasPosition = Number.isFinite(node.x) && Number.isFinite(node.y);
+        const rawX = Number.isFinite(node.posX) ? node.posX : node.x;
+        const rawY = Number.isFinite(node.posY) ? node.posY : node.y;
+        const hasPosition = Number.isFinite(rawX) && Number.isFinite(rawY);
 
         return {
             id,
             position: hasPosition
-                ? { x: node.x, y: node.y }
-                : { x: 140 + index * 260, y: 90 + (index % 3) * 180 },
+                ? { x: rawX * scaleX, y: rawY * scaleY }
+                : { x: (140 + index * 260) * scaleX, y: (90 + (index % 3) * 180) * scaleY },
             data: {
                 label: node.nodeName || node.departmentName || node.nodeCode || node.id || `Step ${index + 1}`,
                 subtitle: node.departmentName || '',
@@ -228,6 +306,11 @@ const mapWorkflowNodes = (workflowNodes = []) =>
                 departmentName: node.departmentName || '',
                 description: node.description || '',
                 manualPositioned: hasPosition,
+                laneId: node.laneId || '',
+                shape: node.shape || 'rectangle',
+                styleColor: node.styleColor || 'blue',
+                assignLabel: node.assignLabel || '',
+                orderLabel: node.orderLabel || '',
             },
             style: createNodeStyle(node),
         };
@@ -251,7 +334,7 @@ const formatTransitionLabel = (actionName, statusText, command) => {
     );
 };
 
-const mapWorkflowEdges = (workflowTransitions = []) =>
+const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) =>
     workflowTransitions.map((transition, index) => {
         const isReturn = transition.isReturn === true || String(transition.isReturn) === 'true' || transition.flowType === 'Return';
         const hasCommand = transition.command && transition.command !== 'None' && transition.command !== '0';
@@ -277,6 +360,8 @@ const mapWorkflowEdges = (workflowTransitions = []) =>
                 statusId: transition.statusId || '',
                 command: transition.command || 'None',
                 commandConfig: transition.commandConfig || '',
+                controlX: Number.isFinite(transition.controlX) ? transition.controlX * scaleX : null,
+                controlY: Number.isFinite(transition.controlY) ? transition.controlY * scaleY : null,
             },
         };
     });
@@ -291,6 +376,10 @@ function Flow({ id: propId }) {
     const [error, setError] = useState(null);
     const [reactFlowInstance, setReactFlowInstance] = useState(null);
     const [statusList, setStatusList] = useState([]);
+    const [layoutConfig, setLayoutConfig] = useState(null);
+    const [workflowDefinition, setWorkflowDefinition] = useState(null);
+    const [lanesList, setLanesList] = useState([]);
+    const [activeStatsTab, setActiveStatsTab] = useState('nodes');
 
     useEffect(() => {
         fetch(`${API_BASE_URL}/api/EnumData/FetchEnum/OverallStatus`)
@@ -368,11 +457,17 @@ function Flow({ id: propId }) {
 
                 const data = await response.json();
                 const parsedPayload = typeof data.workflowNodes === 'string' ? JSON.parse(data.workflowNodes) : data.workflowNodes || {};
+                const scaleX = parsedPayload._layoutConfig?.SCALE_X || 1.0;
+                const scaleY = parsedPayload._layoutConfig?.SCALE_Y || 1.0;
+                setLayoutConfig(parsedPayload._layoutConfig || null);
+                setWorkflowDefinition(parsedPayload.workflowDefinition || null);
+                setLanesList(parsedPayload.lanes || []);
+
                 const nextNodes = Array.isArray(parsedPayload.workflowNodes)
-                    ? mapWorkflowNodes(parsedPayload.workflowNodes)
+                    ? mapWorkflowNodes(parsedPayload.workflowNodes, scaleX, scaleY)
                     : [];
                 const nextEdges = Array.isArray(parsedPayload.workflowTransitions)
-                    ? mapWorkflowEdges(parsedPayload.workflowTransitions)
+                    ? mapWorkflowEdges(parsedPayload.workflowTransitions, scaleX, scaleY)
                     : [];
 
                 setNodes(nextNodes.length ? layoutNodes(nextNodes, nextEdges) : []);
@@ -397,25 +492,46 @@ function Flow({ id: propId }) {
         setLoading(true);
         setError(null);
         try {
+            const scaleX = layoutConfig?.SCALE_X || 1.0;
+            const scaleY = layoutConfig?.SCALE_Y || 1.0;
+
             // Re-map nodes to database structure
-            const workflowNodes = nodes.map((node, index) => {
+            const workflowNodes = nodes.map((node) => {
                 const idNum = parseInt(node.id.replace('node-', ''));
+                const originalX = Math.round(node.position.x / scaleX);
+                const originalY = Math.round(node.position.y / scaleY);
                 return {
                     id: isNaN(idNum) ? node.id : idNum,
+                    laneId: node.data.laneId || '',
                     nodeName: node.data.label,
-                    nodeCode: node.data.label,
                     nodeType: node.data.nodeType || 'task',
+                    shape: node.data.shape || 'rectangle',
+                    styleColor: node.data.styleColor || 'blue',
+                    posX: originalX,
+                    posY: originalY,
+                    x: originalX,
+                    y: originalY,
+                    assignLabel: node.data.assignLabel || '',
+                    orderLabel: node.data.orderLabel || '',
                     departmentName: node.data.departmentName || '',
-                    description: node.data.description || '',
-                    x: Math.round(node.position.x),
-                    y: Math.round(node.position.y)
+                    description: node.data.description || ''
                 };
             });
 
             // Re-map edges to database structure
-            const workflowTransitions = edges.map((edge, index) => {
+            const workflowTransitions = edges.map((edge) => {
                 const sourceNum = parseInt(edge.source.replace('node-', ''));
                 const targetNum = parseInt(edge.target.replace('node-', ''));
+                
+                let parsedCondition = edge.data?.conditionJson || '{}';
+                if (typeof parsedCondition === 'string') {
+                    try {
+                        parsedCondition = JSON.parse(parsedCondition);
+                    } catch (e) {
+                        console.warn("Invalid condition JSON, saving as string");
+                    }
+                }
+
                 return {
                     fromNodeId: isNaN(sourceNum) ? edge.source : sourceNum,
                     toNodeId: isNaN(targetNum) ? edge.target : targetNum,
@@ -424,14 +540,19 @@ function Flow({ id: propId }) {
                     stepNo: parseInt(edge.data?.stepNo) || null,
                     jumpStepNo: parseInt(edge.data?.jumpStepNo) || null,
                     transitionType: edge.data?.transitionType || 'Normal',
-                    conditionJson: edge.data?.conditionJson || '{}',
+                    conditionJson: parsedCondition,
                     isExitTransition: edge.data?.isExitTransition === true,
                     isReturn: edge.data?.isReturn === true,
-                    statusId: edge.data?.statusId || ''
+                    statusId: edge.data?.statusId || '',
+                    command: edge.data?.command || 'None',
+                    commandConfig: edge.data?.commandConfig || ''
                 };
             });
 
             const payload = {
+                _layoutConfig: layoutConfig,
+                workflowDefinition: workflowDefinition,
+                lanes: lanesList,
                 workflowNodes,
                 workflowTransitions
             };
@@ -458,7 +579,7 @@ function Flow({ id: propId }) {
         } finally {
             setLoading(false);
         }
-    }, [workflowId, nodes, edges]);
+    }, [workflowId, nodes, edges, layoutConfig, workflowDefinition, lanesList]);
 
     useEffect(() => {
         if (propId) {
@@ -559,7 +680,8 @@ function Flow({ id: propId }) {
                 style: createNodeStyle({
                     nodeType: field === 'nodeType' ? value : nextNodeData.nodeType,
                     flowType: field === 'flowType' ? value : nextNodeData.flowType,
-                    nodeName: field === 'label' ? value : nextNodeData.label
+                    nodeName: field === 'label' ? value : nextNodeData.label,
+                    styleColor: field === 'styleColor' ? value : nextNodeData.styleColor
                 }),
             };
 
@@ -631,7 +753,67 @@ function Flow({ id: propId }) {
                         <option value="task">Task</option>
                         <option value="department">Department</option>
                         <option value="review">Review</option>
+                        <option value="decision">Decision (Diamond)</option>
+                        <option value="process">Process (Rectangle)</option>
+                        <option value="complete">Complete (Circle)</option>
+                        <option value="end">End (Circle)</option>
                     </select>
+                </label>
+                {lanesList.length > 0 && (
+                    <label>
+                        <span>Lane (Phân làn)</span>
+                        <select
+                            value={selectedNode.data.laneId || ''}
+                            onChange={(event) => updateSelectedNode('laneId', event.target.value)}
+                        >
+                            <option value="">-- Chọn Phân làn --</option>
+                            {lanesList.map(lane => (
+                                <option key={lane.id} value={lane.id}>
+                                    {lane.label}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
+                )}
+                <label>
+                    <span>Shape (Hình dáng)</span>
+                    <select
+                        value={selectedNode.data.shape || 'rectangle'}
+                        onChange={(event) => updateSelectedNode('shape', event.target.value)}
+                    >
+                        <option value="rectangle">Rectangle (Hình chữ nhật)</option>
+                        <option value="circle">Circle (Hình tròn)</option>
+                        <option value="diamond">Diamond (Hình kim cương)</option>
+                    </select>
+                </label>
+                <label>
+                    <span>Style Color (Màu sắc hiển thị)</span>
+                    <select
+                        value={selectedNode.data.styleColor || 'blue'}
+                        onChange={(event) => updateSelectedNode('styleColor', event.target.value)}
+                    >
+                        <option value="blue">Blue (Xanh dương)</option>
+                        <option value="green">Green (Xanh lá)</option>
+                        <option value="orange">Orange (Cam)</option>
+                        <option value="lightOrange">Light Orange (Cam nhạt)</option>
+                        <option value="red">Red (Đỏ)</option>
+                    </select>
+                </label>
+                <label>
+                    <span>Assign Label (Nhãn phân công)</span>
+                    <input
+                        value={selectedNode.data.assignLabel || ''}
+                        onChange={(event) => updateSelectedNode('assignLabel', event.target.value)}
+                        placeholder="e.g. Assign to me"
+                    />
+                </label>
+                <label>
+                    <span>Order Label (Nhãn chỉ đạo)</span>
+                    <input
+                        value={selectedNode.data.orderLabel || ''}
+                        onChange={(event) => updateSelectedNode('orderLabel', event.target.value)}
+                        placeholder="e.g. Ý chỉ"
+                    />
                 </label>
                 <label>
                     <span>Department</span>
@@ -650,7 +832,7 @@ function Flow({ id: propId }) {
                 </label>
             </div>
         );
-    }, [selectedNode, updateSelectedNode]);
+    }, [selectedNode, updateSelectedNode, lanesList]);
 
     const edgeDetails = useMemo(() => {
         if (!selectedEdge) {
@@ -892,6 +1074,104 @@ function Flow({ id: propId }) {
                         </div>
                     )}
                 </aside>
+            </div>
+
+            {/* Stats Summary List */}
+            <div className="flow-stats-container">
+                <div className="flow-stats-tabs">
+                    <button
+                        type="button"
+                        className={`flow-stats-tab-btn ${activeStatsTab === 'nodes' ? 'active' : ''}`}
+                        onClick={() => setActiveStatsTab('nodes')}
+                    >
+                        Flat Node List ({nodes.length})
+                    </button>
+                    <button
+                        type="button"
+                        className={`flow-stats-tab-btn ${activeStatsTab === 'transitions' ? 'active' : ''}`}
+                        onClick={() => setActiveStatsTab('transitions')}
+                    >
+                        Transition List ({edges.length})
+                    </button>
+                </div>
+
+                <div className="flow-stats-table-wrapper">
+                    {activeStatsTab === 'nodes' ? (
+                        <table className="flow-stats-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Node Name</th>
+                                    <th>Type</th>
+                                    <th>Lane</th>
+                                    <th>Shape</th>
+                                    <th>Style Color</th>
+                                    <th>Position (X, Y)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {nodes.map((node) => {
+                                    const scaleX = layoutConfig?.SCALE_X || 1.0;
+                                    const scaleY = layoutConfig?.SCALE_Y || 1.0;
+                                    const origX = Math.round(node.position.x / scaleX);
+                                    const origY = Math.round(node.position.y / scaleY);
+                                    return (
+                                        <tr key={node.id} onClick={() => { setSelectedNode(node); setSelectedEdge(null); }} style={{ cursor: 'pointer' }}>
+                                            <td><strong>{node.id}</strong></td>
+                                            <td>{node.data.label}</td>
+                                            <td><span className="label-item label-action" style={{ textTransform: 'uppercase', fontSize: '10px' }}>{node.data.nodeType}</span></td>
+                                            <td>{node.data.laneId || '-'}</td>
+                                            <td>{node.data.shape || 'rectangle'}</td>
+                                            <td><span style={{ color: node.data.styleColor === 'red' ? '#dc2626' : node.data.styleColor === 'green' ? '#10b981' : node.data.styleColor === 'orange' ? '#f97316' : '#2563eb', fontWeight: 600 }}>{node.data.styleColor || 'blue'}</span></td>
+                                            <td>{origX}, {origY}</td>
+                                        </tr>
+                                    );
+                                })}
+                                {nodes.length === 0 && (
+                                    <tr>
+                                        <td colSpan="7" style={{ textAlign: 'center', color: '#64748b' }}>No nodes available. Load a workflow to view.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    ) : (
+                        <table className="flow-stats-table">
+                            <thead>
+                                <tr>
+                                    <th>From Node</th>
+                                    <th>To Node</th>
+                                    <th>Action Name</th>
+                                    <th>Action Code</th>
+                                    <th>Step No</th>
+                                    <th>Status (Trạng thái)</th>
+                                    <th>System Command</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {edges.map((edge) => {
+                                    const statusObj = statusList.find(s => String(s.id) === String(edge.data?.statusId));
+                                    const statusText = statusObj ? statusObj.value : edge.data?.statusId;
+                                    return (
+                                        <tr key={edge.id} onClick={() => { setSelectedEdge(edge); setSelectedNode(null); }} style={{ cursor: 'pointer' }}>
+                                            <td>{edge.source}</td>
+                                            <td>{edge.target}</td>
+                                            <td><span className="label-item label-action">{edge.data?.actionName || '-'}</span></td>
+                                            <td><code>{edge.data?.actionCode || '-'}</code></td>
+                                            <td>{edge.data?.stepNo || '-'}</td>
+                                            <td>{statusText ? <span className="label-item label-status">{statusText}</span> : '-'}</td>
+                                            <td>{edge.data?.command && edge.data?.command !== 'None' ? <span className="label-item label-command">{edge.data?.command}</span> : '-'}</td>
+                                        </tr>
+                                    );
+                                })}
+                                {edges.length === 0 && (
+                                    <tr>
+                                        <td colSpan="7" style={{ textAlign: 'center', color: '#64748b' }}>No transitions available. Connect nodes to create transitions.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
             </div>
         </div>
     );
