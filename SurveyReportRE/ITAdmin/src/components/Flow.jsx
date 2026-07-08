@@ -15,6 +15,7 @@ import {
     useReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import CustomGrid from '../../../TMIVCom/src/components/CustomGrid';
 
 const nodeTemplates = [
     {
@@ -66,10 +67,10 @@ const CustomEdge = ({
     const controlX = Number.isFinite(data?.controlX) ? data.controlX : (sourceX + targetX) / 2;
     const controlY = Number.isFinite(data?.controlY) ? data.controlY : (sourceY + targetY) / 2;
 
-    const edgePath = `M ${sourceX},${sourceY} Q ${controlX},${controlY} ${targetX},${targetY}`;
+    const edgePath = `M ${sourceX},${sourceY} H ${controlX} V ${controlY} H ${targetX} V ${targetY}`;
 
-    const labelX = 0.25 * sourceX + 0.5 * controlX + 0.25 * targetX;
-    const labelY = 0.25 * sourceY + 0.5 * controlY + 0.25 * targetY;
+    const labelX = controlX;
+    const labelY = controlY - 20;
 
     const onControlPointMouseDown = (event) => {
         event.stopPropagation();
@@ -380,6 +381,64 @@ function Flow({ id: propId }) {
     const [workflowDefinition, setWorkflowDefinition] = useState(null);
     const [lanesList, setLanesList] = useState([]);
     const [activeStatsTab, setActiveStatsTab] = useState('nodes');
+
+    const nodeColumns = useMemo(() => [
+        { dataField: 'id', caption: 'ID', width: 140 },
+        { dataField: 'label', caption: 'Node Name' },
+        { dataField: 'nodeType', caption: 'Type', width: 110 },
+        { dataField: 'laneId', caption: 'Lane (Phân làn)', width: 130 },
+        { dataField: 'shape', caption: 'Shape', width: 110 },
+        { dataField: 'styleColor', caption: 'Style Color', width: 110 },
+        { dataField: 'position', caption: 'Position (X, Y)', width: 130 }
+    ], []);
+
+    const transitionColumns = useMemo(() => [
+        { dataField: 'source', caption: 'From Node', width: 140 },
+        { dataField: 'target', caption: 'To Node', width: 140 },
+        { dataField: 'actionName', caption: 'Action Name' },
+        { dataField: 'actionCode', caption: 'Action Code', width: 130 },
+        { dataField: 'stepNo', caption: 'Step No', width: 90 },
+        { dataField: 'statusText', caption: 'Status (Trạng thái)', width: 150 },
+        { dataField: 'command', caption: 'System Command', width: 140 }
+    ], []);
+
+    const flatNodes = useMemo(() => {
+        return nodes.map(node => {
+            const scaleX = layoutConfig?.SCALE_X || 1.0;
+            const scaleY = layoutConfig?.SCALE_Y || 1.0;
+            const origX = Math.round(node.position.x / scaleX);
+            const origY = Math.round(node.position.y / scaleY);
+            return {
+                id: node.id,
+                label: node.data?.label || '',
+                nodeType: node.data?.nodeType || 'task',
+                laneId: node.data?.laneId || '',
+                shape: node.data?.shape || 'rectangle',
+                styleColor: node.data?.styleColor || 'blue',
+                posX: origX,
+                posY: origY,
+                position: `${origX}, ${origY}`
+            };
+        });
+    }, [nodes, layoutConfig]);
+
+    const flatTransitions = useMemo(() => {
+        return edges.map(edge => {
+            const statusObj = statusList.find(s => String(s.id) === String(edge.data?.statusId));
+            const statusText = statusObj ? statusObj.value : edge.data?.statusId || '';
+            return {
+                id: edge.id,
+                source: edge.source,
+                target: edge.target,
+                actionName: edge.data?.actionName || '',
+                actionCode: edge.data?.actionCode || '',
+                stepNo: edge.data?.stepNo || '',
+                statusId: edge.data?.statusId || '',
+                statusText: statusText,
+                command: edge.data?.command || 'None'
+            };
+        });
+    }, [edges, statusList]);
 
     useEffect(() => {
         fetch(`${API_BASE_URL}/api/EnumData/FetchEnum/OverallStatus`)
@@ -1095,81 +1154,39 @@ function Flow({ id: propId }) {
                     </button>
                 </div>
 
-                <div className="flow-stats-table-wrapper">
+                <div style={{ height: '350px', background: '#fff', borderRadius: '12px', overflow: 'hidden' }}>
                     {activeStatsTab === 'nodes' ? (
-                        <table className="flow-stats-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Node Name</th>
-                                    <th>Type</th>
-                                    <th>Lane</th>
-                                    <th>Shape</th>
-                                    <th>Style Color</th>
-                                    <th>Position (X, Y)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {nodes.map((node) => {
-                                    const scaleX = layoutConfig?.SCALE_X || 1.0;
-                                    const scaleY = layoutConfig?.SCALE_Y || 1.0;
-                                    const origX = Math.round(node.position.x / scaleX);
-                                    const origY = Math.round(node.position.y / scaleY);
-                                    return (
-                                        <tr key={node.id} onClick={() => { setSelectedNode(node); setSelectedEdge(null); }} style={{ cursor: 'pointer' }}>
-                                            <td><strong>{node.id}</strong></td>
-                                            <td>{node.data.label}</td>
-                                            <td><span className="label-item label-action" style={{ textTransform: 'uppercase', fontSize: '10px' }}>{node.data.nodeType}</span></td>
-                                            <td>{node.data.laneId || '-'}</td>
-                                            <td>{node.data.shape || 'rectangle'}</td>
-                                            <td><span style={{ color: node.data.styleColor === 'red' ? '#dc2626' : node.data.styleColor === 'green' ? '#10b981' : node.data.styleColor === 'orange' ? '#f97316' : '#2563eb', fontWeight: 600 }}>{node.data.styleColor || 'blue'}</span></td>
-                                            <td>{origX}, {origY}</td>
-                                        </tr>
-                                    );
-                                })}
-                                {nodes.length === 0 && (
-                                    <tr>
-                                        <td colSpan="7" style={{ textAlign: 'center', color: '#64748b' }}>No nodes available. Load a workflow to view.</td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                        <CustomGrid
+                            key="nodes-grid"
+                            columns={nodeColumns}
+                            rows={flatNodes}
+                            showSelectionCheckbox={false}
+                            showCommandsColumn={false}
+                            allowRowReordering={false}
+                            onRowClick={(row) => {
+                                const foundNode = nodes.find(n => n.id === row.id);
+                                if (foundNode) {
+                                    setSelectedNode(foundNode);
+                                    setSelectedEdge(null);
+                                }
+                            }}
+                        />
                     ) : (
-                        <table className="flow-stats-table">
-                            <thead>
-                                <tr>
-                                    <th>From Node</th>
-                                    <th>To Node</th>
-                                    <th>Action Name</th>
-                                    <th>Action Code</th>
-                                    <th>Step No</th>
-                                    <th>Status (Trạng thái)</th>
-                                    <th>System Command</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {edges.map((edge) => {
-                                    const statusObj = statusList.find(s => String(s.id) === String(edge.data?.statusId));
-                                    const statusText = statusObj ? statusObj.value : edge.data?.statusId;
-                                    return (
-                                        <tr key={edge.id} onClick={() => { setSelectedEdge(edge); setSelectedNode(null); }} style={{ cursor: 'pointer' }}>
-                                            <td>{edge.source}</td>
-                                            <td>{edge.target}</td>
-                                            <td><span className="label-item label-action">{edge.data?.actionName || '-'}</span></td>
-                                            <td><code>{edge.data?.actionCode || '-'}</code></td>
-                                            <td>{edge.data?.stepNo || '-'}</td>
-                                            <td>{statusText ? <span className="label-item label-status">{statusText}</span> : '-'}</td>
-                                            <td>{edge.data?.command && edge.data?.command !== 'None' ? <span className="label-item label-command">{edge.data?.command}</span> : '-'}</td>
-                                        </tr>
-                                    );
-                                })}
-                                {edges.length === 0 && (
-                                    <tr>
-                                        <td colSpan="7" style={{ textAlign: 'center', color: '#64748b' }}>No transitions available. Connect nodes to create transitions.</td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                        <CustomGrid
+                            key="edges-grid"
+                            columns={transitionColumns}
+                            rows={flatTransitions}
+                            showSelectionCheckbox={false}
+                            showCommandsColumn={false}
+                            allowRowReordering={false}
+                            onRowClick={(row) => {
+                                const foundEdge = edges.find(e => e.id === row.id);
+                                if (foundEdge) {
+                                    setSelectedEdge(foundEdge);
+                                    setSelectedNode(null);
+                                }
+                            }}
+                        />
                     )}
                 </div>
             </div>
