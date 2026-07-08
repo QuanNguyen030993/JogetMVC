@@ -4745,9 +4745,9 @@ textarea {
 
 /* Narrow the assignee select box to fit perfectly inline */
 .dept-header .dept-form-header__assign {
-    min-width: 180px !important;
-    max-width: 280px !important;
-    width: 220px !important;
+    min-width: 260px !important;
+    max-width: 380px !important;
+    width: 320px !important;
     margin: 0 !important;
 }
 
