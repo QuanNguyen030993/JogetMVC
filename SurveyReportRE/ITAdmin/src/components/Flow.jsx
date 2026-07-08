@@ -427,10 +427,61 @@ const formatTransitionLabel = (actionName, statusText, command) => {
     );
 };
 
+const parseJsonToRulesState = (jsonStr) => {
+    const fallback = { rootOperator: 'AND', rules: [] };
+    if (!jsonStr || jsonStr === '{}') return fallback;
+    try {
+        const obj = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr;
+        if (!obj || typeof obj !== 'object') return fallback;
+
+        if (obj.type === 'group') {
+            const rules = (obj.children || []).map((child, i) => ({
+                id: `rule-${Date.now()}-${i}`,
+                source: child.source || 'payload',
+                field: child.field || '',
+                dataType: child.dataType || 'string',
+                operator: child.operator || '=',
+                value: child.value != null ? String(child.value) : '',
+                customHandler: child.handler || '',
+                customArgs: child.args ? JSON.stringify(child.args, null, 2) : ''
+            }));
+            return {
+                rootOperator: obj.operator || 'AND',
+                rules
+            };
+        } else if (obj.type === 'rule' || obj.field || obj.handler) {
+            return {
+                rootOperator: 'AND',
+                rules: [{
+                    id: `rule-${Date.now()}-0`,
+                    source: obj.source || 'payload',
+                    field: obj.field || '',
+                    dataType: obj.dataType || 'string',
+                    operator: obj.operator || '=',
+                    value: obj.value != null ? String(obj.value) : '',
+                    customHandler: obj.handler || '',
+                    customArgs: obj.args ? JSON.stringify(obj.args, null, 2) : ''
+                }]
+            };
+        }
+    } catch (e) {
+        console.warn("Failed to parse condition JSON to rules state", e);
+    }
+    return fallback;
+};
+
 const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) =>
     workflowTransitions.map((transition, index) => {
         const isReturn = transition.isReturn === true || String(transition.isReturn) === 'true' || transition.flowType === 'Return';
         const hasCommand = transition.command && transition.command !== 'None' && transition.command !== '0';
+        
+        let conditionJsonStr = '{}';
+        if (transition.conditionJson) {
+            conditionJsonStr = typeof transition.conditionJson === 'string' 
+                ? transition.conditionJson 
+                : JSON.stringify(transition.conditionJson, null, 2);
+        }
+
         return {
             id: `edge-${transition.fromNodeId || transition.from || 'from'}-${transition.toNodeId || transition.to || 'to'}-${index}`,
             source: String(transition.fromNodeId || transition.from || ''),
@@ -453,7 +504,8 @@ const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) 
                 stepNo: transition.stepNo || '',
                 jumpStepNo: transition.jumpStepNo || '',
                 transitionType: transition.transitionType || 'Normal',
-                conditionJson: transition.conditionJson || '{}',
+                conditionJson: conditionJsonStr,
+                conditionRulesState: transition.conditionRulesState || parseJsonToRulesState(transition.conditionJson),
                 isExitTransition: Boolean(transition.isExitTransition),
                 isReturn: isReturn,
                 statusId: transition.statusId || '',
@@ -586,6 +638,7 @@ function Flow({ id: propId }) {
                     jumpStepNo: '',
                     transitionType: 'Normal',
                     conditionJson: '{}',
+                    conditionRulesState: { rootOperator: 'AND', rules: [] },
                     isExitTransition: false,
                     isReturn: false,
                     statusId: '',
@@ -708,6 +761,7 @@ function Flow({ id: propId }) {
                     jumpStepNo: parseInt(edge.data?.jumpStepNo) || null,
                     transitionType: edge.data?.transitionType || 'Normal',
                     conditionJson: parsedCondition,
+                    conditionRulesState: edge.data?.conditionRulesState || null,
                     isExitTransition: edge.data?.isExitTransition === true,
                     isReturn: edge.data?.isReturn === true,
                     statusId: edge.data?.statusId || '',
@@ -900,6 +954,139 @@ function Flow({ id: propId }) {
         },
         [selectedEdge, setEdges],
     );
+
+    const [condSource, setCondSource] = useState('payload');
+    const [condField, setCondField] = useState('totalPremiumTotal');
+    const [condDataType, setCondDataType] = useState('number');
+    const [condOperator, setCondOperator] = useState('>');
+    const [condValue, setCondValue] = useState('0');
+    const [condCustomHandler, setCondCustomHandler] = useState('');
+    const [condCustomArgs, setCondCustomArgs] = useState('{\n  "folder": "FO"\n}');
+    const [condRootOperator, setCondRootOperator] = useState('AND');
+
+    useEffect(() => {
+        if (selectedEdge) {
+            setCondRootOperator(selectedEdge.data?.conditionRulesState?.rootOperator || 'AND');
+        }
+    }, [selectedEdge]);
+
+    const parseConditionValueByType = useCallback((dataType, value) => {
+        if (dataType === "number") {
+            const n = Number(value);
+            return isNaN(n) ? 0 : n;
+        }
+        if (dataType === "boolean") {
+            return value === true || value === "true" || value === "1" || value === 1;
+        }
+        if (dataType === "array") {
+            if (!value) return [];
+            try {
+                const parsed = JSON.parse(value);
+                return Array.isArray(parsed) ? parsed : [parsed];
+            } catch (err) {
+                return String(value).split(",").map(x => x.trim()).filter(Boolean);
+            }
+        }
+        return value ?? "";
+    }, []);
+
+    const mapBuilderRuleToJson = useCallback((rule) => {
+        if (rule.source === "custom") {
+            return {
+                type: "rule",
+                source: rule.source,
+                handler: rule.customHandler || "",
+                args: (() => {
+                    try { return JSON.parse(rule.customArgs || '{}'); } catch (e) { return {}; }
+                })(),
+                operator: rule.operator || "=",
+                value: parseConditionValueByType(rule.dataType, rule.value)
+            };
+        }
+        return {
+            type: rule.type || 'rule',
+            source: rule.source || "payload",
+            field: rule.field || "",
+            dataType: rule.dataType || "string",
+            operator: rule.operator || "=",
+            value: parseConditionValueByType(rule.dataType, rule.value)
+        };
+    }, [parseConditionValueByType]);
+
+    const buildConditionJson = useCallback((rulesState) => {
+        const rules = rulesState?.rules || [];
+        if (!rules.length) return "{}";
+        if (rules.length === 1) {
+            return JSON.stringify(mapBuilderRuleToJson(rules[0]), null, 2);
+        }
+        return JSON.stringify({
+            type: "group",
+            operator: rulesState.rootOperator || "AND",
+            children: rules.map(mapBuilderRuleToJson)
+        }, null, 2);
+    }, [mapBuilderRuleToJson]);
+
+    const addConditionRule = useCallback(() => {
+        if (!selectedEdge) return;
+        const newRule = {
+            id: `rule-${Date.now()}`,
+            source: condSource,
+            field: condSource === 'custom' ? '' : condField,
+            dataType: condDataType,
+            operator: condOperator,
+            value: condValue,
+            customHandler: condSource === 'custom' ? condCustomHandler : '',
+            customArgs: condSource === 'custom' ? condCustomArgs : ''
+        };
+
+        const currentState = selectedEdge.data?.conditionRulesState || { rootOperator: 'AND', rules: [] };
+        const nextRules = [...(currentState.rules || []), newRule];
+        const nextState = {
+            ...currentState,
+            rootOperator: condRootOperator,
+            rules: nextRules
+        };
+
+        const nextJson = buildConditionJson(nextState);
+        updateSelectedEdge('conditionRulesState', nextState);
+        updateSelectedEdge('conditionJson', nextJson);
+    }, [selectedEdge, condSource, condField, condDataType, condOperator, condValue, condCustomHandler, condCustomArgs, condRootOperator, buildConditionJson, updateSelectedEdge]);
+
+    const clearConditionRules = useCallback(() => {
+        if (!selectedEdge) return;
+        const nextState = {
+            rootOperator: 'AND',
+            rules: []
+        };
+        updateSelectedEdge('conditionRulesState', nextState);
+        updateSelectedEdge('conditionJson', '{}');
+    }, [selectedEdge, updateSelectedEdge]);
+
+    const changeRootOperator = useCallback((op) => {
+        if (!selectedEdge) return;
+        setCondRootOperator(op);
+        const currentState = selectedEdge.data?.conditionRulesState || { rootOperator: op, rules: [] };
+        const nextState = {
+            ...currentState,
+            rootOperator: op
+        };
+        const nextJson = buildConditionJson(nextState);
+        updateSelectedEdge('conditionRulesState', nextState);
+        updateSelectedEdge('conditionJson', nextJson);
+    }, [selectedEdge, buildConditionJson, updateSelectedEdge]);
+
+    const removeConditionRule = useCallback((ruleId) => {
+        if (!selectedEdge) return;
+        const currentState = selectedEdge.data?.conditionRulesState || { rootOperator: 'AND', rules: [] };
+        const nextRules = (currentState.rules || []).filter(r => r.id !== ruleId);
+        const nextState = {
+            ...currentState,
+            rules: nextRules
+        };
+        const nextJson = buildConditionJson(nextState);
+        updateSelectedEdge('conditionRulesState', nextState);
+        updateSelectedEdge('conditionJson', nextJson);
+    }, [selectedEdge, buildConditionJson, updateSelectedEdge]);
 
     const nodeDetails = useMemo(() => {
         if (!selectedNode) {
@@ -1114,7 +1301,131 @@ function Flow({ id: propId }) {
                         />
                     </label>
                 )}
-                <label>
+                {selectedEdge.data?.transitionType === 'Condition' && (
+                    <div style={{ marginTop: '16px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
+                        <h4 style={{ fontSize: '0.9rem', marginBottom: '10px', color: '#1e293b', fontWeight: 600 }}>Mini Condition Builder</h4>
+                        
+                        <label>
+                            <span>Root Operator</span>
+                            <select
+                                value={condRootOperator}
+                                onChange={(e) => changeRootOperator(e.target.value)}
+                            >
+                                <option value="AND">AND</option>
+                                <option value="OR">OR</option>
+                            </select>
+                        </label>
+
+                        <label>
+                            <span>Rule Source</span>
+                            <select value={condSource} onChange={(e) => setCondSource(e.target.value)}>
+                                <option value="payload">payload</option>
+                                <option value="custom">custom</option>
+                                <option value="user">user</option>
+                                <option value="department">department</option>
+                                <option value="actor">actor</option>
+                                <option value="system">system</option>
+                            </select>
+                        </label>
+
+                        {condSource !== 'custom' ? (
+                            <label>
+                                <span>Field</span>
+                                <input value={condField} onChange={(e) => setCondField(e.target.value)} />
+                            </label>
+                        ) : (
+                            <>
+                                <label>
+                                    <span>Custom Handler</span>
+                                    <input value={condCustomHandler} onChange={(e) => setCondCustomHandler(e.target.value)} placeholder="e.g. checkDepartmentLimit" />
+                                </label>
+                                <label>
+                                    <span>Custom Args (JSON)</span>
+                                    <textarea
+                                        rows={3}
+                                        value={condCustomArgs}
+                                        onChange={(e) => setCondCustomArgs(e.target.value)}
+                                        placeholder='{"folder": "FO"}'
+                                    />
+                                </label>
+                            </>
+                        )}
+
+                        <label>
+                            <span>Data Type</span>
+                            <select value={condDataType} onChange={(e) => setCondDataType(e.target.value)}>
+                                <option value="string">string</option>
+                                <option value="number">number</option>
+                                <option value="boolean">boolean</option>
+                                <option value="array">array</option>
+                            </select>
+                        </label>
+
+                        <label>
+                            <span>Operator</span>
+                            <select value={condOperator} onChange={(e) => setCondOperator(e.target.value)}>
+                                <option value="=">=</option>
+                                <option value="!=">!=</option>
+                                <option value=">">&gt;</option>
+                                <option value="<">&lt;</option>
+                                <option value=">=">&gt;=</option>
+                                <option value="<=">&lt;=</option>
+                                <option value="contains">contains</option>
+                                <option value="in">in</option>
+                            </select>
+                        </label>
+
+                        <label>
+                            <span>Value</span>
+                            <input value={condValue} onChange={(e) => setCondValue(e.target.value)} />
+                        </label>
+
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                            <button
+                                type="button"
+                                onClick={addConditionRule}
+                                style={{ flex: 1, padding: '6px 12px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem' }}
+                            >
+                                Add Rule
+                            </button>
+                            <button
+                                type="button"
+                                onClick={clearConditionRules}
+                                style={{ padding: '6px 12px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem' }}
+                            >
+                                Clear All
+                            </button>
+                        </div>
+
+                        {selectedEdge.data?.conditionRulesState?.rules?.length > 0 && (
+                            <div style={{ marginTop: '14px', background: '#f8fafc', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                                <span style={{ fontWeight: 600, fontSize: '0.8rem', display: 'block', marginBottom: '6px' }}>Added Rules ({condRootOperator}):</span>
+                                <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '0.78rem', color: '#334155' }}>
+                                    {selectedEdge.data.conditionRulesState.rules.map((rule) => (
+                                        <li key={rule.id} style={{ marginBottom: '6px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span>
+                                                    {rule.source === 'custom' 
+                                                        ? `custom: ${rule.customHandler}`
+                                                        : `${rule.source}.${rule.field} ${rule.operator} ${rule.value}`
+                                                    }
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeConditionRule(rule.id)}
+                                                    style={{ border: 'none', background: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '11px', padding: '0 4px' }}
+                                                >
+                                                    Xóa
+                                                </button>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                )}
+                <label style={{ marginTop: '16px' }}>
                     <span>Condition JSON</span>
                     <textarea
                         rows={4}
@@ -1124,7 +1435,23 @@ function Flow({ id: propId }) {
                 </label>
             </div>
         );
-    }, [selectedEdge, updateSelectedEdge, statusList]);
+    }, [
+        selectedEdge,
+        updateSelectedEdge,
+        statusList,
+        condSource,
+        condField,
+        condDataType,
+        condOperator,
+        condValue,
+        condCustomHandler,
+        condCustomArgs,
+        condRootOperator,
+        addConditionRule,
+        clearConditionRules,
+        changeRootOperator,
+        removeConditionRule
+    ]);
 
     return (
         <div className="flow-shell">
@@ -1244,15 +1571,17 @@ function Flow({ id: propId }) {
                 </div>
 
                 <aside className="flow-properties-panel">
-                    {error && <div className="flow-error">{error}</div>}
-                    {nodeDetails}
-                    {edgeDetails}
-                    {!selectedNode && !selectedEdge && (
-                        <div className="flow-empty-state">
-                            <h3>Configure workflow</h3>
-                            <p>Select a node or connect two nodes to edit transition attributes such as action name, step no and condition JSON.</p>
-                        </div>
-                    )}
+                    <div className="flow-properties-scroll-container">
+                        {error && <div className="flow-error">{error}</div>}
+                        {nodeDetails}
+                        {edgeDetails}
+                        {!selectedNode && !selectedEdge && (
+                            <div className="flow-empty-state">
+                                <h3>Configure workflow</h3>
+                                <p>Select a node or connect two nodes to edit transition attributes such as action name, step no and condition JSON.</p>
+                            </div>
+                        )}
+                    </div>
                 </aside>
             </div>
 
