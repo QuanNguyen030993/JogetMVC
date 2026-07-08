@@ -173,12 +173,12 @@ const mapWorkflowEdges = (workflowTransitions = []) =>
         },
     }));
 
-function Flow() {
+function Flow({ id: propId }) {
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const [selectedNode, setSelectedNode] = useState(null);
     const [selectedEdge, setSelectedEdge] = useState(null);
-    const [workflowId, setWorkflowId] = useState('');
+    const [workflowId, setWorkflowId] = useState(propId || '');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [reactFlowInstance, setReactFlowInstance] = useState(null);
@@ -325,13 +325,18 @@ function Flow() {
     }, [workflowId, nodes, edges]);
 
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const id = params.get('id');
-        if (id) {
-            setWorkflowId(id);
-            loadWorkflow(id);
+        if (propId) {
+            setWorkflowId(propId);
+            loadWorkflow(propId);
+        } else {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            if (id) {
+                setWorkflowId(id);
+                loadWorkflow(id);
+            }
         }
-    }, [loadWorkflow]);
+    }, [propId, loadWorkflow]);
 
     const addNode = useCallback(() => {
         const id = `node-${Math.random().toString(36).slice(2, 8)}`;

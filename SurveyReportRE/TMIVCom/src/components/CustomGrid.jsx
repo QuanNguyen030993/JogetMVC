@@ -85,6 +85,9 @@ const CustomGrid = forwardRef(({
   rows: initialRows,
   onRowsChange,
   onAddRow,
+  onRowClick,
+  onDesignFlow,
+  apiBaseUrl,
   editMode: initialEditMode = 'batch',
   toolbarItems = [],
   rowTemplate,
@@ -93,6 +96,7 @@ const CustomGrid = forwardRef(({
   showSelectionCheckbox = true,
   showCommandsColumn = true,
 }, ref) => {
+  const API_BASE_URL = apiBaseUrl || CONFIG.API_URL || 'https://localhost:7254';
   const [columns, setColumns] = useState(initialColumns ?? []);
   const [rows, setRows] = useState(initialRows ?? []);
   const [draftRows, setDraftRows] = useState(initialRows ?? []);
@@ -1102,7 +1106,10 @@ const CustomGrid = forwardRef(({
     const rowProps = {
       key: rowId,
       className: rowClasses,
-      onClick: () => handleSelectRow(rowId),
+      onClick: () => {
+        handleSelectRow(rowId);
+        onRowClick?.(node);
+      },
       onDragOver: handleRowDragOver,
       onDrop: (e) => handleRowDrop(e, node),
     };
@@ -1158,6 +1165,11 @@ const CustomGrid = forwardRef(({
                       <button type="button" className="command-btn view-btn" onClick={() => handleViewRow(node)} title="Xem chi tiết">
                         <i className="fa fa-eye"></i>
                       </button>
+                      {onDesignFlow && (
+                        <button type="button" className="command-btn design-btn" onClick={() => onDesignFlow(node)} title="Thiết kế Quy trình">
+                          <i className="fa fa-sitemap"></i>
+                        </button>
+                      )}
                       <button type="button" className="command-btn edit-btn" onClick={() => handleRowEdit(rowId)} title="Sửa dòng">
                         <i className="fa fa-pencil"></i>
                       </button>

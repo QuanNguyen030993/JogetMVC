@@ -104,6 +104,7 @@ body:JSON.stringify("2")
 
 },[]);
   const [activeSection, setActiveSection] = useState('dashboard');
+  const [selectedWorkflowId, setSelectedWorkflowId] = useState(null);
   const menuItems = [
     { id: 'dashboard', label: 'Bảng điều khiển (Dashboard)' },
     { id: 'overview', label: 'Tổng quan hệ thống (Overview)' },
@@ -148,9 +149,28 @@ body:JSON.stringify("2")
       case 'mail-queue':
         return <MailQueue />;
       case 'flow':
-        return <Flow />;
+        return <Flow id={selectedWorkflowId} />;
       case 'flowgrid':
-        return <CustomGrid />;
+        return (
+          <CustomGrid
+            modelName="WorkflowDefinition"
+            apiBaseUrl={API_BASE_URL}
+            onRowClick={(row) => {
+              const rowId = row.id || row.Id;
+              if (rowId) {
+                setSelectedWorkflowId(rowId);
+                setActiveSection('flow');
+              }
+            }}
+            onDesignFlow={(row) => {
+              const rowId = row.id || row.Id;
+              if (rowId) {
+                setSelectedWorkflowId(rowId);
+                setActiveSection('flow');
+              }
+            }}
+          />
+        );
       case 'serilog':
         return <SerilogViewer />;
       case 'systable':
@@ -185,7 +205,7 @@ body:JSON.stringify("2")
           </>
         );
     }
-  }, [activeSection]);
+  }, [activeSection, selectedWorkflowId, disk, loginStats]);
 
   return (
     <div className="app-shell">
