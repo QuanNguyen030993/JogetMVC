@@ -12,7 +12,9 @@ import MenuDesigner from './components/MenuDesigner';
 import UserManagement from './components/UserManagement';
 import OverviewPanel from './components/OverviewPanel';
 import EnumDesign from './components/EnumDesign';
+import CustomGrid from '../../TMIVCom/src/components/CustomGrid'
 import './styles/flow.css';
+import './styles/com.all.css';
 import './styles/serilogs.css';
 import './styles/systable.css';
 import './styles/datagridfielddesigner.css';
@@ -109,6 +111,7 @@ body:JSON.stringify("2")
     { id: 'mail-template', label: 'Cấu hình mẫu Email' },
     { id: 'mail-queue', label: 'Hàng đợi Email' },
     { id: 'flow', label: 'Luồng quy trình (Flow)' },
+    { id: 'flowgrid', label: 'Luồng quy trình (Flow Grid)' },
     { id: 'serilog', label: 'Nhật ký hệ thống (Serilogs)' },
     { id: 'systable', label: 'Bảng hệ thống' } ,
     { id: 'datagridfielddesigner', label: 'Thiết kế trường DataGrid' },
@@ -146,6 +149,8 @@ body:JSON.stringify("2")
         return <MailQueue />;
       case 'flow':
         return <Flow />;
+      case 'flowgrid':
+        return <CustomGrid />;
       case 'serilog':
         return <SerilogViewer />;
       case 'systable':
