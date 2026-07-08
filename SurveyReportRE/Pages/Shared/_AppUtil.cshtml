@@ -2342,10 +2342,12 @@
                                 var formId = window.QuotationIdManager.form(item,this.dataForm.id);
                                 var ds = $(`#${formId}`).dxForm("instance").option("dataSource");
                                 var store = ds;
-                                var PICs = JSON.parse(this.dataForm.pic);
-                                // if (!itemChild?.accountName) return;
-                                // if (currentPic == itemChild?.accountName) return;
-                                // PICs[item] = itemChild.accountName;
+                                var PICs = {};
+                                try {
+                                    PICs = JSON.parse(this.dataForm.pIC || this.dataForm.pic || "{}");
+                                } catch (e) {
+                                    PICs = {};
+                                }
 
                                 if (!itemChild || !Array.isArray(itemChild)) return;
 
@@ -2410,10 +2412,12 @@
                                 var formId = window.PolicyIssuanceIdManager.form(item, this.dataForm.id);
                                 var ds = $(`#${formId}`).dxForm("instance").option("dataSource");
                                 var store = ds;
-                                var PICs = JSON.parse(this.dataForm.pic);
-                                // if (!itemChild?.accountName) return;
-                                // if (currentPic == itemChild?.accountName) return;
-                                // PICs[item] = itemChild.accountName;
+                                var PICs = {};
+                                try {
+                                    PICs = JSON.parse(this.dataForm.pIC || this.dataForm.pic || "{}");
+                                } catch (e) {
+                                    PICs = {};
+                                }
 
                                 if (!itemChild || !Array.isArray(itemChild)) return;
 
@@ -2456,8 +2460,9 @@
                         });
                     }, timeout);
                 });
-            stateLayout.isAssigneeBoxRender = true;
-
+            setTimeout(() => {
+                stateLayout.isAssigneeBoxRender = true;
+            }, timeout + 100);
             }
 
     function renderDepartmentAssigneeBox(selector, options, hideIfMuliple = true) {
@@ -2466,11 +2471,13 @@
             dataForm: {},
             currentUserId: null,
             value: null, // string: acc1,acc2
-            onChanged: null
+            onChanged: null,
+            onClosed: null,
+            onValueChanged: null
         }, options || {});
 
         const store = new DevExpress.data.CustomStore({
-            key: "id",
+            key: "accountName", // align with valueExpr: "accountName"
             loadMode: "raw",
 
             load: function (loadOptions) {
@@ -2502,52 +2509,47 @@
             }
         });
 
-
         const defaultValue =
             getDefaultPicByDept(settings.groupName, settings.dataForm)
             || settings.value;
-
 
         const selectedValues = defaultValue
             ? defaultValue.split(",").map(x => x.trim()).filter(Boolean)
             : [];
 
+        const $el = $(selector);
+        if ($el.length === 0) return;
 
-        const tagBox = $(selector).dxTagBox({
+        // Reuse existing dxTagBox instance to avoid recreating it
+        const existingInstance = DevExpress.ui.dxTagBox.getInstance($el[0]);
+        if (existingInstance) {
+            existingInstance.option({
+                dataSource: store,
+                value: selectedValues
+            });
+            return;
+        }
 
+        const tagBox = $el.dxTagBox({
             elementAttr: {
-                    class: "outlined-tagbox"
-                },
-
+                class: "outlined-tagbox"
+            },
             dataSource: store,
-
             valueExpr: "accountName",
-             
             displayExpr: "fullName",
             height: 38,
             width: 400,
             value: selectedValues,
-            // value: getDefaultPicByDept(settings.groupName, settings.dataForm) || settings.value,
-
             searchEnabled: true,
             maxDisplayedTags: hideIfMuliple ? 1 : 100,
-                showMultiTagOnly: hideIfMuliple,
-
+            showMultiTagOnly: hideIfMuliple,
             onMultiTagPreparing: function (e) {
-                if (hideIfMuliple){
-
-                const items = e.selectedItems || [];
-
-                const hiddenItems = items.slice(1);
-
-                e.text = `+${hiddenItems.length} more`;
-
-
-                e.multiTagElement
-                    .attr("title",
-                        hiddenItems
-                            .map(x => x.fullName)
-                            .join("\n")
+                if (hideIfMuliple) {
+                    const items = e.selectedItems || [];
+                    const hiddenItems = items.slice(1);
+                    e.text = `+${hiddenItems.length} more`;
+                    e.multiTagElement.attr("title",
+                        hiddenItems.map(x => x.fullName).join("\n")
                     );
                 }
             },
@@ -2556,86 +2558,55 @@
                 "accountName",
                 "displayName"
             ],
-
             placeholder: "Select assignee...",
-
             showClearButton: true,
-
             showSelectionControls: true,
-
             applyValueMode: "useButtons",
-
-
             buttons: [
                 "clear",
                 "dropDown",
                 {
                     name: "assignToMe",
                     location: "after",
-
                     options: {
                         type: "default",
                         text: "Assign to me",
-
                         onClick: function () {
-
                             $.ajax({
                                 url: "api/Employee/GetMyAssigneeProfile",
                                 type: "GET",
                                 dataType: "json"
-
                             }).done(function (res) {
-
-                                if (!res || !res.success || !res.data)
-                                    return;
-
-
+                                if (!res || !res.success || !res.data) return;
                                 const me = res.data;
-
-                                const editor = $(selector)
-                                    .dxTagBox("instance");
-
-
+                                const editor = $el.dxTagBox("instance");
                                 let current = editor.option("value") || [];
-
-
                                 if (!current.includes(me.accountName)) {
                                     current.push(me.accountName);
                                 }
-
-
                                 editor.option("value", current);
 
-
                                 if (typeof settings.onChanged === "function") {
-
-                                    settings.onChanged(
-                                        [me],
-                                        editor,
-                                        true
-                                    );
+                                    settings.onChanged([me], editor, true);
                                 }
-
+                                if (typeof settings.onClosed === "function") {
+                                    settings.onClosed([me], editor, true);
+                                }
+                                if (typeof settings.onValueChanged === "function") {
+                                    settings.onValueChanged([me], editor, true);
+                                }
                             });
                         }
                     }
                 }
             ],
-
-
-            // onValueChanged: function (e) {
-                onClosed: function (e) {
-
+            onClosed: function (e) {
                 const items = e.component.option("selectedItems") || [];
-
-
                 if (typeof settings.onClosed === "function") {
-
-                            settings.onClosed(
-                        items,
-                        e.component,
-                        false
-                    );
+                    settings.onClosed(items, e.component, false);
+                }
+                if (typeof settings.onValueChanged === "function") {
+                    settings.onValueChanged(items, e.component, false);
                 }
             }
         });
@@ -5748,6 +5719,83 @@ function styleModeChange(item){
 
     }
 
+    // =========================================================================
+    // UTILITY FUNCTIONS FROM appUtil.js (ADDED 2026-07-09)
+    // =========================================================================
 
+    /**
+     * getIconByExt: Returns an emoji representation of a file extension.
+     * Used for rendering beautiful visual file indicators in attachments/lists.
+     */
+    function getIconByExt(ext) {
+        ext = (ext || "").toLowerCase();
+        if (ext === "not found on server") return "!";
+        if (ext === "pdf") return "📕";
+        if (ext === "xls" || ext === "xlsx" || ext === "csv") return "📗";
+        if (ext === "doc" || ext === "docx") return "📘";
+        if (ext === "ppt" || ext === "pptx") return "📙";
+        if (ext === "msg" || ext === "eml") return "✉️";
+        if (ext === "xml" || ext === "json") return "🧾";
+        if (ext === "zip" || ext === "rar" || ext === "7z") return "🗜️";
+        if (["png", "jpg", "jpeg", "gif", "bmp", "webp"].includes(ext)) return "🖼️";
+        return "📎";
+    }
+
+    /**
+     * getExt: Extracts the extension from a file name.
+     * Used to determine file type for icons and logic handling.
+     */
+    function getExt(fileName) {
+        const s = (fileName || "");
+        const i = s.lastIndexOf(".");
+        return i >= 0 ? s.substring(i + 1) : "";
+    }
+
+    /**
+     * formatBytes: Converts a byte size number into a human-readable file size string.
+     * Supports B, KB, MB, GB formats with one decimal place.
+     */
+    function formatBytes(bytes) {
+        const n = Number(bytes || 0);
+        if (n < 1024) return n + " B";
+        const kb = n / 1024;
+        if (kb < 1024) return kb.toFixed(1) + " KB";
+        const mb = kb / 1024;
+        if (mb < 1024) return mb.toFixed(1) + " MB";
+        const gb = mb / 1024;
+        return gb.toFixed(1) + " GB";
+    }
+
+    /**
+     * getJson: Simple AJAX GET wrapper returning a jQuery promise.
+     * Used for RESTful API calls fetching JSON data.
+     */
+    function getJson(url, data) {
+        return $.ajax({
+            url: url,
+            type: "GET",
+            data: data || {},
+            dataType: "json"
+        });
+    }
+
+    /**
+     * getDefaultPicByDept: Safely parses the PIC JSON data and retrieves 
+     * the assignee's account name for a specific department.
+     * Checks both case-variations (pIC / pic) and uses try-catch to prevent crashes.
+     */
+    function getDefaultPicByDept(deptKey, dataForm) {
+        if (!deptKey) return null;
+        if (!dataForm) return null;
+        const picStr = dataForm.pIC || dataForm.pic || "";
+        if (!picStr) return null;
+        let PIC_MAP = {};
+        try {
+            PIC_MAP = JSON.parse(picStr);
+        } catch (e) {
+            return null;
+        }
+        return PIC_MAP[deptKey] || null;
+    }
 
 </script>

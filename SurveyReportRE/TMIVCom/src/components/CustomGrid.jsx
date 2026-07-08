@@ -95,6 +95,7 @@ const CustomGrid = forwardRef(({
   allowRowReordering = true,
   showSelectionCheckbox = true,
   showCommandsColumn = true,
+  selectionMode: propSelectionMode,
 }, ref) => {
   const API_BASE_URL = apiBaseUrl || CONFIG.API_URL || 'https://localhost:7254';
   const [columns, setColumns] = useState(initialColumns ?? []);
@@ -119,6 +120,7 @@ const CustomGrid = forwardRef(({
 
   // Drag row reorder state
   const [draggedRowKey, setDraggedRowKey] = useState(null);
+  const [draggedColumnField, setDraggedColumnField] = useState(null);
 
   // Column resize state
   const [columnWidths, setColumnWidths] = useState({});
@@ -146,9 +148,22 @@ const CustomGrid = forwardRef(({
   const refOperator2 = gridOption?.refOperator2 ?? gridOption?.mGridDetailOption?.refOperator2 ?? null;
   const overrideGetUrl = gridOption?.overrideGetUrl ?? gridOption?.mGridDetailOption?.overrideGetUrl ?? null;
 
+  // Resolve selection mode
+  const selectionMode = gridOption?.selection?.mode ?? propSelectionMode ?? (showSelectionCheckbox ? 'multiple' : 'single');
+
   // Imperative handle to allow jQuery or parent components to get data or call options
   useImperativeHandle(ref, () => ({
     getData: () => draftRows,
+    getSelectedRowKeys: () => selectedRowKeys,
+    getSelectedRowsData: () => draftRows.filter(r => selectedRowKeys.includes(r.id || r.Id)),
+    selectRows: (keys, preserveExisting = false) => {
+      if (preserveExisting) {
+        setSelectedRowKeys(prev => [...new Set([...prev, ...keys])]);
+      } else {
+        setSelectedRowKeys(keys);
+      }
+    },
+    deselectAll: () => setSelectedRowKeys([]),
     option: (name, value) => {
       if (name === 'value') {
         if (value !== undefined) {
@@ -165,9 +180,27 @@ const CustomGrid = forwardRef(({
           return theme;
         }
       }
+      if (name === 'selectedRowKeys') {
+        if (value !== undefined) {
+          setSelectedRowKeys(value || []);
+        } else {
+          return selectedRowKeys;
+        }
+      }
     },
     value: () => draftRows
   }));
+
+  // Trigger onSelectionChanged callback when selectedRowKeys changes
+  useEffect(() => {
+    const callback = gridOption?.onSelectionChanged || gridOption?.mGridOption?.onSelectionChanged;
+    if (callback) {
+      callback({
+        selectedRowKeys,
+        selectedRowsData: draftRows.filter(r => selectedRowKeys.includes(r.id || r.Id))
+      });
+    }
+  }, [selectedRowKeys, draftRows, gridOption]);
 
   // Fetch Table Metadata & Columns Schema
   useEffect(() => {
@@ -682,9 +715,16 @@ const CustomGrid = forwardRef(({
   // Checkbox selection handlers
   const handleSelectRowCheckbox = (event, rowId) => {
     event.stopPropagation();
-    setSelectedRowKeys((prev) =>
-      prev.includes(rowId) ? prev.filter((id) => id !== rowId) : [...prev, rowId]
-    );
+    if (selectionMode === 'single') {
+      setSelectedRowKeys((prev) =>
+        prev.includes(rowId) ? [] : [rowId]
+      );
+      setSelectedRowId((prev) => (prev === rowId ? null : rowId));
+    } else {
+      setSelectedRowKeys((prev) =>
+        prev.includes(rowId) ? prev.filter((id) => id !== rowId) : [...prev, rowId]
+      );
+    }
   };
 
   const handleSelectAllCheckbox = () => {
@@ -819,6 +859,9 @@ const CustomGrid = forwardRef(({
 
   const handleSelectRow = (rowId) => {
     setSelectedRowId(rowId === selectedRowId ? null : rowId);
+    if (selectionMode === 'single') {
+      setSelectedRowKeys(rowId === selectedRowId ? [] : [rowId]);
+    }
     if (editMode === 'form') {
       setActiveCell(null);
     }
@@ -859,9 +902,72 @@ const CustomGrid = forwardRef(({
     setPageIndex(0);
   };
 
-  const handleDragStart = (event, column) => {
+  const handleColumnDragStart = (event, column) => {
+    setDraggedColumnField(column.field);
     event.dataTransfer.setData('text/plain', column.field);
-    event.dataTransfer.effectAllowed = 'copy';
+    event.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleColumnDragOver = (event) => {
+    event.preventDefault();
+  };
+
+  const handleColumnDrop = async (event, targetColumn) => {
+    event.preventDefault();
+    const sourceField = event.dataTransfer.getData('text/plain') || draggedColumnField;
+    if (!sourceField || sourceField === targetColumn.field) return;
+
+    const sourceIndex = columns.findIndex(c => (c.field ?? c.dataField) === sourceField);
+    const targetIndex = columns.findIndex(c => (c.field ?? c.dataField) === targetColumn.field);
+
+    if (sourceIndex === -1 || targetIndex === -1) return;
+
+    const reorderedColumns = [...columns];
+    const [draggedCol] = reorderedColumns.splice(sourceIndex, 1);
+    reorderedColumns.splice(targetIndex, 0, draggedCol);
+
+    const updatedColumns = reorderedColumns.map((col, index) => ({
+      ...col,
+      gridVisibleIndex: index,
+      visibleIndex: index,
+      order: index
+    }));
+
+    setColumns(updatedColumns);
+    setDraggedColumnField(null);
+
+    const modelId = gridOption?.ModelId ?? gridOption?.sysTableId ?? gridOption?.mGridOption?.ModelId ?? gridOption?.mGridDetailOption?.sysTableId ?? null;
+    if (modelId && modelName) {
+      try {
+        const idsPayload = {};
+        updatedColumns.forEach((col, idx) => {
+          const fieldName = col.field ?? col.dataField;
+          if (fieldName) {
+            idsPayload[fieldName] = idx;
+          }
+        });
+
+        const res = await fetch(`${API_BASE_URL}/api/DataGridConfig/UpdateGridVisibleIndex`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            Ids: idsPayload,
+            ModelName: modelName,
+            ModelId: Number(modelId)
+          })
+        });
+
+        if (res.ok) {
+          console.log("Successfully updated column visible index on server.");
+        } else {
+          console.error("Failed to update column visible index:", await res.text());
+        }
+      } catch (err) {
+        console.error("Error updating column visible index:", err);
+      }
+    }
   };
 
   const handleGroupDrop = (event) => {
@@ -1376,9 +1482,11 @@ const CustomGrid = forwardRef(({
                   >
                     <div 
                       className="grid-header-cell-content" 
-                      style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', height: '100%', fontWeight: '600' }}
-                      draggable={column.groupable}
-                      onDragStart={(event) => handleDragStart(event, column)}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', height: '100%', fontWeight: '600', cursor: 'grab' }}
+                      draggable={column.sortable !== false}
+                      onDragStart={(event) => handleColumnDragStart(event, column)}
+                      onDragOver={handleColumnDragOver}
+                      onDrop={(event) => handleColumnDrop(event, column)}
                     >
                       {column.headerIcon ? (
                         <span className="header-icon-wrap">

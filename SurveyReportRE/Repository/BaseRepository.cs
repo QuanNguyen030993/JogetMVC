@@ -1,4 +1,4 @@
-﻿using AutoMapper.Execution;
+using AutoMapper.Execution;
 using Newtonsoft.Json;
 using Microsoft.Data.SqlClient;
 using Dapper;
@@ -88,6 +88,9 @@ public interface IBaseRepository<T> where T : class
     Task<T> UpdateData(T sourceEntity, T targetEntity, string[] changeFields, string keyField);
     Task<T> DeleteData(T entity, object keyId, string keyField, bool isRemove);
     Task<T> BulkDelete(List<int> ids, string keyField, bool isRemove);
+    Task BulkInsertAsync(IEnumerable<T> entities);
+    Task BulkUpdateAsync(IEnumerable<T> entities, string[] updateFields, string keyField);
+    Task BulkDeleteAsync(IEnumerable<object> ids, string keyField, bool isRemove);
     string GetConnection();
     Task ExecuteStoredProcedure(string storedProcedureName, params (string Key, object Value)[] parameters);
     Task<DataTable> ExecuteStoredProcedureReturn(string storedProcedureName, params (string Key, object Value)[] parameters);
@@ -187,7 +190,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
             }
             catch (Exception exFrom)
             {
-
+                Serilog.Log.Error(exFrom, "BaseRepository.GetListObject: Database query failed.");
             }
 
 
@@ -599,6 +602,119 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
             }
         }
         return null;
+    }
+
+    public async Task BulkInsertAsync(IEnumerable<T> entities)
+    {
+        if (entities == null || !entities.Any()) return;
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+            using (var transaction = connection.BeginTransaction())
+            {
+                var tableName = typeof(T).Name;
+                var userName = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, _baseConfiguration);
+
+                foreach (var entity in entities)
+                {
+                    Util.HandleSystemAttribute(entity, userName, CommandQueryType.Insert);
+                }
+
+                var properties = typeof(T).GetProperties()
+                    .Where(p => p.Name != "Id" && p.PropertyType.Name != "List`1" && !p.Name.EndsWith("FK") && !p.Name.EndsWith("Enum"))
+                    .ToList();
+
+                var columns = string.Join(", ", properties.Select(p => $"[{p.Name}]"));
+                var values = string.Join(", ", properties.Select(p => $"@{p.Name}"));
+                var insertQuery = $"INSERT INTO [{tableName}] ({columns}) VALUES ({values})";
+
+                try
+                {
+                    await connection.ExecuteAsync(insertQuery, entities, transaction);
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    Serilog.Log.Error(ex, "Error during BulkInsertAsync");
+                    throw;
+                }
+            }
+        }
+    }
+
+    public async Task BulkUpdateAsync(IEnumerable<T> entities, string[] updateFields, string keyField)
+    {
+        if (entities == null || !entities.Any() || updateFields == null || !updateFields.Any()) return;
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+            using (var transaction = connection.BeginTransaction())
+            {
+                var tableName = typeof(T).Name;
+                var userName = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, _baseConfiguration);
+
+                foreach (var entity in entities)
+                {
+                    Util.HandleSystemAttribute(entity, userName, CommandQueryType.Update);
+                }
+
+                var properties = typeof(T).GetProperties()
+                    .Where(p => updateFields.Contains(p.Name, StringComparer.OrdinalIgnoreCase) && p.Name != keyField)
+                    .ToList();
+
+                var setClause = string.Join(", ", properties.Select(p => $"[{p.Name}] = @{p.Name}"));
+                var updateQuery = $"UPDATE [{tableName}] SET {setClause} WHERE [{keyField}] = @{keyField}";
+
+                try
+                {
+                    await connection.ExecuteAsync(updateQuery, entities, transaction);
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    Serilog.Log.Error(ex, "Error during BulkUpdateAsync");
+                    throw;
+                }
+            }
+        }
+    }
+
+    public async Task BulkDeleteAsync(IEnumerable<object> ids, string keyField, bool isRemove)
+    {
+        if (ids == null || !ids.Any()) return;
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+            using (var transaction = connection.BeginTransaction())
+            {
+                var tableName = typeof(T).Name;
+                var userName = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, _baseConfiguration);
+                string query;
+
+                if (isRemove)
+                {
+                    query = $"DELETE FROM [{tableName}] WHERE [{keyField}] IN @Ids";
+                }
+                else
+                {
+                    query = $"UPDATE [{tableName}] SET [Deleted] = 1, [ModifiedBy] = @ModifiedBy, [ModifiedDate] = GETDATE() WHERE [{keyField}] IN @Ids";
+                }
+
+                try
+                {
+                    await connection.ExecuteAsync(query, new { Ids = ids, ModifiedBy = userName }, transaction);
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    Serilog.Log.Error(ex, "Error during BulkDeleteAsync");
+                    throw;
+                }
+            }
+        }
     }
 
     public async Task<T> GetObjectByIdAsync(long id)
@@ -1549,8 +1665,9 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
                                         propertyInfo.SetValue(entity, enumData);
                                     }
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
+                                    Serilog.Log.Warning(ex, "BaseRepository.ObjectSpecificEnumIncludeSync: Failed to populate enum data for property {IncludeObject}.", includeObject);
                                     continue;
                                 }
                             }
@@ -1649,8 +1766,9 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
                                         propertyInfo.SetValue(entityResult, deserializedObject);
                                     }
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
+                                    Serilog.Log.Warning(ex, "BaseRepository.IncludeSpecificField: Failed to populate data for property {IncludeObject}.", includeObject);
                                     continue;
                                 }
                             }

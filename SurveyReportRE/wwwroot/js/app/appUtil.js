@@ -1,4 +1,4 @@
-﻿
+
 //var ListFormat = Quill.import('formats/list');
 
 //class CustomList extends ListFormat {
@@ -5040,8 +5040,14 @@ $(document).on('submit', 'form', function() {
 
 function getDefaultPicByDept(deptKey, dataForm) {
     if (!deptKey) return null;
-    if (!dataForm.pIC) return null;
-    PIC_MAP = JSON.parse(dataForm.pIC || "{}");
+    const picStr = dataForm.pIC || dataForm.pic || "";
+    if (!picStr) return null;
+    let PIC_MAP = {};
+    try {
+        PIC_MAP = JSON.parse(picStr);
+    } catch (e) {
+        return null;
+    }
     return PIC_MAP[deptKey] || null;
 }
 
