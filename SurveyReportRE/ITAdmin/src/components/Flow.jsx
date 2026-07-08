@@ -1150,7 +1150,7 @@ function Flow({ id: propId }) {
             const nodeExists = nodes.find(n => n.id === currentStep);
             if (nodeExists) {
                 setSelectedNode(nodeExists);
-                alert(`Tìm thấy tiến trình đang chạy tại bước: ${nodeExists.data?.label || currentStep} (Đã highlight) 🎯`);
+                // alert(`Tìm thấy tiến trình đang chạy tại bước: ${nodeExists.data?.label || currentStep} (Đã highlight) 🎯`);
             } else {
                 alert(`Tìm thấy CurrentStep: ${currentStep}, nhưng bước này chưa được vẽ trên sơ đồ hiện tại! ⚠️`);
             }

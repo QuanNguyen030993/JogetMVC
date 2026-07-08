@@ -2690,14 +2690,16 @@
             sendData.StepsWorkflow = convertKeysToUpperFirstChar(findRoute);
             sendData.QuotationId = formItems.id;
             sendData.Comment = formItems.comment;
-
             //var formItemsRes = $(`#qt-formRES`).dxForm("instance")?.option("formData") || {};
                 var condition = safeJsonParse(findRoute.data);
+                debugger
                 if (condition){
             if (condition.source == "form") {
-                    const uploader1 = $(`[id^='attList_qt-body_FO_RES_default_${formItems.id}_'] .att-item.animate-step.visible`);
-                    const fileCount1 = uploader1.length || 0; // number of quote docs
-                     formItems.hasResAttachment =  fileCount1 > 0 ? true : false;
+                    // const uploader1 = $(`[id^='attList_qt-body_FO_RES_default_${formItems.id}_'] .att-item.animate-step.visible`);
+                    // const fileCount1 = uploader1.length || 0; // number of quote docs
+                    debugger
+                        var result = extractAttachmentQuantity(`attList_qt-body_FO_RES_default_${formItems.id}_`);
+                     formItems.hasResAttachment =  result.fileCount > 0 ? true : false;
                 // formItems = window.QuotationPage.state.formFO.dxForm("instance").option("formData");
                 // formItems.hasResAttachment = window.QuotationPage.state.hasResAttachment;
             }
@@ -2757,6 +2759,13 @@
 
 
         }
+
+        function extractAttachmentQuantity(attachmentControlId){
+                      const uploader = $(`[id^='${attachmentControlId}'] .att-item`);
+                        const fileCount = uploader.length || 0; // number of quote docs
+                        return {uploader: uploader,fileCount: fileCount}
+        }
+
             // ====== reload + refresh UI ======
         async function reloadNotifications(take = 30) {
 

@@ -8,8 +8,8 @@ namespace ERPCore.Models.Migration.Business.Workflow
     public class WorkflowInstanceNode : BaseModel
     {
         public string Code { get; set; } = "";
-        public Guid? InstanceWorkflowId { get; set; }
-        public InstanceWorkflow? InstanceWorkflowFK { get; set; }
+        //public Guid? InstanceWorkflowId { get; set; }
+        //public InstanceWorkflow? InstanceWorkflowFK { get; set; }
         public Guid? WorkflowDefinitionId { get; set; }
         public WorkflowDefinition? WorkflowDefinitionFK { get; set; } 
         [MaxLength(50)]

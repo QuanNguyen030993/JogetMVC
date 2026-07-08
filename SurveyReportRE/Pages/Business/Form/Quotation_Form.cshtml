@@ -168,8 +168,9 @@ Note:
                             // setNextStep(state.nextStep);
                             $.each(qtDeptModuleCode, function (itemIndex, item) {
                                     setTimeout(() => {
-                                        var findRoute = state.nextStep.flowSteps.find(f => !f.actionCode.includes("BACK_") && f.fromNodeId == item && f.fNodeId == state.nextStep.currentStep);
-                                        var findRouteReturn = state.nextStep.flowSteps.find(f => f.actionCode.includes("BACK_") && f.fromNodeId == item && f.fNodeId == state.nextStep.currentStep);
+                                        debugger
+                                        var findRoute = data.find(f => !f.actionCode.includes("BACK_") && f.fromNodeId == item && f.fNodeId == state.nextStep.currentStep);
+                                        var findRouteReturn = data.find(f => f.actionCode.includes("BACK_") && f.fromNodeId == item && f.fNodeId == state.nextStep.currentStep);
                                         var returnButtonId = window.QuotationIdManager.btnReturnBranch(item,@ViewData["Id"]);
                                         var submitButtonId = window.QuotationIdManager.btnSubmitBranch(item,@ViewData["Id"]);
                                         var remarkBoxId = window.QuotationIdManager.remarkBox(item,@ViewData["Id"]);

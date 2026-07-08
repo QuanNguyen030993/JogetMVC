@@ -9469,8 +9469,8 @@
   position: relative;
 }
 .dx-fileuploader-dragover .dx-fileuploader-input-wrapper {
-  border: none;
-  padding: 0;
+    border: 0;
+    padding: 0;
 }
 .dx-fileuploader-dragover .dx-fileuploader-input-wrapper .dx-fileuploader-button {
   display: none;
