@@ -522,6 +522,18 @@ const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) 
                 statusName: transition.statusName || '',
                 command: transition.command || 'None',
                 commandConfig: transition.commandConfig || '',
+                mailTemplateId: transition.mailTemplateId || (() => {
+                    try {
+                        const parsed = typeof transition.data === 'string' ? JSON.parse(transition.data) : (transition.data || {});
+                        return parsed.mailTemplateId || '';
+                    } catch (e) { return ''; }
+                })(),
+                notificationTemplateId: transition.notificationTemplateId || (() => {
+                    try {
+                        const parsed = typeof transition.data === 'string' ? JSON.parse(transition.data) : (transition.data || {});
+                        return parsed.notificationTemplateId || '';
+                    } catch (e) { return ''; }
+                })(),
                 controlX: Number.isFinite(transition.controlX) ? transition.controlX * scaleX : null,
                 controlY: Number.isFinite(transition.controlY) ? transition.controlY * scaleY : null,
             },
@@ -590,6 +602,8 @@ function Flow({ id: propId }) {
     const [error, setError] = useState(null);
     const [searchRecordGuid, setSearchRecordGuid] = useState('');
     const [tracedStep, setTracedStep] = useState(null);
+    const [mailTemplates, setMailTemplates] = useState([]);
+    const [notificationsList, setNotificationsList] = useState([]);
     const [reactFlowInstance, setReactFlowInstance] = useState(null);
     const [statusList, setStatusList] = useState([]);
     const [layoutConfig, setLayoutConfig] = useState(null);
@@ -884,6 +898,8 @@ function Flow({ id: propId }) {
                     statusName: edge.data?.statusName || '',
                     command: edge.data?.command || 'None',
                     commandConfig: edge.data?.commandConfig || '',
+                    mailTemplateId: edge.data?.mailTemplateId || null,
+                    notificationTemplateId: edge.data?.notificationTemplateId || null,
                     controlX: edge.data?.controlX ? Math.round(edge.data.controlX / scaleX) : null,
                     controlY: edge.data?.controlY ? Math.round(edge.data.controlY / scaleY) : null,
                     sortOrder: index + 1
@@ -1028,6 +1044,12 @@ function Flow({ id: propId }) {
                     }
                 }
 
+                const stepData = {
+                    ...conditionData,
+                    mailTemplateId: edge.data?.mailTemplateId || null,
+                    notificationTemplateId: edge.data?.notificationTemplateId || null
+                };
+
                 return {
                     sortOrder: index + 1,
                     stepNo: edge.data?.stepNo?.toString() || null,
@@ -1041,6 +1063,8 @@ function Flow({ id: propId }) {
                     canUpload: !isEnd,
                     command: edge.data?.command || null,
                     commandConfig: edge.data?.commandConfig || null,
+                    mailTemplateId: edge.data?.mailTemplateId ? parseInt(edge.data.mailTemplateId) : null,
+                    notificationTemplateId: edge.data?.notificationTemplateId ? parseInt(edge.data.notificationTemplateId) : null,
 
                     departmentCode: fromNode.data?.departmentName || null,
                     displayStatus: edge.data?.actionName || null,
@@ -1060,7 +1084,7 @@ function Flow({ id: propId }) {
                     uiMode: uiMode,
 
                     actionCode: actionCode || null,
-                    data: JSON.stringify(conditionData),
+                    data: JSON.stringify(stepData),
 
                     fromNodeId: edge.source || null,
                     fnodeId: edge.source || null,
@@ -1176,6 +1200,26 @@ function Flow({ id: propId }) {
             }
         }
     }, [propId, loadWorkflow]);
+
+    useEffect(() => {
+        // Load Mail Templates
+        fetch(`${API_BASE_URL}/api/MailTemplate/GetAll`)
+            .then((res) => {
+                if (!res.ok) throw new Error('API status ' + res.status);
+                return res.json();
+            })
+            .then((data) => setMailTemplates(data || []))
+            .catch((err) => console.error("Failed to load Mail Templates:", err));
+
+        // Load Notification Templates
+        fetch(`${API_BASE_URL}/api/Notification/GetAll`)
+            .then((res) => {
+                if (!res.ok) throw new Error('API status ' + res.status);
+                return res.json();
+            })
+            .then((data) => setNotificationsList(data || []))
+            .catch((err) => console.error("Failed to load Notification Templates:", err));
+    }, []);
 
     const addNode = useCallback(() => {
         const id = `node-${Math.random().toString(36).slice(2, 8)}`;
@@ -1800,6 +1844,37 @@ function Flow({ id: propId }) {
                         />
                     </label>
                 )}
+
+                <label>
+                    <span>Mẫu Email (Mail Template)</span>
+                    <select
+                        value={selectedEdge.data?.mailTemplateId || ''}
+                        onChange={(event) => updateSelectedEdge('mailTemplateId', event.target.value)}
+                    >
+                        <option value="">-- Không gửi Email --</option>
+                        {mailTemplates.map((item) => (
+                            <option key={item.id} value={item.id}>
+                                {item.title || item.subject || item.name || `Template ${item.id}`}
+                            </option>
+                        ))}
+                    </select>
+                </label>
+
+                <label>
+                    <span>Mẫu Thông báo (Notification Template)</span>
+                    <select
+                        value={selectedEdge.data?.notificationTemplateId || ''}
+                        onChange={(event) => updateSelectedEdge('notificationTemplateId', event.target.value)}
+                    >
+                        <option value="">-- Không gửi Thông báo --</option>
+                        {notificationsList.map((item) => (
+                            <option key={item.id} value={item.id}>
+                                {item.name || item.title || `Notification ${item.id}`}
+                            </option>
+                        ))}
+                    </select>
+                </label>
+
                 {selectedEdge.data?.transitionType === 'Condition' && (
                     <div style={{ marginTop: '16px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
                         <h4 style={{ fontSize: '0.9rem', marginBottom: '10px', color: '#1e293b', fontWeight: 600 }}>Mini Condition Builder</h4>
