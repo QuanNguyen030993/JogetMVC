@@ -10,6 +10,8 @@ import {
     ConnectionLineType,
     useEdgesState,
     useNodesState,
+    getSmoothStepPath,
+    EdgeLabelRenderer,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -44,40 +46,111 @@ const nodeTemplates = [
     },
 ];
 
-const createNodeStyle = (nodeType = 'default') => {
-    switch (nodeType) {
-        case 'start':
-            return {
-                background: '#dbeafe',
-                border: '1px solid #2563eb',
-                borderRadius: '14px',
-                color: '#0f172a',
-            };
-        case 'department':
-            return {
-                background: '#e0f2fe',
-                border: '1px solid #0284c7',
-                borderRadius: '14px',
-                color: '#0f172a',
-            };
-        case 'review':
-            return {
-                background: '#dcfce7',
-                border: '1px solid #16a34a',
-                borderRadius: '14px',
-                color: '#0f172a',
-            };
-        default:
-            return {
-                background: '#fef3c7',
-                border: '1px solid #d97706',
-                borderRadius: '14px',
-                color: '#0f172a',
-            };
-    }
+const CustomEdge = ({
+    id,
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition,
+    targetPosition,
+    style = {},
+    markerEnd,
+    label,
+}) => {
+    const [edgePath, labelX, labelY] = getSmoothStepPath({
+        sourceX,
+        sourceY,
+        targetX,
+        targetY,
+        sourcePosition,
+        targetPosition,
+    });
+
+    return (
+        <>
+            <path
+                id={id}
+                style={style}
+                className="react-flow__edge-path"
+                d={edgePath}
+                markerEnd={markerEnd}
+            />
+            {label && (
+                <EdgeLabelRenderer>
+                    <div
+                        style={{
+                            position: 'absolute',
+                            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+                            pointerEvents: 'all',
+                        }}
+                        className="nodrag nopan"
+                    >
+                        {label}
+                    </div>
+                </EdgeLabelRenderer>
+            )}
+        </>
+    );
 };
 
-const layoutNodes = (nodes = [], edges = []) => {
+const edgeTypes = {
+    custom: CustomEdge,
+};
+
+const createNodeStyle = (node = {}) => {
+    const type = (node.nodeType || '').toLowerCase();
+    const flowType = (node.flowType || '').toLowerCase();
+    const name = (node.nodeName || '').toLowerCase();
+
+    if (type === 'start' || flowType === 'start' || name === 'start') {
+        return {
+            background: '#ecfdf5',
+            border: '2px solid #10b981',
+            borderRadius: '50px',
+            color: '#065f46',
+            fontWeight: '600',
+            padding: '10px 20px',
+        };
+    }
+    if (type === 'end' || flowType === 'end' || name === 'end' || flowType === 'complete' || name === 'client') {
+        return {
+            background: '#fef2f2',
+            border: '2px solid #ef4444',
+            borderRadius: '50px',
+            color: '#991b1b',
+            fontWeight: '600',
+            padding: '10px 20px',
+        };
+    }
+    if (type === 'department') {
+        return {
+            background: '#e0f2fe',
+            border: '1px solid #0284c7',
+            borderRadius: '14px',
+            color: '#0369a1',
+            padding: '10px',
+        };
+    }
+    if (type === 'review') {
+        return {
+            background: '#f3e8ff',
+            border: '1px solid #8b5cf6',
+            borderRadius: '14px',
+            color: '#6b21a8',
+            padding: '10px',
+        };
+    }
+    return {
+        background: '#fff7ed',
+        border: '1px solid #f97316',
+        borderRadius: '14px',
+        color: '#c2410c',
+        padding: '10px',
+    };
+};
+
+const layoutNodes = (nodes = [], edges = [], forceLayout = false) => {
     if (!nodes.length) {
         return nodes;
     }
@@ -117,6 +190,9 @@ const layoutNodes = (nodes = [], edges = []) => {
     });
 
     return nodes.map((node) => {
+        if (!forceLayout && node.data?.manualPositioned) {
+            return node;
+        }
         const level = levels.get(node.id) || 0;
         const bucket = buckets.get(level) || [];
         const index = bucket.findIndex((item) => item.id === node.id);
@@ -127,6 +203,10 @@ const layoutNodes = (nodes = [], edges = []) => {
                 x: 140 + level * 260,
                 y: 90 + index * 180,
             },
+            data: {
+                ...node.data,
+                manualPositioned: !forceLayout ? node.data?.manualPositioned : false
+            }
         };
     });
 };
@@ -149,29 +229,57 @@ const mapWorkflowNodes = (workflowNodes = []) =>
                 description: node.description || '',
                 manualPositioned: hasPosition,
             },
-            style: createNodeStyle(node.nodeType || 'task'),
+            style: createNodeStyle(node),
         };
     });
 
+const formatTransitionLabel = (actionName, statusText, command) => {
+    const actionPart = actionName || '';
+    const statusPart = statusText || '';
+    const commandPart = command && command !== 'None' ? command : '';
+
+    if (!actionPart && !statusPart && !commandPart) {
+        return <span className="label-default">Transition</span>;
+    }
+
+    return (
+        <span className="flow-edge-label-container">
+            {actionPart && <span className="label-item label-action">{actionPart}</span>}
+            {statusPart && <span className="label-item label-status">{statusPart}</span>}
+            {commandPart && <span className="label-item label-command">{commandPart}</span>}
+        </span>
+    );
+};
+
 const mapWorkflowEdges = (workflowTransitions = []) =>
-    workflowTransitions.map((transition, index) => ({
-        id: `edge-${transition.fromNodeId || transition.from || 'from'}-${transition.toNodeId || transition.to || 'to'}-${index}`,
-        source: String(transition.fromNodeId || transition.from || ''),
-        target: String(transition.toNodeId || transition.to || ''),
-        animated: true,
-        type: ConnectionLineType.SmoothStep,
-        label: transition.actionName || transition.actionCode || transition.statusName || 'Transition',
-        data: {
-            actionName: transition.actionName || '',
-            actionCode: transition.actionCode || '',
-            stepNo: transition.stepNo || '',
-            jumpStepNo: transition.jumpStepNo || '',
-            transitionType: transition.transitionType || 'Normal',
-            conditionJson: transition.conditionJson || '{}',
-            isExitTransition: Boolean(transition.isExitTransition),
-            statusId: transition.statusId || '',
-        },
-    }));
+    workflowTransitions.map((transition, index) => {
+        const isReturn = transition.isReturn === true || String(transition.isReturn) === 'true' || transition.flowType === 'Return';
+        const hasCommand = transition.command && transition.command !== 'None' && transition.command !== '0';
+        return {
+            id: `edge-${transition.fromNodeId || transition.from || 'from'}-${transition.toNodeId || transition.to || 'to'}-${index}`,
+            source: String(transition.fromNodeId || transition.from || ''),
+            target: String(transition.toNodeId || transition.to || ''),
+            animated: Boolean(hasCommand),
+            type: 'custom',
+            label: formatTransitionLabel(transition.actionName || transition.actionCode, transition.statusId, transition.command),
+            style: isReturn
+                ? { stroke: '#dc2626', strokeWidth: 3, strokeDasharray: hasCommand ? '5,5' : undefined }
+                : { stroke: '#2563eb', strokeWidth: 2, strokeDasharray: hasCommand ? '5,5' : undefined },
+            data: {
+                actionName: transition.actionName || '',
+                actionCode: transition.actionCode || '',
+                stepNo: transition.stepNo || '',
+                jumpStepNo: transition.jumpStepNo || '',
+                transitionType: transition.transitionType || 'Normal',
+                conditionJson: transition.conditionJson || '{}',
+                isExitTransition: Boolean(transition.isExitTransition),
+                isReturn: isReturn,
+                statusId: transition.statusId || '',
+                command: transition.command || 'None',
+                commandConfig: transition.commandConfig || '',
+            },
+        };
+    });
 
 function Flow({ id: propId }) {
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -182,6 +290,29 @@ function Flow({ id: propId }) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [reactFlowInstance, setReactFlowInstance] = useState(null);
+    const [statusList, setStatusList] = useState([]);
+
+    useEffect(() => {
+        fetch(`${API_BASE_URL}/api/EnumData/FetchEnum/OverallStatus`)
+            .then(r => r.json())
+            .then(data => setStatusList(data || []))
+            .catch(err => console.error("Failed to load OverallStatus enums:", err));
+    }, []);
+
+    useEffect(() => {
+        if (statusList.length > 0 && edges.length > 0) {
+            setEdges(currentEdges =>
+                currentEdges.map(edge => {
+                    const statusObj = statusList.find(s => String(s.id) === String(edge.data?.statusId));
+                    const statusText = statusObj ? statusObj.value : edge.data?.statusId;
+                    return {
+                        ...edge,
+                        label: formatTransitionLabel(edge.data?.actionName, statusText, edge.data?.command)
+                    };
+                })
+            );
+        }
+    }, [statusList]);
 
     const onConnect = useCallback(
         (params) => {
@@ -189,9 +320,10 @@ function Flow({ id: propId }) {
                 id: `edge-${params.source}-${params.target}-${Date.now()}`,
                 source: params.source,
                 target: params.target,
-                animated: true,
-                type: ConnectionLineType.SmoothStep,
+                animated: false,
+                type: 'custom',
                 label: 'New transition',
+                style: { stroke: '#2563eb', strokeWidth: 2 },
                 data: {
                     actionName: '',
                     actionCode: '',
@@ -200,7 +332,10 @@ function Flow({ id: propId }) {
                     transitionType: 'Normal',
                     conditionJson: '{}',
                     isExitTransition: false,
+                    isReturn: false,
                     statusId: '',
+                    command: 'None',
+                    commandConfig: '',
                 },
             };
 
@@ -291,6 +426,7 @@ function Flow({ id: propId }) {
                     transitionType: edge.data?.transitionType || 'Normal',
                     conditionJson: edge.data?.conditionJson || '{}',
                     isExitTransition: edge.data?.isExitTransition === true,
+                    isReturn: edge.data?.isReturn === true,
                     statusId: edge.data?.statusId || ''
                 };
             });
@@ -354,7 +490,7 @@ function Flow({ id: propId }) {
                 description: '',
                 manualPositioned: false,
             },
-            style: createNodeStyle('task'),
+            style: createNodeStyle({ nodeType: 'task' }),
         };
 
         const nextNodes = [...nodes, nextNode];
@@ -395,7 +531,7 @@ function Flow({ id: propId }) {
                     description: template.description,
                     manualPositioned: true,
                 },
-                style: createNodeStyle(template.nodeType),
+                style: createNodeStyle({ nodeType: template.nodeType }),
             };
 
             const nextNodes = [...nodes, newNode];
@@ -420,7 +556,11 @@ function Flow({ id: propId }) {
             const nextNode = {
                 ...selectedNode,
                 data: nextNodeData,
-                style: createNodeStyle(field === 'nodeType' ? value : nextNodeData.nodeType || 'task'),
+                style: createNodeStyle({
+                    nodeType: field === 'nodeType' ? value : nextNodeData.nodeType,
+                    flowType: field === 'flowType' ? value : nextNodeData.flowType,
+                    nodeName: field === 'label' ? value : nextNodeData.label
+                }),
             };
 
             setNodes((currentNodes) =>
@@ -437,12 +577,25 @@ function Flow({ id: propId }) {
                 return;
             }
 
+            const nextData = {
+                ...selectedEdge.data,
+                [field]: value,
+            };
+
+            const isReturn = nextData.isReturn === true || String(nextData.isReturn) === 'true';
+            const hasCommand = nextData.command && nextData.command !== 'None' && nextData.command !== '0';
+
+            const statusObj = statusList.find(s => String(s.id) === String(nextData.statusId));
+            const statusText = statusObj ? statusObj.value : nextData.statusId;
+
             const nextEdge = {
                 ...selectedEdge,
-                data: {
-                    ...selectedEdge.data,
-                    [field]: value,
-                },
+                label: formatTransitionLabel(nextData.actionName, statusText, nextData.command),
+                data: nextData,
+                animated: Boolean(hasCommand),
+                style: isReturn
+                    ? { stroke: '#dc2626', strokeWidth: 3, strokeDasharray: hasCommand ? '5,5' : undefined }
+                    : { stroke: '#2563eb', strokeWidth: 2, strokeDasharray: hasCommand ? '5,5' : undefined },
             };
 
             setEdges((currentEdges) =>
@@ -450,7 +603,7 @@ function Flow({ id: propId }) {
             );
             setSelectedEdge(nextEdge);
         },
-        [selectedEdge, setEdges],
+        [selectedEdge, setEdges, statusList],
     );
 
     const nodeDetails = useMemo(() => {
@@ -547,11 +700,18 @@ function Flow({ id: propId }) {
                     </select>
                 </label>
                 <label>
-                    <span>Status id</span>
-                    <input
+                    <span>Status (Trạng thái)</span>
+                    <select
                         value={selectedEdge.data?.statusId || ''}
                         onChange={(event) => updateSelectedEdge('statusId', event.target.value)}
-                    />
+                    >
+                        <option value="">-- Chọn Trạng thái --</option>
+                        {statusList.map(status => (
+                            <option key={status.id} value={status.id}>
+                                {status.value} (ID: {status.id})
+                            </option>
+                        ))}
+                    </select>
                 </label>
                 <label className="flow-checkbox">
                     <input
@@ -561,6 +721,37 @@ function Flow({ id: propId }) {
                     />
                     <span>Exit transition</span>
                 </label>
+                <label className="flow-checkbox">
+                    <input
+                        type="checkbox"
+                        checked={Boolean(selectedEdge.data?.isReturn)}
+                        onChange={(event) => updateSelectedEdge('isReturn', event.target.checked)}
+                    />
+                    <span>Return transition (Quay lại)</span>
+                </label>
+                <label>
+                    <span>System Command (Lệnh hệ thống)</span>
+                    <select
+                        value={selectedEdge.data?.command || 'None'}
+                        onChange={(event) => updateSelectedEdge('command', event.target.value)}
+                    >
+                        <option value="None">None</option>
+                        <option value="CopyFile">CopyFile</option>
+                        <option value="TransferFile">TransferFile</option>
+                        <option value="LockFileLocal">LockFileLocal</option>
+                    </select>
+                </label>
+                {selectedEdge.data?.command && selectedEdge.data?.command !== 'None' && (
+                    <label>
+                        <span>Command Configuration (JSON)</span>
+                        <textarea
+                            rows={4}
+                            value={selectedEdge.data?.commandConfig || ''}
+                            onChange={(event) => updateSelectedEdge('commandConfig', event.target.value)}
+                            placeholder='{"sourceDepartment": "FO", "targetDepartment": "LMKT"}'
+                        />
+                    </label>
+                )}
                 <label>
                     <span>Condition JSON</span>
                     <textarea
@@ -571,7 +762,7 @@ function Flow({ id: propId }) {
                 </label>
             </div>
         );
-    }, [selectedEdge, updateSelectedEdge]);
+    }, [selectedEdge, updateSelectedEdge, statusList]);
 
     return (
         <div className="flow-shell">
@@ -600,7 +791,7 @@ function Flow({ id: propId }) {
 
                     <div className="flow-sidebar-card">
                         <h3>Quick actions</h3>
-                        <button type="button" className="flow-action-btn" onClick={() => setNodes((currentNodes) => layoutNodes(currentNodes, edges))}>
+                        <button type="button" className="flow-action-btn" onClick={() => setNodes((currentNodes) => layoutNodes(currentNodes, edges, true))}>
                             Auto layout
                         </button>
                         <button type="button" className="flow-action-btn secondary" onClick={addNode}>
@@ -650,6 +841,7 @@ function Flow({ id: propId }) {
                         onDrop={onDrop}
                         onDragOver={onDragOver}
                         connectionLineType={ConnectionLineType.SmoothStep}
+                        edgeTypes={edgeTypes}
                         fitView
                     >
                         <Panel position="top-left" className="flow-toolbar">
