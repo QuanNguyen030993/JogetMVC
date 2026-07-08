@@ -1434,9 +1434,31 @@ function Flow({ id: propId }) {
                         onChange={(event) => updateSelectedNode('description', event.target.value)}
                     />
                 </label>
+                <div style={{ marginTop: '20px', borderTop: '1px solid #fee2e2', paddingTop: '15px' }}>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setNodes((currentNodes) => currentNodes.filter(n => n.id !== selectedNode.id));
+                            setEdges((currentEdges) => currentEdges.filter(e => e.source !== selectedNode.id && e.target !== selectedNode.id));
+                            setSelectedNode(null);
+                        }}
+                        style={{
+                            width: '100%',
+                            padding: '10px',
+                            background: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontWeight: '600',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Xóa Node này (Delete)
+                    </button>
+                </div>
             </div>
         );
-    }, [selectedNode, updateSelectedNode, lanesList]);
+    }, [selectedNode, updateSelectedNode, lanesList, setNodes, setEdges]);
 
     const edgeDetails = useMemo(() => {
         if (!selectedEdge) {
@@ -1677,6 +1699,27 @@ function Flow({ id: propId }) {
                         onChange={(event) => updateSelectedEdge('conditionJson', event.target.value)}
                     />
                 </label>
+                <div style={{ marginTop: '20px', borderTop: '1px solid #fee2e2', paddingTop: '15px' }}>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setEdges((currentEdges) => currentEdges.filter(e => e.id !== selectedEdge.id));
+                            setSelectedEdge(null);
+                        }}
+                        style={{
+                            width: '100%',
+                            padding: '10px',
+                            background: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontWeight: '600',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Xóa Transition này (Delete)
+                    </button>
+                </div>
             </div>
         );
     }, [
@@ -1694,7 +1737,8 @@ function Flow({ id: propId }) {
         addConditionRule,
         clearConditionRules,
         changeRootOperator,
-        removeConditionRule
+        removeConditionRule,
+        setEdges
     ]);
 
     return (
@@ -1808,6 +1852,7 @@ function Flow({ id: propId }) {
                         onNodesChange={onNodesChange}
                         onEdgesChange={onEdgesChange}
                         onConnect={onConnect}
+                        connectionMode="loose"
                         onNodeClick={(_, node) => {
                             setSelectedNode(node);
                             setSelectedEdge(null);
