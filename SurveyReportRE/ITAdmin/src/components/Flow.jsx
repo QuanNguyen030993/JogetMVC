@@ -1166,34 +1166,39 @@ function Flow({ id: propId }) {
                 return;
             }
 
-            const nextData = {
-                ...selectedEdge.data,
-                [field]: value,
-            };
+            setEdges((currentEdges) => {
+                const matched = currentEdges.find((e) => e.id === selectedEdge.id);
+                if (!matched) return currentEdges;
 
-            const isReturn = nextData.isReturn === true || String(nextData.isReturn) === 'true';
-            const hasCommand = nextData.command && nextData.command !== 'None' && nextData.command !== '0';
+                const nextData = {
+                    ...matched.data,
+                    [field]: value,
+                };
 
-            const nextEdge = {
-                ...selectedEdge,
-                label: formatTransitionLabel(nextData.actionName, nextData.statusName || nextData.statusId, nextData.command),
-                data: nextData,
-                animated: Boolean(hasCommand),
-                style: isReturn
-                    ? { stroke: '#dc2626', strokeWidth: 3, strokeDasharray: hasCommand ? '5,5' : undefined }
-                    : { stroke: '#2563eb', strokeWidth: 2, strokeDasharray: hasCommand ? '5,5' : undefined },
-                markerEnd: {
-                    type: MarkerType.ArrowClosed,
-                    width: 16,
-                    height: 16,
-                    color: isReturn ? '#dc2626' : '#2563eb',
-                },
-            };
+                const isReturn = nextData.isReturn === true || String(nextData.isReturn) === 'true';
+                const hasCommand = nextData.command && nextData.command !== 'None' && nextData.command !== '0';
 
-            setEdges((currentEdges) =>
-                currentEdges.map((edge) => (edge.id === selectedEdge.id ? nextEdge : edge)),
-            );
-            setSelectedEdge(nextEdge);
+                const nextEdge = {
+                    ...matched,
+                    label: formatTransitionLabel(nextData.actionName, nextData.statusName || nextData.statusId, nextData.command),
+                    data: nextData,
+                    animated: Boolean(hasCommand),
+                    style: isReturn
+                        ? { stroke: '#dc2626', strokeWidth: 3, strokeDasharray: hasCommand ? '5,5' : undefined }
+                        : { stroke: '#2563eb', strokeWidth: 2, strokeDasharray: hasCommand ? '5,5' : undefined },
+                    markerEnd: {
+                        type: MarkerType.ArrowClosed,
+                        width: 16,
+                        height: 16,
+                        color: isReturn ? '#dc2626' : '#2563eb',
+                    },
+                };
+
+                // Asynchronously update selection to match latest data
+                setTimeout(() => setSelectedEdge(nextEdge), 0);
+
+                return currentEdges.map((edge) => (edge.id === selectedEdge.id ? nextEdge : edge));
+            });
         },
         [selectedEdge, setEdges],
     );
