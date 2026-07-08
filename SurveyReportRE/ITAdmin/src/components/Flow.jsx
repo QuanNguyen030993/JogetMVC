@@ -758,8 +758,16 @@ function Flow({ id: propId }) {
             const scaleX = layoutConfig?.SCALE_X || 1.0;
             const scaleY = layoutConfig?.SCALE_Y || 1.0;
 
-            // Re-map nodes to database structure
-            const workflowNodes = nodes.map((node) => {
+            // Sort nodes physically (Left-to-Right, then Top-to-Bottom)
+            const sortedNodesList = [...nodes].sort((a, b) => {
+                if (Math.round(a.position.x) !== Math.round(b.position.x)) {
+                    return a.position.x - b.position.x;
+                }
+                return a.position.y - b.position.y;
+            });
+
+            // Re-map nodes to database structure in sorted order
+            const workflowNodes = sortedNodesList.map((node, index) => {
                 const idNum = parseInt(node.id.replace('node-', ''));
                 const originalX = Math.round(node.position.x / scaleX);
                 const originalY = Math.round(node.position.y / scaleY);
@@ -777,12 +785,21 @@ function Flow({ id: propId }) {
                     assignLabel: node.data.assignLabel || '',
                     orderLabel: node.data.orderLabel || '',
                     departmentName: node.data.departmentName || '',
-                    description: node.data.description || ''
+                    description: node.data.description || '',
+                    sortOrder: index + 1,
+                    orderNo: index + 1
                 };
             });
 
-            // Re-map edges to database structure
-            const workflowTransitions = edges.map((edge) => {
+            // Sort edges based on the sorted order of their source nodes
+            const sortedEdgesList = [...edges].sort((a, b) => {
+                const indexA = sortedNodesList.findIndex((n) => n.id === a.source);
+                const indexB = sortedNodesList.findIndex((n) => n.id === b.source);
+                return indexA - indexB;
+            });
+
+            // Re-map edges to database structure in sorted order
+            const workflowTransitions = sortedEdgesList.map((edge, index) => {
                 const sourceNum = parseInt(edge.source.replace('node-', ''));
                 const targetNum = parseInt(edge.target.replace('node-', ''));
                 
@@ -812,7 +829,8 @@ function Flow({ id: propId }) {
                     command: edge.data?.command || 'None',
                     commandConfig: edge.data?.commandConfig || '',
                     controlX: edge.data?.controlX ? Math.round(edge.data.controlX / scaleX) : null,
-                    controlY: edge.data?.controlY ? Math.round(edge.data.controlY / scaleY) : null
+                    controlY: edge.data?.controlY ? Math.round(edge.data.controlY / scaleY) : null,
+                    sortOrder: index + 1
                 };
             });
 
@@ -862,8 +880,16 @@ function Flow({ id: propId }) {
             const scaleX = layoutConfig?.SCALE_X || 1.0;
             const scaleY = layoutConfig?.SCALE_Y || 1.0;
 
-            // 1. Build Nodes list
-            const nodesPayload = nodes.map((node, index) => {
+            // Sort nodes physically (Left-to-Right, then Top-to-Bottom)
+            const sortedNodesList = [...nodes].sort((a, b) => {
+                if (Math.round(a.position.x) !== Math.round(b.position.x)) {
+                    return a.position.x - b.position.x;
+                }
+                return a.position.y - b.position.y;
+            });
+
+            // 1. Build Nodes list in sorted order
+            const nodesPayload = sortedNodesList.map((node, index) => {
                 const origX = Math.round(node.position.x / scaleX);
                 const origY = Math.round(node.position.y / scaleY);
                 const incomingEdge = edges.find((e) => e.target === node.id);
@@ -911,7 +937,14 @@ function Flow({ id: propId }) {
                 nodeMap[n.id] = n;
             });
 
-            const stepsPayload = edges.map((edge, index) => {
+            // Sort edges based on the sorted order of their source nodes
+            const sortedEdgesList = [...edges].sort((a, b) => {
+                const indexA = sortedNodesList.findIndex((n) => n.id === a.source);
+                const indexB = sortedNodesList.findIndex((n) => n.id === b.source);
+                return indexA - indexB;
+            });
+
+            const stepsPayload = sortedEdgesList.map((edge, index) => {
                 const fromNode = nodeMap[edge.source] || {};
                 const toNode = edge.target ? (nodeMap[edge.target] || {}) : null;
                 const incomingEdgesCount = edges.filter((e) => e.target === fromNode.id).length;
@@ -1351,6 +1384,33 @@ function Flow({ id: propId }) {
             <div className="flow-form-card">
                 <h3>Node properties</h3>
                 <label>
+                    <span>Node ID</span>
+                    <input
+                        value={selectedNode.id}
+                        onChange={(event) => {
+                            const newId = event.target.value;
+                            const oldId = selectedNode.id;
+                            
+                            setNodes((currentNodes) =>
+                                currentNodes.map((item) =>
+                                    item.id === oldId ? { ...item, id: newId } : item
+                                )
+                            );
+                            
+                            setEdges((currentEdges) =>
+                                currentEdges.map((edge) => {
+                                    let nextEdge = { ...edge };
+                                    if (edge.source === oldId) nextEdge.source = newId;
+                                    if (edge.target === oldId) nextEdge.target = newId;
+                                    return nextEdge;
+                                })
+                            );
+
+                            setSelectedNode((prev) => ({ ...prev, id: newId }));
+                        }}
+                    />
+                </label>
+                <label>
                     <span>Node name</span>
                     <input
                         value={selectedNode.data.label || ''}
@@ -1479,6 +1539,45 @@ function Flow({ id: propId }) {
         return (
             <div className="flow-form-card">
                 <h3>Transition properties</h3>
+                <label>
+                    <span>From Node (Nút nguồn)</span>
+                    <select
+                        value={selectedEdge.source}
+                        onChange={(event) => {
+                            const newSource = event.target.value;
+                            setEdges((currentEdges) =>
+                                currentEdges.map((e) => (e.id === selectedEdge.id ? { ...e, source: newSource } : e))
+                            );
+                            setSelectedEdge((prev) => ({ ...prev, source: newSource }));
+                        }}
+                    >
+                        {nodes.map((n) => (
+                            <option key={n.id} value={n.id}>
+                                {n.data?.label || n.id} (ID: {n.id})
+                            </option>
+                        ))}
+                    </select>
+                </label>
+                <label>
+                    <span>To Node (Nút đích)</span>
+                    <select
+                        value={selectedEdge.target || ''}
+                        onChange={(event) => {
+                            const newTarget = event.target.value || null;
+                            setEdges((currentEdges) =>
+                                currentEdges.map((e) => (e.id === selectedEdge.id ? { ...e, target: newTarget } : e))
+                            );
+                            setSelectedEdge((prev) => ({ ...prev, target: newTarget }));
+                        }}
+                    >
+                        <option value="">-- Chưa chọn / Exit --</option>
+                        {nodes.map((n) => (
+                            <option key={n.id} value={n.id}>
+                                {n.data?.label || n.id} (ID: {n.id})
+                            </option>
+                        ))}
+                    </select>
+                </label>
                 <label>
                     <span>Action name</span>
                     <input
@@ -1749,7 +1848,8 @@ function Flow({ id: propId }) {
         clearConditionRules,
         changeRootOperator,
         removeConditionRule,
-        setEdges
+        setEdges,
+        nodes
     ]);
 
     return (
