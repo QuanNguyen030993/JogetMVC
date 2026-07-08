@@ -21,32 +21,39 @@ import CustomGrid from '../../../TMIVCom/src/components/CustomGrid';
 const nodeTemplates = [
     {
         type: 'start',
-        label: 'Start',
+        label: 'Start Node',
         subtitle: 'Entry point',
         nodeType: 'start',
         description: 'Initial workflow step',
     },
     {
+        type: 'end',
+        label: 'End Node',
+        subtitle: 'Exit point',
+        nodeType: 'end',
+        description: 'Terminating workflow step',
+    },
+    {
+        type: 'custom',
+        label: 'Custom Node',
+        subtitle: 'Custom process',
+        nodeType: 'custom',
+        description: 'Special process step',
+    },
+    {
         type: 'task',
-        label: 'Task',
-        subtitle: 'Approval / action',
+        label: 'Task Node',
+        subtitle: 'Approval / Action',
         nodeType: 'task',
         description: 'Standard workflow action',
     },
     {
         type: 'department',
-        label: 'Department',
+        label: 'Department Node',
         subtitle: 'Assigned team',
         nodeType: 'department',
-        description: 'Department or owner assignment',
-    },
-    {
-        type: 'review',
-        label: 'Review',
-        subtitle: 'Checker step',
-        nodeType: 'review',
-        description: 'Review / verification step',
-    },
+        description: 'Department assignment step',
+    }
 ];
 
 const CustomEdge = ({
@@ -534,23 +541,40 @@ function Flow({ id: propId }) {
     const [activeStatsTab, setActiveStatsTab] = useState('nodes');
 
     const nodeColumns = useMemo(() => [
-        { dataField: 'id', caption: 'ID', width: 140 },
-        { dataField: 'label', caption: 'Node Name' },
-        { dataField: 'nodeType', caption: 'Type', width: 110 },
-        { dataField: 'laneId', caption: 'Lane (Phân làn)', width: 130 },
-        { dataField: 'shape', caption: 'Shape', width: 110 },
-        { dataField: 'styleColor', caption: 'Style Color', width: 110 },
-        { dataField: 'position', caption: 'Position (X, Y)', width: 130 }
+        { dataField: 'id', caption: 'ID', width: 80 },
+        { dataField: 'label', caption: 'Node Name', width: 150 },
+        { dataField: 'nodeType', caption: 'Type', width: 100 },
+        { dataField: 'flowType', caption: 'Flow Type', width: 110 },
+        { dataField: 'laneId', caption: 'Lane (Phân làn)', width: 120 },
+        { dataField: 'shape', caption: 'Shape', width: 100 },
+        { dataField: 'styleColor', caption: 'Style Color', width: 100 },
+        { dataField: 'allowLoop', caption: 'Allow Loop', width: 100 },
+        { dataField: 'loopGroup', caption: 'Loop Group', width: 110 },
+        { dataField: 'code', caption: 'Code', width: 100 },
+        { dataField: 'stepRole', caption: 'Step Role', width: 100 },
+        { dataField: 'departmentName', caption: 'Department', width: 130 },
+        { dataField: 'levelNo', caption: 'Level No', width: 90 },
+        { dataField: 'position', caption: 'Position (X, Y)', width: 120 }
     ], []);
 
     const transitionColumns = useMemo(() => [
-        { dataField: 'source', caption: 'From Node', width: 140 },
-        { dataField: 'target', caption: 'To Node', width: 140 },
-        { dataField: 'actionName', caption: 'Action Name' },
-        { dataField: 'actionCode', caption: 'Action Code', width: 130 },
+        { dataField: 'source', caption: 'From Node', width: 110 },
+        { dataField: 'target', caption: 'To Node', width: 110 },
+        { dataField: 'actionName', caption: 'Action Name', width: 140 },
+        { dataField: 'actionCode', caption: 'Action Code', width: 120 },
         { dataField: 'stepNo', caption: 'Step No', width: 90 },
-        { dataField: 'statusName', caption: 'Status (Trạng thái)', width: 150 },
-        { dataField: 'command', caption: 'System Command', width: 140 }
+        { dataField: 'jumpStepNo', caption: 'Jump Point', width: 100 },
+        { dataField: 'transitionType', caption: 'Flow Type', width: 110 },
+        { dataField: 'isReturn', caption: 'Is Return', width: 90 },
+        { dataField: 'isLoop', caption: 'Is Loop', width: 90 },
+        { dataField: 'loopGroup', caption: 'Loop Group', width: 110 },
+        { dataField: 'loopExitMode', caption: 'Loop Exit Mode', width: 130 },
+        { dataField: 'maxLoopCount', caption: 'Max Loop Count', width: 120 },
+        { dataField: 'isExitTransition', caption: 'Exit Trans', width: 100 },
+        { dataField: 'userDecisionLabel', caption: 'User Decision Label', width: 150 },
+        { dataField: 'statusName', caption: 'Status', width: 130 },
+        { dataField: 'command', caption: 'System Command', width: 130 },
+        { dataField: 'conditionJson', caption: 'Condition JSON', width: 180 }
     ], []);
 
     const flatNodes = useMemo(() => {
@@ -563,9 +587,16 @@ function Flow({ id: propId }) {
                 id: node.id,
                 label: node.data?.label || '',
                 nodeType: node.data?.nodeType || 'task',
+                flowType: node.data?.flowType || '',
                 laneId: node.data?.laneId || '',
                 shape: node.data?.shape || 'rectangle',
                 styleColor: node.data?.styleColor || 'blue',
+                allowLoop: node.data?.allowLoop ? 'Yes' : 'No',
+                loopGroup: node.data?.loopGroup || '',
+                code: node.data?.code || '',
+                stepRole: node.data?.stepRole || '',
+                departmentName: node.data?.departmentName || '',
+                levelNo: node.data?.levelNo || '',
                 posX: origX,
                 posY: origY,
                 position: `${origX}, ${origY}`
@@ -582,9 +613,19 @@ function Flow({ id: propId }) {
                 actionName: edge.data?.actionName || '',
                 actionCode: edge.data?.actionCode || '',
                 stepNo: edge.data?.stepNo || '',
+                jumpStepNo: edge.data?.jumpStepNo || '',
+                transitionType: edge.data?.transitionType || 'Normal',
+                isReturn: edge.data?.isReturn ? 'Yes' : 'No',
+                isLoop: edge.data?.isLoop ? 'Yes' : 'No',
+                loopGroup: edge.data?.loopGroup || '',
+                loopExitMode: edge.data?.loopExitMode || 'None',
+                maxLoopCount: edge.data?.maxLoopCount || '',
+                isExitTransition: edge.data?.isExitTransition ? 'Yes' : 'No',
+                userDecisionLabel: edge.data?.userDecisionLabel || '',
                 statusId: edge.data?.statusId || '',
                 statusName: edge.data?.statusName || '',
-                command: edge.data?.command || 'None'
+                command: edge.data?.command || 'None',
+                conditionJson: edge.data?.conditionJson || '{}'
             };
         });
     }, [edges]);
@@ -805,6 +846,164 @@ function Flow({ id: propId }) {
         }
     }, [workflowId, nodes, edges, layoutConfig, workflowDefinition, lanesList]);
 
+    const buildWorkflow = useCallback(async () => {
+        const workflowDefinitionId = workflowId;
+        if (!workflowDefinitionId) {
+            setError('Please load or enter a workflow id first');
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+
+        try {
+            const scaleX = layoutConfig?.SCALE_X || 1.0;
+            const scaleY = layoutConfig?.SCALE_Y || 1.0;
+
+            // 1. Build Nodes list
+            const nodesPayload = nodes.map((node, index) => {
+                const origX = Math.round(node.position.x / scaleX);
+                const origY = Math.round(node.position.y / scaleY);
+                return {
+                    workflowDefinitionId: workflowDefinitionId,
+                    nodeId: node.id,
+                    parentNodeId: null,
+                    nodeName: node.data?.label || "",
+                    nodeType: node.data?.nodeType || "",
+                    nodeStatus: node.data?.flowType || "Both",
+                    allowLoop: node.data?.allowLoop === true || node.data?.allowLoop === 'Yes',
+                    loopGroup: node.data?.loopGroup || null,
+                    nodeCode: node.data?.code || null,
+                    stepRole: node.data?.stepRole || null,
+                    departmentCode: node.data?.departmentName || null,
+                    levelNo: node.data?.levelNo ? parseInt(node.data.levelNo) : null,
+                    posX: origX,
+                    posY: origY,
+                    sortOrder: index + 1,
+                    isActive: true,
+                    data: JSON.stringify({
+                        rawNode: {
+                            id: node.id,
+                            text: node.data?.label || "",
+                            type: node.data?.nodeType || "",
+                            flowType: node.data?.flowType || "Both",
+                            allowLoop: node.data?.allowLoop,
+                            loopGroup: node.data?.loopGroup,
+                            code: node.data?.code,
+                            stepRole: node.data?.stepRole,
+                            departmentName: node.data?.departmentName,
+                            levelNo: node.data?.levelNo,
+                            x: origX,
+                            y: origY
+                        }
+                    })
+                };
+            });
+
+            // 2. Build Steps list
+            const nodeMap = {};
+            nodes.forEach(n => {
+                nodeMap[n.id] = n;
+            });
+
+            const stepsPayload = edges.map((edge, index) => {
+                const fromNode = nodeMap[edge.source] || {};
+                const toNode = edge.target ? (nodeMap[edge.target] || {}) : null;
+                const isStart = false; // Deduce from workflow tree start nodes if needed
+                const isEnd = edge.data?.isExitTransition === true || !edge.target;
+
+                let uiMode = "Start";
+                const actionCode = edge.data?.actionCode || "";
+                if (actionCode.startsWith("SUBMIT")) uiMode = "Forward";
+                else if (actionCode.startsWith("RETURN")) uiMode = "Withdraw";
+                else if (actionCode.startsWith("COMPLETE")) uiMode = "Finish";
+
+                let stepType = 2; // Normal
+                if (isEnd) stepType = 9; // End
+                else if (edge.data?.isLoop === true || edge.data?.isLoop === 'Yes') stepType = 3; // Loop
+
+                let conditionData = {};
+                if (edge.data?.conditionJson) {
+                    try {
+                        conditionData = typeof edge.data.conditionJson === 'string'
+                            ? JSON.parse(edge.data.conditionJson)
+                            : edge.data.conditionJson;
+                    } catch (e) {
+                        console.warn("Could not parse condition JSON for step data", e);
+                    }
+                }
+
+                return {
+                    sortOrder: index + 1,
+                    stepNo: edge.data?.stepNo?.toString() || null,
+                    jumpStepNo: edge.data?.jumpStepNo?.toString() || null,
+                    workflowDefinitionId: workflowDefinitionId,
+
+                    stepType: stepType,
+                    allowLoop: edge.data?.isLoop === true || edge.data?.isLoop === 'Yes',
+                    canComment: true,
+                    canEdit: !isEnd,
+                    canUpload: !isEnd,
+                    command: edge.data?.command || null,
+                    commandConfig: edge.data?.commandConfig || null,
+
+                    departmentCode: fromNode.data?.departmentName || null,
+                    displayStatus: edge.data?.actionName || null,
+                    flowType: edge.data?.transitionType || "Both",
+                    isActive: true,
+                    isEnd: isEnd,
+                    isStart: isStart,
+
+                    levelNo: fromNode.data?.levelNo ? parseInt(fromNode.data.levelNo) : null,
+                    loopGroup: edge.data?.loopGroup || null,
+                    parentStepId: null,
+                    posX: fromNode.position ? Math.round(fromNode.position.x / scaleX) : null,
+                    posY: fromNode.position ? Math.round(fromNode.position.y / scaleY) : null,
+                    roleCode: fromNode.data?.code || fromNode.data?.label || fromNode.id,
+                    stepCode: `${edge.source}_${actionCode}`,
+                    stepName: `${fromNode.data?.label || edge.source} ${edge.data?.actionName || actionCode}`,
+                    uiMode: uiMode,
+
+                    actionCode: actionCode || null,
+                    data: JSON.stringify(conditionData),
+
+                    fromNodeId: edge.source || null,
+                    fnodeId: edge.source || null,
+                    tnodeId: edge.target || null,
+                    toNodeId: edge.target || null,
+                    statusId: edge.data?.statusId || null
+                };
+            });
+
+            // 3. Assemble & Post to BuildSteps API
+            const buildPayload = {
+                WorkflowDefinitionId: workflowDefinitionId,
+                Nodes: nodesPayload,
+                Steps: stepsPayload
+            };
+
+            const response = await fetch(`${API_BASE_URL}/api/StepsWorkflow/BuildSteps`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(buildPayload)
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || `API error ${response.status}`);
+            }
+
+            alert("Build Workflow thành công! 🚀 Quy trình đã được biên dịch để thực thi.");
+        } catch (err) {
+            setError(err.message || 'Failed to build workflow steps');
+            alert(`Build quy trình thất bại! ❌ Chi tiết: ${err.message}`);
+        } finally {
+            setLoading(false);
+        }
+    }, [workflowId, nodes, edges, layoutConfig]);
+
     useEffect(() => {
         if (propId) {
             setWorkflowId(propId);
@@ -852,11 +1051,7 @@ function Flow({ id: propId }) {
     const onDrop = useCallback(
         (event) => {
             event.preventDefault();
-
-            const type = event.dataTransfer.getData('application/reactflow');
-            if (!type || !reactFlowInstance) {
-                return;
-            }
+            if (!reactFlowInstance) return;
 
             const bounds = event.currentTarget.getBoundingClientRect();
             const position = reactFlowInstance.project({
@@ -864,20 +1059,68 @@ function Flow({ id: propId }) {
                 y: event.clientY - bounds.top,
             });
 
-            const template = nodeTemplates.find((item) => item.type === type) || nodeTemplates[0];
-            const newNode = {
-                id: `node-${Math.random().toString(36).slice(2, 8)}`,
-                position,
-                data: {
-                    label: template.label,
-                    subtitle: template.subtitle,
-                    nodeType: template.nodeType,
-                    departmentName: '',
-                    description: template.description,
-                    manualPositioned: true,
-                },
-                style: createNodeStyle({ nodeType: template.nodeType }),
-            };
+            const type = event.dataTransfer.getData('application/reactflow');
+            const laneDataStr = event.dataTransfer.getData('application/reactflow-lane');
+
+            let newNode = null;
+
+            if (type) {
+                const template = nodeTemplates.find((item) => item.type === type) || nodeTemplates[0];
+                
+                let shape = 'rectangle';
+                let styleColor = 'blue';
+                if (template.type === 'start') {
+                    shape = 'circle';
+                    styleColor = 'green';
+                } else if (template.type === 'end') {
+                    shape = 'circle';
+                    styleColor = 'red';
+                } else if (template.type === 'custom') {
+                    shape = 'diamond';
+                    styleColor = 'orange';
+                }
+
+                newNode = {
+                    id: `node-${Math.random().toString(36).slice(2, 8)}`,
+                    position,
+                    data: {
+                        label: template.label,
+                        subtitle: template.subtitle,
+                        nodeType: template.nodeType,
+                        departmentName: '',
+                        description: template.description,
+                        manualPositioned: true,
+                        laneId: '',
+                        shape: shape,
+                        styleColor: styleColor,
+                    },
+                    style: createNodeStyle({ nodeType: template.nodeType, styleColor: styleColor }),
+                };
+            } else if (laneDataStr) {
+                try {
+                    const lane = JSON.parse(laneDataStr);
+                    newNode = {
+                        id: `node-${Math.random().toString(36).slice(2, 8)}`,
+                        position,
+                        data: {
+                            label: lane.label || lane.id,
+                            subtitle: 'Department Step',
+                            nodeType: 'department',
+                            departmentName: lane.label || lane.id,
+                            description: `Step for department ${lane.label}`,
+                            manualPositioned: true,
+                            laneId: lane.id,
+                            shape: 'rectangle',
+                            styleColor: 'green',
+                        },
+                        style: createNodeStyle({ nodeType: 'department', styleColor: 'green' }),
+                    };
+                } catch (e) {
+                    console.error("Failed to parse dragged lane data", e);
+                }
+            }
+
+            if (!newNode) return;
 
             const nextNodes = [...nodes, newNode];
             setNodes(layoutNodes(nextNodes, edges));
@@ -1117,6 +1360,7 @@ function Flow({ id: propId }) {
                         <option value="process">Process (Rectangle)</option>
                         <option value="complete">Complete (Circle)</option>
                         <option value="end">End (Circle)</option>
+                        <option value="custom">Custom</option>
                     </select>
                 </label>
                 {lanesList.length > 0 && (
@@ -1458,6 +1702,73 @@ function Flow({ id: propId }) {
             <div className="flow-layout">
                 <aside className="flow-sidebar">
                     <div className="flow-sidebar-card">
+                        <h3>Workflow settings</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+                            <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.85rem', color: '#475569' }}>
+                                <span>Workflow ID</span>
+                                <input
+                                    type="text"
+                                    placeholder="Workflow id"
+                                    value={workflowId}
+                                    onChange={(event) => setWorkflowId(event.target.value)}
+                                    style={{ padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                                />
+                            </label>
+                            <button
+                                type="button"
+                                className="flow-action-btn"
+                                onClick={() => loadWorkflow()}
+                                disabled={loading}
+                                style={{ margin: 0 }}
+                            >
+                                {loading ? 'Loading…' : 'Load workflow'}
+                            </button>
+                            <button
+                                type="button"
+                                className="flow-action-btn"
+                                onClick={saveWorkflow}
+                                disabled={loading || !workflowId}
+                                style={{ background: '#10b981', color: 'white', margin: 0 }}
+                            >
+                                Lưu sơ đồ (Save Layout)
+                            </button>
+                            <button
+                                type="button"
+                                className="flow-action-btn"
+                                onClick={buildWorkflow}
+                                disabled={loading || !workflowId}
+                                style={{ background: '#0284c7', color: 'white', margin: 0 }}
+                            >
+                                Build Workflow (API)
+                            </button>
+                        </div>
+                    </div>
+
+                    {lanesList.length > 0 && (
+                        <div className="flow-sidebar-card">
+                            <h3>Nodes đề cử (Lanes)</h3>
+                            <p>Drag a lane department onto the canvas to add it as a new step.</p>
+                            <div className="flow-palette-list">
+                                {lanesList.map((lane) => (
+                                    <div
+                                        key={lane.id}
+                                        className="flow-palette-item"
+                                        style={{ borderLeft: '4px solid #10b981', background: '#f0fdf4' }}
+                                        draggable
+                                        onDragStart={(event) => {
+                                            event.dataTransfer.setData('application/reactflow-lane', JSON.stringify(lane));
+                                            event.dataTransfer.effectAllowed = 'move';
+                                        }}
+                                    >
+                                        <strong>{lane.label || lane.id}</strong>
+                                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Phân làn quy trình</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flow-sidebar-card">
                         <h3>Node palette</h3>
                         <p>Drag a node to the canvas to build workflow steps.</p>
                         <div className="flow-palette-list">
@@ -1533,26 +1844,7 @@ function Flow({ id: propId }) {
                         edgeTypes={edgeTypes}
                         fitView
                     >
-                        <Panel position="top-left" className="flow-toolbar">
-                            <div>
-                                <h2>Workflow designer</h2>
-                                <p>Load workflow data from API and edit nodes and transitions visually.</p>
-                            </div>
-                            <div className="flow-actions">
-                                <input
-                                    type="text"
-                                    placeholder="Workflow id"
-                                    value={workflowId}
-                                    onChange={(event) => setWorkflowId(event.target.value)}
-                                />
-                                <button type="button" onClick={() => loadWorkflow()} disabled={loading}>
-                                    {loading ? 'Loading…' : 'Load workflow'}
-                                </button>
-                                <button type="button" onClick={saveWorkflow} disabled={loading || !workflowId} style={{ background: '#10b981', color: 'white', marginLeft: '10px', padding: '8px 16px', borderRadius: '8px', fontWeight: '600' }}>
-                                    Lưu (Save)
-                                </button>
-                            </div>
-                        </Panel>
+
 
                         <Panel position="top-right" className="info-panel">
                             <strong>

@@ -1,8 +1,11 @@
 .flow-shell {
   width: 100%;
+  height: calc(100vh - 120px);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  padding-right: 6px;
 }
 
 .flow-layout {
@@ -220,40 +223,7 @@
   font-size: 0.9rem;
 }
 
-@media (max-width: 1280px) {
-  .flow-layout {
-    grid-template-columns: 220px minmax(0, 1fr);
-  }
-
-  .flow-properties-panel {
-    grid-column: 1 / -1;
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-
-  .flow-form-card,
-  .flow-empty-state {
-    flex: 1 1 300px;
-  }
-}
-
-@media (max-width: 900px) {
-  .flow-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .flow-sidebar {
-    order: 2;
-  }
-
-  .flow-canvas-panel {
-    order: 1;
-  }
-
-  .flow-toolbar {
-    min-width: auto;
-  }
-}
+/* Layout remains side-by-side on all screens */
 
 /* Edge label styling for Action - Status - System Command */
 .flow-edge-label-container {
@@ -308,7 +278,9 @@
 
 /* Stats Tables styling */
 .flow-stats-container {
-  margin-top: 20px;
+  margin-top: 40px;
+  clear: both;
+  display: block;
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 16px;
