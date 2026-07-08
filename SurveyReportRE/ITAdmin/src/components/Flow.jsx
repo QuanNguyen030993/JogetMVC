@@ -13,6 +13,7 @@ import {
     getSmoothStepPath,
     EdgeLabelRenderer,
     useReactFlow,
+    MarkerType,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import CustomGrid from '../../../TMIVCom/src/components/CustomGrid';
@@ -72,7 +73,41 @@ const CustomEdge = ({
     const labelX = controlX;
     const labelY = controlY - 20;
 
-    const onControlPointMouseDown = (event) => {
+    const onCorner1MouseDown = (event) => {
+        event.stopPropagation();
+        event.preventDefault();
+
+        const startMouseX = event.clientX;
+        const startControlX = controlX;
+        const zoom = getZoom();
+
+        const handleMouseMove = (moveEvent) => {
+            const dx = moveEvent.clientX - startMouseX;
+            const nextControlX = startControlX + dx / zoom;
+
+            setEdges((currentEdges) =>
+                currentEdges.map((edge) => {
+                    if (edge.id === id) {
+                        return {
+                            ...edge,
+                            data: { ...edge.data, controlX: nextControlX },
+                        };
+                    }
+                    return edge;
+                })
+            );
+        };
+
+        const handleMouseUp = () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+    };
+
+    const onCorner2MouseDown = (event) => {
         event.stopPropagation();
         event.preventDefault();
 
@@ -115,6 +150,40 @@ const CustomEdge = ({
         window.addEventListener('mouseup', handleMouseUp);
     };
 
+    const onCorner3MouseDown = (event) => {
+        event.stopPropagation();
+        event.preventDefault();
+
+        const startMouseY = event.clientY;
+        const startControlY = controlY;
+        const zoom = getZoom();
+
+        const handleMouseMove = (moveEvent) => {
+            const dy = moveEvent.clientY - startMouseY;
+            const nextControlY = startControlY + dy / zoom;
+
+            setEdges((currentEdges) =>
+                currentEdges.map((edge) => {
+                    if (edge.id === id) {
+                        return {
+                            ...edge,
+                            data: { ...edge.data, controlY: nextControlY },
+                        };
+                    }
+                    return edge;
+                })
+            );
+        };
+
+        const handleMouseUp = () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+    };
+
     return (
         <>
             <path
@@ -124,15 +193,38 @@ const CustomEdge = ({
                 d={edgePath}
                 markerEnd={markerEnd}
             />
+            {/* Corner 1: Horizontal adjust */}
             <circle
                 cx={controlX}
-                cy={controlY}
+                cy={sourceY}
                 r={selected ? 7 : 5}
                 fill={selected ? '#2563eb' : '#94a3b8'}
                 stroke="#fff"
                 strokeWidth={1.5}
+                style={{ cursor: 'ew-resize', pointerEvents: 'all', opacity: selected ? 1.0 : 0.6 }}
+                onMouseDown={onCorner1MouseDown}
+            />
+            {/* Corner 2: Both axes adjust */}
+            <circle
+                cx={controlX}
+                cy={controlY}
+                r={selected ? 8 : 6}
+                fill={selected ? '#d97706' : '#d1d5db'}
+                stroke="#fff"
+                strokeWidth={2}
                 style={{ cursor: 'move', pointerEvents: 'all', opacity: selected ? 1.0 : 0.6 }}
-                onMouseDown={onControlPointMouseDown}
+                onMouseDown={onCorner2MouseDown}
+            />
+            {/* Corner 3: Vertical adjust */}
+            <circle
+                cx={targetX}
+                cy={controlY}
+                r={selected ? 7 : 5}
+                fill={selected ? '#10b981' : '#64748b'}
+                stroke="#fff"
+                strokeWidth={1.5}
+                style={{ cursor: 'ns-resize', pointerEvents: 'all', opacity: selected ? 1.0 : 0.6 }}
+                onMouseDown={onCorner3MouseDown}
             />
             {label && (
                 <EdgeLabelRenderer>
@@ -345,10 +437,16 @@ const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) 
             target: String(transition.toNodeId || transition.to || ''),
             animated: Boolean(hasCommand),
             type: 'custom',
-            label: formatTransitionLabel(transition.actionName || transition.actionCode, transition.statusId, transition.command),
+            label: formatTransitionLabel(transition.actionName || transition.actionCode, transition.statusName || transition.statusId, transition.command),
             style: isReturn
                 ? { stroke: '#dc2626', strokeWidth: 3, strokeDasharray: hasCommand ? '5,5' : undefined }
                 : { stroke: '#2563eb', strokeWidth: 2, strokeDasharray: hasCommand ? '5,5' : undefined },
+            markerEnd: {
+                type: MarkerType.ArrowClosed,
+                width: 16,
+                height: 16,
+                color: isReturn ? '#dc2626' : '#2563eb',
+            },
             data: {
                 actionName: transition.actionName || '',
                 actionCode: transition.actionCode || '',
@@ -359,6 +457,7 @@ const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) 
                 isExitTransition: Boolean(transition.isExitTransition),
                 isReturn: isReturn,
                 statusId: transition.statusId || '',
+                statusName: transition.statusName || '',
                 command: transition.command || 'None',
                 commandConfig: transition.commandConfig || '',
                 controlX: Number.isFinite(transition.controlX) ? transition.controlX * scaleX : null,
@@ -398,7 +497,7 @@ function Flow({ id: propId }) {
         { dataField: 'actionName', caption: 'Action Name' },
         { dataField: 'actionCode', caption: 'Action Code', width: 130 },
         { dataField: 'stepNo', caption: 'Step No', width: 90 },
-        { dataField: 'statusText', caption: 'Status (Trạng thái)', width: 150 },
+        { dataField: 'statusName', caption: 'Status (Trạng thái)', width: 150 },
         { dataField: 'command', caption: 'System Command', width: 140 }
     ], []);
 
@@ -424,8 +523,6 @@ function Flow({ id: propId }) {
 
     const flatTransitions = useMemo(() => {
         return edges.map(edge => {
-            const statusObj = statusList.find(s => String(s.id) === String(edge.data?.statusId));
-            const statusText = statusObj ? statusObj.value : edge.data?.statusId || '';
             return {
                 id: edge.id,
                 source: edge.source,
@@ -434,11 +531,11 @@ function Flow({ id: propId }) {
                 actionCode: edge.data?.actionCode || '',
                 stepNo: edge.data?.stepNo || '',
                 statusId: edge.data?.statusId || '',
-                statusText: statusText,
+                statusName: edge.data?.statusName || '',
                 command: edge.data?.command || 'None'
             };
         });
-    }, [edges, statusList]);
+    }, [edges]);
 
     useEffect(() => {
         fetch(`${API_BASE_URL}/api/EnumData/FetchEnum/OverallStatus`)
@@ -452,10 +549,14 @@ function Flow({ id: propId }) {
             setEdges(currentEdges =>
                 currentEdges.map(edge => {
                     const statusObj = statusList.find(s => String(s.id) === String(edge.data?.statusId));
-                    const statusText = statusObj ? statusObj.value : edge.data?.statusId;
+                    const statusText = statusObj ? statusObj.value : edge.data?.statusName || edge.data?.statusId;
                     return {
                         ...edge,
-                        label: formatTransitionLabel(edge.data?.actionName, statusText, edge.data?.command)
+                        label: formatTransitionLabel(edge.data?.actionName, statusText, edge.data?.command),
+                        data: {
+                            ...edge.data,
+                            statusName: edge.data?.statusName || (statusObj ? statusObj.value : '')
+                        }
                     };
                 })
             );
@@ -472,6 +573,12 @@ function Flow({ id: propId }) {
                 type: 'custom',
                 label: 'New transition',
                 style: { stroke: '#2563eb', strokeWidth: 2 },
+                markerEnd: {
+                    type: MarkerType.ArrowClosed,
+                    width: 16,
+                    height: 16,
+                    color: '#2563eb',
+                },
                 data: {
                     actionName: '',
                     actionCode: '',
@@ -482,6 +589,7 @@ function Flow({ id: propId }) {
                     isExitTransition: false,
                     isReturn: false,
                     statusId: '',
+                    statusName: '',
                     command: 'None',
                     commandConfig: '',
                 },
@@ -603,8 +711,11 @@ function Flow({ id: propId }) {
                     isExitTransition: edge.data?.isExitTransition === true,
                     isReturn: edge.data?.isReturn === true,
                     statusId: edge.data?.statusId || '',
+                    statusName: edge.data?.statusName || '',
                     command: edge.data?.command || 'None',
-                    commandConfig: edge.data?.commandConfig || ''
+                    commandConfig: edge.data?.commandConfig || '',
+                    controlX: edge.data?.controlX ? Math.round(edge.data.controlX / scaleX) : null,
+                    controlY: edge.data?.controlY ? Math.round(edge.data.controlY / scaleY) : null
                 };
             });
 
@@ -766,17 +877,20 @@ function Flow({ id: propId }) {
             const isReturn = nextData.isReturn === true || String(nextData.isReturn) === 'true';
             const hasCommand = nextData.command && nextData.command !== 'None' && nextData.command !== '0';
 
-            const statusObj = statusList.find(s => String(s.id) === String(nextData.statusId));
-            const statusText = statusObj ? statusObj.value : nextData.statusId;
-
             const nextEdge = {
                 ...selectedEdge,
-                label: formatTransitionLabel(nextData.actionName, statusText, nextData.command),
+                label: formatTransitionLabel(nextData.actionName, nextData.statusName || nextData.statusId, nextData.command),
                 data: nextData,
                 animated: Boolean(hasCommand),
                 style: isReturn
                     ? { stroke: '#dc2626', strokeWidth: 3, strokeDasharray: hasCommand ? '5,5' : undefined }
                     : { stroke: '#2563eb', strokeWidth: 2, strokeDasharray: hasCommand ? '5,5' : undefined },
+                markerEnd: {
+                    type: MarkerType.ArrowClosed,
+                    width: 16,
+                    height: 16,
+                    color: isReturn ? '#dc2626' : '#2563eb',
+                },
             };
 
             setEdges((currentEdges) =>
@@ -784,7 +898,7 @@ function Flow({ id: propId }) {
             );
             setSelectedEdge(nextEdge);
         },
-        [selectedEdge, setEdges, statusList],
+        [selectedEdge, setEdges],
     );
 
     const nodeDetails = useMemo(() => {
@@ -943,12 +1057,19 @@ function Flow({ id: propId }) {
                 <label>
                     <span>Status (Trạng thái)</span>
                     <select
-                        value={selectedEdge.data?.statusId || ''}
-                        onChange={(event) => updateSelectedEdge('statusId', event.target.value)}
+                        value={selectedEdge.data?.statusName || ''}
+                        onChange={(event) => {
+                            const selectedValue = event.target.value;
+                            const matchingStatus = statusList.find(s => s.value === selectedValue);
+                            const matchingId = matchingStatus ? matchingStatus.id : '';
+                            // Update statusName and statusId
+                            updateSelectedEdge('statusName', selectedValue);
+                            updateSelectedEdge('statusId', matchingId);
+                        }}
                     >
                         <option value="">-- Chọn Trạng thái --</option>
                         {statusList.map(status => (
-                            <option key={status.id} value={status.id}>
+                            <option key={status.id} value={status.value}>
                                 {status.value} (ID: {status.id})
                             </option>
                         ))}
