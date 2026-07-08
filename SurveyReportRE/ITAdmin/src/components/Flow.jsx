@@ -531,6 +531,7 @@ function Flow({ id: propId }) {
     const [selectedNode, setSelectedNode] = useState(null);
     const [selectedEdge, setSelectedEdge] = useState(null);
     const [workflowId, setWorkflowId] = useState(propId || '');
+    const [workflowGuid, setWorkflowGuid] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [reactFlowInstance, setReactFlowInstance] = useState(null);
@@ -717,6 +718,7 @@ function Flow({ id: propId }) {
                 }
 
                 const data = await response.json();
+                setWorkflowGuid(data.guid || data.Guid || '');
                 const parsedPayload = typeof data.workflowNodes === 'string' ? JSON.parse(data.workflowNodes) : data.workflowNodes || {};
                 const scaleX = parsedPayload._layoutConfig?.SCALE_X || 1.0;
                 const scaleY = parsedPayload._layoutConfig?.SCALE_Y || 1.0;
@@ -847,7 +849,7 @@ function Flow({ id: propId }) {
     }, [workflowId, nodes, edges, layoutConfig, workflowDefinition, lanesList]);
 
     const buildWorkflow = useCallback(async () => {
-        const workflowDefinitionId = workflowId;
+        const workflowDefinitionId = workflowGuid || workflowId;
         if (!workflowDefinitionId) {
             setError('Please load or enter a workflow id first');
             return;
@@ -864,10 +866,13 @@ function Flow({ id: propId }) {
             const nodesPayload = nodes.map((node, index) => {
                 const origX = Math.round(node.position.x / scaleX);
                 const origY = Math.round(node.position.y / scaleY);
+                const incomingEdge = edges.find((e) => e.target === node.id);
+                const parentNodeId = incomingEdge ? incomingEdge.source : null;
+
                 return {
                     workflowDefinitionId: workflowDefinitionId,
                     nodeId: node.id,
-                    parentNodeId: null,
+                    parentNodeId: parentNodeId,
                     nodeName: node.data?.label || "",
                     nodeType: node.data?.nodeType || "",
                     nodeStatus: node.data?.flowType || "Both",
@@ -909,7 +914,8 @@ function Flow({ id: propId }) {
             const stepsPayload = edges.map((edge, index) => {
                 const fromNode = nodeMap[edge.source] || {};
                 const toNode = edge.target ? (nodeMap[edge.target] || {}) : null;
-                const isStart = false; // Deduce from workflow tree start nodes if needed
+                const incomingEdgesCount = edges.filter((e) => e.target === fromNode.id).length;
+                const isStart = fromNode.data?.nodeType === 'start' || incomingEdgesCount === 0;
                 const isEnd = edge.data?.isExitTransition === true || !edge.target;
 
                 let uiMode = "Start";
@@ -1002,7 +1008,7 @@ function Flow({ id: propId }) {
         } finally {
             setLoading(false);
         }
-    }, [workflowId, nodes, edges, layoutConfig]);
+    }, [workflowId, workflowGuid, nodes, edges, layoutConfig]);
 
     useEffect(() => {
         if (propId) {
