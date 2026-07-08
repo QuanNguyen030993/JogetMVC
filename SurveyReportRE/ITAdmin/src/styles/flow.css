@@ -342,3 +342,15 @@
 .flow-stats-table tr:hover {
   background: #f8fafc;
 }
+
+/* Trace active node pulse effect */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+    transform: scale(1);
+  }
+  100% {
+    box-shadow: 0 0 24px rgba(245, 158, 11, 0.9);
+    transform: scale(1.03);
+  }
+}

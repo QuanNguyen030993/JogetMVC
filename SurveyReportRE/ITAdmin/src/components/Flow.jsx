@@ -14,6 +14,8 @@ import {
     EdgeLabelRenderer,
     useReactFlow,
     MarkerType,
+    Handle,
+    Position,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import CustomGrid from '../../../TMIVCom/src/components/CustomGrid';
@@ -396,6 +398,7 @@ const mapWorkflowNodes = (workflowNodes = [], scaleX = 1.0, scaleY = 1.0) =>
 
         return {
             id,
+            type: 'workflowNode',
             position: hasPosition
                 ? { x: rawX * scaleX, y: rawY * scaleY }
                 : { x: (140 + index * 260) * scaleX, y: (90 + (index % 3) * 180) * scaleY },
@@ -525,6 +528,52 @@ const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) 
         };
     });
 
+const WorkflowNode = ({ data, selected }) => {
+    const style = createNodeStyle({
+        nodeType: data?.nodeType,
+        flowType: data?.flowType,
+        nodeName: data?.label,
+        styleColor: data?.styleColor
+    });
+
+    return (
+        <div
+            style={{
+                ...style,
+                padding: '10px 15px',
+                minWidth: '120px',
+                textAlign: 'center',
+                position: 'relative',
+                boxShadow: selected ? '0 0 0 2px #2563eb' : (style.boxShadow || '0 1px 3px rgba(0,0,0,0.1)'),
+                border: selected ? '2px solid #2563eb' : style.border
+            }}
+        >
+            <div>{data.label}</div>
+            {data.subtitle && <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>{data.subtitle}</div>}
+            
+            {/* Top handles */}
+            <Handle type="source" position={Position.Top} id="top-src" style={{ left: '35%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Top} id="top-tgt" style={{ left: '65%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+
+            {/* Bottom handles */}
+            <Handle type="source" position={Position.Bottom} id="bottom-src" style={{ left: '35%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Bottom} id="bottom-tgt" style={{ left: '65%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+
+            {/* Left handles */}
+            <Handle type="source" position={Position.Left} id="left-src" style={{ top: '35%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Left} id="left-tgt" style={{ top: '65%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+
+            {/* Right handles */}
+            <Handle type="source" position={Position.Right} id="right-src" style={{ top: '35%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Right} id="right-tgt" style={{ top: '65%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+        </div>
+    );
+};
+
+const nodeTypes = {
+    workflowNode: WorkflowNode,
+};
+
 function Flow({ id: propId }) {
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -534,6 +583,8 @@ function Flow({ id: propId }) {
     const [workflowGuid, setWorkflowGuid] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [searchRecordGuid, setSearchRecordGuid] = useState('');
+    const [tracedStep, setTracedStep] = useState(null);
     const [reactFlowInstance, setReactFlowInstance] = useState(null);
     const [statusList, setStatusList] = useState([]);
     const [layoutConfig, setLayoutConfig] = useState(null);
@@ -1043,6 +1094,106 @@ function Flow({ id: propId }) {
         }
     }, [workflowId, workflowGuid, nodes, edges, layoutConfig]);
 
+    const traceInstanceWorkflow = useCallback(async () => {
+        if (!searchRecordGuid) {
+            alert("Vui lòng nhập Record GUID!");
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+        setTracedStep(null);
+
+        try {
+            // Query InstanceWorkflow matching the RecordGuid
+            const response = await fetch(`${API_BASE_URL}/api/InstanceWorkflow/GetAll?refField=RecordGuid&refKey=${searchRecordGuid}`);
+            if (!response.ok) {
+                throw new Error(`Instance API returned status ${response.status}`);
+            }
+
+            const dataList = await response.json();
+            if (!Array.isArray(dataList) || dataList.length === 0) {
+                alert("Không tìm thấy dòng dữ liệu nào cho Record GUID này! ❌");
+                return;
+            }
+
+            // Get the first matching record
+            const record = dataList[0];
+            const currentStep = record.currentStep || record.CurrentStep;
+
+            if (!currentStep) {
+                alert("Dòng dữ liệu tìm thấy nhưng không có thông tin CurrentStep! ⚠️");
+                return;
+            }
+
+            // Highlight the node matching currentStep
+            setTracedStep(currentStep);
+            setSelectedNode(null);
+            setSelectedEdge(null);
+
+            // Let's find if the node exists on our canvas
+            const nodeExists = nodes.find(n => n.id === currentStep);
+            if (nodeExists) {
+                setSelectedNode(nodeExists);
+                alert(`Tìm thấy tiến trình đang chạy tại bước: ${nodeExists.data?.label || currentStep} (Đã highlight) 🎯`);
+            } else {
+                alert(`Tìm thấy CurrentStep: ${currentStep}, nhưng bước này chưa được vẽ trên sơ đồ hiện tại! ⚠️`);
+            }
+
+        } catch (err) {
+            console.error("Trace error:", err);
+            alert(`Lỗi tra cứu Instance: ${err.message}`);
+        } finally {
+            setLoading(false);
+        }
+    }, [searchRecordGuid, nodes]);
+
+    useEffect(() => {
+        if (tracedStep) {
+            setNodes((currentNodes) =>
+                currentNodes.map((node) => {
+                    if (node.id === tracedStep) {
+                        return {
+                            ...node,
+                            style: {
+                                ...createNodeStyle({
+                                    nodeType: node.data?.nodeType,
+                                    flowType: node.data?.flowType,
+                                    nodeName: node.data?.label,
+                                    styleColor: node.data?.styleColor
+                                }),
+                                border: '3px solid #f59e0b',
+                                boxShadow: '0 0 20px #f59e0b',
+                                animation: 'pulse 1.5s infinite alternate'
+                            }
+                        };
+                    }
+                    return {
+                        ...node,
+                        style: createNodeStyle({
+                            nodeType: node.data?.nodeType,
+                            flowType: node.data?.flowType,
+                            nodeName: node.data?.label,
+                            styleColor: node.data?.styleColor
+                        })
+                    };
+                })
+            );
+        } else {
+            setNodes((currentNodes) =>
+                currentNodes.map((node) => ({
+                    ...node,
+                    style: createNodeStyle({
+                        nodeType: node.data?.nodeType,
+                        flowType: node.data?.flowType,
+                        nodeName: node.data?.label,
+                        styleColor: node.data?.styleColor
+                    })
+                }))
+            );
+        }
+    }, [tracedStep, setNodes]);
+
     useEffect(() => {
         if (propId) {
             setWorkflowId(propId);
@@ -1061,6 +1212,7 @@ function Flow({ id: propId }) {
         const id = `node-${Math.random().toString(36).slice(2, 8)}`;
         const nextNode = {
             id,
+            type: 'workflowNode',
             position: {
                 x: 140 + nodes.length * 120,
                 y: 90 + (nodes.length % 3) * 180,
@@ -1121,6 +1273,7 @@ function Flow({ id: propId }) {
 
                 newNode = {
                     id: `node-${Math.random().toString(36).slice(2, 8)}`,
+                    type: 'workflowNode',
                     position,
                     data: {
                         label: template.label,
@@ -1140,6 +1293,7 @@ function Flow({ id: propId }) {
                     const lane = JSON.parse(laneDataStr);
                     newNode = {
                         id: `node-${Math.random().toString(36).slice(2, 8)}`,
+                        type: 'workflowNode',
                         position,
                         data: {
                             label: lane.label || lane.id,
@@ -1899,6 +2053,41 @@ function Flow({ id: propId }) {
                         </div>
                     </div>
 
+                    <div className="flow-sidebar-card" style={{ borderLeft: '4px solid #f59e0b', background: '#fffbeb' }}>
+                        <h3>Tra cứu Instance</h3>
+                        <p style={{ fontSize: '0.78rem', color: '#64748b', margin: '4px 0 8px 0' }}>Nhập Record GUID để định vị bước hiện tại của hồ sơ trên sơ đồ.</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <input
+                                type="text"
+                                placeholder="Nhập Record GUID..."
+                                value={searchRecordGuid}
+                                onChange={(event) => setSearchRecordGuid(event.target.value)}
+                                style={{ padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.82rem' }}
+                            />
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                                <button
+                                    type="button"
+                                    className="flow-action-btn"
+                                    onClick={traceInstanceWorkflow}
+                                    disabled={loading || !searchRecordGuid}
+                                    style={{ background: '#f59e0b', color: 'white', margin: 0, flex: 1 }}
+                                >
+                                    Kiểm tra (Trace)
+                                </button>
+                                {tracedStep && (
+                                    <button
+                                        type="button"
+                                        className="flow-action-btn secondary"
+                                        onClick={() => setTracedStep(null)}
+                                        style={{ margin: 0, padding: '4px 8px' }}
+                                    >
+                                        Xóa Trace
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
                     {lanesList.length > 0 && (
                         <div className="flow-sidebar-card">
                             <h3>Nodes đề cử (Lanes)</h3>
@@ -1998,6 +2187,7 @@ function Flow({ id: propId }) {
                         onDragOver={onDragOver}
                         connectionLineType={ConnectionLineType.SmoothStep}
                         edgeTypes={edgeTypes}
+                        nodeTypes={nodeTypes}
                         fitView
                     >
 
