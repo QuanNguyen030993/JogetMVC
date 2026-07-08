@@ -139,13 +139,19 @@
      ]});
     viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
     delayAcceptStatus(mainFields,`@QTViewIdHelper.Form(dept, quotationId)`,"@dept", `AC_@QTViewIdHelper.Decision(dept, quotationId)`, `AC_Status_@QTViewIdHelper.Decision(dept, quotationId)`,null,null);
-    //     renderDecisionDeferred(
-    //    "formFO",
-    //    "FO",
-    //    "decisionGroup",
-    //    "btnAcceptFO",
-    //    "acceptStatusFO"
-    // );
+
+    setTimeout(() => {
+        var picJson = PIC_JSON || "{}";
+        var picMap = parsePicMap(picJson);
+        var picVal = picMap["@dept"] || "";
+        var sectionId = `#qt-sec_@(dept)_@(quotationId)`;
+        if (!picVal) {
+            $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
+        } else {
+            $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
+        }
+    }, 100);
+
     })
 </script>
 <div id="@QTViewIdHelper.Form(dept, quotationId)"></div>

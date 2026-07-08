@@ -1,4 +1,4 @@
-﻿<script>
+<script>
     // var ListFormat = Quill.import('formats/list');
 
     // class CustomList extends ListFormat {
@@ -2322,6 +2322,15 @@
                 $.each(qtDeptModuleCode, function (itemIndex, item) {
                     setTimeout(() => {
                             var currentPic = getDefaultPicByDept(item,  data[item]);
+                            if (data[item]) {
+                                const sectionId = `#${moduleKey}-sec_${item}_${data[item].id}`;
+                                const $section = $(sectionId);
+                                if (currentPic) {
+                                    $section.find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
+                                } else {
+                                    $section.find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
+                                }
+                            }
                                 if (data[item])
                                         renderDepartmentAssigneeBox(`#${window.QuotationIdManager.assigneeBox(item, data[item].id)}`, {
                             groupName: item,
@@ -2344,6 +2353,13 @@
                                     .map(x => x?.accountName)
                                     .filter(Boolean);
 
+                                const sectionId = `#${moduleKey}-sec_${item}_${this.dataForm.id}`;
+                                const $section = $(sectionId);
+                                if (accounts.length > 0) {
+                                    $section.find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
+                                } else {
+                                    $section.find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
+                                }
 
                                 if (accounts.length === 0) return;
 
@@ -2374,6 +2390,15 @@
                 $.each(piDeptModuleCode, function (itemIndex, item) {
                     setTimeout(() => {
                     var currentPic = getDefaultPicByDept(item, data[item]);
+                    if (data[item]) {
+                        const sectionId = `#${moduleKey}-sec_${item}_${data[item].id}`;
+                        const $section = $(sectionId);
+                        if (currentPic) {
+                            $section.find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
+                        } else {
+                            $section.find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
+                        }
+                    }
                     if (data[item])
                             renderDepartmentAssigneeBox(`#${window.PolicyIssuanceIdManager.assigneeBox(item, data[item].id)}`, {
                                 groupName: item,
@@ -2396,6 +2421,13 @@
                                     .map(x => x?.accountName)
                                     .filter(Boolean);
 
+                                const sectionId = `#${moduleKey}-sec_${item}_${this.dataForm.id}`;
+                                const $section = $(sectionId);
+                                if (accounts.length > 0) {
+                                    $section.find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
+                                } else {
+                                    $section.find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
+                                }
 
                                 if (accounts.length === 0) return;
 

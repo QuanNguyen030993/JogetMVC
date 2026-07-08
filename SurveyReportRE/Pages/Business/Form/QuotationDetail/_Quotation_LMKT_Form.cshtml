@@ -1,4 +1,4 @@
-﻿@using JogetMVC.Model
+@using JogetMVC.Model
 @{
     string dept = "LMKT";
     long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
@@ -170,6 +170,19 @@
            ]
     });
     viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
+
+    setTimeout(() => {
+        var picJson = PIC_JSON || "{}";
+        var picMap = parsePicMap(picJson);
+        var picVal = picMap["@dept"] || "";
+        var sectionId = `#qt-sec_@(dept)_@(quotationId)`;
+        if (!picVal) {
+            $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
+        } else {
+            $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
+        }
+    }, 100);
+
     })
 </script>
 <div id="@QTViewIdHelper.Form(dept, quotationId)">

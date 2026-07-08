@@ -1,4 +1,4 @@
-﻿@using JogetMVC.Model
+@using JogetMVC.Model
 @{
     string dept = "PM";
     long policyIssuanceId = Convert.ToInt64(ViewData["Id"]);
@@ -307,5 +307,18 @@
         $("#pi_checkList_@policyIssuanceId").dxDataGrid("instance").option("dataSource", dataSourceGridCL);
         $("#pi_checkList_@policyIssuanceId").dxDataGrid("instance").option("id", data.id);
     });
+
+    setTimeout(() => {
+        var picJson = PIC_JSON || "{}";
+        var picMap = parsePicMap(picJson);
+        var picVal = picMap["@dept"] || "";
+        var sectionId = `#pi-sec_@(dept)_@(policyIssuanceId)`;
+        if (!picVal) {
+            $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
+        } else {
+            $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
+        }
+    }, 100);
+
     })
 </script>
