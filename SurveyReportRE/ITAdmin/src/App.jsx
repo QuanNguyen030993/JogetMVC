@@ -12,6 +12,7 @@ import MenuDesigner from './components/MenuDesigner';
 import UserManagement from './components/UserManagement';
 import OverviewPanel from './components/OverviewPanel';
 import EnumDesign from './components/EnumDesign';
+import SlaDesign from './components/SlaDesign';
 import CustomGrid from '../../TMIVCom/src/components/CustomGrid'
 import './styles/flow.css';
 import './styles/com.all.css';
@@ -21,6 +22,7 @@ import './styles/datagridfielddesigner.css';
 import './styles/mailtemplatedesigner.css'
 import './styles/mailqueue.css';
 import './styles/menudesigner.css';
+import './styles/sladesigner.css';
 import "./fonts/css/all.min.css";
 const userCount = { label: 'Người dùng hoạt động', value: '128', detail: '20 người dùng IT đang online' };
 
@@ -117,7 +119,8 @@ body:JSON.stringify("2")
     { id: 'systable', label: 'Bảng hệ thống' } ,
     { id: 'datagridfielddesigner', label: 'Thiết kế trường DataGrid' },
     { id: 'menudesigner', label: 'Thiết kế Menu' },
-    { id: 'enum-design', label: 'Cấu hình danh mục Enum' }
+    { id: 'enum-design', label: 'Cấu hình danh mục Enum' },
+    { id: 'sladesigner', label: 'Cấu hình chỉ số SLA' }
   ];
 
   const systemStatus = useMemo(() => [
@@ -181,6 +184,8 @@ body:JSON.stringify("2")
         return <MenuDesigner />;
       case 'enum-design':
         return <EnumDesign />;
+      case 'sladesigner':
+        return <SlaDesign />;
       default:
         return (
           <>
