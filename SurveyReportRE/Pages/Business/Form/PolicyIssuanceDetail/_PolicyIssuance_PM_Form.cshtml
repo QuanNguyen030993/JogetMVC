@@ -89,70 +89,68 @@
              { itemType: "group" , caption: "Decision",items :[
         {
             dataField: "decision",
-            editorType: "dxRadioGroup",
-            editorOptions: {
-                items: [
-                    { id: "AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)" , text: "Accept", value: true },
-                    // { id: "AS_@PIViewIdHelper.Decision(dept, policyIssuanceId)" , text: "Assign", value: false },
-                    { id: "RJ_@PIViewIdHelper.Decision(dept, policyIssuanceId)" , text: "Reject", value: false }
-                ],
-                 displayExpr: "text",
-                 valueExpr: "id",
-                 layout: "horizontal",
-                 itemTemplate: function(itemData, _, itemElement) {
-                 setTimeout(() => {
-                  var formItems = $(`#@PIViewIdHelper.Form(dept, policyIssuanceId)`).dxForm("instance")?.option("formData") || {};
-                  var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
-                  if (tatObject) if (tatObject[`@dept`]?.AcceptDate)
-                  {
-                    $(`#AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`).addClass("btn-info");
-                    $(`#${itemData.id}`).dxButton("instance").option("disabled", true);
-                    if (itemData.id === "RJ_@PIViewIdHelper.Decision(dept, policyIssuanceId)" ) $(`#RJ_@PIViewIdHelper.Decision(dept, policyIssuanceId)`).dxButton("instance").option("disabled", false);
-                  }
-                 },_delayRenderDecisionButton);
+            label: { text: "Decision" },
+            itemType: "simple",
+            template: function (data, itemElement) {
+                var acceptButtonId = `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
+                var rejectButtonId = `RJ_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
 
-                 $(`<div id='${itemData.id}'>`).dxButton({
-                 text: itemData.text,
-                 width: "100%",
-                 height: "100%",
-                 onClick: function (e){
-                    if (_ == 0)
-                 {
-                      var formItems = $(`#@QTViewIdHelper.Form(dept, policyIssuanceId)`).dxForm("instance")?.option("formData") || {};
-                       var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
-                      tatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
-                      formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
-                      var passingObject = new Object();
-                      passingObject.statusName = "@dept Process"; // base on Dept
-                      passingObject.Comment = `PolicyIssuance ${formItems.quotationCode} accepted by ${_displayName}!`;  // base on Dept
-                      passingObject.formItems = formItems;
-                      passingObject.dept = `@dept`;
-                      passingObject.url = '/api/PolicyIssuance/UpdateData';
-                      passingObject.urlLog = `/api/PolicyIssuance/LogAction`;
-                      passingObject.schemeName = `PolicyIssuance`;
-                      acceptDecision(passingObject);
-                 }
-                 if (_ == 1)
-                 {
-                      var formItems = $(`#@QTViewIdHelper.Form(dept, policyIssuanceId)`).dxForm("instance")?.option("formData") || {};
-                      var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
-                      tatObject[`@dept`].AcceptDate = "";
-                      formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
-                      var passingObject = new Object();
-                      passingObject.statusName = "@dept Pending"; // base on Dept
-                      passingObject.Comment = `PolicyIssuance ${formItems.quotationCode} rejected by ${_displayName}!`;  // base on Dept
-                      passingObject.formItems = formItems;
-                      passingObject.dept = `@dept`;
-                      passingObject.url = '/api/PolicyIssuance/UpdateData';
-                      passingObject.urlLog = `/api/PolicyIssuance/LogAction`;
-                      passingObject.schemeName = `PolicyIssuance`;
-                      rejectDecision(passingObject);
-                 }
-                 }
-                 }).appendTo(itemElement);
-              itemElement
-            },
-            isRequired: true
+                // Render Accept Button
+                $(`<div id='${acceptButtonId}' style='display: inline-block;'>`).dxButton({
+                    text: "Accept",
+                    icon: "check",
+                    type: "success",
+                    onClick: function (e) {
+                        var formItems = $(`#@PIViewIdHelper.Form(dept, policyIssuanceId)`).dxForm("instance")?.option("formData") || {};
+                        var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
+                        tatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
+                        formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+                        var passingObject = new Object();
+                        passingObject.statusName = "@dept Process"; // base on Dept
+                        passingObject.Comment = `PolicyIssuance ${formItems.quotationCode} accepted by ${_displayName}!`;  // base on Dept
+                        passingObject.formItems = formItems;
+                        passingObject.dept = `@dept`;
+                        passingObject.url = '/api/PolicyIssuance/UpdateData';
+                        passingObject.urlLog = `/api/PolicyIssuance/LogAction`;
+                        passingObject.schemeName = `PolicyIssuance`;
+                        acceptDecision(passingObject);
+                    }
+                }).appendTo(itemElement);
+
+                // Render Reject Button
+                $(`<div id='${rejectButtonId}' style='display: inline-block; margin-left: 10px;'>`).dxButton({
+                    text: "Reject",
+                    icon: "close",
+                    type: "danger",
+                    onClick: function (e) {
+                        var formItems = $(`#@PIViewIdHelper.Form(dept, policyIssuanceId)`).dxForm("instance")?.option("formData") || {};
+                        var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
+                        tatObject[`@dept`].AcceptDate = "";
+                        formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+                        var passingObject = new Object();
+                        passingObject.statusName = "@dept Pending"; // base on Dept
+                        passingObject.Comment = `PolicyIssuance ${formItems.quotationCode} rejected by ${_displayName}!`;  // base on Dept
+                        passingObject.formItems = formItems;
+                        passingObject.dept = `@dept`;
+                        passingObject.url = '/api/PolicyIssuance/UpdateData';
+                        passingObject.urlLog = `/api/PolicyIssuance/LogAction`;
+                        passingObject.schemeName = `PolicyIssuance`;
+                        rejectDecision(passingObject);
+                    }
+                }).appendTo(itemElement);
+
+                // Initialize the button states (disable/enable based on AcceptDate status)
+                setTimeout(() => {
+                    var formItems = $(`#@PIViewIdHelper.Form(dept, policyIssuanceId)`).dxForm("instance")?.option("formData") || {};
+                    var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
+                    if (tatObject && tatObject[`@dept`]?.AcceptDate) {
+                        $(`#${acceptButtonId}`).dxButton("instance").option("disabled", true);
+                        $(`#${rejectButtonId}`).dxButton("instance").option("disabled", false);
+                    } else {
+                        $(`#${acceptButtonId}`).dxButton("instance").option("disabled", false);
+                        $(`#${rejectButtonId}`).dxButton("instance").option("disabled", true);
+                    }
+                }, _delayRenderDecisionButton);
             }
         }
              ]},

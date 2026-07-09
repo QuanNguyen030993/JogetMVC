@@ -3041,6 +3041,14 @@
                         renderAttachmentListLazy(data, $preview, {
                             batchSize: 6,
                             delay: 16,
+                            showFillListSelect: editorOptions.showFillListSelect,
+                            sectionId: editorOptions.sectionId,
+                            policyIssuanceId: editorOptions.policyIssuanceId,
+                            sectionIdQt: editorOptions.sectionIdQt,
+                            cloneId: editorOptions.cloneId,
+                            editorOptions: editorOptions,
+                            renderTime: renderTime,
+                            controllerName: controllerName,
                             onDeleted: function () {
                                 loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions, renderTime);
                             }
@@ -3062,6 +3070,14 @@
                             renderAttachmentListLazy(data, $preview, {
                                 batchSize: 6,
                                 delay: 16,
+                                showFillListSelect: editorOptions.showFillListSelect,
+                                sectionId: editorOptions.sectionId,
+                                policyIssuanceId: editorOptions.policyIssuanceId,
+                                sectionIdQt: editorOptions.sectionIdQt,
+                                cloneId: editorOptions.cloneId,
+                                editorOptions: editorOptions,
+                                renderTime: renderTime,
+                                controllerName: controllerName,
                                 onDeleted: function () {
                                      loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions, renderTime);
                                 }
@@ -3177,7 +3193,7 @@
 
 
 
-        function createAttachmentItem(x, onDeleted) {
+        function createAttachmentItem(x, onDeleted, options) {
             const fileName = x.fileName || x.FileName || x.name || "Unnamed";
             const ext = (x.extension || x.Extension || getExt(fileName)).toLowerCase();
             const size = x.size || x.fileSize || x.FileSize || 0;
@@ -3186,12 +3202,15 @@
             const author = x.author || x.author || x.author;
             const date = x.date || x.date || x.date;
             const $item = $("<div>")
-                .addClass("att-item")
-                .css({
+                .addClass("att-item");
+            
+            if (!(options && options.showFillListSelect)) {
+                $item.css({
                     opacity: 0,
                     transform: "translateY(8px)",
                     transition: "opacity .18s ease, transform .18s ease"
                 });
+            }
 
             $("<div>")
                 .addClass("att-ico")
@@ -3275,7 +3294,104 @@
                 //    openWordMammothPopup(id);
             });
             $(`<input type="hidden" value="${id}"></input>`).appendTo($item);
-            return $item;
+
+            var $result = $item;
+            if (options && options.showFillListSelect) {
+                const $wrapper = $("<div>")
+                    .addClass("att-item-wrapper")
+                    .css({ 
+                        display: "flex", 
+                        flexDirection: "column", 
+                        gap: "6px", 
+                        width: "100%", 
+                        maxWidth: "720px",
+                        opacity: 0,
+                        transform: "translateY(8px)",
+                        transition: "opacity .18s ease, transform .18s ease"
+                    });
+                
+                $item.appendTo($wrapper);
+                
+                const $selectBoxWrapper = $("<div>")
+                    .addClass("att-item-selectbox")
+                    .css({ width: "100%", marginBottom: "15px" })
+                    .appendTo($wrapper);
+                
+                var currentAttrs = {};
+                try {
+                    currentAttrs = JSON.parse(x.attributes || x.Attributes || "{}");
+                } catch(e) {}
+                
+                var currentFieldName = currentAttrs.FieldName || "default";
+                
+                $selectBoxWrapper.dxSelectBox({
+                    items: [
+                        { id: "default", text: "Default / Quotation" },
+                        { id: "confirmedQuotationFlag", text: "Confirmed Quotation (must for FCI, CCI)" },
+                        { id: "emailMktClient", text: "Email MKT-Client" },
+                        { id: "riClosings", text: "RI Closings" },
+                        { id: "factoryOperationYears", text: "Operation year of Factories (*)" },
+                        { id: "newReplacementValue", text: "New replacement value / reinstatement value (*)" },
+                        { id: "holdCoverType", text: "Hold Cover / Cover Note" },
+                        { id: "resultAttachment", text: "RES (*)" },
+                        { id: "declarationText", text: "Declaration" },
+                        { id: "machineryList", text: "List of machineries including the depreciated values for each of item (*)" },
+                        { id: "isBodApproved", text: "BoDs/UW's approved" },
+                        { id: "uRFAttachment", text: "URF" },
+                        { id: "emailInformRi", text: "Email inform RI for Endorsement" },
+                        { id: "riScheme", text: "RI Scheme (New/RN)" },
+                        { id: "proposalForm", text: "Proposal form (must for CCI)" },
+                        { id: "propertyType", text: "Type of Property list (must for FCI)" },
+                        { id: "sumInsuredBreakdown", text: "Breakdown SI for each location (must for FCI)" },
+                        { id: "premiumBreakdown", text: "Premium Breakdown" },
+                        { id: "chassisEngineNumber", text: "Chassis - Engine No. (*)" },
+                        { id: "finalPremium", text: "Final Premium in Motor system = Premium in received final Quotation (*)" },
+                        { id: "isKycChecked", text: "KYC Checked" },
+                        { id: "others", text: "Others (Specify)" },
+                        { id: "isGlobalCover", text: "Global" },
+                        { id: "ichigenka", text: "Ichigenka" }
+                    ],
+                    valueExpr: "id",
+                    displayExpr: "text",
+                    value: currentFieldName,
+                    searchEnabled: true,
+                    placeholder: "Select category...",
+                    onValueChanged: function(e) {
+                        var selectedVal = e.value;
+                        currentAttrs.FieldName = selectedVal;
+                        
+                        if (!currentAttrs.OriginalSectionName) {
+                            currentAttrs.OriginalSectionName = currentAttrs.SectionName || `${options.sectionIdQt}_default_${options.cloneId}`;
+                        }
+                        
+                        currentAttrs.SectionName = currentAttrs.OriginalSectionName;
+                        
+                        if (selectedVal === "default") {
+                            delete currentAttrs.TSSectionName;
+                        } else {
+                            currentAttrs.TSSectionName = `${options.sectionId}_${selectedVal}_${options.policyIssuanceId}`;
+                        }
+                        
+                        ajaxPut('/api/Document/UpdateData', {
+                            key: id,
+                            values: JSON.stringify({
+                                Attributes: JSON.stringify(currentAttrs)
+                            })
+                        }, {
+                            onSuccess: function() {
+                                DevExpress.ui.notify("Document category updated successfully", "success", 1500);
+                                loadDxFileUploaderAttachments(options.editorOptions.data.SectionName, options.controllerName, options.editorOptions, options.renderTime);
+                            },
+                            onError: function() {
+                                DevExpress.ui.notify("Failed to update document category", "error", 2000);
+                            }
+                        });
+                    }
+                });
+                
+                $result = $wrapper;
+            }
+            return $result;
         }
 
 

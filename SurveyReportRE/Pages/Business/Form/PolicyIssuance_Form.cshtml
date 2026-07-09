@@ -1,4 +1,4 @@
-﻿@page "{pageNum:int?}/{guid}/{cloneId:long?}/{copyfromguid}"
+@page "{pageNum:int?}/{guid}/{cloneId:long?}/{copyfromguid}"
 @using JogetMVC.Model
 @using Newtonsoft.Json
 @model PolicyIssuance_FormModel
@@ -349,7 +349,7 @@ Note:
 
                                                     $(`#${buttonId}`).dxButton({
                                                         disabled: tatObject?.[stageDept]?.AcceptDate ? false : true,
-                                                        text: route.displayStatus || "",
+                                                        text: (stageDept === "TS" || stageDept === "PM") ? "Accept" : (route.displayStatus || ""),
                                                         icon: "check",
                                                         type: "info",
                                                         onClick: function () {

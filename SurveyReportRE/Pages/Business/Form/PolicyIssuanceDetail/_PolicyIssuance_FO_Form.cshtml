@@ -36,6 +36,11 @@
     that.uploaderAllow = _role == "@dept";
     that.isRenderUploader = false;
     that.data = { SectionName: `${sectionIdQt}_${that.moduleName}_@(cloneId)`, Department: "@(dept)", FieldName: that.moduleName, FormId: "@(QTViewIdHelper.Form(dept, cloneId))" }; //{"SectionName":"default_FO_410"}
+    that.showFillListSelect = true;
+    that.sectionId = sectionId;
+    that.policyIssuanceId = @(policyIssuanceId);
+    that.sectionIdQt = sectionIdQt;
+    that.cloneId = @(cloneId);
 
     var that2 = new Object();
     that2.ModelName = "PolicyIssuance";
@@ -67,7 +72,87 @@
 
             
 
-            { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefaultPi(that,that2,that3)  },
+            { 
+                itemType: "group", 
+                caption: "Attachment", 
+                colCount: 2, 
+                items: [
+                    {
+                        dataField: "quotation",
+                        colSpan: 2,
+                        label: { text: "Upload Quotation" },
+                        template: function (data, itemElement) {
+                            var $mainContainer = $("<div style='display: flex; gap: 15px; width: 100%; align-items: center;'>");
+                            var $uploaderWrapper = $("<div style='flex: 1;'>").appendTo($mainContainer);
+                            var $selectBoxWrapper = $("<div style='width: 350px;'>").appendTo($mainContainer);
+                            
+                            $mainContainer.appendTo(itemElement);
+                            
+                            $selectBoxWrapper.dxSelectBox({
+                                items: [
+                                    { id: "default", text: "Default / Quotation" },
+                                    { id: "confirmedQuotationFlag", text: "Confirmed Quotation (must for FCI, CCI)" },
+                                    { id: "emailMktClient", text: "Email MKT-Client" },
+                                    { id: "riClosings", text: "RI Closings" },
+                                    { id: "factoryOperationYears", text: "Operation year of Factories (*)" },
+                                    { id: "newReplacementValue", text: "New replacement value / reinstatement value (*)" },
+                                    { id: "holdCoverType", text: "Hold Cover / Cover Note" },
+                                    { id: "resultAttachment", text: "RES (*)" },
+                                    { id: "declarationText", text: "Declaration" },
+                                    { id: "machineryList", text: "List of machineries including the depreciated values for each of item (*)" },
+                                    { id: "isBodApproved", text: "BoDs/UW's approved" },
+                                    { id: "uRFAttachment", text: "URF" },
+                                    { id: "emailInformRi", text: "Email inform RI for Endorsement" },
+                                    { id: "riScheme", text: "RI Scheme (New/RN)" },
+                                    { id: "proposalForm", text: "Proposal form (must for CCI)" },
+                                    { id: "propertyType", text: "Type of Property list (must for FCI)" },
+                                    { id: "sumInsuredBreakdown", text: "Breakdown SI for each location (must for FCI)" },
+                                    { id: "premiumBreakdown", text: "Premium Breakdown" },
+                                    { id: "chassisEngineNumber", text: "Chassis - Engine No. (*)" },
+                                    { id: "finalPremium", text: "Final Premium in Motor system = Premium in received final Quotation (*)" },
+                                    { id: "isKycChecked", text: "KYC Checked" },
+                                    { id: "others", text: "Others (Specify)" },
+                                    { id: "isGlobalCover", text: "Global" },
+                                    { id: "ichigenka", text: "Ichigenka" }
+                                ],
+                                valueExpr: "id",
+                                displayExpr: "text",
+                                value: "default",
+                                searchEnabled: true,
+                                placeholder: "Select checklist item if applicable",
+                                onValueChanged: function(e) {
+                                    var selectedVal = e.value;
+                                    that.data.FieldName = selectedVal;
+                                    if (selectedVal === "default") {
+                                        that.data.SectionName = `${sectionIdQt}_default_@(cloneId)`;
+                                    } else {
+                                        that.data.SectionName = `${sectionId}_${selectedVal}_@(policyIssuanceId)`;
+                                    }
+                                    
+                                    $uploaderWrapper.empty();
+                                    createEditor(that, $uploaderWrapper, $("<div>"), that);
+                                }
+                            });
+                            
+                            createEditor(that, $uploaderWrapper, $("<div>"), that);
+                        }
+                    },
+                    {
+                        dataField: "supportingDocument",
+                        colSpan: 2,
+                        template: function (data, itemElement) {
+                            createEditor(that2, itemElement, $(`<div>`), that2);
+                        }
+                    },
+                    {
+                        dataField: "document",
+                        colSpan: 2,
+                        template: function (data, itemElement) {
+                            createEditor(that3, itemElement, $(`<div>`), that3);
+                        }
+                    }
+                ]
+            },
                 {itemType: "group",caption: "Request Date",colCount:2,items: [
             {
                                   dataField: "requestedDate",
