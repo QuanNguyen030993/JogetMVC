@@ -18,7 +18,6 @@ import {
     Position,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import CustomGrid from '../../../TMIVCom/src/components/CustomGrid';
 
 const nodeTemplates = [
     {
@@ -241,7 +240,7 @@ const CustomEdge = ({
                         style={{
                             position: 'absolute',
                             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-                            pointerEvents: 'all',
+                            pointerEvents: 'all'
                         }}
                         className="nodrag nopan"
                     >
@@ -270,7 +269,6 @@ const createNodeStyle = (node = {}) => {
             borderRadius: '50px',
             color: '#991b1b',
             fontWeight: '600',
-            padding: '10px 20px',
         };
     }
     if (styleColor === 'green' || type === 'start' || flowType === 'start' || name === 'start') {
@@ -280,7 +278,6 @@ const createNodeStyle = (node = {}) => {
             borderRadius: '50px',
             color: '#065f46',
             fontWeight: '600',
-            padding: '10px 20px',
         };
     }
     if (styleColor === 'orange' || type === 'decision') {
@@ -289,7 +286,6 @@ const createNodeStyle = (node = {}) => {
             border: '1px solid #f97316',
             borderRadius: '14px',
             color: '#c2410c',
-            padding: '10px',
         };
     }
     if (styleColor === 'lightorange') {
@@ -298,7 +294,6 @@ const createNodeStyle = (node = {}) => {
             border: '1px solid #f59e0b',
             borderRadius: '14px',
             color: '#b45309',
-            padding: '10px',
         };
     }
     if (styleColor === 'blue' || type === 'department') {
@@ -307,7 +302,6 @@ const createNodeStyle = (node = {}) => {
             border: '1px solid #0284c7',
             borderRadius: '14px',
             color: '#0369a1',
-            padding: '10px',
         };
     }
     if (type === 'review') {
@@ -316,7 +310,6 @@ const createNodeStyle = (node = {}) => {
             border: '1px solid #8b5cf6',
             borderRadius: '14px',
             color: '#6b21a8',
-            padding: '10px',
         };
     }
     return {
@@ -324,7 +317,6 @@ const createNodeStyle = (node = {}) => {
         border: '1px solid #cbd5e1',
         borderRadius: '14px',
         color: '#1e293b',
-        padding: '10px',
     };
 };
 
@@ -789,6 +781,7 @@ function Flow({ id: propId , guid: propGuid}) {
                 }
 
                 const data = await response.json();
+                console.log(data);
                 setWorkflowGuid(data.guid || data.Guid || '');
                 const parsedPayload = typeof data.workflowNodes === 'string' ? JSON.parse(data.workflowNodes) : data.workflowNodes || {};
                 const scaleX = parsedPayload._layoutConfig?.SCALE_X || 1.0;
@@ -1143,6 +1136,7 @@ function Flow({ id: propId , guid: propGuid}) {
             }
 
             const dataList = await response.json();
+            console.log(dataList);
             if (!Array.isArray(dataList) || dataList.length === 0) {
                 alert("Không tìm thấy dòng dữ liệu nào cho Record GUID này! ❌");
                 return;
@@ -1178,7 +1172,7 @@ function Flow({ id: propId , guid: propGuid}) {
                 setSelectedNode(nodeExists);
                 // alert(`Tìm thấy tiến trình đang chạy tại bước: ${nodeExists.data?.label || currentStep} (Đã highlight) 🎯`);
             } else {
-                alert(`Tìm thấy CurrentStep: ${currentStep}, nhưng bước này chưa được vẽ trên sơ đồ hiện tại! ⚠️`);
+                // alert(`Tìm thấy CurrentStep: ${currentStep}, nhưng bước này chưa được vẽ trên sơ đồ hiện tại! ⚠️`);
             }
 
         } catch (err) {
@@ -2053,144 +2047,7 @@ function Flow({ id: propId , guid: propGuid}) {
     ]);
 
     return (
-        <div className="flow-shell">
-            <div className="flow-layout">
-                <aside className="flow-sidebar">
-                    {/* <div className="flow-sidebar-card">
-                        <h3>Workflow settings</h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
-                            <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.85rem', color: '#475569' }}>
-                                <span>Workflow ID</span>
-                                <input
-                                    type="text"
-                                    placeholder="Workflow id"
-                                    value={workflowId}
-                                    onChange={(event) => setWorkflowId(event.target.value)}
-                                    style={{ padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
-                                />
-                            </label>
-                            <button
-                                type="button"
-                                className="flow-action-btn"
-                                onClick={() => loadWorkflow()}
-                                disabled={loading}
-                                style={{ margin: 0 }}
-                            >
-                                {loading ? 'Loading…' : 'Load workflow'}
-                            </button>
-                            <button
-                                type="button"
-                                className="flow-action-btn"
-                                onClick={saveWorkflow}
-                                disabled={loading || !workflowId}
-                                style={{ background: '#10b981', color: 'white', margin: 0 }}
-                            >
-                                Lưu sơ đồ (Save Layout)
-                            </button>
-                            <button
-                                type="button"
-                                className="flow-action-btn"
-                                onClick={buildWorkflow}
-                                disabled={loading || !workflowId}
-                                style={{ background: '#0284c7', color: 'white', margin: 0 }}
-                            >
-                                Build Workflow (API)
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="flow-sidebar-card" style={{ borderLeft: '4px solid #f59e0b', background: '#fffbeb' }}>
-                        <h3>Tra cứu Instance</h3>
-                        <p style={{ fontSize: '0.78rem', color: '#64748b', margin: '4px 0 8px 0' }}>Nhập Record GUID để định vị bước hiện tại của hồ sơ trên sơ đồ.</p>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <input
-                                type="text"
-                                placeholder="Nhập Record GUID..."
-                                value={searchRecordGuid}
-                                onChange={(event) => setSearchRecordGuid(event.target.value)}
-                                style={{ padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.82rem' }}
-                            />
-                            <div style={{ display: 'flex', gap: '6px' }}>
-                                <button
-                                    type="button"
-                                    className="flow-action-btn"
-                                    onClick={traceInstanceWorkflow}
-                                    disabled={loading || !searchRecordGuid}
-                                    style={{ background: '#f59e0b', color: 'white', margin: 0, flex: 1 }}
-                                >
-                                    Kiểm tra (Trace)
-                                </button>
-                                {tracedStep && (
-                                    <button
-                                        type="button"
-                                        className="flow-action-btn secondary"
-                                        onClick={() => setTracedStep(null)}
-                                        style={{ margin: 0, padding: '4px 8px' }}
-                                    >
-                                        Xóa Trace
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {lanesList.length > 0 && (
-                        <div className="flow-sidebar-card">
-                            <h3>Nodes đề cử (Lanes)</h3>
-                            <p>Drag a lane department onto the canvas to add it as a new step.</p>
-                            <div className="flow-palette-list">
-                                {lanesList.map((lane) => (
-                                    <div
-                                        key={lane.id}
-                                        className="flow-palette-item"
-                                        style={{ borderLeft: '4px solid #10b981', background: '#f0fdf4' }}
-                                        draggable
-                                        onDragStart={(event) => {
-                                            event.dataTransfer.setData('application/reactflow-lane', JSON.stringify(lane));
-                                            event.dataTransfer.effectAllowed = 'move';
-                                        }}
-                                    >
-                                        <strong>{lane.label || lane.id}</strong>
-                                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Phân làn quy trình</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="flow-sidebar-card">
-                        <h3>Node palette</h3>
-                        <p>Drag a node to the canvas to build workflow steps.</p>
-                        <div className="flow-palette-list">
-                            {nodeTemplates.map((template) => (
-                                <div
-                                    key={template.type}
-                                    className="flow-palette-item"
-                                    draggable
-                                    onDragStart={(event) => {
-                                        event.dataTransfer.setData('application/reactflow', template.type);
-                                        event.dataTransfer.effectAllowed = 'move';
-                                    }}
-                                >
-                                    <strong>{template.label}</strong>
-                                    <span>{template.subtitle}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="flow-sidebar-card">
-                        <h3>Quick actions</h3>
-                        <button type="button" className="flow-action-btn" onClick={() => setNodes((currentNodes) => layoutNodes(currentNodes, edges, true))}>
-                            Auto layout
-                        </button>
-                        <button type="button" className="flow-action-btn secondary" onClick={addNode}>
-                            Add node
-                        </button>
-                    </div> */}
-                </aside>
-
-                <div className="flow-canvas-panel">
+       <div className="flow-canvas-panel">
                     <ReactFlow
                         className="workflow-canvas"
                         nodes={nodes}
@@ -2237,94 +2094,12 @@ function Flow({ id: propId , guid: propGuid}) {
                         fitView
                     >
 
-
-                        <Panel position="top-right" className="info-panel">
-                            <strong>
-                                {selectedNode
-                                    ? `Selected node: ${selectedNode.data.label || selectedNode.id}`
-                                    : selectedEdge
-                                        ? 'Selected transition'
-                                        : 'Select a node or transition'}
-                            </strong>
-                        </Panel>
-
                         <MiniMap />
                         <Controls />
                         <Background gap={16} size={1} />
                     </ReactFlow>
                 </div>
 
-                <aside className="flow-properties-panel">
-                    {/* <div className="flow-properties-scroll-container">
-                        {error && <div className="flow-error">{error}</div>}
-                        {nodeDetails}
-                        {edgeDetails}
-                        {!selectedNode && !selectedEdge && (
-                            <div className="flow-empty-state">
-                                <h3>Configure workflow</h3>
-                                <p>Select a node or connect two nodes to edit transition attributes such as action name, step no and condition JSON.</p>
-                            </div>
-                        )}
-                    </div> */}
-                </aside>
-            </div>
-
-            {/* Stats Summary List */}
-            {/* <div className="flow-stats-container">
-                <div className="flow-stats-tabs">
-                    <button
-                        type="button"
-                        className={`flow-stats-tab-btn ${activeStatsTab === 'nodes' ? 'active' : ''}`}
-                        onClick={() => setActiveStatsTab('nodes')}
-                    >
-                        Flat Node List ({nodes.length})
-                    </button>
-                    <button
-                        type="button"
-                        className={`flow-stats-tab-btn ${activeStatsTab === 'transitions' ? 'active' : ''}`}
-                        onClick={() => setActiveStatsTab('transitions')}
-                    >
-                        Transition List ({edges.length})
-                    </button>
-                </div>
-
-                <div style={{ height: '350px', background: '#fff', borderRadius: '12px', overflow: 'hidden' }}>
-                    {activeStatsTab === 'nodes' ? (
-                        <CustomGrid
-                            key="nodes-grid"
-                            columns={nodeColumns}
-                            rows={flatNodes}
-                            showSelectionCheckbox={false}
-                            showCommandsColumn={false}
-                            allowRowReordering={false}
-                            onRowClick={(row) => {
-                                const foundNode = nodes.find(n => n.id === row.id);
-                                if (foundNode) {
-                                    setSelectedNode(foundNode);
-                                    setSelectedEdge(null);
-                                }
-                            }}
-                        />
-                    ) : (
-                        <CustomGrid
-                            key="edges-grid"
-                            columns={transitionColumns}
-                            rows={flatTransitions}
-                            showSelectionCheckbox={false}
-                            showCommandsColumn={false}
-                            allowRowReordering={false}
-                            onRowClick={(row) => {
-                                const foundEdge = edges.find(e => e.id === row.id);
-                                if (foundEdge) {
-                                    setSelectedEdge(foundEdge);
-                                    setSelectedNode(null);
-                                }
-                            }}
-                        />
-                    )}
-                </div>
-            </div> */}
-        </div>
     );
 }
 

@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && node move-to-wwwroot.js",
-    "preview": "vite preview"
+    "preview": "vite preview",
+     "build:lib": "vite build --config vite.config.lib.js"
   },
   "dependencies": {
     "@xyflow/react": "^12.3.3",
