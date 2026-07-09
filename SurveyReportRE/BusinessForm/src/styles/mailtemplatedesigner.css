@@ -1,0 +1,532 @@
+/* =========================
+   GLOBAL
+========================= */
+
+html,
+body,
+#root {
+
+    margin:0;
+    width:100%;
+    height:100%;
+
+    overflow:hidden;
+
+    font-family:
+    Inter,
+    Segoe UI,
+    Arial,
+    sans-serif;
+
+}
+
+
+.mail-template-designer{
+
+    width:100%;
+    height:100vh;
+
+    background:#f5f7fb;
+
+}
+
+ .mail-content {
+
+            width:700px;
+
+            min-height:400px;
+
+            margin:auto;
+
+            padding:40px;
+
+            background:white;
+
+            border-radius:12px;
+
+            box-shadow:
+            0 5px 20px #ddd;
+
+        }
+
+
+
+        .tmiv-field {
+
+            background:#e8f3ff;
+
+            border:1px dashed #1677ff;
+
+            padding:3px 8px;
+
+            border-radius:5px;
+
+            color:#1677ff;
+
+        }
+
+
+
+/* =========================
+   MAIN LAYOUT
+========================= */
+
+
+.designer-container{
+
+    display:flex;
+
+    width:100%;
+
+    height:100vh;
+
+}
+
+
+
+/* =========================
+   LEFT FIELD PANEL
+========================= */
+
+
+.field-panel{
+
+
+    width:250px;
+
+    min-width:250px;
+
+
+    background:#fff;
+
+
+    border-right:1px solid #e5e7eb;
+
+
+    display:flex;
+
+    flex-direction:column;
+
+
+}
+
+
+
+
+.panel-header{
+
+
+    height:52px;
+
+
+    display:flex;
+
+    align-items:center;
+
+
+    padding:0 18px;
+
+
+    font-size:15px;
+
+    font-weight:600;
+
+
+    border-bottom:1px solid #eee;
+
+
+}
+
+
+
+
+
+.fields-list{
+
+
+    flex:1;
+
+
+    padding:14px;
+
+
+    overflow:auto;
+
+
+}
+
+
+
+
+
+.field-item{
+
+
+    height:38px;
+
+
+    display:flex;
+
+    align-items:center;
+
+
+    padding:0 12px;
+
+
+    margin-bottom:10px;
+
+
+    background:#f9fafb;
+
+
+    border:1px solid #e5e7eb;
+
+
+    border-radius:8px;
+
+
+    color:#374151;
+
+
+    font-size:14px;
+
+
+    cursor:grab;
+
+
+    transition:.2s;
+
+
+}
+
+
+
+
+.field-item:hover{
+
+
+    background:#eff6ff;
+
+
+    border-color:#93c5fd;
+
+
+}
+
+
+
+
+.panel-actions{
+
+
+    padding:14px;
+
+
+    border-top:1px solid #eee;
+
+
+}
+
+
+
+
+
+.btn{
+
+
+    height:36px;
+
+
+    width:100%;
+
+
+    border:0;
+
+
+    border-radius:8px;
+
+
+    margin-bottom:8px;
+
+
+    cursor:pointer;
+
+
+    font-weight:500;
+
+
+    color:white;
+
+
+}
+
+
+
+.primary{
+
+    background:#2563eb;
+
+}
+
+
+.secondary{
+
+    background:#64748b;
+
+}
+
+
+.danger{
+
+    background:#ef4444;
+
+}
+
+
+
+
+
+
+
+/* =========================
+   CENTER EDITOR
+========================= */
+
+
+.editor-wrapper{
+
+
+    flex:1;
+
+
+    height:100vh;
+
+
+    display:flex;
+
+
+    min-width:0;
+
+
+}
+
+
+
+
+.grapesjs-container{
+
+
+    flex:1;
+
+
+    height:100%;
+
+
+    min-width:0;
+
+
+}
+
+
+
+
+
+
+
+
+/* =========================
+   RIGHT TOOL PANEL
+========================= */
+
+
+
+.tool-panel{
+
+
+    width:230px;
+
+    min-width:230px;
+
+
+    background:#fff;
+
+
+    border-left:1px solid #e5e7eb;
+
+
+    display:flex;
+
+    flex-direction:column;
+
+
+}
+
+
+
+
+
+.tool-title{
+
+
+    height:52px;
+
+
+    display:flex;
+
+
+    align-items:center;
+
+
+    padding:0 16px;
+
+
+    font-size:15px;
+
+
+    font-weight:600;
+
+
+    border-bottom:1px solid #eee;
+
+
+}
+
+/* PANEL BACKGROUND */
+#gjs-blocks {
+    flex: 1;
+    overflow: auto;
+    padding: 16px;
+    background: #2f2f2f; /* nền tối mềm hơn */
+}
+
+/* GRID */
+#gjs-blocks .gjs-blocks-c {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+/* BLOCK CARD */
+#gjs-blocks .gjs-block {
+    width: auto !important;
+    min-height: 60px !important;
+    flex-wrap: wrap;
+    background: #ffffff !important;
+    border: 1px solid transparent !important;
+    border-radius: 14px !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+
+    cursor: grab;
+
+    /* shadow mềm hơn */
+    box-shadow: 
+        0 4px 12px rgba(0,0,0,0.08);
+
+    transition: all 0.2s ease;
+}
+
+/* HOVER */
+#gjs-blocks .gjs-block:hover {
+    border-color: #3b82f6 !important;
+    box-shadow: 
+        0 6px 18px rgba(59,130,246,0.25);
+    transform: translateY(-3px) scale(1.02);
+}
+
+/* CLICK (drag feel) */
+#gjs-blocks .gjs-block:active {
+    cursor: grabbing;
+    transform: scale(0.98);
+}
+
+
+/* LABEL TEXT */
+.gjs-block-label {
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    color: #374151 !important;
+    text-align: center;
+    flex-wrap: wrap;
+     white-space: normal !important;   /* cho phép xuống dòng */
+    word-break: break-word;           /* bẻ từ dài */
+    overflow-wrap: break-word;        /* chuẩn mới */
+
+    
+}
+
+/* SECTION TITLE (Basic, Fields) */
+.gjs-title {
+    color: #d1d5db !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    padding: 6px 2px;
+}
+
+/* SCROLL BAR đẹp hơn */
+#gjs-blocks::-webkit-scrollbar {
+    width: 6px;
+}
+#gjs-blocks::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+#gjs-blocks::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
+
+/* HIDE BADGE */
+.gjs-badge {
+    display: none !important;
+}
+
+
+.field-panel {
+    width: 250px;
+    background: #fff;
+    border-right: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
+}
+
+.panel-header {
+    font-weight: bold;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.fields-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.field-item {
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 6px;
+}
+
+.field-item:hover {
+    background: #f0f5ff;
+}
+
+.sql-box {
+    padding: 10px;
+    border-top: 1px solid #eee;
+}
+
+.sql-input {
+    width: 100%;
+    min-height: 120px;
+    font-family: monospace;
+    font-size: 13px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    min-height: 200px;
+}
