@@ -106,20 +106,25 @@
                 var acceptButtonId = `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
                 var rejectButtonId = `RJ_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
 
+                var formItems = data.component.option("formData") || {};
+                var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
+                var hasAccepted = tatObject && tatObject[`@dept`]?.AcceptDate;
+
                 // Render Accept Button
                 $(`<div id='${acceptButtonId}' style='display: inline-block;'>`).dxButton({
                     text: "Accept",
                     icon: "check",
                     type: "success",
+                    disabled: !!hasAccepted,
                     onClick: function (e) {
-                        var formItems = $(`#@PIViewIdHelper.Form(dept, policyIssuanceId)`).dxForm("instance")?.option("formData") || {};
-                        var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
-                        tatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
-                        formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+                        var currentFormItems = data.component.option("formData") || {};
+                        var currentTatObject = tryParseJSON(currentFormItems.turnAroundTimeAttributes, "TAT Button Problem");
+                        currentTatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
+                        currentFormItems.turnAroundTimeAttributes = JSON.stringify(currentTatObject);
                         var passingObject = new Object();
                         passingObject.statusName = "@dept Process"; // base on Dept
-                        passingObject.Comment = `PolicyIssuance ${formItems.quotationCode} accepted by ${_displayName}!`;  // base on Dept
-                        passingObject.formItems = formItems;
+                        passingObject.Comment = `PolicyIssuance ${currentFormItems.quotationCode} accepted by ${_displayName}!`;  // base on Dept
+                        passingObject.formItems = currentFormItems;
                         passingObject.dept = `@dept`;
                         passingObject.url = '/api/PolicyIssuance/UpdateData';
                         passingObject.urlLog = `/api/PolicyIssuance/LogAction`;
@@ -133,15 +138,16 @@
                     text: "Reject",
                     icon: "close",
                     type: "danger",
+                    disabled: !hasAccepted,
                     onClick: function (e) {
-                        var formItems = $(`#@PIViewIdHelper.Form(dept, policyIssuanceId)`).dxForm("instance")?.option("formData") || {};
-                        var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
-                        tatObject[`@dept`].AcceptDate = "";
-                        formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+                        var currentFormItems = data.component.option("formData") || {};
+                        var currentTatObject = tryParseJSON(currentFormItems.turnAroundTimeAttributes, "TAT Button Problem");
+                        currentTatObject[`@dept`].AcceptDate = "";
+                        currentFormItems.turnAroundTimeAttributes = JSON.stringify(currentTatObject);
                         var passingObject = new Object();
                         passingObject.statusName = "@dept Pending"; // base on Dept
-                        passingObject.Comment = `PolicyIssuance ${formItems.quotationCode} rejected by ${_displayName}!`;  // base on Dept
-                        passingObject.formItems = formItems;
+                        passingObject.Comment = `PolicyIssuance ${currentFormItems.quotationCode} rejected by ${_displayName}!`;  // base on Dept
+                        passingObject.formItems = currentFormItems;
                         passingObject.dept = `@dept`;
                         passingObject.url = '/api/PolicyIssuance/UpdateData';
                         passingObject.urlLog = `/api/PolicyIssuance/LogAction`;
@@ -149,19 +155,6 @@
                         rejectDecision(passingObject);
                     }
                 }).appendTo(itemElement);
-
-                // Initialize the button states (disable/enable based on AcceptDate status)
-                setTimeout(() => {
-                    var formItems = $(`#@PIViewIdHelper.Form(dept, policyIssuanceId)`).dxForm("instance")?.option("formData") || {};
-                    var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
-                    if (tatObject && tatObject[`@dept`]?.AcceptDate) {
-                        $(`#${acceptButtonId}`).dxButton("instance").option("disabled", true);
-                        $(`#${rejectButtonId}`).dxButton("instance").option("disabled", false);
-                    } else {
-                        $(`#${acceptButtonId}`).dxButton("instance").option("disabled", false);
-                        $(`#${rejectButtonId}`).dxButton("instance").option("disabled", true);
-                    }
-                }, _delayRenderDecisionButton);
             }
         }]},
             { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefaultPi(that,that2,that3) },

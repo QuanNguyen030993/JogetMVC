@@ -2390,8 +2390,9 @@
                                     });
                                         ajaxGet(`/api/Quotation/AssignTask/${this.dataForm.id}/${item}/${_loginUser}`,null )
                                     .then(list => {
-
-
+                                        if (typeof window.reloadQuotationComponents === "function") {
+                                             window.reloadQuotationComponents();
+                                         }
                                     });
                             }
                         });
@@ -2460,11 +2461,11 @@
                                         // DevExpress.ui.notify(`Assigned To ${itemChild.fullName}`, "success", 2000);
                                     });
                                 ajaxGet(`/api/PolicyIssuance/AssignTask/${this.dataForm.id}/${item}/${_loginUser}`, null)
-                                    .then(list => {
-
-
+                                    .then(() => {
+                                        if (typeof window.reloadPolicyIssuanceComponents === "function") {
+                                            window.reloadPolicyIssuanceComponents();
+                                        }
                                     });
-
                             }
                         });
                     }, timeout);
