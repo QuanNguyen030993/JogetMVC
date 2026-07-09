@@ -371,14 +371,6 @@
         const li = $(`
                     <li id="${code}_li_tab" class="expand-ltr">
                         <div id="${code}_tab" style="display: flex;float: left;"><a href="#${code}" style="padding: 7px;">${tabTitle}</a>
-                        <div id="${code}_progressBar" style="position: relative; display: inline-block;padding: 5px;">
-                        </div>
-                        <div id="${code}_progressSuccessIcon" style="display: none;margin-left: -22px;margin-top: 6px;padding-right: 10px;">
-                             <i class="fa fa-check-circle" aria-hidden="true"></i>
-                        </div>
-                        <div id="${code}_progressErrorIcon" style="display: none;margin-left: -22px;margin-top: 6px;padding-right: 10px;">
-                             <i class="fa fa-times-circle" aria-hidden="true"></i>
-                        </div>
                         <span id="${code}_closeTab" class='${tabFormatButtonClass}' data-code="${code}_closeTab"></span><div>
                     </li>
                 `);//.attr("aria-controls", code);
@@ -1339,7 +1331,7 @@
     }
 
     #tablist > ul > li.ui-tabs-active .close-tab-btn {
-        color: rgba(255, 255, 255, 0.7) !important;
+        color: #2563eb !important;
     }
 
     #tablist > ul > li.ui-tabs-active .close-tab-btn:hover {

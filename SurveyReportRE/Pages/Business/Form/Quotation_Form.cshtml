@@ -166,15 +166,15 @@ Note:
                             state.nextStep.flowSteps = data;
                             state.nextStep.currentStep = instance?.currentStep ?? 0;
                             // setNextStep(state.nextStep);
-                            $.each(qtDeptModuleCode, function (itemIndex, item) {
+                            // $.each(qtDeptModuleCode, function (itemIndex, item) {
                                     setTimeout(() => {
-                                        debugger
-                                        var findRoute = data.find(f => !f.actionCode.includes("BACK_") && f.fromNodeId == item && f.fNodeId == state.nextStep.currentStep);
-                                        var findRouteReturn = data.find(f => f.actionCode.includes("BACK_") && f.fromNodeId == item && f.fNodeId == state.nextStep.currentStep);
-                                        var returnButtonId = window.QuotationIdManager.btnReturnBranch(item,@ViewData["Id"]);
-                                        var submitButtonId = window.QuotationIdManager.btnSubmitBranch(item,@ViewData["Id"]);
-                                        var remarkBoxId = window.QuotationIdManager.remarkBox(item,@ViewData["Id"]);
-                                        var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
+                                        var findRoute = data.find(f => !f.actionCode.includes("BACK_") && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
+                                         var findRoutes = data.filter(f => !f.actionCode.includes("BACK_") && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
+                                        var findRouteReturn = data.find(f => f.actionCode.includes("BACK_") && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
+                                        var returnButtonId = window.QuotationIdManager.btnReturnBranch(stageDept,@ViewData["Id"]);
+                                        var submitButtonId = window.QuotationIdManager.btnSubmitBranch(stageDept,@ViewData["Id"]);
+                                        // var remarkBoxId = window.QuotationIdManager.remarkBox(stageDept,@ViewData["Id"]);
+                                        var formId = window.QuotationIdManager.form(stageDept,@ViewData["Id"]);
                                         var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                                          var tatObject = new Object();
 
@@ -186,9 +186,7 @@ Note:
                                              disabled: false,
                                             text: findRouteReturn ? findRouteReturn.displayStatus : "", icon: "undo", type: "danger", onClick:
                                                 function (e) {
-                                                // var content = remarkBoxs[item].controlRemark.instance.option("value");
-                                                 // var content = $(remarkBoxs[item].controlRemark[0]).htmleditor("option","value");
-                                                    var content = remarkBoxs[item].controlRemark.value();
+                                                    var content = remarkBoxs[stageDept].controlRemark.value();
                                                     formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                                                     formItems.comment = content || "";
                                                     returnToStep(`${formModuleKeyQt}`, state.nextStep, findRouteReturn, formItems);
@@ -203,12 +201,10 @@ Note:
                                          {
                                               if (findRoute)
                                             $(`#${submitButtonId}`).dxButton({
-                                               disabled: tatObject[item].AcceptDate ? false : true,
+                                               disabled: tatObject[stageDept].AcceptDate ? false : true,
                                             text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
                                                 function (e) {
-                                                // var content = remarkBoxs[item].controlRemark.instance.option("value");
-                                                // var content = $(remarkBoxs[item].controlRemark[0]).htmleditor("option","value");
-                                                    var content = remarkBoxs[item].controlRemark.value();
+                                                    var content = remarkBoxs[stageDept].controlRemark.value();
                                                     formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                                                     formItems.comment = content || "";
                                                     submitNextStep(`${formModuleKeyQt}`, state.nextStep, findRoute, formItems);
@@ -221,7 +217,7 @@ Note:
                                        }
                                       
                                    }, _delayRenderSubmitButton);
-                            });
+                            // });
                         });
                 });
         }
@@ -904,25 +900,25 @@ Note:
 
                 var toggleHideWorkflow = false;
 
-                // $(`#${window.QuotationIdManager.panelHoverInFlow(@ViewData["Id"])}`).dxButton({
-                //     text: "Workflow",
-                //     readOnly: true,
-                //     type: "normal",
-                //     stylingMode: "contained",
-                //     onClick: () => {
-                //         if (!toggleHideWorkflow) {
-                //             $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).empty();
-                //             $(`#${window.QuotationIdManager.flowHistoryPanel(@ViewData["Id"])}`).show();
-                //             $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).show();
-                //             toggleHideWorkflow = true;
-                //                 reloadWorkflow("@(ViewData["Guid"])", @(ViewData["Id"]), stageDept, formModuleKeyQt);
-                //         } else {
-                //             $(`#${window.QuotationIdManager.flowHistoryPanel(@ViewData["Id"])}`).hide();
-                //             $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).hide();
-                //             toggleHideWorkflow = false;
-                //         }
-                //     }
-                // });
+                $(`#${window.QuotationIdManager.panelHoverInFlow(@ViewData["Id"])}`).dxButton({
+                    text: "Workflow",
+                    readOnly: true,
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                        if (!toggleHideWorkflow) {
+                            $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).empty();
+                            $(`#${window.QuotationIdManager.flowHistoryPanel(@ViewData["Id"])}`).show();
+                            $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).show();
+                            toggleHideWorkflow = true;
+                                reloadWorkflow("@(ViewData["Guid"])", @(ViewData["Id"]), stageDept, formModuleKeyQt);
+                        } else {
+                            $(`#${window.QuotationIdManager.flowHistoryPanel(@ViewData["Id"])}`).hide();
+                            $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).hide();
+                            toggleHideWorkflow = false;
+                        }
+                    }
+                });
 
                 $("#btnCloseRightComment").off("click").on("click", function () {
                     clearContent();

@@ -11,12 +11,13 @@ public class DrawCanvas_FormModel : PageModel
     private static int Id { get; set; }
     private static int FKId { get; set; }
     private static string JsonConfig { get; set; } = "";
+    private static string RecordGuid { get; set; } = "";
 
     public DrawCanvas_FormModel(ILogger<DrawCanvas_FormModel> logger)
     {
         //_logger = logger;
     }
-    public void OnGet(int? pageNum)
+    public void OnGet(int? pageNum,string recordGuid)
     {
         if (pageNum != 0)
         {
@@ -25,5 +26,6 @@ public class DrawCanvas_FormModel : PageModel
         ModelName = nameof(WorkflowDefinition);
         SchemeModelName = nameof(WorkflowDefinition);
         ViewData[nameof(Id)] = pageNum ?? 0;
+        ViewData[nameof(RecordGuid)] = recordGuid ?? "";
     }
 }

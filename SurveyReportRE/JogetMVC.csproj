@@ -10,9 +10,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="cert\BusinessForm\node_modules\**" />
 	  <Compile Remove="TMIVCom\**" />
+	  <Content Remove="cert\BusinessForm\node_modules\**" />
 	  <Content Remove="TMIVCom\**" />
+	  <EmbeddedResource Remove="cert\BusinessForm\node_modules\**" />
 	  <EmbeddedResource Remove="TMIVCom\**" />
+	  <None Remove="cert\BusinessForm\node_modules\**" />
 	  <None Remove="TMIVCom\**" />
 	</ItemGroup>
 

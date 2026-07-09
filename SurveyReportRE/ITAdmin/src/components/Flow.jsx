@@ -270,7 +270,6 @@ const createNodeStyle = (node = {}) => {
             borderRadius: '50px',
             color: '#991b1b',
             fontWeight: '600',
-            padding: '10px 20px',
         };
     }
     if (styleColor === 'green' || type === 'start' || flowType === 'start' || name === 'start') {
@@ -280,7 +279,6 @@ const createNodeStyle = (node = {}) => {
             borderRadius: '50px',
             color: '#065f46',
             fontWeight: '600',
-            padding: '10px 20px',
         };
     }
     if (styleColor === 'orange' || type === 'decision') {
@@ -289,7 +287,6 @@ const createNodeStyle = (node = {}) => {
             border: '1px solid #f97316',
             borderRadius: '14px',
             color: '#c2410c',
-            padding: '10px',
         };
     }
     if (styleColor === 'lightorange') {
@@ -298,7 +295,6 @@ const createNodeStyle = (node = {}) => {
             border: '1px solid #f59e0b',
             borderRadius: '14px',
             color: '#b45309',
-            padding: '10px',
         };
     }
     if (styleColor === 'blue' || type === 'department') {
@@ -307,7 +303,6 @@ const createNodeStyle = (node = {}) => {
             border: '1px solid #0284c7',
             borderRadius: '14px',
             color: '#0369a1',
-            padding: '10px',
         };
     }
     if (type === 'review') {
@@ -316,7 +311,6 @@ const createNodeStyle = (node = {}) => {
             border: '1px solid #8b5cf6',
             borderRadius: '14px',
             color: '#6b21a8',
-            padding: '10px',
         };
     }
     return {
@@ -324,7 +318,6 @@ const createNodeStyle = (node = {}) => {
         border: '1px solid #cbd5e1',
         borderRadius: '14px',
         color: '#1e293b',
-        padding: '10px',
     };
 };
 

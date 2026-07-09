@@ -61,7 +61,7 @@ public class QuotationWorkflowHistoryController : BaseControllerApi<QuotationWor
         path = _BaseRepository._baseConfiguration.GetSection("BlobStorage:Path");
         MAPPING_PATH = _BaseRepository._baseConfiguration.GetSection("MigrationConfig:MappingField").Value;
         BLOB_PATH = path.Value;
-        CURRENT_USER = _httpContextAccessor.HttpContext.User.Identity.Name.Replace(DOMAIN_NAME, "");
+        CURRENT_USER = _httpContextAccessor.HttpContext.User.Identity.Name?.Replace(DOMAIN_NAME, "") ?? "anonymous";
         spUserName = configuration.GetSection("SharePoint:Username").Value;
         spPassword = configuration.GetSection("SharePoint:Password").Value;
         _blobStorageSettings = blobStorageSettings;

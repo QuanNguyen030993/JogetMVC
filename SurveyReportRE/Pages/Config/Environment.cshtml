@@ -62,187 +62,167 @@
                   });
         }})
     });
-    // TMIVCom.DateBox("#birthDate"); Test
-    // TMIVCom.DateBox(
-    //     "#birthDate",
-    //     {
-    //         value: "2026-06-28",
 
-    //         onChange: function (v) {
-    //             console.log("date=", v);
+    // $("#birthDate").datebox(
+    //             {
+    //                 value: "2026-06-28",
+
+    //                 onChange: function (v) {
+    //                     console.log("date=", v);
+    //                 }
+    //             }
+    // );
+    // $("#remarkEditor").htmleditor(
+    //     {
+
+    //         value:
+    //             "<p>Hello</p>",
+
+
+    //         onChange: function (html) {
+
+    //             console.log($("#remarkEditor").htmleditor("option", "value"));
     //         }
+
     //     }
     // );
-    // TMIVCom.HtmlEditor("#remarkEditor", {
+    
+    // $("#remarkEditor").htmleditor("option", "value", "<p>Hello</p>");
 
-    //     value:
-    //         "<p>Hello</p>",
+    // var comments = [
+    //     {
+    //         id: 1,
+    //         author: 'Alice',
+    //         role: 'Reviewer',
+    //         text: 'Please confirm phase 2 before moving forward.',
+    //         time: '10:15',
+    //     },
+    //     {
+    //         id: 2,
+    //         author: 'Bob',
+    //         role: 'Owner',
+    //         text: 'Looks good. I will update the summary soon.',
+    //         time: '10:28',
+    //     },
+    // ];
 
-
-    //     onChange: function (html) {
-
-    //         console.log(html);
-
+    // $("#commentBox").commenteditor({
+    //     items: comments,
+    //     showComposer: true,
+    //     emptyText: "No comments.",
+    //     onSubmit: function (item, allItems) {
+    //         console.log("new comment", item, allItems);
     //     }
-
     // });
 
-    // $("#a").datebox()
-    $("#birthDate").datebox(
-                {
-                    value: "2026-06-28",
 
-                    onChange: function (v) {
-                        console.log("date=", v);
-                    }
-                }
-    );
-    $("#remarkEditor").htmleditor(
-        {
+    //     var surveyDataSource = {
 
-            value:
-                "<p>Hello</p>",
+    //         load: function(){
+    //             return $.getJSON('/api/Survey/GetAll');
+    //         },
+
+    //         update: function(key, values){
+
+    //             var formData = new FormData();
+
+    //             formData.append("key", key);
+    //             formData.append(
+    //                 "values",
+    //                 JSON.stringify(values)
+    //             );
+
+    //             return $.ajax({
+    //                 url:'/api/Survey/UpdateData',
+    //                 type:'PUT',
+    //                 data:formData,
+    //                 processData:false,
+    //                 contentType:false
+    //             });
+    //         }
+    //     };
 
 
-            onChange: function (html) {
+    // var grid = $("#surveyGrid").datagrid( {
 
-                console.log($("#remarkEditor").htmleditor("option", "value"));
-            }
+    //         columns:[
+    //             {
+    //                 field:"id",
+    //                 caption:"ID",
+    //                 width:"90px"
+    //             },
+    //             {
+    //                 field:"name",
+    //                 caption:"Name",
+    //                 width:"1.5fr",
+    //                 editable:true
+    //             },
+    //             {
+    //                 field:"surveyTypeId",
+    //                 caption:"Survey Type",
+    //                 width:"200px",
+    //                 editable:true,
 
-        }
-    );
-    
-    $("#remarkEditor").htmleditor("option", "value", "<p>Hello</p>");
+    //                 lookup:{
+    //                     dataSource:[
+    //                         {
+    //                             id:1,
+    //                             key:"Type A"
+    //                         },
+    //                         {
+    //                             id:2,
+    //                             key:"Type B"
+    //                         }
+    //                     ],
+    //                     valueExpr:"id",
+    //                     displayExpr:"key"
+    //                 }
+    //             },
+    //             {
+    //                 field:"cmdResend",
+    //                 caption:"Resend",
 
-    var comments = [
-        {
-            id: 1,
-            author: 'Alice',
-            role: 'Reviewer',
-            text: 'Please confirm phase 2 before moving forward.',
-            time: '10:15',
-        },
-        {
-            id: 2,
-            author: 'Bob',
-            role: 'Owner',
-            text: 'Looks good. I will update the summary soon.',
-            time: '10:28',
-        },
-    ];
+    //                 actions:[
+    //                     {
+    //                         text:"Resend",
 
-    $("#commentBox").commenteditor({
-        items: comments,
-        showComposer: true,
-        emptyText: "No comments.",
-        onSubmit: function (item, allItems) {
-            console.log("new comment", item, allItems);
-        }
+    //                         onClick:function(row){
+    //                             console.log(row);
+    //                         }
+    //                     }
+    //                 ]
+    //             }
+    //         ],
+
+
+    //         dataSource:surveyDataSource,
+
+
+    //         editMode:"batch",
+
+
+    //         onRowsChange:function(rows){
+
+    //             console.log(
+    //                 "rows changed",
+    //                 rows
+    //             );
+
+    //         },
+
+
+    //         onAddRow:function(){
+
+    //             console.log("add");
+
+    //         }
+
+    //     });
+
+    $("#flow").flow({
+        id: 11,
+        guid: "00cf6f4b-1228-40f6-bd4b-45b1daf996b3"
     });
-
-
-        var surveyDataSource = {
-
-            load: function(){
-                return $.getJSON('/api/Survey/GetAll');
-            },
-
-            update: function(key, values){
-
-                var formData = new FormData();
-
-                formData.append("key", key);
-                formData.append(
-                    "values",
-                    JSON.stringify(values)
-                );
-
-                return $.ajax({
-                    url:'/api/Survey/UpdateData',
-                    type:'PUT',
-                    data:formData,
-                    processData:false,
-                    contentType:false
-                });
-            }
-        };
-
-
-    var grid = $("#surveyGrid").datagrid( {
-
-            columns:[
-                {
-                    field:"id",
-                    caption:"ID",
-                    width:"90px"
-                },
-                {
-                    field:"name",
-                    caption:"Name",
-                    width:"1.5fr",
-                    editable:true
-                },
-                {
-                    field:"surveyTypeId",
-                    caption:"Survey Type",
-                    width:"200px",
-                    editable:true,
-
-                    lookup:{
-                        dataSource:[
-                            {
-                                id:1,
-                                key:"Type A"
-                            },
-                            {
-                                id:2,
-                                key:"Type B"
-                            }
-                        ],
-                        valueExpr:"id",
-                        displayExpr:"key"
-                    }
-                },
-                {
-                    field:"cmdResend",
-                    caption:"Resend",
-
-                    actions:[
-                        {
-                            text:"Resend",
-
-                            onClick:function(row){
-                                console.log(row);
-                            }
-                        }
-                    ]
-                }
-            ],
-
-
-            dataSource:surveyDataSource,
-
-
-            editMode:"batch",
-
-
-            onRowsChange:function(rows){
-
-                console.log(
-                    "rows changed",
-                    rows
-                );
-
-            },
-
-
-            onAddRow:function(){
-
-                console.log("add");
-
-            }
-
-        });
 
 
 
@@ -266,3 +246,4 @@
 <div id="remarkEditor"></div>
 <div id="surveyGrid"></div>
 <div id="commentBox"></div>
+<div id="flow"> </div>

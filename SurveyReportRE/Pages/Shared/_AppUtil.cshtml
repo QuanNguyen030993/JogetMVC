@@ -2625,7 +2625,7 @@
                         {
                             var staticFlow = null;
                     var passingParams = { UITabId: `form_DrawCanvas_Form_${instance.id}`, pageNum: instance.id };
-                        appendElementViewInside(`/Business/Workflow/DrawCanvas_Form/${instance.id}`, passingParams, $(`#${moduleKey}-flowPanel_${selectedId}`), `${moduleKey}-form_DrawCanvas_Form_${instance.id}`, "appendTo");
+                            appendElementViewInside(`/Business/Workflow/DrawCanvas_Form/${instance.id}/${selectedGuid}`, passingParams, $(`#${moduleKey}-flowPanel_${selectedId}`), `${moduleKey}-form_DrawCanvas_Form_${instance.id}`, "appendTo");
                     // const q = `SELECT DeptCode AS 'dept',ActionTime AS 'time',ActionNote AS 'note' FROM QuotationWorkflowHistory WHERE QuotationId = ${selectedId}`;
                     const q = `OnSystem`;
                     $.ajax({
@@ -2695,12 +2695,10 @@
             sendData.Comment = formItems.comment;
             //var formItemsRes = $(`#qt-formRES`).dxForm("instance")?.option("formData") || {};
                 var condition = safeJsonParse(findRoute.data);
-                debugger
                 if (condition){
             if (condition.source == "form") {
                     // const uploader1 = $(`[id^='attList_qt-body_FO_RES_default_${formItems.id}_'] .att-item.animate-step.visible`);
                     // const fileCount1 = uploader1.length || 0; // number of quote docs
-                    debugger
                         var result = extractAttachmentQuantity(`attList_qt-body_FO_RES_default_${formItems.id}_`);
                      formItems.hasResAttachment =  result.fileCount > 0 ? true : false;
                 // formItems = window.QuotationPage.state.formFO.dxForm("instance").option("formData");
@@ -3015,6 +3013,7 @@
             };
         }
 
+
         function loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions,renderTime) {
             var currentOptions = getCurrentFormOptions(editorOptions);
                  if(!editorOptions.isNotLoading)
@@ -3034,7 +3033,7 @@
                             batchSize: 6,
                             delay: 16,
                             onDeleted: function () {
-                                loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions);
+                                loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions, renderTime);
                             }
                         });
                             var uploader = $(`#fileUpload_${sectionName}_${renderTime}`).dxFileUploader("instance")
@@ -3047,7 +3046,7 @@
                 });
           }
           else {
-                   const $preview = $(`#attList_${editorOptions.controlId}`);
+                       const $preview = $(`#attList_${editorOptions.controlId}_${renderTime}`);
                   var data = [];
                       var uploader = $(`#fileUpload_${editorOptions.controlId}`).dxFileUploader("instance");
                   data = uploader.option("value") || [];
@@ -3055,7 +3054,7 @@
                                 batchSize: 6,
                                 delay: 16,
                                 onDeleted: function () {
-                                    //loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions);
+                                     loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions, renderTime);
                                 }
                             });
             }
@@ -3240,6 +3239,7 @@
                         if (!res.ok) throw new Error("Delete failed");
 
                         DevExpress.ui.notify("Deleted", "success", 1200);
+                            // loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions);
                         if (typeof onDeleted === "function") {
                             onDeleted(x);
                         }
