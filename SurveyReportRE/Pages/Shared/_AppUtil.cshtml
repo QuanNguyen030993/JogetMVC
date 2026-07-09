@@ -1611,6 +1611,7 @@
 
             }
             function parseToGMT7(dateInput, minusTimeZone = 0 ) {
+                    console.log(dateInput);
                  //const offsetMinutes = date.getTimezoneOffset();
            const d = new Date(dateInput); // JS auto parse ISO / UTC
            if (isNaN(d)) return null;
@@ -1627,8 +1628,16 @@
             } else if (typeof input === "string") {
                 // normalize: nếu không có timezone → thêm Z để tránh parse lệch
                 const hasTZ = /[zZ]|[+-]\d{2}:\d{2}$/.test(input);
+                if (hasTZ)
+                {
+                    d = parseToGMT7(hasTZ ? input : input + "Z",1 * _gmtZone);//  new Date(hasTZ ? input : input + "Z");
+                }
+                    const hasPlus = /[+-]\d{2}:\d{2}$/.test(input);
+                if (hasPlus)
+                {
+                             d = parseToGMT7(input,hasPlus);//  new Date(hasTZ ? input : input + "Z");
 
-                d = parseToGMT7(hasTZ ? input : input + "Z",-7);//  new Date(hasTZ ? input : input + "Z");
+                }
             } else {
                 return "—";
             }

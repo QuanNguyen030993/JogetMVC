@@ -171,6 +171,7 @@ Note:
                                         var findRoute = data.find(f => !f.actionCode.includes("BACK_") && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
                                          var findRoutes = data.filter(f => !f.actionCode.includes("BACK_") && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
                                         var findRouteReturn = data.find(f => f.actionCode.includes("BACK_") && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
+                                        var findRouteReturns = data.filter(f => f.actionCode.includes("BACK_") && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
                                         var returnButtonId = window.QuotationIdManager.btnReturnBranch(stageDept,@ViewData["Id"]);
                                         var submitButtonId = window.QuotationIdManager.btnSubmitBranch(stageDept,@ViewData["Id"]);
                                         // var remarkBoxId = window.QuotationIdManager.remarkBox(stageDept,@ViewData["Id"]);
@@ -179,43 +180,94 @@ Note:
                                          var tatObject = new Object();
 
                                             tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Button Problem");
-                                         try {
+                                           try {
+                                            if (findRouteReturns?.length && tatObject) {
 
-                                         if (findRouteReturn && tatObject)
-                                         $(`#${returnButtonId}`).dxButton({
-                                             disabled: false,
-                                            text: findRouteReturn ? findRouteReturn.displayStatus : "", icon: "undo", type: "danger", onClick:
-                                                function (e) {
-                                                    var content = remarkBoxs[stageDept].controlRemark.value();
-                                                    formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-                                                    formItems.comment = content || "";
-                                                    returnToStep(`${formModuleKeyQt}`, state.nextStep, findRouteReturn, formItems);
-                                                }
-                                        });
-                                         }
-                                         catch  (exception)
-                                        {
-                                           console.log("Submit problem",exception);
+                                                findRouteReturns.forEach(route => {
+
+                                                    const buttonId =
+                                                        `${returnButtonId}_${route.routeId || route.actionCode}`;
+
+                                                    if (!$(`#${buttonId}`).length) {
+                                                        $(`<div id="${buttonId}"></div>`)
+                                                            .appendTo(`#${returnButtonId}`);
+                                                    }
+
+                                                    $(`#${buttonId}`).dxButton({
+                                                        disabled: false,
+                                                        text: route.displayStatus || "",
+                                                        icon: "undo",
+                                                        type: "danger",
+                                                        onClick: function () {
+                                                            var content = remarkBoxs[stageDept].controlRemark.value();
+
+                                                            formItems =
+                                                                $(`#${formId}`)
+                                                                    .dxForm("instance")
+                                                                    ?.option("formData") || {};
+
+                                                            formItems.comment = content || "";
+
+                                                            returnToStep(
+                                                                `${formModuleKeyQt}`,
+                                                                state.nextStep,
+                                                                route,
+                                                                formItems
+                                                            );
+                                                        }
+                                                    });
+                                                });
+                                            }
                                         }
-                                         try
-                                         {
-                                              if (findRoute)
-                                            $(`#${submitButtonId}`).dxButton({
-                                               disabled: tatObject[stageDept].AcceptDate ? false : true,
-                                            text: findRoute ? findRoute.displayStatus : "", icon: "check", type: "info", onClick:
-                                                function (e) {
-                                                    var content = remarkBoxs[stageDept].controlRemark.value();
-                                                    formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-                                                    formItems.comment = content || "";
-                                                    submitNextStep(`${formModuleKeyQt}`, state.nextStep, findRoute, formItems);
-                                                }
-                                        });
-                                         }
-                                       catch (exception)
-                                       {
-                                          console.log("Submit problem",exception);
-                                       }
-                                      
+                                        catch (exception) {
+                                            console.log("Return problem", exception);
+                                        }
+                                                                                try {
+
+                                            if (findRoutes?.length) {
+
+                                                findRoutes.forEach(route => {
+
+                                                    const buttonId =
+                                                        `${submitButtonId}_${route.routeId || route.actionCode}`;
+
+                                                    if (!$(`#${buttonId}`).length) {
+                                                        $(`<div id="${buttonId}"></div>`)
+                                                            .appendTo(`#${submitButtonId}`);
+                                                    }
+
+                                                    $(`#${buttonId}`).dxButton({
+                                                        disabled: tatObject?.[stageDept]?.AcceptDate ? false : true,
+                                                        text: route.displayStatus || "",
+                                                        icon: "check",
+                                                        type: "info",
+                                                        onClick: function () {
+
+                                                            var content =
+                                                                remarkBoxs[stageDept].controlRemark.value();
+
+                                                            formItems =
+                                                                $(`#${formId}`)
+                                                                    .dxForm("instance")
+                                                                    ?.option("formData") || {};
+
+                                                            formItems.comment = content || "";
+
+                                                            submitNextStep(
+                                                                `${formModuleKeyQt}`,
+                                                                state.nextStep,
+                                                                route,
+                                                                formItems
+                                                            );
+                                                        }
+                                                    });
+
+                                                });
+                                            }
+                                        }
+                                        catch (exception) {
+                                            console.log("Submit problem", exception);
+                                        }
                                    }, _delayRenderSubmitButton);
                             // });
                         });

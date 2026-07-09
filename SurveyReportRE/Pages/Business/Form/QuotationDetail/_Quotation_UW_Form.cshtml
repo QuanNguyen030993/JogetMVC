@@ -100,7 +100,7 @@
                                                      id: noNeedToRefer
                                          },
                                          text: "No Need To Refer",
-                                         icon: "check",
+                                                     icon: "fa-solid fa-person-running",
                                          onClick: function (e) {
                                              var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                                              var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
@@ -126,7 +126,7 @@
                                                              id: declinedButtonId
                                              },
                                              text: "Decline",
-                                             icon: "check",
+                                                 icon: "remove",
                                              onClick: function (e) {
                                                 var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                                                 var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
