@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using ERPCore.Models.Migration.Business.Data;
 using System.Reflection;
 using HtmlAgilityPack;
@@ -1470,7 +1470,7 @@ namespace ERPCore.Common
             if (nonCondition) return (baseQuery, new Dictionary<string, object>());
             if (predicate != null)
             {
-                var (whereClause, parameters) = ExpressionToSqlConverter<T>.ConvertToSqlWhere(predicate);
+                var (whereClause, parameters) = ExpressionToSqlConverterV2<T>.ConvertToSqlWhere(predicate);
 
                 if (!string.IsNullOrEmpty(whereClause))
                 {
@@ -1489,7 +1489,7 @@ namespace ERPCore.Common
         {
             string baseQuery = $"SELECT * FROM [{tableName}] WITH (NOLOCK) WHERE Deleted = 0";
 
-            var (whereClause, parameters) = ExpressionToSqlConverter<T>.ConvertToSqlWhere(predicate);
+            var (whereClause, parameters) = ExpressionToSqlConverterV2<T>.ConvertToSqlWhere(predicate);
 
             if (!string.IsNullOrEmpty(whereClause))
             {

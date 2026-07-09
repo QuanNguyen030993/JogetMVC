@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -218,4 +218,253 @@ public static class ExpressionToSqlConverter<T>
     //        _ => throw new NotSupportedException($"Unsupported value type: {value.GetType()}")
     //    };
     //}
+}
+
+public static class ExpressionToSqlConverterV2<T>
+{
+    public static (string whereClause, Dictionary<string, object> parameters) ConvertToSqlWhere(Expression<Func<T, bool>> expression)
+    {
+        if (expression == null) return ("", new Dictionary<string, object>());
+
+        var parameters = new Dictionary<string, object>();
+        string whereClause = ProcessExpression(expression.Body, parameters);
+
+        return (whereClause, parameters);
+    }
+
+    private static string ProcessExpression(Expression expression, Dictionary<string, object> parameters)
+    {
+        if (expression == null) return "";
+
+        if (expression is UnaryExpression unaryExpression)
+        {
+            if (unaryExpression.NodeType == ExpressionType.Not)
+            {
+                string operand = ProcessExpression(unaryExpression.Operand, parameters);
+                return $"NOT ({operand})";
+            }
+            return ProcessExpression(unaryExpression.Operand, parameters);
+        }
+
+        if (expression is BinaryExpression binaryExpression)
+        {
+            // Coalesce operator (??)
+            if (binaryExpression.NodeType == ExpressionType.Coalesce)
+            {
+                string left = ProcessExpression(binaryExpression.Left, parameters);
+                string right = ProcessExpression(binaryExpression.Right, parameters);
+                return $"ISNULL({left}, {right})";
+            }
+
+            // Null comparison check (== null, != null)
+            bool leftIsNull = IsNullExpression(binaryExpression.Left);
+            bool rightIsNull = IsNullExpression(binaryExpression.Right);
+
+            if (leftIsNull || rightIsNull)
+            {
+                string op = binaryExpression.NodeType == ExpressionType.Equal ? "IS NULL" : "IS NOT NULL";
+                Expression nonNullExpr = leftIsNull ? binaryExpression.Right : binaryExpression.Left;
+                string nonNullSide = ProcessExpression(nonNullExpr, parameters);
+                return $"({nonNullSide} {op})";
+            }
+
+            string leftSide = ProcessExpression(binaryExpression.Left, parameters);
+            string rightSide = ProcessExpression(binaryExpression.Right, parameters);
+            string opSign = GetSqlOperator(binaryExpression.NodeType);
+
+            return $"({leftSide} {opSign} {rightSide})";
+        }
+
+        if (expression is MemberExpression memberExpression)
+        {
+            if (TryGetColumnName(memberExpression, out string colName, out string part))
+            {
+                string colSql = $"[{colName}]";
+                if (part != null)
+                {
+                    switch (part)
+                    {
+                        case "Date": return $"CAST({colSql} AS DATE)";
+                        case "Year": return $"YEAR({colSql})";
+                        case "Month": return $"MONTH({colSql})";
+                        case "Day": return $"DAY({colSql})";
+                        case "Hour": return $"DATEPART(HOUR, {colSql})";
+                        case "Minute": return $"DATEPART(MINUTE, {colSql})";
+                        case "Second": return $"DATEPART(SECOND, {colSql})";
+                    }
+                }
+                return colSql;
+            }
+
+            // Fallback: evaluate other member accesses as constants/variables from the outer scope
+            return FormatValue(GetValueFromExpression(memberExpression), parameters);
+        }
+
+        if (expression is ConstantExpression constantExpression)
+        {
+            if (constantExpression.Value is bool boolVal)
+            {
+                return FormatValue(boolVal ? 1 : 0, parameters);
+            }
+            return FormatValue(constantExpression.Value, parameters);
+        }
+
+        if (expression is MethodCallExpression methodCallExpression)
+        {
+            if (methodCallExpression.Method.Name == "ToString" && methodCallExpression.Object is MemberExpression memberExpr)
+            {
+                if (TryGetColumnName(memberExpr, out string colName, out _))
+                {
+                    return $"CONVERT(NVARCHAR(MAX), [{colName}])";
+                }
+            }
+
+            if (methodCallExpression.Method.Name == "Contains")
+            {
+                string columnSql = "";
+                object value = null;
+
+                // Case 1: x.Name.Contains("abc")
+                if (methodCallExpression.Object is MemberExpression memberExprContains)
+                {
+                    if (TryGetColumnName(memberExprContains, out string colName, out _))
+                    {
+                        columnSql = $"[{colName}]";
+                    }
+                }
+                // Case 2: x.Name.ToString().Contains("abc")
+                else if (methodCallExpression.Object is MethodCallExpression innerMethod
+                         && innerMethod.Method.Name == "ToString"
+                         && innerMethod.Object is MemberExpression innerMember)
+                {
+                    if (TryGetColumnName(innerMember, out string colName, out _))
+                    {
+                        columnSql = $"CONVERT(NVARCHAR(MAX), [{colName}])";
+                    }
+                }
+
+                if (methodCallExpression.Arguments.Count > 0)
+                {
+                    value = GetValueFromExpression(methodCallExpression.Arguments[0]);
+                }
+
+                string paramName = $"@p{parameters.Count}";
+                parameters[paramName] = $"%{value}%";
+
+                return $"{columnSql} LIKE {paramName}";
+            }
+        }
+
+        throw new NotSupportedException($"Unsupported expression type in V2 converter: {expression.GetType()}");
+    }
+
+    private static bool TryGetColumnName(Expression expr, out string columnName, out string dateTimePart)
+    {
+        columnName = null;
+        dateTimePart = null;
+
+        if (expr is MemberExpression memberExpr)
+        {
+            // Case 1: x.Field
+            if (memberExpr.Expression is ParameterExpression)
+            {
+                columnName = memberExpr.Member.Name;
+                return true;
+            }
+
+            // Case 2: x.Field.Value (Nullable<T>)
+            if (memberExpr.Member.Name == "Value" && memberExpr.Expression is MemberExpression inner)
+            {
+                if (inner.Expression is ParameterExpression)
+                {
+                    columnName = inner.Member.Name;
+                    return true;
+                }
+            }
+
+            // Case 3: x.Field.Year or x.Field.Value.Year
+            string tempCol = null;
+            string tempPart = memberExpr.Member.Name;
+            if (TryGetColumnName(memberExpr.Expression, out tempCol, out _))
+            {
+                columnName = tempCol;
+                dateTimePart = tempPart;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static bool IsNullExpression(Expression expression)
+    {
+        if (expression is ConstantExpression constExpr && constExpr.Value == null)
+        {
+            return true;
+        }
+
+        if (expression is MemberExpression memberExpr)
+        {
+            try
+            {
+                var val = GetValueFromExpression(memberExpr);
+                if (val == null) return true;
+            }
+            catch {}
+        }
+
+        return false;
+    }
+
+    private static object GetValueFromExpression(Expression expression)
+    {
+        if (expression == null) return null;
+
+        switch (expression)
+        {
+            case ConstantExpression constExpr:
+                return constExpr.Value;
+
+            case MemberExpression memberExpr:
+                var obj = GetValueFromExpression(memberExpr.Expression);
+                var member = memberExpr.Member;
+                if (member is PropertyInfo propInfo)
+                    return propInfo.GetValue(obj);
+                if (member is FieldInfo fieldInfo)
+                    return fieldInfo.GetValue(obj);
+                break;
+
+            case UnaryExpression unaryExpr:
+                return GetValueFromExpression(unaryExpr.Operand);
+
+            case MethodCallExpression methodCallExpr:
+                var lambda = Expression.Lambda(methodCallExpr);
+                var compiled = lambda.Compile();
+                return compiled.DynamicInvoke();
+        }
+
+        throw new NotSupportedException($"Unsupported expression type for value evaluation: {expression.GetType().Name}");
+    }
+
+    private static string GetSqlOperator(ExpressionType expressionType)
+    {
+        return expressionType switch
+        {
+            ExpressionType.Equal => "=",
+            ExpressionType.NotEqual => "!=",
+            ExpressionType.GreaterThan => ">",
+            ExpressionType.GreaterThanOrEqual => ">=",
+            ExpressionType.LessThan => "<",
+            ExpressionType.LessThanOrEqual => "<=",
+            ExpressionType.AndAlso => "AND",
+            ExpressionType.OrElse => "OR",
+            _ => throw new NotSupportedException($"Unsupported operator: {expressionType}")
+        };
+    }
+
+    private static string FormatValue(object value, Dictionary<string, object> parameters)
+    {
+        string paramName = $"@param{parameters.Count}";
+        parameters[paramName] = value;
+        return paramName;
+    }
 }
