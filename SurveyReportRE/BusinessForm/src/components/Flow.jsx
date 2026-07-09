@@ -591,7 +591,8 @@ const nodeTypes = {
     workflowNode: WorkflowNode,
 };
 
-function Flow({ id: propId }) {
+function Flow({ id: propId , guid: propGuid}) {
+    console.log(propGuid);
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const [selectedNode, setSelectedNode] = useState(null);
@@ -600,8 +601,8 @@ function Flow({ id: propId }) {
     const [workflowGuid, setWorkflowGuid] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [searchRecordGuid, setSearchRecordGuid] = useState('');
-    const [tracedStep, setTracedStep] = useState(null);
+    const [searchRecordGuid, setSearchRecordGuid] = useState(propGuid || "");
+    const [tracedStep, setTracedStep] = useState(propGuid || "");
     const [mailTemplates, setMailTemplates] = useState([]);
     const [notificationsList, setNotificationsList] = useState([]);
     const [reactFlowInstance, setReactFlowInstance] = useState(null);
@@ -1123,6 +1124,7 @@ function Flow({ id: propId }) {
         }
     }, [workflowId, workflowGuid, nodes, edges, layoutConfig]);
 
+   
     const traceInstanceWorkflow = useCallback(async () => {
         if (!searchRecordGuid) {
             alert("Vui lòng nhập Record GUID!");
@@ -1135,7 +1137,7 @@ function Flow({ id: propId }) {
 
         try {
             // Query InstanceWorkflow matching the RecordGuid
-            const response = await fetch(`${API_BASE_URL}/api/InstanceWorkflow/GetAll?refField=RecordGuid&refKey=${searchRecordGuid}`);
+            const response = await fetch(`${API_BASE_URL}/api/InstanceWorkflow/GetAll?refField=RecordGuid&refKey=${propGuid}`);
             if (!response.ok) {
                 throw new Error(`Instance API returned status ${response.status}`);
             }
@@ -1186,11 +1188,11 @@ function Flow({ id: propId }) {
             setLoading(false);
         }
     }, [searchRecordGuid, nodes, setNodes]);
-
     useEffect(() => {
         if (propId) {
             setWorkflowId(propId);
             loadWorkflow(propId);
+            traceInstanceWorkflow(propGuid);
         } else {
             const params = new URLSearchParams(window.location.search);
             const id = params.get('id');
@@ -2054,7 +2056,7 @@ function Flow({ id: propId }) {
         <div className="flow-shell">
             <div className="flow-layout">
                 <aside className="flow-sidebar">
-                    <div className="flow-sidebar-card">
+                    {/* <div className="flow-sidebar-card">
                         <h3>Workflow settings</h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
                             <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.85rem', color: '#475569' }}>
@@ -2185,7 +2187,7 @@ function Flow({ id: propId }) {
                         <button type="button" className="flow-action-btn secondary" onClick={addNode}>
                             Add node
                         </button>
-                    </div>
+                    </div> */}
                 </aside>
 
                 <div className="flow-canvas-panel">
@@ -2253,7 +2255,7 @@ function Flow({ id: propId }) {
                 </div>
 
                 <aside className="flow-properties-panel">
-                    <div className="flow-properties-scroll-container">
+                    {/* <div className="flow-properties-scroll-container">
                         {error && <div className="flow-error">{error}</div>}
                         {nodeDetails}
                         {edgeDetails}
@@ -2263,12 +2265,12 @@ function Flow({ id: propId }) {
                                 <p>Select a node or connect two nodes to edit transition attributes such as action name, step no and condition JSON.</p>
                             </div>
                         )}
-                    </div>
+                    </div> */}
                 </aside>
             </div>
 
             {/* Stats Summary List */}
-            <div className="flow-stats-container">
+            {/* <div className="flow-stats-container">
                 <div className="flow-stats-tabs">
                     <button
                         type="button"
@@ -2321,7 +2323,7 @@ function Flow({ id: propId }) {
                         />
                     )}
                 </div>
-            </div>
+            </div> */}
         </div>
     );
 }

@@ -1,246 +1,38 @@
-import { useState } from 'react';
-import CustomGrid from './components/CustomGrid';
-import HtmlEditor from './components/HtmlEditor';
-import DateBox from './components/DateBox';
-import CommentEditor from './components/CommentEditor';
-import TextBox from './components/TextBox';
-import NumberBox from './components/NumberBox';
-import CheckBox from './components/CheckBox';
-import SelectBox from './components/SelectBox';
-import DropDownBox from './components/DropDownBox';
-import CustomForm from './components/CustomForm';
+import { useCallback, useEffect, useState,useMemo  } from 'react';
+import { API_BASE_URL } from './config';
+
+import ChartPanel from './components/ChartPanel';
+import MailTemplateDesigner from './components/MailTemplateDesigner';
+import MailQueue from './components/MailQueue';
+import Flow from './components/Flow';
+import SerilogViewer from './components/SerilogViewer';
+import SysTable from './components/SysTable';
+import DataGridFieldDesigner from './components/DataGridFieldDesigner';
+import MenuDesigner from './components/MenuDesigner';
+import UserManagement from './components/UserManagement';
+import OverviewPanel from './components/OverviewPanel';
+import EnumDesign from './components/EnumDesign';
+import SlaDesign from './components/SlaDesign';
+import CustomGrid from '../../TMIVCom/src/components/CustomGrid'
+import './styles/flow.css';
 import './styles/com.all.css';
+import './styles/serilogs.css';
+import './styles/systable.css';
+import './styles/datagridfielddesigner.css';
+import './styles/mailtemplatedesigner.css'
+import './styles/mailqueue.css';
+import './styles/menudesigner.css';
+import './styles/sladesigner.css';
+import "./fonts/css/all.min.css";
 
-const departmentEnum = [
-  { id: 1, key: 'HR', value: 'Human Resources' },
-  { id: 2, key: 'DEV', value: 'Development Team' },
-  { id: 3, key: 'QA', value: 'Quality Assurance' }
-];
-
-const projectsTable = [
-  { Id: 101, name: 'Joget Survey Module', client: 'Joget Inc.' },
-  { Id: 102, name: 'SurveyReport MVC API', client: 'TMIV Inc.' },
-  { Id: 103, name: 'DevExpress Migration', client: 'internal' }
-];
-
-const demoFormFields = [
-  { dataField: 'name', caption: 'Full Name', formDataType: 'string', defaultValue: "'John Doe'", validationRules: [{ type: 'required', message: 'Name is required' }] },
-  { dataField: 'age', caption: 'Age', formDataType: 'number', defaultValue: 30, colSpan: 1 },
-  { dataField: 'active', caption: 'Is Active', formDataType: 'boolean', defaultValue: true, colSpan: 1 },
-  { 
-    dataField: 'deptId', 
-    caption: 'Department', 
-    formDataType: 'enum', 
-    defaultValue: 2,
-    lookup: {
-      dataSource: departmentEnum,
-      valueExpr: 'id',
-      displayExpr: 'value'
-    }
-  },
-  {
-    dataField: 'projectId',
-    caption: 'Project Assigned',
-    formDataType: 'table',
-    defaultValue: 101,
-    lookup: {
-      dataSource: projectsTable,
-      valueExpr: 'Id',
-      displayExpr: 'name',
-      columns: ['Id', 'name', 'client']
-    },
-    editorOptions: {
-      dataSource: projectsTable,
-      valueExpr: 'Id',
-      displayExpr: 'name',
-      columns: ['Id', 'name', 'client']
-    }
-  },
-  { dataField: 'bio', caption: 'Biography', formDataType: 'textarea', colSpan: 2, height: '80px' }
-];
-
-const defaultRows = [
-  { id: 1, name: 'Alice', role: 'Developer', age: 28, active: true, deptId: 2, projectId: 101 },
-  { id: 2, name: 'Bob', role: 'Designer', age: 34, active: false, deptId: 1, projectId: 102 },
-  { id: 3, name: 'Charlie', role: 'QA', age: 25, active: true, deptId: 3, projectId: 103 },
-];
-
-const gridColumns = [
-  { dataField: 'id', caption: 'ID', dataType: 'number', visible: false, width: '60px' },
-  { dataField: 'name', caption: 'Name', dataType: 'string' },
-  { dataField: 'role', caption: 'Role', dataType: 'string' },
-  { dataField: 'age', caption: 'Age', dataType: 'number' },
-  { dataField: 'active', caption: 'Active', dataType: 'boolean' },
-  { 
-    dataField: 'deptId', 
-    caption: 'Department (Enum)', 
-    dataType: 'enum',
-    lookup: {
-      dataSource: departmentEnum,
-      valueExpr: 'id',
-      displayExpr: 'value',
-      itemTemplate: (item) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ 
-            display: 'inline-block', 
-            width: '8px', 
-            height: '8px', 
-            borderRadius: '50%', 
-            background: item.key === 'HR' ? '#f43f5e' : item.key === 'DEV' ? '#10b981' : '#3b82f6'
-          }} />
-          <strong>{item.key}</strong> - <span style={{ color: '#64748b' }}>{item.value}</span>
-        </div>
-      )
-    }
-  },
-  {
-    dataField: 'projectId',
-    caption: 'Project (Table)',
-    dataType: 'table',
-    lookup: {
-      dataSource: projectsTable,
-      valueExpr: 'Id',
-      displayExpr: 'name',
-      columns: ['Id', 'name', 'client']
-    },
-    editorOptions: {
-      dataSource: projectsTable,
-      valueExpr: 'Id',
-      displayExpr: 'name',
-      columns: ['Id', 'name', 'client']
-    }
-  }
-];
 
 function App() {
-  const [rows, setRows] = useState(defaultRows);
-  const [editorValue, setEditorValue] = useState('');
-  const [textValue, setTextValue] = useState('Hello World');
-  const [numberValue, setNumberValue] = useState(42);
-  const [checkValue, setCheckValue] = useState(true);
-  const [selectValue, setSelectValue] = useState(2);
-  const [dropValue, setDropValue] = useState(101);
-
-  const addRow = () => {
-    const nextId = rows.length ? Math.max(...rows.map((row) => row.id)) + 1 : 1;
-    setRows([...rows, { id: nextId, name: '', role: '', age: 18, active: false, deptId: 1, projectId: 101 }]);
-  };
-
-  return (
-    <div className="tmivcom-app">
-      <header className="header">
-        <div>
-          <h1>TMIVCom Reusable Controls</h1>
-          <p>Custom React controls for ASP.NET integration: grid and HTML editor.</p>
-        </div>
-      </header>
-
-      <section className="section">
-        <div className="section-title">Custom Grid - DARK Mode (Mockup Style, drag rows, selection, compact)</div>
-        <div style={{ padding: '16px', background: '#1e293b', borderRadius: '8px' }}>
-          <CustomGrid
-            columns={gridColumns}
-            rows={rows}
-            onRowsChange={setRows}
-            onAddRow={addRow}
-            theme="dark"
-            allowRowReordering={true}
-            showSelectionCheckbox={true}
-            showCommandsColumn={true}
-          />
-        </div>
-      </section>
-
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-        <section className="section">
-          <div className="section-title">Text Box</div>
-          <TextBox value={textValue} onChange={setTextValue} placeholder="Type something..." />
-          <p style={{ marginTop: '8px', fontSize: '0.9rem', color: '#64748b' }}>Current Value: "{textValue}"</p>
-        </section>
-
-        <section className="section">
-          <div className="section-title">Number Box</div>
-          <NumberBox value={numberValue} onChange={setNumberValue} placeholder="Enter number..." />
-          <p style={{ marginTop: '8px', fontSize: '0.9rem', color: '#64748b' }}>Current Value: {numberValue}</p>
-        </section>
-
-        <section className="section">
-          <div className="section-title">Check Box</div>
-          <CheckBox value={checkValue} onChange={setCheckValue} text="Enable Developer Mode" />
-          <p style={{ marginTop: '8px', fontSize: '0.9rem', color: '#64748b' }}>Current Status: {checkValue ? 'Checked (True)' : 'Unchecked (False)'}</p>
-        </section>
-
-        <section className="section">
-          <div className="section-title">Select Box (Enum)</div>
-          <SelectBox 
-            value={selectValue} 
-            onChange={setSelectValue} 
-            dataSource={departmentEnum} 
-            valueExpr="id" 
-            displayExpr="value" 
-            itemTemplate={(item) => (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ 
-                  display: 'inline-block', 
-                  width: '8px', 
-                  height: '8px', 
-                  borderRadius: '50%', 
-                  background: item.key === 'HR' ? '#f43f5e' : item.key === 'DEV' ? '#10b981' : '#3b82f6'
-                }} />
-                <strong>{item.key}</strong> - {item.value}
-              </div>
-            )}
-          />
-          <p style={{ marginTop: '8px', fontSize: '0.9rem', color: '#64748b' }}>Selected ID: {selectValue}</p>
-        </section>
-
-        <section className="section">
-          <div className="section-title">Drop Down Box (Table Grid popup)</div>
-          <DropDownBox 
-            value={dropValue} 
-            onChange={setDropValue} 
-            dataSource={projectsTable} 
-            columns={['Id', 'name', 'client']}
-            valueExpr="Id" 
-            displayExpr="name" 
-          />
-          <p style={{ marginTop: '8px', fontSize: '0.9rem', color: '#64748b' }}>Selected ID: {dropValue}</p>
-        </section>
-      </div>
-
-      <section className="section">
-        <div className="section-title">HTML Editor</div>
-        <HtmlEditor value={editorValue} onChange={setEditorValue} />
-      </section>
-
-      <section className="section">
-        <div className="section-title">Date box</div>
-        <DateBox value={editorValue} onChange={setEditorValue} />
-      </section>
-
-      <section className="section">
-        <div className="section-title">Comment Editor</div>
-        <CommentEditor onChange={setEditorValue} />
-      </section>
-
-      <section className="section">
-        <div className="section-title">Custom Form (Dynamic MForm Simulation)</div>
-        <CustomForm
-          id={0}
-          formConfig={{
-            originModelName: "Employee",
-            colCount: 2,
-            labelLocation: "top",
-            allowFormActionButton: true
-          }}
-          columns={demoFormFields}
-          onSaveSuccess={(data) => console.log("Form Saved successfully:", data)}
-          onClose={() => alert("Form closed")}
-        />
-      </section>
-    </div>
-  );
+  const [loginStats,setLoginStats]=useState([]);
+   const [disk,setDisk]=useState(0);
+   const [selectedWorkflowId, setSelectedWorkflowId] = useState(11);
+      const [selectedWorkflowGuid, setSelectedWorkflowGuid] = useState("00cf6f4b-1228-40f6-bd4b-45b1daf996b3");
+        return <Flow id={selectedWorkflowId} guid={selectedWorkflowGuid} />;
+ 
 }
 
 export default App;
