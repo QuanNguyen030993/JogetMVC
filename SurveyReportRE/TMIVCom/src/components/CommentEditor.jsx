@@ -358,6 +358,7 @@ const handleBlur = () => {
         🔗
     </div>
 <button
+    type="button"
     className="comment-send-btn"
     onClick={onClick}
     title={submitLabel}

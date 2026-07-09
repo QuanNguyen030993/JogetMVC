@@ -477,11 +477,11 @@
 <script src="~/lib/AdminLTE/adminlte.min.js"></script>
 <body class="sidebar-mini skin-re" style="height: auto; min-height: 100%; width: 100%;">
     <header>
-        <div class="main-header wrapper" style="display:flex;">
+        <div class="main-header wrapper" style="display:flex; align-items: center;">
             <!-- LOGO -->
-            <div class="pull-left" style="width: auto; min-width: 180px; white-space: nowrap; flex-shrink: 0; padding-right: 15px;">
-                <a href="#" class="logo" data-toggle="push-menu" role="button">
-                    <div class="logo-lg"><b>Workflow Management</b></div>
+            <div class="pull-left" style="width: fit-content; white-space: nowrap; flex-shrink: 0; padding-right: 15px;">
+                <a href="#" class="logo" data-toggle="push-menu" role="button" style="width: fit-content;">
+                    <div class="logo-lg" style="width: fit-content;"><b>Workflow Management</b></div>
                 </a>
             </div>
             <!-- ROLE -->
@@ -1199,10 +1199,15 @@
 <style>
     /* Responsive Logo text size scaling on zoom */
     .main-header .logo-lg {
-        font-size: clamp(12px, 1.2vw, 18px) !important;
+        font-size: clamp(11px, 1.0vw, 15px) !important;
+        font-weight: 500 !important;
+        opacity: 0.95 !important;
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
+    }
+    .main-header .logo-lg b {
+        font-weight: 600 !important;
     }
 
     /* Modern Notification Button Overrides */

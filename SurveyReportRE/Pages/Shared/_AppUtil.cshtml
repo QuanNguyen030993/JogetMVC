@@ -1513,6 +1513,20 @@
                                                       store.insert(commentData)
                                                      .done(function () {
                                                          DevExpress.ui.notify("Send message successfully", "success", 2000);
+                                                         ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null, null)
+                                                              .then(res => {
+                                                                  var updatedComments = (res || []).map(x => ({
+                                                                      id: x.id,
+                                                                      author: x.author,
+                                                                      role: x.fromDepartment,
+                                                                      text: x.content,
+                                                                      time: fmtTimeLocal(x.createdDate)
+                                                                  }));
+                                                                  $(itemElement).commenteditor("option", {
+                                                                      name: "items",
+                                                                      value: updatedComments
+                                                                  });
+                                                              });
                                                      })
                                                      .fail(function (error) {
                                                          console.error(error);

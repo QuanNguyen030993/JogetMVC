@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office2013.Excel;
+using DocumentFormat.OpenXml.Office2013.Excel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
@@ -44,7 +44,7 @@ public class SectionCommentNoteController : BaseControllerApi<SectionCommentNote
         var entity = new SectionCommentNote();
         JsonConvert.PopulateObject(form.values, entity);
         entity = await _BaseRepository.InsertData(entity);
-        ControllerHelper.SignalRResponse( "R_ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        ControllerHelper.SignalRResponse( "R_ItemSubmitted", new { type = "SectionCommentNote" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         return Ok(entity);
     }
 }
