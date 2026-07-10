@@ -83,7 +83,7 @@
     that3.uploaderAllow = _role == "@dept";
     that3.data = { SectionName: `${sectionId}_${that3.moduleName}_@(policyIssuanceId)`, Department: "@(dept)", FieldName: that3.moduleName, FormId: "@(PIViewIdHelper.Form(dept, policyIssuanceId))" }; //{"SectionName":"default_FO_410"}
     $(`#@PIViewIdHelper.Form(dept, policyIssuanceId)`).dxForm({
-        dataSource: makeBasicDataSource(that, true),
+        dataSource: makeBasicDataSource(that2, true),
          items: [
                
              { itemType: "group" , caption: "Decision",items :[
