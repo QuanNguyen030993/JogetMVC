@@ -166,42 +166,42 @@ function App() {
 
     try {
       // 1. Upload to the C# AsyncUploadSingleFile endpoint
-      const response = await fetch('/api/Document/AsyncUploadSingleFile', {
-        method: 'POST',
-        headers: {
-          'Folder': 'Uploads',
-          'RecordGuid': '00000000-0000-0000-0000-000000000000',
-          'SectionName': 'Preview',
-          'Department': 'IT'
-        },
-        body: formData
-      });
+      // const response = await fetch('/api/Document/AsyncUploadSingleFile', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Folder': 'Uploads',
+      //     'RecordGuid': '00000000-0000-0000-0000-000000000000',
+      //     'SectionName': 'Preview',
+      //     'Department': 'IT'
+      //   },
+      //   body: formData
+      // });
       
-      const data = await response.json();
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || 'Upload failed.');
-      }
+      // const data = await response.json();
+      // if (!response.ok || !data.success) {
+      //   throw new Error(data.message || 'Upload failed.');
+      // }
 
-      const docId = data.attachment?.id || data.attachment?.Id;
-      const fileType = data.attachment?.fileType || data.attachment?.FileType || '';
-      const fileName = data.attachment?.fileName || data.attachment?.FileName || '';
+      // const docId = data.attachment?.id || data.attachment?.Id;
+      // const fileType = data.attachment?.fileType || data.attachment?.FileType || '';
+      // const fileName = data.attachment?.fileName || data.attachment?.FileName || '';
 
-      if (!docId) {
-        throw new Error('Upload succeeded but no document ID was returned.');
-      }
+      // if (!docId) {
+      //   throw new Error('Upload succeeded but no document ID was returned.');
+      // }
 
-      // Check if it is an Office format that needs LibreOffice conversion
-      const ext = fileType.toLowerCase();
-      const isOffice = ['.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx'].includes(ext);
+      // // Check if it is an Office format that needs LibreOffice conversion
+      // const ext = fileType.toLowerCase();
+      // const isOffice = ['.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx'].includes(ext);
 
-      setMessage(isOffice ? 'Converting Office document to PDF...' : 'Loading file preview...');
+      // setMessage(isOffice ? 'Converting Office document to PDF...' : 'Loading file preview...');
 
       // 2. Fetch converted PDF (for Office files) or direct stream (for PDFs/images)
-      const previewEndpoint = isOffice 
-        ? `/api/Document/LibreConvert/${docId}` 
-        : `/api/Document/StreamDocument?id=${docId}`;
+      const previewEndpoint =`https://localhost:7254/api/Document/StreamDocument?id=10372` 
+        ;
 
       const fileResponse = await fetch(previewEndpoint);
+      console.log(fileResponse);
       if (!fileResponse.ok) {
         throw new Error('Failed to retrieve file content or convert document.');
       }
