@@ -139,6 +139,7 @@ function App() {
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
   const [previewFileName, setPreviewFileName] = useState('');
+  const [previewFileType, setPreviewFileType] = useState('');
   const [message, setMessage] = useState('Choose a Word, Excel, PowerPoint, or PDF file to preview.');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -161,45 +162,58 @@ function App() {
     const formData = new FormData();
     formData.append('file', file);
     setIsLoading(true);
-    setMessage('Uploading and preparing preview...');
+    setMessage('Uploading file to C# backend...');
 
     try {
-      // const response = await fetch('http://127.0.0.1:3001/api/upload', {
-      //   method: 'POST',
-      //   body: formData
-      // });
-      // const data = await response.json();
-      // if (!response.ok) {
-      //   throw new Error(data.message || 'Upload failed.');
-      // }
+      // 1. Upload to the C# AsyncUploadSingleFile endpoint
+      const response = await fetch('/api/Document/AsyncUploadSingleFile', {
+        method: 'POST',
+        headers: {
+          'Folder': 'Uploads',
+          'RecordGuid': '00000000-0000-0000-0000-000000000000',
+          'SectionName': 'Preview',
+          'Department': 'IT'
+        },
+        body: formData
+      });
+      
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Upload failed.');
+      }
 
-      // // 1. Fetch file content from backend as a Blob
-      // const fileResponse = await fetch(`http://127.0.0.1:3001${data.url}`);
-      // if (!fileResponse.ok) {
-      //   throw new Error('Failed to retrieve file content from backend.');
-      // }
-      // const blob = await fileResponse.blob();
+      const docId = data.attachment?.id || data.attachment?.Id;
+      const fileType = data.attachment?.fileType || data.attachment?.FileType || '';
+      const fileName = data.attachment?.fileName || data.attachment?.FileName || '';
 
-      // // 2. Generate a local browser Blob URL
-      // const localBlobUrl = URL.createObjectURL(blob);
+      if (!docId) {
+        throw new Error('Upload succeeded but no document ID was returned.');
+      }
 
-      // setPreviewUrl(localBlobUrl);
-            
-      const response = await fetch(
-        "https://localhost:7254/api/Document/StreamDocument?id=10372",
-        {
-          credentials: "include" // nếu dùng cookie auth
-        }
-      );
-      // const data = await response.json();
-      const blob = await response.blob();
-      // const arrayBuffer = await blob.arrayBuffer();
+      // Check if it is an Office format that needs LibreOffice conversion
+      const ext = fileType.toLowerCase();
+      const isOffice = ['.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx'].includes(ext);
 
-      const blobUrl = URL.createObjectURL(blob);
+      setMessage(isOffice ? 'Converting Office document to PDF...' : 'Loading file preview...');
 
-      setPreviewUrl(blobUrl);
-      setPreviewFileName("test");
-      setMessage(`Preview ready (loaded as Blob): test`);
+      // 2. Fetch converted PDF (for Office files) or direct stream (for PDFs/images)
+      const previewEndpoint = isOffice 
+        ? `/api/Document/LibreConvert/${docId}` 
+        : `/api/Document/StreamDocument?id=${docId}`;
+
+      const fileResponse = await fetch(previewEndpoint);
+      if (!fileResponse.ok) {
+        throw new Error('Failed to retrieve file content or convert document.');
+      }
+
+      const blob = await fileResponse.blob();
+      const localBlobUrl = URL.createObjectURL(blob);
+
+      setPreviewUrl(localBlobUrl);
+      setPreviewFileName(fileName);
+      // If we used LibreConvert, the output format is PDF
+      setPreviewFileType(isOffice ? '.pdf' : ext);
+      setMessage(`Preview ready (loaded from C# API): ${fileName}`);
     } catch (error) {
       setMessage(error.message || 'Unable to preview this file.');
     } finally {
@@ -215,13 +229,17 @@ function App() {
     }
   };
 
-  const docs = previewUrl ? [{ uri: previewUrl, fileName: previewFileName }] : [];
+  const docs = previewUrl ? [{ 
+    uri: previewUrl, 
+    fileName: previewFileName,
+    fileType: previewFileType.replace('.', '')
+  }] : [];
 
   return (
     <div className="app-shell">
       <div className="card">
         <h1>React Office Preview (@cyntler)</h1>
-        <p>Tải tài liệu lên và xem trước bằng local Blob Object URL thông qua @cyntler/react-doc-viewer.</p>
+        <p>Tải tài liệu và xem trước qua C# ASP.NET Core API (`LibreConvert` và `StreamDocument`).</p>
 
         <form onSubmit={handleSubmit} className="upload-form">
           <input type="file" accept=".doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf" onChange={handleFileChange} />
@@ -262,6 +280,3 @@ function App() {
 }
 
 export default App;
-
-
-
