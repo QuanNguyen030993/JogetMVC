@@ -103,6 +103,7 @@ public class Quotation : BaseModel
     public bool? IsNotMakeOption { get; set; } = false;
     public string? OptionParentCode { get; set; }
     public bool? IsView { get; set; } = true;
+    public string? ActionStatus { get; set; }
     public EnumData? StatusEnum { get; set; }
     public InstanceWorkflow? InstanceWorkflowFK { get; set; }
     public TurnAroundAttributes? TurnAroundAttributes { get; set; }

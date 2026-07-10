@@ -12,13 +12,18 @@
 </style>
 <script type="text/javascript">
         $(function() {
-         var items = [
-                    { id: "AC_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Accept", value: true },
-                    // { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Assign", value: false },
-                    { id: "RJ_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Reject", value: false }
-                ];
-
-
+         // var items = [
+         //            { id: "AC_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Accept", value: true },
+         //            // { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Assign", value: false },
+         //            { id: "RJ_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Reject", value: false }
+         //        ];
+     var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
+         var acceptStatusId = `AC_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
+     var noNeedToRefer = `NNTF_@QTViewIdHelper.Decision(dept, quotationId)`;
+     var declinedButtonId = `DC_@QTViewIdHelper.Decision(dept, quotationId)`;
+         var declinedStatusId = `DC_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
+                     var items = [ `#${acceptButtonId}`, `#${noNeedToRefer}`, `#${declinedButtonId}`];
+                                 var itemsDelay = [ acceptButtonId , acceptStatusId, declinedButtonId, declinedStatusId, noNeedToRefer, ''];
     var sectionId = "@(ViewData["Cd"])";
     var that = new Object();
     that.ModelName = "Quotation";
@@ -196,7 +201,7 @@
           //           }
           //       }
           //   }
-                  delayAcceptStatus(mainFields,`@QTViewIdHelper.Form(dept, quotationId)`,"@dept", `AC_@QTViewIdHelper.Decision(dept, quotationId)`, `AC_Status_@QTViewIdHelper.Decision(dept, quotationId)`,null,null);
+        delayAcceptStatusV2(mainFields,`@QTViewIdHelper.Form(dept, quotationId)`,"@dept", ...itemsDelay);
 
     setTimeout(() => {
         var picJson = PIC_JSON || "{}";

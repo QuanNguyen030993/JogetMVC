@@ -1043,7 +1043,7 @@ function Flow({ id: propId , guid: propGuid}) {
                     mailTemplateId: edge.data?.mailTemplateId || null,
                     notificationTemplateId: edge.data?.notificationTemplateId || null
                 };
-
+       
                 return {
                     sortOrder: index + 1,
                     stepNo: edge.data?.stepNo?.toString() || null,

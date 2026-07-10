@@ -43,12 +43,16 @@
                 ]}
         ];
 
+        var buttonId = [`AC_@QTViewIdHelper.Decision(dept, quotationId)`
+        ,`DC_@QTViewIdHelper.Decision(dept, quotationId)`
+        
+        
+        ]
+
     $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
         dataSource: makeBasicDataSource(that, true),
                items: [
                     {itemType: "group",caption: "Decision",colCount:2,items: [
-    
-    
                 {
                      dataField: "decision",
 
@@ -70,6 +74,8 @@
                                            var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
                                           tatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
                                           formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+                                          actionStatus["@dept"] = "Approved";
+                                          formItems.actionStatus = JSON.stringify(actionStatus);
                                           var passingObject = new Object();
                                           passingObject.statusName = "Signing Process"; // base on Dept
                                           passingObject.Comment = `Quotation ${formItems.quotationCode} approved by ${_displayName}!`;  // base on Dept
@@ -95,12 +101,15 @@
                                      text: "Decline",
                                      icon: "remove",
                                      onClick: function (e) {
-                                             var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+                                          var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
                                            var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
                                           tatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
                                           formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+                                          var actionStatus = new Object()
+                                          actionStatus["@dept"] = "Declined";
+                                          formItems.actionStatus = JSON.stringify(actionStatus);
                                           var passingObject = new Object();
-                                          passingObject.statusName = "Signing Process"; // base on Dept
+                                          passingObject.statusName = "Quotation refused"; // base on Dept
                                           passingObject.Comment = `Quotation ${formItems.quotationCode} declined by ${_displayName}!`;  // base on Dept
                                           passingObject.formItems = formItems;
                                           passingObject.dept = `@dept`;
@@ -108,8 +117,6 @@
                                           passingObject.urlLog = `/api/Quotation/LogAction`;
                                           passingObject.schemeName = `Quotation`;
                                           rejectDecision(passingObject);
-
-                                      
 
                                      }
                                         }).appendTo(itemElement);
@@ -136,7 +143,22 @@
         }
     }, 100);
 
-    })
+    setTimeout(() => {
+        var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+        var actionStatus = tryParseJSON(formItems.actionStatus, "action Status Button Problem");
+        if (actionStatus["@dept"] == "Declined" )
+        {
+          $(`#DC_@QTViewIdHelper.Decision(dept, quotationId)`).css("background-color","#17a2b8");
+            disableAllDecisionButton(buttonId);
+        }
+        if (actionStatus["@dept"] == "Approved"){
+            $(`#AC_@QTViewIdHelper.Decision(dept, quotationId)`).css("background-color","#17a2b8");
+            disableAllDecisionButton(buttonId);
+        }
+    }, 2000);
+
+    })  
 </script>
 <div id="@QTViewIdHelper.Form(dept, quotationId)">
 </div>
+    <div id="@QTViewIdHelper.BtnSubmitBranch(dept, quotationId)"></div>

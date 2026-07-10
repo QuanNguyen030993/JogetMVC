@@ -55,6 +55,7 @@ namespace ERPCore.Models.Migration.Business.Workflow
         public string? StatusCode { get; set; } = "";
         public string? StatusName { get; set; } = "";
         public long? StatusId { get; set; } = 0;
+        public bool? IsReturn { get; set; } = false;
         public EnumData? StatusEnum { get; set; } 
 
     }

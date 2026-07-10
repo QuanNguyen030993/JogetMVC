@@ -3295,16 +3295,18 @@
             $item.css("cursor", downloadUrl ? "pointer" : "default");
                 if (x.recordGuid)
             $item.on("click", async function (ev) {
-                if (ext === "xlsx" || ext === "xls") {
-                    //libreConvert(id);
-                    openExcelPreviewPopup(id);
-                }
-                if (ext === "docx" || ext === "doc")
-                    openWordPreviewPopup(id);
-                if (ext === "jpg" || ext === "jpeg" || ext === "png")
-                    openImagePreviewPopup(id);
-                if (ext === "pdf")
-                    openPDFPopup(id);
+                     openOfficePopup(id);
+                // if (ext === "xlsx" || ext === "xls") {
+                //     //libreConvert(id);
+                //     // openExcelPreviewPopup(id);
+                //     openOfficePopup(id);
+                // }
+                // if (ext === "docx" || ext === "doc")
+                //     // openWordPreviewPopup(id);
+                // if (ext === "jpg" || ext === "jpeg" || ext === "png")
+                //     openImagePreviewPopup(id);
+                // if (ext === "pdf")
+                //     openPDFPopup(id);
                 //if (ext === "docx")
                 //    openWordMammothPopup(id);
             });
@@ -5404,6 +5406,21 @@ function styleModeChange(item){
 
         popupInstance.show();
     }
+
+
+        async function openOfficePopup(id) {
+            const popup = makePopup("large", "Res");
+            popup.option({
+                width: "80vw",
+                height: "90vh",
+                title: "File Preview",
+                contentTemplate(container) {
+                        $("<div>").previewoffice({id: id }). appendTo(container);
+                }
+            });
+            popup.show();
+        }
+
     async function openWordPreviewPopup(id) {
         const popup = makePopup("large", "Res");
 
@@ -5691,40 +5708,17 @@ function styleModeChange(item){
                 //     }
                 // }
 
-             function delayAcceptStatus(mainFields,formId,dept, acceptButtonId, acceptButtonIdStatus,rejectButtonId, rejectButtonIdStatus ){
-              setTimeout(() => {
-                  // try {
-                     
+            function delayAcceptStatus(mainFields,formId,dept, acceptButtonId, acceptButtonIdStatus,rejectButtonId, rejectButtonIdStatus ){
+                setTimeout(() => {
                   renderDecisionDeferred(formId, dept, "decisionGroup.acceptButton",mainFields, acceptButtonId, acceptButtonIdStatus)
-            //     var formIns = $(`#${formId}`).dxForm("instance");
-            //      var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-            //          var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
+                },_delayRenderDecisionButton);
+            }
 
-                      
-
-            //      if (tatObject) if (tatObject[dept]?.AcceptDate)
-            //  {
-            //          if (acceptButtonId)
-            //          {
-            //             $(`#${acceptButtonId}`).css("background-color","#17a2b8");
-            //             $(`#${acceptButtonIdStatus}`).text(`Accepted at: ${tatObject[dept]?.AcceptDate}`);
-            //             $(`#${acceptButtonId}`).dxButton("instance").option("disabled", true);
-            //                 // renderFullFormIfAccepted(formIns, dept, mainFields);
-            //          }
-            //           if (rejectButtonId)
-            //          {
-            //             $(`#${rejectButtonId}`).css("background-color","#17a2b8");
-            //             $(`#${rejectButtonIdStatus}`).text(`Accepted at: ${tatObject[dept]?.AcceptDate}`);
-            //                 $(`#${rejectButtonId}`).dxButton("instance").option("disabled", true);
-            //          }
-            // }
-            //       }
-
-            //       catch {
-            //           console.log("Accept status problem");
-            //       }
-            },_delayRenderDecisionButton);
-    }
+            function delayAcceptStatusV2(mainFields,formId,dept, ...params ){
+                setTimeout(() => {
+                    renderDecisionDeferredV2(formId, dept, "decisionGroup.acceptButton", mainFields, ...params)
+                },_delayRenderDecisionButton);
+            }
 
     function decisionField(formId,dept,acceptButtonId, acceptStatusElement,rejectButtonId, rejectStatusElement ){
               
@@ -5859,6 +5853,79 @@ function styleModeChange(item){
 
     }
 
+
+        function renderDecisionDeferredV2(formId, dept, groupName, mainField, ...params) {
+
+            // setTimeout(function () {
+
+                var form = $(`#${formId}`).dxForm("instance");
+                if (!form) return;
+
+                var formItems = form.option("formData") || {};
+
+                var picObject = tryParseJSON(formItems.pic, "PIC Load Problem") || {};
+                    var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
+                var pic = picObject[dept];
+                if (!pic) {
+
+                    return;
+
+                }
+
+                form.itemOption(groupName, "visible", pic ? true : false);
+                setTimeout(() => {
+
+
+                           $(`#${params[0]}`).dxButton("instance").option("onClick", function (e){
+                                var passingObject = {
+
+                                           statusName: `${dept} Process`,
+
+                                           Comment: `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`,
+
+                                           formItems: formItems,
+
+                                           dept: dept,
+
+                                           url: "/api/Quotation/UpdateData",
+
+                                           urlLog: "/api/Quotation/LogAction",
+
+                                           schemeName: "Quotation"
+
+                                       };
+
+                                       acceptDecision(passingObject);
+                           } )
+            
+                          if (tatObject) 
+                          if (tatObject[dept]?.AcceptDate)
+                             {
+                                         if (params[0])
+                                            {
+                                             form.option("items", [
+                                                 ...form.option("items"),
+                                                 ...mainField
+                                             ]);
+                                        $(`#${params[0]}`).css("background-color","#17a2b8");
+                                            $(`#${params[1]}`).text(`Accepted at: ${tatObject[dept]?.AcceptDate}`);
+                                                disableAllDecisionButton(params);
+                                        // $(`#${params[0]}`).dxButton("instance").option("disabled", true);
+                                            // renderFullFormIfAccepted(formIns, dept, mainFields);
+
+                                        }
+                                     //  if (rejectButtonId)
+                                     // {
+                                     //    $(`#${rejectButtonId}`).css("background-color","#17a2b8");
+                                     //    $(`#${rejectButtonIdStatus}`).text(`Accepted at: ${tatObject[dept]?.AcceptDate}`);
+                                     //        $(`#${rejectButtonId}`).dxButton("instance").option("disabled", true);
+                                     // }
+                            }
+                                   }, 100);
+
+
+        }
+
     // =========================================================================
     // UTILITY FUNCTIONS FROM appUtil.js (ADDED 2026-07-09)
     // =========================================================================
@@ -5937,5 +6004,17 @@ function styleModeChange(item){
         }
         return PIC_MAP[deptKey] || null;
     }
-
+     function disableAllDecisionButton(items){
+         $.each(items, function(itemIndex, item){
+             setTimeout(() => { 
+                 try 
+                 {
+                     $(`#${item}`).dxButton("instance").option("disabled", true);
+                 }
+                 catch {
+                     console.log("error");
+                 }
+             },1);
+         });
+     }
 </script>

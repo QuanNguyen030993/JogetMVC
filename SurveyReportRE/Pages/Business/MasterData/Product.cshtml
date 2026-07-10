@@ -5,11 +5,11 @@
 }
 <script>
     $(function () {
-          new MGrid(null, $(`#dataGrid_@ProductModel.ModelName`), new ProductGridOption('@ProductModel.ModelName'), null);
-    //     $(`#dataGrid_@ProductModel.ModelName`).datagrid({
-    //         modelName: '@ProductModel.ModelName',
-    //         gridOption: new ProductGridOption('@ProductModel.ModelName')
-    //     });
+          // new MGrid(null, $(`#dataGrid_@ProductModel.ModelName`), new ProductGridOption('@ProductModel.ModelName'), null);
+        $(`#dataGrid_@ProductModel.ModelName`).datagrid({
+            modelName: '@ProductModel.ModelName',
+            gridOption: new ProductGridOption('@ProductModel.ModelName')
+        });
     })
 </script>
 <div id="dataGrid_@ProductModel.ModelName"></div>

@@ -1043,6 +1043,7 @@ function Flow({ id: propId }) {
                 const incomingEdgesCount = edges.filter((e) => e.target === fromNode.id).length;
                 const isStart = fromNode.data?.nodeType === 'start' || incomingEdgesCount === 0;
                 const isEnd = edge.data?.isExitTransition === true || !edge.target;
+                const isReturn = edge.data?.isReturn === true || false; 
 
                 let uiMode = "Start";
                 const actionCode = edge.data?.actionCode || "";
@@ -1070,7 +1071,9 @@ function Flow({ id: propId }) {
                     mailTemplateId: edge.data?.mailTemplateId || null,
                     notificationTemplateId: edge.data?.notificationTemplateId || null
                 };
-
+                console.log(stepData);
+                console.log(fromNode);
+                console.log(edge);
                 return {
                     sortOrder: index + 1,
                     stepNo: edge.data?.stepNo?.toString() || null,
@@ -1093,7 +1096,7 @@ function Flow({ id: propId }) {
                     isActive: true,
                     isEnd: isEnd,
                     isStart: isStart,
-
+                    isReturn : isReturn,
                     levelNo: fromNode.data?.levelNo ? parseInt(fromNode.data.levelNo) : null,
                     loopGroup: edge.data?.loopGroup || null,
                     parentStepId: null,

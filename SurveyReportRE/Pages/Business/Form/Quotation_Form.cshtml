@@ -168,10 +168,11 @@ Note:
                             // setNextStep(state.nextStep);
                             // $.each(qtDeptModuleCode, function (itemIndex, item) {
                                     setTimeout(() => {
-                                        var findRoute = data.find(f => !f.actionCode.includes("BACK_") && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
-                                         var findRoutes = data.filter(f => !f.actionCode.includes("BACK_") && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
-                                        var findRouteReturn = data.find(f => f.actionCode.includes("BACK_") && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
-                                        var findRouteReturns = data.filter(f => f.actionCode.includes("BACK_") && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
+                                        debugger
+                                        // var findRoute = data.find(f => !f.isReturn && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
+                                         var findRoutes = data.filter(f => !f.isReturn && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
+                                        // var findRouteReturn = data.find(f => f.isReturn && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
+                                        var findRouteReturns = data.filter(f => f.isReturn && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
                                         var returnButtonId = window.QuotationIdManager.btnReturnBranch(stageDept,@ViewData["Id"]);
                                         var submitButtonId = window.QuotationIdManager.btnSubmitBranch(stageDept,@ViewData["Id"]);
                                         // var remarkBoxId = window.QuotationIdManager.remarkBox(stageDept,@ViewData["Id"]);
@@ -200,20 +201,25 @@ Note:
                                                         type: "danger",
                                                         onClick: function () {
                                                             var content = remarkBoxs[stageDept].controlRemark.value();
+                                                            if (content)
+                                                                {
+                                                                formItems =
+                                                                    $(`#${formId}`)
+                                                                        .dxForm("instance")
+                                                                        ?.option("formData") || {};
 
-                                                            formItems =
-                                                                $(`#${formId}`)
-                                                                    .dxForm("instance")
-                                                                    ?.option("formData") || {};
+                                                                formItems.comment = content || "";
 
-                                                            formItems.comment = content || "";
-
-                                                            returnToStep(
-                                                                `${formModuleKeyQt}`,
-                                                                state.nextStep,
-                                                                route,
-                                                                formItems
-                                                            );
+                                                                returnToStep(
+                                                                    `${formModuleKeyQt}`,
+                                                                    state.nextStep,
+                                                                    route,
+                                                                    formItems
+                                                                );
+                                                                }
+                                                            else {
+                                                                appNotifyWarning("Please put your reason to remarks!",false);
+                                                            }
                                                         }
                                                     });
                                                 });
@@ -222,7 +228,7 @@ Note:
                                         catch (exception) {
                                             console.log("Return problem", exception);
                                         }
-                                                                                try {
+                                        try {
 
                                             if (findRoutes?.length) {
 
