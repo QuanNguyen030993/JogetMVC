@@ -592,6 +592,117 @@
     border-bottom: none;
 }
 
+.tmivcom-grid-link {
+    min-width: 0;
+    max-width: 100%;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: #337ab7;
+    text-decoration: underline;
+    cursor: pointer;
+    font: inherit;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+}
+
+.statusTag {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    min-height: 22px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.grid-cell:not(.editing-cell) .grid-cell-content > .statusTag {
+    display: inline-flex;
+}
+
+.statusTag.new,
+.statusTag.pending,
+.statusTag.unknown {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.statusTag.in-progress {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.statusTag.accepted,
+.statusTag.approved,
+.statusTag.done,
+.statusTag.complete {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.statusTag.rejected,
+.statusTag.declined {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.statusTag.dispose,
+.statusTag.archive {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.col-pic-rows .grid-cell-content {
+    align-items: center;
+}
+
+.pic-inline-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    width: 100%;
+    overflow: hidden;
+}
+
+.pic-inline {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    max-width: 96px;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    background: #ffffff;
+    overflow: hidden;
+    flex: 0 1 auto;
+}
+
+.pic-inline-head {
+    flex: 0 0 auto;
+    padding: 2px 5px;
+    background: #e2e8f0;
+    color: #334155;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.pic-inline-val {
+    min-width: 0;
+    padding: 2px 6px;
+    color: #1e293b;
+    font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* drag/selection/commands cells */
 /* drag/selection/commands cells */
 .drag-handle-cell {

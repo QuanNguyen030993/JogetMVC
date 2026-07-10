@@ -65,6 +65,73 @@ const sanitizeFileName = (value) => {
   return (text || 'GridData').replace(/[\\/:*?"<>|]/g, '_');
 };
 
+const normalizeStatus = (raw) => {
+  const text = String(raw ?? '').trim();
+  const key = text.toLowerCase().replace(/\s+/g, ' ');
+
+  if (key === '' || key === 'new') return { css: 'new', text: text || 'New' };
+  if (key === 'pending' || key.includes('pending')) return { css: 'pending', text };
+  if (key === 'in progress') return { css: 'in-progress', text };
+  if (key === 'accept' || key.includes('accept')) return { css: 'accepted', text };
+  if (key === 'approved') return { css: 'approved', text };
+  if (key === 'reject' || key === 'quotation refused') return { css: 'rejected', text };
+  if (key === 'decline' || key === 'declined') return { css: 'declined', text };
+  if (key === 'quotation confirmed') return { css: 'accepted', text };
+  if (key === 'done') return { css: 'done', text };
+  if (key === 'complete' || key.includes('complete')) return { css: 'complete', text };
+  if (key === 'dispose') return { css: 'dispose', text };
+  if (key === 'archive') return { css: 'archive', text };
+  if (key === '?' || key === 'unknown') return { css: 'unknown', text: '?' };
+  return { css: 'unknown', text: text || '?' };
+};
+
+const parsePicObject = (picJson) => {
+  try {
+    return typeof picJson === 'string'
+      ? JSON.parse(picJson || '{}')
+      : (picJson || {});
+  } catch {
+    return {};
+  }
+};
+
+const formatPicValue = (value, dept) => {
+  if (!value) return '-';
+
+  if (dept === 'FO' && typeof value === 'object') {
+    const entries = Object.entries(value)
+      .filter(([, itemValue]) => itemValue)
+      .map(([key, itemValue]) => `${key}:${itemValue}`);
+    return entries.length ? entries.join(' | ') : '-';
+  }
+
+  return String(value);
+};
+
+const buildPicCategorySearchText = (picJson) => {
+  const obj = parsePicObject(picJson);
+  const deptOrder = ['FO', 'TS', 'UW', 'LMKT', 'PM'];
+  const parts = [];
+
+  deptOrder.forEach((dept) => {
+    const value = formatPicValue(obj[dept], dept);
+    parts.push(dept);
+    if (value && value !== '-') {
+      parts.push(`${dept}:${value}`, `${dept}: ${value}`, `${dept} ${value}`, value);
+    }
+  });
+
+  return parts.join(' ');
+};
+
+const renderPicItems = (picJson) => {
+  const obj = parsePicObject(picJson);
+  return ['FO', 'TS', 'UW', 'LMKT', 'PM'].map((dept) => ({
+    dept,
+    value: formatPicValue(obj[dept], dept)
+  }));
+};
+
 const InlineCellEditor = ({ value, onChange, onFocus, onBlur }) => {
   const editorRef = useRef(null);
 
@@ -147,6 +214,12 @@ const CustomGrid = forwardRef(({
   const [resizingColumn, setResizingColumn] = useState(null);
   const exportConfig = useMemo(() => normalizeExportConfig(gridOption), [gridOption]);
   const exportEnabled = exportConfig.enabled !== false;
+  const editingConfig = gridOption?.editing || gridOption?.gridEditorOptions?.editing || {};
+  const allowAdding = editingConfig.allowAdding !== false;
+  const allowUpdating = editingConfig.allowUpdating !== false;
+  const allowDeleting = editingConfig.allowDeleting !== false;
+  const filterRowVisible = gridOption?.filterRow?.visible !== false;
+  const groupPanelVisible = gridOption?.groupPanel?.visible !== false;
 
   // Theme support
   const [theme, setTheme] = useState(propTheme || 'light');
@@ -161,6 +234,12 @@ const CustomGrid = forwardRef(({
     }
   }, [propTheme]);
 
+  useEffect(() => {
+    if (editingConfig.mode) {
+      setEditMode(editingConfig.mode);
+    }
+  }, [editingConfig.mode]);
+
   // Extract grid reference / parameter properties similar to mGrid.js & _AppUtil.cshtml
   const refKey = gridOption?.refKey ?? gridOption?.mGridDetailOption?.refKey ?? null;
   const refField = gridOption?.refField ?? gridOption?.mGridDetailOption?.refField ?? 'Id';
@@ -171,7 +250,11 @@ const CustomGrid = forwardRef(({
   const overrideGetUrl = gridOption?.overrideGetUrl ?? gridOption?.mGridDetailOption?.overrideGetUrl ?? null;
 
   // Resolve selection mode
-  const selectionMode = gridOption?.selection?.mode ?? propSelectionMode ?? (showSelectionCheckbox ? 'multiple' : 'single');
+  const selectionMode = gridOption?.selection?.mode ?? gridOption?.selectionMode ?? propSelectionMode ?? (showSelectionCheckbox ? 'multiple' : 'single');
+  const effectiveShowCommandsColumn = gridOption?.isAllowRowMenu ?? showCommandsColumn;
+  const effectiveAllowRowReordering = gridOption?.rowDragging?.allowReordering ?? allowRowReordering;
+  const effectiveShowSelectionCheckbox = selectionMode !== 'none' && showSelectionCheckbox;
+  const isQuotationGrid = String(modelName || gridOption?.ModelName || '').toLowerCase() === 'quotation' || gridOption?.gridProfile === 'quotation';
 
   // Trigger onSelectionChanged callback when selectedRowKeys changes
   useEffect(() => {
@@ -369,32 +452,92 @@ const CustomGrid = forwardRef(({
         }
       }
 
+      const fieldName = column.field ?? column.dataField;
+      const isPicColumn = ['pic', 'leaderPIC', 'hodpic'].includes(fieldName);
+      const isWorkflowStatusColumn = fieldName === 'workflowStatus';
+      const isQuotationCodeColumn = fieldName === 'quotationCode';
+      const quotationStatusLookup = window._enums?.OverallStatus || window._enums?.overallStatus;
+      const nextLookup = isQuotationGrid && isWorkflowStatusColumn && Array.isArray(quotationStatusLookup)
+        ? {
+          ...(column.lookup || {}),
+          dataSource: quotationStatusLookup,
+          valueExpr: column.lookup?.valueExpr || 'id',
+          displayExpr: column.lookup?.displayExpr || 'value'
+        }
+        : column.lookup;
+
       return {
-        field: column.field ?? column.dataField,
+        field: fieldName,
         caption: column.caption || column.field || column.dataField,
-        width: column.width || '1fr',
+        width: (isQuotationGrid && isPicColumn ? 500 : column.width) || '1fr',
         visible: column.visible !== false,
-        sortable: column.sortable !== false,
+        sortable: column.sortable !== false && column.allowSorting !== false && !(isQuotationGrid && isPicColumn),
         groupable: column.groupable !== false,
-        editable: column.editable !== false,
+        editable: column.editable !== false && column.allowEditing !== false,
         template: column.template,
         cellTemplate: column.cellTemplate,
         actions: column.actions,
         editorType: editorType,
         dataType: column.dataType,
-        lookup: column.lookup,
+        lookup: nextLookup,
         editorOptions: column.editorOptions,
         headerIcon: column.headerIcon || column.icon,
+        cssClass: column.cssClass || (isQuotationGrid && isPicColumn ? 'col-pic-rows' : ''),
+        sortOrder: column.sortOrder || (isQuotationGrid && fieldName === 'requestedDate' ? 'desc' : undefined),
+        calculateCellValue: column.calculateCellValue || (isQuotationGrid && isPicColumn ? (rowData) => buildPicCategorySearchText(getCellValue(rowData, fieldName)) : undefined),
+        calculateDisplayValue: column.calculateDisplayValue,
+        linkConfig: column.linkConfig || (isQuotationGrid && isQuotationCodeColumn ? {
+          moduleName: 'Business/Form',
+          controllerName: 'Quotation',
+          keyField: 'id',
+          guidField: 'guid'
+        } : undefined),
+        statusColumn: isQuotationGrid && isWorkflowStatusColumn,
+        picColumn: isQuotationGrid && isPicColumn,
       };
     });
-  }, [columns]);
+  }, [columns, isQuotationGrid]);
+
+  const getColumnValue = (row, column) => {
+    if (!column) return undefined;
+
+    if (typeof column.calculateCellValue === 'function') {
+      try {
+        return column.calculateCellValue(row);
+      } catch (err) {
+        console.warn('calculateCellValue failed:', column.field, err);
+      }
+    }
+
+    if (typeof column.calculateDisplayValue === 'function') {
+      try {
+        return column.calculateDisplayValue(row);
+      } catch (err) {
+        console.warn('calculateDisplayValue failed:', column.field, err);
+      }
+    }
+
+    return getCellValue(row, column.field);
+  };
+
+  useEffect(() => {
+    if (sortInfo.field) return;
+
+    const defaultSortColumn = normalizedColumns.find((column) => column.sortOrder);
+    if (defaultSortColumn?.field) {
+      setSortInfo({
+        field: defaultSortColumn.field,
+        direction: String(defaultSortColumn.sortOrder).toLowerCase() === 'desc' ? 'desc' : 'asc'
+      });
+    }
+  }, [normalizedColumns, sortInfo.field]);
 
   // Columns specifically used for grid rendering structure
   const renderingColumns = useMemo(() => {
     const list = normalizedColumns.filter((column) => column.visible !== false);
 
     // Drag handle gripper column on the left
-    if (allowRowReordering && groupColumns.length === 0) {
+    if (effectiveAllowRowReordering && groupColumns.length === 0) {
       list.unshift({
         field: 'row-drag-handle',
         caption: '',
@@ -407,7 +550,7 @@ const CustomGrid = forwardRef(({
     }
 
     // Checkbox selector column
-    if (showSelectionCheckbox) {
+    if (effectiveShowSelectionCheckbox) {
       list.unshift({
         field: 'row-selection-checkbox',
         caption: '',
@@ -420,7 +563,7 @@ const CustomGrid = forwardRef(({
     }
 
     // Row command actions (Edit, Delete, View) on the right
-    if (showCommandsColumn) {
+    if (effectiveShowCommandsColumn) {
       list.push({
         field: 'row-commands',
         caption: 'Actions',
@@ -433,7 +576,7 @@ const CustomGrid = forwardRef(({
     }
 
     return list;
-  }, [normalizedColumns, allowRowReordering, showSelectionCheckbox, showCommandsColumn, groupColumns.length]);
+  }, [normalizedColumns, effectiveAllowRowReordering, effectiveShowSelectionCheckbox, effectiveShowCommandsColumn, groupColumns.length]);
 
   const resolveColumnWidth = (column) => {
     const key = column.field || column.caption;
@@ -724,7 +867,7 @@ const CustomGrid = forwardRef(({
     return draftRows.filter((row) =>
       normalizedColumns.every((column) => {
         if (column.actions) return true;
-        const value = getCellValue(row, column.field);
+        const value = getColumnValue(row, column);
         const filterValue = filters[column.field];
         if (filterValue === undefined || filterValue === null || filterValue === '') return true;
 
@@ -732,6 +875,14 @@ const CustomGrid = forwardRef(({
           const targetBool = filterValue === 'true';
           const valBool = value === true || value === 'true' || Number(value) === 1;
           return valBool === targetBool;
+        }
+
+        if (column.statusColumn && column.lookup && Array.isArray(column.lookup.dataSource)) {
+          const valExpr = column.lookup.valueExpr || 'id';
+          const dispExpr = column.lookup.displayExpr || 'value';
+          const selectedItem = column.lookup.dataSource.find((item) => String(item[valExpr] ?? item.id ?? item.Id) === String(filterValue));
+          const selectedText = selectedItem ? (selectedItem[dispExpr] ?? selectedItem.value ?? selectedItem.text ?? selectedItem.name ?? '') : filterValue;
+          return String(value ?? '').toLowerCase().includes(String(selectedText).toLowerCase());
         }
 
         if (column.lookup && Array.isArray(column.lookup.dataSource)) {
@@ -751,8 +902,9 @@ const CustomGrid = forwardRef(({
     }
 
     return [...filteredRows].sort((a, b) => {
-      const left = getCellValue(a, sortInfo.field);
-      const right = getCellValue(b, sortInfo.field);
+      const sortColumn = normalizedColumns.find((column) => column.field === sortInfo.field);
+      const left = getColumnValue(a, sortColumn || { field: sortInfo.field });
+      const right = getColumnValue(b, sortColumn || { field: sortInfo.field });
 
       if (left === right) return 0;
       if (left == null) return 1;
@@ -766,7 +918,7 @@ const CustomGrid = forwardRef(({
         ? String(left).localeCompare(String(right), undefined, { numeric: true })
         : String(right).localeCompare(String(left), undefined, { numeric: true });
     });
-  }, [filteredRows, sortInfo]);
+  }, [filteredRows, sortInfo, normalizedColumns]);
 
   const exportColumns = useMemo(() => (
     renderingColumns.filter((column) =>
@@ -780,10 +932,19 @@ const CustomGrid = forwardRef(({
   ), [renderingColumns]);
 
   const getExportCellValue = (row, column) => {
-    const value = getCellValue(row, column.field);
+    const rawValue = getCellValue(row, column.field);
+    const value = getColumnValue(row, column);
+
+    if (column.picColumn) {
+      return buildPicCategorySearchText(rawValue);
+    }
+
+    if (column.statusColumn) {
+      return rawValue ?? value ?? '';
+    }
 
     if (column.editorType === 'dxCheckBox' || column.editorType === 'checkbox' || column.dataType === 'boolean') {
-      const boolValue = value === true || value === 'true' || Number(value) === 1;
+      const boolValue = rawValue === true || rawValue === 'true' || Number(rawValue) === 1;
       return boolValue ? 'Yes' : 'No';
     }
 
@@ -938,6 +1099,7 @@ const CustomGrid = forwardRef(({
 
   const isCellEditable = (rowId, field) => {
     if (!field) return false;
+    if (!allowUpdating) return false;
     if (editMode === 'batch') return true;
     if (editMode === 'row') return editingRowId === rowId;
     if (editMode === 'cell') return activeCell?.rowId === rowId && activeCell?.field === field;
@@ -1083,6 +1245,26 @@ const CustomGrid = forwardRef(({
 
   const toggleGroup = (groupKey) => {
     setExpandedGroups((prev) => ({ ...prev, [groupKey]: !prev[groupKey] }));
+  };
+
+  const openLinkedRow = (row, column) => {
+    const linkConfig = column.linkConfig;
+    if (!linkConfig) return;
+
+    const keyValue = getCellValue(row, linkConfig.keyField || 'id') ?? getCellValue(row, 'Id');
+    const guidValue = getCellValue(row, linkConfig.guidField || 'guid');
+    const controllerName = linkConfig.controllerName || modelName;
+    const moduleName = linkConfig.moduleName || 'Business/Form';
+    const displayText = getCellValue(row, column.field) ?? '';
+    const url = `/${moduleName}/${controllerName}_Form/${keyValue}${guidValue ? `/${guidValue}` : ''}`;
+    const viewId = `form_${controllerName}_Form_${keyValue}`;
+    const title = `${controllerName} ${displayText}`;
+
+    if (typeof window.callElementView === 'function') {
+      window.callElementView(url, viewId, title);
+    } else {
+      window.location.href = url;
+    }
   };
 
   // Rendering Helper Methods
@@ -1271,6 +1453,44 @@ const CustomGrid = forwardRef(({
       );
     }
 
+    if (column.linkConfig) {
+      return (
+        <button
+          type="button"
+          className="tmivcom-grid-link"
+          title={String(value ?? '')}
+          onClick={(event) => {
+            event.stopPropagation();
+            openLinkedRow(row, column);
+          }}
+        >
+          {value ?? ''}
+        </button>
+      );
+    }
+
+    if (column.statusColumn) {
+      const status = normalizeStatus(value);
+      return (
+        <span className={`statusTag ${status.css}`} title={status.text}>
+          {status.text}
+        </span>
+      );
+    }
+
+    if (column.picColumn) {
+      return (
+        <div className="pic-inline-wrap" title={buildPicCategorySearchText(value)}>
+          {renderPicItems(value).map((item) => (
+            <div key={item.dept} className={`pic-inline pic-inline--${item.dept.toLowerCase()}`}>
+              <span className="pic-inline-head">{item.dept}</span>
+              <span className="pic-inline-val" title={item.value}>{item.value}</span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
     if (column.editorType === 'dxSelectBox' || column.editorType === 'selectbox') {
       const ds = column.lookup?.dataSource || column.editorOptions?.dataSource || [];
       const valExpr = column.lookup?.valueExpr || column.editorOptions?.valueExpr || 'id';
@@ -1312,6 +1532,7 @@ const CustomGrid = forwardRef(({
       className: rowClasses,
       onClick: () => {
         handleSelectRow(rowId);
+        gridOption?.onRowClick?.({ data: node, key: rowId, rowType: 'data' });
         onRowClick?.(node);
       },
       onDragOver: handleRowDragOver,
@@ -1374,12 +1595,16 @@ const CustomGrid = forwardRef(({
                           <i className="fa fa-sitemap"></i>
                         </button>
                       )}
-                      <button type="button" className="command-btn edit-btn" onClick={() => handleRowEdit(rowId)} title="Sửa dòng">
-                        <i className="fa fa-pencil"></i>
-                      </button>
-                      <button type="button" className="command-btn delete-btn" onClick={() => handleDeleteRow(rowId)} title="Xóa dòng">
-                        <i className="fa fa-trash-o"></i>
-                      </button>
+                      {allowUpdating && (
+                        <button type="button" className="command-btn edit-btn" onClick={() => handleRowEdit(rowId)} title="Sửa dòng">
+                          <i className="fa fa-pencil"></i>
+                        </button>
+                      )}
+                      {allowDeleting && (
+                        <button type="button" className="command-btn delete-btn" onClick={() => handleDeleteRow(rowId)} title="Xóa dòng">
+                          <i className="fa fa-trash-o"></i>
+                        </button>
+                      )}
                     </>
                   )}
                 </div>
@@ -1391,7 +1616,7 @@ const CustomGrid = forwardRef(({
           return (
             <td 
               key={column.field || `col-${column.caption}`} 
-              className={`grid-cell dx-cell ${isEditing ? 'editing-cell' : ''}`} 
+              className={`grid-cell dx-cell ${column.cssClass || ''} ${isEditing ? 'editing-cell' : ''}`}
               onClick={() => {
                 if (editMode === 'cell' && column.editable) {
                   setActiveCell({ rowId, field: column.field });
@@ -1453,7 +1678,7 @@ const CustomGrid = forwardRef(({
       text: 'Save',
       icon: 'fa-save',
       onClick: saveChanges,
-      disabled: !isDirty && editingRowId === null,
+      disabled: !allowUpdating || (!isDirty && editingRowId === null),
     },
     {
       location: 'before',
@@ -1471,12 +1696,12 @@ const CustomGrid = forwardRef(({
       }),
       disabled: exportColumns.length === 0 || sortedRows.length === 0,
     }] : []),
-    {
+    ...(allowAdding ? [{
       location: 'after',
       text: 'Add Row',
       icon: 'fa-plus',
       onClick: handleAddRow,
-    },
+    }] : []),
   ];
 
   const renderedToolbarItems = [...defaultToolbarItems, ...toolbarItems];
@@ -1521,7 +1746,7 @@ const CustomGrid = forwardRef(({
         </div>
       </div>
 
-      <div className="grid-group-panel" onDragOver={(event) => event.preventDefault()} onDrop={handleGroupDrop}>
+      {groupPanelVisible && <div className="grid-group-panel" onDragOver={(event) => event.preventDefault()} onDrop={handleGroupDrop}>
         {groupColumns.length === 0 ? (
           <span className="group-placeholder">Drag a column header here to group by that column</span>
         ) : (
@@ -1537,7 +1762,7 @@ const CustomGrid = forwardRef(({
             );
           })
         )}
-      </div>
+      </div>}
 
       {/* Styled Grid using native HTML <table> structure for perfect alignment */}
       <div className="grid-table-container" style={{ overflowX: 'auto', width: '100%' }}>
@@ -1621,7 +1846,7 @@ const CustomGrid = forwardRef(({
               })}
             </tr>
 
-            <tr className="grid-filter-row">
+            {filterRowVisible && <tr className="grid-filter-row">
               {renderingColumns.map((column) => (
                 <th key={column.field || `filter-${column.caption}`} className="grid-filter-cell">
                   {column.isCommand || column.field === 'row-commands' || column.field === 'row-selection-checkbox' || column.field === 'row-drag-handle' ? null : column.lookup && Array.isArray(column.lookup.dataSource) ? (
@@ -1661,7 +1886,7 @@ const CustomGrid = forwardRef(({
                   )}
                 </th>
               ))}
-            </tr>
+            </tr>}
           </thead>
 
           <tbody className="grid-body">
