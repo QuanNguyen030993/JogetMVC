@@ -8,6 +8,7 @@ import CheckBox from "../components/CheckBox.jsx";
 import SelectBox from "../components/SelectBox.jsx";
 import DropDownBox from "../components/DropDownBox.jsx";
 import CustomForm from "../components/CustomForm.jsx";
+import PreviewOffice from "../components/PreviewOffice.jsx";
 import React from "react";
 
 import { createRoot } from "react-dom/client";
@@ -552,6 +553,48 @@ $.fn.customform = function(arg1, arg2, arg3) {
     return this;
 };
 
+$.fn.previewoffice = function(arg1, arg2, arg3) {
+    if (typeof arg1 === "string") {
+        if (arg1 === "option") {
+            if (arguments.length === 2 && this.length === 1) {
+                const instance = roots.get(this[0]);
+                return instance?.ref?.current?.option(arg2) ?? instance?.options?.[arg2];
+            }
+
+            this.each(function() {
+                const instance = roots.get(this);
+                if (!instance) return;
+
+                if (instance.ref?.current) {
+                    instance.ref.current.option(arg2, arg3);
+                } else {
+                    instance.options[arg2] = arg3;
+                    const Component = controls[instance.name];
+                    instance.root.render(
+                        <Component ref={instance.ref} {...instance.options}/>
+                    );
+                }
+            });
+            return this;
+        }
+
+        if (arg1 === "refresh") {
+            return this.each(function() {
+                const instance = roots.get(this);
+                instance?.ref?.current?.refresh?.();
+            });
+        }
+    }
+
+    if (typeof arg1 === "object" || typeof arg1 === "undefined") {
+        return this.each(function() {
+            mount(this, "PreviewOffice", arg1 || {});
+        });
+    }
+
+    return this;
+};
+
 register(
     "DateBox",
     DateBox
@@ -601,4 +644,9 @@ register(
     CustomForm
 );
 
-export default { DateBox, HtmlEditor, CustomGrid, CommentEditor, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm };
+register(
+    "PreviewOffice",
+    PreviewOffice
+);
+
+export default { DateBox, HtmlEditor, CustomGrid, CommentEditor, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm, PreviewOffice };
