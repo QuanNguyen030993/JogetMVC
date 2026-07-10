@@ -2708,6 +2708,34 @@
 
         }
 
+        function getTransitionButtonIcon(route, fallbackIcon) {
+            if (route?.icon) return route.icon;
+
+            var routeData = safeJsonParse(route?.data);
+            return routeData?.icon || fallbackIcon;
+        }
+
+        function getTransitionButtonClass(route, fallbackClass) {
+            if (route?.buttonClass) return route.buttonClass;
+
+            var routeData = safeJsonParse(route?.data);
+            return routeData?.buttonClass || fallbackClass || "";
+        }
+
+        function applyTransitionButtonClass(selector, route, fallbackClass) {
+            var buttonClass = getTransitionButtonClass(route, fallbackClass);
+            var knownClasses = "dx-button-default dx-button-success dx-button-danger dx-button-warning dx-button-info dx-button-normal";
+            var $button = $(selector);
+
+            if (!buttonClass) {
+                return "";
+            }
+
+            $button.removeClass(knownClasses);
+            $button.addClass(buttonClass);
+
+            return buttonClass;
+        }
 
         function submitNextStep(moduleName, _nextStep, findRoute, formItems) {
             // var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};

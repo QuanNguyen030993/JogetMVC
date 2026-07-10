@@ -197,7 +197,7 @@ Note:
                                                     $(`#${buttonId}`).dxButton({
                                                         disabled: false,
                                                         text: route.displayStatus || "",
-                                                        icon: "undo",
+                                                        icon: getTransitionButtonIcon(route, "undo"),
                                                         type: "danger",
                                                         onClick: function () {
                                                             var content = remarkBoxs[stageDept].controlRemark.value();
@@ -222,6 +222,7 @@ Note:
                                                             }
                                                         }
                                                     });
+                                                    applyTransitionButtonClass(`#${buttonId}`, route);
                                                 });
                                             }
                                         }
@@ -245,7 +246,7 @@ Note:
                                                     $(`#${buttonId}`).dxButton({
                                                         disabled: stageDept === "LMKT" ? false : (tatObject?.[stageDept]?.AcceptDate ? false : true),
                                                         text: route.displayStatus || "",
-                                                        icon: "check",
+                                                        icon: getTransitionButtonIcon(route, "check"),
                                                         type: "info",
                                                         onClick: function () {
 
@@ -292,6 +293,7 @@ Note:
                                                             );
                                                         }
                                                     });
+                                                    applyTransitionButtonClass(`#${buttonId}`, route);
 
                                                 });
                                             }

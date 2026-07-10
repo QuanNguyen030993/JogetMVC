@@ -58,6 +58,42 @@ const nodeTemplates = [
     }
 ];
 
+const transitionIconOptions = [
+    { icon: 'x', value: 'close', label: 'close' },
+    { icon: 'check', value: 'check', label: 'check' },
+    { icon: 'plus', value: 'plus', label: 'plus' },
+    { icon: 'minus', value: 'minus', label: 'minus' },
+    { icon: 'edit', value: 'edit', label: 'edit' },
+    { icon: 'trash', value: 'trash', label: 'trash' },
+    { icon: 'save', value: 'save', label: 'save' },
+    { icon: 'search', value: 'search', label: 'search' },
+    { icon: 'refresh', value: 'refresh', label: 'refresh' },
+    { icon: 'copy', value: 'copy', label: 'copy' },
+    { icon: 'paste', value: 'paste', label: 'paste' },
+    { icon: 'download', value: 'download', label: 'download' },
+    { icon: 'upload', value: 'upload', label: 'upload' },
+    { icon: 'folder', value: 'folder', label: 'folder' },
+    { icon: 'home', value: 'home', label: 'home' },
+    { icon: 'preferences', value: 'preferences', label: 'preferences' },
+    { icon: 'user', value: 'user', label: 'user' },
+    { icon: 'lock', value: 'lock', label: 'lock' },
+    { icon: 'menu', value: 'menu', label: 'menu' },
+    { icon: 'chevronleft', value: 'chevronleft', label: 'chevronleft' },
+    { icon: 'chevronright', value: 'chevronright', label: 'chevronright' },
+    { icon: 'chevronup', value: 'chevronup', label: 'chevronup' },
+    { icon: 'chevrondown', value: 'chevrondown', label: 'chevrondown' },
+];
+
+const transitionButtonClassOptions = [
+    { value: '', label: 'Default' },
+    { value: 'dx-button-default', label: 'Default' },
+    { value: 'dx-button-success', label: 'Success' },
+    { value: 'dx-button-danger', label: 'Danger' },
+    { value: 'dx-button-warning', label: 'Warning' },
+    { value: 'dx-button-info', label: 'Info' },
+    { value: 'dx-button-normal', label: 'Normal' },
+];
+
 const CustomEdge = ({
     id,
     sourceX,
@@ -526,6 +562,12 @@ const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) 
                         return parsed.icon || '';
                     } catch (e) { return ''; }
                 })(),
+                buttonClass: transition.buttonClass || (() => {
+                    try {
+                        const parsed = typeof transition.data === 'string' ? JSON.parse(transition.data) : (transition.data || {});
+                        return parsed.buttonClass || '';
+                    } catch (e) { return ''; }
+                })(),
                 command: transition.command || 'None',
                 commandConfig: transition.commandConfig || '',
                 mailTemplateId: transition.mailTemplateId || (() => {
@@ -696,6 +738,7 @@ function Flow({ id: propId }) {
         { dataField: 'userDecisionLabel', caption: 'User Decision Label', width: 150 },
         { dataField: 'statusName', caption: 'Status', width: 130 },
         { dataField: 'icon', caption: 'Icon', width: 100 },
+        { dataField: 'buttonClass', caption: 'Button Class', width: 130 },
         { dataField: 'command', caption: 'System Command', width: 130 },
         { dataField: 'conditionJson', caption: 'Condition JSON', width: 180 }
     ], []);
@@ -748,6 +791,7 @@ function Flow({ id: propId }) {
                 statusId: edge.data?.statusId || '',
                 statusName: edge.data?.statusName || '',
                 icon: edge.data?.icon || '',
+                buttonClass: edge.data?.buttonClass || '',
                 command: edge.data?.command || 'None',
                 conditionJson: edge.data?.conditionJson || '{}'
             };
@@ -809,6 +853,7 @@ function Flow({ id: propId }) {
                     statusId: '',
                     statusName: '',
                     icon: '',
+                    buttonClass: '',
                     command: 'None',
                     commandConfig: '',
                 },
@@ -955,6 +1000,7 @@ function Flow({ id: propId }) {
                     statusId: edge.data?.statusId || '',
                     statusName: edge.data?.statusName || '',
                     icon: edge.data?.icon || '',
+                    buttonClass: edge.data?.buttonClass || '',
                     command: edge.data?.command || 'None',
                     commandConfig: edge.data?.commandConfig || '',
                     mailTemplateId: edge.data?.mailTemplateId || null,
@@ -1107,6 +1153,7 @@ function Flow({ id: propId }) {
                 const stepData = {
                     ...conditionData,
                     icon: edge.data?.icon || null,
+                    buttonClass: edge.data?.buttonClass || null,
                     mailTemplateId: edge.data?.mailTemplateId || null,
                     notificationTemplateId: edge.data?.notificationTemplateId || null
                 };
@@ -1918,10 +1965,31 @@ function Flow({ id: propId }) {
                 <label>
                     <span>Icon</span>
                     <input
+                        list="transition-icon-options"
                         value={selectedEdge.data?.icon || ''}
                         onChange={(event) => updateSelectedEdge('icon', event.target.value)}
-                        placeholder="e.g. check, fa fa-check"
+                        placeholder="e.g. check"
                     />
+                    <datalist id="transition-icon-options">
+                        {transitionIconOptions.map((item) => (
+                            <option key={item.value} value={item.value}>
+                                {item.icon} {item.label}
+                            </option>
+                        ))}
+                    </datalist>
+                </label>
+                <label>
+                    <span>Button class</span>
+                    <select
+                        value={selectedEdge.data?.buttonClass || ''}
+                        onChange={(event) => updateSelectedEdge('buttonClass', event.target.value)}
+                    >
+                        {transitionButtonClassOptions.map((item) => (
+                            <option key={item.value || 'default'} value={item.value}>
+                                {item.label}{item.value ? ` (${item.value})` : ''}
+                            </option>
+                        ))}
+                    </select>
                 </label>
                 <label>
                     <span>Step no</span>
