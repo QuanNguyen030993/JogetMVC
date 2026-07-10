@@ -584,6 +584,19 @@ const nodeTypes = {
     workflowNode: WorkflowNode,
 };
 
+const getMiniMapNodeColor = (node) => {
+    const styleColor = (node.data?.styleColor || '').toLowerCase();
+    const nodeType = (node.data?.nodeType || '').toLowerCase();
+
+    if (styleColor === 'red' || nodeType === 'end') return '#ef4444';
+    if (styleColor === 'green' || nodeType === 'start' || nodeType === 'department') return '#10b981';
+    if (styleColor === 'orange' || nodeType === 'custom' || nodeType === 'decision') return '#f97316';
+    if (styleColor === 'lightorange') return '#f59e0b';
+    if (styleColor === 'blue') return '#0284c7';
+    if (nodeType === 'review') return '#8b5cf6';
+    return '#64748b';
+};
+
 function Flow({ id: propId }) {
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -603,6 +616,20 @@ function Flow({ id: propId }) {
     const [workflowDefinition, setWorkflowDefinition] = useState(null);
     const [lanesList, setLanesList] = useState([]);
     const [activeStatsTab, setActiveStatsTab] = useState('nodes');
+
+    const focusNode = useCallback(
+        (nodeId) => {
+            window.requestAnimationFrame(() => {
+                reactFlowInstance?.fitView?.({
+                    nodes: [{ id: nodeId }],
+                    padding: 0.5,
+                    duration: 250,
+                    maxZoom: 1.2,
+                });
+            });
+        },
+        [reactFlowInstance],
+    );
 
     const nodeColumns = useMemo(() => [
         { dataField: 'id', caption: 'ID', width: 80 },
@@ -1216,48 +1243,83 @@ function Flow({ id: propId }) {
 
     const addNode = useCallback(() => {
         const id = `node-${Math.random().toString(36).slice(2, 8)}`;
-        const nextNode = {
-            id,
-            type: 'workflowNode',
-            position: {
-                x: 140 + nodes.length * 120,
-                y: 90 + (nodes.length % 3) * 180,
-            },
-            data: {
-                label: `Step ${nodes.length + 1}`,
-                subtitle: 'New step',
-                nodeType: 'task',
-                departmentName: '',
-                description: '',
-                manualPositioned: false,
-            },
-            style: createNodeStyle({ nodeType: 'task' }),
-        };
 
-        const nextNodes = [...nodes, nextNode];
-        setNodes(layoutNodes(nextNodes, edges));
-        setSelectedNode(nextNode);
-        setSelectedEdge(null);
-    }, [edges, nodes, setNodes]);
+        setNodes((currentNodes) => {
+            const nextNode = {
+                id,
+                type: 'workflowNode',
+                position: {
+                    x: 140 + currentNodes.length * 120,
+                    y: 90 + (currentNodes.length % 3) * 180,
+                },
+                data: {
+                    label: `Step ${currentNodes.length + 1}`,
+                    subtitle: 'New step',
+                    nodeType: 'task',
+                    departmentName: '',
+                    description: '',
+                    manualPositioned: false,
+                },
+                style: createNodeStyle({ nodeType: 'task' }),
+            };
+
+            window.requestAnimationFrame(() => {
+                setSelectedNode(nextNode);
+                setSelectedEdge(null);
+                focusNode(nextNode.id);
+            });
+
+            return layoutNodes([...currentNodes, nextNode], edges);
+        });
+    }, [edges, focusNode, setNodes]);
 
     const onDragOver = useCallback((event) => {
         event.preventDefault();
-        event.dataTransfer.dropEffect = 'move';
+        event.stopPropagation();
+        event.dataTransfer.dropEffect = 'copy';
     }, []);
+
+    const getDropPosition = useCallback(
+        (event) => {
+            const screenPosition = {
+                x: event.clientX,
+                y: event.clientY,
+            };
+
+            if (reactFlowInstance?.screenToFlowPosition) {
+                return reactFlowInstance.screenToFlowPosition(screenPosition);
+            }
+
+            const bounds = event.currentTarget.getBoundingClientRect();
+            const panePosition = {
+                x: event.clientX - bounds.left,
+                y: event.clientY - bounds.top,
+            };
+
+            if (reactFlowInstance?.project) {
+                return reactFlowInstance.project(panePosition);
+            }
+
+            return panePosition;
+        },
+        [reactFlowInstance],
+    );
 
     const onDrop = useCallback(
         (event) => {
             event.preventDefault();
+            event.stopPropagation();
             if (!reactFlowInstance) return;
 
-            const bounds = event.currentTarget.getBoundingClientRect();
-            const position = reactFlowInstance.project({
-                x: event.clientX - bounds.left,
-                y: event.clientY - bounds.top,
-            });
+            const position = getDropPosition(event);
+            const plainData = event.dataTransfer.getData('text/plain');
 
-            const type = event.dataTransfer.getData('application/reactflow');
-            const laneDataStr = event.dataTransfer.getData('application/reactflow-lane');
+            const laneDataStr =
+                event.dataTransfer.getData('application/reactflow-lane') ||
+                (plainData.startsWith('lane:') ? plainData.slice(5) : '');
+            const type =
+                event.dataTransfer.getData('application/reactflow') ||
+                (!laneDataStr ? plainData : '');
 
             let newNode = null;
 
@@ -1321,12 +1383,12 @@ function Flow({ id: propId }) {
 
             if (!newNode) return;
 
-            const nextNodes = [...nodes, newNode];
-            setNodes(layoutNodes(nextNodes, edges));
+            setNodes((currentNodes) => layoutNodes([...currentNodes, newNode], edges));
             setSelectedNode(newNode);
             setSelectedEdge(null);
+            focusNode(newNode.id);
         },
-        [edges, nodes, reactFlowInstance, setNodes],
+        [edges, focusNode, getDropPosition, reactFlowInstance, setNodes],
     );
 
     const updateSelectedNode = useCallback(
@@ -2138,7 +2200,8 @@ function Flow({ id: propId }) {
                                         draggable
                                         onDragStart={(event) => {
                                             event.dataTransfer.setData('application/reactflow-lane', JSON.stringify(lane));
-                                            event.dataTransfer.effectAllowed = 'move';
+                                            event.dataTransfer.setData('text/plain', `lane:${JSON.stringify(lane)}`);
+                                            event.dataTransfer.effectAllowed = 'copyMove';
                                         }}
                                     >
                                         <strong>{lane.label || lane.id}</strong>
@@ -2160,7 +2223,8 @@ function Flow({ id: propId }) {
                                     draggable
                                     onDragStart={(event) => {
                                         event.dataTransfer.setData('application/reactflow', template.type);
-                                        event.dataTransfer.effectAllowed = 'move';
+                                        event.dataTransfer.setData('text/plain', template.type);
+                                        event.dataTransfer.effectAllowed = 'copyMove';
                                     }}
                                 >
                                     <strong>{template.label}</strong>
@@ -2181,7 +2245,12 @@ function Flow({ id: propId }) {
                     </div>
                 </aside>
 
-                <div className="flow-canvas-panel">
+                <div
+                    className="flow-canvas-panel"
+                    onDrop={onDrop}
+                    onDragEnter={onDragOver}
+                    onDragOver={onDragOver}
+                >
                     <ReactFlow
                         className="workflow-canvas"
                         nodes={nodes}
@@ -2220,8 +2289,6 @@ function Flow({ id: propId }) {
                             setSelectedNode(node);
                         }}
                         onInit={setReactFlowInstance}
-                        onDrop={onDrop}
-                        onDragOver={onDragOver}
                         connectionLineType={ConnectionLineType.SmoothStep}
                         edgeTypes={edgeTypes}
                         nodeTypes={nodeTypes}
@@ -2239,7 +2306,21 @@ function Flow({ id: propId }) {
                             </strong>
                         </Panel>
 
-                        <MiniMap />
+                        <MiniMap
+                            pannable
+                            zoomable
+                            nodeColor={getMiniMapNodeColor}
+                            nodeStrokeWidth={3}
+                            maskColor="rgba(15, 23, 42, 0.12)"
+                            style={{
+                                width: 180,
+                                height: 120,
+                                background: '#ffffff',
+                                border: '1px solid #cbd5e1',
+                                borderRadius: 10,
+                                boxShadow: '0 10px 24px rgba(15, 23, 42, 0.12)',
+                            }}
+                        />
                         <Controls />
                         <Background gap={16} size={1} />
                     </ReactFlow>
