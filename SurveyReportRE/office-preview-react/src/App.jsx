@@ -164,28 +164,42 @@ function App() {
     setMessage('Uploading and preparing preview...');
 
     try {
-      const response = await fetch('http://127.0.0.1:3001/api/upload', {
-        method: 'POST',
-        body: formData
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Upload failed.');
-      }
+      // const response = await fetch('http://127.0.0.1:3001/api/upload', {
+      //   method: 'POST',
+      //   body: formData
+      // });
+      // const data = await response.json();
+      // if (!response.ok) {
+      //   throw new Error(data.message || 'Upload failed.');
+      // }
 
-      // 1. Fetch file content from backend as a Blob
-      const fileResponse = await fetch(`http://127.0.0.1:3001${data.url}`);
-      if (!fileResponse.ok) {
-        throw new Error('Failed to retrieve file content from backend.');
-      }
-      const blob = await fileResponse.blob();
+      // // 1. Fetch file content from backend as a Blob
+      // const fileResponse = await fetch(`http://127.0.0.1:3001${data.url}`);
+      // if (!fileResponse.ok) {
+      //   throw new Error('Failed to retrieve file content from backend.');
+      // }
+      // const blob = await fileResponse.blob();
 
-      // 2. Generate a local browser Blob URL
-      const localBlobUrl = URL.createObjectURL(blob);
+      // // 2. Generate a local browser Blob URL
+      // const localBlobUrl = URL.createObjectURL(blob);
 
-      setPreviewUrl(localBlobUrl);
-      setPreviewFileName(data.fileName);
-      setMessage(`Preview ready (loaded as Blob): ${data.fileName}`);
+      // setPreviewUrl(localBlobUrl);
+            
+      const response = await fetch(
+        "https://localhost:7254/api/Document/StreamDocument?id=10372",
+        {
+          credentials: "include" // nếu dùng cookie auth
+        }
+      );
+      // const data = await response.json();
+      const blob = await response.blob();
+      // const arrayBuffer = await blob.arrayBuffer();
+
+      const blobUrl = URL.createObjectURL(blob);
+
+      setPreviewUrl(blobUrl);
+      setPreviewFileName("test");
+      setMessage(`Preview ready (loaded as Blob): test`);
     } catch (error) {
       setMessage(error.message || 'Unable to preview this file.');
     } finally {
