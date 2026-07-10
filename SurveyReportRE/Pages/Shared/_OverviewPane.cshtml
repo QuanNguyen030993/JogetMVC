@@ -19,6 +19,7 @@
                 <div id="@ViewIdHelper.PanelHoverInFlow(moduleCode,quotationId)"></div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;">
+                <div id="@Id("btnRefreshOverview")"></div>
                 <div id="@ViewIdHelper.BtnCollapseAllTab(moduleCode,quotationId)"></div>
                 <div id="@ViewIdHelper.BtnToggleReferenceFields(moduleCode,quotationId)"></div>
                 <div id="@ViewIdHelper.BtnAttachmentLog(moduleCode,quotationId)"></div>
@@ -88,6 +89,18 @@
 </div>
 <script>
     $(function () {
+        $("#@Id("btnRefreshOverview")").dxButton({
+            icon: "refresh",
+            hint: "Refresh",
+            stylingMode: "text",
+            onClick: function () {
+                if (typeof window.reloadQuotationComponents === "function") {
+                    window.reloadQuotationComponents();
+                } else {
+                    console.warn("window.reloadQuotationComponents is not available.");
+                }
+            }
+        });
 
         const btn =
             $("#@Id("adminFloatBtn")");

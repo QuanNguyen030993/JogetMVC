@@ -243,7 +243,7 @@ Note:
                                                     }
 
                                                     $(`#${buttonId}`).dxButton({
-                                                        disabled: tatObject?.[stageDept]?.AcceptDate ? false : true,
+                                                        disabled: stageDept === "LMKT" ? false : (tatObject?.[stageDept]?.AcceptDate ? false : true),
                                                         text: route.displayStatus || "",
                                                         icon: "check",
                                                         type: "info",
@@ -258,6 +258,31 @@ Note:
                                                                     ?.option("formData") || {};
 
                                                             formItems.comment = content || "";
+
+                                                            if (stageDept === "LMKT") {
+                                                                var currentTatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "LMKT SubmitBranch TAT Problem") || {};
+                                                                if (!currentTatObject[stageDept]) {
+                                                                    currentTatObject[stageDept] = {
+                                                                        AcceptDate: "",
+                                                                        CompleteDate: ""
+                                                                    };
+                                                                }
+                                                                if (!currentTatObject[stageDept].AcceptDate) {
+                                                                    currentTatObject[stageDept].AcceptDate = formatDateToString(new Date()).gmt7;
+                                                                    formItems.turnAroundTimeAttributes = JSON.stringify(currentTatObject);
+                                                                    ajaxPut('/api/Quotation/UpdateData',
+                                                                        {
+                                                                            key: formItems.id,
+                                                                            values: JSON.stringify(formItems)
+                                                                        },
+                                                                        {
+                                                                            onSuccess: function () { },
+                                                                            onError: function (err) { console.log("LMKT SubmitBranch TAT update problem", err); }
+                                                                        }
+                                                                    );
+                                                                }
+                                                                $(`#${submitButtonId}`).find(".dx-button").css("background-color", "#17a2b8");
+                                                            }
 
                                                             submitNextStep(
                                                                 `${formModuleKeyQt}`,
