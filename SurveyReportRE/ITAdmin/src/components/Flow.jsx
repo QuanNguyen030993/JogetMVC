@@ -384,7 +384,8 @@ const layoutNodes = (nodes = [], edges = [], forceLayout = false) => {
 
 const mapWorkflowNodes = (workflowNodes = [], scaleX = 1.0, scaleY = 1.0) =>
     workflowNodes.map((node, index) => {
-        const id = String(node.id ?? `node-${index + 1}`);
+        const id = String(node.id ?? node.nodeId ?? `NODE_${index + 1}`);
+        const code = node.nodeCode || node.code || id;
         const rawX = Number.isFinite(node.posX) ? node.posX : node.x;
         const rawY = Number.isFinite(node.posY) ? node.posY : node.y;
         const hasPosition = Number.isFinite(rawX) && Number.isFinite(rawY);
@@ -407,6 +408,12 @@ const mapWorkflowNodes = (workflowNodes = [], scaleX = 1.0, scaleY = 1.0) =>
                 styleColor: node.styleColor || 'blue',
                 assignLabel: node.assignLabel || '',
                 orderLabel: node.orderLabel || '',
+                code,
+                flowType: node.flowType || node.nodeStatus || 'Both',
+                stepRole: node.stepRole || '',
+                levelNo: node.levelNo || '',
+                allowLoop: !!node.allowLoop,
+                loopGroup: node.loopGroup || '',
             },
             style: createNodeStyle(node),
         };
@@ -582,6 +589,23 @@ const WorkflowNode = ({ data, selected }) => {
 
 const nodeTypes = {
     workflowNode: WorkflowNode,
+};
+
+const normalizeNodeCode = (value, fallback = 'NODE') => {
+    const rawValue = String(value || fallback).trim();
+    const normalized = rawValue.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    return normalized || fallback;
+};
+
+const generateUniqueNodeId = (nodes = [], baseName = 'NODE') => {
+    const base = normalizeNodeCode(baseName, 'NODE');
+    const existing = new Set(nodes.map((node) => String(node.id)));
+    let candidate = `${base}_${Date.now()}`;
+
+    while (existing.has(candidate)) {
+        candidate = `${base}_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    }
+    return candidate;
 };
 
 const getMiniMapNodeColor = (node) => {
@@ -859,14 +883,21 @@ function Flow({ id: propId }) {
 
             // Re-map nodes to database structure in sorted order
             const workflowNodes = sortedNodesList.map((node, index) => {
-                const idNum = parseInt(node.id.replace('node-', ''));
                 const originalX = Math.round(node.position.x / scaleX);
                 const originalY = Math.round(node.position.y / scaleY);
+                const nodeCode = node.data.code || node.id;
                 return {
-                    id: isNaN(idNum) ? node.id : idNum,
+                    id: node.id,
                     laneId: node.data.laneId || '',
                     nodeName: node.data.label,
                     nodeType: node.data.nodeType || 'task',
+                    nodeCode,
+                    code: nodeCode,
+                    flowType: node.data.flowType || 'Both',
+                    stepRole: node.data.stepRole || '',
+                    levelNo: node.data.levelNo || '',
+                    allowLoop: !!node.data.allowLoop,
+                    loopGroup: node.data.loopGroup || '',
                     shape: node.data.shape || 'rectangle',
                     styleColor: node.data.styleColor || 'blue',
                     posX: originalX,
@@ -891,9 +922,6 @@ function Flow({ id: propId }) {
 
             // Re-map edges to database structure in sorted order
             const workflowTransitions = sortedEdgesList.map((edge, index) => {
-                const sourceNum = parseInt(edge.source.replace('node-', ''));
-                const targetNum = parseInt(edge.target.replace('node-', ''));
-                
                 let parsedCondition = edge.data?.conditionJson || '{}';
                 if (typeof parsedCondition === 'string') {
                     try {
@@ -904,8 +932,8 @@ function Flow({ id: propId }) {
                 }
 
                 return {
-                    fromNodeId: isNaN(sourceNum) ? edge.source : sourceNum,
-                    toNodeId: isNaN(targetNum) ? edge.target : targetNum,
+                    fromNodeId: edge.source,
+                    toNodeId: edge.target,
                     actionName: edge.data?.actionName || edge.label || 'Transition',
                     actionCode: edge.data?.actionCode || '',
                     stepNo: parseInt(edge.data?.stepNo) || null,
@@ -997,7 +1025,7 @@ function Flow({ id: propId }) {
                     nodeStatus: node.data?.flowType || "Both",
                     allowLoop: node.data?.allowLoop === true || node.data?.allowLoop === 'Yes',
                     loopGroup: node.data?.loopGroup || null,
-                    nodeCode: node.data?.code || null,
+                    nodeCode: node.data?.code || node.id,
                     stepRole: node.data?.stepRole || null,
                     departmentCode: node.data?.departmentName || null,
                     levelNo: node.data?.levelNo ? parseInt(node.data.levelNo) : null,
@@ -1261,9 +1289,8 @@ function Flow({ id: propId }) {
     }, []);
 
     const addNode = useCallback(() => {
-        const id = `node-${Math.random().toString(36).slice(2, 8)}`;
-
         setNodes((currentNodes) => {
+            const id = generateUniqueNodeId(currentNodes, 'NODE');
             const nextNode = {
                 id,
                 type: 'workflowNode',
@@ -1278,6 +1305,12 @@ function Flow({ id: propId }) {
                     departmentName: '',
                     description: '',
                     manualPositioned: false,
+                    code: id,
+                    flowType: 'Both',
+                    stepRole: '',
+                    levelNo: 1,
+                    allowLoop: false,
+                    loopGroup: '',
                 },
                 style: createNodeStyle({ nodeType: 'task' }),
             };
@@ -1345,6 +1378,7 @@ function Flow({ id: propId }) {
 
             if (type) {
                 const template = nodeTemplates.find((item) => item.type === type) || nodeTemplates[0];
+                const id = generateUniqueNodeId(nodes, 'NODE');
                 
                 let shape = 'rectangle';
                 let styleColor = 'blue';
@@ -1360,7 +1394,7 @@ function Flow({ id: propId }) {
                 }
 
                 newNode = {
-                    id: `node-${Math.random().toString(36).slice(2, 8)}`,
+                    id,
                     type: 'workflowNode',
                     position,
                     data: {
@@ -1373,14 +1407,21 @@ function Flow({ id: propId }) {
                         laneId: '',
                         shape: shape,
                         styleColor: styleColor,
+                        code: id,
+                        flowType: 'Both',
+                        stepRole: '',
+                        levelNo: 1,
+                        allowLoop: false,
+                        loopGroup: '',
                     },
                     style: createNodeStyle({ nodeType: template.nodeType, styleColor: styleColor }),
                 };
             } else if (laneDataStr) {
                 try {
                     const lane = JSON.parse(laneDataStr);
+                    const id = generateUniqueNodeId(nodes, 'NODE');
                     newNode = {
-                        id: `node-${Math.random().toString(36).slice(2, 8)}`,
+                        id,
                         type: 'workflowNode',
                         position,
                         data: {
@@ -1393,6 +1434,12 @@ function Flow({ id: propId }) {
                             laneId: lane.id,
                             shape: 'rectangle',
                             styleColor: 'green',
+                            code: id,
+                            flowType: 'Both',
+                            stepRole: '',
+                            levelNo: 1,
+                            allowLoop: false,
+                            loopGroup: '',
                         },
                         style: createNodeStyle({ nodeType: 'department', styleColor: 'green' }),
                     };
@@ -1408,7 +1455,7 @@ function Flow({ id: propId }) {
             setSelectedEdge(null);
             focusNode(newNode.id);
         },
-        [edges, endPaletteDrag, focusNode, getDropPosition, reactFlowInstance, setNodes],
+        [edges, endPaletteDrag, focusNode, getDropPosition, nodes, reactFlowInstance, setNodes],
     );
 
     const updateSelectedNode = useCallback(
@@ -1635,7 +1682,16 @@ function Flow({ id: propId }) {
                             
                             setNodes((currentNodes) =>
                                 currentNodes.map((item) =>
-                                    item.id === oldId ? { ...item, id: newId } : item
+                                    item.id === oldId
+                                        ? {
+                                            ...item,
+                                            id: newId,
+                                            data: {
+                                                ...item.data,
+                                                code: item.data?.code === oldId || !item.data?.code ? newId : item.data.code,
+                                            },
+                                        }
+                                        : item
                                 )
                             );
                             
@@ -1648,7 +1704,14 @@ function Flow({ id: propId }) {
                                 })
                             );
 
-                            setSelectedNode((prev) => ({ ...prev, id: newId }));
+                            setSelectedNode((prev) => ({
+                                ...prev,
+                                id: newId,
+                                data: {
+                                    ...prev.data,
+                                    code: prev.data?.code === oldId || !prev.data?.code ? newId : prev.data.code,
+                                },
+                            }));
                         }}
                     />
                 </label>
@@ -1657,6 +1720,13 @@ function Flow({ id: propId }) {
                     <input
                         value={selectedNode.data.label || ''}
                         onChange={(event) => updateSelectedNode('label', event.target.value)}
+                    />
+                </label>
+                <label>
+                    <span>Code</span>
+                    <input
+                        value={selectedNode.data.code || ''}
+                        onChange={(event) => updateSelectedNode('code', event.target.value)}
                     />
                 </label>
                 <label>
