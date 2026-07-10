@@ -75,66 +75,15 @@
             { 
                 itemType: "group", 
                 caption: "Attachment", 
-                colCount: 2, 
+                colCount: 1, 
                 items: [
                     {
                         dataField: "quotation",
-                        colSpan: 2,
+                        colSpan: 1,
                         label: { text: "Upload Quotation" },
                         template: function (data, itemElement) {
-                            var $mainContainer = $("<div style='display: flex; gap: 15px; width: 100%; align-items: center;'>");
-                            var $uploaderWrapper = $("<div style='flex: 1;'>").appendTo($mainContainer);
-                            var $selectBoxWrapper = $("<div style='width: 350px;'>").appendTo($mainContainer);
-                            
-                            $mainContainer.appendTo(itemElement);
-                            
-                            $selectBoxWrapper.dxSelectBox({
-                                items: [
-                                    { id: "default", text: "Default / Quotation" },
-                                    { id: "confirmedQuotationFlag", text: "Confirmed Quotation (must for FCI, CCI)" },
-                                    { id: "emailMktClient", text: "Email MKT-Client" },
-                                    { id: "riClosings", text: "RI Closings" },
-                                    { id: "factoryOperationYears", text: "Operation year of Factories (*)" },
-                                    { id: "newReplacementValue", text: "New replacement value / reinstatement value (*)" },
-                                    { id: "holdCoverType", text: "Hold Cover / Cover Note" },
-                                    { id: "resultAttachment", text: "RES (*)" },
-                                    { id: "declarationText", text: "Declaration" },
-                                    { id: "machineryList", text: "List of machineries including the depreciated values for each of item (*)" },
-                                    { id: "isBodApproved", text: "BoDs/UW's approved" },
-                                    { id: "uRFAttachment", text: "URF" },
-                                    { id: "emailInformRi", text: "Email inform RI for Endorsement" },
-                                    { id: "riScheme", text: "RI Scheme (New/RN)" },
-                                    { id: "proposalForm", text: "Proposal form (must for CCI)" },
-                                    { id: "propertyType", text: "Type of Property list (must for FCI)" },
-                                    { id: "sumInsuredBreakdown", text: "Breakdown SI for each location (must for FCI)" },
-                                    { id: "premiumBreakdown", text: "Premium Breakdown" },
-                                    { id: "chassisEngineNumber", text: "Chassis - Engine No. (*)" },
-                                    { id: "finalPremium", text: "Final Premium in Motor system = Premium in received final Quotation (*)" },
-                                    { id: "isKycChecked", text: "KYC Checked" },
-                                    { id: "others", text: "Others (Specify)" },
-                                    { id: "isGlobalCover", text: "Global" },
-                                    { id: "ichigenka", text: "Ichigenka" }
-                                ],
-                                valueExpr: "id",
-                                displayExpr: "text",
-                                value: "default",
-                                searchEnabled: true,
-                                placeholder: "Select checklist item if applicable",
-                                onValueChanged: function(e) {
-                                    var selectedVal = e.value;
-                                    that.data.FieldName = selectedVal;
-                                    if (selectedVal === "default") {
-                                        that.data.SectionName = `${sectionIdQt}_default_@(cloneId)`;
-                                    } else {
-                                        that.data.SectionName = `${sectionId}_${selectedVal}_@(policyIssuanceId)`;
-                                    }
-                                    
-                                    $uploaderWrapper.empty();
-                                    createEditor(that, $uploaderWrapper, $("<div>"), that);
-                                }
-                            });
-                            
-                            createEditor(that, $uploaderWrapper, $("<div>"), that);
+                            createEditor(that, itemElement, $("<div>"), that);
+                          
                         }
                     },
                     {
@@ -219,7 +168,40 @@
     
     });
     viewFieldAdjust("@PIViewIdHelper.Form(dept, policyIssuanceId)");
+      setTimeout(() => {
+          var attachListId = `attList_qt-body_@(dept)__default_@(cloneId)_`;
+          var uploader = $(`[id^='${attachListId}'] .att-item`);
+          var result = extractAttachmentQuantity(attachListId);
+          $.each(uploader, function (itemIndex, item) {
+              var $mainContainer = $("<div>");
+                                var $uploaderWrapper = $("<div style='flex: 1;'>").appendTo($mainContainer);
+                                var $selectBoxWrapper = $("<div style='width: 200px;'>").appendTo($mainContainer);
 
+                                $mainContainer.appendTo(item);
+
+                                $selectBoxWrapper.dxSelectBox({
+                                    items: _enums.TSCheckList,
+                                    valueExpr: "id",
+                                    displayExpr: "text",
+                                    value: "default",
+                                    searchEnabled: true,
+                                    placeholder: "Select checklist item if applicable",
+                                    onValueChanged: function(e) {
+                                        var selectedVal = e.value;
+                                        that.data.FieldName = selectedVal;
+                                        if (selectedVal === "default") {
+                                            that.data.SectionName = `${sectionIdQt}_default_@(cloneId)`;
+                                        } else {
+                                            that.data.SectionName = `${sectionId}_${selectedVal}_@(policyIssuanceId)`;
+                                        }
+
+                                        $uploaderWrapper.empty();
+                                        createEditor(that, $uploaderWrapper, $("<div>"), that);
+                                    }
+                                });
+          }); 
+                             
+          });
     setTimeout(() => {
         var picJson = PIC_JSON || "{}";
         var picMap = parsePicMap(picJson);
