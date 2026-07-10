@@ -3,6 +3,7 @@ import { CONFIG } from '../config';
 import DropDownBox from './DropDownBox';
 import SelectBox from './SelectBox';
 import CheckBox from './CheckBox';
+import * as XLSX from 'xlsx';
 
 const API_BASE_URL = CONFIG.API_URL || 'https://localhost:7254';
 
@@ -43,6 +44,25 @@ const getAvatarBgColor = (name) => {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);
   }
   return colors[Math.abs(hash) % colors.length];
+};
+
+const normalizeExportConfig = (gridOption) => {
+  const config = gridOption?.export || gridOption?.exportConfig || gridOption?.sysTableConfig?.export || {};
+
+  if (typeof config === 'string') {
+    try {
+      return JSON.parse(config);
+    } catch {
+      return {};
+    }
+  }
+
+  return config || {};
+};
+
+const sanitizeFileName = (value) => {
+  const text = String(value || 'GridData').trim();
+  return (text || 'GridData').replace(/[\\/:*?"<>|]/g, '_');
 };
 
 const InlineCellEditor = ({ value, onChange, onFocus, onBlur }) => {
@@ -125,6 +145,8 @@ const CustomGrid = forwardRef(({
   // Column resize state
   const [columnWidths, setColumnWidths] = useState({});
   const [resizingColumn, setResizingColumn] = useState(null);
+  const exportConfig = useMemo(() => normalizeExportConfig(gridOption), [gridOption]);
+  const exportEnabled = exportConfig.enabled !== false;
 
   // Theme support
   const [theme, setTheme] = useState(propTheme || 'light');
@@ -150,46 +172,6 @@ const CustomGrid = forwardRef(({
 
   // Resolve selection mode
   const selectionMode = gridOption?.selection?.mode ?? propSelectionMode ?? (showSelectionCheckbox ? 'multiple' : 'single');
-
-  // Imperative handle to allow jQuery or parent components to get data or call options
-  useImperativeHandle(ref, () => ({
-    getData: () => draftRows,
-    getSelectedRowKeys: () => selectedRowKeys,
-    getSelectedRowsData: () => draftRows.filter(r => selectedRowKeys.includes(r.id || r.Id)),
-    selectRows: (keys, preserveExisting = false) => {
-      if (preserveExisting) {
-        setSelectedRowKeys(prev => [...new Set([...prev, ...keys])]);
-      } else {
-        setSelectedRowKeys(keys);
-      }
-    },
-    deselectAll: () => setSelectedRowKeys([]),
-    option: (name, value) => {
-      if (name === 'value') {
-        if (value !== undefined) {
-          setDraftRows(value || []);
-          setRows(value || []);
-        } else {
-          return draftRows;
-        }
-      }
-      if (name === 'theme') {
-        if (value !== undefined) {
-          setTheme(value);
-        } else {
-          return theme;
-        }
-      }
-      if (name === 'selectedRowKeys') {
-        if (value !== undefined) {
-          setSelectedRowKeys(value || []);
-        } else {
-          return selectedRowKeys;
-        }
-      }
-    },
-    value: () => draftRows
-  }));
 
   // Trigger onSelectionChanged callback when selectedRowKeys changes
   useEffect(() => {
@@ -401,6 +383,7 @@ const CustomGrid = forwardRef(({
         editorType: editorType,
         dataType: column.dataType,
         lookup: column.lookup,
+        editorOptions: column.editorOptions,
         headerIcon: column.headerIcon || column.icon,
       };
     });
@@ -784,6 +767,121 @@ const CustomGrid = forwardRef(({
         : String(right).localeCompare(String(left), undefined, { numeric: true });
     });
   }, [filteredRows, sortInfo]);
+
+  const exportColumns = useMemo(() => (
+    renderingColumns.filter((column) =>
+      column.visible !== false &&
+      !column.isCommand &&
+      !column.actions &&
+      column.field !== 'row-selection-checkbox' &&
+      column.field !== 'row-drag-handle' &&
+      column.field !== 'row-commands'
+    )
+  ), [renderingColumns]);
+
+  const getExportCellValue = (row, column) => {
+    const value = getCellValue(row, column.field);
+
+    if (column.editorType === 'dxCheckBox' || column.editorType === 'checkbox' || column.dataType === 'boolean') {
+      const boolValue = value === true || value === 'true' || Number(value) === 1;
+      return boolValue ? 'Yes' : 'No';
+    }
+
+    if ((column.editorType === 'dxSelectBox' || column.editorType === 'selectbox') && Array.isArray(column.lookup?.dataSource || column.editorOptions?.dataSource)) {
+      const ds = column.lookup?.dataSource || column.editorOptions?.dataSource || [];
+      const valExpr = column.lookup?.valueExpr || column.editorOptions?.valueExpr || 'id';
+      const dispExpr = column.lookup?.displayExpr || column.editorOptions?.displayExpr || 'name';
+      const selectedItem = ds.find((item) => {
+        const itemVal = typeof item === 'object' ? (item[valExpr] ?? item.id ?? item.key ?? '') : item;
+        return String(itemVal) === String(value);
+      });
+
+      if (selectedItem) {
+        return typeof selectedItem === 'object'
+          ? (selectedItem[dispExpr] ?? selectedItem.value ?? selectedItem.text ?? selectedItem.name ?? value)
+          : selectedItem;
+      }
+    }
+
+    if ((column.editorType === 'dxDropDownBox' || column.editorType === 'dropdownbox') && Array.isArray(column.lookup?.dataSource || column.editorOptions?.dataSource)) {
+      const ds = column.lookup?.dataSource || column.editorOptions?.dataSource || [];
+      const valExpr = column.lookup?.valueExpr || column.editorOptions?.valueExpr || 'Id';
+      const dispExpr = column.lookup?.displayExpr || column.editorOptions?.displayExpr || 'name';
+      const selectedItem = ds.find((item) => String(item[valExpr] ?? item.id ?? item.Id) === String(value));
+      if (selectedItem) {
+        return selectedItem[dispExpr] ?? selectedItem.name ?? value;
+      }
+    }
+
+    return value ?? '';
+  };
+
+  const exportToExcel = (options = {}) => {
+    const selectedOnly = options.selectedOnly ?? options.exportSelectedRows ?? false;
+    const sourceRows = selectedOnly
+      ? sortedRows.filter((row) => selectedRowKeys.includes(row.id || row.Id))
+      : sortedRows;
+
+    const headers = exportColumns.map((column) => column.caption || column.field);
+    const dataRows = sourceRows.map((row) =>
+      exportColumns.map((column) => getExportCellValue(row, column))
+    );
+
+    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...dataRows]);
+    const columnWidthsForExport = exportColumns.map((column) => {
+      const key = column.field || column.caption;
+      const width = columnWidths[key] || parseInt(resolveColumnWidth(column), 10) || 160;
+      return { wch: Math.max(10, Math.min(60, Math.round(width / 8))) };
+    });
+    worksheet['!cols'] = columnWidthsForExport;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
+
+    const fileName = sanitizeFileName(options.fileName || exportConfig.fileName || modelName || gridOption?.ModelName || 'GridData');
+    XLSX.writeFile(workbook, `${fileName}.xlsx`);
+  };
+
+  // Imperative handle to allow jQuery or parent components to get data or call options
+  useImperativeHandle(ref, () => ({
+    getData: () => draftRows,
+    getSelectedRowKeys: () => selectedRowKeys,
+    getSelectedRowsData: () => draftRows.filter(r => selectedRowKeys.includes(r.id || r.Id)),
+    exportToExcel,
+    selectRows: (keys, preserveExisting = false) => {
+      if (preserveExisting) {
+        setSelectedRowKeys(prev => [...new Set([...prev, ...keys])]);
+      } else {
+        setSelectedRowKeys(keys);
+      }
+    },
+    deselectAll: () => setSelectedRowKeys([]),
+    option: (name, value) => {
+      if (name === 'value') {
+        if (value !== undefined) {
+          setDraftRows(value || []);
+          setRows(value || []);
+        } else {
+          return draftRows;
+        }
+      }
+      if (name === 'theme') {
+        if (value !== undefined) {
+          setTheme(value);
+        } else {
+          return theme;
+        }
+      }
+      if (name === 'selectedRowKeys') {
+        if (value !== undefined) {
+          setSelectedRowKeys(value || []);
+        } else {
+          return selectedRowKeys;
+        }
+      }
+    },
+    value: () => draftRows
+  }));
 
   const pageCount = useMemo(() => {
     if (groupColumns.length > 0) {
@@ -1364,6 +1462,15 @@ const CustomGrid = forwardRef(({
       onClick: cancelChanges,
       disabled: !isDirty && editingRowId === null,
     },
+    ...(exportEnabled ? [{
+      location: 'before',
+      text: 'Export Excel',
+      icon: 'fa-file-excel-o',
+      onClick: () => exportToExcel({
+        selectedOnly: exportConfig.allowExportSelectedData && selectedRowKeys.length > 0
+      }),
+      disabled: exportColumns.length === 0 || sortedRows.length === 0,
+    }] : []),
     {
       location: 'after',
       text: 'Add Row',
