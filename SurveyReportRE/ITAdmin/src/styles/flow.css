@@ -8,6 +8,16 @@
   padding-right: 6px;
 }
 
+.flow-shell.palette-dragging {
+  overflow: hidden;
+}
+
+.flow-shell.palette-dragging .flow-sidebar,
+.flow-shell.palette-dragging .flow-properties-panel,
+.flow-shell.palette-dragging .flow-properties-scroll-container {
+  overflow: hidden;
+}
+
 .flow-layout {
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr) 320px;

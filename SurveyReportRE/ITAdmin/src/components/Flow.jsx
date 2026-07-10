@@ -616,6 +616,7 @@ function Flow({ id: propId }) {
     const [workflowDefinition, setWorkflowDefinition] = useState(null);
     const [lanesList, setLanesList] = useState([]);
     const [activeStatsTab, setActiveStatsTab] = useState('nodes');
+    const [isPaletteDragging, setIsPaletteDragging] = useState(false);
 
     const focusNode = useCallback(
         (nodeId) => {
@@ -1241,6 +1242,21 @@ function Flow({ id: propId }) {
             .catch((err) => console.error("Failed to load Notification Templates:", err));
     }, []);
 
+    useEffect(() => {
+        if (!isPaletteDragging) return undefined;
+
+        const originalBodyOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+
+        return () => {
+            document.body.style.overflow = originalBodyOverflow;
+        };
+    }, [isPaletteDragging]);
+
+    const endPaletteDrag = useCallback(() => {
+        setIsPaletteDragging(false);
+    }, []);
+
     const addNode = useCallback(() => {
         const id = `node-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -1309,6 +1325,7 @@ function Flow({ id: propId }) {
         (event) => {
             event.preventDefault();
             event.stopPropagation();
+            endPaletteDrag();
             if (!reactFlowInstance) return;
 
             const position = getDropPosition(event);
@@ -1388,7 +1405,7 @@ function Flow({ id: propId }) {
             setSelectedEdge(null);
             focusNode(newNode.id);
         },
-        [edges, focusNode, getDropPosition, reactFlowInstance, setNodes],
+        [edges, endPaletteDrag, focusNode, getDropPosition, reactFlowInstance, setNodes],
     );
 
     const updateSelectedNode = useCallback(
@@ -2106,7 +2123,7 @@ function Flow({ id: propId }) {
     ]);
 
     return (
-        <div className="flow-shell">
+        <div className={`flow-shell${isPaletteDragging ? ' palette-dragging' : ''}`}>
             <div className="flow-layout">
                 <aside className="flow-sidebar">
                     <div className="flow-sidebar-card">
@@ -2199,10 +2216,12 @@ function Flow({ id: propId }) {
                                         style={{ borderLeft: '4px solid #10b981', background: '#f0fdf4' }}
                                         draggable
                                         onDragStart={(event) => {
+                                            setIsPaletteDragging(true);
                                             event.dataTransfer.setData('application/reactflow-lane', JSON.stringify(lane));
                                             event.dataTransfer.setData('text/plain', `lane:${JSON.stringify(lane)}`);
                                             event.dataTransfer.effectAllowed = 'copyMove';
                                         }}
+                                        onDragEnd={endPaletteDrag}
                                     >
                                         <strong>{lane.label || lane.id}</strong>
                                         <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Phân làn quy trình</span>
@@ -2222,10 +2241,12 @@ function Flow({ id: propId }) {
                                     className="flow-palette-item"
                                     draggable
                                     onDragStart={(event) => {
+                                        setIsPaletteDragging(true);
                                         event.dataTransfer.setData('application/reactflow', template.type);
                                         event.dataTransfer.setData('text/plain', template.type);
                                         event.dataTransfer.effectAllowed = 'copyMove';
                                     }}
+                                    onDragEnd={endPaletteDrag}
                                 >
                                     <strong>{template.label}</strong>
                                     <span>{template.subtitle}</span>
