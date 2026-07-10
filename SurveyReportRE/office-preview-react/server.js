@@ -38,7 +38,13 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
   res.json({ success: true, fileName: req.file.originalname, url });
 });
 
-app.use('/uploads', express.static(uploadDir));
+app.use('/uploads', express.static(uploadDir, {
+  setHeaders: (res) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.set('Access-Control-Allow-Headers', '*');
+  }
+}));
 
 app.listen(port, () => {
   console.log(`Office preview server listening on http://localhost:${port}`);

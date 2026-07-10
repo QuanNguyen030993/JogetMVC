@@ -1,61 +1,54 @@
 import { useState, useEffect, useRef } from 'react';
+import DocViewer, { DocViewerRenderers } from "@cyntler/react-doc-viewer";
+import "@cyntler/react-doc-viewer/dist/index.css";
 
-// Sub-component to render Word (.docx) documents locally
-function DocxPreview({ url }) {
+// Custom local Word document (.docx) renderer plugin for @cyntler/react-doc-viewer
+const LocalDocxRenderer = ({ mainState: { currentDocument } }) => {
   const containerRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     let isMounted = true;
-    const loadDocx = async () => {
-      if (!url) return;
+    const renderDoc = async () => {
+      if (!currentDocument?.uri) return;
       setLoading(true);
       setError('');
       try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Failed to fetch Word document.');
+        const response = await fetch(currentDocument.uri);
+        if (!response.ok) throw new Error('Failed to fetch docx file.');
         const blob = await response.blob();
         
         if (isMounted && containerRef.current) {
           containerRef.current.innerHTML = '';
-          if (window.docx && typeof window.docx.renderAsync === 'function') {
-            await window.docx.renderAsync(blob, containerRef.current, null, {
-              className: "docx-viewer",
-              inWrapper: true,
-              ignoreWidth: false,
-              ignoreHeight: false,
-            });
-          } else {
-            throw new Error('docx-preview library is not loaded.');
-          }
+          const { renderAsync } = await import('docx-preview');
+          await renderAsync(blob, containerRef.current, null, {
+            className: "docx-viewer",
+            inWrapper: true,
+          });
         }
       } catch (err) {
-        if (isMounted) {
-          setError(err.message || 'Error rendering Word document.');
-        }
+        if (isMounted) setError(err.message || 'Error rendering DOCX');
       } finally {
         if (isMounted) setLoading(false);
       }
     };
-
-    loadDocx();
-    return () => {
-      isMounted = false;
-    };
-  }, [url]);
+    renderDoc();
+    return () => { isMounted = false; };
+  }, [currentDocument]);
 
   return (
     <div className="docx-container">
-      {loading && <div className="spinner">Rendering Word document...</div>}
+      {loading && <div className="spinner">Rendering document...</div>}
       {error && <div className="error-message">{error}</div>}
       <div ref={containerRef} className="docx-render-area" />
     </div>
   );
-}
+};
+LocalDocxRenderer.fileTypes = ["docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
 
-// Sub-component to render Excel (.xlsx, .xls) files locally
-function ExcelPreview({ url }) {
+// Custom local Excel (.xlsx, .xls) renderer plugin for @cyntler/react-doc-viewer
+const LocalExcelRenderer = ({ mainState: { currentDocument } }) => {
   const [workbook, setWorkbook] = useState(null);
   const [activeSheet, setActiveSheet] = useState('');
   const [sheetHtml, setSheetHtml] = useState('');
@@ -64,55 +57,50 @@ function ExcelPreview({ url }) {
 
   useEffect(() => {
     let isMounted = true;
-    const loadExcel = async () => {
-      if (!url) return;
+    const renderExcel = async () => {
+      if (!currentDocument?.uri) return;
       setLoading(true);
       setError('');
       try {
-        const response = await fetch(url);
+        const response = await fetch(currentDocument.uri);
         if (!response.ok) throw new Error('Failed to fetch Excel file.');
         const arrayBuffer = await response.arrayBuffer();
         
-        if (window.XLSX) {
-          const wb = window.XLSX.read(arrayBuffer, { type: 'array' });
-          if (isMounted) {
-            setWorkbook(wb);
-            if (wb.SheetNames.length > 0) {
-              const firstSheet = wb.SheetNames[0];
-              setActiveSheet(firstSheet);
-              const html = window.XLSX.utils.sheet_to_html(wb.Sheets[firstSheet]);
-              setSheetHtml(html);
-            }
+        const XLSX = await import('xlsx');
+        const wb = XLSX.read(arrayBuffer, { type: 'array' });
+        
+        if (isMounted) {
+          setWorkbook(wb);
+          if (wb.SheetNames.length > 0) {
+            const firstSheet = wb.SheetNames[0];
+            setActiveSheet(firstSheet);
+            const html = XLSX.utils.sheet_to_html(wb.Sheets[firstSheet]);
+            setSheetHtml(html);
           }
-        } else {
-          throw new Error('SheetJS (XLSX) library is not loaded.');
         }
       } catch (err) {
-        if (isMounted) {
-          setError(err.message || 'Error rendering Excel file.');
-        }
+        if (isMounted) setError(err.message || 'Error rendering Excel');
       } finally {
         if (isMounted) setLoading(false);
       }
     };
-
-    loadExcel();
-    return () => {
-      isMounted = false;
-    };
-  }, [url]);
+    renderExcel();
+    return () => { isMounted = false; };
+  }, [currentDocument]);
 
   const handleSheetChange = (sheetName) => {
     setActiveSheet(sheetName);
     if (workbook) {
-      const html = window.XLSX.utils.sheet_to_html(workbook.Sheets[sheetName]);
-      setSheetHtml(html);
+      import('xlsx').then((XLSX) => {
+        const html = XLSX.utils.sheet_to_html(workbook.Sheets[sheetName]);
+        setSheetHtml(html);
+      });
     }
   };
 
   return (
     <div className="excel-container">
-      {loading && <div className="spinner">Rendering sheet data...</div>}
+      {loading && <div className="spinner">Rendering sheet...</div>}
       {error && <div className="error-message">{error}</div>}
       {workbook && workbook.SheetNames.length > 1 && (
         <div className="sheet-tabs">
@@ -137,7 +125,15 @@ function ExcelPreview({ url }) {
       )}
     </div>
   );
-}
+};
+LocalExcelRenderer.fileTypes = [
+  "xlsx", "xls",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-excel"
+];
+
+// Register our local renderers before default renderers to take precedence
+const customRenderers = [LocalDocxRenderer, LocalExcelRenderer, ...DocViewerRenderers];
 
 function App() {
   const [file, setFile] = useState(null);
@@ -145,6 +141,15 @@ function App() {
   const [previewFileName, setPreviewFileName] = useState('');
   const [message, setMessage] = useState('Choose a Word, Excel, PowerPoint, or PDF file to preview.');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Revoke Blob URLs to prevent memory leaks when changing documents
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -168,9 +173,19 @@ function App() {
         throw new Error(data.message || 'Upload failed.');
       }
 
-      setPreviewUrl(`http://127.0.0.1:3001${data.url}`);
+      // 1. Fetch file content from backend as a Blob
+      const fileResponse = await fetch(`http://127.0.0.1:3001${data.url}`);
+      if (!fileResponse.ok) {
+        throw new Error('Failed to retrieve file content from backend.');
+      }
+      const blob = await fileResponse.blob();
+
+      // 2. Generate a local browser Blob URL
+      const localBlobUrl = URL.createObjectURL(blob);
+
+      setPreviewUrl(localBlobUrl);
       setPreviewFileName(data.fileName);
-      setMessage(`Preview ready: ${data.fileName}`);
+      setMessage(`Preview ready (loaded as Blob): ${data.fileName}`);
     } catch (error) {
       setMessage(error.message || 'Unable to preview this file.');
     } finally {
@@ -186,17 +201,13 @@ function App() {
     }
   };
 
-  const previewExt = previewFileName ? previewFileName.slice(previewFileName.lastIndexOf('.')).toLowerCase() : '';
-  const isDocx = previewExt === '.docx';
-  const isExcel = previewExt === '.xlsx' || previewExt === '.xls';
-  const isPdf = previewExt === '.pdf';
-  const isUnsupported = previewExt === '.doc' || previewExt === '.ppt' || previewExt === '.pptx';
+  const docs = previewUrl ? [{ uri: previewUrl, fileName: previewFileName }] : [];
 
   return (
     <div className="app-shell">
       <div className="card">
-        <h1>React Local Office Preview</h1>
-        <p>Upload documents and preview them securely entirely offline in your browser.</p>
+        <h1>React Office Preview (@cyntler)</h1>
+        <p>Tải tài liệu lên và xem trước bằng local Blob Object URL thông qua @cyntler/react-doc-viewer.</p>
 
         <form onSubmit={handleSubmit} className="upload-form">
           <input type="file" accept=".doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf" onChange={handleFileChange} />
@@ -217,23 +228,18 @@ function App() {
             </a>
           </div>
 
-          <div className="preview-body">
-            {isDocx ? (
-              <DocxPreview url={previewUrl} />
-            ) : isExcel ? (
-              <ExcelPreview url={previewUrl} />
-            ) : isPdf ? (
-              <iframe title="PDF preview" src={previewUrl} className="preview-frame" />
-            ) : isUnsupported ? (
-              <div className="unsupported-preview">
-                <p>
-                  In-browser local preview for <strong>{previewExt}</strong> is not supported to ensure offline privacy.
-                </p>
-                <p>You can still download the file to view it on your machine.</p>
-              </div>
-            ) : (
-              <p>This file format is not supported for preview.</p>
-            )}
+          <div className="preview-body-viewer">
+            <DocViewer
+              documents={docs}
+              pluginRenderers={customRenderers}
+              config={{
+                header: {
+                  disableHeader: true,
+                  disableFileName: true,
+                }
+              }}
+              style={{ height: 650, borderRadius: '8px', overflow: 'hidden' }}
+            />
           </div>
         </div>
       )}
@@ -242,4 +248,6 @@ function App() {
 }
 
 export default App;
+
+
 

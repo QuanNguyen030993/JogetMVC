@@ -64,15 +64,6 @@ button:disabled {
   color: #4b5563;
 }
 
-.preview-frame {
-  width: 100%;
-  height: 760px;
-  border: 1px solid #d1d5db;
-  border-radius: 12px;
-}
-
-/* Local Preview Component Styling */
-
 .preview-header {
   display: flex;
   justify-content: space-between;
@@ -89,51 +80,30 @@ button:disabled {
   word-break: break-all;
 }
 
-.preview-body {
+.preview-body-viewer {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   overflow: hidden;
-  padding: 20px;
   min-height: 400px;
 }
 
-/* Spinner & Loading */
-.spinner {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 40px;
-  color: #4f46e5;
-  font-weight: 500;
-}
-
-.error-message {
-  padding: 16px;
-  background-color: #fef2f2;
-  border: 1px solid #fee2e2;
-  color: #b91c1c;
-  border-radius: 8px;
-  margin-bottom: 16px;
-}
-
-/* Word Preview (.docx) Styling */
+/* Custom DOCX Renderer Styles */
 .docx-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
-  max-height: 700px;
+  max-height: 650px;
   overflow-y: auto;
-  padding: 10px;
+  background: #f8fafc;
 }
 
 .docx-render-area {
   width: 100%;
-  max-width: 850px;
+  max-width: 800px;
 }
 
-/* Overriding default docx-preview styling for realistic pages */
 .docx-viewer {
   background: transparent !important;
   padding: 0 !important;
@@ -141,51 +111,53 @@ button:disabled {
 
 .docx-viewer section.docx {
   background: white !important;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-  margin: 0 auto 20px auto !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
+  margin: 10px auto 20px auto !important;
   border-radius: 4px !important;
-  padding: 20mm 15mm 20mm 15mm !important; /* Standard Word margins */
+  padding: 20mm 15mm 20mm 15mm !important;
   border: 1px solid #e2e8f0 !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
 }
 
-/* Excel Preview (.xlsx, .xls) Styling */
+/* Custom Excel Renderer Styles */
 .excel-container {
   display: flex;
   flex-direction: column;
   width: 100%;
+  max-height: 650px;
 }
 
 .sheet-tabs {
   display: flex;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   overflow-x: auto;
-  padding-bottom: 8px;
+  padding: 4px 0 8px 0;
   border-bottom: 1px solid #e2e8f0;
 }
 
 .sheet-tab {
-  background: #f1f5f9;
+  background: #e2e8f0;
   color: #475569;
+  border: none;
   border-radius: 6px;
   padding: 6px 12px;
   font-size: 13px;
+  cursor: pointer;
 }
 
 .sheet-tab:hover {
-  background: #e2e8f0;
+  background: #cbd5e1;
 }
 
 .sheet-tab.active {
-  background: #4f46e5;
+  background: #2563eb;
   color: white;
 }
 
 .excel-render-wrapper {
   width: 100%;
-  max-height: 600px;
   overflow: auto;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
@@ -215,18 +187,5 @@ button:disabled {
   background-color: #f1f5f9;
 }
 
-/* Unsupported Preview Style */
-.unsupported-preview {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-  text-align: center;
-  color: #475569;
-}
 
-.unsupported-preview p {
-  margin: 8px 0;
-}
 
