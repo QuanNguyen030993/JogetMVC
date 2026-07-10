@@ -163,28 +163,38 @@ function App() {
       const previewEndpoint = 'https://localhost:7254/api/Document/StreamDocument?id=10395';
 
       const fileResponse = await fetch(previewEndpoint);
-      console.log('Response status:', fileResponse.status);
+      console.log('Response status:', fileResponse);
       
       if (!fileResponse.ok) {
         throw new Error(`Failed to retrieve document: ${fileResponse.status} ${fileResponse.statusText}`);
       }
-
+      const mimeToExt = {
+        "text/plain": ".txt",
+        "application/pdf": ".pdf",
+        "application/vnd.ms-word": ".docx",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+        "application/vnd.ms-excel": ".xls",
+        "application/vnd.openxmlformatsofficedocument.spreadsheetml.sheet": ".xlsx",
+        "application/vnd.ms-powerpoint": ".ppt",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation": ".pptx",
+        "image/png": ".png",
+        "image/jpeg": ".jpg",
+        "image/bmp": ".bmp",
+        "image/gif": ".gif",
+        "image/svg+xml": ".svg",
+        "application/octet-stream": ".bin",
+        "image/vnd.microsoft.icon": ".ico",
+        "text/csv": ".csv",
+        "application/x-rar-compressed": ".rar",
+        "application/rtf": ".rtf"
+      };
       const blob = await fileResponse.blob();
       const localBlobUrl = URL.createObjectURL(blob);
-
       setPreviewUrl(localBlobUrl);
-      
-      // 2. Định nghĩa/Hardcode các thông tin mô tả file (tránh lỗi ReferenceError)
-      // Bạn hãy điều chỉnh phần đuôi file dưới đây cho khớp với định dạng thực tế của file 10372:
-      // - Nếu là PDF: đặt ".pdf"
-      // - Nếu là Word: đặt ".docx" (sẽ tự động chạy qua local renderer offline)
-      // - Nếu là Excel: đặt ".xlsx" (sẽ tự động chạy qua local renderer offline)
-      const testName = "test_document.pdf";
-      const testExt = ".xlsx"; // Hoặc ".docx" hoặc ".pdf" tùy theo định dạng thực tế của file 10372
-
-      setPreviewFileName(testName);
-      setPreviewFileType(testExt);
-      setMessage(`Preview ready (loaded from C# API): ${testName}`);
+      console.log(blob.type);
+      const ext = mimeToExt[blob.type] || ".bin";; // Hoặc ".docx" hoặc ".pdf" tùy theo định dạng thực tế của file 10372
+      setPreviewFileType(ext);
+      // setMessage(`Preview ready (loaded from C# API): ${testName}`);
     } catch (error) {
       setMessage(error.message || 'Unable to preview this file.');
     } finally {
@@ -199,6 +209,7 @@ function App() {
       setMessage(`Selected: ${selected.name}`);
     }
   };
+
 
   const docs = previewUrl ? [{ 
     uri: previewUrl, 
