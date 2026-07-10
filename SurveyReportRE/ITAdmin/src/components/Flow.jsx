@@ -520,6 +520,12 @@ const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) 
                 isReturn: isReturn,
                 statusId: transition.statusId || '',
                 statusName: transition.statusName || '',
+                icon: transition.icon || (() => {
+                    try {
+                        const parsed = typeof transition.data === 'string' ? JSON.parse(transition.data) : (transition.data || {});
+                        return parsed.icon || '';
+                    } catch (e) { return ''; }
+                })(),
                 command: transition.command || 'None',
                 commandConfig: transition.commandConfig || '',
                 mailTemplateId: transition.mailTemplateId || (() => {
@@ -689,6 +695,7 @@ function Flow({ id: propId }) {
         { dataField: 'isExitTransition', caption: 'Exit Trans', width: 100 },
         { dataField: 'userDecisionLabel', caption: 'User Decision Label', width: 150 },
         { dataField: 'statusName', caption: 'Status', width: 130 },
+        { dataField: 'icon', caption: 'Icon', width: 100 },
         { dataField: 'command', caption: 'System Command', width: 130 },
         { dataField: 'conditionJson', caption: 'Condition JSON', width: 180 }
     ], []);
@@ -740,6 +747,7 @@ function Flow({ id: propId }) {
                 userDecisionLabel: edge.data?.userDecisionLabel || '',
                 statusId: edge.data?.statusId || '',
                 statusName: edge.data?.statusName || '',
+                icon: edge.data?.icon || '',
                 command: edge.data?.command || 'None',
                 conditionJson: edge.data?.conditionJson || '{}'
             };
@@ -800,6 +808,7 @@ function Flow({ id: propId }) {
                     isReturn: false,
                     statusId: '',
                     statusName: '',
+                    icon: '',
                     command: 'None',
                     commandConfig: '',
                 },
@@ -945,6 +954,7 @@ function Flow({ id: propId }) {
                     isReturn: edge.data?.isReturn === true,
                     statusId: edge.data?.statusId || '',
                     statusName: edge.data?.statusName || '',
+                    icon: edge.data?.icon || '',
                     command: edge.data?.command || 'None',
                     commandConfig: edge.data?.commandConfig || '',
                     mailTemplateId: edge.data?.mailTemplateId || null,
@@ -1096,6 +1106,7 @@ function Flow({ id: propId }) {
 
                 const stepData = {
                     ...conditionData,
+                    icon: edge.data?.icon || null,
                     mailTemplateId: edge.data?.mailTemplateId || null,
                     notificationTemplateId: edge.data?.notificationTemplateId || null
                 };
@@ -1902,6 +1913,14 @@ function Flow({ id: propId }) {
                     <input
                         value={selectedEdge.data?.actionCode || ''}
                         onChange={(event) => updateSelectedEdge('actionCode', event.target.value)}
+                    />
+                </label>
+                <label>
+                    <span>Icon</span>
+                    <input
+                        value={selectedEdge.data?.icon || ''}
+                        onChange={(event) => updateSelectedEdge('icon', event.target.value)}
+                        placeholder="e.g. check, fa fa-check"
                     />
                 </label>
                 <label>
