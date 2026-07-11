@@ -385,24 +385,33 @@ Note:
             });
         }
 
-        // Global function for SignalR to reload quotation components
-        window.reloadQuotationComponents = async function() {
-            loadQuotePage(true).then(async () => {
-            if (state.selectedId) {
-                await loadSelectedWorkflow();
-            }
-            // Reload state for attachments and comments
-            reloadState();
-            // Re-render department forms
-            renderDeptForms();
-            // Update UI hints
-            updateHints();
+        // Coalesce SignalR/action reloads so section templates are not rendered twice
+        // while their nested controls are still being initialized.
+        var quotationReloadPromise = null;
+        window.reloadQuotationComponents = function() {
+            if (quotationReloadPromise) return quotationReloadPromise;
+
+            quotationReloadPromise = (async function () {
+                while (state.quotePaging.loading) {
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                }
+
+                // loadQuotePage already synchronizes state, loads workflow and calls renderDetail.
+                await loadQuotePage(true);
+
+                // Let DevExtreme finish all nested templates before the final repaint.
+                await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
                 $.each(qtDeptModuleCode, function (itemIndex, item) {
-                     var form = $(`#${window.QuotationIdManager.form(item,@ViewData["Id"])}`).dxForm("instance");
-                    form.repaint();
+                    var form = $(`#${window.QuotationIdManager.form(item,@ViewData["Id"])}`).dxForm("instance");
+                    form?.repaint();
                 });
+                applyEditLock();
+                updateHints();
+            })().finally(function () {
+                quotationReloadPromise = null;
             });
-            // scrollToDept(formModuleKeyQt,state.quotes[0].stageDept);
+
+            return quotationReloadPromise;
         };
 
 
@@ -483,6 +492,10 @@ Note:
                     var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
                     $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
                      $(`#${formId}`).dxForm("instance")?.repaint();
+                    setAttachmentPermissionForSection(
+                        `#${formModuleKeyQt}-sec_${item}_@ViewData["Id"]`,
+                        _isSuperUser ? true : !roleApply[item]
+                    );
                 });
                
             }, 1);

@@ -10,7 +10,7 @@ import SelectBox from './components/SelectBox';
 import DropDownBox from './components/DropDownBox';
 import CustomForm from './components/CustomForm';
 import './css/com.all.css';
-
+import "./fonts/css/all.min.css";
 const departmentEnum = [
   { id: 1, key: 'HR', value: 'Human Resources' },
   { id: 2, key: 'DEV', value: 'Development Team' },
@@ -93,23 +93,23 @@ const gridColumns = [
       )
     }
   },
-  {
-    dataField: 'projectId',
-    caption: 'Project (Table)',
-    dataType: 'table',
-    lookup: {
-      dataSource: projectsTable,
-      valueExpr: 'Id',
-      displayExpr: 'name',
-      columns: ['Id', 'name', 'client']
-    },
-    editorOptions: {
-      dataSource: projectsTable,
-      valueExpr: 'Id',
-      displayExpr: 'name',
-      columns: ['Id', 'name', 'client']
-    }
-  }
+  // {
+  //   dataField: 'projectId',
+  //   caption: 'Project (Table)',
+  //   dataType: 'table',
+  //   lookup: {
+  //     dataSource: projectsTable,
+  //     valueExpr: 'Id',
+  //     displayExpr: 'name',
+  //     columns: ['Id', 'name', 'client']
+  //   },
+  //   editorOptions: {
+  //     dataSource: projectsTable,
+  //     valueExpr: 'Id',
+  //     displayExpr: 'name',
+  //     columns: ['Id', 'name', 'client']
+  //   }
+  // }
 ];
 
 function App() {
@@ -151,7 +151,7 @@ function App() {
         </div>
       </section>
 
-
+{/* 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
         <section className="section">
           <div className="section-title">Text Box</div>
@@ -238,7 +238,7 @@ function App() {
           onSaveSuccess={(data) => console.log("Form Saved successfully:", data)}
           onClose={() => alert("Form closed")}
         />
-      </section>
+      </section> */}
     </div>
   );
 }

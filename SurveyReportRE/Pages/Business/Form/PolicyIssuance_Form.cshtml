@@ -389,15 +389,34 @@ Note:
         }
 
 
-          // Global function for SignalR to reload quotation components
-        window.reloadPolicyIssuanceComponents = async function() {
-              loadQuotePage(true).then(() => {
-            loadPIDetail(@ViewData["Id"]);
-            applyNodeHighlights();
-            applySectionFocusHighlight();
-            updateHints();
-            firstRender = false;
-        });
+        // Coalesce SignalR/action reloads so every section finishes rendering once.
+        var policyIssuanceReloadPromise = null;
+        window.reloadPolicyIssuanceComponents = function() {
+            if (policyIssuanceReloadPromise) return policyIssuanceReloadPromise;
+
+            policyIssuanceReloadPromise = (async function () {
+                while (state.quotePaging.loading) {
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                }
+
+                // loadQuotePage already synchronizes state, loads workflow and calls renderDetail.
+                await loadQuotePage(true);
+
+                await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                $.each(piDeptModuleCode, function (itemIndex, item) {
+                    var form = $(`#${window.PolicyIssuanceIdManager.form(item,@ViewData["Id"])}`).dxForm("instance");
+                    form?.repaint();
+                });
+                applyEditLock();
+                applyNodeHighlights();
+                applySectionFocusHighlight();
+                updateHints();
+                firstRender = false;
+            })().finally(function () {
+                policyIssuanceReloadPromise = null;
+            });
+
+            return policyIssuanceReloadPromise;
         };
 
 
@@ -436,6 +455,11 @@ Note:
                     $(`#${saveButtonId}`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roleApply[item]);
                      var formId = window.PolicyIssuanceIdManager.form(item,@ViewData["Id"]);
                  $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
+                    $(`#${formId}`).dxForm("instance")?.repaint();
+                    setAttachmentPermissionForSection(
+                        `#${formModuleKeyPi}-sec_${item}_@ViewData["Id"]`,
+                        _isSuperUser ? true : !roleApply[item]
+                    );
                 });
                
             }, 1);
@@ -448,6 +472,7 @@ Note:
                 stylingMode: "outlined",
                 onValueChanged: (e) => {
                     state.currentUserRole = e.value;
+                    _role = e.value;
                     $(`#${formModuleKeyPi}-loginRoleLabel`).text(state.currentUserRole);
                     applyEditLock();
                     updateHints();

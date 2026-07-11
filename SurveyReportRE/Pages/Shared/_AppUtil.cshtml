@@ -3007,9 +3007,16 @@
 
                 const frag = document.createDocumentFragment();
                 const itemsToAnimate = [];
+                const sectionPermission = attList_Host.closest(".dept-section").data("attachmentCanEdit");
+                const itemOptions = {
+                    ...options,
+                    uploaderAllow: sectionPermission === undefined
+                        ? options.uploaderAllow
+                        : sectionPermission
+                };
 
                 for (let i = 0; i < batchSize && index < list.length; i++, index++) {
-                    const $item = createAttachmentItem(list[index], onDeleted);
+                    const $item = createAttachmentItem(list[index], onDeleted, itemOptions);
                     frag.appendChild($item[0]);
                     itemsToAnimate.push($item);
                 }
@@ -3137,6 +3144,7 @@
                             editorOptions: editorOptions,
                             renderTime: renderTime,
                             controllerName: controllerName,
+                            uploaderAllow: editorOptions.uploaderAllow,
                             onDeleted: function () {
                                 loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions, renderTime);
                             }
@@ -3166,19 +3174,25 @@
                                 editorOptions: editorOptions,
                                 renderTime: renderTime,
                                 controllerName: controllerName,
+                                uploaderAllow: editorOptions.uploaderAllow,
                                 onDeleted: function () {
                                      loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions, renderTime);
                                 }
                             });
             }
         }
-        function renderDxFileUploader(editorOptions, $container, options, isRenderUploader = true, uploaderAllow = false)  {
+        function renderDxFileUploader(editorOptions, $container, options, isRenderUploader = true, uploaderAllow = true)  {
             const renderTime = Date.now();
             const controlId = `${editorOptions.data.SectionName}`;
             const data =  editorOptions.data;
             editorOptions.controlId = controlId;
             options = options || {};
             const controllerName = options.controllerName || "Document";
+            const sectionPermission = $container.closest(".dept-section").data("attachmentCanEdit");
+            if (sectionPermission !== undefined) {
+                uploaderAllow = !!sectionPermission;
+            }
+            editorOptions.uploaderAllow = uploaderAllow;
             // const currentOptions = getCurrentFormOptions(editorOptions) || {};
             // currentOptions.guid = editorOptions.guid || "";
             // const ids = getDxFileUploaderIds(editorOptions);
@@ -3197,7 +3211,7 @@
              // if (isRenderUploader)
                $uploader
                 .dxFileUploader({
-                    // disabled: !uploaderAllow,
+                    disabled: !uploaderAllow,
                     multiple: true,
                     accept: options.accept || "*/*",
                     selectButtonText: editorOptions.titleName || `Upload Attachments`,
@@ -3279,6 +3293,17 @@
               loadDxFileUploaderAttachments(controlId, controllerName, editorOptions,renderTime);
         }
 
+        function setAttachmentPermissionForSection(sectionSelector, canEdit) {
+            const $section = $(sectionSelector);
+            if (!$section.length) return;
+
+            $section.data("attachmentCanEdit", !!canEdit);
+            $section.find(".dx-fileuploader").each(function () {
+                $(this).dxFileUploader("instance")?.option("disabled", !canEdit);
+            });
+            $section.find(".attachment-delete-action").toggle(!!canEdit);
+        }
+
 
 
         function createAttachmentItem(x, onDeleted, options) {
@@ -3339,6 +3364,8 @@
                 icon: "trash",
                 hint: "Delete",
                 stylingMode: "outlined",
+                visible: options?.uploaderAllow !== false,
+                elementAttr: { class: "attachment-delete-action" },
                 onClick: async function (ev) {
                     ev.event?.stopPropagation?.();
 
@@ -5789,7 +5816,6 @@ function styleModeChange(item){
 
             function delayAcceptStatusV2(mainFields,formId,dept, ...params ){
                 setTimeout(() => {
-                    debugger
                     renderDecisionDeferredV2(formId, dept, "decisionGroup.acceptButton", mainFields, ...params)
                 },_delayRenderDecisionButton);
             }
@@ -5827,7 +5853,10 @@ function styleModeChange(item){
                                          // acceptDecision(passingObject);
                                      }
                                         }).appendTo(itemElement);
-                                                    $(`#${acceptStatusElement}`).appendTo(itemElement);
+                                                    if (acceptStatusElement && !$(`#${acceptStatusElement}`).length) {
+                                                        $(`<div id="${acceptStatusElement}" class="accept-status-indicator"></div>`)
+                                                            .appendTo(itemElement);
+                                                    }
                          }
                                 
                      }
@@ -5910,7 +5939,11 @@ function styleModeChange(item){
                                      ...mainField
                                  ]);
                             $(`#${acceptButtonId}`).css("background-color","#17a2b8");
-                                $(`#${acceptStatusElement}`).text(`Accepted at: ${tatObject[dept]?.AcceptDate}`);
+                                updateDelayAcceptStatus(
+                                    acceptStatusElement,
+                                    acceptButtonId,
+                                    tatObject[dept]?.AcceptDate
+                                );
                             $(`#${acceptButtonId}`).dxButton("instance").option("disabled", true);
                                 // renderFullFormIfAccepted(formIns, dept, mainFields);
                              
@@ -5937,6 +5970,25 @@ function styleModeChange(item){
         function getDelayAcceptStatusId(item) {
             if (!item || typeof item === "string") return "";
             return item.statusId || item.statusElement || item.statusElementId || "";
+        }
+
+        function updateDelayAcceptStatus(statusId, buttonId, acceptDate) {
+            if (!statusId || !acceptDate) return;
+
+            var $status = $(`#${statusId}`);
+            if (!$status.length) {
+                $status = $(`<div id="${statusId}" class="accept-status-indicator"></div>`);
+                var $button = buttonId ? $(`#${buttonId}`) : $();
+                if ($button.length) {
+                    $status.insertAfter($button);
+                }
+            }
+
+            if (!$status.length) return;
+            $status
+                .addClass("statusTag status-success")
+                .css({ display: "inline-flex", marginLeft: "8px", alignItems: "center" })
+                .text(`Accepted at: ${fmtTimeLocal(acceptDate)}`);
         }
 
         function isRouteDecisionButton(item) {
@@ -6183,7 +6235,12 @@ function styleModeChange(item){
                 setTimeout(() => {
                            var latestFormItems = form.option("formData") || {};
                            var latestTatObject = tryParseJSON(latestFormItems.turnAroundTimeAttributes, "TAT Load Button Problem");
-                           var buttonItems = params.filter(item => getDelayAcceptButtonId(item));
+                           // Legacy callers (UW/LMKT) pass buttonId/statusId pairs.
+                           // Status element ids must not be initialized or disabled as buttons.
+                           var usesLegacyStringPairs = params.length > 0 && params.every(item => typeof item === "string");
+                           var buttonItems = usesLegacyStringPairs
+                               ? params.filter((item, index) => index % 2 === 0 && item)
+                               : params.filter(item => getDelayAcceptButtonId(item));
                            var renderedStoredStatus = false;
                            buttonItems.forEach(item => {
                                if (renderDelayAcceptStoredStatusButton(formId, dept, item, latestFormItems, latestTatObject)) {
@@ -6249,7 +6306,11 @@ function styleModeChange(item){
                                                 else{
 
                             $(`#${acceptButtonId}`).css("background-color","#17a2b8");
-                                                $(`#${acceptStatusId}`).text(`Accepted at: ${latestTatObject[dept]?.AcceptDate}`);
+                                                updateDelayAcceptStatus(
+                                                    acceptStatusId,
+                                                    acceptButtonId,
+                                                    latestTatObject[dept]?.AcceptDate
+                                                );
                                                     disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
                                                 }
                                       

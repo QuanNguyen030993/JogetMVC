@@ -711,6 +711,7 @@ function Flow({ id: propId }) {
     const [lanesList, setLanesList] = useState([]);
     const [activeStatsTab, setActiveStatsTab] = useState('nodes');
     const [isPaletteDragging, setIsPaletteDragging] = useState(false);
+    const [draggedLaneIndex, setDraggedLaneIndex] = useState(null);
 
     const focusNode = useCallback(
         (nodeId) => {
@@ -2407,21 +2408,39 @@ function Flow({ id: propId }) {
                     {lanesList.length > 0 && (
                         <div className="flow-sidebar-card">
                             <h3>Nodes đề cử (Lanes)</h3>
-                            <p>Drag a lane department onto the canvas to add it as a new step.</p>
+                            <p>Drag a lane onto canvas to add step, or drag lanes to reorder them.</p>
                             <div className="flow-palette-list">
-                                {lanesList.map((lane) => (
+                                {lanesList.map((lane, index) => (
                                     <div
                                         key={lane.id}
                                         className="flow-palette-item"
-                                        style={{ borderLeft: '4px solid #10b981', background: '#f0fdf4' }}
+                                        style={{ borderLeft: '4px solid #10b981', background: '#f0fdf4', cursor: 'grab' }}
                                         draggable
                                         onDragStart={(event) => {
+                                            setDraggedLaneIndex(index);
                                             setIsPaletteDragging(true);
                                             event.dataTransfer.setData('application/reactflow-lane', JSON.stringify(lane));
                                             event.dataTransfer.setData('text/plain', `lane:${JSON.stringify(lane)}`);
                                             event.dataTransfer.effectAllowed = 'copyMove';
                                         }}
-                                        onDragEnd={endPaletteDrag}
+                                        onDragEnd={(event) => {
+                                            setDraggedLaneIndex(null);
+                                            endPaletteDrag();
+                                        }}
+                                        onDragOver={(event) => {
+                                            event.preventDefault();
+                                        }}
+                                        onDrop={(event) => {
+                                            event.preventDefault();
+                                            if (draggedLaneIndex !== null && draggedLaneIndex !== index) {
+                                                const nextLanes = [...lanesList];
+                                                const [movedLane] = nextLanes.splice(draggedLaneIndex, 1);
+                                                nextLanes.splice(index, 0, movedLane);
+                                                setLanesList(nextLanes);
+                                            }
+                                            setDraggedLaneIndex(null);
+                                            endPaletteDrag();
+                                        }}
                                     >
                                         <strong>{lane.label || lane.id}</strong>
                                         <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Phân làn quy trình</span>

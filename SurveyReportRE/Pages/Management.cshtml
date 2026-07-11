@@ -371,7 +371,7 @@
         const li = $(`
                     <li id="${code}_li_tab" class="expand-ltr">
                         <div id="${code}_tab" style="display: flex;float: left;"><a href="#${code}" style="padding: 7px;">${tabTitle}</a>
-                        <span id="${code}_closeTab" class='${tabFormatButtonClass}' data-code="${code}_closeTab"></span><div>
+                        <span id="${code}_closeTab" class='${tabFormatButtonClass}' data-code="${code}_closeTab"></span></div>
                     </li>
                 `);//.attr("aria-controls", code);
         //<span id="${code}_progressBar" style="padding: 5px;"></span>
@@ -479,14 +479,16 @@
     <header>
         <div class="main-header wrapper" style="display:flex; align-items: center;">
             <!-- LOGO -->
-            <div class="pull-left" style="width: fit-content; white-space: nowrap; flex-shrink: 0; padding-right: 15px;">
-                <a href="#" class="logo" data-toggle="push-menu" role="button" style="width: fit-content;">
-                    <div class="logo-lg" style="width: fit-content;"><b>Workflow Management</b></div>
-                </a>
+            <div class="management-logo-slot">
+                <div class="pull-left" style="margin-left: 12%;width: fit-content;white-space: nowrap;flex-shrink: 0;padding-right: 15px;">
+                    <a href="#" class="logo" data-toggle="push-menu" role="button" style="width: fit-content;">
+                        <div class="logo-lg" style="width: fit-content;"><b>Workflow Management</b></div>
+                    </a>
+                </div>
             </div>
             <!-- ROLE -->
             <div class="admin-float-swicher">
-                <p id="returnToSuperUser" />
+                <p id="returnToSuperUser"></p>
                 <div id="qt-roleSelect"> </div>
                 <div id="pi-roleSelect"> </div>
                 <div id="environmentLabel" style="color: red;"></div>
@@ -1197,6 +1199,26 @@
 
 </script>
 <style>
+    .management-logo-slot {
+        width: 13%;
+        max-width: 13%;
+        flex: 0 0 13%;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+
+    .management-logo-slot .pull-left {
+        max-width: 88%;
+        box-sizing: border-box;
+    }
+
+    .management-logo-slot .logo,
+    .management-logo-slot .logo-lg {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
     /* Responsive Logo text size scaling on zoom */
     .main-header .logo-lg {
         font-size: clamp(11px, 1.0vw, 15px) !important;

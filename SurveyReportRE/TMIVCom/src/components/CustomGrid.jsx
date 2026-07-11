@@ -193,6 +193,23 @@ const CustomGrid = forwardRef(({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const getColumnId = (col) => {
+    if (!col) return '';
+    if (typeof col === 'string') return col;
+    return col.field ?? col.dataField ?? col.caption ?? '';
+  };
+
+  const getIconClass = (iconName) => {
+    if (!iconName) return '';
+    if (iconName.includes('fa-solid') || iconName.includes('fa-regular') || iconName.includes('fa-brands') || iconName.startsWith('fas ') || iconName.startsWith('far ') || iconName.startsWith('fa ')) {
+      return iconName;
+    }
+    if (iconName.startsWith('fa-')) {
+      return `fa-solid ${iconName}`;
+    }
+    return `fa-solid fa-${iconName}`;
+  };
   const [selectedRowId, setSelectedRowId] = useState(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [sortInfo, setSortInfo] = useState({ field: null, direction: 'asc' });
@@ -204,6 +221,73 @@ const CustomGrid = forwardRef(({
   const [editingRowId, setEditingRowId] = useState(null);
   const [activeCell, setActiveCell] = useState(null);
   const [isDirty, setIsDirty] = useState(false);
+  const [isEditLayoutMode, setIsEditLayoutMode] = useState(false);
+
+  // Excel filter states
+  const [excelFilters, setExcelFilters] = useState({});
+  const [openFilterField, setOpenFilterField] = useState(null);
+  const [filterSearchQuery, setFilterSearchQuery] = useState('');
+  const [tempSelectedValues, setTempSelectedValues] = useState([]);
+  const [dropdownStyle, setDropdownStyle] = useState({});
+
+  const getColumnUniqueValues = (field) => {
+    const uniqueMap = new Map();
+    const column = columns.find(c => getColumnId(c) === field);
+    draftRows.forEach(r => {
+      const rawVal = r[field];
+      let displayVal = rawVal;
+      if (rawVal === undefined || rawVal === null || rawVal === '') {
+        uniqueMap.set('', '(Blanks)');
+      } else {
+        if (column && column.lookup && Array.isArray(column.lookup.dataSource)) {
+          const lookupItem = column.lookup.dataSource.find(item => String(item[column.lookup.valueExpr]) === String(rawVal));
+          displayVal = lookupItem ? lookupItem[column.lookup.displayExpr] : rawVal;
+        }
+        uniqueMap.set(rawVal, String(displayVal));
+      }
+    });
+    return Array.from(uniqueMap.entries()).map(([raw, disp]) => ({ raw, disp })).sort((a, b) => a.disp.localeCompare(b.disp));
+  };
+
+  const handleFilterIconClick = (e, column) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (openFilterField === column.field) {
+      setOpenFilterField(null);
+      return;
+    }
+    const rect = e.currentTarget.getBoundingClientRect();
+    setDropdownStyle({
+      position: 'fixed',
+      top: `${rect.bottom + 5}px`,
+      left: `${rect.left}px`,
+      zIndex: 9999,
+      background: 'var(--grid-bg, #fff)',
+      border: '1px solid var(--grid-border-cells, #ddd)',
+      borderRadius: '4px',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+      padding: '10px',
+      minWidth: '220px',
+      maxHeight: '300px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '8px'
+    });
+    const activeVals = excelFilters[column.field] || [];
+    setOpenFilterField(column.field);
+    setTempSelectedValues([...activeVals]);
+    setFilterSearchQuery('');
+  };
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (openFilterField && !e.target.closest('.excel-filter-dropdown') && !e.target.closest('.header-filter-btn')) {
+        setOpenFilterField(null);
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, [openFilterField]);
 
   // Drag row reorder state
   const [draggedRowKey, setDraggedRowKey] = useState(null);
@@ -227,10 +311,7 @@ const CustomGrid = forwardRef(({
     if (propTheme) {
       setTheme(propTheme);
     } else {
-      const isDark = document.body.classList.contains('dark') || 
-                     document.body.classList.contains('dark-theme') || 
-                     document.documentElement.classList.contains('dark');
-      setTheme(isDark ? 'dark' : 'light');
+      setTheme('light');
     }
   }, [propTheme]);
 
@@ -270,7 +351,33 @@ const CustomGrid = forwardRef(({
   // Fetch Table Metadata & Columns Schema
   useEffect(() => {
     if (!modelName) {
-      if (initialColumns) {
+      if (initialColumns && Array.isArray(initialColumns)) {
+        const storageKey = `customgrid_colorder_${gridType || 'default'}_${initialColumns.map(getColumnId).join('_')}`;
+        try {
+          const savedOrder = localStorage.getItem(storageKey);
+          if (savedOrder) {
+            const orderArr = JSON.parse(savedOrder);
+            if (Array.isArray(orderArr) && orderArr.length > 0) {
+              const reordered = [];
+              orderArr.forEach((fieldId) => {
+                const col = initialColumns.find(c => getColumnId(c) === fieldId);
+                if (col) reordered.push(col);
+              });
+              initialColumns.forEach((col) => {
+                const fieldId = getColumnId(col);
+                if (!orderArr.includes(fieldId)) {
+                  reordered.push(col);
+                }
+              });
+              if (reordered.length > 0) {
+                setColumns(reordered);
+                return;
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("Failed to load column order from localStorage", e);
+        }
         setColumns(initialColumns);
       }
       return;
@@ -652,7 +759,13 @@ const CustomGrid = forwardRef(({
     const newRow = { id: nextId, Id: nextId };
     normalizedColumns.forEach(col => {
       if (col.field && col.field !== 'id' && col.field !== 'Id') {
-        newRow[col.field] = '';
+        let filterVal = '';
+        if (filters[col.field] !== undefined && filters[col.field] !== null && filters[col.field] !== '') {
+          filterVal = filters[col.field];
+        } else if (excelFilters[col.field] && excelFilters[col.field].length === 1) {
+          filterVal = excelFilters[col.field][0];
+        }
+        newRow[col.field] = filterVal;
       }
     });
 
@@ -868,33 +981,40 @@ const CustomGrid = forwardRef(({
       normalizedColumns.every((column) => {
         if (column.actions) return true;
         const value = getColumnValue(row, column);
+        
+        // 1. Text filter row checks
         const filterValue = filters[column.field];
-        if (filterValue === undefined || filterValue === null || filterValue === '') return true;
-
-        if (column.editorType === 'dxCheckBox' || column.editorType === 'checkbox' || column.dataType === 'boolean') {
-          const targetBool = filterValue === 'true';
-          const valBool = value === true || value === 'true' || Number(value) === 1;
-          return valBool === targetBool;
+        if (filterValue !== undefined && filterValue !== null && filterValue !== '') {
+          if (column.editorType === 'dxCheckBox' || column.editorType === 'checkbox' || column.dataType === 'boolean') {
+            const targetBool = filterValue === 'true';
+            const valBool = value === true || value === 'true' || Number(value) === 1;
+            if (valBool !== targetBool) return false;
+          } else if (column.statusColumn && column.lookup && Array.isArray(column.lookup.dataSource)) {
+            const valExpr = column.lookup.valueExpr || 'id';
+            const dispExpr = column.lookup.displayExpr || 'value';
+            const selectedItem = column.lookup.dataSource.find((item) => String(item[valExpr] ?? item.id ?? item.Id) === String(filterValue));
+            const selectedText = selectedItem ? (selectedItem[dispExpr] ?? selectedItem.value ?? selectedItem.text ?? selectedItem.name ?? '') : filterValue;
+            if (!String(value ?? '').toLowerCase().includes(String(selectedText).toLowerCase())) return false;
+          } else if (column.lookup && Array.isArray(column.lookup.dataSource)) {
+            if (String(value) !== String(filterValue)) return false;
+          } else {
+            if (!String(value ?? '').toLowerCase().includes(String(filterValue).toLowerCase())) return false;
+          }
         }
 
-        if (column.statusColumn && column.lookup && Array.isArray(column.lookup.dataSource)) {
-          const valExpr = column.lookup.valueExpr || 'id';
-          const dispExpr = column.lookup.displayExpr || 'value';
-          const selectedItem = column.lookup.dataSource.find((item) => String(item[valExpr] ?? item.id ?? item.Id) === String(filterValue));
-          const selectedText = selectedItem ? (selectedItem[dispExpr] ?? selectedItem.value ?? selectedItem.text ?? selectedItem.name ?? '') : filterValue;
-          return String(value ?? '').toLowerCase().includes(String(selectedText).toLowerCase());
+        // 2. Excel multi-select filters checks
+        const excelSelectedVals = excelFilters[column.field];
+        if (excelSelectedVals && Array.isArray(excelSelectedVals) && excelSelectedVals.length > 0) {
+          const rawVal = value === undefined || value === null || value === '' ? '' : value;
+          if (!excelSelectedVals.includes(rawVal)) {
+            return false;
+          }
         }
 
-        if (column.lookup && Array.isArray(column.lookup.dataSource)) {
-          return String(value) === String(filterValue);
-        }
-
-        return String(value ?? '')
-          .toLowerCase()
-          .includes(String(filterValue).toLowerCase());
+        return true;
       }),
     );
-  }, [draftRows, filters, normalizedColumns]);
+  }, [draftRows, filters, excelFilters, normalizedColumns]);
 
   const sortedRows = useMemo(() => {
     if (!sortInfo.field) {
@@ -1164,21 +1284,27 @@ const CustomGrid = forwardRef(({
 
   const handleColumnDragStart = (event, column) => {
     setDraggedColumnField(column.field);
-    event.dataTransfer.setData('text/plain', column.field);
-    event.dataTransfer.effectAllowed = 'move';
+    if (event.dataTransfer) {
+      event.dataTransfer.setData('text/plain', column.field || '');
+      event.dataTransfer.effectAllowed = 'move';
+    }
   };
 
   const handleColumnDragOver = (event) => {
     event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
   };
 
   const handleColumnDrop = async (event, targetColumn) => {
     event.preventDefault();
-    const sourceField = event.dataTransfer.getData('text/plain') || draggedColumnField;
+    if (!isEditLayoutMode) return;
+    const sourceField = (event.dataTransfer && event.dataTransfer.getData('text/plain')) || draggedColumnField;
     if (!sourceField || sourceField === targetColumn.field) return;
 
-    const sourceIndex = columns.findIndex(c => (c.field ?? c.dataField) === sourceField);
-    const targetIndex = columns.findIndex(c => (c.field ?? c.dataField) === targetColumn.field);
+    const sourceIndex = columns.findIndex(c => getColumnId(c) === sourceField);
+    const targetIndex = columns.findIndex(c => getColumnId(c) === getColumnId(targetColumn));
 
     if (sourceIndex === -1 || targetIndex === -1) return;
 
@@ -1195,6 +1321,16 @@ const CustomGrid = forwardRef(({
 
     setColumns(updatedColumns);
     setDraggedColumnField(null);
+
+    if (!modelName && initialColumns && Array.isArray(initialColumns)) {
+      const storageKey = `customgrid_colorder_${gridType || 'default'}_${initialColumns.map(getColumnId).join('_')}`;
+      try {
+        const orderArr = updatedColumns.map(getColumnId);
+        localStorage.setItem(storageKey, JSON.stringify(orderArr));
+      } catch (e) {
+        console.warn("Failed to save column order to localStorage", e);
+      }
+    }
 
     const modelId = gridOption?.ModelId ?? gridOption?.sysTableId ?? gridOption?.mGridOption?.ModelId ?? gridOption?.mGridDetailOption?.sysTableId ?? null;
     if (modelId && modelName) {
@@ -1579,30 +1715,30 @@ const CustomGrid = forwardRef(({
                   {isEditing ? (
                     <>
                       <button type="button" className="command-btn save-btn" onClick={saveChanges} title="Lưu">
-                        <i className="fa fa-check"></i>
+                        <i className="fa-solid fa-check"></i>
                       </button>
                       <button type="button" className="command-btn cancel-btn" onClick={cancelChanges} title="Hủy">
-                        <i className="fa fa-times"></i>
+                        <i className="fa-solid fa-xmark"></i>
                       </button>
                     </>
                   ) : (
                     <>
                       <button type="button" className="command-btn view-btn" onClick={() => handleViewRow(node)} title="Xem chi tiết">
-                        <i className="fa fa-eye"></i>
+                        <i className="fa-solid fa-eye"></i>
                       </button>
                       {onDesignFlow && (
                         <button type="button" className="command-btn design-btn" onClick={() => onDesignFlow(node)} title="Thiết kế Quy trình">
-                          <i className="fa fa-sitemap"></i>
+                          <i className="fa-solid fa-sitemap"></i>
                         </button>
                       )}
                       {allowUpdating && (
                         <button type="button" className="command-btn edit-btn" onClick={() => handleRowEdit(rowId)} title="Sửa dòng">
-                          <i className="fa fa-pencil"></i>
+                          <i className="fa-solid fa-pencil"></i>
                         </button>
                       )}
                       {allowDeleting && (
                         <button type="button" className="command-btn delete-btn" onClick={() => handleDeleteRow(rowId)} title="Xóa dòng">
-                          <i className="fa fa-trash-o"></i>
+                          <i className="fa-solid fa-trash-can"></i>
                         </button>
                       )}
                     </>
@@ -1687,6 +1823,12 @@ const CustomGrid = forwardRef(({
       onClick: cancelChanges,
       disabled: !isDirty && editingRowId === null,
     },
+    {
+      location: 'before',
+      text: isEditLayoutMode ? 'Exit Layout Edit' : 'Edit Layout',
+      icon: 'fa-edit',
+      onClick: () => setIsEditLayoutMode(prev => !prev),
+    },
     ...(exportEnabled ? [{
       location: 'before',
       text: 'Export Excel',
@@ -1724,7 +1866,7 @@ const CustomGrid = forwardRef(({
                 disabled={item.disabled}
                 title={item.text}
               >
-                {item.icon ? <span className="toolbar-icon"><i className={`fa ${item.icon}`}></i></span> : null}
+                {item.icon ? <span className="toolbar-icon"><i className={getIconClass(item.icon)}></i></span> : null}
               </button>
             ))}
         </div>
@@ -1740,7 +1882,7 @@ const CustomGrid = forwardRef(({
                 disabled={item.disabled}
                 title={item.text}
               >
-                {item.icon ? <span className="toolbar-icon"><i className={`fa ${item.icon}`}></i></span> : null}
+                {item.icon ? <span className="toolbar-icon"><i className={getIconClass(item.icon)}></i></span> : null}
               </button>
             ))}
         </div>
@@ -1811,18 +1953,19 @@ const CustomGrid = forwardRef(({
                     key={column.field || `header-${column.caption}`}
                     className={`grid-header-cell dx-header-cell sortable resizable ${sortInfo.field === column.field ? 'sorted' : ''}`}
                     onClick={() => handleHeaderClick(column)}
+                    draggable={true}
+                    onDragStart={(event) => handleColumnDragStart(event, column)}
+                    onDragOver={handleColumnDragOver}
+                    onDrop={(event) => handleColumnDrop(event, column)}
+                    style={{ cursor: 'grab' }}
                   >
                     <div 
                       className="grid-header-cell-content" 
-                      style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', height: '100%', fontWeight: '600', cursor: 'grab' }}
-                      draggable={column.sortable !== false}
-                      onDragStart={(event) => handleColumnDragStart(event, column)}
-                      onDragOver={handleColumnDragOver}
-                      onDrop={(event) => handleColumnDrop(event, column)}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', height: '100%', fontWeight: '600' }}
                     >
                       {column.headerIcon ? (
                         <span className="header-icon-wrap">
-                          <i className={`fa ${column.headerIcon}`}></i>
+                          <i className={getIconClass(column.headerIcon)}></i>
                         </span>
                       ) : column.dataType === 'avatar' || column.editorType === 'avatar' || column.field === 'avatar' || column.field === 'photo' ? (
                         <span className="header-icon-wrap">
@@ -1835,12 +1978,24 @@ const CustomGrid = forwardRef(({
                           {sortInfo.field === column.field ? (sortInfo.direction === 'asc' ? '▲' : '▼') : '⇅'}
                         </span>
                       )}
+                      {!isEditLayoutMode && column.sortable !== false && (
+                        <span 
+                          className="header-filter-btn" 
+                          onClick={(e) => handleFilterIconClick(e, column)}
+                          style={{ cursor: 'pointer', padding: '2px', marginLeft: '4px', opacity: (excelFilters[column.field] && excelFilters[column.field].length > 0) ? 1 : 0.4 }}
+                          title="Filter values"
+                        >
+                          <i className="fa-solid fa-filter" style={{ color: (excelFilters[column.field] && excelFilters[column.field].length > 0) ? '#0284c7' : 'inherit', fontSize: '11px' }}></i>
+                        </span>
+                      )}
                     </div>
-                    <span
-                      className="grid-column-resizer"
-                      onMouseDown={(event) => handleColumnResizeStart(event, column)}
-                      title="Resize column"
-                    />
+                    {isEditLayoutMode && (
+                      <span
+                        className="grid-column-resizer"
+                        onMouseDown={(event) => handleColumnResizeStart(event, column)}
+                        title="Resize column"
+                      />
+                    )}
                   </th>
                 );
               })}
@@ -2007,6 +2162,110 @@ const CustomGrid = forwardRef(({
           {`Showing ${showingStart} - ${showingEnd} of ${filteredRows.length}`}
         </div>
       </div>
+
+      {openFilterField && (
+        <div 
+          className="excel-filter-dropdown" 
+          style={dropdownStyle}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="filter-search-box" style={{ display: 'flex', border: '1px solid #ccc', borderRadius: '4px', padding: '4px 8px', marginBottom: '4px' }}>
+            <input 
+              type="text" 
+              placeholder="Search..." 
+              value={filterSearchQuery} 
+              onChange={(e) => setFilterSearchQuery(e.target.value)} 
+              style={{ border: 'none', outline: 'none', width: '100%', fontSize: '13px' }}
+            />
+          </div>
+
+          <div className="filter-values-list" style={{ overflowY: 'auto', flex: 1, maxHeight: '180px', display: 'flex', flexDirection: 'column', gap: '6px', padding: '4px 0', borderBottom: '1px solid #eee' }}>
+            {(() => {
+              const uniqueVals = getColumnUniqueValues(openFilterField);
+              const filteredUnique = uniqueVals.filter(item => 
+                item.disp.toLowerCase().includes(filterSearchQuery.toLowerCase())
+              );
+              
+              const isAllChecked = filteredUnique.length > 0 && filteredUnique.every(item => tempSelectedValues.includes(item.raw));
+              
+              return (
+                <>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={isAllChecked}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          const newSelection = [...new Set([...tempSelectedValues, ...filteredUnique.map(i => i.raw)])];
+                          setTempSelectedValues(newSelection);
+                        } else {
+                          const filteredRaws = filteredUnique.map(i => i.raw);
+                          setTempSelectedValues(tempSelectedValues.filter(v => !filteredRaws.includes(v)));
+                        }
+                      }}
+                    />
+                    (Select All)
+                  </label>
+                  
+                  {filteredUnique.map((item, idx) => (
+                    <label key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={tempSelectedValues.includes(item.raw)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setTempSelectedValues([...tempSelectedValues, item.raw]);
+                          } else {
+                            setTempSelectedValues(tempSelectedValues.filter(v => v !== item.raw));
+                          }
+                        }}
+                      />
+                      {item.disp}
+                    </label>
+                  ))}
+                </>
+              );
+            })()}
+          </div>
+
+          <div className="filter-actions" style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', paddingTop: '4px' }}>
+            <button 
+              type="button" 
+              onClick={() => {
+                const newFilters = { ...excelFilters };
+                delete newFilters[openFilterField];
+                setExcelFilters(newFilters);
+                setOpenFilterField(null);
+              }}
+              style={{ padding: '4px 8px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+            >
+              Clear Filter
+            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button 
+                type="button" 
+                onClick={() => {
+                  setExcelFilters({
+                    ...excelFilters,
+                    [openFilterField]: tempSelectedValues
+                  });
+                  setOpenFilterField(null);
+                }}
+                style={{ padding: '4px 12px', background: '#0284c7', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+              >
+                OK
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setOpenFilterField(null)}
+                style={{ padding: '4px 12px', background: '#e5e7eb', color: '#374151', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 });
