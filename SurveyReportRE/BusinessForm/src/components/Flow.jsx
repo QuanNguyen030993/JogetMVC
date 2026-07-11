@@ -429,6 +429,22 @@ const formatTransitionLabel = (actionName, statusText, command) => {
     );
 };
 
+const normalizeTransitionScript = (value) => {
+    let script = value || '';
+    for (let index = 0; index < 3 && typeof script === 'string'; index += 1) {
+        const text = script.trim();
+        if (!text.startsWith('{')) break;
+        try {
+            const parsed = JSON.parse(text);
+            if (!parsed || typeof parsed.transitionScript !== 'string') break;
+            script = parsed.transitionScript;
+        } catch (error) {
+            break;
+        }
+    }
+    return typeof script === 'string' ? script : '';
+};
+
 const parseJsonToRulesState = (jsonStr) => {
     const fallback = { rootOperator: 'AND', rules: [] };
     if (!jsonStr || jsonStr === '{}') return fallback;
@@ -512,6 +528,12 @@ const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) 
                 isReturn: isReturn,
                 statusId: transition.statusId || '',
                 statusName: transition.statusName || '',
+                transitionScript: normalizeTransitionScript(transition.transitionScript || (() => {
+                    try {
+                        const parsed = typeof transition.data === 'string' ? JSON.parse(transition.data) : (transition.data || {});
+                        return parsed.transitionScript || '';
+                    } catch (e) { return ''; }
+                })()),
                 command: transition.command || 'None',
                 commandConfig: transition.commandConfig || '',
                 mailTemplateId: transition.mailTemplateId || (() => {
@@ -894,6 +916,11 @@ function Flow({ id: propId , guid: propGuid}) {
                     commandConfig: edge.data?.commandConfig || '',
                     mailTemplateId: edge.data?.mailTemplateId || null,
                     notificationTemplateId: edge.data?.notificationTemplateId || null,
+                    data: {
+                        transitionScript: normalizeTransitionScript(edge.data?.transitionScript),
+                        mailTemplateId: edge.data?.mailTemplateId || null,
+                        notificationTemplateId: edge.data?.notificationTemplateId || null
+                    },
                     controlX: edge.data?.controlX ? Math.round(edge.data.controlX / scaleX) : null,
                     controlY: edge.data?.controlY ? Math.round(edge.data.controlY / scaleY) : null,
                     sortOrder: index + 1
@@ -1040,6 +1067,7 @@ function Flow({ id: propId , guid: propGuid}) {
 
                 const stepData = {
                     ...conditionData,
+                    transitionScript: normalizeTransitionScript(edge.data?.transitionScript) || null,
                     mailTemplateId: edge.data?.mailTemplateId || null,
                     notificationTemplateId: edge.data?.notificationTemplateId || null
                 };
@@ -1118,8 +1146,8 @@ function Flow({ id: propId , guid: propGuid}) {
     }, [workflowId, workflowGuid, nodes, edges, layoutConfig]);
 
    
-    const traceInstanceWorkflow = useCallback(async () => {
-        if (!searchRecordGuid) {
+    const traceInstanceWorkflow = useCallback(async (recordGuid = searchRecordGuid) => {
+        if (!recordGuid) {
             alert("Vui lòng nhập Record GUID!");
             return;
         }
@@ -1130,7 +1158,7 @@ function Flow({ id: propId , guid: propGuid}) {
 
         try {
             // Query InstanceWorkflow matching the RecordGuid
-            const response = await fetch(`${API_BASE_URL}/api/InstanceWorkflow/GetAll?refField=RecordGuid&refKey=${propGuid}`);
+            const response = await fetch(`${API_BASE_URL}/api/InstanceWorkflow/GetAll?refField=RecordGuid&refKey=${encodeURIComponent(recordGuid)}`);
             if (!response.ok) {
                 throw new Error(`Instance API returned status ${response.status}`);
             }
@@ -1161,13 +1189,13 @@ function Flow({ id: propId , guid: propGuid}) {
                     ...n,
                     data: {
                         ...n.data,
-                        isTraced: n.id === currentStep
+                        isTraced: String(n.id) === String(currentStep)
                     }
                 }))
             );
 
             // Let's find if the node exists on our canvas
-            const nodeExists = nodes.find(n => n.id === currentStep);
+            const nodeExists = nodes.find(n => String(n.id) === String(currentStep));
             if (nodeExists) {
                 setSelectedNode(nodeExists);
                 // alert(`Tìm thấy tiến trình đang chạy tại bước: ${nodeExists.data?.label || currentStep} (Đã highlight) 🎯`);
@@ -1185,8 +1213,11 @@ function Flow({ id: propId , guid: propGuid}) {
     useEffect(() => {
         if (propId) {
             setWorkflowId(propId);
-            loadWorkflow(propId);
-            traceInstanceWorkflow(propGuid);
+            setSearchRecordGuid(propGuid || '');
+            (async () => {
+                await loadWorkflow(propId);
+                if (propGuid) await traceInstanceWorkflow(propGuid);
+            })();
         } else {
             const params = new URLSearchParams(window.location.search);
             const id = params.get('id');
@@ -1195,7 +1226,7 @@ function Flow({ id: propId , guid: propGuid}) {
                 loadWorkflow(id);
             }
         }
-    }, [propId, loadWorkflow]);
+    }, [propId, propGuid, loadWorkflow]);
 
     useEffect(() => {
         // Load Mail Templates
@@ -1828,6 +1859,16 @@ function Flow({ id: propId , guid: propGuid}) {
                         <option value="TransferFile">TransferFile</option>
                         <option value="LockFileLocal">LockFileLocal</option>
                     </select>
+                </label>
+                <label>
+                    <span>Transition JavaScript</span>
+                    <textarea
+                        rows={7}
+                        value={selectedEdge.data?.transitionScript || ''}
+                        onChange={(event) => updateSelectedEdge('transitionScript', event.target.value)}
+                        placeholder={'const status = JSON.parse(formItems.actionStatus || "{}");\nstatus[findRoute.fromNodeId] = "Approved";\nformItems.actionStatus = JSON.stringify(status);\nreturn formItems;'}
+                    />
+                    <small>Available: formItems, sendData, findRoute, nextStep, moduleName.</small>
                 </label>
                 {selectedEdge.data?.command && selectedEdge.data?.command !== 'None' && (
                     <label>

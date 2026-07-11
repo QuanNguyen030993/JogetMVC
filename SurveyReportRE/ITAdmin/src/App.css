@@ -338,6 +338,19 @@ button {
   flex-direction: column;
 }
 
+.recover-flow-panel {
+  flex: 0 0 auto;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #dbe3ef;
+}
+
+.recover-flow-panel .flow-canvas-panel,
+.recover-flow-panel .workflow-canvas {
+  min-height: 520px;
+  height: 520px;
+}
+
 .recover-panel-title {
   margin-bottom: 12px;
   color: #0f172a;
@@ -378,55 +391,6 @@ button {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: 12px;
-}
-
-.recover-flow-chart {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 12px;
-  margin-bottom: 14px;
-  border: 1px solid #dbe3ef;
-  border-radius: 8px;
-  background: #f8fafc;
-}
-
-.recover-node {
-  min-width: 88px;
-  padding: 10px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #0f172a;
-  text-align: center;
-}
-
-.recover-node span,
-.recover-node small {
-  display: block;
-}
-
-.recover-node span {
-  font-weight: 700;
-}
-
-.recover-node small {
-  margin-top: 3px;
-  color: #64748b;
-  font-size: 0.72rem;
-}
-
-.recover-node.current {
-  border-color: #16a34a;
-  background: #ecfdf5;
-  box-shadow: inset 0 -3px 0 #16a34a;
-}
-
-.recover-node-arrow {
-  flex: 0 0 auto;
-  color: #64748b;
-  font-weight: 700;
 }
 
 .recover-mode-row label {

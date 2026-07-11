@@ -26,6 +26,11 @@ using ERPCore.Models.Business.Migration.Config;
 using ERPCore.Models.Migration.Business.Workflow;
 using static WorkflowDefinition_FormModel;
 
+public class WorkflowTransitionSubmitRequest : SubmitRequest
+{
+    public string? ActionStatus { get; set; }
+}
+
 [ApiController]
 [Route("api/[controller]/[action]")]
 public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
@@ -91,7 +96,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     }
 
     [HttpPost]
-    public async Task<IActionResult> QuotationSubmitNextStep([FromBody] SubmitRequest submitRequest)
+    public async Task<IActionResult> QuotationSubmitNextStep([FromBody] WorkflowTransitionSubmitRequest submitRequest)
     {
 
         if (string.IsNullOrEmpty(submitRequest.StepsWorkflow.FromNodeId) || string.IsNullOrEmpty(submitRequest.StepsWorkflow.ToNodeId)) return StatusCode(500, "Submit problem, please contact IT Admin!!!!");
@@ -102,6 +107,8 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         quotation.StageDept = submitRequest.StepsWorkflow.ToNodeId;
         quotation.WorkflowStatus = submitRequest.StepsWorkflow.StatusName;
         quotation.StatusId = submitRequest.StepsWorkflow.StatusId;
+        if (submitRequest.ActionStatus != null)
+            quotation.ActionStatus = submitRequest.ActionStatus;
         TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(quotation.TurnAroundTimeAttributes);
         TurnAroundItem tatObject = submitRequest.StepsWorkflow.FromNodeId switch
         {
@@ -278,7 +285,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         }
         
     }
-    public async Task<IActionResult> QuotationReturnToStep([FromBody] SubmitRequest submitRequest)
+    public async Task<IActionResult> QuotationReturnToStep([FromBody] WorkflowTransitionSubmitRequest submitRequest)
     {
 
         if (string.IsNullOrEmpty(submitRequest.StepsWorkflow.FromNodeId) || string.IsNullOrEmpty(submitRequest.StepsWorkflow.ToNodeId)) return StatusCode(500, "Submit problem, please contact IT Admin!!!!");
@@ -290,6 +297,8 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         quotation.StageDept = submitRequest.StepsWorkflow.ToNodeId;
         quotation.WorkflowStatus = submitRequest.StepsWorkflow.StatusName;
         quotation.StatusId = submitRequest.StepsWorkflow.StatusId;
+        if (submitRequest.ActionStatus != null)
+            quotation.ActionStatus = submitRequest.ActionStatus;
         TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(quotation.TurnAroundTimeAttributes);
         TurnAroundItem tatObject = submitRequest.StepsWorkflow.FromNodeId switch
         {
@@ -409,8 +418,18 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         if (quotation != null)
         {
             quotation.StageDept = isRevise ? targetStep.ToNodeId : targetStep.FromNodeId;
-            quotation.WorkflowStatus = targetStep.StatusName ?? quotation.WorkflowStatus;
-            quotation.StatusId = targetStep.StatusId;
+            if (isRevise)
+            {
+                quotation.WorkflowStatus = targetStep.StatusName ?? quotation.WorkflowStatus;
+                quotation.StatusId = targetStep.StatusId;
+            }
+            else
+            {
+                // Recover moves the processing node back but does not roll the business status
+                // back to the selected transition's historical status.
+                quotation.WorkflowStatus = "Recover";
+            }
+            quotation.ActionStatus = "";
             await _quotationRepository.UpdateData(quotation, JsonConvert.SerializeObject(quotation), quotation.Id, "Id");
         }
 

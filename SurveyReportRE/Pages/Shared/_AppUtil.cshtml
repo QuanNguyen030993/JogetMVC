@@ -2737,6 +2737,37 @@
             return buttonClass;
         }
 
+        function evaluateTransitionScript(moduleName, nextStep, findRoute, formItems, sendData) {
+            var routeData = safeJsonParse(findRoute?.data) || {};
+            var script = routeData.transitionScript || findRoute?.transitionScript;
+            for (var unwrapIndex = 0; unwrapIndex < 3 && typeof script === "string"; unwrapIndex++) {
+                if (!script.trim().startsWith("{")) break;
+                var wrappedScript = safeJsonParse(script);
+                if (!wrappedScript || typeof wrappedScript.transitionScript !== "string") break;
+                script = wrappedScript.transitionScript;
+            }
+            if (!script || !String(script).trim()) {
+                return { formItems: formItems, sendData: sendData };
+            }
+            try {
+                var runner = new Function(
+                    "formItems", "sendData", "findRoute", "nextStep", "moduleName",
+                    '"use strict";\n' + script
+                );
+                var result = runner(formItems, sendData, findRoute, nextStep, moduleName);
+
+                if (result && result.formItems) formItems = result.formItems;
+                else if (result && !result.sendData) formItems = result;
+                if (result && result.sendData) sendData = result.sendData;
+
+                return { formItems: formItems, sendData: sendData };
+            } catch (error) {
+                console.error("Transition JavaScript failed", error, findRoute);
+                DevExpress.ui.notify("Transition JavaScript error: " + error.message, "error", 5000);
+                throw error;
+            }
+        }
+
         function submitNextStep(moduleName, _nextStep, findRoute, formItems) {
             // var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
             var sendData = new Object();
@@ -2744,6 +2775,13 @@
             sendData.StepsWorkflow = convertKeysToUpperFirstChar(findRoute);
             sendData.QuotationId = formItems.id;
             sendData.Comment = formItems.comment;
+            var transitionResult = evaluateTransitionScript(moduleName, _nextStep, findRoute, formItems, sendData);
+            formItems = transitionResult.formItems;
+            sendData = transitionResult.sendData;
+            // Persist fields changed by transitionScript as part of the workflow request.
+            if (formItems && Object.prototype.hasOwnProperty.call(formItems, "actionStatus")) {
+                sendData.ActionStatus = formItems.actionStatus;
+            }
             //var formItemsRes = $(`#qt-formRES`).dxForm("instance")?.option("formData") || {};
                 var condition = safeJsonParse(findRoute.data);
                 if (condition){
@@ -2779,10 +2817,18 @@
             function returnToStep(moduleName, _nextStep, findRoute, formItems) {
             // var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
             var sendData = new Object();
+            debugger
             sendData.InstanceWorkflow = convertKeysToUpperFirstChar(_nextStep.instanceWorkflow);
             sendData.StepsWorkflow = convertKeysToUpperFirstChar(findRoute);
             sendData.QuotationId = formItems.id;
             sendData.Comment = formItems.comment;
+            var transitionResult = evaluateTransitionScript(moduleName, _nextStep, findRoute, formItems, sendData);
+            formItems = transitionResult.formItems;
+            sendData = transitionResult.sendData;
+            // Persist fields changed by transitionScript as part of the workflow request.
+            if (formItems && Object.prototype.hasOwnProperty.call(formItems, "actionStatus")) {
+                sendData.ActionStatus = formItems.actionStatus;
+            }
 
             //var formItemsRes = $(`#qt-formRES`).dxForm("instance")?.option("formData") || {};
             var condition = safeJsonParse(findRoute.data);
@@ -5743,6 +5789,7 @@ function styleModeChange(item){
 
             function delayAcceptStatusV2(mainFields,formId,dept, ...params ){
                 setTimeout(() => {
+                    debugger
                     renderDecisionDeferredV2(formId, dept, "decisionGroup.acceptButton", mainFields, ...params)
                 },_delayRenderDecisionButton);
             }
@@ -6181,13 +6228,33 @@ function styleModeChange(item){
                                                      ...mainField
                                                  ]);
                                              }
-                                        $(`#${acceptButtonId}`).css("background-color","#17a2b8");
-                                            $(`#${acceptStatusId}`).text(`Accepted at: ${latestTatObject[dept]?.AcceptDate}`);
-                                                disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
-                                        // $(`#${params[0]}`).dxButton("instance").option("disabled", true);
-                                            // renderFullFormIfAccepted(formIns, dept, mainFields);
 
-                                        }
+                                                if (dept == "LMKT") {
+                                                    var storedStatus = getDelayAcceptStoredStatus(formItems, dept, formItems);
+                                                    if (storedStatus) {
+                                                        $(`#${params[0]}`).dxButton("instance").option("visible", true);
+                                                        $(`#${params[2]}`).dxButton("instance").option("visible", true);
+                                                        if (storedStatus.text == "Approved")
+                                                            $(`#${params[0]}`).css("background-color", "#17a2b8");
+                                                        if (storedStatus.text == "Declined")
+                                                            $(`#${params[2]}`).css("background-color", "#17a2b8");
+                                                        if (storedStatus)
+                                                            disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
+                                                    }
+                                                    else {
+                                                        $(`#${params[0]}`).dxButton("instance").option("visible", false);
+                                                        $(`#${params[2]}`).dxButton("instance").option("visible", false);
+                                                    }
+                                                }
+                                                else{
+
+                            $(`#${acceptButtonId}`).css("background-color","#17a2b8");
+                                                $(`#${acceptStatusId}`).text(`Accepted at: ${latestTatObject[dept]?.AcceptDate}`);
+                                                    disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
+                                                }
+                                      
+
+                                            }
                                      //  if (rejectButtonId)
                                      // {
                                      //    $(`#${rejectButtonId}`).css("background-color","#17a2b8");
@@ -6195,20 +6262,8 @@ function styleModeChange(item){
                                      //        $(`#${rejectButtonId}`).dxButton("instance").option("disabled", true);
                                      // }
                             }
-                            if ( dept == "LMKT" )
-                            {
-                                debugger
-                            var storedStatus = getDelayAcceptStoredStatus(formItems, dept, formItems);
-                            if (storedStatus)
-                            {
-                                console.log(storedStatus);
-
-                            }
-                            else {
-                                $(`#${params[0]}`).dxButton("instance").option("visible", false);
-                                $(`#${params[2]}`).dxButton("instance").option("visible", false);
-                            }
-                            }
+                           
+                            
                                    }, 100);
 
 

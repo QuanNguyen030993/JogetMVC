@@ -556,6 +556,12 @@ const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) 
                 isReturn: isReturn,
                 statusId: transition.statusId || '',
                 statusName: transition.statusName || '',
+                transitionScript: normalizeTransitionScript(transition.transitionScript || (() => {
+                    try {
+                        const parsed = typeof transition.data === 'string' ? JSON.parse(transition.data) : (transition.data || {});
+                        return parsed.transitionScript || '';
+                    } catch (e) { return ''; }
+                })()),
                 icon: transition.icon || (() => {
                     try {
                         const parsed = typeof transition.data === 'string' ? JSON.parse(transition.data) : (transition.data || {});
@@ -637,6 +643,22 @@ const WorkflowNode = ({ data, selected }) => {
 
 const nodeTypes = {
     workflowNode: WorkflowNode,
+};
+
+const normalizeTransitionScript = (value) => {
+    let script = value || '';
+    for (let index = 0; index < 3 && typeof script === 'string'; index += 1) {
+        const text = script.trim();
+        if (!text.startsWith('{')) break;
+        try {
+            const parsed = JSON.parse(text);
+            if (!parsed || typeof parsed.transitionScript !== 'string') break;
+            script = parsed.transitionScript;
+        } catch (error) {
+            break;
+        }
+    }
+    return typeof script === 'string' ? script : '';
 };
 
 const normalizeNodeCode = (value, fallback = 'NODE') => {
@@ -1005,6 +1027,13 @@ function Flow({ id: propId }) {
                     commandConfig: edge.data?.commandConfig || '',
                     mailTemplateId: edge.data?.mailTemplateId || null,
                     notificationTemplateId: edge.data?.notificationTemplateId || null,
+                    data: {
+                        transitionScript: normalizeTransitionScript(edge.data?.transitionScript),
+                        icon: edge.data?.icon || '',
+                        buttonClass: edge.data?.buttonClass || '',
+                        mailTemplateId: edge.data?.mailTemplateId || null,
+                        notificationTemplateId: edge.data?.notificationTemplateId || null
+                    },
                     controlX: edge.data?.controlX ? Math.round(edge.data.controlX / scaleX) : null,
                     controlY: edge.data?.controlY ? Math.round(edge.data.controlY / scaleY) : null,
                     sortOrder: index + 1
@@ -1152,6 +1181,7 @@ function Flow({ id: propId }) {
 
                 const stepData = {
                     ...conditionData,
+                    transitionScript: normalizeTransitionScript(edge.data?.transitionScript) || null,
                     icon: edge.data?.icon || null,
                     buttonClass: edge.data?.buttonClass || null,
                     mailTemplateId: edge.data?.mailTemplateId || null,
@@ -2064,6 +2094,16 @@ function Flow({ id: propId }) {
                         <option value="TransferFile">TransferFile</option>
                         <option value="LockFileLocal">LockFileLocal</option>
                     </select>
+                </label>
+                <label>
+                    <span>Transition JavaScript</span>
+                    <textarea
+                        rows={7}
+                        value={selectedEdge.data?.transitionScript || ''}
+                        onChange={(event) => updateSelectedEdge('transitionScript', event.target.value)}
+                        placeholder={'const status = JSON.parse(formItems.actionStatus || "{}");\nstatus[findRoute.fromNodeId] = "Approved";\nformItems.actionStatus = JSON.stringify(status);\nreturn formItems;'}
+                    />
+                    <small>Available: formItems, sendData, findRoute, nextStep, moduleName.</small>
                 </label>
                 {selectedEdge.data?.command && selectedEdge.data?.command !== 'None' && (
                     <label>
