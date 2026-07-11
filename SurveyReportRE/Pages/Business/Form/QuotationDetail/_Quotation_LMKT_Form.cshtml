@@ -43,44 +43,20 @@
                 ]}
         ];
 
+        var deptCode = "@dept";
         var submitBranchId = `@QTViewIdHelper.BtnSubmitBranch(dept, quotationId)`;
-        var submitBranchDecisionHostId = `SB_DecisionHost_@QTViewIdHelper.Decision(dept, quotationId)`;
 
-        function moveSubmitBranchToDecision() {
-            var $host = $(`#${submitBranchDecisionHostId}`);
-            var $submitBranch = $(`#${submitBranchId}`);
-
-            if (!$host.length || !$submitBranch.length) return false;
-
-            $submitBranch
-                .addClass("lmkt-submitbranch-decision")
-                .appendTo($host);
-
-            var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-            var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT SubmitBranch Decision Problem");
-
-            if (tatObject?.["@dept"]?.AcceptDate) {
-                $submitBranch.find(".dx-button").css("background-color", "#17a2b8");
-                $submitBranch.find(".dx-button").each(function () {
-                    var instance = DevExpress.ui.dxButton.getInstance(this);
-                    instance?.option("disabled", false);
-                });
-            }
-
-            return true;
-        }
-
-        function moveSubmitBranchToDecisionDeferred() {
-            var attempts = 0;
-            var timer = setInterval(function () {
-                attempts++;
-                if (moveSubmitBranchToDecision() || attempts >= 30) {
-                    clearInterval(timer);
-                }
-            }, 200);
-        }
-
-    $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
+        var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
+        var acceptStatusId = `AC_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
+        var declinedButtonId = `DC_@QTViewIdHelper.Decision(dept, quotationId)`;
+        var declinedStatusId = `DC_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
+        var itemsDelay = [acceptButtonId, acceptStatusId, declinedButtonId, declinedStatusId];
+        var items = [
+            { id: "AC_@QTViewIdHelper.Decision(dept, quotationId)", text: "Approved", value: true },
+            // { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Assign", value: false },
+            { id: "DC_@QTViewIdHelper.Decision(dept, quotationId)", text: "Declined", value: false }
+        ];
+        $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
         dataSource: makeBasicDataSource(that, true),
                items: [
                     {itemType: "group",caption: "Decision",colCount:2,items: [
@@ -91,22 +67,36 @@
                          text: "Decision"
                      },
                      itemType: "simple",
-
                      template: function (data, itemElement) {
                          $(`<div id="${submitBranchId}" class="lmkt-submitbranch-decision-host"></div>`)
                              .appendTo(itemElement);
-                         // moveSubmitBranchToDecisionDeferred();
-                         }
-
-                 }
+                         $.each(items, function (itemIndex, item) {
+                             $(`<div id="${item.id}">`).dxButton({ text: item.text}).appendTo(itemElement);
+                         });
+                     }
+                }
     ]}, 
             ...mainFields
            
            ]
     });
     viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
+    // delayAcceptStatusV2(mainFields, `@QTViewIdHelper.Form(dept, quotationId)`, deptCode, {
+    //     buttonId: submitBranchId,
+    //     acceptStatusField: "actionStatus",
+    //     useTatAcceptStatus: true,
+    //     statusButtonDisabled: true,
+    //     skipAcceptedMainFields: true,
+    //     loadRouteButtons: function () {
+    //         if (typeof window.loadSelectedQuotationWorkflow === "function") {
+    //             window.loadSelectedQuotationWorkflow();
+    //         }
+    //     }
+    // });
 
-    setTimeout(() => {
+        delayAcceptStatusV2(mainFields, `@QTViewIdHelper.Form(dept, quotationId)`, "@dept", ...itemsDelay);
+
+        setTimeout(() => {
         var picJson = PIC_JSON || "{}";
         var picMap = parsePicMap(picJson);
         var picVal = picMap["@dept"] || "";
@@ -117,11 +107,6 @@
             $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
         }
     }, 100);
-
-    setTimeout(
-        moveSubmitBranchToDecisionDeferred,
-        typeof _delayRenderDecisionButton !== "undefined" ? _delayRenderDecisionButton : 2000
-    );
 
     })  
 </script>

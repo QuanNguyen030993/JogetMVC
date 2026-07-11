@@ -13,6 +13,7 @@ import UserManagement from './components/UserManagement';
 import OverviewPanel from './components/OverviewPanel';
 import EnumDesign from './components/EnumDesign';
 import SlaDesign from './components/SlaDesign';
+import WorkflowRecover from './components/WorkflowRecover';
 import CustomGrid from '../../TMIVCom/src/components/CustomGrid'
 import './styles/flow.css';
 import './styles/com.all.css';
@@ -115,6 +116,7 @@ body:JSON.stringify("2")
     { id: 'mail-queue', label: 'Hàng đợi Email' },
     { id: 'flow', label: 'Luồng quy trình (Flow)' },
     { id: 'flowgrid', label: 'Luồng quy trình (Flow Grid)' },
+    { id: 'workflow-recover', label: 'Recover / Revise Flow' },
     { id: 'serilog', label: 'Nhật ký hệ thống (Serilogs)' },
     { id: 'systable', label: 'Bảng hệ thống' } ,
     { id: 'datagridfielddesigner', label: 'Thiết kế trường DataGrid' },
@@ -174,6 +176,8 @@ body:JSON.stringify("2")
             }}
           />
         );
+      case 'workflow-recover':
+        return <WorkflowRecover />;
       case 'serilog':
         return <SerilogViewer />;
       case 'systable':

@@ -376,6 +376,61 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 
         return Ok();
     }
+
+    [HttpPost]
+    public async Task<IActionResult> RecoverWorkflow([FromBody] WorkflowRecoverRequest request)
+    {
+        if (request == null) return BadRequest("Recover payload is required.");
+
+        InstanceWorkflow instanceWorkflow = await _BaseRepository.GetSingleObject(s => s.Id == request.InstanceWorkflowId);
+        if (instanceWorkflow == null) return NotFound("InstanceWorkflow not found.");
+
+        StepsWorkflow selectedStep = await _stepsWorkflowRepository.GetSingleObject(s => s.Id == request.StepsWorkflowId);
+        if (selectedStep == null) return NotFound("StepsWorkflow not found.");
+
+        StepsWorkflow targetStep = selectedStep;
+        bool isRevise = string.Equals(request.Mode, "Revise", StringComparison.OrdinalIgnoreCase);
+        if (isRevise)
+        {
+            targetStep = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == instanceWorkflow.WorkflowDefinitionId && (s.IsStart ?? false))
+                ?? selectedStep;
+        }
+
+        string nextCurrentStep = isRevise
+            ? (!string.IsNullOrEmpty(targetStep.TNodeId) ? targetStep.TNodeId : targetStep.FNodeId)
+            : (!string.IsNullOrEmpty(targetStep.FNodeId) ? targetStep.FNodeId : targetStep.TNodeId);
+
+        if (string.IsNullOrEmpty(nextCurrentStep)) return BadRequest("Target step does not have a valid workflow node id.");
+
+        instanceWorkflow.CurrentStep = nextCurrentStep;
+        await _BaseRepository.UpdateData(instanceWorkflow, JsonConvert.SerializeObject(instanceWorkflow), instanceWorkflow.Id, "Id");
+
+        Quotation quotation = await _quotationRepository.GetSingleObject(s => s.Guid == instanceWorkflow.RecordGuid);
+        if (quotation != null)
+        {
+            quotation.StageDept = isRevise ? targetStep.ToNodeId : targetStep.FromNodeId;
+            quotation.WorkflowStatus = targetStep.StatusName ?? quotation.WorkflowStatus;
+            quotation.StatusId = targetStep.StatusId;
+            await _quotationRepository.UpdateData(quotation, JsonConvert.SerializeObject(quotation), quotation.Id, "Id");
+        }
+
+        return Ok(new
+        {
+            instanceWorkflow.Id,
+            instanceWorkflow.RecordGuid,
+            instanceWorkflow.WorkflowDefinitionId,
+            CurrentStep = instanceWorkflow.CurrentStep,
+            QuotationStageDept = quotation?.StageDept,
+            QuotationWorkflowStatus = quotation?.WorkflowStatus,
+            QuotationStatusId = quotation?.StatusId,
+            Mode = isRevise ? "Revise" : "Recover",
+            TargetStepId = targetStep.Id,
+            TargetFromNodeId = targetStep.FromNodeId,
+            TargetToNodeId = targetStep.ToNodeId,
+            request.Note
+        });
+    }
+
     public async Task TATLog([FromBody]Quotation quotation, [FromQuery] TurnAroundItem tatObject, string department)
     {
          TurnAroundTimeSession activeSession = new TurnAroundTimeSession();
@@ -445,6 +500,14 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         public string TargetDepartment { get; set; }
         public string Strategy { get; set; } // Latest
         public string FileSelector { get; set; } // First
+    }
+
+    public class WorkflowRecoverRequest
+    {
+        public long InstanceWorkflowId { get; set; }
+        public long StepsWorkflowId { get; set; }
+        public string Mode { get; set; }
+        public string Note { get; set; }
     }
 }
 

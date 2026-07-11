@@ -5881,6 +5881,236 @@ function styleModeChange(item){
     }
 
 
+        function getDelayAcceptButtonId(item) {
+            if (!item) return "";
+            if (typeof item === "string") return item;
+            return item.buttonId || item.id || item.elementId || "";
+        }
+
+        function getDelayAcceptStatusId(item) {
+            if (!item || typeof item === "string") return "";
+            return item.statusId || item.statusElement || item.statusElementId || "";
+        }
+
+        function isRouteDecisionButton(item) {
+            return item && typeof item === "object" && (item.isRouteButton || item.route || item.findRoute);
+        }
+
+        function getDelayAcceptButtonHost(item) {
+            if (!item || typeof item !== "object") return null;
+            var hostId = item.containerId || item.hostId || item.appendTo || "";
+            if (!hostId) return null;
+            return String(hostId).charAt(0) === "#" || String(hostId).charAt(0) === "." ? $(hostId) : $(`#${hostId}`);
+        }
+
+        function ensureDelayDecisionButtonElement(buttonId, item) {
+            var $button = $(`#${buttonId}`);
+            if ($button.length) return $button;
+
+            var $host = getDelayAcceptButtonHost(item);
+            if (!$host || !$host.length) return $button;
+
+            return $(`<div id="${buttonId}"></div>`).appendTo($host);
+        }
+
+        function getDelayDecisionButtonDisabled(item, route, fallbackDisabled) {
+            if (item && typeof item === "object" && typeof item.disabled !== "undefined") {
+                return item.disabled;
+            }
+
+            if (route && typeof route.disabled !== "undefined") {
+                return route.disabled;
+            }
+
+            return fallbackDisabled || false;
+        }
+
+        function ensureDelayDecisionButtonInstance(buttonId, item) {
+            var $button = ensureDelayDecisionButtonElement(buttonId, item);
+            if (!$button.length) return null;
+
+            var instance = $button.dxButton("instance");
+            if (instance) return instance;
+
+            var route = item?.route || item?.findRoute;
+            var options = {
+                disabled: getDelayDecisionButtonDisabled(item, route),
+                text: item?.text || route?.displayStatus || route?.actionName || route?.actionCode || "",
+                icon: item?.icon || (route ? getTransitionButtonIcon(route, "check") : "check"),
+                type: item?.type || (route?.isReturn ? "danger" : "info")
+            };
+
+            $button.dxButton(options);
+
+            var buttonClass = item?.buttonClass || getTransitionButtonClass(route, "");
+            if (buttonClass) {
+                applyTransitionButtonClass(`#${buttonId}`, route || { buttonClass: buttonClass }, buttonClass);
+            }
+            if (item?.buttonColor || item?.backgroundColor) {
+                $button.find(".dx-button").css("background-color", item.buttonColor || item.backgroundColor);
+            }
+
+            return $button.dxButton("instance");
+        }
+
+        function getDelayAcceptStoredStatus(formItems, dept, item) {
+            if (!item || typeof item !== "object") return null;
+            if (item.acceptStatus) return item.acceptStatus;
+
+            var statusField = item.acceptStatusField || item.actionStatusField || "actionStatus";
+            var statusObject = tryParseJSON(formItems?.[statusField], "Delay AcceptStatus Problem") || {};
+            var buttonStatus = statusObject[`${dept}Button`];
+
+            if (buttonStatus) return buttonStatus;
+            return statusObject[dept] || null;
+        }
+
+        function renderDelayAcceptStoredStatusButton(formId, dept, item, formItems, tatObject) {
+            var buttonId = getDelayAcceptButtonId(item);
+            if (!buttonId || !item || typeof item !== "object") return false;
+
+            var storedStatus = getDelayAcceptStoredStatus(formItems, dept, item);
+            var statusText = "";
+            var statusIcon = item.icon || "check";
+            var statusClass = item.buttonClass || "dx-button-info";
+
+            if (storedStatus && typeof storedStatus === "object") {
+                statusText = storedStatus.text || storedStatus.displayStatus || storedStatus.actionName || storedStatus.actionCode || "";
+                statusIcon = storedStatus.icon || statusIcon;
+                statusClass = storedStatus.buttonClass || statusClass;
+            } else if (typeof storedStatus === "string") {
+                statusText = storedStatus;
+            }
+
+            if (!statusText && item.useTatAcceptStatus && tatObject?.[dept]?.AcceptDate) {
+                statusText = item.tatStatusText || "Submitted";
+            }
+
+            if (!statusText) return false;
+
+            var $host = $(`#${buttonId}`);
+            if (!$host.length) return false;
+
+            var statusButtonId = item.statusButtonId || `${buttonId}_status`;
+            if (item.clearRouteButtonsOnStatus !== false) {
+                $host.children().not(`#${statusButtonId}`).remove();
+            }
+            var $statusButton = $(`#${statusButtonId}`);
+            if (!$statusButton.length) {
+                $statusButton = $(`<div id="${statusButtonId}"></div>`).appendTo($host);
+            }
+
+            $statusButton.dxButton({
+                disabled: item.statusButtonDisabled !== false,
+                text: statusText,
+                icon: statusIcon,
+                type: item.type || "info"
+            });
+            applyTransitionButtonClass(`#${statusButtonId}`, { buttonClass: statusClass });
+            $statusButton.find(".dx-button").css("background-color", item.acceptedColor || "#17a2b8");
+
+            return true;
+        }
+
+        function buildDefaultDecisionClick(formId, dept) {
+            return function (e) {
+                var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                var passingObject = {
+                    statusName: `${dept} Process`,
+                    Comment: `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`,
+                    formItems: formItems,
+                    dept: dept,
+                    url: "/api/Quotation/UpdateData",
+                    urlLog: "/api/Quotation/LogAction",
+                    schemeName: "Quotation"
+                };
+
+                acceptDecision(passingObject);
+            };
+        }
+
+        function buildRouteDecisionClick(formId, dept, item) {
+            return function (e) {
+                var route = item.route || item.findRoute;
+                var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                var content = "";
+
+                if (typeof item.getComment === "function") {
+                    content = item.getComment();
+                } else {
+                    content = window.remarkBoxs?.[dept]?.controlRemark?.value?.() || "";
+                }
+
+                if (item.requireRemark && !content) {
+                    appNotifyWarning(item.remarkMessage || "Please put your reason to remarks!", false);
+                    return;
+                }
+
+                formItems.comment = content || "";
+
+                if (typeof item.onClick === "function") {
+                    item.onClick({
+                        event: e,
+                        formItems: formItems,
+                        route: route,
+                        dept: dept,
+                        formId: formId,
+                        config: item
+                    });
+                    return;
+                }
+
+                var moduleName = item.moduleName || item.formModuleKey || item.moduleKey || "qt";
+                var nextStep = item.nextStep || item.state?.nextStep || window.QuotationPage?.state?.nextStep;
+                var handlerName = item.handlerName || item.action || (route?.isReturn ? "returnToStep" : "submitNextStep");
+
+                if (!route || !nextStep) {
+                    buildDefaultDecisionClick(formId, dept)(e);
+                    return;
+                }
+
+                if (handlerName === "returnToStep") {
+                    returnToStep(moduleName, nextStep, route, formItems);
+                    return;
+                }
+
+                submitNextStep(moduleName, nextStep, route, formItems);
+            };
+        }
+
+        function applyDelayDecisionButton(formId, dept, item) {
+            var buttonId = getDelayAcceptButtonId(item);
+            if (!buttonId) return;
+
+            var instance = ensureDelayDecisionButtonInstance(buttonId, item);
+            if (!instance) return;
+
+            if (isRouteDecisionButton(item)) {
+                var route = item.route || item.findRoute;
+                var buttonOptions = {
+                    onClick: buildRouteDecisionClick(formId, dept, item)
+                };
+
+                if (route) {
+                    buttonOptions.text = item.text || route.displayStatus || route.actionName || route.actionCode || instance.option("text");
+                    buttonOptions.icon = item.icon || getTransitionButtonIcon(route, instance.option("icon") || "check");
+                    buttonOptions.type = item.type || instance.option("type");
+                    buttonOptions.disabled = getDelayDecisionButtonDisabled(item, route, instance.option("disabled"));
+                }
+
+                instance.option(buttonOptions);
+                applyTransitionButtonClass(`#${buttonId}`, route || item, item.buttonClass);
+                if (item.buttonColor || item.backgroundColor) {
+                    $(`#${buttonId}`).find(".dx-button").css("background-color", item.buttonColor || item.backgroundColor);
+                }
+                return;
+            }
+
+            if (item && typeof item === "object" && item.useDefaultDecisionClick) {
+                instance.option("onClick", buildDefaultDecisionClick(formId, dept));
+            }
+        }
+
         function renderDecisionDeferredV2(formId, dept, groupName, mainField, ...params) {
 
             // setTimeout(function () {
@@ -5899,44 +6129,61 @@ function styleModeChange(item){
 
                 }
 
-                form.itemOption(groupName, "visible", pic ? true : false);
+                try {
+                    form.itemOption(groupName, "visible", pic ? true : false);
+                } catch (e) {
+                }
                 setTimeout(() => {
+                           var latestFormItems = form.option("formData") || {};
+                           var latestTatObject = tryParseJSON(latestFormItems.turnAroundTimeAttributes, "TAT Load Button Problem");
+                           var buttonItems = params.filter(item => getDelayAcceptButtonId(item));
+                           var renderedStoredStatus = false;
+                           buttonItems.forEach(item => {
+                               if (renderDelayAcceptStoredStatusButton(formId, dept, item, latestFormItems, latestTatObject)) {
+                                   renderedStoredStatus = true;
+                                   return;
+                               }
 
+                               if (item && typeof item === "object" && typeof item.loadRouteButtons === "function" && !isRouteDecisionButton(item) && !item.useDefaultDecisionClick && !item.createButton) {
+                                   item.loadRouteButtons({
+                                       formId: formId,
+                                       dept: dept,
+                                       formItems: latestFormItems,
+                                       tatObject: latestTatObject,
+                                       config: item
+                                   });
+                                   return;
+                               }
 
-                           $(`#${params[0]}`).dxButton("instance").option("onClick", function (e){
-                                var passingObject = {
+                               applyDelayDecisionButton(formId, dept, item);
 
-                                           statusName: `${dept} Process`,
-
-                                           Comment: `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`,
-
-                                           formItems: formItems,
-
-                                           dept: dept,
-
-                                           url: "/api/Quotation/UpdateData",
-
-                                           urlLog: "/api/Quotation/LogAction",
-
-                                           schemeName: "Quotation"
-
-                                       };
-
-                                       acceptDecision(passingObject);
-                           } )
-            
-                          if (tatObject) 
-                          if (tatObject[dept]?.AcceptDate)
+                               if (item && typeof item === "object" && typeof item.loadRouteButtons === "function") {
+                                   item.loadRouteButtons({
+                                       formId: formId,
+                                       dept: dept,
+                                       formItems: latestFormItems,
+                                       tatObject: latestTatObject,
+                                       config: item
+                                   });
+                               }
+                           });
+                          if (!renderedStoredStatus && latestTatObject)
+                          if (latestTatObject[dept]?.AcceptDate )
                              {
-                                         if (params[0])
+                                         var acceptButtonId = getDelayAcceptButtonId(params[0]);
+                                         var acceptStatusId = getDelayAcceptStatusId(params[0]) || params[1];
+                                         var skipAcceptedMainFields = params[0] && typeof params[0] === "object" && params[0].skipAcceptedMainFields;
+                                         if (acceptButtonId)
                                             {
-                                             form.option("items", [
-                                                 ...form.option("items"),
-                                                 ...mainField
-                                             ]);
-                                        $(`#${params[0]}`).css("background-color","#17a2b8");
-                                            $(`#${params[1]}`).text(`Accepted at: ${tatObject[dept]?.AcceptDate}`);
-                                                disableAllDecisionButton(params);
+                                             if (!skipAcceptedMainFields) {
+                                                 form.option("items", [
+                                                     ...form.option("items"),
+                                                     ...mainField
+                                                 ]);
+                                             }
+                                        $(`#${acceptButtonId}`).css("background-color","#17a2b8");
+                                            $(`#${acceptStatusId}`).text(`Accepted at: ${latestTatObject[dept]?.AcceptDate}`);
+                                                disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
                                         // $(`#${params[0]}`).dxButton("instance").option("disabled", true);
                                             // renderFullFormIfAccepted(formIns, dept, mainFields);
 
@@ -5947,6 +6194,20 @@ function styleModeChange(item){
                                      //    $(`#${rejectButtonIdStatus}`).text(`Accepted at: ${tatObject[dept]?.AcceptDate}`);
                                      //        $(`#${rejectButtonId}`).dxButton("instance").option("disabled", true);
                                      // }
+                            }
+                            if ( dept == "LMKT" )
+                            {
+                                debugger
+                            var storedStatus = getDelayAcceptStoredStatus(formItems, dept, formItems);
+                            if (storedStatus)
+                            {
+                                console.log(storedStatus);
+
+                            }
+                            else {
+                                $(`#${params[0]}`).dxButton("instance").option("visible", false);
+                                $(`#${params[2]}`).dxButton("instance").option("visible", false);
+                            }
                             }
                                    }, 100);
 

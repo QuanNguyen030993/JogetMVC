@@ -181,6 +181,11 @@ Note:
                                          var tatObject = new Object();
 
                                             tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Button Problem");
+                                        var actionStatusObject = tryParseJSON(formItems.actionStatus, "Submit Button ActionStatus Problem") || {};
+                                        var hasAcceptedRouteStatus = stageDept === "LMKT" && (actionStatusObject[`${stageDept}Button`] || actionStatusObject[stageDept]);
+                                        if (hasAcceptedRouteStatus) {
+                                            return;
+                                        }
                                            try {
                                             if (findRouteReturns?.length && tatObject) {
 
@@ -270,18 +275,29 @@ Note:
                                                                 }
                                                                 if (!currentTatObject[stageDept].AcceptDate) {
                                                                     currentTatObject[stageDept].AcceptDate = formatDateToString(new Date()).gmt7;
-                                                                    formItems.turnAroundTimeAttributes = JSON.stringify(currentTatObject);
-                                                                    ajaxPut('/api/Quotation/UpdateData',
-                                                                        {
-                                                                            key: formItems.id,
-                                                                            values: JSON.stringify(formItems)
-                                                                        },
-                                                                        {
-                                                                            onSuccess: function () { },
-                                                                            onError: function (err) { console.log("LMKT SubmitBranch TAT update problem", err); }
-                                                                        }
-                                                                    );
                                                                 }
+
+                                                                var currentActionStatus = tryParseJSON(formItems.actionStatus, "LMKT SubmitBranch ActionStatus Problem") || {};
+                                                                currentActionStatus[stageDept] = route.displayStatus || route.actionName || route.actionCode || "Submitted";
+                                                                currentActionStatus[`${stageDept}Button`] = {
+                                                                    text: route.displayStatus || route.actionName || route.actionCode || "Submitted",
+                                                                    actionCode: route.actionCode || "",
+                                                                    icon: getTransitionButtonIcon(route, "check"),
+                                                                    buttonClass: getTransitionButtonClass(route, "dx-button-info")
+                                                                };
+
+                                                                formItems.turnAroundTimeAttributes = JSON.stringify(currentTatObject);
+                                                                formItems.actionStatus = JSON.stringify(currentActionStatus);
+                                                                ajaxPut('/api/Quotation/UpdateData',
+                                                                    {
+                                                                        key: formItems.id,
+                                                                        values: JSON.stringify(formItems)
+                                                                    },
+                                                                    {
+                                                                        onSuccess: function () { },
+                                                                        onError: function (err) { console.log("LMKT SubmitBranch status update problem", err); }
+                                                                    }
+                                                                );
                                                                 $(`#${submitButtonId}`).find(".dx-button").css("background-color", "#17a2b8");
                                                             }
 
@@ -306,6 +322,7 @@ Note:
                         });
                 });
         }
+        window.loadSelectedQuotationWorkflow = loadSelectedWorkflow;
 
         async function loadQuotePage(reset = false) {
             if (state.quotePaging.loading) return;
