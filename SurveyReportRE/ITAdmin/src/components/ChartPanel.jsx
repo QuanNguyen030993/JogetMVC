@@ -19,7 +19,7 @@ import {
 
 
 const ChartPanel = ({
-  cpuData,
+  serilogData,
   ticketData,
   loginStats = [],
   disk = 0
@@ -119,18 +119,18 @@ return (
 
 
 
-{/* CPU */}
+{/* Serilog hourly count */}
 
 <div className="chart-card">
 
 <div className="chart-card-header">
 
 <h3>
-Tải CPU theo ngày
+Serilog count by hour
 </h3>
 
 <span>
-%
+Today
 </span>
 
 </div>
@@ -143,13 +143,13 @@ Tải CPU theo ngày
 >
 
 <AreaChart
-data={cpuData}
+data={serilogData}
 >
 
 <defs>
 
 <linearGradient
-id="colorCpu"
+id="colorSerilog"
 x1="0"
 y1="0"
 x2="0"
@@ -178,7 +178,7 @@ strokeDasharray="3 3"
 />
 
 
-<XAxis dataKey="day"/>
+<XAxis dataKey="label"/>
 
 <YAxis/>
 
@@ -190,11 +190,11 @@ strokeDasharray="3 3"
 
 type="monotone"
 
-dataKey="usage"
+dataKey="count"
 
 stroke="#2563eb"
 
-fill="url(#colorCpu)"
+fill="url(#colorSerilog)"
 
 />
 
@@ -223,11 +223,11 @@ fill="url(#colorCpu)"
 <div className="chart-card-header">
 
 <h3>
-Ticket IT
+Ticket IT — Browser errors
 </h3>
 
 <span>
-Open / Closed
+Error count by time
 </span>
 
 </div>
@@ -260,22 +260,10 @@ strokeDasharray="3 3"
 <Legend/>
 
 
-<Bar
-
-dataKey="open"
-
-fill="#f59e0b"
-
-/>
+<Bar dataKey="clientBrowserError" fill="#475569" name="Client Browser Error" radius={[4, 4, 0, 0]} />
 
 
-<Bar
-
-dataKey="closed"
-
-fill="#10b981"
-
-/>
+<Bar dataKey="errorBrowserDetails" fill="#0f766e" name="Error Browser Details" radius={[4, 4, 0, 0]} />
 
 
 </BarChart>

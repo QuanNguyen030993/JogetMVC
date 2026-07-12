@@ -14,6 +14,8 @@ import OverviewPanel from './components/OverviewPanel';
 import EnumDesign from './components/EnumDesign';
 import SlaDesign from './components/SlaDesign';
 import WorkflowRecover from './components/WorkflowRecover';
+import EvaluationPanel from './components/EvaluationPanel';
+import ActiveUsersPanel from './components/ActiveUsersPanel';
 import CustomGrid from '../../TMIVCom/src/components/CustomGrid'
 import './styles/flow.css';
 import './styles/com.all.css';
@@ -26,33 +28,33 @@ import './styles/menudesigner.css';
 import './styles/sladesigner.css';
 import "./fonts/css/all.min.css";
 
-const userCount = { label: 'Người dùng hoạt động', value: '128', detail: '20 người dùng IT đang online' };
-
-const cpuData = [
-  { day: 'T2', usage: 64 },
-  { day: 'T3', usage: 58 },
-  { day: 'T4', usage: 72 },
-  { day: 'T5', usage: 81 },
-  { day: 'T6', usage: 75 },
-  { day: 'T7', usage: 69 },
-  { day: 'CN', usage: 73 }
-];
-
-const ticketData = [
-  { day: 'T2', open: 4, closed: 8 },
-  { day: 'T3', open: 7, closed: 6 },
-  { day: 'T4', open: 3, closed: 9 },
-  { day: 'T5', open: 6, closed: 7 },
-  { day: 'T6', open: 5, closed: 7 },
-  { day: 'T7', open: 4, closed: 6 },
-  { day: 'CN', open: 2, closed: 4 }
-];
-
 function App() {
   const [loginStats,setLoginStats]=useState([]);
   const [disk,setDisk]=useState(0);
+  const [ticketData,setTicketData]=useState([]);
+  const [serilogHourly,setSerilogHourly]=useState([]);
+  const [onlineUsers,setOnlineUsers]=useState([]);
+  const [onlineUsersLoading,setOnlineUsersLoading]=useState(true);
+  const [onlineUsersError,setOnlineUsersError]=useState('');
    
   useEffect(()=>{
+    let activeUsersTimer;
+    const loadOnlineUsers = () => {
+      setOnlineUsersLoading(true);
+      fetch(`${API_BASE_URL}/api/UsersSession/OnlineUsers`)
+        .then(response => {
+          if (!response.ok) throw new Error(`Online users failed (${response.status})`);
+          return response.json();
+        })
+        .then(users => {
+          setOnlineUsers(Array.isArray(users) ? users : []);
+          setOnlineUsersError('');
+        })
+        .catch(error => setOnlineUsersError(error?.message || 'Unable to load active users'))
+        .finally(() => setOnlineUsersLoading(false));
+    };
+    loadOnlineUsers();
+    activeUsersTimer = setInterval(loadOnlineUsers, 15000);
     fetch(`${API_BASE_URL}/api/UsersSession/ExecuteCustomQuery`,{
       method:"POST",
       headers:{
@@ -89,7 +91,74 @@ function App() {
     .then(d=>
       setDisk(d[0]?.availableSpace||0)
     );
+
+    fetch(`${API_BASE_URL}/api/CommentLog/GetSerilogHourlyToday`)
+      .then(response => {
+        if (!response.ok) throw new Error(`Serilog hourly count failed (${response.status})`);
+        return response.json();
+      })
+      .then(rows => {
+        setSerilogHourly((rows || []).map(row => {
+          const hour = Number(row.hour ?? row.Hour) || 0;
+          return {
+            hour,
+            label: `${String(hour).padStart(2, '0')}:00`,
+            count: Number(row.count ?? row.Count) || 0
+          };
+        }));
+      })
+      .catch(error => {
+        console.error('Load Serilog hourly count failed', error);
+        setSerilogHourly([]);
+      });
+
+    Promise.all([
+      fetch(`${API_BASE_URL}/api/ClientBrowserError/CountTrend?interval=day&take=30`),
+      fetch(`${API_BASE_URL}/api/ErrorBrowserDetails/CountTrend?interval=day&take=30`)
+    ])
+      .then(async ([clientResponse, detailResponse]) => {
+        if (!clientResponse.ok) throw new Error(`ClientBrowserError trend failed (${clientResponse.status})`);
+        if (!detailResponse.ok) throw new Error(`ErrorBrowserDetails trend failed (${detailResponse.status})`);
+        const [clientRows, detailRows] = await Promise.all([clientResponse.json(), detailResponse.json()]);
+        return [
+          ...(clientRows || []).map(row => ({ ...row, source: 'ClientBrowserError' })),
+          ...(detailRows || []).map(row => ({ ...row, source: 'ErrorBrowserDetails' }))
+        ];
+      })
+      .then(rows => {
+        const buckets = new Map();
+        (rows || []).forEach(row => {
+          const time = row.time ?? row.Time;
+          const source = row.source ?? row.Source;
+          const count = Number(row.count ?? row.Count) || 0;
+          const key = String(time || 'Unknown');
+          if (!buckets.has(key)) {
+            const parsedDate = new Date(time);
+            buckets.set(key, {
+              time: key,
+              day: Number.isNaN(parsedDate.getTime()) ? key : parsedDate.toLocaleDateString([], { month: 'short', day: '2-digit' }),
+              clientBrowserError: 0,
+              errorBrowserDetails: 0
+            });
+          }
+          const bucket = buckets.get(key);
+          if (String(source).toLowerCase() === 'clientbrowsererror') bucket.clientBrowserError = count;
+          if (String(source).toLowerCase() === 'errorbrowserdetails') bucket.errorBrowserDetails = count;
+        });
+        setTicketData(Array.from(buckets.values()).sort((a, b) => new Date(a.time) - new Date(b.time)));
+      })
+      .catch(error => {
+        console.error('Load Ticket IT trend failed', error);
+        setTicketData([]);
+      });
+    return () => clearInterval(activeUsersTimer);
   },[]);
+
+  const userCount = useMemo(() => ({
+    label: 'Người dùng hoạt động',
+    value: String(onlineUsers.length),
+    detail: onlineUsers.length ? 'SignalR sessions currently online' : 'No active SignalR session'
+  }), [onlineUsers]);
 
   const [activeSection, setActiveSection] = useState('dashboard');
   const [selectedWorkflowId, setSelectedWorkflowId] = useState(null);
@@ -196,15 +265,17 @@ function App() {
               </article>
             </section>
             <ChartPanel
-              cpuData={cpuData}
+              serilogData={serilogHourly}
               ticketData={ticketData}
               loginStats={loginStats}
               disk={disk}
             />
+            <ActiveUsersPanel users={onlineUsers} loading={onlineUsersLoading} error={onlineUsersError} />
+            <EvaluationPanel />
           </>
         );
     }
-  }, [activeSection, selectedWorkflowId, disk, loginStats]);
+  }, [activeSection, selectedWorkflowId, disk, loginStats, ticketData, serilogHourly, onlineUsers, onlineUsersLoading, onlineUsersError, userCount]);
 
   return (
     <div className="app-shell">

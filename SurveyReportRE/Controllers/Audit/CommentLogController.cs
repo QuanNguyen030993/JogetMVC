@@ -103,6 +103,32 @@ public class CommentLogController : BaseControllerApi<CommentLog>
         return Ok(obj);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetSerilogHourlyToday()
+    {
+        string query = @"
+WITH Hours AS
+(
+    SELECT 0 AS [hour]
+    UNION ALL
+    SELECT [hour] + 1 FROM Hours WHERE [hour] < 23
+), LogCounts AS
+(
+    SELECT DATEPART(hour, [TimeStamp]) AS [hour], COUNT_BIG(1) AS [count]
+    FROM Logs WITH (NOLOCK)
+    WHERE [TimeStamp] >= CAST(GETDATE() AS date)
+      AND [TimeStamp] < DATEADD(day, 1, CAST(GETDATE() AS date))
+    GROUP BY DATEPART(hour, [TimeStamp])
+)
+SELECT h.[hour], ISNULL(l.[count], 0) AS [count]
+FROM Hours h
+LEFT JOIN LogCounts l ON l.[hour] = h.[hour]
+ORDER BY h.[hour]
+OPTION (MAXRECURSION 24);";
+        var result = await _BaseRepository.ExecuteCustomLogQuery(query);
+        return Ok(result);
+    }
+
     [HttpPost]
     public override async Task<object> ExecuteCustomQuery([FromBody] string query)
     {

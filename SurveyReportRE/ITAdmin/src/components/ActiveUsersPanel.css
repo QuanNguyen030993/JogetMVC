@@ -1,0 +1,15 @@
+.active-users-panel { margin-top: 22px; overflow: hidden; border: 1px solid #dfe6ee; border-radius: 14px; background: #fff; box-shadow: 0 7px 24px rgba(15,23,42,.06); }
+.active-users-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 17px 20px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }
+.active-users-header span { color: #64748b; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.active-users-header h2 { margin: 3px 0 0; color: #172235; font-size: 19px; }
+.active-users-header > strong { display: grid; width: 44px; height: 44px; place-items: center; border-radius: 12px; background: #334155; color: #fff; font-size: 18px; }
+.active-users-table-wrap { width: 100%; overflow: auto; }
+.active-users-table { width: 100%; min-width: 760px; border-collapse: collapse; color: #475569; font-size: 12px; }
+.active-users-table th { padding: 10px 14px; border-bottom: 1px solid #dfe6ee; background: #f1f5f9; color: #334155; text-align: left; font-size: 11px; letter-spacing: .025em; }
+.active-users-table td { max-width: 280px; padding: 11px 14px; border-bottom: 1px solid #edf2f7; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.active-users-table tbody tr:hover td { background: #f8fbff; }
+.active-user-dot { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.12); }
+.connection-id { color: #64748b; font-family: Consolas, monospace; }
+.active-users-state { height: 110px; color: #94a3b8; text-align: center !important; }
+.active-users-state.error { color: #b91c1c; }
+

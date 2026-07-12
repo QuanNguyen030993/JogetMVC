@@ -3,29 +3,12 @@
 @{
 
 }
-<script>
-    $(function () {
-        connectionSignR.invoke("GetOnlineUsers");
-    //     connectionSignR.on("onlineUsersChanged", (users) => {
-    //     userRender(users);
-    // });
-    });
-</script>
-<div style="margin: 8px 0;">
-    <span>Connected users: </span><b id="count">0</b>
+<div style="margin:20px;padding:22px;border:1px solid #dfe6ee;border-radius:12px;background:#f8fafc;color:#475569;">
+    <div style="display:flex;align-items:center;gap:12px;">
+        <i class="fas fa-users" style="font-size:22px;color:#334155;"></i>
+        <div>
+            <h3 style="margin:0 0 4px;color:#1e293b;">Active users moved</h3>
+            <p style="margin:0;font-size:13px;">Theo dõi người dùng đang hoạt động đã được chuyển sang ITAdmin Dashboard. Màn hình này không còn khởi tạo SignalR hoặc render danh sách riêng.</p>
+        </div>
+    </div>
 </div>
-
-<table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse; width: 700px;">
-    <thead>
-        <tr>
-            <th>User</th>
-            <th>AuthType</th>
-            <th>Connections</th>
-            <th>LastSeen</th>
-            <th>SignalR ConnectionId</th>
-        </tr>
-    </thead>
-    <tbody id="tbody">
-        <tr><td colspan="4">Loading...</td></tr>
-    </tbody>
-</table>

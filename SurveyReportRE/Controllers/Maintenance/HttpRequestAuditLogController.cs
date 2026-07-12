@@ -52,6 +52,7 @@ public class HttpRequestAuditLogController : BaseControllerApi<HttpRequestAuditL
         return result;
     }
 
+
 //    [HttpGet("api/audit/http-log-chart")]
 //    public async Task<IActionResult> GetHttpLogChart([FromQuery] HttpLogChartQuery q)
 //    {

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using ERPCore.Controllers.Base;
 using ERPCore.Models.Migration.Config;
+using ERPCore.Common;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -24,6 +25,12 @@ public class UsersSessionController : BaseControllerApi<UsersSession>
         string baseQuery = $"EXEC usp_Monitoring_GetData ${query}";
         List<Dictionary<string, object>> obj = await _BaseRepository.ExecuteCustomQuery(baseQuery);
         return (obj);
+    }
+
+    [HttpGet]
+    public IActionResult OnlineUsers()
+    {
+        return Ok(FileProcessingHub._store.GetOnlineUsers());
     }
 
  }

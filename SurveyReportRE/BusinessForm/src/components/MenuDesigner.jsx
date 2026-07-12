@@ -35,7 +35,8 @@ export default function MenuDesigner() {
         Icon: m.icon || "fa-solid fa-house",
         Order: m.sortOrder || 1,
         Visible: m.active !== false,
-        ParentId: m.parentId || null
+        ParentId: m.parentId || null,
+        PageSystem: m.pageSystem ?? m.PageSystem ?? "[]"
       }));
       setMenus(mapped);
       setSelected(null);
@@ -61,6 +62,7 @@ export default function MenuDesigner() {
       Order: menus.length + 1,
       Visible: true,
       ParentId: null,
+      PageSystem: "[]",
       isNew: true
     };
     setMenus((x) => [...x, item]);
@@ -109,7 +111,8 @@ export default function MenuDesigner() {
           icon: m.Icon,
           sortOrder: m.Order,
           active: m.Visible,
-          parentId: m.ParentId
+          parentId: m.ParentId,
+          PageSystem: m.PageSystem || "[]"
         };
 
         const formData = new FormData();
@@ -117,19 +120,21 @@ export default function MenuDesigner() {
         if (m.isNew || m.id > 100000000000) {
           // Insertion
           formData.append("values", JSON.stringify(payload));
-          await fetch(`${API_BASE_URL}/api/Menu/InsertData`, {
+          const response = await fetch(`${API_BASE_URL}/api/Menu/InsertData`, {
             method: "POST",
             body: formData
           });
+          if (!response.ok) throw new Error(`Insert menu failed (${response.status})`);
         } else {
           // Update
           payload.id = m.id;
           formData.append("key", m.id);
           formData.append("values", JSON.stringify(payload));
-          await fetch(`${API_BASE_URL}/api/Menu/UpdateData`, {
+          const response = await fetch(`${API_BASE_URL}/api/Menu/UpdateData`, {
             method: "PUT",
             body: formData
           });
+          if (!response.ok) throw new Error(`Update menu ${m.id} failed (${response.status})`);
         }
       }
 

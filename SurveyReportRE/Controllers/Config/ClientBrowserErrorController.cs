@@ -57,5 +57,25 @@ public class ClientBrowserErrorController : BaseControllerApi<ClientBrowserError
             return Ok();
         }
     }
+
+    [HttpGet]
+    public async Task<object> CountTrend(string interval = "day", int take = 30)
+    {
+        take = Math.Clamp(take, 1, 366);
+        string bucket = interval?.ToLowerInvariant() switch
+        {
+            "hour" => "DATEADD(hour, DATEDIFF(hour, 0, CreatedDate), 0)",
+            "month" => "DATEFROMPARTS(YEAR(CreatedDate), MONTH(CreatedDate), 1)",
+            "year" => "DATEFROMPARTS(YEAR(CreatedDate), 1, 1)",
+            _ => "CAST(CreatedDate AS date)"
+        };
+        string query = $@"
+SELECT TOP ({take}) {bucket} AS [time], COUNT_BIG(1) AS [count]
+FROM dbo.ClientBrowserError WITH (NOLOCK)
+WHERE CreatedDate IS NOT NULL
+GROUP BY {bucket}
+ORDER BY [time] DESC;";
+        return await _BaseRepository.ExecuteCustomQuery(query);
+    }
 }
 
