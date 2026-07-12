@@ -3306,6 +3306,68 @@
 
 
 
+        async function copyAttachmentToClipboard(attachment, downloadUrl, fileName) {
+            if (!downloadUrl) {
+                DevExpress.ui.notify("No download url", "warning", 2000);
+                return;
+            }
+
+            const absoluteUrl = new URL(downloadUrl, window.location.origin).href;
+            try {
+                if (window.isSecureContext && navigator.clipboard?.write && window.ClipboardItem) {
+                    const response = await fetch(absoluteUrl, { credentials: "include" });
+                    if (!response.ok) throw new Error("Unable to download attachment");
+
+                    const blob = await response.blob();
+                    const mimeType = blob.type || attachment.contentType || attachment.ContentType || "application/octet-stream";
+                    const isSupported = typeof ClipboardItem.supports !== "function" || ClipboardItem.supports(mimeType);
+                    if (isSupported) {
+                        await navigator.clipboard.write([
+                            new ClipboardItem({ [mimeType]: blob })
+                        ]);
+                        DevExpress.ui.notify(`Copied ${fileName}. Paste it into the email editor.`, "success", 2200);
+                        return;
+                    }
+                }
+
+                await navigator.clipboard.writeText(absoluteUrl);
+                DevExpress.ui.notify("Browser cannot copy this file type. Download link copied instead.", "warning", 3000);
+            } catch (error) {
+                try {
+                    await navigator.clipboard.writeText(absoluteUrl);
+                    DevExpress.ui.notify("File copy is not supported. Download link copied instead.", "warning", 3000);
+                } catch {
+                    DevExpress.ui.notify(error.message || "Copy attachment failed", "error", 2500);
+                }
+            }
+        }
+
+        function previewAttachment(id, extension, fileName) {
+            const ext = String(extension || "").toLowerCase().replace(/^\./, "");
+            const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg"];
+            const officeExtensions = ["doc", "docx", "xls", "xlsx", "ppt", "pptx", "odt", "ods", "odp"];
+            const textExtensions = ["txt", "log", "md", "csv", "json", "xml", "yaml", "yml", "ini", "config", "sql", "js", "css", "html", "htm"];
+
+            if (imageExtensions.includes(ext)) {
+                openImagePreviewPopup(id);
+                return;
+            }
+            if (officeExtensions.includes(ext)) {
+                openOfficePopup(id);
+                return;
+            }
+            if (ext === "pdf") {
+                openPDFPopup(id);
+                return;
+            }
+            if (textExtensions.includes(ext)) {
+                openTextPreviewPopup(id, fileName);
+                return;
+            }
+
+            DevExpress.ui.notify("Preview is not supported for this file type", "info", 2000);
+        }
+
         function createAttachmentItem(x, onDeleted, options) {
             const fileName = x.fileName || x.FileName || x.name || "Unnamed";
             const ext = (x.extension || x.Extension || getExt(fileName)).toLowerCase();
@@ -3344,6 +3406,17 @@
                 .appendTo($meta);
 
             const $actions = $("<div>").addClass("att-actions").appendTo($item);
+
+                if (x.recordGuid)
+            $("<div>").dxButton({
+                icon: "copy",
+                hint: "Copy file",
+                stylingMode: "text",
+                onClick: async function (ev) {
+                    ev.event?.stopPropagation?.();
+                    await copyAttachmentToClipboard(x, downloadUrl, fileName);
+                }
+            }).appendTo($actions);
 
                 if (x.recordGuid)
             $("<div>").dxButton({
@@ -3395,20 +3468,7 @@
             $item.css("cursor", downloadUrl ? "pointer" : "default");
                 if (x.recordGuid)
             $item.on("click", async function (ev) {
-                     openOfficePopup(id);
-                // if (ext === "xlsx" || ext === "xls") {
-                //     //libreConvert(id);
-                //     // openExcelPreviewPopup(id);
-                //     openOfficePopup(id);
-                // }
-                // if (ext === "docx" || ext === "doc")
-                //     // openWordPreviewPopup(id);
-                // if (ext === "jpg" || ext === "jpeg" || ext === "png")
-                //     openImagePreviewPopup(id);
-                // if (ext === "pdf")
-                //     openPDFPopup(id);
-                //if (ext === "docx")
-                //    openWordMammothPopup(id);
+                    previewAttachment(id, ext, fileName);
             });
             $(`<input type="hidden" value="${id}"></input>`).appendTo($item);
 
@@ -5582,8 +5642,44 @@ function styleModeChange(item){
             contentTemplate(container) {
                 var scrollContent = popupStandardContentByScroll($("<img>")
                     .attr("src", `/api/Document/StreamDocument?id=${id}`)
-                    .css({ width: '100%', height: 'auto', objectFit: 'cover', borderRadius: '5px' }));
+                    .css({ width: '100%', height: 'auto', objectFit: 'contain', borderRadius: '5px' }));
                 scrollContent.appendTo(container);
+            }
+        });
+        popup.show();
+    }
+
+    async function openTextPreviewPopup(id, fileName) {
+        const popup = makePopup("large", "Res");
+        popup.option({
+            width: "80vw",
+            height: "90vh",
+            title: `Text Preview${fileName ? ` - ${fileName}` : ""}`,
+            contentTemplate(container) {
+                const $text = $("<pre>")
+                    .css({
+                        margin: 0,
+                        padding: "16px",
+                        minHeight: "100%",
+                        whiteSpace: "pre-wrap",
+                        overflowWrap: "anywhere",
+                        overflow: "auto",
+                        background: "#0f172a",
+                        color: "#e2e8f0",
+                        borderRadius: "6px",
+                        fontFamily: "Consolas, 'Courier New', monospace",
+                        fontSize: "13px"
+                    })
+                    .text("Loading...")
+                    .appendTo(container);
+
+                fetch(`/api/Document/StreamDocument?id=${encodeURIComponent(id)}`, { credentials: "include" })
+                    .then(response => {
+                        if (!response.ok) throw new Error(`Unable to load text file (${response.status})`);
+                        return response.text();
+                    })
+                    .then(content => $text.text(content))
+                    .catch(error => $text.text(error.message || "Unable to preview text file"));
             }
         });
         popup.show();
@@ -5593,7 +5689,7 @@ function styleModeChange(item){
         popup.option({
             width: "80vw",
             height: "90vh",
-            title: "Image Preview",
+            title: "PDF Preview",
             contentTemplate(container) {
                        $.ajax({
                         url: `/api/Utility/GetPdfFile/${id}`,

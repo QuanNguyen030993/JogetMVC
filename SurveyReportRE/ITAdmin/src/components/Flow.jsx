@@ -426,6 +426,20 @@ const mapWorkflowNodes = (workflowNodes = [], scaleX = 1.0, scaleY = 1.0) =>
         const rawY = Number.isFinite(node.posY) ? node.posY : node.y;
         const hasPosition = Number.isFinite(rawX) && Number.isFinite(rawY);
 
+        let parsedScreenConditions = [];
+        if (Array.isArray(node.screenConditions)) {
+            parsedScreenConditions = node.screenConditions;
+        } else if (node.data) {
+            try {
+                const parsed = typeof node.data === 'string' ? JSON.parse(node.data) : node.data;
+                if (Array.isArray(parsed.screenConditions)) {
+                    parsedScreenConditions = parsed.screenConditions;
+                } else if (parsed.rawNode && Array.isArray(parsed.rawNode.screenConditions)) {
+                    parsedScreenConditions = parsed.rawNode.screenConditions;
+                }
+            } catch (e) {}
+        }
+
         return {
             id,
             type: 'workflowNode',
@@ -450,6 +464,7 @@ const mapWorkflowNodes = (workflowNodes = [], scaleX = 1.0, scaleY = 1.0) =>
                 levelNo: node.levelNo || '',
                 allowLoop: !!node.allowLoop,
                 loopGroup: node.loopGroup || '',
+                screenConditions: parsedScreenConditions,
             },
             style: createNodeStyle(node),
         };
@@ -986,7 +1001,8 @@ function Flow({ id: propId }) {
                     departmentName: node.data.departmentName || '',
                     description: node.data.description || '',
                     sortOrder: index + 1,
-                    orderNo: index + 1
+                    orderNo: index + 1,
+                    screenConditions: node.data.screenConditions || []
                 };
             });
 
@@ -1132,8 +1148,20 @@ function Flow({ id: propId }) {
                             departmentName: node.data?.departmentName,
                             levelNo: node.data?.levelNo,
                             x: origX,
-                            y: origY
-                        }
+                            y: origY,
+                            screenConditions: node.data?.screenConditions || []
+                        },
+                        screenConditions: node.data?.screenConditions || [],
+                        condition: (() => {
+                            const conditionObj = {};
+                            (node.data?.screenConditions || []).forEach(rule => {
+                                if (rule.sectionId) {
+                                    conditionObj[rule.sectionId] = rule.mode || 'Hide';
+                                }
+                            });
+                            return conditionObj;
+                        })(),
+                        nodetype: node.data?.nodeType || "task"
                     })
                 };
             });
@@ -1906,6 +1934,130 @@ function Flow({ id: propId }) {
                         onChange={(event) => updateSelectedNode('description', event.target.value)}
                     />
                 </label>
+
+                {/* Screen Section Conditions Section */}
+                <div style={{ marginTop: '16px', borderTop: '1px solid #cbd5e1', paddingTop: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                        <span style={{ fontWeight: 600, fontSize: '0.9rem', color: '#1e293b' }}>Điều kiện Section màn hình</span>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const currentRules = selectedNode.data?.screenConditions || [];
+                                const newRule = {
+                                    id: `sec-${Date.now()}`,
+                                    sectionId: '',
+                                    mode: 'Hide',
+                                    condition: ''
+                                };
+                                updateSelectedNode('screenConditions', [...currentRules, newRule]);
+                            }}
+                            style={{
+                                padding: '4px 8px',
+                                background: '#2563eb',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                fontSize: '0.75rem',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Thêm điều kiện
+                        </button>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {(selectedNode.data?.screenConditions || []).map((rule, idx) => (
+                            <div
+                                key={rule.id || idx}
+                                style={{
+                                    border: '1px solid #cbd5e1',
+                                    borderRadius: '6px',
+                                    padding: '10px',
+                                    background: '#f8fafc',
+                                    position: 'relative'
+                                }}
+                            >
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const currentRules = selectedNode.data?.screenConditions || [];
+                                        const nextRules = currentRules.filter((_, i) => i !== idx);
+                                        updateSelectedNode('screenConditions', nextRules);
+                                    }}
+                                    style={{
+                                        position: 'absolute',
+                                        top: '6px',
+                                        right: '6px',
+                                        background: 'none',
+                                        border: 'none',
+                                        color: '#ef4444',
+                                        fontSize: '0.85rem',
+                                        cursor: 'pointer'
+                                    }}
+                                    title="Xóa điều kiện"
+                                >
+                                    ✕
+                                </button>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px', marginRight: '16px' }}>
+                                    <label style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '0.75rem' }}>
+                                        <span>Mã Section</span>
+                                        <input
+                                            type="text"
+                                            value={rule.sectionId || ''}
+                                            onChange={(e) => {
+                                                const currentRules = [...(selectedNode.data?.screenConditions || [])];
+                                                currentRules[idx] = { ...currentRules[idx], sectionId: e.target.value };
+                                                updateSelectedNode('screenConditions', currentRules);
+                                            }}
+                                            placeholder="e.g. secContract"
+                                            style={{ padding: '4px 6px', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid #cbd5e1', background: 'white' }}
+                                        />
+                                    </label>
+
+                                    <label style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '0.75rem' }}>
+                                        <span>Trạng thái (Mode)</span>
+                                        <select
+                                            value={rule.mode || 'Hide'}
+                                            onChange={(e) => {
+                                                const currentRules = [...(selectedNode.data?.screenConditions || [])];
+                                                currentRules[idx] = { ...currentRules[idx], mode: e.target.value };
+                                                updateSelectedNode('screenConditions', currentRules);
+                                            }}
+                                            style={{ padding: '4px 6px', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid #cbd5e1', background: 'white' }}
+                                        >
+                                            <option value="Show">Show (Hiển thị)</option>
+                                            <option value="Hide">Hide (Ẩn)</option>
+                                            <option value="ReadOnly">ReadOnly (Chỉ đọc)</option>
+                                        </select>
+                                    </label>
+                                </div>
+
+                                <label style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '0.75rem' }}>
+                                    <span>Điều kiện kích hoạt (Rule)</span>
+                                    <input
+                                        type="text"
+                                        value={rule.condition || ''}
+                                        onChange={(e) => {
+                                            const currentRules = [...(selectedNode.data?.screenConditions || [])];
+                                            currentRules[idx] = { ...currentRules[idx], condition: e.target.value };
+                                            updateSelectedNode('screenConditions', currentRules);
+                                        }}
+                                        placeholder="e.g. totalPremium > 5000"
+                                        style={{ padding: '4px 6px', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid #cbd5e1', background: 'white' }}
+                                    />
+                                </label>
+                            </div>
+                        ))}
+
+                        {(selectedNode.data?.screenConditions || []).length === 0 && (
+                            <div style={{ fontSize: '0.75rem', color: '#64748b', textAlign: 'center', padding: '10px', background: '#f1f5f9', borderRadius: '6px' }}>
+                                Chưa thiết lập điều kiện Section nào.
+                            </div>
+                        )}
+                    </div>
+                </div>
+
                 <div style={{ marginTop: '20px', borderTop: '1px solid #fee2e2', paddingTop: '15px' }}>
                     <button
                         type="button"
