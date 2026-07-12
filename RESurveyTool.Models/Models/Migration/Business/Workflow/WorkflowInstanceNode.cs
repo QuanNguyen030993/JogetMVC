@@ -13,7 +13,7 @@ namespace ERPCore.Models.Migration.Business.Workflow
         public Guid? WorkflowDefinitionId { get; set; }
         public WorkflowDefinition? WorkflowDefinitionFK { get; set; } 
         [MaxLength(50)]
-        public string NodeStatus { get; set; } = "Pending"; // Pending / Active / Completed / Skipped / Returned
+        public string Data { get; set; } =""; // Pending / Active / Completed / Skipped / Returned
         public DateTime? ActivatedDate { get; set; }
         public DateTime? CompletedDate { get; set; }
         public int LoopCount { get; set; }

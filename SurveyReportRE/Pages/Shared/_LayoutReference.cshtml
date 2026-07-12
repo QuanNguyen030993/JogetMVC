@@ -196,6 +196,15 @@
     const _delayLoadDataSubmitButton = 5000;
     const _delayUnlockForm = 100;
     const _delayRenderDecisionButton = 2000;
+    // Shared decision palette for dynamically loaded form partials.
+    window.DecisionColors = Object.freeze({
+        accepted: "#17a2b8",
+        accept: "#28a745",
+        reject: "#dc3545",
+        warning: "#ffc107",
+        normal: "#6c757d",
+        textOnColor: "#ffffff"
+    });
         const _errorFailLogCountMax = 100;
     window.ErrorFailLogCount = 0;
     // var _nextStep = new Object();

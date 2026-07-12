@@ -1189,6 +1189,7 @@ aside {
 .dept-section.collapsed .dept-body,
 .dept-section.collapsed .dept-upperbody,
 .dept-section.collapsed .dept-lowerbody,
+.dept-section.collapsed .dept-footer,
 .dept-section.collapsed .composer,
 .dept-section.collapsed .filter-bar,
 .dept-section.collapsed .filter-bar .filter-left,
@@ -1199,7 +1200,9 @@ aside {
 .dept-section.collapsed .comment-card .comment-actions,
 .dept-section.collapsed .filter-bar .comment-wrap {
     max-height: 0px;
+    min-height: 0 !important;
     opacity: 0;
+    overflow: hidden;
     padding-top: 0;
     padding-bottom: 0;
     

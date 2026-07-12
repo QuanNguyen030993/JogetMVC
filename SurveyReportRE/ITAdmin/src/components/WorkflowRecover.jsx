@@ -32,6 +32,7 @@ const normalizeStep = (row = {}) => ({
   stepName: getValue(row, "stepName", "StepName"),
   statusName: getValue(row, "statusName", "StatusName"),
   statusId: getValue(row, "statusId", "StatusId"),
+  actionName: getValue(row, "actionName", "ActionName", "displayStatus", "DisplayStatus"),
   isReturn: Boolean(getValue(row, "isReturn", "IsReturn")),
   isStart: Boolean(getValue(row, "isStart", "IsStart")),
 });
@@ -291,6 +292,7 @@ export default function WorkflowRecover() {
                 <div className="recover-step-head">
                   <span>Step</span>
                   <span>Route</span>
+                  <span>Action Name</span>
                   <span>Status</span>
                   <span>Type</span>
                 </div>
@@ -310,7 +312,8 @@ export default function WorkflowRecover() {
                     >
                       <span>{step.fNodeId || "-"}</span>
                       <span>{step.fromNodeId || "-"} {"->"} {step.toNodeId || "-"}</span>
-                      <span>{step.statusName || step.stepName || "-"}</span>
+                      <span>{step.actionName || step.stepName || "-"}</span>
+                      <span>{step.statusName || "-"}</span>
                       <span className="recover-step-actions">
                         <em>{step.isStart ? "Start" : step.isReturn ? "Return" : "Forward"}</em>
                         <b>Recover here</b>

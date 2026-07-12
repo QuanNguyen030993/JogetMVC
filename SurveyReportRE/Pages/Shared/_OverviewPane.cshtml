@@ -93,11 +93,20 @@
             icon: "refresh",
             hint: "Refresh",
             stylingMode: "text",
-            onClick: function () {
-                if (typeof window.reloadQuotationComponents === "function") {
-                    window.reloadQuotationComponents();
+            onClick: function (e) {
+                if (typeof window.reloadCurrentTabView === "function"
+                    && window.reloadCurrentTabView(e.element)) {
+                    return;
+                }
+
+                const moduleCode = "@moduleCode";
+                const reloadComponents = moduleCode === "pi"
+                    ? window.reloadPolicyIssuanceComponents
+                    : window.reloadQuotationComponents;
+                if (typeof reloadComponents === "function") {
+                    reloadComponents();
                 } else {
-                    console.warn("window.reloadQuotationComponents is not available.");
+                    console.warn(`Reload function for ${moduleCode} is not available.`);
                 }
             }
         });

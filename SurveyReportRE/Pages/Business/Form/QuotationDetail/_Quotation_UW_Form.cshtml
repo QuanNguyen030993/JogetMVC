@@ -102,7 +102,7 @@
                                             }).appendTo(itemElement);
                                                         if (!$(`#${acceptStatusElement}`).length) {
                                                             $(`<div id="${acceptStatusElement}" class="accept-status-indicator"></div>`)
-                                                                .appendTo(itemElement);
+                                                                .prependTo(itemElement);
                                                         }
                                                              $(`<div id='${noNeedToRefer}'>`)
                                         .dxButton({

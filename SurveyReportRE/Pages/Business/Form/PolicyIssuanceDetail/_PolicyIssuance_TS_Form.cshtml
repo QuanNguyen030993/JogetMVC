@@ -104,6 +104,7 @@
             itemType: "simple",
             template: function (data, itemElement) {
                 var acceptButtonId = `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
+                var acceptStatusId = `AC_Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
                 var rejectButtonId = `RJ_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
 
                 var formItems = data.component.option("formData") || {};
@@ -111,7 +112,7 @@
                 var hasAccepted = tatObject && tatObject[`@dept`]?.AcceptDate;
 
                 // Render Accept Button
-                $(`<div id='${acceptButtonId}' style='display: inline-block;'>`).dxButton({
+                var $acceptButton = $(`<div id='${acceptButtonId}' style='display: inline-block;'>`).dxButton({
                     text: "Accept",
                     icon: "check",
                     type: "success",
@@ -132,9 +133,13 @@
                         acceptDecision(passingObject);
                     }
                 }).appendTo(itemElement);
+                $acceptButton.find(".dx-button").css({
+                    backgroundColor: hasAccepted ? window.DecisionColors.accepted : window.DecisionColors.accept,
+                    color: window.DecisionColors.textOnColor
+                });
 
                 // Render Reject Button
-                $(`<div id='${rejectButtonId}' style='display: inline-block; margin-left: 10px;'>`).dxButton({
+                var $rejectButton = $(`<div id='${rejectButtonId}' style='display: inline-block; margin-left: 10px;'>`).dxButton({
                     text: "Reject",
                     icon: "close",
                     type: "danger",
@@ -155,6 +160,11 @@
                         rejectDecision(passingObject);
                     }
                 }).appendTo(itemElement);
+                $rejectButton.find(".dx-button").css({
+                    backgroundColor: window.DecisionColors.reject,
+                    color: window.DecisionColors.textOnColor
+                });
+                updateDelayAcceptStatus(acceptStatusId, acceptButtonId, hasAccepted);
             }
         }]},
             { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefaultPi(that,that2,that3) },

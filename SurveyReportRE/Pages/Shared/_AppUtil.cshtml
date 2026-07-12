@@ -1752,7 +1752,7 @@
         `;
     }
 
-        function TinyMCEElementMaker(classform, dept, id, control)
+        function TinyMCEElementMaker(classform, dept, id, control, moduleKey = "qt")
         {
         var item = new Object();
 
@@ -1762,11 +1762,11 @@
                 item.editorType = "dxHtmlEditor";
                 item.instanceProps = new Object();
                 item.instanceProps.refKey = id;
-                var itemElement = $(`#${window.QuotationIdManager.remarkBox(dept, id)}`);
-
-
-
-                var $element = $(`#${window.QuotationIdManager.remarkBox(dept, id)}`);
+                const remarkBoxId = moduleKey === "pi"
+                    ? window.PolicyIssuanceIdManager.remarkBox(dept, id)
+                    : window.QuotationIdManager.remarkBox(dept, id);
+                var itemElement = $(`#${remarkBoxId}`);
+                var $element = itemElement;
                 if ($element.length > 0) {
                     $element.empty();
                     item.control = $element.htmleditor(
@@ -2864,6 +2864,61 @@
                         return {uploader: uploader,fileCount: fileCount}
         }
 
+        function parseWorkflowNodeScreenConditions(node) {
+            let data = node?.data ?? node?.Data ?? node ?? {};
+            if (typeof data === "string") {
+                try { data = JSON.parse(data); } catch { return []; }
+            }
+
+            const rules = data?.screenConditions || data?.rawNode?.screenConditions;
+            if (Array.isArray(rules) && rules.length) return rules;
+
+            const conditionMap = data?.condition || data?.rawNode?.condition;
+            if (conditionMap && typeof conditionMap === "object") {
+                return Object.entries(conditionMap).map(([sectionId, mode]) => ({ sectionId, mode }));
+            }
+            return [];
+        }
+
+        function applyQuotationScreenConditions(quotationId, screenConditions) {
+            const $sections = $("[data-quotation-screen-section]").filter(function () {
+                return String($(this).attr("data-quotation-id")) === String(quotationId);
+            });
+
+            // Screen-controlled sections are hidden unless the reached node explicitly shows them.
+            $sections.hide();
+            (Array.isArray(screenConditions) ? screenConditions : []).forEach(rule => {
+                const sectionId = String(rule?.sectionId || "").trim();
+                if (!sectionId) return;
+
+                const $target = $sections.filter(function () {
+                    return $(this).attr("data-quotation-screen-section") === sectionId;
+                });
+                String(rule?.mode || "Hide").toLowerCase() === "show"
+                    ? $target.show()
+                    : $target.hide();
+            });
+        }
+
+        function loadAndApplyQuotationScreenConditions(currentNodeCode, quotationId) {
+            applyQuotationScreenConditions(quotationId, []);
+            if (!currentNodeCode || !quotationId) return $.Deferred().resolve([]).promise();
+
+            const params = new URLSearchParams();
+            params.set("refKey", currentNodeCode);
+            params.set("refField", "Code");
+            return ajaxGet(`/api/WorkflowInstanceNode/GetAll?${params.toString()}`, null)
+                .then(result => {
+                    const node = Array.isArray(result) ? result[0] : result;
+                    const conditions = parseWorkflowNodeScreenConditions(node);
+                    applyQuotationScreenConditions(quotationId, conditions);
+                    // Some nested partial controls complete rendering after the workflow request.
+                    setTimeout(() => applyQuotationScreenConditions(quotationId, conditions), 100);
+                    return conditions;
+                })
+                .fail(() => applyQuotationScreenConditions(quotationId, []));
+        }
+
             // ====== reload + refresh UI ======
         async function reloadNotifications(take = 30) {
 
@@ -3328,6 +3383,8 @@
                         DevExpress.ui.notify(`Copied ${fileName}. Paste it into the email editor.`, "success", 2200);
                         return;
                     }
+                } else {
+                    console.warn(`Remark box not found: ${remarkBoxId}`);
                 }
 
                 await navigator.clipboard.writeText(absoluteUrl);
@@ -5951,7 +6008,7 @@ function styleModeChange(item){
                                         }).appendTo(itemElement);
                                                     if (acceptStatusElement && !$(`#${acceptStatusElement}`).length) {
                                                         $(`<div id="${acceptStatusElement}" class="accept-status-indicator"></div>`)
-                                                            .appendTo(itemElement);
+                                                            .prependTo(itemElement);
                                                     }
                          }
                                 
@@ -6034,7 +6091,7 @@ function styleModeChange(item){
                                      ...form.option("items"),
                                      ...mainField
                                  ]);
-                            $(`#${acceptButtonId}`).css("background-color","#17a2b8");
+                            $(`#${acceptButtonId}`).css("background-color", window.DecisionColors.accepted);
                                 updateDelayAcceptStatus(
                                     acceptStatusElement,
                                     acceptButtonId,
@@ -6046,7 +6103,7 @@ function styleModeChange(item){
                          }
                          //  if (rejectButtonId)
                          // {
-                         //    $(`#${rejectButtonId}`).css("background-color","#17a2b8");
+                                     //    $(`#${rejectButtonId}`).css("background-color", window.DecisionColors.accepted);
                          //    $(`#${rejectButtonIdStatus}`).text(`Accepted at: ${tatObject[dept]?.AcceptDate}`);
                          //        $(`#${rejectButtonId}`).dxButton("instance").option("disabled", true);
                          // }
@@ -6072,18 +6129,27 @@ function styleModeChange(item){
             if (!statusId || !acceptDate) return;
 
             var $status = $(`#${statusId}`);
+            var $button = buttonId ? $(`#${buttonId}`) : $();
             if (!$status.length) {
                 $status = $(`<div id="${statusId}" class="accept-status-indicator"></div>`);
-                var $button = buttonId ? $(`#${buttonId}`) : $();
                 if ($button.length) {
-                    $status.insertAfter($button);
+                    $status.prependTo($button.parent());
                 }
             }
 
             if (!$status.length) return;
+            if ($button.length && !$status.is($button.parent().children().first())) {
+                $status.detach().prependTo($button.parent());
+            }
             $status
                 .addClass("statusTag status-success")
-                .css({ display: "inline-flex", marginLeft: "8px", alignItems: "center" })
+                .css({
+                    display: "flex",
+                    width: "100%",
+                    margin: "0 0 10px 0",
+                    alignItems: "center",
+                    boxSizing: "border-box"
+                })
                 .text(`Accepted at: ${fmtTimeLocal(acceptDate)}`);
         }
 
@@ -6202,7 +6268,7 @@ function styleModeChange(item){
                 type: item.type || "info"
             });
             applyTransitionButtonClass(`#${statusButtonId}`, { buttonClass: statusClass });
-            $statusButton.find(".dx-button").css("background-color", item.acceptedColor || "#17a2b8");
+            $statusButton.find(".dx-button").css("background-color", item.acceptedColor || window.DecisionColors.accepted);
 
             return true;
         }
@@ -6388,9 +6454,9 @@ function styleModeChange(item){
                                                         $(`#${params[0]}`).dxButton("instance").option("visible", true);
                                                         $(`#${params[2]}`).dxButton("instance").option("visible", true);
                                                         if (storedStatus.text == "Approved")
-                                                            $(`#${params[0]}`).css("background-color", "#17a2b8");
+                                                            $(`#${params[0]}`).css("background-color", window.DecisionColors.accepted);
                                                         if (storedStatus.text == "Declined")
-                                                            $(`#${params[2]}`).css("background-color", "#17a2b8");
+                                                            $(`#${params[2]}`).css("background-color", window.DecisionColors.accepted);
                                                         if (storedStatus)
                                                             disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
                                                     }
@@ -6401,7 +6467,7 @@ function styleModeChange(item){
                                                 }
                                                 else{
 
-                            $(`#${acceptButtonId}`).css("background-color","#17a2b8");
+                            $(`#${acceptButtonId}`).css("background-color", window.DecisionColors.accepted);
                                                 updateDelayAcceptStatus(
                                                     acceptStatusId,
                                                     acceptButtonId,
@@ -6414,7 +6480,7 @@ function styleModeChange(item){
                                             }
                                      //  if (rejectButtonId)
                                      // {
-                                     //    $(`#${rejectButtonId}`).css("background-color","#17a2b8");
+                         //    $(`#${rejectButtonId}`).css("background-color", window.DecisionColors.accepted);
                                      //    $(`#${rejectButtonIdStatus}`).text(`Accepted at: ${tatObject[dept]?.AcceptDate}`);
                                      //        $(`#${rejectButtonId}`).dxButton("instance").option("disabled", true);
                                      // }

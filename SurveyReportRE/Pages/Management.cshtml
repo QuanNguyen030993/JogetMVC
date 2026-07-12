@@ -13,6 +13,7 @@
         //not invoke to the mForm js
 
         try {
+            const sourceData = data;
             if (url.length === 0) {
                 appNotify({ message: "Page request does not exist.", type: 'info' });
                 return false;
@@ -29,6 +30,10 @@
             }).done(function (data) {
                 try {
                     addTab(code, caption, data);
+                    $(`#${code}_content_wrapper`)
+                        .attr("data-source-url", url)
+                        .attr("data-source-caption", caption || "")
+                        .data("source-data", sourceData);
                 }
                 catch (e) {
                     appNotify({ message: e.message, type: 'error' });
@@ -61,6 +66,26 @@
             return;
         }
     }
+
+    var reloadCurrentTabView = function (triggerElement) {
+        const $wrapper = $(triggerElement).closest("[id$='_content_wrapper']");
+        if (!$wrapper.length) return false;
+
+        const wrapperId = $wrapper.attr("id") || "";
+        const code = wrapperId.replace(/_content_wrapper$/, "");
+        const sourceUrl = $wrapper.attr("data-source-url");
+        const caption = $wrapper.attr("data-source-caption")
+            || $(`#${code}_li_tab a`).text()
+            || code;
+
+        if (!sourceUrl || !code) {
+            console.warn("Cannot fully reload tab because its source URL is missing.", code);
+            return false;
+        }
+
+        callElementView(sourceUrl, code, caption, $wrapper.data("source-data"));
+        return true;
+    };
 
     var replaceElementView = function (url, params, container) {
         try {

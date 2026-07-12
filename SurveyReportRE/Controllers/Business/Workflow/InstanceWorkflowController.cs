@@ -146,7 +146,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         workflowInstanceNode = await _workflowInstanceNodeRepository.GetSingleObject(s => s.Code == submitRequest.InstanceWorkflow.CurrentStep);
 
         if (workflowInstanceNode == null) return StatusCode(500, "Cannot find node in workflow!");
-        if (workflowInstanceNode.NodeStatus == "End")
+        if (workflowInstanceNode.Data.Contains("End"))
         {
             quotation.StageDept = "";
             quotation.StageAccount = "";

@@ -261,10 +261,9 @@ button {
 
 .workflow-recover {
   display: flex;
-  flex: 1;
-  min-height: 0;
   flex-direction: column;
   gap: 16px;
+  height: auto;
 }
 
 .recover-toolbar {
@@ -319,18 +318,17 @@ button {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(420px, 0.65fr);
   gap: 16px;
-  min-height: 0;
-  flex: 1;
+  height: auto;
 }
 
 .recover-grid-panel,
 .recover-detail-panel {
-  min-height: 0;
-  overflow: auto;
   border: 1px solid #d8dee9;
   border-radius: 8px;
   background: #ffffff;
   padding: 14px;
+  height: auto;
+  overflow: visible;
 }
 
 .recover-grid-panel {
@@ -541,4 +539,24 @@ button {
   .chart-row {
     grid-template-columns: 1fr;
   }
+}
+
+/* Overrides for nested Flow component inside recover flow to enable native scroll and prevent overflow cuts */
+.recover-flow-panel .flow-shell {
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.recover-flow-panel .flow-layout {
+  height: auto !important;
+  align-items: start;
+}
+
+.recover-flow-panel .flow-sidebar,
+.recover-flow-panel .flow-properties-panel,
+.recover-flow-panel .flow-properties-scroll-container {
+  position: static !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
 }

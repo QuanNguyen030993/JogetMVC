@@ -160,6 +160,7 @@ Note:
 
             return ajaxGet(`/api/Quotation/GetQuotationWorkflow/${state.selectedGuid}`, null)
                 .then(instance => {
+                    loadAndApplyQuotationScreenConditions(instance?.currentStep, state.selectedId);
                     return ajaxGet(`/api/StepsWorkflow/GetNextStep/${instance?.workflowDefinitionId ?? "00000000-0000-0000-0000-000000000000"}/${instance?.currentStep ?? 0}`, null)
                         .then(data => {
                             state.nextStep.instanceWorkflow = instance;
@@ -298,7 +299,7 @@ Note:
                                                                         onError: function (err) { console.log("LMKT SubmitBranch status update problem", err); }
                                                                     }
                                                                 );
-                                                                $(`#${submitButtonId}`).find(".dx-button").css("background-color", "#17a2b8");
+                                                                $(`#${submitButtonId}`).find(".dx-button").css("background-color", window.DecisionColors.accepted);
                                                             }
 
                                                             submitNextStep(
@@ -1074,7 +1075,7 @@ Note:
                 if (q.stageDept == item)
                 {
                     $(`#${QuotationIdManager.actionBarDept(item,@ViewData["Id"])}`).css({"display": "block"});
-                    var control = TinyMCEElementMaker(`.htmleditor`, item, @ViewData["Id"], control);
+                    var control = TinyMCEElementMaker(`.htmleditor`, item, @ViewData["Id"], control, "qt");
                     remarkBoxs[item] = { id: q.id, sectionName: item, controlRemark: control };
                 }
                 else {
