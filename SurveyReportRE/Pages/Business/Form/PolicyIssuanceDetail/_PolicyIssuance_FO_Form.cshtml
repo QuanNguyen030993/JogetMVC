@@ -168,40 +168,7 @@
     
     });
     viewFieldAdjust("@PIViewIdHelper.Form(dept, policyIssuanceId)");
-      setTimeout(() => {
-          var attachListId = `attList_qt-body_@(dept)__default_@(cloneId)_`;
-          var uploader = $(`[id^='${attachListId}'] .att-item`);
-          var result = extractAttachmentQuantity(attachListId);
-          $.each(uploader, function (itemIndex, item) {
-              var $mainContainer = $("<div>");
-                                var $uploaderWrapper = $("<div style='flex: 1;'>").appendTo($mainContainer);
-                                var $selectBoxWrapper = $("<div style='width: 200px;'>").appendTo($mainContainer);
 
-                                $mainContainer.appendTo(item);
-
-                                $selectBoxWrapper.dxSelectBox({
-                                    items: _enums.TSCheckList,
-                                    valueExpr: "id",
-                                    displayExpr: "text",
-                                    value: "default",
-                                    searchEnabled: true,
-                                    placeholder: "Select checklist item if applicable",
-                                    onValueChanged: function(e) {
-                                        var selectedVal = e.value;
-                                        that.data.FieldName = selectedVal;
-                                        if (selectedVal === "default") {
-                                            that.data.SectionName = `${sectionIdQt}_default_@(cloneId)`;
-                                        } else {
-                                            that.data.SectionName = `${sectionId}_${selectedVal}_@(policyIssuanceId)`;
-                                        }
-
-                                        $uploaderWrapper.empty();
-                                        createEditor(that, $uploaderWrapper, $("<div>"), that);
-                                    }
-                                });
-          }); 
-                             
-          });
     setTimeout(() => {
         var picJson = PIC_JSON || "{}";
         var picMap = parsePicMap(picJson);

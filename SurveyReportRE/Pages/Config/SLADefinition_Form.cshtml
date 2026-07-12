@@ -5,6 +5,77 @@
 
 }
 
+<style>
+    .sla-designer {
+        width: min(100%, 1100px);
+        margin: 0 auto;
+        padding: 22px;
+        box-sizing: border-box;
+    }
+
+    .sla-designer.dx-form {
+        padding: 18px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 6px 22px rgba(15, 23, 42, .065);
+    }
+
+    .sla-definition-intro {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        margin-bottom: 5px;
+        padding: 16px 18px;
+        border: 1px solid #dfe6ee;
+        border-radius: 10px;
+        background: #f8fafc;
+    }
+
+    .sla-definition-intro-icon {
+        display: grid;
+        width: 42px;
+        height: 42px;
+        flex: 0 0 42px;
+        place-items: center;
+        border-radius: 10px;
+        background: #334155;
+        color: #fff;
+    }
+
+    .sla-definition-intro h2 {
+        margin: 0 0 3px;
+        color: #172235;
+        font-size: 19px;
+        font-weight: 750;
+    }
+
+    .sla-definition-intro p {
+        margin: 0;
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    .sla-designer .dx-form-group-with-caption {
+        margin-top: 14px;
+        padding: 15px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        background: #fcfdff;
+    }
+
+    .sla-designer .dx-form-group-caption {
+        color: #263548;
+        font-size: 14px;
+        font-weight: 750;
+    }
+
+    @@media (max-width: 640px) {
+        .sla-designer { padding: 12px; }
+        .sla-designer.dx-form { padding: 12px; }
+    }
+</style>
+
 
 <script>
 
@@ -55,27 +126,47 @@
         items: [
 
             {
+                itemType: "simple",
+                template: function () {
+                    return $(`
+                        <div class="sla-definition-intro">
+                            <div class="sla-definition-intro-icon"><i class="fas fa-stopwatch"></i></div>
+                            <div>
+                                <h2>SLA setup</h2>
+                                <p>Define the target values users can maintain for this department.</p>
+                            </div>
+                        </div>
+                    `);
+                }
+            },
+
+            {
                 itemType: "group",
-                caption: "SLA Information",
+                caption: "Basic information",
                 colCount: 2,
                 items: [
 
                     {
                         dataField: "dept",
+                        label: { text: "Department" },
                         editorType: "dxSelectBox",
                         editorOptions: {
                                 value: res.dept,
                             items: [
                                 "TS",
                                 "UW",
-                                "PM"
+                                "PM",
+                                "FO",
+                                "LMKT"
                             ]
                         }
                     },
 
 
                     {
-                        dataField: "code"
+                        dataField: "code",
+                        label: { text: "SLA code" },
+                        helpText: "Use a short, recognizable code such as RESPONSE_TIME."
                     }
 
                 ]
@@ -84,7 +175,7 @@
 
             {
                 itemType: "group",
-                caption: "Fields",
+                caption: "Values users can configure",
 
                 template: function (data, itemElement) {
 
@@ -106,20 +197,25 @@
                             columns: [
 
                                 {
-                                    dataField: "name"
+                                    dataField: "name",
+                                    caption: "Field key"
                                 },
 
                                 {
-                                    dataField: "label"
+                                    dataField: "label",
+                                    caption: "Label shown to users"
                                 },
                                     {
-                                        dataField: "min"
+                                        dataField: "min",
+                                        caption: "Minimum"
                                     },
                                     {
-                                        dataField: "max"
+                                        dataField: "max",
+                                        caption: "Maximum"
                                     },
                                 {
                                     dataField: "control",
+                                    caption: "Input type",
                                     lookup: {
                                         dataSource: [
                                             "number",
@@ -131,6 +227,7 @@
 
                                 {
                                     dataField: "required",
+                                    caption: "Required",
                                     dataType: "boolean"
                                 }
 
@@ -146,25 +243,30 @@
 
             {
                 itemType: "group",
-                caption: "Calculation",
+                caption: "Result calculation",
                 colCount: 2,
 
                 items: [
 
                     {
                         dataField: "attributes.calculation.type",
+                        label: { text: "Calculation method" },
                         editorType: "dxSelectBox",
                         editorOptions: {
                             items: [
                                 "manual",
                                 "dateDiff"
-                            ]
+                            ],
+                            displayExpr: function (value) {
+                                return value === "dateDiff" ? "Difference between two dates" : "Use entered value";
+                            }
                         }
                     },
 
 
                     {
                             dataField: "attributes.calculation.unit",
+                        label: { text: "Time unit" },
                         editorType: "dxSelectBox",
                         editorOptions: {
                             items: [
@@ -183,6 +285,7 @@
                 itemType: "button",
                 buttonOptions: {
                     text: "Save",
+                    icon: "save",
                     type: "success",
                     onClick: function () {
 

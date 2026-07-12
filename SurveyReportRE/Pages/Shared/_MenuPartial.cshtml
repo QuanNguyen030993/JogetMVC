@@ -1,4 +1,4 @@
-﻿@* <link href="~/lib/tree-search/jquery.treefilter.css" rel="stylesheet" />
+@* <link href="~/lib/tree-search/jquery.treefilter.css" rel="stylesheet" />
 <script src="~/lib/tree-search/jquery.treefilter.js"></script> *@
 
 
@@ -34,10 +34,8 @@
         var sortArry = arrs.sort(function (a, b) {
             return a.sortOrder - b.sortOrder;
         });
-        //remove every menu do not have children
-        var convertArr = $.map(arrs, function (value) {
-            return value.children.length > 0 ? value : null;
-        });
+        // Keep all menus, including those without children
+        var convertArr = sortArry;
         loadData(convertArr, "ul.tree");
     });
 

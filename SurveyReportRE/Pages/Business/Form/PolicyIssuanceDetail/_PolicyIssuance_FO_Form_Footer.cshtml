@@ -1,7 +1,9 @@
-﻿@using JogetMVC.Model
+@using JogetMVC.Model
  @{
     string dept = "FO";  
-    long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
+    long quotationId = Convert.ToInt64(ViewData["Id"]); 
+    string quotationGuid = ViewData["Guid"].ToString();
+    string cloneQuotationGuid = ViewData["CopyFromGuid"]?.ToString() ?? "";
 }
 
 
@@ -33,27 +35,62 @@
                   shading: true,
                   closeOnOutsideClick: false,
                     position: { of: `#@PIViewIdHelper.Form(dept, quotationId)`}
-                  // onShown: function () {
-                  //     setTimeout(function () {
-                  //         appLoadPanel.hide();
-                  //     }, 3000);
-                  // }
               });
              globalLoadPanel.dxLoadPanel("instance").show();
 
-            ajaxPut('/api/PolicyIssuance/UpdateData',
-            {
-                key: formItems.id,
-                values: JSON.stringify(
-                    formItems
-                )
-            },
-            {
-                onSuccess: function (response) { 
-                },
-                onError: function (err) { }
-            }
-        );
+             // Fetch attachments to save their classified types to PolicyIssuance Attributes field
+             var cloneQuotationGuid = "@cloneQuotationGuid";
+             var policyIssuanceGuid = "@quotationGuid";
+
+             var fetch1 = $.ajax({ url: `/api/Document/GetByKey?recordGuid=${cloneQuotationGuid}`, method: "GET" });
+             var fetch2 = $.ajax({ url: `/api/Document/GetByKey?recordGuid=${policyIssuanceGuid}`, method: "GET" });
+
+             $.when(fetch1, fetch2).done(function (r1, r2) {
+                 var docs = [...(r1[0] || []), ...(r2[0] || [])];
+                 var selectedTypes = {};
+                 docs.forEach(function (doc) {
+                     var attrs = {};
+                     try {
+                         attrs = JSON.parse(doc.attributes || doc.Attributes || "{}");
+                     } catch (e) {}
+                     if (attrs.FieldName && attrs.FieldName !== "default") {
+                         selectedTypes[attrs.FieldName] = true;
+                     }
+                 });
+
+                 formItems.attributes = JSON.stringify(selectedTypes);
+                 formItems.Attributes = JSON.stringify(selectedTypes);
+
+                 ajaxPut('/api/PolicyIssuance/UpdateData',
+                     {
+                         key: formItems.id,
+                         values: JSON.stringify(formItems)
+                     },
+                     {
+                         onSuccess: function (response) {
+                             globalLoadPanel.dxLoadPanel("instance").hide();
+                         },
+                         onError: function (err) {
+                             globalLoadPanel.dxLoadPanel("instance").hide();
+                         }
+                     }
+                 );
+             }).fail(function () {
+                 ajaxPut('/api/PolicyIssuance/UpdateData',
+                     {
+                         key: formItems.id,
+                         values: JSON.stringify(formItems)
+                     },
+                     {
+                         onSuccess: function (response) {
+                             globalLoadPanel.dxLoadPanel("instance").hide();
+                         },
+                         onError: function (err) {
+                             globalLoadPanel.dxLoadPanel("instance").hide();
+                         }
+                     }
+                 );
+             });
         }
     });
 </script> 

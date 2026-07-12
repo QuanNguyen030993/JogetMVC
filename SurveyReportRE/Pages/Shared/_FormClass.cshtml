@@ -1,4 +1,4 @@
-﻿<script>
+<script>
     var SLAForm = class SLAForm extends MForm {
 
         constructor(id, childGridConfig, formConfig, mFormOption) {
@@ -128,21 +128,21 @@
 
                     let items = [];
                     let formData = {};
+
                     items.push({
-                            itemType: "button",
-                            horizontalAlignment: "right",
-                            verticalAlignment: "top",
-                            buttonOptions: {
-                                text: "Save",
-                                icon: "save",
-                                type: "success",
-                                stylingMode: "contained",
-                                onClick() {
-                                      that.doSaveData(false);
-                                         DevExpress.ui.notify("Saved successfully", "success", 2000);
-                                }
-                            }
-                        });
+                        itemType: "simple",
+                        template: function () {
+                            return $(`
+                                <div class="sla-user-note">
+                                    <i class="fas fa-lightbulb"></i>
+                                    <div>
+                                        <b>How to configure</b>
+                                        <span>Enter the target value for each SLA below. The allowed range and unit are shown next to each field.</span>
+                                    </div>
+                                </div>
+                            `);
+                        }
+                    });
 
 
                     $.each(
@@ -151,10 +151,11 @@
 
 
                             let attr =
-                                JSON.parse(row.attributes);
+                                tryParseJSON(row.attributes, "SLA configuration") || { fields: [], calculation: {} };
 
 
 
+                            let rowItems = [];
                             $.each(
                                 attr.fields,
                                 function (j, f) {
@@ -169,29 +170,44 @@
 
 
 
-                                    items.push({
+                                    let rangeText = "";
+                                    if (f.min !== undefined && f.max !== undefined && Number(f.max) > Number(f.min)) {
+                                        rangeText = `Allowed range: ${f.min} – ${f.max}`;
+                                    } else if (f.min !== undefined) {
+                                        rangeText = `Minimum: ${f.min}`;
+                                    }
+
+                                    rowItems.push({
 
                                         dataField: fieldName,
 
 
                                         label: {
-                                            text: f.label
+                                            text: f.label || f.name
                                         },
 
 
                                         editorType:
                                             f.control == "number"
-                                                ?
-                                                "dxNumberBox"
-                                                :
-                                                "dxTextBox",
+                                                ? "dxNumberBox"
+                                                : f.control == "date"
+                                                    ? "dxDateBox"
+                                                    : "dxTextBox",
 
 
                                         editorOptions: {
                                             min: f.min,
                                             max: f.max,
-                                            showSpinButtons: true
+                                            showSpinButtons: f.control == "number",
+                                            stylingMode: "outlined",
+                                            placeholder: `Enter ${String(f.label || f.name).toLowerCase()}`
                                         },
+
+                                        helpText: rangeText,
+
+                                        validationRules: f.required
+                                            ? [{ type: "required", message: `${f.label || f.name} is required` }]
+                                            : [],
 
 
                                         slaRowId: row.id,
@@ -222,6 +238,18 @@
 
                                 });
 
+                            let calculation = attr.calculation || {};
+                            let unitLabel = calculation.unit === "hour" ? "hours" : "days";
+                            let groupCaption = row.label || row.name || row.code || `SLA ${i + 1}`;
+                            items.push({
+                                itemType: "group",
+                                name: `slaUserGroup_${row.id || i}`,
+                                caption: `${groupCaption} · ${unitLabel}`,
+                                colCount: rowItems.length > 1 ? 2 : 1,
+                                cssClass: "sla-user-value-group",
+                                items: rowItems
+                            });
+
 
                         });
 
@@ -229,6 +257,36 @@
 
                    
 
+
+                    if (!that.slaRows.length) {
+                        items.push({
+                            itemType: "simple",
+                            template: function () {
+                                return $('<div class="sla-user-empty"><i class="fas fa-inbox"></i><b>No SLA settings found</b><span>Please contact an administrator to create an SLA definition for this department.</span></div>');
+                            }
+                        });
+                    } else {
+                        items.push({
+                            itemType: "button",
+                            horizontalAlignment: "right",
+                            cssClass: "sla-user-save",
+                            buttonOptions: {
+                                text: "Save SLA settings",
+                                icon: "save",
+                                type: "default",
+                                stylingMode: "contained",
+                                onClick() {
+                                    var validation = that.formInstance.validate();
+                                    if (!validation.isValid) {
+                                        DevExpress.ui.notify("Please complete the required SLA values", "warning", 2000);
+                                        return;
+                                    }
+                                    that.doSaveData(false);
+                                    DevExpress.ui.notify("SLA settings saved successfully", "success", 2000);
+                                }
+                            }
+                        });
+                    }
 
                     that.formInstance.option(
                         "formData",
@@ -297,7 +355,7 @@
                         let data = {
 
                             attributes:
-                                JSON.stringify({ fields: [attributes.fields[0]], calculation: calculation }),
+                                JSON.stringify({ fields: attributes.fields, calculation: calculation }),
 
 
                             value: value || 0,
@@ -1981,7 +2039,16 @@ var WorkflowDefinitionForm = class WorkflowDefinitionForm extends MForm {
         constructor(id, childGridConfig, formConfig, mFormOption) {
             super(id, childGridConfig, formConfig, mFormOption)
         }
-
+    }
+    var FOSLAForm = class FOSLAForm extends SLAForm {
+        constructor(id, childGridConfig, formConfig, mFormOption) {
+            super(id, childGridConfig, formConfig, mFormOption)
+        }
+    }
+    var LMKTSLAForm = class LMKTSLAForm extends SLAForm {
+        constructor(id, childGridConfig, formConfig, mFormOption) {
+            super(id, childGridConfig, formConfig, mFormOption)
+        }
     }
 </script>
 

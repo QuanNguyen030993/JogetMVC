@@ -58,15 +58,62 @@ public class MenuController : BaseControllerApi<Menu>
         }
     }
 
+    private static List<string> ParseAllowedRoles(string allowedRoles)
+    {
+        var list = new List<string>();
+        if (string.IsNullOrEmpty(allowedRoles)) return list;
+        
+        string trimmed = allowedRoles.Trim();
+        if (trimmed.StartsWith("[") && trimmed.EndsWith("]"))
+        {
+            try
+            {
+                var roles = JsonConvert.DeserializeObject<List<string>>(trimmed);
+                if (roles != null)
+                {
+                    list.AddRange(roles.Select(r => r.Trim().ToUpper()));
+                    return list;
+                }
+            }
+            catch { }
+        }
+        
+        // Fallback to comma separation
+        list.AddRange(trimmed.Split(',').Select(r => r.Trim().ToUpper()));
+        return list;
+    }
+
     [HttpGet]
     public async Task<ActionResult<Menu>> GetHierarchyMenu(string pageSystem)
     {
         var result = new List<MenuHierarchy>();
         string superUsers = _configuration.GetSection("SuperUser:SuperUser").Value;
         string loginAccount = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, _configuration);
-        if (superUsers.Contains(loginAccount))
-        {
+        bool isSuperUser = superUsers.Contains(loginAccount);
+        var roles = await _BaseRepository.GetUserRoles(loginAccount, isSuperUser);
 
+        // Get user's role name
+        string userRole = "";
+        if (roles != null)
+        {
+            try
+            {
+                var prop = roles.GetType().GetProperty("RoleName");
+                if (prop != null)
+                {
+                    userRole = prop.GetValue(roles)?.ToString() ?? "";
+                }
+                else
+                {
+                    dynamic dynamicRoles = roles;
+                    userRole = dynamicRoles.RoleName?.ToString() ?? "";
+                }
+            }
+            catch { }
+        }
+
+        if (isSuperUser)
+        {
             List<Menu> menus = new List<Menu>();
             IBaseRepository<Menu> _menuRepository = new BaseRepository<Menu>(_configuration, _httpContextAccessor);
             menus = await _menuRepository.GetAllActive();
@@ -82,7 +129,6 @@ public class MenuController : BaseControllerApi<Menu>
                 SortOrder = x.SortOrder.GetValueOrDefault(),
                 Icon = x.Icon,
                 PageSystem = x.PageSystem
-            //}).Where(w => w.PageSystem.Contains(pageSystem)).ToList();
             }).ToList();
         }
         else
@@ -94,32 +140,34 @@ public class MenuController : BaseControllerApi<Menu>
                 List<UserRoles> userRoles = new List<UserRoles>();  
                 userRoles = await _userRolesRepository.GetAll();
                 userRoles = userRoles.Where(w => w.UserId == user.Id).ToList();
-                if (userRoles.Count > 0)
+                
+                List<Menu> menus = new List<Menu>();
+                IBaseRepository<Menu> _menuRepository = new BaseRepository<Menu>(_configuration, _httpContextAccessor);
+                menus = await _menuRepository.GetAllActive();
+                
+                result = menus.OrderBy(x => x.ParentId).Select(x => new MenuHierarchy
                 {
-                    List<Menu> menus = new List<Menu>();
-                    IBaseRepository<Menu> _menuRepository = new BaseRepository<Menu>(_configuration, _httpContextAccessor);
-                    menus = await _menuRepository.GetAllActive();
-                    result = menus.OrderBy(x => x.ParentId).Select(x => new MenuHierarchy
-                    {
-                        Id = x.Id,
-                        Name = x.Name,
-                        Caption = x.Caption,
-                        Action = $"{x.ActionUri}{x.Parameter}",
-                        ParentId = x.ParentId,
-                        HasItems = menus.Any(y => y.ParentId == x.Id),
-                        HasPermission = true,
-                        SortOrder = x.SortOrder.GetValueOrDefault(),
-                        Icon = x.Icon,
-                        PageSystem = x.PageSystem
-                        //}).Where(w => w.PageSystem.Contains(pageSystem)).ToList();
-                    }).Where(w => userRoles.Select(s => s.MenuId).Contains(w.Id)).ToList();
-                }
+                    Id = x.Id,
+                    Name = x.Name,
+                    Caption = x.Caption,
+                    Action = $"{x.ActionUri}{x.Parameter}",
+                    ParentId = x.ParentId,
+                    HasItems = menus.Any(y => y.ParentId == x.Id),
+                    HasPermission = true,
+                    SortOrder = x.SortOrder.GetValueOrDefault(),
+                    Icon = x.Icon,
+                    PageSystem = x.PageSystem
+                }).Where(w => 
+                    // 1. Explicitly configured in UserRoles table
+                    (userRoles.Count > 0 && userRoles.Select(s => s.MenuId).Contains(w.Id)) ||
+                    // 2. Or user's role is in AllowedRoles list stored in PageSystem JSON
+                    (!string.IsNullOrEmpty(w.PageSystem) && 
+                     ParseAllowedRoles(w.PageSystem).Contains(userRole.Trim().ToUpper()))
+                ).ToList();
             }
         }
-        bool isSuperUser = superUsers.Contains(loginAccount);
-        var roles = await _BaseRepository.GetUserRoles(loginAccount, isSuperUser);
+
         if (roles != null)
-        //return Ok(roles);
             return Ok(new { Menu = result, UserRoles = roles });
         else
         {

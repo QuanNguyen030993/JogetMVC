@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { API_BASE_URL } from "../config";
+import CustomGrid from "../../../TMIVCom/src/components/CustomGrid";
 
 const icons = [
   "fa-solid fa-house",
@@ -20,6 +21,7 @@ export default function MenuDesigner() {
   const [deletedIds, setDeletedIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [tagInput, setTagInput] = useState("");
 
   const loadMenus = async () => {
     try {
@@ -30,12 +32,14 @@ export default function MenuDesigner() {
 
       const mapped = (data || []).map((m) => ({
         id: m.id,
-        Name: m.name || m.caption || "Unnamed Menu",
+        Name: m.name || "",
+        Caption: m.caption || "",
         Url: m.actionUri || "/",
         Icon: m.icon || "fa-solid fa-house",
         Order: m.sortOrder || 1,
         Visible: m.active !== false,
-        ParentId: m.parentId || null
+        ParentId: m.parentId || null,
+        PageSystem: m.pageSystem || ""
       }));
       setMenus(mapped);
       setSelected(null);
@@ -56,11 +60,13 @@ export default function MenuDesigner() {
     const item = {
       id,
       Name: "New Menu",
+      Caption: "New Menu",
       Url: "/",
       Icon: "fa-solid fa-house",
       Order: menus.length + 1,
       Visible: true,
       ParentId: null,
+      PageSystem: "[]",
       isNew: true
     };
     setMenus((x) => [...x, item]);
@@ -77,6 +83,52 @@ export default function MenuDesigner() {
     }));
   };
 
+  const parentLookupSource = menus.map(m => ({ id: m.id, name: m.Name }));
+
+  const gridColumns = [
+    { field: "Name", caption: "Tên Menu (Name)", width: "180px" },
+    { field: "Caption", caption: "Nhãn hiển thị (Caption)", width: "180px" },
+    { field: "Url", caption: "Đường dẫn (Url)", width: "200px" },
+    {
+      field: "Icon",
+      caption: "Icon đại diện",
+      width: "150px",
+      editorType: "selectbox",
+      lookup: {
+        dataSource: icons.map(i => ({ id: i, name: i })),
+        valueExpr: "id",
+        displayExpr: "name"
+      }
+    },
+    { field: "Order", caption: "Thứ tự sắp xếp (Order)", width: "100px", editorType: "numberbox" },
+    { field: "Visible", caption: "Hiển thị (Active)", width: "100px", editorType: "checkbox" },
+    {
+      field: "ParentId",
+      caption: "Menu cha (Parent Menu)",
+      width: "180px",
+      editorType: "selectbox",
+      lookup: {
+        dataSource: parentLookupSource,
+        valueExpr: "id",
+        displayExpr: "name"
+      }
+    },
+    { field: "PageSystem", caption: "Quyền truy cập (JSON)", width: "220px" }
+  ];
+
+  const handleGridRowsChange = (nextRows) => {
+    const currentIds = menus.map(m => m.id);
+    const nextIds = nextRows.map(m => m.id);
+    const removedIds = currentIds.filter(id => !nextIds.includes(id));
+    
+    removedIds.forEach(id => {
+      if (id < 100000000000) {
+        setDeletedIds(prev => [...prev, id]);
+      }
+    });
+    setMenus(nextRows);
+  };
+
   const removeMenu = () => {
     if (!selected) return;
     if (selected.id < 100000000000) {
@@ -90,7 +142,6 @@ export default function MenuDesigner() {
     try {
       setSaving(true);
 
-      // 1. Process deletions
       for (const id of deletedIds) {
         const formData = new FormData();
         formData.append("key", id);
@@ -100,29 +151,27 @@ export default function MenuDesigner() {
         });
       }
 
-      // 2. Process insertions & updates
       for (const m of menus) {
         const payload = {
           name: m.Name,
-          caption: m.Name,
+          caption: m.Caption || m.Name,
           actionUri: m.Url,
           icon: m.Icon,
           sortOrder: m.Order,
           active: m.Visible,
-          parentId: m.ParentId
+          parentId: m.ParentId,
+          pageSystem: m.PageSystem
         };
 
         const formData = new FormData();
 
         if (m.isNew || m.id > 100000000000) {
-          // Insertion
           formData.append("values", JSON.stringify(payload));
           await fetch(`${API_BASE_URL}/api/Menu/InsertData`, {
             method: "POST",
             body: formData
           });
         } else {
-          // Update
           payload.id = m.id;
           formData.append("key", m.id);
           formData.append("values", JSON.stringify(payload));
@@ -143,16 +192,10 @@ export default function MenuDesigner() {
     }
   };
 
-  const getParentName = (parentId) => {
-    const parent = menus.find((m) => m.id === parentId);
-    return parent ? ` (${parent.Name})` : "";
-  };
-
   const hierarchicalMenus = React.useMemo(() => {
     const roots = menus.filter((m) => !m.ParentId);
     const children = menus.filter((m) => m.ParentId);
 
-    // Sắp xếp các menu cha theo Order
     roots.sort((a, b) => (a.Order || 0) - (b.Order || 0));
 
     const result = [];
@@ -160,7 +203,6 @@ export default function MenuDesigner() {
     const traverse = (parent, level = 0) => {
       result.push({ ...parent, level });
 
-      // Tìm và sắp xếp con của menu này
       const myChildren = children.filter((c) => c.ParentId == parent.id);
       myChildren.sort((a, b) => (a.Order || 0) - (b.Order || 0));
 
@@ -173,7 +215,6 @@ export default function MenuDesigner() {
       traverse(root, 0);
     });
 
-    // Gom các menu con mồ côi (nếu có cha bị xóa/không tồn tại)
     const processedIds = new Set(result.map((x) => x.id));
     const orphans = menus.filter((m) => !processedIds.has(m.id));
     orphans.forEach((orphan) => {
@@ -188,7 +229,7 @@ export default function MenuDesigner() {
   }
 
   return (
-    <div className="menu-designer">
+    <div className="menu-builder">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
         <h2>Menu Designer (Thiết kế thanh điều hướng)</h2>
         <button 
@@ -200,23 +241,35 @@ export default function MenuDesigner() {
             color: "white", 
             borderRadius: "8px", 
             fontWeight: "600",
+            border: "none",
+            cursor: "pointer"
           }}
         >
           {saving ? "Đang lưu..." : "Lưu thiết kế Menu"}
         </button>
       </div>
 
-      <div className="menu-layout">
-        <div className="menu-tools">
+      <div className="menu-layout" style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
+        <div className="menu-tools" style={{ width: "240px", flexShrink: 0, padding: "15px", border: "1px solid #e2e8f0", borderRadius: "10px", background: "white" }}>
           <h3>Thành phần</h3>
           <div
             className="menu-item-tool"
             draggable
-            onDragStart={(e) => e.dataTransfer.setData("type", "menu")}
+            onDragStart={(e) => e.dataTransfer.setData("menu-item", "true")}
+            style={{
+              padding: "10px 14px",
+              background: "#f8fafc",
+              border: "1px solid #cbd5e1",
+              borderRadius: "6px",
+              marginBottom: "15px",
+              cursor: "grab",
+              fontWeight: "600",
+              color: "#475569"
+            }}
           >
             + Menu Item
           </div>
-          <button onClick={addMenu} style={{ padding: "10px", background: "#10b981", color: "white", borderRadius: "6px", width: "100%", fontWeight: "600" }}>
+          <button onClick={addMenu} style={{ padding: "10px", background: "#10b981", color: "white", borderRadius: "6px", width: "100%", fontWeight: "600", border: "none", cursor: "pointer" }}>
             Thêm Menu
           </button>
         </div>
@@ -225,6 +278,7 @@ export default function MenuDesigner() {
           className="menu-preview"
           onDragOver={(e) => e.preventDefault()}
           onDrop={addMenu}
+          style={{ flex: 1, minWidth: "300px", padding: "15px", border: "1px solid #e2e8f0", borderRadius: "10px", background: "white" }}
         >
           <h3>Danh sách Menu (Xem trước)</h3>
           {hierarchicalMenus.map((m) => (
@@ -246,7 +300,7 @@ export default function MenuDesigner() {
               {m.level > 0 && <span style={{ color: "#cbd5e1", marginRight: "4px" }}>└─</span>}
               <i className={m.Icon}></i>
               <span style={{ fontWeight: m.level > 0 ? "400" : "600", color: "#334155" }}>
-                {m.Name}
+                {m.Name} {m.Caption ? `(${m.Caption})` : ""}
               </span>
             </div>
           ))}
@@ -257,15 +311,24 @@ export default function MenuDesigner() {
           )}
         </div>
 
-        <div className="menu-property" style={{ padding: "15px", border: "1px solid #e2e8f0", borderRadius: "10px", background: "#f8fafc" }}>
+        <div className="menu-property" style={{ width: "340px", flexShrink: 0, padding: "15px", border: "1px solid #e2e8f0", borderRadius: "10px", background: "#f8fafc" }}>
           <h3>Thuộc tính</h3>
           {selected ? (
             <>
               <label style={{ display: "block", marginBottom: "12px" }}>
-                Tên hiển thị (Name/Caption)
+                Tên Menu (Name)
                 <input
                   value={selected.Name}
                   onChange={(e) => updateMenu("Name", e.target.value)}
+                  style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", marginTop: "4px" }}
+                />
+              </label>
+
+              <label style={{ display: "block", marginBottom: "12px" }}>
+                Nhãn hiển thị (Caption)
+                <input
+                  value={selected.Caption || ""}
+                  onChange={(e) => updateMenu("Caption", e.target.value)}
                   style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", marginTop: "4px" }}
                 />
               </label>
@@ -298,7 +361,7 @@ export default function MenuDesigner() {
                 >
                   <option value="">-- Không có --</option>
                   {menus
-                    .filter((m) => m.id !== selected.id) // Can't be parent of itself
+                    .filter((m) => m.id !== selected.id)
                     .map((m) => (
                       <option key={m.id} value={m.id}>{m.Name}</option>
                     ))}
@@ -322,6 +385,105 @@ export default function MenuDesigner() {
                 <i className={selected.Icon} style={{ fontSize: "1.5rem" }}></i>
               </div>
 
+              {(() => {
+                const tags = [];
+                try {
+                  const parsed = JSON.parse(selected.PageSystem || "[]");
+                  if (Array.isArray(parsed)) {
+                    tags.push(...parsed);
+                  } else if (selected.PageSystem) {
+                    tags.push(...selected.PageSystem.split(",").filter(Boolean));
+                  }
+                } catch (e) {
+                  if (selected.PageSystem) {
+                    tags.push(...selected.PageSystem.split(",").filter(Boolean));
+                  }
+                }
+
+                const addTag = (val) => {
+                  const cleaned = val.trim();
+                  if (cleaned && !tags.includes(cleaned)) {
+                    const updated = [...tags, cleaned];
+                    updateMenu("PageSystem", JSON.stringify(updated));
+                  }
+                };
+
+                const removeTag = (indexToRemove) => {
+                  const updated = tags.filter((_, idx) => idx !== indexToRemove);
+                  updateMenu("PageSystem", JSON.stringify(updated));
+                };
+
+                return (
+                  <label style={{ display: "block", marginBottom: "16px" }}>
+                    Quyền truy cập (Allowed Roles / Departments - JSON Array)
+                    <div style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "6px",
+                      padding: "6px 10px",
+                      background: "white",
+                      border: "1px solid #cbd5e1",
+                      borderRadius: "6px",
+                      marginTop: "6px",
+                      minHeight: "38px",
+                      alignItems: "center"
+                    }}>
+                      {tags.map((tag, idx) => (
+                        <span key={idx} style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          background: "#e2e8f0",
+                          color: "#334155",
+                          padding: "2px 8px",
+                          borderRadius: "4px",
+                          fontSize: "0.85rem",
+                          fontWeight: "500"
+                        }}>
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => removeTag(idx)}
+                            style={{
+                              background: "none",
+                              border: "none",
+                              color: "#ef4444",
+                              cursor: "pointer",
+                              fontWeight: "bold",
+                              fontSize: "0.8rem",
+                              padding: "0 2px"
+                            }}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                      <input
+                        type="text"
+                        placeholder={tags.length === 0 ? "Nhập tag rồi ấn Enter..." : ""}
+                        value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === ",") {
+                            e.preventDefault();
+                            addTag(tagInput);
+                            setTagInput("");
+                          }
+                        }}
+                        style={{
+                          border: "none",
+                          outline: "none",
+                          flex: "1",
+                          minWidth: "120px",
+                          fontSize: "0.9rem",
+                          padding: "4px 0"
+                        }}
+                      />
+                    </div>
+                  </label>
+                );
+              })()}
+
               <label style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
                 <input
                   type="checkbox"
@@ -334,15 +496,10 @@ export default function MenuDesigner() {
               <button
                 className="delete"
                 onClick={removeMenu}
-                style={{ width: "100%", padding: "10px", background: "#ef4444", color: "white", borderRadius: "6px", border: "none", fontWeight: "600", marginBottom: "20px" }}
+                style={{ width: "100%", padding: "10px", background: "#ef4444", color: "white", borderRadius: "6px", border: "none", fontWeight: "600", marginBottom: "20px", cursor: "pointer" }}
               >
                 Xóa Menu này
               </button>
-
-              <h3>JSON Preview</h3>
-              <pre style={{ background: "#f1f5f9", padding: "10px", borderRadius: "8px", fontSize: "0.8rem", overflowX: "auto" }}>
-                {JSON.stringify(selected, null, 2)}
-              </pre>
             </>
           ) : (
             <div style={{ color: "#6b7280", textAlign: "center", padding: "20px" }}>

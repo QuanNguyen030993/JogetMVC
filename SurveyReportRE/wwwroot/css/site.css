@@ -4192,6 +4192,310 @@ text-overflow: ellipsis;
     }
 }
 
+/* ==========================================================================
+   DevExtreme DataGrid - professional application theme
+   Visual-only overrides: grid behavior, dimensions and data options remain
+   controlled by each dxDataGrid instance.
+   ========================================================================== */
+:root {
+    --dx-grid-surface: #ffffff;
+    --dx-grid-header: #f5f7fa;
+    --dx-grid-header-strong: #e9eef5;
+    --dx-grid-header-text: #263548;
+    --dx-grid-filter: #fbfcfe;
+    --dx-grid-filter-border: #d7dee8;
+    --dx-grid-border: #e2e8f0;
+    --dx-grid-border-soft: #edf2f7;
+    --dx-grid-text: #334155;
+    --dx-grid-muted: #64748b;
+    --dx-grid-primary: #2563eb;
+    --dx-grid-primary-soft: #eff6ff;
+    --dx-grid-hover: #f8fbff;
+    --dx-grid-selected: #e8f1ff;
+    --dx-grid-radius: 10px;
+}
+
+body .dx-datagrid {
+    overflow: hidden;
+    border: 1px solid var(--dx-grid-border);
+    border-radius: var(--dx-grid-radius);
+    background: var(--dx-grid-surface);
+    color: var(--dx-grid-text);
+    font-size: 13px;
+    box-shadow: 0 3px 14px rgba(15, 23, 42, .055);
+}
+
+body .dx-datagrid .dx-datagrid-header-panel {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--dx-grid-border);
+    background: var(--dx-grid-surface);
+}
+
+body .dx-datagrid .dx-toolbar {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+}
+
+body .dx-datagrid .dx-toolbar .dx-toolbar-label,
+body .dx-datagrid .dx-toolbar-label > div {
+    color: #0f172a;
+    font-weight: 700;
+}
+
+body .dx-datagrid .dx-datagrid-search-panel {
+    width: min(300px, 38vw) !important;
+    margin: 0;
+}
+
+body .dx-datagrid .dx-datagrid-search-panel.dx-texteditor,
+body .dx-datagrid .dx-header-row .dx-texteditor,
+body .dx-datagrid .dx-filter-row .dx-texteditor {
+    overflow: hidden;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    background: #fff;
+    transition: border-color .16s ease, box-shadow .16s ease;
+}
+
+body .dx-datagrid .dx-datagrid-search-panel.dx-state-focused,
+body .dx-datagrid .dx-filter-row .dx-texteditor.dx-state-focused {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .11);
+}
+
+body .dx-datagrid .dx-datagrid-headers {
+    border-bottom: 1px solid #cbd5e1;
+    background: linear-gradient(180deg, var(--dx-grid-header) 0%, var(--dx-grid-header-strong) 100%) !important;
+    color: var(--dx-grid-header-text) !important;
+}
+
+body .dx-datagrid .dx-header-row > td {
+    padding-top: 11px;
+    padding-bottom: 11px;
+    border-color: var(--dx-grid-border);
+    background: transparent !important;
+    color: var(--dx-grid-header-text) !important;
+    font-size: 12px;
+    font-weight: 750;
+    letter-spacing: .025em;
+    text-transform: none;
+    vertical-align: middle;
+}
+
+body .dx-datagrid .dx-header-row > td:hover {
+    background: #dde5ef !important;
+    color: #172235 !important;
+}
+
+body .dx-datagrid .dx-sort,
+body .dx-datagrid .dx-sort-up,
+body .dx-datagrid .dx-sort-down,
+body .dx-datagrid .dx-header-filter {
+    color: var(--dx-grid-primary);
+}
+
+body .dx-datagrid .dx-filter-row > td {
+    padding: 6px 7px;
+    border-color: var(--dx-grid-filter-border) !important;
+    background: var(--dx-grid-filter) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .85);
+}
+
+body .dx-datagrid .dx-filter-row .dx-editor-cell {
+    background: var(--dx-grid-filter) !important;
+}
+
+body .dx-datagrid .dx-filter-row .dx-texteditor {
+    border-color: #cbd5df;
+    background: #ffffff !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .035);
+}
+
+body .dx-datagrid .dx-filter-row .dx-texteditor-input {
+    color: #334155;
+}
+
+body .dx-datagrid .dx-filter-row .dx-placeholder {
+    color: #94a3b8;
+}
+
+body .dx-datagrid .dx-filter-row .dx-menu {
+    background: transparent !important;
+}
+
+body .dx-datagrid .dx-filter-row .dx-menu-item .dx-icon {
+    color: #64748b !important;
+}
+
+body .dx-datagrid .dx-datagrid-rowsview {
+    border-color: var(--dx-grid-border);
+    background: var(--dx-grid-surface);
+}
+
+body .dx-datagrid .dx-data-row > td {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-color: var(--dx-grid-border-soft);
+    color: var(--dx-grid-text);
+    vertical-align: middle;
+    transition: background-color .14s ease, color .14s ease;
+}
+
+body .dx-datagrid .dx-row-alt > td {
+    background: #fbfcfe;
+}
+
+body .dx-datagrid .dx-data-row.dx-state-hover:not(.dx-selection) > td,
+body .dx-datagrid .dx-data-row:hover:not(.dx-selection) > td {
+    background: var(--dx-grid-hover);
+    color: #0f172a;
+}
+
+body .dx-datagrid .dx-data-row.dx-selection > td,
+body .dx-datagrid .dx-data-row.dx-row-focused > td {
+    background: var(--dx-grid-selected) !important;
+    color: #173b74 !important;
+}
+
+body .dx-datagrid .dx-data-row.dx-selection > td:first-child,
+body .dx-datagrid .dx-data-row.dx-row-focused > td:first-child {
+    box-shadow: inset 3px 0 0 var(--dx-grid-primary);
+}
+
+body .dx-datagrid .dx-group-row > td {
+    padding: 10px 12px;
+    border-color: #dbe4ef;
+    background: #f1f5f9;
+    color: #1e3a5f;
+    font-weight: 700;
+}
+
+body .dx-datagrid .dx-master-detail-row > td {
+    padding: 14px;
+    background: #f8fafc;
+}
+
+body .dx-datagrid .dx-command-edit .dx-link,
+body .dx-datagrid .dx-command-select .dx-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    min-height: 28px;
+    margin: 0 2px;
+    border-radius: 6px;
+    color: #475569;
+    text-decoration: none;
+    transition: background-color .15s ease, color .15s ease, transform .15s ease;
+}
+
+body .dx-datagrid .dx-command-edit .dx-link:hover,
+body .dx-datagrid .dx-command-select .dx-link:hover {
+    background: #e2e8f0;
+    color: var(--dx-grid-primary);
+    transform: translateY(-1px);
+}
+
+body .dx-datagrid .dx-link-delete:hover {
+    background: #fee2e2 !important;
+    color: #dc2626 !important;
+}
+
+body .dx-datagrid .dx-checkbox-icon {
+    border-color: #94a3b8;
+    border-radius: 4px;
+}
+
+body .dx-datagrid .dx-checkbox-checked .dx-checkbox-icon {
+    border-color: var(--dx-grid-primary);
+    background: var(--dx-grid-primary);
+    color: #fff;
+}
+
+body .dx-datagrid .dx-datagrid-total-footer,
+body .dx-datagrid .dx-datagrid-summary-item {
+    border-color: var(--dx-grid-border);
+    background: #f8fafc;
+    color: #334155;
+    font-weight: 700;
+}
+
+body .dx-datagrid .dx-datagrid-pager {
+    padding: 10px 12px;
+    border-top: 1px solid var(--dx-grid-border);
+    background: #fff;
+    color: var(--dx-grid-muted);
+}
+
+body .dx-datagrid .dx-pager .dx-page,
+body .dx-datagrid .dx-pager .dx-page-size,
+body .dx-datagrid .dx-pager .dx-navigate-button {
+    min-width: 30px;
+    min-height: 30px;
+    margin: 0 2px;
+    padding: 6px 9px;
+    border-radius: 6px;
+    color: #475569;
+}
+
+body .dx-datagrid .dx-pager .dx-selection {
+    background: var(--dx-grid-primary) !important;
+    color: #fff !important;
+    box-shadow: 0 3px 8px rgba(37, 99, 235, .22);
+}
+
+body .dx-datagrid .dx-pager .dx-page:hover,
+body .dx-datagrid .dx-pager .dx-page-size:hover,
+body .dx-datagrid .dx-pager .dx-navigate-button:hover {
+    background: var(--dx-grid-primary-soft);
+    color: var(--dx-grid-primary);
+}
+
+body .dx-datagrid .dx-loadpanel-content {
+    border: 1px solid var(--dx-grid-border);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .96);
+    box-shadow: 0 12px 32px rgba(15, 23, 42, .14);
+}
+
+body .dx-datagrid .dx-datagrid-nodata {
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+body .dx-datagrid .dx-scrollable-scroll-content {
+    border-radius: 999px;
+    background: #94a3b8;
+    opacity: .58;
+}
+
+body .dx-datagrid .dx-row-inserted > td,
+body .dx-datagrid .dx-cell-modified:not(.dx-field-item-content) {
+    background: #f0fdf4;
+}
+
+body .dx-datagrid .dx-invalid > .dx-texteditor-container {
+    border-radius: 6px;
+    box-shadow: 0 0 0 2px rgba(220, 38, 38, .11);
+}
+
+@media (max-width: 768px) {
+    body .dx-datagrid .dx-datagrid-header-panel {
+        padding: 8px;
+    }
+
+    body .dx-datagrid .dx-datagrid-search-panel {
+        width: min(240px, 66vw) !important;
+    }
+
+    body .dx-datagrid .dx-header-row > td,
+    body .dx-datagrid .dx-data-row > td {
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+}
+
     /* FO - xanh dương */
     .ct-item.ct-fo {
         border-left: 4px solid #2196F3;

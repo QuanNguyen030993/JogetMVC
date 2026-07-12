@@ -22,7 +22,8 @@ button {
 .app-shell {
   display: grid;
   grid-template-columns: 260px 1fr;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .sidebar {
@@ -32,6 +33,11 @@ button {
   display: flex;
   flex-direction: column;
   gap: 24px;
+}
+
+.sidebar nav {
+  overflow-y: auto;
+  flex: 1;
 }
 
 .brand {
@@ -59,7 +65,8 @@ button {
   padding: 24px;
   display: flex;
   flex-direction: column;
-  overflow: auto;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .topbar {
@@ -263,7 +270,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  height: auto;
+  height: calc(100vh - 120px);
 }
 
 .recover-toolbar {
@@ -318,7 +325,7 @@ button {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(420px, 0.65fr);
   gap: 16px;
-  height: auto;
+  height: calc(100% - 80px);
 }
 
 .recover-grid-panel,
@@ -327,8 +334,8 @@ button {
   border-radius: 8px;
   background: #ffffff;
   padding: 14px;
-  height: auto;
-  overflow: visible;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .recover-grid-panel {

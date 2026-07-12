@@ -25,6 +25,7 @@ import './styles/mailqueue.css';
 import './styles/menudesigner.css';
 import './styles/sladesigner.css';
 import "./fonts/css/all.min.css";
+
 const userCount = { label: 'Người dùng hoạt động', value: '128', detail: '20 người dùng IT đang online' };
 
 const cpuData = [
@@ -49,65 +50,50 @@ const ticketData = [
 
 function App() {
   const [loginStats,setLoginStats]=useState([]);
-   const [disk,setDisk]=useState(0);
+  const [disk,setDisk]=useState(0);
    
-useEffect(()=>{
+  useEffect(()=>{
+    fetch(`${API_BASE_URL}/api/UsersSession/ExecuteCustomQuery`,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify("1")
+    })
+    .then(r=>r.json())
+    .then(data=>{
+      let result=[];
+      data.forEach(row=>{
+        let month=row.Month || row.month;
+        Object.keys(row).forEach(k=>{
+          if(k.startsWith("h")){
+            result.push({
+              month,
+              hour:parseInt(k.substring(1)),
+              loginCount:Number(row[k])||0
+            });
+          }
+        });
+      });
+      setLoginStats(result);
+    });
 
-fetch(`${API_BASE_URL}/api/UsersSession/ExecuteCustomQuery`,{
- method:"POST",
- headers:{
-  "Content-Type":"application/json"
- },
- body:JSON.stringify("1")
-})
-.then(r=>r.json())
-.then(data=>{
+    fetch(`${API_BASE_URL}/api/UsersSession/ExecuteCustomQuery`,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify("2")
+    })
+    .then(r=>r.json())
+    .then(d=>
+      setDisk(d[0]?.availableSpace||0)
+    );
+  },[]);
 
-let result=[];
-
-data.forEach(row=>{
-
-let month=row.Month || row.month;
-
-Object.keys(row).forEach(k=>{
-
-if(k.startsWith("h")){
-
-result.push({
- month,
- hour:parseInt(k.substring(1)),
- loginCount:Number(row[k])||0
-});
-
-}
-
-});
-
-});
-
-
-setLoginStats(result);
-
-});
-
-
-
-fetch(`${API_BASE_URL}/api/UsersSession/ExecuteCustomQuery`,{
-method:"POST",
-headers:{
- "Content-Type":"application/json"
-},
-body:JSON.stringify("2")
-})
-.then(r=>r.json())
-.then(d=>
- setDisk(d[0]?.availableSpace||0)
-);
-
-
-},[]);
   const [activeSection, setActiveSection] = useState('dashboard');
   const [selectedWorkflowId, setSelectedWorkflowId] = useState(null);
+
   const menuItems = [
     { id: 'dashboard', label: 'Bảng điều khiển (Dashboard)' },
     { id: 'overview', label: 'Tổng quan hệ thống (Overview)' },
@@ -120,8 +106,11 @@ body:JSON.stringify("2")
     { id: 'serilog', label: 'Nhật ký hệ thống (Serilogs)' },
     { id: 'systable', label: 'Bảng hệ thống' } ,
     { id: 'datagridfielddesigner', label: 'Thiết kế trường DataGrid' },
+    { id: 'datagridconfig-grid', label: 'Bảng DataGrid Config (CustomGrid)' },
     { id: 'menudesigner', label: 'Thiết kế Menu' },
+    { id: 'menu-grid', label: 'Bảng Menu (CustomGrid)' },
     { id: 'enum-design', label: 'Cấu hình danh mục Enum' },
+    { id: 'enumdata-grid', label: 'Bảng Enum Data (CustomGrid)' },
     { id: 'sladesigner', label: 'Cấu hình chỉ số SLA' }
   ];
 
@@ -184,10 +173,16 @@ body:JSON.stringify("2")
         return <SysTable />;
       case 'datagridfielddesigner':
         return <DataGridFieldDesigner />;
+      case 'datagridconfig-grid':
+        return <CustomGrid modelName="DataGridConfig" apiBaseUrl={API_BASE_URL} editMode="batch" />;
       case 'menudesigner':
         return <MenuDesigner />;
+      case 'menu-grid':
+        return <CustomGrid modelName="Menu" apiBaseUrl={API_BASE_URL} editMode="batch" />;
       case 'enum-design':
         return <EnumDesign />;
+      case 'enumdata-grid':
+        return <CustomGrid modelName="EnumData" apiBaseUrl={API_BASE_URL} editMode="batch" />;
       case 'sladesigner':
         return <SlaDesign />;
       default:
@@ -201,15 +196,10 @@ body:JSON.stringify("2")
               </article>
             </section>
             <ChartPanel
-
-            cpuData={cpuData}
-
-            ticketData={ticketData}
-
-            loginStats={loginStats}
-
-            disk={disk}
-
+              cpuData={cpuData}
+              ticketData={ticketData}
+              loginStats={loginStats}
+              disk={disk}
             />
           </>
         );

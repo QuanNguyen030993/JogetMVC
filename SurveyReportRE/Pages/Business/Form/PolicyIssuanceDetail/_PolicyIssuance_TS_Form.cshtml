@@ -297,23 +297,54 @@
          ]
        });
      viewFieldAdjust("@PIViewIdHelper.Form(dept, policyIssuanceId)");
-         detailsDataSource.load().done(function (data) {
-        if (!data || data.length === 0) return;
+          // Fetch attachments to check if there are files uploaded for each checklist item type
+          const cloneQuotationGuid = "@(cloneQuotationGuid)";
+          const quotationGuid = "@(quotationGuid)";
+          const fetch1 = $.ajax({ url: `/api/Document/GetByKey?recordGuid=${cloneQuotationGuid}`, method: "GET" });
+          const fetch2 = $.ajax({ url: `/api/Document/GetByKey?recordGuid=${quotationGuid}`, method: "GET" });
 
-        const dbRow = data[0];
+          $.when(fetch1, fetch2, detailsDataSource.load()).done(function (r1, r2, rDetails) {
+              const docs = [...(r1[0] || []), ...(r2[0] || [])];
+              const detailData = rDetails[0] || [];
+              if (!detailData || detailData.length === 0) return;
 
-        dataSourceGrid.forEach(item => {
-            // bind checkbox
-            item.checked = dbRow[item.field] ?? false;
-            item.ownId = dbRow.id;
-            // bind value (cho text/textarea/radio/select)
-            item.value = dbRow[item.field];
-        });
+              const dbRow = detailData[0];
 
-        // refresh grid
-        $("#pi_fillList_@policyIssuanceId").dxDataGrid("instance").option("dataSource", dataSourceGrid);
-        $("#pi_fillList_@policyIssuanceId").dxDataGrid("instance").option("id", data.id);
-    });
+              // Map files uploaded for each checklist item type
+              const fileTypesWithFiles = {};
+              docs.forEach(function (doc) {
+                  var attrs = {};
+                  try {
+                      attrs = JSON.parse(doc.attributes || doc.Attributes || "{}");
+                  } catch (e) {}
+                  if (attrs.FieldName && attrs.FieldName !== "default") {
+                      fileTypesWithFiles[attrs.FieldName] = true;
+                  }
+              });
+
+              // Get PolicyIssuance Attributes mapping
+              var formInstance = $("#@PIViewIdHelper.Form(dept, policyIssuanceId)").dxForm("instance");
+              var parentFormData = formInstance ? formInstance.option("formData") : {};
+              var piAttributes = {};
+              try {
+                  piAttributes = JSON.parse(parentFormData.attributes || parentFormData.Attributes || "{}");
+              } catch (e) {}
+
+              dataSourceGrid.forEach(item => {
+                  // bind checkbox: checked if database says true, OR if saved in PolicyIssuance Attributes, OR if a file of this type is uploaded
+                  item.checked = (dbRow[item.field] ?? false) || (piAttributes[item.field] === true) || (fileTypesWithFiles[item.field] === true);
+                  item.ownId = dbRow.id;
+                  // bind value (cho text/textarea/radio/select)
+                  item.value = dbRow[item.field];
+              });
+
+              // refresh grid
+              var gridInstance = $("#pi_fillList_@policyIssuanceId").dxDataGrid("instance");
+              if (gridInstance) {
+                  gridInstance.option("dataSource", dataSourceGrid);
+                  gridInstance.option("id", detailData.id);
+              }
+          });
 
     setTimeout(() => {
         var picJson = PIC_JSON || "{}";

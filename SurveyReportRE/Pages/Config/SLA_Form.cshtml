@@ -1,8 +1,160 @@
-﻿@page "{Dept}"
+@page "{Dept}"
 @model SLA_FormModel
 @{
 
 }
+<style>
+    .sla-user-page {
+        width: min(100%, 980px);
+        margin: 0 auto;
+        padding: 22px;
+        box-sizing: border-box;
+    }
+
+    .sla-user-hero {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 18px;
+        padding: 18px 20px;
+        border: 1px solid #dfe6ee;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #f8fafc 0%, #eef3f8 100%);
+    }
+
+    .sla-user-hero-icon {
+        display: grid;
+        flex: 0 0 44px;
+        width: 44px;
+        height: 44px;
+        place-items: center;
+        border-radius: 11px;
+        background: #334155;
+        color: #fff;
+        font-size: 19px;
+    }
+
+    .sla-user-hero h2 {
+        margin: 0 0 4px;
+        color: #172235;
+        font-size: 20px;
+        font-weight: 750;
+    }
+
+    .sla-user-hero p {
+        margin: 0;
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .sla-user-form-shell {
+        padding: 18px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 5px 20px rgba(15, 23, 42, .06);
+    }
+
+    .sla-user-form .sla-user-note {
+        display: flex;
+        align-items: flex-start;
+        gap: 11px;
+        margin-bottom: 6px;
+        padding: 12px 14px;
+        border: 1px solid #dbe5ef;
+        border-radius: 9px;
+        background: #f8fafc;
+        color: #475569;
+    }
+
+    .sla-user-form .sla-user-note > i {
+        margin-top: 2px;
+        color: #b7791f;
+        font-size: 16px;
+    }
+
+    .sla-user-form .sla-user-note b,
+    .sla-user-form .sla-user-note span {
+        display: block;
+    }
+
+    .sla-user-form .sla-user-note b {
+        margin-bottom: 2px;
+        color: #334155;
+    }
+
+    .sla-user-form .sla-user-note span {
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .sla-user-form .sla-user-value-group {
+        margin-top: 14px;
+        padding: 15px 16px 6px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        background: #fcfdff;
+    }
+
+    .sla-user-form .sla-user-value-group .dx-form-group-caption {
+        padding-bottom: 10px;
+        color: #263548;
+        font-size: 14px;
+        font-weight: 750;
+    }
+
+    .sla-user-form .dx-field-item-label-text {
+        color: #475569;
+        font-weight: 650;
+    }
+
+    .sla-user-form .dx-field-item-help-text {
+        color: #94a3b8;
+        font-size: 11px;
+    }
+
+    .sla-user-form .sla-user-save {
+        margin-top: 18px;
+        padding-top: 15px;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .sla-user-form .sla-user-save .dx-button {
+        min-width: 190px;
+        min-height: 42px;
+        border-radius: 8px;
+        background: #334155;
+        color: #fff;
+        font-weight: 700;
+        box-shadow: 0 5px 12px rgba(51, 65, 85, .18);
+    }
+
+    .sla-user-form .sla-user-save .dx-button:hover {
+        background: #1e293b;
+    }
+
+    .sla-user-empty {
+        display: flex;
+        min-height: 210px;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 7px;
+        color: #94a3b8;
+        text-align: center;
+    }
+
+    .sla-user-empty i { font-size: 28px; }
+    .sla-user-empty b { color: #475569; font-size: 15px; }
+    .sla-user-empty span { max-width: 430px; font-size: 12px; }
+
+    @@media (max-width: 640px) {
+        .sla-user-page { padding: 12px; }
+        .sla-user-hero { align-items: flex-start; padding: 15px; }
+        .sla-user-form-shell { padding: 12px; }
+    }
+</style>
 <script>
     
         var _deptInput = "@(ViewData["Dept"].ToString())";
@@ -23,7 +175,22 @@
             new UWSLAForm(_deptInput, null, _formConfig, mFormOption);
             if (_deptInput == "PM")
             new PMSLAForm(_deptInput, null, _formConfig, mFormOption);
+            if (_deptInput == "FO")
+            new FOSLAForm(_deptInput, null, _formConfig, mFormOption);
+            if (_deptInput == "LMKT")
+            new LMKTSLAForm(_deptInput, null, _formConfig, mFormOption);
     // });
 </script>
-<div id="form_@(SLA_FormModel.ModelName)" class="dExForm"></div>
+<div class="sla-user-page">
+    <div class="sla-user-hero">
+        <div class="sla-user-hero-icon"><i class="fas fa-clock"></i></div>
+        <div>
+            <h2>SLA settings — @ViewData["Dept"]</h2>
+            <p>Set the expected handling time for this department. Changes will be applied after you save.</p>
+        </div>
+    </div>
+    <div class="sla-user-form-shell">
+        <div id="form_@(SLA_FormModel.ModelName)" class="dExForm sla-user-form"></div>
+    </div>
+</div>
 

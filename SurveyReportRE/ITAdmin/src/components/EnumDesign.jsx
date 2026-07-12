@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { API_BASE_URL } from "../config";
+import CustomGrid from "../../../TMIVCom/src/components/CustomGrid";
 
 const safeParseBinaryJson = (val) => {
   if (!val) return {};
@@ -244,9 +245,46 @@ export default function EnumDesign() {
     }
   };
 
-  const getTableName = (tableId) => {
-    const tbl = tables.find((t) => t.id === tableId || t.Id === tableId);
-    return tbl ? tbl.name : `Bảng #${tableId}`;
+  const mappingRows = React.useMemo(() => {
+    return gridFields.map((f) => {
+      const parsedFormItem = safeParseBinaryJson(f.formItem);
+      return {
+        ...f,
+        LinkedEnum: parsedFormItem.enum || ""
+      };
+    });
+  }, [gridFields]);
+
+  const gridColumns = [
+    {
+      field: "sysTableId",
+      caption: "Bảng dữ liệu",
+      width: "180px",
+      calculateCellValue: (row) => getTableName(row.sysTableId)
+    },
+    { field: "dataField", caption: "Mã cột (DataField)", width: "160px" },
+    { field: "caption", caption: "Tiêu đề (Caption)", width: "180px" },
+    {
+      field: "LinkedEnum",
+      caption: "Nhóm Enum liên kết",
+      width: "220px",
+      editorType: "selectbox",
+      lookup: {
+        dataSource: dictionaryGroups.map(g => ({ id: g.groupName, name: g.groupName })),
+        valueExpr: "id",
+        displayExpr: "name"
+      }
+    }
+  ];
+
+  const handleGridRowsChange = async (nextRows) => {
+    for (const nextRow of nextRows) {
+      const prevRow = mappingRows.find(r => r.id === nextRow.id);
+      if (prevRow && prevRow.LinkedEnum !== nextRow.LinkedEnum) {
+        await handleUpdateFieldMapping(nextRow, nextRow.LinkedEnum);
+        break;
+      }
+    }
   };
 
   if (loading && enumData.length === 0) {
@@ -260,7 +298,7 @@ export default function EnumDesign() {
         <button 
           onClick={loadData} 
           disabled={saving} 
-          style={{ padding: "8px 16px", background: "#475569", color: "white", borderRadius: "8px", fontWeight: "600" }}
+          style={{ padding: "8px 16px", background: "#475569", color: "white", borderRadius: "8px", fontWeight: "600", border: "none", cursor: "pointer" }}
         >
           Tải lại dữ liệu
         </button>
@@ -280,8 +318,8 @@ export default function EnumDesign() {
               style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1" }}
             />
             <div style={{ display: "flex", gap: "8px" }}>
-              <button onClick={addGroup} disabled={saving} style={{ flex: 1, padding: "8px", background: "#10b981", color: "white", borderRadius: "6px", fontWeight: "600" }}>+ Thêm nhóm</button>
-              <button onClick={deleteGroup} disabled={saving || !selectedGroup} style={{ flex: 1, padding: "8px", background: "#ef4444", color: "white", borderRadius: "6px", fontWeight: "600" }}>- Xóa nhóm</button>
+              <button onClick={addGroup} disabled={saving} style={{ flex: 1, padding: "8px", background: "#10b981", color: "white", borderRadius: "6px", fontWeight: "600", border: "none", cursor: "pointer" }}>+ Thêm nhóm</button>
+              <button onClick={deleteGroup} disabled={saving || !selectedGroup} style={{ flex: 1, padding: "8px", background: "#ef4444", color: "white", borderRadius: "6px", fontWeight: "600", border: "none", cursor: "pointer" }}>- Xóa nhóm</button>
             </div>
           </div>
 
@@ -292,7 +330,7 @@ export default function EnumDesign() {
               onChange={(e) => setKeyInput(e.target.value)}
               style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1" }}
             />
-            <button onClick={addKey} disabled={saving || !selectedGroup} style={{ width: "100%", padding: "8px", background: "#2563eb", color: "white", borderRadius: "6px", fontWeight: "600" }}>+ Thêm Key</button>
+            <button onClick={addKey} disabled={saving || !selectedGroup} style={{ width: "100%", padding: "8px", background: "#2563eb", color: "white", borderRadius: "6px", fontWeight: "600", border: "none", cursor: "pointer" }}>+ Thêm Key</button>
           </div>
 
           <div style={{ overflowY: "auto", flex: 1, maxHeight: "400px" }}>
