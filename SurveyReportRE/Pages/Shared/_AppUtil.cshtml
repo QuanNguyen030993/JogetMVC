@@ -20,6 +20,19 @@
     //                 'modules/better-table': quillBetterTable,
     //                 'formats/custom-list': CustomList
     //             }, true);
+
+    function popupStandardContentByScroll(customContainer) {
+        var scrollView = $("<div>");
+        customContainer.appendTo(scrollView);
+
+        scrollView.dxScrollView({
+            width: "100%",
+            height: "100%",
+            useNative: false 
+        });
+        return scrollView;
+    }
+
         //Performance check query in need
         function makeBasicDataSource(instance, isForm = false, configBefore = false) {
             try {
@@ -5772,12 +5785,113 @@ function styleModeChange(item){
         popup.show();
     }
 
+    window.AuditLogViewState = window.AuditLogViewState || {
+        sequence: 0,
+        contents: {}
+    };
+
+    function refreshAuditLogOverflowHints() {
+        requestAnimationFrame(function () {
+            $(".ct-item[data-audit-log-key]").each(function () {
+                var $card = $(this);
+                var content = $card.find(".ct-text")[0];
+                if (!content) return;
+
+                var isOverflowing = content.scrollHeight > content.clientHeight + 2
+                    || content.scrollWidth > content.clientWidth + 2;
+                $card.toggleClass("ct-overflowing", isOverflowing);
+                $card.find(".ct-view-more").toggle(isOverflowing);
+                $card.find("img").off("load.auditOverflow").on("load.auditOverflow", refreshAuditLogOverflowHints);
+            });
+        });
+    }
+
+    function updateRichPreviewOverflow(container) {
+        var $container = $(container);
+        var $preview = $container.find(".rich-html-preview").first();
+        var preview = $preview[0];
+        if (!preview) return false;
+
+        var isOverflowing = preview.scrollHeight > preview.clientHeight + 2
+            || preview.scrollWidth > preview.clientWidth + 2;
+        $container.toggleClass("rich-preview-overflowing", isOverflowing);
+        $container.find(".rich-view-more").toggle(isOverflowing);
+        $preview.find("img").off("load.richPreview").on("load.richPreview", function () {
+            updateRichPreviewOverflow($container);
+        });
+        return isOverflowing;
+    }
+    window.updateRichPreviewOverflow = updateRichPreviewOverflow;
+
+    function openRichMessageViewer(options) {
+        options = options || {};
+        var $popupHost = $("#richMessageViewerPopup");
+        if (!$popupHost.length) {
+            $popupHost = $('<div id="richMessageViewerPopup"></div>').appendTo(document.body);
+        }
+
+        var popup = $popupHost.data("dxPopup");
+        if (!popup) {
+            $popupHost.dxPopup({
+                width: function () { return Math.min(1240, window.innerWidth * 0.94); },
+                height: function () { return Math.min(880, window.innerHeight * 0.9); },
+                minWidth: 320,
+                minHeight: 300,
+                showTitle: true,
+                showCloseButton: true,
+                dragEnabled: true,
+                resizeEnabled: true,
+                closeOnOutsideClick: true,
+                wrapperAttr: { class: "rich-message-viewer-popup" },
+                contentTemplate: function (container) {
+                    $(container).append(`
+                        <div class="rich-message-viewer">
+                            <div class="rich-message-meta"></div>
+                            <div class="rich-message-scroll">
+                                <article class="rich-message-document"></article>
+                            </div>
+                        </div>
+                    `);
+                }
+            });
+            popup = $popupHost.data("dxPopup");
+        }
+
+        popup.option("title", options.title || "Message detail");
+        popup.option("onShown", function () {
+            var metaParts = [];
+            if (options.badge) metaParts.push(`<span class="rich-message-badge">${escapeHtml(options.badge)}</span>`);
+            if (options.author) metaParts.push(`<span><b>From:</b> ${escapeHtml(options.author)}</span>`);
+            if (options.date) metaParts.push(`<span><b>Date:</b> ${escapeHtml(options.date)}</span>`);
+            $popupHost.find(".rich-message-meta").html(metaParts.join(""));
+            $popupHost.find(".rich-message-document").html(options.html || '<div class="rich-message-empty">No content</div>');
+            $popupHost.find(".rich-message-scroll").scrollTop(0);
+        });
+        popup.show();
+    }
+    window.openRichMessageViewer = openRichMessageViewer;
+
+    function openAuditLogDetail(card) {
+        var $card = $(card);
+        var key = $card.attr("data-audit-log-key");
+        var auditItem = window.AuditLogViewState.contents[key];
+        if (!auditItem) return;
+
+        openRichMessageViewer({
+            title: auditItem.title || "Audit Log detail",
+            badge: "Audit Log",
+            author: auditItem.author,
+            date: auditItem.date,
+            html: auditItem.html
+        });
+    }
+
        function renderComments(items) {
         if (!Array.isArray(items) || items.length === 0) {
             return `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No audit logs</div>`;
         }
 
-        return items.map((c) => {
+        var html = items.map((c) => {
             const dept = (c.deptCode || "").toUpperCase();
 
             let typeClass = "";
@@ -5794,8 +5908,17 @@ function styleModeChange(item){
                 typeClass = "ct-pm";
             }
 
+            var auditKey = `audit_${Date.now()}_${++window.AuditLogViewState.sequence}`;
+            var auditTitle = (c.deptCode ? c.deptCode + " - " : "") + (c.commentBy || "Audit Log");
+            window.AuditLogViewState.contents[auditKey] = {
+                title: auditTitle,
+                author: c.commentBy || "",
+                date: fmtTimeLocal(c.commentTime || ""),
+                html: c.commentText || ""
+            };
+
             return `
-                <div class="ct-item ${typeClass}">
+                <div class="ct-item ${typeClass}" data-audit-log-key="${auditKey}" onclick="openAuditLogDetail(this)" role="button" tabindex="0" onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); openAuditLogDetail(this); }">
                     <div class="ct-user">
                         ${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}
                     </div>
@@ -5805,10 +5928,16 @@ function styleModeChange(item){
                     <div class="ct-text">
                         ${c.commentText || ""}
                     </div>
+                    <div class="ct-view-more">Click to view more</div>
                 </div>
             `;
         }).join("");
+
+        setTimeout(refreshAuditLogOverflowHints, 0);
+        setTimeout(refreshAuditLogOverflowHints, 350);
+        return html;
     }
+    window.renderAuditLogComments = renderComments;
     //20260619
 
                 function clearContent()

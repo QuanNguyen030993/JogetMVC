@@ -922,8 +922,8 @@
 
                         const typeBadge = `<span title="${typeMeta.label}" style="padding:2px 6px;border-radius:6px;font-size:10px;font-weight:700;background:${typeMeta.background};color:${typeMeta.color};margin-right:6px;text-transform:uppercase;">${typeMeta.shortLabel}</span>`;
 
-                        return $(`
-                            <div style="padding:10px 8px; border-bottom:1px solid rgba(0,0,0,.06);">
+                        const $notificationItem = $(`
+                            <div class="notif-list-item" style="padding:10px 8px; border-bottom:1px solid rgba(0,0,0,.06);">
                               <div style="display:flex; gap:8px; align-items:flex-start;">
                                 <div style="width:10px; margin-top:6px;">
                                   <span style="display:${isUnread ? "inline-block" : "none"}; width:8px; height:8px; border-radius:50%; background:#ff3b30;"></span>
@@ -936,9 +936,10 @@
                                     </div>
                                     <div style="opacity:.6; font-size:12px; white-space:nowrap;">${timeText}</div>
                                   </div>
-                                  <div style="opacity:.85; margin-top:4px; font-size:13px;">
-                                    ${escapeHtml(itemData.message || "")}
+                                  <div class="notif-message-preview rich-html-preview">
+                                    ${itemData.message || ""}
                                   </div>
+                                  <div class="notif-view-more rich-view-more">Click to view more</div>
                                   <div style="margin-top:8px; display:flex; gap:8px;">
                                     <a href="javascript:void(0)" class="notif-open">Open</a>
                                     <a href="javascript:void(0)" class="notif-mark">${isUnread ? "Mark read" : "Read"}</a>
@@ -966,6 +967,14 @@
                                e.stopPropagation();
                             // mở popup đọc nội dung, không ảnh hưởng open/mark read
                         });
+                        $notificationItem.on("click", ".notif-message-preview, .notif-view-more", function (e) {
+                            if (!$notificationItem.hasClass("rich-preview-overflowing") && !$(e.target).closest(".notif-view-more").length) return;
+                            e.stopPropagation();
+                            openMessageDialog(itemData);
+                        });
+                        setTimeout(function () { updateRichPreviewOverflow($notificationItem); }, 0);
+                        setTimeout(function () { updateRichPreviewOverflow($notificationItem); }, 350);
+                        return $notificationItem;
                     }
                 }).dxList("instance");
             }

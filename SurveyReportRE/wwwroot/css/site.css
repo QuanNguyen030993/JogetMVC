@@ -3913,6 +3913,285 @@ text-overflow: ellipsis;
     border-radius: 6px;
 }
 
+/* Audit Log cards may contain rich HTML and pasted images. */
+.rightDock .ct-item[data-audit-log-key] {
+    cursor: pointer;
+    position: relative;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    will-change: transform;
+}
+
+.rightDock .ct-item[data-audit-log-key]:hover,
+.rightDock .ct-item[data-audit-log-key]:focus-visible {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, .16);
+    border-color: rgba(37, 99, 235, .45);
+    outline: none;
+}
+
+.rightDock .ct-item[data-audit-log-key] .ct-text {
+    max-height: 180px;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.rightDock .ct-item[data-audit-log-key] .ct-text img,
+.audit-log-detail-content img {
+    display: block;
+    max-width: 100% !important;
+    height: auto !important;
+    object-fit: contain;
+}
+
+.rightDock .ct-item[data-audit-log-key] .ct-text table,
+.audit-log-detail-content table {
+    max-width: 100% !important;
+    table-layout: fixed;
+    overflow-wrap: anywhere;
+}
+
+.ct-view-more {
+    display: none;
+    margin-top: 8px;
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: right;
+}
+
+.ct-item.ct-overflowing .ct-text {
+    -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 72%, transparent 100%);
+}
+
+.audit-log-detail-content {
+    width: 100%;
+    height: 100%;
+    padding: 18px 22px;
+    overflow: auto;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    box-sizing: border-box;
+}
+
+/* Shared rich HTML preview used by notifications and message cards. */
+.notif-list-item {
+    border-radius: 10px;
+    transition: background-color .18s ease, box-shadow .18s ease;
+}
+
+.notif-list-item:hover {
+    background: #f8fafc;
+    box-shadow: inset 0 0 0 1px rgba(148, 163, 184, .18);
+}
+
+.notif-list-item > div > div:last-child {
+    min-width: 0;
+}
+
+.notif-message-preview {
+    position: relative;
+    max-height: 96px;
+    margin-top: 7px;
+    overflow: hidden;
+    color: #475569;
+    font-size: 13px;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.notif-message-preview > :first-child {
+    margin-top: 0 !important;
+}
+
+.notif-message-preview > :last-child {
+    margin-bottom: 0 !important;
+}
+
+.notif-message-preview img,
+.rich-html-preview img {
+    display: block;
+    max-width: 100% !important;
+    height: auto !important;
+    border-radius: 6px;
+    object-fit: contain;
+}
+
+.notif-message-preview table,
+.rich-html-preview table {
+    max-width: 100% !important;
+    table-layout: fixed;
+    overflow-wrap: anywhere;
+}
+
+.rich-html-preview * {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.rich-preview-overflowing .rich-html-preview {
+    cursor: pointer;
+    -webkit-mask-image: linear-gradient(to bottom, #000 65%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 65%, transparent 100%);
+}
+
+.rich-view-more {
+    display: none;
+    margin-top: 5px;
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: right;
+    cursor: pointer;
+}
+
+.rich-view-more:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+/* Polished full message viewer shared by Notification and Audit Log. */
+.rich-message-viewer-popup .dx-overlay-content {
+    border: 1px solid rgba(148, 163, 184, .28);
+    border-radius: 14px !important;
+    overflow: hidden;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, .24) !important;
+}
+
+.rich-message-viewer-popup .dx-popup-title {
+    min-height: 56px;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+    border-bottom: 1px solid #e2e8f0;
+    color: #0f172a;
+    font-size: 17px;
+    font-weight: 750;
+}
+
+.rich-message-viewer-popup .dx-popup-content {
+    padding: 0 !important;
+    background: #eef2f7;
+}
+
+.rich-message-viewer {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+}
+
+.rich-message-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 18px;
+    min-height: 48px;
+    padding: 10px 22px;
+    background: #fff;
+    border-bottom: 1px solid #e2e8f0;
+    color: #64748b;
+    font-size: 12px;
+    box-sizing: border-box;
+}
+
+.rich-message-badge {
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: #dbeafe;
+    color: #1d4ed8;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+}
+
+.rich-message-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 22px;
+    overflow: auto;
+    box-sizing: border-box;
+}
+
+.rich-message-document {
+    width: min(100%, 1060px);
+    min-height: 240px;
+    margin: 0 auto;
+    padding: 28px 32px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(15, 23, 42, .08);
+    color: #1e293b;
+    font-size: 14px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    box-sizing: border-box;
+}
+
+.rich-message-document img {
+    display: block;
+    max-width: 100% !important;
+    height: auto !important;
+    margin: 14px auto;
+    border-radius: 8px;
+    object-fit: contain;
+}
+
+.rich-message-document > * {
+    max-width: 100% !important;
+    box-sizing: border-box;
+}
+
+.rich-message-document table {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.rich-message-document th,
+.rich-message-document td {
+    padding: 8px 10px;
+    border: 1px solid #cbd5e1;
+    overflow-wrap: anywhere;
+}
+
+.rich-message-document iframe,
+.rich-message-document video {
+    max-width: 100% !important;
+}
+
+.rich-message-document pre {
+    max-width: 100%;
+    padding: 14px;
+    overflow: auto;
+    border-radius: 8px;
+    background: #0f172a;
+    color: #e2e8f0;
+    white-space: pre-wrap;
+}
+
+.rich-message-empty {
+    padding: 70px 20px;
+    color: #94a3b8;
+    text-align: center;
+}
+
+@media (max-width: 640px) {
+    .rich-message-scroll {
+        padding: 10px;
+    }
+
+    .rich-message-document {
+        padding: 18px 16px;
+    }
+}
+
     /* FO - xanh dương */
     .ct-item.ct-fo {
         border-left: 4px solid #2196F3;
