@@ -21,6 +21,7 @@
       reInsuranceType: [],
       BranchOffice: [],
       OverallStatus: [],
+      NotificationType: [],
       reInsuranceType: [],
       TMICode: [],
       Currency: [],
@@ -59,7 +60,11 @@
 
     $.each(_enums, function(index, item) {
     if (!item.length)
-            ajaxGet(`/api/EnumData/FetchEnum/${index}`).done(res => {if (res) _enums[index] = res;
+            ajaxGet(`/api/EnumData/FetchEnum/${index}`).done(res => {
+                if (res) _enums[index] = res;
+                if (index === "NotificationType" && typeof refreshNotifUI === "function") {
+                    refreshNotifUI();
+                }
         });
     });
 </script>

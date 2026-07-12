@@ -691,10 +691,95 @@
     let _notif = {
         items: [],
         unreadCount: 0,
+        currentFilter: "all",
         // popup: null,
         popover: null,
         list: null
     };
+
+    const notificationTypeMeta = {
+        assign: { label: "Assign", shortLabel: "ASG", icon: "user", background: "#ede9fe", color: "#6d28d9" },
+        route: { label: "Route", shortLabel: "RTE", icon: "route", background: "#ffedd5", color: "#c2410c" },
+        quotation: { label: "Quotation", shortLabel: "QT", icon: "file", background: "#e0f2fe", color: "#0369a1" },
+        policyissuance: { label: "Policy Issuance", shortLabel: "PI", icon: "shield", background: "#dcfce7", color: "#15803d" },
+        default: { label: "System", shortLabel: "SYS", icon: "info", background: "#f1f5f9", color: "#475569" }
+    };
+
+    function normalizeNotificationType(value) {
+        return String(value || "").trim().toLowerCase().replace(/[\s_-]+/g, "");
+    }
+
+    function getNotificationTypeEnumItem(typeKey) {
+        const aliases = {
+            assign: ["assign", "assignment"],
+            route: ["route", "routing", "workflowroute"],
+            quotation: ["quotation", "qt"],
+            policyissuance: ["policyissuance", "policy", "pi"]
+        };
+        const acceptedValues = aliases[typeKey] || [typeKey];
+
+        return (_enums.NotificationType || []).find(enumItem => {
+            const values = [enumItem?.code, enumItem?.key, enumItem?.value, enumItem?.name, enumItem?.text]
+                .map(normalizeNotificationType);
+            return values.some(value => acceptedValues.includes(value));
+        }) || null;
+    }
+
+    function getNotificationTypeEnumId(typeKey) {
+        const enumItem = getNotificationTypeEnumItem(typeKey);
+        return enumItem?.id ?? enumItem?.Id ?? null;
+    }
+
+    function getNotificationItemTypeId(item) {
+        let enumType = item?.type ?? item?.Type;
+        if (typeof enumType === "string" && enumType.trim().startsWith("{")) {
+            try { enumType = JSON.parse(enumType); } catch { }
+        }
+
+        if (enumType && typeof enumType === "object") {
+            return enumType.id ?? enumType.Id ?? item?.typeId ?? item?.TypeId ?? null;
+        }
+
+        if (typeof enumType === "number" || /^\d+$/.test(String(enumType || ""))) {
+            return enumType;
+        }
+        return item?.typeId ?? item?.TypeId ?? null;
+    }
+
+    function getNotificationType(item) {
+        const notificationTypeId = getNotificationItemTypeId(item);
+        if (notificationTypeId !== null && notificationTypeId !== undefined) {
+            for (const typeKey of ["assign", "route", "quotation", "policyissuance"]) {
+                const enumId = getNotificationTypeEnumId(typeKey);
+                if (enumId !== null && String(enumId) === String(notificationTypeId)) {
+                    return typeKey;
+                }
+            }
+        }
+
+        let enumType = item?.type ?? item?.Type;
+        if (typeof enumType === "string" && enumType.trim().startsWith("{")) {
+            try { enumType = JSON.parse(enumType); } catch { }
+        }
+
+        const candidates = typeof enumType === "object" && enumType
+            ? [enumType.code, enumType.key, enumType.value, enumType.name, enumType.text, enumType.displayName]
+            : [enumType, item?.typeCode, item?.typeName];
+
+        for (const candidate of candidates) {
+            const type = normalizeNotificationType(candidate);
+            if (type.includes("assign")) return "assign";
+            if (type.includes("route") || type.includes("workflow")) return "route";
+            if (type === "qt" || type.includes("quotation")) return "quotation";
+            if (type === "pi" || type.includes("policyissuance") || type.includes("policy")) return "policyissuance";
+        }
+
+        // Backward compatibility for notifications created before Type was populated.
+        const title = String(item?.title || "").toUpperCase();
+        if (title.includes("[QT]")) return "quotation";
+        if (title.includes("[PI]")) return "policyissuance";
+        return "default";
+    }
 
     // updateNotification(100);
 
@@ -757,11 +842,13 @@
                       <div id="notifMarkAllBtn"></div>
                       <div style="margin-left:auto; opacity:.7; font-size:12px;" id="notifHint"></div>
                     </div>
-                    <div class="notif-filters" style="display:flex; gap:6px; padding:0 10px 10px 10px; border-bottom:1px solid rgba(0,0,0,.06);">
+                    <div class="notif-filters" style="display:flex; flex-wrap:wrap; gap:6px; padding:0 10px 10px 10px; border-bottom:1px solid rgba(0,0,0,.06);">
                         <span class="filter-btn active" data-filter="all" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: #3b82f6; color: #fff; transition: all 0.2s ease;">All</span>
                         <span class="filter-btn" data-filter="unread" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: #f1f5f9; color: #64748b; transition: all 0.2s ease;">Unread</span>
-                        <span class="filter-btn" data-filter="qt" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: #f1f5f9; color: #64748b; transition: all 0.2s ease;">Quotation</span>
-                        <span class="filter-btn" data-filter="pi" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: #f1f5f9; color: #64748b; transition: all 0.2s ease;">Policy</span>
+                        <span class="filter-btn" data-filter="assign" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: #f1f5f9; color: #64748b; transition: all 0.2s ease;">Assign</span>
+                        <span class="filter-btn" data-filter="route" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: #f1f5f9; color: #64748b; transition: all 0.2s ease;">Route</span>
+                        <span class="filter-btn" data-filter="quotation" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: #f1f5f9; color: #64748b; transition: all 0.2s ease;">Quotation</span>
+                        <span class="filter-btn" data-filter="policyissuance" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: #f1f5f9; color: #64748b; transition: all 0.2s ease;">Policy Issuance</span>
                     </div>
                     <div id="notifList" style="padding: 10px"></div>
                 `);
@@ -798,30 +885,17 @@
                         // item UI
                         const isUnread = !itemData.isRead;
                         const timeText = formatTime(itemData.createdDate);
+                        const notificationType = getNotificationType(itemData);
+                        const typeMeta = notificationTypeMeta[notificationType] || notificationTypeMeta.default;
 
                         let title = itemData.title || "";
-                        let prefix = "";
-                        let prefixBadge = "";
                         // Match bracket prefix at start like [QT] or [PI]
                         const match = title.match(/^\[([^\]]+)\]/);
                         if (match) {
-                            prefix = match[1].toUpperCase();
                             title = title.substring(match[0].length).trim(); // Clean title
-
-                            let badgeBg = "#e2e8f0";
-                            let badgeColor = "#475569";
-                            if (prefix === "QT") {
-                                badgeBg = "#e0f2fe";
-                                badgeColor = "#0369a1";
-                            } else if (prefix === "PI") {
-                                badgeBg = "#dcfce7";
-                                badgeColor = "#15803d";
-                            } else if (prefix === "SYS") {
-                                badgeBg = "#fef3c7";
-                                badgeColor = "#d97706";
-                            }
-                            prefixBadge = `<span style="padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 700; background: ${badgeBg}; color: ${badgeColor}; margin-right: 6px; text-transform: uppercase;">${prefix}</span>`;
                         }
+
+                        const typeBadge = `<span title="${typeMeta.label}" style="padding:2px 6px;border-radius:6px;font-size:10px;font-weight:700;background:${typeMeta.background};color:${typeMeta.color};margin-right:6px;text-transform:uppercase;">${typeMeta.shortLabel}</span>`;
 
                         return $(`
                             <div style="padding:10px 8px; border-bottom:1px solid rgba(0,0,0,.06);">
@@ -832,13 +906,13 @@
                                 <div style="flex:1;">
                                   <div style="display:flex; justify-content:space-between; gap:8px;">
                                     <div style="font-weight:${isUnread ? 700 : 600}; display: flex; align-items: center;">
-                                      ${prefixBadge}
+                                      ${typeBadge}
                                       <span>${escapeHtml(title)}</span>
                                     </div>
                                     <div style="opacity:.6; font-size:12px; white-space:nowrap;">${timeText}</div>
                                   </div>
                                   <div style="opacity:.85; margin-top:4px; font-size:13px;">
-                                    ${itemData.message} 
+                                    ${escapeHtml(itemData.message || "")}
                                   </div>
                                   <div style="margin-top:8px; display:flex; gap:8px;">
                                     <a href="javascript:void(0)" class="notif-open">Open</a>
@@ -909,10 +983,15 @@
             const filter = _notif.currentFilter || "all";
             if (filter === "unread") {
                 filteredItems = filteredItems.filter(x => !x.isRead);
-            } else if (filter === "qt") {
-                filteredItems = filteredItems.filter(x => (x.title || "").toUpperCase().includes("[QT]"));
-            } else if (filter === "pi") {
-                filteredItems = filteredItems.filter(x => (x.title || "").toUpperCase().includes("[PI]"));
+            } else if (["assign", "route", "quotation", "policyissuance"].includes(filter)) {
+                const filterTypeId = getNotificationTypeEnumId(filter);
+                filteredItems = filteredItems.filter(x => {
+                    const itemTypeId = getNotificationItemTypeId(x);
+                    if (filterTypeId !== null && itemTypeId !== null) {
+                        return String(itemTypeId) === String(filterTypeId);
+                    }
+                    return getNotificationType(x) === filter;
+                });
             }
             _notif.list.option("dataSource", filteredItems);
             $("#notifHint").text(_notif.unreadCount ? `${_notif.unreadCount} unread` : "");

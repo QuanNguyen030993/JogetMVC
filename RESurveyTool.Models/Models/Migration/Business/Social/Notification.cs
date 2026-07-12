@@ -19,6 +19,6 @@ public class Notification : BaseModel
     [MaxLength(255)]
     public string? ReceivedBy { get; set; } = "";
     public Guid? RecordGuid { get; set; }
-
-
+    public long? Type { get; set; }
+    public EnumDataTypeAttribute? TypeEnum { get; set; }
 }

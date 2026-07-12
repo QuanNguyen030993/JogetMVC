@@ -333,7 +333,23 @@ export default function EnumDesign() {
                         fontSize: "0.9rem"
                       }}
                     >
-                      <span>{item.value}</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
+                        <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{item.value}</span>
+                        <span
+                          title={`Enum ID: ${item.id}`}
+                          style={{
+                            flexShrink: 0,
+                            padding: "2px 6px",
+                            borderRadius: "999px",
+                            background: "#e2e8f0",
+                            color: "#475569",
+                            fontSize: "0.72rem",
+                            fontWeight: "700"
+                          }}
+                        >
+                          ID: {item.id}
+                        </span>
+                      </div>
                       <button 
                         onClick={() => deleteKey(item.id)} 
                         style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", fontSize: "0.8rem" }}
