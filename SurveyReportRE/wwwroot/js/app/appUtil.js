@@ -4319,20 +4319,15 @@ function stretchColumnsEvenly(e, opts = {}) {
         opts.targetWidth ??
         "calc(100vw - var(--menu-width))";
 
+    const fillRatio =
+        opts.fillRatio ??
+        0.85;
+
 
 
     // convert css width -> px
     const targetWidth =
         resolveWidth(rawTargetWidth);
-
-
-
-    grid.option(
-        "width",
-        "inherit"
-    );
-
-    grid.updateDimensions();
 
 
 
@@ -4347,7 +4342,9 @@ function stretchColumnsEvenly(e, opts = {}) {
             defaultWidth,
 
             excludeFields:
-                opts.excludeFields
+                opts.excludeFields,
+
+            fillRatio
 
         });
 
@@ -4378,6 +4375,10 @@ function stretchColumnsEvenly(e, opts = {}) {
     try {
 
         cols.forEach(col => {
+
+            if (Math.abs((Number(col.width) || 0) - result.width) < 1) {
+                return;
+            }
 
             grid.columnOption(
                 col.visibleIndex,
@@ -4433,10 +4434,16 @@ function calcColumnWidthByViewport({
     columns,
     targetWidth,
     defaultWidth,
-    excludeFields = []
+    excludeFields = [],
+    fillRatio = 0.85
 }) {
 
     const excludeSet = new Set(excludeFields);
+
+
+    const commandWidth = columns
+        .filter(c => c.command)
+        .reduce((sum, col) => sum + (Number(col.width) || 50), 0);
 
 
     const visibleCols = columns
@@ -4461,8 +4468,9 @@ function calcColumnWidthByViewport({
 
             return sum +
                 (
-                    Number(col.width) ||
-                    defaultWidth
+                    excludeSet.has(col.dataField)
+                        ? (Number(col.width) || defaultWidth)
+                        : defaultWidth
                 );
 
         }, 0);
@@ -4471,7 +4479,8 @@ function calcColumnWidthByViewport({
 
     const availableWidth =
         targetWidth -
-        getScrollbarWidth();
+        getScrollbarWidth() -
+        commandWidth;
 
 
 
@@ -4482,12 +4491,12 @@ function calcColumnWidthByViewport({
 
 
     // không đủ -> giữ nguyên
-    if (diff <= 0) {
+    if (currentWidth >= availableWidth * fillRatio) {
 
         return {
             width: defaultWidth,
             shouldStretch: false,
-            reason: "column overflow"
+            reason: "columns already fill the form"
         };
     }
 

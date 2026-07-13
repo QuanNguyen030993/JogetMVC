@@ -26,6 +26,7 @@ public class NotificationController : BaseControllerApi<Notification>
     private readonly IBaseRepository<Notification> _BaseRepository;
     private readonly IConfiguration configuration;
     private readonly IHubContext<FileProcessingHub> _hubContext;
+    private readonly IBaseRepository<EnumData> _enumDataRepository;
     private string DOMAIN_NAME = "";
     public NotificationController(IBaseRepository<Notification> BaseRepository
         , IConfiguration config
@@ -35,6 +36,7 @@ public class NotificationController : BaseControllerApi<Notification>
         configuration = config;
         _BaseRepository = BaseRepository;
         _hubContext = hubContext;
+        _enumDataRepository = new BaseRepository<EnumData>(configuration, _httpContextAccessor);
         DOMAIN_NAME = configuration.GetSection("Domain:DCServer").Value;
     }
     [HttpPost]
@@ -88,6 +90,14 @@ public class NotificationController : BaseControllerApi<Notification>
     [HttpPost]
     public async Task<IActionResult> Notify([FromBody] NotificationRequest notification)
     {
+        if (notification?.Notification == null)
+        {
+            return BadRequest("Notification payload is required.");
+        }
+
+        notification.Notification.Type ??= await NotificationTypeResolver.ResolveIdAsync(
+            _enumDataRepository,
+            NotificationTypeKeys.Default);
 
         IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
 

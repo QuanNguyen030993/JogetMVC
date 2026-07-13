@@ -33,11 +33,14 @@ button {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .sidebar nav {
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
 }
 
 .brand {

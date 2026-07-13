@@ -235,17 +235,21 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
 
                     //loop multiple account tai day
                     var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
+                    long? initialNotificationTypeId = await NotificationTypeResolver.ResolveIdAsync(
+                        _enumDataRepository,
+                        NotificationTypeKeys.Initial);
                     string picsStr = picS.PICMain.GetType().GetProperty(stepsWorkflow?.ToNodeId ?? "")?.GetValue(picS.PICMain ?? new PICAttributes()).ToString() ?? "";
                     foreach (var memberName in picsStr.Split(","))
                     {
                         NotificationRequest notification = new NotificationRequest();
                         Notification Notification = new Notification();
-                        Notification.Title = string.Format(_messageSettings.InitializeMessage.Title, PolicyIssuance.QuotationCode);
+                        Notification.Title = string.Format(_messageSettings.InitializeMessage.Title, PolicyIssuance.PolicyIssuanceCode);
                         Notification.Message = PolicyIssuance?.Subject ?? string.Format(_messageSettings.InitializeMessage.Content, "");
                         Notification.IsRead = false;
                         Notification.Resource = $"{memberName}_{stepsWorkflow.ToNodeId}";
                         Notification.System = "WM";
                         Notification.RecordGuid = PolicyIssuance.Guid;
+                        Notification.Type = initialNotificationTypeId;
 
                         Notification.ReceivedBy = memberName;
                         notification.Notification = Notification;
@@ -254,7 +258,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
                         PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
                         string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
                         Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(PolicyIssuance));
-                        NotificationController.Notify(notification);
+                        await NotificationController.Notify(notification);
                     }
                 }
 
@@ -351,10 +355,14 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
                 Guid = quotation.Guid,
                 ReceivedBy = accountName,
                 Id = quotation.Id,
-                Code = quotation.QuotationCode
+                Code = quotation.PolicyIssuanceCode,
+                ModuleName = nameof(PolicyIssuance)
             };
 
-            Notification notification = await ControllerUtil.Notify(transferObject);
+            long? assignNotificationTypeId = await NotificationTypeResolver.ResolveIdAsync(
+                _enumDataRepository,
+                NotificationTypeKeys.Assign);
+            Notification notification = await ControllerUtil.Notify(transferObject, assignNotificationTypeId);
 
 
 

@@ -1,4 +1,4 @@
-﻿var MGrid = class MGrid {
+var MGrid = class MGrid {
     constructor(gridConfig, container, mGridOption) {
         try {
             this.ImportType = "default";
@@ -93,6 +93,53 @@
 
                 // Initialize grid index visible
                 this.updateGridIndexVisible();
+
+                // Attach Excel paste listener
+                this.container.on("paste", (htmlEvent) => {
+                    const clipboardData = htmlEvent.originalEvent.clipboardData || window.clipboardData;
+                    const pastedData = clipboardData.getData("text");
+                    if (!pastedData) return;
+                    
+                    const rows = pastedData.split(/\r?\n/).map(row => row.split("\t"));
+                    if (rows.length === 0 || (rows.length === 1 && rows[0].length === 1 && rows[0][0] === "")) return;
+                    
+                    const gridInstance = this.component;
+                    const lastCell = this.mGridOption.focusData;
+                    if (!lastCell || lastCell.rowIndex === undefined) return;
+                    
+                    htmlEvent.preventDefault();
+                    
+                    const visibleColumns = gridInstance.getVisibleColumns();
+                    const startColIndex = visibleColumns.findIndex(c => c.dataField === lastCell.column.dataField);
+                    if (startColIndex === -1) return;
+                    
+                    gridInstance.beginUpdate();
+                    
+                    for (let r = 0; r < rows.length; r++) {
+                        const rowData = rows[r];
+                        const targetRowIndex = lastCell.rowIndex + r;
+                        if (rowData.length === 1 && rowData[0] === "" && r === rows.length - 1) continue;
+                        
+                        for (let c = 0; c < rowData.length; c++) {
+                            const val = rowData[c];
+                            const targetColIndex = startColIndex + c;
+                            if (targetColIndex >= visibleColumns.length) continue;
+                            
+                            const col = visibleColumns[targetColIndex];
+                            if (col && col.allowEditing !== false && col.dataField) {
+                                let typedVal = val;
+                                if (col.dataType === "number") {
+                                    typedVal = val === "" ? null : Number(val);
+                                } else if (col.dataType === "boolean") {
+                                    typedVal = val.toLowerCase() === "true" || val === "1" || val.toLowerCase() === "yes";
+                                }
+                                gridInstance.cellValue(targetRowIndex, col.dataField, typedVal);
+                            }
+                        }
+                    }
+                    
+                    gridInstance.endUpdate();
+                });
 
             }).catch(err => {
 
@@ -824,10 +871,15 @@ var MGridOption = class MGridOption {
         const grid = e.component;
 
 
-        const targetWidth =
-            window.innerWidth -
-            _widthMenuWidth -
-            _rightWindowPadding;
+        const gridElement = grid.element().get(0);
+        const hostElement = gridElement?.parentElement;
+        const hostStyle = hostElement ? window.getComputedStyle(hostElement) : null;
+        const hostHorizontalPadding = hostStyle
+            ? (parseFloat(hostStyle.paddingLeft) || 0) + (parseFloat(hostStyle.paddingRight) || 0)
+            : 0;
+        const targetWidth = Math.floor(
+            (hostElement?.clientWidth || gridElement?.clientWidth || window.innerWidth) - hostHorizontalPadding
+        );
 
 
         const cols =
@@ -842,8 +894,8 @@ var MGridOption = class MGridOption {
 
 
 
-        // 85% rule
-        if (totalDefault < targetWidth * 0.85) {
+        // Only grids with too few columns are stretched to fill their actual form.
+        if (targetWidth > 0 && totalDefault < targetWidth * 0.85) {
 
             stretchColumnsEvenly(e, {
 
@@ -852,7 +904,8 @@ var MGridOption = class MGridOption {
                 defaultWidth:
                     _defaultGridFieldWidth,
 
-                excludeFields: []
+                excludeFields: [],
+                fillRatio: 0.85
 
             });
 
@@ -860,7 +913,8 @@ var MGridOption = class MGridOption {
 
 
         // Load saved layout configuration
-        if (this.loadLayoutConfiguration) {
+        if (!this.layoutConfigurationLoaded && this.loadLayoutConfiguration) {
+            this.layoutConfigurationLoaded = true;
             this.loadLayoutConfiguration();
         }
     }
@@ -1022,7 +1076,7 @@ var MGridOption = class MGridOption {
                     allowColumnResizing: true,
                     columnResizingMode: 'widget',
                     columnHidingEnabled: false,
-                    columnAutoWidth: true,
+                    columnAutoWidth: false,
                     showColumnLines: true,
                     columnChooser: { allowSearch: true, enabled: true },
                     columnFixing: { enabled: true },
@@ -1092,7 +1146,7 @@ var MGridOption = class MGridOption {
                         //texts: { exportAll: 'Export all', exportSelectedRows: 'Export selected rows', exportTo: 'Export' }
                     },
                     masterDetail: this.masterDetail,
-                    width: "inherit", //Change to margin left - right, must be without width, must not set 100% here
+                    width: "100%",
                     height: this.height ? this.height : window.innerHeight - 130, // == null ? "inherit"
                     columns: this.columns,
                     customizeColumns: tryExecute(this.onCustomizeColumns.bind(this)),

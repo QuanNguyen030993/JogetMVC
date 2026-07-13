@@ -58,7 +58,7 @@
 ## G. Notification
 
 - [ ] Filter so sánh đúng NotificationType ID.
-- [ ] Assign/Route/Quotation/Policy Issuance có badge đúng.
+- [ ] Cả 11 NotificationType có badge và filter đúng EnumData ID.
 - [ ] HTML message render đúng.
 - [ ] Ảnh load chậm vẫn xác định overflow đúng.
 - [ ] Mark read cập nhật count.
@@ -83,4 +83,3 @@
 - [ ] Pager và command button hoạt động bình thường.
 - [ ] Grid không thay đổi column width ngoài cấu hình.
 - [ ] Layout không vỡ ở desktop/tablet/mobile.
-

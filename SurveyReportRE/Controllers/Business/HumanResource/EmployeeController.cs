@@ -206,41 +206,187 @@ public class EmployeeController : BaseControllerApi<Employee>
     [HttpGet]
     public async Task<IActionResult> EmployeeUpdate(string? adminUser, string? passWord)
     {
-        var domainEmailName = _BaseRepository._baseConfiguration.GetSection("Domain:Email").Value;
-        List<Users> users = new List<Users>();
-        users = await _usersRepository.GetAll();
-        //users = users.Where(w => Regex.IsMatch(w.name, @"\sRE$")).ToList();
+        var domainEmailName = _configuration.GetValue<string>("Domain:Email") ?? "";
+        var users = await _usersRepository.GetAll();
+        var employees = await _BaseRepository.GetAll();
+        var branchEnums = await _enumDataRepository.GetAll();
 
-        List<Employee> employees = new List<Employee>();
-        employees = await _BaseRepository.GetAll();
+        var employeeByAccount = employees
+            .Where(employee => !string.IsNullOrWhiteSpace(employee.AccountName))
+            .GroupBy(employee => employee.AccountName.Trim(), StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
 
-        if (users
-            .Any(user =>
-                !employees.Any(emp =>
-                    user.mail.Replace(domainEmailName, "") == emp.AccountName)))
+        var branchIdByCode = branchEnums
+            .Where(item => !string.IsNullOrWhiteSpace(item.Code))
+            .GroupBy(item => item.Code.Trim(), StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.Key, group => (long?)group.First().Id, StringComparer.OrdinalIgnoreCase);
+
+        var insertedEmployees = new List<Employee>();
+        var updatedEmployees = new List<Employee>();
+        var processedAccounts = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var user in users)
         {
-            List<Employee> newEmployees = users
-            .Where(user =>
-                !employees.Any(emp =>
-                    user.mail.Replace(domainEmailName, "") == emp.AccountName))
-            .Select(user => new Employee
+            var accountName = ResolveAccountName(user, domainEmailName);
+            if (string.IsNullOrWhiteSpace(accountName) || !processedAccounts.Add(accountName))
             {
-                FullName = user.name,
-                Department = "Risk Engineering",
-                AccountName = user.mail.Replace(domainEmailName, ""),
-                Email = user.mail,
-                UsersId = user.Id
-            })
-            .ToList();
+                continue;
+            }
 
+            var branchCode = ResolveBranchCode(user);
+            branchIdByCode.TryGetValue(branchCode, out var branchId);
 
-            foreach (var newEmployee in newEmployees)
+            if (!employeeByAccount.TryGetValue(accountName, out var employee))
             {
-                await _BaseRepository.InsertData(newEmployee);
+                employee = new Employee
+                {
+                    AccountName = accountName
+                };
+                ApplyUserToEmployee(employee, user, accountName, branchId, preserveMissingValues: false);
+                insertedEmployees.Add(employee);
+                employeeByAccount[accountName] = employee;
+                continue;
+            }
+
+            if (ApplyUserToEmployee(employee, user, accountName, branchId, preserveMissingValues: true))
+            {
+                updatedEmployees.Add(employee);
             }
         }
 
-        return Ok();
+        if (insertedEmployees.Count > 0)
+        {
+            await _BaseRepository.BulkInsertAsync(insertedEmployees);
+        }
+
+        if (updatedEmployees.Count > 0)
+        {
+            await _BaseRepository.BulkUpdateAsync(
+                updatedEmployees,
+                new[]
+                {
+                    nameof(Employee.FirstName),
+                    nameof(Employee.LastName),
+                    nameof(Employee.FullName),
+                    nameof(Employee.Department),
+                    nameof(Employee.AccountName),
+                    nameof(Employee.Email),
+                    nameof(Employee.EmailName),
+                    nameof(Employee.AreaId),
+                    nameof(Employee.UsersId)
+                },
+                nameof(Employee.Id));
+        }
+
+        return Ok(new
+        {
+            success = true,
+            inserted = insertedEmployees.Count,
+            updated = updatedEmployees.Count,
+            skipped = users.Count - processedAccounts.Count
+        });
+    }
+
+    private static string ResolveAccountName(Users user, string domainEmailName)
+    {
+        if (!string.IsNullOrWhiteSpace(user.username))
+        {
+            return user.username.Trim();
+        }
+
+        var email = !string.IsNullOrWhiteSpace(user.mail)
+            ? user.mail.Trim()
+            : user.userPrincipalName?.Trim() ?? "";
+
+        if (!string.IsNullOrWhiteSpace(domainEmailName) &&
+            email.EndsWith(domainEmailName, StringComparison.OrdinalIgnoreCase))
+        {
+            return email[..^domainEmailName.Length].Trim();
+        }
+
+        var atIndex = email.IndexOf('@');
+        return (atIndex > 0 ? email[..atIndex] : email).Trim();
+    }
+
+    private static string ResolveBranchCode(Users user)
+        {
+        var branchOu = (user.distinguishedName ?? "")
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .FirstOrDefault(value => value.StartsWith("OU=OU-", StringComparison.OrdinalIgnoreCase));
+
+        var branch = branchOu == null ? "" : branchOu[6..].Trim();
+        return branch.ToUpperInvariant() switch
+            {
+            "SGN" => "HCM",
+            "HCM" => "HCM",
+            "HN" => "HN",
+            _ => branch
+        };
+    }
+
+    private static string ResolveEmployeeGroup(Users user)
+    {
+        var departmentOu = (user.distinguishedName ?? "")
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .FirstOrDefault(value =>
+                value.StartsWith("OU=", StringComparison.OrdinalIgnoreCase) &&
+                !value.StartsWith("OU=OU-", StringComparison.OrdinalIgnoreCase));
+
+        var department = departmentOu == null ? "" : departmentOu[3..].Trim();
+        return department.ToUpperInvariant() switch
+            {
+            "UWRI" => "UW",
+            "PM" => "PM",
+            "MKT" => "MKT",
+            _ => department
+        };
+            }
+
+    private static bool ApplyUserToEmployee(
+        Employee employee,
+        Users user,
+        string accountName,
+        long? branchId,
+        bool preserveMissingValues)
+    {
+        var firstName = user.givenname?.Trim() ?? "";
+        var lastName = user.sn?.Trim() ?? "";
+        var fullName = user.name?.Trim() ?? "";
+        var email = user.mail?.Trim() ?? "";
+        var department = ResolveEmployeeGroup(user);
+
+        if (preserveMissingValues)
+        {
+            firstName = string.IsNullOrWhiteSpace(firstName) ? employee.FirstName : firstName;
+            lastName = string.IsNullOrWhiteSpace(lastName) ? employee.LastName : lastName;
+            fullName = string.IsNullOrWhiteSpace(fullName) ? employee.FullName : fullName;
+            email = string.IsNullOrWhiteSpace(email) ? employee.Email : email;
+            department = string.IsNullOrWhiteSpace(department) ? employee.Department : department;
+            branchId ??= employee.AreaId;
+        }
+
+        var changed =
+            !string.Equals(employee.FirstName, firstName, StringComparison.Ordinal) ||
+            !string.Equals(employee.LastName, lastName, StringComparison.Ordinal) ||
+            !string.Equals(employee.FullName, fullName, StringComparison.Ordinal) ||
+            !string.Equals(employee.Department, department, StringComparison.Ordinal) ||
+            !string.Equals(employee.AccountName, accountName, StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(employee.Email, email, StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(employee.EmailName, accountName, StringComparison.OrdinalIgnoreCase) ||
+            employee.AreaId != branchId ||
+            employee.UsersId != user.Id;
+
+        employee.FirstName = firstName;
+        employee.LastName = lastName;
+        employee.FullName = fullName;
+        employee.Department = department;
+        employee.AccountName = accountName;
+        employee.Email = email;
+        employee.EmailName = accountName;
+        employee.AreaId = branchId;
+        employee.UsersId = user.Id;
+
+        return changed;
     }
     [HttpPost]
     public override async Task<object> DropDownLookupCustomQuery([FromBody] string query)

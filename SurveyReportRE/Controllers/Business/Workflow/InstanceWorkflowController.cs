@@ -25,6 +25,7 @@ using static ERPCore.Models.Models.Parsing.JsonHandle;
 using ERPCore.Models.Business.Migration.Config;
 using ERPCore.Models.Migration.Business.Workflow;
 using static WorkflowDefinition_FormModel;
+using ERPCore.Models.Migration.Config;
 
 public class WorkflowTransitionSubmitRequest : SubmitRequest
 {
@@ -52,6 +53,8 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     private readonly IBaseRepository<Notification> _notificationRepository;
     private readonly IBaseRepository<UrlCall> _urlCallRepository;
     private readonly IBaseRepository<StepsWorkflow> _stepsWorkflowRepository;
+    private readonly IBaseRepository<WorkflowDefinition> _workflowDefinitionRepository;
+    private readonly IBaseRepository<EnumData> _enumDataRepository;
     private readonly IBaseRepository<Document> _documentRepository;
     private readonly IBaseRepository<WorkflowInstanceNode> _workflowInstanceNodeRepository;
     private readonly IHubContext<FileProcessingHub> _hubContext;
@@ -86,6 +89,8 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         _notificationRepository = new BaseRepository<Notification>(configuration, _httpContextAccessor);
         _urlCallRepository = new BaseRepository<UrlCall>(configuration, _httpContextAccessor);
         _stepsWorkflowRepository = new BaseRepository<StepsWorkflow>(configuration, _httpContextAccessor);
+        _workflowDefinitionRepository = new BaseRepository<WorkflowDefinition>(configuration, _httpContextAccessor);
+        _enumDataRepository = new BaseRepository<EnumData>(configuration, _httpContextAccessor);
         _documentRepository = new BaseRepository<Document>(configuration, _httpContextAccessor);
         _workflowInstanceNodeRepository = new BaseRepository<WorkflowInstanceNode>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
@@ -242,20 +247,25 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             Guid = quotation.Guid,
             ReceivedBy = accountName,
             Id = quotation.Id,
-            Code = quotation.QuotationCode
+            Code = quotation.QuotationCode,
+            ModuleName = nameof(Quotation)
         };
 
 
 
         Notification notification = new Notification();
         UrlCall urlCall = new UrlCall();
+        long? notificationTypeId = await ResolveWorkflowNotificationTypeId(
+            submitRequest.StepsWorkflow,
+            submitRequest.InstanceWorkflow,
+            NotificationTypeKeys.Quotation);
         if (submitRequest.isEmail ?? false)
         {//Test cho nay
             //notification = await ControllerUtil.MakeNotificationFromEmail(notification, mailQueue, quotation, configuration,out urlCall);
-            notification = await ControllerUtil.NotifySameEmail(notification, transferObject);
+            notification = await ControllerUtil.NotifySameEmail(notification, transferObject, notificationTypeId);
         }
         else
-            notification = await ControllerUtil.Notify(transferObject);
+            notification = await ControllerUtil.Notify(transferObject, notificationTypeId);
         await _urlCallRepository.InsertData(urlCall);
         await _notificationRepository.InsertData(notification);
 
@@ -377,13 +387,38 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             Guid = quotation.Guid,
             ReceivedBy = accountName,
             Id = quotation.Id,
-            Code = quotation.QuotationCode
+            Code = quotation.QuotationCode,
+            ModuleName = nameof(Quotation)
         };
 
-        Notification notification = await ControllerUtil.Notify(transferObject);
+        long? notificationTypeId = await ResolveWorkflowNotificationTypeId(
+            submitRequest.StepsWorkflow,
+            submitRequest.InstanceWorkflow,
+            NotificationTypeKeys.Quotation);
+        Notification notification = await ControllerUtil.Notify(transferObject, notificationTypeId);
         await _notificationRepository.InsertData(notification);
 
         return Ok();
+    }
+
+    private async Task<long?> ResolveWorkflowNotificationTypeId(
+        StepsWorkflow? stepsWorkflow,
+        InstanceWorkflow? instanceWorkflow,
+        string fallbackType)
+    {
+        WorkflowDefinition? workflowDefinition = null;
+        if (instanceWorkflow != null)
+        {
+            workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(
+                definition => definition.Guid == instanceWorkflow.WorkflowDefinitionId);
+        }
+
+        string notificationType = NotificationTypeResolver.ResolveWorkflowType(
+            stepsWorkflow,
+            workflowDefinition,
+            fallbackType);
+
+        return await NotificationTypeResolver.ResolveIdAsync(_enumDataRepository, notificationType);
     }
 
     [HttpPost]

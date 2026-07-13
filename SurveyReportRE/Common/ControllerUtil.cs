@@ -126,21 +126,13 @@ namespace ERPCore.ControllerUtil
             return (PICMain, PICLeader, PICHOD);
 
         }
-        public static async Task<Notification> Notify(dynamic transferObject
-            )
+        public static async Task<Notification> Notify(
+            dynamic transferObject,
+            long? notificationTypeId = null)
         {
             string DOMAIN_NAME = transferObject.DOMAIN_NAME;
             NotificationRequest notification = new NotificationRequest();
-            Notification Notification = new Notification();
-            Notification.Title = transferObject.Title; 
-            Notification.Message = transferObject.Subject;
-            Notification.IsRead = false;
-            Notification.Url = $"/Business/Form/{nameof(Quotation)}_Form/{transferObject.Id}";
-            Notification.Resource = $"{transferObject.Resource}";
-            Notification.System = "WM";
-            Notification.RecordGuid = transferObject.Guid;
-
-            Notification.ReceivedBy = transferObject.ReceivedBy;
+            Notification Notification = BuildNotification(transferObject, notificationTypeId);
             notification.Notification = Notification;
             notification.connectionId = transferObject.ReceivedBy;
             notification.tabPublicUrl = Util.URLObjectMaking(transferObject);
@@ -196,10 +188,13 @@ namespace ERPCore.ControllerUtil
         //}
 
 
-        public static async Task<Notification> NotifySameEmail(Notification Notification, dynamic transferObject
-            )
+        public static async Task<Notification> NotifySameEmail(
+            Notification Notification,
+            dynamic transferObject,
+            long? notificationTypeId = null)
         {
             string DOMAIN_NAME = transferObject.DOMAIN_NAME;
+            Notification = BuildNotification(transferObject, notificationTypeId, Notification);
             NotificationRequest notification = new NotificationRequest();
             notification.Notification = Notification;
             notification.connectionId = transferObject.ReceivedBy;
@@ -227,6 +222,27 @@ namespace ERPCore.ControllerUtil
             }
            
             return Notification;
+        }
+
+        private static Notification BuildNotification(
+            dynamic transferObject,
+            long? notificationTypeId,
+            Notification? notification = null)
+        {
+            notification ??= new Notification();
+            Type transferType = transferObject.GetType();
+            string moduleName = transferType.GetProperty("ModuleName")?.GetValue(transferObject)?.ToString()
+                                ?? nameof(Quotation);
+            notification.Title = transferObject.Title;
+            notification.Message = transferObject.Subject;
+            notification.IsRead = false;
+            notification.Url = $"/Business/Form/{moduleName}_Form/{transferObject.Id}";
+            notification.Resource = $"{transferObject.Resource}";
+            notification.System = "WM";
+            notification.RecordGuid = transferObject.Guid;
+            notification.ReceivedBy = transferObject.ReceivedBy;
+            notification.Type = notificationTypeId;
+            return notification;
         }
         public static async Task CloneAction(
     IBaseRepository<CommentLog> _quotationCommentLogRepository,

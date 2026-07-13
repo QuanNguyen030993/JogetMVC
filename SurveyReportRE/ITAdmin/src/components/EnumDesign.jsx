@@ -45,6 +45,11 @@ export default function EnumDesign() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  const getTableName = (sysTableId) => {
+    const table = tables.find((t) => t.id === sysTableId || t.Id === sysTableId);
+    return table ? (table.name || table.Name || table.caption || table.Caption || sysTableId) : sysTableId;
+  };
+
   // Group EnumData by name
   const dictionaryGroups = React.useMemo(() => {
     const map = {};

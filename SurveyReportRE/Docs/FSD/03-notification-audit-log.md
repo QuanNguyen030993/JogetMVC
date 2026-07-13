@@ -6,11 +6,17 @@ Notification sử dụng enum `NotificationType`. UI filter so sánh bằng enum
 
 | Type | Ý nghĩa | Badge |
 |---|---|---|
+| Default | Thông báo mặc định/legacy | DEF |
 | Assign | Giao việc cho người dùng/department | ASG |
-| Route | Workflow chuyển bước | RTE |
+| System | Thông báo hệ thống | SYS |
+| PolicyIssuance | Sự kiện của Policy Issuance | PI |
 | Quotation | Sự kiện của Quotation | QT |
-| Policy Issuance | Sự kiện của Policy Issuance | PI |
-| Default | Thông báo hệ thống/legacy | SYS |
+| Accept | Người dùng tiếp nhận công việc | ACC |
+| Success | Workflow/action hoàn tất thành công | OK |
+| Fail | Workflow/action thất bại hoặc bị từ chối | FAIL |
+| Initial | Khởi tạo request/workflow | INI |
+| Reminder | Nhắc việc | REM |
+| Alert | Cảnh báo | ALT |
 
 Backward compatibility vẫn nhận diện `[QT]`, `[PI]` hoặc tên type cũ khi record chưa có Type ID.
 
@@ -18,7 +24,7 @@ Backward compatibility vẫn nhận diện `[QT]`, `[PI]` hoặc tên type cũ k
 
 Người dùng có thể:
 
-- Lọc All, Unread, Assign, Route, Quotation, Policy Issuance.
+- Lọc All, Unread và toàn bộ 11 `NotificationType`.
 - Search theo title/message.
 - Mark read hoặc Mark all as read.
 - Open record đích.
@@ -91,4 +97,3 @@ Viewer hỗ trợ:
 | Comment content | `SectionCommentNote.Content` |
 | Comment record | `SectionCommentNote.RecordGuid` |
 | Department | `SectionCommentNote.CurrentDepartment` |
-

@@ -267,6 +267,9 @@ public class QuotationController : BaseControllerApi<Quotation>
 
         (PICAttributes PICMain, PICSysHandleAttributes PICLeader, PICAttributes PICHOD) picS = ControllerUtil.PersonInChargeHandle(quotation, null, _businessConfig, siteEnums);
         var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
+        long? quotationNotificationTypeId = await NotificationTypeResolver.ResolveIdAsync(
+            _enumDataRepository,
+            NotificationTypeKeys.Quotation);
         string requestPIC = picS.PICMain.GetType().GetProperty("FO")?.GetValue(picS.PICMain ?? new PICAttributes()).ToString() ?? "";
         Employee rqEmployee = new Employee();
         Users rqFlowUser = await _usersRepository.GetSingleObject(s => s.username == requestPIC);
@@ -325,6 +328,7 @@ public class QuotationController : BaseControllerApi<Quotation>
                                 Notification.Resource = $"{memberName}_{stepsWorkflow?.ToNodeId}";
                                 Notification.System = "WM";
                                 Notification.RecordGuid = quotation.Guid;
+                                Notification.Type = quotationNotificationTypeId;
 
                                 Notification.ReceivedBy = memberName;
                                 notification.Notification = Notification;
@@ -333,7 +337,7 @@ public class QuotationController : BaseControllerApi<Quotation>
                                 PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
                                 string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
                                 Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
-                                NotificationController.Notify(notification);
+                                await NotificationController.Notify(notification);
 
                             }
 
@@ -772,10 +776,14 @@ public class QuotationController : BaseControllerApi<Quotation>
                 Guid = quotation.Guid,
                 ReceivedBy = accountName,
                 Id = quotation.Id,
-                Code = quotation.QuotationCode
+                Code = quotation.QuotationCode,
+                ModuleName = nameof(Quotation)
             };
 
-            Notification notification = await ControllerUtil.Notify(transferObject);
+            long? assignNotificationTypeId = await NotificationTypeResolver.ResolveIdAsync(
+                _enumDataRepository,
+                NotificationTypeKeys.Assign);
+            Notification notification = await ControllerUtil.Notify(transferObject, assignNotificationTypeId);
 
 
 
@@ -844,6 +852,9 @@ public class QuotationController : BaseControllerApi<Quotation>
 
             //loop multiple account tai day
             var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
+            long? initialNotificationTypeId = await NotificationTypeResolver.ResolveIdAsync(
+                _enumDataRepository,
+                NotificationTypeKeys.Initial);
             string picsStr = picS.PICMain.GetType().GetProperty(stepsWorkflow?.ToNodeId ?? "")?.GetValue(picS.PICMain ?? new PICAttributes()).ToString() ?? "";
             foreach (var memberName in picsStr.Split(","))
             {
@@ -855,6 +866,7 @@ public class QuotationController : BaseControllerApi<Quotation>
                 Notification.Resource = $"{memberName}_{stepsWorkflow.ToNodeId}";
                 Notification.System = "WM";
                 Notification.RecordGuid = quotation.Guid;
+                Notification.Type = initialNotificationTypeId;
 
                 Notification.ReceivedBy = memberName;
                 notification.Notification = Notification;
@@ -863,7 +875,7 @@ public class QuotationController : BaseControllerApi<Quotation>
                 PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
                 string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
                 Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
-                NotificationController.Notify(notification);
+                await NotificationController.Notify(notification);
             }
         }
     }

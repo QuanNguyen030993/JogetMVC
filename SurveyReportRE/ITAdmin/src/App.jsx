@@ -188,6 +188,7 @@ function App() {
     { id: 'serilog', label: 'Nhật ký hệ thống (Serilogs)' },
     { id: 'systable', label: 'Bảng hệ thống' } ,
     { id: 'datagridfielddesigner', label: 'Thiết kế trường DataGrid' },
+    { id: 'formfielddesigner', label: 'Thiết kế trường Form (View)' },
     { id: 'datagridconfig-grid', label: 'Bảng DataGrid Config (CustomGrid)' },
     { id: 'menudesigner', label: 'Thiết kế Menu' },
     { id: 'menu-grid', label: 'Bảng Menu (CustomGrid)' },
@@ -255,16 +256,26 @@ function App() {
         return <SysTable />;
       case 'datagridfielddesigner':
         return <DataGridFieldDesigner />;
+      case 'formfielddesigner':
+        return (
+          <div style={{ width: "100%", height: "calc(100vh - 120px)", overflow: "hidden", background: "white", borderRadius: "12px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}>
+            <iframe 
+              src={`${API_BASE_URL}/Config/FormFieldDesign`} 
+              style={{ width: "100%", height: "100%", border: "none" }} 
+              title="Form Field Designer"
+            />
+          </div>
+        );
       case 'datagridconfig-grid':
-        return <CustomGrid modelName="DataGridConfig" apiBaseUrl={API_BASE_URL} editMode="batch" />;
+        return <CustomGrid modelName="DataGridConfig" gridType="System" apiBaseUrl={API_BASE_URL} editMode="batch" />;
       case 'menudesigner':
         return <MenuDesigner />;
       case 'menu-grid':
-        return <CustomGrid modelName="Menu" apiBaseUrl={API_BASE_URL} editMode="batch" />;
+        return <CustomGrid modelName="Menu" gridType="System" apiBaseUrl={API_BASE_URL} editMode="batch" />;
       case 'enum-design':
         return <EnumDesign />;
       case 'enumdata-grid':
-        return <CustomGrid modelName="EnumData" apiBaseUrl={API_BASE_URL} editMode="batch" />;
+        return <CustomGrid modelName="EnumData" gridType="System" apiBaseUrl={API_BASE_URL} editMode="batch" />;
       case 'sladesigner':
         return <SlaDesign />;
       default:
