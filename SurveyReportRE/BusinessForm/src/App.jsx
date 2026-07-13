@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState,useMemo  } from 'react';
 import { API_BASE_URL } from './config';
 
-import ChartPanel from './components/ChartPanel';
+import WorkloadChart from './components/WorkloadChart';
 // import MailTemplateDesigner from './components/MailTemplateDesigner';
 // import MailQueue from './components/MailQueue';
 import Flow from './components/Flow';
@@ -141,7 +141,7 @@ import "./fonts/css/all.min.css";
 //         </select>
 //       </div>
 
-//       <ChartPanel data={filteredData} memberData={memberData}/>
+//       <WorkloadChart data={filteredData} memberData={memberData}/>
 //     </div>
 //   );
 // }
@@ -158,7 +158,7 @@ function App() {
     >
       <h1>Quotation / Policy Dashboard</h1>
 
-      <ChartPanel data={data} />
+      <WorkloadChart data={data} />
     </div>
   );
 }

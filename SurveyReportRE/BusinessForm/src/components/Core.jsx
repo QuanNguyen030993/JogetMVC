@@ -9,6 +9,7 @@
 // import DropDownBox from "../components/DropDownBox.jsx";
 // import CustomForm from "../components/CustomForm.jsx";
 import Flow from "../components/Flow.jsx"
+import WorkloadChart from "../components/WorkloadChart.jsx";
 import React from "react";
 
 import { createRoot } from "react-dom/client";
@@ -178,6 +179,9 @@ function createJQueryPlugin(pluginName, componentName) {
 }
 
 createJQueryPlugin("flow", "Flow");
+createJQueryPlugin("workflowchart", "WorkloadChart");
+createJQueryPlugin("workloadchart", "WorkloadChart");
 
 register("Flow", Flow);
-export default { DateBox, HtmlEditor, CustomGrid, CommentEditor, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm,  };
+register("WorkloadChart", WorkloadChart);
+export default { DateBox, HtmlEditor, CustomGrid, CommentEditor, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm, WorkloadChart };

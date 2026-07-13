@@ -291,7 +291,7 @@ function StatusChart({
 
 }
 
-export default function ChartPanel({
+export default function WorkloadChart({
 
   data = []
 

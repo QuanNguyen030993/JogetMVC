@@ -7,13 +7,14 @@
     "dev": "vite",
     "build": "vite build && node move-to-wwwroot.js",
     "preview": "vite preview",
-     "build:lib": "vite build --config vite.config.lib.js"
+    "build:lib": "vite build --config vite.config.lib.js"
   },
   "dependencies": {
     "@xyflow/react": "^12.3.3",
     "grapejs": "^2.1.2",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "recharts": "^3.9.2"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
