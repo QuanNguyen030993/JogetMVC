@@ -94,6 +94,9 @@
 
     <script>
         var shouldShow = false;
+        var lineText = "";
+        var productText = "";
+        var policyNoText = "";
            var guid= crypto.randomUUID();
                 var sectionId =  "qt-body_@(dept)_";
                          var that = new Object();
@@ -361,6 +364,9 @@
                             that.formInstance = that.dxForm("instance");
                             that.formInstance.updateData("lineCode", e.value.code);
                             that.formInstance.updateData("lineName", e.value.value);
+                                // lineText  = `${e.value.value} (${e.value.code})`;
+                                // that.formInstance.updateData("subject", lineText);
+                            
                         } }
                     },
                     { dataField: "lineName", editorType: "dxTextBox", visible: false},
@@ -380,6 +386,8 @@
                                 that.formInstance = that.dxForm("instance");
                                 that.formInstance.updateData("productName", e.value?.value || e.value );
                                 that.formInstance.updateData("productCode", e.value?.code  || e.value);
+                                productText = `${e.value.value} (${e.value.code})`;
+                                that.formInstance.updateData("subject", `${productText} - ${policyNoText}`);
                             }
                     }
                     },
@@ -415,7 +423,18 @@
                                     }
                                 },
                         { dataField: "dueDate", editorType: "dxDateBox", editorOptions: { displayFormat: "dd-MM-yyyy" } },
-                        { dataField: "policyNo",name: "policyNo", visible: shouldShow ,label: { text: "Policy No" }, editorType: "dxTextBox" },
+                        { dataField: "policyNo",name: "policyNo", visible: shouldShow ,label: { text: "Policy No" }, editorType: "dxTextBox"
+                        , editorOptions: {
+                            onValueChanged: function (e){
+                                debugger
+                            that.formInstance = that.dxForm("instance"); 
+                            
+                            policyNoText = e.value;
+                            that.formInstance.updateData("subject", `${productText} - ${policyNoText}`);
+                            }
+                        }
+                        
+                        },
                         { dataField: "businessChannel", isRequired: true, editorType: "dxSelectBox",
                             editorOptions: { items: _enums.BusinessChannel,
                                 keyExpr: "id",
@@ -423,6 +442,7 @@
                                     onValueChanged(e) {
                                 that.formInstance = that.dxForm("instance");
                                 that.formInstance.updateData("businessChannelName", e.value?.value || e.value);
+
                                     }
                             } },
                        { dataField: "reinsuranceId", isRequired: true, label: { text: "Reinsurance" }, editorType: "dxSelectBox", editorOptions: { keyExpr: "id", displayExpr: "value", items: _enums.reInsuranceType } },
