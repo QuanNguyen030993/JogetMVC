@@ -1,0 +1,283 @@
+[
+  {
+    "department": "FO",
+    "member": "An",
+    "type": "Quotation",
+    "status": "Pending",
+    "count": 5
+  },
+  {
+    "department": "FO",
+    "member": "An",
+    "type": "Quotation",
+    "status": "Completed",
+    "count": 18
+  },
+  {
+    "department": "FO",
+    "member": "An",
+    "type": "Policy Issuance",
+    "status": "Completed",
+    "count": 8
+  },
+
+  {
+    "department": "FO",
+    "member": "Binh",
+    "type": "Quotation",
+    "status": "Completed",
+    "count": 15
+  },
+  {
+    "department": "FO",
+    "member": "Binh",
+    "type": "Policy Issuance",
+    "status": "Pending",
+    "count": 6
+  },
+
+  {
+    "department": "FO",
+    "member": "Cuong",
+    "type": "Quotation",
+    "status": "Rejected",
+    "count": 3
+  },
+  {
+    "department": "FO",
+    "member": "Cuong",
+    "type": "Policy Issuance",
+    "status": "Completed",
+    "count": 7
+  },
+
+  {
+    "department": "FO",
+    "member": "Dung",
+    "type": "Quotation",
+    "status": "Pending",
+    "count": 4
+  },
+  {
+    "department": "FO",
+    "member": "Dung",
+    "type": "Policy Issuance",
+    "status": "Completed",
+    "count": 9
+  },
+
+
+
+  {
+    "department": "TS",
+    "member": "Hieu",
+    "type": "Quotation",
+    "status": "Pending",
+    "count": 10
+  },
+  {
+    "department": "TS",
+    "member": "Hieu",
+    "type": "Quotation",
+    "status": "Completed",
+    "count": 20
+  },
+  {
+    "department": "TS",
+    "member": "Hieu",
+    "type": "Policy Issuance",
+    "status": "Completed",
+    "count": 11
+  },
+
+  {
+    "department": "TS",
+    "member": "Khanh",
+    "type": "Quotation",
+    "status": "Completed",
+    "count": 17
+  },
+  {
+    "department": "TS",
+    "member": "Khanh",
+    "type": "Policy Issuance",
+    "status": "Pending",
+    "count": 5
+  },
+
+  {
+    "department": "TS",
+    "member": "Linh",
+    "type": "Quotation",
+    "status": "Rejected",
+    "count": 2
+  },
+  {
+    "department": "TS",
+    "member": "Linh",
+    "type": "Policy Issuance",
+    "status": "Completed",
+    "count": 12
+  },
+
+  {
+    "department": "TS",
+    "member": "Minh",
+    "type": "Quotation",
+    "status": "Completed",
+    "count": 25
+  },
+  {
+    "department": "TS",
+    "member": "Minh",
+    "type": "Policy Issuance",
+    "status": "Completed",
+    "count": 14
+  },
+
+
+
+  {
+    "department": "UW",
+    "member": "Nam",
+    "type": "Quotation",
+    "status": "Pending",
+    "count": 15
+  },
+  {
+    "department": "UW",
+    "member": "Nam",
+    "type": "Quotation",
+    "status": "Completed",
+    "count": 42
+  },
+  {
+    "department": "UW",
+    "member": "Nam",
+    "type": "Policy Issuance",
+    "status": "Completed",
+    "count": 19
+  },
+
+  {
+    "department": "UW",
+    "member": "Phuong",
+    "type": "Quotation",
+    "status": "Completed",
+    "count": 35
+  },
+  {
+    "department": "UW",
+    "member": "Phuong",
+    "type": "Policy Issuance",
+    "status": "Completed",
+    "count": 17
+  },
+
+  {
+    "department": "UW",
+    "member": "Quang",
+    "type": "Quotation",
+    "status": "Pending",
+    "count": 12
+  },
+  {
+    "department": "UW",
+    "member": "Quang",
+    "type": "Policy Issuance",
+    "status": "Pending",
+    "count": 8
+  },
+
+  {
+    "department": "UW",
+    "member": "Trang",
+    "type": "Quotation",
+    "status": "Completed",
+    "count": 28
+  },
+  {
+    "department": "UW",
+    "member": "Trang",
+    "type": "Policy Issuance",
+    "status": "Rejected",
+    "count": 4
+  },
+
+  {
+    "department": "UW",
+    "member": "Tuan",
+    "type": "Quotation",
+    "status": "Completed",
+    "count": 31
+  },
+  {
+    "department": "UW",
+    "member": "Tuan",
+    "type": "Policy Issuance",
+    "status": "Completed",
+    "count": 15
+  },
+
+
+
+  {
+    "department": "PM",
+    "member": "Van",
+    "type": "Quotation",
+    "status": "Completed",
+    "count": 14
+  },
+  {
+    "department": "PM",
+    "member": "Van",
+    "type": "Policy Issuance",
+    "status": "Completed",
+    "count": 8
+  },
+
+  {
+    "department": "PM",
+    "member": "Yen",
+    "type": "Quotation",
+    "status": "Pending",
+    "count": 6
+  },
+  {
+    "department": "PM",
+    "member": "Yen",
+    "type": "Policy Issuance",
+    "status": "Completed",
+    "count": 5
+  },
+
+  {
+    "department": "PM",
+    "member": "Giang",
+    "type": "Quotation",
+    "status": "Rejected",
+    "count": 2
+  },
+  {
+    "department": "PM",
+    "member": "Giang",
+    "type": "Policy Issuance",
+    "status": "Completed",
+    "count": 7
+  },
+
+  {
+    "department": "PM",
+    "member": "Long",
+    "type": "Quotation",
+    "status": "Completed",
+    "count": 11
+  },
+  {
+    "department": "PM",
+    "member": "Long",
+    "type": "Policy Issuance",
+    "status": "Pending",
+    "count": 4
+  }
+]
