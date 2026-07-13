@@ -29,6 +29,7 @@
                 type: 'GET'
             }).done(function (data) {
                 try {
+                    debugger
                     addTab(code, caption, data);
                     $(`#${code}_content_wrapper`)
                         .attr("data-source-url", url)

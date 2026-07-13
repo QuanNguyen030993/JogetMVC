@@ -12,6 +12,7 @@ using ERPCore.Models.Request;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using ERPCore.Models.Migration.Business.HumanResource;
+using Newtonsoft.Json.Linq;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -21,6 +22,7 @@ public class MenuController : BaseControllerApi<Menu>
     private readonly IBaseRepository<Users> _usersRepository;
     private readonly IBaseRepository<UserRoles> _userRolesRepository;
     private readonly IBaseRepository<UsersSession> _userSessionRepository;
+    private readonly IBaseRepository<Employee> _employeeRepository;
     private readonly IConfiguration _configuration;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
@@ -48,6 +50,7 @@ public class MenuController : BaseControllerApi<Menu>
         _userRolesRepository = new BaseRepository<UserRoles>(_configuration, _httpContextAccessor);
         _usersRepository = new BaseRepository<Users>(_configuration, _httpContextAccessor);
         _userSessionRepository = new BaseRepository<UsersSession>(_configuration, _httpContextAccessor);
+        _employeeRepository = new BaseRepository<Employee>(_configuration, _httpContextAccessor);
         try
         {
         Util.GetQueryLog(_BaseRepository._connectionString);
@@ -64,14 +67,37 @@ public class MenuController : BaseControllerApi<Menu>
         if (string.IsNullOrEmpty(allowedRoles)) return list;
         
         string trimmed = allowedRoles.Trim();
-        if (trimmed.StartsWith("[") && trimmed.EndsWith("]"))
+        if ((trimmed.StartsWith("[") && trimmed.EndsWith("]")) || (trimmed.StartsWith("{") && trimmed.EndsWith("}")))
         {
             try
             {
-                var roles = JsonConvert.DeserializeObject<List<string>>(trimmed);
-                if (roles != null)
+                if (trimmed.StartsWith("{"))
                 {
-                    list.AddRange(roles.Select(r => r.Trim().ToUpper()));
+                    var dict = JsonConvert.DeserializeObject<Dictionary<string, object>>(trimmed);
+                    if (dict != null && dict.TryGetValue("permission", out var permVal) && permVal != null)
+                    {
+                        string permStr = permVal.ToString().Trim();
+                        if (permStr.StartsWith("[") && permStr.EndsWith("]"))
+                        {
+                            var roles = JsonConvert.DeserializeObject<List<string>>(permStr);
+                            if (roles != null)
+                            {
+                                list.AddRange(roles.Select(r => r.Trim().ToUpper()));
+                                return list;
+                            }
+                        }
+                        else
+                        {
+                            list.AddRange(permStr.Split(',').Select(r => r.Trim().ToUpper()));
+                            return list;
+                        }
+                    }
+                }
+
+                var arrayRoles = JsonConvert.DeserializeObject<List<string>>(trimmed);
+                if (arrayRoles != null)
+                {
+                    list.AddRange(arrayRoles.Select(r => r.Trim().ToUpper()));
                     return list;
                 }
             }
@@ -81,6 +107,98 @@ public class MenuController : BaseControllerApi<Menu>
         // Fallback to comma separation
         list.AddRange(trimmed.Split(',').Select(r => r.Trim().ToUpper()));
         return list;
+    }
+
+    private static bool TryParsePermissionGroups(string pageSystem, out HashSet<string> permissionGroups)
+    {
+        permissionGroups = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (string.IsNullOrWhiteSpace(pageSystem)) return false;
+
+        try
+        {
+            var pageSystemObject = JObject.Parse(pageSystem);
+            var permissionProperty = pageSystemObject.Properties().FirstOrDefault(property =>
+                string.Equals(property.Name, "permission", StringComparison.OrdinalIgnoreCase));
+
+            if (permissionProperty == null) return false;
+
+            var permissionToken = permissionProperty.Value;
+            if (permissionToken.Type == JTokenType.Array)
+            {
+                foreach (var group in permissionToken.Values<string>())
+                {
+                    AddPermissionGroups(permissionGroups, group);
+                }
+            }
+            else
+            {
+                AddPermissionGroups(permissionGroups, permissionToken.ToString());
+            }
+
+            return true;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    private static void AddPermissionGroups(HashSet<string> permissionGroups, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return;
+
+        var trimmedValue = value.Trim();
+        if (trimmedValue.StartsWith("[") && trimmedValue.EndsWith("]"))
+        {
+            try
+            {
+                var groups = JsonConvert.DeserializeObject<List<string>>(trimmedValue);
+                if (groups != null)
+                {
+                    foreach (var group in groups)
+                    {
+                        AddPermissionGroups(permissionGroups, group);
+                    }
+
+                    return;
+                }
+            }
+            catch (JsonException)
+            {
+                // Continue with the delimited-string parser below.
+            }
+        }
+
+        foreach (var group in trimmedValue.Split(
+                     new[] { ',', ';', '|' },
+                     StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            permissionGroups.Add(group);
+        }
+    }
+
+    private static bool IsSlaMenu(Menu menu)
+    {
+        return string.Equals(menu.Name?.Trim(), "SLA", StringComparison.OrdinalIgnoreCase)
+               || (!string.IsNullOrWhiteSpace(menu.ActionUri)
+                   && menu.ActionUri.Contains("/Config/SLA", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool CanViewSlaMenu(Menu menu, Employee? employee)
+    {
+        if (!IsSlaMenu(menu) || !TryParsePermissionGroups(menu.PageSystem, out var permissionGroups))
+        {
+            return true;
+        }
+
+        var employeeRole = employee?.SystemRolesFK?.RoleName?.Trim();
+        if (string.Equals(employeeRole, "IT", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var employeeGroup = employee?.Department?.Trim();
+        return !string.IsNullOrWhiteSpace(employeeGroup) && permissionGroups.Contains(employeeGroup);
     }
 
     [HttpGet]
@@ -137,6 +255,10 @@ public class MenuController : BaseControllerApi<Menu>
             if (users.Any(a => a.username == loginAccount))
             {
                 Users user = users.First(a => a.username == loginAccount);
+                Employee? employee = await _employeeRepository.GetSingleObjectFullInclude(
+                    e => e.AccountName == loginAccount,
+                    null,
+                    e => e.SystemRolesFK);
                 List<UserRoles> userRoles = new List<UserRoles>();  
                 userRoles = await _userRolesRepository.GetAll();
                 userRoles = userRoles.Where(w => w.UserId == user.Id).ToList();
@@ -145,6 +267,21 @@ public class MenuController : BaseControllerApi<Menu>
                 IBaseRepository<Menu> _menuRepository = new BaseRepository<Menu>(_configuration, _httpContextAccessor);
                 menus = await _menuRepository.GetAllActive();
                 
+                var permittedMenuIds = userRoles.Select(userRoleItem => userRoleItem.MenuId).ToHashSet();
+                menus = menus.Where(menu =>
+                {
+                    bool hasSlaPermission = IsSlaMenu(menu)
+                                            && TryParsePermissionGroups(menu.PageSystem, out _);
+                    bool hasConfiguredPermission = permittedMenuIds.Contains(menu.Id)
+                                                   || (hasSlaPermission
+                                                       ? CanViewSlaMenu(menu, employee)
+                                                       : (!string.IsNullOrEmpty(menu.PageSystem)
+                                                          && ParseAllowedRoles(menu.PageSystem)
+                                                              .Contains(userRole.Trim().ToUpper())));
+
+                    return hasConfiguredPermission && CanViewSlaMenu(menu, employee);
+                }).ToList();
+
                 result = menus.OrderBy(x => x.ParentId).Select(x => new MenuHierarchy
                 {
                     Id = x.Id,
@@ -157,13 +294,7 @@ public class MenuController : BaseControllerApi<Menu>
                     SortOrder = x.SortOrder.GetValueOrDefault(),
                     Icon = x.Icon,
                     PageSystem = x.PageSystem
-                }).Where(w => 
-                    // 1. Explicitly configured in UserRoles table
-                    (userRoles.Count > 0 && userRoles.Select(s => s.MenuId).Contains(w.Id)) ||
-                    // 2. Or user's role is in AllowedRoles list stored in PageSystem JSON
-                    (!string.IsNullOrEmpty(w.PageSystem) && 
-                     ParseAllowedRoles(w.PageSystem).Contains(userRole.Trim().ToUpper()))
-                ).ToList();
+                }).ToList();
             }
         }
 

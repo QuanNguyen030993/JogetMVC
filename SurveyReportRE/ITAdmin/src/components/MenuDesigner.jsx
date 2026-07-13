@@ -393,6 +393,13 @@ export default function MenuDesigner() {
                   const parsed = JSON.parse(selected.PageSystem || "[]");
                   if (Array.isArray(parsed)) {
                     tags.push(...parsed);
+                  } else if (parsed && parsed.permission) {
+                    const permVal = parsed.permission;
+                    if (Array.isArray(permVal)) {
+                      tags.push(...permVal);
+                    } else if (typeof permVal === 'string') {
+                      tags.push(...permVal.split(",").filter(Boolean));
+                    }
                   } else if (selected.PageSystem) {
                     tags.push(...selected.PageSystem.split(",").filter(Boolean));
                   }
@@ -406,13 +413,13 @@ export default function MenuDesigner() {
                   const cleaned = val.trim();
                   if (cleaned && !tags.includes(cleaned)) {
                     const updated = [...tags, cleaned];
-                    updateMenu("PageSystem", JSON.stringify(updated));
+                    updateMenu("PageSystem", JSON.stringify({ permission: updated.join(",") }));
                   }
                 };
 
                 const removeTag = (indexToRemove) => {
                   const updated = tags.filter((_, idx) => idx !== indexToRemove);
-                  updateMenu("PageSystem", JSON.stringify(updated));
+                  updateMenu("PageSystem", JSON.stringify({ permission: updated.join(",") }));
                 };
 
                 return (

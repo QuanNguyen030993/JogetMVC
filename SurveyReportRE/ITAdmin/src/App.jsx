@@ -92,6 +92,19 @@ function App() {
       setDisk(d[0]?.availableSpace||0)
     );
 
+    fetch(`${API_BASE_URL}/api/UsersSession/ExecuteCustomQuery`,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify("3")
+    })
+    .then(r=>r.json())
+    .then(d=>
+      setTicketData(d || [])
+    )
+    .catch(err=>console.error("Fetch ticketData failed", err));
+
     fetch(`${API_BASE_URL}/api/CommentLog/GetSerilogHourlyToday`)
       .then(response => {
         if (!response.ok) throw new Error(`Serilog hourly count failed (${response.status})`);
