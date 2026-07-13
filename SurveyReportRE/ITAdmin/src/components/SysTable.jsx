@@ -9,8 +9,8 @@ const safeParseBinaryJson = (val) => {
       return JSON.parse(val);
     } catch (e) {
       try {
-        const decoded = decodeURIComponent(escape(atob(val)));
-        return JSON.parse(decoded);
+        //const decoded = decodeURIComponent(escape(atob(val)));
+        return JSON.parse(val);
       } catch (e2) {
         console.error("Failed to parse binary JSON:", e2);
         return null;
@@ -24,7 +24,8 @@ const safeStringifyBinaryJson = (obj) => {
   if (!obj) return "";
   try {
     const jsonStr = JSON.stringify(obj);
-    return btoa(unescape(encodeURIComponent(jsonStr)));
+    // return btoa(unescape(encodeURIComponent(jsonStr)));
+    return jsonStr;
   } catch (e) {
     console.error("Failed to stringify binary JSON:", e);
     return "";

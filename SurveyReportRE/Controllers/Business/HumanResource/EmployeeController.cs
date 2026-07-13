@@ -30,6 +30,8 @@ public class EmployeeController : BaseControllerApi<Employee>
     {
         var currentLogin = (User?.Identity?.Name ?? "").Trim();
         EnumData enumData = await _enumDataRepository.GetSingleObject(s => s.Code == request.branchCode);
+        if (enumData != null)
+        {
         List<Employee> data = await _BaseRepository.GetListObject(l => l.Department == request.group && l.AreaId == enumData.Id);
 
         if (request.excludeCurrent ?? false)
@@ -45,6 +47,14 @@ public class EmployeeController : BaseControllerApi<Employee>
             success = true,
             data = data
         });
+        }
+        return Ok(
+            new
+            {
+                success = false,
+                data = new Employee()
+            }
+            );
     }
     [HttpGet("{id}")]
     public async Task<IActionResult> EmployeeLookup(string id)

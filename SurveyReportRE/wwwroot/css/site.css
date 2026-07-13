@@ -4197,23 +4197,6 @@ text-overflow: ellipsis;
    Visual-only overrides: grid behavior, dimensions and data options remain
    controlled by each dxDataGrid instance.
    ========================================================================== */
-:root {
-    --dx-grid-surface: #ffffff;
-    --dx-grid-header: #f5f7fa;
-    --dx-grid-header-strong: #e9eef5;
-    --dx-grid-header-text: #263548;
-    --dx-grid-filter: #fbfcfe;
-    --dx-grid-filter-border: #d7dee8;
-    --dx-grid-border: #e2e8f0;
-    --dx-grid-border-soft: #edf2f7;
-    --dx-grid-text: #334155;
-    --dx-grid-muted: #64748b;
-    --dx-grid-primary: #2563eb;
-    --dx-grid-primary-soft: #eff6ff;
-    --dx-grid-hover: #f8fbff;
-    --dx-grid-selected: #e8f1ff;
-    --dx-grid-radius: 10px;
-}
 
 body .dx-datagrid {
     overflow: hidden;

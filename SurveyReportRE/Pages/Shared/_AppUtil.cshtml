@@ -726,6 +726,11 @@
                         onClick() {
                             var gridInstance = $(`#dataGrid_Quotation_Request`).dxDataGrid("instance");
                             var selectedItems = gridInstance.getSelectedRowsData();
+                                 makeMiniLoadingPanel("Initiate Policy Issuance", "Please wait...");
+                                    var result = new Object();
+                                        result.payload = new Object();
+                                        result.payload.progressvalue = 25;
+                                            renderBrowserLoading(result);
                             var policyIssuances = [];
                              $.each(selectedItems, function (itemIndex, item){
                                 var policyIssuance = new Object();
@@ -755,7 +760,8 @@
 
                                   var formData = new FormData();
                                         formData.append("PolicyIssuanceData",JSON.stringify(policyIssuances));
-
+                            result.payload.progressvalue = 50;
+                            renderBrowserLoading(result);
 
                                  $.ajax({
                                     url: "/api/PolicyIssuance/CreatePolicyIssuance",
@@ -765,13 +771,11 @@
                                     contentType: false,
                                     success: function (res) {
                                         DevExpress.ui.notify("PolicyIssuance created!", "success", 1200);
-
                                     },
                                     error: function (xhr) {
-                                         // result.payload.progressvalue = 100;
-                                         // renderBrowserLoading(result);
-                                         appNotifyError(`${xhr.responseJSON?.detail || xhr.statusText} <br/>${xhr.responseJSON?.message || xhr.responseText}`);
-                                         // appNotifyError(`${xhr.responseJSON?.detail || xhr.statusText} <br/>${xhr.responseJSON?.message || xhr.responseText}`);
+                                       result.payload.progressvalue = 100;
+                                     renderBrowserLoading(result);
+                                     appNotifyError(`${xhr.responseJSON?.detail || xhr.statusText} <br/>${xhr.responseJSON?.message || xhr.responseText}`);
                                     }
                                 });
 
@@ -1656,7 +1660,7 @@
                 const hasTZ = /[zZ]|[+-]\d{2}:\d{2}$/.test(input);
                 if (hasTZ)
                 {
-                    d = parseToGMT7(hasTZ ? input : input + "Z",1 * _gmtZone);//  new Date(hasTZ ? input : input + "Z");
+                            d = parseToGMT7(input,-1 * _gmtZone);//  new Date(hasTZ ? input : input + "Z");
                 }
                     const hasPlus = /[+-]\d{2}:\d{2}$/.test(input);
                 if (hasPlus)
@@ -3446,8 +3450,21 @@
             const id = x.id || x.Id || x.attachmentId;
             const author = x.author || x.author || x.author;
             const date = x.date || x.date || x.date;
+                  const $wrapper = $("<div>")
+                        .addClass("att-item-wrapper")
+                        .css({
+                            display: "flex",
+                            flexDirection: "left",
+                            gap: "6px",
+                            width: "100%",
+                            // maxWidth: "720px",
+                            opacity: 0,
+                            transform: "translateY(8px)",
+                            transition: "opacity .18s ease, transform .18s ease"
+                        });
             const $item = $("<div>")
                 .addClass("att-item");
+                $item.appendTo($wrapper);   
             
             if (!(options && options.showFillListSelect)) {
                 $item.css({
@@ -3479,9 +3496,9 @@
 
                 if (x.recordGuid)
             $("<div>").dxButton({
-                icon: "copy",
+                icon: "email",
                 hint: "Copy file",
-                stylingMode: "text",
+                    stylingMode: "contained",
                 onClick: async function (ev) {
                     ev.event?.stopPropagation?.();
                     await copyAttachmentToClipboard(x, downloadUrl, fileName);
@@ -3544,24 +3561,12 @@
 
             var $result = $item;
             if (options && options.showFillListSelect) {
-                const $wrapper = $("<div>")
-                    .addClass("att-item-wrapper")
-                    .css({ 
-                        display: "flex", 
-                        flexDirection: "column", 
-                        gap: "6px", 
-                        width: "100%", 
-                        maxWidth: "720px",
-                        opacity: 0,
-                        transform: "translateY(8px)",
-                        transition: "opacity .18s ease, transform .18s ease"
-                    });
-                
-                $item.appendTo($wrapper);
+              
+                    $item.appendTo($wrapper);
                 
                 const $selectBoxWrapper = $("<div>")
                     .addClass("att-item-selectbox")
-                    .css({ width: "100%", marginBottom: "15px" })
+                    .css({ width: "100%" })
                     .appendTo($wrapper);
                 
                 var currentAttrs = {};
@@ -3572,32 +3577,7 @@
                 var currentFieldName = currentAttrs.FieldName || "default";
                 
                 $selectBoxWrapper.dxSelectBox({
-                    items: [
-                        { id: "default", text: "Default / Quotation" },
-                        { id: "confirmedQuotationFlag", text: "Confirmed Quotation (must for FCI, CCI)" },
-                        { id: "emailMktClient", text: "Email MKT-Client" },
-                        { id: "riClosings", text: "RI Closings" },
-                        { id: "factoryOperationYears", text: "Operation year of Factories (*)" },
-                        { id: "newReplacementValue", text: "New replacement value / reinstatement value (*)" },
-                        { id: "holdCoverType", text: "Hold Cover / Cover Note" },
-                        { id: "resultAttachment", text: "RES (*)" },
-                        { id: "declarationText", text: "Declaration" },
-                        { id: "machineryList", text: "List of machineries including the depreciated values for each of item (*)" },
-                        { id: "isBodApproved", text: "BoDs/UW's approved" },
-                        { id: "uRFAttachment", text: "URF" },
-                        { id: "emailInformRi", text: "Email inform RI for Endorsement" },
-                        { id: "riScheme", text: "RI Scheme (New/RN)" },
-                        { id: "proposalForm", text: "Proposal form (must for CCI)" },
-                        { id: "propertyType", text: "Type of Property list (must for FCI)" },
-                        { id: "sumInsuredBreakdown", text: "Breakdown SI for each location (must for FCI)" },
-                        { id: "premiumBreakdown", text: "Premium Breakdown" },
-                        { id: "chassisEngineNumber", text: "Chassis - Engine No. (*)" },
-                        { id: "finalPremium", text: "Final Premium in Motor system = Premium in received final Quotation (*)" },
-                        { id: "isKycChecked", text: "KYC Checked" },
-                        { id: "others", text: "Others (Specify)" },
-                        { id: "isGlobalCover", text: "Global" },
-                        { id: "ichigenka", text: "Ichigenka" }
-                    ],
+                        items: _enums.TSCheckList,
                     valueExpr: "id",
                     displayExpr: "text",
                     value: currentFieldName,
@@ -3637,6 +3617,7 @@
                 });
                 
                 $result = $wrapper;
+
             }
             return $result;
         }
@@ -4264,8 +4245,8 @@
                                         ? tryParseJSON(object.formItems.turnAroundTimeAttributes, "Parse Accept TAT Problem" )
                                     : {};
 
-                                var currentDate = new Date().toISOString();
-
+                                var currentDate = new Date();
+                                    console.log(currentDate);
 
                                         if (! object.formItems.turnAroundTimeAttributes[object.dept]) {
                                              object.formItems.turnAroundTimeAttributes[object.dept] = {
@@ -4328,25 +4309,6 @@
 
 
                           //TAT handle if need
-                                    //      object.formItems.turnAroundTimeAttributes = object.formItems.turnAroundTimeAttributes
-                                    //         ? tryParseJSON(object.formItems.turnAroundTimeAttributes, "Parse Accept TAT Problem" )
-                                    //     : {};
-
-                                    // var currentDate = new Date().toISOString();
-
-
-                                    //         if (! object.formItems.turnAroundTimeAttributes[object.dept]) {
-                                    //              object.formItems.turnAroundTimeAttributes[object.dept] = {
-                                    //             AcceptDate: "",
-                                    //             CompleteDate: ""
-                                    //         };
-                                    //     }
-
-                                    //       object.formItems.turnAroundTimeAttributes[object.dept].AcceptDate = currentDate;
-                                    //       object.formItems.turnAroundTimeAttributes[object.dept].CompleteDate = currentDate;
-                                    //       object.formItems.turnAroundTimeAttributes = JSON.stringify( object.formItems.turnAroundTimeAttributes);
-
-
 
 
                            ajaxPut(object.url,

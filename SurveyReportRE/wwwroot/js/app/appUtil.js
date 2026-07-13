@@ -3647,7 +3647,7 @@ function makeLCPreviewPictureObject(imageInstance, imgContainerSizeObject, imgSi
 
 
 function userRender(users) {
-    menuCountNotify("UserSession", users);
+    //menuCountNotify("UserSession", users);
     const tbody = document.getElementById("tbody");
     if (tbody == null) return;
     const countEl = document.getElementById("count");

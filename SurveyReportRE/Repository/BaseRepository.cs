@@ -164,7 +164,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
                 try
                 {
                     var (sql, parameters) = Util.BuildSelectAllQuery<T>(typeof(T).Name, predicate); ;
-                    var compiledPredicate = predicate.Compile();
+                    //var compiledPredicate = predicate.Compile();
                     var result = await connection.QueryAsync<T>(sql, parameters);
                     IQueryable<T> queryableResult = result.ToList().AsQueryable();
                     if (queryableResult.Any(predicate))
@@ -177,7 +177,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
                 catch (Exception ex)
                 {
                     var (sql, parameters) = Util.BuildSelectAllQuery<T>(typeof(T).Name, predicate, true); ;
-                    var compiledPredicate = predicate.Compile();
+                    //var compiledPredicate = predicate.Compile();
                     var result = await connection.QueryAsync<T>(sql, new { });
                     IQueryable<T> queryableResult = result.ToList().AsQueryable();
                     if (queryableResult.Any(predicate))
@@ -205,7 +205,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
             var (sql, parameters) = Util.BuildSelectAllQuery<T>(typeof(T).Name, predicate); ;
             try
             {
-                var compiledPredicate = predicate.Compile();
+                //var compiledPredicate = predicate.Compile();
                 var result = await connection.QueryAsync<T>(sql, parameters);
                 IQueryable<T> queryableResult = result.ToList().AsQueryable();
                 if (queryableResult.Any(predicate))
@@ -236,7 +236,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
             var (sql, parameters) = Util.BuildSelectQuery<T>(typeof(T).Name, predicate);
             try
             {
-                var compiledPredicate = predicate.Compile();
+                //var compiledPredicate = predicate.Compile();
                 //var sql = Util.BuildSelectQuery<T>(typeof(T).Name, predicate);
                 var result = await connection.QueryAsync<T>(sql, parameters);
                 IQueryable<T> queryableResult = result.ToList().AsQueryable();
@@ -269,7 +269,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
             var (sql, parameters) = Util.BuildSelectQuery<T>(typeof(T).Name, predicate);
             try
             {
-                var compiledPredicate = predicate.Compile();
+                //var compiledPredicate = predicate.Compile();
                 //var sql = Util.BuildSelectQuery<T>(typeof(T).Name, predicate);
                 var result = await connection.QueryAsync<T>(sql, parameters);
                 IQueryable<T> queryableResult = result.ToList().AsQueryable();
@@ -1498,7 +1498,8 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
     //Last change date: 2025-02-21
     public async Task<List<T>> GetListObjectFullInclude(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includeProperties)
     {
-        List<T> entities = new List<T>(); var compiledPredicate = predicate.Compile();
+        List<T> entities = new List<T>(); 
+        var compiledPredicate = predicate.Compile();
         using (var connection = new SqlConnection(_connectionString))
         {
 
