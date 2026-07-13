@@ -416,7 +416,7 @@ public class DocumentController : BaseControllerApi<Document>
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetByKey(Guid recordGuid, string? folder = null)
+    public async Task<IActionResult> GetByKey(Guid recordGuid, string? folder = null, bool? isOutOfRule = false)
     {
         // folder: "FO" => filter SubDirectory start with "MKT\"
         folder = string.IsNullOrWhiteSpace(folder) ? null : folder.Trim();
@@ -427,12 +427,19 @@ public class DocumentController : BaseControllerApi<Document>
 
         if (string.IsNullOrWhiteSpace(folder))
             all = await _BaseRepository.GetListObject(l => l.RecordGuid == recordGuid);
+      
         var docs = all
             .Where(d => (d.Deleted == null || d.Deleted == false)
                         && d.RecordGuid.HasValue
                         && d.RecordGuid.Value == recordGuid)
             .ToList();
-
+        if (isOutOfRule ?? false)
+        {
+            all = await _BaseRepository.GetListObject(l => l.Attributes.Contains($"{folder}"));
+            docs = all
+            .Where(d => (d.Deleted == null || d.Deleted == false))
+            .ToList();
+        }
         //if (!string.IsNullOrEmpty(folder))
         //{
         //    var prefix = (folder.EndsWith("\\") ? folder : folder + "\\");

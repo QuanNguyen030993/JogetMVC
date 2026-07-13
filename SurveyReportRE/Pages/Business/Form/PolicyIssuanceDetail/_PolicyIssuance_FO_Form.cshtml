@@ -32,7 +32,7 @@
     that.id = @(cloneId);
     that.guid = "@(cloneQuotationGuid)";
     that.sectionName = "@(dept)";
-    that.titleName = "Quotation";
+    that.titleName = "Upload Quotation";
     that.uploaderAllow = false;//_role == "@dept";
     that.isRenderUploader = false;
     that.data = { SectionName: `${sectionIdQt}_${that.moduleName}_@(cloneId)`, Department: "@(dept)", FieldName: that.moduleName, FormId: "@(QTViewIdHelper.Form(dept, cloneId))" }; //{"SectionName":"default_FO_410"}
@@ -80,7 +80,7 @@
                     {
                         dataField: "quotation",
                         colSpan: 1,
-                        label: { text: "Upload Quotation" },
+                        label: { text: "Uploaded Quotation" },
                         template: function (data, itemElement) {
                             createEditor(that, itemElement, $("<div>"), that);
                           

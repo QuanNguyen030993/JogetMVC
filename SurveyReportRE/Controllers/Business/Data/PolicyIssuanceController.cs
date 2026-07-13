@@ -712,16 +712,16 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     }
 
     [HttpPost]
-    public async Task<IActionResult> LogAction([FromForm] QuotationRequest quotationData)
+    public async Task<IActionResult> LogAction([FromForm] PolicyIssuanceRequest quotationData)
     {
-        quotationData.QuotationData = JsonConvert.DeserializeObject<QuotationData>(Request.Form[nameof(PolicyIssuance) + "Data"]);
-        quotationData.QuotationData.SubmitRequest = JsonConvert.DeserializeObject<SubmitRequest>(Request.Form["SubmitRequest"]);
+        quotationData.PolicyIssuanceData = JsonConvert.DeserializeObject<PolicyIssuanceData>(Request.Form[nameof(PolicyIssuance) + "Data"]);
+        quotationData.PolicyIssuanceData.SubmitRequest = JsonConvert.DeserializeObject<SubmitRequest>(Request.Form["SubmitRequest"]);
         SubmitRequest submitRequest = new SubmitRequest();
-        submitRequest.Comment = quotationData?.QuotationData?.SubmitRequest?.Comment;
+        submitRequest.Comment = quotationData?.PolicyIssuanceData?.SubmitRequest?.Comment;
         submitRequest.StepsWorkflow = new StepsWorkflow();
-        submitRequest.StepsWorkflow.FromNodeId = quotationData?.QuotationData?.SubmitRequest?.StepsWorkflow?.FromNodeId;
-        submitRequest.isFullDetail = quotationData?.QuotationData?.SubmitRequest?.isFullDetail;
-        await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotationData.QuotationData.Quotation, submitRequest, _blobStorageSettings);
+        submitRequest.StepsWorkflow.FromNodeId = quotationData?.PolicyIssuanceData?.SubmitRequest?.StepsWorkflow?.FromNodeId;
+        submitRequest.isFullDetail = quotationData?.PolicyIssuanceData?.SubmitRequest?.isFullDetail;
+        await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotationData.PolicyIssuanceData.PolicyIssuance, submitRequest, _blobStorageSettings);
         return Ok();
     }
 

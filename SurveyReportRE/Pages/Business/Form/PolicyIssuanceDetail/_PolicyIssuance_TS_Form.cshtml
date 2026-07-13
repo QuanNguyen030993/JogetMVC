@@ -1,5 +1,6 @@
 @using JogetMVC.Model
 @{
+    string prefix = "pi";
     string dept = "TS";
     long policyIssuanceId = Convert.ToInt64(ViewData["Id"]); 
     string quotationGuid = ViewData["Guid"].ToString();
@@ -17,6 +18,9 @@
     $(function() {
     var thisObject = new Object();
     thisObject.ModelName =  "PolicyIssuance";       
+    thisObject.formId = `@PIViewIdHelper.Form(dept, policyIssuanceId)`;
+    thisObject.dept = `@dept`;
+    thisObject.prefix = `@prefix`;
     var thisObjectDetails = new Object();
     thisObjectDetails.ModelName =  "PolicyIssuanceDetails";
     thisObjectDetails.refField =  "PolicyIssuanceId";
@@ -92,204 +96,199 @@
     that3.uploaderAllow = _role == "@dept";
     that3.data = { SectionName: `${sectionId}_${that3.moduleName}_@(policyIssuanceId)`, Department: "@(dept)", FieldName: that3.moduleName, FormId: "@(PIViewIdHelper.Form(dept, policyIssuanceId))" }; //{"SectionName":"default_FO_410"}
 
+
+    var  mainFields = [{itemType: "group",caption: "Fill List",colCount:1,items: [
+     {
+           itemType: "simple",
+           template: function () {
+             return $("<div id='pi_fillList_@policyIssuanceId'>").dxDataGrid({
+               dataSource: dataSourceGrid,
+               keyExpr: "field",
+                 paging: {
+                            enabled: false
+                          },
+                          pager: {
+                            visible: false
+                          },
+                          editing: {
+                            mode: "cell",
+                            allowUpdating: true
+                          },
+
+              columnAutoWidth: true,
+              wordWrapEnabled: true,
+
+               showBorders: true,
+               columns: [
+                 {
+                   dataField: "label",
+                   caption: "Content",
+                   allowEditing: false,
+                   width: 350
+                 },
+                 {
+                   dataField: "checked",
+                   caption: "Check",
+                   width: 100,
+                   dataType: "boolean"
+                 },
+                 {
+                   caption: "Value",
+                   cellTemplate: function (container, options) {
+                     const data = options.data;
+
+                     if (!data.checked) {
+                       container.text("");
+                       return;
+                     }
+
+                     let editor;
+
+                     switch (data.type) {
+                       case "number":
+                         editor = $("<div>").dxNumberBox({ value: data.value });
+                         break;
+                       case "text":
+                         editor = $("<div>").dxTextBox({ value: data.value });
+                         break;
+                       case "textarea":
+                         editor = $("<div>").dxTextArea({ value: data.value, height: 80 });
+                         break;
+                       case "select":
+                         editor = $("<div>").dxSelectBox({ items: ["New", "Renewal", "Hold Cover", "Cover Note"] });
+                         break;
+                       case "radio":
+                         editor = $("<div>").dxRadioGroup({ displayExpr: "text",
+                          valueExpr: "id",
+                          layout: "horizontal",items: ["A", "B", "C", "D"]
+                         });
+                         break;
+                       case "checkbox":
+                         var that = new Object();
+                         that.ModelName = "PolicyIssuance";
+                         that.moduleName = `pi_${data.field}`; //"pi field"
+                         that.editorType = "dxFileUploader";
+                         that.id = @(policyIssuanceId);
+                         that.guid ="@(quotationGuid)";
+                         that.sectionName = "@(dept)";
+                         that.titleName = "Upload Document";
+                         that.baseOnAttributes = "FieldName";
+                        var sectionId = "@(ViewData["Cd"])";
+                         that.data = { SectionName: `${sectionId}_${data.field}_@(policyIssuanceId)`, Department: "@(dept)", FieldName: `${data.field}_@(policyIssuanceId)` }; //{"SectionName":"default_FO_410"}
+                         editor = $("<div>");
+                         createEditor(that, editor, $(`<div>`), that);
+                         break;
+                       default:
+                         editor = "";
+                     }
+
+                     container.append(editor);
+                   }
+                 }
+               ]
+             });
+           }
+         }, { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefaultPi(that,that2,that3) },
+    {itemType: "group",caption: "Source Of Business",colCount:2,items: [
+    {dataField: "policyPackage", label: { text: "Package Of Policy" } ,editorType: "dxSelectBox",visible:true, editorOptions: makeSelectBoxEditorOptions(_enums.PolicyPackage),displayExpr: "value"},
+    {dataField: "languageOfPolicy", label: { text: "Language Of Policy" },editorType: "dxSelectBox",visible:true, editorOptions: makeSelectBoxEditorOptions(_enums.LanguageOfPolicy),displayExpr: "value"}
+        ]}
+     ]}]
+     ;
    
+     var acceptButtonId = `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
+         var acceptStatusId = `AC_Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
+     var declinedButtonId = `DC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
+         var declinedStatusId = `DC_Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
+                     var items = [ `#${acceptButtonId}`, `#${declinedButtonId}`];
+                                 var itemsDelay = [ acceptButtonId , acceptStatusId, declinedButtonId, declinedStatusId,'', ''];
+
     $("#@PIViewIdHelper.Form(dept, policyIssuanceId)").dxForm({
         dataSource: makeBasicDataSource(thisObject, true),
        
          items: [
-              {itemType: "group",caption: "Decision",colCount:2,items: [
-        {
-            dataField: "decision",
-            label: { text: "Decision" },
-            itemType: "simple",
-            template: function (data, itemElement) {
-                var acceptButtonId = `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
-                var acceptStatusId = `AC_Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
-                var rejectButtonId = `RJ_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
+              {itemType: "group", name: "decisionGroup" ,caption: "Prepare Quotation",colCount:2,items: [
+            decisionField(`@PIViewIdHelper.Form(dept, policyIssuanceId)`, "@dept",`AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,`AC_Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,null,null  )
+        ]}
 
-                var formItems = data.component.option("formData") || {};
-                var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
-                var hasAccepted = tatObject && tatObject[`@dept`]?.AcceptDate;
 
-                // Render Accept Button
-                var $acceptButton = $(`<div id='${acceptButtonId}' style='display: inline-block;'>`).dxButton({
-                    text: "Accept",
-                    icon: "check",
-                    type: "success",
-                    disabled: !!hasAccepted,
-                    onClick: function (e) {
-                        var currentFormItems = data.component.option("formData") || {};
-                        var currentTatObject = tryParseJSON(currentFormItems.turnAroundTimeAttributes, "TAT Button Problem");
-                        currentTatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
-                        currentFormItems.turnAroundTimeAttributes = JSON.stringify(currentTatObject);
-                        var passingObject = new Object();
-                        passingObject.statusName = "@dept Process"; // base on Dept
-                        passingObject.Comment = `PolicyIssuance ${currentFormItems.quotationCode} accepted by ${_displayName}!`;  // base on Dept
-                        passingObject.formItems = currentFormItems;
-                        passingObject.dept = `@dept`;
-                        passingObject.url = '/api/PolicyIssuance/UpdateData';
-                        passingObject.urlLog = `/api/PolicyIssuance/LogAction`;
-                        passingObject.schemeName = `PolicyIssuance`;
-                        acceptDecision(passingObject);
-                    }
-                }).appendTo(itemElement);
-                $acceptButton.find(".dx-button").css({
-                    backgroundColor: hasAccepted ? window.DecisionColors.accepted : window.DecisionColors.accept,
-                    color: window.DecisionColors.textOnColor
-                });
+        //       {itemType: "group",caption: "Decision",colCount:2,items: [
+        // {
+        //     dataField: "decision",
+        //     label: { text: "Decision" },
+        //     itemType: "simple",
+        //     template: function (data, itemElement) {
+        //         var acceptButtonId = `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
+        //         var acceptStatusId = `AC_Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
+        //         var rejectButtonId = `RJ_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
 
-                // Render Reject Button
-                var $rejectButton = $(`<div id='${rejectButtonId}' style='display: inline-block; margin-left: 10px;'>`).dxButton({
-                    text: "Reject",
-                    icon: "close",
-                    type: "danger",
-                    disabled: !hasAccepted,
-                    onClick: function (e) {
-                        var currentFormItems = data.component.option("formData") || {};
-                        var currentTatObject = tryParseJSON(currentFormItems.turnAroundTimeAttributes, "TAT Button Problem");
-                        currentTatObject[`@dept`].AcceptDate = "";
-                        currentFormItems.turnAroundTimeAttributes = JSON.stringify(currentTatObject);
-                        var passingObject = new Object();
-                        passingObject.statusName = "@dept Pending"; // base on Dept
-                        passingObject.Comment = `PolicyIssuance ${currentFormItems.quotationCode} rejected by ${_displayName}!`;  // base on Dept
-                        passingObject.formItems = currentFormItems;
-                        passingObject.dept = `@dept`;
-                        passingObject.url = '/api/PolicyIssuance/UpdateData';
-                        passingObject.urlLog = `/api/PolicyIssuance/LogAction`;
-                        passingObject.schemeName = `PolicyIssuance`;
-                        rejectDecision(passingObject);
-                    }
-                }).appendTo(itemElement);
-                $rejectButton.find(".dx-button").css({
-                    backgroundColor: window.DecisionColors.reject,
-                    color: window.DecisionColors.textOnColor
-                });
-                updateDelayAcceptStatus(acceptStatusId, acceptButtonId, hasAccepted);
-            }
-        }]},
-            { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefaultPi(that,that2,that3) },
-    {itemType: "group",caption: "Source Of Business",colCount:2,items: [
-    {dataField: "policyPackage", label: { text: "Package Of Policy" } ,editorType: "dxSelectBox",visible:true, editorOptions: makeSelectBoxEditorOptions(_enums.PolicyPackage),displayExpr: "value"},
-    {dataField: "languageOfPolicy", label: { text: "Language Of Policy" },editorType: "dxSelectBox",visible:true, editorOptions: makeSelectBoxEditorOptions(_enums.LanguageOfPolicy),displayExpr: "value"}
-    ]},
+        //         var formItems = data.component.option("formData") || {};
+        //         var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
+        //         var hasAccepted = tatObject && tatObject[`@dept`]?.AcceptDate;
+
+        //         // Render Accept Button
+        //         var $acceptButton = $(`<div id='${acceptButtonId}' style='display: inline-block;'>`).dxButton({
+        //             text: "Accept",
+        //             icon: "check",
+        //             type: "success",
+        //             disabled: !!hasAccepted,
+        //             onClick: function (e) {
+        //                 var currentFormItems = data.component.option("formData") || {};
+        //                 var currentTatObject = tryParseJSON(currentFormItems.turnAroundTimeAttributes, "TAT Button Problem");
+        //                 currentTatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
+        //                 currentFormItems.turnAroundTimeAttributes = JSON.stringify(currentTatObject);
+        //                 var passingObject = new Object();
+        //                 passingObject.statusName = "@dept Process"; // base on Dept
+        //                 passingObject.Comment = `PolicyIssuance ${currentFormItems.quotationCode} accepted by ${_displayName}!`;  // base on Dept
+        //                 passingObject.formItems = currentFormItems;
+        //                 passingObject.dept = `@dept`;
+        //                 passingObject.url = '/api/PolicyIssuance/UpdateData';
+        //                 passingObject.urlLog = `/api/PolicyIssuance/LogAction`;
+        //                 passingObject.schemeName = `PolicyIssuance`;
+        //                 acceptDecision(passingObject);
+        //             }
+        //         }).appendTo(itemElement);
+        //         $acceptButton.find(".dx-button").css({
+        //             backgroundColor: hasAccepted ? window.DecisionColors.accepted : window.DecisionColors.accept,
+        //             color: window.DecisionColors.textOnColor
+        //         });
+
+        //         // Render Reject Button
+        //         var $rejectButton = $(`<div id='${rejectButtonId}' style='display: inline-block; margin-left: 10px;'>`).dxButton({
+        //             text: "Reject",
+        //             icon: "close",
+        //             type: "danger",
+        //             disabled: !hasAccepted,
+        //             onClick: function (e) {
+        //                 var currentFormItems = data.component.option("formData") || {};
+        //                 var currentTatObject = tryParseJSON(currentFormItems.turnAroundTimeAttributes, "TAT Button Problem");
+        //                 currentTatObject[`@dept`].AcceptDate = "";
+        //                 currentFormItems.turnAroundTimeAttributes = JSON.stringify(currentTatObject);
+        //                 var passingObject = new Object();
+        //                 passingObject.statusName = "@dept Pending"; // base on Dept
+        //                 passingObject.Comment = `PolicyIssuance ${currentFormItems.quotationCode} rejected by ${_displayName}!`;  // base on Dept
+        //                 passingObject.formItems = currentFormItems;
+        //                 passingObject.dept = `@dept`;
+        //                 passingObject.url = '/api/PolicyIssuance/UpdateData';
+        //                 passingObject.urlLog = `/api/PolicyIssuance/LogAction`;
+        //                 passingObject.schemeName = `PolicyIssuance`;
+        //                 rejectDecision(passingObject);
+        //             }
+        //         }).appendTo(itemElement);
+        //         $rejectButton.find(".dx-button").css({
+        //             backgroundColor: window.DecisionColors.reject,
+        //             color: window.DecisionColors.textOnColor
+        //         });
+        //         updateDelayAcceptStatus(acceptStatusId, acceptButtonId, hasAccepted);
+        //     }
+        // }
+        
+    
+    // ]},
+           
 
         
-    {itemType: "group",caption: "Fill List",colCount:1,items: [
-    // {dataField: "confirmedQuotationFlag",editorType: "dxCheckBox",visible:true},
-    // {dataField: "riClosings",editorType: "dxCheckBox",visible:true},
-    // {dataField: "factoryOperationYears",editorType: "dxCheckBox",visible:true},
-    // {dataField: "newReplacementValue",editorType: "dxCheckBox",visible:true},
-    // {dataField: "holdCoverType",editorType: "dxCheckBox",visible:true},
-    // {dataField: "resultAttachment",editorType: "dxCheckBox",visible:true},
-    // {dataField: "declarationText",editorType: "dxCheckBox",visible:true},
-    // {dataField: "machineryList",editorType: "dxCheckBox",visible:true},
-    // {dataField: "isBodApproved",editorType: "dxCheckBox",visible:true},
-    // {dataField: "uRFAttachment",editorType: "dxCheckBox",visible:true},
-    // {dataField: "emailInformRi",editorType: "dxCheckBox",visible:true},
-    // {dataField: "riScheme",editorType: "dxCheckBox",visible:true},
-    // {dataField: "proposalForm",editorType: "dxCheckBox",visible:true},
-    // {dataField: "premiumBreakdown",editorType: "dxCheckBox",visible:true},
-    // {dataField: "reason",editorType: "dxCheckBox",visible:true},
-    // {dataField: "chassisEngineNumber",editorType: "dxCheckBox",visible:true},
-    // {dataField: "finalPremium",editorType: "dxCheckBox",visible:true},
-    // {dataField: "isKycChecked",editorType: "dxCheckBox",visible:true},
-    // {dataField: "isGlobalCover",editorType: "dxCheckBox",visible:true},
-    // {dataField: "ichigenka",editorType: "dxCheckBox",visible:true},
-
-    {
-          itemType: "simple",
-          template: function () {
-            return $("<div id='pi_fillList_@policyIssuanceId'>").dxDataGrid({
-              dataSource: dataSourceGrid,
-              keyExpr: "field",
-
-                paging: {
-                           enabled: false
-                         },
-                         pager: {
-                           visible: false
-                         },
-
-                         editing: {
-                           mode: "cell",
-                           allowUpdating: true
-                         },
-
-             columnAutoWidth: true,
-             wordWrapEnabled: true,
-
-              showBorders: true,
-              columns: [
-                {
-                  dataField: "label",
-                  caption: "Content",
-                  allowEditing: false,
-                  width: 350
-                },
-                {
-                  dataField: "checked",
-                  caption: "Check",
-                  width: 100,
-                  dataType: "boolean"
-                },
-                {
-                  caption: "Value",
-                  cellTemplate: function (container, options) {
-                    const data = options.data;
-
-                    if (!data.checked) {
-                      container.text("");
-                      return;
-                    }
-
-                    let editor;
-
-                    switch (data.type) {
-                      case "number":
-                        editor = $("<div>").dxNumberBox({ value: data.value });
-                        break;
-                      case "text":
-                        editor = $("<div>").dxTextBox({ value: data.value });
-                        break;
-                      case "textarea":
-                        editor = $("<div>").dxTextArea({ value: data.value, height: 80 });
-                        break;
-                      case "select":
-                        editor = $("<div>").dxSelectBox({ items: ["New", "Renewal", "Hold Cover", "Cover Note"] });
-                        break;
-                      case "radio":
-                        editor = $("<div>").dxRadioGroup({ displayExpr: "text",
-                         valueExpr: "id",
-                         layout: "horizontal",items: ["A", "B", "C", "D"] 
-                        });
-                        break;
-                      case "checkbox":
-                        var that = new Object();
-                        that.ModelName = "PolicyIssuance";
-                        that.moduleName = `pi_${data.field}`; //"pi field"
-                        that.editorType = "dxFileUploader";
-                        that.id = @(policyIssuanceId);
-                        that.guid ="@(quotationGuid)";
-                        that.sectionName = "@(dept)";
-                        that.titleName = "Upload Document";
-                       var sectionId = "@(ViewData["Cd"])";
-                        that.data = { SectionName: `${sectionId}_${data.field}_@(policyIssuanceId)`, Department: "@(dept)", FieldName: data.field }; //{"SectionName":"default_FO_410"}
-                        editor = $("<div>");
-                        createEditor(that, editor, $(`<div>`), that);
-                        break;
-                      default:
-                        editor = "";
-                    }
-
-                    container.append(editor);
-                  }
-                }
-              ]
-            });
-          }
-        }
-
-    ]},
+    
 
     // 🔷 1. Proposal & UW Input
    
@@ -304,6 +303,7 @@
           const fetch2 = $.ajax({ url: `/api/Document/GetByKey?recordGuid=${quotationGuid}`, method: "GET" });
 
           $.when(fetch1, fetch2, detailsDataSource.load()).done(function (r1, r2, rDetails) {
+              debugger
               const docs = [...(r1[0] || []), ...(r2[0] || [])];
               const detailData = rDetails[0] || [];
               if (!detailData || detailData.length === 0) return;
@@ -317,9 +317,18 @@
                   try {
                       attrs = JSON.parse(doc.attributes || doc.Attributes || "{}");
                   } catch (e) {}
-                  if (attrs.FieldName && attrs.FieldName !== "default") {
-                      fileTypesWithFiles[attrs.FieldName] = true;
-                  }
+                  // if (attrs.FieldName && attrs.FieldName !== "default") {
+                  //     fileTypesWithFiles[attrs.FieldName] = true;
+                  // }
+
+                    if (attrs.FieldName && attrs.FieldName !== "default") {
+                           fileTypesWithFiles[attrs.FieldName] = true;
+                       }
+
+                       if (attrs.TSSectionName) {
+                           fileTypesWithFiles[attrs.TSSectionName] = true;
+                       }
+
               });
 
               // Get PolicyIssuance Attributes mapping
@@ -346,6 +355,8 @@
               }
           });
 
+
+     delayAcceptStatusV2(mainFields,thisObject, ...itemsDelay); 
     setTimeout(() => {
         var picJson = PIC_JSON || "{}";
         var picMap = parsePicMap(picJson);

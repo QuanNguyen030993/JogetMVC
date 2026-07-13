@@ -736,6 +736,7 @@ export default function ChartPanel({
 
         }}
 >
+  <h1>Workloads</h1>
 <Card
 
           title="Total"
@@ -764,6 +765,7 @@ export default function ChartPanel({
           value={statistics.rejected}
 
         />
+
 </div>
 
       {/* CHART */}

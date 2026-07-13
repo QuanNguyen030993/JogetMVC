@@ -950,76 +950,76 @@
 
 
             function renderComments(comments) {
-                    const wrap = $(`#${moduleKey}-commentWrap_${dept}_${id}`);
-                wrap.empty();
-                const items = getCurrentComments();
-                if (!items.length) {
-                    wrap.append(`<div class="empty-state">No comments.</div>`);
-                    return;
-                }
+                //     const wrap = $(`#${moduleKey}-commentWrap_${dept}_${id}`);
+                // wrap.empty();
+                // const items = getCurrentComments();
+                // if (!items.length) {
+                //     wrap.append(`<div class="empty-state">No comments.</div>`);
+                //     return;
+                // }
 
-                items.forEach(item => {
-                    const cls = (item.type || "").toLowerCase();
-                    const unreadBadge = item.unread
-                        ? `<span class="mini-badge badge-soft-red">Unread</span>`
-                        : `<span class="mini-badge badge-soft-gray">Read</span>`;
-                    const linkedPin = item.linkedPin
-                        ? `<span class="mini-badge badge-soft-yellow">Pinned related</span>`
-                        : "";
+                // items.forEach(item => {
+                //     const cls = (item.type || "").toLowerCase();
+                //     const unreadBadge = item.unread
+                //         ? `<span class="mini-badge badge-soft-red">Unread</span>`
+                //         : `<span class="mini-badge badge-soft-gray">Read</span>`;
+                //     const linkedPin = item.linkedPin
+                //         ? `<span class="mini-badge badge-soft-yellow">Pinned related</span>`
+                //         : "";
 
-                    wrap.append(`
-                  <div class="comment-card ${cls}">
-                    <div class="comment-head">
-                      <div class="comment-head-left">
-                        <div class="comment-meta">
-                          <div class="comment-author-row">
-                            <span class="comment-author">${escapeHtml(item.author)} - Added a comment - ${fmtTimeLocal(item.time)} </span>
-                            <span class="mini-badge ${badgeClassByType(item.type)}">${item.type}</span>
-                            ${linkedPin}
-                          </div>
-                        </div>
-                      </div>
-                      <div>${unreadBadge}</div>
-                    </div>
+                //     wrap.append(`
+                //   <div class="comment-card ${cls}">
+                //     <div class="comment-head">
+                //       <div class="comment-head-left">
+                //         <div class="comment-meta">
+                //           <div class="comment-author-row">
+                //             <span class="comment-author">${escapeHtml(item.author)} - Added a comment - ${fmtTimeLocal(item.time)} </span>
+                //             <span class="mini-badge ${badgeClassByType(item.type)}">${item.type}</span>
+                //             ${linkedPin}
+                //           </div>
+                //         </div>
+                //       </div>
+                //       <div>${unreadBadge}</div>
+                //     </div>
 
-                    <div class="comment-body clamp" id="${moduleKey}-comment-body-${item.id}">${item.body}</div>
+                //     <div class="comment-body clamp" id="${moduleKey}-comment-body-${item.id}">${item.body}</div>
 
-                    <div class="comment-actions">
-                      <div class="btn-read-${item.id}"></div>
-                      <div class="btn-reply-${item.id}"></div>
-                      <div class="btn-pin-${item.id}"></div>
-                      <div class="btn-resolve-${item.id}"></div>
-                      <span class="mini-badge badge-soft-gray">${item.replies} replies</span>
-                    </div>
-                  </div>
-                `);
-                });
+                //     <div class="comment-actions">
+                //       <div class="btn-read-${item.id}"></div>
+                //       <div class="btn-reply-${item.id}"></div>
+                //       <div class="btn-pin-${item.id}"></div>
+                //       <div class="btn-resolve-${item.id}"></div>
+                //       <span class="mini-badge badge-soft-gray">${item.replies} replies</span>
+                //     </div>
+                //   </div>
+                // `);
+                // });
 
-                items.forEach(item => {
-                    $(`.btn-read-${item.id}`).dxButton({
-                        text: "Read more",
-                        stylingMode: "text",
-                        onClick: function (e) {
-                            const el = $(`#comment-body-${item.id}`);
-                            el.toggleClass("clamp");
-                            e.component.option("text", el.hasClass("clamp") ? "Read more" : "Collapse");
-                        }
-                    });
-                    $(`.btn-reply-${item.id}`).dxButton({
-                        text: "Reply",
-                        stylingMode: "text",
-                        onClick: function () { popupInstance.show(); }
-                    });
-                    $(`.btn-pin-${item.id}`).dxButton({
-                        text: "Pin to top",
-                        stylingMode: "text"
-                    });
-                    $(`.btn-resolve-${item.id}`).dxButton({
-                        text: item.type === "Blocker" ? "Mark resolved" : "Mark done",
-                        stylingMode: "text",
-                        type: "success"
-                    });
-                });
+                // items.forEach(item => {
+                //     $(`.btn-read-${item.id}`).dxButton({
+                //         text: "Read more",
+                //         stylingMode: "text",
+                //         onClick: function (e) {
+                //             const el = $(`#comment-body-${item.id}`);
+                //             el.toggleClass("clamp");
+                //             e.component.option("text", el.hasClass("clamp") ? "Read more" : "Collapse");
+                //         }
+                //     });
+                //     $(`.btn-reply-${item.id}`).dxButton({
+                //         text: "Reply",
+                //         stylingMode: "text",
+                //         onClick: function () { popupInstance.show(); }
+                //     });
+                //     $(`.btn-pin-${item.id}`).dxButton({
+                //         text: "Pin to top",
+                //         stylingMode: "text"
+                //     });
+                //     $(`.btn-resolve-${item.id}`).dxButton({
+                //         text: item.type === "Blocker" ? "Mark resolved" : "Mark done",
+                //         stylingMode: "text",
+                //         type: "success"
+                //     });
+                // });
             }
 
 
@@ -1521,12 +1521,12 @@
                                                       return;
                                                   }
                                                  var commentData = new Object();
-                                                 commentData = ObjectPopulateKey(commentDataForm, true, false);
+                                                    commentData = ObjectPopulateKey(commentDataForm, true, false);
                                                          commentData.FromDepartment = _role; // comment out
                                                      commentData.CurrentDepartment = dept;
                                                      commentData.Author = _displayName;
-                                                 commentData.RecordGuid = guid;
-                                                 commentData.IsPinned = commentData.Type == "Pinned" ? true :  false;
+                                                     commentData.RecordGuid = guid;
+                                                     commentData.IsPinned = commentData.Type == "Pinned" ? true :  false;
                                                       store.insert(commentData)
                                                      .done(function () {
                                                          DevExpress.ui.notify("Send message successfully", "success", 2000);
@@ -2834,7 +2834,6 @@
             function returnToStep(moduleName, _nextStep, findRoute, formItems) {
             // var formItems = $(`#qt-form${dept}`).dxForm("instance")?.option("formData") || {};
             var sendData = new Object();
-            debugger
             sendData.InstanceWorkflow = convertKeysToUpperFirstChar(_nextStep.instanceWorkflow);
             sendData.StepsWorkflow = convertKeysToUpperFirstChar(findRoute);
             sendData.QuotationId = formItems.id;
@@ -3198,10 +3197,16 @@
                 currentOptions.guid = editorOptions.guid;
                 if (!currentOptions || !currentOptions.guid) return;
                 var combine = editorOptions?.specificFolder ? `${editorOptions.moduleName}_${currentOptions.sectionName}_${currentOptions.id}_${editorOptions?.specificFolder}` : `${editorOptions.controlId}`;
-                 if (editorOptions?.data) combine = sectionName;
+                combine = editorOptions.data.SectionName;
+                var queryUrl = `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${(combine)}`;
+                    if (editorOptions?.baseOnAttributes){
+                        combine = editorOptions.data[editorOptions?.baseOnAttributes];
+                        queryUrl = `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${(combine)}&isOutOfRule=true`
+                    }
+                // if (editorOptions?.data) combine = sectionName;
                     // showUploaderLoader(editorOptions.uploaderId, "File loading...");
                 $.ajax({
-                    url: `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${(combine)} `,
+                        url: queryUrl,
                     method: "GET",
                     success: function (data) {
                         const $preview = $(`#attList_${sectionName}_${renderTime}`);
@@ -3253,117 +3258,118 @@
                             });
             }
         }
-        function renderDxFileUploader(editorOptions, $container, options, isRenderUploader = true, uploaderAllow = true)  {
-            const renderTime = Date.now();
-            const controlId = `${editorOptions.data.SectionName}`;
-            const data =  editorOptions.data;
-            editorOptions.controlId = controlId;
-            options = options || {};
-            const controllerName = options.controllerName || "Document";
-            const sectionPermission = $container.closest(".dept-section").data("attachmentCanEdit");
-            if (sectionPermission !== undefined) {
-                uploaderAllow = !!sectionPermission;
-            }
-            editorOptions.uploaderAllow = uploaderAllow;
-            // const currentOptions = getCurrentFormOptions(editorOptions) || {};
-            // currentOptions.guid = editorOptions.guid || "";
-            // const ids = getDxFileUploaderIds(editorOptions);
-            // var uploaderAllow = editorOptions.uploaderAllow == null ? true : editorOptions.uploaderAllow;
-            // editorOptions.uploaderAllow = uploaderAllow;
-
-            $(`#${editorOptions.previewId}`).remove();
-            $(`#${controlId}`).remove();
-            //const $preview =  $(`<div id="${previewId}" style="display:flex;flex-wrap:wrap;gap:25px;top:10px"></div>`)
-            const $preview = $(`<div id="attList_${controlId}_${renderTime}" class="att-preview"></div>`)
-                .appendTo($container);
-            const $uploader = $(`<div id="fileUpload_${controlId}_${renderTime}"></div>`)
-                .appendTo($container)
-
-               
-             // if (isRenderUploader)
-               $uploader
-                .dxFileUploader({
-                    disabled: !uploaderAllow,
-                    multiple: true,
-                    accept: options.accept || "*/*",
-                    selectButtonText: editorOptions.titleName || `Upload Attachments`,
-                    dropZone: `#attList_${controlId}_${renderTime}`,
-                    labelText: "",
-                    uploadMode: editorOptions.uploadMode ? editorOptions.uploadMode : "instantly",
-                    uploadUrl: options.uploadUrl || `/api/Attachment/AsyncUploadFile`,
-                    showFileList: false,//editorOptions.uploadMode != "instantly" ? true : false,
-                    uploadHeaders: {
-                        //Only use for static string    
-                    },
-                    onInitialized: function (e) {
-                        //updateDxFileUploaderHeaders(editorOptions);
-                    },
-                    onUploadStarted: function (e) {
-                             // makeMiniLoadingPanel(`Uploading file ${e.file.name}`, "Please wait...");
-                             makeMiniLoadingPanel(`Uploading file`, "Please wait...");
-                        // showUploaderLoader(editorOptions.uploaderId, "File loading...");
-                    },
-                    onValueChanged: function(e){
-                        if (editorOptions.uploadMode != "instantly")
-                        loadDxFileUploaderAttachments(editorOptions.controlId, controllerName, editorOptions, renderTime)
-                    },
-                    onProgress: function(e) {
-                        // e.bytesLoaded: số byte đã upload
-                        // e.bytesTotal: tổng size file
-                        const percent = Math.round((e.bytesLoaded / e.bytesTotal) * 100);
-
-                        var result = {};
-                        result.payload = {};
-                        result.payload.progressvalue = percent;
-
-                        renderBrowserLoading(result);
-                    },
-                    uploadFile: function (file) {
-                        file.guid = editorOptions.guid;
-                        return uploadFileAjax(file,data ,{
-                            url: "/api/Attachment/AsyncUploadFile",
-                                ...editorOptions 
-                        });
-
-                    },
-                    onUploaded: function (e) {
-                            var result = new Object();
-                                 result.payload = new Object();
-                                 result.payload.progressvalue = 100;
-                                 renderBrowserLoading(result);
-                        // hideUploaderLoader(editorOptions.uploaderId);
-                        loadDxFileUploaderAttachments(controlId, controllerName, editorOptions,renderTime)
-
-
-                    },
-
-                    // onContentReady: function (e) {
-                    //     if (!e.component.option("showFileList")) {
-                    //         $(e.element)
-                    //             .find(".dx-fileuploader-input-container")
-                    //             .remove();
-                    //     }
-                    // }
-
-                    onContentReady: function (e) {
-
-                        if (!e.component.option("showFileList")) {
-
-                            const $el = $(e.element);
-
-                            // ✅ Ẩn UI uploader
-                            $el.find(".dx-fileuploader-input-container").css({
-                                opacity: 0,
-                                height: 0,
-                                overflow: "hidden"
-                            });
-                        }
-                    }
-
-
-                });
-              loadDxFileUploaderAttachments(controlId, controllerName, editorOptions,renderTime);
+            function renderDxFileUploader(editorOptions, $container, options, isRenderUploader = true, uploaderAllow = true)  {
+        const renderTime = Date.now();
+        const editorOptionsIn = structuredClone(editorOptions);
+        const controlId = `${editorOptionsIn.data.SectionName}`;
+        const data =  editorOptionsIn.data;
+        editorOptionsIn.controlId = controlId;
+        options = options || {};
+        const controllerName = options.controllerName || "Document";
+        const sectionPermission = $container.closest(".dept-section").data("attachmentCanEdit");
+        if (sectionPermission !== undefined) {
+            uploaderAllow = !!sectionPermission;
         }
+        editorOptionsIn.uploaderAllow = uploaderAllow;
+        // const currentOptions = getCurrentFormOptions(editorOptionsIn) || {};
+        // currentOptions.guid = editorOptionsIn.guid || "";
+        // const ids = getDxFileUploaderIds(editorOptionsIn);
+        // var uploaderAllow = editorOptionsIn.uploaderAllow == null ? true : editorOptionsIn.uploaderAllow;
+        // editorOptionsIn.uploaderAllow = uploaderAllow;
+
+        $(`#${editorOptionsIn.previewId}`).remove();
+        $(`#${controlId}`).remove();
+        //const $preview =  $(`<div id="${previewId}" style="display:flex;flex-wrap:wrap;gap:25px;top:10px"></div>`)
+        const $preview = $(`<div id="attList_${controlId}_${renderTime}" class="att-preview"></div>`)
+            .appendTo($container);
+        const $uploader = $(`<div id="fileUpload_${controlId}_${renderTime}"></div>`)
+            .appendTo($container)
+
+
+         if (isRenderUploader)
+           $uploader
+            .dxFileUploader({
+                disabled: !uploaderAllow,
+                multiple: true,
+                accept: options.accept || "*/*",
+                selectButtonText: editorOptionsIn.titleName || `Upload Attachments`,
+                dropZone: `#attList_${controlId}_${renderTime}`,
+                labelText: "",
+                uploadMode: editorOptionsIn.uploadMode ? editorOptionsIn.uploadMode : "instantly",
+                uploadUrl: options.uploadUrl || `/api/Attachment/AsyncUploadFile`,
+                showFileList: false,//editorOptionsIn.uploadMode != "instantly" ? true : false,
+                uploadHeaders: {
+                    //Only use for static string
+                },
+                onInitialized: function (e) {
+                    //updateDxFileUploaderHeaders(editorOptionsIn);
+                },
+                onUploadStarted: function (e) {
+                         // makeMiniLoadingPanel(`Uploading file ${e.file.name}`, "Please wait...");
+                         makeMiniLoadingPanel(`Uploading file`, "Please wait...");
+                    // showUploaderLoader(editorOptionsIn.uploaderId, "File loading...");
+                },
+                onValueChanged: function(e){
+                    if (editorOptionsIn.uploadMode != "instantly")
+                    loadDxFileUploaderAttachments(editorOptionsIn.controlId, controllerName, editorOptionsIn, renderTime)
+                },
+                onProgress: function(e) {
+                    // e.bytesLoaded: số byte đã upload
+                    // e.bytesTotal: tổng size file
+                    const percent = Math.round((e.bytesLoaded / e.bytesTotal) * 100);
+
+                    var result = {};
+                    result.payload = {};
+                    result.payload.progressvalue = percent;
+
+                    renderBrowserLoading(result);
+                },
+                uploadFile: function (file) {
+                    file.guid = editorOptionsIn.guid;
+                    return uploadFileAjax(file,data ,{
+                        url: "/api/Attachment/AsyncUploadFile",
+                            ...editorOptionsIn
+                    });
+
+                },
+                onUploaded: function (e) {
+                        var result = new Object();
+                             result.payload = new Object();
+                             result.payload.progressvalue = 100;
+                             renderBrowserLoading(result);
+                    // hideUploaderLoader(editorOptionsIn.uploaderId);
+                    loadDxFileUploaderAttachments(controlId, controllerName, editorOptionsIn,renderTime)
+
+
+                },
+
+                // onContentReady: function (e) {
+                //     if (!e.component.option("showFileList")) {
+                //         $(e.element)
+                //             .find(".dx-fileuploader-input-container")
+                //             .remove();
+                //     }
+                // }
+
+                onContentReady: function (e) {
+
+                    if (!e.component.option("showFileList")) {
+
+                        const $el = $(e.element);
+
+                        // ✅ Ẩn UI uploader
+                        $el.find(".dx-fileuploader-input-container").css({
+                            opacity: 0,
+                            height: 0,
+                            overflow: "hidden"
+                        });
+                    }
+                }
+
+
+            });
+          loadDxFileUploaderAttachments(controlId, controllerName, editorOptionsIn,renderTime);
+    }
 
         function setAttachmentPermissionForSection(sectionSelector, canEdit) {
             const $section = $(sectionSelector);
@@ -3573,8 +3579,8 @@
                 try {
                     currentAttrs = JSON.parse(x.attributes || x.Attributes || "{}");
                 } catch(e) {}
-                
-                var currentFieldName = currentAttrs.FieldName || "default";
+
+                    var currentFieldName = currentAttrs.TSSectionName || "default";
                 
                 $selectBoxWrapper.dxSelectBox({
                         items: _enums.TSCheckList,
@@ -3585,7 +3591,7 @@
                     placeholder: "Select category...",
                     onValueChanged: function(e) {
                         var selectedVal = e.value;
-                        currentAttrs.FieldName = selectedVal;
+                            currentAttrs.FieldName = `${selectedVal}_${options.policyIssuanceId}`;
                         
                         if (!currentAttrs.OriginalSectionName) {
                             currentAttrs.OriginalSectionName = currentAttrs.SectionName || `${options.sectionIdQt}_default_${options.cloneId}`;
@@ -3596,7 +3602,7 @@
                         if (selectedVal === "default") {
                             delete currentAttrs.TSSectionName;
                         } else {
-                            currentAttrs.TSSectionName = `${options.sectionId}_${selectedVal}_${options.policyIssuanceId}`;
+                            currentAttrs.TSSectionName = `${selectedVal}`;
                         }
                         
                         ajaxPut('/api/Document/UpdateData', {
@@ -3695,8 +3701,7 @@
             const guid = file.guid || "";
             const folder = buildFolder(latestOptions, options.controlId) || "";
             const sectionName = `${options.controlId}${specificFolder}`;
-                const dept = options.sectionName || "";
-
+            const dept = options.sectionName || "";
             const formData = new FormData();
             formData.append("file", file);
             return $.ajax({
@@ -3721,7 +3726,7 @@
                     if (sectionName) {
                         xhr.setRequestHeader("SectionName", sectionName);
                     }
-                   if (sectionName) {
+                    if (sectionName) {
                       xhr.setRequestHeader("Department", dept);
                      }
                      if (options.data){
@@ -4236,34 +4241,53 @@
        }
 
 
-       function acceptDecision(object){
-            var statusObject = _enums.OverallStatus.find(f => f.value == object.statusName);
-                          object.formItems.statusId  = statusObject.id;
-                          object.formItems.workflowStatus = statusObject.value;
+       function acceptDecision(object, dept){
 
-                                   object.formItems.turnAroundTimeAttributes = object.formItems.turnAroundTimeAttributes
-                                        ? tryParseJSON(object.formItems.turnAroundTimeAttributes, "Parse Accept TAT Problem" )
+                    var scheme  = object.prefix === "pi"
+                            ? "PolicyIssuance"
+                            : "Quotation";
+               var formItems = $(`#${object.formId}`).dxForm("instance")?.option("formData") || {};
+                    var passingObject = {
+                        statusName: `${object.dept} Process`,
+                        Comment: `${scheme} ${formItems.quotationCode} accepted by ${_displayName}!`,
+                        formItems: formItems,
+                        dept: dept,
+                        url: object.prefix === "pi"
+                            ? "/api/PolicyIssuance/UpdateData"
+                            : "/api/Quotation/UpdateData",
+                                urlLog: object.prefix === "pi"
+                            ? "/api/PolicyIssuance/LogAction"
+                            : "/api/Quotation/LogAction",
+                            schemeName: scheme
+                    };
+
+
+            var statusObject = _enums.OverallStatus.find(f => f.value == passingObject.statusName);
+                          passingObject.formItems.statusId  = statusObject.id;
+                          passingObject.formItems.workflowStatus = statusObject.value;
+
+                                   passingObject.formItems.turnAroundTimeAttributes = passingObject.formItems.turnAroundTimeAttributes
+                                        ? tryParseJSON(passingObject.formItems.turnAroundTimeAttributes, "Parse Accept TAT Problem" )
                                     : {};
 
                                 var currentDate = new Date();
-                                    console.log(currentDate);
 
-                                        if (! object.formItems.turnAroundTimeAttributes[object.dept]) {
-                                             object.formItems.turnAroundTimeAttributes[object.dept] = {
+                                            if (! passingObject.formItems.turnAroundTimeAttributes[dept]) {
+                                             passingObject.formItems.turnAroundTimeAttributes[dept] = {
                                             AcceptDate: "",
                                             CompleteDate: ""
                                         };
                                     }
 
-                                      object.formItems.turnAroundTimeAttributes[object.dept].AcceptDate = currentDate;
-                                      object.formItems.turnAroundTimeAttributes[object.dept].CompleteDate = currentDate;
-                                      object.formItems.turnAroundTimeAttributes = JSON.stringify( object.formItems.turnAroundTimeAttributes);
+                                      passingObject.formItems.turnAroundTimeAttributes[dept].AcceptDate = currentDate;
+                                          passingObject.formItems.turnAroundTimeAttributes[dept].CompleteDate = currentDate;
+                                      passingObject.formItems.turnAroundTimeAttributes = JSON.stringify( passingObject.formItems.turnAroundTimeAttributes);
 
-                           ajaxPut(object.url,
+                               ajaxPut(passingObject.url,
                             {
-                                key: object.formItems.id,
+                                key: passingObject.formItems.id,
                                 values: JSON.stringify(
-                                    object.formItems
+                                    passingObject.formItems
                                 )
                             },
                             {
@@ -4273,25 +4297,25 @@
                             });
 
                         var submitRequest = new Object();
-                            submitRequest.Comment = object.Comment;
+                                submitRequest.Comment = passingObject.Comment;
                             submitRequest.StepsWorkflow = new Object()
-                            submitRequest.StepsWorkflow.FromNodeId = object.dept;
+                                submitRequest.StepsWorkflow.FromNodeId = passingObject.dept;
                             submitRequest.StepsWorkflow.StepName = "Internal Workflow";
                             submitRequest.isFullDetail = false;
                          var quotationData = new Object();
 
                             quotationData.Quotation = new Object();
-                            quotationData.Quotation.Id = object.formItems.id;
-                            quotationData.Quotation.Guid = object.formItems.guid;
+                            quotationData.Quotation.Id = passingObject.formItems.id;
+                            quotationData.Quotation.Guid = passingObject.formItems.guid;
                             quotationData.Quotation.BranchCode = _branch;
                                 
                             quotationData.Attributes = new Object();
-                            quotationData.Attributes.SectionName = object.dept;
+                            quotationData.Attributes.SectionName = passingObject.dept;
                              var formData = new FormData();
-                            formData.append(`${object.schemeName}Data`,JSON.stringify(quotationData));
+                            formData.append(`${passingObject.schemeName}Data`,JSON.stringify(quotationData));
                             formData.append("SubmitRequest",JSON.stringify(submitRequest));
                               $.ajax({
-                                url:`${object.urlLog}`,
+                                    url:`${passingObject.urlLog}`,
                                 type: "POST",
                                 data: formData,
                                 processData: false,
@@ -5849,55 +5873,56 @@ function styleModeChange(item){
     }
 
        function renderComments(items) {
-        if (!Array.isArray(items) || items.length === 0) {
-            return `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No audit logs</div>`;
-        }
+        // if (!Array.isArray(items) || items.length === 0) {
+        //     return `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No audit logs</div>`;
+        // }
 
-        var html = items.map((c) => {
-            const dept = (c.deptCode || "").toUpperCase();
+        // var html = items.map((c) => {
+        //     const dept = (c.deptCode || "").toUpperCase();
 
-            let typeClass = "";
+        //     let typeClass = "";
 
-            if (dept.startsWith("FO")) {
-                typeClass = "ct-fo";
-            } else if (dept.startsWith("TS")) {
-                typeClass = "ct-ts";
-            } else if (dept.startsWith("UW")) {
-                typeClass = "ct-uw";
-            } else if (dept.startsWith("LMKT")) {
-                typeClass = "ct-lmkt";
-            } else if (dept.startsWith("PM")) {
-                typeClass = "ct-pm";
-            }
+        //     if (dept.startsWith("FO")) {
+        //         typeClass = "ct-fo";
+        //     } else if (dept.startsWith("TS")) {
+        //         typeClass = "ct-ts";
+        //     } else if (dept.startsWith("UW")) {
+        //         typeClass = "ct-uw";
+        //     } else if (dept.startsWith("LMKT")) {
+        //         typeClass = "ct-lmkt";
+        //     } else if (dept.startsWith("PM")) {
+        //         typeClass = "ct-pm";
+        //     }
 
-            var auditKey = `audit_${Date.now()}_${++window.AuditLogViewState.sequence}`;
-            var auditTitle = (c.deptCode ? c.deptCode + " - " : "") + (c.commentBy || "Audit Log");
-            window.AuditLogViewState.contents[auditKey] = {
-                title: auditTitle,
-                author: c.commentBy || "",
-                date: fmtTimeLocal(c.commentTime || ""),
-                html: c.commentText || ""
-            };
+        //     var auditKey = `audit_${Date.now()}_${++window.AuditLogViewState.sequence}`;
+        //     var auditTitle = (c.deptCode ? c.deptCode + " - " : "") + (c.commentBy || "Audit Log");
+        //     window.AuditLogViewState.contents[auditKey] = {
+        //         title: auditTitle,
+        //         author: c.commentBy || "",
+        //         date: fmtTimeLocal(c.commentTime || ""),
+        //         html: c.commentText || ""
+        //     };
 
-            return `
-                <div class="ct-item ${typeClass}" data-audit-log-key="${auditKey}" onclick="openAuditLogDetail(this)" role="button" tabindex="0" onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); openAuditLogDetail(this); }">
-                    <div class="ct-user">
-                        ${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}
-                    </div>
-                    <div class="ct-time">
-                        ${fmtTimeLocal(c.commentTime || "")}
-                    </div>
-                    <div class="ct-text">
-                        ${c.commentText || ""}
-                    </div>
-                    <div class="ct-view-more">Click to view more</div>
-                </div>
-            `;
-        }).join("");
+        //     return `
+        //         <div class="ct-item ${typeClass}" data-audit-log-key="${auditKey}" onclick="openAuditLogDetail(this)" role="button" tabindex="0" onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); openAuditLogDetail(this); }">
+        //             <div class="ct-user">
+        //                 ${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}
+        //             </div>
+        //             <div class="ct-time">
+        //                 ${fmtTimeLocal(c.commentTime || "")}
+        //             </div>
+        //             <div class="ct-text">
+        //                 ${c.commentText || ""}
+        //             </div>
+        //             <div class="ct-view-more">Click to view more</div>
+        //         </div>
+        //     `;
+        // }).join("");
 
-        setTimeout(refreshAuditLogOverflowHints, 0);
-        setTimeout(refreshAuditLogOverflowHints, 350);
-        return html;
+        // setTimeout(refreshAuditLogOverflowHints, 0);
+        // setTimeout(refreshAuditLogOverflowHints, 350);
+        // return html;
+        return "";
     }
     window.renderAuditLogComments = renderComments;
     //20260619
@@ -6058,9 +6083,9 @@ function styleModeChange(item){
                 },_delayRenderDecisionButton);
             }
 
-            function delayAcceptStatusV2(mainFields,formId,dept, ...params ){
+            function delayAcceptStatusV2(mainFields,formProps, ...params ){
                 setTimeout(() => {
-                    renderDecisionDeferredV2(formId, dept, "decisionGroup.acceptButton", mainFields, ...params)
+                    renderDecisionDeferredV2(formProps, "decisionGroup.acceptButton", mainFields, ...params)
                 },_delayRenderDecisionButton);
             }
 
@@ -6114,7 +6139,6 @@ function styleModeChange(item){
 
     function renderDecisionDeferred(formId, dept, groupName, mainField, acceptButtonId, acceptStatusElement) {
 
-        // setTimeout(function () {
 
             var form = $(`#${formId}`).dxForm("instance");
             if (!form) return;
@@ -6153,29 +6177,11 @@ function styleModeChange(item){
 
                                    };
 
-                                   acceptDecision(passingObject);
+                                       acceptDecision(passingObject, dept);
                        } )
-                // form.itemOption(groupName, "onClick", );
-            // form.itemOption(groupName, "items", [
-
-            //     ...form.itemOption(groupName, "items"),
-
-            //     decisionItem
-
-            // ]);
-
-            // }, _delayRenderDecisionButton);
-     //             var formData = formInstance.option("formData") || {};
-     // var tatObject = tryParseJSON(formData.turnAroundTimeAttributes);
-
-     // if (tatObject?.[dept]?.AcceptDate) {
-     //     formInstance.option("items", [
-     //         ...formInstance.option("items"),
-     //         ...mainField
-     //     ]);
-     // }
+               
                       if (tatObject) if (tatObject[dept]?.AcceptDate)
-                 {
+                    {
                          if (acceptButtonId)
                          {
                                  form.option("items", [
@@ -6189,19 +6195,11 @@ function styleModeChange(item){
                                     tatObject[dept]?.AcceptDate
                                 );
                             $(`#${acceptButtonId}`).dxButton("instance").option("disabled", true);
-                                // renderFullFormIfAccepted(formIns, dept, mainFields);
                              
                          }
-                         //  if (rejectButtonId)
-                         // {
-                                     //    $(`#${rejectButtonId}`).css("background-color", window.DecisionColors.accepted);
-                         //    $(`#${rejectButtonIdStatus}`).text(`Accepted at: ${tatObject[dept]?.AcceptDate}`);
-                         //        $(`#${rejectButtonId}`).dxButton("instance").option("disabled", true);
-                         // }
+                        
                 }
                                }, 100);
-
-
     }
 
 
@@ -6277,33 +6275,112 @@ function styleModeChange(item){
             return fallbackDisabled || false;
         }
 
+        // function ensureDelayDecisionButtonInstance(buttonId, item) {
+        //     var $button = ensureDelayDecisionButtonElement(buttonId, item);
+        //     if (!$button.length) return null;
+
+        //     var instance = $button.dxButton("instance");
+        //     if (instance) return instance;
+
+        //     var route = item?.route || item?.findRoute;
+        //     var options = {
+        //         disabled: getDelayDecisionButtonDisabled(item, route),
+        //         text: item?.text || route?.displayStatus || route?.actionName || route?.actionCode || "",
+        //         icon: item?.icon || (route ? getTransitionButtonIcon(route, "check") : "check"),
+        //         type: item?.type || (route?.isReturn ? "danger" : "info")
+        //     };
+
+        //     $button.dxButton(options);
+
+        //     var buttonClass = item?.buttonClass || getTransitionButtonClass(route, "");
+        //     if (buttonClass) {
+        //         applyTransitionButtonClass(`#${buttonId}`, route || { buttonClass: buttonClass }, buttonClass);
+        //     }
+        //     if (item?.buttonColor || item?.backgroundColor) {
+        //         $button.find(".dx-button").css("background-color", item.buttonColor || item.backgroundColor);
+        //     }
+
+        //     return $button.dxButton("instance");
+        // }
         function ensureDelayDecisionButtonInstance(buttonId, item) {
-            var $button = ensureDelayDecisionButtonElement(buttonId, item);
-            if (!$button.length) return null;
+   var $button = ensureDelayDecisionButtonElement(buttonId, item);
+   // Không tìm thấy element
+   if (!$button || !$button.length) {
+       return {
+           type: null,
+           value: null
+       };
+   }
+   try 
+   {
+   // Check instance đã tồn tại
+   var instance = $button.dxButton("instance");
+   if (instance) {
+       return {
+           type: "instance",
+           value: instance,
+           element: $button
+       };
+   }
+   var route = item?.route || item?.findRoute;
+   var options = {
+       disabled: getDelayDecisionButtonDisabled(item, route),
+       text:
+           item?.text ||
+           route?.displayStatus ||
+           route?.actionName ||
+           route?.actionCode ||
+           "",
+       icon:
+           item?.icon ||
+           (route
+               ? getTransitionButtonIcon(route, "check")
+               : "check"),
+       type:
+           item?.type ||
+           (route?.isReturn ? "danger" : "info")
+   };
+   // Init DevExtreme Button
+   $button.dxButton(options);
+   var buttonClass =
+       item?.buttonClass ||
+       getTransitionButtonClass(route, "");
+   if (buttonClass) {
+       applyTransitionButtonClass(
+           `#${buttonId}`,
+           route || {
+               buttonClass: buttonClass
+           },
+           buttonClass
+       );
+   }
+   if (
+       item?.buttonColor ||
+       item?.backgroundColor
+   ) {
+       $button
+           .find(".dx-button")
+           .css(
+               "background-color",
+               item.buttonColor ||
+               item.backgroundColor
+           );
+   }
+   instance = $button.dxButton("instance");
+   }
+   catch {
 
-            var instance = $button.dxButton("instance");
-            if (instance) return instance;
-
-            var route = item?.route || item?.findRoute;
-            var options = {
-                disabled: getDelayDecisionButtonDisabled(item, route),
-                text: item?.text || route?.displayStatus || route?.actionName || route?.actionCode || "",
-                icon: item?.icon || (route ? getTransitionButtonIcon(route, "check") : "check"),
-                type: item?.type || (route?.isReturn ? "danger" : "info")
-            };
-
-            $button.dxButton(options);
-
-            var buttonClass = item?.buttonClass || getTransitionButtonClass(route, "");
-            if (buttonClass) {
-                applyTransitionButtonClass(`#${buttonId}`, route || { buttonClass: buttonClass }, buttonClass);
-            }
-            if (item?.buttonColor || item?.backgroundColor) {
-                $button.find(".dx-button").css("background-color", item.buttonColor || item.backgroundColor);
-            }
-
-            return $button.dxButton("instance");
-        }
+   }
+   // Lấy instance sau khi init
+   return {
+       type: instance
+           ? "instance"
+           : "element",
+       value: instance || $button,
+       element: $button,
+       instance: instance || null
+   };
+}
 
         function getDelayAcceptStoredStatus(formItems, dept, item) {
             if (!item || typeof item !== "object") return null;
@@ -6364,23 +6441,34 @@ function styleModeChange(item){
             return true;
         }
 
-        function buildDefaultDecisionClick(formId, dept) {
-            return function (e) {
-                var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-                var passingObject = {
-                    statusName: `${dept} Process`,
-                    Comment: `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`,
-                    formItems: formItems,
-                    dept: dept,
-                    url: "/api/Quotation/UpdateData",
-                    urlLog: "/api/Quotation/LogAction",
-                    schemeName: "Quotation"
-                };
+        // function buildDefaultDecisionClick(formId, dept) {
+        //     return function (e) {
+        //         var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+        //         var passingObject = {
+        //             statusName: `${dept} Process`,
+        //             Comment: `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`,
+        //             formItems: formItems,
+        //             dept: dept,
+        //             url: "/api/Quotation/UpdateData",
+        //             urlLog: "/api/Quotation/LogAction",
+        //             schemeName: "Quotation"
+        //         };
 
-                acceptDecision(passingObject);
+        //         acceptDecision(passingObject);
+        //     };
+        // }
+        function buildDefaultDecisionClick(formProps) {
+            return function (e) {
+
+                     var objSnapshot = structuredClone(formProps);
+                   
+                
+
+                        acceptDecision(objSnapshot, objSnapshot.dept);
             };
         }
 
+        
         function buildRouteDecisionClick(formId, dept, item) {
             return function (e) {
                 var route = item.route || item.findRoute;
@@ -6417,7 +6505,7 @@ function styleModeChange(item){
                 var handlerName = item.handlerName || item.action || (route?.isReturn ? "returnToStep" : "submitNextStep");
 
                 if (!route || !nextStep) {
-                    buildDefaultDecisionClick(formId, dept)(e);
+                    buildDefaultDecisionClick(formProps)(e);
                     return;
                 }
 
@@ -6430,51 +6518,54 @@ function styleModeChange(item){
             };
         }
 
-        function applyDelayDecisionButton(formId, dept, item) {
+        function applyDelayDecisionButton(formProps, item) {
             var buttonId = getDelayAcceptButtonId(item);
             if (!buttonId) return;
 
             var instance = ensureDelayDecisionButtonInstance(buttonId, item);
             if (!instance) return;
 
-            if (isRouteDecisionButton(item)) {
-                var route = item.route || item.findRoute;
-                var buttonOptions = {
-                    onClick: buildRouteDecisionClick(formId, dept, item)
-                };
+            if (instance.type == "instance")
+            {
+                if (isRouteDecisionButton(item)) {
+                    var route = item.route || item.findRoute;
+                    var buttonOptions = {
+                        onClick: buildRouteDecisionClick(formProps.formId, formProps.dept, item)
+                    };
 
-                if (route) {
-                    buttonOptions.text = item.text || route.displayStatus || route.actionName || route.actionCode || instance.option("text");
-                    buttonOptions.icon = item.icon || getTransitionButtonIcon(route, instance.option("icon") || "check");
-                    buttonOptions.type = item.type || instance.option("type");
-                    buttonOptions.disabled = getDelayDecisionButtonDisabled(item, route, instance.option("disabled"));
+                    if (route) {
+                        buttonOptions.text = item.text || route.displayStatus || route.actionName || route.actionCode || instance.option("text");
+                        buttonOptions.icon = item.icon || getTransitionButtonIcon(route, instance.option("icon") || "check");
+                        buttonOptions.type = item.type || instance.option("type");
+                        buttonOptions.disabled = getDelayDecisionButtonDisabled(item, route, instance.option("disabled"));
+                    }
+
+                    instance.option(buttonOptions);
+                    applyTransitionButtonClass(`#${buttonId}`, route || item, item.buttonClass);
+                    if (item.buttonColor || item.backgroundColor) {
+                        $(`#${buttonId}`).find(".dx-button").css("background-color", item.buttonColor || item.backgroundColor);
+                    }
+                    return;
                 }
-
-                instance.option(buttonOptions);
-                applyTransitionButtonClass(`#${buttonId}`, route || item, item.buttonClass);
-                if (item.buttonColor || item.backgroundColor) {
-                    $(`#${buttonId}`).find(".dx-button").css("background-color", item.buttonColor || item.backgroundColor);
-                }
-                return;
-            }
-
-            if (item && typeof item === "object" && item.useDefaultDecisionClick) {
-                instance.option("onClick", buildDefaultDecisionClick(formId, dept));
+            //if (item && typeof item === "object" && item.useDefaultDecisionClick) {
+                    var objSnapshot = structuredClone(formProps);
+                    instance.value.option("onClick", buildDefaultDecisionClick(objSnapshot));
+            //}
             }
         }
 
-        function renderDecisionDeferredV2(formId, dept, groupName, mainField, ...params) {
+        function renderDecisionDeferredV2(formProps, groupName, mainField, ...params) {
 
             // setTimeout(function () {
 
-                var form = $(`#${formId}`).dxForm("instance");
+                var form = $(`#${formProps.formId}`).dxForm("instance");
                 if (!form) return;
 
                 var formItems = form.option("formData") || {};
 
                 var picObject = tryParseJSON(formItems.pic, "PIC Load Problem") || {};
                     var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
-                var pic = picObject[dept];
+                var pic = picObject[formProps.dept];
                 if (!pic) {
 
                     return;
@@ -6496,28 +6587,27 @@ function styleModeChange(item){
                                : params.filter(item => getDelayAcceptButtonId(item));
                            var renderedStoredStatus = false;
                            buttonItems.forEach(item => {
-                               if (renderDelayAcceptStoredStatusButton(formId, dept, item, latestFormItems, latestTatObject)) {
+                               if (renderDelayAcceptStoredStatusButton(formProps.formId, formProps.dept, item, latestFormItems, latestTatObject)) {
                                    renderedStoredStatus = true;
                                    return;
                                }
 
                                if (item && typeof item === "object" && typeof item.loadRouteButtons === "function" && !isRouteDecisionButton(item) && !item.useDefaultDecisionClick && !item.createButton) {
                                    item.loadRouteButtons({
-                                       formId: formId,
-                                       dept: dept,
+                                       formId: formProps.formId,
+                                       dept: formProps.dept,
                                        formItems: latestFormItems,
                                        tatObject: latestTatObject,
                                        config: item
                                    });
                                    return;
                                }
-
-                               applyDelayDecisionButton(formId, dept, item);
+                               applyDelayDecisionButton(formProps, item);
 
                                if (item && typeof item === "object" && typeof item.loadRouteButtons === "function") {
                                    item.loadRouteButtons({
-                                       formId: formId,
-                                       dept: dept,
+                                       formId: formProps.formId,
+                                       dept: formProps.dept,
                                        formItems: latestFormItems,
                                        tatObject: latestTatObject,
                                        config: item
@@ -6525,50 +6615,51 @@ function styleModeChange(item){
                                }
                            });
                           if (!renderedStoredStatus && latestTatObject)
-                          if (latestTatObject[dept]?.AcceptDate )
+                          if (latestTatObject[formProps.dept]?.AcceptDate)
                              {
-                                         var acceptButtonId = getDelayAcceptButtonId(params[0]);
-                                         var acceptStatusId = getDelayAcceptStatusId(params[0]) || params[1];
-                                         var skipAcceptedMainFields = params[0] && typeof params[0] === "object" && params[0].skipAcceptedMainFields;
-                                         if (acceptButtonId)
-                                            {
-                                             if (!skipAcceptedMainFields) {
-                                                 form.option("items", [
-                                                     ...form.option("items"),
-                                                     ...mainField
-                                                 ]);
-                                             }
+                              var acceptButtonId = getDelayAcceptButtonId(params[0]);
+                              var acceptStatusId = getDelayAcceptStatusId(params[0]) || params[1];
+                              var skipAcceptedMainFields = params[0] && typeof params[0] === "object" && params[0].skipAcceptedMainFields;
+                              if (acceptButtonId)
+                                 {
+                                  if (!skipAcceptedMainFields) {
+                                      form.option("items", [
+                                          ...form.option("items"),
+                                          ...mainField
+                                      ]);
+                                  }
 
-                                                if (dept == "LMKT") {
-                                                    var storedStatus = getDelayAcceptStoredStatus(formItems, dept, formItems);
-                                                    if (storedStatus) {
-                                                        $(`#${params[0]}`).dxButton("instance").option("visible", true);
-                                                        $(`#${params[2]}`).dxButton("instance").option("visible", true);
-                                                        if (storedStatus.text == "Approved")
-                                                            $(`#${params[0]}`).css("background-color", window.DecisionColors.accepted);
-                                                        if (storedStatus.text == "Declined")
-                                                            $(`#${params[2]}`).css("background-color", window.DecisionColors.accepted);
-                                                        if (storedStatus)
-                                                            disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
-                                                    }
-                                                    else {
-                                                        $(`#${params[0]}`).dxButton("instance").option("visible", false);
-                                                        $(`#${params[2]}`).dxButton("instance").option("visible", false);
-                                                    }
-                                                }
-                                                else{
+                                     if (formProps.dept == "LMKT") {
+                                         var storedStatus = getDelayAcceptStoredStatus(formItems, formProps.dept, formItems);
+                                         if (storedStatus) {
+                                             $(`#${params[0]}`).dxButton("instance").option("visible", true);
+                                             $(`#${params[2]}`).dxButton("instance").option("visible", true);
+                                             if (storedStatus.text == "Approved")
+                                                 $(`#${params[0]}`).css("background-color", window.DecisionColors.accepted);
+                                             if (storedStatus.text == "Declined")
+                                                 $(`#${params[2]}`).css("background-color", window.DecisionColors.accepted);
+                                             if (storedStatus)
+                                                 disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
+                                         }
+                                         else {
+                                             $(`#${params[0]}`).dxButton("instance").option("visible", false);
+                                             $(`#${params[2]}`).dxButton("instance").option("visible", false);
+                                         }
+                                     }
+                                     else{
 
-                            $(`#${acceptButtonId}`).css("background-color", window.DecisionColors.accepted);
-                                                updateDelayAcceptStatus(
-                                                    acceptStatusId,
-                                                    acceptButtonId,
-                                                    latestTatObject[dept]?.AcceptDate
-                                                );
-                                                    disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
-                                                }
-                                      
+                                  
 
-                                            }
+
+                                     $(`#${acceptButtonId}`).css("background-color", window.DecisionColors.accepted);
+                                     updateDelayAcceptStatus(
+                                         acceptStatusId,
+                                         acceptButtonId,
+                                         latestTatObject[formProps.dept]?.AcceptDate
+                                     );
+                                         disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
+                                     }
+                                  }
                                      //  if (rejectButtonId)
                                      // {
                          //    $(`#${rejectButtonId}`).css("background-color", window.DecisionColors.accepted);
@@ -6578,7 +6669,7 @@ function styleModeChange(item){
                             }
                            
                             
-                                   }, 100);
+                                   },100);
 
 
         }

@@ -601,7 +601,6 @@ var MGridOption = class MGridOption {
             location: "after",
             widget: "dxButton",
             options: {
-                type: 'default',
                 icon: "refresh",
                 onClick: function () {
                     dtGrid.refresh();
@@ -609,73 +608,72 @@ var MGridOption = class MGridOption {
             }
         });
 
-        // Add Edit Layout button (always visible)
-        e.toolbarOptions.items.unshift({
-            location: "after",
-            widget: "dxButton",
-            options: {
-                type: 'default',
-                text: 'Edit Layout',
-                icon: "edit",
-                onClick: function () {
-                    if (that.mGridInstance) {
-                        that.mGridInstance.toggleEditLayoutMode();
-                        // Update button appearance
-                        if (that.mGridInstance.isEditLayoutMode) {
-                            $(this).dxButton('instance').option('type', 'success');
-                            $(this).dxButton('instance').option('text', 'Exit Layout Edit');
-                        } else {
-                            $(this).dxButton('instance').option('type', 'default');
-                            $(this).dxButton('instance').option('text', 'Edit Layout');
+        if (_isSuperUser) {
+            // Add Edit Layout button (always visible)
+            e.toolbarOptions.items.unshift({
+                location: "after",
+                widget: "dxButton",
+                options: {
+                    text: 'Edit Layout',
+                    icon: "edit",
+                    onClick: function () {
+                        if (that.mGridInstance) {
+                            that.mGridInstance.toggleEditLayoutMode();
+                            // Update button appearance
+                            if (that.mGridInstance.isEditLayoutMode) {
+                                $(this).dxButton('instance').option('type', 'success');
+                                $(this).dxButton('instance').option('text', 'Exit Layout Edit');
+                            } else {
+                                $(this).dxButton('instance').option('type', 'default');
+                                $(this).dxButton('instance').option('text', 'Edit Layout');
+                            }
                         }
                     }
                 }
-            }
-        });
-        // Bulk Mode Toggle Button
-        e.toolbarOptions.items.unshift({
-            location: "after",
-            widget: "dxButton",
-            options: {
-                type: "default",
-                text: "Bulk Mode",
-                icon: "check",
-                onClick: function () {
-                    if (that.mGridInstance) {
-                        let isOn = that.mGridInstance.toggleBulkMode();
+            });
+            // Bulk Mode Toggle Button
+            e.toolbarOptions.items.unshift({
+                location: "after",
+                widget: "dxButton",
+                options: {
+                    text: "Bulk Mode",
+                    icon: "check",
+                    onClick: function () {
+                        if (that.mGridInstance) {
+                            let isOn = that.mGridInstance.toggleBulkMode();
 
-                        const btn = $(this).dxButton("instance");
+                            const btn = $(this).dxButton("instance");
 
-                        if (isOn) {
-                            btn.option({
-                                type: "success",
-                                text: "Exit Bulk Mode"
-                            });
-                        } else {
-                            btn.option({
-                                type: "default",
-                                text: "Bulk Mode"
-                            });
+                            if (isOn) {
+                                btn.option({
+                                    type: "success",
+                                    text: "Exit Bulk Mode"
+                                });
+                            } else {
+                                btn.option({
+                                    type: "default",
+                                    text: "Bulk Mode"
+                                });
+                            }
                         }
                     }
                 }
-            }
-        });
-        // Bulk Delete Button
-        e.toolbarOptions.items.unshift({
-            location: "after",
-            widget: "dxButton",
-            options: {
-                type: "danger",
-                text: "Delete Selected",
-                icon: "trash",
-                onClick: function () {
-                    if (that.mGridInstance) {
-                        that.mGridInstance.executeBulkDelete();
+            });
+            // Bulk Delete Button
+            e.toolbarOptions.items.unshift({
+                location: "after",
+                widget: "dxButton",
+                options: {
+                    text: "Delete Selected",
+                    icon: "trash",
+                    onClick: function () {
+                        if (that.mGridInstance) {
+                            that.mGridInstance.executeBulkDelete();
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
         if (this.GridConfig)
             if (this.GridConfig.sysTableConfig.toolbarItemsConfig) {
                 var gridToolBarConfig = tryParseJSON((this.GridConfig.sysTableConfig.toolbarItemsConfig),"toolbarItemsConfig Problem");

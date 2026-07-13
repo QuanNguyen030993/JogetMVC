@@ -686,43 +686,6 @@ Note:
                 };
             }
 
-            // function escapeHtml(s) {
-            //     return String(s ?? "")
-            //         .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
-            //         .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
-            // }
-
-            // function renderComments(items) {
-            //     if (!Array.isArray(items) || items.length === 0) {
-            //         return `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No audit logs</div>`;
-            //     }
-            //     return items.map((c) => `
-            //             <div class="ct-item">
-            //                 <div class="ct-user">${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}</div>
-            //                 <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
-            //                 <div class="ct-text">${escapeHtml(c.commentText || "")}</div>
-            //             </div>
-            //         `).join("");
-            // }
-
-            // const loadComments = debounce(function (quoteNo, quoteId) {
-            //     document.documentElement.style.setProperty("--rightdock-width", "20%");
-            //     $("#rightCommentSub").text(`Audit log - ${quoteNo}` || "-");
-            //     $("#rightCommentList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
-
-            //     const q = `SELECT * FROM PolicyIssuanceCommentLog WHERE PolicyIssuanceId = ${quoteId}`;
-            //     $.ajax({
-            //         url: `/api/PolicyIssuanceCommentLog/ExecuteCustomQuery`,
-            //         method: "POST",
-            //         async: true,
-            //         contentType: "application/json",
-            //         data: JSON.stringify(q),
-            //         success: function (data) { $("#rightCommentList").html(renderComments(data)); },
-            //         error: function () {
-            //             $("#rightCommentList").html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load audit logs</div>`);
-            //         }
-            //     });
-            // }, 180);
 
             const loadComments = debounce(function (quoteNo, quoteId) {
                 document.documentElement.style.setProperty("--rightdock-width", "20%");

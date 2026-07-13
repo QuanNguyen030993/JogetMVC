@@ -117,7 +117,7 @@ connectionSignR.start().then(async function () {
     });
     connectionSignR.on("onlineUsersChanged", (users) => {
         signalRBlink();
-        userRender(users);
+        //userRender(users);
     });
     connectionSignR.on(`sectionRender_${_connectionId}`, (responseData) => {
         signalRBlink();

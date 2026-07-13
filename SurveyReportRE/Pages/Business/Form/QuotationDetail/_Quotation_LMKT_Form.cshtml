@@ -1,6 +1,7 @@
 @using JogetMVC.Model
 @{
     string dept = "LMKT";
+    string prefix = "qt";
     long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
 }
 <style>
@@ -13,6 +14,14 @@
 <script type="text/javascript">
     $(function() {
     var sectionId = "@(ViewData["Cd"])";
+        var thisObject = new Object();
+        thisObject.ModelName =  "Quotation";
+        thisObject.formId = `@QTViewIdHelper.Form(dept, quotationId)`;
+            thisObject.dept = `@dept`;
+        thisObject.prefix = `@prefix`;
+
+
+
     var that = new Object();
     that.ModelName = "Quotation";
     that.moduleName = "default";
@@ -94,7 +103,7 @@
     //     }
     // });
 
-        delayAcceptStatusV2(null, `@QTViewIdHelper.Form(dept, quotationId)`, "@dept", ...itemsDelay);
+        delayAcceptStatusV2(null, thisObject, ...itemsDelay);
 
         setTimeout(() => {
         var picJson = PIC_JSON || "{}";
