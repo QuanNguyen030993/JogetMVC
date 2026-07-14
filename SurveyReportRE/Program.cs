@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.AspNetCore.StaticFiles;
 using ERPCore.Models.Config;
 using SautinSoft.Document;
 using Serilog;
@@ -25,25 +26,55 @@ using Serilog.Events;
 
 
 var builder = WebApplication.CreateBuilder(args);
-string connectionLogString = ControllerUtil.ParseConnectionString(builder.Configuration.GetConnectionString("LogConnection"), builder.Configuration);
+string connectionLogString = "";
+try
+{
+    var rawConnectionString = builder.Configuration.GetConnectionString("LogConnection");
+    if (!string.IsNullOrEmpty(rawConnectionString))
+    {
+        connectionLogString = ControllerUtil.ParseConnectionString(rawConnectionString, builder.Configuration);
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error parsing connection string for LogConnection: {ex.Message}");
+}
+
 var config = builder.Configuration.GetFileProvider();
-var logger = new LoggerConfiguration()
-                    //.ReadFrom.Configuration(builder.Configuration)
+var loggerConfiguration = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("System", LogEventLevel.Warning)
                     .Enrich.FromLogContext()
                     .WriteTo.Console()
+    .WriteTo.File(
+        path: Path.Combine(builder.Environment.ContentRootPath, "Logs", "app-log-.txt"),
+        restrictedToMinimumLevel: LogEventLevel.Information,
+        rollingInterval: RollingInterval.Day
+    );
+
+if (!string.IsNullOrEmpty(connectionLogString))
+{
+    loggerConfiguration.WriteTo.Logger(lc => lc
+        .Filter.ByIncludingOnly(logEvent =>
+             logEvent.Level == LogEventLevel.Warning || 
+             logEvent.Level == LogEventLevel.Error || 
+             logEvent.Level == LogEventLevel.Fatal
+        )
                     .WriteTo.MSSqlServer(
-                            connectionLogString,
+            connectionString: connectionLogString,
                             sinkOptions: new Serilog.Sinks.MSSqlServer.MSSqlServerSinkOptions
                             {
                                 TableName = "Logs",
                                 AutoCreateSqlTable = true
                             }
                         )
-                    .Filter.ByIncludingOnly(logEvent =>
-                         logEvent.Level == LogEventLevel.Error || logEvent.Level == LogEventLevel.Warning //|| logEvent.Level == LogEventLevel.Information
-                    )
-                    .CreateLogger();
-Log.Logger = logger;
+    );
+}
+
+Log.Logger = loggerConfiguration.CreateLogger();
+builder.Host.UseSerilog(Log.Logger);
+
 
 string sautinSoftLicenseKey = builder.Configuration.GetSection("SautinSoft:License").Value;
 DocumentCore.SetLicense(sautinSoftLicenseKey);
@@ -112,7 +143,6 @@ builder.Services.AddSession();
 builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(@"C:\AppKeys\MyApp"))
     .SetApplicationName("TMIV.MyApp");
-builder.Host.UseSerilog(logger);
 builder.Services.AddCors(options => // React debug
 {
     options.AddPolicy("AllowFrontend",
@@ -135,7 +165,17 @@ if (!app.Environment.IsDevelopment())
 app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
 app.UseSerilogRequestLogging();
-app.UseStaticFiles();
+var contentTypeProvider = new FileExtensionContentTypeProvider();
+contentTypeProvider.Mappings[".doc"] = "application/msword";
+contentTypeProvider.Mappings[".docx"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+contentTypeProvider.Mappings[".xls"] = "application/vnd.ms-excel";
+contentTypeProvider.Mappings[".xlsx"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+contentTypeProvider.Mappings[".ppt"] = "application/vnd.ms-powerpoint";
+contentTypeProvider.Mappings[".pptx"] = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+app.UseStaticFiles(new StaticFileOptions
+{
+    ContentTypeProvider = contentTypeProvider
+});
 
 app.UseRouting();
 

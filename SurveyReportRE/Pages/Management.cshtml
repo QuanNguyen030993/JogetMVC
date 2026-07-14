@@ -29,7 +29,6 @@
                 type: 'GET'
             }).done(function (data) {
                 try {
-                    debugger
                     addTab(code, caption, data);
                     $(`#${code}_content_wrapper`)
                         .attr("data-source-url", url)
@@ -719,6 +718,10 @@
         items: [],
         unreadCount: 0,
         currentFilter: "all",
+        reloadRequestId: 0,
+        reloadTimer: null,
+        openingIds: new Set(),
+        pendingReadIds: new Set(),
         // popup: null,
         popover: null,
         list: null
@@ -849,6 +852,7 @@
 
 
     function setNotifCount(n) {
+        n = Math.max(0, Number(n) || 0);
         const $count = $("#notificationBtn .notif-count");
         if (!n || n <= 0) {
             $count.text("").hide();
@@ -863,26 +867,34 @@
 
 
     function apiMarkRead(id) {
-
-        ajaxPut('/api/Notification/UpdateData', { key: id, values: JSON.stringify({ isRead: true }) }, {
-            onSuccess: function (response) {
-            },
-            onError: function (err) {
-            }
+        const notificationId = String(id ?? "");
+        _notif.pendingReadIds.add(notificationId);
+        const request = ajaxPut('/api/Notification/UpdateData', {
+            key: id,
+            values: JSON.stringify({ isRead: true })
         });
-        // TODO: thay bằng API thật
-        // return $.post(`/api/Notifications/MarkRead?id=${id}`);
-        return $.Deferred().resolve(true).promise();
+        request.always(function () {
+            _notif.pendingReadIds.delete(notificationId);
+        });
+        return request;
     }
 
-    function apiMarkAllRead() {
-        // TODO: thay bằng API thật
-        // return $.post(`/api/Notifications/MarkAllRead`);
-        return $.Deferred().resolve(true).promise();
+    async function apiMarkAllRead() {
+        const unreadItems = (_notif.items || []).filter(item => !item.isRead);
+        const results = await Promise.allSettled(unreadItems.map(item => apiMarkRead(item.id)));
+        let failed = 0;
+        results.forEach((result, index) => {
+            if (result.status === "fulfilled") {
+                unreadItems[index].isRead = true;
+            } else {
+                failed += 1;
+            }
+        });
+        return { updated: unreadItems.length - failed, failed };
     }
 
     function ensureNotificationPopup() {
-        if (_notif.popup) return;
+        if (_notif.popover) return;
 
         _notif.popover = $("#notificationPopOver").dxPopover({
             target: "#notificationBtn",       // 🔔 neo theo bell
@@ -938,10 +950,11 @@
                     type: "default",
                     stylingMode: "outlined",
                     onClick: async function () {
-                        await apiMarkAllRead();
-                        // update local state
-                        _notif.items.forEach(x => x.isRead = true);
+                        const result = await apiMarkAllRead();
                         refreshNotifUI();
+                        if (result.failed) {
+                            DevExpress.ui.notify(`${result.failed} notification(s) could not be updated`, "warning", 1800);
+                        }
                     }
                 });
 
@@ -986,7 +999,6 @@
                                   </div>
                                   <div class="notif-view-more rich-view-more">Click to view more</div>
                                   <div style="margin-top:8px; display:flex; gap:8px;">
-                                    <a href="javascript:void(0)" class="notif-open">Open</a>
                                     <a href="javascript:void(0)" class="notif-mark">${isUnread ? "Mark read" : "Read"}</a>
                                     <a href="javascript:void(0)" class="notif-view">View message</a>
                                   </div>
@@ -994,17 +1006,22 @@
                               </div>
                             </div>
                         `)
+                        .css("cursor", "pointer")
                         .data("item", itemData)
-                        .on("click", ".notif-open", async function (e) {
-                            e.stopPropagation();
-                            await openNotification(itemData);
+                        .on("click", function (e) {
+                            if ($(e.target).closest("a, .notif-message-preview, .notif-view-more").length) return;
+                            openNotification(itemData);
                         })
                         .on("click", ".notif-mark", async function (e) {
                             e.stopPropagation();
                             if (!itemData.isRead) {
-                                await apiMarkRead(itemData.id);
-                                itemData.isRead = true;
-                                refreshNotifUI();
+                                try {
+                                    await apiMarkRead(itemData.id);
+                                    itemData.isRead = true;
+                                    refreshNotifUI();
+                                } catch (err) {
+                                    DevExpress.ui.notify("Unable to mark notification as read", "warning", 1500);
+                                }
                             }
                         }).on("click", ".notif-view", async function (e) {
                             openMessageDialog(itemData);
@@ -1036,22 +1053,59 @@
 
 
     // ====== open item ======
+    function getNotificationTarget(item) {
+        let target = item?.url ?? item?.Url ?? "";
+        for (let i = 0; i < 3 && typeof target === "string"; i++) {
+            const value = target.trim();
+            if (!value) return null;
+            if (!(value.startsWith("{") || value.startsWith('"'))) {
+                target = { url: value };
+                break;
+            }
+            try { target = JSON.parse(value); } catch { return null; }
+        }
+
+        if (target?.url && typeof target.url === "object") target = target.url;
+        if (!target || typeof target !== "object") return null;
+
+        const url = target.url ?? target.Url;
+        if (!url || typeof url !== "string") return null;
+        return {
+            url: url,
+            caption: target.caption ?? target.Caption ?? target.code ?? target.Code
+                ?? `notification_${item?.recordGuid ?? item?.RecordGuid ?? item?.id ?? item?.Id}`,
+            name: target.name ?? target.Name ?? item?.title ?? item?.Title ?? "Notification",
+            data: target.data ?? target.Data ?? null
+        };
+    }
+
     async function openNotification(item) {
+        const itemId = String(item?.id ?? item?.Id ?? "");
+        if (_notif.openingIds.has(itemId)) return;
+        _notif.openingIds.add(itemId);
+        setTimeout(() => _notif.openingIds.delete(itemId), 800);
+
         // 1) mark read
         if (!item.isRead) {
-            await apiMarkRead(item.id);
             item.isRead = true;
             refreshNotifUI();
+            apiMarkRead(item.id).catch(function (err) {
+                item.isRead = false;
+                refreshNotifUI();
+                console.warn("Unable to mark notification as read", err);
+            });
         }
 
         // 2) hành động mở: tùy hệ bạn
         // Nếu bạn có obj.url/caption/name kiểu loadParams -> callElementView(...)
-        if (item.url) {
-            // invokePageTab(item.url,true);
-            callElementView(item.url.url, item.url.caption, item.url.name);
-        } else {
+        const target = getNotificationTarget(item);
+        if (!target) {
             DevExpress.ui.notify("No target action for this notification", "warning", 1500);
+            return;
         }
+
+        _notif.popover?.hide();
+        callElementView(target.url, target.caption, target.name, target.data);
     }
     function refreshNotifUI() {
         _notif.unreadCount = (_notif.items || []).filter(x => !x.isRead).length;
@@ -1078,13 +1132,11 @@
     }
 
     // ====== public function you already call ======
-    function updateNotification(intervalMs = 10000) {
-         reloadNotifications();
-
-        // polling
-        setInterval(() => {
-             // reloadNotifications();
-        }, intervalMs);
+    function updateNotification() {
+        clearTimeout(_notif.reloadTimer);
+        _notif.reloadTimer = setTimeout(function () {
+            reloadNotifications().catch(function () { });
+        }, 80);
     }
 
     function invokePageTab(objString, isNotify = false){
@@ -1098,9 +1150,8 @@
 
     ensureNotificationPopup();
     updateNotification();
-     $("#notificationBtn").on("click", function () {
+     $("#notificationBtn").off("click.notification").on("click.notification", function () {
          $(this).toggleClass("is-open");
-     hideNotificationDot();
      // _notif.popup.show();
      _notif.popover.toggle();
 

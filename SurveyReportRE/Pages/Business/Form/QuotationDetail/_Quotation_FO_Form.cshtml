@@ -46,9 +46,52 @@
     that2.uploaderAllow = _role == "@dept";
     that2.data = { SectionName: `${sectionId}_${that2.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" }; //{"SectionName":"default_FO_410"}
 
+    function getClientDecisionStatus(actionStatus) {
+        if (!actionStatus) return "";
+        try {
+            var status = typeof actionStatus === "string"
+                ? JSON.parse(actionStatus)
+                : actionStatus;
+            return status?.ClientDecision || "";
+        } catch (err) {
+            console.warn("Unable to read ClientDecision from actionStatus", err);
+            return "";
+        }
+    }
+
+    function setClientDecisionStatus(decision) {
+        var form = $("#@QTViewIdHelper.Form(dept, quotationId)").dxForm("instance");
+        if (!form) return;
+
+        var formData = form.option("formData") || {};
+        var status = {};
+        try {
+            status = formData.actionStatus
+                ? (typeof formData.actionStatus === "string" ? JSON.parse(formData.actionStatus) : formData.actionStatus)
+                : {};
+        } catch (err) {
+            console.warn("Unable to update ClientDecision in actionStatus", err);
+        }
+
+        status = status && typeof status === "object" ? status : {};
+        if (decision) {
+            status.ClientDecision = decision;
+        } else {
+            delete status.ClientDecision;
+        }
+        form.updateData("actionStatus", JSON.stringify(status));
+    }
+
 
     window.QuotationPage.state.formFO = $("#@QTViewIdHelper.Form(dept, quotationId)").dxForm({
     dataSource: makeBasicDataSource(that, true),
+    onContentReady: function (e) {
+        var formData = e.component.option("formData") || {};
+        var storedDecision = getClientDecisionStatus(formData.actionStatus);
+        if ((formData.clientDecision || "") !== storedDecision) {
+            e.component.updateData("clientDecision", storedDecision || null);
+        }
+    },
     items: [
 
             { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentByCase(that , that2)},
@@ -76,7 +119,29 @@
                     { dataField: "businessAddress", label: { template: labelTpl("Business Address") }, editorOptions: { readOnly: true } },
                         { dataField: "sourceOfBusinessName", label: { template: labelTpl("SourceOfBusinessName - Nguồn business (name)") } },
 
-                     ]},{
+                     ]},
+                 {
+                    itemType: "group",
+                    name: "clientConfirmGroup",
+                    caption: "Client Confirm",
+                    colCount: 1,
+                    items: [
+                        {
+                            dataField: "clientDecision",
+                            editorType: "dxRadioGroup",
+                            label: { text: "Decision" },
+                            editorOptions: {
+                                layout: "horizontal",
+                                items: ["Accept", "Refuse", "End Quotation"],
+                                onValueChanged: function (e) {
+                                    if (!e.event) return;
+                                    setClientDecisionStatus(e.value);
+                                }
+                            }
+                        }
+                    ]
+                 },
+                 {
                         itemType: "group",
                         caption: "Products",
                         colCount: 2,

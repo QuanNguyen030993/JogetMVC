@@ -2975,34 +2975,56 @@
 
             // ====== reload + refresh UI ======
         async function reloadNotifications(take = 30) {
+            _notif.reloadRequestId = (_notif.reloadRequestId || 0) + 1;
+            const requestId = _notif.reloadRequestId;
+            const params = new URLSearchParams();
+            params.set("refKey", _loginUser);
+            params.set("refField", "ReceivedBy");
 
-            var de = $.Deferred();
-                var params = new URLSearchParams();
-                params.set("refKey", _loginUser);
-                params.set("refField", 'ReceivedBy');
-                ajaxGet(`/api/Notification/GetAll?${params.toString()}`, null) // Do not passing another param if use URL Search Params
-                .then(ids => {
-                        ids = ids.map(id => {
-                            try {
-                                if (id.url && id.url !== "{}") {
-                                    id.url = JSON.parse(id.url);
-                                } else {
-                                    id.url = "";
-                                }
-                            } catch (e) {
-                                id.url = "";
-                                de.reject(e);
+            try {
+                const result = await ajaxGet(`/api/Notification/GetAll?${params.toString()}`, null);
+                if (requestId !== _notif.reloadRequestId) return _notif.items || [];
+
+                const seenIds = new Set();
+                const items = (Array.isArray(result) ? result : [])
+                    .filter(item => {
+                        const key = String(item?.id ?? item?.Id ?? "");
+                        if (!key || seenIds.has(key)) return false;
+                        seenIds.add(key);
+                        return true;
+                    })
+                    .map(item => {
+                        item.id = item.id ?? item.Id;
+                        let target = item.url ?? item.Url ?? "";
+                        for (let i = 0; i < 2 && typeof target === "string"; i++) {
+                            const value = target.trim();
+                            if (!value || value === "{}") {
+                                target = "";
+                                break;
                             }
-                            return id;
-                        });
-                        const res = ids;
-                        _notif.items = res || [];
-                        refreshNotifUI();
-                         de.resolve("Ok");
-                    }).fail(function (xhr) {
-                         de.reject(xhr);
-                    }).promise();
+                            if (!(value.startsWith("{") || value.startsWith('"'))) break;
+                            try { target = JSON.parse(value); } catch { break; }
+                        }
+                        item.url = target;
+                        const readValue = item.isRead ?? item.IsRead;
+                        item.isRead = readValue === true
+                            || readValue === 1
+                            || String(readValue).toLowerCase() === "true";
+                        if (_notif.pendingReadIds?.has(String(item.id))) {
+                            item.isRead = true;
+                        }
+                        return item;
+                    });
 
+                _notif.items = items;
+                refreshNotifUI();
+                return items;
+            } catch (xhr) {
+                if (requestId === _notif.reloadRequestId) {
+                    console.warn("Unable to reload notifications", xhr);
+                }
+                throw xhr;
+            }
         }
         //Attachment handle
         
@@ -4206,6 +4228,7 @@
                 maxLoopCount: x.maxLoopCount || null,
                 isExitTransition: !!x.isExitTransition,
                 userDecisionLabel: x.userDecisionLabel || "",
+                mailTemplateName: x.mailTemplateName || "",
                 conditionJson: x.conditionJson || {},
                 command: x.command ?? null,
                     commandConfig: x.commandConfig ?? null
@@ -4225,8 +4248,9 @@
                     levelNo: x.levelNo,
                     flowType: x.flowType || "Both",
                     allowLoop: !!x.allowLoop,
-                    loopGroup: x.loopGroup || "",
-                    x: x.x,
+                     loopGroup: x.loopGroup || "",
+                    mailTemplateName: x.mailTemplateName || "",
+                     x: x.x,
                     y: x.y
              }
         }

@@ -18,12 +18,12 @@ Note:
 *@
 
 <style>
-    #qt-overviewRoot {
+    #qt-overviewRoot_@(ViewData["Id"]) {
         position: relative;
     }
 
-    #qt-overviewRoot.qt-render-loading .cardBody,
-    #qt-overviewRoot.qt-render-loading [class="qt-cardHeader"] {
+    #qt-overviewRoot_@(ViewData["Id"]).qt-render-loading .cardBody,
+    #qt-overviewRoot_@(ViewData["Id"]).qt-render-loading .qt-cardHeader {
         pointer-events: none;
         user-select: none;
     }
@@ -33,25 +33,79 @@ Note:
         inset: 0;
         z-index: 120;
         display: flex;
-        flex-direction: column;
-        gap: 14px;
-        padding: 18px;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
         overflow: hidden;
         border-radius: inherit;
-        background: rgba(248, 250, 252, .78);
-        backdrop-filter: blur(2px);
+        background: rgba(248, 250, 252, .82);
+        backdrop-filter: blur(3px);
         opacity: 0;
         visibility: hidden;
         transition: opacity .28s ease, visibility .28s ease;
     }
 
-    #qt-overviewRoot.qt-render-loading .qt-render-overlay {
+    #qt-overviewRoot_@(ViewData["Id"]).qt-render-loading .qt-render-overlay {
         opacity: 1;
         visibility: visible;
     }
 
     .qt-render-overlay.is-leaving {
         opacity: 0 !important;
+    }
+
+    .qt-loader-panel {
+        width: min(320px, calc(100% - 32px));
+        padding: 26px 28px 24px;
+        text-align: center;
+        border: 1px solid rgba(203, 213, 225, .62);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, .88);
+        box-shadow: 0 18px 55px rgba(15, 23, 42, .14);
+    }
+
+    .qt-loader-icon-host {
+        display: grid;
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 15px;
+        place-items: center;
+    }
+
+    .qt-loader-icon-host > img,
+    .qt-loader-icon-host > svg {
+        display: block;
+        max-width: 64px;
+        max-height: 64px;
+        object-fit: contain;
+    }
+
+    .qt-loader-default-icon {
+        position: relative;
+        width: 52px;
+        height: 52px;
+        border: 4px solid rgba(37, 99, 235, .14);
+        border-top-color: #2563eb;
+        border-radius: 50%;
+        animation: qtLoaderSpin .85s linear infinite;
+    }
+
+    .qt-loader-default-icon::after {
+        content: "";
+        position: absolute;
+        inset: 7px;
+        border: 3px solid rgba(14, 165, 233, .14);
+        border-bottom-color: #0ea5e9;
+        border-radius: 50%;
+        animation: qtLoaderSpin .65s linear infinite reverse;
+    }
+
+    .qt-loader-message {
+        margin-bottom: 15px;
+        color: #334155;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: .01em;
     }
 
     .qt-render-progress {
@@ -66,59 +120,26 @@ Note:
         width: 12%;
         height: 100%;
         border-radius: inherit;
-        background: linear-gradient(90deg, #2563eb, #38bdf8);
+        background: linear-gradient(90deg, #2563eb, #38bdf8, #2563eb);
+        background-size: 200% 100%;
+        animation: qtProgressFlow 1.1s linear infinite;
         transition: width .3s ease;
     }
 
-    .qt-render-status {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        color: #475569;
-        font-size: 12px;
-        font-weight: 650;
+    @@keyframes qtLoaderSpin {
+        to { transform: rotate(360deg); }
     }
 
-    .qt-skeleton-row,
-    .qt-skeleton-card {
-        position: relative;
-        overflow: hidden;
-        border: 1px solid rgba(203, 213, 225, .55);
-        background: rgba(255, 255, 255, .72);
+    @@keyframes qtProgressFlow {
+        to { background-position: -200% 0; }
     }
 
-    .qt-skeleton-row {
-        height: 54px;
-        border-radius: 12px;
-    }
-
-    .qt-skeleton-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-    }
-
-    .qt-skeleton-card {
-        min-height: 150px;
-        border-radius: 14px;
-    }
-
-    .qt-skeleton-row::after,
-    .qt-skeleton-card::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        transform: translateX(-100%);
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,.72), transparent);
-        animation: qtSkeletonShimmer 1.2s infinite;
-    }
-
-    @@keyframes qtSkeletonShimmer {
-        100% { transform: translateX(100%); }
-    }
-
-    @@media (max-width: 900px) {
-        .qt-skeleton-grid { grid-template-columns: 1fr; }
+    @@media (prefers-reduced-motion: reduce) {
+        .qt-loader-default-icon,
+        .qt-loader-default-icon::after,
+        .qt-render-progress > span {
+            animation-duration: 1.8s;
+        }
     }
 </style>
 
@@ -159,6 +180,9 @@ Note:
     };
     var firstRender = true;
     setTimeout(() => {
+        const quotationViewInstanceId = "@ViewData["Id"]";
+        const quotationViewInstanceKey = `${formModuleKeyQt}:${quotationViewInstanceId}`;
+        const quotationOverviewRootId = `${formModuleKeyQt}-overviewRoot_${quotationViewInstanceId}`;
         const QtRoles = qtDeptModuleCode;
         $(`#${formModuleKeyQt}-loginRoleLabel`).text(state.currentUserRole);
 
@@ -177,32 +201,59 @@ Note:
         const quotationRenderGate = (function () {
             var sequence = 0;
             var startedAt = 0;
-            var $root = $(`#${formModuleKeyQt}-overviewRoot`);
+            var $root = $(`#${quotationOverviewRootId}`);
             var $overlay = $root.children(".qt-render-overlay");
 
             if (!$overlay.length) {
                 $overlay = $(`
-                    <div class="qt-render-overlay" aria-live="polite" aria-busy="true">
-                        <div class="qt-render-status">
-                            <span class="qt-render-message">Preparing quotation interface…</span>
-                            <span class="qt-render-percent">0%</span>
-                        </div>
-                        <div class="qt-render-progress"><span></span></div>
-                        <div class="qt-skeleton-row"></div>
-                        <div class="qt-skeleton-grid">
-                            <div class="qt-skeleton-card"></div>
-                            <div class="qt-skeleton-card"></div>
-                            <div class="qt-skeleton-card"></div>
-                            <div class="qt-skeleton-card"></div>
+                    <div id="${formModuleKeyQt}-renderOverlay_${quotationViewInstanceId}" class="qt-render-overlay" role="status" aria-live="polite" aria-busy="true">
+                        <div class="qt-loader-panel">
+                            <div class="qt-loader-icon-host" aria-hidden="true">
+                                <div class="qt-loader-default-icon"></div>
+                            </div>
+                            <div class="qt-loader-message">Please wait…</div>
+                            <div class="qt-render-progress"><span></span></div>
                         </div>
                     </div>
                 `).appendTo($root);
             }
 
-            function setPhase(message, progress) {
+            function setLoadingIcon(source, options) {
+                var $host = $overlay.find(".qt-loader-icon-host").empty();
+                options = options || {};
+
+                function appendVisual(visual) {
+                    if (!visual) return;
+                    var $visual = visual.jquery ? visual : $(visual);
+                    if ($visual.length && !$visual.parent().is($host)) {
+                        $host.append($visual);
+                    }
+                }
+
+                if (!source) {
+                    $host.append('<div class="qt-loader-default-icon"></div>');
+                    return;
+                }
+
+                if (typeof source === "function") {
+                    appendVisual(source($host));
+                    return;
+                }
+
+                if (typeof source === "string") {
+                    $("<img>", {
+                        src: source,
+                        alt: options.alt || "",
+                        class: options.className || ""
+                    }).appendTo($host);
+                    return;
+                }
+
+                appendVisual(source);
+            }
+
+            function setPhase(_message, progress) {
                 progress = Math.max(0, Math.min(100, Number(progress) || 0));
-                $overlay.find(".qt-render-message").text(message || "Loading…");
-                $overlay.find(".qt-render-percent").text(`${progress}%`);
                 $overlay.find(".qt-render-progress > span").css("width", `${Math.max(progress, 8)}%`);
             }
 
@@ -253,9 +304,22 @@ Note:
                 }, 900);
             }
 
-            return { begin, setPhase, complete, fail };
+            if (window.QuotationLoadingIcon) {
+                setLoadingIcon(window.QuotationLoadingIcon);
+            }
+
+            return { begin, setPhase, complete, fail, setLoadingIcon };
         })();
 
+        window.OverviewViewRegistry = window.OverviewViewRegistry || {};
+        window.OverviewViewRegistry[quotationViewInstanceKey] = {
+            moduleCode: formModuleKeyQt,
+            recordId: quotationViewInstanceId,
+            rootId: quotationOverviewRootId,
+            renderGate: quotationRenderGate
+        };
+        window.QuotationRenderGates = window.QuotationRenderGates || {};
+        window.QuotationRenderGates[quotationViewInstanceId] = quotationRenderGate;
         window.QuotationRenderGate = quotationRenderGate;
 
         function money(n) {
@@ -583,7 +647,7 @@ Note:
         // Coalesce SignalR/action reloads so section templates are not rendered twice
         // while their nested controls are still being initialized.
         var quotationReloadPromise = null;
-        window.reloadQuotationComponents = function() {
+        function reloadQuotationInstance() {
             if (quotationReloadPromise) return quotationReloadPromise;
 
             quotationReloadPromise = (async function () {
@@ -613,6 +677,21 @@ Note:
             });
 
             return quotationReloadPromise;
+        }
+
+        window.OverviewViewRegistry[quotationViewInstanceKey].reload = reloadQuotationInstance;
+        window.reloadQuotationComponents = function(instanceId) {
+            var registry = window.OverviewViewRegistry || {};
+            if (instanceId !== undefined && instanceId !== null) {
+                return registry[`qt:${instanceId}`]?.reload?.();
+            }
+
+            var reloads = Object.keys(registry)
+                .filter(key => key.startsWith("qt:"))
+                .map(key => registry[key])
+                .filter(entry => entry && document.getElementById(entry.rootId) && typeof entry.reload === "function")
+                .map(entry => entry.reload());
+            return Promise.all(reloads);
         };
 
 

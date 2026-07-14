@@ -8,6 +8,12 @@ using System.Text.RegularExpressions;
 using Microsoft.Data.SqlClient;
 using ERPCore.Models.Migration.Config;
 using JogetMVC.Models.Models.Request;
+using ERPCore.Models.Models.Parsing;
+using Microsoft.AspNetCore.SignalR;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
+using ERPCore.ControllerUtil;
 
 [Route("api/[controller]/[action]")]
 [ApiController]
@@ -204,13 +210,33 @@ public class EmployeeController : BaseControllerApi<Employee>
 
 
     [HttpGet]
-    public async Task<IActionResult> EmployeeUpdate(string? adminUser, string? passWord)
+    public async Task<IActionResult> EmployeeUpdate(string? adminUser, string? passWord, string? connectionId)
     {
-        var domainEmailName = _configuration.GetValue<string>("Domain:Email") ?? "";
-        var users = await _usersRepository.GetAll();
-        var employees = await _BaseRepository.GetAll();
-        var branchEnums = await _enumDataRepository.GetAll();
+        var initiatorUserName = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, _configuration);
 
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await SendProgress(connectionId, 5, "Initializing Employee Sync...");
+
+                var claims = new List<System.Security.Claims.Claim> { new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, initiatorUserName) };
+                var identity = new System.Security.Claims.ClaimsIdentity(claims, "mock");
+                var principal = new System.Security.Claims.ClaimsPrincipal(identity);
+                var mockContext = new DefaultHttpContext { User = principal };
+                var mockAccessor = new MockHttpContextAccessor { HttpContext = mockContext };
+
+                var bgEmployeeRepo = new BaseRepository<Employee>(_configuration, mockAccessor);
+                var bgUsersRepo = new BaseRepository<Users>(_configuration, mockAccessor);
+                var bgEnumRepo = new BaseRepository<EnumData>(_configuration, mockAccessor);
+
+                await SendProgress(connectionId, 15, "Fetching users and employees from database...");
+        var domainEmailName = _configuration.GetValue<string>("Domain:Email") ?? "";
+                var users = await bgUsersRepo.GetAll();
+                var employees = await bgEmployeeRepo.GetAll();
+                var branchEnums = await bgEnumRepo.GetAll();
+
+                await SendProgress(connectionId, 25, "Analyzing database differences...");
         var employeeByAccount = employees
             .Where(employee => !string.IsNullOrWhiteSpace(employee.AccountName))
             .GroupBy(employee => employee.AccountName.Trim(), StringComparer.OrdinalIgnoreCase)
@@ -254,15 +280,38 @@ public class EmployeeController : BaseControllerApi<Employee>
             }
         }
 
-        if (insertedEmployees.Count > 0)
+                int totalToInsert = insertedEmployees.Count;
+                int totalToUpdate = updatedEmployees.Count;
+                int totalOperations = totalToInsert + totalToUpdate;
+                int processedCount = 0;
+
+                if (totalOperations == 0)
         {
-            await _BaseRepository.BulkInsertAsync(insertedEmployees);
+                    await SendProgress(connectionId, 100, "Employee database is already up to date.", isComplete: true);
+                    return;
         }
 
-        if (updatedEmployees.Count > 0)
+                await SendProgress(connectionId, 30, $"Syncing database: {totalToInsert} to insert, {totalToUpdate} to update...");
+
+                int batchSize = 100;
+                
+                // Batch inserts
+                for (int i = 0; i < totalToInsert; i += batchSize)
         {
-            await _BaseRepository.BulkUpdateAsync(
-                updatedEmployees,
+                    var batch = insertedEmployees.Skip(i).Take(batchSize).ToList();
+                    await bgEmployeeRepo.BulkInsertAsync(batch);
+                    processedCount += batch.Count;
+
+                    int progress = 30 + (int)(processedCount * 65.0 / totalOperations);
+                    await SendProgress(connectionId, progress, $"Inserting: {processedCount}/{totalOperations}...");
+                }
+
+                // Batch updates
+                for (int i = 0; i < totalToUpdate; i += batchSize)
+                {
+                    var batch = updatedEmployees.Skip(i).Take(batchSize).ToList();
+                    await bgEmployeeRepo.BulkUpdateAsync(
+                        batch,
                 new[]
                 {
                     nameof(Employee.FirstName),
@@ -276,15 +325,53 @@ public class EmployeeController : BaseControllerApi<Employee>
                     nameof(Employee.UsersId)
                 },
                 nameof(Employee.Id));
+                    processedCount += batch.Count;
+
+                    int progress = 30 + (int)(processedCount * 65.0 / totalOperations);
+                    await SendProgress(connectionId, progress, $"Updating: {processedCount}/{totalOperations}...");
         }
 
-        return Ok(new
+                await SendProgress(connectionId, 100, $"Completed! {totalToInsert} inserted, {totalToUpdate} updated.", isComplete: true);
+            }
+            catch (Exception ex)
         {
-            success = true,
-            inserted = insertedEmployees.Count,
-            updated = updatedEmployees.Count,
-            skipped = users.Count - processedAccounts.Count
+                Serilog.Log.Error(ex, "EmployeeUpdate background execution failed.");
+                await SendProgress(connectionId, 100, $"Error: {ex.Message}", isError: true);
+            }
         });
+
+        return Ok(new { success = true, message = "Employee update initiated..." });
+    }
+
+    private async Task SendProgress(string? connectionId, int progressvalue, string subTabContent, bool isComplete = false, bool isError = false)
+    {
+        if (string.IsNullOrEmpty(connectionId)) return;
+
+        var result = new SignalRResult
+        {
+            status = isComplete ? "complete" : (isError ? "error" : "saving ..."),
+            tabName = "Employee Update",
+            subTabContent = subTabContent,
+            progressvalue = progressvalue,
+            type = isComplete ? "complete" : (isError ? "error" : "inprogress")
+        };
+
+        try
+        {
+            if (FileProcessingHub._hubContext != null)
+            {
+                await FileProcessingHub._hubContext.Clients.Client(connectionId).SendAsync("R_OverviewLoading", new { payload = result, connectionId = connectionId });
+            }
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Error(ex, "Failed to send SignalR progress update.");
+        }
+    }
+
+    public class MockHttpContextAccessor : IHttpContextAccessor
+    {
+        public HttpContext? HttpContext { get; set; }
     }
 
     private static string ResolveAccountName(Users user, string domainEmailName)

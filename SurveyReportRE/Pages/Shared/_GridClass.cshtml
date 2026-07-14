@@ -1,4 +1,4 @@
-﻿<script>
+<script>
           //var container = $(`<div style="width: 100%; height: 100%; float: left;">`).appendTo(itemElement);
     //var imageUI = new ImageUI({
     //    container: container,
@@ -647,16 +647,28 @@
                 options: {
                     text: "Employee Update",
                     onClick: function (e) {
+                        makeMiniLoadingPanel("Employee Update", "Please wait...");
+                        var result = {
+                            payload: {
+                                progressvalue: 5,
+                                tabName: "Employee Update",
+                                subTabName: "Initiating..."
+                            },
+                            connectionId: _connectionId
+                        };
+                        renderBrowserLoading(result);
+
                         $.ajax({
-                            url: '/api/Employee/EmployeeUpdate',
+                            url: `/api/Employee/EmployeeUpdate?connectionId=${_connectionId}`,
                             success: function (response) {
                                 appNotifySuccess(
-                                    `Employee sync done: ${response.inserted || 0} inserted, ${response.updated || 0} updated.`,
+                                    "Employee sync initiated in the background! Please monitor the progress bar.",
                                     false
                                 );
-                                that.dataGrid?.refresh();
                             },
                             error: function (err) {
+                                result.payload.progressvalue = 100;
+                                renderBrowserLoading(result);
                                 appErrorHandling('Process update!', err);
                             }
                         });
@@ -733,12 +745,25 @@
                                         type: "success",
                                         onClick: function () {
                                             var data = contentElement.find(".dx-form").dxForm("instance").option("formData");
+                                            makeMiniLoadingPanel("User Update", "Please wait...");
+                                            var result = {
+                                                payload: {
+                                                    progressvalue: 5,
+                                                    tabName: "User Update",
+                                                    subTabName: "Initiating..."
+                                                },
+                                                connectionId: _connectionId
+                                            };
+                                            renderBrowserLoading(result);
+
                                             $.ajax({
-                                                url: `/api/Users/EmployeeUpdate?adminUser=${data.adminUser}&passWord=${data.passWord}`,
+                                                url: `/api/Users/EmployeeUpdate?adminUser=${data.adminUser}&passWord=${data.passWord}&connectionId=${_connectionId}`,
                                                 success: function (response) {
-                                                    appNotifySuccess("Process done!", false);
+                                                    appNotifySuccess("User sync initiated in the background! Please monitor the progress bar.", false);
                                                 },
                                                 error: function (err) {
+                                                    result.payload.progressvalue = 100;
+                                                    renderBrowserLoading(result);
                                                     appErrorHandling("Process update!", err);
                                                 }
                                             });

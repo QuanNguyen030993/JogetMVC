@@ -16,6 +16,10 @@ using System.Security.Principal;
 using ERPCore.Models.Migration.Business.HumanResource;
 using ERPCore.Common;
 using ERPCore.Models.Migration.Business.MasterData;
+using ERPCore.Models.Models.Parsing;
+using Microsoft.AspNetCore.SignalR;
+using System.Threading.Tasks;
+using ERPCore.ControllerUtil;
 
 namespace ERPCore.Controllers.Config
 {
@@ -155,21 +159,109 @@ namespace ERPCore.Controllers.Config
         }
 
         [HttpGet]
-        public async Task<IActionResult> EmployeeUpdate(string? adminUser, string? passWord)
+        public async Task<IActionResult> EmployeeUpdate(string? adminUser, string? passWord, string? connectionId)
         {
-            LDAPInfo ldapSetting = _configuration.GetSection("LDAP").Get<LDAPInfo>();
-            ldapSetting.LdapUser = adminUser;
-            ldapSetting.LdapPassword = passWord;
-            LDConnect.LDConnectInitialize(ldapSetting.Domain, ldapSetting.LdapUser, ldapSetting.LdapPassword);
-            List<ADUser> aDUsers = LDConnect.GetAllUsers(false, true);
-            foreach (var user in aDUsers)
-            {
-               await _BaseRepository.InsertData(JsonConvert.DeserializeObject<Users>(JsonConvert.SerializeObject(user)));
-            }
-            //LdapHelper.LdapInitialize(ldapSetting.LdapServer,ldapSetting.LdapUser,ldapSetting.LdapPassword);
-            //List<string> ldapUser = LdapHelper.GetAllUsers();
+            var initiatorUserName = ERPCore.ControllerUtil.ControllerUtil.GetCurrentContextUser(_httpContextAccessor, _configuration);
 
-            return Ok();
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await SendProgress(connectionId, 5, "Connecting to LDAP/Active Directory...", "User Update");
+
+                    LDAPInfo ldapSetting = _configuration.GetSection("LDAP").Get<LDAPInfo>();
+                    if (ldapSetting == null)
+                    {
+                        ldapSetting = new LDAPInfo();
+                    }
+                    ldapSetting.LdapUser = adminUser;
+                    ldapSetting.LdapPassword = passWord;
+                    LDConnect.LDConnectInitialize(ldapSetting.Domain, ldapSetting.LdapUser, ldapSetting.LdapPassword);
+
+                    await SendProgress(connectionId, 15, "Retrieving Active Directory users...", "User Update");
+                    List<ADUser> aDUsers = LDConnect.GetAllUsers(false, true);
+
+                    if (aDUsers == null || aDUsers.Count == 0)
+                    {
+                        await SendProgress(connectionId, 100, "No Active Directory users found.", "User Update", isComplete: true);
+                        return;
+                    }
+
+                    int totalUsers = aDUsers.Count;
+                    await SendProgress(connectionId, 30, $"Found {totalUsers} users. Preparing DB sync...", "User Update");
+
+                    var claims = new List<System.Security.Claims.Claim>();
+                    claims.Add(new System.Security.Claims.Claim("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name", initiatorUserName));
+                    var identity = new System.Security.Claims.ClaimsIdentity(claims, "mock");
+                    var principal = new System.Security.Claims.ClaimsPrincipal(identity);
+                    var mockContext = new DefaultHttpContext { User = principal };
+                    var mockAccessor = new MockHttpContextAccessor { HttpContext = mockContext };
+
+                    var bgUsersRepo = new BaseRepository<Users>(_configuration, mockAccessor);
+
+                    int batchSize = 100;
+                    int processedCount = 0;
+                    for (int i = 0; i < totalUsers; i += batchSize)
+                    {
+                        var batch = aDUsers.Skip(i).Take(batchSize).ToList();
+                        foreach (var user in batch)
+                        {
+                            try
+                            {
+                                await bgUsersRepo.InsertData(JsonConvert.DeserializeObject<Users>(JsonConvert.SerializeObject(user)));
+                            }
+                            catch (Exception ex)
+                            {
+                                Serilog.Log.Warning(ex, $"Failed to insert AD user {user.username}");
+                            }
+                        }
+                        processedCount += batch.Count;
+
+                        int progress = 30 + (int)(processedCount * 70.0 / totalUsers);
+                        await SendProgress(connectionId, progress, $"Syncing users: {processedCount}/{totalUsers}...", "User Update");
+                    }
+
+                    await SendProgress(connectionId, 100, $"Completed! {totalUsers} users processed.", "User Update", isComplete: true);
+                }
+                catch (Exception ex)
+                {
+                    Serilog.Log.Error(ex, "User update background execution failed.");
+                    await SendProgress(connectionId, 100, $"Error: {ex.Message}", "User Update", isError: true);
+                }
+            });
+
+            return Ok(new { success = true, message = "User update initiated..." });
+        }
+
+        private async Task SendProgress(string? connectionId, int progressvalue, string subTabContent, string tabName, bool isComplete = false, bool isError = false)
+        {
+            if (string.IsNullOrEmpty(connectionId)) return;
+
+            var result = new SignalRResult
+            {
+                status = isComplete ? "complete" : (isError ? "error" : "saving ..."),
+                tabName = tabName,
+                subTabContent = subTabContent,
+                progressvalue = progressvalue,
+                type = isComplete ? "complete" : (isError ? "error" : "inprogress")
+            };
+
+            try
+            {
+                if (FileProcessingHub._hubContext != null)
+                {
+                    await FileProcessingHub._hubContext.Clients.Client(connectionId).SendAsync("R_OverviewLoading", new { payload = result, connectionId = connectionId });
+                }
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Error(ex, "Failed to send SignalR progress update.");
+            }
+        }
+
+        public class MockHttpContextAccessor : IHttpContextAccessor
+        {
+            public HttpContext? HttpContext { get; set; }
         }
 
 

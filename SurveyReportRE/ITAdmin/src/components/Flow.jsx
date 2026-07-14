@@ -380,10 +380,13 @@ const layoutNodes = (nodes = [], edges = [], forceLayout = false) => {
 
         children.forEach((childId) => {
             const nextLevel = currentLevel + 1;
-            if ((levels.get(childId) || -1) < nextLevel) {
-                levels.set(childId, nextLevel);
+            // Prevent infinite loop on cycles by limiting maximum path level traversal to the nodes count
+            if (nextLevel < nodes.length) {
+                if ((levels.get(childId) || -1) < nextLevel) {
+                    levels.set(childId, nextLevel);
+                    queue.push(childId);
+                }
             }
-            queue.push(childId);
         });
     }
 
@@ -2639,10 +2642,46 @@ function Flow({ id: propId }) {
 
                 <div
                     className="flow-canvas-panel"
+                    style={{ position: 'relative' }}
                     onDrop={onDrop}
                     onDragEnter={onDragOver}
                     onDragOver={onDragOver}
                 >
+                    {loading && (
+                        <div className="flow-loading-overlay" style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: 'rgba(255, 255, 255, 0.7)',
+                            backdropFilter: 'blur(4px)',
+                            zIndex: 10,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '12px'
+                        }}>
+                            <div className="flow-spinner" style={{
+                                width: '40px',
+                                height: '40px',
+                                border: '4px solid #cbd5e1',
+                                borderTop: '4px solid #0284c7',
+                                borderRadius: '50%',
+                                animation: 'flow-spin 1s linear infinite'
+                            }} />
+                            <span style={{ fontSize: '14px', color: '#334155', fontWeight: '500', fontFamily: 'sans-serif' }}>
+                                Loading diagram...
+                            </span>
+                            <style>{`
+                                @keyframes flow-spin {
+                                    0% { transform: rotate(0deg); }
+                                    100% { transform: rotate(360deg); }
+                                }
+                            `}</style>
+                        </div>
+                    )}
                     <ReactFlow
                         className="workflow-canvas"
                         nodes={nodes}

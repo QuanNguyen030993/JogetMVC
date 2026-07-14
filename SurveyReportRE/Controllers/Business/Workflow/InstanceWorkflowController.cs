@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Serilog;
 using ERPCore.Common;
 using ERPCore.Controllers.Base;
 using ERPCore.Models.Base;
@@ -208,9 +210,6 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 
 
 
-        MailTemplate mailTemplate = new MailTemplate();
-        mailTemplate = await _mailTemplateRepository.GetSingleObject(s => s.TemplateName == "Submit Mail");
-        Users flowUser = new Users();
         PICAttributes pICAttributes = new PICAttributes();
         pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
         string accountName = submitRequest.StepsWorkflow.ToNodeId switch
@@ -223,20 +222,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             _ => null
         };
         ControllerHelper.SignalRResponse("R_ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
-        Employee employee = new Employee();
-        flowUser = await _usersRepository.GetSingleObject(s => s.username == accountName);
-        employee = await _employeeRepository.GetSingleObject(s => s.UsersId == flowUser.Id);
-        MailQueue mailQueue = new MailQueue();
-        if (mailTemplate != null)
-        {
-            DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
-            Dictionary<string, object> flowDictionaryData = new Dictionary<string, object>();
-            if (query.Rows.Count > 0)
-
-                flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
-            mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
-            if (mailQueue != null) await _mailQueueRepository.InsertData(mailQueue);
-        }
+        await SendAttachedWorkflowMailAsync(submitRequest, quotation);
 
         dynamic transferObject = new
         {
@@ -399,6 +385,228 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         await _notificationRepository.InsertData(notification);
 
         return Ok();
+    }
+
+    private static string? ReadMailTemplateName(JObject? source)
+    {
+        if (source == null) return null;
+
+        string[] keys = ["mailTemplateName", "templateMailName", "mailTemplate"];
+        foreach (string key in keys)
+        {
+            JToken? token = source.GetValue(key, StringComparison.OrdinalIgnoreCase);
+            if (token == null || token.Type == JTokenType.Null) continue;
+
+            if (token.Type == JTokenType.Object)
+            {
+                JObject templateObject = (JObject)token;
+                token = templateObject.GetValue("templateName", StringComparison.OrdinalIgnoreCase)
+                    ?? templateObject.GetValue("name", StringComparison.OrdinalIgnoreCase)
+                    ?? templateObject.GetValue("value", StringComparison.OrdinalIgnoreCase);
+            }
+
+            string value = token?.ToString().Trim() ?? "";
+            if (!string.IsNullOrWhiteSpace(value)) return value;
+        }
+
+        return null;
+    }
+
+    private static JObject? TryReadJsonObject(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        try
+        {
+            JToken token = JToken.Parse(value);
+            while (token.Type == JTokenType.String)
+            {
+                string nested = token.Value<string>() ?? "";
+                if (string.IsNullOrWhiteSpace(nested)) return null;
+                token = JToken.Parse(nested);
+            }
+            return token as JObject;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private async Task<string?> ResolveAttachedMailTemplateNameAsync(WorkflowTransitionSubmitRequest submitRequest)
+    {
+        string? configuredName = ReadMailTemplateName(TryReadJsonObject(submitRequest.StepsWorkflow?.CommandConfig));
+        if (!string.IsNullOrWhiteSpace(configuredName)) return configuredName;
+
+        Guid workflowDefinitionId = submitRequest.InstanceWorkflow?.WorkflowDefinitionId ?? Guid.Empty;
+        if (workflowDefinitionId == Guid.Empty) return null;
+
+        WorkflowDefinition? definition = await _workflowDefinitionRepository.GetSingleObject(
+            item => item.Guid == workflowDefinitionId);
+        JObject? payload = TryReadJsonObject(definition?.WorkflowNodes);
+        if (payload == null) return null;
+
+        StepsWorkflow step = submitRequest.StepsWorkflow;
+        JArray? transitions = payload.GetValue("workflowTransitions", StringComparison.OrdinalIgnoreCase) as JArray;
+        JObject? selectedTransition = transitions?
+            .OfType<JObject>()
+            .FirstOrDefault(item =>
+                string.Equals(item.GetValue("fromNodeId", StringComparison.OrdinalIgnoreCase)?.ToString(), step.FromNodeId, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(item.GetValue("toNodeId", StringComparison.OrdinalIgnoreCase)?.ToString(), step.ToNodeId, StringComparison.OrdinalIgnoreCase)
+                && (string.IsNullOrWhiteSpace(step.ActionCode)
+                    || string.Equals(item.GetValue("actionCode", StringComparison.OrdinalIgnoreCase)?.ToString(), step.ActionCode, StringComparison.OrdinalIgnoreCase)));
+
+        configuredName = ReadMailTemplateName(selectedTransition);
+        if (!string.IsNullOrWhiteSpace(configuredName)) return configuredName;
+
+        JArray? nodes = payload.GetValue("workflowNodes", StringComparison.OrdinalIgnoreCase) as JArray;
+        JObject? targetNode = nodes?
+            .OfType<JObject>()
+            .FirstOrDefault(item =>
+                string.Equals(item.GetValue("id", StringComparison.OrdinalIgnoreCase)?.ToString(), step.ToNodeId, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(item.GetValue("nodeCode", StringComparison.OrdinalIgnoreCase)?.ToString(), step.ToNodeId, StringComparison.OrdinalIgnoreCase));
+
+        configuredName = ReadMailTemplateName(targetNode);
+        if (!string.IsNullOrWhiteSpace(configuredName)) return configuredName;
+
+        JObject? sourceNode = nodes?
+            .OfType<JObject>()
+            .FirstOrDefault(item =>
+                string.Equals(item.GetValue("id", StringComparison.OrdinalIgnoreCase)?.ToString(), step.FromNodeId, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(item.GetValue("nodeCode", StringComparison.OrdinalIgnoreCase)?.ToString(), step.FromNodeId, StringComparison.OrdinalIgnoreCase));
+
+        return ReadMailTemplateName(sourceNode);
+    }
+
+    private string NormalizeWorkflowAccount(string? account)
+    {
+        string value = (account ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(value)) return "";
+        if (!string.IsNullOrWhiteSpace(DOMAIN_NAME))
+        {
+            value = value.Replace(DOMAIN_NAME, "", StringComparison.OrdinalIgnoreCase);
+        }
+        int slashIndex = Math.Max(value.LastIndexOf('\\'), value.LastIndexOf('/'));
+        return (slashIndex >= 0 ? value[(slashIndex + 1)..] : value).Trim();
+    }
+
+    private async Task<Employee?> FindEmployeeByAccountAsync(string? account)
+    {
+        string normalizedAccount = NormalizeWorkflowAccount(account);
+        if (string.IsNullOrWhiteSpace(normalizedAccount)) return null;
+
+        Users? user = await _usersRepository.GetSingleObject(
+            item => item.username == normalizedAccount);
+        if (user == null) return null;
+
+        return await _employeeRepository.GetSingleObject(item => item.UsersId == user.Id);
+    }
+
+    private IEnumerable<string> ExtractAssignedPicAccounts(string? picJson)
+    {
+        JObject? pic = TryReadJsonObject(picJson);
+        if (pic == null) yield break;
+
+        foreach (JProperty property in pic.Properties())
+        {
+            IEnumerable<string> values = property.Value.Type switch
+            {
+                JTokenType.Array => property.Value.Values<string>(),
+                JTokenType.Object => new[]
+                {
+                    ((JObject)property.Value).GetValue("account", StringComparison.OrdinalIgnoreCase)?.ToString()
+                    ?? ((JObject)property.Value).GetValue("username", StringComparison.OrdinalIgnoreCase)?.ToString()
+                    ?? ((JObject)property.Value).GetValue("value", StringComparison.OrdinalIgnoreCase)?.ToString()
+                    ?? ""
+                },
+                _ => new[] { property.Value.ToString() }
+            };
+
+            foreach (string value in values)
+            {
+                foreach (string account in (value ?? "").Split([';', ','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    if (!string.IsNullOrWhiteSpace(account)) yield return account;
+                }
+            }
+        }
+    }
+
+    private async Task SendAttachedWorkflowMailAsync(WorkflowTransitionSubmitRequest submitRequest, Quotation quotation)
+    {
+        try
+        {
+            string? templateName = await ResolveAttachedMailTemplateNameAsync(submitRequest);
+            if (string.IsNullOrWhiteSpace(templateName)) return;
+
+            MailTemplate? mailTemplate = await _mailTemplateRepository.GetSingleObject(
+                item => item.TemplateName == templateName);
+            if (mailTemplate == null || !(mailTemplate.IsActive ?? false)) return;
+
+            Employee? creator = await FindEmployeeByAccountAsync(quotation.CreatedBy);
+            if (creator == null || string.IsNullOrWhiteSpace(creator.Email))
+            {
+                Log.Warning("Workflow mail {TemplateName} was skipped because creator {CreatedBy} has no employee email.", templateName, quotation.CreatedBy);
+                return;
+            }
+
+            HashSet<string> ccEmails = new(StringComparer.OrdinalIgnoreCase);
+            HashSet<string> seenAccounts = new(StringComparer.OrdinalIgnoreCase)
+            {
+                NormalizeWorkflowAccount(quotation.CreatedBy)
+            };
+
+            foreach (string account in ExtractAssignedPicAccounts(quotation.PIC))
+            {
+                string normalizedAccount = NormalizeWorkflowAccount(account);
+                if (string.IsNullOrWhiteSpace(normalizedAccount) || !seenAccounts.Add(normalizedAccount)) continue;
+
+                Employee? employee = await FindEmployeeByAccountAsync(normalizedAccount);
+                if (employee != null
+                    && !string.IsNullOrWhiteSpace(employee.Email)
+                    && !string.Equals(employee.Email, creator.Email, StringComparison.OrdinalIgnoreCase))
+                {
+                    ccEmails.Add(employee.Email.Trim());
+                }
+            }
+
+            foreach (string configuredCc in (mailTemplate.CC ?? "").Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (!string.Equals(configuredCc, creator.Email, StringComparison.OrdinalIgnoreCase)) ccEmails.Add(configuredCc);
+            }
+            foreach (string followCc in Util.CCAllEmail(_emailSettings.FollowCC, "").Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (!string.Equals(followCc, creator.Email, StringComparison.OrdinalIgnoreCase)) ccEmails.Add(followCc);
+            }
+
+            Dictionary<string, object> templateData = new();
+            if (!string.IsNullOrWhiteSpace(mailTemplate.MailQuery))
+            {
+                DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
+                if (query.Rows.Count > 0) templateData = Util.MakeQueryIntoDirectory(query.Rows[0]);
+            }
+            templateData["QuotationId"] = quotation.Id;
+            templateData["QuotationCode"] = quotation.QuotationCode ?? "";
+            templateData["WorkflowStatus"] = quotation.WorkflowStatus ?? "";
+
+            MailItem mailItem = new()
+            {
+                ToName = creator.FullName,
+                ToEmail = creator.Email,
+                Subject = $"{MailUtil.TitleContentHandle(mailTemplate.PrefixTitleMail, templateData)} {MailUtil.TitleContentHandle(mailTemplate.TemplateMailTitle, templateData)}".Trim(),
+                HtmlBody = MailUtil.BodyContentHandle(mailTemplate.TemplateContent, templateData),
+                TextBody = "",
+                CC = string.Join(';', ccEmails),
+                BCC = mailTemplate.BCC ?? ""
+            };
+
+            MailUtil.SendEmail(_emailSettings, mailItem, null).Wait();
+            MailQueue mailQueue = Util.MakeMailQueueItem(mailItem, _emailSettings, null, "Workflow");
+            await _mailQueueRepository.InsertData(mailQueue);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Unable to send attached workflow mail for quotation {QuotationId}.", quotation.Id);
+        }
     }
 
     private async Task<long?> ResolveWorkflowNotificationTypeId(

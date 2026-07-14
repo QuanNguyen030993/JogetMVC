@@ -16,6 +16,132 @@ Note:
 -Remove app div for scroll
 *@
 
+<style>
+    #pi-overviewRoot_@(ViewData["Id"]) {
+        position: relative;
+    }
+
+    #pi-overviewRoot_@(ViewData["Id"]).pi-render-loading .cardBody,
+    #pi-overviewRoot_@(ViewData["Id"]).pi-render-loading .pi-cardHeader {
+        pointer-events: none;
+        user-select: none;
+    }
+
+    .pi-render-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 120;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        overflow: hidden;
+        border-radius: inherit;
+        background: rgba(248, 250, 252, .82);
+        backdrop-filter: blur(3px);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity .28s ease, visibility .28s ease;
+    }
+
+    #pi-overviewRoot_@(ViewData["Id"]).pi-render-loading .pi-render-overlay {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .pi-render-overlay.is-leaving {
+        opacity: 0 !important;
+    }
+
+    .pi-loader-panel {
+        width: min(320px, calc(100% - 32px));
+        padding: 26px 28px 24px;
+        text-align: center;
+        border: 1px solid rgba(203, 213, 225, .62);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, .88);
+        box-shadow: 0 18px 55px rgba(15, 23, 42, .14);
+    }
+
+    .pi-loader-icon-host {
+        display: grid;
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 15px;
+        place-items: center;
+    }
+
+    .pi-loader-icon-host > img,
+    .pi-loader-icon-host > svg {
+        display: block;
+        max-width: 64px;
+        max-height: 64px;
+        object-fit: contain;
+    }
+
+    .pi-loader-default-icon {
+        position: relative;
+        width: 52px;
+        height: 52px;
+        border: 4px solid rgba(37, 99, 235, .14);
+        border-top-color: #2563eb;
+        border-radius: 50%;
+        animation: piLoaderSpin .85s linear infinite;
+    }
+
+    .pi-loader-default-icon::after {
+        content: "";
+        position: absolute;
+        inset: 7px;
+        border: 3px solid rgba(14, 165, 233, .14);
+        border-bottom-color: #0ea5e9;
+        border-radius: 50%;
+        animation: piLoaderSpin .65s linear infinite reverse;
+    }
+
+    .pi-loader-message {
+        margin-bottom: 15px;
+        color: #334155;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: .01em;
+    }
+
+    .pi-render-progress {
+        height: 3px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, .22);
+    }
+
+    .pi-render-progress > span {
+        display: block;
+        width: 12%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #2563eb, #38bdf8, #2563eb);
+        background-size: 200% 100%;
+        animation: piProgressFlow 1.1s linear infinite;
+        transition: width .3s ease;
+    }
+
+    @@keyframes piLoaderSpin {
+        to { transform: rotate(360deg); }
+    }
+
+    @@keyframes piProgressFlow {
+        to { background-position: -200% 0; }
+    }
+
+    @@media (prefers-reduced-motion: reduce) {
+        .pi-loader-default-icon,
+        .pi-loader-default-icon::after,
+        .pi-render-progress > span {
+            animation-duration: 1.8s;
+        }
+    }
+</style>
+
 
 <body>
 
@@ -95,6 +221,9 @@ Note:
     };
     var firstRender = true;
     setTimeout(() => {
+        const policyIssuanceViewInstanceId = "@ViewData["Id"]";
+        const policyIssuanceViewInstanceKey = `${formModuleKeyPi}:${policyIssuanceViewInstanceId}`;
+        const policyIssuanceOverviewRootId = `${formModuleKeyPi}-overviewRoot_${policyIssuanceViewInstanceId}`;
      const QtRoles = piDeptModuleCode;
         $(`#${formModuleKeyPi}-loginRoleLabel`).text(state.currentUserRole);
 
@@ -111,6 +240,130 @@ Note:
         var remarkBoxs = { FO: {}, TS: {}, PM: {} };
 
         state.piDetails = {};
+
+        const policyIssuanceRenderGate = (function () {
+            var sequence = 0;
+            var startedAt = 0;
+            var $root = $(`#${policyIssuanceOverviewRootId}`);
+            var $overlay = $root.children(".pi-render-overlay");
+
+            if (!$overlay.length) {
+                $overlay = $(`
+                    <div id="${formModuleKeyPi}-renderOverlay_${policyIssuanceViewInstanceId}" class="pi-render-overlay" role="status" aria-live="polite" aria-busy="true">
+                        <div class="pi-loader-panel">
+                            <div class="pi-loader-icon-host" aria-hidden="true">
+                                <div class="pi-loader-default-icon"></div>
+                            </div>
+                            <div class="pi-loader-message">Please wait…</div>
+                            <div class="pi-render-progress"><span></span></div>
+                        </div>
+                    </div>
+                `).appendTo($root);
+            }
+
+            function setLoadingIcon(source, options) {
+                var $host = $overlay.find(".pi-loader-icon-host").empty();
+                options = options || {};
+
+                function appendVisual(visual) {
+                    if (!visual) return;
+                    var $visual = visual.jquery ? visual : $(visual);
+                    if ($visual.length && !$visual.parent().is($host)) {
+                        $host.append($visual);
+                    }
+                }
+
+                if (!source) {
+                    $host.append('<div class="pi-loader-default-icon"></div>');
+                    return;
+                }
+
+                if (typeof source === "function") {
+                    appendVisual(source($host));
+                    return;
+                }
+
+                if (typeof source === "string") {
+                    $("<img>", {
+                        src: source,
+                        alt: options.alt || "",
+                        class: options.className || ""
+                    }).appendTo($host);
+                    return;
+                }
+
+                appendVisual(source);
+            }
+
+            function setPhase(_message, progress) {
+                progress = Math.max(0, Math.min(100, Number(progress) || 0));
+                $overlay.find(".pi-render-progress > span").css("width", `${Math.max(progress, 8)}%`);
+            }
+
+            function resetProgressiveContent() {
+                const $sections = $(`#${window.PolicyIssuanceIdManager.overviewScroll(@ViewData["Id"])} section.dept-section`);
+                $sections.removeClass("visible");
+                $sections.find(".animate-step").removeClass("visible");
+            }
+
+            function begin(message) {
+                sequence += 1;
+                startedAt = performance.now();
+                $overlay.removeClass("is-leaving").attr("aria-busy", "true");
+                $root.addClass("pi-render-loading");
+                resetProgressiveContent();
+                setPhase(message || "Loading policy issuance data…", 12);
+                return sequence;
+            }
+
+            async function complete(token) {
+                if (token !== sequence) return;
+                setPhase("Finalizing controls…", 92);
+                await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+                var minimumVisibleTime = 320;
+                var remaining = minimumVisibleTime - (performance.now() - startedAt);
+                if (remaining > 0) {
+                    await new Promise(resolve => setTimeout(resolve, remaining));
+                }
+                if (token !== sequence) return;
+
+                animateOverviewSections(formModuleKeyPi);
+                setPhase("Ready", 100);
+                $overlay.addClass("is-leaving").attr("aria-busy", "false");
+                setTimeout(function () {
+                    if (token !== sequence) return;
+                    $root.removeClass("pi-render-loading");
+                    $overlay.removeClass("is-leaving");
+                }, 300);
+            }
+
+            function fail(token, message) {
+                if (token !== sequence) return;
+                setPhase(message || "Unable to load policy issuance", 100);
+                $overlay.attr("aria-busy", "false");
+                setTimeout(function () {
+                    if (token === sequence) $root.removeClass("pi-render-loading");
+                }, 900);
+            }
+
+            if (window.PolicyIssuanceLoadingIcon) {
+                setLoadingIcon(window.PolicyIssuanceLoadingIcon);
+            }
+
+            return { begin, setPhase, complete, fail, setLoadingIcon };
+        })();
+
+        window.OverviewViewRegistry = window.OverviewViewRegistry || {};
+        window.OverviewViewRegistry[policyIssuanceViewInstanceKey] = {
+            moduleCode: formModuleKeyPi,
+            recordId: policyIssuanceViewInstanceId,
+            rootId: policyIssuanceOverviewRootId,
+            renderGate: policyIssuanceRenderGate
+        };
+        window.PolicyIssuanceRenderGates = window.PolicyIssuanceRenderGates || {};
+        window.PolicyIssuanceRenderGates[policyIssuanceViewInstanceId] = policyIssuanceRenderGate;
+        window.PolicyIssuanceRenderGate = policyIssuanceRenderGate;
 
         function money(n) {
             return new Intl.NumberFormat("vi-VN", {
@@ -172,7 +425,7 @@ Note:
 
 
 
-        function syncSelectedState(q) {
+        async function syncSelectedState(q) {
             if (!q) return;
 
 
@@ -186,9 +439,9 @@ Note:
             const params = new URLSearchParams();
             params.set("refKey", state.selectedGuid);
             params.set("refField", 'RecordGuid');
-            ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null)
-                .then(res => {
-                    var pinnedNotes = (res || []).map(x => ({
+            try {
+                var res = await ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null);
+                var pinnedNotes = (res || []).map(x => ({
                         id: x.id,
                         section: x.currentDepartment,//target main
                         fromSection: x.fromDepartment,//target pin
@@ -205,10 +458,14 @@ Note:
                         author: x.author,
                         urgent: false,
                         time: parseToGMT7(x.createdDate, 0)
-                    }));
-                    state.comments = pinnedNotes;
-                    state.pinNotes = pinnedNotes.filter(f => f.isPinned);
-                });
+                }));
+                state.comments = pinnedNotes;
+                state.pinNotes = pinnedNotes.filter(f => f.isPinned);
+            } catch (err) {
+                console.warn("Unable to preload policy issuance comments", err);
+                state.comments = [];
+                state.pinNotes = [];
+            }
 
             PIC_JSON = pICs.find(f => f.quotationCode == state.selectedCodeNo)?.pIC ?? q.pIC ?? "{}";
             renderDeptCallouts(PIC_JSON);
@@ -339,8 +596,8 @@ Note:
           }
 
         async function loadQuotePage(reset = false) {
-            if (state.quotePaging.loading) return;
-            if (!reset && state.quotePaging.done) return;
+            if (state.quotePaging.loading) return false;
+            if (!reset && state.quotePaging.done) return false;
 
             if (reset) {
                 state.quotePaging.skip = 0;
@@ -357,13 +614,15 @@ Note:
                     method: "GET",
                     contentType: "application/json"
                 });
-                data = data.map(m => { m.pIC = m.pic; return m; });
+                policyIssuanceRenderGate.setPhase("Policy issuance data received…", 38);
 
-                const rows = Array.isArray(data) ? data : [];
+                const rows = Array.isArray(data)
+                    ? data.map(item => ({ ...item, pIC: item.pic }))
+                    : [];
 
                 if (reset && rows.length === 0) {
                     state.quotePaging.done = true;
-                    return;
+                    return false;
                 }
 
                 state.quotes = state.quotes.concat(rows);
@@ -375,14 +634,18 @@ Note:
 
                 if (!state.quotePaging.firstLoadDone && state.quotes.length > 0) {
                     state.quotePaging.firstLoadDone = true;
-                    syncSelectedState(state.quotes[0]);
-                    
+                    policyIssuanceRenderGate.setPhase("Binding policy issuance state…", 52);
+                    await syncSelectedState(state.quotes[0]);
+                    policyIssuanceRenderGate.setPhase("Loading workflow and permissions…", 68);
                     await loadSelectedWorkflow();
+                    policyIssuanceRenderGate.setPhase("Initializing department controls…", 80);
                     renderDetail();
                 }
+                return true;
             } catch (err) {
                 console.error("loadQuotePage error:", err);
                 DevExpress.ui.notify("Load policyIssuance list failed", "error", 1500);
+                return false;
             } finally {
                 state.quotePaging.loading = false;
             }
@@ -391,16 +654,21 @@ Note:
 
         // Coalesce SignalR/action reloads so every section finishes rendering once.
         var policyIssuanceReloadPromise = null;
-        window.reloadPolicyIssuanceComponents = function() {
+        function reloadPolicyIssuanceInstance() {
             if (policyIssuanceReloadPromise) return policyIssuanceReloadPromise;
 
+            var renderToken = policyIssuanceRenderGate.begin("Refreshing policy issuance…");
             policyIssuanceReloadPromise = (async function () {
                 while (state.quotePaging.loading) {
                     await new Promise(resolve => setTimeout(resolve, 50));
                 }
 
                 // loadQuotePage already synchronizes state, loads workflow and calls renderDetail.
-                await loadQuotePage(true);
+                var loaded = await loadQuotePage(true);
+                if (!loaded) {
+                    policyIssuanceRenderGate.fail(renderToken, "Policy issuance refresh failed");
+                    return;
+                }
 
                 await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
                 $.each(piDeptModuleCode, function (itemIndex, item) {
@@ -411,12 +679,31 @@ Note:
                 applyNodeHighlights();
                 applySectionFocusHighlight();
                 updateHints();
+                await policyIssuanceRenderGate.complete(renderToken);
                 firstRender = false;
+            })().catch(function (err) {
+                console.error("reloadPolicyIssuanceComponents error:", err);
+                policyIssuanceRenderGate.fail(renderToken, "Policy issuance refresh failed");
             })().finally(function () {
                 policyIssuanceReloadPromise = null;
             });
 
             return policyIssuanceReloadPromise;
+        }
+
+        window.OverviewViewRegistry[policyIssuanceViewInstanceKey].reload = reloadPolicyIssuanceInstance;
+        window.reloadPolicyIssuanceComponents = function(instanceId) {
+            var registry = window.OverviewViewRegistry || {};
+            if (instanceId !== undefined && instanceId !== null) {
+                return registry[`pi:${instanceId}`]?.reload?.();
+            }
+
+            var reloads = Object.keys(registry)
+                .filter(key => key.startsWith("pi:"))
+                .map(key => registry[key])
+                .filter(entry => entry && document.getElementById(entry.rootId) && typeof entry.reload === "function")
+                .map(entry => entry.reload());
+            return Promise.all(reloads);
         };
 
 
@@ -1364,7 +1651,6 @@ Note:
          //SkeletionUI
            bindSectionHeaderToggle();
         setupDeptTree();
-        animateOverviewSections(formModuleKeyPi); //DevExtreme control layout
 
         // bindInfiniteScroll();
         // initMainPaneSplitter();
@@ -1383,13 +1669,22 @@ Note:
         // setTimeout(layoutTreeLine, 0);
         // window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
 
-        loadQuotePage(true).then(() => {
-            loadPIDetail(@ViewData["Id"]);
+        var initialRenderToken = policyIssuanceRenderGate.begin("Loading policy issuance data…");
+        loadQuotePage(true).then(async (loaded) => {
+            if (!loaded) {
+                policyIssuanceRenderGate.fail(initialRenderToken, "Policy issuance data is unavailable");
+                return;
+            }
+            await loadPIDetail(@ViewData["Id"]);
             applyNodeHighlights();
             applySectionFocusHighlight();
             updateHints();
             renderDeptCallouts(PIC_JSON);
+            await policyIssuanceRenderGate.complete(initialRenderToken);
             firstRender = false;
+        }).catch(function (err) {
+            console.error("Initial policy issuance render error:", err);
+            policyIssuanceRenderGate.fail(initialRenderToken, "Policy issuance data is unavailable");
         });
          }, _delayQuotationsLoadForm);
 </script>

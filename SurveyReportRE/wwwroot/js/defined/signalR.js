@@ -1,4 +1,4 @@
-﻿let signalRMessageCount = 0;
+let signalRMessageCount = 0;
 
 function setSignalRStatus(status) {
 
@@ -183,6 +183,24 @@ connectionSignR.start().then(async function () {
         signalRBlink();
         if (responseData.connectionId == _connectionId) {
             renderBrowserLoading(responseData);
+            if (responseData.payload && responseData.payload.progressvalue >= 100) {
+                if (responseData.payload.tabName === "Employee Update" || responseData.payload.tabName === "User Update") {
+                    if (responseData.payload.type === "error") {
+                        appErrorHandling("Update failed: " + responseData.payload.subTabContent);
+                    } else {
+                        appNotifySuccess(responseData.payload.subTabContent || "Sync completed successfully!", false);
+                    }
+                    setTimeout(() => {
+                        $(".dx-datagrid").each(function () {
+                            try {
+                                $(this).dxDataGrid("instance")?.refresh();
+                            } catch (e) {
+                                console.error(e);
+                            }
+                        });
+                    }, 500);
+                }
+            }
             //progressValue = responseData.lossControlData.progressvalue;
             //if (responseData.lossControlData.progressvalue == 100) {
             //    $(`#saveLossControlForm_${_id}`).dxButton("instance").option("disabled", false);
