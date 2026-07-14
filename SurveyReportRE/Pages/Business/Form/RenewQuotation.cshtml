@@ -1,0 +1,60 @@
+@page
+@model RenewQuotationModel
+@{
+}
+<script>
+    $(function () {
+        class RenewQuotationGridOption extends QuotationGridOption {
+            onToolbarPreparing(e) {
+                const that = this;
+                super.onToolbarPreparing(e);
+                e.toolbarOptions.items.unshift({
+                    location: "after",
+                    widget: "dxButton",
+                    options: {
+                        text: "Prepare selected quotation(s)",
+                        icon: "repeat",
+                        onClick: function () {
+                            const selectedRows = that.dataGrid.getSelectedRowsData();
+                            if (!selectedRows.length) {
+                                DevExpress.ui.notify("Please select at least one quotation.", "warning", 2000);
+                                return;
+                            }
+
+                            const tmpStore = makeBasicDataSource({ ModelName: "QuotationTmp" }, true);
+                            $.when.apply($, selectedRows.map(row => tmpStore.insert(row)))
+                                .done(function () {
+                                    that.dataGrid.clearSelection();
+                                    DevExpress.ui.notify("Quotation(s) added to Prepare Quotation.", "success", 2500);
+                                })
+                                .fail(function (error) {
+                                    appErrorHandling("Unable to prepare the selected quotation(s).", error);
+                                });
+                        }
+                    }
+                });
+            }
+        }
+
+        const gridParams = {
+            isAllowRowMenu: false,
+            selection: { mode: "multiple", showCheckBoxesMode: "always" },
+            gridEditorOptions: {
+                editing: { allowUpdating: false, allowAdding: false, allowDeleting: false }
+            }
+        };
+        if (!_isSuperUser) {
+            gridParams.refOperator = "contains";
+            gridParams.refKey = _loginUser;
+            gridParams.refField = "pic";
+            if (_roleAppName === "Leader")
+                gridParams.refField = "leaderPIC";
+            if (_roleAppName === "HOD")
+                gridParams.refField = "hodpic";
+        }
+        const gridOption = new RenewQuotationGridOption("@RenewQuotationModel.ModelName", "User", gridParams);
+        gridOption.overrideGetUrl = "/api/Quotation/RenewList";
+        new MGrid(null, $("#dataGrid_@RenewQuotationModel.PageName"), gridOption, null);
+    });
+</script>
+<div id="dataGrid_@RenewQuotationModel.PageName"></div>

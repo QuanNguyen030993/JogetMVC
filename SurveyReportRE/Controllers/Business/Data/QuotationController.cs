@@ -160,25 +160,63 @@ public class QuotationController : BaseControllerApi<Quotation>
     [HttpGet]
     public  async Task<ActionResult<List<Quotation>>> RenewList()
     {
-        var quotations = await GetAll(); 
-        SLA sLA = new SLA();
-        sLA = await _slaRepository.GetSingleObject(s => s.Code == _businessConfig.CurrentValue.SLA.RenewQuotation);
-        var days = sLA?.Value ?? 0;
+        var quotations = await _BaseRepository.GetAll(HttpContext.Request.Query.ToList());
+        var renewSlaCode = _businessConfig.CurrentValue.SLA?.RenewQuotation;
+        var sLA = await _slaRepository.GetSingleObject(s => s.Code == renewSlaCode);
+        var days = Math.Max(sLA?.Value ?? 0, 0);
 
         var fromDate = DateTime.Now.Date;
         var toDate = fromDate.AddDays(days);
 
-        var model = (OkObjectResult)quotations?.Result;
-
-        quotations = ((List<Quotation>)model?.Value).Where(q => q.InceptionDate >= fromDate &&
-                    q.InceptionDate <= toDate)
-        .ToList();
-
-        List<Quotation> quotationResult = ((List<Quotation>)model?.Value).Where(q => q.InceptionDate >= fromDate &&
-                    q.InceptionDate <= toDate)
-        .ToList();
+        List<Quotation> quotationResult = quotations
+            .Where(q => q.InceptionDate >= fromDate && q.InceptionDate <= toDate)
+            .ToList();
 
         return Ok(quotationResult);
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<List<Quotation>>> SignedBackList()
+    {
+        const string signReminderCode = "SIGN_REMINDER_DAY";
+        const string technicalServiceDept = "TS";
+
+        var signReminderSla = await _slaRepository.GetSingleObject(s =>
+            s.Code == signReminderCode && s.Dept == technicalServiceDept);
+        var reminderDays = Math.Max(signReminderSla?.Value ?? 0, 0);
+        var reminderDate = DateTime.Now.Date.AddDays(-reminderDays);
+        var quotations = await _BaseRepository.GetAll();
+
+        return Ok(quotations
+            .Where(q => q.ModifiedDate.HasValue && q.ModifiedDate.Value.Date <= reminderDate)
+            .OrderBy(q => q.ModifiedDate)
+            .ToList());
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<List<Quotation>>> SubmittedList()
+    {
+        var quotations = await _BaseRepository.GetAll();
+        var workflows = await _instanceWorkflowRepository.GetAll();
+        var workflowByRecord = workflows
+            .Where(w => w.RecordGuid.HasValue)
+            .GroupBy(w => w.RecordGuid!.Value)
+            .ToDictionary(
+                group => group.Key,
+                group => group.OrderByDescending(w => w.ModifiedDate).First());
+
+        var result = quotations.Where(quotation =>
+        {
+            if (!workflowByRecord.TryGetValue(quotation.Guid, out var workflow))
+                return false;
+
+            return !string.Equals(
+                quotation.StageDept?.Trim(),
+                workflow.CurrentStep?.Trim(),
+                StringComparison.OrdinalIgnoreCase);
+        }).ToList();
+
+        return Ok(result);
     }
 
 

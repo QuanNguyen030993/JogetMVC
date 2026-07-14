@@ -1,0 +1,18 @@
+@page
+@model SignedBackQuotationModel
+@{
+}
+<script>
+    $(function () {
+        const gridParams = {
+            isAllowRowMenu: false,
+            gridEditorOptions: {
+                editing: { allowUpdating: false, allowAdding: false, allowDeleting: false }
+            }
+        };
+        const gridOption = new QuotationGridOption("@SignedBackQuotationModel.ModelName", "User", gridParams);
+        gridOption.overrideGetUrl = "/api/Quotation/SignedBackList";
+        new MGrid(null, $("#dataGrid_@SignedBackQuotationModel.PageName"), gridOption, null);
+    });
+</script>
+<div id="dataGrid_@SignedBackQuotationModel.PageName"></div>

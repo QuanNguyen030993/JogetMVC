@@ -1,0 +1,18 @@
+@page
+@model FollowUpDocumentModel
+@{
+}
+<script>
+    $(function () {
+        const gridParams = {
+            isAllowRowMenu: false,
+            gridEditorOptions: {
+                editing: { allowUpdating: false, allowAdding: false, allowDeleting: false }
+            }
+        };
+        const gridOption = new PolicyIssuanceGridOption("@FollowUpDocumentModel.ModelName", "User", gridParams);
+        gridOption.overrideGetUrl = "/api/PolicyIssuance/FollowUpDocumentList";
+        new MGrid(null, $("#dataGrid_@FollowUpDocumentModel.PageName"), gridOption, null);
+    });
+</script>
+<div id="dataGrid_@FollowUpDocumentModel.PageName"></div>

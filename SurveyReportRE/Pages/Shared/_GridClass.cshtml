@@ -2743,7 +2743,8 @@
 
      var PrepareListGridOption = class PrepareListGridOption extends MGridOption {
         constructor(modelName, gridType, params) {
-            super(modelName, gridType, params); 
+            super(modelName, gridType, params);
+            this.Params = params;
         };
         onEditorPreparing(e) {
             $.each(qtDeptModuleCode,function (itemInd, item){
@@ -2778,6 +2779,23 @@
         }
 
 
+        onRowUpdating(e) {
+            const currentPIC = tryParseJSON(e.oldData.pic || "{}", "PIC Load Problem") || {};
+            let picChanged = false;
+
+            $.each(qtDeptModuleCode, function (_, dept) {
+                const fieldName = `pic${dept}`;
+                if (Object.prototype.hasOwnProperty.call(e.newData, fieldName)) {
+                    currentPIC[dept] = e.newData[fieldName] || "";
+                    picChanged = true;
+                }
+            });
+
+            if (picChanged)
+                e.newData.pic = JSON.stringify(currentPIC);
+        }
+
+
         onCustomizeColumns(columns) {
             var that = this;
             super.onCustomizeColumns(columns);
@@ -2787,12 +2805,33 @@
             $.each(columns, function (colIndex, col) {
                 col.allowEditing = false;
                  $.each(qtDeptModuleCode,function (itemInd, item){
-                    
-                     col.allowEditing = true;
-                        if (col.dataField === `pic${item}`) {
+                    if (col.dataField === `pic${item}`) {
+                        const lookup = col.lookup || {};
+                        col.allowEditing = true;
+                        col.editorType = "dxTagBox";
+                        col.editCellTemplate = function (container, cellInfo) {
+                            const selectedAccounts = String(cellInfo.value || "")
+                                .split(",")
+                                .map(value => value.trim())
+                                .filter(Boolean);
+
+                            $("<div>").dxTagBox({
+                                dataSource: lookup.dataSource,
+                                displayExpr: lookup.displayExpr || "fullName",
+                                valueExpr: lookup.valueExpr || "accountName",
+                                value: selectedAccounts,
+                                searchEnabled: true,
+                                showSelectionControls: true,
+                                applyValueMode: "useButtons",
+                                multiline: false,
+                                onValueChanged: function (event) {
+                                    cellInfo.setValue((event.value || []).join(","));
+                                }
+                            }).appendTo(container);
+                        };
                         col.cellTemplate = function (container, options) {
-                            col.value = tryParseJSON(options.data.pic, "PIC Load Problem")[item];
-                            return $(`<div>`).text(tryParseJSON(options.data.pic, "PIC Load Problem")[item]).appendTo(container);
+                            const pic = tryParseJSON(options.data.pic, "PIC Load Problem") || {};
+                            return $("<div>").text(pic[item] || "").appendTo(container);
                         }
                     }
                 });

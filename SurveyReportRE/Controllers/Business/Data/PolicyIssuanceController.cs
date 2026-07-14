@@ -50,6 +50,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     private readonly IBaseRepository<PolicyIssuanceChecklist> _policyIssuanceChecklistRepository;
     private readonly IBaseRepository<MailTemplate> _mailTemplateRepository;
     private readonly IBaseRepository<MailQueue> _mailQueueRepository;
+    private readonly IBaseRepository<SLA> _slaRepository;
 
     private readonly IConfigurationSection path;
     public static string MANAGER_APP = "";
@@ -97,6 +98,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         _policyIssuanceChecklistRepository = new BaseRepository<PolicyIssuanceChecklist>(configuration, _httpContextAccessor);
         _mailTemplateRepository = new BaseRepository<MailTemplate>(configuration, _httpContextAccessor);
         _mailQueueRepository = new BaseRepository<MailQueue>(configuration, _httpContextAccessor);
+        _slaRepository = new BaseRepository<SLA>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
         _hubContext = hubContext;
         MANAGER_APP = configuration.GetSection("BusinessConfig:ManagerAppKey").Value;
@@ -132,6 +134,51 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         }
         return Ok();
     }
+
+    [HttpGet]
+    public async Task<ActionResult<List<PolicyIssuance>>> FollowUpDocumentList()
+    {
+        const string signReminderCode = "SIGN_REMINDER_DAY";
+        const string technicalServiceDept = "TS";
+
+        var signReminderSla = await _slaRepository.GetSingleObject(s =>
+            s.Code == signReminderCode && s.Dept == technicalServiceDept);
+        var reminderDays = Math.Max(signReminderSla?.Value ?? 0, 0);
+        var reminderDate = DateTime.Now.Date.AddDays(-reminderDays);
+        var policyIssuances = await _BaseRepository.GetAll();
+
+        return Ok(policyIssuances
+            .Where(item => item.ModifiedDate.HasValue && item.ModifiedDate.Value.Date <= reminderDate)
+            .OrderBy(item => item.ModifiedDate)
+            .ToList());
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<List<PolicyIssuance>>> SubmittedList()
+    {
+        var policyIssuances = await _BaseRepository.GetAll();
+        var workflows = await _instanceWorkflowRepository.GetAll();
+        var workflowByRecord = workflows
+            .Where(workflow => workflow.RecordGuid.HasValue)
+            .GroupBy(workflow => workflow.RecordGuid!.Value)
+            .ToDictionary(
+                group => group.Key,
+                group => group.OrderByDescending(workflow => workflow.ModifiedDate).First());
+
+        var result = policyIssuances.Where(item =>
+        {
+            if (!workflowByRecord.TryGetValue(item.Guid, out var workflow))
+                return false;
+
+            return !string.Equals(
+                item.StageDept?.Trim(),
+                workflow.CurrentStep?.Trim(),
+                StringComparison.OrdinalIgnoreCase);
+        }).ToList();
+
+        return Ok(result);
+    }
+
     [HttpGet("{guid}")]
     public async Task<IActionResult> GetPolicyIssuanceWorkflow(Guid guid)
     {

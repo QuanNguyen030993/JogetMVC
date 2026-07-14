@@ -1,0 +1,18 @@
+@page
+@model PolicyIssuanceSubmittedRequestModel
+@{
+}
+<script>
+    $(function () {
+        const gridParams = {
+            isAllowRowMenu: false,
+            gridEditorOptions: {
+                editing: { allowUpdating: false, allowAdding: false, allowDeleting: false }
+            }
+        };
+        const gridOption = new PolicyIssuanceGridOption("@PolicyIssuanceSubmittedRequestModel.ModelName", "User", gridParams);
+        gridOption.overrideGetUrl = "/api/PolicyIssuance/SubmittedList";
+        new MGrid(null, $("#dataGrid_@PolicyIssuanceSubmittedRequestModel.PageName"), gridOption, null);
+    });
+</script>
+<div id="dataGrid_@PolicyIssuanceSubmittedRequestModel.PageName"></div>

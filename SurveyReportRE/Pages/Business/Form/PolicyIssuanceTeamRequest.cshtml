@@ -1,0 +1,24 @@
+@page
+@model PolicyIssuanceTeamRequestModel
+@{
+}
+<script>
+    $(function () {
+        const gridParams = {
+            isAllowRowMenu: false,
+            refOperator: "contains",
+            refKey: _loginUser,
+            refField: "pic",
+            gridEditorOptions: {
+                editing: { allowUpdating: false, allowAdding: false, allowDeleting: false }
+            }
+        };
+        new MGrid(
+            null,
+            $("#dataGrid_@PolicyIssuanceTeamRequestModel.PageName"),
+            new PolicyIssuanceGridOption("@PolicyIssuanceTeamRequestModel.ModelName", "User", gridParams),
+            null
+        );
+    });
+</script>
+<div id="dataGrid_@PolicyIssuanceTeamRequestModel.PageName"></div>
