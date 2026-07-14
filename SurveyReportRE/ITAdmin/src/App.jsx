@@ -196,6 +196,7 @@ function App() {
     { id: 'menu-grid', label: 'Bảng Menu (CustomGrid)' },
     { id: 'enum-design', label: 'Cấu hình danh mục Enum' },
     { id: 'enumdata-grid', label: 'Bảng Enum Data (CustomGrid)' },
+    { id: 'notification-grid', label: 'Bảng Notification (CustomGrid)' },
     { id: 'sladesigner', label: 'Cấu hình chỉ số SLA' }
   ];
 
@@ -280,6 +281,8 @@ function App() {
         return <EnumDesign />;
       case 'enumdata-grid':
         return <CustomGrid modelName="EnumData" gridType="System" apiBaseUrl={API_BASE_URL} editMode="batch" />;
+      case 'notification-grid':
+        return <CustomGrid modelName="Notification" gridType="System" apiBaseUrl={API_BASE_URL} editMode="batch" />;
       case 'sladesigner':
         return <SlaDesign />;
       default:

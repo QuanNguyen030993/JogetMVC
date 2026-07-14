@@ -111,3 +111,54 @@ BEGIN CATCH
     PRINT 'Error occurred, transaction rolled back. ❌';
     THROW;
 END CATCH
+INSERT INTO SLA
+(
+    Dept, Attributes, Code, Value, DecimalValue,
+    FromDate, ToDate, Duration, Guid,
+    CreatedBy, CreatedDate, ModifiedBy, ModifiedDate,
+    Deleted, DeletedBy, DeletedDate, RowOrder,
+    CopyFromGuid, DraftGuid, BooleanValue, Unit
+)
+VALUES
+('FO', N'{"fields":[{"name":"gapTatDay","label":"Số ngày Gap TAT","control":"number","required":true,"min":0,"max":30,"value":3}],"calculation":{"type":"manual","unit":"day"}}', 'GAP_TAT_DAY', 3, 3, NULL, NULL, NULL, NEWID(), 'quan.nh', GETDATE(), NULL, NULL, 0, NULL, NULL, 1, NULL, NULL, 0, 'day'),
+
+('FO', N'{"fields":[{"name":"tatDay","label":"Số ngày TAT","control":"number","required":true,"min":0,"max":90,"value":5}],"calculation":{"type":"manual","unit":"day"}}', 'TAT_DAY', 5, 5, NULL, NULL, NULL, NEWID(), 'quan.nh', GETDATE(), NULL, NULL, 0, NULL, NULL, 2, NULL, NULL, 0, 'day'),
+
+('TS', N'{"fields":[{"name":"gapTatDay","label":"Số ngày Gap TAT","control":"number","required":true,"min":0,"max":30,"value":3}],"calculation":{"type":"manual","unit":"day"}}', 'GAP_TAT_DAY', 3, 3, NULL, NULL, NULL, NEWID(), 'quan.nh', GETDATE(), NULL, NULL, 0, NULL, NULL, 3, NULL, NULL, 0, 'day'),
+
+('TS', N'{"fields":[{"name":"tatDay","label":"Số ngày TAT","control":"number","required":true,"min":0,"max":90,"value":21}],"calculation":{"type":"manual","unit":"day"}}', 'TAT_DAY', 21, 21, NULL, NULL, NULL, NEWID(), 'quan.nh', GETDATE(), NULL, NULL, 0, NULL, NULL, 4, NULL, NULL, 0, 'day'),
+
+('TS', N'{"fields":[{"name":"renewQuotationDay","label":"Số ngày nhắc renew hợp đồng báo giá","control":"number","required":true,"min":1,"max":365,"value":60}],"calculation":{"type":"beforeDate","unit":"day"}}', 'RENEW_QUOTATION_DAY', 60, 60, NULL, NULL, NULL, NEWID(), 'quan.nh', GETDATE(), NULL, NULL, 0, NULL, NULL, 5, NULL, NULL, 0, 'calendar_day'),
+
+('TS', N'{"fields":[{"name":"signReminderDay","label":"Số ngày nhắc ký","control":"number","required":true,"min":1,"max":30,"value":7}],"calculation":{"type":"beforeDate","unit":"day"}}', 'SIGN_REMINDER_DAY', 7, 7, NULL, NULL, NULL, NEWID(), 'quan.nh', GETDATE(), NULL, NULL, 0, NULL, NULL, 6, NULL, NULL, 0, 'calendar_day'),
+
+('UW', N'{"fields":[{"name":"gapTatDay","label":"Số ngày Gap TAT","control":"number","required":true,"min":0,"max":30,"value":3}],"calculation":{"type":"manual","unit":"day"}}', 'GAP_TAT_DAY', 3, 3, NULL, NULL, NULL, NEWID(), 'quan.nh', GETDATE(), NULL, NULL, 0, NULL, NULL, 7, NULL, NULL, 0, 'day'),
+
+('UW', N'{"fields":[{"name":"tatDay","label":"Số ngày TAT","control":"number","required":true,"min":0,"max":90,"value":5}],"calculation":{"type":"manual","unit":"day"}}', 'TAT_DAY', 5, 5, NULL, NULL, NULL, NEWID(), 'quan.nh', GETDATE(), NULL, NULL, 0, NULL, NULL, 8, NULL, NULL, 0, 'day'),
+
+('LMKT', N'{"fields":[{"name":"gapTatDay","label":"Số ngày Gap TAT","control":"number","required":true,"min":0,"max":30,"value":3}],"calculation":{"type":"manual","unit":"day"}}', 'GAP_TAT_DAY', 3, 3, NULL, NULL, NULL, NEWID(), 'quan.nh', GETDATE(), NULL, NULL, 0, NULL, NULL, 9, NULL, NULL, 0, 'day'),
+
+('LMKT', N'{"fields":[{"name":"tatDay","label":"Số ngày TAT","control":"number","required":true,"min":0,"max":90,"value":7}],"calculation":{"type":"manual","unit":"day"}}', 'TAT_DAY', 7, 7, NULL, NULL, NULL, NEWID(), 'quan.nh', GETDATE(), NULL, NULL, 0, NULL, NULL, 10, NULL, NULL, 0, 'day'),
+
+('PM', N'{"fields":[{"name":"gapTatDay","label":"Số ngày Gap TAT","control":"number","required":true,"min":0,"max":30,"value":3}],"calculation":{"type":"manual","unit":"day"}}', 'GAP_TAT_DAY', 3, 3, NULL, NULL, NULL, NEWID(), 'quan.nh', GETDATE(), NULL, NULL, 0, NULL, NULL, 11, NULL, NULL, 0, 'day'),
+
+('PM', N'{"fields":[{"name":"tatDay","label":"Số ngày TAT","control":"number","required":true,"min":0,"max":90,"value":7}],"calculation":{"type":"manual","unit":"day"}}', 'TAT_DAY', 7, 7, NULL, NULL, NULL, NEWID(), 'quan.nh', GETDATE(), NULL, NULL, 0, NULL, NULL, 12, NULL, NULL, 0, 'day');
+
+INSERT INTO SLA
+(
+    Dept, Attributes, Code, Value, DecimalValue,
+    FromDate, ToDate, Duration, Guid,
+    CreatedBy, CreatedDate, ModifiedBy, ModifiedDate,
+    Deleted, DeletedBy, DeletedDate, RowOrder,
+    CopyFromGuid, DraftGuid, BooleanValue, Unit
+)
+VALUES
+('FO', N'{"fields":[{"name":"overdueApplicationDay","label":"Số ngày quá hạn xử lý đơn","control":"number","required":true,"min":0,"max":90,"value":3}],"calculation":{"type":"manual","unit":"day"}}', 'OVERDUE_APPLICATION_DAY', 3, 3, NULL, NULL, NULL, NEWID(), 'quan.nh', GETDATE(), NULL, NULL, 0, NULL, NULL, 13, NULL, NULL, 0, 'day'),
+
+('TS', N'{"fields":[{"name":"overdueApplicationDay","label":"Số ngày quá hạn xử lý đơn","control":"number","required":true,"min":0,"max":90,"value":3}],"calculation":{"type":"manual","unit":"day"}}', 'OVERDUE_APPLICATION_DAY', 3, 3, NULL, NULL, NULL, NEWID(), 'quan.nh', GETDATE(), NULL, NULL, 0, NULL, NULL, 14, NULL, NULL, 0, 'day'),
+
+('UW', N'{"fields":[{"name":"overdueApplicationDay","label":"Số ngày quá hạn xử lý đơn","control":"number","required":true,"min":0,"max":90,"value":3}],"calculation":{"type":"manual","unit":"day"}}', 'OVERDUE_APPLICATION_DAY', 3, 3, NULL, NULL, NULL, NEWID(), 'quan.nh', GETDATE(), NULL, NULL, 0, NULL, NULL, 15, NULL, NULL, 0, 'day'),
+
+('LMKT', N'{"fields":[{"name":"overdueApplicationDay","label":"Số ngày quá hạn xử lý đơn","control":"number","required":true,"min":0,"max":90,"value":3}],"calculation":{"type":"manual","unit":"day"}}', 'OVERDUE_APPLICATION_DAY', 3, 3, NULL, NULL, NULL, NEWID(), 'quan.nh', GETDATE(), NULL, NULL, 0, NULL, NULL, 16, NULL, NULL, 0, 'day'),
+
+('PM', N'{"fields":[{"name":"overdueApplicationDay","label":"Số ngày quá hạn xử lý đơn","control":"number","required":true,"min":0,"max":90,"value":3}],"calculation":{"type":"manual","unit":"day"}}', 'OVERDUE_APPLICATION_DAY', 3, 3, NULL, NULL, NULL, NEWID(), 'quan.nh', GETDATE(), NULL, NULL, 0, NULL, NULL, 17, NULL, NULL, 0, 'day');

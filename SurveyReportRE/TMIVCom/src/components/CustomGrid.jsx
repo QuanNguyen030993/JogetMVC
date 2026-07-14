@@ -563,15 +563,53 @@ const CustomGrid = forwardRef(({
       const isPicColumn = ['pic', 'leaderPIC', 'hodpic'].includes(fieldName);
       const isWorkflowStatusColumn = fieldName === 'workflowStatus';
       const isQuotationCodeColumn = fieldName === 'quotationCode';
-      const quotationStatusLookup = window._enums?.OverallStatus || window._enums?.overallStatus;
-      const nextLookup = isQuotationGrid && isWorkflowStatusColumn && Array.isArray(quotationStatusLookup)
-        ? {
-          ...(column.lookup || {}),
-          dataSource: quotationStatusLookup,
-          valueExpr: column.lookup?.valueExpr || 'id',
-          displayExpr: column.lookup?.displayExpr || 'value'
+      let nextLookup = column.lookup;
+      if (editorType === 'selectbox' || nextLookup) {
+        let ds = nextLookup?.dataSource || column.editorOptions?.dataSource;
+        let valueExpr = nextLookup?.valueExpr || column.editorOptions?.valueExpr || 'id';
+        let displayExpr = nextLookup?.displayExpr || column.editorOptions?.displayExpr || 'name';
+
+        if (typeof ds === 'string' && window._enums && Array.isArray(window._enums[ds])) {
+          ds = window._enums[ds];
         }
-        : column.lookup;
+
+        if ((!ds || !Array.isArray(ds) || ds.length === 0) && window._enums) {
+          const cleanField = fieldName.replace(/Id$/i, '');
+          const enumKey = Object.keys(window._enums).find(
+            key => key.toLowerCase() === cleanField.toLowerCase() || key.toLowerCase() === fieldName.toLowerCase()
+          );
+          if (enumKey && Array.isArray(window._enums[enumKey])) {
+            ds = window._enums[enumKey];
+          }
+        }
+
+        if ((!ds || !Array.isArray(ds) || ds.length === 0) && isWorkflowStatusColumn) {
+          const overallStatusDS = window._enums?.OverallStatus || window._enums?.overallStatus;
+          if (Array.isArray(overallStatusDS)) {
+            ds = overallStatusDS;
+            displayExpr = 'value';
+          }
+        }
+
+        if (Array.isArray(ds) && ds.length > 0) {
+          const firstItem = ds[0];
+          if (firstItem && typeof firstItem === 'object') {
+            if (!nextLookup?.valueExpr && !column.editorOptions?.valueExpr) {
+              valueExpr = firstItem.id !== undefined ? 'id' : (firstItem.code !== undefined ? 'code' : (firstItem.value !== undefined ? 'value' : valueExpr));
+            }
+            if (!nextLookup?.displayExpr && !column.editorOptions?.displayExpr) {
+              displayExpr = firstItem.value !== undefined ? 'value' : (firstItem.text !== undefined ? 'text' : (firstItem.name !== undefined ? 'key' : (firstItem.key !== undefined ? 'key' : displayExpr)));
+            }
+          }
+
+          nextLookup = {
+            ...(nextLookup || {}),
+            dataSource: ds,
+            valueExpr,
+            displayExpr
+          };
+        }
+      }
 
       return {
         field: fieldName,
@@ -587,7 +625,7 @@ const CustomGrid = forwardRef(({
         editorType: editorType,
         dataType: column.dataType,
         lookup: nextLookup,
-        editorOptions: column.editorOptions,
+        editorOptions: nextLookup ? { ...(column.editorOptions || {}), dataSource: nextLookup.dataSource, valueExpr: nextLookup.valueExpr, displayExpr: nextLookup.displayExpr } : column.editorOptions,
         headerIcon: column.headerIcon || column.icon,
         cssClass: column.cssClass || (isQuotationGrid && isPicColumn ? 'col-pic-rows' : ''),
         sortOrder: column.sortOrder || (isQuotationGrid && fieldName === 'requestedDate' ? 'desc' : undefined),
