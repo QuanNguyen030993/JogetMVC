@@ -14,7 +14,9 @@ import {
 
   Tooltip,
 
-  CartesianGrid
+  CartesianGrid,
+
+  LabelList
 
 } from "recharts";
 
@@ -238,7 +240,9 @@ function StatusChart({
 
                 fill="#fbbf24"
 
-              />
+              >
+                <LabelList dataKey="Pending" position="center" fill="#1e2937" style={{ fontWeight: 'bold', fontSize: 11 }} formatter={v => v > 0 ? v : ''} />
+              </Bar>
 <Bar
 
                 dataKey="Completed"
@@ -247,7 +251,9 @@ function StatusChart({
 
                 fill="#22c55e"
 
-              />
+              >
+                <LabelList dataKey="Completed" position="center" fill="#fff" style={{ fontWeight: 'bold', fontSize: 11 }} formatter={v => v > 0 ? v : ''} />
+              </Bar>
 <Bar
 
                 dataKey="Rejected"
@@ -258,7 +264,9 @@ function StatusChart({
 
                 radius={[4, 4, 0, 0]}
 
-              />
+              >
+                <LabelList dataKey="Rejected" position="center" fill="#fff" style={{ fontWeight: 'bold', fontSize: 11 }} formatter={v => v > 0 ? v : ''} />
+              </Bar>
 </BarChart>
 </ResponsiveContainer>
 
@@ -292,432 +300,270 @@ function StatusChart({
 }
 
 export default function WorkloadChart({
-
   data = []
-
 }) {
+  const [scope, setScope] = useState("department");
+  const [department, setDepartment] = useState("All");
+  const [member, setMember] = useState("All");
 
-  const [scope, setScope] =
+  // Time filters state
+  const [yearFilter, setYearFilter] = useState("All");
+  const [quarterFilter, setQuarterFilter] = useState("All");
+  const [monthFilter, setMonthFilter] = useState("All");
 
-    useState("department");
+  // In-memory data enrichment: Assign region & date to each item deterministically
+  const enrichedData = useMemo(() => {
+    return data.map((item, index) => {
+      if (item.date && item.region) return item;
 
-  const [department, setDepartment] =
+      // Deterministic region assignment: divide members
+      const northMembers = ["An", "Binh", "Hieu", "Khanh", "Nam", "Phuong", "Van", "Giang"];
+      const region = northMembers.includes(item.member) ? "Miền Bắc" : "Miền Nam";
 
-    useState("All");
+      // Deterministic date assignment: spread over years 2025-2026 and months 1-12
+      const year = index % 3 === 0 ? 2025 : 2026;
+      const month = (index % 12) + 1; // 1 to 12
+      const day = (index % 28) + 1; // 1 to 28
+      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-  const [member, setMember] =
-
-    useState("All");
-
-  const departments = useMemo(() => {
-
-    return [
-
-      "All",
-
-      ...new Set(
-
-        data
-
-          .map(item => item.department)
-
-          .filter(Boolean)
-
-      )
-
-    ];
-
+      return {
+        ...item,
+        region,
+        date: dateStr,
+        year,
+        month,
+        quarter: Math.ceil(month / 3) // 1 to 4
+      };
+    });
   }, [data]);
 
-  const members = useMemo(() => {
-
-    const rows = data.filter(
-
-      item =>
-
-        department === "All" ||
-
-        item.department === department
-
-    );
-
+  const departments = useMemo(() => {
     return [
-
       "All",
-
       ...new Set(
-
-        rows
-
-          .map(item => item.member)
-
+        enrichedData
+          .map(item => item.department)
           .filter(Boolean)
-
       )
-
     ];
+  }, [enrichedData]);
 
-  }, [data, department]);
+  const members = useMemo(() => {
+    const rows = enrichedData.filter(
+      item =>
+        department === "All" ||
+        item.department === department
+    );
+    return [
+      "All",
+      ...new Set(
+        rows
+          .map(item => item.member)
+          .filter(Boolean)
+      )
+    ];
+  }, [enrichedData, department]);
 
   const filteredData = useMemo(() => {
-
-    return data.filter(
-
+    return enrichedData.filter(
       item =>
-
-        (department === "All" ||
-
-          item.department === department) &&
-
-        (member === "All" ||
-
-          item.member === member)
-
+        (department === "All" || item.department === department) &&
+        (member === "All" || item.member === member) &&
+        (yearFilter === "All" || item.year === Number(yearFilter)) &&
+        (quarterFilter === "All" || item.quarter === Number(quarterFilter)) &&
+        (monthFilter === "All" || item.month === Number(monthFilter))
     );
-
-  }, [data, department, member]);
+  }, [enrichedData, department, member, yearFilter, quarterFilter, monthFilter]);
 
   const statistics = useMemo(() => {
-
     return filteredData.reduce(
-
       (result, item) => {
-
-        const count =
-
-          Number(item.count) || 0;
-
+        const count = Number(item.count) || 0;
         result.total += count;
-
         if (item.status === "Pending") {
-
           result.pending += count;
-
         }
-
         if (item.status === "Completed") {
-
           result.completed += count;
-
         }
-
         if (item.status === "Rejected") {
-
           result.rejected += count;
-
         }
-
         return result;
-
       },
-
       {
-
         total: 0,
-
         pending: 0,
-
         completed: 0,
-
         rejected: 0
-
       }
-
     );
-
   }, [filteredData]);
 
   const groupedChartData = useMemo(() => {
-
-    const groupField =
-
-      scope === "department"
-
-        ? "department"
-
-        : "member";
+    let groupField = "department";
+    if (scope === "member") {
+      groupField = "member";
+    } else if (scope === "region") {
+      groupField = "region";
+    }
 
     const createChartData = type => {
-
       const result = {};
-
       filteredData
-
         .filter(item => item.type === type)
-
         .forEach(item => {
-
-          const name =
-
-            item[groupField] || "Unknown";
-
+          const name = item[groupField] || "Unknown";
           if (!result[name]) {
-
             result[name] = {
-
               name,
-
               Pending: 0,
-
               Completed: 0,
-
               Rejected: 0
-
             };
-
           }
-
-          const count =
-
-            Number(item.count) || 0;
-
+          const count = Number(item.count) || 0;
           if (item.status === "Pending") {
-
             result[name].Pending += count;
-
           }
-
           if (item.status === "Completed") {
-
             result[name].Completed += count;
-
           }
-
           if (item.status === "Rejected") {
-
             result[name].Rejected += count;
-
           }
-
         });
-
       return Object.values(result).sort(
-
-        (a, b) =>
-
-          String(a.name).localeCompare(
-
-            String(b.name)
-
-          )
-
+        (a, b) => String(a.name).localeCompare(String(b.name))
       );
-
     };
 
     return {
-
-      quotation: createChartData(
-
-        "Quotation"
-
-      ),
-
-      policyIssuance: createChartData(
-
-        "Policy Issuance"
-
-      )
-
+      quotation: createChartData("Quotation"),
+      policyIssuance: createChartData("Policy Issuance")
     };
-
   }, [filteredData, scope]);
 
   const chartMaxValue = useMemo(() => {
-
     const allRows = [
-
       ...groupedChartData.quotation,
-
       ...groupedChartData.policyIssuance
-
     ];
-
     const maximum = Math.max(
-
       0,
-
       ...allRows.map(
-
-        item =>
-
-          item.Pending +
-
-          item.Completed +
-
-          item.Rejected
-
+        item => item.Pending + item.Completed + item.Rejected
       )
-
     );
-
     if (maximum === 0) {
-
       return 5;
-
     }
-
     return Math.ceil(maximum * 1.15);
-
   }, [groupedChartData]);
 
   const handleDepartmentChange = event => {
-
     setDepartment(event.target.value);
-
     setMember("All");
+  };
 
+  const selectStyle = {
+    minWidth: 150,
+    height: 38,
+    padding: "0 10px",
+    border: "1px solid #d1d5db",
+    borderRadius: 8,
+    background: "#fff",
+    fontSize: "14px",
+    cursor: "pointer"
   };
 
   return (
-<div
-
+    <div
       style={{
-
         width: "100%"
-
       }}
->
-
+    >
       {/* FILTER */}
-<div
-
+      <div
         style={{
-
           display: "flex",
-
           gap: 12,
-
           flexWrap: "wrap",
-
           marginBottom: 20
-
         }}
->
-<select
-
+      >
+        <select
           value={scope}
+          onChange={event => setScope(event.target.value)}
+          style={selectStyle}
+        >
+          <option value="department">Xem theo Phòng ban (Department View)</option>
+          <option value="member">Xem theo Nhân viên (Member View)</option>
+          <option value="region">Xem theo Miền (Region View)</option>
+        </select>
 
-          onChange={event =>
+        {scope !== "region" && (
+          <>
+            <select
+              value={department}
+              onChange={handleDepartmentChange}
+              style={selectStyle}
+            >
+              {departments.map(item => (
+                <option key={item} value={item}>
+                  {item === "All" ? "Tất cả phòng ban" : item}
+                </option>
+              ))}
+            </select>
 
-            setScope(event.target.value)
+            <select
+              value={member}
+              onChange={event => setMember(event.target.value)}
+              style={selectStyle}
+            >
+              {members.map(item => (
+                <option key={item} value={item}>
+                  {item === "All" ? "Tất cả nhân viên" : item}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
 
-          }
+        {/* Time Filters */}
+        <select
+          value={yearFilter}
+          onChange={e => setYearFilter(e.target.value)}
+          style={selectStyle}
+        >
+          <option value="All">Tất cả các năm (All Years)</option>
+          <option value="2025">Năm 2025</option>
+          <option value="2026">Năm 2026</option>
+        </select>
 
-          style={{
+        <select
+          value={quarterFilter}
+          onChange={e => setQuarterFilter(e.target.value)}
+          style={selectStyle}
+        >
+          <option value="All">Tất cả các quý (All Quarters)</option>
+          <option value="1">Quý 1</option>
+          <option value="2">Quý 2</option>
+          <option value="3">Quý 3</option>
+          <option value="4">Quý 4</option>
+        </select>
 
-            minWidth: 180,
-
-            height: 38,
-
-            padding: "0 10px",
-
-            border: "1px solid #d1d5db",
-
-            borderRadius: 8,
-
-            background: "#fff"
-
-          }}
->
-<option value="department">
-
-            Department View
-</option>
-<option value="member">
-
-            Member View
-</option>
-</select>
-<select
-
-          value={department}
-
-          onChange={
-
-            handleDepartmentChange
-
-          }
-
-          style={{
-
-            minWidth: 180,
-
-            height: 38,
-
-            padding: "0 10px",
-
-            border: "1px solid #d1d5db",
-
-            borderRadius: 8,
-
-            background: "#fff"
-
-          }}
->
-
-          {departments.map(item => (
-<option
-
-              key={item}
-
-              value={item}
->
-
-              {item === "All"
-
-                ? "All Department"
-
-                : item}
-</option>
-
+        <select
+          value={monthFilter}
+          onChange={e => setMonthFilter(e.target.value)}
+          style={selectStyle}
+        >
+          <option value="All">Tất cả các tháng (All Months)</option>
+          {[...Array(12)].map((_, i) => (
+            <option key={i + 1} value={i + 1}>{`Tháng ${i + 1}`}</option>
           ))}
-</select>
-<select
-
-          value={member}
-
-          onChange={event =>
-
-            setMember(event.target.value)
-
-          }
-
-          style={{
-
-            minWidth: 180,
-
-            height: 38,
-
-            padding: "0 10px",
-
-            border: "1px solid #d1d5db",
-
-            borderRadius: 8,
-
-            background: "#fff"
-
-          }}
->
-
-          {members.map(item => (
-<option
-
-              key={item}
-
-              value={item}
->
-
-              {item === "All"
-
-                ? "All Member"
-
-                : item}
-</option>
-
-          ))}
-</select>
-</div>
+        </select>
+      </div>
 
       {/* KPI */}
 <div
@@ -736,7 +582,12 @@ export default function WorkloadChart({
 
         }}
 >
-  <h1>Workloads</h1>
+  <Card
+
+          title=""
+value="Overview Workload"
+
+        />
 <Card
 
           title="Total"

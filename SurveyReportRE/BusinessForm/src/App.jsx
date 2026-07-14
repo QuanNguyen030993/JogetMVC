@@ -5,7 +5,8 @@ import WorkloadChart from './components/WorkloadChart';
 // import MailTemplateDesigner from './components/MailTemplateDesigner';
 // import MailQueue from './components/MailQueue';
 import Flow from './components/Flow';
-// import SerilogViewer from './components/SerilogViewer';
+import SerilogViewer from './components/SerilogViewer';
+import AspLogViewer from './components/AspLogViewer';
 // import SysTable from './components/SysTable';
 // import DataGridFieldDesigner from './components/DataGridFieldDesigner';
 // import MenuDesigner from './components/MenuDesigner';
@@ -148,17 +149,76 @@ import "./fonts/css/all.min.css";
 import data from "../data/data.json";
 
 function App() {
-  return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#f5f6fa",
-        padding: 24
-      }}
-    >
-      <h1>Quotation / Policy Dashboard</h1>
+  const [activeSection, setActiveSection] = useState('dashboard');
 
-      <WorkloadChart data={data} />
+  const menuItems = [
+    { id: 'dashboard', label: 'Báo cáo công việc (Dashboard)' },
+    { id: 'serilog', label: 'Nhật ký hệ thống (Serilogs)' },
+    { id: 'asplog', label: 'Nhật ký ứng dụng (ASP Log)' }
+  ];
+
+  const content = useMemo(() => {
+    switch (activeSection) {
+      case 'serilog':
+        return <SerilogViewer />;
+      case 'asplog':
+        return <AspLogViewer />;
+      case 'dashboard':
+      default:
+        return <WorkloadChart data={data} />;
+    }
+  }, [activeSection]);
+
+  return (
+    <div className="app-shell">
+      <aside className="sidebar">
+        <div className="brand" style={{ padding: "0 0 10px 0", borderBottom: "1px solid #1f2937" }}>
+          <i className="fas fa-chart-line" style={{ marginRight: 8, color: "#3b82f6" }}></i>
+          Joget Survey
+        </div>
+        <nav style={{ marginTop: 20 }}>
+          {menuItems.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={item.id === activeSection ? 'active' : ''}
+              onClick={() => setActiveSection(item.id)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                width: "100%",
+                padding: "12px 14px",
+                marginBottom: "8px",
+                background: item.id === activeSection ? "#1f2937" : "transparent",
+                color: "#f9fafb",
+                borderRadius: "10px",
+                border: "none",
+                textAlign: "left",
+                cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+            >
+              {item.id === 'dashboard' && <i className="fas fa-tachometer-alt" style={{ width: 18 }}></i>}
+              {item.id === 'serilog' && <i className="fas fa-database" style={{ width: 18 }}></i>}
+              {item.id === 'asplog' && <i className="fas fa-file-alt" style={{ width: 18 }}></i>}
+              {item.label}
+            </button>
+          ))}
+        </nav>
+      </aside>
+
+      <main className="main-content" style={{ background: "#f5f6fa", flex: 1, minHeight: "100vh" }}>
+        <header className="topbar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <h1 style={{ margin: 0, fontSize: "1.75rem", fontWeight: "700", color: "#1e293b" }}>
+            {menuItems.find(m => m.id === activeSection)?.label}
+          </h1>
+        </header>
+
+        <div style={{ flex: 1 }}>
+          {content}
+        </div>
+      </main>
     </div>
   );
 }
