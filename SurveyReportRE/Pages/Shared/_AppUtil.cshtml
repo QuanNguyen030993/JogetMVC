@@ -3258,9 +3258,60 @@
                             });
             }
         }
-            function renderDxFileUploader(editorOptions, $container, options, isRenderUploader = true, uploaderAllow = true)  {
+        function cloneReusableOptions(value, seen) {
+            if (value === null || typeof value !== "object") {
+                return value;
+            }
+
+            seen = seen || new WeakMap();
+            if (seen.has(value)) {
+                return seen.get(value);
+            }
+
+            if (value instanceof Date) {
+                return new Date(value.getTime());
+            }
+
+            if (value instanceof RegExp) {
+                return new RegExp(value.source, value.flags);
+            }
+
+            if (Array.isArray(value)) {
+                const result = [];
+                seen.set(value, result);
+                Reflect.ownKeys(value).forEach(function (key) {
+                    if (key === "length") return;
+
+                    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+                    if (Object.prototype.hasOwnProperty.call(descriptor, "value")) {
+                        descriptor.value = cloneReusableOptions(descriptor.value, seen);
+                    }
+                    Object.defineProperty(result, key, descriptor);
+                });
+                return result;
+            }
+
+            const prototype = Object.getPrototypeOf(value);
+            if (prototype !== Object.prototype && prototype !== null) {
+                // DOM, jQuery, DevExtreme and other class instances must keep their identity.
+                return value;
+            }
+
+            const result = Object.create(prototype);
+            seen.set(value, result);
+            Reflect.ownKeys(value).forEach(function (key) {
+                const descriptor = Object.getOwnPropertyDescriptor(value, key);
+                if (Object.prototype.hasOwnProperty.call(descriptor, "value")) {
+                    descriptor.value = cloneReusableOptions(descriptor.value, seen);
+                }
+                Object.defineProperty(result, key, descriptor);
+            });
+            return result;
+        }
+
+        function renderDxFileUploader(editorOptions, $container, options, isRenderUploader = true, uploaderAllow = true)  {
         const renderTime = Date.now();
-        const editorOptionsIn = structuredClone(editorOptions);
+        const editorOptionsIn = cloneReusableOptions(editorOptions);
         const controlId = `${editorOptionsIn.data.SectionName}`;
         const data =  editorOptionsIn.data;
         editorOptionsIn.controlId = controlId;
@@ -6460,7 +6511,7 @@ function styleModeChange(item){
         function buildDefaultDecisionClick(formProps) {
             return function (e) {
 
-                     var objSnapshot = structuredClone(formProps);
+                     var objSnapshot = cloneReusableOptions(formProps);
                    
                 
 
@@ -6548,7 +6599,7 @@ function styleModeChange(item){
                     return;
                 }
             //if (item && typeof item === "object" && item.useDefaultDecisionClick) {
-                    var objSnapshot = structuredClone(formProps);
+                    var objSnapshot = cloneReusableOptions(formProps);
                     instance.value.option("onClick", buildDefaultDecisionClick(objSnapshot));
             //}
             }

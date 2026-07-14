@@ -16,6 +16,7 @@ import SlaDesign from './components/SlaDesign';
 import WorkflowRecover from './components/WorkflowRecover';
 import EvaluationPanel from './components/EvaluationPanel';
 import ActiveUsersPanel from './components/ActiveUsersPanel';
+import AspLogViewer from './components/AspLogViewer';
 import CustomGrid from '../../TMIVCom/src/components/CustomGrid'
 import './styles/flow.css';
 import './styles/com.all.css';
@@ -186,6 +187,7 @@ function App() {
     { id: 'flowgrid', label: 'Luồng quy trình (Flow Grid)' },
     { id: 'workflow-recover', label: 'Recover / Revise Flow' },
     { id: 'serilog', label: 'Nhật ký hệ thống (Serilogs)' },
+    { id: 'asplog', label: 'Nhật ký ứng dụng (ASP Log)' },
     { id: 'systable', label: 'Bảng hệ thống' } ,
     { id: 'datagridfielddesigner', label: 'Thiết kế trường DataGrid' },
     { id: 'formfielddesigner', label: 'Thiết kế trường Form (View)' },
@@ -252,6 +254,8 @@ function App() {
         return <WorkflowRecover />;
       case 'serilog':
         return <SerilogViewer />;
+      case 'asplog':
+        return <AspLogViewer />;
       case 'systable':
         return <SysTable />;
       case 'datagridfielddesigner':

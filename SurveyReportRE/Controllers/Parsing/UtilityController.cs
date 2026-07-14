@@ -1,4 +1,4 @@
-﻿using LdapService;
+using LdapService;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
@@ -1165,10 +1165,90 @@ namespace ERPCore.Controllers.Config
             return result;
         }
 
+        [HttpGet]
+        public IActionResult GetLogFiles()
+        {
+            try
+            {
+                var pathPattern = _configuration["Serilog:WriteTo:1:Args:path"];
+                if (string.IsNullOrEmpty(pathPattern))
+                {
+                    pathPattern = "Logs/app-log-.txt";
+                }
 
+                var fullPatternPath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), pathPattern);
+                var logDir = System.IO.Path.GetDirectoryName(fullPatternPath);
+                var filePrefix = System.IO.Path.GetFileNameWithoutExtension(fullPatternPath);
+                var fileExt = System.IO.Path.GetExtension(fullPatternPath);
 
+                if (!System.IO.Directory.Exists(logDir))
+                {
+                    return Ok(new List<object>());
+                }
 
-        
+                var files = System.IO.Directory.GetFiles(logDir, $"{filePrefix}*{fileExt}");
+                var list = files.Select(f => {
+                    var filename = System.IO.Path.GetFileName(f);
+                    var datePart = filename.Replace(filePrefix, "").Replace(fileExt, "");
+                    string displayDate = datePart;
+                    if (datePart.Length == 8)
+                    {
+                        displayDate = $"{datePart.Substring(0, 4)}-{datePart.Substring(4, 2)}-{datePart.Substring(6, 2)}";
+                    }
+                    return new {
+                        filename = filename,
+                        date = displayDate,
+                        size = new System.IO.FileInfo(f).Length,
+                        lastModified = new System.IO.FileInfo(f).LastWriteTime
+                    };
+                }).OrderByDescending(f => f.date).ToList();
 
+                return Ok(list);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet]
+        public IActionResult GetLogContent([FromQuery] string filename)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(filename) || filename.Contains("..") || filename.Contains("/") || filename.Contains("\\"))
+                {
+                    return BadRequest("Invalid filename");
+                }
+
+                var pathPattern = _configuration["Serilog:WriteTo:1:Args:path"];
+                if (string.IsNullOrEmpty(pathPattern))
+                {
+                    pathPattern = "Logs/app-log-.txt";
+                }
+
+                var fullPatternPath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), pathPattern);
+                var logDir = System.IO.Path.GetDirectoryName(fullPatternPath);
+                var filePath = System.IO.Path.Combine(logDir, filename);
+
+                if (!System.IO.File.Exists(filePath))
+                {
+                    return NotFound("Log file not found");
+                }
+
+                string content = "";
+                using (var fs = new System.IO.FileStream(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite))
+                using (var reader = new System.IO.StreamReader(fs, Encoding.UTF8))
+                {
+                    content = reader.ReadToEnd();
+                }
+
+                return Ok(new { content = content });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

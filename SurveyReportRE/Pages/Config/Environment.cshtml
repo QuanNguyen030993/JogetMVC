@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model EnvironmentModel
 @{
 
@@ -224,8 +224,21 @@
         guid: "00cf6f4b-1228-40f6-bd4b-45b1daf996b3"
     });
 
-
-
+    $("#demoMap").tmivmap({
+        center: [21.0285, 105.8542], // Hanoi
+        zoom: 13,
+        height: "450px",
+        markers: [
+            { id: 1, lat: 21.0285, lng: 105.8542, title: "Hanoi Center", popupContent: "Welcome to Hanoi!", draggable: true }
+        ],
+        onMapClick: function(e) {
+            console.log("Map clicked:", e);
+            alert("Clicked: " + e.lat + ", " + e.lng + (e.address ? " (" + e.address + ")" : ""));
+        },
+        onMarkerDragEnd: function(id, pos) {
+            console.log("Marker drag end:", id, pos);
+        }
+    });
 </script>
 <div>TMIV environment
     <div id="tabPanel">
@@ -247,3 +260,8 @@
 <div id="surveyGrid"></div>
 <div id="commentBox"></div>
 <div id="flow"> </div>
+
+<div style="margin-top: 30px; padding: 20px; border-top: 2px dashed #0284c7; background: #f8fafc;">
+    <h3 style="font-family: sans-serif; color: #0f172a; margin-bottom: 12px;">TMIV Map Demo</h3>
+    <div id="demoMap" style="max-width: 900px; border-radius: 8px;"></div>
+</div>

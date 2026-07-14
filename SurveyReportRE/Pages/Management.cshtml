@@ -725,12 +725,23 @@
     };
 
     const notificationTypeMeta = {
+        default: { label: "Default", shortLabel: "DEF", icon: "info", background: "#f1f5f9", color: "#475569" },
         assign: { label: "Assign", shortLabel: "ASG", icon: "user", background: "#ede9fe", color: "#6d28d9" },
-        route: { label: "Route", shortLabel: "RTE", icon: "route", background: "#ffedd5", color: "#c2410c" },
+        system: { label: "System", shortLabel: "SYS", icon: "preferences", background: "#e2e8f0", color: "#334155" },
         quotation: { label: "Quotation", shortLabel: "QT", icon: "file", background: "#e0f2fe", color: "#0369a1" },
         policyissuance: { label: "Policy Issuance", shortLabel: "PI", icon: "shield", background: "#dcfce7", color: "#15803d" },
-        default: { label: "System", shortLabel: "SYS", icon: "info", background: "#f1f5f9", color: "#475569" }
+        accept: { label: "Accept", shortLabel: "ACC", icon: "check", background: "#ccfbf1", color: "#0f766e" },
+        success: { label: "Success", shortLabel: "OK", icon: "check", background: "#dcfce7", color: "#166534" },
+        fail: { label: "Fail", shortLabel: "FAIL", icon: "close", background: "#fee2e2", color: "#b91c1c" },
+        initial: { label: "Initial", shortLabel: "INI", icon: "add", background: "#dbeafe", color: "#1d4ed8" },
+        reminder: { label: "Reminder", shortLabel: "REM", icon: "clock", background: "#fef3c7", color: "#b45309" },
+        alert: { label: "Alert", shortLabel: "ALT", icon: "warning", background: "#ffedd5", color: "#c2410c" }
     };
+
+    const notificationTypeKeys = [
+        "default", "assign", "system", "policyissuance", "quotation", "accept",
+        "success", "fail", "initial", "reminder", "alert"
+    ];
 
     function normalizeNotificationType(value) {
         return String(value || "").trim().toLowerCase().replace(/[\s_-]+/g, "");
@@ -738,10 +749,17 @@
 
     function getNotificationTypeEnumItem(typeKey) {
         const aliases = {
+            default: ["default"],
             assign: ["assign", "assignment"],
-            route: ["route", "routing", "workflowroute"],
+            system: ["system", "sys"],
             quotation: ["quotation", "qt"],
-            policyissuance: ["policyissuance", "policy", "pi"]
+            policyissuance: ["policyissuance", "policy", "pi"],
+            accept: ["accept", "accepted"],
+            success: ["success", "successful"],
+            fail: ["fail", "failed", "failure"],
+            initial: ["initial", "initialize", "initialized"],
+            reminder: ["reminder", "remind"],
+            alert: ["alert"]
         };
         const acceptedValues = aliases[typeKey] || [typeKey];
 
@@ -776,7 +794,7 @@
     function getNotificationType(item) {
         const notificationTypeId = getNotificationItemTypeId(item);
         if (notificationTypeId !== null && notificationTypeId !== undefined) {
-            for (const typeKey of ["assign", "route", "quotation", "policyissuance"]) {
+            for (const typeKey of notificationTypeKeys) {
                 const enumId = getNotificationTypeEnumId(typeKey);
                 if (enumId !== null && String(enumId) === String(notificationTypeId)) {
                     return typeKey;
@@ -795,10 +813,17 @@
 
         for (const candidate of candidates) {
             const type = normalizeNotificationType(candidate);
+            if (type === "default") return "default";
             if (type.includes("assign")) return "assign";
-            if (type.includes("route") || type.includes("workflow")) return "route";
+            if (type === "system" || type === "sys") return "system";
             if (type === "qt" || type.includes("quotation")) return "quotation";
             if (type === "pi" || type.includes("policyissuance") || type.includes("policy")) return "policyissuance";
+            if (type.includes("accept")) return "accept";
+            if (type.includes("success")) return "success";
+            if (type.includes("fail")) return "fail";
+            if (type.includes("initial")) return "initial";
+            if (type.includes("remind")) return "reminder";
+            if (type.includes("alert")) return "alert";
         }
 
         // Backward compatibility for notifications created before Type was populated.
@@ -872,10 +897,17 @@
                     <div class="notif-filters" style="display:flex; flex-wrap:wrap; gap:6px; padding:0 10px 10px 10px; border-bottom:1px solid rgba(0,0,0,.06);">
                         <span class="filter-btn active" data-filter="all" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: #3b82f6; color: #fff; transition: all 0.2s ease;">All</span>
                         <span class="filter-btn" data-filter="unread" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: #f1f5f9; color: #64748b; transition: all 0.2s ease;">Unread</span>
+                        <span class="filter-btn" data-filter="default" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: #f1f5f9; color: #64748b; transition: all 0.2s ease;">Default</span>
                         <span class="filter-btn" data-filter="assign" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: #f1f5f9; color: #64748b; transition: all 0.2s ease;">Assign</span>
-                        <span class="filter-btn" data-filter="route" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: #f1f5f9; color: #64748b; transition: all 0.2s ease;">Route</span>
+                        <span class="filter-btn" data-filter="system" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: #f1f5f9; color: #64748b; transition: all 0.2s ease;">System</span>
                         <span class="filter-btn" data-filter="quotation" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: #f1f5f9; color: #64748b; transition: all 0.2s ease;">Quotation</span>
                         <span class="filter-btn" data-filter="policyissuance" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: #f1f5f9; color: #64748b; transition: all 0.2s ease;">Policy Issuance</span>
+                        <span class="filter-btn" data-filter="accept" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: #f1f5f9; color: #64748b; transition: all 0.2s ease;">Accept</span>
+                        <span class="filter-btn" data-filter="success" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: #f1f5f9; color: #64748b; transition: all 0.2s ease;">Success</span>
+                        <span class="filter-btn" data-filter="fail" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: #f1f5f9; color: #64748b; transition: all 0.2s ease;">Fail</span>
+                        <span class="filter-btn" data-filter="initial" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: #f1f5f9; color: #64748b; transition: all 0.2s ease;">Initial</span>
+                        <span class="filter-btn" data-filter="reminder" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: #f1f5f9; color: #64748b; transition: all 0.2s ease;">Reminder</span>
+                        <span class="filter-btn" data-filter="alert" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: #f1f5f9; color: #64748b; transition: all 0.2s ease;">Alert</span>
                     </div>
                     <div id="notifList" style="padding: 10px"></div>
                 `);
@@ -1019,7 +1051,7 @@
             const filter = _notif.currentFilter || "all";
             if (filter === "unread") {
                 filteredItems = filteredItems.filter(x => !x.isRead);
-            } else if (["assign", "route", "quotation", "policyissuance"].includes(filter)) {
+            } else if (notificationTypeKeys.includes(filter)) {
                 const filterTypeId = getNotificationTypeEnumId(filter);
                 filteredItems = filteredItems.filter(x => {
                     const itemTypeId = getNotificationItemTypeId(x);

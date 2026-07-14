@@ -1,13 +1,3 @@
-// import DateBox from "../components/Datebox.jsx"; 
-// import HtmlEditor from "../components/HtmlEditor.jsx"; 
-// import CustomGrid from "../components/CustomGrid.jsx"; 
-// import CommentEditor from "../components/CommentEditor.jsx";
-// import TextBox from "../components/TextBox.jsx";
-// import NumberBox from "../components/NumberBox.jsx";
-// import CheckBox from "../components/CheckBox.jsx";
-// import SelectBox from "../components/SelectBox.jsx";
-// import DropDownBox from "../components/DropDownBox.jsx";
-// import CustomForm from "../components/CustomForm.jsx";
 import Flow from "../components/Flow.jsx"
 import WorkloadChart from "../components/WorkloadChart.jsx";
 import React from "react";
@@ -184,4 +174,4 @@ createJQueryPlugin("workloadchart", "WorkloadChart");
 
 register("Flow", Flow);
 register("WorkloadChart", WorkloadChart);
-export default { DateBox, HtmlEditor, CustomGrid, CommentEditor, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm, WorkloadChart };
+export default { WorkloadChart, Flow };

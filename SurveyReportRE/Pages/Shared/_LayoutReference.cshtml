@@ -12,11 +12,11 @@
 <link href="~/css/fonts/css/v4-shims.min.css" rel="stylesheet" type="text/css" />
 
 <!--App CSS: customized-->
-<link href="~/css/devextreme/dx-diagram.min.css" rel="stylesheet">
+@* <link href="~/css/devextreme/dx-diagram.min.css" rel="stylesheet"> *@
 <link href="~/css/app/tabs.css" rel="stylesheet" type="text/css" />
 <link href="~/css/devextreme-20.1.4/dx-gantt.css" rel="stylesheet" type="text/css" />
 <link href="~/lib/AdminLTE/sidebar-menu.min.css" rel="stylesheet" />
-<link href="~/lib/AdminLTE/_all-skins.min.css" rel="stylesheet" />
+@* <link href="~/lib/AdminLTE/_all-skins.min.css" rel="stylesheet" /> *@
 <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 <!--JS library: common -->
@@ -39,18 +39,41 @@
     window.Quill = window.DevExpress.Quill;
 </script> *@
  
-<script src="~/lib/knockout/knockout.js"></script>
-<script src="~/lib/wysiwyg-editor-summernote/summernote.js"></script>
+@* Planning use *@
+@* <script src="~/lib/knockout/knockout.js"></script> *@
+<!-- docx preview -->
+@* <script src="~/lib/docxjs/jszip.min.js"></script> *@
+<!-- Demo lib-->
+@* <script src="~/lib/docx-preview/docx-preview.min.js"></script>
+<script src="~/lib/mammoth/mammoth.browser.min.js"></script> *@
+@* <script src="~/lib/tinymce/tinymce.min.js"></script> *@
+@* <script src="~/lib/tinymce/icons/default/icons.min.js"></script>
+<script src="~/lib/tinymce/models/dom/model.min.js"></script>
+<script src="~/lib/tinymce/plugins/lists/plugin.min.js"></script>
+<script src="~/lib/tinymce/themes/silver/theme.min.js"></script>
+<script src="~/lib/tinymce/tinymce.min.js"></script>
+ <link href="~/lib/tinymce/skins/ui/oxide/content.min.css" rel="stylesheet" />
+<link href="~/lib/tinymce/skins/ui/oxide/skin.min.css" rel="stylesheet" />
+<link href="~/lib/tinymce/skins/ui/oxide/content.inline.min.css" rel="stylesheet" /> *@
+
+@* unused *@
+@* <script src="~/lib/wysiwyg-editor-summernote/summernote.js"></script> *@
+@* <script src="~/lib/excelljs/excel.js"></script>
+<script src="~/lib/excelljs/FileSaver.js"></script>
+ *@
+
+
 <script src="~/lib/bootstrap/tooltip.js"></script>
 @* <script src="~/lib/bootstrap/popper.js"></script> *@
+<script src="~/lib/bootstrap-tagsinput/bootstrap-tagsinput.js"></script>
 <script src="~/lib/bootstrap/bootstrap.min.js"></script>
+
 <script src="~/lib/map/infobubble-compiled.js"></script>
 <script src="~/lib/moment/moment.min.js"></script>
 <!--JS library: js push channel -->
 <script src="~/lib/postal/lodash.min.js"></script>
 <script src="~/lib/postal/postal.min.js"></script>
 
-<script src="~/lib/bootstrap-tagsinput/bootstrap-tagsinput.js"></script>
 @*<script scr="~/lib/ckeditor/ckeditor.js"></script>*@
 <script src="~/lib/ckeditor/ckeditor.js"></script>
 
@@ -81,7 +104,7 @@
 <!--JS library: devextreme-20.1.4 -->
 <script src="~/lib/devextreme-20.1.4/jszip.min.js"></script>
 @* <script src="~/lib/devextreme-20.1.4/dx-diagram.js"></script> *@
-<script src="~/lib/devextreme-diagram/2.0.45/dx-diagram.min.js"></script>
+@* <script src="~/lib/devextreme-diagram/2.0.45/dx-diagram.min.js"></script> *@
 <script src="~/lib/devextreme-gantt/2.0.40/dx-gantt.min.js"></script>
 @* <script src="~/lib/devextreme-22.2.15/dx.all.js"></script>  *@
 <script src="~/lib/devextreme-20.2.13/dx.all.js"></script>  
@@ -94,8 +117,6 @@
 
 <!--JS library: sheetjs, import data from excel -->
 <script src="~/lib/sheetjs/xlsx.full.min.js"></script>
-<script src="~/lib/excelljs/excel.js"></script>
-<script src="~/lib/excelljs/FileSaver.js"></script>
 
 <!-- Important: All app data must be included before app script-->
 <!-- SpreadSheet script-->
@@ -105,36 +126,20 @@
 @* <script src="~/lib/tagify/tagify.min.js"></script> *@
 <script src="~/lib/signalr/signalr-current.min.js"></script>
 
-<!-- docx preview -->
-<script src="~/lib/docxjs/jszip.min.js"></script>
-<!-- Demo lib-->
-<script src="~/lib/docx-preview/docx-preview.min.js"></script>
-<script src="~/lib/mammoth/mammoth.browser.min.js"></script>
+
 <script src="~/lib/jsplumb/jsplumb.min.js"></script>
 <script src="~/lib/mermaid/mermaid.min.js"></script>
  <link href="~/css/jstree/style.min.css" rel="stylesheet" />
-
-
-<script src="~/lib/tinymce/tinymce.min.js"></script>
-<script src="~/lib/tinymce/icons/default/icons.min.js"></script>
-<script src="~/lib/tinymce/models/dom/model.min.js"></script>
-<script src="~/lib/tinymce/plugins/lists/plugin.min.js"></script>
-<script src="~/lib/tinymce/themes/silver/theme.min.js"></script>
-<script src="~/lib/tinymce/tinymce.min.js"></script>
- <link href="~/lib/tinymce/skins/ui/oxide/content.min.css" rel="stylesheet" />
-<link href="~/lib/tinymce/skins/ui/oxide/skin.min.css" rel="stylesheet" />
-<link href="~/lib/tinymce/skins/ui/oxide/content.inline.min.css" rel="stylesheet" />
-
 <script src="~/lib/jstree/jstree.min.js"></script>
 
 
 
-<!-- Flatpickr CSS -->
+@* <!-- Flatpickr CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
 <!-- Flatpickr JS -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-
+ *@
 
 <script>
     // var constHostName = 'https://localhost:5000/api';
