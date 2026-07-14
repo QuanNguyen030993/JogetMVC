@@ -18,8 +18,108 @@ Note:
 *@
 
 <style>
+    #qt-overviewRoot {
+        position: relative;
+    }
 
+    #qt-overviewRoot.qt-render-loading .cardBody,
+    #qt-overviewRoot.qt-render-loading [class="qt-cardHeader"] {
+        pointer-events: none;
+        user-select: none;
+    }
 
+    .qt-render-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 120;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 18px;
+        overflow: hidden;
+        border-radius: inherit;
+        background: rgba(248, 250, 252, .78);
+        backdrop-filter: blur(2px);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity .28s ease, visibility .28s ease;
+    }
+
+    #qt-overviewRoot.qt-render-loading .qt-render-overlay {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .qt-render-overlay.is-leaving {
+        opacity: 0 !important;
+    }
+
+    .qt-render-progress {
+        height: 3px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, .22);
+    }
+
+    .qt-render-progress > span {
+        display: block;
+        width: 12%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #2563eb, #38bdf8);
+        transition: width .3s ease;
+    }
+
+    .qt-render-status {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #475569;
+        font-size: 12px;
+        font-weight: 650;
+    }
+
+    .qt-skeleton-row,
+    .qt-skeleton-card {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(203, 213, 225, .55);
+        background: rgba(255, 255, 255, .72);
+    }
+
+    .qt-skeleton-row {
+        height: 54px;
+        border-radius: 12px;
+    }
+
+    .qt-skeleton-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .qt-skeleton-card {
+        min-height: 150px;
+        border-radius: 14px;
+    }
+
+    .qt-skeleton-row::after,
+    .qt-skeleton-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        transform: translateX(-100%);
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,.72), transparent);
+        animation: qtSkeletonShimmer 1.2s infinite;
+    }
+
+    @@keyframes qtSkeletonShimmer {
+        100% { transform: translateX(100%); }
+    }
+
+    @@media (max-width: 900px) {
+        .qt-skeleton-grid { grid-template-columns: 1fr; }
+    }
 </style>
 
 <script type="text/javascript">
@@ -74,6 +174,90 @@ Note:
 
         state.quoteDetails = {};
 
+        const quotationRenderGate = (function () {
+            var sequence = 0;
+            var startedAt = 0;
+            var $root = $(`#${formModuleKeyQt}-overviewRoot`);
+            var $overlay = $root.children(".qt-render-overlay");
+
+            if (!$overlay.length) {
+                $overlay = $(`
+                    <div class="qt-render-overlay" aria-live="polite" aria-busy="true">
+                        <div class="qt-render-status">
+                            <span class="qt-render-message">Preparing quotation interface…</span>
+                            <span class="qt-render-percent">0%</span>
+                        </div>
+                        <div class="qt-render-progress"><span></span></div>
+                        <div class="qt-skeleton-row"></div>
+                        <div class="qt-skeleton-grid">
+                            <div class="qt-skeleton-card"></div>
+                            <div class="qt-skeleton-card"></div>
+                            <div class="qt-skeleton-card"></div>
+                            <div class="qt-skeleton-card"></div>
+                        </div>
+                    </div>
+                `).appendTo($root);
+            }
+
+            function setPhase(message, progress) {
+                progress = Math.max(0, Math.min(100, Number(progress) || 0));
+                $overlay.find(".qt-render-message").text(message || "Loading…");
+                $overlay.find(".qt-render-percent").text(`${progress}%`);
+                $overlay.find(".qt-render-progress > span").css("width", `${Math.max(progress, 8)}%`);
+            }
+
+            function resetProgressiveContent() {
+                const $sections = $(`#${window.QuotationIdManager.overviewScroll(@ViewData["Id"])} section.dept-section`);
+                $sections.removeClass("visible");
+                $sections.find(".animate-step").removeClass("visible");
+            }
+
+            function begin(message) {
+                sequence += 1;
+                startedAt = performance.now();
+                $overlay.removeClass("is-leaving").attr("aria-busy", "true");
+                $root.addClass("qt-render-loading");
+                resetProgressiveContent();
+                setPhase(message || "Loading quotation data…", 12);
+                return sequence;
+            }
+
+            async function complete(token) {
+                if (token !== sequence) return;
+                setPhase("Finalizing controls…", 92);
+                await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+                var minimumVisibleTime = 320;
+                var remaining = minimumVisibleTime - (performance.now() - startedAt);
+                if (remaining > 0) {
+                    await new Promise(resolve => setTimeout(resolve, remaining));
+                }
+                if (token !== sequence) return;
+
+                animateOverviewSections(formModuleKeyQt);
+                setPhase("Ready", 100);
+                $overlay.addClass("is-leaving").attr("aria-busy", "false");
+                setTimeout(function () {
+                    if (token !== sequence) return;
+                    $root.removeClass("qt-render-loading");
+                    $overlay.removeClass("is-leaving");
+                }, 300);
+            }
+
+            function fail(token, message) {
+                if (token !== sequence) return;
+                setPhase(message || "Unable to load quotation", 100);
+                $overlay.attr("aria-busy", "false");
+                setTimeout(function () {
+                    if (token === sequence) $root.removeClass("qt-render-loading");
+                }, 900);
+            }
+
+            return { begin, setPhase, complete, fail };
+        })();
+
+        window.QuotationRenderGate = quotationRenderGate;
+
         function money(n) {
             return new Intl.NumberFormat("vi-VN", {
                 style: "currency",
@@ -109,7 +293,7 @@ Note:
 
 
 
-        function syncSelectedState(q) {
+        async function syncSelectedState(q) {
             if (!q) return;
 
         
@@ -123,7 +307,7 @@ Note:
             const params = new URLSearchParams();
             params.set("refKey", state.selectedGuid);
             params.set("refField", 'RecordGuid');
-            ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null)
+            var commentsPromise = ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null)
                 .then(res => {
                     var pinnedNotes = (res || []).map(x => ({
                         id: x.id,
@@ -145,6 +329,11 @@ Note:
                     }));
                     state.comments = pinnedNotes;
                     state.pinNotes = pinnedNotes.filter(f => f.isPinned);
+                })
+                .catch(error => {
+                    state.comments = [];
+                    state.pinNotes = [];
+                    console.warn("Section comments could not be preloaded.", error);
                 });
 
             PIC_JSON = pICs.find(f => f.quotationCode == state.selectedCodeNo)?.pIC ?? q.pIC ?? "{}";
@@ -152,7 +341,7 @@ Note:
             var map = parsePicMap(PIC_JSON);
             stageAccount = map[stageDept] ? map[stageDept] : "(Unassigned)";
 
-
+            await commentsPromise;
         }
 
         function loadSelectedWorkflow() {
@@ -344,14 +533,15 @@ Note:
                     method: "GET",
                     contentType: "application/json"
                 });
+                quotationRenderGate.setPhase("Quotation data received…", 38);
 
-                data = data.map(m => { m.pIC = m.pic; return m; });
-
-                const rows = Array.isArray(data) ? data : [];
+                const rows = Array.isArray(data)
+                    ? data.map(item => ({ ...item, pIC: item.pic }))
+                    : [];
 
                 if (reset && rows.length === 0) {
                     state.quotePaging.done = true;
-                    return;
+                    return false;
                 }
 
                 state.quotes = state.quotes.concat(rows);
@@ -363,13 +553,18 @@ Note:
 
                 if (!state.quotePaging.firstLoadDone && state.quotes.length > 0) {
                     state.quotePaging.firstLoadDone = true;
-                    syncSelectedState(state.quotes[0]);
+                    quotationRenderGate.setPhase("Binding quotation state…", 52);
+                    await syncSelectedState(state.quotes[0]);
+                    quotationRenderGate.setPhase("Loading workflow and permissions…", 68);
                     await loadSelectedWorkflow();
+                    quotationRenderGate.setPhase("Initializing department controls…", 80);
                     renderDetail();
                 }
+                return true;
             } catch (err) {
                 console.error("loadQuotePage error:", err);
                 DevExpress.ui.notify("Load quotation list failed", "error", 1500);
+                return false;
             } finally {
                 state.quotePaging.loading = false;
             }
@@ -392,12 +587,17 @@ Note:
             if (quotationReloadPromise) return quotationReloadPromise;
 
             quotationReloadPromise = (async function () {
+                var renderToken = quotationRenderGate.begin("Refreshing quotation…");
                 while (state.quotePaging.loading) {
                     await new Promise(resolve => setTimeout(resolve, 50));
                 }
 
                 // loadQuotePage already synchronizes state, loads workflow and calls renderDetail.
-                await loadQuotePage(true);
+                var loaded = await loadQuotePage(true);
+                if (!loaded) {
+                    quotationRenderGate.fail(renderToken, "Quotation refresh failed");
+                    return;
+                }
 
                 // Let DevExtreme finish all nested templates before the final repaint.
                 await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
@@ -407,6 +607,7 @@ Note:
                 });
                 applyEditLock();
                 updateHints();
+                await quotationRenderGate.complete(renderToken);
             })().finally(function () {
                 quotationReloadPromise = null;
             });
@@ -1186,7 +1387,6 @@ Note:
 
         bindSectionHeaderToggle();
         setupDeptTree();
-        animateOverviewSections(formModuleKeyQt); //DevExtreme control layout
 
         // bindInfiniteScroll();
         // initMainPaneSplitter();
@@ -1195,14 +1395,19 @@ Note:
         window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
 
 
-        loadQuotePage(true).then(() => {
+        var initialRenderToken = quotationRenderGate.begin("Loading quotation data…");
+        loadQuotePage(true).then(async (loaded) => {
+            if (!loaded) {
+                quotationRenderGate.fail(initialRenderToken, "Quotation data is unavailable");
+                return;
+            }
             applyNodeHighlights();
             applySectionFocusHighlight();
             updateHints();
             renderDeptCallouts(PIC_JSON);
-            firstRender = false;
             applyEditLock();
-
+            await quotationRenderGate.complete(initialRenderToken);
+            firstRender = false;
         });
     }, _delayQuotationsLoadForm);
 
