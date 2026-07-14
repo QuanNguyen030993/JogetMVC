@@ -9,7 +9,7 @@
         body {
             margin: 0;
             font-family: Arial;
-            background: #f5f7fb;
+            background: var(--c-f5f7fb);
         }
 
         .layout {
@@ -24,7 +24,7 @@
 
         .left {
             width: 320px;
-            border-right: 1px solid #ddd;
+            border-right: 1px solid var(--c-dddddd);
         }
 
         .center {
@@ -34,12 +34,12 @@
 
         .right {
             width: 320px;
-            border-left: 1px solid #ddd;
+            border-left: 1px solid var(--c-dddddd);
             padding: 10px;
         }
 
         .card {
-            border: 1px solid #ddd;
+            border: 1px solid var(--c-dddddd);
             border-radius: 10px;
             margin: 10px;
         }
@@ -47,17 +47,17 @@
         .card-title {
             padding: 10px;
             font-weight: bold;
-            background: #eef4ff;
+            background: var(--c-eef4ff);
         }
 
         .item {
             padding: 8px;
             cursor: pointer;
-            border-top: 1px solid #eee;
+            border-top: 1px solid var(--c-eeeeee);
         }
 
             .item:hover {
-                background: #dbeafe;
+                background: var(--c-dbeafe);
             }
 
         .form-item {
@@ -70,7 +70,7 @@
 
 
         <!-- LEFT -->
-    <div style="padding:10px;border-bottom:1px solid #ddd">
+    <div style="padding:10px;border-bottom:1px solid var(--c-dddddd)">
 
         <input id="txtGroupName" placeholder="Group name"
                style="width:100%;margin-bottom:5px" />
@@ -346,7 +346,7 @@
         html += `
             <div style='margin-bottom:20px'>
                 <div style='font-weight:bold;
-                            background:#eef4ff;
+                            background:var(--c-eef4ff);
                             padding:10px;
                             border-radius:8px'>
                     Group: ${groupId}
@@ -553,4 +553,3 @@
         }
         reload();
     </script>
-

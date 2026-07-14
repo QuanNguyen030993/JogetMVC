@@ -710,7 +710,7 @@
                         //     height: "100%",
                         //     overflow: "auto",
                         //     padding: "20px",
-                        //     background: "#fff",
+                        //     background: window.AppColors.c_ffffff,
                         //     lineHeight: "1.6",
                         //     fontFamily: "Calibri, Arial"
                         // }).html("Loading...").appendTo(container);
@@ -839,7 +839,7 @@
                 //     height: "100%",
                 //     overflow: "auto",
                 //     padding: "20px",
-                //     background: "#fff",
+                //     background: window.AppColors.c_ffffff,
                 //     lineHeight: "1.6",
                 //     fontFamily: "Calibri, Arial"
                 // }).html("Loading...").appendTo(container);
@@ -987,7 +987,7 @@
 
 
 
-            function renderComments(comments) {
+            function renderSectionComments(comments) {
                 //     const wrap = $(`#${moduleKey}-commentWrap_${dept}_${id}`);
                 // wrap.empty();
                 // const items = getCurrentComments();
@@ -1079,7 +1079,7 @@
                 //     value: "All",
                 //     onValueChanged: function (e) {
                 //         filterType = e.value;
-                //         renderComments(comments);
+                //         renderSectionComments(comments);
                 //     }
                 // });
 
@@ -1088,7 +1088,7 @@
                 // //     value: false,
                 // //     onValueChanged: function (e) {
                 // //         unreadOnly = e.value;
-                // //         renderComments(comments);
+                // //         renderSectionComments(comments);
                 // //     }
                 // // });
 
@@ -1099,7 +1099,7 @@
                 //     onClick: function () {
                 //         filterType = "All";
                 //             $(`#${moduleKey}-filterTypeSelect_${dept}_${id}`).dxSelectBox("instance").option("value", "All");
-                //         renderComments(comments);
+                //         renderSectionComments(comments);
                 //     }
                 // });
 
@@ -1109,7 +1109,7 @@
                 //     onClick: function () {
                 //         filterType = "Request";
                 //             $(`#${moduleKey}-filterTypeSelect_${dept}_${id}`).dxSelectBox("instance").option("value", "Request");
-                //         renderComments(comments);
+                //         renderSectionComments(comments);
                 //     }
                 // });
 
@@ -1119,7 +1119,7 @@
                 //     onClick: function () {
                 //         filterType = "Blocker";
                 //             $(`#${moduleKey}-filterTypeSelect_${dept}_${id}`).dxSelectBox("instance").option("value", "Blocker");
-                //         renderComments(comments);
+                //         renderSectionComments(comments);
                 //     }
                 // });
 
@@ -1129,7 +1129,7 @@
                 //     onClick: function () {
                 //         filterType = "Discussion";
                 //             $(`#${moduleKey}-filterTypeSelect_${dept}_${id}`).dxSelectBox("instance").option("value", "Discussion");
-                //         renderComments(comments);
+                //         renderSectionComments(comments);
                 //     }
                 // });
 
@@ -1139,7 +1139,7 @@
                 //     onClick: function () {
                 //         filterType = "Internal";
                 //             $(`#${moduleKey}-filterTypeSelect_${dept}_${id}`).dxSelectBox("instance").option("value", "Internal");
-                //         renderComments(comments);
+                //         renderSectionComments(comments);
                 //     }
                 // });
             }
@@ -1278,7 +1278,7 @@
              if (commentsIn.length > 0) {
                  comments = commentsIn;
 
-                  renderComments(comments);
+                  renderSectionComments(comments);
 
              }
 
@@ -2722,7 +2722,7 @@
                     // var key = `flow:${selectedCodeNo}`;
                     function renderFlow(items) {
                         if (!Array.isArray(items) || items.length === 0) {
-                            return { summary: "-", html: `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No history</div>` };
+                            return { summary: "-", html: `<div style="color:var(--c-6b7280);font-size:12px;padding:6px 4px;">No history</div>` };
                         }
                         // const summary = items.map(x => x.dept).join(" → ");
                         const summary = "";
@@ -3764,7 +3764,7 @@
                 message: message || "File loading...",
                 visible: true,
                 shading: true,
-                shadingColor: "rgba(255,255,255,0.7)",
+                shadingColor: window.AppColors.c_rgba_255_255_255_0_7,
                 showPane: true,
                 closeOnOutsideClick: false,
                 position: { of: "#" +  idControlElement }
@@ -4840,7 +4840,7 @@
                                         message: "Image loading...",
                                         visible: true,
                                         shading: true,
-                                        shadingColor: "rgba(255,255,255,0.7)",
+                                        shadingColor: window.AppColors.c_rgba_255_255_255_0_7,
                                         showPane: true,
                                         closeOnOutsideClick: false,
                                         position: { of: $previewWrapper }
@@ -4891,7 +4891,7 @@
                                 message: "Image loading...",
                                 visible: true,
                                 shading: true,
-                                shadingColor: "rgba(255,255,255,0.7)",
+                                shadingColor: window.AppColors.c_rgba_255_255_255_0_7,
                                 showPane: true,
                                 closeOnOutsideClick: false,
                                 position: { of: `#imagePreview_${editorOptions.refKey}_${editorOptions.outline.id}` }
@@ -5074,7 +5074,7 @@
         function visibleCommentButtonCell(e, gridInstance) {
         $(`<a class="dx-link dx-link-edit">`)
             .addClass("dx-icon fas fa-eye")
-            .css({ marginRight: "5px", cursor: "pointer", color: "#337ab7" })
+            .css({ marginRight: "5px", cursor: "pointer", color: window.AppColors.c_337ab7 })
             .on("click", function () {
                 var value = !e.data.isView;
                 ajaxGet(`api/${gridInstance.ModelName}/ToggleVisibleRows/${e.data.guid}/${value}`, null);
@@ -5719,7 +5719,7 @@ function styleModeChange(item){
 
                 const $toolbar = $("<div>").css({
                     padding: "8px 12px",
-                    borderBottom: "1px solid #ddd",
+                    borderBottom: "1px solid var(--c-dddddd)",
                     display: "flex",
                     gap: "8px",
                     alignItems: "center",
@@ -5734,7 +5734,7 @@ function styleModeChange(item){
                     flex: 1,
                     overflow: "auto",
                     padding: "12px",
-                    background: "#fff"
+                    background: window.AppColors.c_ffffff
                 }).appendTo($wrapper);
 
                 $body.html("<div style='padding:20px'>Loading...</div>");
@@ -5772,18 +5772,18 @@ function styleModeChange(item){
                                 borderCollapse: "collapse",
                                 width: "max-content",
                                 minWidth: "100%",
-                                background: "#fff"
+                                background: window.AppColors.c_ffffff
                             });
 
                             $body.find("th, td").css({
-                                border: "1px solid #dcdcdc",
+                                border: "1px solid var(--c-dcdcdc)",
                                 padding: "6px 10px",
                                 whiteSpace: "nowrap",
                                 verticalAlign: "middle"
                             });
 
                             $body.find("tr:nth-child(even)").css({
-                                background: "#fafafa"
+                                background: window.AppColors.c_fafafa
                             });
                         }
 
@@ -5839,7 +5839,7 @@ function styleModeChange(item){
                         height: "100%",
                         overflow: "auto",
                         padding: 20,
-                        background: "#f5f6f8"
+                        background: window.AppColors.c_f5f6f8
                     })
                     .html("Loading...")
                     .appendTo(container);
@@ -5852,11 +5852,11 @@ function styleModeChange(item){
                     .then(blob => {
                         const docEl = $("<div>")
                             .css({
-                                background: "#fff",
+                                background: window.AppColors.c_ffffff,
                                 padding: 40,
                                 margin: "0 auto",
                                 maxWidth: 900,
-                                boxShadow: "0 4px 20px rgba(0,0,0,0.1)"
+                                boxShadow: "0 4px 20px var(--c-rgba-0-0-0-0-1)"
                             })[0];
 
                         $host.empty().append(docEl);
@@ -5908,8 +5908,8 @@ function styleModeChange(item){
                         whiteSpace: "pre-wrap",
                         overflowWrap: "anywhere",
                         overflow: "auto",
-                        background: "#0f172a",
-                        color: "#e2e8f0",
+                        background: window.AppColors.c_0f172a,
+                        color: window.AppColors.c_e2e8f0,
                         borderRadius: "6px",
                         fontFamily: "Consolas, 'Courier New', monospace",
                         fontSize: "13px"
@@ -5944,7 +5944,7 @@ function styleModeChange(item){
                                  $("<iframe>")
                             .attr("id", `pdfViewer_${id}`)
                              .attr("src", fileURL)
-                            .css({ width: "100%", height: "800px", border: "1px solid #ccc" })
+                            .css({ width: "100%", height: "800px", border: "1px solid var(--c-cccccc)" })
                                 .appendTo(container);
                             // $(`#${formModuleKeyQt}-pdfViewer_${quoteId}`).attr("src", fileURL);
                         },
@@ -6060,59 +6060,86 @@ function styleModeChange(item){
         });
     }
 
-       function renderComments(items) {
-        // if (!Array.isArray(items) || items.length === 0) {
-        //     return `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No audit logs</div>`;
-        // }
-
-        // var html = items.map((c) => {
-        //     const dept = (c.deptCode || "").toUpperCase();
-
-        //     let typeClass = "";
-
-        //     if (dept.startsWith("FO")) {
-        //         typeClass = "ct-fo";
-        //     } else if (dept.startsWith("TS")) {
-        //         typeClass = "ct-ts";
-        //     } else if (dept.startsWith("UW")) {
-        //         typeClass = "ct-uw";
-        //     } else if (dept.startsWith("LMKT")) {
-        //         typeClass = "ct-lmkt";
-        //     } else if (dept.startsWith("PM")) {
-        //         typeClass = "ct-pm";
-        //     }
-
-        //     var auditKey = `audit_${Date.now()}_${++window.AuditLogViewState.sequence}`;
-        //     var auditTitle = (c.deptCode ? c.deptCode + " - " : "") + (c.commentBy || "Audit Log");
-        //     window.AuditLogViewState.contents[auditKey] = {
-        //         title: auditTitle,
-        //         author: c.commentBy || "",
-        //         date: fmtTimeLocal(c.commentTime || ""),
-        //         html: c.commentText || ""
-        //     };
-
-        //     return `
-        //         <div class="ct-item ${typeClass}" data-audit-log-key="${auditKey}" onclick="openAuditLogDetail(this)" role="button" tabindex="0" onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); openAuditLogDetail(this); }">
-        //             <div class="ct-user">
-        //                 ${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}
-        //             </div>
-        //             <div class="ct-time">
-        //                 ${fmtTimeLocal(c.commentTime || "")}
-        //             </div>
-        //             <div class="ct-text">
-        //                 ${c.commentText || ""}
-        //             </div>
-        //             <div class="ct-view-more">Click to view more</div>
-        //         </div>
-        //     `;
-        // }).join("");
-
-        // setTimeout(refreshAuditLogOverflowHints, 0);
-        // setTimeout(refreshAuditLogOverflowHints, 350);
-        // return html;
+    function getAuditLogField(item, ...fieldNames) {
+        for (var index = 0; index < fieldNames.length; index++) {
+            var fieldName = fieldNames[index];
+            if (item?.[fieldName] !== null && item?.[fieldName] !== undefined) {
+                return item[fieldName];
+            }
+        }
         return "";
     }
-    window.renderAuditLogComments = renderComments;
+
+    function normalizeAuditLogItems(result) {
+        if (Array.isArray(result)) return result;
+        if (Array.isArray(result?.data)) return result.data;
+        if (Array.isArray(result?.items)) return result.items;
+        return [];
+    }
+
+    function getAuditLogDepartmentClass(department) {
+        var dept = String(department || "").trim().toUpperCase();
+        if (dept.startsWith("FO")) return "ct-fo";
+        if (dept.startsWith("TS")) return "ct-ts";
+        if (dept.startsWith("UW")) return "ct-uw";
+        if (dept.startsWith("LMKT")) return "ct-lmkt";
+        if (dept.startsWith("PM")) return "ct-pm";
+        return "";
+    }
+
+    function renderAuditLogs(result) {
+        var items = normalizeAuditLogItems(result);
+        window.AuditLogViewState.contents = {};
+
+        if (!items.length) {
+            return `<div style="color:var(--c-6b7280);font-size:12px;padding:6px 4px;">No audit logs</div>`;
+        }
+
+        var html = items.map(function (item) {
+            var dept = getAuditLogField(item, "deptCode", "DeptCode", "fromDepartment", "FromDepartment");
+            var author = getAuditLogField(item, "commentBy", "CommentBy", "createdBy", "CreatedBy");
+            var rawDate = getAuditLogField(item, "commentTime", "CommentTime", "createdDate", "CreatedDate", "createdAtUtc", "CreatedAtUtc");
+            var content = getAuditLogField(item, "commentText", "CommentText", "comment", "Comment", "message", "Message");
+            var displayDate = rawDate ? fmtTimeLocal(rawDate) : "";
+            var auditKey = `audit_${Date.now()}_${++window.AuditLogViewState.sequence}`;
+            var auditTitle = (dept ? `${dept} - ` : "") + (author || "Audit Log");
+
+            window.AuditLogViewState.contents[auditKey] = {
+                title: auditTitle,
+                author: author,
+                date: displayDate,
+                html: content || ""
+            };
+
+            return `
+                <div class="ct-item ${getAuditLogDepartmentClass(dept)}" data-audit-log-key="${auditKey}" role="button" tabindex="0">
+                    <div class="ct-user">${escapeHtml((dept ? `${dept} – ` : "") + author)}</div>
+                    <div class="ct-time">${escapeHtml(displayDate)}</div>
+                    <div class="ct-text">${content || ""}</div>
+                    <div class="ct-view-more">Click to view more</div>
+                </div>`;
+        }).join("");
+
+        setTimeout(refreshAuditLogOverflowHints, 0);
+        setTimeout(refreshAuditLogOverflowHints, 350);
+        return html;
+    }
+
+    $(document)
+        .off("click.auditLog", ".ct-item[data-audit-log-key]")
+        .on("click.auditLog", ".ct-item[data-audit-log-key]", function () {
+            openAuditLogDetail(this);
+        })
+        .off("keydown.auditLog", ".ct-item[data-audit-log-key]")
+        .on("keydown.auditLog", ".ct-item[data-audit-log-key]", function (event) {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                openAuditLogDetail(this);
+            }
+        });
+
+    window.renderAuditLogs = renderAuditLogs;
+    window.openAuditLogDetail = openAuditLogDetail;
     //20260619
 
                 function clearContent()
@@ -6232,7 +6259,7 @@ function styleModeChange(item){
                     getPersonInCharge(pic).then(function (stageName) {
                     // if (stageDept)
                         $co.find(".co-text").text(stageName);
-                        $co.css({ color: "rgba(17,24,39,.85)" });
+                        $co.css({ color: window.AppColors.c_rgba_17_24_39_85 });
                         });
                 });
             }

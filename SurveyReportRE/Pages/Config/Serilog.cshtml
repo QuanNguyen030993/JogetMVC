@@ -120,10 +120,10 @@
         onRowPrepared: function (e) {
             if (e.rowType === "data") {
                 if (e.data.level === "Error") {
-                    e.rowElement.css("background-color", "#ffe6e6");
+                    e.rowElement.css("background-color", window.AppColors.c_ffe6e6);
                 }
                 if (e.data.level === "Warning") {
-                    e.rowElement.css("background-color", "#fff5cc");
+                    e.rowElement.css("background-color", window.AppColors.c_fff5cc);
                 }
             }
         }
@@ -149,4 +149,3 @@
 <div class="grid-wrapper">
     <div id="gridContainer"></div>
 </div>
-

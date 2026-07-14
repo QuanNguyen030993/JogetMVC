@@ -5,16 +5,16 @@
 
 <style>
     :root {
-        --dashboard-ink: #172033;
-        --dashboard-muted: #667085;
-        --dashboard-line: #e7eaf0;
-        --dashboard-surface: #ffffff;
+        --dashboard-ink: var(--c-172033);
+        --dashboard-muted: var(--c-667085);
+        --dashboard-line: var(--c-e7eaf0);
+        --dashboard-surface: var(--c-ffffff);
     }
 
     body {
         margin: 0;
         color: var(--dashboard-ink);
-        background: #f3f6fb;
+        background: var(--c-f3f6fb);
         font-family: Inter, "Segoe UI", Arial, sans-serif;
     }
 
@@ -22,9 +22,9 @@
         min-height: 100vh;
         padding: 28px;
         background:
-            radial-gradient(circle at 8% 0%, rgba(74, 112, 255, .13), transparent 25rem),
-            radial-gradient(circle at 92% 8%, rgba(36, 193, 153, .09), transparent 24rem),
-            #f3f6fb;
+            radial-gradient(circle at 8% 0%, var(--c-rgba-74-112-255-13), transparent 25rem),
+            radial-gradient(circle at 92% 8%, var(--c-rgba-36-193-153-09), transparent 24rem),
+            var(--c-f3f6fb);
     }
 
     .workload-dashboard-shell {
@@ -41,10 +41,10 @@
         margin-bottom: 22px;
         padding: 28px 30px;
         overflow: hidden;
-        color: #fff;
+        color: var(--c-ffffff);
         border-radius: 20px;
-        background: linear-gradient(120deg, #172b66 0%, #315ed8 58%, #2f8fbe 100%);
-        box-shadow: 0 18px 42px rgba(31, 65, 145, .2);
+        background: linear-gradient(120deg, var(--c-172b66) 0%, var(--c-315ed8) 58%, var(--c-2f8fbe) 100%);
+        box-shadow: 0 18px 42px var(--c-rgba-31-65-145-2);
     }
 
     .workload-dashboard-hero::after {
@@ -54,13 +54,13 @@
         bottom: -110px;
         width: 300px;
         height: 300px;
-        border: 45px solid rgba(255, 255, 255, .08);
+        border: 45px solid var(--c-rgba-255-255-255-08);
         border-radius: 50%;
     }
 
     .workload-dashboard-eyebrow {
         margin-bottom: 9px;
-        color: #bcd1ff;
+        color: var(--c-bcd1ff);
         font-size: 12px;
         font-weight: 700;
         letter-spacing: .16em;
@@ -77,7 +77,7 @@
     .workload-dashboard-subtitle {
         max-width: 650px;
         margin: 9px 0 0;
-        color: rgba(255, 255, 255, .76);
+        color: var(--c-rgba-255-255-255-76);
         font-size: 14px;
         line-height: 1.55;
     }
@@ -90,9 +90,9 @@
         align-items: center;
         gap: 9px;
         padding: 10px 14px;
-        border: 1px solid rgba(255, 255, 255, .22);
+        border: 1px solid var(--c-rgba-255-255-255-22);
         border-radius: 999px;
-        background: rgba(255, 255, 255, .12);
+        background: var(--c-rgba-255-255-255-12);
         font-size: 13px;
         font-weight: 600;
         backdrop-filter: blur(8px);
@@ -102,16 +102,16 @@
         width: 8px;
         height: 8px;
         border-radius: 50%;
-        background: #65e6b4;
-        box-shadow: 0 0 0 5px rgba(101, 230, 180, .16);
+        background: var(--c-65e6b4);
+        box-shadow: 0 0 0 5px var(--c-rgba-101-230-180-16);
     }
 
     .workload-dashboard-card {
         padding: 24px;
-        border: 1px solid rgba(221, 226, 235, .82);
+        border: 1px solid var(--c-rgba-221-226-235-82);
         border-radius: 20px;
-        background: rgba(255, 255, 255, .92);
-        box-shadow: 0 10px 32px rgba(28, 45, 78, .08);
+        background: var(--c-rgba-255-255-255-92);
+        box-shadow: 0 10px 32px var(--c-rgba-28-45-78-08);
     }
 
     #workloadDashboard {
@@ -120,15 +120,15 @@
     }
 
     #workloadDashboard > div > div:first-child select {
-        color: #344054;
-        border-color: #d9deea !important;
-        box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
+        color: var(--c-344054);
+        border-color: var(--c-d9deea) !important;
+        box-shadow: 0 1px 2px var(--c-rgba-16-24-40-04);
         outline: none;
     }
 
     #workloadDashboard > div > div:first-child select:focus {
-        border-color: #6687ed !important;
-        box-shadow: 0 0 0 3px rgba(49, 94, 216, .12);
+        border-color: var(--c-6687ed) !important;
+        box-shadow: 0 0 0 3px var(--c-rgba-49-94-216-12);
     }
 
     @@media (max-width: 767px) {

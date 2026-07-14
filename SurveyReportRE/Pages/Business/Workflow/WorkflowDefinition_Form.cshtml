@@ -17,7 +17,7 @@
 
     body {
         font-family: Segoe UI, sans-serif;
-        background: #f5f7fb;
+        background: var(--c-f5f7fb);
         margin: 0
     }
 
@@ -48,20 +48,20 @@
     .card-h-title {
         font-size: 15px;
         font-weight: 700;
-        color: #1e293b
+        color: var(--c-1e293b)
     }
 
     .card-h-sub {
         font-size: 12px;
-        color: #64748b
+        color: var(--c-64748b)
     }
 
     .card-h {
         min-width: 600px;
-        background: #fff;
-        border: 1px solid #e6ebf3;
+        background: var(--c-ffffff);
+        border: 1px solid var(--c-e6ebf3);
         border-radius: 16px;
-        box-shadow: 0 6px 18px rgba(0,0,0,.05);
+        box-shadow: 0 6px 18px var(--c-rgba-0-0-0-05);
         display: flex;
         flex-direction: row; /* đổi từ column -> row */
 
@@ -74,8 +74,8 @@
         min-width: 160px;
         padding: 14px 18px;
         border-bottom: none;
-        border-right: 1px solid #edf2f7;
-        background: linear-gradient(#fff,#f9fbff);
+        border-right: 1px solid var(--c-edf2f7);
+        background: linear-gradient(var(--c-ffffff),var(--c-f9fbff));
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -98,30 +98,30 @@
 
 
     .tool-item {
-        border: 1px solid #dbe7ff;
-        background: #f6faff;
+        border: 1px solid var(--c-dbe7ff);
+        background: var(--c-f6faff);
         border-radius: 14px;
         padding: 12px;
         cursor: grab;
     }
 
         .tool-item:hover {
-            background: #eef4ff;
-            border-color: #3b82f6;
+            background: var(--c-eef4ff);
+            border-color: var(--c-3b82f6);
         }
 
 
     #treeWorkflow {
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--c-e2e8f0);
         border-radius: 12px;
         min-height: 450px;
-        background: #fff;
+        background: var(--c-ffffff);
         padding: 8px;
     }
 
     .json-box {
-        background: #020617;
-        color: #38bdf8;
+        background: var(--c-020617);
+        color: var(--c-38bdf8);
         border-radius: 12px;
         padding: 12px;
         font-size: 12px;
@@ -130,8 +130,8 @@
     }
 
     .node-json-editor {
-        border: 1px solid #dbe0ea;
-        background: #f8fafc;
+        border: 1px solid var(--c-dbe0ea);
+        background: var(--c-f8fafc);
         border-radius: 12px;
         padding: 10px;
     }
@@ -148,13 +148,13 @@
     }
 
     .layout::-webkit-scrollbar-thumb {
-        background: #cbd5f5;
+        background: var(--c-cbd5f5);
         border-radius: 6px
     }
 
 
     .jstree-clicked {
-        background: #e0f2fe !important
+        background: var(--c-e0f2fe) !important
     }
 
 
@@ -175,7 +175,7 @@
     .toolbar {
         min-height: 60px;
         border-bottom: 1px solid var(--border);
-        background: #fff;
+        background: var(--c-ffffff);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -240,9 +240,9 @@
         padding: 7px 10px;
         border: 1px solid var(--border);
         border-radius: 999px;
-        background: #fff;
+        background: var(--c-ffffff);
         font-size: 12px;
-        color: #334155;
+        color: var(--c-334155);
     }
 
     .legend-row {
@@ -268,12 +268,12 @@
             position: relative;
             min-width: 1400px;
             min-height: 760px;
-            background: linear-gradient(to right, rgba(203,213,225,.35) 1px, transparent 1px), linear-gradient(to bottom, rgba(203,213,225,.35) 1px, transparent 1px);
+            background: linear-gradient(to right, var(--c-rgba-203-213-225-35) 1px, transparent 1px), linear-gradient(to bottom, var(--c-rgba-203-213-225-35) 1px, transparent 1px);
             background-size: 24px 24px;
-            background-color: #fff;
+            background-color: var(--c-ffffff);
             border: 1px solid var(--border);
             border-radius: 18px;
-            box-shadow: 0 10px 28px rgba(15,23,42,0.06);
+            box-shadow: 0 10px 28px var(--c-rgba-15-23-42-0-06);
             overflow:  auto;
             }
 
@@ -282,8 +282,8 @@
         position: absolute;
         top: 14px;
         font-size: 12px;
-        color: #64748b;
-        background: #f8fafc;
+        color: var(--c-64748b);
+        background: var(--c-f8fafc);
         border: 1px solid var(--border);
         border-radius: 999px;
         padding: 4px 10px;
@@ -298,12 +298,12 @@
     }
 
     .status-ok {
-        color: #15803d;
+        color: var(--c-15803d);
     }
 
     code {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        background: var(--c-f8fafc);
+        border: 1px solid var(--c-e2e8f0);
         padding: 2px 6px;
         border-radius: 6px;
     }
@@ -317,7 +317,7 @@
   
     .sidebarHint {
         font-size: 12px;
-        color: #64748b;
+        color: var(--c-64748b);
         line-height: 1.5;
         margin-bottom: 12px;
     }
@@ -339,8 +339,8 @@
     }
 
     .btn {
-        border: 1px solid #cfd6df;
-        background: #fff;
+        border: 1px solid var(--c-cfd6df);
+        background: var(--c-ffffff);
         border-radius: 10px;
         padding: 8px 12px;
         cursor: pointer;
@@ -348,7 +348,7 @@
     }
 
         .btn:hover {
-            background: #f8fafc;
+            background: var(--c-f8fafc);
         }
 
     .legend {
@@ -362,22 +362,22 @@
     .canvas {
         position: relative;
         flex: 1;
-        border: 1px solid #dbe2ea;
+        border: 1px solid var(--c-dbe2ea);
         border-radius: 16px;
-        background: linear-gradient(to right, rgba(0,0,0,.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,.04) 1px, transparent 1px), #fff;
+        background: linear-gradient(to right, var(--c-rgba-0-0-0-04) 1px, transparent 1px), linear-gradient(to bottom, var(--c-rgba-0-0-0-04) 1px, transparent 1px), var(--c-ffffff);
         background-size: 24px 24px;
         overflow: hidden;
         min-height: 420px;
     }
 
         .canvas.dragOver {
-            background: linear-gradient(to right, rgba(59,130,246,.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(59,130,246,.08) 1px, transparent 1px), #eff6ff;
+            background: linear-gradient(to right, var(--c-rgba-59-130-246-08) 1px, transparent 1px), linear-gradient(to bottom, var(--c-rgba-59-130-246-08) 1px, transparent 1px), var(--c-eff6ff);
             background-size: 24px 24px;
         }
 
     .rightPane {
-        border-left: 1px solid #dbe2ea;
-        background: #fff;
+        border-left: 1px solid var(--c-dbe2ea);
+        background: var(--c-ffffff);
         display: flex;
         flex-direction: column;
         min-width: 0;
@@ -385,7 +385,7 @@
 
     .panelHeader {
         padding: 14px 16px;
-        border-bottom: 1px solid #eef2f7;
+        border-bottom: 1px solid var(--c-eef2f7);
         font-weight: 700;
     }
 
@@ -400,21 +400,21 @@
 
     .statusBar {
         font-size: 12px;
-        color: #475569;
+        color: var(--c-475569);
     }
 
     .sectionTitle {
         font-size: 12px;
         font-weight: 700;
-        color: #475569;
+        color: var(--c-475569);
         margin-top: 4px;
     }
 
     .infoBox {
-        border: 1px solid #e5e7eb;
+        border: 1px solid var(--c-e5e7eb);
         border-radius: 12px;
         padding: 12px;
-        background: #fafafa;
+        background: var(--c-fafafa);
         font-size: 12px;
         line-height: 1.5;
         max-height: 220px;
@@ -428,9 +428,9 @@
         min-height: 80px;
         padding: 10px 12px;
         border-radius: 14px;
-        background: #fff;
-        border: 2px solid #cbd5e1;
-        box-shadow: 0 8px 18px rgba(0,0,0,.08);
+        background: var(--c-ffffff);
+        border: 2px solid var(--c-cbd5e1);
+        box-shadow: 0 8px 18px var(--c-rgba-0-0-0-08);
         cursor: move;
         user-select: none;
         transition: all .15s ease;
@@ -438,27 +438,27 @@
 
         .node:hover {
             transform: translateY(-1px);
-            box-shadow: 0 10px 22px rgba(0,0,0,.12);
+            box-shadow: 0 10px 22px var(--c-rgba-0-0-0-12);
         }
 
         .node.selected {
-            box-shadow: 0 0 0 4px rgba(37,99,235,.12), 0 10px 24px rgba(0,0,0,.12);
-            border-color: #2563eb;
+            box-shadow: 0 0 0 4px var(--c-rgba-37-99-235-12), 0 10px 24px var(--c-rgba-0-0-0-12);
+            border-color: var(--c-2563eb);
         }
 
         .node.activeNode {
-            border-color: #2563eb;
-            background: #eff6ff;
+            border-color: var(--c-2563eb);
+            background: var(--c-eff6ff);
         }
 
         .node.completedNode {
-            border-color: #16a34a;
-            background: #f0fdf4;
+            border-color: var(--c-16a34a);
+            background: var(--c-f0fdf4);
         }
 
         .node.pendingNode {
-            border-color: #d97706;
-            background: #fff7ed;
+            border-color: var(--c-d97706);
+            background: var(--c-fff7ed);
         }
 
         .node.allowLoopNode::after {
@@ -469,13 +469,13 @@
             width: 24px;
             height: 24px;
             border-radius: 999px;
-            background: #fb923c;
-            color: #fff;
+            background: var(--c-fb923c);
+            color: var(--c-ffffff);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 13px;
-            box-shadow: 0 4px 10px rgba(0,0,0,.15);
+            box-shadow: 0 4px 10px var(--c-rgba-0-0-0-15);
         }
     /* base node vẫn giữ */
     .node {
@@ -483,23 +483,23 @@
         min-width: 140px;
         padding: 10px;
         border-radius: 8px;
-        background: #fff;
-        border: 1px solid #ccc;
+        background: var(--c-ffffff);
+        border: 1px solid var(--c-cccccc);
         text-align: center;
         transition: all 0.2s ease;
     }
 
 
         .node.flow-start {
-            background-color: rgba(34, 197, 94, 0.1);
-            border: 2px solid #22c55e;
-            color: #166534;
+            background-color: var(--c-rgba-34-197-94-0-1);
+            border: 2px solid var(--c-22c55e);
+            color: var(--c-166534);
         }
 
         .node.flow-end {
-            background-color: rgba(239, 68, 68, 0.1);
-            border: 2px solid #ef4444;
-            color: #7f1d1d;
+            background-color: var(--c-rgba-239-68-68-0-1);
+            border: 2px solid var(--c-ef4444);
+            color: var(--c-7f1d1d);
         }
 
 
@@ -538,36 +538,36 @@
         padding: 0 8px;
         border-radius: 999px;
         font-size: 11px;
-        border: 1px solid #dbe2ea;
-        background: #f8fafc;
-        color: #334155;
+        border: 1px solid var(--c-dbe2ea);
+        background: var(--c-f8fafc);
+        color: var(--c-334155);
     }
 
     .flow-both {
-        background: #f8fafc;
+        background: var(--c-f8fafc);
     }
 
     .flow-quotation {
-        background: #ecfeff;
-        border-color: #a5f3fc;
-        color: #155e75;
+        background: var(--c-ecfeff);
+        border-color: var(--c-a5f3fc);
+        color: var(--c-155e75);
     }
 
     .flow-policy {
-        background: #f5f3ff;
-        border-color: #c4b5fd;
-        color: #5b21b6;
+        background: var(--c-f5f3ff);
+        border-color: var(--c-c4b5fd);
+        color: var(--c-5b21b6);
     }
 
    
 
     .aLabel {
-        background: rgba(255,255,255,.94);
-        border: 1px solid #e5e7eb;
+        background: var(--c-rgba-255-255-255-94);
+        border: 1px solid var(--c-e5e7eb);
         border-radius: 999px;
         padding: 2px 8px;
         font-size: 11px;
-        color: #334155;
+        color: var(--c-334155);
     }
 </style>
 <body>
@@ -2633,8 +2633,8 @@
                       ConnectionsDetachable: false,
                       ReattachConnections: false,
                       Endpoint: "Blank",
-                      PaintStyle: { stroke: "#64748b", strokeWidth: 2 },
-                      HoverPaintStyle: { stroke: "#334155", strokeWidth: 3 }
+                      PaintStyle: { stroke: window.AppColors.c_64748b, strokeWidth: 2 },
+                      HoverPaintStyle: { stroke: window.AppColors.c_334155, strokeWidth: 3 }
                     });
 
                     (currentJson.workflowTransitions || []).forEach(connectEdge);

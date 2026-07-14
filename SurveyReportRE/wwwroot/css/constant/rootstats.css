@@ -46,4 +46,12 @@
     --dx-grid-hover: #f8fbff;
     --dx-grid-selected: #e8f1ff;
     --dx-grid-radius: 0px;
+
+    /* Colors gathered from CSS files */
+    --c-0077cc: #0077cc;
+    --c-1861ac: #1861ac;
+    --c-1b6ec2: #1b6ec2;
+    --c-e5e5e5: #e5e5e5;
+    --c-ffffff: #ffffff;
+    --c-rgba-0-0-0-05: rgba(0,0,0,.05);
 }

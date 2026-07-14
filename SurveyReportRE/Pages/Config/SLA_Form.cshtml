@@ -17,9 +17,9 @@
         gap: 14px;
         margin-bottom: 18px;
         padding: 18px 20px;
-        border: 1px solid #dfe6ee;
+        border: 1px solid var(--c-dfe6ee);
         border-radius: 12px;
-        background: linear-gradient(135deg, #f8fafc 0%, #eef3f8 100%);
+        background: linear-gradient(135deg, var(--c-f8fafc) 0%, var(--c-eef3f8) 100%);
     }
 
     .sla-user-hero-icon {
@@ -29,31 +29,31 @@
         height: 44px;
         place-items: center;
         border-radius: 11px;
-        background: #334155;
-        color: #fff;
+        background: var(--c-334155);
+        color: var(--c-ffffff);
         font-size: 19px;
     }
 
     .sla-user-hero h2 {
         margin: 0 0 4px;
-        color: #172235;
+        color: var(--c-172235);
         font-size: 20px;
         font-weight: 750;
     }
 
     .sla-user-hero p {
         margin: 0;
-        color: #64748b;
+        color: var(--c-64748b);
         font-size: 13px;
         line-height: 1.5;
     }
 
     .sla-user-form-shell {
         padding: 18px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--c-e2e8f0);
         border-radius: 12px;
-        background: #fff;
-        box-shadow: 0 5px 20px rgba(15, 23, 42, .06);
+        background: var(--c-ffffff);
+        box-shadow: 0 5px 20px var(--c-rgba-15-23-42-06);
     }
 
     .sla-user-form .sla-user-note {
@@ -62,15 +62,15 @@
         gap: 11px;
         margin-bottom: 6px;
         padding: 12px 14px;
-        border: 1px solid #dbe5ef;
+        border: 1px solid var(--c-dbe5ef);
         border-radius: 9px;
-        background: #f8fafc;
-        color: #475569;
+        background: var(--c-f8fafc);
+        color: var(--c-475569);
     }
 
     .sla-user-form .sla-user-note > i {
         margin-top: 2px;
-        color: #b7791f;
+        color: var(--c-b7791f);
         font-size: 16px;
     }
 
@@ -81,7 +81,7 @@
 
     .sla-user-form .sla-user-note b {
         margin-bottom: 2px;
-        color: #334155;
+        color: var(--c-334155);
     }
 
     .sla-user-form .sla-user-note span {
@@ -92,46 +92,46 @@
     .sla-user-form .sla-user-value-group {
         margin-top: 14px;
         padding: 15px 16px 6px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--c-e2e8f0);
         border-radius: 10px;
-        background: #fcfdff;
+        background: var(--c-fcfdff);
     }
 
     .sla-user-form .sla-user-value-group .dx-form-group-caption {
         padding-bottom: 10px;
-        color: #263548;
+        color: var(--c-263548);
         font-size: 14px;
         font-weight: 750;
     }
 
     .sla-user-form .dx-field-item-label-text {
-        color: #475569;
+        color: var(--c-475569);
         font-weight: 650;
     }
 
     .sla-user-form .dx-field-item-help-text {
-        color: #94a3b8;
+        color: var(--c-94a3b8);
         font-size: 11px;
     }
 
     .sla-user-form .sla-user-save {
         margin-top: 18px;
         padding-top: 15px;
-        border-top: 1px solid #e2e8f0;
+        border-top: 1px solid var(--c-e2e8f0);
     }
 
     .sla-user-form .sla-user-save .dx-button {
         min-width: 190px;
         min-height: 42px;
         border-radius: 8px;
-        background: #334155;
-        color: #fff;
+        background: var(--c-334155);
+        color: var(--c-ffffff);
         font-weight: 700;
-        box-shadow: 0 5px 12px rgba(51, 65, 85, .18);
+        box-shadow: 0 5px 12px var(--c-rgba-51-65-85-18);
     }
 
     .sla-user-form .sla-user-save .dx-button:hover {
-        background: #1e293b;
+        background: var(--c-1e293b);
     }
 
     .sla-user-empty {
@@ -141,12 +141,12 @@
         justify-content: center;
         flex-direction: column;
         gap: 7px;
-        color: #94a3b8;
+        color: var(--c-94a3b8);
         text-align: center;
     }
 
     .sla-user-empty i { font-size: 28px; }
-    .sla-user-empty b { color: #475569; font-size: 15px; }
+    .sla-user-empty b { color: var(--c-475569); font-size: 15px; }
     .sla-user-empty span { max-width: 430px; font-size: 12px; }
 
     @@media (max-width: 640px) {
@@ -193,4 +193,3 @@
         <div id="form_@(SLA_FormModel.ModelName)" class="dExForm sla-user-form"></div>
     </div>
 </div>
-

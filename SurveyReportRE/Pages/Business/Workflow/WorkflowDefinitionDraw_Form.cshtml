@@ -50,11 +50,11 @@
             let code = "graph TD\n";
             
             // Định nghĩa bảng màu sắc map theo styleColor
-            code += "    classDef orange fill:#ffe0b2,stroke:#fb8c00,stroke-width:2px;\n";
-            code += "    classDef lightOrange fill:#fff3e0,stroke:#ffb74d,stroke-width:1px;\n";
-            code += "    classDef blue fill:#e3f2fd,stroke:#2196f3,stroke-width:2px;\n";
-            code += "    classDef green fill:#e8f5e9,stroke:#4caf50,stroke-width:2px;\n";
-            code += "    classDef red fill:#ffebee,stroke:#f44336,stroke-width:2px;\n\n";
+            code += "    classDef orange fill:var(--c-ffe0b2),stroke:var(--c-fb8c00),stroke-width:2px;\n";
+            code += "    classDef lightOrange fill:var(--c-fff3e0),stroke:var(--c-ffb74d),stroke-width:1px;\n";
+            code += "    classDef blue fill:var(--c-e3f2fd),stroke:var(--c-2196f3),stroke-width:2px;\n";
+            code += "    classDef green fill:var(--c-e8f5e9),stroke:var(--c-4caf50),stroke-width:2px;\n";
+            code += "    classDef red fill:var(--c-ffebee),stroke:var(--c-f44336),stroke-width:2px;\n\n";
 
             // Tạo Phân làn (subgraph) và gộp các Node vào làn tương ứng
             if (wfData.lanes && wfData.workflowNodes) {
@@ -109,11 +109,11 @@
   let mermaid = "graph TD\n";
 
   // 1. Định nghĩa màu sắc hệ thống dựa trên flowType hoặc nodeName
-  mermaid += "    classDef orange fill:#ffe0b2,stroke:#fb8c00,stroke-width:2px;\n";
-  mermaid += "    classDef lightOrange fill:#fff3e0,stroke:#ffb74d,stroke-width:1px;\n";
-  mermaid += "    classDef blue fill:#e3f2fd,stroke:#2196f3,stroke-width:2px;\n";
-  mermaid += "    classDef green fill:#e8f5e9,stroke:#4caf50,stroke-width:2px;\n";
-  mermaid += "    classDef red fill:#ffebee,stroke:#f44336,stroke-width:2px;\n\n";
+  mermaid += "    classDef orange fill:var(--c-ffe0b2),stroke:var(--c-fb8c00),stroke-width:2px;\n";
+  mermaid += "    classDef lightOrange fill:var(--c-fff3e0),stroke:var(--c-ffb74d),stroke-width:1px;\n";
+  mermaid += "    classDef blue fill:var(--c-e3f2fd),stroke:var(--c-2196f3),stroke-width:2px;\n";
+  mermaid += "    classDef green fill:var(--c-e8f5e9),stroke:var(--c-4caf50),stroke-width:2px;\n";
+  mermaid += "    classDef red fill:var(--c-ffebee),stroke:var(--c-f44336),stroke-width:2px;\n\n";
 
   // Hàm tạo hình dáng Node (Tất cả label bọc nháy kép để an toàn tuyệt đối)
   function getNodeShape(node) {
@@ -207,11 +207,11 @@
   let mermaid = "graph TD\n";
 
   // 1. Định nghĩa màu sắc (classDef) dựa trên styleColor trong JSON
-  mermaid += "    classDef orange fill:#ffe0b2,stroke:#fb8c00,stroke-width:2px;\n";
-  mermaid += "    classDef lightOrange fill:#fff3e0,stroke:#ffb74d,stroke-width:1px;\n";
-  mermaid += "    classDef blue fill:#e3f2fd,stroke:#2196f3,stroke-width:2px;\n";
-  mermaid += "    classDef green fill:#e8f5e9,stroke:#4caf50,stroke-width:2px;\n";
-  mermaid += "    classDef red fill:#ffebee,stroke:#f44336,stroke-width:2px;\n\n";
+  mermaid += "    classDef orange fill:var(--c-ffe0b2),stroke:var(--c-fb8c00),stroke-width:2px;\n";
+  mermaid += "    classDef lightOrange fill:var(--c-fff3e0),stroke:var(--c-ffb74d),stroke-width:1px;\n";
+  mermaid += "    classDef blue fill:var(--c-e3f2fd),stroke:var(--c-2196f3),stroke-width:2px;\n";
+  mermaid += "    classDef green fill:var(--c-e8f5e9),stroke:var(--c-4caf50),stroke-width:2px;\n";
+  mermaid += "    classDef red fill:var(--c-ffebee),stroke:var(--c-f44336),stroke-width:2px;\n\n";
 
   // Bản đồ map shape/nodeType sang ký hiệu Mermaid
   function getNodeShape(node) {

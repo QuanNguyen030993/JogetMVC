@@ -42,13 +42,13 @@
         .sidenav a {
             text-decoration: none;
             font-size: 25px;
-            color: #818181;
+            color: var(--c-818181);
             display: block;
             transition: 0.3s;
         }
 
             .sidenav a:hover {
-                color: #f1f1f1;
+                color: var(--c-f1f1f1);
             }
 
         .sidenav .closebtn {
@@ -106,7 +106,7 @@
             <div id="@idButton" style="left: 30px;top: 10px;"> </div>
         </div>
         <div id="@idRightTab" class="mainside">
-            <span id="@searchToggle" style="cursor:pointer" onclick="openNav()">&#9776;Search Panel</span>
+            <span id="@searchToggle" style="cursor:pointer" onclick="openNav()">&var(--c-997777);Search Panel</span>
             <div id='dataGrid_@Search_FormModel.ModelName' style="height: 100%; width:100%" class="report-grid a	pp-main-grid-container ">
             </div>
         </div>

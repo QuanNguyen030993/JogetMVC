@@ -696,12 +696,12 @@ Note:
             // function escapeHtml(s) {
             //     return String(s ?? "")
             //         .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
-            //         .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+            //         .replaceAll('"', "&quot;").replaceAll("'", "&var(--c-003399);");
             // }
 
             // function renderComments(items) {
             //     if (!Array.isArray(items) || items.length === 0) {
-            //         return `<div style="color:#6b7280;font-size:12px;padding:6px 4px;">No audit logs</div>`;
+            //         return `<div style="color:var(--c-6b7280);font-size:12px;padding:6px 4px;">No audit logs</div>`;
             //     }
             //     return items.map((c) => `
             //                     <div class="ct-item">
@@ -713,21 +713,21 @@ Note:
             //                         // <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
             // }
 
-            const loadComments = debounce(function (quoteNo) {
+            const loadAuditLogs = debounce(function (quoteNo) {
                 document.documentElement.style.setProperty("--rightdock-width", "20%");
-                var guid = "@(ViewData["Guid"])";
+                var guid = state.selectedGuid;
                 $("#rightCommentSub").text(`Audit log - ${quoteNo}` || "-");
-                $("#rightCommentList").html(`<div style="color:#6b7280;font-size:12px;padding:6px 4px;">Loading…</div>`);
+                $("#rightCommentList").html(`<div style="color:var(--c-6b7280);font-size:12px;padding:6px 4px;">Loading…</div>`);
                 const q = `OnSystem`;
                 $.ajax({
-                    url: `/api/CommentLog/ExecuteCustomQuery?refField=RecordGuid&refKey=${guid}`,
+                    url: `/api/CommentLog/ExecuteCustomQuery?refField=RecordGuid&refKey=${encodeURIComponent(guid)}`,
                     method: "POST",
                     async: true,
                     contentType: "application/json",
                     data: JSON.stringify(q),
-                    success: function (data) { $("#rightCommentList").html(renderComments(data)); },
+                    success: function (data) { $("#rightCommentList").html(window.renderAuditLogs(data)); },
                     error: function () {
-                        $("#rightCommentList").html(`<div style="color:#ef4444;font-size:12px;font-weight:700;padding:6px 4px;">Failed to load audit logs</div>`);
+                        $("#rightCommentList").html(`<div style="color:var(--c-ef4444);font-size:12px;font-weight:700;padding:6px 4px;">Failed to load audit logs</div>`);
                     }
                 });
             }, 180);
@@ -752,7 +752,7 @@ Note:
                 $("<iframe>")
                     .attr("id", `${formModuleKeyQt}-pdfViewer_${quoteId}`)
                     .attr("src", "")
-                    .css({ width: "100%", height: "800px", border: "1px solid #ccc" })
+                    .css({ width: "100%", height: "800px", border: "1px solid var(--c-cccccc)" })
                     .appendTo($("#rightCommentList"));
 
                 $.ajax({
@@ -935,7 +935,7 @@ Note:
                     onClick: () => {
                         clearContent();
                         openRightCommentPanel();
-                        loadComments(state.selectedCodeNo);
+                        loadAuditLogs(state.selectedCodeNo);
                     }
                 }).appendTo($("#headerWidgetsPanel"));
 
@@ -959,7 +959,7 @@ Note:
                         clearContent();
                         if (!commentPanelOpened) {
                             openRightCommentPanel();
-                            loadComments(state.selectedCodeNo);
+                            loadAuditLogs(state.selectedCodeNo);
                         } else {
                             closeRightCommentPanel();
                         }
@@ -1043,7 +1043,7 @@ Note:
 
             }
 
-            return { bind, loadComments, loadReferenceFields, openRightCommentPanel, closeRightCommentPanel };
+            return { bind, loadAuditLogs, loadReferenceFields, openRightCommentPanel, closeRightCommentPanel };
         })();
 
         function renderDetail() {
@@ -1115,7 +1115,7 @@ Note:
 
                         <div class="${formModuleKeyQt}-dept-tree dept-node status" data-key="${workflowStatus}" data-target="#${formModuleKeyQt}-sec-${text}">
 
-                            <div class="dept-callout animate-step visible" data-pic-for="${text}" style="color: rgba(17, 24, 39, 0.85);">
+                            <div class="dept-callout animate-step visible" data-pic-for="${text}" style="color: var(--c-rgba-17-24-39-0-85);">
                                 <span class="co-icon"></span>
                                 <span class="co-text">${workflowStatus}</span>
                             </div>

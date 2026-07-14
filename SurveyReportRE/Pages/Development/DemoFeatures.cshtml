@@ -456,7 +456,7 @@
           },
           constantLines: [{
             value: 80,
-            color: '#fc3535',
+            color: window.AppColors.c_fc3535,
             dashStyle: 'dash',
             width: 2,
             label: { visible: false },
@@ -472,13 +472,13 @@
           valueField: 'count',
           axis: 'frequency',
           name: 'Complaint frequency',
-          color: '#fac29a',
+          color: window.AppColors.c_fac29a,
         }, {
           type: 'spline',
           valueField: 'cumulativePercentage',
           axis: 'percentage',
           name: 'Cumulative percentage',
-          color: '#6b71c3',
+          color: window.AppColors.c_6b71c3,
         }],
         legend: {
           verticalAlignment: 'top',
@@ -678,9 +678,9 @@
         },
         rangeContainer: {
           ranges: [
-            { startValue: 10, endValue: 20, color: '#0077BE' },
-            { startValue: 20, endValue: 30, color: '#E6E200' },
-            { startValue: 30, endValue: 40, color: '#77DD77' },
+            { startValue: 10, endValue: 20, color: window.AppColors.c_0077be },
+            { startValue: 20, endValue: 30, color: window.AppColors.c_e6e200 },
+            { startValue: 30, endValue: 40, color: window.AppColors.c_77dd77 },
           ],
         },
         tooltip: { enabled: true },

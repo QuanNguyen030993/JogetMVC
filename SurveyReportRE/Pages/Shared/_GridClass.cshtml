@@ -299,8 +299,8 @@
             //        eC.rowElement
             //            .css({
             //                fontWeight: "bold",
-            //                backgroundColor: "#e6f2ff",
-            //                color: "#003366"
+            //                backgroundColor: window.AppColors.c_e6f2ff,
+            //                color: window.AppColors.c_003366
             //            })
             //            .addClass("custom-group-row");
 
@@ -1750,7 +1750,7 @@
                                                         users.forEach((user) => {
                                                             $("<div>")
                                                                 .css({
-                                                                    borderBottom: "1px solid #ccc",
+                                                                    borderBottom: "1px solid var(--c-cccccc)",
                                                                     padding: "10px",
                                                                     marginBottom: "5px",
                                                                 })
@@ -2036,7 +2036,7 @@
                                                         users.forEach((user) => {
                                                             $("<div>")
                                                                 .css({
-                                                                    borderBottom: "1px solid #ccc",
+                                                                    borderBottom: "1px solid var(--c-cccccc)",
                                                                     padding: "10px",
                                                                     marginBottom: "5px",
                                                                 })
@@ -2601,7 +2601,7 @@
                         var selectedGuid = options.data["guid"];
                         $('<a>').addClass('dx-link dx-link-edit')
                             .text(options.text)
-                            .css({ color: "#337ab7", textDecoration: "underline", cursor: "pointer" })
+                            .css({ color: window.AppColors.c_337ab7, textDecoration: "underline", cursor: "pointer" })
                             .on('dxclick', function () {
                                 if (Object.keys(options.key).length > 0)
                                     callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}/${selectedGuid}`, `form_${controllerName}_Form_${options.key.id}`, `${controllerName} ${options.text}`);
@@ -2847,7 +2847,7 @@
                         var selectedCopyGuid = options.data["copyFromGuid"];
                         $('<a>').addClass('dx-link dx-link-edit')
                             .text(options.text)
-                            .css({ color: "#337ab7", textDecoration: "underline", cursor: "pointer" })
+                            .css({ color: window.AppColors.c_337ab7, textDecoration: "underline", cursor: "pointer" })
                             .on('dxclick', function () {
                                 if (Object.keys(options.key).length > 0)
                                     callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}/${selectedGuid}/${selectedCloneId}/${selectedCopyGuid}`, `form_${controllerName}_Form_${options.key.id}`, `${controllerName} ${options.text}`);
@@ -2864,7 +2864,7 @@
                         var selectedGuid = options.data["copyFromGuid"];
                         $('<a>').addClass('dx-link dx-link-edit')
                             .text(options.text)
-                            .css({ color: "#337ab7", textDecoration: "underline", cursor: "pointer" })
+                            .css({ color: window.AppColors.c_337ab7, textDecoration: "underline", cursor: "pointer" })
                             .on('dxclick', function () {
                                 if (Object.keys(options.key).length > 0)
                                     callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}/${selectedGuid}`, `form_${controllerName}_Form_${selectedValue}`, `${controllerName} ${options.text}`);
@@ -2952,6 +2952,5 @@
 
     }
 </script>
-
 
 
