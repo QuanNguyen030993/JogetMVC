@@ -16,7 +16,7 @@ if (existsSync(targetAssets)) {
 renameSync(path.join(tempDir, 'assets'), targetAssets);
 
 // Copy index.html vào wwwroot (move luôn cũng được, dùng renameSync)
-copyFileSync(path.join(tempDir, 'index.html'), path.join(wwwroot, 'index.html'));
+copyFileSync(path.join(tempDir, 'index1.html'), path.join(wwwroot, 'index1.html'));
 
 // Xóa folder tạm sau khi đã move xong
 // rmSync(tempDir, { recursive: true, force: true });

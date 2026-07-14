@@ -12,6 +12,12 @@
 </style>
 <script type="text/javascript">
     $(function () {
+        var thisObject = new Object();
+        thisObject.ModelName = "Quotation";
+        thisObject.formId = `@QTViewIdHelper.Form(dept, quotationId)`;
+        thisObject.dept = "@dept";
+        thisObject.prefix = "qt";
+
         var that = new Object();
     var sectionId = "@(ViewData["Cd"])";
     that.ModelName = "Quotation";
@@ -42,11 +48,9 @@
 
 
 
-    var items = [
-                { id: "AC_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Accept", value: true },
-                // { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Assign", value: false },
-                { id: "RJ_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Reject", value: false }
-            ];
+    var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
+    var acceptStatusId = `AC_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
+    var itemsDelay = [acceptButtonId, acceptStatusId];
 
     var mainFields = [  { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentByCase(that , that2) },
 
@@ -131,14 +135,14 @@
      items: [
          {itemType: "group", name: "decisionGroup" ,caption: "Prepare Quotation",colCount:2,items: [
     
-           decisionField(`@QTViewIdHelper.Form(dept, quotationId)`, "@dept",`AC_@QTViewIdHelper.Decision(dept, quotationId)`,`AC_Status_@QTViewIdHelper.Decision(dept, quotationId)`,null,null  )
+           decisionField(thisObject.formId, thisObject.dept, acceptButtonId, acceptStatusId, null, null)
 
 
     ]}
   
      ]});
     viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
-    delayAcceptStatus(mainFields,`@QTViewIdHelper.Form(dept, quotationId)`,"@dept", `AC_@QTViewIdHelper.Decision(dept, quotationId)`, `AC_Status_@QTViewIdHelper.Decision(dept, quotationId)`,null,null);
+    delayAcceptStatusV2(mainFields, thisObject, ...itemsDelay);
 
     setTimeout(() => {
         var picJson = PIC_JSON || "{}";

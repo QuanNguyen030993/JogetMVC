@@ -55,6 +55,69 @@ export default function MenuDesigner() {
     loadMenus();
   }, []);
 
+  const handleDragStart = (e, item) => {
+    e.dataTransfer.setData("dragged-menu-id", item.id);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDropOnRow = (e, targetItem) => {
+    e.preventDefault();
+    const draggedId = parseInt(e.dataTransfer.getData("dragged-menu-id"));
+    if (!draggedId || draggedId === targetItem.id) return;
+
+    const draggedItem = menus.find((m) => m.id === draggedId);
+    if (!draggedItem) return;
+
+    const isDescendant = (parent, potentialChild) => {
+      if (!potentialChild.ParentId) return false;
+      if (potentialChild.ParentId === parent.id) return true;
+      const immediateParent = menus.find(m => m.id === potentialChild.ParentId);
+      return immediateParent ? isDescendant(parent, immediateParent) : false;
+    };
+
+    if (isDescendant(draggedItem, targetItem)) {
+      alert("Không thể kéo menu cha vào menu con của chính nó! ❌");
+      return;
+    }
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const relativeY = e.clientY - rect.top;
+    const dropPosition = relativeY < rect.height / 2 ? "before" : "after";
+
+    const targetParentId = targetItem.ParentId;
+
+    const siblings = menus
+      .filter((m) => m.ParentId === targetParentId && m.id !== draggedId)
+      .sort((a, b) => (a.Order || 0) - (b.Order || 0));
+
+    const targetIndex = siblings.findIndex((m) => m.id === targetItem.id);
+    let newIndex = targetIndex;
+    if (dropPosition === "after") {
+      newIndex = targetIndex + 1;
+    }
+
+    siblings.splice(newIndex, 0, { ...draggedItem, ParentId: targetParentId });
+
+    const updatedMenus = menus.map((m) => {
+      if (m.id === draggedId) {
+        const orderIdx = siblings.findIndex(s => s.id === draggedId);
+        return { ...m, ParentId: targetParentId, Order: orderIdx + 1 };
+      }
+      
+      const sibIdx = siblings.findIndex(s => s.id === m.id);
+      if (sibIdx !== -1) {
+        return { ...m, Order: sibIdx + 1 };
+      }
+
+      return m;
+    });
+
+    setMenus(updatedMenus);
+  };
+
   const addMenu = () => {
     const id = Date.now();
     const item = {
@@ -71,6 +134,14 @@ export default function MenuDesigner() {
     };
     setMenus((x) => [...x, item]);
     setSelected(item);
+  };
+
+  const handleDropOnPreviewContainer = (e) => {
+    e.preventDefault();
+    const isNewItem = e.dataTransfer.getData("menu-item");
+    if (isNewItem === "true") {
+      addMenu();
+    }
   };
 
   const updateMenu = (key, value) => {
@@ -279,7 +350,7 @@ export default function MenuDesigner() {
         <div
           className="menu-preview"
           onDragOver={(e) => e.preventDefault()}
-          onDrop={addMenu}
+          onDrop={handleDropOnPreviewContainer}
           style={{ flex: 1, minWidth: "300px", padding: "15px", border: "1px solid #e2e8f0", borderRadius: "10px", background: "white" }}
         >
           <h3>Danh sách Menu (Xem trước)</h3>
@@ -288,6 +359,10 @@ export default function MenuDesigner() {
               key={m.id}
               className={selected?.id === m.id ? "menu-row active" : "menu-row"}
               onClick={() => setSelected(m)}
+              draggable
+              onDragStart={(e) => handleDragStart(e, m)}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDropOnRow(e, m)}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -295,7 +370,7 @@ export default function MenuDesigner() {
                 padding: "10px 14px",
                 paddingLeft: `${14 + m.level * 20}px`,
                 borderBottom: "1px solid #e2e8f0",
-                cursor: "pointer",
+                cursor: "move",
                 background: selected?.id === m.id ? "#f1f5f9" : "transparent"
               }}
             >

@@ -430,7 +430,15 @@
                         type: 'normal',
                         text: "Demo Data",
                         onClick() {
-                            var form = $(`#quotationRequestForm`).dxForm().dxForm("instance");
+                            var form = $(`#quotationRequestForm`).dxForm("instance");
+                            if (!form) {
+                                DevExpress.ui.notify("Quotation form is still loading.", "warning", 1500);
+                                return;
+                            }
+
+                            var now = new Date();
+                            var dueDate = new Date(now);
+                            dueDate.setDate(dueDate.getDate() + 7);
                                     var payload = {
                                             assignedTeamOrRole: "TS",
                                             assignees: {},
@@ -453,8 +461,8 @@
                                             businessOccupation: "AAAAAAA",
                                             clientId: 1128,
                                             clientName: "DAO DUY THANG",
-                                            createDate: "2026-06-22T06:32:57.860Z",
-                                            dueDate: "2026-06-22T06:32:57.860Z",
+                                            createDate: now,
+                                            dueDate: dueDate,
 
                                             lineId: {
                                                 id: 1,
@@ -465,8 +473,8 @@
                                             lineCode: "LI1",
                                             lineName: "Fire & Property, BI",
 
-                                            PIC: "quan.nh",
-                                            policyNo: "PPPPPP",
+                                            PIC: _loginUser,
+                                            policyNo: `DEMO-${Date.now()}`,
 
                                             productCode: "PC2",
                                             productId: {
@@ -492,15 +500,15 @@
                                                 rowOrder: null
                                             },
 
-                                            reqDate: "2026-06-22T06:32:57.860Z",
-                                            reqPerson: "quan.nh",
+                                            reqDate: now,
+                                            reqPerson: _loginUser,
                                             requestTypeId: 149,
-                                            requestedDate: "2026-06-22T06:32:57.860Z",
+                                            requestedDate: now,
 
-                                            stageAccount: "quan.nh",
+                                            stageAccount: _loginUser,
                                             stageDept: "TS",
 
-                                            subject: "Subject báo giá new",
+                                            subject: `Demo quotation ${now.toLocaleString()}`,
                                             turnAroundTimeAttributes: "",
 
                                             quotationQuantity: 2,
@@ -509,6 +517,36 @@
                                             businessChannelName: "Direct (DIR)"
                                         };
                                 form.option("formData", payload);
+
+                                // Demo mode supplies assignment data automatically so the
+                                // production Complete flow can submit without manual input.
+                                var branch = (_enums.BranchOffice || []).find(f => f.code === _branch)
+                                    || (_enums.BranchOffice || [])[0];
+                                var assignmentData = {
+                                    to: _loginUser,
+                                    branchId: branch?.id || null,
+                                    notes: "Auto-generated demo quotation",
+                                    deptTarget: "TS"
+                                };
+                                var $assignBox = $("#assignBox");
+                                var assignmentForm = $assignBox.dxForm("instance");
+                                if (!assignmentForm) {
+                                    assignmentForm = $assignBox.dxForm({
+                                        visible: false,
+                                        formData: assignmentData
+                                    }).dxForm("instance");
+                                } else {
+                                    assignmentForm.option("formData", assignmentData);
+                                }
+
+                                // Invoke the same handler as the Complete button.
+                                setTimeout(function () {
+                                    var completeItem = (popupInstance.option("toolbarItems") || [])
+                                        .find(item => item.options?.text === "Complete");
+                                    if (completeItem?.options?.onClick) {
+                                        completeItem.options.onClick();
+                                    }
+                                }, 0);
                             },
                         },
                     },
@@ -4292,6 +4330,104 @@
        }
 
 
+       function getAssignNotificationTypeId() {
+            if (typeof getNotificationTypeEnumId === "function") {
+                var resolvedId = getNotificationTypeEnumId("assign");
+                if (resolvedId !== null && resolvedId !== undefined) return resolvedId;
+            }
+
+            var normalizeType = function (value) {
+                return String(value || "").trim().toLowerCase().replace(/[\s_-]+/g, "");
+            };
+            var assignAliases = ["assign", "assignment", "assigned"];
+            var enumItem = (_enums.NotificationType || []).find(function (item) {
+                return [item?.key, item?.code, item?.value, item?.name, item?.text]
+                    .map(normalizeType)
+                    .some(value => assignAliases.includes(value));
+            });
+            return enumItem?.id ?? enumItem?.Id ?? null;
+       }
+
+       function getPicNotificationAccounts(picValue) {
+            var accounts = [];
+            var appendValue = function (value) {
+                if (value === null || value === undefined) return;
+                if (Array.isArray(value)) {
+                    value.forEach(appendValue);
+                    return;
+                }
+                if (typeof value === "object") {
+                    Object.values(value).forEach(appendValue);
+                    return;
+                }
+
+                String(value).split(/[,;]+/).forEach(function (account) {
+                    account = account.trim();
+                    if (account && !["null", "undefined"].includes(account.toLowerCase())) {
+                        accounts.push(account);
+                    }
+                });
+            };
+
+            if (typeof picValue === "string") {
+                var parsedPic = tryParseJSON(picValue, "Accept PIC Notification Problem");
+                appendValue(parsedPic && Object.keys(parsedPic).length ? parsedPic : picValue);
+            } else {
+                appendValue(picValue);
+            }
+
+            var seenAccounts = new Set();
+            return accounts.filter(function (account) {
+                var normalizedAccount = account.toLowerCase();
+                if (seenAccounts.has(normalizedAccount)) return false;
+                seenAccounts.add(normalizedAccount);
+                return true;
+            });
+       }
+
+       function notifyAcceptDecisionPicAccounts(passingObject) {
+            var formItems = passingObject.formItems || {};
+            var picValue = formItems.pic ?? formItems.pIC ?? formItems.PIC;
+            var accounts = getPicNotificationAccounts(picValue);
+            if (!accounts.length) return;
+
+            var scheme = passingObject.schemeName || "Quotation";
+            var recordCode = formItems.quotationCode
+                || formItems.policyIssuanceCode
+                || formItems.code
+                || formItems.id;
+            var notificationTypeId = getAssignNotificationTypeId();
+            var tabPublicUrl = {
+                url: `/Business/Form/${scheme}_Form/${formItems.id}`,
+                caption: `form_${scheme}_Form_${formItems.id}`,
+                name: `${scheme} ${recordCode || ""}`.trim(),
+                data: ""
+            };
+
+            accounts.forEach(function (account) {
+                var notificationData = {
+                    Notification: {
+                        Title: `Assigning Task - ${recordCode || scheme}`,
+                        Message: `${scheme} ${recordCode || ""} was accepted by ${_displayName}.`,
+                        IsRead: false,
+                        Resource: `${account}_${passingObject.dept}`,
+                        System: "WM",
+                        RecordGuid: formItems.guid,
+                        ReceivedBy: account,
+                        Type: notificationTypeId
+                    },
+                    connectionId: account,
+                    tabPublicUrl: tabPublicUrl
+                };
+
+                ajaxPost("api/Utility/NotifyAnother", notificationData, {
+                    onError: function (err) {
+                        console.warn("Accept PIC notification failed.", account, err);
+                    }
+                });
+            });
+       }
+
        function acceptDecision(object, dept){
 
                     var scheme  = object.prefix === "pi"
@@ -4343,6 +4479,7 @@
                             },
                             {
                                 onSuccess: function (response) {
+                                    notifyAcceptDecisionPicAccounts(passingObject);
                                 },
                                 onError: function (err) { }
                             });

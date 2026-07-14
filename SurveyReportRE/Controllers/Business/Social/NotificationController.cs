@@ -95,9 +95,16 @@ public class NotificationController : BaseControllerApi<Notification>
             return BadRequest("Notification payload is required.");
         }
 
-        notification.Notification.Type ??= await NotificationTypeResolver.ResolveIdAsync(
-            _enumDataRepository,
-            NotificationTypeKeys.Default);
+        if (!notification.Notification.Type.HasValue)
+        {
+            string notificationText = $"{notification.Notification.Title} {notification.Notification.Message}";
+            string fallbackType = notificationText.Contains("assign", StringComparison.OrdinalIgnoreCase)
+                ? NotificationTypeKeys.Assign
+                : NotificationTypeKeys.Default;
+            notification.Notification.Type = await NotificationTypeResolver.ResolveIdAsync(
+                _enumDataRepository,
+                fallbackType);
+        }
 
         IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
 

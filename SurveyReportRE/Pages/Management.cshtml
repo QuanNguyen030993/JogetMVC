@@ -757,7 +757,7 @@
             accept: ["accept", "accepted"],
             success: ["success", "successful"],
             fail: ["fail", "failed", "failure"],
-            initial: ["initial", "initialize", "initialized"],
+            initial: ["initial", "initialize", "initialized", "initiate", "initiated", "initiation", "inititial"],
             reminder: ["reminder", "remind"],
             alert: ["alert"]
         };
@@ -797,7 +797,11 @@
             for (const typeKey of notificationTypeKeys) {
                 const enumId = getNotificationTypeEnumId(typeKey);
                 if (enumId !== null && String(enumId) === String(notificationTypeId)) {
-                    return typeKey;
+                    // Old notifications can have the Default type even though their
+                    // title clearly identifies a more specific event. Keep evaluating
+                    // those items so the title fallback below can classify them.
+                    if (typeKey !== "default") return typeKey;
+                    break;
                 }
             }
         }
@@ -813,7 +817,7 @@
 
         for (const candidate of candidates) {
             const type = normalizeNotificationType(candidate);
-            if (type === "default") return "default";
+            if (type === "default") continue;
             if (type.includes("assign")) return "assign";
             if (type === "system" || type === "sys") return "system";
             if (type === "qt" || type.includes("quotation")) return "quotation";
@@ -827,7 +831,14 @@
         }
 
         // Backward compatibility for notifications created before Type was populated.
-        const title = String(item?.title || "").toUpperCase();
+        const title = String(item?.title ?? item?.Title ?? "").toUpperCase();
+        const normalizedTitle = normalizeNotificationType(title);
+        if (
+            normalizedTitle.includes("initial")
+            || normalizedTitle.includes("inititial")
+            || normalizedTitle.includes("initiat")
+            || /\b(?:CREATE|CREATED|START|STARTED)\b/.test(title)
+        ) return "initial";
         if (title.includes("[QT]")) return "quotation";
         if (title.includes("[PI]")) return "policyissuance";
         return "default";
