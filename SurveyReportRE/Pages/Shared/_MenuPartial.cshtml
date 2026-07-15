@@ -49,7 +49,9 @@
                 case "UserSession":
                     {
                         setTimeout(() => {
-                        connectionSignR.invoke("GetOnlineUsers");
+                        window.ensureSignalRConnection?.()
+                            .then(() => connectionSignR.invoke("GetOnlineUsers"))
+                            .catch(error => console.warn("Unable to load online users.", error));
                         }, 1000);
                         break;
                     }

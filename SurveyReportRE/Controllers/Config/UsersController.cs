@@ -148,7 +148,7 @@ namespace ERPCore.Controllers.Config
         public IActionResult ReturnToAccount()
         {
             HttpContext.Session.Remove("ImpersonatedUser");
-            Response.Cookies.Delete("ImpersonatedUser");
+            Response.Cookies.Delete("ImpersonatedUser", new CookieOptions { Path = "/" });
 
             return Ok(new
             {
@@ -194,6 +194,7 @@ namespace ERPCore.Controllers.Config
                     IsEssential = true,
                     SameSite = SameSiteMode.Lax,
                     Secure = Request.IsHttps,
+                    Path = "/",
                     MaxAge = TimeSpan.FromHours(8)
                 });
 

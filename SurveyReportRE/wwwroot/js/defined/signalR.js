@@ -52,12 +52,77 @@ function registerSignalREvent(eventName, callback) {
     });
 }
 const connectionSignR = new signalR.HubConnectionBuilder()
-    .withUrl("/fileProcessingHub", {
-        transport: signalR.HttpTransportType.WebSockets
-    })
-    .configureLogging(signalR.LogLevel.Information)
-    .withAutomaticReconnect()
+    // Let SignalR negotiate WebSockets/SSE/Long Polling instead of failing when
+    // a proxy does not support WebSockets.
+    .withUrl("/fileProcessingHub")
+    .configureLogging(signalR.LogLevel.Warning)
+    .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
     .build();
+
+connectionSignR.serverTimeoutInMilliseconds = 60000;
+connectionSignR.keepAliveIntervalInMilliseconds = 15000;
+
+let signalRScopedConnectionId = null;
+let signalRStartPromise = null;
+let signalRRetryTimer = null;
+let signalRRetryAttempt = 0;
+let signalRHandlersRegistered = false;
+
+function bindConnectionScopedEvents(connectionId) {
+    if (!connectionId) return;
+
+    if (signalRScopedConnectionId) {
+        connectionSignR.off(`LCReportFeature_${signalRScopedConnectionId}`);
+        connectionSignR.off(`sectionRender_${signalRScopedConnectionId}`);
+    }
+    signalRScopedConnectionId = connectionId;
+
+    connectionSignR.on(`LCReportFeature_${connectionId}`, function (responseData) {
+        if (responseData.connectionId !== _connectionId) return;
+        if (responseData.isCreate) {
+            appNotifySuccess("LossControl created !", false);
+            callElementView(`/Business/LCForm/LossControl_Form/${responseData.responseData.id}`, `form_LossControl_Form_${responseData.responseData.id}`, `LossControl ${responseData.responseData.lossControlNo}`);
+        }
+
+        $(`#copyLossControlForm_${responseData.responseData.id}`).dxButton("instance")
+            ?.option("visible", responseData.copyVisibleStatus);
+        $(`#previewLossControlForm_${responseData.responseData.id}`).dxButton("instance")
+            ?.option("text", responseData.pdfButtonText);
+    });
+
+    connectionSignR.on(`sectionRender_${connectionId}`, function (responseData) {
+        signalRBlink();
+        const quotations = window.QuotationPage?.state?.quotes;
+        if (Array.isArray(quotations)) {
+            const index = quotations.findIndex(item => item.id === responseData.data?.id);
+            if (index >= 0) quotations[index] = { ...responseData.data };
+        }
+
+        const target = document.querySelector(`#qt-form${_role}`) || window;
+        const globalLoadPanel = $("#loadingPopup").dxLoadPanel({
+            shadingColor: "rgba(0,0,0,0.4)",
+            visible: false,
+            showIndicator: true,
+            showPane: false,
+            shading: true,
+            closeOnOutsideClick: false,
+            position: { of: target }
+        }).dxLoadPanel("instance");
+        globalLoadPanel.hide();
+    });
+}
+
+async function synchronizeSignalRContext(reconnectedId) {
+    _connectionId = reconnectedId || connectionSignR.connectionId;
+    if (!_connectionId)
+        _connectionId = await connectionSignR.invoke("GetConnectionId");
+
+    bindConnectionScopedEvents(_connectionId);
+    window.dispatchEvent(new CustomEvent("signalr:connected", {
+        detail: { connectionId: _connectionId }
+    }));
+    return _connectionId;
+}
 connectionSignR.onreconnecting(function (err) {
 
     console.warn("SignalR reconnecting", err);
@@ -65,80 +130,68 @@ connectionSignR.onreconnecting(function (err) {
     setSignalRStatus("reconnecting");
 });
 
-connectionSignR.onreconnected(async function () {
-
-    console.log("SignalR reconnected");
-
+connectionSignR.onreconnected(async function (connectionId) {
     try {
-
-        _connectionId =
-            await connectionSignR.invoke("GetConnectionId");
-
-        $("#signalRMonitor .signalr-text")
-            .text(`Online`);
-
+        signalRRetryAttempt = 0;
+        await synchronizeSignalRContext(connectionId);
+        setSignalRStatus("connected");
     } catch (e) {
-        console.error(e);
+        console.warn("Unable to synchronize SignalR context after reconnect.", e);
     }
-
-    setSignalRStatus("connected");
 });
 
-connectionSignR.onclose(function () {
-
-    console.error("SignalR disconnected");
-
+connectionSignR.onclose(function (error) {
     setSignalRStatus("disconnected");
+    if (error) console.warn("SignalR disconnected.", error);
+    scheduleSignalRRestart();
 });
-connectionSignR.start().then(async function () {
-    // if (!_connectionId)
-    setSignalRStatus("connected");
 
-    _connectionId =
-        await connectionSignR.invoke("GetConnectionId");
+function scheduleSignalRRestart() {
+    if (signalRRetryTimer || document.visibilityState === "hidden") return;
+    const delay = Math.min(30000, 1000 * Math.pow(2, signalRRetryAttempt++));
+    signalRRetryTimer = setTimeout(function () {
+        signalRRetryTimer = null;
+        startSignalRConnection();
+    }, delay);
+}
 
-    $("#signalRMonitor .signalr-text")
-        .text(`Online`);
-    connectionSignR.on(`LCReportFeature_${_connectionId}`, function (responseData) {
-        if (responseData.connectionId == _connectionId) {
-            if (responseData.isCreate) {
-                appNotifySuccess(`LossControl created !`, false);
-                //removeTab("LossControl");
-                callElementView(`/Business/LCForm/LossControl_Form/${responseData.responseData.id}`, `form_LossControl_Form_${responseData.responseData.id}`, `LossControl ${responseData.responseData.lossControlNo}`);
-                $(`#copyLossControlForm_${responseData.responseData.id}`).dxButton("instance").option("visible", responseData.copyVisibleStatus);
-                $(`#previewLossControlForm_${responseData.responseData.id}`).dxButton("instance").option("text", responseData.pdfButtonText);
+function waitForSignalRConnection(timeoutMs = 60000) {
+    if (connectionSignR.state === signalR.HubConnectionState.Connected)
+        return Promise.resolve(_connectionId);
 
-            }
-            else {
-                $(`#copyLossControlForm_${responseData.responseData.id}`).dxButton("instance").option("visible", responseData.copyVisibleStatus);
-                $(`#previewLossControlForm_${responseData.responseData.id}`).dxButton("instance").option("text", responseData.pdfButtonText);
-            }
+    return new Promise(function (resolve, reject) {
+        const timeoutId = setTimeout(function () {
+            window.removeEventListener("signalr:connected", onConnected);
+            reject(new Error("Timed out waiting for SignalR connection."));
+        }, timeoutMs);
+
+        function onConnected(event) {
+            clearTimeout(timeoutId);
+            resolve(event.detail?.connectionId || _connectionId);
         }
+
+        window.addEventListener("signalr:connected", onConnected, { once: true });
     });
+}
+
+function startSignalRConnection() {
+    if (connectionSignR.state === signalR.HubConnectionState.Connected)
+        return Promise.resolve(_connectionId);
+    if (signalRStartPromise) return signalRStartPromise;
+    if (connectionSignR.state !== signalR.HubConnectionState.Disconnected)
+        return waitForSignalRConnection();
+
+    signalRStartPromise = connectionSignR.start().then(async function () {
+        signalRRetryAttempt = 0;
+        await synchronizeSignalRContext(connectionSignR.connectionId);
+        setSignalRStatus("connected");
+
+        if (signalRHandlersRegistered) return _connectionId;
+        signalRHandlersRegistered = true;
+
     connectionSignR.on("onlineUsersChanged", (users) => {
         signalRBlink();
         //userRender(users);
-    });
-    connectionSignR.on(`sectionRender_${_connectionId}`, (responseData) => {
-        signalRBlink();
-        const idx = window.QuotationPage.state.quotes.findIndex(x => x.id === responseData.data.id);
-        window.QuotationPage.state.quotes[idx] = { ...responseData.data };
-
-        var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
-            shadingColor: "rgba(0,0,0,0.4)",
-            visible: false,
-            showIndicator: true,
-            showPane: false,
-            shading: true,
-            closeOnOutsideClick: false,
-            position: { of: `#qt-form${_role}` }
-            // onShown: function () {
-            //     setTimeout(function () {
-            //         appLoadPanel.hide();
-            //     }, 3000);
-            // }
-        });
-        globalLoadPanel.dxLoadPanel("instance").hide();
     });
 
     connectionSignR.on("NotificationCountUpdated", function (count) {
@@ -258,11 +311,32 @@ connectionSignR.start().then(async function () {
             //}
         }
     });
+    return _connectionId;
 }).catch(function (err) {
-    console.error("SignalR connection failed:", err);
+    console.warn("SignalR connection failed; a retry has been scheduled.", err);
+    setSignalRStatus("disconnected");
+    scheduleSignalRRestart();
+    return null;
+}).finally(function () {
+    signalRStartPromise = null;
 });
-connectionSignR.serverTimeoutInMilliseconds = 28800000; // 60s
-connectionSignR.keepAliveIntervalInMilliseconds = 10000; // gửi keepalive mỗi 15s
+
+    return signalRStartPromise;
+}
+
+window.ensureSignalRConnection = startSignalRConnection;
+
+document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible"
+        && connectionSignR.state === signalR.HubConnectionState.Disconnected) {
+        startSignalRConnection();
+    }
+});
+
+$(function () {
+    startSignalRConnection();
+});
+
 var _fetchTables = [ "Outline", "DataGridConfig"];
 var _cacheDataGridConfigs = [];
 

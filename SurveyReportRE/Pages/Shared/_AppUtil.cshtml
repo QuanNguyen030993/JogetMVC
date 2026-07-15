@@ -2234,6 +2234,18 @@
         }
 
         var appErrorHandling = function (message, err) {
+            try {
+                if (!err?.__clientErrorLogged && typeof sendClientErrorLog === "function") {
+                    sendClientErrorLog(message, err, {
+                        status: err?.status || err?.xhr?.status,
+                        responseText: err?.responseText,
+                        stack: err?.stack,
+                        errorType: "handled_error"
+                    });
+                }
+            } catch {
+                // Logging must never interrupt the original error handling flow.
+            }
             if (err != null) {
                 if (err == "Unauthorized") {
                     window.location = "/Account/Login";

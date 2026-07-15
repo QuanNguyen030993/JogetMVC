@@ -11,11 +11,11 @@ namespace ERPCore.Pages
     public class ManagementModel : PageModel
     {
         private readonly ILogger<ManagementModel> _logger;
-        private static string HostUrl { get; set; } = "";
-        private static bool IsSuperUser { get; set; } = false;
-        private static bool IsDebugMode { get; set; } = false;
-        private static bool NotifyEnv { get; set; } = false;
-        IConfiguration _configuration;
+        private string HostUrl { get; set; } = "";
+        private bool IsSuperUser { get; set; }
+        private bool IsDebugMode { get; set; }
+        private bool NotifyEnv { get; set; }
+        private readonly IConfiguration _configuration;
 
         public ManagementModel(ILogger<ManagementModel> logger, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
         {
@@ -58,7 +58,12 @@ namespace ERPCore.Pages
                     //IsSuperUser = true;
                     NotifyEnv = DebugEnv;
                 }
-                IsDebugMode = isDebugMode;
+                IsDebugMode = isDebugMode
+                    || string.Equals(
+                        httpContextAccessor.HttpContext?.User?.Identity?.AuthenticationType,
+                        "Impersonation",
+                        StringComparison.OrdinalIgnoreCase)
+                    || httpContextAccessor.HttpContext?.Request.Cookies.ContainsKey("ImpersonatedUser") == true;
         }
 
         public void OnGet(string loadParams)

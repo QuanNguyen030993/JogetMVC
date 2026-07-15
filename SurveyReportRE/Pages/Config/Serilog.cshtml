@@ -132,7 +132,9 @@
         loadLogs(); // ✅ gọi API
 
         // SignalR call (giữ lại)
-        connectionSignR.invoke("GetOnlineUsers");
+        window.ensureSignalRConnection?.()
+            .then(() => connectionSignR.invoke("GetOnlineUsers"))
+            .catch(error => console.warn("Unable to load online users.", error));
 
         // Sau này mở lại:
         // connectionSignR.on("onlineUsersChanged", (users) => {

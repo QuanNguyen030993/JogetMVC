@@ -2511,59 +2511,141 @@ function markupStatusCSS(container, options, control = null) {
 
 }
 
-function sendClientErrorLog(message, err, additionalDetails = {}) {
+const clientErrorReporter = (function () {
+    const endpoint = '/api/ClientBrowserError/LogClientError';
+    const sentAt = [];
+    const recentFingerprints = new Map();
+    const maxPerMinute = 20;
+    const duplicateWindowMs = 15000;
 
-    if (window.ErrorFailLogCount <= _errorFailLogCountMax && err?.status != 200) {
-        const errorLog = new Object();
-        errorLog.Message = typeof message === 'string' ? message : JSON.stringify(message),
-            errorLog.Url = window.location.href,
-            errorLog.UserAgent = navigator.userAgent,
-        errorLog.Time = new Date().toISOString();
-            errorLog.ErrorBrowserDetails = new Object();
-        if (err) {
-            errorLog.ErrorBrowserDetails.Status = err?.status || null;
-            errorLog.ErrorBrowserDetails.ResponseText = err?.responseText || null;
-            errorLog.ErrorBrowserDetails.Stack = err?.stack || null;
-            errorLog.ErrorBrowserDetails.FileName = additionalDetails.fileName || err?.fileName || null;
-            errorLog.ErrorBrowserDetails.LineNumber = additionalDetails.lineNumber || err?.lineNumber || null;
-            errorLog.ErrorBrowserDetails.ColumnNumber = additionalDetails.columnNumber || err?.columnNumber || null;
-            errorLog.ErrorBrowserDetails.FunctionName = additionalDetails.functionName || null;
-            errorLog.ErrorBrowserDetails.ErrorType = additionalDetails.errorType || 'http_error';
-            errorLog.ErrorBrowserDetails.Context = JSON.stringify(additionalDetails.context) || JSON.stringify(getPageContext());
-            errorLog.ErrorBrowserDetails.BreadcrumbTrails = additionalDetails?.breadcrumbTrail ?? [];// || getBreadcrumbTrail();
+    function limit(value, maxLength) {
+        const text = value == null ? '' : String(value);
+        return text.length <= maxLength ? text : text.substring(0, maxLength);
+    }
+
+    function safeJson(value, fallback) {
+        if (value === undefined || value === null) return fallback;
+        try {
+            const seen = new WeakSet();
+            return JSON.stringify(value, function (_, item) {
+                if (typeof item === 'object' && item !== null) {
+                    if (seen.has(item)) return '[Circular]';
+                    seen.add(item);
+                }
+                return item;
+            });
+        } catch (_) {
+            return fallback;
         }
-        else {
+    }
 
-            errorLog.ErrorBrowserDetails.ErrorType = additionalDetails.errorType || 'unknown';
-            errorLog.ErrorBrowserDetails.FileName = additionalDetails.fileName || null;
-            errorLog.ErrorBrowserDetails.LineNumber = additionalDetails.lineNumber || null;
-            errorLog.ErrorBrowserDetails.ColumnNumber = additionalDetails.columnNumber || null;
-            errorLog.ErrorBrowserDetails.FunctionName = additionalDetails.functionName || null;
-            errorLog.ErrorBrowserDetails.Context = JSON.stringify(additionalDetails.context) || JSON.stringify(getPageContext());
-            errorLog.ErrorBrowserDetails.BreadcrumbTrails = additionalDetails?.breadcrumbTrail ?? [];// || getBreadcrumbTrail();
+    function normalizeBreadcrumbs(value) {
+        let normalized = value;
+        if (typeof normalized === 'string') {
+            try { normalized = JSON.parse(normalized); }
+            catch (_) { normalized = [{ value: limit(normalized, 1000) }]; }
         }
+        if (normalized == null) normalized = getBreadcrumbTrail();
+        if (!Array.isArray(normalized)) normalized = [normalized];
+        return normalized.filter(Boolean).slice(-20);
+    }
 
-       
-        ajaxPost('/api/ClientBrowserError/LogClientError', errorLog, {
-            onSuccess: function (response) {
-            },
-            onError: function (err) {
-                    window.ErrorFailLogCount++;
+    function normalizeError(message, err, details) {
+        const source = details || {};
+        const xhr = err?.xhr || err;
+        const errorMessage = typeof message === 'string'
+            ? message
+            : safeJson(message, String(message || 'Client error'));
+        const responseText = source.responseText
+            || err?.responseText
+            || xhr?.responseText
+            || err?.message
+            || source.message
+            || errorMessage;
+        const context = source.context == null
+            ? Object.assign(getPageContext(), err?.url ? {
+                request: {
+                    url: err.url,
+                    method: err.method,
+                    textStatus: err.textStatus,
+                    errorThrown: err.errorThrown
+                }
+            } : {})
+            : source.context;
+
+        return {
+            Message: limit(errorMessage || responseText || 'Client error', 2000),
+            Url: limit(window.location.href, 2048),
+            UserAgent: limit(navigator.userAgent, 1024),
+            Time: new Date().toISOString(),
+            ErrorBrowserDetails: {
+                Status: Number.isFinite(Number(source.status ?? xhr?.status))
+                    ? Number(source.status ?? xhr?.status)
+                    : null,
+                ResponseText: limit(responseText, 8000),
+                Stack: limit(source.stack || err?.stack || '', 16000),
+                FileName: limit(source.fileName || err?.fileName || source.url || err?.url || '', 2048),
+                LineNumber: Number(source.lineNumber || err?.lineNumber) || null,
+                ColumnNumber: Number(source.columnNumber || err?.columnNumber) || null,
+                FunctionName: limit(source.functionName || '', 512),
+                ErrorType: limit(source.errorType || err?.errorType || (xhr?.status ? 'http_error' : 'javascript_error'), 64),
+                Context: limit(safeJson(context, '{}'), 8000),
+                BreadcrumbTrails: normalizeBreadcrumbs(source.breadcrumbTrail ?? err?.breadcrumbTrail)
             }
+        };
+    }
+
+    function canSend(payload) {
+        const now = Date.now();
+        while (sentAt.length && now - sentAt[0] > 60000) sentAt.shift();
+        if (sentAt.length >= maxPerMinute) return false;
+
+        const detail = payload.ErrorBrowserDetails;
+        const fingerprint = [
+            payload.Message,
+            detail.ErrorType,
+            detail.FileName,
+            detail.LineNumber,
+            detail.Status
+        ].join('|');
+        const lastSent = recentFingerprints.get(fingerprint);
+        if (lastSent && now - lastSent < duplicateWindowMs) return false;
+
+        recentFingerprints.set(fingerprint, now);
+        sentAt.push(now);
+        for (const [key, timestamp] of recentFingerprints) {
+            if (now - timestamp > 60000) recentFingerprints.delete(key);
+        }
+        return true;
+    }
+
+    function send(message, err, details) {
+        if (err?.status === 200) return Promise.resolve(false);
+
+        const payload = normalizeError(message, err, details);
+        if (!canSend(payload)) return Promise.resolve(false);
+
+        window.ErrorFailLogCount = (window.ErrorFailLogCount || 0) + 1;
+        return fetch(endpoint, {
+            method: 'POST',
+            credentials: 'same-origin',
+            keepalive: true,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).then(function (response) {
+            return response.ok;
+        }).catch(function () {
+            // Never call console.error or the AJAX wrapper here: both are monitored
+            // and would recursively create another client error.
+            return false;
         });
     }
-    //$.ajax({
-    //    url: '/api/ClientBrowserError/LogClientError',
-    //    type: 'POST',
-    //    contentType: 'application/json',
-    //    data: JSON.stringify({ model: JSON.stringify( errorLog )}),
-    //    success: function () {
-    //        console.log("Error logged to server");
-    //    },
-    //    error: function () {
-    //        console.warn("Failed to log error to server");
-    //    }
-    //});
+
+    return { send: send, normalizeError: normalizeError };
+})();
+
+function sendClientErrorLog(message, err, additionalDetails) {
+    return clientErrorReporter.send(message, err, additionalDetails || {});
 }
 
 // Helper functions for error context
@@ -4075,15 +4157,18 @@ function ajaxCore(method, url, {
                 errorThrown,
                 status: xhr?.status,
                 responseText: xhr?.responseText,
-                breadcrumbTrail: JSON.stringify(body),
-                xhr
+                breadcrumbTrail: body,
+                xhr,
+                __clientErrorLogged: true
             };
 
             try { onError?.(errInfo); } catch (e) {
                 try { sendClientErrorLog?.("onError callback error", e); } catch { }
             }
 
-            try { sendClientErrorLog?.("AJAX ERROR", errInfo); } catch { }
+            if (!String(fullUrl).includes('/api/ClientBrowserError/LogClientError')) {
+                try { sendClientErrorLog?.("AJAX ERROR", errInfo); } catch { }
+            }
         })
         .always(() => {
             try { onFinally?.(); } catch { }
@@ -4994,24 +5079,28 @@ function getJson(url, data) {
 
 // Global error handlers for detailed JavaScript error tracing
 window.addEventListener('error', function(event) {
+    const resourceUrl = event.target && event.target !== window
+        ? (event.target.src || event.target.href || '')
+        : '';
     const errorInfo = {
         message: event.message,
-        fileName: event.filename,
+        fileName: event.filename || resourceUrl,
         lineNumber: event.lineno,
         columnNumber: event.colno,
         stack: event.error?.stack,
-        errorType: 'uncaught'
+        errorType: resourceUrl ? 'resource_error' : 'uncaught'
     };
-    sendClientErrorLog(event.message, null, errorInfo);
-});
+    sendClientErrorLog(event.message || ('Failed to load resource: ' + resourceUrl), event.error, errorInfo);
+}, true);
 
 window.addEventListener('unhandledrejection', function(event) {
+    const reason = event.reason instanceof Error ? event.reason : null;
     const errorInfo = {
         message: event.reason?.message || String(event.reason),
         stack: event.reason?.stack,
         errorType: 'unhandled_promise'
     };
-    sendClientErrorLog(event.reason?.message || 'Unhandled promise rejection', null, errorInfo);
+    sendClientErrorLog(event.reason?.message || 'Unhandled promise rejection', reason, errorInfo);
 });
 
 
@@ -5023,16 +5112,19 @@ $.Deferred.exceptionHook = function (error, stack) {
 // Override console.error to also log to server
 const originalConsoleError = console.error;
 console.error = function(...args) {
-    // Call original
-    //originalConsoleError.apply(console, args);
+    originalConsoleError.apply(console, args);
 
     const errorInfo = {
-        //message: event.reason?.message || String(event.reason),
-        //stack: event.reason?.stack,
+        stack: args.find(arg => arg instanceof Error)?.stack,
         errorType: 'console_error'
     };
-    const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
-    sendClientErrorLog('Console Error: ' + message, null, errorInfo);
+    const message = args.map(function (arg) {
+        if (arg instanceof Error) return arg.message;
+        if (typeof arg !== 'object') return String(arg);
+        try { return JSON.stringify(arg); }
+        catch (_) { return '[Unserializable object]'; }
+    }).join(' ');
+    sendClientErrorLog('Console Error: ' + message, args.find(arg => arg instanceof Error), errorInfo);
 };
 
 // Track user actions for breadcrumb
