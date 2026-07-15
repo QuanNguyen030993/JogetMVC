@@ -538,12 +538,35 @@
                     <span class="notif-dot"></span>
                     <span class="notif-count" id="notifCount" style="display:none;">0</span>
                 </div>
-                <div class="navbar-nav user user-menu" style="display:contents;margin-right: 15%; margin-left: auto;">
+                <div class="navbar-nav user user-menu">
                     <input id="rolename" type="hidden" />
+                    <button id="userAccountTrigger" class="user-account-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+                        <span id="accountAvatarInitial" class="user-account-avatar">U</span>
+                        <span class="user-account-copy">
+                            <span id="accountLabel" class="user-account-name">User</span>
+                            <span id="accountRoleBadge" class="user-account-role">Role not selected</span>
+                        </span>
+                        <i class="fa fa-angle-down user-account-chevron" aria-hidden="true"></i>
+                    </button>
                 </div>
 
-                <div id="dropdown-menu" style="display:none; position:absolute; right:10px; top:50px;">
-                    <ul id="dropdownContent"></ul>
+                <div id="dropdown-menu" class="user-account-menu" style="display:none;">
+                    <div class="user-menu-heading">
+                        <span id="menuAvatarInitial" class="user-menu-avatar">U</span>
+                        <div>
+                            <strong id="displayLabel">User account</strong>
+                            <span id="roleLabel">Workflow group not selected</span>
+                        </div>
+                    </div>
+                    <div class="user-menu-session">
+                        <span class="user-menu-session-dot"></span>
+                        <span id="signalRCounter">Session count from SignalR: (0)</span>
+                    </div>
+                    <button id="openUserSettings" class="user-settings-entry" type="button">
+                        <span class="user-settings-icon"><i class="fa fa-cog"></i></span>
+                        <span><strong>Settings</strong><small>Choose your workflow role</small></span>
+                        <i class="fa fa-angle-right"></i>
+                    </button>
                 </div>
 
                 </div>
@@ -561,6 +584,30 @@
             <div id="notificationPopOver"></div>
             <div id="assigneeEntryForm"></div>
             <div id="moduleLauncherPopup"></div>
+            <div id="userSettingsModal" class="user-settings-modal" aria-hidden="true">
+                <div class="user-settings-backdrop"></div>
+                <section class="user-settings-dialog" role="dialog" aria-modal="true" aria-labelledby="userSettingsTitle">
+                    <header class="user-settings-header">
+                        <div>
+                            <span class="user-settings-kicker">ACCOUNT SETTINGS</span>
+                            <h2 id="userSettingsTitle">Choose your workflow role</h2>
+                            <p>The role controls your working group and relevant workflow menus.</p>
+                        </div>
+                        <button id="closeUserSettings" class="user-settings-close" type="button" aria-label="Close settings">&times;</button>
+                    </header>
+                    <div id="userRoleOptions" class="user-role-options"></div>
+                    <div class="user-settings-note">
+                        <i class="fa fa-info-circle"></i>
+                        Menu permissions will be fully refreshed the next time this page is loaded.
+                    </div>
+                    <footer class="user-settings-footer">
+                        <button id="cancelUserSettings" class="user-settings-cancel" type="button">Cancel</button>
+                        <button id="saveUserSettings" class="user-settings-save" type="button">
+                            <i class="fa fa-check"></i> Save settings
+                        </button>
+                    </footer>
+                </section>
+            </div>
 
     </header>
     @await Html.PartialAsync("_MenuPartial")
@@ -666,44 +713,93 @@
                 //    }, 1000);
             }
 
-        var marginTop = "margin-top:3px";
-        var avatar = `./img/no-profile-icon.jpg`;
-       $(".user.user-menu").append(`<div style="display:flex;margin-right: -15%;${marginTop}">
-       <img src="${avatar}" class="user-image" style="border-radius:50%"
-       width="25px" height="25px" alt="User Image"/> 
-       <div id="accountLabel" style="color: white;margin-right:5px;${marginTop}">${_loginUser}</div>
-       <div id="signalRMonitor" class="signalr-monitor signalr-disconnected">
-                    <div class="signalr-dot"></div>
-                    <span class="signalr-text">Offline</span>
-                    
-                </div>
-                </div>
-       
+    const fallbackRoleOptions = [
+        { code: "FO", description: "Front Office - tiếp nhận yêu cầu và phối hợp với khách hàng." },
+        { code: "TS", description: "Technical Services - chuẩn bị và rà soát nội dung kỹ thuật." },
+        { code: "PM", description: "Product Management - quản lý sản phẩm và điều khoản." },
+        { code: "UW", description: "Underwriting - đánh giá rủi ro và quyết định nhận bảo hiểm." },
+        { code: "LMKT", description: "Local Marketing - điều phối kinh doanh và phát hành đơn." }
+    ];
+    let selectedUserRole = "";
+    let userRoleOptions = fallbackRoleOptions;
 
-       `);
+    function renderUserRoleOptions() {
+        $("#userRoleOptions").html(userRoleOptions.map(role => `
+            <label class="user-role-card ${selectedUserRole === role.code ? "is-selected" : ""}">
+                <input type="radio" name="userWorkflowRole" value="${role.code}" ${selectedUserRole === role.code ? "checked" : ""} />
+                <span class="user-role-code">${role.code}</span>
+                <span class="user-role-description">${role.description}</span>
+                <span class="user-role-check"><i class="fa fa-check"></i></span>
+            </label>
+        `).join(""));
+    }
 
+    function refreshUserRoleSettings(openModal = false) {
+        return $.get("/api/Employee/GetMyRoleSettings")
+            .done(function (response) {
+                if (!response?.success) return;
+                const profile = response.data;
+                selectedUserRole = (profile.role || "").toUpperCase();
+                userRoleOptions = profile.roles?.length ? profile.roles : fallbackRoleOptions;
+                $("#accountRoleBadge").text(selectedUserRole || "Role not selected");
+                $("#roleLabel").text(selectedUserRole ? `Workflow group ${selectedUserRole}` : "Workflow group not selected");
+                $("#displayLabel").text(profile.fullName || _displayName || profile.accountName);
+                const initial = (profile.fullName || profile.accountName || "U").charAt(0).toUpperCase();
+                $("#accountAvatarInitial, #menuAvatarInitial").text(initial);
+                renderUserRoleOptions();
+                if (openModal) $("#userSettingsModal").addClass("is-open").attr("aria-hidden", "false");
+            })
+            .fail(function (xhr) {
+                appNotify({ message: xhr.responseJSON?.message || "Unable to load account settings.", type: "warning" });
+            });
+    }
 
-        $("#dropdownContent").html(`
-        <li style="padding:10px; border-bottom:1px solid var(--c-eeeeee);">
-            <bAccount Setting</b>
-        </li>
-        <li style="padding:10px;">
-            <div id="displayLabel"></div>
-            <div id="roleLabel"></div>
-        </li>
-        <li><span id="signalRCounter">Session count from SignalR: (0)</span></li>
-        <li style="padding:10px; text-align:right;">
-            <a href="#" class="btn btn-default btn-sm">Close application</a>
-        </li>
-    `);
-
-    $(".user-image").on("click", function (e) {
+    $("#userAccountTrigger").on("click", function (e) {
         e.stopPropagation();
         $("#dropdown-menu").toggle();
+        $(this).attr("aria-expanded", $("#dropdown-menu").is(":visible"));
     });
 
     $(document).on("click", function () {
         $("#dropdown-menu").hide();
+        $("#userAccountTrigger").attr("aria-expanded", "false");
+    });
+
+    $("#dropdown-menu").on("click", function (e) { e.stopPropagation(); });
+    $("#openUserSettings").on("click", function () {
+        $("#dropdown-menu").hide();
+        refreshUserRoleSettings(true);
+    });
+    $("#closeUserSettings, #cancelUserSettings, .user-settings-backdrop").on("click", function () {
+        $("#userSettingsModal").removeClass("is-open").attr("aria-hidden", "true");
+    });
+    $("#userRoleOptions").on("change", "input[name='userWorkflowRole']", function () {
+        selectedUserRole = this.value;
+        renderUserRoleOptions();
+    });
+    $("#saveUserSettings").on("click", function () {
+        if (!selectedUserRole) {
+            appNotify({ message: "Please select a role.", type: "warning" });
+            return;
+        }
+
+        const $button = $(this).prop("disabled", true).addClass("is-saving");
+        $.ajax({
+            url: "/api/Employee/UpdateMyRole",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ role: selectedUserRole })
+        }).done(function (response) {
+            _role = response.data.role;
+            $("#accountRoleBadge").text(response.data.role);
+            $("#roleLabel").text(`Workflow group ${response.data.role}`);
+            $("#userSettingsModal").removeClass("is-open").attr("aria-hidden", "true");
+            appNotify({ message: "Role setting saved. Reload the page to refresh menu permissions.", type: "success" });
+        }).fail(function (xhr) {
+            appNotify({ message: xhr.responseJSON?.message || "Unable to save role setting.", type: "error" });
+        }).always(function () {
+            $button.prop("disabled", false).removeClass("is-saving");
+        });
     });
 
 
@@ -1408,6 +1504,392 @@
 
 </script>
 <style>
+    .user.user-menu {
+        display: flex;
+        align-items: center;
+        margin-left: 10px;
+    }
+
+    .user-account-trigger {
+        min-width: 168px;
+        height: 42px;
+        padding: 5px 10px 5px 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        color: #fff;
+        background: rgba(255, 255, 255, .12);
+        border: 1px solid rgba(255, 255, 255, .2);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: background .18s ease, transform .18s ease, border-color .18s ease;
+    }
+
+    .user-account-trigger:hover,
+    .user-account-trigger[aria-expanded="true"] {
+        background: rgba(255, 255, 255, .2);
+        border-color: rgba(255, 255, 255, .36);
+        transform: translateY(-1px);
+    }
+
+    .user-account-avatar,
+    .user-menu-avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        color: #fff;
+        font-weight: 700;
+        background: linear-gradient(145deg, #ff5b68, #c7162b);
+        box-shadow: 0 4px 12px rgba(112, 15, 28, .28);
+    }
+
+    .user-account-avatar {
+        width: 31px;
+        height: 31px;
+        border-radius: 10px;
+        font-size: 13px;
+    }
+
+    .user-account-copy {
+        min-width: 0;
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        align-items: flex-start;
+        line-height: 1.15;
+    }
+
+    .user-account-name {
+        max-width: 110px;
+        overflow: hidden;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 650;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .user-account-role {
+        margin-top: 3px;
+        color: rgba(255, 255, 255, .74);
+        font-size: 10px;
+        letter-spacing: .035em;
+        text-transform: uppercase;
+    }
+
+    .user-account-chevron {
+        color: rgba(255, 255, 255, .76);
+        transition: transform .18s ease;
+    }
+
+    .user-account-trigger[aria-expanded="true"] .user-account-chevron {
+        transform: rotate(180deg);
+    }
+
+    .user-account-menu {
+        position: absolute;
+        z-index: 2500;
+        top: 56px;
+        right: 14px;
+        width: 310px;
+        padding: 10px;
+        color: #1f2937;
+        background: #fff;
+        border: 1px solid #e7eaf0;
+        border-radius: 16px;
+        box-shadow: 0 18px 50px rgba(15, 23, 42, .2);
+    }
+
+    .user-menu-heading {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px;
+        background: linear-gradient(135deg, #fff6f7, #fff);
+        border-radius: 12px;
+    }
+
+    .user-menu-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 13px;
+        font-size: 16px;
+    }
+
+    .user-menu-heading strong,
+    .user-menu-heading span {
+        display: block;
+    }
+
+    .user-menu-heading strong {
+        color: #172033;
+        font-size: 14px;
+    }
+
+    .user-menu-heading div > span {
+        margin-top: 3px;
+        color: #7b8495;
+        font-size: 11px;
+    }
+
+    .user-menu-session {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 11px 12px 8px;
+        color: #718096;
+        font-size: 10px;
+    }
+
+    .user-menu-session-dot {
+        width: 7px;
+        height: 7px;
+        background: #27ae60;
+        border-radius: 50%;
+        box-shadow: 0 0 0 3px rgba(39, 174, 96, .12);
+    }
+
+    .user-settings-entry {
+        width: 100%;
+        padding: 10px;
+        display: grid;
+        grid-template-columns: 35px 1fr auto;
+        align-items: center;
+        gap: 10px;
+        color: #273246;
+        text-align: left;
+        background: transparent;
+        border: 0;
+        border-radius: 11px;
+    }
+
+    .user-settings-entry:hover {
+        background: #f6f7fa;
+    }
+
+    .user-settings-entry span:nth-child(2) {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .user-settings-entry small {
+        margin-top: 2px;
+        color: #8a93a3;
+    }
+
+    .user-settings-icon {
+        width: 35px;
+        height: 35px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #c7162b;
+        background: #fff0f2;
+        border-radius: 10px;
+    }
+
+    .user-settings-modal {
+        position: fixed;
+        z-index: 9000;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+    }
+
+    .user-settings-modal.is-open {
+        display: flex;
+    }
+
+    .user-settings-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(12, 18, 31, .58);
+        backdrop-filter: blur(3px);
+    }
+
+    .user-settings-dialog {
+        position: relative;
+        width: min(680px, 100%);
+        max-height: calc(100vh - 48px);
+        overflow: auto;
+        padding: 26px;
+        background: #fff;
+        border-radius: 22px;
+        box-shadow: 0 28px 80px rgba(7, 12, 24, .32);
+        animation: userSettingsEnter .2s ease-out;
+    }
+
+    @@keyframes userSettingsEnter {
+        from { opacity: 0; transform: translateY(12px) scale(.985); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .user-settings-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+    }
+
+    .user-settings-kicker {
+        color: #c7162b;
+        font-size: 10px;
+        font-weight: 750;
+        letter-spacing: .16em;
+    }
+
+    .user-settings-header h2 {
+        margin: 5px 0 6px;
+        color: #172033;
+        font-size: 23px;
+        font-weight: 700;
+    }
+
+    .user-settings-header p {
+        margin: 0;
+        color: #737d8e;
+        font-size: 13px;
+    }
+
+    .user-settings-close {
+        width: 36px;
+        height: 36px;
+        color: #677184;
+        font-size: 24px;
+        line-height: 1;
+        background: #f4f5f7;
+        border: 0;
+        border-radius: 11px;
+    }
+
+    .user-role-options {
+        margin-top: 22px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .user-role-card {
+        position: relative;
+        min-height: 92px;
+        padding: 14px 42px 14px 14px;
+        display: flex;
+        flex-direction: column;
+        cursor: pointer;
+        background: #fafbfc;
+        border: 1px solid #e5e8ed;
+        border-radius: 14px;
+        transition: border-color .16s ease, background .16s ease, box-shadow .16s ease, transform .16s ease;
+    }
+
+    .user-role-card:hover {
+        border-color: #d5a4aa;
+        transform: translateY(-1px);
+    }
+
+    .user-role-card.is-selected {
+        background: #fff7f8;
+        border-color: #d52a3f;
+        box-shadow: 0 7px 18px rgba(199, 22, 43, .1);
+    }
+
+    .user-role-card input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .user-role-code {
+        color: #172033;
+        font-size: 16px;
+        font-weight: 750;
+    }
+
+    .user-role-description {
+        margin-top: 5px;
+        color: #717b8c;
+        font-size: 11px;
+        line-height: 1.4;
+    }
+
+    .user-role-check {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        width: 22px;
+        height: 22px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: transparent;
+        background: #fff;
+        border: 1px solid #d9dde5;
+        border-radius: 50%;
+    }
+
+    .user-role-card.is-selected .user-role-check {
+        color: #fff;
+        background: #c7162b;
+        border-color: #c7162b;
+    }
+
+    .user-settings-note {
+        margin-top: 14px;
+        padding: 10px 12px;
+        display: flex;
+        gap: 8px;
+        color: #667085;
+        font-size: 11px;
+        background: #f6f8fb;
+        border-radius: 10px;
+    }
+
+    .user-settings-note i {
+        color: #c7162b;
+    }
+
+    .user-settings-footer {
+        margin-top: 20px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .user-settings-cancel,
+    .user-settings-save {
+        height: 39px;
+        padding: 0 18px;
+        font-weight: 650;
+        border-radius: 10px;
+    }
+
+    .user-settings-cancel {
+        color: #4f596a;
+        background: #fff;
+        border: 1px solid #dfe3e9;
+    }
+
+    .user-settings-save {
+        color: #fff;
+        background: linear-gradient(135deg, #d82339, #ad1023);
+        border: 0;
+        box-shadow: 0 8px 18px rgba(199, 22, 43, .24);
+    }
+
+    .user-settings-save:disabled {
+        cursor: wait;
+        opacity: .65;
+    }
+
+    @@media (max-width: 760px) {
+        .user-account-copy { display: none; }
+        .user-account-trigger { min-width: 0; }
+        .user-role-options { grid-template-columns: 1fr; }
+        .user-settings-dialog { padding: 20px; }
+    }
+
     .management-logo-slot {
         width: 13%;
         max-width: 13%;

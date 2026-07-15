@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using ERPCore.Controllers.Base;
 using ERPCore.Models.Migration.Business.Config;
@@ -19,6 +19,21 @@ using ERPCore.ControllerUtil;
 [ApiController]
 public class EmployeeController : BaseControllerApi<Employee>
 {
+    private static readonly IReadOnlyDictionary<string, string> SelfServiceRoles =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["FO"] = "Front Office - tiếp nhận yêu cầu và phối hợp với khách hàng.",
+            ["TS"] = "Technical Services - chuẩn bị và rà soát nội dung kỹ thuật.",
+            ["PM"] = "Product Management - quản lý sản phẩm và điều khoản.",
+            ["UW"] = "Underwriting - đánh giá rủi ro và quyết định nhận bảo hiểm.",
+            ["LMKT"] = "Local Marketing - điều phối kinh doanh và phát hành đơn."
+        };
+
+    public sealed class UpdateMyRoleRequest
+    {
+        public string Role { get; set; } = "";
+    }
+
     private readonly IBaseRepository<Employee> _BaseRepository;
     private readonly IBaseRepository<Users> _usersRepository;
     private readonly IBaseRepository<EnumData> _enumDataRepository;
@@ -145,6 +160,72 @@ public class EmployeeController : BaseControllerApi<Employee>
         return Ok(new { success = true, data = emp });
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetMyRoleSettings()
+    {
+        var employee = await GetCurrentEmployeeAsync();
+        if (employee == null)
+            return NotFound(new { success = false, message = "Current employee was not found." });
+
+        return Ok(new
+        {
+            success = true,
+            data = new
+            {
+                employee.Id,
+                employee.FullName,
+                employee.AccountName,
+                role = employee.Department,
+                roles = SelfServiceRoles.Select(item => new
+                {
+                    code = item.Key,
+                    description = item.Value
+                })
+            }
+        });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> UpdateMyRole([FromBody] UpdateMyRoleRequest request)
+    {
+        var role = request?.Role?.Trim().ToUpperInvariant() ?? "";
+        if (!SelfServiceRoles.ContainsKey(role))
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "Role must be one of: FO, TS, PM, UW, LMKT."
+            });
+        }
+
+        var employee = await GetCurrentEmployeeAsync();
+        if (employee == null)
+            return NotFound(new { success = false, message = "Current employee was not found." });
+
+        employee.Department = role;
+        await _BaseRepository.UpdateData(
+            employee,
+            JsonConvert.SerializeObject(new { Department = role }),
+            employee.Id,
+            "Id");
+
+        return Ok(new
+        {
+            success = true,
+            message = "Role setting was saved.",
+            data = new { role, description = SelfServiceRoles[role] }
+        });
+    }
+
+    private async Task<Employee?> GetCurrentEmployeeAsync()
+    {
+        var accountName = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, _configuration)?.Trim();
+        if (string.IsNullOrWhiteSpace(accountName))
+            return null;
+
+        return await _BaseRepository.GetSingleObject(employee => employee.AccountName == accountName);
+    }
+
     //[HttpGet("{dept}")]
     //public async Task<ActionResult<Employee>> AssigneeList(string dept)
     //{
@@ -231,54 +312,54 @@ public class EmployeeController : BaseControllerApi<Employee>
                 var bgEnumRepo = new BaseRepository<EnumData>(_configuration, mockAccessor);
 
                 await SendProgress(connectionId, 15, "Fetching users and employees from database...");
-        var domainEmailName = _configuration.GetValue<string>("Domain:Email") ?? "";
+                var domainEmailName = _configuration.GetValue<string>("Domain:Email") ?? "";
                 var users = await bgUsersRepo.GetAll();
                 var employees = await bgEmployeeRepo.GetAll();
                 var branchEnums = await bgEnumRepo.GetAll();
 
                 await SendProgress(connectionId, 25, "Analyzing database differences...");
-        var employeeByAccount = employees
-            .Where(employee => !string.IsNullOrWhiteSpace(employee.AccountName))
-            .GroupBy(employee => employee.AccountName.Trim(), StringComparer.OrdinalIgnoreCase)
-            .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
+                var employeeByAccount = employees
+                    .Where(employee => !string.IsNullOrWhiteSpace(employee.AccountName))
+                    .GroupBy(employee => employee.AccountName.Trim(), StringComparer.OrdinalIgnoreCase)
+                    .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
 
-        var branchIdByCode = branchEnums
-            .Where(item => !string.IsNullOrWhiteSpace(item.Code))
-            .GroupBy(item => item.Code.Trim(), StringComparer.OrdinalIgnoreCase)
-            .ToDictionary(group => group.Key, group => (long?)group.First().Id, StringComparer.OrdinalIgnoreCase);
+                var branchIdByCode = branchEnums
+                    .Where(item => !string.IsNullOrWhiteSpace(item.Code))
+                    .GroupBy(item => item.Code.Trim(), StringComparer.OrdinalIgnoreCase)
+                    .ToDictionary(group => group.Key, group => (long?)group.First().Id, StringComparer.OrdinalIgnoreCase);
 
-        var insertedEmployees = new List<Employee>();
-        var updatedEmployees = new List<Employee>();
-        var processedAccounts = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var insertedEmployees = new List<Employee>();
+                var updatedEmployees = new List<Employee>();
+                var processedAccounts = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var user in users)
-        {
-            var accountName = ResolveAccountName(user, domainEmailName);
-            if (string.IsNullOrWhiteSpace(accountName) || !processedAccounts.Add(accountName))
-            {
-                continue;
-            }
-
-            var branchCode = ResolveBranchCode(user);
-            branchIdByCode.TryGetValue(branchCode, out var branchId);
-
-            if (!employeeByAccount.TryGetValue(accountName, out var employee))
-            {
-                employee = new Employee
+                foreach (var user in users)
                 {
-                    AccountName = accountName
-                };
-                ApplyUserToEmployee(employee, user, accountName, branchId, preserveMissingValues: false);
-                insertedEmployees.Add(employee);
-                employeeByAccount[accountName] = employee;
-                continue;
-            }
+                    var accountName = ResolveAccountName(user, domainEmailName);
+                    if (string.IsNullOrWhiteSpace(accountName) || !processedAccounts.Add(accountName))
+                    {
+                        continue;
+                    }
 
-            if (ApplyUserToEmployee(employee, user, accountName, branchId, preserveMissingValues: true))
-            {
-                updatedEmployees.Add(employee);
-            }
-        }
+                    var branchCode = ResolveBranchCode(user);
+                    branchIdByCode.TryGetValue(branchCode, out var branchId);
+
+                    if (!employeeByAccount.TryGetValue(accountName, out var employee))
+                    {
+                        employee = new Employee
+                        {
+                            AccountName = accountName
+                        };
+                        ApplyUserToEmployee(employee, user, accountName, branchId, preserveMissingValues: false);
+                        insertedEmployees.Add(employee);
+                        employeeByAccount[accountName] = employee;
+                        continue;
+                    }
+
+                    if (ApplyUserToEmployee(employee, user, accountName, branchId, preserveMissingValues: true))
+                    {
+                        updatedEmployees.Add(employee);
+                    }
+                }
 
                 int totalToInsert = insertedEmployees.Count;
                 int totalToUpdate = updatedEmployees.Count;
@@ -286,10 +367,10 @@ public class EmployeeController : BaseControllerApi<Employee>
                 int processedCount = 0;
 
                 if (totalOperations == 0)
-        {
+                {
                     await SendProgress(connectionId, 100, "Employee database is already up to date.", isComplete: true);
                     return;
-        }
+                }
 
                 await SendProgress(connectionId, 30, $"Syncing database: {totalToInsert} to insert, {totalToUpdate} to update...");
 
@@ -297,7 +378,7 @@ public class EmployeeController : BaseControllerApi<Employee>
                 
                 // Batch inserts
                 for (int i = 0; i < totalToInsert; i += batchSize)
-        {
+                {
                     var batch = insertedEmployees.Skip(i).Take(batchSize).ToList();
                     await bgEmployeeRepo.BulkInsertAsync(batch);
                     processedCount += batch.Count;
@@ -312,29 +393,29 @@ public class EmployeeController : BaseControllerApi<Employee>
                     var batch = updatedEmployees.Skip(i).Take(batchSize).ToList();
                     await bgEmployeeRepo.BulkUpdateAsync(
                         batch,
-                new[]
-                {
-                    nameof(Employee.FirstName),
-                    nameof(Employee.LastName),
-                    nameof(Employee.FullName),
-                    nameof(Employee.Department),
-                    nameof(Employee.AccountName),
-                    nameof(Employee.Email),
-                    nameof(Employee.EmailName),
-                    nameof(Employee.AreaId),
-                    nameof(Employee.UsersId)
-                },
-                nameof(Employee.Id));
+                        new[]
+                        {
+                            nameof(Employee.FirstName),
+                            nameof(Employee.LastName),
+                            nameof(Employee.FullName),
+                            nameof(Employee.Department),
+                            nameof(Employee.AccountName),
+                            nameof(Employee.Email),
+                            nameof(Employee.EmailName),
+                            nameof(Employee.AreaId),
+                            nameof(Employee.UsersId)
+                        },
+                        nameof(Employee.Id));
                     processedCount += batch.Count;
 
                     int progress = 30 + (int)(processedCount * 65.0 / totalOperations);
                     await SendProgress(connectionId, progress, $"Updating: {processedCount}/{totalOperations}...");
-        }
+                }
 
                 await SendProgress(connectionId, 100, $"Completed! {totalToInsert} inserted, {totalToUpdate} updated.", isComplete: true);
             }
             catch (Exception ex)
-        {
+            {
                 Serilog.Log.Error(ex, "EmployeeUpdate background execution failed.");
                 await SendProgress(connectionId, 100, $"Error: {ex.Message}", isError: true);
             }

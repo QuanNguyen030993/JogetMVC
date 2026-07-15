@@ -224,22 +224,7 @@ public class QuotationController : BaseControllerApi<Quotation>
     public override async Task<ActionResult<List<Quotation>>> GetAll()
     {
         var queryParams = HttpContext.Request.Query;
-
-
-
-        // ===== PAGING =====
-        int skip = 0;
-        int take = 50;
-
-        if (queryParams.ContainsKey("skip"))
-            int.TryParse(queryParams["skip"], out skip);
-
-        if (queryParams.ContainsKey("take"))
-            int.TryParse(queryParams["take"], out take);
-
-        take = Math.Clamp(take, 1, 200);
-
-        var requestParams = HttpContext.Request.Query.ToList();
+        var requestParams = NormalizeGridLoadParams(queryParams);
         var requestParamsHeader = HttpContext.Request.Headers.ToList();
         //Pending
 

@@ -416,25 +416,43 @@ namespace ERPCore.Controllers.Base
         }
 
 
+        protected static List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> NormalizeGridLoadParams(
+            Microsoft.AspNetCore.Http.IQueryCollection queryParams,
+            int defaultTake = 50,
+            int maxTake = 200)
+        {
+            var normalized = queryParams
+                .Where(item => !string.Equals(item.Key, "_", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            // Keep non-grid GetAll calls backward compatible. DevExtreme always sends
+            // at least one of these values when remote paging is active.
+            var hasPaging = queryParams.ContainsKey("skip") || queryParams.ContainsKey("take");
+            if (!hasPaging)
+                return normalized;
+
+            var skip = queryParams.TryGetValue("skip", out var rawSkip) && int.TryParse(rawSkip.ToString(), out var parsedSkip)
+                ? Math.Max(parsedSkip, 0)
+                : 0;
+            var take = queryParams.TryGetValue("take", out var rawTake) && int.TryParse(rawTake.ToString(), out var parsedTake)
+                ? Math.Clamp(parsedTake, 1, maxTake)
+                : defaultTake;
+
+            normalized.RemoveAll(item =>
+                string.Equals(item.Key, "skip", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(item.Key, "take", StringComparison.OrdinalIgnoreCase));
+            normalized.Add(new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>("skip", skip.ToString()));
+            normalized.Add(new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>("take", take.ToString()));
+
+            return normalized;
+        }
+
         //[AllowAnonymous] // test
         [HttpGet]
         public virtual async Task<ActionResult<List<T>>> GetAll()
         {
             var queryParams = HttpContext.Request.Query;
-
-            // ===== PAGING =====
-            int skip = 0;
-            int take = 50;
-
-            if (queryParams.ContainsKey("skip"))
-                int.TryParse(queryParams["skip"], out skip);
-
-            if (queryParams.ContainsKey("take"))
-                int.TryParse(queryParams["take"], out take);
-
-            take = Math.Clamp(take, 1, 200);
-
-            var requestParams = HttpContext.Request.Query.ToList();
+            var requestParams = NormalizeGridLoadParams(queryParams);
             IDictionary<string, object> dynamicObj = new ExpandoObject { };
             foreach (var item in requestParams)
             {
@@ -442,7 +460,7 @@ namespace ERPCore.Controllers.Base
             }
 
             var rawParams = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var item in queryParams)
+            foreach (var item in requestParams)
             {
                 if (item.Key == "_") continue;
                 rawParams[item.Key] = item.Value.ToString() ?? "";

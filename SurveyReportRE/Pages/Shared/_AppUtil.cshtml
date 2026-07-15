@@ -33,6 +33,21 @@
         return scrollView;
     }
 
+        const _gridDefaultTake = 50;
+        const _gridMaxTake = 200;
+
+        function normalizeGridLoadParams(ajaxOptions) {
+            ajaxOptions.data = ajaxOptions.data || {};
+
+            const parsedSkip = Number.parseInt(ajaxOptions.data.skip, 10);
+            const parsedTake = Number.parseInt(ajaxOptions.data.take, 10);
+
+            ajaxOptions.data.skip = Number.isFinite(parsedSkip) ? Math.max(parsedSkip, 0) : 0;
+            ajaxOptions.data.take = Number.isFinite(parsedTake)
+                ? Math.min(Math.max(parsedTake, 1), _gridMaxTake)
+                : _gridDefaultTake;
+        }
+
         //Performance check query in need
         function makeBasicDataSource(instance, isForm = false, configBefore = false) {
             try {
@@ -160,12 +175,14 @@
                             params.set("refOperator2", instance?.refOperator2);
                             return new DevExpress.data.DataSource({
                                 // filter: filter,
+                                paginate: true,
+                                pageSize: _gridDefaultTake,
                                 store: DevExpress.data.AspNet.createStore({
                                     key: "id",
                                 loadUrl: instance?.mGridInstance?.overrideGetUrl ? `${instance?.mGridInstance?.overrideGetUrl}?${params.toString()}` : `/api/${instance.ModelName}/GetAll?${params.toString()}`,
                                     onBeforeSend: function (method, ajaxOptions) {
                                         if (method === "load") {
-                                            ajaxOptions.data = ajaxOptions.data || {};
+                                            normalizeGridLoadParams(ajaxOptions);
                                             // ajaxOptions.headers = {
                                             //     "refField": instance?.refField ?? "",
                                             //     "refField2": instance?.refField2 ?? "",
@@ -197,12 +214,14 @@
                             params.set("refOperator2", instance?.refOperator2);
                          return new DevExpress.data.DataSource({
                             // filter: filter,
+                            paginate: true,
+                            pageSize: _gridDefaultTake,
                             store: DevExpress.data.AspNet.createStore({
                                 key: "id",
                             loadUrl: instance?.mGridInstance?.overrideGetUrl ? `${instance?.mGridInstance?.overrideGetUrl}?${params.toString()}` : `/api/${instance.ModelName}/GetAll?${params.toString()}`,
                                   onBeforeSend: function (method, ajaxOptions) {
                                         if (method === "load") {
-                                            ajaxOptions.data = ajaxOptions.data || {};
+                                            normalizeGridLoadParams(ajaxOptions);
                                             // ajaxOptions.headers = {
                                             //     "refField": instance?.refField ?? "",
                                             //     "refField2": instance?.refField2 ?? "",

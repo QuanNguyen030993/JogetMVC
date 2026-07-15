@@ -38,6 +38,11 @@ export default function DataGridDesigner() {
   const [loading, setLoading] = useState(true);
   const [newTableName, setNewTableName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [exportConfig, setExportConfig] = useState({
+    enabled: false,
+    fileName: "",
+    allowExportSelectedData: false
+  });
 
   const [config, setConfig] = useState({
     editing: {
@@ -75,6 +80,25 @@ export default function DataGridDesigner() {
         editing: gridOpts.editing || { mode: "row", allowAdding: false, allowUpdating: false, allowDeleting: false },
         columns: gridOpts.columns || []
       });
+
+      let exportSettings = { enabled: false, fileName: "", allowExportSelectedData: false };
+      const rawExport = table.export || table.Export;
+      if (rawExport) {
+        if (typeof rawExport === 'string') {
+          try {
+            exportSettings = JSON.parse(rawExport);
+          } catch (e) {
+            console.error("Failed to parse export config:", e);
+          }
+        } else if (typeof rawExport === 'object') {
+          exportSettings = rawExport;
+        }
+      }
+      setExportConfig({
+        enabled: exportSettings.enabled ?? false,
+        fileName: exportSettings.fileName ?? "",
+        allowExportSelectedData: exportSettings.allowExportSelectedData ?? false
+      });
     }
   };
 
@@ -90,7 +114,9 @@ export default function DataGridDesigner() {
         }),
         toolbarItemsConfig: selectedTable.toolbarItemsConfig || safeStringifyBinaryJson([]),
         displayExpr: selectedTable.displayExpr || selectedTable.DisplayExpr || "",
-        DisplayExpr: selectedTable.displayExpr || selectedTable.DisplayExpr || ""
+        DisplayExpr: selectedTable.displayExpr || selectedTable.DisplayExpr || "",
+        export: JSON.stringify(exportConfig),
+        Export: JSON.stringify(exportConfig)
       };
 
       const formData = new FormData();
@@ -124,7 +150,9 @@ export default function DataGridDesigner() {
         }),
         toolbarItemsConfig: safeStringifyBinaryJson([]),
         displayExpr: "",
-        DisplayExpr: ""
+        DisplayExpr: "",
+        export: JSON.stringify({ enabled: false, fileName: "", allowExportSelectedData: false }),
+        Export: JSON.stringify({ enabled: false, fileName: "", allowExportSelectedData: false })
       };
 
       const formData = new FormData();
@@ -315,6 +343,38 @@ export default function DataGridDesigner() {
                   ))}
                 </div>
 
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "15px", marginBottom: "12px", alignItems: "center", width: "100%" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", fontWeight: "600", color: "#475569", margin: 0, cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      checked={exportConfig.enabled}
+                      onChange={(e) => setExportConfig({ ...exportConfig, enabled: e.target.checked })}
+                    />
+                    Cho phép Export Excel
+                  </label>
+                  {exportConfig.enabled && (
+                    <>
+                      <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", fontWeight: "600", color: "#475569", margin: 0, cursor: "pointer" }}>
+                        <input
+                          type="checkbox"
+                          checked={exportConfig.allowExportSelectedData}
+                          onChange={(e) => setExportConfig({ ...exportConfig, allowExportSelectedData: e.target.checked })}
+                        />
+                        Export dòng chọn
+                      </label>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ fontSize: "0.85rem", fontWeight: "600", color: "#475569" }}>Tên file export:</span>
+                        <input
+                          value={exportConfig.fileName}
+                          onChange={(e) => setExportConfig({ ...exportConfig, fileName: e.target.value })}
+                          placeholder="Mặc định"
+                          style={{ padding: "4px 8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", width: "150px" }}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+
                 <div style={{ flex: 1, minWidth: "180px" }}>
                   <label style={{ fontSize: "0.85rem", fontWeight: "600", color: "#475569", display: "block", marginBottom: "4px" }}>Trường hiển thị (DisplayExpr)</label>
                   <input
@@ -390,6 +450,7 @@ export default function DataGridDesigner() {
                 {JSON.stringify(
                   {
                     DisplayExpr: selectedTable.displayExpr || selectedTable.DisplayExpr || "",
+                    ExportConfig: exportConfig,
                     GridEditorOptions: {
                       editing: config.editing,
                       columns: config.columns

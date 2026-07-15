@@ -1115,9 +1115,9 @@ var MGridOption = class MGridOption {
                     keyExpr: (gridDataSource instanceof DevExpress.data.DataSource || gridDataSource instanceof DevExpress.data.CustomStore) ? null : (fetchConfig?.keyExpr ?? "id"),
                     //scrolling: { mode: 'infinite', showScrollbar: 'always' },
                     scrolling: {
-                        mode: 'virtual',
-                        // renderingThreshold: 500,
-                        preloadEnabled: false,
+                        mode: 'standard',
+                        rowRenderingMode: 'virtual',
+                        useNative: true,
                         showScrollbar: 'always'
                     },
                     filterRow: { visible: true },
@@ -1133,8 +1133,14 @@ var MGridOption = class MGridOption {
                     },
                     loadPanel: { showPane: false, text: null },
                     rowAlternationEnabled: false,
-                    paging: { enabled: true, pageSize: 50 }, // điều chỉnh nếu data nhiều
-                    pager: { visible: true, allowedPageSizes: [5, 10, 'all'], showPageSizeSelector: true, allowedPageSizes: 50, showInfo: true },// điều chỉnh nếu data nhiều
+                    paging: { enabled: true, pageSize: 50 },
+                    pager: {
+                        visible: true,
+                        allowedPageSizes: [25, 50, 100, 200],
+                        showPageSizeSelector: true,
+                        showNavigationButtons: true,
+                        showInfo: true
+                    },
                     showBorders: true,
                     summary: summary,
                     export: (Object.keys(exportConfig)).length > 0 ? exportConfig : {

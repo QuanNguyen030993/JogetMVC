@@ -14,8 +14,9 @@
                 d.resolve(result.menu);
                 _menus = result.menu; // cache
                 $("#rolename").text(result.userRoles.RoleName);
-                 _loginUser =  result.userRoles.LoginName.replace("TOKIOMARINE\\", "");;
+                _loginUser =  result.userRoles.LoginName.replace("TOKIOMARINE\\", "");;
                 $("#accountLabel").text(_loginUser);
+                $("#accountAvatarInitial").text((_loginUser || "U").charAt(0).toUpperCase());
                  _role = result.userRoles.RoleName;
                  //Debug
                  _roleAppName = result.userRoles.RoleAppName;
@@ -23,6 +24,7 @@
                 $("#roleLabel").text(`Department ${_role}`);
                  _displayName = result.userRoles.DisplayName;
                 $("#displayLabel").text(`${_displayName}`);
+                refreshUserRoleSettings();
             });
             return d.promise();
         }
