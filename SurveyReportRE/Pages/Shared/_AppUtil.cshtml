@@ -4486,11 +4486,11 @@
                     tabPublicUrl: tabPublicUrl
                 };
 
-                ajaxPost("api/Utility/NotifyAnother", notificationData, {
-                    onError: function (err) {
-                        console.warn("Accept PIC notification failed.", account, err);
-                    }
-                });
+                // ajaxPost("api/Utility/NotifyAnother", notificationData, {
+                //     onError: function (err) {
+                //         console.warn("Accept PIC notification failed.", account, err);
+                //     }
+                // });
             });
        }
 
@@ -4538,7 +4538,7 @@
 
                                ajaxPut(passingObject.url,
                             {
-                                key: passingObject.formItems.id,
+                                key: formItems.id,
                                 values: JSON.stringify(
                                     passingObject.formItems
                                 )
