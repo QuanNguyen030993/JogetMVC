@@ -901,11 +901,20 @@ function Flow({ id: propId }) {
             };
 
             setEdges((currentEdges) => {
-                const nextEdges = addEdge(newEdge, currentEdges);
+                const finalEdge = {
+                    ...newEdge,
+                    sourceHandle: params.sourceHandle,
+                    targetHandle: params.targetHandle,
+                };
+                const nextEdges = [...currentEdges, finalEdge];
                 setNodes((currentNodes) => layoutNodes(currentNodes, nextEdges));
                 return nextEdges;
             });
-            setSelectedEdge(newEdge);
+            setSelectedEdge({
+                ...newEdge,
+                sourceHandle: params.sourceHandle,
+                targetHandle: params.targetHandle,
+            });
         },
         [setEdges, setNodes],
     );
@@ -1614,41 +1623,39 @@ function Flow({ id: propId }) {
                 return;
             }
 
-            setEdges((currentEdges) => {
-                const matched = currentEdges.find((e) => e.id === selectedEdge.id);
-                if (!matched) return currentEdges;
+            const matched = edges.find((e) => e.id === selectedEdge.id);
+            const dataToUse = matched ? matched.data : selectedEdge.data;
 
-                const nextData = {
-                    ...matched.data,
-                    [field]: value,
-                };
+            const nextData = {
+                ...dataToUse,
+                [field]: value,
+            };
 
-                const isReturn = nextData.isReturn === true || String(nextData.isReturn) === 'true';
-                const hasCommand = nextData.command && nextData.command !== 'None' && nextData.command !== '0';
+            const isReturn = nextData.isReturn === true || String(nextData.isReturn) === 'true';
+            const hasCommand = nextData.command && nextData.command !== 'None' && nextData.command !== '0';
 
-                const nextEdge = {
-                    ...matched,
-                    label: formatTransitionLabel(nextData.actionName, nextData.statusName || nextData.statusId, nextData.command),
-                    data: nextData,
-                    animated: Boolean(hasCommand),
-                    style: isReturn
-                        ? { stroke: '#dc2626', strokeWidth: 3, strokeDasharray: hasCommand ? '5,5' : undefined }
-                        : { stroke: '#2563eb', strokeWidth: 2, strokeDasharray: hasCommand ? '5,5' : undefined },
-                    markerEnd: {
-                        type: MarkerType.ArrowClosed,
-                        width: 16,
-                        height: 16,
-                        color: isReturn ? '#dc2626' : '#2563eb',
-                    },
-                };
+            const nextEdge = {
+                ...(matched || selectedEdge),
+                label: formatTransitionLabel(nextData.actionName, nextData.statusName || nextData.statusId, nextData.command),
+                data: nextData,
+                animated: Boolean(hasCommand),
+                style: isReturn
+                    ? { stroke: '#dc2626', strokeWidth: 3, strokeDasharray: hasCommand ? '5,5' : undefined }
+                    : { stroke: '#2563eb', strokeWidth: 2, strokeDasharray: hasCommand ? '5,5' : undefined },
+                markerEnd: {
+                    type: MarkerType.ArrowClosed,
+                    width: 16,
+                    height: 16,
+                    color: isReturn ? '#dc2626' : '#2563eb',
+                },
+            };
 
-                // Asynchronously update selection to match latest data
-                setTimeout(() => setSelectedEdge(nextEdge), 0);
-
-                return currentEdges.map((edge) => (edge.id === selectedEdge.id ? nextEdge : edge));
-            });
+            setEdges((currentEdges) =>
+                currentEdges.map((edge) => (edge.id === selectedEdge.id ? nextEdge : edge))
+            );
+            setSelectedEdge(nextEdge);
         },
-        [selectedEdge, setEdges],
+        [selectedEdge, edges, setEdges],
     );
 
     const [condSource, setCondSource] = useState('payload');
