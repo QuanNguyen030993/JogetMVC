@@ -699,6 +699,27 @@ namespace ERPCore.Controllers.Base
 
         #region POST API 
 
+        protected virtual IActionResult? ValidateUploadFileSize(IFormFile file)
+        {
+            var maxFileSizeMb = _BaseRepository._baseConfiguration.GetValue<long?>("Upload:MaxFileSizeMB") ?? 50;
+            if (maxFileSizeMb <= 0)
+            {
+                maxFileSizeMb = 50;
+            }
+
+            var maxFileSize = maxFileSizeMb * 1024L * 1024L;
+            if (file.Length <= maxFileSize)
+            {
+                return null;
+            }
+
+            return StatusCode(StatusCodes.Status413PayloadTooLarge, new
+            {
+                success = false,
+                message = $"File '{file.FileName}' exceeds the {maxFileSizeMb} MB upload limit."
+            });
+        }
+
         [HttpPost]
         public virtual async Task<IActionResult> AsyncUploadFile()
         {// Use blog settings while override this method instead
@@ -716,6 +737,9 @@ namespace ERPCore.Controllers.Base
             file = files.FirstOrDefault();
             if (file != null && file.Length > 0)
             {
+                var sizeValidationError = ValidateUploadFileSize(file);
+                if (sizeValidationError != null) return sizeValidationError;
+
                 using (var ms = new MemoryStream())
                 {
                     file.CopyTo(ms);
@@ -777,6 +801,9 @@ namespace ERPCore.Controllers.Base
             string department = Request.Headers["Department"];
             if (file != null && file.Length > 0)
             {
+                var sizeValidationError = ValidateUploadFileSize(file);
+                if (sizeValidationError != null) return sizeValidationError;
+
                 using (var ms = new MemoryStream())
                 {
                     file.CopyTo(ms);

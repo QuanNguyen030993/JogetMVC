@@ -3,6 +3,9 @@ import { CONFIG } from '../config';
 import DropDownBox from './DropDownBox';
 import SelectBox from './SelectBox';
 import CheckBox from './CheckBox';
+import TextBox from './TextBox';
+import NumberBox from './NumberBox';
+import DateBox from './Datebox';
 import * as XLSX from 'xlsx';
 
 const API_BASE_URL = CONFIG.API_URL || 'https://localhost:7254';
@@ -1510,19 +1513,9 @@ const CustomGrid = forwardRef(({
 
       if (column.editorType === 'dxDateBox' || column.editorType === 'datebox') {
         return (
-          <InlineCellEditor
+          <DateBox
             value={value ? value.substring(0, 10) : ''}
             onChange={(nextValue) => handleCellChange(rowId, column.field, nextValue)}
-            onFocus={() => {
-              if (editMode === 'cell') {
-                setActiveCell({ rowId, field: column.field });
-              }
-            }}
-            onBlur={() => {
-              if (editMode === 'cell') {
-                setActiveCell(null);
-              }
-            }}
           />
         );
       }
@@ -1565,19 +1558,9 @@ const CustomGrid = forwardRef(({
 
       if (column.editorType === 'dxNumberBox' || column.editorType === 'numberbox') {
         return (
-          <InlineCellEditor
-            value={value ?? ''}
-            onChange={(nextValue) => handleCellChange(rowId, column.field, Number(nextValue))}
-            onFocus={() => {
-              if (editMode === 'cell') {
-                setActiveCell({ rowId, field: column.field });
-              }
-            }}
-            onBlur={() => {
-              if (editMode === 'cell') {
-                setActiveCell(null);
-              }
-            }}
+          <NumberBox
+            value={value}
+            onChange={(nextValue) => handleCellChange(rowId, column.field, nextValue)}
           />
         );
       }
@@ -1599,19 +1582,9 @@ const CustomGrid = forwardRef(({
       }
 
       return (
-        <InlineCellEditor
+        <TextBox
           value={value ?? ''}
           onChange={(nextValue) => handleCellChange(rowId, column.field, nextValue)}
-          onFocus={() => {
-            if (editMode === 'cell') {
-              setActiveCell({ rowId, field: column.field });
-            }
-          }}
-          onBlur={() => {
-            if (editMode === 'cell') {
-              setActiveCell(null);
-            }
-          }}
         />
       );
     }

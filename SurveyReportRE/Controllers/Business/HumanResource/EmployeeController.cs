@@ -110,7 +110,9 @@ public class EmployeeController : BaseControllerApi<Employee>
     {
         var accountList = id
             .Split(',', StringSplitOptions.RemoveEmptyEntries)
-            .Select(x => x.Trim().ToLower())
+            .Select(x => x.Trim().ToLowerInvariant())
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
 
         var data = await _BaseRepository.GetListObject(x =>

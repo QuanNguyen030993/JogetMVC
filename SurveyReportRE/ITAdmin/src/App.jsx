@@ -18,6 +18,7 @@ import EvaluationPanel from './components/EvaluationPanel';
 import ActiveUsersPanel from './components/ActiveUsersPanel';
 import AspLogViewer from './components/AspLogViewer';
 import CustomGrid from '../../TMIVCom/src/components/CustomGrid'
+import NotificationHub from './components/NotificationHub';
 import './styles/flow.css';
 import './styles/com.all.css';
 import './styles/serilogs.css';
@@ -197,6 +198,7 @@ function App() {
     { id: 'enum-design', label: 'Cấu hình danh mục Enum' },
     { id: 'enumdata-grid', label: 'Bảng Enum Data (CustomGrid)' },
     { id: 'notification-grid', label: 'Bảng Notification (CustomGrid)' },
+    { id: 'notification-hub', label: 'Trung tâm thông báo (Notification Hub)' },
     { id: 'sladesigner', label: 'Cấu hình chỉ số SLA' }
   ];
 
@@ -283,6 +285,8 @@ function App() {
         return <CustomGrid modelName="EnumData" gridType="System" apiBaseUrl={API_BASE_URL} editMode="batch" />;
       case 'notification-grid':
         return <CustomGrid modelName="Notification" gridType="System" apiBaseUrl={API_BASE_URL} editMode="batch" />;
+      case 'notification-hub':
+        return <NotificationHub />;
       case 'sladesigner':
         return <SlaDesign />;
       default:

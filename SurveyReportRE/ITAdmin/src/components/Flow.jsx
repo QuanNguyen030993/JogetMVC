@@ -113,34 +113,61 @@ const CustomEdge = ({
     const controlX = Number.isFinite(data?.controlX) ? data.controlX : (sourceX + targetX) / 2;
     const controlY = Number.isFinite(data?.controlY) ? data.controlY : (sourceY + targetY) / 2;
 
-    const edgePath = `M ${sourceX},${sourceY} H ${controlX} V ${controlY} H ${targetX} V ${targetY}`;
+    const isSourceHorizontal = sourcePosition === Position.Left || sourcePosition === Position.Right;
+    const isTargetHorizontal = targetPosition === Position.Left || targetPosition === Position.Right;
 
-    const labelX = controlX;
-    const labelY = controlY - 20;
+    let edgePath = '';
+    let labelX = controlX;
+    let labelY = controlY - 20;
+
+    if (isSourceHorizontal && !isTargetHorizontal) {
+        edgePath = `M ${sourceX},${sourceY} H ${controlX} V ${controlY} H ${targetX} V ${targetY}`;
+    } else if (!isSourceHorizontal && isTargetHorizontal) {
+        edgePath = `M ${sourceX},${sourceY} V ${controlY} H ${controlX} V ${targetY} H ${targetX}`;
+    } else if (isSourceHorizontal && isTargetHorizontal) {
+        edgePath = `M ${sourceX},${sourceY} H ${controlX} V ${targetY} H ${targetX}`;
+        labelY = (sourceY + targetY) / 2 - 20;
+    } else {
+        edgePath = `M ${sourceX},${sourceY} V ${controlY} H ${targetX} V ${targetY}`;
+        labelX = (sourceX + targetX) / 2;
+    }
 
     const onCorner1MouseDown = (event) => {
         event.stopPropagation();
         event.preventDefault();
 
         const startMouseX = event.clientX;
+        const startMouseY = event.clientY;
         const startControlX = controlX;
+        const startControlY = controlY;
         const zoom = getZoom();
 
         const handleMouseMove = (moveEvent) => {
-            const dx = moveEvent.clientX - startMouseX;
-            const nextControlX = startControlX + dx / zoom;
-
-            setEdges((currentEdges) =>
-                currentEdges.map((edge) => {
-                    if (edge.id === id) {
-                        return {
-                            ...edge,
-                            data: { ...edge.data, controlX: nextControlX },
-                        };
-                    }
-                    return edge;
-                })
-            );
+            if (isSourceHorizontal) {
+                // Horizontal first segment -> vertical resize (ns-resize) adjusting controlY
+                const dy = moveEvent.clientY - startMouseY;
+                const nextControlY = startControlY + dy / zoom;
+                setEdges((currentEdges) =>
+                    currentEdges.map((edge) => {
+                        if (edge.id === id) {
+                            return { ...edge, data: { ...edge.data, controlY: nextControlY } };
+                        }
+                        return edge;
+                    })
+                );
+            } else {
+                // Vertical first segment -> horizontal resize (ew-resize) adjusting controlX
+                const dx = moveEvent.clientX - startMouseX;
+                const nextControlX = startControlX + dx / zoom;
+                setEdges((currentEdges) =>
+                    currentEdges.map((edge) => {
+                        if (edge.id === id) {
+                            return { ...edge, data: { ...edge.data, controlX: nextControlX } };
+                        }
+                        return edge;
+                    })
+                );
+            }
         };
 
         const handleMouseUp = () => {
@@ -199,25 +226,38 @@ const CustomEdge = ({
         event.stopPropagation();
         event.preventDefault();
 
+        const startMouseX = event.clientX;
         const startMouseY = event.clientY;
+        const startControlX = controlX;
         const startControlY = controlY;
         const zoom = getZoom();
 
         const handleMouseMove = (moveEvent) => {
-            const dy = moveEvent.clientY - startMouseY;
-            const nextControlY = startControlY + dy / zoom;
-
-            setEdges((currentEdges) =>
-                currentEdges.map((edge) => {
-                    if (edge.id === id) {
-                        return {
-                            ...edge,
-                            data: { ...edge.data, controlY: nextControlY },
-                        };
-                    }
-                    return edge;
-                })
-            );
+            if (isTargetHorizontal) {
+                // Horizontal last segment -> vertical resize (ns-resize) adjusting controlY
+                const dy = moveEvent.clientY - startMouseY;
+                const nextControlY = startControlY + dy / zoom;
+                setEdges((currentEdges) =>
+                    currentEdges.map((edge) => {
+                        if (edge.id === id) {
+                            return { ...edge, data: { ...edge.data, controlY: nextControlY } };
+                        }
+                        return edge;
+                    })
+                );
+            } else {
+                // Vertical last segment -> horizontal resize (ew-resize) adjusting controlX
+                const dx = moveEvent.clientX - startMouseX;
+                const nextControlX = startControlX + dx / zoom;
+                setEdges((currentEdges) =>
+                    currentEdges.map((edge) => {
+                        if (edge.id === id) {
+                            return { ...edge, data: { ...edge.data, controlX: nextControlX } };
+                        }
+                        return edge;
+                    })
+                );
+            }
         };
 
         const handleMouseUp = () => {
@@ -238,18 +278,18 @@ const CustomEdge = ({
                 d={edgePath}
                 markerEnd={markerEnd}
             />
-            {/* Corner 1: Horizontal adjust */}
+            {/* Corner 1: Dynamic start axis adjust */}
             <circle
-                cx={controlX}
-                cy={sourceY}
+                cx={isSourceHorizontal ? controlX : sourceX}
+                cy={isSourceHorizontal ? sourceY : controlY}
                 r={selected ? 7 : 5}
                 fill={selected ? '#2563eb' : '#94a3b8'}
                 stroke="#fff"
                 strokeWidth={1.5}
-                style={{ cursor: 'ew-resize', pointerEvents: 'all', opacity: selected ? 1.0 : 0.6 }}
+                style={{ cursor: isSourceHorizontal ? 'ns-resize' : 'ew-resize', pointerEvents: 'all', opacity: selected ? 1.0 : 0.6 }}
                 onMouseDown={onCorner1MouseDown}
             />
-            {/* Corner 2: Both axes adjust */}
+            {/* Corner 2: Both axes adjust (Midpoint handle) */}
             <circle
                 cx={controlX}
                 cy={controlY}
@@ -260,15 +300,15 @@ const CustomEdge = ({
                 style={{ cursor: 'move', pointerEvents: 'all', opacity: selected ? 1.0 : 0.6 }}
                 onMouseDown={onCorner2MouseDown}
             />
-            {/* Corner 3: Vertical adjust */}
+            {/* Corner 3: Dynamic end axis adjust */}
             <circle
-                cx={targetX}
-                cy={controlY}
+                cx={isTargetHorizontal ? controlX : targetX}
+                cy={isTargetHorizontal ? targetY : controlY}
                 r={selected ? 7 : 5}
                 fill={selected ? '#10b981' : '#64748b'}
                 stroke="#fff"
                 strokeWidth={1.5}
-                style={{ cursor: 'ns-resize', pointerEvents: 'all', opacity: selected ? 1.0 : 0.6 }}
+                style={{ cursor: isTargetHorizontal ? 'ns-resize' : 'ew-resize', pointerEvents: 'all', opacity: selected ? 1.0 : 0.6 }}
                 onMouseDown={onCorner3MouseDown}
             />
             {label && (
@@ -468,6 +508,7 @@ const mapWorkflowNodes = (workflowNodes = [], scaleX = 1.0, scaleY = 1.0) =>
                 allowLoop: !!node.allowLoop,
                 loopGroup: node.loopGroup || '',
                 screenConditions: parsedScreenConditions,
+                custom: node.custom || '',
             },
             style: createNodeStyle(node),
         };
@@ -550,12 +591,12 @@ const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) 
             id: `edge-${transition.fromNodeId || transition.from || 'from'}-${transition.toNodeId || transition.to || 'to'}-${index}`,
             source: String(transition.fromNodeId || transition.from || ''),
             target: String(transition.toNodeId || transition.to || ''),
-            animated: Boolean(hasCommand),
+            animated: !hasCommand,
             type: 'custom',
             label: formatTransitionLabel(transition.actionName || transition.actionCode, transition.statusName || transition.statusId, transition.command),
             style: isReturn
-                ? { stroke: '#dc2626', strokeWidth: 3, strokeDasharray: hasCommand ? '5,5' : undefined }
-                : { stroke: '#2563eb', strokeWidth: 2, strokeDasharray: hasCommand ? '5,5' : undefined },
+                ? { stroke: '#dc2626', strokeWidth: 3 }
+                : { stroke: '#2563eb', strokeWidth: 2 },
             markerEnd: {
                 type: MarkerType.ArrowClosed,
                 width: 16,
@@ -606,6 +647,12 @@ const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) 
                         return parsed.notificationTemplateId || '';
                     } catch (e) { return ''; }
                 })(),
+                custom: (() => {
+                    try {
+                        const parsed = typeof transition.data === 'string' ? JSON.parse(transition.data) : (transition.data || {});
+                        return parsed.custom || '';
+                    } catch (e) { return ''; }
+                })(),
                 controlX: Number.isFinite(transition.controlX) ? transition.controlX * scaleX : null,
                 controlY: Number.isFinite(transition.controlY) ? transition.controlY * scaleY : null,
             },
@@ -641,20 +688,44 @@ const WorkflowNode = ({ data, selected }) => {
             {data.subtitle && <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>{data.subtitle}</div>}
             
             {/* Top handles */}
-            <Handle type="source" position={Position.Top} id="top-src" style={{ left: '35%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
-            <Handle type="target" position={Position.Top} id="top-tgt" style={{ left: '65%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Top} id="top-src-1" style={{ left: '15%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Top} id="top-src-2" style={{ left: '25%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Top} id="top-src-3" style={{ left: '35%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Top} id="top-src" style={{ left: '48%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Top} id="top-tgt" style={{ left: '52%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Top} id="top-tgt-1" style={{ left: '65%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Top} id="top-tgt-2" style={{ left: '75%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Top} id="top-tgt-3" style={{ left: '85%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
 
             {/* Bottom handles */}
-            <Handle type="source" position={Position.Bottom} id="bottom-src" style={{ left: '35%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
-            <Handle type="target" position={Position.Bottom} id="bottom-tgt" style={{ left: '65%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Bottom} id="bottom-src-1" style={{ left: '15%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Bottom} id="bottom-src-2" style={{ left: '25%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Bottom} id="bottom-src-3" style={{ left: '35%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Bottom} id="bottom-src" style={{ left: '48%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Bottom} id="bottom-tgt" style={{ left: '52%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Bottom} id="bottom-tgt-1" style={{ left: '65%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Bottom} id="bottom-tgt-2" style={{ left: '75%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Bottom} id="bottom-tgt-3" style={{ left: '85%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
 
             {/* Left handles */}
-            <Handle type="source" position={Position.Left} id="left-src" style={{ top: '35%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
-            <Handle type="target" position={Position.Left} id="left-tgt" style={{ top: '65%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Left} id="left-src-1" style={{ top: '15%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Left} id="left-src-2" style={{ top: '25%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Left} id="left-src-3" style={{ top: '35%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Left} id="left-src" style={{ top: '48%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Left} id="left-tgt" style={{ top: '52%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Left} id="left-tgt-1" style={{ top: '65%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Left} id="left-tgt-2" style={{ top: '75%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Left} id="left-tgt-3" style={{ top: '85%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
 
             {/* Right handles */}
-            <Handle type="source" position={Position.Right} id="right-src" style={{ top: '35%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
-            <Handle type="target" position={Position.Right} id="right-tgt" style={{ top: '65%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Right} id="right-src-1" style={{ top: '15%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Right} id="right-src-2" style={{ top: '25%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Right} id="right-src-3" style={{ top: '35%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Right} id="right-src" style={{ top: '48%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Right} id="right-tgt" style={{ top: '52%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Right} id="right-tgt-1" style={{ top: '65%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Right} id="right-tgt-2" style={{ top: '75%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Right} id="right-tgt-3" style={{ top: '85%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
         </div>
     );
 };
@@ -871,7 +942,7 @@ function Flow({ id: propId }) {
                 id: `edge-${params.source}-${params.target}-${Date.now()}`,
                 source: params.source,
                 target: params.target,
-                animated: false,
+                animated: true,
                 type: 'custom',
                 label: 'New transition',
                 style: { stroke: '#2563eb', strokeWidth: 2 },
@@ -1014,7 +1085,8 @@ function Flow({ id: propId }) {
                     description: node.data.description || '',
                     sortOrder: index + 1,
                     orderNo: index + 1,
-                    screenConditions: node.data.screenConditions || []
+                    screenConditions: node.data.screenConditions || [],
+                    custom: node.data.custom || ''
                 };
             });
 
@@ -1061,7 +1133,8 @@ function Flow({ id: propId }) {
                         icon: edge.data?.icon || '',
                         buttonClass: edge.data?.buttonClass || '',
                         mailTemplateId: edge.data?.mailTemplateId || null,
-                        notificationTemplateId: edge.data?.notificationTemplateId || null
+                        notificationTemplateId: edge.data?.notificationTemplateId || null,
+                        custom: edge.data?.custom || ''
                     },
                     controlX: edge.data?.controlX ? Math.round(edge.data.controlX / scaleX) : null,
                     controlY: edge.data?.controlY ? Math.round(edge.data.controlY / scaleY) : null,
@@ -1638,10 +1711,10 @@ function Flow({ id: propId }) {
                 ...(matched || selectedEdge),
                 label: formatTransitionLabel(nextData.actionName, nextData.statusName || nextData.statusId, nextData.command),
                 data: nextData,
-                animated: Boolean(hasCommand),
+                animated: !hasCommand,
                 style: isReturn
-                    ? { stroke: '#dc2626', strokeWidth: 3, strokeDasharray: hasCommand ? '5,5' : undefined }
-                    : { stroke: '#2563eb', strokeWidth: 2, strokeDasharray: hasCommand ? '5,5' : undefined },
+                    ? { stroke: '#dc2626', strokeWidth: 3 }
+                    : { stroke: '#2563eb', strokeWidth: 2 },
                 markerEnd: {
                     type: MarkerType.ArrowClosed,
                     width: 16,
@@ -1873,6 +1946,16 @@ function Flow({ id: propId }) {
                         <option value="custom">Custom</option>
                     </select>
                 </label>
+                {selectedNode.data.nodeType === 'custom' && (
+                    <label>
+                        <span>Vị trí Binding (Custom Key)</span>
+                        <input
+                            value={selectedNode.data.custom || ''}
+                            placeholder="Ví dụ: name của group trong dxForm"
+                            onChange={(event) => updateSelectedNode('custom', event.target.value)}
+                        />
+                    </label>
+                )}
                 {lanesList.length > 0 && (
                     <label>
                         <span>Lane (Phân làn)</span>
@@ -2207,8 +2290,19 @@ function Flow({ id: propId }) {
                         <option value="Normal">Normal</option>
                         <option value="Loop">Loop</option>
                         <option value="Condition">Condition</option>
+                        <option value="Custom">Custom</option>
                     </select>
                 </label>
+                {selectedEdge.data?.transitionType === 'Custom' && (
+                    <label>
+                        <span>Vị trí Binding (Custom Key)</span>
+                        <input
+                            value={selectedEdge.data?.custom || ''}
+                            placeholder="Ví dụ: name của group trong dxForm"
+                            onChange={(event) => updateSelectedEdge('custom', event.target.value)}
+                        />
+                    </label>
+                )}
                 <label>
                     <span>Status (Trạng thái)</span>
                     <select

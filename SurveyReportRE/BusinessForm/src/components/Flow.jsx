@@ -583,20 +583,44 @@ const WorkflowNode = ({ data, selected }) => {
             {data.subtitle && <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>{data.subtitle}</div>}
             
             {/* Top handles */}
-            <Handle type="source" position={Position.Top} id="top-src" style={{ left: '35%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
-            <Handle type="target" position={Position.Top} id="top-tgt" style={{ left: '65%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Top} id="top-src-1" style={{ left: '15%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Top} id="top-src-2" style={{ left: '25%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Top} id="top-src-3" style={{ left: '35%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Top} id="top-src" style={{ left: '48%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Top} id="top-tgt" style={{ left: '52%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Top} id="top-tgt-1" style={{ left: '65%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Top} id="top-tgt-2" style={{ left: '75%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Top} id="top-tgt-3" style={{ left: '85%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
 
             {/* Bottom handles */}
-            <Handle type="source" position={Position.Bottom} id="bottom-src" style={{ left: '35%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
-            <Handle type="target" position={Position.Bottom} id="bottom-tgt" style={{ left: '65%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Bottom} id="bottom-src-1" style={{ left: '15%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Bottom} id="bottom-src-2" style={{ left: '25%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Bottom} id="bottom-src-3" style={{ left: '35%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Bottom} id="bottom-src" style={{ left: '48%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Bottom} id="bottom-tgt" style={{ left: '52%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Bottom} id="bottom-tgt-1" style={{ left: '65%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Bottom} id="bottom-tgt-2" style={{ left: '75%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Bottom} id="bottom-tgt-3" style={{ left: '85%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
 
             {/* Left handles */}
-            <Handle type="source" position={Position.Left} id="left-src" style={{ top: '35%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
-            <Handle type="target" position={Position.Left} id="left-tgt" style={{ top: '65%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Left} id="left-src-1" style={{ top: '15%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Left} id="left-src-2" style={{ top: '25%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Left} id="left-src-3" style={{ top: '35%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Left} id="left-src" style={{ top: '48%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Left} id="left-tgt" style={{ top: '52%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Left} id="left-tgt-1" style={{ top: '65%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Left} id="left-tgt-2" style={{ top: '75%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Left} id="left-tgt-3" style={{ top: '85%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
 
             {/* Right handles */}
-            <Handle type="source" position={Position.Right} id="right-src" style={{ top: '35%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
-            <Handle type="target" position={Position.Right} id="right-tgt" style={{ top: '65%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Right} id="right-src-1" style={{ top: '15%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Right} id="right-src-2" style={{ top: '25%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Right} id="right-src-3" style={{ top: '35%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="source" position={Position.Right} id="right-src" style={{ top: '48%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Right} id="right-tgt" style={{ top: '52%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Right} id="right-tgt-1" style={{ top: '65%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Right} id="right-tgt-2" style={{ top: '75%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+            <Handle type="target" position={Position.Right} id="right-tgt-3" style={{ top: '85%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
         </div>
     );
 };

@@ -712,7 +712,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
 
         var entity = new PolicyIssuance();
         JsonConvert.PopulateObject(form.values, entity);
-        _BaseRepository.UpdateData(entity, form.values, form.key, "Id");
+        _BaseRepository.UpdateData(entity, form.values, form.key, "Id").GetAwaiter().GetResult();
 
         Task.Run(async () =>
         {

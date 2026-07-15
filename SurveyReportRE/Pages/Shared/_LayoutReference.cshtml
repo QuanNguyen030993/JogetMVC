@@ -1,3 +1,12 @@
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@{
+    var configuredUploadMaxFileSizeMb = 50;
+    int.TryParse(Configuration["Upload:MaxFileSizeMB"], out configuredUploadMaxFileSizeMb);
+    if (configuredUploadMaxFileSizeMb <= 0)
+    {
+        configuredUploadMaxFileSizeMb = 50;
+    }
+}
 <!--CSS variables-->
 <link href="~/css/constant/rootstats.css" rel="stylesheet" type="text/css" />
 <!-- Colors gathered from Pages CSHTML/JS -->
@@ -429,6 +438,18 @@
     loadedConfig: [],
     loadedSTConfig: []
     };
+    window.UploadConfig = Object.freeze({
+        maxFileSizeMB: @configuredUploadMaxFileSizeMb,
+        maxFileSize: @((long)configuredUploadMaxFileSizeMb * 1024 * 1024)
+    });
+    if (window.DevExpress?.ui?.dxFileUploader?.defaultOptions) {
+        DevExpress.ui.dxFileUploader.defaultOptions({
+            options: {
+                maxFileSize: window.UploadConfig.maxFileSize,
+                invalidMaxFileSizeMessage: `File exceeds the ${window.UploadConfig.maxFileSizeMB} MB upload limit.`
+            }
+        });
+    }
     window.QuotationPage = {
     state: {
         quotes: [],

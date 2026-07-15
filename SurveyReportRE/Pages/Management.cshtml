@@ -1003,6 +1003,69 @@
         return { updated: unreadItems.length - failed, failed };
     }
 
+    function initNotificationFilterScroller($toolbar) {
+        const $scroller = $toolbar.find(".notif-filters");
+        const $shell = $toolbar.find(".notif-filter-shell");
+        const scroller = $scroller[0];
+        if (!scroller) return;
+
+        let pointerId = null;
+        let startX = 0;
+        let startScrollLeft = 0;
+        let dragMoved = false;
+
+        const updateOverflowIndicator = function () {
+            const hasMoreRight = scroller.scrollLeft + scroller.clientWidth < scroller.scrollWidth - 2;
+            $shell.toggleClass("has-more-right", hasMoreRight);
+        };
+
+        scroller.addEventListener("pointerdown", function (event) {
+            if (event.pointerType === "mouse" && event.button !== 0) return;
+            pointerId = event.pointerId;
+            startX = event.clientX;
+            startScrollLeft = scroller.scrollLeft;
+            dragMoved = false;
+            scroller.setPointerCapture?.(pointerId);
+            $scroller.addClass("is-dragging");
+        });
+
+        scroller.addEventListener("pointermove", function (event) {
+            if (pointerId !== event.pointerId) return;
+            const deltaX = event.clientX - startX;
+            if (Math.abs(deltaX) > 4) dragMoved = true;
+            scroller.scrollLeft = startScrollLeft - deltaX;
+            updateOverflowIndicator();
+        });
+
+        const stopDragging = function (event) {
+            if (pointerId !== event.pointerId) return;
+            if (dragMoved) {
+                $scroller.data("suppressFilterClick", true);
+                setTimeout(() => $scroller.removeData("suppressFilterClick"), 80);
+            }
+            scroller.releasePointerCapture?.(pointerId);
+            pointerId = null;
+            $scroller.removeClass("is-dragging");
+            updateOverflowIndicator();
+        };
+
+        scroller.addEventListener("pointerup", stopDragging);
+        scroller.addEventListener("pointercancel", stopDragging);
+        scroller.addEventListener("scroll", updateOverflowIndicator, { passive: true });
+        scroller.addEventListener("wheel", function (event) {
+            if (scroller.scrollWidth <= scroller.clientWidth || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+            scroller.scrollLeft += event.deltaY;
+            event.preventDefault();
+            updateOverflowIndicator();
+        }, { passive: false });
+        scroller.addEventListener("dragstart", event => event.preventDefault());
+
+        if (window.ResizeObserver) {
+            new ResizeObserver(updateOverflowIndicator).observe(scroller);
+        }
+        requestAnimationFrame(updateOverflowIndicator);
+    }
+
     function ensureNotificationPopup() {
         if (_notif.popover) return;
 
@@ -1027,7 +1090,8 @@
                       <div id="notifMarkAllBtn"></div>
                       <div style="margin-left:auto; opacity:.7; font-size:12px;" id="notifHint"></div>
                     </div>
-                    <div class="notif-filters" style="display:flex; flex-wrap:wrap; gap:6px; padding:0 10px 10px 10px; border-bottom:1px solid var(--c-rgba-0-0-0-06);">
+                    <div class="notif-filter-shell">
+                    <div class="notif-filters">
                         <span class="filter-btn active" data-filter="all" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: var(--c-3b82f6); color: var(--c-ffffff); transition: all 0.2s ease;">All</span>
                         <span class="filter-btn" data-filter="unread" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: var(--c-f1f5f9); color: var(--c-64748b); transition: all 0.2s ease;">Unread</span>
                         <span class="filter-btn" data-filter="default" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: var(--c-f1f5f9); color: var(--c-64748b); transition: all 0.2s ease;">Default</span>
@@ -1042,12 +1106,19 @@
                         <span class="filter-btn" data-filter="reminder" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: var(--c-f1f5f9); color: var(--c-64748b); transition: all 0.2s ease;">Reminder</span>
                         <span class="filter-btn" data-filter="alert" style="padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; background: var(--c-f1f5f9); color: var(--c-64748b); transition: all 0.2s ease;">Alert</span>
                     </div>
+                    <div class="notif-filter-overflow" aria-hidden="true">…</div>
+                    </div>
                     <div id="notifList" style="padding: 10px"></div>
                 `);
 
                 $(contentEl).append($toolbar);
+                initNotificationFilterScroller($toolbar);
 
-                $toolbar.find(".filter-btn").on("click", function() {
+                $toolbar.find(".filter-btn").on("click", function(event) {
+                    if ($toolbar.find(".notif-filters").data("suppressFilterClick")) {
+                        event.preventDefault();
+                        return;
+                    }
                     $toolbar.find(".filter-btn").css({background: window.AppColors.c_f1f5f9, color: window.AppColors.c_64748b});
                     $(this).css({background: window.AppColors.c_3b82f6, color: window.AppColors.c_ffffff});
                     _notif.currentFilter = $(this).data("filter");
@@ -1097,12 +1168,12 @@
                                   <span style="display:${isUnread ? "inline-block" : "none"}; width:8px; height:8px; border-radius:50%; background:var(--c-ff3b30);"></span>
                                 </div>
                                 <div style="flex:1;">
-                                  <div style="display:flex; justify-content:space-between; gap:8px;">
-                                    <div style="font-weight:${isUnread ? 700 : 600}; display: flex; align-items: center;">
+                                  <div class="notif-item-heading">
+                                    <div class="notif-item-title" style="font-weight:${isUnread ? 700 : 600};">
                                       ${typeBadge}
-                                      <span>${escapeHtml(title)}</span>
+                                      <span class="notif-item-title-text">${escapeHtml(title)}</span>
                                     </div>
-                                    <div style="opacity:.6; font-size:12px; white-space:nowrap;">${timeText}</div>
+                                    <div class="notif-item-time">${timeText}</div>
                                   </div>
                                   <div class="notif-message-preview rich-html-preview">
                                     ${itemData.message || ""}
@@ -1156,7 +1227,11 @@
     function formatTime(dt) {
            try {
                const d = (dt instanceof Date) ? dt : new Date(dt);
-               return d.toLocaleString();
+               if (Number.isNaN(d.getTime())) return "";
+               return d.toLocaleTimeString("en-US", {
+                   hour: "numeric",
+                   minute: "2-digit"
+               });
            } catch { return ""; }
        }
 

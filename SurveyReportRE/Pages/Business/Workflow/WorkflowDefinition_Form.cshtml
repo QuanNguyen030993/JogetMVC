@@ -1480,6 +1480,29 @@
                 nodeMap[n.id] = n;
             });
 
+            function buildRouteData(t) {
+                var routeData = typeof t.conditionJson === "string"
+                    ? (safeParseJson(t.conditionJson, {}) || {})
+                    : (t.conditionJson || {});
+                if (typeof routeData !== "object" || Array.isArray(routeData)) {
+                    routeData = {};
+                }
+
+                if (t.buttonPlacement && t.buttonPlacement !== "footer") {
+                    routeData.buttonPlacement = t.buttonPlacement;
+                } else {
+                    delete routeData.buttonPlacement;
+                }
+
+                if (t.buttonPlacement === "custom" && t.buttonGroupName) {
+                    routeData.buttonGroupName = String(t.buttonGroupName).trim();
+                } else {
+                    delete routeData.buttonGroupName;
+                }
+
+                return JSON.stringify(routeData);
+            }
+
             return transitions.map(function (t, index) {
                 const fromNode = nodeMap[t.fromNodeId] || {};
                 const toNode = t.toNodeId ? (nodeMap[t.toNodeId] || {}) : null;
@@ -1524,9 +1547,7 @@
                     uiMode: uiMode,
 
                     actionCode: t.actionCode || null,
-                    data: JSON.stringify(
-                        t.conditionJson || {}
-                    ),
+                    data: buildRouteData(t),
 
                     fromNodeId: t.fromNodeId || null,
                     fnodeId: t.fromNodeId || null,
@@ -2016,6 +2037,29 @@
                     {
                         dataField: "actionName",
                         label: { text: "Action Name" }
+                    },
+                    {
+                        dataField: "buttonPlacement",
+                        label: { text: "UW Button Placement" },
+                        editorType: "dxSelectBox",
+                        editorOptions: {
+                            dataSource: [
+                                { value: "footer", text: "Footer (default)" },
+                                { value: "decision", text: "Decision" },
+                                { value: "custom", text: "Custom dxForm group" }
+                            ],
+                            valueExpr: "value",
+                            displayExpr: "text",
+                            showClearButton: false
+                        }
+                    },
+                    {
+                        dataField: "buttonGroupName",
+                        label: { text: "Custom dxForm Group Name" },
+                        editorType: "dxTextBox",
+                        editorOptions: {
+                            placeholder: "Example: uwDecisionGroup"
+                        }
                     },
                     {
                         dataField: "stepNo",
@@ -2913,6 +2957,8 @@
                             maxLoopCount: null,
                             isExitTransition: false,
                             userDecisionLabel: sourceId === targetId ? "Loop" : "",
+                            buttonPlacement: "footer",
+                            buttonGroupName: "",
                             conditionJson: ""
                         };
 

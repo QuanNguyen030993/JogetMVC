@@ -217,23 +217,23 @@ function startSignalRConnection() {
         showPopupNotification(items.title,
             items.message);
     });
-        connectionSignR.on("R_ItemSubmitted", function (items) {
-            debugger
+    connectionSignR.on("R_ItemSubmitted", function (items) {
             signalRBlink();
-            if (items.type === "Quotation") {
-                if (typeof window.reloadCurrentTabView === "function"
-                    && window.reloadCurrentTabView(e.element)) {
+            if (items.type === "Quotation" || items.type === "PolicyIssuance") {
+                if (typeof window.reloadWorkflowViewComponents === "function") {
+                    window.reloadWorkflowViewComponents(items.type, items.id)
+                        .catch(function (err) {
+                            console.error("Submitted item reload failed", err);
+                        });
                     return;
                 }
-                debugger
-                const moduleCode = "qt";
-                const viewInstanceKey = `qt:${items.id}`;
-                const viewInstance = window.OverviewViewRegistry?.[viewInstanceKey];
-                if (typeof viewInstance?.reload === "function") {
-                    viewInstance.reload();
-                    return;
+
+                const reloadComponents = items.type === "PolicyIssuance"
+                    ? window.reloadPolicyIssuanceComponents
+                    : window.reloadQuotationComponents;
+                if (typeof reloadComponents === "function") {
+                    reloadComponents(items.id);
                 }
-                window.reloadQuotationComponents(items.id);
                 //const reloadComponents = moduleCode === "pi"
                 //    ? window.reloadPolicyIssuanceComponents
                 //    : window.reloadQuotationComponents;

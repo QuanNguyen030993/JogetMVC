@@ -2423,6 +2423,58 @@
         }
 
     }
+
+        async function persistDepartmentAssignment(schemeName, recordId, dept, store, values, formId) {
+            var normalizedScheme = String(schemeName || "").replace(/\s+/g, "").toLowerCase();
+            var moduleCode = normalizedScheme === "policyissuance" ? "pi" : "qt";
+            var controllerName = moduleCode === "pi" ? "PolicyIssuance" : "Quotation";
+            var reloadKey = `${moduleCode}:${recordId}`;
+            var updateCompleted = false;
+
+            // Suppress the R_ItemSubmitted event raised by UpdateData. The final
+            // refresh must happen only after AssignTask has read the saved PIC.
+            window.WorkflowViewReloadState = window.WorkflowViewReloadState || {};
+            window.WorkflowViewReloadState[reloadKey] = Number.POSITIVE_INFINITY;
+            var loadingContext = beginWorkflowViewLoading(
+                controllerName,
+                recordId,
+                `Assigning ${dept} member…`
+            );
+
+            try {
+                await Promise.resolve(store.update(recordId, values));
+                updateCompleted = true;
+                await Promise.resolve(
+                    ajaxGet(`/api/${controllerName}/AssignTask/${recordId}/${dept}/${_loginUser}`, null)
+                );
+            } catch (err) {
+                console.error(`${controllerName} assignment failed`, err);
+                failWorkflowViewLoading(loadingContext, "Assignment failed");
+                if (typeof appNotifyWarning === "function") {
+                    appNotifyWarning("Assignment could not be completed. Please try again.", false);
+                }
+            } finally {
+                if (updateCompleted) {
+                    try {
+                        var reloaded = await reloadWorkflowViewComponents(
+                            controllerName,
+                            recordId,
+                            document.getElementById(formId),
+                            true
+                        );
+                        if (!reloaded) {
+                            failWorkflowViewLoading(loadingContext, "Assignment refresh unavailable");
+                        }
+                    } catch (reloadError) {
+                        failWorkflowViewLoading(loadingContext, "Assignment refresh failed");
+                        console.error(`${controllerName} assignment reload failed`, reloadError);
+                    }
+                } else {
+                    delete window.WorkflowViewReloadState[reloadKey];
+                }
+            }
+        }
+
         function initDepartmentAssignees(moduleKey, data , timeout = _delayRenderAssigneeBox) {
             var pageLayout = window.QuotationPage;
             var stateLayout = pageLayout.state;
@@ -2484,16 +2536,14 @@
 
                                 var data = new Object();
                                 data.pIC = JSON.stringify(PICs);
-                                        store.update(this.dataForm.id, data)
-                                    .done(function () {
-                                        // DevExpress.ui.notify(`Assigned To ${itemChild.fullName}`, "success", 2000);
-                                    });
-                                        ajaxGet(`/api/Quotation/AssignTask/${this.dataForm.id}/${item}/${_loginUser}`,null )
-                                    .then(list => {
-                                        if (typeof window.reloadQuotationComponents === "function") {
-                                             window.reloadQuotationComponents();
-                                         }
-                                    });
+                                persistDepartmentAssignment(
+                                    "Quotation",
+                                    this.dataForm.id,
+                                    item,
+                                    store,
+                                    data,
+                                    formId
+                                );
                             }
                         });
                     }, timeout);
@@ -2556,16 +2606,14 @@
 
                                 var data = new Object();
                                 data.pIC = JSON.stringify(PICs);
-                                store.update(this.dataForm.id, data)
-                                    .done(function () {
-                                        // DevExpress.ui.notify(`Assigned To ${itemChild.fullName}`, "success", 2000);
-                                    });
-                                ajaxGet(`/api/PolicyIssuance/AssignTask/${this.dataForm.id}/${item}/${_loginUser}`, null)
-                                    .then(() => {
-                                        if (typeof window.reloadPolicyIssuanceComponents === "function") {
-                                            window.reloadPolicyIssuanceComponents();
-                                        }
-                                    });
+                                persistDepartmentAssignment(
+                                    "PolicyIssuance",
+                                    this.dataForm.id,
+                                    item,
+                                    store,
+                                    data,
+                                    formId
+                                );
                             }
                         });
                     }, timeout);
@@ -2814,7 +2862,17 @@
             var placement = route?.buttonPlacement || routeData.buttonPlacement || fallbackPlacement || "footer";
             placement = String(placement).trim().toLowerCase();
 
-            return placement === "decision" ? "decision" : "footer";
+            return ["decision", "custom"].includes(placement) ? placement : "footer";
+        }
+
+        function getTransitionButtonGroupName(route, fallbackGroupName) {
+            var routeData = safeJsonParse(route?.data) || {};
+            return String(
+                route?.buttonGroupName
+                || routeData.buttonGroupName
+                || fallbackGroupName
+                || ""
+            ).trim();
         }
 
         function applyTransitionButtonClass(selector, route, fallbackClass) {
@@ -2893,15 +2951,28 @@
                 var flowName = "";
                 if (moduleName === "qt") flowName = "Quotation";
                 if (moduleName === "pi") flowName = "PolicyIssuance";
+                var loadingContext = beginWorkflowViewLoading(
+                    flowName,
+                    formItems.id,
+                    `Submitting to ${findRoute.toNodeId}…`
+                );
 
-                        ajaxPost(`/api/InstanceWorkflow/${flowName}SubmitNextStep`, sendData, {processData: true,
+                        return ajaxPost(`/api/InstanceWorkflow/${flowName}SubmitNextStep`, sendData, {processData: true,
                     onSuccess: function (response) {
                         appNotifySuccess(`Submitted to ${findRoute.toNodeId}`, false);
+                        reloadWorkflowViewComponents(flowName, formItems.id, null, true)
+                            .then(function (reloaded) {
+                                if (!reloaded) failWorkflowViewLoading(loadingContext, "Workflow refresh unavailable");
+                            })
+                            .catch(function (err) {
+                                failWorkflowViewLoading(loadingContext, "Workflow refresh failed");
+                                console.error("Submit route reload failed", err);
+                            });
                     },
                     onError: function (err) {
+                        failWorkflowViewLoading(loadingContext, "Submit failed");
                     }
                 });
-                DevExpress.ui.notify("Submitted !", "Success");
             }
             else {
                 DevExpress.ui.notify(condition.message, condition.validateType);
@@ -2935,14 +3006,27 @@
                      var flowName = "";
                     if (moduleName === "qt") flowName = "Quotation";
                     if (moduleName === "pi") flowName = "PolicyIssuance";
-                    ajaxPost(`/api/InstanceWorkflow/${flowName}ReturnToStep`, sendData, {
+                    var loadingContext = beginWorkflowViewLoading(
+                        flowName,
+                        formItems.id,
+                        `Returning to ${findRoute.toNodeId}…`
+                    );
+                    return ajaxPost(`/api/InstanceWorkflow/${flowName}ReturnToStep`, sendData, {
                     onSuccess: function (response) {
                         appNotifySuccess(`Submitted to ${findRoute.toNodeId}`, false);
+                        reloadWorkflowViewComponents(flowName, formItems.id, null, true)
+                            .then(function (reloaded) {
+                                if (!reloaded) failWorkflowViewLoading(loadingContext, "Workflow refresh unavailable");
+                            })
+                            .catch(function (err) {
+                                failWorkflowViewLoading(loadingContext, "Workflow refresh failed");
+                                console.error("Return route reload failed", err);
+                            });
                     },
                     onError: function (err) {
+                        failWorkflowViewLoading(loadingContext, "Return failed");
                     }
                 });
-                DevExpress.ui.notify("Submitted !", "Success");
             }
             else {
                 DevExpress.ui.notify(condition.message, condition.validateType);
@@ -3338,7 +3422,8 @@
           else {
                        const $preview = $(`#attList_${editorOptions.controlId}_${renderTime}`);
                   var data = [];
-                      var uploader = $(`#fileUpload_${editorOptions.controlId}`).dxFileUploader("instance");
+                      var uploader = $(`#fileUpload_${editorOptions.controlId}_${renderTime}`).dxFileUploader("instance");
+                      if (!uploader) return;
                   data = uploader.option("value") || [];
                             renderAttachmentListLazy(data, $preview, {
                                 batchSize: 6,
@@ -3422,6 +3507,14 @@
             uploaderAllow = !!sectionPermission;
         }
         editorOptionsIn.uploaderAllow = uploaderAllow;
+        const configuredMaxFileSize = Number(
+            editorOptionsIn.maxFileSize
+            || options.maxFileSize
+            || ((editorOptionsIn.maxFileSizeMB || options.maxFileSizeMB) * 1024 * 1024)
+            || window.UploadConfig?.maxFileSize
+            || (50 * 1024 * 1024)
+        );
+        const configuredMaxFileSizeMB = Math.round((configuredMaxFileSize / 1024 / 1024) * 100) / 100;
         // const currentOptions = getCurrentFormOptions(editorOptionsIn) || {};
         // currentOptions.guid = editorOptionsIn.guid || "";
         // const ids = getDxFileUploaderIds(editorOptionsIn);
@@ -3431,6 +3524,24 @@
         $(`#${editorOptionsIn.previewId}`).remove();
         $(`#${controlId}`).remove();
         //const $preview =  $(`<div id="${previewId}" style="display:flex;flex-wrap:wrap;gap:25px;top:10px"></div>`)
+        const dropZoneId = `attachmentDropZone_${controlId}_${renderTime}`;
+        const $dropZone = $(`
+            <div id="${dropZoneId}"
+                 class="attachment-drop-zone${uploaderAllow ? "" : " is-disabled"}"
+                 role="button"
+                 tabindex="${uploaderAllow ? "0" : "-1"}"
+                 aria-disabled="${uploaderAllow ? "false" : "true"}">
+                <span class="dx-icon dx-icon-upload attachment-drop-zone__icon" aria-hidden="true"></span>
+                <span class="attachment-drop-zone__content">
+                    <strong>
+                        <span class="attachment-drop-zone__compact-label">Upload attachments</span>
+                        <span class="attachment-drop-zone__drop-label">Drop files here</span>
+                    </strong>
+                    <span class="attachment-drop-zone__hint">or click to browse from your computer</span>
+                </span>
+            </div>`)
+            .toggle(!!isRenderUploader)
+            .appendTo($container);
         const $preview = $(`<div id="attList_${controlId}_${renderTime}" class="att-preview"></div>`)
             .appendTo($container);
         const $uploader = $(`<div id="fileUpload_${controlId}_${renderTime}"></div>`)
@@ -3443,8 +3554,11 @@
                 disabled: !uploaderAllow,
                 multiple: true,
                 accept: options.accept || "*/*",
+                maxFileSize: configuredMaxFileSize,
+                invalidMaxFileSizeMessage: `File exceeds the ${configuredMaxFileSizeMB} MB upload limit.`,
                 selectButtonText: editorOptionsIn.titleName || `Upload Attachments`,
-                dropZone: `#attList_${controlId}_${renderTime}`,
+                dropZone: `#${dropZoneId}`,
+                dialogTrigger: `#${dropZoneId}`,
                 labelText: "",
                 uploadMode: editorOptionsIn.uploadMode ? editorOptionsIn.uploadMode : "instantly",
                 uploadUrl: options.uploadUrl || `/api/Attachment/AsyncUploadFile`,
@@ -3456,11 +3570,24 @@
                     //updateDxFileUploaderHeaders(editorOptionsIn);
                 },
                 onUploadStarted: function (e) {
+                         $dropZone.removeClass("is-dragging").addClass("is-uploading");
                          // makeMiniLoadingPanel(`Uploading file ${e.file.name}`, "Please wait...");
                          makeMiniLoadingPanel(`Uploading file`, "Please wait...");
                     // showUploaderLoader(editorOptionsIn.uploaderId, "File loading...");
                 },
                 onValueChanged: function(e){
+                    $dropZone.removeClass("is-dragging");
+                    const oversizedFile = (e.value || []).find(file => file.size > configuredMaxFileSize);
+                    if (oversizedFile) {
+                        const message = `${oversizedFile.name} exceeds the ${configuredMaxFileSizeMB} MB upload limit.`;
+                        if (typeof appNotifyWarning === "function") {
+                            appNotifyWarning(message, false);
+                        } else {
+                            DevExpress.ui.notify(message, "warning", 3000);
+                        }
+                        e.component.reset();
+                        return;
+                    }
                     if (editorOptionsIn.uploadMode != "instantly")
                     loadDxFileUploaderAttachments(editorOptionsIn.controlId, controllerName, editorOptionsIn, renderTime)
                 },
@@ -3484,6 +3611,7 @@
 
                 },
                 onUploaded: function (e) {
+                        $dropZone.removeClass("is-dragging is-uploading");
                         var result = new Object();
                              result.payload = new Object();
                              result.payload.progressvalue = 100;
@@ -3492,6 +3620,19 @@
                     loadDxFileUploaderAttachments(controlId, controllerName, editorOptionsIn,renderTime)
 
 
+                },
+                onUploadError: function (e) {
+                    $dropZone.removeClass("is-dragging is-uploading");
+                    const fileName = e.file?.name ? ` ${e.file.name}` : "";
+                    if (typeof appNotifyWarning === "function") {
+                        appNotifyWarning(`Unable to upload${fileName}. Please try again.`, false);
+                    }
+                },
+                onDropZoneEnter: function () {
+                    if (uploaderAllow) $dropZone.addClass("is-dragging");
+                },
+                onDropZoneLeave: function () {
+                    $dropZone.removeClass("is-dragging");
                 },
 
                 // onContentReady: function (e) {
@@ -3519,6 +3660,11 @@
 
 
             });
+          $dropZone.on("keydown", function (event) {
+              if (event.key !== "Enter" && event.key !== " ") return;
+              event.preventDefault();
+              $dropZone.trigger("click");
+          });
           loadDxFileUploaderAttachments(controlId, controllerName, editorOptionsIn,renderTime);
     }
 
@@ -3530,6 +3676,10 @@
             $section.find(".dx-fileuploader").each(function () {
                 $(this).dxFileUploader("instance")?.option("disabled", !canEdit);
             });
+            $section.find(".attachment-drop-zone")
+                .toggleClass("is-disabled", !canEdit)
+                .attr("aria-disabled", canEdit ? "false" : "true")
+                .attr("tabindex", canEdit ? "0" : "-1");
             $section.find(".attachment-delete-action").toggle(!!canEdit);
         }
 
@@ -4272,6 +4422,7 @@
                 mailTemplateName: x.mailTemplateName || "",
                 conditionJson: x.conditionJson || {},
                 buttonPlacement: x.buttonPlacement || transitionData.buttonPlacement || "footer",
+                buttonGroupName: x.buttonGroupName || transitionData.buttonGroupName || "",
                 command: x.command ?? null,
                     commandConfig: x.commandConfig ?? null
             }
@@ -4494,34 +4645,116 @@
             });
        }
 
+       window.WorkflowViewReloadState = window.WorkflowViewReloadState || {};
+       function beginWorkflowViewLoading(schemeName, recordId, message) {
+            var normalizedScheme = String(schemeName || "").replace(/\s+/g, "").toLowerCase();
+            var moduleCode = normalizedScheme === "policyissuance" ? "pi" : "qt";
+            var reloadKey = `${moduleCode}:${recordId}`;
+            var viewInstance = window.OverviewViewRegistry?.[`${moduleCode}:${recordId}`];
+            var renderGate = viewInstance?.renderGate;
+
+            if (!renderGate || typeof renderGate.begin !== "function") return null;
+            // The action itself owns the next refresh. Suppress the matching hub
+            // event so the old view is not rendered twice while the request runs.
+            window.WorkflowViewReloadState[reloadKey] = Number.POSITIVE_INFINITY;
+            return {
+                renderGate: renderGate,
+                token: renderGate.begin(message || "Processing workflow action…"),
+                reloadKey: reloadKey
+            };
+       }
+
+       function failWorkflowViewLoading(context, message) {
+            if (!context?.renderGate || typeof context.renderGate.fail !== "function") return;
+            if (context.reloadKey) delete window.WorkflowViewReloadState[context.reloadKey];
+            context.renderGate.fail(context.token, message || "Workflow action failed");
+       }
+
+       function reloadWorkflowViewComponents(schemeName, recordId, triggerElement, forceReload) {
+            var normalizedScheme = String(schemeName || "").replace(/\s+/g, "").toLowerCase();
+            var isPolicyIssuance = normalizedScheme === "policyissuance";
+            var moduleCode = isPolicyIssuance ? "pi" : "qt";
+            var reloadKey = `${moduleCode}:${recordId}`;
+            var now = Date.now();
+            var previousReloadAt = window.WorkflowViewReloadState[reloadKey] || 0;
+
+            // UpdateData emits R_ItemSubmitted and acceptDecision also has a success
+            // callback. Treat both as one refresh action.
+            if (!forceReload && now - previousReloadAt < 1500) {
+                return Promise.resolve(true);
+            }
+            window.WorkflowViewReloadState[reloadKey] = now;
+
+            var viewInstance = window.OverviewViewRegistry?.[`${moduleCode}:${recordId}`];
+            var refreshSource = triggerElement;
+            if (refreshSource?.jquery) refreshSource = refreshSource[0];
+            if (!refreshSource && viewInstance?.rootId) {
+                refreshSource = document.getElementById(viewInstance.rootId);
+            }
+
+            // Keep the same behavior as the Overview Refresh button: reload the
+            // complete current tab first, then fall back to the component registry.
+            if (refreshSource
+                && typeof window.reloadCurrentTabView === "function"
+                && window.reloadCurrentTabView(refreshSource)) {
+                return Promise.resolve(true);
+            }
+
+            if (typeof viewInstance?.reload === "function") {
+                return Promise.resolve(viewInstance.reload());
+            }
+
+            var reloadComponents = isPolicyIssuance
+                ? window.reloadPolicyIssuanceComponents
+                : window.reloadQuotationComponents;
+
+            if (typeof reloadComponents === "function") {
+                return Promise.resolve(reloadComponents(recordId));
+            }
+
+            console.warn(`Reload handler is not available for ${schemeName} ${recordId}.`);
+            return Promise.resolve(false);
+       }
+       window.reloadWorkflowViewComponents = reloadWorkflowViewComponents;
+
        function acceptDecision(object, dept){
 
-                    var scheme  = object.prefix === "pi"
-                            ? "PolicyIssuance"
-                            : "Quotation";
-               var formItems = $(`#${object.formId}`).dxForm("instance")?.option("formData") || {};
+                    object = object || {};
+                    dept = dept || object.dept;
+                    var scheme = object.schemeName || (object.prefix === "pi" ? "PolicyIssuance" : "Quotation");
+                    var formItems = object.formItems
+                        || $(`#${object.formId}`).dxForm("instance")?.option("formData")
+                        || {};
+                    var recordCode = formItems.quotationCode
+                        || formItems.policyIssuanceCode
+                        || formItems.code
+                        || formItems.id;
                     var passingObject = {
-                        statusName: `${object.dept} Process`,
-                        Comment: `${scheme} ${formItems.quotationCode} accepted by ${_displayName}!`,
+                        ...object,
+                        statusName: object.statusName || `${dept} Process`,
+                        Comment: object.Comment || `${scheme} ${recordCode || ""} accepted by ${_displayName}!`,
                         formItems: formItems,
                         dept: dept,
-                        url: object.prefix === "pi"
+                        url: object.url || (scheme === "PolicyIssuance"
                             ? "/api/PolicyIssuance/UpdateData"
-                            : "/api/Quotation/UpdateData",
-                                urlLog: object.prefix === "pi"
+                            : "/api/Quotation/UpdateData"),
+                        urlLog: object.urlLog || (scheme === "PolicyIssuance"
                             ? "/api/PolicyIssuance/LogAction"
-                            : "/api/Quotation/LogAction",
-                            schemeName: scheme
+                            : "/api/Quotation/LogAction"),
+                        schemeName: scheme
                     };
 
 
             var statusObject = _enums.OverallStatus.find(f => f.value == passingObject.statusName);
-                          passingObject.formItems.statusId  = statusObject.id;
-                          passingObject.formItems.workflowStatus = statusObject.value;
+                          if (statusObject) {
+                              passingObject.formItems.statusId  = statusObject.id;
+                              passingObject.formItems.workflowStatus = statusObject.value;
+                          }
 
                                    passingObject.formItems.turnAroundTimeAttributes = passingObject.formItems.turnAroundTimeAttributes
                                         ? tryParseJSON(passingObject.formItems.turnAroundTimeAttributes, "Parse Accept TAT Problem" )
                                     : {};
+                                   passingObject.formItems.turnAroundTimeAttributes = passingObject.formItems.turnAroundTimeAttributes || {};
 
                                 var currentDate = new Date();
 
@@ -4534,9 +4767,14 @@
 
                                       passingObject.formItems.turnAroundTimeAttributes[dept].AcceptDate = currentDate;
                                           passingObject.formItems.turnAroundTimeAttributes[dept].CompleteDate = currentDate;
-                                      passingObject.formItems.turnAroundTimeAttributes = JSON.stringify( passingObject.formItems.turnAroundTimeAttributes);
+                    passingObject.formItems.turnAroundTimeAttributes = JSON.stringify( passingObject.formItems.turnAroundTimeAttributes);
 
-                               ajaxPut(passingObject.url,
+                               var loadingContext = beginWorkflowViewLoading(
+                                   passingObject.schemeName,
+                                   formItems.id,
+                                   `Accepting ${passingObject.dept} decision…`
+                               );
+                               var updateRequest = ajaxPut(passingObject.url,
                             {
                                 key: formItems.id,
                                 values: JSON.stringify(
@@ -4546,8 +4784,26 @@
                             {
                                 onSuccess: function (response) {
                                     notifyAcceptDecisionPicAccounts(passingObject);
+                                    var refreshSource = object.formId
+                                        ? document.getElementById(object.formId)
+                                        : null;
+                                    reloadWorkflowViewComponents(
+                                        passingObject.schemeName,
+                                        passingObject.formItems.id,
+                                        refreshSource,
+                                        true
+                                    )
+                                        .then(function (reloaded) {
+                                            if (!reloaded) failWorkflowViewLoading(loadingContext, "Workflow refresh unavailable");
+                                        })
+                                        .catch(function (err) {
+                                            failWorkflowViewLoading(loadingContext, "Workflow refresh failed");
+                                            console.error("Accept decision reload failed", err);
+                                        });
                                 },
-                                onError: function (err) { }
+                                onError: function (err) {
+                                    failWorkflowViewLoading(loadingContext, "Accept decision failed");
+                                }
                             });
 
                         var submitRequest = new Object();
@@ -4579,6 +4835,7 @@
                                 error: function (xhr) {
                                 }
                             });
+                            return updateRequest;
        }
        function rejectDecision(object){
             var statusObject = _enums.OverallStatus.find(f => f.value == object.statusName);

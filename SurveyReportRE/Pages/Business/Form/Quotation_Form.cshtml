@@ -434,10 +434,44 @@ Note:
                                          var tatObject = new Object();
 
                                             tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Button Problem");
-                                        var actionStatusObject = tryParseJSON(formItems.actionStatus, "Submit Button ActionStatus Problem") || {};
-                                        var hasAcceptedRouteStatus = stageDept === "LMKT" && (actionStatusObject[`${stageDept}Button`] || actionStatusObject[stageDept]);
-                                        if (hasAcceptedRouteStatus) {
-                                            return;
+                                         var actionStatusObject = tryParseJSON(formItems.actionStatus, "Submit Button ActionStatus Problem") || {};
+                                         var hasAcceptedRouteStatus = stageDept === "LMKT" && (actionStatusObject[`${stageDept}Button`] || actionStatusObject[stageDept]);
+                                         if (hasAcceptedRouteStatus) {
+                                             return;
+                                         }
+                                        if (stageDept === "UW") {
+                                            const $uwRouteSlot = $(`[data-route-custom-host][data-record-id="@ViewData["Id"]"]`)
+                                                .filter(function () {
+                                                    return $(this).attr("data-route-group-name") === "uwDecisionGroup";
+                                                })
+                                                .first();
+                                            const eligibleUwRoutes = [
+                                                ...(findRoutes || []),
+                                                ...(tatObject ? (findRouteReturns || []) : [])
+                                            ];
+                                            const hasUwCustomRoute = eligibleUwRoutes.some(function (route) {
+                                                return getTransitionButtonPlacement(route) === "custom"
+                                                    && getTransitionButtonGroupName(route, "uwDecisionGroup") === "uwDecisionGroup";
+                                            });
+
+                                            if ($uwRouteSlot.length) {
+                                                $uwRouteSlot.removeClass("is-route-pending");
+                                                if (hasUwCustomRoute) {
+                                                    $uwRouteSlot
+                                                        .removeClass("is-fallback-ready")
+                                                        .addClass("has-flow-route")
+                                                        .attr("data-has-flow-route", "true");
+                                                    $uwRouteSlot.find("[data-uw-route-fallback]").each(function () {
+                                                        $(this).dxButton("instance")?.dispose();
+                                                        $(this).remove();
+                                                    });
+                                                } else {
+                                                    $uwRouteSlot
+                                                        .removeClass("has-flow-route")
+                                                        .addClass("is-fallback-ready")
+                                                        .attr("data-has-flow-route", "false");
+                                                }
+                                            }
                                         }
                                            try {
                                             if (findRouteReturns?.length && tatObject) {
@@ -448,12 +482,22 @@ Note:
                                                         `${returnButtonId}_${route.routeId || route.actionCode}`;
 
                                                     const uwDecisionHost = `#uw-route-decision-host-@ViewData["Id"]`;
+                                                    const routePlacement = getTransitionButtonPlacement(route);
+                                                    const customGroupName = getTransitionButtonGroupName(route, "uwDecisionGroup");
+                                                    const $uwCustomHost = $(`[data-route-custom-host][data-record-id="@ViewData["Id"]"]`)
+                                                        .filter(function () {
+                                                            return $(this).attr("data-route-group-name") === customGroupName;
+                                                        })
+                                                        .first();
+                                                    const useUwCustomHost = stageDept === "UW"
+                                                        && routePlacement === "custom"
+                                                        && $uwCustomHost.length;
                                                     const useUwDecisionHost = stageDept === "UW"
-                                                        && getTransitionButtonPlacement(route) === "decision"
+                                                        && routePlacement === "decision"
                                                         && $(uwDecisionHost).length;
-                                                    const routeButtonHost = useUwDecisionHost
-                                                        ? uwDecisionHost
-                                                        : `#${returnButtonId}`;
+                                                    const routeButtonHost = useUwCustomHost
+                                                        ? $uwCustomHost
+                                                        : (useUwDecisionHost ? uwDecisionHost : `#${returnButtonId}`);
 
                                                     if (!$(`#${buttonId}`).length) {
                                                         $(`<div id="${buttonId}"></div>`)
@@ -507,12 +551,22 @@ Note:
                                                         `${submitButtonId}_${route.routeId || route.actionCode}`;
 
                                                     const uwDecisionHost = `#uw-route-decision-host-@ViewData["Id"]`;
+                                                    const routePlacement = getTransitionButtonPlacement(route);
+                                                    const customGroupName = getTransitionButtonGroupName(route, "uwDecisionGroup");
+                                                    const $uwCustomHost = $(`[data-route-custom-host][data-record-id="@ViewData["Id"]"]`)
+                                                        .filter(function () {
+                                                            return $(this).attr("data-route-group-name") === customGroupName;
+                                                        })
+                                                        .first();
+                                                    const useUwCustomHost = stageDept === "UW"
+                                                        && routePlacement === "custom"
+                                                        && $uwCustomHost.length;
                                                     const useUwDecisionHost = stageDept === "UW"
-                                                        && getTransitionButtonPlacement(route) === "decision"
+                                                        && routePlacement === "decision"
                                                         && $(uwDecisionHost).length;
-                                                    const routeButtonHost = useUwDecisionHost
-                                                        ? uwDecisionHost
-                                                        : `#${submitButtonId}`;
+                                                    const routeButtonHost = useUwCustomHost
+                                                        ? $uwCustomHost
+                                                        : (useUwDecisionHost ? uwDecisionHost : `#${submitButtonId}`);
 
                                                     if (!$(`#${buttonId}`).length) {
                                                         $(`<div id="${buttonId}"></div>`)
@@ -522,7 +576,9 @@ Note:
                                                     }
 
                                                     $(`#${buttonId}`).dxButton({
-                                                        disabled: stageDept === "LMKT" ? false : (tatObject?.[stageDept]?.AcceptDate ? false : true),
+                                                        disabled: (stageDept === "LMKT" || useUwCustomHost || useUwDecisionHost)
+                                                            ? false
+                                                            : (tatObject?.[stageDept]?.AcceptDate ? false : true),
                                                         text: route.displayStatus || "",
                                                         icon: getTransitionButtonIcon(route, "chevronright"),
                                                         type: "info",

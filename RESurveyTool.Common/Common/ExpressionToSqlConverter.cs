@@ -321,6 +321,15 @@ public static class ExpressionToSqlConverterV2<T>
 
             if (methodCallExpression.Method.Name == "Contains")
             {
+                // Collection.Contains(x.Field) / Enumerable.Contains(collection, x.Field)
+                // must become SQL IN, not string LIKE. dxTagBox values arrive as a
+                // captured List<T>, so treating this as string.Contains attempts to
+                // evaluate x.Field and causes PropertyInfo.GetValue(null).
+                if (TryProcessCollectionContains(methodCallExpression, parameters, out string inClause))
+                {
+                    return inClause;
+                }
+
                 string columnSql = "";
                 object value = null;
 
@@ -356,6 +365,86 @@ public static class ExpressionToSqlConverterV2<T>
         }
 
         throw new NotSupportedException($"Unsupported expression type in V2 converter: {expression.GetType()}");
+    }
+
+    private static bool TryProcessCollectionContains(
+        MethodCallExpression methodCall,
+        Dictionary<string, object> parameters,
+        out string sql)
+    {
+        sql = "";
+        Expression valuesExpression = null;
+        Expression columnExpression = null;
+
+        if (methodCall.Object != null
+            && methodCall.Object.Type != typeof(string)
+            && methodCall.Arguments.Count == 1)
+        {
+            valuesExpression = methodCall.Object;
+            columnExpression = methodCall.Arguments[0];
+        }
+        else if (methodCall.Object == null
+                 && methodCall.Arguments.Count == 2
+                 && methodCall.Method.DeclaringType == typeof(Enumerable))
+        {
+            valuesExpression = methodCall.Arguments[0];
+            columnExpression = methodCall.Arguments[1];
+        }
+
+        if (valuesExpression == null
+            || !TryGetColumnSql(columnExpression, out string columnSql))
+        {
+            return false;
+        }
+
+        if (GetValueFromExpression(valuesExpression) is not System.Collections.IEnumerable values)
+        {
+            return false;
+        }
+
+        var parameterNames = new List<string>();
+        foreach (var value in values)
+        {
+            string parameterName = $"@param{parameters.Count}";
+            parameters[parameterName] = value;
+            parameterNames.Add(parameterName);
+        }
+
+        sql = parameterNames.Count == 0
+            ? "(1 = 0)"
+            : $"{columnSql} IN ({string.Join(", ", parameterNames)})";
+        return true;
+    }
+
+    private static bool TryGetColumnSql(Expression expression, out string columnSql)
+    {
+        columnSql = "";
+
+        if (TryGetColumnName(expression, out string columnName, out _))
+        {
+            columnSql = $"[{columnName}]";
+            return true;
+        }
+
+        if (expression is UnaryExpression unaryExpression
+            && (unaryExpression.NodeType == ExpressionType.Convert
+                || unaryExpression.NodeType == ExpressionType.ConvertChecked))
+        {
+            return TryGetColumnSql(unaryExpression.Operand, out columnSql);
+        }
+
+        if (expression is MethodCallExpression methodCall
+            && methodCall.Object != null
+            && methodCall.Arguments.Count == 0
+            && (methodCall.Method.Name == "ToLower" || methodCall.Method.Name == "ToUpper")
+            && TryGetColumnSql(methodCall.Object, out string innerColumnSql))
+        {
+            string sqlFunction = methodCall.Method.Name == "ToLower" ? "LOWER" : "UPPER";
+            columnSql = $"{sqlFunction}({innerColumnSql})";
+            return true;
+        }
+
+        return false;
     }
 
     private static bool TryGetColumnName(Expression expr, out string columnName, out string dateTimePart)
@@ -428,9 +517,24 @@ public static class ExpressionToSqlConverterV2<T>
                 var obj = GetValueFromExpression(memberExpr.Expression);
                 var member = memberExpr.Member;
                 if (member is PropertyInfo propInfo)
+                {
+                    var getter = propInfo.GetMethod;
+                    if (getter?.IsStatic != true && obj == null)
+                    {
+                        throw new InvalidOperationException(
+                            $"Cannot evaluate captured property '{propInfo.Name}' because its target is null.");
+                    }
                     return propInfo.GetValue(obj);
+                }
                 if (member is FieldInfo fieldInfo)
+                {
+                    if (!fieldInfo.IsStatic && obj == null)
+                    {
+                        throw new InvalidOperationException(
+                            $"Cannot evaluate captured field '{fieldInfo.Name}' because its target is null.");
+                    }
                     return fieldInfo.GetValue(obj);
+                }
                 break;
 
             case UnaryExpression unaryExpr:

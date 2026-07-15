@@ -593,7 +593,7 @@ aside {
 }
 
 .att-preview {
-    width: 80%;
+    width: 100%;
     display: flex;
     flex-direction: column;
     margin-bottom: 10px;
@@ -603,6 +603,146 @@ aside {
     padding: 6px 4px;
     scroll-behavior: smooth;
     max-height: 320px;
+}
+
+.attachment-drop-zone {
+    width: 100%;
+    min-height: 44px;
+    margin: 4px 0 12px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0;
+    box-sizing: border-box;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
+    text-align: left;
+    transition: min-height .18s ease, padding .18s ease, border-color .18s ease, background-color .18s ease, box-shadow .18s ease;
+}
+
+.attachment-drop-zone:hover .attachment-drop-zone__content,
+.attachment-drop-zone:focus-visible .attachment-drop-zone__content {
+    background: #1765cc;
+    box-shadow: 0 2px 6px rgba(26, 115, 232, .28);
+}
+
+.attachment-drop-zone:focus-visible {
+    outline: none;
+}
+
+.attachment-drop-zone.is-dragging {
+    min-height: 132px;
+    padding: 22px 28px;
+    justify-content: center;
+    gap: 16px;
+    border-style: dashed;
+    border-color: #1a73e8;
+    background: #e8f0fe;
+    color: #3c4043;
+    box-shadow: 0 0 0 3px rgba(26, 115, 232, .14);
+}
+
+.attachment-drop-zone.is-uploading {
+    cursor: progress;
+}
+
+.attachment-drop-zone.is-uploading .attachment-drop-zone__content {
+    background: linear-gradient(90deg, #1a73e8, #4c8fe8, #1a73e8);
+    background-size: 200% 100%;
+    animation: attachment-drop-zone-loading 1.4s linear infinite;
+}
+
+.attachment-drop-zone.is-disabled {
+    display: none;
+}
+
+.attachment-drop-zone__icon {
+    display: none;
+}
+
+.attachment-drop-zone__content {
+    display: inline-flex;
+    align-items: center;
+    min-height: 38px;
+    padding: 0 16px;
+    border-radius: 4px;
+    background: #1a73e8;
+    color: #fff;
+    line-height: 1.35;
+    transition: background-color .18s ease, box-shadow .18s ease;
+}
+
+.attachment-drop-zone__content strong {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.attachment-drop-zone__drop-label,
+.attachment-drop-zone__hint {
+    display: none;
+}
+
+.attachment-drop-zone.is-dragging .attachment-drop-zone__icon {
+    display: inline-block;
+    flex: 0 0 auto;
+    font-size: 34px;
+    color: #1a73e8;
+}
+
+.attachment-drop-zone.is-dragging .attachment-drop-zone__content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    min-height: 0;
+    padding: 0;
+    background: transparent;
+    color: #3c4043;
+    box-shadow: none;
+}
+
+.attachment-drop-zone.is-dragging .attachment-drop-zone__compact-label {
+    display: none;
+}
+
+.attachment-drop-zone.is-dragging .attachment-drop-zone__drop-label,
+.attachment-drop-zone.is-dragging .attachment-drop-zone__hint {
+    display: inline;
+}
+
+.attachment-drop-zone.is-dragging .attachment-drop-zone__drop-label {
+    font-size: 16px;
+}
+
+.attachment-drop-zone.is-dragging .attachment-drop-zone__hint {
+    font-size: 13px;
+    color: #5f6368;
+}
+
+@keyframes attachment-drop-zone-loading {
+    from { background-position: 100% 0; }
+    to { background-position: -100% 0; }
+}
+
+@media (max-width: 640px) {
+    .attachment-drop-zone {
+        min-height: 44px;
+    }
+
+    .attachment-drop-zone.is-dragging {
+        min-height: 112px;
+        padding: 18px;
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .attachment-drop-zone.is-dragging .attachment-drop-zone__content {
+        align-items: center;
+    }
 }
 
     .att-preview::-webkit-scrollbar {
@@ -3998,6 +4138,101 @@ text-overflow: ellipsis;
 .notif-list-item:hover {
     background: #f8fafc;
     box-shadow: inset 0 0 0 1px rgba(148, 163, 184, .18);
+}
+
+.notif-filter-shell {
+    position: relative;
+    border-bottom: 1px solid var(--c-rgba-0-0-0-06);
+}
+
+.notif-filters {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0 36px 10px 10px;
+    cursor: grab;
+    user-select: none;
+    scrollbar-width: none;
+    touch-action: pan-x;
+    scroll-behavior: smooth;
+}
+
+.notif-filters::-webkit-scrollbar {
+    display: none;
+}
+
+.notif-filters.is-dragging {
+    cursor: grabbing;
+    scroll-behavior: auto;
+}
+
+.notif-filters.is-dragging .filter-btn {
+    cursor: grabbing !important;
+}
+
+.notif-filters .filter-btn {
+    flex: 0 0 auto;
+}
+
+.notif-filter-overflow {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 1px;
+    width: 38px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 1px 9px 0 0;
+    box-sizing: border-box;
+    color: var(--c-64748b);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 20px;
+    background: linear-gradient(90deg, transparent, var(--c-ffffff) 48%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .16s ease;
+}
+
+.notif-filter-shell.has-more-right .notif-filter-overflow {
+    opacity: 1;
+}
+
+.notif-item-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
+}
+
+.notif-item-title {
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.notif-item-title > span:first-child {
+    flex: 0 0 auto;
+}
+
+.notif-item-title-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.notif-item-time {
+    flex: 0 0 auto;
+    opacity: .6;
+    font-size: 12px;
+    white-space: nowrap;
 }
 
 .notif-list-item > div > div:last-child {
