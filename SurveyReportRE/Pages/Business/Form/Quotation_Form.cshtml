@@ -447,9 +447,19 @@ Note:
                                                     const buttonId =
                                                         `${returnButtonId}_${route.routeId || route.actionCode}`;
 
+                                                    const uwDecisionHost = `#uw-route-decision-host-@ViewData["Id"]`;
+                                                    const useUwDecisionHost = stageDept === "UW"
+                                                        && getTransitionButtonPlacement(route) === "decision"
+                                                        && $(uwDecisionHost).length;
+                                                    const routeButtonHost = useUwDecisionHost
+                                                        ? uwDecisionHost
+                                                        : `#${returnButtonId}`;
+
                                                     if (!$(`#${buttonId}`).length) {
                                                         $(`<div id="${buttonId}"></div>`)
-                                                            .appendTo(`#${returnButtonId}`);
+                                                            .appendTo(routeButtonHost);
+                                                    } else if (!$(`#${buttonId}`).parent().is(routeButtonHost)) {
+                                                        $(`#${buttonId}`).appendTo(routeButtonHost);
                                                     }
 
                                                     $(`#${buttonId}`).dxButton({
@@ -496,9 +506,19 @@ Note:
                                                     const buttonId =
                                                         `${submitButtonId}_${route.routeId || route.actionCode}`;
 
+                                                    const uwDecisionHost = `#uw-route-decision-host-@ViewData["Id"]`;
+                                                    const useUwDecisionHost = stageDept === "UW"
+                                                        && getTransitionButtonPlacement(route) === "decision"
+                                                        && $(uwDecisionHost).length;
+                                                    const routeButtonHost = useUwDecisionHost
+                                                        ? uwDecisionHost
+                                                        : `#${submitButtonId}`;
+
                                                     if (!$(`#${buttonId}`).length) {
                                                         $(`<div id="${buttonId}"></div>`)
-                                                            .appendTo(`#${submitButtonId}`);
+                                                            .appendTo(routeButtonHost);
+                                                    } else if (!$(`#${buttonId}`).parent().is(routeButtonHost)) {
+                                                        $(`#${buttonId}`).appendTo(routeButtonHost);
                                                     }
 
                                                     $(`#${buttonId}`).dxButton({

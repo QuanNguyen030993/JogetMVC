@@ -10,6 +10,13 @@
         padding-left: 18px;
         padding-right: 18px;
     }
+
+    .uw-route-decision-host {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+    }
 </style>
 <script type="text/javascript">
     $(function() {
@@ -165,6 +172,9 @@
                                                 uwDecision(passingObject);
                                              }
                                                 }).appendTo(itemElement);
+
+                                                $(`<div id="uw-route-decision-host-@quotationId" class="uw-route-decision-host"></div>`)
+                                                    .appendTo(itemElement);
 
                          }
                      }

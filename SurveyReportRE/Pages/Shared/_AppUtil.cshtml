@@ -2809,6 +2809,14 @@
             return routeData?.buttonClass || fallbackClass || "";
         }
 
+        function getTransitionButtonPlacement(route, fallbackPlacement) {
+            var routeData = safeJsonParse(route?.data) || {};
+            var placement = route?.buttonPlacement || routeData.buttonPlacement || fallbackPlacement || "footer";
+            placement = String(placement).trim().toLowerCase();
+
+            return placement === "decision" ? "decision" : "footer";
+        }
+
         function applyTransitionButtonClass(selector, route, fallbackClass) {
             var buttonClass = getTransitionButtonClass(route, fallbackClass);
             var knownClasses = "dx-button-default dx-button-success dx-button-danger dx-button-warning dx-button-info dx-button-normal";
@@ -4243,6 +4251,7 @@
 
       
      function transitionMapeHandle(x){
+            var transitionData = safeJsonParse(x.conditionJson) || {};
             return {
                 fromNodeId: x.fromNodeId,
                 toNodeId: x.toNodeId,
@@ -4262,6 +4271,7 @@
                 userDecisionLabel: x.userDecisionLabel || "",
                 mailTemplateName: x.mailTemplateName || "",
                 conditionJson: x.conditionJson || {},
+                buttonPlacement: x.buttonPlacement || transitionData.buttonPlacement || "footer",
                 command: x.command ?? null,
                     commandConfig: x.commandConfig ?? null
             }
