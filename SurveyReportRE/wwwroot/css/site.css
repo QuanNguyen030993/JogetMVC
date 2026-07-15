@@ -1106,6 +1106,7 @@ aside {
 
     /* Accept / Approved / Client Accept */
     .statusTag.accepted,
+    .statusTag.approved,
     .statusTag.approve,
     .statusTag.client-accept {
         background: rgba(16,185,129);
@@ -1134,6 +1135,19 @@ aside {
         background: rgba(245,158,11,.18);
         color: #92400e;
     }
+
+.status-group-content {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 24px;
+}
+
+.status-group-count {
+    color: #667085;
+    font-size: 12px;
+    font-weight: 600;
+}
 
 
 .overview-wrap {

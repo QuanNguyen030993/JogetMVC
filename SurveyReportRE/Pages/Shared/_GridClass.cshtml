@@ -2396,6 +2396,78 @@
         }
 
     }
+    function getStatusRawValue(options, dataField) {
+        let raw = options?.value;
+        if (Array.isArray(raw))
+            raw = raw.length ? raw[raw.length - 1] : "";
+        if (raw == null && options?.data && dataField)
+            raw = options.data[dataField];
+        if (raw == null || String(raw).trim() === "")
+            raw = options?.key ?? options?.displayValue ?? "";
+        if (Array.isArray(raw))
+            raw = raw.length ? raw[raw.length - 1] : "";
+        return raw;
+    }
+
+    function configureStatusGridColumn(col) {
+        const statusItems = Array.isArray(_enums?.OverallStatus) ? _enums.OverallStatus : [];
+
+        col.lookup = {
+            dataSource: statusItems,
+            displayExpr: "value",
+            valueExpr: "value",
+            itemTemplate: function (data) {
+                const st = normalizeStatus(data?.value ?? data);
+                return `<div class="statusTag ${st.css}">${st.text}</div>`;
+            }
+        };
+
+        col.cellTemplate = function (container, options) {
+            const st = normalizeStatus(getStatusRawValue(options, col.dataField));
+            $("<div>").addClass(`statusTag ${st.css}`).text(st.text).appendTo(container);
+        };
+
+        col.groupCellTemplate = function (container, options) {
+            const st = normalizeStatus(getStatusRawValue(options, col.dataField));
+            const $content = $("<div>").addClass("status-group-content").appendTo(container);
+            $("<span>").addClass(`statusTag ${st.css}`).text(st.text).appendTo($content);
+
+            const groupCount = options?.data?.count;
+            if (groupCount != null)
+                $("<span>").addClass("status-group-count").text(`(${groupCount})`).appendTo($content);
+        };
+
+        col.calculateDisplayValue = function (rowData) {
+            return normalizeStatus(rowData?.[col.dataField]).text;
+        };
+
+        col.calculateFilterExpression = function (value, operation, target) {
+            const enumItem = statusItems.find(item => item.id == value || item.value == value);
+            return this.defaultCalculateFilterExpression(enumItem?.value ?? value, operation, target);
+        };
+    }
+
+    function configureStatusExcelExport(gridOptions, statusFields) {
+        gridOptions.export = gridOptions.export || {};
+        const originalCustomizeExcelCell = gridOptions.export.customizeExcelCell;
+
+        gridOptions.export.customizeExcelCell = function (options) {
+            if (typeof originalCustomizeExcelCell === "function")
+                originalCustomizeExcelCell(options);
+
+            const gridCell = options.gridCell || options;
+            const excelCell = options.excelCell || options;
+            const dataField = gridCell?.column?.dataField;
+            if (!statusFields.includes(dataField))
+                return;
+
+            const statusText = normalizeStatus(getStatusRawValue(gridCell, dataField)).text;
+            excelCell.value = gridCell.rowType === "group"
+                ? `${gridCell.column?.caption || "Status"}: ${statusText}`
+                : statusText;
+        };
+    }
+
      var QuotationGridOption = class QuotationGridOption extends MGridOption {
         constructor(modelName, gridType, params) {
             super(modelName, gridType, params);
@@ -2404,6 +2476,12 @@
             this.DeletedItems = 0;
             this.IsLoading = false;
         };
+
+        async makeGridOptions(mGridConfigInstance = null) {
+            const options = await super.makeGridOptions(mGridConfigInstance);
+            configureStatusExcelExport(options, ["workflowStatus"]);
+            return options;
+        }
 
 
         onEditorPreparing(e) {
@@ -2569,6 +2647,10 @@
                                        ${st.text}
                                    </div>`;
                      };
+
+                    // Keep raw string status as the lookup value so grouping and export
+                    // can resolve a visible label instead of an empty lookup result.
+                    configureStatusGridColumn(col);
 
                 }
                  if (col.dataField == "requestedDate") {
@@ -2900,7 +2982,14 @@
          var PolicyIssuanceGridOption = class PolicyIssuanceGridOption extends MGridOption {
         constructor(modelName, gridType, params) {
             super(modelName, gridType, params);
+            this.Params = params;
         };
+
+        async makeGridOptions(mGridConfigInstance = null) {
+            const options = await super.makeGridOptions(mGridConfigInstance);
+            configureStatusExcelExport(options, ["workflowStatus", "policyIssuanceStatus"]);
+            return options;
+        }
         hyperLinkCode(columns, moduleName, controllerName, propertyName, specificLinkField = null) {
             $.each(columns, function (i, col) {
                 if (col.dataField  == (specificLinkField != null ? specificLinkField : "Code")) {
@@ -2963,6 +3052,10 @@
             this.hyperLinkCode(columns, "Business/Form", "PolicyIssuance", "id", "policyIssuanceCode");
             this.hyperLinkCode(columns, "Business/Form", "Quotation", "quotationId", "quotationCode");
             $.each(columns, function (colIndex, col) {
+            if (col.dataField === "workflowStatus")
+            {
+                configureStatusGridColumn(col);
+            }
             if (col.dataField === "policyIssuanceStatus")
             {
                 col.cellTemplate = function (container, options) {
@@ -2978,6 +3071,7 @@
 
                 $(container).append(html);
             };
+                configureStatusGridColumn(col);
                 }
                 if (col.dataField === "pic" || col.dataField === "leaderPIC" || col.dataField === "hodpic")
                 {
