@@ -692,9 +692,18 @@
                  onClick: function () {
                      $.ajax({
                          url: `/api/Users/ReturnToAccount`,
+                         method: "POST",
                          success: function (response) {
+                             appNotify({ message: response.message, type: "success" });
+                             setTimeout(function () {
+                                 window.location.replace(`${response.redirectUrl || "/Management"}?returned=${Date.now()}`);
+                             }, 400);
                          },
                          error: function (err) {
+                             appNotify({
+                                 message: err.responseJSON?.message || "Unable to return to the original account.",
+                                 type: "error"
+                             });
                          }
                      });
                  },

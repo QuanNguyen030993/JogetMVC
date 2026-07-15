@@ -56,9 +56,9 @@ namespace ERPCore.Pages
                 if (DebugEnv)
                 {
                     //IsSuperUser = true;
-                    IsDebugMode = isDebugMode;
                     NotifyEnv = DebugEnv;
                 }
+                IsDebugMode = isDebugMode;
         }
 
         public void OnGet(string loadParams)

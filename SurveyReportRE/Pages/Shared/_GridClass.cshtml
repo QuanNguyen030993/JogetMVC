@@ -685,35 +685,58 @@
         constructor(modelName, gridType) {
             super(modelName, gridType);
         };
-        //onCustomizeColumns(columns) {
-        //    var that = this;
-        //    super.onCustomizeColumns(columns);
-        //    //hyperLinkCodeReplace(columns, "Business/Workflow", "SurveyWorkFlow", "id", "surveyNo");
-        //    $.each(columns, function (colIndex, col) {
-        //        if (col.dataField == "username") {
-        //            col.cellTemplate = function (container, options) {
-        //                $("<div>").text(options.text).appendTo(container);
-        //                $("<div>")
-        //                    .dxButton({
-        //                        text: "Login As",
-        //                        stylingMode: "contained",
-        //                        type: "normal",
-        //                        onClick: function () {
-        //                            $.ajax({
-        //                                url: `/api/Users/LoginAs/${options.text}`,
-        //                                success: function (response) {
-        //                                },
-        //                                error: function (err) {
-        //                                }
-        //                            });
-        //                        },
-        //                    })
-        //                    .appendTo(container);
-        //            };
-        //        }
+        onCustomizeColumns(columns) {
+            super.onCustomizeColumns(columns);
+            if (_isSuperUser !== "true") return;
 
-        //    });
-        //}
+            columns.push({
+                name: "loginAsAction",
+                caption: "Login as",
+                width: 130,
+                alignment: "center",
+                allowFiltering: false,
+                allowSorting: false,
+                allowGrouping: false,
+                allowExporting: false,
+                fixed: true,
+                fixedPosition: "right",
+                cellTemplate: function (container, options) {
+                    const userName = options.data?.username;
+                    $("<div>").dxButton({
+                        text: "Login as",
+                        icon: "user",
+                        stylingMode: "outlined",
+                        type: "default",
+                        disabled: !userName || userName.toLowerCase() === (_loginUser || "").toLowerCase(),
+                        onClick: function () {
+                            DevExpress.ui.dialog.confirm(
+                                `You will temporarily work as <b>${$("<div>").text(userName).html()}</b>. Continue?`,
+                                "Confirm Login as"
+                            ).done(function (confirmed) {
+                                if (!confirmed) return;
+
+                                $.ajax({
+                                    url: "/api/Users/LoginAs",
+                                    method: "POST",
+                                    contentType: "application/json",
+                                    data: JSON.stringify({ userName: userName })
+                                }).done(function (response) {
+                                    appNotify({ message: response.message, type: "success" });
+                                    setTimeout(function () {
+                                        window.location.replace(`${response.redirectUrl || "/Management"}?impersonated=${Date.now()}`);
+                                    }, 500);
+                                }).fail(function (xhr) {
+                                    appNotify({
+                                        message: xhr.responseJSON?.message || `Unable to switch to ${userName}.`,
+                                        type: "error"
+                                    });
+                                });
+                            });
+                        }
+                    }).appendTo(container);
+                }
+            });
+        }
         onToolbarPreparing(e) {
             super.onToolbarPreparing(e);
             var that = this;

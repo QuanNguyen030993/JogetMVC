@@ -34,6 +34,12 @@ namespace ERPCore.Controllers.Config
 
         public static string DOMAIN_NAME = "";
         public static string SUPER_USER = "";
+
+        public sealed class LoginAsRequest
+        {
+            public string UserName { get; set; } = "";
+        }
+
         public UsersController(IBaseRepository<Users> BaseRepository, IConfiguration configuration, IHttpContextAccessor httpContextAccessor) : base(BaseRepository, httpContextAccessor)
         {
             _BaseRepository = BaseRepository;
@@ -138,24 +144,73 @@ namespace ERPCore.Controllers.Config
             return Ok(Base);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> ReturnToAccount()
+        [HttpPost]
+        public IActionResult ReturnToAccount()
         {
             HttpContext.Session.Remove("ImpersonatedUser");
-            var windowsIdentity = WindowsIdentity.GetCurrent();
-            if (windowsIdentity != null)
+            Response.Cookies.Delete("ImpersonatedUser");
+
+            return Ok(new
             {
-                var windowsPrincipal = new WindowsPrincipal(windowsIdentity);
-                HttpContext.User = windowsPrincipal;
-            }
-            return Redirect("/Management");
+                success = true,
+                message = "Returned to the original account.",
+                redirectUrl = "/Management"
+            });
         }
 
-        [HttpGet("{userName}")]
-        public async Task<IActionResult> LoginAs(string userName)
+        [HttpPost]
+        public async Task<IActionResult> LoginAs([FromBody] LoginAsRequest request)
         {
-            HttpContext.Session.SetString("ImpersonatedUser", userName);
-            return Redirect("/Management");
+            var currentUser = ControllerUtil.ControllerUtil
+                .GetCurrentContextUser(_httpContextAccessor, _configuration)
+                .Trim();
+            if (!IsSuperUser(currentUser))
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new
+                {
+                    success = false,
+                    message = "Only a super user can use Login as."
+                });
+            }
+
+            var userName = request?.UserName?.Trim() ?? "";
+            if (string.IsNullOrWhiteSpace(userName))
+                return BadRequest(new { success = false, message = "Please select a user." });
+
+            var targetUser = await _BaseRepository.GetSingleObject(user => user.username == userName);
+            if (targetUser == null)
+                return NotFound(new { success = false, message = $"User '{userName}' was not found." });
+
+            if (string.Equals(currentUser, targetUser.username, StringComparison.OrdinalIgnoreCase))
+                return BadRequest(new { success = false, message = "You are already using this account." });
+
+            HttpContext.Session.SetString("ImpersonatedUser", targetUser.username);
+            Response.Cookies.Append(
+                "ImpersonatedUser",
+                targetUser.username,
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    IsEssential = true,
+                    SameSite = SameSiteMode.Lax,
+                    Secure = Request.IsHttps,
+                    MaxAge = TimeSpan.FromHours(8)
+                });
+
+            return Ok(new
+            {
+                success = true,
+                message = $"Switching to {targetUser.username}...",
+                data = new { userName = targetUser.username },
+                redirectUrl = "/Management"
+            });
+        }
+
+        private static bool IsSuperUser(string userName)
+        {
+            return (SUPER_USER ?? "")
+                .Split(new[] { ',', ';', '|', ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                .Any(item => string.Equals(item.Trim(), userName, StringComparison.OrdinalIgnoreCase));
         }
 
         [HttpGet]
