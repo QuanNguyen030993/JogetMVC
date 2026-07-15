@@ -40,7 +40,7 @@
     "department": "FO",
     "member": "Cuong",
     "type": "Quotation",
-    "status": "Rejected",
+    "status": "In Progress",
     "count": 3
   },
   {
@@ -109,7 +109,7 @@
     "department": "TS",
     "member": "Linh",
     "type": "Quotation",
-    "status": "Rejected",
+    "status": "In Progress",
     "count": 2
   },
   {
@@ -200,7 +200,7 @@
     "department": "UW",
     "member": "Trang",
     "type": "Policy Issuance",
-    "status": "Rejected",
+    "status": "In Progress",
     "count": 4
   },
 
@@ -255,7 +255,7 @@
     "department": "PM",
     "member": "Giang",
     "type": "Quotation",
-    "status": "Rejected",
+    "status": "In Progress",
     "count": 2
   },
   {

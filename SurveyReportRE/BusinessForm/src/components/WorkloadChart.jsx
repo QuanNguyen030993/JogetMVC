@@ -238,12 +238,26 @@ function StatusChart({
 
                 stackId="status"
 
-                fill="#fbbf24"
+                fill="#999998"
 
               >
                 <LabelList dataKey="Pending" position="center" fill="#1e2937" style={{ fontWeight: 'bold', fontSize: 11 }} formatter={v => v > 0 ? v : ''} />
               </Bar>
+
 <Bar
+
+                dataKey="InProgress"
+
+                stackId="status"
+
+                fill="#fbbf24"
+
+                radius={[4, 4, 0, 0]}
+
+              >
+                <LabelList dataKey="InProgress" position="center" fill="#fff" style={{ fontWeight: 'bold', fontSize: 11 }} formatter={v => v > 0 ? v : ''} />
+              </Bar>
+              <Bar
 
                 dataKey="Completed"
 
@@ -253,19 +267,6 @@ function StatusChart({
 
               >
                 <LabelList dataKey="Completed" position="center" fill="#fff" style={{ fontWeight: 'bold', fontSize: 11 }} formatter={v => v > 0 ? v : ''} />
-              </Bar>
-<Bar
-
-                dataKey="Rejected"
-
-                stackId="status"
-
-                fill="#ef4444"
-
-                radius={[4, 4, 0, 0]}
-
-              >
-                <LabelList dataKey="Rejected" position="center" fill="#fff" style={{ fontWeight: 'bold', fontSize: 11 }} formatter={v => v > 0 ? v : ''} />
               </Bar>
 </BarChart>
 </ResponsiveContainer>
@@ -386,8 +387,8 @@ export default function WorkloadChart({
         if (item.status === "Completed") {
           result.completed += count;
         }
-        if (item.status === "Rejected") {
-          result.rejected += count;
+        if (item.status === "InProgress") {
+          result.InProgress += count;
         }
         return result;
       },
@@ -395,7 +396,7 @@ export default function WorkloadChart({
         total: 0,
         pending: 0,
         completed: 0,
-        rejected: 0
+        InProgress: 0
       }
     );
   }, [filteredData]);
@@ -419,7 +420,7 @@ export default function WorkloadChart({
               name,
               Pending: 0,
               Completed: 0,
-              Rejected: 0
+              InProgress: 0
             };
           }
           const count = Number(item.count) || 0;
@@ -429,8 +430,8 @@ export default function WorkloadChart({
           if (item.status === "Completed") {
             result[name].Completed += count;
           }
-          if (item.status === "Rejected") {
-            result[name].Rejected += count;
+          if (item.status === "InProgress") {
+            result[name].InProgress += count;
           }
         });
       return Object.values(result).sort(
@@ -452,7 +453,7 @@ export default function WorkloadChart({
     const maximum = Math.max(
       0,
       ...allRows.map(
-        item => item.Pending + item.Completed + item.Rejected
+        item => item.Pending + item.Completed + item.InProgress
       )
     );
     if (maximum === 0) {
@@ -611,9 +612,9 @@ value="Overview Workload"
         />
 <Card
 
-          title="Rejected"
+          title="InProgress"
 
-          value={statistics.rejected}
+          value={statistics.InProgress}
 
         />
 
@@ -722,7 +723,7 @@ value="Overview Workload"
 
               color="#ef4444"
 
-              label="Rejected"
+              label="InProgress"
 
             />
 </div>

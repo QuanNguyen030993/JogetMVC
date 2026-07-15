@@ -2696,46 +2696,50 @@ VALUES
             // 6) ORDER BY (DevExtreme sort= JSON)
             // =========================
             var sortJson = Get(allParams, "sort");
-            var orderBySql = BuildOrderByFromSort(sortJson, _reservedKeys);
 
-            if (string.IsNullOrWhiteSpace(orderBySql))
+            var getOrderByCondition = Get(allParams, "orderBy");
+
+            if (bool.Parse(getOrderByCondition ?? "true"))
             {
-                // fallback từ orderBy/orderDir (nếu bạn tự truyền)
-                string orderBy = Get(allParams, "orderBy") ?? defaultOrderBy;
-                string orderDir = (Get(allParams, "orderDir") ?? defaultOrderDir);
-                orderDir = string.Equals(orderDir, "asc", StringComparison.OrdinalIgnoreCase) ? "ASC" : "DESC";
+                var orderBySql = BuildOrderByFromSort(sortJson, _reservedKeys);
 
-                if (!_reservedKeys.Contains(orderBy)) orderBy = defaultOrderBy;
-                if (!_reservedKeys.Contains(orderBy)) orderBy = pkTieBreaker ?? "Id";
+                if (string.IsNullOrWhiteSpace(orderBySql))
+                {
+                    // fallback từ orderBy/orderDir (nếu bạn tự truyền)
+                    string orderBy = Get(allParams, "orderBy") ?? defaultOrderBy;
+                    string orderDir = (Get(allParams, "orderDir") ?? defaultOrderDir);
+                    orderDir = string.Equals(orderDir, "asc", StringComparison.OrdinalIgnoreCase) ? "ASC" : "DESC";
 
-                orderBySql = $"{QuoteName(orderBy)} {orderDir}";
+                    if (!_reservedKeys.Contains(orderBy)) orderBy = defaultOrderBy;
+                    if (!_reservedKeys.Contains(orderBy)) orderBy = pkTieBreaker ?? "Id";
+
+                    orderBySql = $"{QuoteName(orderBy)} {orderDir}";
+                }
+
+                // tie-breaker để paging ổn định khi trùng sort key
+                if (!string.IsNullOrWhiteSpace(pkTieBreaker) && _reservedKeys.Contains(pkTieBreaker))
+                {
+                    var tie = QuoteName(pkTieBreaker);
+                    if (!orderBySql.Contains(tie, StringComparison.OrdinalIgnoreCase))
+                        orderBySql += $", {tie} DESC";
+                }
+
+                sql.Append("ORDER BY ");
+                sql.AppendLine(orderBySql);
+                // =========================
+                // 7) paging / all
+                // =========================
+                if (paging)
+                {
+                    sql.AppendLine("OFFSET @skip ROWS FETCH NEXT @take ROWS ONLY;");
+                    parameters["@skip"] = skip;
+                    parameters["@take"] = take;
+                }
+                else
+                {
+                    sql.AppendLine($"OFFSET 0 ROWS FETCH NEXT {maxAll} ROWS ONLY;");
+                }
             }
-
-            // tie-breaker để paging ổn định khi trùng sort key
-            if (!string.IsNullOrWhiteSpace(pkTieBreaker) && _reservedKeys.Contains(pkTieBreaker))
-            {
-                var tie = QuoteName(pkTieBreaker);
-                if (!orderBySql.Contains(tie, StringComparison.OrdinalIgnoreCase))
-                    orderBySql += $", {tie} DESC";
-            }
-
-            sql.Append("ORDER BY ");
-            sql.AppendLine(orderBySql);
-
-            // =========================
-            // 7) paging / all
-            // =========================
-            if (paging)
-            {
-                sql.AppendLine("OFFSET @skip ROWS FETCH NEXT @take ROWS ONLY;");
-                parameters["@skip"] = skip;
-                parameters["@take"] = take;
-            }
-            else
-            {
-                sql.AppendLine($"OFFSET 0 ROWS FETCH NEXT {maxAll} ROWS ONLY;");
-            }
-
             return new SqlQueryBuildResult
             {
                 Sql = sql.ToString(),

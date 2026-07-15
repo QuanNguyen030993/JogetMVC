@@ -16,13 +16,19 @@ public class DashboardController : ControllerBase
     public async Task<IActionResult> Workload()
     {
         const string query = """
-            SELECT CreatedDate, PIC, 'Quotation' AS [Type], WorkflowStatus,
-                   WorkflowStatus AS [OverallStatus]
+            SELECT CreatedDate,PIC, StageAccount,'Quotation' AS 'type', StageDept,CASE WHEN WorkflowStatus LIKE '% Pending' THEN 'Pending' 
+                     																		 WHEN WorkflowStatus = 'Quotation confirmed' THEN 'Completed'
+                     																		 ELSE 'InProgress' END
+            AS 'OverallStatus'  
             FROM Quotation
-            UNION ALL
-            SELECT CreatedDate, PIC, 'Policy Issuance' AS [Type], WorkflowStatus,
-                   WorkflowStatus AS [OverallStatus]
-            FROM PolicyIssuance
+            WHERE StageDept IN ('FO','TS','LMKT','PM','UW')
+            UNION 
+            SELECT CreatedDate,PIC, StageAccount,'Policy Issuance' AS 'type', StageDept, CASE WHEN WorkflowStatus LIKE '% Pending' THEN 'Pending' 
+                     																		 WHEN WorkflowStatus = 'Quotation confirmed' THEN 'Completed'
+                     																		 ELSE 'InProgress' END
+            AS 'OverallStatus'  FROM
+            PolicyIssuance
+             WHERE StageDept IN ('FO','TS','LMKT','PM','UW')
             """;
 
         var rows = await _quotationRepository.ExecuteCustomQuery(query);
@@ -30,13 +36,15 @@ public class DashboardController : ControllerBase
 
         foreach (var row in rows)
         {
-            var picJson = GetRowValue(row, "PIC")?.ToString();
-            var type = GetRowValue(row, "Type")?.ToString()?.Trim() ?? "Unknown";
-            var createdDate = ParseDate(GetRowValue(row, "CreatedDate"));
+            var picJson = GetRowValue(row, "pIC")?.ToString();
+            var type = GetRowValue(row, "type")?.ToString()?.Trim() ?? "Unknown";
+            var createdDate = ParseDate(GetRowValue(row, "createdDate"));
+            var stageDept = GetRowValue(row, "stageDept")?.ToString();
+            var stageAccount = GetRowValue(row, "stageAccount")?.ToString();
             var date = createdDate?.ToString("yyyy-MM-dd") ?? "";
-            var status = GetRowValue(row, "OverallStatus")?.ToString()?.Trim();
+            var status = GetRowValue(row, "overallStatus")?.ToString()?.Trim();
             if (string.IsNullOrWhiteSpace(status))
-                status = GetRowValue(row, "WorkflowStatus")?.ToString()?.Trim();
+                status = GetRowValue(row, "workflowStatus")?.ToString()?.Trim();
             status = string.IsNullOrWhiteSpace(status) ? "Unknown" : status;
 
             foreach (var assignment in ParseAssignments(picJson))
@@ -46,8 +54,8 @@ public class DashboardController : ControllerBase
                 {
                     item = new DashboardWorkloadItem
                     {
-                        Department = assignment.Department,
-                        Member = assignment.Member,
+                        Department = stageDept ?? "",
+                        Member = stageAccount ?? "",
                         Type = type,
                         Status = status,
                         Date = date,

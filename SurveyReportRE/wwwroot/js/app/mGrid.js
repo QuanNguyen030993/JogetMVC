@@ -1251,10 +1251,10 @@ var MDropDownDataSource = class MDropDownDataSource {
             loadMode: "raw",
             load: function (loadOptions) {
                 var d = $.Deferred();
-                var params = {};
+                var params = structuredClone(customOptions);
                 var filter = [];
-                params.skip = customOptions.skip;
-                params.take = customOptions.take;
+                //params.skip = customOptions.skip;
+                //params.take = customOptions.take;
                 params.sort = loadOptions.sort ? JSON.stringify(loadOptions.sort) : "";
                 params.totalSummary = loadOptions.totalSummary ? JSON.stringify(loadOptions.totalSummary) : "";
                 params.group = loadOptions.group ? JSON.stringify(loadOptions.group) : "";
