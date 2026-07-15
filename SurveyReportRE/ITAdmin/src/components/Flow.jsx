@@ -1299,7 +1299,8 @@ function Flow({ id: propId }) {
                     icon: edge.data?.icon || null,
                     buttonClass: edge.data?.buttonClass || null,
                     mailTemplateId: edge.data?.mailTemplateId || null,
-                    notificationTemplateId: edge.data?.notificationTemplateId || null
+                    notificationTemplateId: edge.data?.notificationTemplateId || null,
+                    custom: edge.data?.custom || null
                 };
                 console.log(stepData);
                 console.log(fromNode);

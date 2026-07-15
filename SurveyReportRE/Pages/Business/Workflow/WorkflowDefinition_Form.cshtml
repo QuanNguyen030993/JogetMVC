@@ -1530,7 +1530,7 @@
 
                     departmentCode: fromNode.departmentName || null,
                     displayStatus: t.actionName || null,
-                    flowType: t.flowType || "Both",
+                    flowType: t.flowType || "Forward",
                     isActive: true,
                     isEnd: isEnd,
                     isStart: isStart,
@@ -2949,7 +2949,7 @@
                             toNodeId: targetId,
                             actionCode: actionCode,
                             actionName: actionName,
-                            flowType: (targetNode && targetNode.flowType) || "Both",
+                            flowType: "Forward",
                             isReturn: false,
                             isLoop: sourceId === targetId,
                             loopGroup: sourceId === targetId ? ((sourceNode && sourceNode.loopGroup) || "") : "",

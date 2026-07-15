@@ -4,12 +4,31 @@
     long policyIssuanceId = Convert.ToInt64(ViewData["Id"]);
 }
 
+<style>
+    #piReminderButton_@policyIssuanceId {
+        display: inline-flex;
+        align-items: center;
+        flex: 0 0 auto;
+    }
+
+    #piReminderButton_@policyIssuanceId .dx-button {
+        min-width: 34px;
+        width: 34px;
+        height: 34px;
+        border-radius: 6px;
+    }
+
+    #piReminderButton_@policyIssuanceId .dx-button-content {
+        padding: 7px;
+    }
+</style>
 
 <div class="dept-title">@dept</div>
 <div class="dept-form-header">
     <div class="dept-form-header__assign">
         <div id="@PIViewIdHelper.AssigneeBox(dept, policyIssuanceId)"></div>
     </div>
+    <div id="piReminderButton_@policyIssuanceId"></div>
     @* <div id="@PIViewIdHelper.BtnToggleResForm(dept, policyIssuanceId)"></div> *@
 </div>
 <div id="pi-stickPanel_@dept">

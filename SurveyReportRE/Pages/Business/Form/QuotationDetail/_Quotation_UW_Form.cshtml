@@ -11,13 +11,6 @@
         padding-right: 18px;
     }
 
-    .uw-route-decision-host {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 8px;
-    }
-
     .uw-decision-primary-actions {
         display: flex;
         flex-wrap: wrap;
@@ -50,6 +43,10 @@
         opacity: 1;
         transition: opacity .15s ease;
     }
+
+    .uw-route-custom-host.has-flow-route .uw-route-fallback-button {
+        display: none;
+    }
 </style>
 <script type="text/javascript">
     $(function() {
@@ -70,10 +67,8 @@
      var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
          var acceptStatusId = `AC_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
      var noNeedToRefer = `NNTF_@QTViewIdHelper.Decision(dept, quotationId)`;
-     var declinedButtonId = `DC_@QTViewIdHelper.Decision(dept, quotationId)`;
-         var declinedStatusId = `DC_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
-                     var items = [ `#${acceptButtonId}`, `#${noNeedToRefer}`, `#${declinedButtonId}`];
-                                 var itemsDelay = [ acceptButtonId , acceptStatusId, declinedButtonId, declinedStatusId, noNeedToRefer, ''];
+                     var items = [ `#${acceptButtonId}`, `#${noNeedToRefer}`];
+                                 var itemsDelay = [ acceptButtonId , acceptStatusId, noNeedToRefer, ''];
     var sectionId = "@(ViewData["Cd"])";
     var that = new Object();
     that.ModelName = "Quotation";
@@ -121,10 +116,9 @@
 
                          template: function (data, itemElement) {
                              var formId = `@QTViewIdHelper.Form(dept,quotationId)`;
-                             var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
-                                 var noNeedToRefer = `NNTF_@QTViewIdHelper.Decision(dept, quotationId)`;
-                                 var declinedButtonId = `DC_@QTViewIdHelper.Decision(dept, quotationId)`;
-                                 var acceptStatusElement = `AC_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
+                                  var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
+                                  var noNeedToRefer = `NNTF_@QTViewIdHelper.Decision(dept, quotationId)`;
+                                  var acceptStatusElement = `AC_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
                                  var $primaryActions = $(`<div class="uw-decision-primary-actions"></div>`)
                                      .appendTo(itemElement);
                                              $(`<div id='${acceptButtonId}'>`)
@@ -155,7 +149,7 @@
                                                             $(`<div id="${acceptStatusElement}" class="accept-status-indicator"></div>`)
                                                                 .prependTo($primaryActions);
                                                         }
-                                                var $uwRouteSlot = $(`<div id="uw-route-custom-host-@quotationId" class="uw-route-custom-host is-route-pending" data-route-custom-host="true" data-record-id="@quotationId" data-route-group-name="uwDecisionGroup"></div>`)
+                                                var $uwRouteSlot = $(`<div id="uw-route-custom-host-@quotationId" class="uw-route-custom-host workflow-custom-route-host is-route-pending" data-route-custom-host="true" data-record-id="@quotationId" data-route-dept="UW" data-route-group-name="uwDecisionGroup"></div>`)
                                                     .appendTo($primaryActions);
                                                              $(`<div id='${noNeedToRefer}' class="uw-route-fallback-button" data-uw-route-fallback="true">`)
                                          .dxButton({
@@ -182,37 +176,6 @@
                                               uwDecision(passingObject);
                                          }
                                              }).appendTo($uwRouteSlot);
-
-
-                                                         $(`<div id='${declinedButtonId}'>`)
-                                            .dxButton({
-                                             elementAttr: {
-                                                             id: declinedButtonId
-                                             },
-                                             text: "Decline",
-                                                 icon: "remove",
-                                             onClick: function (e) {
-                                                var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-                                                var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem") || {};
-                                                tatObject[uwDept] = tatObject[uwDept] || {};
-                                                tatObject[uwDept].AcceptDate = formatDateToString(new Date()).gmt7;
-                                                formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
-
-                                                var passingObject = new Object();
-                                                passingObject.statusName = `${uwDept} No Need To Refer`; // base on Dept
-                                                passingObject.Comment = `Quotation ${formItems.quotationCode} marked Declined by ${_displayName}!`;  // base on Dept
-                                                passingObject.formItems = formItems;
-                                                passingObject.dept = uwDept;
-                                                passingObject.url = '/api/Quotation/UWReferal';
-                                                passingObject.urlLog = `/api/Quotation/LogAction`;
-                                                passingObject.schemeName = `Quotation`;
-                                                uwDecision(passingObject);
-                                             }
-                                                }).appendTo(itemElement);
-
-                                                $(`<div id="uw-route-decision-host-@quotationId" class="uw-route-decision-host"></div>`)
-                                                    .appendTo(itemElement);
-
                          }
                      }
     ]},        

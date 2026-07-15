@@ -141,6 +141,14 @@ Note:
             animation-duration: 1.8s;
         }
     }
+
+    .workflow-custom-route-host {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+    }
 </style>
 
 <script type="text/javascript">
@@ -423,9 +431,18 @@ Note:
                             // $.each(qtDeptModuleCode, function (itemIndex, item) {
                                     setTimeout(() => {
                                         // var findRoute = data.find(f => !f.isReturn && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
-                                         var findRoutes = data.filter(f => !f.isReturn && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
+                                         const customRoutes = data.filter(function (route) {
+                                             return String(route?.flowType || "").trim().toLowerCase() === "custom";
+                                         });
+                                         var findRoutes = data.filter(f => !f.isReturn
+                                             && String(f?.flowType || "").trim().toLowerCase() !== "custom"
+                                             && f.fromNodeId == stageDept
+                                             && f.fNodeId == state.nextStep.currentStep);
                                         // var findRouteReturn = data.find(f => f.isReturn && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
-                                        var findRouteReturns = data.filter(f => f.isReturn && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
+                                        var findRouteReturns = data.filter(f => f.isReturn
+                                            && String(f?.flowType || "").trim().toLowerCase() !== "custom"
+                                            && f.fromNodeId == stageDept
+                                            && f.fNodeId == state.nextStep.currentStep);
                                         var returnButtonId = window.QuotationIdManager.btnReturnBranch(stageDept,@ViewData["Id"]);
                                         var submitButtonId = window.QuotationIdManager.btnSubmitBranch(stageDept,@ViewData["Id"]);
                                         // var remarkBoxId = window.QuotationIdManager.remarkBox(stageDept,@ViewData["Id"]);
@@ -433,46 +450,94 @@ Note:
                                         var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                                          var tatObject = new Object();
 
-                                            tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Button Problem");
+                                            tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Button Problem") || {};
                                          var actionStatusObject = tryParseJSON(formItems.actionStatus, "Submit Button ActionStatus Problem") || {};
                                          var hasAcceptedRouteStatus = stageDept === "LMKT" && (actionStatusObject[`${stageDept}Button`] || actionStatusObject[stageDept]);
                                          if (hasAcceptedRouteStatus) {
-                                             return;
+                                             findRoutes = [];
                                          }
-                                        if (stageDept === "UW") {
-                                            const $uwRouteSlot = $(`[data-route-custom-host][data-record-id="@ViewData["Id"]"]`)
-                                                .filter(function () {
-                                                    return $(this).attr("data-route-group-name") === "uwDecisionGroup";
-                                                })
-                                                .first();
-                                            const eligibleUwRoutes = [
-                                                ...(findRoutes || []),
-                                                ...(tatObject ? (findRouteReturns || []) : [])
-                                            ];
-                                            const hasUwCustomRoute = eligibleUwRoutes.some(function (route) {
-                                                return getTransitionButtonPlacement(route) === "custom"
-                                                    && getTransitionButtonGroupName(route, "uwDecisionGroup") === "uwDecisionGroup";
-                                            });
+                                        const recordId = @ViewData["Id"];
+                                        const normalizeRouteDept = function (value) {
+                                            return String(value || "").trim().toUpperCase();
+                                        };
+                                        const ensureCustomRouteHost = function (deptCode) {
+                                            const normalizedDept = normalizeRouteDept(deptCode);
+                                            let $host = $(`[data-route-custom-host][data-record-id="${recordId}"][data-route-dept="${normalizedDept}"]`).first();
+                                            if ($host.length) return $host;
 
-                                            if ($uwRouteSlot.length) {
-                                                $uwRouteSlot.removeClass("is-route-pending");
-                                                if (hasUwCustomRoute) {
-                                                    $uwRouteSlot
-                                                        .removeClass("is-fallback-ready")
-                                                        .addClass("has-flow-route")
-                                                        .attr("data-has-flow-route", "true");
-                                                    $uwRouteSlot.find("[data-uw-route-fallback]").each(function () {
-                                                        $(this).dxButton("instance")?.dispose();
-                                                        $(this).remove();
-                                                    });
-                                                } else {
-                                                    $uwRouteSlot
-                                                        .removeClass("has-flow-route")
-                                                        .addClass("is-fallback-ready")
-                                                        .attr("data-has-flow-route", "false");
-                                                }
+                                            const deptFormId = window.QuotationIdManager.form(normalizedDept, recordId);
+                                            const $deptForm = $(`#${deptFormId}`);
+                                            if (!$deptForm.length) return $();
+
+                                            $host = $(`<div class="workflow-custom-route-host" data-route-custom-host="true" data-record-id="${recordId}" data-route-dept="${normalizedDept}"></div>`);
+                                            const $acceptButton = $deptForm.find(`[id^="AC_"]`).first();
+                                            if ($acceptButton.length) {
+                                                $host.insertAfter($acceptButton);
+                                            } else {
+                                                const $decisionArea = $deptForm.find(".dx-form-group-content").first();
+                                                $host.appendTo($decisionArea.length ? $decisionArea : $deptForm);
+                                            }
+                                            return $host;
+                                        };
+
+                                        $(`[data-route-custom-host][data-record-id="${recordId}"] [data-custom-route-button]`).each(function () {
+                                            $(this).dxButton("instance")?.dispose();
+                                            $(this).remove();
+                                        });
+
+                                        const $uwRouteSlot = ensureCustomRouteHost("UW");
+                                        const hasUwCustomRoute = customRoutes.some(function (route) {
+                                            return normalizeRouteDept(route?.fromNodeId) === "UW";
+                                        });
+                                        if ($uwRouteSlot.length) {
+                                            $uwRouteSlot
+                                                .removeClass("is-route-pending")
+                                                .toggleClass("has-flow-route", hasUwCustomRoute)
+                                                .toggleClass("is-fallback-ready", !hasUwCustomRoute)
+                                                .attr("data-has-flow-route", hasUwCustomRoute ? "true" : "false");
+                                            const fallbackInstance = $uwRouteSlot.find("[data-uw-route-fallback]").dxButton("instance");
+                                            if (fallbackInstance && !hasUwCustomRoute) {
+                                                fallbackInstance.option("disabled", stageDept !== "UW" || !!tatObject?.UW?.AcceptDate);
                                             }
                                         }
+
+                                        customRoutes.forEach(function (route, routeIndex) {
+                                            const routeDept = normalizeRouteDept(route?.fromNodeId);
+                                            if (!routeDept) return;
+                                            const $routeHost = ensureCustomRouteHost(routeDept);
+                                            if (!$routeHost.length) return;
+
+                                            const rawRouteKey = route?.routeId || route?.id || route?.actionCode || routeIndex;
+                                            const safeRouteKey = String(rawRouteKey).replace(/[^a-zA-Z0-9_-]/g, "_");
+                                            const customButtonId = `qt-custom-route-${recordId}-${routeDept}-${safeRouteKey}-${routeIndex}`;
+                                            const isCurrentRoute = routeDept === normalizeRouteDept(stageDept)
+                                                && route?.fNodeId == state.nextStep.currentStep;
+                                            const $customButton = $(`<div id="${customButtonId}" data-custom-route-button="true"></div>`)
+                                                .appendTo($routeHost);
+
+                                            $customButton.dxButton({
+                                                disabled: !isCurrentRoute,
+                                                text: route.displayStatus || route.actionName || route.actionCode || "Custom action",
+                                                icon: getTransitionButtonIcon(route, route.isReturn ? "undo" : "chevronright"),
+                                                type: route.isReturn ? "danger" : "info",
+                                                onClick: function () {
+                                                    const routeFormId = window.QuotationIdManager.form(routeDept, recordId);
+                                                    const routeFormItems = $(`#${routeFormId}`).dxForm("instance")?.option("formData") || {};
+                                                    const content = window.remarkBoxs?.[routeDept]?.controlRemark?.value?.() || "";
+                                                    if (route.isReturn && !content) {
+                                                        appNotifyWarning("Please put your reason to remarks!", false);
+                                                        return;
+                                                    }
+                                                    routeFormItems.comment = content;
+                                                    if (route.isReturn) {
+                                                        returnToStep(formModuleKeyQt, state.nextStep, route, routeFormItems);
+                                                    } else {
+                                                        submitNextStep(formModuleKeyQt, state.nextStep, route, routeFormItems);
+                                                    }
+                                                }
+                                            });
+                                            applyTransitionButtonClass(`#${customButtonId}`, route);
+                                        });
                                            try {
                                             if (findRouteReturns?.length && tatObject) {
 
@@ -481,23 +546,7 @@ Note:
                                                     const buttonId =
                                                         `${returnButtonId}_${route.routeId || route.actionCode}`;
 
-                                                    const uwDecisionHost = `#uw-route-decision-host-@ViewData["Id"]`;
-                                                    const routePlacement = getTransitionButtonPlacement(route);
-                                                    const customGroupName = getTransitionButtonGroupName(route, "uwDecisionGroup");
-                                                    const $uwCustomHost = $(`[data-route-custom-host][data-record-id="@ViewData["Id"]"]`)
-                                                        .filter(function () {
-                                                            return $(this).attr("data-route-group-name") === customGroupName;
-                                                        })
-                                                        .first();
-                                                    const useUwCustomHost = stageDept === "UW"
-                                                        && routePlacement === "custom"
-                                                        && $uwCustomHost.length;
-                                                    const useUwDecisionHost = stageDept === "UW"
-                                                        && routePlacement === "decision"
-                                                        && $(uwDecisionHost).length;
-                                                    const routeButtonHost = useUwCustomHost
-                                                        ? $uwCustomHost
-                                                        : (useUwDecisionHost ? uwDecisionHost : `#${returnButtonId}`);
+                                                    const routeButtonHost = `#${returnButtonId}`;
 
                                                     if (!$(`#${buttonId}`).length) {
                                                         $(`<div id="${buttonId}"></div>`)
@@ -550,23 +599,7 @@ Note:
                                                     const buttonId =
                                                         `${submitButtonId}_${route.routeId || route.actionCode}`;
 
-                                                    const uwDecisionHost = `#uw-route-decision-host-@ViewData["Id"]`;
-                                                    const routePlacement = getTransitionButtonPlacement(route);
-                                                    const customGroupName = getTransitionButtonGroupName(route, "uwDecisionGroup");
-                                                    const $uwCustomHost = $(`[data-route-custom-host][data-record-id="@ViewData["Id"]"]`)
-                                                        .filter(function () {
-                                                            return $(this).attr("data-route-group-name") === customGroupName;
-                                                        })
-                                                        .first();
-                                                    const useUwCustomHost = stageDept === "UW"
-                                                        && routePlacement === "custom"
-                                                        && $uwCustomHost.length;
-                                                    const useUwDecisionHost = stageDept === "UW"
-                                                        && routePlacement === "decision"
-                                                        && $(uwDecisionHost).length;
-                                                    const routeButtonHost = useUwCustomHost
-                                                        ? $uwCustomHost
-                                                        : (useUwDecisionHost ? uwDecisionHost : `#${submitButtonId}`);
+                                                    const routeButtonHost = `#${submitButtonId}`;
 
                                                     if (!$(`#${buttonId}`).length) {
                                                         $(`<div id="${buttonId}"></div>`)
@@ -576,11 +609,11 @@ Note:
                                                     }
 
                                                     $(`#${buttonId}`).dxButton({
-                                                        disabled: (stageDept === "LMKT" || useUwCustomHost || useUwDecisionHost)
+                                                        disabled: stageDept === "LMKT"
                                                             ? false
                                                             : (tatObject?.[stageDept]?.AcceptDate ? false : true),
                                                         text: route.displayStatus || "",
-                                                        icon: getTransitionButtonIcon(route, "chevronright"),
+                                                        icon: getTransitionButtonIcon(route, "fa-solid fa-person-running"),
                                                         type: "info",
                                                         onClick: function () {
 

@@ -10,6 +10,7 @@ import DropDownBox from "../components/DropDownBox.jsx";
 import CustomForm from "../components/CustomForm.jsx";
 import PreviewOffice from "../components/PreviewOffice.jsx";
 import Map from "../components/Map.jsx";
+import FileUploader from "../components/FileUploader.jsx";
 import React from "react";
 
 import { createRoot } from "react-dom/client";
@@ -631,6 +632,41 @@ $.fn.tmivmap = function(arg1, arg2, arg3) {
     return this;
 };
 
+$.fn.tmivfileuploader = function(arg1, arg2, arg3) {
+    if (typeof arg1 === "string") {
+        if (arg1 === "option") {
+            if (arguments.length === 2 && this.length === 1) {
+                const instance = roots.get(this[0]);
+                return instance?.ref?.current?.option?.(arg2) ?? instance?.options?.[arg2];
+            }
+
+            this.each(function() {
+                const instance = roots.get(this);
+                if (!instance) return;
+
+                if (instance.ref?.current) {
+                    instance.ref.current.option?.(arg2, arg3);
+                } else {
+                    instance.options[arg2] = arg3;
+                    const Component = controls[instance.name];
+                    instance.root.render(
+                        <Component ref={instance.ref} {...instance.options}/>
+                    );
+                }
+            });
+            return this;
+        }
+    }
+
+    if (typeof arg1 === "object" || typeof arg1 === "undefined") {
+        return this.each(function() {
+            mount(this, "FileUploader", arg1 || {});
+        });
+    }
+
+    return this;
+};
+
 register(
     "DateBox",
     DateBox
@@ -690,4 +726,9 @@ register(
     Map
 );
 
-export default { DateBox, HtmlEditor, CustomGrid, CommentEditor, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm, PreviewOffice, Map };
+register(
+    "FileUploader",
+    FileUploader
+);
+
+export default { DateBox, HtmlEditor, CustomGrid, CommentEditor, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm, PreviewOffice, Map, FileUploader };
