@@ -3,6 +3,7 @@ import { API_BASE_URL } from "../config";
 import CustomGrid from "../../../TMIVCom/src/components/CustomGrid";
 
 const icons = [
+  "",
   "fa-solid fa-house",
   "fa-solid fa-user",
   "fa-solid fa-users",
@@ -166,7 +167,7 @@ export default function MenuDesigner() {
       width: "150px",
       editorType: "selectbox",
       lookup: {
-        dataSource: icons.map(i => ({ id: i, name: i })),
+        dataSource: icons.map(i => ({ id: i, name: i || "Blank / Không có icon" })),
         valueExpr: "id",
         displayExpr: "name"
       }
@@ -448,12 +449,12 @@ export default function MenuDesigner() {
               <label style={{ display: "block", marginBottom: "12px" }}>
                 Icon đại diện
                 <select
-                  value={selected.Icon}
+                  value={selected.Icon || ""}
                   onChange={(e) => updateMenu("Icon", e.target.value)}
                   style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", marginTop: "4px", background: "white" }}
                 >
                   {icons.map((i) => (
-                    <option key={i} value={i}>{i}</option>
+                    <option key={i} value={i}>{i || "Blank / Không có icon"}</option>
                   ))}
                 </select>
               </label>
