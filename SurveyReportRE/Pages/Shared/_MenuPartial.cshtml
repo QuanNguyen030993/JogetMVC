@@ -24,7 +24,8 @@
                 $("#roleLabel").text(`Department ${_role}`);
                  _displayName = result.userRoles.DisplayName;
                 $("#displayLabel").text(`${_displayName}`);
-                refreshUserRoleSettings();
+                if (typeof refreshUserRoleSettings === "function")
+                    refreshUserRoleSettings();
             });
             return d.promise();
         }
