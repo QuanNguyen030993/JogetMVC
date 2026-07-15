@@ -106,6 +106,19 @@
         box-shadow: 0 0 0 5px var(--c-rgba-101-230-180-16);
     }
 
+    .workload-dashboard-badge.is-mock .workload-dashboard-badge-dot {
+        background: var(--c-ffc857, #ffc857);
+        box-shadow: 0 0 0 5px rgba(255, 200, 87, .16);
+    }
+
+    .workload-dashboard-source-label {
+        min-width: 66px;
+    }
+
+    #workloadDataSourceSwitch {
+        margin-left: 2px;
+    }
+
     .workload-dashboard-card {
         padding: 24px;
         border: 1px solid var(--c-rgba-221-226-235-82);
@@ -165,7 +178,10 @@
                     Theo dõi khối lượng Quotation và Policy Issuance theo phòng ban, nhân sự và trạng thái xử lý.
                 </p>
             </div>
-            <div class="workload-dashboard-badge">
+            <div id="workloadDataSourceBadge" class="workload-dashboard-badge is-mock">
+                <span class="workload-dashboard-badge-dot"></span>
+                <span id="workloadDataSourceLabel" class="workload-dashboard-source-label">Mock data</span>
+                <div id="workloadDataSourceSwitch" aria-label="Switch dashboard data source"></div>
             </div>
         </header>
 
@@ -178,7 +194,7 @@
 
 <script>
     (function () {
-        const workloadData = [
+        const mockWorkloadData = [
             { department: "FO", member: "An", type: "Quotation", status: "Pending", count: 5 },
             { department: "FO", member: "An", type: "Quotation", status: "Completed", count: 18 },
             { department: "FO", member: "An", type: "Policy Issuance", status: "Completed", count: 8 },
@@ -214,6 +230,8 @@
 
         $(function () {
             const $dashboard = $("#workloadDashboard");
+            const $sourceBadge = $("#workloadDataSourceBadge");
+            const $sourceLabel = $("#workloadDataSourceLabel");
 
             if (typeof $dashboard.workloadchart !== "function") {
                 $dashboard.html(
@@ -222,7 +240,52 @@
                 return;
             }
 
-            $dashboard.workloadchart({ data: workloadData });
+            const chart = $dashboard.workloadchart({ data: mockWorkloadData });
+            let suppressSwitchChange = false;
+
+            function setSourceState(source, label) {
+                $sourceBadge.toggleClass("is-mock", source !== "live");
+                $sourceLabel.text(label);
+            }
+
+            $("#workloadDataSourceSwitch").dxSwitch({
+                value: false,
+                switchedOffText: "Mock",
+                switchedOnText: "Live",
+                width: 82,
+                onValueChanged: function (event) {
+                    if (suppressSwitchChange)
+                        return;
+
+                    if (!event.value) {
+                        chart.option("data", mockWorkloadData);
+                        setSourceState("mock", "Mock data");
+                        return;
+                    }
+
+                    const switchInstance = event.component;
+                    switchInstance.option("disabled", true);
+                    setSourceState("live", "Loading...");
+
+                    $.ajax({
+                        url: "/api/Dashboard/Workload",
+                        method: "GET",
+                        dataType: "json"
+                    }).done(function (data) {
+                        chart.option("data", Array.isArray(data) ? data : []);
+                        setSourceState("live", "Live data");
+                    }).fail(function (xhr) {
+                        chart.option("data", mockWorkloadData);
+                        setSourceState("mock", "Mock data");
+                        suppressSwitchChange = true;
+                        switchInstance.option("value", false);
+                        suppressSwitchChange = false;
+                        appErrorHandling("Không thể tải dữ liệu Dashboard từ database.", xhr);
+                    }).always(function () {
+                        switchInstance.option("disabled", false);
+                    });
+                }
+            });
         });
     })();
 </script>

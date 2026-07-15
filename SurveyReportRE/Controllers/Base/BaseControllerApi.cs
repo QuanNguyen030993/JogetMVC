@@ -917,12 +917,190 @@ namespace ERPCore.Controllers.Base
         #region Bulk Action
 
 
-        // POST: api/YourModel/BulkDelete
+        // POST: api/YourModel/BulkInsert
+        // Body: [{ ...entity1 }, { ...entity2 }]
         [HttpPost]
-        public async Task<IActionResult> BulkDelete([FromBody] List<int> ids)
+        public virtual async Task<IActionResult> BulkInsert([FromBody] List<T> entities)
         {
-             await _BaseRepository.BulkDelete(ids, "Id", true);
-            return Ok();
+            if (entities == null || entities.Count == 0)
+                return BadRequest("At least one item is required.");
+            if (entities.Any(entity => entity == null))
+                return BadRequest("Bulk insert items cannot be null.");
+
+            const int maxBatchSize = 5000;
+            if (entities.Count > maxBatchSize)
+                return BadRequest($"A bulk request cannot contain more than {maxBatchSize} items.");
+
+            await _BaseRepository.BulkInsertAsync(entities);
+            return Ok(new
+            {
+                operation = "insert",
+                affected = entities.Count
+            });
+        }
+
+
+        // PUT: api/YourModel/BulkUpdate
+        // Body: { "items": [{ "id": 1, ... }], "updateFields": ["Field1", "Field2"] }
+        [HttpPut]
+        public virtual async Task<IActionResult> BulkUpdate([FromBody] BulkUpdateRequest<T> request)
+        {
+            if (request?.Items == null || request.Items.Count == 0)
+                return BadRequest("At least one item is required.");
+            if (request.Items.Any(item => item == null))
+                return BadRequest("Bulk update items cannot be null.");
+            if (request.UpdateFields == null || request.UpdateFields.Count == 0)
+                return BadRequest("At least one update field is required.");
+
+            const int maxBatchSize = 5000;
+            if (request.Items.Count > maxBatchSize)
+                return BadRequest($"A bulk request cannot contain more than {maxBatchSize} items.");
+
+            const string keyField = "Id";
+            var modelProperties = typeof(T).GetProperties()
+                .ToDictionary(property => property.Name, StringComparer.OrdinalIgnoreCase);
+            if (!modelProperties.TryGetValue(keyField, out var keyProperty))
+                return BadRequest($"{typeof(T).Name} does not define the required {keyField} key.");
+
+            var invalidKeyIndexes = request.Items
+                .Select((item, index) => new { item, index })
+                .Where(entry => IsEmptyBulkKey(keyProperty.GetValue(entry.item)))
+                .Select(entry => entry.index)
+                .ToList();
+            if (invalidKeyIndexes.Count > 0)
+                return BadRequest($"Every update item must contain a non-zero {keyField}. Invalid item indexes: {string.Join(", ", invalidKeyIndexes)}.");
+
+            var protectedFields = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                keyField,
+                "Guid",
+                "CreatedBy",
+                "CreatedDate",
+                "Deleted",
+                "DeletedBy",
+                "DeletedDate"
+            };
+            var updateFields = request.UpdateFields
+                .Where(field => !string.IsNullOrWhiteSpace(field))
+                .Select(field => field.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            var invalidFields = updateFields
+                .Where(field =>
+                    !modelProperties.TryGetValue(field, out var property) ||
+                    protectedFields.Contains(field) ||
+                    !IsBulkWritableProperty(property))
+                .ToList();
+            if (invalidFields.Count > 0)
+                return BadRequest($"Unknown or protected update field(s): {string.Join(", ", invalidFields)}.");
+
+            updateFields = updateFields
+                .Select(field => modelProperties[field].Name)
+                .ToList();
+
+            // Persist the audit values populated by BaseRepository.HandleSystemAttribute.
+            if (modelProperties.ContainsKey("ModifiedBy"))
+                updateFields.Add("ModifiedBy");
+            if (modelProperties.ContainsKey("ModifiedDate"))
+                updateFields.Add("ModifiedDate");
+            updateFields = updateFields
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            await _BaseRepository.BulkUpdateAsync(request.Items, updateFields.ToArray(), keyField);
+            return Ok(new
+            {
+                operation = "update",
+                affected = request.Items.Count,
+                fields = updateFields
+            });
+        }
+
+
+        // DELETE: api/YourModel/BulkDelete
+        // Body: { "ids": [1, 2], "hardDelete": false }
+        [HttpDelete]
+        public virtual async Task<IActionResult> BulkDelete([FromBody] BulkDeleteRequest request)
+        {
+            if (request?.Ids == null || request.Ids.Count == 0)
+                return BadRequest("At least one Id is required.");
+            if (request.Ids.Any(id => id <= 0))
+                return BadRequest("Every Id must be greater than zero.");
+
+            const int maxBatchSize = 5000;
+            var ids = request.Ids.Distinct().ToList();
+            if (ids.Count > maxBatchSize)
+                return BadRequest($"A bulk request cannot contain more than {maxBatchSize} Ids.");
+
+            await _BaseRepository.BulkDeleteAsync(ids.Cast<object>(), "Id", request.HardDelete);
+            return Ok(new
+            {
+                operation = request.HardDelete ? "hard-delete" : "soft-delete",
+                affected = ids.Count
+            });
+        }
+
+
+        // POST: api/YourModel/BulkDelete
+        // Legacy body: [1, 2]
+        [HttpPost]
+        public virtual async Task<IActionResult> BulkDelete([FromBody] List<int> ids)
+        {
+            if (ids == null || ids.Count == 0)
+                return BadRequest("At least one Id is required.");
+            if (ids.Any(id => id <= 0))
+                return BadRequest("Every Id must be greater than zero.");
+
+            var distinctIds = ids.Distinct().ToList();
+            const int maxBatchSize = 5000;
+            if (distinctIds.Count > maxBatchSize)
+                return BadRequest($"A bulk request cannot contain more than {maxBatchSize} Ids.");
+
+            await _BaseRepository.BulkDeleteAsync(distinctIds.Cast<object>(), "Id", true);
+            return Ok(new
+            {
+                operation = "hard-delete",
+                affected = distinctIds.Count,
+                legacy = true
+            });
+        }
+
+
+        private static bool IsEmptyBulkKey(object? value)
+        {
+            if (value == null)
+                return true;
+
+            return value switch
+            {
+                byte number => number == 0,
+                short number => number == 0,
+                int number => number == 0,
+                long number => number == 0,
+                uint number => number == 0,
+                ulong number => number == 0,
+                Guid guid => guid == Guid.Empty,
+                string text => string.IsNullOrWhiteSpace(text) || text == "0",
+                _ => false
+            };
+        }
+
+
+        private static bool IsBulkWritableProperty(PropertyInfo property)
+        {
+            if (!property.CanWrite || property.GetIndexParameters().Length > 0)
+                return false;
+
+            var propertyType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+            return propertyType.IsPrimitive ||
+                   propertyType.IsEnum ||
+                   propertyType == typeof(string) ||
+                   propertyType == typeof(decimal) ||
+                   propertyType == typeof(DateTime) ||
+                   propertyType == typeof(DateTimeOffset) ||
+                   propertyType == typeof(TimeSpan) ||
+                   propertyType == typeof(Guid) ||
+                   propertyType == typeof(byte[]);
         }
 
 
