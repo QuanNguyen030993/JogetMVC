@@ -14,6 +14,7 @@ using ERPCore.Models.Request;
 using ERPCore.Models.Migration.Business.Social;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.SharePoint.ApplicationPages.Calendar.Exchange;
+using ERPCore.Models.Migration.Config;
 
 namespace ERPCore.ControllerUtil
 {
@@ -99,17 +100,31 @@ namespace ERPCore.ControllerUtil
             else return "1";
         }
 
-        public async static Task SignalRResponse(string UIMethod
+        public async static Task SignalRResponse(IBaseRepository<UsersSession> _usersSessionRepository, string UIMethod
             , object returnObject
             , string connectionId
             , string domainName
             )
         {
 
-            IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
-                OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(domainName, "") == connectionId);
+            //IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
+            //    OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(domainName, "") == connectionId);
+            
+            List<UsersSession> usersSession = new List<UsersSession>();
 
-                await FileProcessingHub._hubContext.Clients.Client(onlineUser.ConnectionId).SendAsync(UIMethod,
+            var today = DateTime.Today.AddDays(-1);
+            var tomorrow = DateTime.Today.AddDays(1);
+
+            string loginUser = connectionId;
+            usersSession = await _usersSessionRepository
+                .GetListObject(s => s.CreatedDate >= today
+                         && s.CreatedDate < tomorrow
+                );
+            UsersSession currentUsersSession = usersSession.Where(w => w.CreatedBy == loginUser).OrderByDescending(s => s.CreatedDate)
+                .FirstOrDefault();
+
+
+            await FileProcessingHub._hubContext.Clients.Client(currentUsersSession?.SignalRConnectionId ?? "").SendAsync(UIMethod,
                 returnObject);
         }
      

@@ -50,6 +50,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     private readonly IBaseRepository<PolicyIssuanceChecklist> _policyIssuanceChecklistRepository;
     private readonly IBaseRepository<MailTemplate> _mailTemplateRepository;
     private readonly IBaseRepository<MailQueue> _mailQueueRepository;
+    private readonly IBaseRepository<UsersSession> _usersSessionRepository;
     private readonly IBaseRepository<SLA> _slaRepository;
 
     private readonly IConfigurationSection path;
@@ -99,6 +100,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         _mailTemplateRepository = new BaseRepository<MailTemplate>(configuration, _httpContextAccessor);
         _mailQueueRepository = new BaseRepository<MailQueue>(configuration, _httpContextAccessor);
         _slaRepository = new BaseRepository<SLA>(configuration, _httpContextAccessor);
+        _usersSessionRepository = new BaseRepository<UsersSession>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
         _hubContext = hubContext;
         MANAGER_APP = configuration.GetSection("BusinessConfig:ManagerAppKey").Value;
@@ -319,7 +321,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
                 progressvalue = 75,//quotationComplete,
                 type = "inprogress"
             };
-            ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+            ControllerHelper.SignalRResponse(_usersSessionRepository, "R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
             startCount++;
             }
             else
@@ -333,7 +335,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
                     progressvalue = 100,//quotationComplete,
                     type = "error"
                 };
-                ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+                ControllerHelper.SignalRResponse(_usersSessionRepository, "R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
                 return BadRequest(new { detail = "Initial Quotation Error", message = "Flow not found!" });
             }
 
@@ -350,7 +352,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
             progressvalue = 100,
             type = "complete"
         };
-        ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        ControllerHelper.SignalRResponse(_usersSessionRepository, "R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         return Ok();
     }
 
@@ -729,7 +731,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
 
             }
         });
-        ControllerHelper.SignalRResponse("R_ItemSubmitted", new { type = nameof(PolicyIssuance) }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        ControllerHelper.SignalRResponse(_usersSessionRepository, "R_ItemSubmitted", new { id = form.key, type = nameof(PolicyIssuance) }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
 
         return new HttpResponseMessage(HttpStatusCode.OK);
     }

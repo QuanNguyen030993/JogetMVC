@@ -56,6 +56,7 @@ public class QuotationController : BaseControllerApi<Quotation>
     private readonly IBaseRepository<Product> _productRepository;
     private readonly IBaseRepository<Line> _lineRepository;
     private readonly IBaseRepository<SLA> _slaRepository;
+    private readonly IBaseRepository<UsersSession> _usersSessionRepository;
     private readonly IHubContext<FileProcessingHub> _hubContext;
     private readonly ILogger<Quotation> _logger;
     private readonly IConfigurationSection path;
@@ -108,6 +109,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         _productRepository = new BaseRepository<Product>(configuration, _httpContextAccessor);
         _lineRepository = new BaseRepository<Line>(configuration, _httpContextAccessor);
         _slaRepository = new BaseRepository<SLA>(configuration, _httpContextAccessor);
+        _usersSessionRepository =  new BaseRepository<UsersSession>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
         _messageSettings = configuration.GetSection("Message").Get<Message>();
 
@@ -153,7 +155,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         entity = await _BaseRepository.GetSingleObject(s => s.Id == id);
         entity.IsNotMakeOption = true;
         await _BaseRepository.UpdateData(entity, JsonConvert.SerializeObject(new { IsNotMakeOption = true }), entity.Id, "Id");
-        ControllerHelper.SignalRResponse("R_ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        ControllerHelper.SignalRResponse(_usersSessionRepository,"R_ItemSubmitted", new { id = id,type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
 
         return Ok();
     }
@@ -542,7 +544,7 @@ public class QuotationController : BaseControllerApi<Quotation>
                             progressvalue = 75,//fileComplete,
                             type = "inprogress"
                         };
-                        ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+                        ControllerHelper.SignalRResponse(_usersSessionRepository,"R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
 
                     }
 
@@ -597,7 +599,7 @@ public class QuotationController : BaseControllerApi<Quotation>
                             progressvalue = 75,//quotationComplete,
                             type = "inprogress"
                         };
-                        ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+                        ControllerHelper.SignalRResponse(_usersSessionRepository, "R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
                     }
                     else
                     {
@@ -610,7 +612,7 @@ public class QuotationController : BaseControllerApi<Quotation>
                             progressvalue = 100,//quotationComplete,
                             type = "error"
                         };
-                        ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+                        ControllerHelper.SignalRResponse(_usersSessionRepository,"R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
                         return BadRequest(new {detail = "Initial Quotation Error", message = "Flow not found!" });
                     }
                 }
@@ -624,7 +626,7 @@ public class QuotationController : BaseControllerApi<Quotation>
                 progressvalue = 100,
                 type = "complete"
             };
-            ControllerHelper.SignalRResponse("R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+            ControllerHelper.SignalRResponse(_usersSessionRepository,"R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
             return Ok();
         }
         catch (Exception ex)
@@ -1229,7 +1231,7 @@ public class QuotationController : BaseControllerApi<Quotation>
 
             }
         });
-        ControllerHelper.SignalRResponse("R_ItemSubmitted", new { type = nameof(Quotation) }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        ControllerHelper.SignalRResponse(_usersSessionRepository, "R_ItemSubmitted", new { id = form.key,  type = nameof(Quotation) }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         return new HttpResponseMessage(HttpStatusCode.OK);
     }
     public async Task BulkInsertQuotationAsync(List<Quotation> data)

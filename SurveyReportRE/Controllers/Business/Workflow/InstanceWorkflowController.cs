@@ -59,6 +59,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     private readonly IBaseRepository<EnumData> _enumDataRepository;
     private readonly IBaseRepository<Document> _documentRepository;
     private readonly IBaseRepository<WorkflowInstanceNode> _workflowInstanceNodeRepository;
+    private readonly IBaseRepository<UsersSession> _usersSessionRepository;
     private readonly IHubContext<FileProcessingHub> _hubContext;
     private readonly Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> _blobStorageSettings;
     private readonly Microsoft.Extensions.Options.IOptionsMonitor<BusinessConfig> _businessConfig;
@@ -95,6 +96,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         _enumDataRepository = new BaseRepository<EnumData>(configuration, _httpContextAccessor);
         _documentRepository = new BaseRepository<Document>(configuration, _httpContextAccessor);
         _workflowInstanceNodeRepository = new BaseRepository<WorkflowInstanceNode>(configuration, _httpContextAccessor);
+        _usersSessionRepository = new BaseRepository<UsersSession>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
         _hubContext = hubContext;
         _blobStorageSettings = blobStorageSettings;
@@ -221,7 +223,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             "PM" => pICAttributes.PM,
             _ => null
         };
-        ControllerHelper.SignalRResponse("R_ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        ControllerHelper.SignalRResponse(_usersSessionRepository,"R_ItemSubmitted", new { id = quotation.Id, type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         await SendAttachedWorkflowMailAsync(submitRequest, quotation);
 
         dynamic transferObject = new
@@ -347,7 +349,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             "PM" => pICAttributes.PM,
             _ => null
         };
-        ControllerHelper.SignalRResponse( "R_ItemSubmitted", new { type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        ControllerHelper.SignalRResponse(_usersSessionRepository, "R_ItemSubmitted", new { id = quotation.Id,  type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         Employee employee = new Employee();
         flowUser = await _usersRepository.GetSingleObject(s => s.username == accountName);
         employee = await _employeeRepository.GetSingleObject(s => s.UsersId == flowUser.Id);

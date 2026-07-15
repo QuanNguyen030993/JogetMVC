@@ -30,7 +30,7 @@ public class UsersSessionController : BaseControllerApi<UsersSession>
     [HttpGet]
     public IActionResult OnlineUsers()
     {
-        return Ok(FileProcessingHub._store.GetOnlineUsers());
+        return Ok(FileProcessingHub._store?.GetOnlineUsers());
     }
 
  }

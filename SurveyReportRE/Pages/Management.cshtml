@@ -552,7 +552,7 @@
 
                 <div id="dropdown-menu" class="user-account-menu" style="display:none;">
                     <div class="user-menu-heading">
-                        <span id="menuAvatarInitial" class="user-menu-avatar">U</span>
+                        @* <span id="menuAvatarInitial" class="user-menu-avatar">U</span> *@
                         <div>
                             <strong id="displayLabel">User account</strong>
                             <span id="roleLabel">Workflow group not selected</span>
@@ -693,6 +693,7 @@
                  stylingMode: "contained",
                  type: "normal",
                  onClick: function () {
+                     debugger
                      $.ajax({
                          url: `/api/Users/ReturnToAccount`,
                          method: "POST",
@@ -757,7 +758,7 @@
                 $("#roleLabel").text(selectedUserRole ? `Workflow group ${selectedUserRole}` : "Workflow group not selected");
                 $("#displayLabel").text(profile.fullName || _displayName || profile.accountName);
                 const initial = (profile.fullName || profile.accountName || "U").charAt(0).toUpperCase();
-                $("#accountAvatarInitial, #menuAvatarInitial").text(initial);
+                $("#accountAvatarInitial").text(initial);
                 renderUserRoleOptions();
                 if (openModal) $("#userSettingsModal").addClass("is-open").attr("aria-hidden", "false");
             })
@@ -1524,6 +1525,7 @@
     }
 
     .user-account-trigger {
+        margin-top: 0px !important;
         min-width: 168px;
         height: 42px;
         padding: 5px 10px 5px 6px;
@@ -1602,7 +1604,7 @@
 
     .user-account-menu {
         position: absolute;
-        z-index: 2500;
+        z-index: 10900;
         top: 56px;
         right: 14px;
         width: 310px;

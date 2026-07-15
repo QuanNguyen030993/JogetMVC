@@ -2699,7 +2699,7 @@ VALUES
 
             var getOrderByCondition = Get(allParams, "orderBy");
 
-            if (bool.Parse(getOrderByCondition ?? "true"))
+            if (bool.Parse(getOrderByCondition ?? "false"))
             {
                 var orderBySql = BuildOrderByFromSort(sortJson, _reservedKeys);
 

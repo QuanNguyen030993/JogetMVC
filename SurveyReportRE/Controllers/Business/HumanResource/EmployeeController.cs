@@ -505,8 +505,8 @@ public class EmployeeController : BaseControllerApi<Employee>
             {
             "UWRI" => "UW",
             "PM" => "PM",
-            "MKT" => "MKT",
-            _ => department
+            "MKT" => "?",
+            _ => "?"
         };
             }
 

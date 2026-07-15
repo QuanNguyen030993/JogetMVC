@@ -354,7 +354,7 @@
     // var constHostName = 'https://localhost:5000/api';
     const _defaultSkipDropDown = 0;
     const _defaultTakeDropDown = 1000; // Can than so nay khi dung cho dropdown
-
+    
 
     const _defaultFormFieldWidth = "100%";
     const _defaultFormFieldHeight = 50;
@@ -526,12 +526,11 @@
     var _isSuperUser = "false";
     var _isDebugMode = "false";
     var _genericExceptionMessage = "";
-    
+    var _isIssued= false;
     var _windowWidth = 0;
     // Write your JavaScript code.
     var _connectionId = null;//generateGUID();
-    // const connectionSignR = new signalR.HubConnectionBuilder()
-    //     .withUrl("/fileProcessingHub").build(); //
+
 
     var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
     shadingColor: "rgba(0,0,0,0.4)",
@@ -773,4 +772,5 @@
     var qtDeptModuleCode = @Html.Raw(JsonSerializer.Serialize(qtDeptModuleCode));
     var piDeptModuleCode = @Html.Raw(JsonSerializer.Serialize(piDeptModuleCode));
 </script>
-<script src="~/js/defined/signalR.js"></script>
+
+@await Html.PartialAsync("_SignalR")

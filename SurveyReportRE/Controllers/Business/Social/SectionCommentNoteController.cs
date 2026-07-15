@@ -22,12 +22,14 @@ using System.Net;
 using ERPCore.Models.Models.Parsing;
 using ERPCore.Models.Migration.Business.Social;
 using Microsoft.AspNetCore.SignalR;
+using ERPCore.Models.Migration.Config;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
 public class SectionCommentNoteController : BaseControllerApi<SectionCommentNote>
 {
     private readonly IBaseRepository<SectionCommentNote> _BaseRepository;
+    private readonly IBaseRepository<UsersSession> _usersSessionRepository;
     private readonly IConfiguration configuration;
     private readonly IConfigurationSection path;
     private static string DOMAIN_NAME = "";
@@ -37,6 +39,7 @@ public class SectionCommentNoteController : BaseControllerApi<SectionCommentNote
         _BaseRepository = BaseRepository;
 
         DOMAIN_NAME = configuration.GetSection("Domain:DCServer").Value;
+        _usersSessionRepository = new BaseRepository<UsersSession>(configuration, _httpContextAccessor);
     }
     [HttpPost]
     public override async Task<IActionResult> InsertData([FromForm] InsertFormCollection form)
@@ -44,7 +47,7 @@ public class SectionCommentNoteController : BaseControllerApi<SectionCommentNote
         var entity = new SectionCommentNote();
         JsonConvert.PopulateObject(form.values, entity);
         entity = await _BaseRepository.InsertData(entity);
-        ControllerHelper.SignalRResponse( "R_ItemSubmitted", new { type = "SectionCommentNote" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        ControllerHelper.SignalRResponse(_usersSessionRepository, "R_ItemSubmitted", new { id = form.key,  type = "SectionCommentNote" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         return Ok(entity);
     }
 }
