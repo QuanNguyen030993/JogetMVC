@@ -25,7 +25,11 @@
         thisObject.prefix = `@prefix`;
 
 
-
+        var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
+        var acceptStatusId = `AC_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
+        var declinedButtonId = `DC_@QTViewIdHelper.Decision(dept, quotationId)`;
+        var declinedStatusId = `DC_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
+        var itemsDelay = [acceptButtonId, acceptStatusId, declinedButtonId, declinedStatusId];
 
     var that = new Object();
     var sectionId = "@(ViewData["Cd"])";
@@ -192,7 +196,7 @@
     
     });
     viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
-    delayAcceptStatusV2(null, thisObject, []);
+    delayAcceptStatusV2(null, thisObject, ...itemsDelay);
     setTimeout(() => {
         var picJson = PIC_JSON || "{}";
         var picMap = parsePicMap(picJson);

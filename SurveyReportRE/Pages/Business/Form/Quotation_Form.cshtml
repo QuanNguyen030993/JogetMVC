@@ -476,7 +476,8 @@ Note:
                                             if ($acceptButton.length) {
                                                 $host.insertAfter($acceptButton);
                                             } else {
-                                                const $decisionArea = $deptForm.find(".dx-form-group-content").first();
+                                                var  $decisionArea = $deptForm.find(".dx-form-group-content").first();
+                                                $decisionArea = ($deptForm.find(".dx-form-group-content").length > 1) ? $deptForm.find(".dx-form-group-content")[1] :  $deptForm.find(".dx-form-group-content").first();
                                                 $host.appendTo($decisionArea.length ? $decisionArea : $deptForm);
                                             }
                                             return $host;
