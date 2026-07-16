@@ -207,7 +207,7 @@
         dataSource: makeBasicDataSource(thisObject, true),
        
          items: [
-              {itemType: "group", name: "decisionGroup" ,caption: "Prepare Quotation",colCount:2,items: [
+              {itemType: "group", name: "decision@deptGroup" ,caption: "Prepare Quotation",colCount:2,items: [
             decisionField(`@PIViewIdHelper.Form(dept, policyIssuanceId)`, "@dept",`AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,`AC_Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,null,null  )
         ]}
 
@@ -303,7 +303,6 @@
           const fetch2 = $.ajax({ url: `/api/Document/GetByKey?recordGuid=${quotationGuid}`, method: "GET" });
 
           $.when(fetch1, fetch2, detailsDataSource.load()).done(function (r1, r2, rDetails) {
-              debugger
               const docs = [...(r1[0] || []), ...(r2[0] || [])];
               const detailData = rDetails[0] || [];
               if (!detailData || detailData.length === 0) return;

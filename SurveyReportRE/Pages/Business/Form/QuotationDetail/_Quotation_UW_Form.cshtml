@@ -20,7 +20,7 @@
     }
 
     .uw-decision-primary-actions .accept-status-indicator {
-        flex: 0 0 100%;
+        /* flex: 0 0 100%; */
     }
 
     .uw-route-custom-host {
@@ -121,28 +121,32 @@
                                   var acceptStatusElement = `AC_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
                                  var $primaryActions = $(`<div class="uw-decision-primary-actions"></div>`)
                                      .appendTo(itemElement);
-                                             $(`<div id='${acceptButtonId}'>`)
+                                         var acceptButtonElement=    $(`<div id='${acceptButtonId}'>`)
                                         .dxButton({
                                          elementAttr: {
                                                  id: acceptButtonId
                                          },
+                                         disabled: true,
                                          text: "Accept",
                                          icon: "check",
                                          onClick: function (e) {
-                                                 var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                                             var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                                              var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem") || {};
-                                             tatObject[uwDept] = tatObject[uwDept] || {};
-                                                 tatObject[uwDept].AcceptDate = formatDateToString(new Date()).gmt7;
-                                             formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
-                                             var passingObject = new Object();
-                                             passingObject.statusName = `${uwDept} Process`; // base on Dept
-                                             passingObject.Comment = `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`;  // base on Dept
-                                             passingObject.formItems = formItems;
-                                                 passingObject.dept = uwDept;
-                                             passingObject.url = '/api/Quotation/UpdateData';
-                                             passingObject.urlLog = `/api/Quotation/LogAction`;
-                                             passingObject.schemeName = `Quotation`;
-                                                 acceptDecision(passingObject,`@dept`);
+                                                 
+                                                     
+                                                     tatObject[uwDept] = tatObject[uwDept] || {};
+                                                     tatObject[uwDept].AcceptDate = formatDateToString(new Date()).gmt7;
+                                                     formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+                                                     var passingObject = new Object();
+                                                     passingObject.statusName = `${uwDept} Process`; // base on Dept
+                                                     passingObject.Comment = `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`;  // base on Dept
+                                                     passingObject.formItems = formItems;
+                                                     passingObject.dept = uwDept;
+                                                     passingObject.url = '/api/Quotation/UpdateData';
+                                                     passingObject.urlLog = `/api/Quotation/LogAction`;
+                                                     passingObject.schemeName = `Quotation`;
+                                                     acceptDecision(passingObject,`@dept`);
+
                                          }
                                             }).appendTo($primaryActions);
                                                         if (!$(`#${acceptStatusElement}`).length) {
@@ -159,21 +163,21 @@
                                          text: "No Need To Refer",
                                                      icon: "fa-solid fa-person-running",
                                          onClick: function (e) {
-                                             var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-                                             var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem") || {};
-                                             tatObject[uwDept] = tatObject[uwDept] || {};
-                                                 tatObject[uwDept].AcceptDate = formatDateToString(new Date()).gmt7;
-                                             formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+                                             // var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                                             // var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem") || {};
+                                             // tatObject[uwDept] = tatObject[uwDept] || {};
+                                             //     tatObject[uwDept].AcceptDate = formatDateToString(new Date()).gmt7;
+                                             // formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
                                              
-                                             var passingObject = new Object();
-                                             passingObject.statusName = `${uwDept} No Need To Refer`; // base on Dept
-                                             passingObject.Comment = `Quotation ${formItems.quotationCode} marked No Need To Refer by ${_displayName}!`;  // base on Dept
-                                             passingObject.formItems = formItems;
-                                             passingObject.dept = uwDept;
-                                             passingObject.url = '/api/Quotation/UWReferal';
-                                             passingObject.urlLog = `/api/Quotation/LogAction`;
-                                             passingObject.schemeName = `Quotation`;
-                                              uwDecision(passingObject);
+                                             // var passingObject = new Object();
+                                             // passingObject.statusName = `${uwDept} No Need To Refer`; // base on Dept
+                                             // passingObject.Comment = `Quotation ${formItems.quotationCode} marked No Need To Refer by ${_displayName}!`;  // base on Dept
+                                             // passingObject.formItems = formItems;
+                                             // passingObject.dept = uwDept;
+                                             // passingObject.url = '/api/Quotation/UWReferal';
+                                             // passingObject.urlLog = `/api/Quotation/LogAction`;
+                                             // passingObject.schemeName = `Quotation`;
+                                             //  uwDecision(passingObject);
                                          }
                                              }).appendTo($uwRouteSlot);
                          }

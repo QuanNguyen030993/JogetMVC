@@ -501,19 +501,6 @@ font-size:12px;
 
 
 
-button{
-
-border:none;
-
-background:#ef4444;
-
-color:white;
-
-border-radius:6px;
-
-padding:5px 10px;
-
-}
 
 
 @media(max-width:1100px){
@@ -673,21 +660,6 @@ font-size:12px;
 
 }
 
-
-
-button{
-
-border:none;
-
-background:#ef4444;
-
-color:white;
-
-border-radius:6px;
-
-padding:5px 10px;
-
-}
 
 
 @media(max-width:1100px){
@@ -1652,22 +1624,6 @@ padding:15px;
 
 
 
-
-button{
-
-border:none;
-
-background:#2563eb;
-
-color:white;
-
-border-radius:8px;
-
-padding:8px 14px;
-
-cursor:pointer;
-
-}
 
 
 

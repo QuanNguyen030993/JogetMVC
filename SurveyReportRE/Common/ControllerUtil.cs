@@ -367,7 +367,7 @@ namespace ERPCore.ControllerUtil
             {
                 logFlowQuery = $@"INSERT INTO WorkflowHistory(RecordGuid
             ,StepNo,DeptCode,ActionTime,ActionNote,FromDeptCode,ToDeptCode,ActionCode,Actor,SourceSystem,CreatedAtUtc)
-                        VALUES ('{entity.Guid}',{workflowEntity.InstanceWorkflow.CurrentStep}
+                        VALUES ('{entity.Guid}','{workflowEntity.InstanceWorkflow.CurrentStep}'
             ,'{workflowEntity.StepsWorkflow.FromNodeId}'
             ,'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}'
             ,'{workflowEntity.StepsWorkflow.DisplayStatus}'

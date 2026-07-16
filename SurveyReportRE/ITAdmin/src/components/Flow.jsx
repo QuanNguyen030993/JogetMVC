@@ -2014,7 +2014,7 @@ function Flow({ id: propId }) {
                     />
                 </label>
                 <label>
-                    <span>Department</span>
+                    <span>Node Detail</span>
                     <input
                         value={selectedNode.data.departmentName || ''}
                         onChange={(event) => updateSelectedNode('departmentName', event.target.value)}

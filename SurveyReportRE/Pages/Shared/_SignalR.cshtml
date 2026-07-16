@@ -115,7 +115,6 @@ function bindConnectionScopedEvents(connectionId) {
 }
 
 async function synchronizeSignalRContext(reconnectedId) {
-    debugger
     if (!_isIssued)
     {
         _connectionId = await connectionSignR.invoke("GetConnectionId");

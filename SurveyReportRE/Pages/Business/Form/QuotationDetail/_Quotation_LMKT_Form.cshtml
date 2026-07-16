@@ -53,7 +53,7 @@
         ];
 
         var deptCode = "@dept";
-        var submitBranchId = `@QTViewIdHelper.BtnSubmitBranch(dept, quotationId)`;
+        // var submitBranchId = `@QTViewIdHelper.BtnSubmitBranch(dept, quotationId)`;
 
         var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
         var acceptStatusId = `AC_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
@@ -77,10 +77,10 @@
                      },
                      itemType: "simple",
                      template: function (data, itemElement) {
-                         $(`<div id="${submitBranchId}" class="lmkt-submitbranch-decision-host"></div>`)
-                             .appendTo(itemElement);
+                         // $(`<div id="${submitBranchId}" class="lmkt-submitbranch-decision-host"></div>`)
+                         //     .appendTo(itemElement);
                          $.each(items, function (itemIndex, item) {
-                             $(`<div id="${item.id}">`).dxButton({ text: item.text}).appendTo(itemElement);
+                             $(`<div id="${item.id}">`).dxButton({ text: item.text, visible: false}).appendTo(itemElement);
                          });
                      }
                 }

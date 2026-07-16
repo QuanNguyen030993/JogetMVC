@@ -1,4 +1,4 @@
-@page
+﻿@page
 @model EnvironmentModel
 @{
 
@@ -219,26 +219,52 @@
 
     //     });
 
-    $("#flow").flow({
-        id: 11,
-        guid: "00cf6f4b-1228-40f6-bd4b-45b1daf996b3"
-    });
+    // $("#flow").flow({
+    //     id: 11,
+    //     guid: "00cf6f4b-1228-40f6-bd4b-45b1daf996b3"
+    // });
 
-    $("#demoMap").tmivmap({
-        center: [21.0285, 105.8542], // Hanoi
-        zoom: 13,
-        height: "450px",
-        markers: [
-            { id: 1, lat: 21.0285, lng: 105.8542, title: "Hanoi Center", popupContent: "Welcome to Hanoi!", draggable: true }
-        ],
-        onMapClick: function(e) {
-            console.log("Map clicked:", e);
-            alert("Clicked: " + e.lat + ", " + e.lng + (e.address ? " (" + e.address + ")" : ""));
+    // $("#demoMap").tmivmap({
+    //     center: [21.0285, 105.8542], // Hanoi
+    //     zoom: 13,
+    //     height: "450px",
+    //     markers: [
+    //         { id: 1, lat: 21.0285, lng: 105.8542, title: "Hanoi Center", popupContent: "Welcome to Hanoi!", draggable: true }
+    //     ],
+    //     onMapClick: function(e) {
+    //         console.log("Map clicked:", e);
+    //         alert("Clicked: " + e.lat + ", " + e.lng + (e.address ? " (" + e.address + ")" : ""));
+    //     },
+    //     onMarkerDragEnd: function(id, pos) {
+    //         console.log("Marker drag end:", id, pos);
+    //     }
+    // });
+    $("#fileuploader").fileuploader({
+        guid: "3b6f39cc-8a18-4ce3-a8d2-cceb2757a111",
+        controllerName: "Document",
+        titleName: "Click to select or drag files here",
+
+        data: {
+            ModuleName: "PolicyIssuance",
+            code: "POL001",
+            SectionName: "UW"
         },
-        onMarkerDragEnd: function(id, pos) {
-            console.log("Marker drag end:", id, pos);
+
+        specificFolder: "PolicyDocs",
+
+        onUploaded: function () {
+            console.log("Upload thành công");
+        },
+
+        onDeleted: function (file) {
+            console.log("Đã xóa", file);
+        },
+
+        onChange: function (files) {
+            console.log("Danh sách file", files);
         }
     });
+
 </script>
 <div>TMIV environment
     <div id="tabPanel">
@@ -260,6 +286,7 @@
 <div id="surveyGrid"></div>
 <div id="commentBox"></div>
 <div id="flow"> </div>
+<div id="fileuploader"> </div>
 
 <div style="margin-top: 30px; padding: 20px; border-top: 2px dashed var(--c-0284c7); background: var(--c-f8fafc);">
     <h3 style="font-family: sans-serif; color: var(--c-0f172a); margin-bottom: 12px;">TMIV Map Demo</h3>

@@ -430,6 +430,8 @@ Note:
                             // setNextStep(state.nextStep);
                             // $.each(qtDeptModuleCode, function (itemIndex, item) {
                                     setTimeout(() => {
+                                        debugger
+                                       
                                         // var findRoute = data.find(f => !f.isReturn && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
                                          const customRoutes = data.filter(function (route) {
                                              return String(route?.flowType || "").trim().toLowerCase() === "custom";
@@ -500,7 +502,6 @@ Note:
                                                 fallbackInstance.option("disabled", stageDept !== "UW" || !!tatObject?.UW?.AcceptDate);
                                             }
                                         }
-
                                         customRoutes.forEach(function (route, routeIndex) {
                                             const routeDept = normalizeRouteDept(route?.fromNodeId);
                                             if (!routeDept) return;

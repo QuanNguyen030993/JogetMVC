@@ -2,7 +2,7 @@
 @{
     string dept = "FO";
     long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
-    
+    string prefix = "qt";
 }
 
 <style>
@@ -18,6 +18,12 @@
 </div>
 <script type="text/javascript">
     $( function (){
+                var thisObject = new Object();
+        thisObject.ModelName =  "Quotation";
+        thisObject.formId = `@QTViewIdHelper.Form(dept, quotationId)`;
+            thisObject.dept = `@dept`;
+        thisObject.prefix = `@prefix`;
+
 
 
 
@@ -120,27 +126,28 @@
                         { dataField: "sourceOfBusinessName", label: { template: labelTpl("SourceOfBusinessName - Nguồn business (name)") } },
 
                      ]},
-                 {
-                    itemType: "group",
-                    name: "clientConfirmGroup",
-                    caption: "Client Confirm",
-                    colCount: 1,
-                    items: [
-                        {
-                            dataField: "clientDecision",
-                            editorType: "dxRadioGroup",
-                            label: { text: "Decision" },
-                            editorOptions: {
-                                layout: "horizontal",
-                                items: ["Accept", "Refuse", "End Quotation"],
-                                onValueChanged: function (e) {
-                                    if (!e.event) return;
-                                    setClientDecisionStatus(e.value);
-                                }
-                            }
-                        }
-                    ]
-                 },
+                      
+                 // {
+                 //    itemType: "group",
+                 //    caption: "Client Confirm",
+                 //    colCount: 1,
+                 //    items: [
+                 //        {
+                 //            dataField: "clientDecision",
+                 //            editorType: "dxRadioGroup",
+                 //             name: "clientConfirmGroup",
+                 //            label: { text: "Decision" },
+                 //            editorOptions: {
+                 //                layout: "horizontal",
+                 //                items: ["Accept", "Refuse", "End Quotation"],
+                 //                onValueChanged: function (e) {
+                 //                    if (!e.event) return;
+                 //                    setClientDecisionStatus(e.value);
+                 //                }
+                 //            }
+                 //        }
+                 //    ]
+                 // },
                  {
                         itemType: "group",
                         caption: "Products",
@@ -177,13 +184,15 @@
 
                  { dataField:"subject", label:{text:"Subject"}, editorType:"dxTextArea", colSpan:3},
                 
-                            ]}
-
+                            ]},
+                            {itemType: "group", name: "clientConfirmGroup" ,caption: "Client Confirm",colCount:2,items: [
+                        decisionField(`@QTViewIdHelper.Form(dept, quotationId)`, "@dept",null,null,null,null  )
+                    ]}
                ]
     
     });
     viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
-
+    delayAcceptStatusV2(null, thisObject, []);
     setTimeout(() => {
         var picJson = PIC_JSON || "{}";
         var picMap = parsePicMap(picJson);

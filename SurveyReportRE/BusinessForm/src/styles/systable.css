@@ -235,27 +235,6 @@ select:focus{
 
 
 
-button{
-
-    height:34px;
-
-    padding:
-
-        0 14px;
-
-    border:none;
-
-    border-radius:8px;
-
-    background:#2563eb;
-
-    color:white;
-
-    cursor:pointer;
-
-}
-
-
 
 button:hover{
 

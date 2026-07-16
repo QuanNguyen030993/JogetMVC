@@ -604,7 +604,7 @@ aside {
     scroll-behavior: smooth;
     max-height: 320px;
 }
-
+/*
 .attachment-drop-zone {
     width: 100%;
     min-height: 44px;
@@ -612,7 +612,7 @@ aside {
     padding: 0;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     gap: 0;
     box-sizing: border-box;
     border: 2px solid transparent;
@@ -622,6 +622,19 @@ aside {
     cursor: pointer;
     text-align: left;
     transition: min-height .18s ease, padding .18s ease, border-color .18s ease, background-color .18s ease, box-shadow .18s ease;
+}*/
+
+.attachment-drop-zone {
+    width: 100%;
+    height: 100%;
+    min-height: 50px;
+    background-color: #f5faff;
+    border: 2px dashed #007bff;
+    border-radius: 8px;
+    padding: 5px 10px;
+    text-align: center;
+    box-shadow: 0 3px 11px rgba(0, 0, 0, 0.05);
+    transition: border-color 0.3s ease-in-out;
 }
 
 .attachment-drop-zone:hover .attachment-drop-zone__content,
@@ -635,7 +648,7 @@ aside {
 }
 
 .attachment-drop-zone.is-dragging {
-    min-height: 132px;
+    min-height: 200px;
     padding: 22px 28px;
     justify-content: center;
     gap: 16px;
@@ -670,8 +683,7 @@ aside {
     min-height: 38px;
     padding: 0 16px;
     border-radius: 4px;
-    background: #1a73e8;
-    color: #fff;
+    color: gray;
     line-height: 1.35;
     transition: background-color .18s ease, box-shadow .18s ease;
 }
@@ -4914,15 +4926,6 @@ textarea {
     margin-top: 10px;
 }
 
-button {
-    border: none;
-    background: #2563eb;
-    color: #fff;
-    padding: 9px 12px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 600;
-}
 
     button.secondary {
         background: #475569;

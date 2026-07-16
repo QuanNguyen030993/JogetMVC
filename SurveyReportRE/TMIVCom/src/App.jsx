@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import  React, { useRef, useState } from 'react';
 import CustomGrid from './components/CustomGrid';
 import HtmlEditor from './components/HtmlEditor';
 import DateBox from './components/DateBox';
@@ -9,6 +9,12 @@ import CheckBox from './components/CheckBox';
 import SelectBox from './components/SelectBox';
 import DropDownBox from './components/DropDownBox';
 import CustomForm from './components/CustomForm';
+import FileUploader from "./components/FileUploader";
+  
+
+          
+
+
 import './css/com.all.css';
 import "./fonts/css/all.min.css";
 const departmentEnum = [
@@ -112,6 +118,8 @@ const gridColumns = [
   // }
 ];
 
+
+  
 function App() {
   const [rows, setRows] = useState(defaultRows);
   const [editorValue, setEditorValue] = useState('');
@@ -120,6 +128,37 @@ function App() {
   const [checkValue, setCheckValue] = useState(true);
   const [selectValue, setSelectValue] = useState(2);
   const [dropValue, setDropValue] = useState(101);
+
+
+    const uploaderRef = useRef(null);
+
+    const [formData] = useState({
+        ModuleName: "PolicyIssuance",
+        code: "POL001",
+        SectionName: "Underwriting"
+    });
+
+    const handleUploaded = () => {
+        console.log("Upload thành công");
+    };
+
+    const handleDeleted = (file) => {
+        console.log("Đã xóa:", file);
+    };
+
+    const handleChange = (files) => {
+        console.log("Danh sách file hiện tại:", files);
+    };
+
+    const getFiles = () => {
+        const files = uploaderRef.current?.value();
+        console.log(files);
+    };
+
+    const refreshFiles = () => {
+        uploaderRef.current?.refresh();
+    };
+
 
   const addRow = () => {
     const nextId = rows.length ? Math.max(...rows.map((row) => row.id)) + 1 : 1;
@@ -150,6 +189,28 @@ function App() {
           />
         </div>
       </section>
+ <div className="tmivcom-app">
+      <header className="header">
+        <div>
+          <h1>TMIVCom Reusable Controls</h1>
+      <FileUploader
+                ref={uploaderRef}
+                guid="3b6f39cc-8a18-4ce3-a8d2-cceb2757a111"
+                data={formData}
+                specificFolder="QuotationDoc"
+                controllerName="Document"
+                titleName="Upload tài liệu"
+                multiple={true}
+                maxFileSize={20 * 1024 * 1024}
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg"
+                onUploaded={handleUploaded}
+                onDeleted={handleDeleted}
+                onChange={handleChange}
+            />
+              </div>
+      </header>
+</div>
+
 
 {/* 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>

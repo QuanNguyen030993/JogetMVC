@@ -1709,8 +1709,8 @@ function Flow({ id: propId , guid: propGuid}) {
                     />
                 </label>
                 <label>
-                    <span>Department</span>
-                    <input
+                    <span>Node Detail</span>
+                    <textarea
                         value={selectedNode.data.departmentName || ''}
                         onChange={(event) => updateSelectedNode('departmentName', event.target.value)}
                     />

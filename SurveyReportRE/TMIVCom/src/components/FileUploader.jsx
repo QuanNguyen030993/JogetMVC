@@ -300,32 +300,7 @@ const FileUploader = forwardRef(({
                 disabled={disabled}
             />
 
-            {/* Drop Zone */}
-            <div 
-                className={`attachment-drop-zone ${disabled ? "is-disabled" : ""} ${isDragging ? "is-dragging" : ""} ${isUploading ? "is-uploading" : ""}`}
-                role="button"
-                tabIndex={disabled ? -1 : 0}
-                onClick={triggerFilePicker}
-                onDragEnter={handleDragEnter}
-                onDragLeave={handleDragLeave}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-            >
-                <span className="dx-icon dx-icon-upload attachment-drop-zone__icon"></span>
-                <span className="attachment-drop-zone__content">
-                    {isUploading ? (
-                        <strong>Uploading file...</strong>
-                    ) : (
-                        <>
-                            <strong>
-                                <span className="attachment-drop-zone__compact-label">{titleName}</span>
-                                <span className="attachment-drop-zone__drop-label">Drop files here</span>
-                            </strong>
-                            <span className="attachment-drop-zone__hint">or click to browse from your computer</span>
-                        </>
-                    )}
-                </span>
-            </div>
+            
 
             {/* Preview List */}
             <div className="att-preview" style={{ marginTop: "10px" }}>
@@ -407,6 +382,32 @@ const FileUploader = forwardRef(({
                         );
                     })
                 )}
+            </div>
+            {/* Drop Zone */}
+            <div 
+                className={`attachment-drop-zone ${disabled ? "is-disabled" : ""} ${isDragging ? "is-dragging" : ""} ${isUploading ? "is-uploading" : ""}`}
+                role="button"
+                tabIndex={disabled ? -1 : 0}
+                onClick={triggerFilePicker}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+            >
+                <span className="dx-icon dx-icon-upload attachment-drop-zone__icon"></span>
+                <span className="attachment-drop-zone__content">
+                    {isUploading ? (
+                        <strong>Uploading file...</strong>
+                    ) : (
+                        <>
+                            <strong>
+                                <span className="attachment-drop-zone__compact-label">{titleName}</span>
+                                <span className="attachment-drop-zone__drop-label">Drop files here</span>
+                            </strong>
+                            <span className="attachment-drop-zone__hint">or click to browse from your computer</span>
+                        </>
+                    )}
+                </span>
             </div>
         </div>
     );

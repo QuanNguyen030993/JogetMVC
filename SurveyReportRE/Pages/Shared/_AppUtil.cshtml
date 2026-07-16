@@ -3523,29 +3523,30 @@
 
         $(`#${editorOptionsIn.previewId}`).remove();
         $(`#${controlId}`).remove();
-        //const $preview =  $(`<div id="${previewId}" style="display:flex;flex-wrap:wrap;gap:25px;top:10px"></div>`)
+        // const $preview =  $(`<div id="${previewId}" style="display:flex;flex-wrap:wrap;gap:25px;top:10px"></div>`)
         const dropZoneId = `attachmentDropZone_${controlId}_${renderTime}`;
-        const $dropZone = $(`
-            <div id="${dropZoneId}"
-                 class="attachment-drop-zone${uploaderAllow ? "" : " is-disabled"}"
-                 role="button"
-                 tabindex="${uploaderAllow ? "0" : "-1"}"
-                 aria-disabled="${uploaderAllow ? "false" : "true"}">
-                <span class="dx-icon dx-icon-upload attachment-drop-zone__icon" aria-hidden="true"></span>
-                <span class="attachment-drop-zone__content">
-                    <strong>
-                        <span class="attachment-drop-zone__compact-label">Upload attachments</span>
-                        <span class="attachment-drop-zone__drop-label">Drop files here</span>
-                    </strong>
-                    <span class="attachment-drop-zone__hint">or click to browse from your computer</span>
-                </span>
-            </div>`)
-            .toggle(!!isRenderUploader)
-            .appendTo($container);
+       
         const $preview = $(`<div id="attList_${controlId}_${renderTime}" class="att-preview"></div>`)
             .appendTo($container);
+        const $dropZone = $(`
+                <div id="${dropZoneId}"
+                     class="attachment-drop-zone${uploaderAllow ? "" : " is-disabled "}"
+                     role="button"
+                     tabindex="${uploaderAllow ? "0" : "-1"}"
+                     aria-disabled="${uploaderAllow ? "false" : "true"}">
+                    <span class="dx-icon dx-icon-upload attachment-drop-zone__icon" aria-hidden="true"></span>
+                    <span class="attachment-drop-zone__content">
+                        <strong>
+                            <span class="attachment-drop-zone__compact-label">Drop files here</span>
+                             <span class="attachment-drop-zone__drop-label"></span>
+                        </strong>
+                        <span class="attachment-drop-zone__hint"></span>
+                    </span>
+                </div>`)
+                .toggle(!!isRenderUploader)
+                .appendTo($container);
         const $uploader = $(`<div id="fileUpload_${controlId}_${renderTime}"></div>`)
-            .appendTo($container)
+             .appendTo($container)
 
 
          if (isRenderUploader)
@@ -3665,6 +3666,39 @@
               event.preventDefault();
               $dropZone.trigger("click");
           });
+
+        //v2 control
+            // console.log(editorOptionsIn);
+            //   const $uploader1 = $(`<div id="fileUpload1_${controlId}_${renderTime}"></div>`)
+            //  .appendTo($container)
+            // debugger
+            //   $uploader1.fileuploader({
+            //                 guid: editorOptionsIn.guid,
+            //                 controllerName: "Document",
+            //                 titleName: "Click to select or drag files here",
+
+            //                 data: {
+            //                         ModuleName: editorOptionsIn.ModelName,
+            //                     // code: "POL001",
+            //                         SectionName: editorOptionsIn.data.Department
+            //                 },
+
+            //                         specificFolder: editorOptionsIn.specificFolder,
+
+            //                 onUploaded: function () {
+            //                     console.log("Upload thành công");
+            //                 },
+
+            //                 onDeleted: function (file) {
+            //                     console.log("Đã xóa", file);
+            //                 },
+
+            //                 onChange: function (files) {
+            //                     console.log("Danh sách file", files);
+            //                 }
+            //             });
+
+
           loadDxFileUploaderAttachments(controlId, controllerName, editorOptionsIn,renderTime);
     }
 
@@ -4487,64 +4521,64 @@
         );
     }
 
-    function uwDecision(object){
-            var statusObject = _enums.OverallStatus.find(f => f.value == object.statusName);
-                          // object.formItems.statusId  = statusObject.id;
-                                  var passingObject = new Object();
-                             passingObject.RecordStatus  =  object.statusName; // sbase on Dept
-                                     passingObject.QuotationId = object.formItems.id;
-                                         passingObject.RouteAction = `UW_NNTF`;  // base on Dept
-                              passingObject.TemplateMailName = `NO_NEED_TO_FEFER`;
+    // function uwDecision(object){
+    //         var statusObject = _enums.OverallStatus.find(f => f.value == object.statusName);
+    //                       // object.formItems.statusId  = statusObject.id;
+    //                               var passingObject = new Object();
+    //                          passingObject.RecordStatus  =  object.statusName; // sbase on Dept
+    //                                  passingObject.QuotationId = object.formItems.id;
+    //                                      passingObject.RouteAction = `UW_NNTF`;  // base on Dept
+    //                           passingObject.TemplateMailName = `NO_NEED_TO_FEFER`;
 
 
-                                  ajaxPost(object.url, passingObject, {processData: true}).then(
-                         data => {alert("call");
-                         });
+    //                               ajaxPost(object.url, passingObject, {processData: true}).then(
+    //                      data => {alert("call");
+    //                      });
 
 
-                          // object.formItems.quotationStatus = statusObject.value;
-                           // ajaxPut(object.url,
-                           //  {
-                           //      key: object.formItems.id,
-                           //      values: JSON.stringify(
-                           //          object.formItems
-                           //      )
-                           //  },
-                           //  {
-                           //      onSuccess: function (response) {
-                           //      },
-                           //      onError: function (err) { }
-                           //  });
+    //                       // object.formItems.quotationStatus = statusObject.value;
+    //                        // ajaxPut(object.url,
+    //                        //  {
+    //                        //      key: object.formItems.id,
+    //                        //      values: JSON.stringify(
+    //                        //          object.formItems
+    //                        //      )
+    //                        //  },
+    //                        //  {
+    //                        //      onSuccess: function (response) {
+    //                        //      },
+    //                        //      onError: function (err) { }
+    //                        //  });
 
-                        // var submitRequest = new Object();
-                        //     submitRequest.Comment = object.Comment;
-                        //     submitRequest.StepsWorkflow = new Object()
-                        //     submitRequest.StepsWorkflow.FromNodeId = object.dept;
-                        //     submitRequest.StepsWorkflow.StepName = "Internal Workflow";
-                        //     submitRequest.isFullDetail = false;
-                        //  var quotationData = new Object();
+    //                     // var submitRequest = new Object();
+    //                     //     submitRequest.Comment = object.Comment;
+    //                     //     submitRequest.StepsWorkflow = new Object()
+    //                     //     submitRequest.StepsWorkflow.FromNodeId = object.dept;
+    //                     //     submitRequest.StepsWorkflow.StepName = "Internal Workflow";
+    //                     //     submitRequest.isFullDetail = false;
+    //                     //  var quotationData = new Object();
 
-                        //     quotationData.Quotation = new Object();
-                        //     quotationData.Quotation.Id = object.formItems.id;
-                        //     quotationData.Quotation.Guid = object.formItems.guid;
-                        //     quotationData.Quotation.BranchCode = _branch;
-                        //     quotationData.Attributes = new Object();
-                        //     quotationData.Attributes.SectionName = object.dept;
-                        //      var formData = new FormData();
-                        //     formData.append(`${object.schemeName}Data`,JSON.stringify(quotationData));
-                        //     formData.append("SubmitRequest",JSON.stringify(submitRequest));
-                        //       $.ajax({
-                        //         url:`${object.urlLog}`,
-                        //         type: "POST",
-                        //         data: formData,
-                        //         processData: false,
-                        //         contentType: false,
-                        //         success: function (res) {
-                        //         },
-                        //         error: function (xhr) {
-                        //         }
-                        //     });
-       }
+    //                     //     quotationData.Quotation = new Object();
+    //                     //     quotationData.Quotation.Id = object.formItems.id;
+    //                     //     quotationData.Quotation.Guid = object.formItems.guid;
+    //                     //     quotationData.Quotation.BranchCode = _branch;
+    //                     //     quotationData.Attributes = new Object();
+    //                     //     quotationData.Attributes.SectionName = object.dept;
+    //                     //      var formData = new FormData();
+    //                     //     formData.append(`${object.schemeName}Data`,JSON.stringify(quotationData));
+    //                     //     formData.append("SubmitRequest",JSON.stringify(submitRequest));
+    //                     //       $.ajax({
+    //                     //         url:`${object.urlLog}`,
+    //                     //         type: "POST",
+    //                     //         data: formData,
+    //                     //         processData: false,
+    //                     //         contentType: false,
+    //                     //         success: function (res) {
+    //                     //         },
+    //                     //         error: function (xhr) {
+    //                     //         }
+    //                     //     });
+    //    }
 
 
        function getAssignNotificationTypeId() {
@@ -5269,6 +5303,9 @@
                 break;
             case "dxFileUploader":
                 {
+                   
+
+
                     renderDxFileUploader(editorOptions, $container, {
                         controllerName: "Document",
                         uploadTitle: "Files",
@@ -6622,8 +6659,9 @@ function styleModeChange(item){
             }
 
             function delayAcceptStatusV2(mainFields,formProps, ...params ){
+                            var delayObject = structuredClone(formProps);
                 setTimeout(() => {
-                    renderDecisionDeferredV2(formProps, "decisionGroup.acceptButton", mainFields, ...params)
+                    renderDecisionDeferredV2(formProps, `decision${delayObject.dept}Group.acceptButton`, mainFields, ...params)
                 },_delayRenderDecisionButton);
             }
 
@@ -6645,6 +6683,7 @@ function styleModeChange(item){
                                      elementAttr: {
                                              id: acceptButtonId
                                      },
+                                     disabled: true,
                                      text: "Accept",
                                      icon: "check",
                                      onClick: function (e) {
@@ -7153,9 +7192,9 @@ function styleModeChange(item){
                                }
                            });
                           if (!renderedStoredStatus && latestTatObject)
+                              var acceptButtonId = getDelayAcceptButtonId(params[0]);
                           if (latestTatObject[formProps.dept]?.AcceptDate)
                              {
-                              var acceptButtonId = getDelayAcceptButtonId(params[0]);
                               var acceptStatusId = getDelayAcceptStatusId(params[0]) || params[1];
                               var skipAcceptedMainFields = params[0] && typeof params[0] === "object" && params[0].skipAcceptedMainFields;
                               if (acceptButtonId)
@@ -7204,6 +7243,10 @@ function styleModeChange(item){
                                      //    $(`#${rejectButtonIdStatus}`).text(`Accepted at: ${tatObject[dept]?.AcceptDate}`);
                                      //        $(`#${rejectButtonId}`).dxButton("instance").option("disabled", true);
                                      // }
+                            }
+                                if (formItems.stageDept == formProps.dept) {
+                                console.log("pass here");
+                                  $(`#${acceptButtonId}`).dxButton("instance").option("disabled",false);
                             }
                            
                             

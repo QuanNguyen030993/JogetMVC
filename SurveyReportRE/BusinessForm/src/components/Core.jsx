@@ -169,7 +169,6 @@ function createJQueryPlugin(pluginName, componentName) {
 }
 
 createJQueryPlugin("flow", "Flow");
-createJQueryPlugin("workflowchart", "WorkloadChart");
 createJQueryPlugin("workloadchart", "WorkloadChart");
 
 register("Flow", Flow);
