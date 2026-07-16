@@ -1,102 +1,183 @@
-﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR;
+using Newtonsoft.Json;
 using System.Collections.Concurrent;
 using ERPCore.Models.Migration.Config;
 
 public class FileProcessingHub : Hub
 {
-    public static MemoryPresenceStore _store;
+    // Kept as initialized compatibility accessors because existing controllers use
+    // them to push events outside a Hub instance.
+    public static MemoryPresenceStore _store { get; private set; } = new();
+    public static IHubContext<FileProcessingHub>? _hubContext { get; private set; }
 
-    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IConfiguration _configuration;
     private readonly IBaseRepository<UsersSession> _userSessionRepository;
-    public static IHubContext<FileProcessingHub> _hubContext;
-
+    private readonly ILogger<FileProcessingHub> _logger;
 
     public FileProcessingHub(
-        IHttpContextAccessor httpContextAccessor,
         IConfiguration configuration,
         IBaseRepository<UsersSession> userSessionRepository,
-        IHubContext<FileProcessingHub> hubContext)
+        MemoryPresenceStore presenceStore,
+        IHubContext<FileProcessingHub> hubContext,
+        ILogger<FileProcessingHub> logger)
     {
-        _httpContextAccessor = httpContextAccessor;
         _configuration = configuration;
         _userSessionRepository = userSessionRepository;
+        _logger = logger;
+        _store = presenceStore;
         _hubContext = hubContext;
     }
+
+    public static void Configure(
+        MemoryPresenceStore presenceStore,
+        IHubContext<FileProcessingHub> hubContext)
+    {
+        _store = presenceStore;
+        _hubContext = hubContext;
+    }
+
+    public override async Task OnConnectedAsync()
+    {
+        var user = ResolveCurrentUser();
+        var authType = Context.User?.Identity?.AuthenticationType ?? "None";
+        _store.AddOrUpdate(user, authType, Context.ConnectionId);
+
+        await TryOpenUserSessionAsync(user);
+        await base.OnConnectedAsync();
+        await Clients.All.SendAsync("onlineUsersChanged", _store.GetOnlineUsers());
+    }
+
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        if (_store == null)
-            _store = new MemoryPresenceStore();
-        if (_store != null)
-            _store.Remove(Context.ConnectionId);
+        _store.Remove(Context.ConnectionId);
+        await TryCloseUserSessionAsync();
         await Clients.All.SendAsync("onlineUsersChanged", _store.GetOnlineUsers());
         await base.OnDisconnectedAsync(exception);
     }
 
-    // Client có thể gọi để lấy snapshot ngay khi vào trang
-    public Task<List<OnlineUserDto>> GetOnlineUsers()
+    public async Task<List<OnlineUserDto>> GetOnlineUsers()
     {
-        if (_store == null)
-            _store = new MemoryPresenceStore();
-        Clients.All.SendAsync("onlineUsersChanged", _store.GetOnlineUsers().ToList());
-        return Task.FromResult(_store.GetOnlineUsers().ToList());
+        var snapshot = _store.GetOnlineUsers().ToList();
+        await Clients.Caller.SendAsync("onlineUsersChanged", snapshot);
+        return snapshot;
     }
-    public async Task NotifyFileProcessingCompleted(int surveyId)
+
+    public Task<string> GetConnectionId()
+        => Task.FromResult(Context.ConnectionId);
+
+    public Task NotifyFileProcessingCompleted(int surveyId)
+        => Clients.Caller.SendAsync("FileProcessingCompleted", surveyId);
+
+    private string ResolveCurrentUser()
     {
-        await Clients.Caller.SendAsync("FileProcessingCompleted", surveyId);
+        var user = Context.UserIdentifier ?? Context.User?.Identity?.Name ?? "";
+        var domain = _configuration.GetValue<string>("Domain:DCServer") ?? "";
+        if (!string.IsNullOrWhiteSpace(domain))
+            user = user.Replace(domain, "", StringComparison.OrdinalIgnoreCase);
+
+        return string.IsNullOrWhiteSpace(user) ? "Anonymous" : user.Trim();
     }
-    public string GetConnectionId()
+
+    private async Task TryOpenUserSessionAsync(string user)
     {
-        if (_store == null)
-            _store = new MemoryPresenceStore();
-        var user = Context.User?.Identity?.Name ?? "Anonymous";
-        var authType = Context.User?.Identity?.AuthenticationType ?? "None";
+        if (string.Equals(user, "Anonymous", StringComparison.OrdinalIgnoreCase)) return;
 
-        _store.AddOrUpdate(user, authType, Context.ConnectionId);
+        try
+        {
+            var httpContext = Context.GetHttpContext();
+            var userAgent = httpContext?.Request.Headers["User-Agent"].ToString() ?? "";
+            var token = "";
+            try { token = httpContext?.Session.Id ?? ""; } catch { }
 
-        // push list online cho tất cả client
-        Clients.All.SendAsync("onlineUsersChanged", _store.GetOnlineUsers());
-
-        IBaseRepository<UsersSession> _userSessionRepository = new BaseRepository<UsersSession>(_configuration, _httpContextAccessor);
-        UsersSession usersSession = new UsersSession();
-        usersSession.UserName = user;
-        usersSession.IPAddress = "";
-        usersSession.UserAgent = "";
-        usersSession.DeviceInfo = "";
-        usersSession.Token = "";
-        usersSession.LoginTime = DateTime.Now;
-        usersSession.IsActive = true;
-        usersSession.SignalRConnectionId = Context.ConnectionId.ToString();
-        _userSessionRepository.InsertData(usersSession);
-
-        return Context.ConnectionId;
+            await _userSessionRepository.InsertData(new UsersSession
+            {
+                UserName = user,
+                IPAddress = httpContext?.Connection.RemoteIpAddress?.ToString() ?? "",
+                UserAgent = Limit(userAgent, 1024),
+                DeviceInfo = Limit(userAgent, 1024),
+                Token = Limit(token, 512),
+                LoginTime = DateTime.Now,
+                IsActive = true,
+                SignalRConnectionId = Context.ConnectionId
+            });
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Unable to open user session for SignalR connection {ConnectionId}.", Context.ConnectionId);
+        }
     }
+
+    private async Task TryCloseUserSessionAsync()
+    {
+        try
+        {
+            var session = await _userSessionRepository.GetSingleObject(item =>
+                item.SignalRConnectionId == Context.ConnectionId && item.IsActive);
+            if (session == null) return;
+
+            session.IsActive = false;
+            session.LogoutTime = DateTime.Now;
+            await _userSessionRepository.UpdateData(
+                session,
+                JsonConvert.SerializeObject(new { IsActive = false, LogoutTime = session.LogoutTime }),
+                session.Id,
+                "Id");
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Unable to close user session for SignalR connection {ConnectionId}.", Context.ConnectionId);
+        }
+    }
+
+    private static string Limit(string value, int maxLength)
+        => value.Length <= maxLength ? value : value[..maxLength];
 }
 
-public record OnlineUserDto(string User, string AuthType, int Connections, DateTimeOffset LastSeen, string ConnectionId);
+public record OnlineUserDto(
+    string User,
+    string AuthType,
+    int Connections,
+    DateTimeOffset LastSeen,
+    string ConnectionId);
 
-public class MemoryPresenceStore //: IPresenceStore
+public class MemoryPresenceStore
 {
-    private readonly ConcurrentDictionary<string, (string User, string AuthType, DateTimeOffset LastSeen, string ConnectionId)> _byConn = new();
+    private readonly ConcurrentDictionary<string, PresenceEntry> _byConnection = new();
 
-    public void AddOrUpdate(string user, string authType, string connId)
-        => _byConn[connId] = (user, authType, DateTimeOffset.Now, connId);
+    public void AddOrUpdate(string user, string authType, string connectionId)
+        => _byConnection[connectionId] = new PresenceEntry(
+            user,
+            authType,
+            DateTimeOffset.Now,
+            connectionId);
 
-    public void Remove(string connId)
-        => _byConn.TryRemove(connId, out _);
+    public void Remove(string connectionId)
+        => _byConnection.TryRemove(connectionId, out _);
 
     public IReadOnlyList<OnlineUserDto> GetOnlineUsers()
     {
-        return _byConn.Values
-            .GroupBy(x => (x.User, x.AuthType, x.ConnectionId))
-            .Select(g => new OnlineUserDto(
-                g.Key.User,
-                g.Key.AuthType,
-                g.Count(),
-                g.Max(x => x.LastSeen),
-                g.Key.ConnectionId)
-            )
-            .OrderBy(x => x.User)
+        var snapshot = _byConnection.Values.ToList();
+        var counts = snapshot
+            .GroupBy(item => (item.User, item.AuthType))
+            .ToDictionary(group => group.Key, group => group.Count());
+
+        // Return one row per connection so existing notification senders still
+        // reach every browser tab, while Connections reflects the true user count.
+        return snapshot
+            .Select(item => new OnlineUserDto(
+                item.User,
+                item.AuthType,
+                counts[(item.User, item.AuthType)],
+                item.LastSeen,
+                item.ConnectionId))
+            .OrderBy(item => item.User)
+            .ThenBy(item => item.ConnectionId)
             .ToList();
     }
+
+    private sealed record PresenceEntry(
+        string User,
+        string AuthType,
+        DateTimeOffset LastSeen,
+        string ConnectionId);
 }

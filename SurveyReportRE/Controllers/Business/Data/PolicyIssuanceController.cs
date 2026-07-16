@@ -624,6 +624,11 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         var Base = await _BaseRepository.ExecuteCustomQuery(query);
         //return obj;
         string userName = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration);
+        if (ControllerUtil.IsSuperUser(configuration, userName))
+        {
+            return Ok(Base);
+        }
+
         Users user = await _usersRepository.GetSingleObject(s => s.username == userName);
         Employee employee = await _employeeRepository.GetSingleObject(s => s.AccountName == userName);
 
@@ -633,11 +638,6 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         }
 
         // Nếu là SUPER_USER, trả về tất cả dữ liệu
-        if (SUPER_USER.Contains(user.username))
-        {
-            return Ok(Base);
-        }
-
         UserRoles userRole = await _userRolesRepository.GetSingleObject(s => s.UserId == user.Id);
         Roles roles = await _rolesRepository.GetSingleObject(s => s.Id == userRole.RoleId);
 

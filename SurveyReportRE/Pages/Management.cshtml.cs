@@ -23,7 +23,6 @@ namespace ERPCore.Pages
             _configuration = configuration;
             //string checkIfLoginAsDebug = configuration.GetSection("SuperUser:LoginAs").Value;
             bool isDebugMode = false;
-            string superUsers = _configuration.GetSection("SuperUser:SuperUser").Value ?? "";
             ControllerUtil.ControllerUtil.ContextHandle(httpContextAccessor, configuration, out isDebugMode);
             //if (!string.IsNullOrEmpty(checkIfLoginAsDebug))
             //{
@@ -51,7 +50,9 @@ namespace ERPCore.Pages
             //        httpContextAccessor.HttpContext.User = new ClaimsPrincipal(newIdentity);
             //   }
             //}
-                IsSuperUser = superUsers.Contains(ControllerUtil.ControllerUtil.GetCurrentContextUser(httpContextAccessor, configuration));
+                IsSuperUser = ControllerUtil.ControllerUtil.IsSuperUser(
+                    configuration,
+                    ControllerUtil.ControllerUtil.GetCurrentContextUser(httpContextAccessor, configuration));
                 var DebugEnv = bool.Parse(_configuration?.GetSection("SuperUser:IsDebug").Value ?? "");
                 if (DebugEnv)
                 {

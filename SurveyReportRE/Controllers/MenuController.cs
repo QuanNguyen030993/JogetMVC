@@ -205,10 +205,20 @@ public class MenuController : BaseControllerApi<Menu>
     public async Task<ActionResult<Menu>> GetHierarchyMenu(string pageSystem)
     {
         var result = new List<MenuHierarchy>();
-        string superUsers = _configuration.GetSection("SuperUser:SuperUser").Value;
         string loginAccount = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, _configuration);
-        bool isSuperUser = superUsers.Contains(loginAccount);
+        bool isSuperUser = ControllerUtil.IsSuperUser(_configuration, loginAccount);
         var roles = await _BaseRepository.GetUserRoles(loginAccount, isSuperUser);
+        if (isSuperUser && roles == null)
+        {
+            roles = new
+            {
+                RoleName = "SuperUser",
+                DisplayName = loginAccount,
+                LoginName = loginAccount,
+                Branch = "",
+                RoleAppName = "SuperUser"
+            };
+        }
 
         // Get user's role name
         string userRole = "";

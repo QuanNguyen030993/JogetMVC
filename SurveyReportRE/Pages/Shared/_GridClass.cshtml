@@ -687,7 +687,7 @@
         };
         onCustomizeColumns(columns) {
             super.onCustomizeColumns(columns);
-            if (_isSuperUser !== "true") return;
+            if (!_isSuperUser) return;
 
             columns.push({
                 name: "loginAsAction",

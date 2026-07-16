@@ -62,7 +62,18 @@
     $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
         dataSource: makeBasicDataSource(modelObject, true),
                  items: [
-                      {itemType: "group",caption: "Decision",colCount:2,items: [
+                      {
+                          itemType: "group",
+                          name: "decision@(dept)Group",
+                          cssClass: "workflow-decision-group qt-decision-group-@(dept)",
+                          elementAttr: {
+                              id: "qt-decision-group-@(dept)-@(quotationId)",
+                              "data-form-group-name": "decision@(dept)Group",
+                              "data-route-dept": "@dept"
+                          },
+                          caption: "Decision",
+                          colCount: 2,
+                          items: [
          {
     dataField: "decision",
     label: { text: "Decision" },

@@ -1,4 +1,4 @@
-﻿using JetBrains.Annotations;
+using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
@@ -46,7 +46,7 @@ namespace ERPCore.Controllers.Base
             var loggerFactory = (ILoggerFactory?)services?.GetService(typeof(ILoggerFactory));
             if (loggerFactory != null)
             {
-            _loggerT = loggerFactory.CreateLogger<T>();
+                _loggerT = loggerFactory.CreateLogger<T>();
             }
             else
             {
@@ -71,7 +71,7 @@ namespace ERPCore.Controllers.Base
             //}
 
 
-                //var httpContext = _httpContextAccessor.HttpContext;
+            //var httpContext = _httpContextAccessor.HttpContext;
             //if (httpContext.User == null || !httpContext.User.Identity.IsAuthenticated)
             //if (httpContext.User != null)
             //{

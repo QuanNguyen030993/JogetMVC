@@ -189,7 +189,18 @@
                  { dataField:"subject", label:{text:"Subject"}, editorType:"dxTextArea", colSpan:3},
                 
                             ]},
-                            {itemType: "group", name: "clientConfirmGroup" ,caption: "Client Confirm",colCount:2,items: [
+                            {
+                                itemType: "group",
+                                name: "decision@(dept)Group",
+                                cssClass: "workflow-decision-group qt-decision-group-@(dept)",
+                                elementAttr: {
+                                    id: "qt-decision-group-@(dept)-@(quotationId)",
+                                    "data-form-group-name": "decision@(dept)Group",
+                                    "data-route-dept": "@dept"
+                                },
+                                caption: "Client Confirm",
+                                colCount: 2,
+                                items: [
                         decisionField(`@QTViewIdHelper.Form(dept, quotationId)`, "@dept",null,null,null,null  )
                     ]}
                ]

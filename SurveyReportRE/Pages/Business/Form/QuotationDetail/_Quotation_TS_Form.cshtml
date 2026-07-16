@@ -133,7 +133,18 @@
     var formInstance =  $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
     dataSource: makeBasicDataSource(that, true),
      items: [
-         {itemType: "group", name: "decision@deptGroup" ,caption: "Prepare Quotation",colCount:2,items: [
+         {
+             itemType: "group",
+             name: "decision@(dept)Group",
+             cssClass: "workflow-decision-group qt-decision-group-@(dept)",
+             elementAttr: {
+                 id: "qt-decision-group-@(dept)-@(quotationId)",
+                 "data-form-group-name": "decision@(dept)Group",
+                 "data-route-dept": "@dept"
+             },
+             caption: "Prepare Quotation",
+             colCount: 2,
+             items: [
     
            decisionField(thisObject.formId, thisObject.dept, acceptButtonId, acceptStatusId, null, null)
 

@@ -140,6 +140,14 @@ Note:
             animation-duration: 1.8s;
         }
     }
+
+    .workflow-custom-route-host {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+    }
 </style>
 
 
@@ -482,13 +490,22 @@ Note:
                               state.nextStep.instanceWorkflow = instance;
                               state.nextStep.flowSteps = data;
                               state.nextStep.currentStep = instance?.currentStep ?? 0;
-                              
+
 
                               setTimeout(() => {
+                                        const customRoutes = data.filter(function (route) {
+                                            return String(route?.flowType || "").trim().toLowerCase() === "custom";
+                                        });
                                         // var findRoute = data.find(f => !f.isReturn && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
-                                         var findRoutes = data.filter(f => !f.isReturn && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
+                                         var findRoutes = data.filter(f => !f.isReturn
+                                             && String(f?.flowType || "").trim().toLowerCase() !== "custom"
+                                             && f.fromNodeId == stageDept
+                                             && f.fNodeId == state.nextStep.currentStep);
                                         // var findRouteReturn = data.find(f => f.isReturn && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
-                                        var findRouteReturns = data.filter(f => f.isReturn && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
+                                        var findRouteReturns = data.filter(f => f.isReturn
+                                            && String(f?.flowType || "").trim().toLowerCase() !== "custom"
+                                            && f.fromNodeId == stageDept
+                                            && f.fNodeId == state.nextStep.currentStep);
                                         var returnButtonId = window.PolicyIssuanceIdManager.btnReturnBranch(stageDept,@ViewData["Id"]);
                                         var submitButtonId = window.PolicyIssuanceIdManager.btnSubmitBranch(stageDept,@ViewData["Id"]);
                                         // var remarkBoxId = window.QuotationIdManager.remarkBox(stageDept,@ViewData["Id"]);
@@ -497,6 +514,147 @@ Note:
                                          var tatObject = new Object();
 
                                             tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Button Problem");
+                                        const recordId = @ViewData["Id"];
+                                        const normalizeRouteDept = function (value) {
+                                            return String(value || "").trim().toUpperCase();
+                                        };
+                                        const normalizeRouteGroupKey = function (value) {
+                                            return normalizeRouteDept(value).replace(/[^A-Z0-9]/g, "");
+                                        };
+                                        const getRouteGroupKeys = function (routeData) {
+                                            const route = typeof routeData === "object" && routeData
+                                                ? routeData
+                                                : { fromNodeId: routeData };
+                                            return [
+                                                route.fromNodeId,
+                                                route.fromDeptCode,
+                                                route.departmentCode,
+                                                route.deptCode,
+                                                route.roleCode,
+                                                route.nodeName
+                                            ]
+                                                .map(normalizeRouteGroupKey)
+                                                .filter(function (value, index, values) {
+                                                    return value.length >= 2 && values.indexOf(value) === index;
+                                                });
+                                        };
+                                        const isSimilarRouteGroup = function (routeKeys, groupDept) {
+                                            const groupKey = normalizeRouteGroupKey(groupDept);
+                                            return routeKeys.some(function (routeKey) {
+                                                return routeKey === groupKey
+                                                    || routeKey.indexOf(groupKey) >= 0
+                                                    || groupKey.indexOf(routeKey) >= 0;
+                                            });
+                                        };
+                                        const ensureCustomRouteHost = function (routeData) {
+                                            const routeKeys = getRouteGroupKeys(routeData);
+                                            if (!routeKeys.length) return $();
+
+                                            let $host = $(`[data-pi-route-custom-host][data-record-id="${recordId}"]`)
+                                                .filter(function () {
+                                                    return isSimilarRouteGroup(
+                                                        routeKeys,
+                                                        $(this).attr("data-route-dept"));
+                                                })
+                                                .first();
+                                            if ($host.length) return $host;
+
+                                            const groupIdPrefix = "pi-decision-group-";
+                                            const groupIdSuffix = `-${recordId}`;
+                                            let $decisionGroup = $(`[id^="${groupIdPrefix}"][id$="${groupIdSuffix}"]`)
+                                                .filter(function () {
+                                                    const groupId = this.id || "";
+                                                    const groupDept = groupId.substring(
+                                                        groupIdPrefix.length,
+                                                        groupId.length - groupIdSuffix.length);
+                                                    return isSimilarRouteGroup(routeKeys, groupDept);
+                                                })
+                                                .first();
+                                            if (!$decisionGroup.length) {
+                                                const fallbackDept = ["FO", "TS", "PM"]
+                                                    .find(function (dept) {
+                                                        return isSimilarRouteGroup(routeKeys, dept);
+                                                    });
+                                                if (fallbackDept) {
+                                                    const fallbackFormId = window.PolicyIssuanceIdManager.form(
+                                                        fallbackDept,
+                                                        recordId);
+                                                    $decisionGroup = $(`#${fallbackFormId} .pi-decision-group-${fallbackDept}`)
+                                                        .first()
+                                                        .attr({
+                                                            id: `${groupIdPrefix}${fallbackDept}${groupIdSuffix}`,
+                                                            "data-form-group-name": `decision${fallbackDept}Group`,
+                                                            "data-route-dept": fallbackDept
+                                                        });
+                                                }
+                                            }
+                                            if (!$decisionGroup.length) {
+                                                console.warn("No policy issuance decision group matched the custom route.", routeData);
+                                                return $();
+                                            }
+
+                                            const groupId = $decisionGroup.attr("id");
+                                            const groupDept = groupId.substring(
+                                                groupIdPrefix.length,
+                                                groupId.length - groupIdSuffix.length);
+                                            const $decisionArea = $decisionGroup
+                                                .find(".dx-form-group-content")
+                                                .first();
+                                            if (!$decisionArea.length) return $();
+
+                                            return $("<div>")
+                                                .addClass("workflow-custom-route-host")
+                                                .attr({
+                                                    "data-pi-route-custom-host": "true",
+                                                    "data-record-id": recordId,
+                                                    "data-route-dept": groupDept,
+                                                    "data-route-group-id": groupId
+                                                })
+                                                .appendTo($decisionArea);
+                                        };
+
+                                        $(`[data-pi-route-custom-host][data-record-id="${recordId}"] [data-custom-route-button]`).each(function () {
+                                            $(this).dxButton("instance")?.dispose();
+                                            $(this).remove();
+                                        });
+
+                                        customRoutes.forEach(function (route, routeIndex) {
+                                            const $routeHost = ensureCustomRouteHost(route);
+                                            if (!$routeHost.length) return;
+
+                                            const routeDept = normalizeRouteDept($routeHost.attr("data-route-dept"));
+                                            const rawRouteKey = route?.routeId || route?.id || route?.actionCode || routeIndex;
+                                            const safeRouteKey = String(rawRouteKey).replace(/[^a-zA-Z0-9_-]/g, "_");
+                                            const customButtonId = `pi-custom-route-${recordId}-${routeDept}-${safeRouteKey}-${routeIndex}`;
+                                            const isCurrentRoute = routeDept === normalizeRouteDept(stageDept)
+                                                && route?.fNodeId == state.nextStep.currentStep;
+                                            const $customButton = $(`<div id="${customButtonId}" data-custom-route-button="true"></div>`)
+                                                .appendTo($routeHost);
+
+                                            $customButton.dxButton({
+                                                disabled: !isCurrentRoute,
+                                                text: route.displayStatus || route.actionName || route.actionCode || "Custom action",
+                                                icon: getTransitionButtonIcon(route, route.isReturn ? "undo" : "chevronright"),
+                                                type: route.isReturn ? "danger" : "info",
+                                                onClick: function () {
+                                                    const routeFormId = window.PolicyIssuanceIdManager.form(routeDept, recordId);
+                                                    const routeFormItems = $(`#${routeFormId}`).dxForm("instance")?.option("formData") || {};
+                                                    const content = window.remarkBoxs?.[routeDept]?.controlRemark?.value?.() || "";
+                                                    if (route.isReturn && !content) {
+                                                        appNotifyWarning("Please put your reason to remarks!", false);
+                                                        return;
+                                                    }
+
+                                                    routeFormItems.comment = content;
+                                                    if (route.isReturn) {
+                                                        returnToStep(formModuleKeyPi, state.nextStep, route, routeFormItems);
+                                                    } else {
+                                                        submitNextStep(formModuleKeyPi, state.nextStep, route, routeFormItems);
+                                                    }
+                                                }
+                                            });
+                                            applyTransitionButtonClass(`#${customButtonId}`, route);
+                                        });
                                            try {
                                             if (findRouteReturns?.length && tatObject) {
 

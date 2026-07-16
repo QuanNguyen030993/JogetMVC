@@ -104,7 +104,18 @@
         $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
      dataSource: makeBasicDataSource(that, true),
     items: [
-         {itemType: "group",name: "decision@deptGroup",caption: "UW Review",colCount:2,items: [
+         {
+             itemType: "group",
+             name: "decision@(dept)Group",
+             cssClass: "workflow-decision-group qt-decision-group-@(dept)",
+             elementAttr: {
+                 id: "qt-decision-group-@(dept)-@(quotationId)",
+                 "data-form-group-name": "decision@(dept)Group",
+                 "data-route-dept": "@dept"
+             },
+             caption: "UW Review",
+             colCount: 2,
+             items: [
     
                 {
                          dataField: "decision",
@@ -153,7 +164,7 @@
                                                             $(`<div id="${acceptStatusElement}" class="accept-status-indicator"></div>`)
                                                                 .prependTo($primaryActions);
                                                         }
-                                                var $uwRouteSlot = $(`<div id="uw-route-custom-host-@quotationId" class="uw-route-custom-host workflow-custom-route-host is-route-pending" data-route-custom-host="true" data-record-id="@quotationId" data-route-dept="UW" data-route-group-name="uwDecisionGroup"></div>`)
+                                                var $uwRouteSlot = $(`<div id="uw-route-custom-host-@quotationId" class="uw-route-custom-host workflow-custom-route-host is-route-pending" data-route-custom-host="true" data-record-id="@quotationId" data-route-dept="UW" data-route-group-name="decisionUWGroup"></div>`)
                                                     .appendTo($primaryActions);
                                                              $(`<div id='${noNeedToRefer}' class="uw-route-fallback-button" data-uw-route-fallback="true">`)
                                          .dxButton({

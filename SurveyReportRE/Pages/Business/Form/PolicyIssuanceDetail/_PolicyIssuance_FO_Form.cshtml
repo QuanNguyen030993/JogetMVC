@@ -162,7 +162,20 @@
 
                  { dataField:"subject", label:{text:"Subject"}, editorType:"dxTextArea", colSpan:3},
 
-                            ]}
+                            ]},
+                            {
+                                itemType: "group",
+                                name: "decision@(dept)Group",
+                                cssClass: "workflow-decision-group pi-decision-group-@(dept)",
+                                elementAttr: {
+                                    id: "pi-decision-group-@(dept)-@(policyIssuanceId)",
+                                    "data-form-group-name": "decision@(dept)Group",
+                                    "data-route-dept": "@dept"
+                                },
+                                caption: "Client Confirm",
+                                colCount: 2,
+                                items: []
+                            }
 
                ]
     

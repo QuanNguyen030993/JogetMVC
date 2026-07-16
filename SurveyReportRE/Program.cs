@@ -93,6 +93,7 @@ builder.Services.AddSignalR(options => {
     options.KeepAliveInterval = TimeSpan.FromSeconds(double.Parse(builder.Configuration.GetSection("SignalRConfig:KeepAliveInterval").Value));
     options.ClientTimeoutInterval = TimeSpan.FromSeconds(double.Parse(builder.Configuration.GetSection("SignalRConfig:ClientTimeoutInterval").Value)); // client timeout > keepalive
 });
+builder.Services.AddSingleton<MemoryPresenceStore>();
 builder.Services.AddControllers();
 builder.Services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
 builder.Services.AddScoped(typeof(IHttpRequestAuditLogWriter), typeof(HttpRequestAuditLogWriter));
@@ -155,6 +156,9 @@ builder.Services.AddCors(options => // React debug
         });
 });
 var app = builder.Build();
+FileProcessingHub.Configure(
+    app.Services.GetRequiredService<MemoryPresenceStore>(),
+    app.Services.GetRequiredService<IHubContext<FileProcessingHub>>());
 //app.MapGet("/", () => "Hello World!");
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -178,13 +182,37 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.UseRouting();
+app.UseSession();
 
 //app.UseCors(); // not debug React
 
 //-------------------------------------------
 //Comment out if Allow anomymous for debugging 
 app.UseAuthentication();
+if (app.Environment.IsDevelopment()
+    && builder.Configuration.GetValue<bool>("SuperUser:IsDebug"))
+{
+    app.Use(async (context, next) =>
+    {
+        const string developmentUser = "quan.nh";
+        var identity = new System.Security.Claims.ClaimsIdentity(
+            new[]
+            {
+                new System.Security.Claims.Claim(
+                    System.Security.Claims.ClaimTypes.Name,
+                    developmentUser)
+            },
+            authenticationType: "DevelopmentUser",
+            nameType: System.Security.Claims.ClaimTypes.Name,
+            roleType: System.Security.Claims.ClaimTypes.Role);
+
+        context.User = new System.Security.Claims.ClaimsPrincipal(identity);
+        await next();
+    });
+}
+app.UseMiddleware<CookieImpersonationMiddleware>();
 app.UseAuthorization();
+app.UseMiddleware<HttpRequestAuditMiddleware>();
 //-------------------------------------------
 
 

@@ -462,24 +462,97 @@ Note:
                                         const normalizeRouteDept = function (value) {
                                             return String(value || "").trim().toUpperCase();
                                         };
-                                        const ensureCustomRouteHost = function (deptCode) {
-                                            const normalizedDept = normalizeRouteDept(deptCode);
-                                            let $host = $(`[data-route-custom-host][data-record-id="${recordId}"][data-route-dept="${normalizedDept}"]`).first();
+                                        const normalizeRouteGroupKey = function (value) {
+                                            return normalizeRouteDept(value).replace(/[^A-Z0-9]/g, "");
+                                        };
+                                        const getRouteGroupKeys = function (routeData) {
+                                            const route = typeof routeData === "object" && routeData
+                                                ? routeData
+                                                : { fromNodeId: routeData };
+                                            return [
+                                                route.fromNodeId,
+                                                route.fromDeptCode,
+                                                route.departmentCode,
+                                                route.deptCode,
+                                                route.roleCode,
+                                                route.nodeName
+                                            ]
+                                                .map(normalizeRouteGroupKey)
+                                                .filter(function (value, index, values) {
+                                                    return value.length >= 2 && values.indexOf(value) === index;
+                                                });
+                                        };
+                                        const isSimilarRouteGroup = function (routeKeys, groupDept) {
+                                            const groupKey = normalizeRouteGroupKey(groupDept);
+                                            return routeKeys.some(function (routeKey) {
+                                                return routeKey === groupKey
+                                                    || routeKey.indexOf(groupKey) >= 0
+                                                    || groupKey.indexOf(routeKey) >= 0;
+                                            });
+                                        };
+                                        const ensureCustomRouteHost = function (routeData) {
+                                            const routeKeys = getRouteGroupKeys(routeData);
+                                            if (!routeKeys.length) return $();
+
+                                            let $host = $(`[data-route-custom-host][data-record-id="${recordId}"]`)
+                                                .filter(function () {
+                                                    return isSimilarRouteGroup(
+                                                        routeKeys,
+                                                        $(this).attr("data-route-dept"));
+                                                })
+                                                .first();
                                             if ($host.length) return $host;
 
-                                            const deptFormId = window.QuotationIdManager.form(normalizedDept, recordId);
-                                            const $deptForm = $(`#${deptFormId}`);
-                                            if (!$deptForm.length) return $();
-
-                                            $host = $(`<div class="workflow-custom-route-host" data-route-custom-host="true" data-record-id="${recordId}" data-route-dept="${normalizedDept}"></div>`);
-                                            const $acceptButton = $deptForm.find(`[id^="AC_"]`).first();
-                                            if ($acceptButton.length) {
-                                                $host.insertAfter($acceptButton);
-                                            } else {
-                                                var  $decisionArea = $deptForm.find(".dx-form-group-content").first();
-                                                $decisionArea = ($deptForm.find(".dx-form-group-content").length > 1) ? $deptForm.find(".dx-form-group-content")[1] :  $deptForm.find(".dx-form-group-content").first();
-                                                $host.appendTo($decisionArea.length ? $decisionArea : $deptForm);
+                                            const groupIdPrefix = "qt-decision-group-";
+                                            const groupIdSuffix = `-${recordId}`;
+                                            let $decisionGroup = $(`[id^="${groupIdPrefix}"][id$="${groupIdSuffix}"]`)
+                                                .filter(function () {
+                                                    const groupId = this.id || "";
+                                                    const groupDept = groupId.substring(
+                                                        groupIdPrefix.length,
+                                                        groupId.length - groupIdSuffix.length);
+                                                    return isSimilarRouteGroup(routeKeys, groupDept);
+                                                })
+                                                .first();
+                                            if (!$decisionGroup.length) {
+                                                const fallbackDept = ["FO", "TS", "UW", "LMKT", "PM"]
+                                                    .find(function (dept) {
+                                                        return isSimilarRouteGroup(routeKeys, dept);
+                                                    });
+                                                if (fallbackDept) {
+                                                    const fallbackFormId = window.QuotationIdManager.form(
+                                                        fallbackDept,
+                                                        recordId);
+                                                    $decisionGroup = $(`#${fallbackFormId} .qt-decision-group-${fallbackDept}`)
+                                                        .first()
+                                                        .attr({
+                                                            id: `${groupIdPrefix}${fallbackDept}${groupIdSuffix}`,
+                                                            "data-form-group-name": `decision${fallbackDept}Group`,
+                                                            "data-route-dept": fallbackDept
+                                                        });
+                                                }
                                             }
+                                            if (!$decisionGroup.length) {
+                                                console.warn("No decision group id matched the custom route.", routeData);
+                                                return $();
+                                            }
+
+                                            const groupId = $decisionGroup.attr("id");
+                                            const groupDept = groupId.substring(
+                                                groupIdPrefix.length,
+                                                groupId.length - groupIdSuffix.length);
+                                            const $decisionArea = $decisionGroup
+                                                .find(".dx-form-group-content")
+                                                .first();
+                                            if (!$decisionArea.length) {
+                                                console.warn(`Decision content for group '${groupId}' was not found.`);
+                                                return $();
+                                            }
+
+                                            $host = $(`<div class="workflow-custom-route-host" data-route-custom-host="true" data-record-id="${recordId}" data-route-dept="${groupDept}"></div>`);
+                                            $host
+                                                .attr("data-route-group-id", groupId)
+                                                .appendTo($decisionArea);
                                             return $host;
                                         };
 
@@ -488,9 +561,9 @@ Note:
                                             $(this).remove();
                                         });
 
-                                        const $uwRouteSlot = ensureCustomRouteHost("UW");
+                                        const $uwRouteSlot = ensureCustomRouteHost({ fromNodeId: "UW" });
                                         const hasUwCustomRoute = customRoutes.some(function (route) {
-                                            return normalizeRouteDept(route?.fromNodeId) === "UW";
+                                            return isSimilarRouteGroup(getRouteGroupKeys(route), "UW");
                                         });
                                         if ($uwRouteSlot.length) {
                                             $uwRouteSlot
@@ -504,10 +577,12 @@ Note:
                                             }
                                         }
                                         customRoutes.forEach(function (route, routeIndex) {
-                                            const routeDept = normalizeRouteDept(route?.fromNodeId);
-                                            if (!routeDept) return;
-                                            const $routeHost = ensureCustomRouteHost(routeDept);
+                                            const $routeHost = ensureCustomRouteHost(route);
+                                            console.log("");
+                                            debugger
                                             if (!$routeHost.length) return;
+                                            const routeDept = normalizeRouteDept($routeHost.attr("data-route-dept"));
+                                            if (!routeDept) return;
 
                                             const rawRouteKey = route?.routeId || route?.id || route?.actionCode || routeIndex;
                                             const safeRouteKey = String(rawRouteKey).replace(/[^a-zA-Z0-9_-]/g, "_");

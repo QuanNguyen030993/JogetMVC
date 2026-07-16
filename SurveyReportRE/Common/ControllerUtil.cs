@@ -39,15 +39,48 @@ namespace ERPCore.ControllerUtil
                + filename;
         }
 
-        public static string  GetCurrentContextUser(IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
+        public static string NormalizeAccountName(string? accountName)
         {
-            string domain = configuration?.GetSection("Domain:DCServer").Value ?? "";
-            var DebugEnv = bool.Parse(configuration?.GetSection("SuperUser:IsDebug").Value ?? "");
-            if (DebugEnv && httpContextAccessor?.HttpContext?.User?.Identity?.Name == null)
+            return (accountName ?? "").Trim().Replace('/', '\\');
+        }
+
+        public static bool IsSuperUser(IConfiguration configuration, string? accountName)
+        {
+            var normalizedAccount = NormalizeAccountName(accountName);
+            if (string.IsNullOrWhiteSpace(normalizedAccount)) return false;
+
+            var configuredUsers = configuration.GetSection("SuperUser:SuperUser").Value ?? "";
+            return configuredUsers
+                .Split(new[] { ',', ';', '|', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(NormalizeAccountName)
+                .Any(user =>
+                    string.Equals(user, normalizedAccount, StringComparison.OrdinalIgnoreCase)
+                    || (!user.Contains('\\')
+                        && string.Equals(
+                            user,
+                            normalizedAccount.Split('\\').Last(),
+                            StringComparison.OrdinalIgnoreCase)));
+        }
+
+        public static string GetCurrentContextUser(IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
+        {
+            var debugEnv = bool.TryParse(
+                configuration?.GetSection("SuperUser:IsDebug").Value,
+                out var isDebug) && isDebug;
+            var identityName = httpContextAccessor?.HttpContext?.User?.Identity?.Name;
+            if (debugEnv && string.IsNullOrWhiteSpace(identityName))
             {
                 return "quan.nh";
             }
-            return httpContextAccessor?.HttpContext?.User?.Identity?.Name?.Replace(domain, "") ?? ""; 
+            var normalizedIdentity = NormalizeAccountName(identityName);
+            var configuredDomain = NormalizeAccountName(
+                configuration?.GetSection("Domain:DCServer").Value);
+            if (!string.IsNullOrWhiteSpace(configuredDomain)
+                && normalizedIdentity.StartsWith(configuredDomain, StringComparison.OrdinalIgnoreCase))
+            {
+                return normalizedIdentity[configuredDomain.Length..].TrimStart('\\');
+            }
+            return normalizedIdentity;
         }
 
         public static void ContextHandle(IHttpContextAccessor httpContextAccessor, IConfiguration configuration, out bool isDebugmode)

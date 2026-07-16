@@ -207,7 +207,18 @@
         dataSource: makeBasicDataSource(thisObject, true),
        
          items: [
-              {itemType: "group", name: "decision@deptGroup" ,caption: "Prepare Quotation",colCount:2,items: [
+              {
+                  itemType: "group",
+                  name: "decision@(dept)Group",
+                  cssClass: "workflow-decision-group pi-decision-group-@(dept)",
+                  elementAttr: {
+                      id: "pi-decision-group-@(dept)-@(policyIssuanceId)",
+                      "data-form-group-name": "decision@(dept)Group",
+                      "data-route-dept": "@dept"
+                  },
+                  caption: "Prepare Quotation",
+                  colCount: 2,
+                  items: [
             decisionField(`@PIViewIdHelper.Form(dept, policyIssuanceId)`, "@dept",`AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,`AC_Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,null,null  )
         ]}
 

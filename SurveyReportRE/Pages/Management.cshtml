@@ -678,7 +678,7 @@
 
 
 
-        _isSuperUser =  `@Html.Raw(ViewData["IsSuperUser"])`;
+        _isSuperUser = @Html.Raw(ViewData["IsSuperUser"]);
         _isDebugMode = `@Html.Raw(ViewData["IsDebugMode"])`;
         var _notifyEnv = `@Html.Raw(ViewData["NotifyEnv"])`;
         if (_notifyEnv  == "true")

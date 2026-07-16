@@ -97,7 +97,7 @@ namespace ERPCore.Controllers.Config
                 Base = await _BaseRepository.GetAll(requestParams);
             }
             string userName = ControllerUtil.ControllerUtil.GetCurrentContextUser(_httpContextAccessor, _configuration);
-            if (SUPER_USER.Contains(userName))
+            if (ControllerUtil.ControllerUtil.IsSuperUser(_configuration, userName))
                 return Ok(Base);
             else
             {
@@ -207,11 +207,9 @@ namespace ERPCore.Controllers.Config
             });
         }
 
-        private static bool IsSuperUser(string userName)
+        private bool IsSuperUser(string userName)
         {
-            return (SUPER_USER ?? "")
-                .Split(new[] { ',', ';', '|', ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                .Any(item => string.Equals(item.Trim(), userName, StringComparison.OrdinalIgnoreCase));
+            return ControllerUtil.ControllerUtil.IsSuperUser(_configuration, userName);
         }
 
         [HttpGet]
