@@ -1,0 +1,26 @@
+@page
+@model ChecklistDefinitionModel
+
+<script>
+    $(function () {
+        var gridConfig = {
+            editing: {
+                mode: "batch",
+                allowAdding: true,
+                allowUpdating: true,
+                allowDeleting: true
+            }
+        };
+
+        new MGrid(
+            null,
+            $("#dataGrid_@ChecklistDefinitionModel.ModelName"),
+            new ChecklistDefinitionGridOption(
+                "@ChecklistDefinitionModel.ModelName",
+                "User",
+                gridConfig),
+            null);
+    });
+</script>
+
+<div id="dataGrid_@ChecklistDefinitionModel.ModelName"></div>

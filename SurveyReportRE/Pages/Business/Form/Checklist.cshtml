@@ -1,0 +1,30 @@
+@page "{recordGuid:guid?}"
+@model ChecklistModel
+
+<script>
+    $(function () {
+        var recordGuid = "@Model.RecordGuid";
+        var gridConfig = {
+            refField: "RecordGuid",
+            refKey: recordGuid,
+            refOperator: "=",
+            editing: {
+                mode: "batch",
+                allowAdding: !!recordGuid,
+                allowUpdating: !!recordGuid,
+                allowDeleting: !!recordGuid
+            }
+        };
+
+        new MGrid(
+            null,
+            $("#dataGrid_@ChecklistModel.ModelName"),
+            new ChecklistGridOption(
+                "@ChecklistModel.ModelName",
+                "User",
+                gridConfig),
+            null);
+    });
+</script>
+
+<div id="dataGrid_@ChecklistModel.ModelName"></div>

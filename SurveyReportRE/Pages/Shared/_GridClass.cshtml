@@ -870,6 +870,142 @@
         }
     }
 
+    function applyChecklistColumnConfiguration(columns, includeRecordGuid) {
+        const visibleFields = [
+            "sequenceNo",
+            "pmCheck",
+            "checkpoint",
+            "needToCheck",
+            "result",
+            "lineId",
+            "productId"
+        ];
+        if (includeRecordGuid) visibleFields.push("recordGuid");
+
+        columns.forEach(function (column) {
+            if (!column.dataField) return;
+            column.visible = visibleFields.some(function (field) {
+                return field.toLowerCase() === String(column.dataField).toLowerCase();
+            });
+        });
+
+        const columnDefinitions = [{
+            dataField: "sequenceNo",
+            caption: "No.",
+            dataType: "number",
+            width: 80,
+            visibleIndex: 0,
+            editorOptions: { min: 0, showSpinButtons: true }
+        }, {
+            dataField: "pmCheck",
+            caption: "PM Check",
+            dataType: "boolean",
+            width: 110,
+            visibleIndex: 1
+        }, {
+            dataField: "checkpoint",
+            caption: "Checkpoint",
+            dataType: "string",
+            minWidth: 180,
+            visibleIndex: 2,
+            validationRules: [{
+                type: "stringLength",
+                max: 100,
+                message: "Checkpoint cannot exceed 100 characters."
+            }]
+        }, {
+            dataField: "needToCheck",
+            caption: "Need To Check",
+            dataType: "string",
+            minWidth: 280,
+            visibleIndex: 3,
+            editorType: "dxTextArea",
+            editorOptions: {
+                minHeight: 70,
+                autoResizeEnabled: true
+            }
+        }, {
+            dataField: "result",
+            caption: "Result",
+            dataType: "boolean",
+            width: 100,
+            visibleIndex: 4
+        }, {
+            dataField: "lineId",
+            caption: "Line",
+            dataType: "number",
+            minWidth: 150,
+            visibleIndex: 5,
+            lookup: {
+                dataSource: _entities.line,
+                valueExpr: "id",
+                displayExpr: "lineName"
+            }
+        }, {
+            dataField: "productId",
+            caption: "Product",
+            dataType: "number",
+            minWidth: 180,
+            visibleIndex: 6,
+            lookup: {
+                dataSource: _entities.product,
+                valueExpr: "id",
+                displayExpr: "productName"
+            }
+        }];
+
+        if (includeRecordGuid) {
+            columnDefinitions.push({
+                dataField: "recordGuid",
+                caption: "Record Guid",
+                dataType: "string",
+                minWidth: 250,
+                visibleIndex: 7,
+                allowEditing: false
+            });
+        }
+
+        columnDefinitions.forEach(function (definition) {
+            let column = columns.find(function (item) {
+                return String(item.dataField || "").toLowerCase()
+                    === definition.dataField.toLowerCase();
+            });
+            if (!column) {
+                column = { dataField: definition.dataField };
+                columns.push(column);
+            }
+            Object.assign(column, definition);
+        });
+    }
+
+    var ChecklistDefinitionGridOption = class ChecklistDefinitionGridOption extends MGridOption {
+        constructor(modelName, gridType, config) {
+            super(modelName, gridType, config);
+            if (config?.editing) {
+                this.gridEditorOptions = { editing: config.editing };
+            }
+        }
+
+        onCustomizeColumns(columns) {
+            super.onCustomizeColumns(columns);
+            applyChecklistColumnConfiguration(columns, false);
+        }
+    }
+
+    var ChecklistGridOption = class ChecklistGridOption extends MGridOption {
+        constructor(modelName, gridType, config) {
+            super(modelName, gridType, config);
+            if (config?.editing) {
+                this.gridEditorOptions = { editing: config.editing };
+            }
+        }
+
+        onCustomizeColumns(columns) {
+            super.onCustomizeColumns(columns);
+            applyChecklistColumnConfiguration(columns, true);
+        }
+    }
+
     var SurveyMemoWorkflowGridOption = class SurveyMemoWorkflowGridOption extends MGridOption {
         constructor(modelName, gridType, params) {
             super(modelName, gridType, params);
