@@ -40,6 +40,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 {
     private readonly IBaseRepository<InstanceWorkflow> _BaseRepository;
     private readonly IBaseRepository<Quotation> _quotationRepository;
+    private readonly IBaseRepository<PolicyIssuance> _policyIssuanceRepository;
     private readonly IBaseRepository<CommentLog> _quotationCommentLogRepository;
     private readonly IConfiguration configuration;
     private readonly IConfigurationSection path;
@@ -81,6 +82,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         _optionsMonitor = optionsMonitor;
         _BaseRepository = BaseRepository;
         _quotationRepository = new BaseRepository<Quotation>(configuration, _httpContextAccessor);
+        _policyIssuanceRepository = new BaseRepository<PolicyIssuance>(configuration, _httpContextAccessor);
         _quotationCommentLogRepository = new BaseRepository<CommentLog>(configuration, _httpContextAccessor);
         _mailQueueRepository = new BaseRepository<MailQueue>(configuration, _httpContextAccessor);
         _mailTemplateRepository = new BaseRepository<MailTemplate>(configuration, _httpContextAccessor);
@@ -260,6 +262,161 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         return Ok();
     }
 
+    [HttpPost]
+    public async Task<IActionResult> PolicyIssuanceSubmitNextStep([FromBody] WorkflowTransitionSubmitRequest submitRequest)
+    {
+
+        if (string.IsNullOrEmpty(submitRequest.StepsWorkflow.FromNodeId) || string.IsNullOrEmpty(submitRequest.StepsWorkflow.ToNodeId)) return StatusCode(500, "Submit problem, please contact IT Admin!!!!");
+        submitRequest.InstanceWorkflow.CurrentStep = submitRequest.StepsWorkflow.TNodeId;
+        await _BaseRepository.UpdateData(submitRequest.InstanceWorkflow, JsonConvert.SerializeObject(submitRequest.InstanceWorkflow), submitRequest.InstanceWorkflow?.Id, "Id");
+        PolicyIssuance quotation = new PolicyIssuance();
+        quotation = await _policyIssuanceRepository.GetSingleObject(s => s.Id == submitRequest.PolicyIssuanceId);
+        quotation.StageDept = submitRequest.StepsWorkflow.ToNodeId;
+        quotation.WorkflowStatus = submitRequest.StepsWorkflow.StatusName;
+        quotation.StatusId = submitRequest.StepsWorkflow.StatusId;
+        if (submitRequest.ActionStatus != null)
+            quotation.ActionStatus = submitRequest.ActionStatus;
+        TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(quotation.TurnAroundTimeAttributes);
+        TurnAroundItem tatObject = submitRequest.StepsWorkflow.FromNodeId switch
+        {
+            "FO" => result.FO,
+            "TS" => result.TS,
+            "UW" => result.UW,
+            "LMKT" => result.LMKT,
+            "PM" => result.PM,
+            _ => null
+        };
+        tatObject.CompleteDate = DateTime.Now;
+        switch (submitRequest.StepsWorkflow.FromNodeId)
+        {
+            case "FO":
+                result.FO = tatObject;
+                break;
+            case "TS":
+                result.TS = tatObject;
+                break;
+            case "UW":
+                result.UW = tatObject;
+                break;
+            case "LMKT":
+                result.LMKT = tatObject;
+                break;
+            case "PM":
+                result.PM = tatObject;
+                break;
+        }
+        quotation.TurnAroundTimeAttributes = JsonConvert.SerializeObject(result);
+
+        await PITATLog(quotation, tatObject, submitRequest.StepsWorkflow.FromNodeId);
+
+        WorkflowInstanceNode workflowInstanceNode = new WorkflowInstanceNode();
+        workflowInstanceNode = await _workflowInstanceNodeRepository.GetSingleObject(s => s.Code == submitRequest.InstanceWorkflow.CurrentStep);
+
+        if (workflowInstanceNode == null) return StatusCode(500, "Cannot find node in workflow!");
+        if (workflowInstanceNode.Data.Contains("End"))
+        {
+            quotation.StageDept = "";
+            quotation.StageAccount = "";
+        }
+
+        await _policyIssuanceRepository.UpdateData(quotation, JsonConvert.SerializeObject(quotation), quotation?.Id, "Id");
+
+        if (submitRequest.StepsWorkflow.Command != null)
+        {
+            WorkflowCommand commandEnum = WorkflowCommand.None;
+
+            if (!string.IsNullOrEmpty(submitRequest.StepsWorkflow.Command))
+            {
+                Enum.TryParse(
+                    submitRequest.StepsWorkflow.Command,
+                    true, // ignore case
+                    out commandEnum
+                );
+            }
+            switch (commandEnum)
+            {
+                case WorkflowCommand.TransferFile:
+
+                    var config = JsonConvert.DeserializeObject<TransferFileConfig>(
+                        submitRequest.StepsWorkflow.CommandConfig ?? "{}"
+                    );
+
+                    await HandleTransferFile(config, quotation);
+                    break;
+
+                case WorkflowCommand.CopyFile:
+
+                    //await HandleCopyFile();
+                    break;
+
+                case WorkflowCommand.LockFileLocal:
+
+                    //await HandleLockFile();
+                    break;
+
+                default:
+                    // do nothing
+                    break;
+            }
+        }
+
+
+
+
+
+
+        var userInfo = await ControllerHelper.FetchUserRoles(_httpContextAccessor, configuration, DOMAIN_NAME);
+        await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
+
+
+
+        PICAttributes pICAttributes = new PICAttributes();
+        pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
+        string accountName = submitRequest.StepsWorkflow.ToNodeId switch
+        {
+            "FO" => pICAttributes.FO,
+            "TS" => pICAttributes.TS,
+            "UW" => pICAttributes.UW,
+            "LMKT" => pICAttributes.LMKT,
+            "PM" => pICAttributes.PM,
+            _ => null
+        };
+        ControllerHelper.SignalRResponse(_usersSessionRepository, "R_ItemSubmitted", new { id = quotation.Id, type = "PolicyIssuance" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        await PISendAttachedWorkflowMailAsync(submitRequest, quotation);
+
+        dynamic transferObject = new
+        {
+            DOMAIN_NAME = DOMAIN_NAME,
+            Title = "Assigning Task",
+            Subject = $"{quotation.PolicyIssuanceCode} have been submitted from {userInfo.Employee?.FullName ?? "anonymous"}",
+            Resource = "Assign from ",
+            Guid = quotation.Guid,
+            ReceivedBy = accountName,
+            Id = quotation.Id,
+            Code = quotation.PolicyIssuanceCode,
+            ModuleName = nameof(PolicyIssuance)
+        };
+
+
+
+        Notification notification = new Notification();
+        UrlCall urlCall = new UrlCall();
+        long? notificationTypeId = await ResolveWorkflowNotificationTypeId(
+            submitRequest.StepsWorkflow,
+            submitRequest.InstanceWorkflow,
+            NotificationTypeKeys.PolicyIssuance);
+        if (submitRequest.isEmail ?? false)
+        {//Test cho nay
+            //notification = await ControllerUtil.MakeNotificationFromEmail(notification, mailQueue, quotation, configuration,out urlCall);
+            notification = await ControllerUtil.NotifySameEmail(notification, transferObject, notificationTypeId);
+        }
+        else
+            notification = await ControllerUtil.Notify(transferObject, notificationTypeId);
+        await _urlCallRepository.InsertData(urlCall);
+        await _notificationRepository.InsertData(notification);
+
+        return Ok();
+    }
     private async Task HandleTransferFile(TransferFileConfig config, dynamic ObjectIn)
     {//{   "sourceDepartment": "FO",   "strategy": "Latest",   "fileSelector": "First",   "allowOverride": false }
         if (config == null)
@@ -611,6 +768,84 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         }
     }
 
+    private async Task PISendAttachedWorkflowMailAsync(WorkflowTransitionSubmitRequest submitRequest, PolicyIssuance quotation)
+    {
+        try
+        {
+            string? templateName = await ResolveAttachedMailTemplateNameAsync(submitRequest);
+            if (string.IsNullOrWhiteSpace(templateName)) return;
+
+            MailTemplate? mailTemplate = await _mailTemplateRepository.GetSingleObject(
+                item => item.TemplateName == templateName);
+            if (mailTemplate == null || !(mailTemplate.IsActive ?? false)) return;
+
+            Employee? creator = await FindEmployeeByAccountAsync(quotation.CreatedBy);
+            if (creator == null || string.IsNullOrWhiteSpace(creator.Email))
+            {
+                Log.Warning("Workflow mail {TemplateName} was skipped because creator {CreatedBy} has no employee email.", templateName, quotation.CreatedBy);
+                return;
+            }
+
+            HashSet<string> ccEmails = new(StringComparer.OrdinalIgnoreCase);
+            HashSet<string> seenAccounts = new(StringComparer.OrdinalIgnoreCase)
+            {
+                NormalizeWorkflowAccount(quotation.CreatedBy)
+            };
+
+            foreach (string account in ExtractAssignedPicAccounts(quotation.PIC))
+            {
+                string normalizedAccount = NormalizeWorkflowAccount(account);
+                if (string.IsNullOrWhiteSpace(normalizedAccount) || !seenAccounts.Add(normalizedAccount)) continue;
+
+                Employee? employee = await FindEmployeeByAccountAsync(normalizedAccount);
+                if (employee != null
+                    && !string.IsNullOrWhiteSpace(employee.Email)
+                    && !string.Equals(employee.Email, creator.Email, StringComparison.OrdinalIgnoreCase))
+                {
+                    ccEmails.Add(employee.Email.Trim());
+                }
+            }
+
+            foreach (string configuredCc in (mailTemplate.CC ?? "").Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (!string.Equals(configuredCc, creator.Email, StringComparison.OrdinalIgnoreCase)) ccEmails.Add(configuredCc);
+            }
+            foreach (string followCc in Util.CCAllEmail(_emailSettings.FollowCC, "").Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (!string.Equals(followCc, creator.Email, StringComparison.OrdinalIgnoreCase)) ccEmails.Add(followCc);
+            }
+
+            Dictionary<string, object> templateData = new();
+            if (!string.IsNullOrWhiteSpace(mailTemplate.MailQuery))
+            {
+                DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
+                if (query.Rows.Count > 0) templateData = Util.MakeQueryIntoDirectory(query.Rows[0]);
+            }
+            templateData["PolicyIssuanceId"] = quotation.Id;
+            templateData["PolicyIssuanceCode"] = quotation.PolicyIssuanceCode ?? "";
+            templateData["WorkflowStatus"] = quotation.WorkflowStatus ?? "";
+
+            MailItem mailItem = new()
+            {
+                ToName = creator.FullName,
+                ToEmail = creator.Email,
+                Subject = $"{MailUtil.TitleContentHandle(mailTemplate.PrefixTitleMail, templateData)} {MailUtil.TitleContentHandle(mailTemplate.TemplateMailTitle, templateData)}".Trim(),
+                HtmlBody = MailUtil.BodyContentHandle(mailTemplate.TemplateContent, templateData),
+                TextBody = "",
+                CC = string.Join(';', ccEmails),
+                BCC = mailTemplate.BCC ?? ""
+            };
+
+            MailUtil.SendEmail(_emailSettings, mailItem, null).Wait();
+            MailQueue mailQueue = Util.MakeMailQueueItem(mailItem, _emailSettings, null, "Workflow");
+            await _mailQueueRepository.InsertData(mailQueue);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Unable to send attached workflow mail for quotation {PolicyIssuanceId}.", quotation.Id);
+        }
+    }
+
     private async Task<long?> ResolveWorkflowNotificationTypeId(
         StepsWorkflow? stepsWorkflow,
         InstanceWorkflow? instanceWorkflow,
@@ -758,6 +993,71 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         await _turnAroundTimeDeptProcessingRepository.InsertData(deptProcessing);
 
         }
+
+    public async Task PITATLog([FromBody] PolicyIssuance quotation, [FromQuery] TurnAroundItem tatObject, string department)
+    {
+        TurnAroundTimeSession activeSession = new TurnAroundTimeSession();
+        activeSession = await _turnAroundTimeSessionRepository
+        .GetSingleObject(s => s.RecordGuid == quotation.Guid);
+
+
+        if (activeSession == null)
+        {
+            // Đếm số phiên đã có để tính SessionNo tiếp theo
+            var allSessions = await _turnAroundTimeSessionRepository
+                .GetListObject(s => s.RecordGuid == quotation.Guid);
+
+            int nextSessionNo = (allSessions?.Count ?? 0) + 1;
+
+            activeSession = new TurnAroundTimeSession
+            {
+                SessionNo = nextSessionNo,
+                SessionTypeId = quotation.RequestTypeId,   // truyền từ client: New=1 / Renew=2 / Amend=3
+                SessionStartDate = tatObject.AcceptDate,
+                SessionEndDate = tatObject.CompleteDate,
+                TotalDays = 0,
+                RecordGuid = quotation.Guid
+            };
+            await _turnAroundTimeSessionRepository.InsertData(activeSession);
+            // Sau insert, activeSession.Id đã được gán bởi EF/repository
+        }
+        else
+        {
+            // Đếm số phiên đã có để tính SessionNo tiếp theo
+            var allSessions = await _turnAroundTimeSessionRepository
+                .GetListObject(s => s.RecordGuid == quotation.Guid);
+
+
+            activeSession.SessionNo = activeSession.SessionNo;
+            activeSession.SessionTypeId = quotation.RequestTypeId;   // truyền từ client: New=1 / Renew=2 / Amend=3
+            activeSession.SessionStartDate = activeSession.SessionStartDate;
+            activeSession.SessionEndDate = tatObject.CompleteDate;
+            activeSession.TotalDays = 0;
+            activeSession.RecordGuid = quotation.Guid;
+            await _turnAroundTimeSessionRepository.UpdateData(activeSession, JsonConvert.SerializeObject(activeSession), activeSession.Id, "Id");
+            // Sau insert, activeSession.Id đã được gán bởi EF/repository
+        }
+
+        // Bước 2 — Tìm hoặc tạo DeptProcessing cho phòng ban đang submit
+        TurnAroundTimeDeptProcessing deptProcessing = new TurnAroundTimeDeptProcessing();
+
+        DateTime acceptDate = tatObject.AcceptDate ?? DateTime.Now;
+        DateTime completeDate = tatObject.CompleteDate ?? DateTime.Now;
+        int processingDays = (completeDate.Date - acceptDate.Date).Days;  // đơn vị ngày
+
+        // Chưa có → tạo mới
+        deptProcessing = new TurnAroundTimeDeptProcessing
+        {
+            TurnAroundTimeSessionId = activeSession.Id,
+            Department = department,
+            AcceptDate = acceptDate,
+            CompleteDate = completeDate,
+            ProcessingDays = processingDays
+        };
+        await _turnAroundTimeDeptProcessingRepository.InsertData(deptProcessing);
+
+    }
+
     public class TransferFileConfig
     {
         public string SourceDepartment { get; set; }

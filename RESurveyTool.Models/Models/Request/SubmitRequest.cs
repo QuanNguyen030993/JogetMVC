@@ -10,6 +10,7 @@ namespace ERPCore.Models.Request
         public StepsWorkflow? StepsWorkflow { get; set; }
         public StepsWorkflow? ToStepsWorkflow { get; set; }
         public long? QuotationId { get; set; }  
+        public long? PolicyIssuanceId { get; set; }  
         public string? Comment { get; set; }
         public bool? isEmail { get; set; } = false;
         public bool? isFullDetail { get; set; } = true; 

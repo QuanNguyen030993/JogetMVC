@@ -5,10 +5,10 @@ using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
-public class ChecklistController : BaseControllerApi<Checklist>
+public class ChecklistController : BaseControllerApi<PolicyIssuanceChecklist>
 {
     public ChecklistController(
-        IBaseRepository<Checklist> repository,
+        IBaseRepository<PolicyIssuanceChecklist> repository,
         IHttpContextAccessor httpContextAccessor)
         : base(repository, httpContextAccessor)
     {

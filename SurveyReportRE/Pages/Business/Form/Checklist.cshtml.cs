@@ -5,12 +5,12 @@ namespace ERPCore.Pages;
 
 public class ChecklistModel : PageModel
 {
-    public static string ModelName { get; private set; } = nameof(Checklist);
+    public static string ModelName { get; private set; } = nameof(PolicyIssuanceChecklist);
     public string RecordGuid { get; private set; } = "";
 
     public void OnGet(Guid? recordGuid)
     {
-        ModelName = nameof(Checklist);
+        ModelName = nameof(PolicyIssuanceChecklist);
         RecordGuid = recordGuid?.ToString() ?? "";
         ViewData["Model"] = ModelName;
         ViewData[nameof(RecordGuid)] = RecordGuid;

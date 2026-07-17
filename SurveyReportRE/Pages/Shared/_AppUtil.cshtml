@@ -2927,6 +2927,7 @@
             sendData.InstanceWorkflow = convertKeysToUpperFirstChar(_nextStep.instanceWorkflow);
             sendData.StepsWorkflow = convertKeysToUpperFirstChar(findRoute);
             sendData.QuotationId = formItems.id;
+            sendData.PolicyIssuanceId = formItems.id;
             sendData.Comment = formItems.comment;
             var transitionResult = evaluateTransitionScript(moduleName, _nextStep, findRoute, formItems, sendData);
             formItems = transitionResult.formItems;
@@ -2986,6 +2987,7 @@
             sendData.InstanceWorkflow = convertKeysToUpperFirstChar(_nextStep.instanceWorkflow);
             sendData.StepsWorkflow = convertKeysToUpperFirstChar(findRoute);
             sendData.QuotationId = formItems.id;
+            sendData.PolicyIssuanceId = formItems.id;
             sendData.Comment = formItems.comment;
             var transitionResult = evaluateTransitionScript(moduleName, _nextStep, findRoute, formItems, sendData);
             formItems = transitionResult.formItems;
@@ -7245,11 +7247,12 @@ function styleModeChange(item){
                                      // }
                             }
                                 if (formItems.stageDept == formProps.dept) {
+
                                   $(`#${acceptButtonId}`).dxButton("instance").option("disabled",false);
                             }
                            
                             
-                                   },100);
+                                   },1000);
 
 
         }

@@ -705,7 +705,7 @@ Note:
                                                                                 try {
 
                                             if (findRoutes?.length) {
-
+                                                console.log(findRoutes);
                                                 findRoutes.forEach(route => {
 
                                                     const buttonId =
@@ -716,31 +716,70 @@ Note:
                                                             .appendTo(`#${submitButtonId}`);
                                                     }
 
-                                                    $(`#${buttonId}`).dxButton({
-                                                        disabled: tatObject?.[stageDept]?.AcceptDate ? false : true,
-                                                        text: (stageDept === "TS" || stageDept === "PM") ? "Accept" : (route.displayStatus || ""),
-                                                        icon: "fa-solid fa-person-running",
-                                                        type: "info",
-                                                        onClick: function () {
+                                                       $(`#${buttonId}`).dxButton({
+        disabled: stageDept === "LMKT"
+            ? false
+            : (tatObject?.[stageDept]?.AcceptDate ? false : true),
+        text: route.displayStatus || "",
+        icon: getTransitionButtonIcon(route, "fa-solid fa-person-running"),
+        type: "info",
+        onClick: function () {
 
-                                                            var content =
-                                                                remarkBoxs[stageDept].controlRemark.value();
+            var content =
+                remarkBoxs[stageDept].controlRemark.value();
 
-                                                            formItems =
-                                                                $(`#${formId}`)
-                                                                    .dxForm("instance")
-                                                                    ?.option("formData") || {};
+            formItems =
+                $(`#${formId}`)
+                    .dxForm("instance")
+                    ?.option("formData") || {};
 
-                                                            formItems.comment = content || "";
+            formItems.comment = content || "";
 
-                                                            submitNextStep(
-                                                                `${formModuleKeyQt}`,
-                                                                state.nextStep,
-                                                                route,
-                                                                formItems
-                                                            );
-                                                        }
-                                                    });
+            if (stageDept === "LMKT") {
+                var currentTatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "LMKT SubmitBranch TAT Problem") || {};
+                if (!currentTatObject[stageDept]) {
+                    currentTatObject[stageDept] = {
+                        AcceptDate: "",
+                        CompleteDate: ""
+                    };
+                }
+                if (!currentTatObject[stageDept].AcceptDate) {
+                    currentTatObject[stageDept].AcceptDate = formatDateToString(new Date()).gmt7;
+                }
+
+                var currentActionStatus = tryParseJSON(formItems.actionStatus, "LMKT SubmitBranch ActionStatus Problem") || {};
+                currentActionStatus[stageDept] = route.displayStatus || route.actionName || route.actionCode || "Submitted";
+                currentActionStatus[`${stageDept}Button`] = {
+                    text: route.displayStatus || route.actionName || route.actionCode || "Submitted",
+                    actionCode: route.actionCode || "",
+                    icon: getTransitionButtonIcon(route, "check"),
+                    buttonClass: getTransitionButtonClass(route, "dx-button-info")
+                };
+
+                formItems.turnAroundTimeAttributes = JSON.stringify(currentTatObject);
+                formItems.actionStatus = JSON.stringify(currentActionStatus);
+                ajaxPut('/api/Quotation/UpdateData',
+                    {
+                        key: formItems.id,
+                        values: JSON.stringify(formItems)
+                    },
+                    {
+                        onSuccess: function () { },
+                        onError: function (err) { console.log("LMKT SubmitBranch status update problem", err); }
+                    }
+                );
+                $(`#${submitButtonId}`).find(".dx-button").css("background-color", window.DecisionColors.accepted);
+            }
+
+            submitNextStep(
+                `${formModuleKeyPi}`,
+                state.nextStep,
+                route,
+                formItems
+            );
+        }
+    });
+    applyTransitionButtonClass(`#${buttonId}`, route);
 
                                                 });
                                             }
