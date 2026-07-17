@@ -154,7 +154,8 @@ function App() {
   const menuItems = [
     { id: 'dashboard', label: 'Báo cáo công việc (Dashboard)' },
     { id: 'serilog', label: 'Nhật ký hệ thống (Serilogs)' },
-    { id: 'asplog', label: 'Nhật ký ứng dụng (ASP Log)' }
+    { id: 'asplog', label: 'Nhật ký ứng dụng (ASP Log)' },
+    { id: 'diagram', label: 'Diagram' }
   ];
 
   const content = useMemo(() => {
@@ -163,6 +164,8 @@ function App() {
         return <SerilogViewer />;
       case 'asplog':
         return <AspLogViewer />;
+      case 'diagram':
+        return <Flow id={11} guid="6c5c0375-f255-49f7-aaec-c17ce778fe53"/>;
       case 'dashboard':
       default:
         return <WorkloadChart data={data} />;
