@@ -20,6 +20,7 @@ import AspLogViewer from './components/AspLogViewer';
 import CustomGrid from '../../TMIVCom/src/components/CustomGrid'
 import NotificationHub from './components/NotificationHub';
 import SqlStoredProcedure from './components/SqlStoredProcedure';
+import NotificationTemplate from './components/NotificationTemplate';
 import './styles/flow.css';
 import './styles/com.all.css';
 import './styles/serilogs.css';
@@ -29,6 +30,7 @@ import './styles/mailtemplatedesigner.css'
 import './styles/mailqueue.css';
 import './styles/menudesigner.css';
 import './styles/sladesigner.css';
+import './styles/notificationtemplate.css';
 import "./fonts/css/all.min.css";
 
 function App() {
@@ -201,6 +203,7 @@ function App() {
     { id: 'enumdata-grid', label: 'Bảng Enum Data (CustomGrid)' },
     { id: 'notification-grid', label: 'Bảng Notification (CustomGrid)' },
     { id: 'notification-hub', label: 'Trung tâm thông báo (Notification Hub)' },
+    { id: 'notification-template', label: 'Thiết lập Notification Template' },
     { id: 'sladesigner', label: 'Cấu hình chỉ số SLA' }
   ];
 
@@ -291,6 +294,8 @@ function App() {
         return <CustomGrid modelName="Notification" gridType="System" apiBaseUrl={API_BASE_URL} editMode="batch" />;
       case 'notification-hub':
         return <NotificationHub />;
+      case 'notification-template':
+        return <NotificationTemplate />;
       case 'sladesigner':
         return <SlaDesign />;
       default:

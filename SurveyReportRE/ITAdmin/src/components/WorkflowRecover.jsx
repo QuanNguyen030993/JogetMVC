@@ -641,17 +641,16 @@ export default function WorkflowRecover() {
                   <div className="recover-empty">Loading React Flow diagram...</div>
                 ) : (
                   <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden', height: '520px', background: '#f8fafc' }}>
-                    <Diagram
+                    {/* <Diagram
                       nodes={diagramNodes}
                       edges={diagramEdges}
                       readOnly={true}
-                    />
+                    /> */}
                   </div>
                 )
               ) : (
                 selectedWorkflow?.recordGuid ? (
                   <Flow
-                    key={`${selectedWorkflow.workflowDefinitionId}-${selectedWorkflow.recordGuid}`}
                     id={selectedWorkflow.workflowDefinitionId}
                     guid={selectedWorkflow.recordGuid}
                   />

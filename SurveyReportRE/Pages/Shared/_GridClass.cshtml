@@ -1062,6 +1062,17 @@
         }
     }
 
+    var NotificationTemplateGridOption = class NotificationTemplateGridOption extends MGridOption {
+        constructor(modelName, gridType) {
+            super(modelName, gridType);
+        };
+
+        onCustomizeColumns(columns) {
+            super.onCustomizeColumns(columns);
+            super.hyperLinkCode(columns, "Business/MasterData", "NotificationTemplate", "id", "templateName");
+        }
+    }
+
 
     var LossExpValueBrkdwnDetailGridOption = class LossExpValueBrkdwnDetailGridOption extends MGridOption {
         constructor(modelName, gridType, params) {

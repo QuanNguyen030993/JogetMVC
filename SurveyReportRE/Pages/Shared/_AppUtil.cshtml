@@ -4706,33 +4706,51 @@
             context.renderGate.fail(context.token, message || "Workflow action failed");
        }
 
-       function reloadWorkflowViewComponents(schemeName, recordId, triggerElement, forceReload) {
-            var normalizedScheme = String(schemeName || "").replace(/\s+/g, "").toLowerCase();
-            var isPolicyIssuance = normalizedScheme === "policyissuance";
-            var moduleCode = isPolicyIssuance ? "pi" : "qt";
-            var reloadKey = `${moduleCode}:${recordId}`;
-            var now = Date.now();
-            var previousReloadAt = window.WorkflowViewReloadState[reloadKey] || 0;
+       function reloadCurrentTabView(triggerElement) {
+            var $wrapper = $(triggerElement).closest("[id$='_content_wrapper']");
+            if (!$wrapper.length) return false;
 
-            // UpdateData emits R_ItemSubmitted and acceptDecision also has a success
-            // callback. Treat both as one refresh action.
+            var wrapperId = $wrapper.attr("id") || "";
+            var code = wrapperId.replace(/_content_wrapper$/, "");
+            var sourceUrl = $wrapper.attr("data-source-url");
+            var caption = $wrapper.attr("data-source-caption")
+                || $(`#${code}_li_tab a`).text()
+                || code;
+
+            if (!sourceUrl || !code) {
+                console.warn("Cannot fully reload tab because its source URL is missing.", code);
+                return false;
+            }
+
+            callElementView(sourceUrl, code, caption, $wrapper.data("source-data"));
+            return true;
+       }
+       window.reloadCurrentTabView = reloadCurrentTabView;
+
+       function reloadOverviewViewComponents(moduleCode, recordId, triggerElement, forceReload) {
+            var normalizedModule = String(moduleCode || "").replace(/\s+/g, "").toLowerCase();
+            var isPolicyIssuance = normalizedModule === "pi" || normalizedModule === "policyissuance";
+            var resolvedModuleCode = isPolicyIssuance ? "pi" : "qt";
+            var viewInstanceKey = `${resolvedModuleCode}:${recordId}`;
+            var now = Date.now();
+            var previousReloadAt = window.WorkflowViewReloadState[viewInstanceKey] || 0;
+
+            // SignalR and workflow callbacks can report the same update. Keep all
+            // reload entry points on this shared guard so the view renders once.
             if (!forceReload && now - previousReloadAt < 1500) {
                 return Promise.resolve(true);
             }
-            window.WorkflowViewReloadState[reloadKey] = now;
+            window.WorkflowViewReloadState[viewInstanceKey] = now;
 
-            var viewInstance = window.OverviewViewRegistry?.[`${moduleCode}:${recordId}`];
+            var viewInstance = window.OverviewViewRegistry?.[viewInstanceKey];
             var refreshSource = triggerElement;
+
             if (refreshSource?.jquery) refreshSource = refreshSource[0];
             if (!refreshSource && viewInstance?.rootId) {
                 refreshSource = document.getElementById(viewInstance.rootId);
             }
 
-            // Keep the same behavior as the Overview Refresh button: reload the
-            // complete current tab first, then fall back to the component registry.
-            if (refreshSource
-                && typeof window.reloadCurrentTabView === "function"
-                && window.reloadCurrentTabView(refreshSource)) {
+            if (refreshSource && reloadCurrentTabView(refreshSource)) {
                 return Promise.resolve(true);
             }
 
@@ -4748,8 +4766,16 @@
                 return Promise.resolve(reloadComponents(recordId));
             }
 
-            console.warn(`Reload handler is not available for ${schemeName} ${recordId}.`);
+            console.warn(`Reload handler is not available for ${viewInstanceKey}.`);
             return Promise.resolve(false);
+       }
+       window.reloadOverviewViewComponents = reloadOverviewViewComponents;
+
+       function reloadWorkflowViewComponents(schemeName, recordId, triggerElement, forceReload) {
+            var normalizedScheme = String(schemeName || "").replace(/\s+/g, "").toLowerCase();
+            var isPolicyIssuance = normalizedScheme === "policyissuance";
+            var moduleCode = isPolicyIssuance ? "pi" : "qt";
+            return reloadOverviewViewComponents(moduleCode, recordId, triggerElement, forceReload);
        }
        window.reloadWorkflowViewComponents = reloadWorkflowViewComponents;
 
@@ -4927,7 +4953,7 @@
 
 
 
-    function createHtmlEditor(container, $element, item, editorOptions, isFullscreen = false) {
+    function createDevExtremeHtmlEditor(container, $element, item, editorOptions, isFullscreen = false) {
 
         var defaultOnValueChanged = function (e) {
             if (item.instanceProps?.formInstance) {
@@ -5173,6 +5199,125 @@
 
         return { element: editor, instance: editor.dxHtmlEditor("instance") };
     }
+
+    function createHtmlEditor(container, $element, item, editorOptions) {
+        editorOptions = editorOptions || {};
+
+        var controlId = editorOptions.instanceProps
+            ? editorOptions.instanceProps.refKey
+            : (editorOptions.id || item.id || "new");
+        var readOnly = item.isFieldReadOnly === true
+            || editorOptions.isReadOnly === true
+            || editorOptions.readOnly === true;
+        var $editorElement = $element?.length ? $element : $("<div>");
+        var editorControl;
+        var syncingFromForm = false;
+        var formInstance = editorOptions.formInstance || item.instanceProps?.formInstance;
+
+        $editorElement
+            .attr("id", `htmlEditor_${item.dataField}_${controlId}`)
+            .addClass("tmiv-form-html-editor")
+            .css("width", editorOptions.width || item.width || _defaultHtmlEditorWidth);
+
+        var defaultOnChange = function (html) {
+            if (readOnly || syncingFromForm) return;
+
+            if (formInstance) {
+                formInstance.updateData(item.dataField, html);
+            }
+            editorOptions.value = html;
+        };
+
+        var onChange = defaultOnChange;
+        if (item.customEditorOptions && typeof editorOptions.onValueChanged === "function") {
+            onChange = function (html) {
+                editorOptions.onValueChanged({
+                    value: html,
+                    component: editorControl
+                });
+            };
+        } else if (typeof editorOptions.onChange === "function") {
+            onChange = editorOptions.onChange;
+        }
+
+        var editorOnChange = onChange;
+        onChange = function (html) {
+            if (syncingFromForm) return;
+            editorOnChange(html);
+        };
+
+        editorControl = $editorElement.htmleditor({
+            value: editorOptions.value ?? "",
+            height: editorOptions.formHeight || item.formHeight || 150,
+            readOnly: readOnly,
+            disabled: readOnly,
+            onChange: onChange
+        });
+
+        if (formInstance && item.dataField) {
+            formInstance.tmivHtmlEditors = formInstance.tmivHtmlEditors || {};
+            formInstance.tmivHtmlEditors[item.dataField] = {
+                setValue: function (value) {
+                    var nextValue = value ?? "";
+                    if (editorControl.value() === nextValue) return;
+
+                    syncingFromForm = true;
+                    try {
+                        editorControl.option("value", nextValue);
+                        editorOptions.value = nextValue;
+                    } finally {
+                        syncingFromForm = false;
+                    }
+                }
+            };
+
+            if (!formInstance.tmivHtmlEditorSyncRegistered) {
+                formInstance.tmivHtmlEditorSyncRegistered = true;
+
+                formInstance.on("fieldDataChanged", function (e) {
+                    formInstance.tmivHtmlEditors?.[e.dataField]?.setValue(e.value);
+                });
+
+                formInstance.on("optionChanged", function (e) {
+                    if (e.name !== "formData") return;
+
+                    var formData = e.value || {};
+                    Object.keys(formInstance.tmivHtmlEditors || {}).forEach(function (dataField) {
+                        formInstance.tmivHtmlEditors[dataField].setValue(formData[dataField]);
+                    });
+                });
+            }
+
+            var currentFormData = formInstance.option("formData") || {};
+            if (Object.prototype.hasOwnProperty.call(currentFormData, item.dataField)) {
+                formInstance.tmivHtmlEditors[item.dataField].setValue(currentFormData[item.dataField]);
+            }
+        }
+
+        if (!$editorElement.parent().length || !$editorElement.parent().is(container)) {
+            $editorElement.appendTo(container);
+        }
+
+        function applyReadOnlyState() {
+            var $content = $editorElement.find(".tmiv-html-content");
+            if (!$content.length) return false;
+
+            $content.attr("contenteditable", readOnly ? "false" : "true");
+            $editorElement.find(".tmiv-html-toolbar").toggle(!readOnly);
+            $editorElement.toggleClass("tmiv-html-editor-readonly", readOnly);
+            return true;
+        }
+
+        if (!applyReadOnlyState() && window.MutationObserver) {
+            var observer = new MutationObserver(function () {
+                if (applyReadOnlyState()) observer.disconnect();
+            });
+            observer.observe($editorElement[0], { childList: true, subtree: true });
+        }
+
+        return { element: $editorElement, instance: editorControl };
+    }
+
     function createEditor(devExtremeItem, $container, $element, editorOptions) {
         //editorOptions should be main property of control here
         switch (devExtremeItem.editorType) {
@@ -5353,7 +5498,7 @@
                     $(`<div id='dataGrid_${elementName}_${editorOptions.id}' style="min-height: ${_defaultGridMinHeight}px;">`).dxDataGrid(mGridOption.makeGridOptions()).appendTo($container);
                 break;
             case "dxHtmlEditor":
-                $container.addClass("quill-wrapper");
+                $container.addClass("tmiv-html-editor-wrapper");
                 devExtremeItem.control = createHtmlEditor($container, $element, devExtremeItem, editorOptions);
                 break;
             case "dxDateBox":
@@ -5953,6 +6098,7 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
 
    $.each(itemsArray, function (i, item) {
        var editorOptions = { ...item.editorOptions };
+       var usesAccordionEditor = false;
        if (formInstanceProps.isReadOnly)
            item.readOnly = formInstanceProps.isReadOnly;
        item.instanceProps = formInstanceProps;
@@ -5960,6 +6106,7 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
            if (item.formItem.outline) {
                if (!item.formItem.isPreload) {
                    if (isAccordionGroupSupportControls(item, editorOptions, formInstanceProps)) {
+                       usesAccordionEditor = true;
                        item.template = function (data, itemElement) {
                            //doubleClickDefaultPlaceHolderToText(editorOptions, data, item);
                            editorOptions.onInitialized = function (e) {
@@ -5976,12 +6123,6 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
                            createAccordionField(item, itemElement, editorOptions, formInstanceProps);
                        }
                        item.label.visible = false;
-                   }
-               }
-               else {
-                   if (item.editorType == "dxHtmlEditor") {
-                       item.editorOptions.readOnly = item.readOnly;
-
                    }
                }
            }
@@ -6008,6 +6149,28 @@ function RenderFormElement(_gridConfig, itemsArray, formInstanceProps) {
                        createEditor(item, itemElement, $("<div>"), childProps);
                    }
            }
+       }
+
+       // DataGridConfig continues to use dxHtmlEditor as the field type, but
+       // Form rendering uses the same TMIV HTML editor as the remark boxes.
+       if (item.editorType == "dxHtmlEditor" && !usesAccordionEditor) {
+           item.template = function (data, itemElement) {
+               var childProps = customChildProps(item, formInstanceProps);
+               var formData = data.component.option("formData") || {};
+               childProps.formInstance = data.component;
+
+               if (Object.prototype.hasOwnProperty.call(formData, item.dataField)) {
+                   childProps.value = formData[item.dataField] ?? "";
+               } else if (!childProps.value) {
+                   childProps.value = getHtmlEditorBeforeRender(item, formInstanceProps);
+               }
+
+               if (formInstanceProps.isReadOnly) {
+                   childProps.readOnly = true;
+               }
+
+               createEditor(item, itemElement, $("<div>"), childProps);
+           };
        }
    });
 }

@@ -219,41 +219,14 @@ function startSignalRConnection() {
     connectionSignR.on("R_ItemSubmitted", function (items) {
             signalRBlink();
             if (items.type === "Quotation" || items.type === "PolicyIssuance") {
-                if (typeof window.reloadWorkflowViewComponents === "function") {
-                    window.reloadWorkflowViewComponents(items.type, items.id)
-                        .catch(function (err) {
-                            console.error("Submitted item reload failed", err);
-                        });
+                if (typeof window.reloadOverviewViewComponents !== "function") {
+                    console.warn("Shared overview reload handler is not available.", items);
                     return;
                 }
-
-                const reloadComponents = items.type === "PolicyIssuance"
-                    ? window.reloadPolicyIssuanceComponents
-                    : window.reloadQuotationComponents;
-                if (typeof reloadComponents === "function") {
-                    reloadComponents(items.id);
-                }
-                //const reloadComponents = moduleCode === "pi"
-                //    ? window.reloadPolicyIssuanceComponents
-                //    : window.reloadQuotationComponents;
-                //if (typeof reloadComponents === "function") {
-                //    reloadComponents(items.id);
-                //} else {
-                //    console.warn(`Reload function for ${viewInstanceKey} is not available.`);
-                //}
-
-
-
-                //            // Call the reload function for quotation components
-                //            if (window.reloadQuotationComponents) {
-                //                window.reloadQuotationComponents();
-                //            }
-                //}
-                //if (items.type === "PolicyIssuance") {
-                //    if (window.reloadPolicyIssuanceComponents) {
-                //        window.reloadPolicyIssuanceComponents();
-                //    }
-                //}
+                window.reloadOverviewViewComponents(items.type, items.id)
+                    .catch(function (err) {
+                        console.error("Submitted item reload failed", err);
+                    });
             }
         }
     );

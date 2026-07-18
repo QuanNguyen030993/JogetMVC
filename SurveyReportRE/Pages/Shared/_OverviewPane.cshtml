@@ -6,7 +6,6 @@
     string Css(string name) => $"{Model.Prefix}-{name}";
     var moduleCode = (Model.ModuleCode ?? "").Trim().ToLower();
     var quotationId = Convert.ToInt64(ViewData["Id"]);
-    var viewInstanceKey = $"{moduleCode}:{quotationId}";
 }
 
 <div id="@Id("overviewRoot")" class="pane pane-right">
@@ -96,27 +95,7 @@
             hint: "Refresh",
             stylingMode: "text",
             onClick: function (e) {
-                if (typeof window.reloadCurrentTabView === "function"
-                    && window.reloadCurrentTabView(e.element)) {
-                    return;
-                }
-
-                const moduleCode = "@moduleCode";
-                const viewInstanceKey = "@viewInstanceKey";
-                const viewInstance = window.OverviewViewRegistry?.[viewInstanceKey];
-                if (typeof viewInstance?.reload === "function") {
-                    viewInstance.reload();
-                    return;
-                }
-
-                const reloadComponents = moduleCode === "pi"
-                    ? window.reloadPolicyIssuanceComponents
-                    : window.reloadQuotationComponents;
-                if (typeof reloadComponents === "function") {
-                    reloadComponents(@quotationId);
-                } else {
-                    console.warn(`Reload function for ${viewInstanceKey} is not available.`);
-                }
+                window.reloadOverviewViewComponents("@moduleCode", @quotationId, e.element, true);
             }
         });
 

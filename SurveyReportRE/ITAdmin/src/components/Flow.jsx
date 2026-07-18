@@ -1082,7 +1082,7 @@ function Flow({ id: propId }) {
             .catch((err) => console.error("Failed to load Mail Templates:", err));
 
         // Load Notification Templates
-        fetch(`${API_BASE_URL}/api/Notification/GetAll`)
+        fetch(`${API_BASE_URL}/api/NotificationTemplate/GetAll`)
             .then((res) => {
                 if (!res.ok) throw new Error('API status ' + res.status);
                 return res.json();

@@ -721,7 +721,7 @@ function toggleFullScreen(editor, editorElement, item, editorOptions) {
             dragEnabled: false,
             closeOnOutsideClick: true,
             contentTemplate: function (container) {
-                const tempHtmlEditor = createHtmlEditor(container, $("<div>"), item, editorOptions, true);
+                const tempHtmlEditor = createDevExtremeHtmlEditor(container, $("<div>"), item, editorOptions, true);
                 return tempHtmlEditor;
             },
             onHiding: function (e) {
