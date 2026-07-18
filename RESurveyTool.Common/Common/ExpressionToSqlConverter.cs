@@ -240,6 +240,16 @@ public static class ExpressionToSqlConverterV2<T>
         {
             if (unaryExpression.NodeType == ExpressionType.Not)
             {
+                // SQL Server does not allow a bit column to be used as a
+                // standalone predicate (for example: NOT ([Deleted])).
+                // Translate a negated boolean member to an explicit bit
+                // comparison instead.
+                if (IsBooleanType(unaryExpression.Operand.Type)
+                    && TryGetColumnSql(unaryExpression.Operand, out string booleanColumnSql))
+                {
+                    return $"({booleanColumnSql} = {FormatValue(0, parameters)})";
+                }
+
                 string operand = ProcessExpression(unaryExpression.Operand, parameters);
                 return $"NOT ({operand})";
             }
@@ -365,6 +375,11 @@ public static class ExpressionToSqlConverterV2<T>
         }
 
         throw new NotSupportedException($"Unsupported expression type in V2 converter: {expression.GetType()}");
+    }
+
+    private static bool IsBooleanType(Type type)
+    {
+        return type == typeof(bool) || Nullable.GetUnderlyingType(type) == typeof(bool);
     }
 
     private static bool TryProcessCollectionContains(
