@@ -932,6 +932,62 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         InstanceWorkflow instanceWorkflow = await _BaseRepository.GetSingleObject(s => s.Id == request.InstanceWorkflowId);
         if (instanceWorkflow == null) return NotFound("InstanceWorkflow not found.");
 
+        WorkflowDefinition workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(
+            item => item.Guid == instanceWorkflow.WorkflowDefinitionId);
+        if (workflowDefinition == null) return NotFound("WorkflowDefinition not found.");
+
+        string normalizedFlowType = (workflowDefinition.FlowType ?? "")
+            .Replace(" ", "", StringComparison.Ordinal)
+            .Replace("-", "", StringComparison.Ordinal);
+        bool isQuotationFlow = string.Equals(
+            normalizedFlowType,
+            nameof(Quotation),
+            StringComparison.OrdinalIgnoreCase);
+        bool isPolicyIssuanceFlow = string.Equals(
+            normalizedFlowType,
+            nameof(PolicyIssuance),
+            StringComparison.OrdinalIgnoreCase);
+        bool isSharedFlow = string.Equals(
+            normalizedFlowType,
+            "Both",
+            StringComparison.OrdinalIgnoreCase);
+
+        if (!isQuotationFlow && !isPolicyIssuanceFlow && !isSharedFlow)
+        {
+            return BadRequest(
+                $"WorkflowDefinition FlowType '{workflowDefinition.FlowType}' is not supported. Expected Quotation, PolicyIssuance, or Both.");
+        }
+
+        Quotation? quotation = null;
+        PolicyIssuance? policyIssuance = null;
+        string? recordType = null;
+
+        if (isQuotationFlow || isSharedFlow)
+        {
+            quotation = await _quotationRepository.GetSingleObject(
+                item => item.Guid == instanceWorkflow.RecordGuid);
+            if (quotation != null)
+            {
+                recordType = nameof(Quotation);
+            }
+        }
+
+        if (isPolicyIssuanceFlow || (isSharedFlow && quotation == null))
+        {
+            policyIssuance = await _policyIssuanceRepository.GetSingleObject(
+                item => item.Guid == instanceWorkflow.RecordGuid);
+            if (policyIssuance != null)
+            {
+                recordType = nameof(PolicyIssuance);
+            }
+        }
+
+        if (recordType == null)
+        {
+            return NotFound(
+                $"{workflowDefinition.FlowType} record was not found for RecordGuid {instanceWorkflow.RecordGuid}.");
+        }
+
         bool isRevise = string.Equals(request.Mode, "Revise", StringComparison.OrdinalIgnoreCase);
         string nextCurrentStep = "";
         string nextDeptCode = "";
@@ -956,13 +1012,19 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             }
             else
             {
+                var matchingStep = await _stepsWorkflowRepository.GetSingleObject(s =>
+                    s.WorkflowDefinitionId == instanceWorkflow.WorkflowDefinitionId
+                    && (s.FNodeId == request.TargetNodeId || s.TNodeId == request.TargetNodeId));
+                if (matchingStep == null)
+                {
+                    return BadRequest("Target node does not belong to the InstanceWorkflow definition.");
+                }
+
                 if (string.IsNullOrEmpty(nextDeptCode))
                 {
-                    var matchingStep = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == instanceWorkflow.WorkflowDefinitionId && (s.FNodeId == request.TargetNodeId || s.TNodeId == request.TargetNodeId));
-                    if (matchingStep != null)
-                    {
-                        nextDeptCode = (matchingStep.FNodeId == request.TargetNodeId) ? matchingStep.FromNodeId : matchingStep.ToNodeId;
-                    }
+                    nextDeptCode = (matchingStep.FNodeId == request.TargetNodeId)
+                        ? matchingStep.FromNodeId
+                        : matchingStep.ToNodeId;
                 }
             }
         }
@@ -970,6 +1032,10 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         {
             StepsWorkflow selectedStep = await _stepsWorkflowRepository.GetSingleObject(s => s.Id == request.StepsWorkflowId);
             if (selectedStep == null) return NotFound("StepsWorkflow not found.");
+            if (selectedStep.WorkflowDefinitionId != instanceWorkflow.WorkflowDefinitionId)
+            {
+                return BadRequest("StepsWorkflow does not belong to the InstanceWorkflow definition.");
+            }
 
             StepsWorkflow targetStep = selectedStep;
             if (isRevise)
@@ -991,7 +1057,6 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         instanceWorkflow.CurrentStep = nextCurrentStep;
         await _BaseRepository.UpdateData(instanceWorkflow, JsonConvert.SerializeObject(instanceWorkflow), instanceWorkflow.Id, "Id");
 
-        Quotation quotation = await _quotationRepository.GetSingleObject(s => s.Guid == instanceWorkflow.RecordGuid);
         if (quotation != null)
         {
             quotation.StageDept = nextDeptCode;
@@ -1009,32 +1074,26 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             await _quotationRepository.UpdateData(quotation, JsonConvert.SerializeObject(quotation), quotation.Id, "Id");
         }
 
-        PolicyIssuance? policyIssuance = null;
-        if (quotation == null)
+        if (policyIssuance != null)
         {
-            policyIssuance = await _policyIssuanceRepository.GetSingleObject(
-                item => item.Guid == instanceWorkflow.RecordGuid);
-            if (policyIssuance != null)
+            policyIssuance.StageDept = nextDeptCode;
+            policyIssuance.StageAccount = ResolveStageAccount(policyIssuance.PIC, nextDeptCode);
+            if (isRevise)
             {
-                policyIssuance.StageDept = nextDeptCode;
-                policyIssuance.StageAccount = ResolveStageAccount(policyIssuance.PIC, nextDeptCode);
-                if (isRevise)
-                {
-                    policyIssuance.WorkflowStatus = nextStatusName ?? policyIssuance.WorkflowStatus;
-                    policyIssuance.StatusId = nextStatusId;
-                }
-                else
-                {
-                    policyIssuance.WorkflowStatus = "Recover";
-                }
-
-                policyIssuance.ActionStatus = "";
-                await _policyIssuanceRepository.UpdateData(
-                    policyIssuance,
-                    JsonConvert.SerializeObject(policyIssuance),
-                    policyIssuance.Id,
-                    "Id");
+                policyIssuance.WorkflowStatus = nextStatusName ?? policyIssuance.WorkflowStatus;
+                policyIssuance.StatusId = nextStatusId;
             }
+            else
+            {
+                policyIssuance.WorkflowStatus = "Recover";
+            }
+
+            policyIssuance.ActionStatus = "";
+            await _policyIssuanceRepository.UpdateData(
+                policyIssuance,
+                JsonConvert.SerializeObject(policyIssuance),
+                policyIssuance.Id,
+                "Id");
         }
 
         string recoveredStageDept = quotation?.StageDept ?? policyIssuance?.StageDept ?? "";
@@ -1048,18 +1107,16 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             CurrentStep = instanceWorkflow.CurrentStep,
             StageDept = recoveredStageDept,
             StageAccount = recoveredStageAccount,
-            QuotationStageDept = recoveredStageDept,
+            QuotationStageDept = quotation?.StageDept,
+            QuotationStageAccount = quotation?.StageAccount,
             QuotationWorkflowStatus = quotation?.WorkflowStatus,
             QuotationStatusId = quotation?.StatusId,
             PolicyIssuanceStageDept = policyIssuance?.StageDept,
             PolicyIssuanceStageAccount = policyIssuance?.StageAccount,
             PolicyIssuanceWorkflowStatus = policyIssuance?.WorkflowStatus,
             PolicyIssuanceStatusId = policyIssuance?.StatusId,
-            RecordType = quotation != null
-                ? nameof(Quotation)
-                : policyIssuance != null
-                    ? nameof(PolicyIssuance)
-                    : null,
+            RecordType = recordType,
+            WorkflowFlowType = workflowDefinition.FlowType,
             Mode = isRevise ? "Revise" : "Recover",
             TargetNodeId = nextCurrentStep,
             TargetDeptCode = nextDeptCode,

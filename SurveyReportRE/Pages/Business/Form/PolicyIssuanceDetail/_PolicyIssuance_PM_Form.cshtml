@@ -29,27 +29,11 @@
 
 
     var thisObjectDetails = new Object();
-    thisObjectDetails.ModelName = "PolicyIssuanceCheckList";
+    thisObjectDetails.ModelName = "PolicyIssuanceChecklist";
     thisObjectDetails.refField = "PolicyIssuanceId";
     thisObjectDetails.refKey = @policyIssuanceId;
-    var detailsDataSourceCL = makeBasicDataSource(thisObjectDetails, false);
+    var policyIssuanceChecklistDataSource = makeBasicDataSource(thisObjectDetails, false);
     var sectionId = "@(ViewData["Cd"])";
-
-    var dataSourceGridCL = [
-        { field: "policyNoCL", label: "policyNoCL", checked: false, type: "checkbox" },
-    { field: "theInsured", label: "theInsured", checked: false, type: "checkbox" },
-    { field: "occupation", label: "occupation", checked: false, type: "checkbox" },
-    { field: "occupationFCICode", label: "occupationFCICode", checked: false, type: "checkbox" },
-    { field: "riskGrading", label: "riskGrading", checked: false, type: "checkbox" },
-    { field: "pOI", label: "pOI", checked: false, type: "checkbox" },
-    { field: "tSI", label: "tSI", checked: false, type: "checkbox" },
-    { field: "premium", label: "premium", checked: false, type: "checkbox" },
-    { field: "deductible", label: "deductible", checked: false, type: "checkbox" },
-    { field: "tnCs", label: "tnCs", checked: false, type: "checkbox" },
-    { field: "occupationCode", label: "occupationCode", checked: false, type: "checkbox" },
-    { field: "premiumRate", label: "premiumRate", checked: false, type: "checkbox" }
-
-    ];
 
 
     //    var that = new Object();
@@ -88,32 +72,18 @@
     that3.uploaderAllow = _role == "@dept";
     that3.data = { SectionName: `${sectionId}_${that3.moduleName}_@(policyIssuanceId)`, Department: "@(dept)", FieldName: that3.moduleName, FormId: "@(PIViewIdHelper.Form(dept, policyIssuanceId))" }; //{"SectionName":"default_FO_410"}
     var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, policyIssuanceId)`;
-    var acceptStatusId = `AC_Status_@QTViewIdHelper.Decision(dept, policyIssuanceId)`;
+    var acceptStatusId = `Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
     var itemsDelay = [acceptButtonId, acceptStatusId];
 
 
 
     var mainFields =       [ {itemType: "group", caption: "Attachment",colCount: 1, items: attachmentDefaultPi(null,that2,that3)  },
                          {itemType: "group",caption: "Checklist",colCount:1,items: [
-                    // {dataField: "policyNoCL",editorType: "dxCheckBox",visible:true},
-                    // {dataField: "theInsured",editorType: "dxCheckBox",visible:true},
-                    // {dataField: "occupation",editorType: "dxCheckBox",visible:true},
-                    // {dataField: "occupationFCICode",editorType: "dxCheckBox",visible:true},
-                    // {dataField: "riskGrading",editorType: "dxCheckBox",visible:true},
-                    // {dataField: "pOI",editorType: "dxCheckBox",visible:true},
-                    // {dataField: "tSI",editorType: "dxCheckBox",visible:true},
-                    // {dataField: "premium",editorType: "dxCheckBox",visible:true},
-                    // {dataField: "deductible",editorType: "dxCheckBox",visible:true},
-                    // {dataField: "tnCs",editorType: "dxCheckBox",visible:true},
-                    // {dataField: "occupationCode",editorType: "dxCheckBox",visible:true},
-                    // {dataField: "premiumRate",editorType: "dxCheckBox",visible:true}
-
                     {
                         itemType: "simple",
                         template: function () {
                             return $("<div id='pi_checkList_@policyIssuanceId'>").dxDataGrid({
-                                dataSource: dataSourceGridCL,
-                                keyExpr: "field",
+                                dataSource: policyIssuanceChecklistDataSource,
 
                                 paging: {
                                     enabled: false
@@ -133,68 +103,35 @@
                                 showBorders: true,
                                 columns: [
                                     {
-                                        dataField: "label",
-                                        caption: "Content",
-                                        allowEditing: false,
-                                        width: 350
+                                        dataField: "sequenceNo",
+                                        caption: "No.",
+                                        dataType: "number",
+                                        width: 80,
+                                        allowEditing: false
                                     },
                                     {
-                                        dataField: "checked",
-                                        caption: "Check",
-                                        width: 100,
-                                        dataType: "boolean"
+                                        dataField: "pmCheck",
+                                        caption: "PM Check",
+                                        dataType: "boolean",
+                                        width: 110
                                     },
                                     {
-                                        caption: "Value",
-                                        cellTemplate: function (container, options) {
-                                            const data = options.data;
-
-                                            if (!data.checked) {
-                                                container.text("");
-                                                return;
-                                            }
-
-                                            let editor;
-
-                                            switch (data.type) {
-                                                case "number":
-                                                    editor = $("<div>").dxNumberBox({ value: data.value });
-                                                    break;
-                                                case "text":
-                                                    editor = $("<div>").dxTextBox({ value: data.value });
-                                                    break;
-                                                case "textarea":
-                                                    editor = $("<div>").dxTextArea({ value: data.value, height: 80 });
-                                                    break;
-                                                case "select":
-                                                    editor = $("<div>").dxSelectBox({ items: ["New", "Renewal", "Hold Cover", "Cover Note"] });
-                                                    break;
-                                                case "radio":
-                                                    editor = $("<div>").dxRadioGroup({
-                                                        displayExpr: "text",
-                                                        valueExpr: "id",
-                                                        layout: "horizontal", items: ["A", "B", "C", "D"]
-                                                    });
-                                                    break;
-                                                case "checkbox":
-                                                    var that = new Object();
-                                                    that.ModelName = "PolicyIssuance";
-                                                    that.moduleName = `pi_${data.field}`; //"pi field"
-                                                    that.editorType = "dxFileUploader";
-                                                    that.id = @(policyIssuanceId);
-                                                    that.guid = "@(quotationGuid)";
-                                                    that.sectionName = "@(dept)";
-                                                    that.titleName = "Upload Document";
-                                                    that.data = {};
-                                                    editor = $("<div>");
-                                                    createEditor(that, editor, $(`<div>`), that);
-                                                    break;
-                                                default:
-                                                    editor = "";
-                                            }
-
-                                            container.append(editor);
-                                        }
+                                        dataField: "checkpoint",
+                                        caption: "Checkpoint",
+                                        minWidth: 180,
+                                        allowEditing: false
+                                    },
+                                    {
+                                        dataField: "needToCheck",
+                                        caption: "Need To Check",
+                                        minWidth: 280,
+                                        allowEditing: false
+                                    },
+                                    {
+                                        dataField: "result",
+                                        caption: "Result",
+                                        dataType: "boolean",
+                                        width: 100
                                     }
                                 ]
                             });
@@ -221,7 +158,7 @@
                     }
                ]}];
     // var acceptButtonId = `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
-    //         var acceptStatusId = `AC_Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
+    //         var acceptStatusId = `Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
     //     var declinedButtonId = `DC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
     //         var declinedStatusId = `DC_Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
     //                     var items = [ `#${acceptButtonId}`, `#${declinedButtonId}`];
@@ -243,7 +180,7 @@
               caption: "@dept Review",
               colCount: 2,
               items: [
-            decisionField(`@PIViewIdHelper.Form(dept, policyIssuanceId)`, "@dept",`AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,`AC_Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,null,null  )
+            decisionField(`@PIViewIdHelper.Form(dept, policyIssuanceId)`, "@dept",`AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,`Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,null,null  )
         ]}
 
 
@@ -254,24 +191,6 @@
        
            viewFieldAdjust("@PIViewIdHelper.Form(dept, policyIssuanceId)");
 
-    // detailsDataSourceCL.load().done(function (data) {
-    //     if (!data || data.length === 0) return;
-
-    //     const dbRow = data[0];
-
-    //     dataSourceGridCL.forEach(item => {
-    //         // bind checkbox
-    //         item.checked = dbRow[item.field] ?? false;
-    //         item.ownId = dbRow.id;
-    //         // bind value (cho text/textarea/radio/select)
-    //         item.value = dbRow[item.field];
-    //     });
-
-    //     // refresh grid
-    //     $("#pi_checkList_@policyIssuanceId").dxDataGrid("instance").option("dataSource", dataSourceGridCL);
-    //     $("#pi_checkList_@policyIssuanceId").dxDataGrid("instance").option("id", data.id);
-    // });
-    
     delayAcceptStatusV2(mainFields,thisObject, ...itemsDelay);
     setTimeout(() => {
         var picJson = PIC_JSON || "{}";

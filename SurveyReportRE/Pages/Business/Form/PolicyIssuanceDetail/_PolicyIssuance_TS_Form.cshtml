@@ -197,7 +197,7 @@
      ;
    
      var acceptButtonId = `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
-         var acceptStatusId = `AC_Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
+         var acceptStatusId = `Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
      var declinedButtonId = `DC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
          var declinedStatusId = `DC_Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
                      var items = [ `#${acceptButtonId}`, `#${declinedButtonId}`];
@@ -219,7 +219,7 @@
                   caption: "@dept Decision",
                   colCount: 2,
                   items: [
-            decisionField(`@PIViewIdHelper.Form(dept, policyIssuanceId)`, "@dept",`AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,`AC_Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,null,null  )
+            decisionField(`@PIViewIdHelper.Form(dept, policyIssuanceId)`, "@dept",`AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,`Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,null,null  )
         ]}
 
        

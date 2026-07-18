@@ -65,7 +65,7 @@
          //            { id: "RJ_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Reject", value: false }
          //        ];
      var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
-         var acceptStatusId = `AC_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
+         var acceptStatusId = `Status_@QTViewIdHelper.Decision(dept, quotationId)`;
      var noNeedToRefer = `NNTF_@QTViewIdHelper.Decision(dept, quotationId)`;
                      var items = [ `#${acceptButtonId}`, `#${noNeedToRefer}`];
                                  var itemsDelay = [ acceptButtonId , acceptStatusId, noNeedToRefer, ''];
@@ -129,7 +129,7 @@
                              var formId = `@QTViewIdHelper.Form(dept,quotationId)`;
                                   var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
                                   var noNeedToRefer = `NNTF_@QTViewIdHelper.Decision(dept, quotationId)`;
-                                  var acceptStatusElement = `AC_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
+                                  var acceptStatusElement = `Status_@QTViewIdHelper.Decision(dept, quotationId)`;
                                  var $primaryActions = $(`<div class="uw-decision-primary-actions"></div>`)
                                      .appendTo(itemElement);
                                          var acceptButtonElement=    $(`<div id='${acceptButtonId}'>`)

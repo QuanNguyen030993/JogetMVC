@@ -789,13 +789,13 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         {
             var quotationId = policyIssuance.QuotationId.Value;
             quotation = await _quotationRepository.GetSingleObject(item =>
-                item.Id == quotationId && !item.Deleted);
+                item.Id == quotationId);
         }
         else if (policyIssuance.CopyFromGuid.HasValue)
         {
             var quotationGuid = policyIssuance.CopyFromGuid.Value;
             quotation = await _quotationRepository.GetSingleObject(item =>
-                item.Guid == quotationGuid && !item.Deleted);
+                item.Guid == quotationGuid);
         }
 
         if (quotation?.LineId == null || quotation.ProductId == null)

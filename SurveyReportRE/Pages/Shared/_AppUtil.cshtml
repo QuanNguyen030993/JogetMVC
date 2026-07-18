@@ -6661,11 +6661,132 @@ function styleModeChange(item){
             }
 
             function delayAcceptStatusV2(mainFields,formProps, ...params ){
-                            var delayObject = structuredClone(formProps);
+                var delayObject = structuredClone(formProps);
+                var initialButtonId = getDelayAcceptButtonId(params[0]);
+                var initialStatusId = getDelayAcceptStatusId(params[0]) || params[1] || params[3];
+                setTimeout(() => {
+                    setDecisionCommonStatus(initialStatusId, initialButtonId, "idle", "No status");
+                }, 0);
                 setTimeout(() => {
                     renderDecisionDeferredV2(formProps, `decision${delayObject.dept}Group.acceptButton`, mainFields, ...params)
                 },_delayRenderDecisionButton);
             }
+
+    function ensureDecisionCommonStatus(statusId, buttonId) {
+        if (!statusId) return $();
+
+        var $status = $(`#${statusId}`);
+        var $button = buttonId ? $(`#${buttonId}`) : $();
+        if (!$status.length) {
+            $status = $(`<span id="${statusId}" class="accept-status-indicator decision-common-status"></span>`);
+        }
+
+        var $fieldItem = $button.length ? $button.closest(".dx-field-item") : $status.closest(".dx-field-item");
+        var $labelContent = $fieldItem.find(".dx-field-item-label-content").first();
+        if (!$labelContent.length) {
+            $labelContent = $fieldItem.find(".dx-field-item-label").first();
+        }
+
+        if ($labelContent.length) {
+            $labelContent.css({
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                whiteSpace: "nowrap"
+            });
+            if (!$status.parent().is($labelContent)) {
+                $status.detach().appendTo($labelContent);
+            }
+        } else if (!$status.parent().length && $button.length) {
+            $status.prependTo($button.parent());
+        }
+
+        $status.css({
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "5px",
+            minHeight: "20px",
+            padding: "2px 8px",
+            borderRadius: "999px",
+            fontSize: "11px",
+            fontWeight: "600",
+            lineHeight: "16px",
+            boxSizing: "border-box"
+        });
+
+        return $status;
+    }
+
+    function setDecisionCommonStatus(statusId, buttonId, state, text, title) {
+        var $status = ensureDecisionCommonStatus(statusId, buttonId);
+        if (!$status.length) return;
+
+        $status
+            .removeClass("statusTag status-success accepted approved rejected declined unknown is-loading")
+            .removeAttr("title")
+            .css({ color: "", backgroundColor: "", border: "" })
+            .empty();
+
+        if (state === "loading") {
+            $status
+                .addClass("is-loading")
+                .css({ color: "#475569", backgroundColor: "#f1f5f9", border: "1px solid #cbd5e1" });
+            var $loader = $('<span class="decision-common-status-loader"></span>').appendTo($status);
+            $loader.dxLoadIndicator({ width: 14, height: 14, visible: true });
+            return;
+        }
+
+        var statusText = String(text || "No status").trim() || "No status";
+        var normalizedStatus = statusText.toLowerCase();
+        var isAccepted = normalizedStatus.includes("accept") || normalizedStatus.includes("approv");
+        var isRejected = normalizedStatus.includes("reject") || normalizedStatus.includes("declin") || normalizedStatus.includes("refus");
+
+        if (isAccepted) {
+            $status.addClass("statusTag status-success accepted");
+        } else if (isRejected) {
+            $status.addClass("statusTag rejected");
+        } else {
+            $status.addClass("statusTag unknown");
+        }
+
+        $status
+            .css({ width: "auto", margin: "0" })
+            .text(statusText);
+        if (title) $status.attr("title", title);
+    }
+
+    function getDecisionCommonStatus(formItems, dept, tatObject) {
+        var rawActionStatus = formItems?.actionStatus;
+        var actionStatus = rawActionStatus && typeof rawActionStatus === "object"
+            ? rawActionStatus
+            : (tryParseJSON(rawActionStatus, "Decision Status Load Problem") || {});
+        var storedStatus = actionStatus[`${dept}Button`] || actionStatus[dept];
+        var statusText = "";
+
+        if (storedStatus && typeof storedStatus === "object") {
+            statusText = storedStatus.text
+                || storedStatus.displayStatus
+                || storedStatus.actionName
+                || storedStatus.actionCode
+                || storedStatus.statusName
+                || "";
+        } else if (typeof storedStatus === "string") {
+            statusText = storedStatus;
+        }
+
+        if (statusText) return { text: statusText, title: "" };
+
+        var acceptDate = tatObject?.[dept]?.AcceptDate;
+        if (acceptDate) {
+            return {
+                text: "Accepted",
+                title: `Accepted at: ${fmtTimeLocal(acceptDate)}`
+            };
+        }
+
+        return { text: "No status", title: "" };
+    }
 
     function decisionField(formId,dept,acceptButtonId, acceptStatusElement,rejectButtonId, rejectStatusElement ){
               
@@ -6701,9 +6822,11 @@ function styleModeChange(item){
                                          // acceptDecision(passingObject);
                                      }
                                         }).appendTo(itemElement);
-                                                    if (acceptStatusElement && !$(`#${acceptStatusElement}`).length) {
-                                                        $(`<div id="${acceptStatusElement}" class="accept-status-indicator"></div>`)
-                                                            .prependTo(itemElement);
+                                                    var commonStatusId = acceptStatusElement || rejectStatusElement;
+                                                    if (commonStatusId) {
+                                                        setTimeout(function () {
+                                                            setDecisionCommonStatus(commonStatusId, acceptButtonId || rejectButtonId, "idle", "No status");
+                                                        }, 0);
                                                     }
                          }
                                 
@@ -6795,30 +6918,13 @@ function styleModeChange(item){
 
         function updateDelayAcceptStatus(statusId, buttonId, acceptDate) {
             if (!statusId || !acceptDate) return;
-
-            var $status = $(`#${statusId}`);
-            var $button = buttonId ? $(`#${buttonId}`) : $();
-            if (!$status.length) {
-                $status = $(`<div id="${statusId}" class="accept-status-indicator"></div>`);
-                if ($button.length) {
-                    $status.prependTo($button.parent());
-                }
-            }
-
-            if (!$status.length) return;
-            if ($button.length && !$status.is($button.parent().children().first())) {
-                $status.detach().prependTo($button.parent());
-            }
-            $status
-                .addClass("statusTag status-success")
-                .css({
-                    display: "flex",
-                    width: "100%",
-                    margin: "0 0 10px 0",
-                    alignItems: "center",
-                    boxSizing: "border-box"
-                })
-                .text(`Accepted at: ${fmtTimeLocal(acceptDate)}`);
+            setDecisionCommonStatus(
+                statusId,
+                buttonId,
+                "status",
+                "Accepted",
+                `Accepted at: ${fmtTimeLocal(acceptDate)}`
+            );
         }
 
         function isRouteDecisionButton(item) {
@@ -7155,6 +7261,9 @@ function styleModeChange(item){
                     form.itemOption(groupName, "visible", pic ? true : false);
                 } catch (e) {
                 }
+                var commonAcceptButtonId = getDelayAcceptButtonId(params[0]);
+                var commonStatusId = getDelayAcceptStatusId(params[0]) || params[1] || params[3];
+                setDecisionCommonStatus(commonStatusId, commonAcceptButtonId, "loading");
                 setTimeout(() => {
                            var latestFormItems = form.option("formData") || {};
                            var latestTatObject = tryParseJSON(latestFormItems.turnAroundTimeAttributes, "TAT Load Button Problem");
@@ -7193,9 +7302,8 @@ function styleModeChange(item){
                                    });
                                }
                            });
-                          if (!renderedStoredStatus && latestTatObject)
-                              var acceptButtonId = getDelayAcceptButtonId(params[0]);
-                          if (latestTatObject[formProps.dept]?.AcceptDate)
+                          var acceptButtonId = getDelayAcceptButtonId(params[0]);
+                          if (!renderedStoredStatus && latestTatObject?.[formProps.dept]?.AcceptDate)
                              {
                               var acceptStatusId = getDelayAcceptStatusId(params[0]) || params[1];
                               var skipAcceptedMainFields = params[0] && typeof params[0] === "object" && params[0].skipAcceptedMainFields;
@@ -7246,6 +7354,18 @@ function styleModeChange(item){
                                      //        $(`#${rejectButtonId}`).dxButton("instance").option("disabled", true);
                                      // }
                             }
+                                var finalDecisionStatus = getDecisionCommonStatus(
+                                    latestFormItems,
+                                    formProps.dept,
+                                    latestTatObject
+                                );
+                                setDecisionCommonStatus(
+                                    commonStatusId,
+                                    acceptButtonId,
+                                    "status",
+                                    finalDecisionStatus.text,
+                                    finalDecisionStatus.title
+                                );
                                 if (formItems.stageDept == formProps.dept) {
 
                                   $(`#${acceptButtonId}`).dxButton("instance").option("disabled",false);

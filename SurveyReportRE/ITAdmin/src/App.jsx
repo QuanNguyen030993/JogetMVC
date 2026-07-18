@@ -19,6 +19,7 @@ import ActiveUsersPanel from './components/ActiveUsersPanel';
 import AspLogViewer from './components/AspLogViewer';
 import CustomGrid from '../../TMIVCom/src/components/CustomGrid'
 import NotificationHub from './components/NotificationHub';
+import SqlStoredProcedure from './components/SqlStoredProcedure';
 import './styles/flow.css';
 import './styles/com.all.css';
 import './styles/serilogs.css';
@@ -190,6 +191,7 @@ function App() {
     { id: 'serilog', label: 'Nhật ký hệ thống (Serilogs)' },
     { id: 'asplog', label: 'Nhật ký ứng dụng (ASP Log)' },
     { id: 'systable', label: 'Bảng hệ thống' } ,
+    { id: 'sql-stored', label: 'Quản lý Stored Procedure (TMIVCom)' },
     { id: 'datagridfielddesigner', label: 'Thiết kế trường DataGrid' },
     { id: 'formfielddesigner', label: 'Thiết kế trường Form (View)' },
     { id: 'datagridconfig-grid', label: 'Bảng DataGrid Config (CustomGrid)' },
@@ -261,6 +263,8 @@ function App() {
         return <AspLogViewer />;
       case 'systable':
         return <SysTable />;
+      case 'sql-stored':
+        return <SqlStoredProcedure />;
       case 'datagridfielddesigner':
         return <DataGridFieldDesigner />;
       case 'formfielddesigner':
