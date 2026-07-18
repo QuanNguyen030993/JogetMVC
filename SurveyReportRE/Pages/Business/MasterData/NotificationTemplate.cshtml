@@ -1,0 +1,15 @@
+@page
+@model NotificationTemplateModel
+
+<script>
+    $(function () {
+        new MGrid(
+            null,
+            $(`#dataGrid_@NotificationTemplateModel.ModelName`),
+            new NotificationTemplateGridOption("@NotificationTemplateModel.ModelName"),
+            null
+        );
+    });
+</script>
+
+<div id="dataGrid_@NotificationTemplateModel.ModelName"></div>

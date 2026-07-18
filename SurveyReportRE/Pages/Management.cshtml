@@ -67,26 +67,6 @@
         }
     }
 
-    var reloadCurrentTabView = function (triggerElement) {
-        const $wrapper = $(triggerElement).closest("[id$='_content_wrapper']");
-        if (!$wrapper.length) return false;
-
-        const wrapperId = $wrapper.attr("id") || "";
-        const code = wrapperId.replace(/_content_wrapper$/, "");
-        const sourceUrl = $wrapper.attr("data-source-url");
-        const caption = $wrapper.attr("data-source-caption")
-            || $(`#${code}_li_tab a`).text()
-            || code;
-
-        if (!sourceUrl || !code) {
-            console.warn("Cannot fully reload tab because its source URL is missing.", code);
-            return false;
-        }
-
-        callElementView(sourceUrl, code, caption, $wrapper.data("source-data"));
-        return true;
-    };
-
     var replaceElementView = function (url, params, container) {
         try {
             if (url.length === 0) {

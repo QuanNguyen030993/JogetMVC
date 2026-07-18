@@ -817,10 +817,10 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
 
         var copiedRows = await _policyIssuanceChecklistRepository.GetListObject(item =>
             item.PolicyIssuanceId == policyIssuanceId && !item.Deleted);
-        var copiedDefinitionIds = copiedRows
-            .Where(item => item.ChecklistDefinitionId.HasValue)
-            .Select(item => item.ChecklistDefinitionId!.Value)
-            .ToHashSet();
+        //var copiedDefinitionIds = copiedRows
+        //    .Where(item => item.ChecklistDefinitionId.HasValue)
+        //    .Select(item => item.ChecklistDefinitionId!.Value)
+        //    .ToHashSet();
         var copiedDefinitionGuids = copiedRows
             .Where(item => item.CopyFromGuid.HasValue)
             .Select(item => item.CopyFromGuid!.Value)
@@ -828,12 +828,12 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
 
         var rowsToInsert = definitions
             .Where(definition =>
-                !copiedDefinitionIds.Contains(definition.Id)
-                && !copiedDefinitionGuids.Contains(definition.Guid))
+                //!copiedDefinitionIds.Contains(definition.Id)
+                //&& 
+                !copiedDefinitionGuids.Contains(definition.Guid))
             .Select(definition => new PolicyIssuanceChecklist
             {
                 PolicyIssuanceId = policyIssuanceId,
-                ChecklistDefinitionId = definition.Id,
                 RecordGuid = policyIssuance.Guid,
                 SequenceNo = definition.SequenceNo,
                 PMCheck = definition.PMCheck,

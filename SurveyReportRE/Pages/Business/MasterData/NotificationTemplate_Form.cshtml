@@ -1,0 +1,16 @@
+@page "{pageNum:int?}"
+@model NotificationTemplate_FormModel
+
+<script>
+    $(function () {
+        var id = @Convert.ToInt32(ViewData["Id"]);
+        var formConfig = new MFormOption();
+        formConfig.originModelName = "@NotificationTemplate_FormModel.ModelName";
+        formConfig.formElementName = "@NotificationTemplate_FormModel.ModelName";
+        formConfig.schemeBasedOn = "@NotificationTemplate_FormModel.SchemeModelName";
+        formConfig.colCount = 1;
+        new MForm(id, null, formConfig);
+    });
+</script>
+
+<div id="form_@(NotificationTemplate_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])"></div>
