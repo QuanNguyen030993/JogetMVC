@@ -937,9 +937,17 @@
             minWidth: 150,
             visibleIndex: 5,
             lookup: {
-                dataSource: _entities.line,
+                dataSource: function () {
+                    return { store: _entities.line };
+                },
                 valueExpr: "id",
-                displayExpr: "lineName"
+                displayExpr: "value"
+            },
+            setCellValue: function (newData, value, currentRowData) {
+                newData.lineId = value;
+                if (currentRowData?.lineId !== value) {
+                    newData.productId = null;
+                }
             }
         }, {
             dataField: "productId",
@@ -948,9 +956,16 @@
             minWidth: 180,
             visibleIndex: 6,
             lookup: {
-                dataSource: _entities.product,
+                dataSource: function (options) {
+                    const lineId = options?.data?.lineId;
+                    const dataSource = { store: _entities.product };
+                    if (lineId != null) {
+                        dataSource.filter = ["lineId", "=", lineId];
+                    }
+                    return dataSource;
+                },
                 valueExpr: "id",
-                displayExpr: "productName"
+                displayExpr: "value"
             }
         }];
 

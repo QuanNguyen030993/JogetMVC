@@ -58,7 +58,7 @@ export default function WorkflowRecover() {
   const gridRef = useRef(null);
   const [selectedWorkflow, setSelectedWorkflow] = useState(null);
   const [steps, setSteps] = useState([]);
-  const [selectedStepId, setSelectedStepId] = useState("");
+  const [selectedNodeId, setSelectedNodeId] = useState("");
   const [mode, setMode] = useState("Recover");
   const [note, setNote] = useState("");
   const [loadingSteps, setLoadingSteps] = useState(false);
@@ -66,28 +66,88 @@ export default function WorkflowRecover() {
   const [message, setMessage] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const currentStep = useMemo(
-    () => steps.find((step) => String(step.tNodeId) === String(selectedWorkflow?.currentStep))
-      || steps.find((step) => String(step.fNodeId) === String(selectedWorkflow?.currentStep)),
-    [selectedWorkflow, steps],
+  // Extract unique nodes dynamically from transition steps
+  const uniqueNodes = useMemo(() => {
+    const nodeMap = new Map();
+
+    // 1. Gather all department nodes (exclude virtual Start/End)
+    steps.forEach((step) => {
+      // From node
+      if (step.fNodeId && step.fromNodeId && step.fromNodeId !== "Start" && step.fromNodeId !== "End") {
+        if (!nodeMap.has(step.fNodeId)) {
+          nodeMap.set(step.fNodeId, {
+            id: step.fNodeId,
+            code: step.fromNodeId,
+            isStart: false,
+          });
+        }
+      }
+
+      // To node
+      if (step.tNodeId && step.toNodeId && step.toNodeId !== "Start" && step.toNodeId !== "End") {
+        if (!nodeMap.has(step.tNodeId)) {
+          nodeMap.set(step.tNodeId, {
+            id: step.tNodeId,
+            code: step.toNodeId,
+            isStart: false,
+          });
+        }
+      }
+    });
+
+    // 2. Mark the actual first department step as isStart (target of the start step)
+    steps.forEach((step) => {
+      if (step.isStart && step.tNodeId) {
+        const node = nodeMap.get(step.tNodeId);
+        if (node) {
+          node.isStart = true;
+        }
+      }
+    });
+
+    const nodeList = Array.from(nodeMap.values());
+
+    // 3. For each node, find all outgoing transitions and format them
+    return nodeList.map((node) => {
+      const outgoing = steps.filter((step) => String(step.fNodeId) === String(node.id));
+      const outgoingStr = outgoing
+        .map((step) => {
+          const actionPart = step.actionName || step.stepName || "Next";
+          const targetPart = step.toNodeId || "End";
+          const statusPart = step.statusName ? ` [${step.statusName}]` : "";
+          return `${actionPart} -> ${targetPart}${statusPart}`;
+        })
+        .join(", ");
+
+      return {
+        ...node,
+        outgoingCount: outgoing.length,
+        outgoingStr: outgoingStr || "(No outgoing transitions / End node)",
+      };
+    });
+  }, [steps]);
+
+  const currentStepNode = useMemo(
+    () => uniqueNodes.find((node) => String(node.id) === String(selectedWorkflow?.currentStep)),
+    [selectedWorkflow, uniqueNodes],
   );
 
-  const firstStartStep = useMemo(
-    () => steps.find((step) => step.isStart) || steps[0] || null,
-    [steps],
+  const firstStartNode = useMemo(
+    () => uniqueNodes.find((node) => node.isStart) || uniqueNodes[0] || null,
+    [uniqueNodes],
   );
 
-  const selectedStep = useMemo(
-    () => steps.find((step) => String(step.id) === String(selectedStepId)) || null,
-    [selectedStepId, steps],
+  const selectedNode = useMemo(
+    () => uniqueNodes.find((node) => String(node.id) === String(selectedNodeId)) || null,
+    [selectedNodeId, uniqueNodes],
   );
 
-  const targetStep = mode === "Revise" ? firstStartStep : selectedStep;
+  const targetNode = mode === "Revise" ? firstStartNode : selectedNode;
 
   const loadSteps = useCallback(async (workflow) => {
     if (!workflow?.workflowDefinitionId) {
       setSteps([]);
-      setSelectedStepId("");
+      setSelectedNodeId("");
       return;
     }
 
@@ -95,7 +155,7 @@ export default function WorkflowRecover() {
       setLoadingSteps(true);
       setMessage("");
       setSteps([]);
-      setSelectedStepId("");
+      setSelectedNodeId("");
 
       const response = await fetch(
         `${API_BASE_URL}/api/StepsWorkflow/GetAll?refField=WorkflowDefinitionId&refKey=${workflow.workflowDefinitionId}&take=9999`,
@@ -106,9 +166,30 @@ export default function WorkflowRecover() {
       const list = (Array.isArray(data) ? data : []).map(normalizeStep);
       setSteps(list);
 
-      const current = list.find((step) => String(step.fNodeId) === String(workflow.currentStep));
-      const fallback = current || list.find((step) => step.isStart) || list[0];
-      if (fallback) setSelectedStepId(String(fallback.id));
+      // Extract nodes dynamically to set default selected node (filtering out virtual Start/End)
+      const nodeMap = new Map();
+      list.forEach((step) => {
+        if (step.fNodeId && step.fromNodeId && step.fromNodeId !== "Start" && step.fromNodeId !== "End") {
+          if (!nodeMap.has(step.fNodeId)) {
+            nodeMap.set(step.fNodeId, { id: step.fNodeId, code: step.fromNodeId, isStart: false });
+          }
+        }
+        if (step.tNodeId && step.toNodeId && step.toNodeId !== "Start" && step.toNodeId !== "End") {
+          if (!nodeMap.has(step.tNodeId)) {
+            nodeMap.set(step.tNodeId, { id: step.tNodeId, code: step.toNodeId, isStart: false });
+          }
+        }
+      });
+      list.forEach((step) => {
+        if (step.isStart && step.tNodeId) {
+          const node = nodeMap.get(step.tNodeId);
+          if (node) node.isStart = true;
+        }
+      });
+      const nodeList = Array.from(nodeMap.values());
+      const current = nodeList.find(node => String(node.id) === String(workflow.currentStep));
+      const fallback = current || nodeList.find(node => node.isStart) || nodeList[0];
+      if (fallback) setSelectedNodeId(String(fallback.id));
     } catch (error) {
       console.error(error);
       setMessage("Load StepsWorkflow failed.");
@@ -124,10 +205,10 @@ export default function WorkflowRecover() {
   }, [loadSteps, selectedWorkflow]);
 
   useEffect(() => {
-    if (mode === "Revise" && firstStartStep) {
-      setSelectedStepId(String(firstStartStep.id));
+    if (mode === "Revise" && firstStartNode) {
+      setSelectedNodeId(String(firstStartNode.id));
     }
-  }, [firstStartStep, mode]);
+  }, [firstStartNode, mode]);
 
   const handleSelectWorkflow = (row) => {
     const workflow = normalizeWorkflow(row);
@@ -145,12 +226,12 @@ export default function WorkflowRecover() {
   };
 
   const submitRecover = async () => {
-    if (!selectedWorkflow || !targetStep) {
-      setMessage("Select InstanceWorkflow and target step first.");
+    if (!selectedWorkflow || !targetNode) {
+      setMessage("Select InstanceWorkflow and target node first.");
       return;
     }
 
-    const targetLabel = `${targetStep.fromNodeId || "-"} -> ${targetStep.toNodeId || "-"}`;
+    const targetLabel = `${targetNode.code || "Node"} (#${targetNode.id})`;
     const confirmed = window.confirm(`${mode} workflow #${selectedWorkflow.id} to ${targetLabel}?`);
     if (!confirmed) return;
 
@@ -163,7 +244,8 @@ export default function WorkflowRecover() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           instanceWorkflowId: selectedWorkflow.id,
-          stepsWorkflowId: targetStep.id,
+          targetNodeId: targetNode.id,
+          targetDeptCode: targetNode.code === "Start" || targetNode.code === "End" ? "" : targetNode.code,
           mode,
           note,
         }),
@@ -176,7 +258,7 @@ export default function WorkflowRecover() {
 
       const result = await response.json().catch(() => null);
       const stageText = result?.quotationStageDept ? `, Quotation.StageDept: ${result.quotationStageDept}` : "";
-      setMessage(`${mode} completed. CurrentStep: ${result?.currentStep || targetStep.fNodeId || targetStep.tNodeId || "-"}${stageText}`);
+      setMessage(`${mode} completed. CurrentStep: ${result?.currentStep || targetNode.id}${stageText}`);
       setRefreshKey((value) => value + 1);
       setSelectedWorkflow((prev) => prev ? { ...prev, currentStep: result?.currentStep || prev.currentStep } : prev);
     } catch (error) {
@@ -198,7 +280,7 @@ export default function WorkflowRecover() {
           <button type="button" onClick={() => setRefreshKey((value) => value + 1)}>
             Refresh Grid
           </button>
-          <button type="button" className="primary" onClick={submitRecover} disabled={saving || !targetStep}>
+          <button type="button" className="primary" onClick={submitRecover} disabled={saving || !targetNode}>
             {saving ? "Processing..." : mode}
           </button>
         </div>
@@ -262,19 +344,19 @@ export default function WorkflowRecover() {
                   <strong>{selectedWorkflow.currentStep || "-"}</strong>
                 </div>
                 <div>
-                  <span>Current route</span>
-                  <strong>{currentStep ? `${currentStep.fromNodeId} -> ${currentStep.toNodeId}` : "-"}</strong>
+                  <span>Current Dept</span>
+                  <strong>{currentStepNode?.code || "-"}</strong>
                 </div>
                 <div>
-                  <span>Current node</span>
-                  <strong>{currentStep?.toNodeId || selectedWorkflow.currentStep || "-"}</strong>
+                  <span>Current Node ID</span>
+                  <strong>{selectedWorkflow.currentStep || "-"}</strong>
                 </div>
               </div>
 
               <div className="recover-mode-row">
                 <label className={mode === "Recover" ? "active" : ""}>
                   <input type="radio" value="Recover" checked={mode === "Recover"} onChange={(event) => setMode(event.target.value)} />
-                  Recover to selected step
+                  Recover to selected node
                 </label>
                 <label className={mode === "Revise" ? "active" : ""}>
                   <input type="radio" value="Revise" checked={mode === "Revise"} onChange={(event) => setMode(event.target.value)} />
@@ -287,42 +369,42 @@ export default function WorkflowRecover() {
                 <textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Reason or audit note" />
               </label>
 
-              <div className="recover-panel-title">StepsWorkflow</div>
+              <div className="recover-panel-title">Workflow Nodes</div>
               <div className="recover-step-table">
                 <div className="recover-step-head">
-                  <span>Step</span>
-                  <span>Route</span>
-                  <span>Action Name</span>
-                  <span>Status</span>
+                  <span>Node ID</span>
+                  <span>Dept</span>
+                  <span>Transitions / Outgoing Routes (1 Line)</span>
                   <span>Type</span>
                 </div>
 
-                {loadingSteps ? <div className="recover-empty">Loading steps...</div> : null}
+                {loadingSteps ? <div className="recover-empty">Loading nodes...</div> : null}
 
-                {steps.map((step) => {
-                  const active = String(step.id) === String(selectedStepId);
-                  const current = String(step.tNodeId) === String(selectedWorkflow.currentStep);
+                {uniqueNodes.map((node) => {
+                  const active = String(node.id) === String(selectedNodeId);
+                  const current = String(node.id) === String(selectedWorkflow.currentStep);
                   return (
                     <button
-                      key={step.id}
+                      key={node.id}
                       type="button"
                       className={`recover-step ${active ? "active" : ""} ${current ? "current" : ""}`}
-                      onClick={() => mode !== "Revise" && setSelectedStepId(String(step.id))}
-                      disabled={mode === "Revise" && !step.isStart}
+                      onClick={() => mode !== "Revise" && setSelectedNodeId(String(node.id))}
+                      disabled={mode === "Revise" && !node.isStart}
                     >
-                      <span>{step.fNodeId || "-"}</span>
-                      <span>{step.fromNodeId || "-"} {"->"} {step.toNodeId || "-"}</span>
-                      <span>{step.actionName || step.stepName || "-"}</span>
-                      <span>{step.statusName || "-"}</span>
+                      <span style={{ fontFamily: 'monospace', fontSize: '11px' }}>{node.id}</span>
+                      <strong style={{ fontSize: '13px', color: '#1e293b' }}>{node.code}</strong>
+                      <span style={{ fontSize: '11px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={node.outgoingStr}>
+                        {node.outgoingCount > 0 ? `(${node.outgoingCount} states) ${node.outgoingStr}` : node.outgoingStr}
+                      </span>
                       <span className="recover-step-actions">
-                        <em>{step.isStart ? "Start" : step.isReturn ? "Return" : "Forward"}</em>
+                        <em>{node.isStart ? "Start" : "Normal"}</em>
                         <b>Recover here</b>
                       </span>
                     </button>
                   );
                 })}
 
-                {!steps.length && !loadingSteps ? <div className="recover-empty">No StepsWorkflow found.</div> : null}
+                {!uniqueNodes.length && !loadingSteps ? <div className="recover-empty">No Nodes found.</div> : null}
               </div>
             </>
           )}

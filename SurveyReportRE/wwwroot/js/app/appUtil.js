@@ -5505,3 +5505,91 @@ function openMessageDialog(item) {
         html: item.message || ""
     });
 }
+
+// Enables accessible expand/collapse behavior for captioned DevExtreme Form groups.
+// The handler is delegated so it also covers groups rendered later by the
+// Quotation and Policy Issuance partial views.
+function enableDxFormGroupToggle(root) {
+    const $root = root instanceof jQuery ? root : $(root);
+    if (!$root.length) return null;
+
+    const rootElement = $root.get(0);
+    const namespace = ".dxFormGroupToggle";
+
+    function prepareGroups(container) {
+        $(container)
+            .find(".dx-form-group-with-caption")
+            .addBack(".dx-form-group-with-caption")
+            .each(function () {
+                const $group = $(this);
+                const $caption = $group.children(".dx-form-group-caption").first();
+                const $content = $group.children(".dx-form-group-content").first();
+
+                // An empty caption is only a layout wrapper, not a toggle header.
+                if (!$caption.length || !$content.length || !$.trim($caption.text())) return;
+                if ($caption.attr("data-dx-group-toggle-ready") === "true") return;
+
+                const contentId = $content.attr("id") ||
+                    `dx-form-group-content-${enableDxFormGroupToggle.nextId++}`;
+
+                $content.attr("id", contentId);
+                $caption.attr({
+                    "data-dx-group-toggle-ready": "true",
+                    "role": "button",
+                    "tabindex": "0",
+                    "aria-controls": contentId,
+                    "aria-expanded": "true"
+                });
+                $group.addClass("dx-form-group-toggle");
+            });
+    }
+
+    function toggleGroup(caption) {
+        const $caption = $(caption);
+        const $group = $caption.closest(".dx-form-group-toggle");
+        const $content = $group.children(".dx-form-group-content").first();
+        const collapsed = !$group.hasClass("is-collapsed");
+
+        $group.toggleClass("is-collapsed", collapsed);
+        $caption.attr("aria-expanded", String(!collapsed));
+        $content.attr("aria-hidden", String(collapsed));
+
+        // Let widgets such as DataGrid recalculate their dimensions after reveal.
+        if (!collapsed) {
+            $content.trigger("dxshown");
+            window.dispatchEvent(new Event("resize"));
+        }
+    }
+
+    $root.addClass("dx-form-groups-toggle-enabled");
+    $root.off(namespace)
+        .on(`click${namespace}`, ".dx-form-group-toggle > .dx-form-group-caption", function (event) {
+            event.preventDefault();
+            toggleGroup(this);
+        })
+        .on(`keydown${namespace}`, ".dx-form-group-toggle > .dx-form-group-caption", function (event) {
+            if (event.key !== "Enter" && event.key !== " ") return;
+            event.preventDefault();
+            toggleGroup(this);
+        });
+
+    prepareGroups(rootElement);
+
+    if (rootElement.dxFormGroupToggleObserver) {
+        rootElement.dxFormGroupToggleObserver.disconnect();
+    }
+
+    const observer = new MutationObserver(function (mutations) {
+        mutations.forEach(function (mutation) {
+            mutation.addedNodes.forEach(function (node) {
+                if (node.nodeType === Node.ELEMENT_NODE) prepareGroups(node);
+            });
+        });
+    });
+    observer.observe(rootElement, { childList: true, subtree: true });
+    rootElement.dxFormGroupToggleObserver = observer;
+
+    return observer;
+}
+
+enableDxFormGroupToggle.nextId = 1;

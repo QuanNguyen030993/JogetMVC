@@ -7,6 +7,7 @@ public class PolicyIssuanceChecklist : BaseModel
 {
     public long? PolicyIssuanceId { get; set; }
     public PolicyIssuance? PolicyIssuanceFK { get; set; }
+    public long? ChecklistDefinitionId { get; set; }
     public Guid RecordGuid { get; set; }
     public int SequenceNo { get; set; }
     public bool PMCheck { get; set; }

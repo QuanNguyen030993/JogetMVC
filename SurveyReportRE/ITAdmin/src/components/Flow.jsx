@@ -1966,6 +1966,7 @@ function Flow({ id: propId }) {
                         <option value="CopyFile">CopyFile</option>
                         <option value="TransferFile">TransferFile</option>
                         <option value="LockFileLocal">LockFileLocal</option>
+                        <option value="ClearTurnaroundTimesAttributes">ClearTurnaroundTimesAttributes</option>
                     </select>
                 </label>
                 <label>

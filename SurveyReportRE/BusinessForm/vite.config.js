@@ -4,9 +4,10 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/',
+  base: '/dist/',
   build: {
     outDir: path.resolve(__dirname, '../wwwroot/dist'),
-    emptyOutDir: true,      // KHÔNG xóa toàn bộ wwwroot
+    assetsDir: 'assets-bizform',
+    emptyOutDir: false,
   },
 });

@@ -1,22 +1,19 @@
-import { rmSync, renameSync, existsSync, copyFileSync } from 'fs';
+import { renameSync, existsSync, rmSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const tempDir = path.resolve(__dirname, '../wwwroot/dist');
-const wwwroot = path.resolve(__dirname, '../wwwroot');
+const distDir = path.resolve(__dirname, '../wwwroot/dist');
 
-// Xóa assets cũ trong wwwroot (nếu có)
-const targetAssets = path.join(wwwroot, 'assets');
-if (existsSync(targetAssets)) {
-  rmSync(targetAssets, { recursive: true, force: true });
+const sourceHtml = path.join(distDir, 'index.html');
+const targetHtml = path.join(distDir, 'indexbizfom.html');
+
+if (existsSync(sourceHtml)) {
+  if (existsSync(targetHtml)) {
+    rmSync(targetHtml);
+  }
+  renameSync(sourceHtml, targetHtml);
+  console.log(`Renamed index.html to indexbizfom.html in ${distDir}`);
+} else {
+  console.log(`index.html not found in ${distDir}`);
 }
-
-// Move thư mục assets từ build-temp sang wwwroot/assets
-renameSync(path.join(tempDir, 'assets'), targetAssets);
-
-// Copy index.html vào wwwroot (move luôn cũng được, dùng renameSync)
-copyFileSync(path.join(tempDir, 'index.html'), path.join(wwwroot, 'index1.html'));
-
-// Xóa folder tạm sau khi đã move xong
-// rmSync(tempDir, { recursive: true, force: true });

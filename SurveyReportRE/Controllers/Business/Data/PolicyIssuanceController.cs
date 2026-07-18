@@ -24,11 +24,14 @@ using ERPCore.Models.Migration.Business.Social;
 using System.Reflection;
 using ERPCore.Models.Migration.Business.Data;
 using ERPCore.Models.Migration.Business.MasterData;
+using Newtonsoft.Json.Linq;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
 public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
 {
+    private static readonly System.Text.Json.JsonSerializerOptions WebJsonOptions =
+        new(System.Text.Json.JsonSerializerDefaults.Web);
     private readonly IBaseRepository<PolicyIssuance> _BaseRepository;
     private readonly IConfiguration configuration;
     private readonly IBaseRepository<Survey> _surveyRepository;
@@ -48,6 +51,8 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     private readonly IBaseRepository<Document> _documentRepository;
     private readonly IBaseRepository<PolicyIssuanceDetails> _policyIssuanceDetailsRepository;
     private readonly IBaseRepository<PolicyIssuanceChecklist> _policyIssuanceChecklistRepository;
+    private readonly IBaseRepository<ChecklistDefinition> _checklistDefinitionRepository;
+    private readonly IBaseRepository<Quotation> _quotationRepository;
     private readonly IBaseRepository<MailTemplate> _mailTemplateRepository;
     private readonly IBaseRepository<MailQueue> _mailQueueRepository;
     private readonly IBaseRepository<UsersSession> _usersSessionRepository;
@@ -97,6 +102,8 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         _documentRepository = new BaseRepository<Document>(configuration, _httpContextAccessor);
         _policyIssuanceDetailsRepository = new BaseRepository<PolicyIssuanceDetails>(configuration, _httpContextAccessor);
         _policyIssuanceChecklistRepository = new BaseRepository<PolicyIssuanceChecklist>(configuration, _httpContextAccessor);
+        _checklistDefinitionRepository = new BaseRepository<ChecklistDefinition>(configuration, _httpContextAccessor);
+        _quotationRepository = new BaseRepository<Quotation>(configuration, _httpContextAccessor);
         _mailTemplateRepository = new BaseRepository<MailTemplate>(configuration, _httpContextAccessor);
         _mailQueueRepository = new BaseRepository<MailQueue>(configuration, _httpContextAccessor);
         _slaRepository = new BaseRepository<SLA>(configuration, _httpContextAccessor);
@@ -258,10 +265,6 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
                     PolicyIssuanceDetails policyIssuanceDetails = new PolicyIssuanceDetails();
                     policyIssuanceDetails.PolicyIssuanceId = PolicyIssuance.Id;
                     policyIssuanceDetails = await _policyIssuanceDetailsRepository.InsertData(policyIssuanceDetails);
-                    PolicyIssuanceChecklist policyIssuanceCheckList = new PolicyIssuanceChecklist();
-                    policyIssuanceCheckList.PolicyIssuanceId = PolicyIssuance.Id;
-                    policyIssuanceCheckList = await _policyIssuanceChecklistRepository.InsertData(policyIssuanceCheckList);
-
                     instanceWorkflow.RecordGuid = PolicyIssuance.Guid;
                     instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
                     instanceWorkflow.CurrentStepId = new Guid();
@@ -709,10 +712,18 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     [HttpPut]
     public override HttpResponseMessage UpdateData([FromForm] UpdateFormCollection form)
     {
-
         var entity = new PolicyIssuance();
         JsonConvert.PopulateObject(form.values, entity);
         _BaseRepository.UpdateData(entity, form.values, form.key, "Id").GetAwaiter().GetResult();
+
+        // PM Accept is persisted through this shared UpdateData endpoint. Once the
+        // PM acceptance timestamp is present, materialize the matching checklist
+        // definition set for this Policy Issuance. The copy is idempotent so later
+        // saves/retries cannot duplicate checklist rows.
+        if (IsDepartmentAccepted(form.values, "PM"))
+        {
+            EnsurePolicyIssuanceChecklistAsync(form.key).GetAwaiter().GetResult();
+        }
 
         Task.Run(async () =>
         {
@@ -734,6 +745,115 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         ControllerHelper.SignalRResponse(_usersSessionRepository, "R_ItemSubmitted", new { id = form.key, type = nameof(PolicyIssuance) }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
 
         return new HttpResponseMessage(HttpStatusCode.OK);
+    }
+
+    private static bool IsDepartmentAccepted(string values, string department)
+    {
+        if (string.IsNullOrWhiteSpace(values)) return false;
+
+        try
+        {
+            var payload = JObject.Parse(values);
+            var tatToken = payload.GetValue("turnAroundTimeAttributes", StringComparison.OrdinalIgnoreCase);
+            if (tatToken == null || tatToken.Type == JTokenType.Null) return false;
+
+            var tat = tatToken.Type == JTokenType.String
+                ? JObject.Parse(tatToken.Value<string>() ?? "{}")
+                : tatToken as JObject;
+            var departmentToken = tat?.GetValue(department, StringComparison.OrdinalIgnoreCase) as JObject;
+            var acceptDate = departmentToken?.GetValue("AcceptDate", StringComparison.OrdinalIgnoreCase);
+
+            return acceptDate != null
+                && acceptDate.Type != JTokenType.Null
+                && !string.IsNullOrWhiteSpace(acceptDate.ToString());
+        }
+        catch (JsonException ex)
+        {
+            Serilog.Log.Warning(ex, "Cannot inspect Policy Issuance PM acceptance payload.");
+            return false;
+        }
+    }
+
+    private async Task<int> EnsurePolicyIssuanceChecklistAsync(long policyIssuanceId)
+    {
+        var policyIssuance = await _BaseRepository.GetSingleObject(item =>
+            item.Id == policyIssuanceId && !item.Deleted);
+        if (policyIssuance == null)
+        {
+            throw new InvalidOperationException(
+                $"Policy Issuance {policyIssuanceId} was not found.");
+        }
+
+        Quotation? quotation = null;
+        if (policyIssuance.QuotationId.HasValue)
+        {
+            var quotationId = policyIssuance.QuotationId.Value;
+            quotation = await _quotationRepository.GetSingleObject(item =>
+                item.Id == quotationId && !item.Deleted);
+        }
+        else if (policyIssuance.CopyFromGuid.HasValue)
+        {
+            var quotationGuid = policyIssuance.CopyFromGuid.Value;
+            quotation = await _quotationRepository.GetSingleObject(item =>
+                item.Guid == quotationGuid && !item.Deleted);
+        }
+
+        if (quotation?.LineId == null || quotation.ProductId == null)
+        {
+            throw new InvalidOperationException(
+                $"Cannot create Policy Issuance checklist: Quotation LineId/ProductId was not found for PolicyIssuanceId {policyIssuanceId}.");
+        }
+
+        var lineId = quotation.LineId.Value;
+        var productId = quotation.ProductId.Value;
+        var definitions = await _checklistDefinitionRepository.GetListObject(definition =>
+            definition.LineId == lineId
+            && definition.ProductId == productId
+            && !definition.Deleted);
+        if (definitions.Count == 0)
+        {
+            return 0;
+        }
+
+        var copiedRows = await _policyIssuanceChecklistRepository.GetListObject(item =>
+            item.PolicyIssuanceId == policyIssuanceId && !item.Deleted);
+        var copiedDefinitionIds = copiedRows
+            .Where(item => item.ChecklistDefinitionId.HasValue)
+            .Select(item => item.ChecklistDefinitionId!.Value)
+            .ToHashSet();
+        var copiedDefinitionGuids = copiedRows
+            .Where(item => item.CopyFromGuid.HasValue)
+            .Select(item => item.CopyFromGuid!.Value)
+            .ToHashSet();
+
+        var rowsToInsert = definitions
+            .Where(definition =>
+                !copiedDefinitionIds.Contains(definition.Id)
+                && !copiedDefinitionGuids.Contains(definition.Guid))
+            .Select(definition => new PolicyIssuanceChecklist
+            {
+                PolicyIssuanceId = policyIssuanceId,
+                ChecklistDefinitionId = definition.Id,
+                RecordGuid = policyIssuance.Guid,
+                SequenceNo = definition.SequenceNo,
+                PMCheck = definition.PMCheck,
+                Checkpoint = definition.Checkpoint ?? "",
+                NeedToCheck = definition.NeedToCheck ?? "",
+                Result = definition.Result ? "1" : "0",
+                LineId = lineId,
+                ProductId = productId,
+                RowOrder = definition.RowOrder,
+                CopyFromGuid = definition.Guid
+            })
+            .ToList();
+
+        if (rowsToInsert.Count == 0)
+        {
+            return 0;
+        }
+
+        await _policyIssuanceChecklistRepository.BulkInsertAsync(rowsToInsert);
+        return rowsToInsert.Count;
     }
     public async Task BulkInsertPolicyIssuanceAsync(List<PolicyIssuance> data)
     {
@@ -846,8 +966,118 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
             return NotFound();
         }
 
-        return Ok(Base);
+        var quotationFields = await GetQuotationFieldsAsync(Base);
+        var response = Base
+            .Select(item => AddQuotationFields(item, quotationFields))
+            .ToList();
+
+        return Content(JsonConvert.SerializeObject(response), "application/json");
     }
+
+    [HttpGet("{id}")]
+    public override async Task<ActionResult<PolicyIssuance>> GetSingle(int id)
+    {
+        var policyIssuance = await _BaseRepository.GetObjectByIdAsync(id)
+            ?? new PolicyIssuance();
+        var quotationFields = await GetQuotationFieldsAsync(new[] { policyIssuance });
+        var response = AddQuotationFields(
+            policyIssuance,
+            quotationFields);
+
+        return Content(JsonConvert.SerializeObject(response), "application/json");
+    }
+
+    private async Task<IReadOnlyDictionary<long, PolicyIssuanceQuotationFields>> GetQuotationFieldsAsync(
+        IEnumerable<PolicyIssuance> policyIssuances)
+    {
+        var items = policyIssuances.Where(item => item.Id > 0).ToList();
+        if (items.Count == 0)
+        {
+            return new Dictionary<long, PolicyIssuanceQuotationFields>();
+        }
+
+        var quotationIds = items
+            .Where(item => item.QuotationId.HasValue)
+            .Select(item => item.QuotationId!.Value)
+            .Distinct()
+            .ToArray();
+        var quotationGuids = items
+            .Where(item => !item.QuotationId.HasValue && item.CopyFromGuid.HasValue)
+            .Select(item => item.CopyFromGuid!.Value)
+            .Distinct()
+            .ToArray();
+
+        List<Quotation> quotations;
+        if (quotationIds.Length > 0 && quotationGuids.Length > 0)
+        {
+            quotations = await _quotationRepository.GetListObject(item =>
+                !item.Deleted
+                && (quotationIds.Contains(item.Id) || quotationGuids.Contains(item.Guid)));
+        }
+        else if (quotationIds.Length > 0)
+        {
+            quotations = await _quotationRepository.GetListObject(item =>
+                !item.Deleted && quotationIds.Contains(item.Id));
+        }
+        else if (quotationGuids.Length > 0)
+        {
+            quotations = await _quotationRepository.GetListObject(item =>
+                !item.Deleted && quotationGuids.Contains(item.Guid));
+        }
+        else
+        {
+            quotations = new List<Quotation>();
+        }
+
+        var quotationById = quotations.ToDictionary(item => item.Id);
+        var quotationByGuid = quotations
+            .GroupBy(item => item.Guid)
+            .ToDictionary(group => group.Key, group => group.OrderByDescending(item => item.Id).First());
+        var result = new Dictionary<long, PolicyIssuanceQuotationFields>();
+
+        foreach (var policyIssuance in items)
+        {
+            Quotation? quotation = null;
+            if (policyIssuance.QuotationId.HasValue)
+            {
+                quotationById.TryGetValue(policyIssuance.QuotationId.Value, out quotation);
+            }
+            else if (policyIssuance.CopyFromGuid.HasValue)
+            {
+                quotationByGuid.TryGetValue(policyIssuance.CopyFromGuid.Value, out quotation);
+            }
+
+            result[policyIssuance.Id] = new PolicyIssuanceQuotationFields
+            {
+                PolicyIssuanceId = policyIssuance.Id,
+                LineName = quotation?.LineName,
+                ProductName = quotation?.ProductName
+            };
+        }
+
+        return result;
+    }
+
+    private static JObject AddQuotationFields(
+        PolicyIssuance policyIssuance,
+        IReadOnlyDictionary<long, PolicyIssuanceQuotationFields> quotationFields)
+    {
+        var response = JObject.Parse(System.Text.Json.JsonSerializer.Serialize(
+            policyIssuance,
+            WebJsonOptions));
+        quotationFields.TryGetValue(policyIssuance.Id, out var quotation);
+        response["lineName"] = quotation?.LineName ?? "";
+        response["productName"] = quotation?.ProductName ?? "";
+        return response;
+    }
+
+    private sealed class PolicyIssuanceQuotationFields
+    {
+        public long PolicyIssuanceId { get; init; }
+        public string? LineName { get; init; }
+        public string? ProductName { get; init; }
+    }
+
     [HttpDelete]
     public override async Task<IActionResult> DeleteData([FromForm] DeleteFormCollection form)
     {

@@ -7,8 +7,10 @@ namespace ERPCore.Models.Migration.Business.MasterData;
 public class ChecklistDefinition : BaseModel
 {
     public int SequenceNo { get; set; }
+    public bool PMCheck { get; set; }
     public string? Checkpoint { get; set; } = "";
     public string? NeedToCheck { get; set; } = "";
+    public bool Result { get; set; }
     public long? LineId { get; set; }
     public long? ProductId { get; set; }
 }

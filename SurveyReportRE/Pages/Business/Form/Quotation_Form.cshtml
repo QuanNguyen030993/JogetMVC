@@ -191,6 +191,7 @@ Note:
         const quotationViewInstanceId = "@ViewData["Id"]";
         const quotationViewInstanceKey = `${formModuleKeyQt}:${quotationViewInstanceId}`;
         const quotationOverviewRootId = `${formModuleKeyQt}-overviewRoot_${quotationViewInstanceId}`;
+        enableDxFormGroupToggle(`#${quotationOverviewRootId}`);
         const QtRoles = qtDeptModuleCode;
         $(`#${formModuleKeyQt}-loginRoleLabel`).text(state.currentUserRole);
 

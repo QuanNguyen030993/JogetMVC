@@ -1,4 +1,4 @@
-﻿using ERPCore.Models.Migration.Business.MasterData;
+using ERPCore.Models.Migration.Business.MasterData;
 using ERPCore.Models.Migration.Business.Workflow;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Security.Cryptography;
@@ -71,7 +71,8 @@ public class WorkflowDefinition_FormModel : PageModel
         None = 0,
         CopyFile = 1,
         TransferFile = 2,
-        LockFileLocal = 3
+        LockFileLocal = 3,
+        ClearTurnaroundTimesAttributes = 4
     }
 
 }

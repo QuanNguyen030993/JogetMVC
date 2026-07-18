@@ -5648,6 +5648,52 @@ textarea {
     margin-top: 10px !important;
 }
 
+/* Toggleable custom dxForm groups in Quotation and Policy Issuance flows. */
+.dx-form-groups-toggle-enabled .dx-form-group-toggle > .dx-form-group-caption {
+    position: relative;
+    padding-right: 34px !important;
+    cursor: pointer;
+    user-select: none;
+    transition: color .18s ease, border-color .18s ease, margin-bottom .18s ease;
+}
+
+.dx-form-groups-toggle-enabled .dx-form-group-toggle > .dx-form-group-caption::after {
+    content: "\25BE";
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    color: #64748b;
+    font-size: 16px;
+    line-height: 1;
+    transform: translateY(-50%) rotate(0deg);
+    transform-origin: center;
+    transition: transform .18s ease, color .18s ease;
+}
+
+.dx-form-groups-toggle-enabled .dx-form-group-toggle > .dx-form-group-caption:hover::after,
+.dx-form-groups-toggle-enabled .dx-form-group-toggle > .dx-form-group-caption:focus-visible::after {
+    color: #2563eb;
+}
+
+.dx-form-groups-toggle-enabled .dx-form-group-toggle > .dx-form-group-caption:focus-visible {
+    border-radius: 4px;
+    outline: 2px solid rgba(37, 99, 235, .35);
+    outline-offset: 3px;
+}
+
+.dx-form-groups-toggle-enabled .dx-form-group-toggle.is-collapsed > .dx-form-group-caption {
+    margin-bottom: 0 !important;
+    border-bottom-color: transparent !important;
+}
+
+.dx-form-groups-toggle-enabled .dx-form-group-toggle.is-collapsed > .dx-form-group-caption::after {
+    transform: translateY(-50%) rotate(-90deg);
+}
+
+.dx-form-groups-toggle-enabled .dx-form-group-toggle.is-collapsed > .dx-form-group-content {
+    display: none !important;
+}
+
 /* Make DevExtreme text area & text box borders soft and modern */
 .dept-upperbody .dx-texteditor {
     border-radius: 6px !important;

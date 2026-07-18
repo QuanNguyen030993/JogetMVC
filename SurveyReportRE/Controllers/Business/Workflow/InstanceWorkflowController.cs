@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -149,6 +149,35 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                 result.PM = tatObject;
                 break;
         }
+
+        if (submitRequest.StepsWorkflow.Command != null &&
+            (submitRequest.StepsWorkflow.Command.Equals("ClearTurnaroundTimesAttributes", StringComparison.OrdinalIgnoreCase) ||
+             submitRequest.StepsWorkflow.Command.Equals("clear turnaroundtimesattributes", StringComparison.OrdinalIgnoreCase)))
+        {
+            string destDept = submitRequest.StepsWorkflow.ToNodeId;
+            if (!string.IsNullOrEmpty(destDept))
+            {
+                switch (destDept.ToUpper())
+                {
+                    case "FO":
+                        if (result.FO != null) { result.FO.AcceptDate = null; result.FO.CompleteDate = null; }
+                        break;
+                    case "TS":
+                        if (result.TS != null) { result.TS.AcceptDate = null; result.TS.CompleteDate = null; }
+                        break;
+                    case "UW":
+                        if (result.UW != null) { result.UW.AcceptDate = null; result.UW.CompleteDate = null; }
+                        break;
+                    case "LMKT":
+                        if (result.LMKT != null) { result.LMKT.AcceptDate = null; result.LMKT.CompleteDate = null; }
+                        break;
+                    case "PM":
+                        if (result.PM != null) { result.PM.AcceptDate = null; result.PM.CompleteDate = null; }
+                        break;
+                }
+            }
+        }
+
         quotation.TurnAroundTimeAttributes = JsonConvert.SerializeObject(result);
 
         await TATLog(quotation, tatObject, submitRequest.StepsWorkflow.FromNodeId);
@@ -305,6 +334,35 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                 result.PM = tatObject;
                 break;
         }
+
+        if (submitRequest.StepsWorkflow.Command != null &&
+            (submitRequest.StepsWorkflow.Command.Equals("ClearTurnaroundTimesAttributes", StringComparison.OrdinalIgnoreCase) ||
+             submitRequest.StepsWorkflow.Command.Equals("clear turnaroundtimesattributes", StringComparison.OrdinalIgnoreCase)))
+        {
+            string destDept = submitRequest.StepsWorkflow.ToNodeId;
+            if (!string.IsNullOrEmpty(destDept))
+            {
+                switch (destDept.ToUpper())
+                {
+                    case "FO":
+                        if (result.FO != null) { result.FO.AcceptDate = null; result.FO.CompleteDate = null; }
+                        break;
+                    case "TS":
+                        if (result.TS != null) { result.TS.AcceptDate = null; result.TS.CompleteDate = null; }
+                        break;
+                    case "UW":
+                        if (result.UW != null) { result.UW.AcceptDate = null; result.UW.CompleteDate = null; }
+                        break;
+                    case "LMKT":
+                        if (result.LMKT != null) { result.LMKT.AcceptDate = null; result.LMKT.CompleteDate = null; }
+                        break;
+                    case "PM":
+                        if (result.PM != null) { result.PM.AcceptDate = null; result.PM.CompleteDate = null; }
+                        break;
+                }
+            }
+        }
+
         quotation.TurnAroundTimeAttributes = JsonConvert.SerializeObject(result);
 
         await PITATLog(quotation, tatObject, submitRequest.StepsWorkflow.FromNodeId);
@@ -874,20 +932,59 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         InstanceWorkflow instanceWorkflow = await _BaseRepository.GetSingleObject(s => s.Id == request.InstanceWorkflowId);
         if (instanceWorkflow == null) return NotFound("InstanceWorkflow not found.");
 
-        StepsWorkflow selectedStep = await _stepsWorkflowRepository.GetSingleObject(s => s.Id == request.StepsWorkflowId);
-        if (selectedStep == null) return NotFound("StepsWorkflow not found.");
-
-        StepsWorkflow targetStep = selectedStep;
         bool isRevise = string.Equals(request.Mode, "Revise", StringComparison.OrdinalIgnoreCase);
-        if (isRevise)
-        {
-            targetStep = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == instanceWorkflow.WorkflowDefinitionId && (s.IsStart ?? false))
-                ?? selectedStep;
-        }
+        string nextCurrentStep = "";
+        string nextDeptCode = "";
+        string? nextStatusName = null;
+        long? nextStatusId = null;
 
-        string nextCurrentStep = isRevise
-            ? (!string.IsNullOrEmpty(targetStep.TNodeId) ? targetStep.TNodeId : targetStep.FNodeId)
-            : (!string.IsNullOrEmpty(targetStep.FNodeId) ? targetStep.FNodeId : targetStep.TNodeId);
+        if (!string.IsNullOrEmpty(request.TargetNodeId))
+        {
+            nextCurrentStep = request.TargetNodeId;
+            nextDeptCode = request.TargetDeptCode ?? "";
+
+            if (isRevise)
+            {
+                var startStep = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == instanceWorkflow.WorkflowDefinitionId && (s.IsStart ?? false));
+                if (startStep != null)
+                {
+                    nextCurrentStep = !string.IsNullOrEmpty(startStep.TNodeId) ? startStep.TNodeId : startStep.FNodeId;
+                    nextDeptCode = startStep.ToNodeId;
+                    nextStatusName = startStep.StatusName;
+                    nextStatusId = startStep.StatusId;
+                }
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(nextDeptCode))
+                {
+                    var matchingStep = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == instanceWorkflow.WorkflowDefinitionId && (s.FNodeId == request.TargetNodeId || s.TNodeId == request.TargetNodeId));
+                    if (matchingStep != null)
+                    {
+                        nextDeptCode = (matchingStep.FNodeId == request.TargetNodeId) ? matchingStep.FromNodeId : matchingStep.ToNodeId;
+                    }
+                }
+            }
+        }
+        else
+        {
+            StepsWorkflow selectedStep = await _stepsWorkflowRepository.GetSingleObject(s => s.Id == request.StepsWorkflowId);
+            if (selectedStep == null) return NotFound("StepsWorkflow not found.");
+
+            StepsWorkflow targetStep = selectedStep;
+            if (isRevise)
+            {
+                targetStep = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == instanceWorkflow.WorkflowDefinitionId && (s.IsStart ?? false))
+                    ?? selectedStep;
+            }
+
+            nextCurrentStep = isRevise
+                ? (!string.IsNullOrEmpty(targetStep.TNodeId) ? targetStep.TNodeId : targetStep.FNodeId)
+                : (!string.IsNullOrEmpty(targetStep.FNodeId) ? targetStep.FNodeId : targetStep.TNodeId);
+            nextDeptCode = isRevise ? targetStep.ToNodeId : targetStep.FromNodeId;
+            nextStatusName = targetStep.StatusName;
+            nextStatusId = targetStep.StatusId;
+        }
 
         if (string.IsNullOrEmpty(nextCurrentStep)) return BadRequest("Target step does not have a valid workflow node id.");
 
@@ -897,21 +994,51 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         Quotation quotation = await _quotationRepository.GetSingleObject(s => s.Guid == instanceWorkflow.RecordGuid);
         if (quotation != null)
         {
-            quotation.StageDept = isRevise ? targetStep.ToNodeId : targetStep.FromNodeId;
+            quotation.StageDept = nextDeptCode;
+            quotation.StageAccount = ResolveStageAccount(quotation.PIC, nextDeptCode);
             if (isRevise)
             {
-                quotation.WorkflowStatus = targetStep.StatusName ?? quotation.WorkflowStatus;
-                quotation.StatusId = targetStep.StatusId;
+                quotation.WorkflowStatus = nextStatusName ?? quotation.WorkflowStatus;
+                quotation.StatusId = nextStatusId;
             }
             else
             {
-                // Recover moves the processing node back but does not roll the business status
-                // back to the selected transition's historical status.
                 quotation.WorkflowStatus = "Recover";
             }
             quotation.ActionStatus = "";
             await _quotationRepository.UpdateData(quotation, JsonConvert.SerializeObject(quotation), quotation.Id, "Id");
         }
+
+        PolicyIssuance? policyIssuance = null;
+        if (quotation == null)
+        {
+            policyIssuance = await _policyIssuanceRepository.GetSingleObject(
+                item => item.Guid == instanceWorkflow.RecordGuid);
+            if (policyIssuance != null)
+            {
+                policyIssuance.StageDept = nextDeptCode;
+                policyIssuance.StageAccount = ResolveStageAccount(policyIssuance.PIC, nextDeptCode);
+                if (isRevise)
+                {
+                    policyIssuance.WorkflowStatus = nextStatusName ?? policyIssuance.WorkflowStatus;
+                    policyIssuance.StatusId = nextStatusId;
+                }
+                else
+                {
+                    policyIssuance.WorkflowStatus = "Recover";
+                }
+
+                policyIssuance.ActionStatus = "";
+                await _policyIssuanceRepository.UpdateData(
+                    policyIssuance,
+                    JsonConvert.SerializeObject(policyIssuance),
+                    policyIssuance.Id,
+                    "Id");
+            }
+        }
+
+        string recoveredStageDept = quotation?.StageDept ?? policyIssuance?.StageDept ?? "";
+        string recoveredStageAccount = quotation?.StageAccount ?? policyIssuance?.StageAccount ?? "";
 
         return Ok(new
         {
@@ -919,15 +1046,44 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             instanceWorkflow.RecordGuid,
             instanceWorkflow.WorkflowDefinitionId,
             CurrentStep = instanceWorkflow.CurrentStep,
-            QuotationStageDept = quotation?.StageDept,
+            StageDept = recoveredStageDept,
+            StageAccount = recoveredStageAccount,
+            QuotationStageDept = recoveredStageDept,
             QuotationWorkflowStatus = quotation?.WorkflowStatus,
             QuotationStatusId = quotation?.StatusId,
+            PolicyIssuanceStageDept = policyIssuance?.StageDept,
+            PolicyIssuanceStageAccount = policyIssuance?.StageAccount,
+            PolicyIssuanceWorkflowStatus = policyIssuance?.WorkflowStatus,
+            PolicyIssuanceStatusId = policyIssuance?.StatusId,
+            RecordType = quotation != null
+                ? nameof(Quotation)
+                : policyIssuance != null
+                    ? nameof(PolicyIssuance)
+                    : null,
             Mode = isRevise ? "Revise" : "Recover",
-            TargetStepId = targetStep.Id,
-            TargetFromNodeId = targetStep.FromNodeId,
-            TargetToNodeId = targetStep.ToNodeId,
+            TargetNodeId = nextCurrentStep,
+            TargetDeptCode = nextDeptCode,
             request.Note
         });
+    }
+
+    private static string ResolveStageAccount(string? picJson, string? stageDept)
+    {
+        if (string.IsNullOrWhiteSpace(picJson) || string.IsNullOrWhiteSpace(stageDept))
+        {
+            return "";
+        }
+
+        try
+        {
+            var pic = JObject.Parse(picJson);
+            return pic.GetValue(stageDept, StringComparison.OrdinalIgnoreCase)?.ToString().Trim() ?? "";
+        }
+        catch (JsonException ex)
+        {
+            Log.Warning(ex, "Cannot recover StageAccount from PIC for department {StageDept}.", stageDept);
+            return "";
+        }
     }
 
     public async Task TATLog([FromBody]Quotation quotation, [FromQuery] TurnAroundItem tatObject, string department)
@@ -1069,7 +1225,9 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     public class WorkflowRecoverRequest
     {
         public long InstanceWorkflowId { get; set; }
-        public long StepsWorkflowId { get; set; }
+        public long? StepsWorkflowId { get; set; }
+        public string? TargetNodeId { get; set; }
+        public string? TargetDeptCode { get; set; }
         public string Mode { get; set; }
         public string Note { get; set; }
     }

@@ -232,6 +232,7 @@ Note:
         const policyIssuanceViewInstanceId = "@ViewData["Id"]";
         const policyIssuanceViewInstanceKey = `${formModuleKeyPi}:${policyIssuanceViewInstanceId}`;
         const policyIssuanceOverviewRootId = `${formModuleKeyPi}-overviewRoot_${policyIssuanceViewInstanceId}`;
+        enableDxFormGroupToggle(`#${policyIssuanceOverviewRootId}`);
      const QtRoles = piDeptModuleCode;
         $(`#${formModuleKeyPi}-loginRoleLabel`).text(state.currentUserRole);
 
