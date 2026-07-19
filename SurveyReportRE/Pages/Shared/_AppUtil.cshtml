@@ -3496,6 +3496,68 @@
             return result;
         }
 
+        /* Custom fileuploader implementation is kept for reference only.
+        function renderFileUploader(editorOptions, $container, options, isRenderUploader = true, uploaderAllow = true) {
+            const renderTime = Date.now();
+            const editorOptionsIn = cloneReusableOptions(editorOptions);
+            const data = editorOptionsIn.data || {};
+            const controlId = `${data.SectionName || data.Department || editorOptionsIn.controlId || renderTime}`;
+            const currentOptions = options || {};
+            const controllerName = currentOptions.controllerName || "Document";
+            const sectionPermission = $container.closest(".dept-section").data("attachmentCanEdit");
+            if (sectionPermission !== undefined) {
+                uploaderAllow = !!sectionPermission;
+            }
+
+            const configuredMaxFileSize = Number(
+                editorOptionsIn.maxFileSize
+                || currentOptions.maxFileSize
+                || ((editorOptionsIn.maxFileSizeMB || currentOptions.maxFileSizeMB) * 1024 * 1024)
+                || window.UploadConfig?.maxFileSize
+                || (50 * 1024 * 1024)
+            );
+            const moduleName = data.ModuleName || editorOptionsIn.ModelName || "";
+            const normalizedModuleName = String(moduleName).toLowerCase();
+            const uploaderData = {
+                ...data,
+                // The currently deployed fileuploader recognizes Quotation by the QT marker.
+                ModuleName: normalizedModuleName.includes("quotation") ? "QT" : moduleName,
+                code: data.code || data.Code || editorOptionsIn.code || "",
+                SectionName: data.SectionName || data.Department || controlId
+            };
+
+            $container.find(".tmivcom-fileuploader-host").remove();
+            const $uploader = $(`<div id="fileUpload_${controlId}_${renderTime}" class="tmivcom-fileuploader-host"></div>`)
+                .toggleClass("is-uploader-hidden", !isRenderUploader)
+                .appendTo($container);
+
+            $uploader.fileuploader({
+                guid: editorOptionsIn.guid || "",
+                controllerName: controllerName,
+                titleName: editorOptionsIn.titleName || currentOptions.uploadTitle || "Click to select or drag files here",
+                data: uploaderData,
+                specificFolder: editorOptionsIn.specificFolder || "",
+                baseOnAttributes: editorOptionsIn.baseOnAttributes || "",
+                maxFileSize: configuredMaxFileSize,
+                accept: currentOptions.accept || "",
+                multiple: editorOptionsIn.multiple !== false,
+                disabled: !uploaderAllow,
+                showUploader: !!isRenderUploader,
+                uploadUrl: currentOptions.uploadUrl || "/api/Attachment/AsyncUploadFile",
+                onUploaded: function () {
+                    renderBrowserLoading({ payload: { progressvalue: 100 } });
+                    if (typeof editorOptionsIn.onUploaded === "function") editorOptionsIn.onUploaded();
+                },
+                onDeleted: function (file) {
+                    if (typeof editorOptionsIn.onDeleted === "function") editorOptionsIn.onDeleted(file);
+                },
+                onChange: function (files) {
+                    if (typeof editorOptionsIn.onChange === "function") editorOptionsIn.onChange(files);
+                }
+            });
+        }
+        */
+
         function renderDxFileUploader(editorOptions, $container, options, isRenderUploader = true, uploaderAllow = true)  {
         const renderTime = Date.now();
         const editorOptionsIn = cloneReusableOptions(editorOptions);
