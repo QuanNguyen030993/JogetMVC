@@ -54,6 +54,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     private readonly IBaseRepository<TurnAroundTimeDeptProcessing> _turnAroundTimeDeptProcessingRepository;
     private readonly IBaseRepository<TurnAroundTimeSession> _turnAroundTimeSessionRepository;
     private readonly IBaseRepository<Notification> _notificationRepository;
+    private readonly IBaseRepository<NotificationTemplate> _notificationTemplateRepository;
     private readonly IBaseRepository<UrlCall> _urlCallRepository;
     private readonly IBaseRepository<StepsWorkflow> _stepsWorkflowRepository;
     private readonly IBaseRepository<WorkflowDefinition> _workflowDefinitionRepository;
@@ -92,6 +93,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         _turnAroundTimeDeptProcessingRepository = new BaseRepository<TurnAroundTimeDeptProcessing>(configuration, _httpContextAccessor);
         _turnAroundTimeSessionRepository = new BaseRepository<TurnAroundTimeSession>(configuration, _httpContextAccessor);
         _notificationRepository = new BaseRepository<Notification>(configuration, _httpContextAccessor);
+        _notificationTemplateRepository = new BaseRepository<NotificationTemplate>(configuration, _httpContextAccessor);
         _urlCallRepository = new BaseRepository<UrlCall>(configuration, _httpContextAccessor);
         _stepsWorkflowRepository = new BaseRepository<StepsWorkflow>(configuration, _httpContextAccessor);
         _workflowDefinitionRepository = new BaseRepository<WorkflowDefinition>(configuration, _httpContextAccessor);
@@ -272,20 +274,11 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 
 
 
-        Notification notification = new Notification();
-        UrlCall urlCall = new UrlCall();
-        long? notificationTypeId = await ResolveWorkflowNotificationTypeId(
-            submitRequest.StepsWorkflow,
-            submitRequest.InstanceWorkflow,
-            NotificationTypeKeys.Quotation);
-        if (submitRequest.isEmail ?? false)
-        {//Test cho nay
-            //notification = await ControllerUtil.MakeNotificationFromEmail(notification, mailQueue, quotation, configuration,out urlCall);
-            notification = await ControllerUtil.NotifySameEmail(notification, transferObject, notificationTypeId);
-        }
-        else
-            notification = await ControllerUtil.Notify(transferObject, notificationTypeId);
-        await _urlCallRepository.InsertData(urlCall);
+        Notification notification = await SendWorkflowNotificationAsync(
+            submitRequest,
+            transferObject,
+            NotificationTypeKeys.Quotation,
+            quotation.WorkflowStatus);
         await _notificationRepository.InsertData(notification);
 
         return Ok();
@@ -457,20 +450,11 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 
 
 
-        Notification notification = new Notification();
-        UrlCall urlCall = new UrlCall();
-        long? notificationTypeId = await ResolveWorkflowNotificationTypeId(
-            submitRequest.StepsWorkflow,
-            submitRequest.InstanceWorkflow,
-            NotificationTypeKeys.PolicyIssuance);
-        if (submitRequest.isEmail ?? false)
-        {//Test cho nay
-            //notification = await ControllerUtil.MakeNotificationFromEmail(notification, mailQueue, quotation, configuration,out urlCall);
-            notification = await ControllerUtil.NotifySameEmail(notification, transferObject, notificationTypeId);
-        }
-        else
-            notification = await ControllerUtil.Notify(transferObject, notificationTypeId);
-        await _urlCallRepository.InsertData(urlCall);
+        Notification notification = await SendWorkflowNotificationAsync(
+            submitRequest,
+            transferObject,
+            NotificationTypeKeys.PolicyIssuance,
+            quotation.WorkflowStatus);
         await _notificationRepository.InsertData(notification);
 
         return Ok();
@@ -498,6 +482,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         }
         
     }
+    [HttpPost]
     public async Task<IActionResult> QuotationReturnToStep([FromBody] WorkflowTransitionSubmitRequest submitRequest)
     {
 
@@ -550,9 +535,6 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
 
 
-        MailTemplate mailTemplate = new MailTemplate();
-        mailTemplate = await _mailTemplateRepository.GetSingleObject(s => s.TemplateName == "Return Mail");
-        Users flowUser = new Users();
         PICAttributes pICAttributes = new PICAttributes();
         pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
         string accountName = submitRequest.StepsWorkflow.ToNodeId switch
@@ -565,19 +547,24 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             _ => null
         };
         ControllerHelper.SignalRResponse(_usersSessionRepository, "R_ItemSubmitted", new { id = quotation.Id,  type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
-        Employee employee = new Employee();
-        flowUser = await _usersRepository.GetSingleObject(s => s.username == accountName);
-        employee = await _employeeRepository.GetSingleObject(s => s.UsersId == flowUser.Id);
-        if (mailTemplate != null)
+        string? attachedMailTemplateName = await ResolveAttachedMailTemplateNameAsync(submitRequest);
+        if (!string.IsNullOrWhiteSpace(attachedMailTemplateName))
         {
-            DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
-            Dictionary<string, object> flowDictionaryData = new Dictionary<string, object>();
-            if (query.Rows.Count > 0)
-
-                flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
-            MailQueue mailQueue = new MailQueue();
-            mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
-            if (mailQueue != null) await _mailQueueRepository.InsertData(mailQueue);
+            await SendAttachedWorkflowMailAsync(submitRequest, quotation);
+        }
+        else
+        {
+            MailTemplate? mailTemplate = await _mailTemplateRepository.GetSingleObject(s => s.TemplateName == "Return Mail");
+            Employee? targetEmployee = await FindEmployeeByAccountAsync(accountName);
+            if (mailTemplate != null && targetEmployee != null)
+            {
+                DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
+                Dictionary<string, object> flowDictionaryData = query.Rows.Count > 0
+                    ? Util.MakeQueryIntoDirectory(query.Rows[0])
+                    : new Dictionary<string, object>();
+                MailQueue mailQueue = Util.NotifySession(targetEmployee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
+                if (mailQueue != null) await _mailQueueRepository.InsertData(mailQueue);
+            }
         }
 
 
@@ -585,7 +572,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         {
             DOMAIN_NAME = DOMAIN_NAME,
             Title = "Assigning Task",
-            Subject = $"{quotation.QuotationCode} have been returned from {employee.FullName}",
+            Subject = $"{quotation.QuotationCode} have been returned from {userInfo.Employee?.FullName ?? "anonymous"}",
             Resource = "Assign from ",
             Guid = quotation.Guid,
             ReceivedBy = accountName,
@@ -594,21 +581,142 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             ModuleName = nameof(Quotation)
         };
 
-        long? notificationTypeId = await ResolveWorkflowNotificationTypeId(
-            submitRequest.StepsWorkflow,
+        Notification notification = await SendWorkflowNotificationAsync(
+            submitRequest,
+            transferObject,
+            NotificationTypeKeys.Quotation,
+            quotation.WorkflowStatus);
+        await _notificationRepository.InsertData(notification);
+
+        return Ok();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> PolicyIssuanceReturnToStep([FromBody] WorkflowTransitionSubmitRequest submitRequest)
+    {
+        if (string.IsNullOrEmpty(submitRequest.StepsWorkflow?.FromNodeId)
+            || string.IsNullOrEmpty(submitRequest.StepsWorkflow.ToNodeId))
+        {
+            return StatusCode(500, "Submit problem, please contact IT Admin!!!!");
+        }
+
+        submitRequest.InstanceWorkflow.CurrentStep = submitRequest.StepsWorkflow.TNodeId;
+        await _BaseRepository.UpdateData(
             submitRequest.InstanceWorkflow,
-            NotificationTypeKeys.Quotation);
-        Notification notification = await ControllerUtil.Notify(transferObject, notificationTypeId);
+            JsonConvert.SerializeObject(submitRequest.InstanceWorkflow),
+            submitRequest.InstanceWorkflow?.Id,
+            "Id");
+
+        PolicyIssuance policyIssuance = await _policyIssuanceRepository.GetSingleObject(
+            item => item.Id == submitRequest.PolicyIssuanceId);
+        if (policyIssuance == null) return NotFound("Policy Issuance not found.");
+
+        policyIssuance.StageDept = submitRequest.StepsWorkflow.ToNodeId;
+        policyIssuance.WorkflowStatus = submitRequest.StepsWorkflow.StatusName;
+        policyIssuance.StatusId = submitRequest.StepsWorkflow.StatusId;
+        if (submitRequest.ActionStatus != null) policyIssuance.ActionStatus = submitRequest.ActionStatus;
+
+        TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(policyIssuance.TurnAroundTimeAttributes);
+        TurnAroundItem tatObject = submitRequest.StepsWorkflow.FromNodeId switch
+        {
+            "FO" => result.FO,
+            "TS" => result.TS,
+            "UW" => result.UW,
+            "LMKT" => result.LMKT,
+            "PM" => result.PM,
+            _ => null
+        };
+        if (tatObject != null) tatObject.CompleteDate = DateTime.Now;
+        policyIssuance.TurnAroundTimeAttributes = JsonConvert.SerializeObject(result);
+
+        await PITATLog(policyIssuance, tatObject, submitRequest.StepsWorkflow.FromNodeId);
+        await _policyIssuanceRepository.UpdateData(
+            policyIssuance,
+            JsonConvert.SerializeObject(policyIssuance),
+            policyIssuance.Id,
+            "Id");
+
+        var userInfo = await ControllerHelper.FetchUserRoles(_httpContextAccessor, configuration, DOMAIN_NAME);
+        await ControllerUtil.LogAction(
+            _quotationCommentLogRepository,
+            _httpContextAccessor,
+            configuration,
+            DOMAIN_NAME,
+            policyIssuance,
+            submitRequest,
+            _blobStorageSettings);
+
+        PICAttributes picAttributes = JsonConvert.DeserializeObject<PICAttributes>(policyIssuance.PIC);
+        string accountName = submitRequest.StepsWorkflow.ToNodeId switch
+        {
+            "FO" => picAttributes.FO,
+            "TS" => picAttributes.TS,
+            "UW" => picAttributes.UW,
+            "LMKT" => picAttributes.LMKT,
+            "PM" => picAttributes.PM,
+            _ => null
+        };
+
+        ControllerHelper.SignalRResponse(
+            _usersSessionRepository,
+            "R_ItemSubmitted",
+            new { id = policyIssuance.Id, type = "PolicyIssuance" },
+            ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration),
+            DOMAIN_NAME);
+
+        string? attachedMailTemplateName = await ResolveAttachedMailTemplateNameAsync(submitRequest);
+        if (!string.IsNullOrWhiteSpace(attachedMailTemplateName))
+        {
+            await PISendAttachedWorkflowMailAsync(submitRequest, policyIssuance);
+        }
+        else
+        {
+            MailTemplate? mailTemplate = await _mailTemplateRepository.GetSingleObject(item => item.TemplateName == "Return Mail");
+            Employee? targetEmployee = await FindEmployeeByAccountAsync(accountName);
+            if (mailTemplate != null && targetEmployee != null)
+            {
+                DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
+                Dictionary<string, object> flowDictionaryData = query.Rows.Count > 0
+                    ? Util.MakeQueryIntoDirectory(query.Rows[0])
+                    : new Dictionary<string, object>();
+                MailQueue mailQueue = Util.NotifySession(targetEmployee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
+                if (mailQueue != null) await _mailQueueRepository.InsertData(mailQueue);
+            }
+        }
+
+        dynamic transferObject = new
+        {
+            DOMAIN_NAME,
+            Title = "Assigning Task",
+            Subject = $"{policyIssuance.PolicyIssuanceCode} have been returned from {userInfo.Employee?.FullName ?? "anonymous"}",
+            Resource = "Assign from ",
+            Guid = policyIssuance.Guid,
+            ReceivedBy = accountName,
+            Id = policyIssuance.Id,
+            Code = policyIssuance.PolicyIssuanceCode,
+            ModuleName = nameof(PolicyIssuance)
+        };
+
+        Notification notification = await SendWorkflowNotificationAsync(
+            submitRequest,
+            transferObject,
+            NotificationTypeKeys.PolicyIssuance,
+            policyIssuance.WorkflowStatus);
         await _notificationRepository.InsertData(notification);
 
         return Ok();
     }
 
     private static string? ReadMailTemplateName(JObject? source)
+        => ReadTemplateName(source, ["mailTemplateName", "templateMailName", "mailTemplate"]);
+
+    private static string? ReadNotificationTemplateName(JObject? source)
+        => ReadTemplateName(source, ["notificationTemplateName", "templateNotificationName", "notificationTemplate"]);
+
+    private static string? ReadTemplateName(JObject? source, string[] keys)
     {
         if (source == null) return null;
 
-        string[] keys = ["mailTemplateName", "templateMailName", "mailTemplate"];
         foreach (string key in keys)
         {
             JToken? token = source.GetValue(key, StringComparison.OrdinalIgnoreCase);
@@ -650,8 +758,16 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     }
 
     private async Task<string?> ResolveAttachedMailTemplateNameAsync(WorkflowTransitionSubmitRequest submitRequest)
+        => await ResolveAttachedTemplateNameAsync(submitRequest, ReadMailTemplateName);
+
+    private async Task<string?> ResolveAttachedNotificationTemplateNameAsync(WorkflowTransitionSubmitRequest submitRequest)
+        => await ResolveAttachedTemplateNameAsync(submitRequest, ReadNotificationTemplateName);
+
+    private async Task<string?> ResolveAttachedTemplateNameAsync(
+        WorkflowTransitionSubmitRequest submitRequest,
+        Func<JObject?, string?> readTemplateName)
     {
-        string? configuredName = ReadMailTemplateName(TryReadJsonObject(submitRequest.StepsWorkflow?.CommandConfig));
+        string? configuredName = readTemplateName(TryReadJsonObject(submitRequest.StepsWorkflow?.CommandConfig));
         if (!string.IsNullOrWhiteSpace(configuredName)) return configuredName;
 
         Guid workflowDefinitionId = submitRequest.InstanceWorkflow?.WorkflowDefinitionId ?? Guid.Empty;
@@ -672,7 +788,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                 && (string.IsNullOrWhiteSpace(step.ActionCode)
                     || string.Equals(item.GetValue("actionCode", StringComparison.OrdinalIgnoreCase)?.ToString(), step.ActionCode, StringComparison.OrdinalIgnoreCase)));
 
-        configuredName = ReadMailTemplateName(selectedTransition);
+        configuredName = readTemplateName(selectedTransition);
         if (!string.IsNullOrWhiteSpace(configuredName)) return configuredName;
 
         JArray? nodes = payload.GetValue("workflowNodes", StringComparison.OrdinalIgnoreCase) as JArray;
@@ -682,7 +798,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                 string.Equals(item.GetValue("id", StringComparison.OrdinalIgnoreCase)?.ToString(), step.ToNodeId, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(item.GetValue("nodeCode", StringComparison.OrdinalIgnoreCase)?.ToString(), step.ToNodeId, StringComparison.OrdinalIgnoreCase));
 
-        configuredName = ReadMailTemplateName(targetNode);
+        configuredName = readTemplateName(targetNode);
         if (!string.IsNullOrWhiteSpace(configuredName)) return configuredName;
 
         JObject? sourceNode = nodes?
@@ -691,7 +807,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                 string.Equals(item.GetValue("id", StringComparison.OrdinalIgnoreCase)?.ToString(), step.FromNodeId, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(item.GetValue("nodeCode", StringComparison.OrdinalIgnoreCase)?.ToString(), step.FromNodeId, StringComparison.OrdinalIgnoreCase));
 
-        return ReadMailTemplateName(sourceNode);
+        return readTemplateName(sourceNode);
     }
 
     private string NormalizeWorkflowAccount(string? account)
@@ -902,6 +1018,79 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         {
             Log.Error(ex, "Unable to send attached workflow mail for quotation {PolicyIssuanceId}.", quotation.Id);
         }
+    }
+
+    private async Task<Notification> SendWorkflowNotificationAsync(
+        WorkflowTransitionSubmitRequest submitRequest,
+        dynamic fallbackTransferObject,
+        string fallbackType,
+        string? workflowStatus)
+    {
+        string? templateName = await ResolveAttachedNotificationTemplateNameAsync(submitRequest);
+        NotificationTemplate? notificationTemplate = null;
+        if (!string.IsNullOrWhiteSpace(templateName))
+        {
+            notificationTemplate = await _notificationTemplateRepository.GetSingleObject(
+                item => item.TemplateName == templateName);
+            if (notificationTemplate == null || !(notificationTemplate.IsActive ?? false))
+            {
+                Log.Warning("Workflow notification template {TemplateName} was not found or is inactive.", templateName);
+                notificationTemplate = null;
+            }
+        }
+
+        dynamic transferObject = fallbackTransferObject;
+        long? notificationTypeId;
+        if (notificationTemplate != null)
+        {
+            Dictionary<string, object> templateData = new()
+            {
+                ["RecordId"] = fallbackTransferObject.Id,
+                ["RecordCode"] = fallbackTransferObject.Code ?? "",
+                ["QuotationId"] = fallbackTransferObject.Id,
+                ["QuotationCode"] = fallbackTransferObject.Code ?? "",
+                ["PolicyIssuanceId"] = fallbackTransferObject.Id,
+                ["PolicyIssuanceCode"] = fallbackTransferObject.Code ?? "",
+                ["WorkflowStatus"] = workflowStatus ?? "",
+                ["FromNodeId"] = submitRequest.StepsWorkflow?.FromNodeId ?? "",
+                ["ToNodeId"] = submitRequest.StepsWorkflow?.ToNodeId ?? "",
+                ["ActionCode"] = submitRequest.StepsWorkflow?.ActionCode ?? "",
+                ["ActionStatus"] = submitRequest.ActionStatus ?? "",
+                ["Comment"] = submitRequest.Comment ?? ""
+            };
+
+            transferObject = new
+            {
+                DOMAIN_NAME,
+                Title = MailUtil.TitleContentHandle(notificationTemplate.Title, templateData),
+                Subject = MailUtil.BodyContentHandle(notificationTemplate.Content, templateData),
+                Resource = fallbackTransferObject.Resource,
+                Guid = fallbackTransferObject.Guid,
+                ReceivedBy = fallbackTransferObject.ReceivedBy,
+                Id = fallbackTransferObject.Id,
+                Code = fallbackTransferObject.Code,
+                ModuleName = fallbackTransferObject.ModuleName
+            };
+            notificationTypeId = notificationTemplate.TypeId
+                ?? await ResolveWorkflowNotificationTypeId(
+                    submitRequest.StepsWorkflow,
+                    submitRequest.InstanceWorkflow,
+                    fallbackType);
+        }
+        else
+        {
+            notificationTypeId = await ResolveWorkflowNotificationTypeId(
+                submitRequest.StepsWorkflow,
+                submitRequest.InstanceWorkflow,
+                fallbackType);
+        }
+
+        if (submitRequest.isEmail ?? false)
+        {
+            return await ControllerUtil.NotifySameEmail(new Notification(), transferObject, notificationTypeId);
+        }
+
+        return await ControllerUtil.Notify(transferObject, notificationTypeId);
     }
 
     private async Task<long?> ResolveWorkflowNotificationTypeId(

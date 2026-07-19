@@ -385,9 +385,12 @@ namespace ERPCore.Controllers.Config
         {
             var schema = new List<ERPCore.Models.Business.Migration.Config.DataGridConfig>
             {
-                new ERPCore.Models.Business.Migration.Config.DataGridConfig { DataField = "tableName", Caption = "Tên Bảng", DataType = "string", Visible = true },
+                new ERPCore.Models.Business.Migration.Config.DataGridConfig { DataField = "tableName", Caption = "Tên Bảng (Table)", DataType = "string", Visible = true },
                 new ERPCore.Models.Business.Migration.Config.DataGridConfig { DataField = "schemaName", Caption = "Schema", DataType = "string", Visible = true },
-                new ERPCore.Models.Business.Migration.Config.DataGridConfig { DataField = "rowCounts", Caption = "Số lượng dòng", DataType = "number", Visible = true }
+                new ERPCore.Models.Business.Migration.Config.DataGridConfig { DataField = "rowCounts", Caption = "Số Dòng (Record Count)", DataType = "number", Visible = true },
+                new ERPCore.Models.Business.Migration.Config.DataGridConfig { DataField = "totalSpaceMB", Caption = "Tổng Dung Lượng (MB)", DataType = "number", Visible = true },
+                new ERPCore.Models.Business.Migration.Config.DataGridConfig { DataField = "usedSpaceMB", Caption = "Dung Lượng Đã Dùng (MB)", DataType = "number", Visible = true },
+                new ERPCore.Models.Business.Migration.Config.DataGridConfig { DataField = "unusedSpaceMB", Caption = "Dung Lượng Trống (MB)", DataType = "number", Visible = true }
             };
             return Ok(schema);
         }

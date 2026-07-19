@@ -773,6 +773,15 @@
                         item.isActive !== false && item.IsActive !== false));
             }
         });
+        var workflowNotificationTemplateStore = new DevExpress.data.CustomStore({
+            key: "id",
+            loadMode: "raw",
+            load: function () {
+                return ajaxGet("/api/NotificationTemplate/GetAll", null)
+                    .then(items => (Array.isArray(items) ? items : []).filter(item =>
+                        item.isActive !== false && item.IsActive !== false));
+            }
+        });
         var dragToolData = null;
         var conditionBuilderInstance = null;
         var conditionRuleState = {
@@ -846,6 +855,19 @@
                         colSpan: 2,
                         editorOptions: {
                             dataSource: workflowMailTemplateStore,
+                            valueExpr: "templateName",
+                            displayExpr: "templateName",
+                            searchEnabled: true,
+                            showClearButton: true
+                        }
+                    },
+                    {
+                        dataField: "notificationTemplateName",
+                        label: { text: "Notification Template" },
+                        editorType: "dxSelectBox",
+                        colSpan: 2,
+                        editorOptions: {
+                            dataSource: workflowNotificationTemplateStore,
                             valueExpr: "templateName",
                             displayExpr: "templateName",
                             searchEnabled: true,
@@ -1538,6 +1560,7 @@
                     levelNo: fromNode.levelNo || null,
                     loopGroup: t.loopGroup || null,
                     mailTemplateName: t.mailTemplateName || toNode?.mailTemplateName || null,
+                    notificationTemplateName: t.notificationTemplateName || toNode?.notificationTemplateName || null,
                     parentStepId: null,
                     posX: fromNode.x || null,
                     posY: fromNode.y || null,
@@ -1576,6 +1599,7 @@
                 levelNo: parentNode ? ((parentNode.original.levelNo || 1) + 1) : 1,
                 flowType: "Both",
                 mailTemplateName: "",
+                notificationTemplateName: "",
                 allowLoop: false,
                 loopGroup: "",
                 x: 0,
@@ -1607,6 +1631,7 @@
                 levelNo: original.levelNo || 1,
                 flowType: original.flowType || "Both",
                 mailTemplateName: original.mailTemplateName || "",
+                notificationTemplateName: original.notificationTemplateName || "",
                 allowLoop: !!original.allowLoop,
                 loopGroup: original.loopGroup || "",
                 x: original.x ?? null,
@@ -1684,6 +1709,7 @@
             node.original.levelNo = json.levelNo || 1;
             node.original.flowType = json.flowType || "Both";
             node.original.mailTemplateName = json.mailTemplateName || "";
+            node.original.notificationTemplateName = json.notificationTemplateName || "";
             node.original.allowLoop = !!json.allowLoop;
             node.original.loopGroup = json.loopGroup || "";
             node.original.x = json.x ?? 0;
@@ -1895,6 +1921,7 @@
                         levelNo: newObject.levelNo ?? oldNode.levelNo ?? 1,
                         flowType: newObject.flowType || oldNode.flowType || "Both",
                         mailTemplateName: newObject.mailTemplateName || oldNode.mailTemplateName || "",
+                        notificationTemplateName: newObject.notificationTemplateName || oldNode.notificationTemplateName || "",
                         allowLoop: !!(newObject.allowLoop ?? oldNode.allowLoop),
                         loopGroup: newObject.loopGroup || oldNode.loopGroup || "",
                         x: newObject.x ?? oldNode.x ?? null,
@@ -1913,6 +1940,7 @@
                         levelNo: x.original?.levelNo ?? oldNode.levelNo ?? 1,
                         flowType: x.original?.flowType || oldNode.flowType || "Both",
                         mailTemplateName: x.original?.mailTemplateName || oldNode.mailTemplateName || "",
+                        notificationTemplateName: x.original?.notificationTemplateName || oldNode.notificationTemplateName || "",
                         allowLoop: !!(x.original?.allowLoop ?? oldNode.allowLoop),
                         loopGroup: x.original?.loopGroup || oldNode.loopGroup || "",
                         x: x.original?.x ?? oldNode.x ?? null,
@@ -1939,6 +1967,7 @@
                         levelNo: cur.levelNo,
                         flowType: cur.flowType,
                         mailTemplateName: cur.mailTemplateName || "",
+                        notificationTemplateName: cur.notificationTemplateName || "",
                         allowLoop: cur.allowLoop,
                         loopGroup: cur.loopGroup,
                         x: cur.x,
@@ -2130,6 +2159,19 @@
                         }
                     },
                     {
+                        dataField: "notificationTemplateName",
+                        label: { text: "Notification Template" },
+                        editorType: "dxSelectBox",
+                        colSpan: 2,
+                        editorOptions: {
+                            dataSource: workflowNotificationTemplateStore,
+                            valueExpr: "templateName",
+                            displayExpr: "templateName",
+                            searchEnabled: true,
+                            showClearButton: true
+                        }
+                    },
+                    {
                         dataField: "conditionJson",
                         label: { text: "Condition JSON" },
                         editorType: "dxTextArea",
@@ -2272,6 +2314,7 @@
                     allowLoop: !!x.allowLoop,
                     loopGroup: x.loopGroup || "",
                     mailTemplateName: x.mailTemplateName || "",
+                    notificationTemplateName: x.notificationTemplateName || "",
                     x: x.x ?? null,
                     y: x.y ?? null
                 })),
@@ -2304,6 +2347,7 @@
                 allowLoop: !!x.allowLoop,
                 loopGroup: x.loopGroup || "",
                 mailTemplateName: x.mailTemplateName || "",
+                notificationTemplateName: x.notificationTemplateName || "",
                 x: x.x ?? null,
                 y: x.y ?? null
             }));
@@ -2776,6 +2820,7 @@
                       allowLoop: n.allowLoop,
                       loopGroup: n.loopGroup || "",
                       mailTemplateName: n.mailTemplateName || "",
+                      notificationTemplateName: n.notificationTemplateName || "",
                       nodeType: "",
                       nodeCode: "",
                       stepRole: "",

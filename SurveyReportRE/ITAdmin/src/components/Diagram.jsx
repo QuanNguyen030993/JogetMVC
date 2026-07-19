@@ -13,6 +13,7 @@ import {
     Position,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import { API_BASE_URL } from '../config';
 
 const CustomEdge = ({
     id,
@@ -269,28 +270,78 @@ const CustomEdge = ({
                         {label && <span style={{ fontWeight: '500' }}>{label}</span>}
                         {data?.notificationTemplateId && String(data.notificationTemplateId).trim() !== '' && (
                             <span 
-                                title="Notification Template Attached" 
+                                className="diagram-icon-hover-trigger"
                                 style={{ 
                                     color: '#f59e0b', 
                                     display: 'inline-flex', 
                                     alignItems: 'center',
+                                    position: 'relative',
+                                    cursor: 'pointer',
                                     marginLeft: label ? '2px' : '0' 
                                 }}
                             >
                                 <i className="fa-solid fa-bell" style={{ fontSize: '11px' }}></i>
+                                {data.resolvedNotificationTemplate && (
+                                    <div className="diagram-tooltip-popup">
+                                        <div className="tooltip-header">
+                                            <strong>🔔 {data.resolvedNotificationTemplate.name}</strong>
+                                        </div>
+                                        <div className="tooltip-body">
+                                            {data.resolvedNotificationTemplate.title && (
+                                                <div className="tooltip-field">
+                                                    <span className="label">Title:</span> {data.resolvedNotificationTemplate.title}
+                                                </div>
+                                            )}
+                                            {data.resolvedNotificationTemplate.content && (
+                                                <div className="tooltip-field">
+                                                    <span className="label">Content:</span>
+                                                    <div 
+                                                        className="content-preview"
+                                                        dangerouslySetInnerHTML={{ __html: data.resolvedNotificationTemplate.content }}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </span>
                         )}
                         {data?.mailTemplateId && String(data.mailTemplateId).trim() !== '' && (
                             <span 
-                                title="Email Template Attached" 
+                                className="diagram-icon-hover-trigger"
                                 style={{ 
                                     color: '#3b82f6', 
                                     display: 'inline-flex', 
                                     alignItems: 'center',
+                                    position: 'relative',
+                                    cursor: 'pointer',
                                     marginLeft: (label || (data?.notificationTemplateId && String(data.notificationTemplateId).trim() !== '')) ? '2px' : '0'
                                 }}
                             >
                                 <i className="fa-solid fa-envelope" style={{ fontSize: '11px' }}></i>
+                                {data.resolvedMailTemplate && (
+                                    <div className="diagram-tooltip-popup">
+                                        <div className="tooltip-header">
+                                            <strong>✉️ {data.resolvedMailTemplate.name}</strong>
+                                        </div>
+                                        <div className="tooltip-body">
+                                            {data.resolvedMailTemplate.title && (
+                                                <div className="tooltip-field">
+                                                    <span className="label">Mail Title (Subject):</span> {data.resolvedMailTemplate.title}
+                                                </div>
+                                            )}
+                                            {data.resolvedMailTemplate.content && (
+                                                <div className="tooltip-field">
+                                                    <span className="label">Content:</span>
+                                                    <div 
+                                                        className="content-preview"
+                                                        dangerouslySetInnerHTML={{ __html: data.resolvedMailTemplate.content }}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </span>
                         )}
                     </div>
@@ -473,6 +524,21 @@ export default function Diagram({
     loading,
     readOnly = false,
 }) {
+    const [mailTemplates, setMailTemplates] = React.useState([]);
+    const [notificationsList, setNotificationsList] = React.useState([]);
+
+    React.useEffect(() => {
+        fetch(`${API_BASE_URL}/api/MailTemplate/GetAll`)
+            .then(res => res.json().catch(() => []))
+            .then(data => setMailTemplates(data || []))
+            .catch(e => console.error("Failed to load MailTemplates in Diagram:", e));
+
+        fetch(`${API_BASE_URL}/api/NotificationTemplate/GetAll`)
+            .then(res => res.json().catch(() => []))
+            .then(data => setNotificationsList(data || []))
+            .catch(e => console.error("Failed to load NotificationTemplates in Diagram:", e));
+    }, []);
+
     const displayNodes = React.useMemo(() => {
         if (!readOnly) return nodes;
         return nodes.map(node => ({
@@ -521,6 +587,9 @@ export default function Diagram({
                 }
             }
 
+            const mailTpl = mailTemplates.find(t => String(t.id || t.Id) === String(edge.data?.mailTemplateId));
+            const notiTpl = notificationsList.find(t => String(t.id || t.Id) === String(edge.data?.notificationTemplateId));
+
             return {
                 ...edge,
                 sourceHandle,
@@ -528,10 +597,20 @@ export default function Diagram({
                 data: {
                     ...edge.data,
                     readOnly: readOnly ? true : edge.data?.readOnly,
+                    resolvedMailTemplate: mailTpl ? {
+                        name: mailTpl.templateName || mailTpl.TemplateName || 'Mail Template',
+                        title: mailTpl.templateMailTitle || mailTpl.TemplateMailTitle || '',
+                        content: mailTpl.templateContent || mailTpl.TemplateContent || ''
+                    } : null,
+                    resolvedNotificationTemplate: notiTpl ? {
+                        name: notiTpl.templateName || notiTpl.TemplateName || 'Notification Template',
+                        title: notiTpl.title || notiTpl.Title || '',
+                        content: notiTpl.content || notiTpl.Content || ''
+                    } : null,
                 },
             };
         });
-    }, [edges, nodes, readOnly]);
+    }, [edges, nodes, readOnly, mailTemplates, notificationsList]);
 
     return (
         <div

@@ -4456,6 +4456,7 @@
                 isExitTransition: !!x.isExitTransition,
                 userDecisionLabel: x.userDecisionLabel || "",
                 mailTemplateName: x.mailTemplateName || "",
+                notificationTemplateName: x.notificationTemplateName || "",
                 conditionJson: x.conditionJson || {},
                 buttonPlacement: x.buttonPlacement || transitionData.buttonPlacement || "footer",
                 buttonGroupName: x.buttonGroupName || transitionData.buttonGroupName || "",
@@ -4477,8 +4478,9 @@
                     levelNo: x.levelNo,
                     flowType: x.flowType || "Both",
                     allowLoop: !!x.allowLoop,
-                     loopGroup: x.loopGroup || "",
+                    loopGroup: x.loopGroup || "",
                     mailTemplateName: x.mailTemplateName || "",
+                    notificationTemplateName: x.notificationTemplateName || "",
                      x: x.x,
                     y: x.y
              }

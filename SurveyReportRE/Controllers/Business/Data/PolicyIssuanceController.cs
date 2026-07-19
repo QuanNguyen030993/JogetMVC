@@ -209,9 +209,9 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         long? piCount = PolicyIssuanceData.Count;
         SignalRResult result = new SignalRResult
         {
-            status = "saving ...",
-            tabName = _messageSettings.OverviewMessageLoading.Title,
-            subTabContent = _messageSettings.OverviewMessageLoading.Content,
+            status = "Preparing policy issuance creation...",
+            tabName = "Policy Issuance Creation",
+            subTabContent = "Preparing policy issuance data...",
             data = PolicyIssuanceData,
             progressvalue = 0,
             type = "inprogress"
@@ -317,10 +317,10 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
                 //quotationComplete = quotationCount ?? 0 / i; //Pending at ajax
                 result = new SignalRResult
             {
-                status = "saving ...",
+                status = "Creating policy issuances...",
                 data = PolicyIssuanceData,
-                tabName = _messageSettings.OverviewMessageLoading.Title,
-                subTabContent = _messageSettings.OverviewMessageLoading.Content,
+                tabName = "Policy Issuance Creation",
+                subTabContent = "Creating the requested policy issuance records...",
                 progressvalue = 75,//quotationComplete,
                 type = "inprogress"
             };
@@ -331,10 +331,10 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
             {
                 result = new SignalRResult
                 {
-                    status = "saving ...",
+                    status = "Policy issuance creation failed.",
                     data = PolicyIssuanceData,
-                    tabName = _messageSettings.OverviewMessageLoading.Title,
-                    subTabContent = _messageSettings.OverviewMessageLoading.Content,
+                    tabName = "Policy Issuance Creation",
+                    subTabContent = "Unable to create policy issuances because the policy issuance workflow was not found.",
                     progressvalue = 100,//quotationComplete,
                     type = "error"
                 };
@@ -348,10 +348,10 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         }
         result = new SignalRResult
         {
-            status = "",
+            status = "Policy issuance creation completed.",
             data = PolicyIssuanceData,
-            tabName = _messageSettings.OverviewMessageLoading.Title,
-            subTabContent = _messageSettings.OverviewMessageLoading.Content,
+            tabName = "Policy Issuance Creation",
+            subTabContent = "The policy issuance records were created successfully.",
             progressvalue = 100,
             type = "complete"
         };
@@ -835,6 +835,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
                 SequenceNo = definition.SequenceNo,
                 Checkpoint = definition.Checkpoint ?? "",
                 NeedToCheck = definition.NeedToCheck ?? "",
+                Result = "review",
                 LineId = lineId,
                 ProductId = productId,
                 RowOrder = definition.RowOrder,

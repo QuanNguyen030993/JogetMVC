@@ -10,6 +10,7 @@ using System.Net;
 using ERPCore.Models.Base;
 using ERPCore.Models.Migration.Config;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using ERPCore.Models.Business.Migration.Config;
 using ERPCore.Models.Migration.Business.HumanResource;
 using ERPCore.Models.Request;
@@ -52,6 +53,7 @@ public class QuotationController : BaseControllerApi<Quotation>
     private readonly IBaseRepository<StepsWorkflow> _stepsWorkflowRepository;
     private readonly IBaseRepository<Document> _documentRepository;
     private readonly IBaseRepository<Notification> _notificationRepository;
+    private readonly IBaseRepository<NotificationTemplate> _notificationTemplateRepository;
     private readonly IBaseRepository<EnumData> _enumDataRepository;
     private readonly IBaseRepository<Product> _productRepository;
     private readonly IBaseRepository<Line> _lineRepository;
@@ -105,6 +107,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         _stepsWorkflowRepository = new BaseRepository<StepsWorkflow>(configuration, _httpContextAccessor);
         _documentRepository = new BaseRepository<Document>(configuration, _httpContextAccessor);
         _notificationRepository = new BaseRepository<Notification>(configuration, _httpContextAccessor);
+        _notificationTemplateRepository = new BaseRepository<NotificationTemplate>(configuration, _httpContextAccessor);
         _enumDataRepository = new BaseRepository<EnumData>(configuration, _httpContextAccessor);
         _productRepository = new BaseRepository<Product>(configuration, _httpContextAccessor);
         _lineRepository = new BaseRepository<Line>(configuration, _httpContextAccessor);
@@ -472,9 +475,9 @@ public class QuotationController : BaseControllerApi<Quotation>
 
             SignalRResult result = new SignalRResult
             {
-                status = "saving ...",
-                tabName = _messageSettings.OverviewMessageLoading.Title,
-                subTabContent = _messageSettings.OverviewMessageLoading.Content,
+                status = "Preparing quotation creation...",
+                tabName = "Quotation Creation",
+                subTabContent = "Preparing quotation data...",
                 data = quotationData,
                 progressvalue = 0,
                 type = "inprogress"
@@ -537,9 +540,9 @@ public class QuotationController : BaseControllerApi<Quotation>
                         fileComplete = filesCount / i; // Pending at ajax
                         result = new SignalRResult
                         {
-                            status = "saving ...",
-                            tabName = _messageSettings.OverviewMessageLoading.Title,
-                            subTabContent = _messageSettings.OverviewMessageLoading.Content,
+                            status = "Creating quotations...",
+                            tabName = "Quotation Creation",
+                            subTabContent = "Creating quotation records from the uploaded files...",
                             data = quotationData,
                             progressvalue = 75,//fileComplete,
                             type = "inprogress"
@@ -592,10 +595,10 @@ public class QuotationController : BaseControllerApi<Quotation>
                         quotationComplete = quotationCount ?? 0 / i; //Pending at ajax
                         result = new SignalRResult
                         {
-                            status = "saving ...",
+                            status = "Creating quotations...",
                             data = quotationData,
-                            tabName = _messageSettings.OverviewMessageLoading.Title,
-                            subTabContent = _messageSettings.OverviewMessageLoading.Content,
+                            tabName = "Quotation Creation",
+                            subTabContent = "Creating the requested quotation records...",
                             progressvalue = 75,//quotationComplete,
                             type = "inprogress"
                         };
@@ -605,10 +608,10 @@ public class QuotationController : BaseControllerApi<Quotation>
                     {
                         result = new SignalRResult
                         {
-                            status = "saving ...",
+                            status = "Quotation creation failed.",
                             data = quotationData,
-                            tabName = _messageSettings.OverviewMessageLoading.Title,
-                            subTabContent = _messageSettings.OverviewMessageLoading.Content,
+                            tabName = "Quotation Creation",
+                            subTabContent = "Unable to create quotations because the quotation workflow was not found.",
                             progressvalue = 100,//quotationComplete,
                             type = "error"
                         };
@@ -619,10 +622,10 @@ public class QuotationController : BaseControllerApi<Quotation>
             }
             result = new SignalRResult
             {
-                status = "",
+                status = "Quotation creation completed.",
                 data = quotationData,
-                tabName = _messageSettings.OverviewMessageLoading.Title,
-                subTabContent = _messageSettings.OverviewMessageLoading.Content,
+                tabName = "Quotation Creation",
+                subTabContent = "The quotation records were created successfully.",
                 progressvalue = 100,
                 type = "complete"
             };
@@ -635,10 +638,10 @@ public class QuotationController : BaseControllerApi<Quotation>
             SignalRResult result = new SignalRResult();
             result = new SignalRResult
             {
-                status = "",
+                status = "Quotation creation failed.",
                 data = null,
-                tabName = _messageSettings.OverviewMessageLoading.Title,
-                subTabContent = _messageSettings.OverviewMessageLoading.Content,
+                tabName = "Quotation Creation",
+                subTabContent = "An unexpected error occurred while creating the quotation records.",
                 progressvalue = 100,
                 type = "error"
             };
@@ -880,12 +883,16 @@ public class QuotationController : BaseControllerApi<Quotation>
             long? initialNotificationTypeId = await NotificationTypeResolver.ResolveIdAsync(
                 _enumDataRepository,
                 NotificationTypeKeys.Initial);
+            string notificationTitle = await ResolveRouteTransitionNotificationTitleAsync(
+                workflowDefinition,
+                stepsWorkflow,
+                quotation);
             string picsStr = picS.PICMain.GetType().GetProperty(stepsWorkflow?.ToNodeId ?? "")?.GetValue(picS.PICMain ?? new PICAttributes()).ToString() ?? "";
             foreach (var memberName in picsStr.Split(","))
             {
                 NotificationRequest notification = new NotificationRequest();
                 Notification Notification = new Notification();
-                Notification.Title = string.Format(_messageSettings.InitializeMessage.Title, quotation.QuotationCode);
+                Notification.Title = notificationTitle;
                 Notification.Message = quotation?.Subject ?? string.Format(_messageSettings.InitializeMessage.Content, "");
                 Notification.IsRead = false;
                 Notification.Resource = $"{memberName}_{stepsWorkflow.ToNodeId}";
@@ -902,6 +909,95 @@ public class QuotationController : BaseControllerApi<Quotation>
                 Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
                 await NotificationController.Notify(notification);
             }
+        }
+    }
+
+    private async Task<string> ResolveRouteTransitionNotificationTitleAsync(
+        WorkflowDefinition workflowDefinition,
+        StepsWorkflow stepsWorkflow,
+        Quotation quotation)
+    {
+        string fallbackTitle = $"Quotation {quotation.QuotationCode} created";
+
+        JObject? workflowPayload = TryReadWorkflowPayload(workflowDefinition.WorkflowNodes);
+        JArray? transitions = workflowPayload?
+            .GetValue("workflowTransitions", StringComparison.OrdinalIgnoreCase) as JArray;
+        JObject? routeTransition = transitions?
+            .OfType<JObject>()
+            .FirstOrDefault(transition =>
+                string.Equals(
+                    transition.GetValue("fromNodeId", StringComparison.OrdinalIgnoreCase)?.ToString(),
+                    stepsWorkflow.FromNodeId,
+                    StringComparison.OrdinalIgnoreCase)
+                && string.Equals(
+                    transition.GetValue("toNodeId", StringComparison.OrdinalIgnoreCase)?.ToString(),
+                    stepsWorkflow.ToNodeId,
+                    StringComparison.OrdinalIgnoreCase)
+                && (string.IsNullOrWhiteSpace(stepsWorkflow.ActionCode)
+                    || string.Equals(
+                        transition.GetValue("actionCode", StringComparison.OrdinalIgnoreCase)?.ToString(),
+                        stepsWorkflow.ActionCode,
+                        StringComparison.OrdinalIgnoreCase)));
+
+        string templateName = routeTransition?
+            .GetValue("notificationTemplateName", StringComparison.OrdinalIgnoreCase)?
+            .ToString()
+            .Trim() ?? "";
+        if (string.IsNullOrWhiteSpace(templateName))
+        {
+            _logger.LogWarning(
+                "No notification template is configured for quotation route transition {FromNodeId} -> {ToNodeId} ({ActionCode}).",
+                stepsWorkflow.FromNodeId,
+                stepsWorkflow.ToNodeId,
+                stepsWorkflow.ActionCode);
+            return fallbackTitle;
+        }
+
+        NotificationTemplate? notificationTemplate = await _notificationTemplateRepository.GetSingleObject(
+            template => template.TemplateName == templateName);
+        if (notificationTemplate == null || !(notificationTemplate.IsActive ?? false))
+        {
+            _logger.LogWarning(
+                "Notification template {TemplateName} for quotation route transition was not found or is inactive.",
+                templateName);
+            return fallbackTitle;
+        }
+
+        Dictionary<string, object> templateData = new()
+        {
+            ["RecordId"] = quotation.Id,
+            ["RecordCode"] = quotation.QuotationCode ?? "",
+            ["QuotationId"] = quotation.Id,
+            ["QuotationCode"] = quotation.QuotationCode ?? "",
+            ["WorkflowStatus"] = quotation.WorkflowStatus ?? "",
+            ["FromNodeId"] = stepsWorkflow.FromNodeId ?? "",
+            ["ToNodeId"] = stepsWorkflow.ToNodeId ?? "",
+            ["ActionCode"] = stepsWorkflow.ActionCode ?? ""
+        };
+
+        string title = MailUtil.TitleContentHandle(notificationTemplate.Title, templateData).Trim();
+        return string.IsNullOrWhiteSpace(title) ? fallbackTitle : title;
+    }
+
+    private static JObject? TryReadWorkflowPayload(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+
+        try
+        {
+            JToken token = JToken.Parse(value);
+            while (token.Type == JTokenType.String)
+            {
+                string nestedValue = token.Value<string>() ?? "";
+                if (string.IsNullOrWhiteSpace(nestedValue)) return null;
+                token = JToken.Parse(nestedValue);
+            }
+
+            return token as JObject;
+        }
+        catch (JsonException)
+        {
+            return null;
         }
     }
 

@@ -5704,3 +5704,41 @@ textarea {
         border-color: #3b82f6 !important;
         box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
     }
+
+/* Keep long application menus inside the viewport. */
+.main-sidebar > .sidebar {
+    box-sizing: border-box;
+    height: calc(100vh - 50px) !important;
+    max-height: calc(100vh - 50px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+}
+
+/* Neutralize the old inline height assigned to .tf-tree. */
+.main-sidebar > .sidebar > .sidebar-menu.tree {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+.main-sidebar > .sidebar::-webkit-scrollbar {
+    width: 7px;
+}
+
+.main-sidebar > .sidebar::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, .55);
+    border-radius: 999px;
+}
+
+.main-sidebar > .sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+@media (max-width: 767px) {
+    .main-sidebar > .sidebar {
+        height: calc(100vh - 100px) !important;
+        max-height: calc(100vh - 100px);
+    }
+}

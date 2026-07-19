@@ -13,6 +13,25 @@
         padding-left: 18px;
         padding-right: 18px;
     }
+
+    .pm-checklist-html {
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .pm-checklist-html p {
+        margin: 0 0 6px;
+    }
+
+    .pm-checklist-html p:last-child {
+        margin-bottom: 0;
+    }
+
+    .pm-checklist-html ul,
+    .pm-checklist-html ol {
+        margin: 0;
+        padding-left: 22px;
+    }
 </style>
 <div id="gridPA_@policyIssuanceId"></div>
 
@@ -113,7 +132,11 @@
                                         dataField: "pmCheck",
                                         caption: "PM Check",
                                         dataType: "boolean",
-                                        width: 110
+                                        width: 110,
+                                        setCellValue: function (newData, value) {
+                                            newData.pmCheck = !!value;
+                                            newData.result = value ? "checked" : "review";
+                                        }
                                     },
                                     {
                                         dataField: "checkpoint",
@@ -125,13 +148,23 @@
                                         dataField: "needToCheck",
                                         caption: "Need To Check",
                                         minWidth: 280,
-                                        allowEditing: false
+                                        allowEditing: false,
+                                        cellTemplate: function (container, options) {
+                                            $("<div>")
+                                                .addClass("pm-checklist-html")
+                                                .html(options.value || "")
+                                                .appendTo(container);
+                                        }
                                     },
                                     {
                                         dataField: "result",
                                         caption: "Result",
-                                        dataType: "boolean",
-                                        width: 100
+                                        dataType: "string",
+                                        width: 100,
+                                        allowEditing: false,
+                                        calculateCellValue: function (rowData) {
+                                            return rowData.pmCheck ? "checked" : "review";
+                                        }
                                     }
                                 ]
                             });
@@ -164,45 +197,59 @@
     //                     var items = [ `#${acceptButtonId}`, `#${declinedButtonId}`];
     //                                 var itemsDelay = [ acceptButtonId , acceptStatusId, declinedButtonId, declinedStatusId,'', ''];
 
-    $(`#@PIViewIdHelper.Form(dept, policyIssuanceId)`).dxForm({
-        dataSource: makeBasicDataSource(that2, true),
-         items: [
-               
-          {
-              itemType: "group",
-              name: "decision@(dept)Group",
-              cssClass: "workflow-decision-group pi-decision-group-@(dept)",
-              elementAttr: {
-                  id: "pi-decision-group-@(dept)-@(policyIssuanceId)",
-                  "data-form-group-name": "decision@(dept)Group",
-                  "data-route-dept": "@dept"
-              },
-              caption: "@dept Review",
-              colCount: 2,
-              items: [
-            decisionField(`@PIViewIdHelper.Form(dept, policyIssuanceId)`, "@dept",`AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,`Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,null,null  )
-        ]}
+    $.ajax({
+        url: `/api/PolicyIssuance/GetSingle/@policyIssuanceId`,
+        method: "GET"
+    }).done(function (formData) {
+        $(`#@PIViewIdHelper.Form(dept, policyIssuanceId)`).dxForm({
+            formData: formData || {},
+            items: [
+                {
+                    itemType: "group",
+                    name: "decision@(dept)Group",
+                    cssClass: "workflow-decision-group pi-decision-group-@(dept)",
+                    elementAttr: {
+                        id: "pi-decision-group-@(dept)-@(policyIssuanceId)",
+                        "data-form-group-name": "decision@(dept)Group",
+                        "data-route-dept": "@dept"
+                    },
+                    caption: "@dept Review",
+                    colCount: 2,
+                    items: [
+                        decisionField(
+                            `@PIViewIdHelper.Form(dept, policyIssuanceId)`,
+                            "@dept",
+                            `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,
+                            `Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,
+                            null,
+                            null)
+                    ]
+                }
+            ]
+        });
 
+        viewFieldAdjust("@PIViewIdHelper.Form(dept, policyIssuanceId)");
 
-                  
+        // Decision/submit handlers depend on formData, so initialize them only
+        // after the Policy Issuance record has been loaded and bound to dxForm.
+        delayAcceptStatusV2(mainFields, thisObject, ...itemsDelay);
 
-
-                    ]});
-       
-           viewFieldAdjust("@PIViewIdHelper.Form(dept, policyIssuanceId)");
-
-    delayAcceptStatusV2(mainFields,thisObject, ...itemsDelay);
-    setTimeout(() => {
-        var picJson = PIC_JSON || "{}";
-        var picMap = parsePicMap(picJson);
-        var picVal = picMap["@dept"] || "";
-        var sectionId = `#pi-sec_@(dept)_@(policyIssuanceId)`;
-        if (!picVal) {
-            $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
-        } else {
-            $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
-        }
-    }, 100);
+        setTimeout(() => {
+            var picJson = formData?.pic || PIC_JSON || "{}";
+            var picMap = parsePicMap(picJson);
+            var picVal = picMap["@dept"] || "";
+            var sectionId = `#pi-sec_@(dept)_@(policyIssuanceId)`;
+            if (!picVal) {
+                $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
+            } else {
+                $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
+            }
+        }, 100);
+    }).fail(function (xhr) {
+        appErrorHandling(
+            `Cannot load Policy Issuance @policyIssuanceId before rendering PM decision buttons.`,
+            xhr);
+    });
 
     })
 </script>

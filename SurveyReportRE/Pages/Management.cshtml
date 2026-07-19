@@ -1004,14 +1004,17 @@
             startX = event.clientX;
             startScrollLeft = scroller.scrollLeft;
             dragMoved = false;
-            scroller.setPointerCapture?.(pointerId);
-            $scroller.addClass("is-dragging");
         });
 
         scroller.addEventListener("pointermove", function (event) {
             if (pointerId !== event.pointerId) return;
             const deltaX = event.clientX - startX;
-            if (Math.abs(deltaX) > 4) dragMoved = true;
+            if (!dragMoved && Math.abs(deltaX) > 4) {
+                dragMoved = true;
+                scroller.setPointerCapture?.(pointerId);
+                $scroller.addClass("is-dragging");
+            }
+            if (!dragMoved) return;
             scroller.scrollLeft = startScrollLeft - deltaX;
             updateOverflowIndicator();
         });
@@ -1022,7 +1025,9 @@
                 $scroller.data("suppressFilterClick", true);
                 setTimeout(() => $scroller.removeData("suppressFilterClick"), 80);
             }
-            scroller.releasePointerCapture?.(pointerId);
+            if (scroller.hasPointerCapture?.(pointerId)) {
+                scroller.releasePointerCapture(pointerId);
+            }
             pointerId = null;
             $scroller.removeClass("is-dragging");
             updateOverflowIndicator();
@@ -1358,17 +1363,20 @@
                // minHeight: 420,
                // maxWidth: 1100,
                // maxHeight: 700,
-               height: "70%",
-               width: "70%",
+               width: function () { return Math.min(1200, window.innerWidth * 0.92); },
+               height: function () { return Math.min(760, window.innerHeight * 0.9); },
+               minWidth: Math.min(320, window.innerWidth * 0.92),
+               minHeight: Math.min(320, window.innerHeight * 0.9),
                showTitle: false,
                showCloseButton: true,
                closeOnOutsideClick: true,
                dragEnabled: false,
+               wrapperAttr: { class: "module-launcher-popup" },
                contentTemplate: function (container) {
                    const html = `
     <div class="launcher-wrap">
 
-        <h2>Select action</h2>
+        <h2 class="launcher-title">Select action</h2>
 
         <div class="launcher-grid">
 
@@ -2295,7 +2303,7 @@
     .launcher-wrap {
         width: 100%;
         min-height: 100%;
-        padding: 50px;
+        padding: clamp(16px, 4vh, 50px) clamp(14px, 3vw, 50px);
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -2311,36 +2319,30 @@
     .launcher-title {
         width: 100%;
         text-align: center;
-        font-size: 32px;
+        font-size: clamp(22px, 3vw, 32px);
         font-weight: 700;
         color: var(--c-273142);
-        margin-bottom: 45px;
+        margin: 0 0 clamp(18px, 4vh, 45px);
     }
 
 
 
     .launcher-grid {
         width: 100%;
-        display: flex;
-        justify-content: center;
+        max-width: 1080px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         align-items: flex-start;
-        gap: 40px;
-        flex-wrap: wrap;
-    }
-
-
-    .launcher-grid {
-        display: flex;
-        gap: 40px;
-        justify-content: center;
+        gap: clamp(12px, 2.5vw, 40px);
     }
 
 
 
     .action-card {
-        width: 320px;
-        height: 430px;
-        border-radius: 28px;
+        width: 100%;
+        min-width: 0;
+        height: auto;
+        border-radius: clamp(14px, 2vw, 28px);
         overflow: hidden;
         background: var(--c-ffffff);
         cursor: pointer;
@@ -2358,7 +2360,7 @@
 
 
     .card-image {
-        height: 220px;
+        height: clamp(100px, 20vh, 220px);
         overflow: hidden;
     }
 
@@ -2374,23 +2376,25 @@
 
 
     .card-body {
-        height: 210px;
+        min-height: clamp(122px, 22vh, 210px);
+        height: auto;
         text-align: center;
-        padding: 20px;
+        padding: clamp(12px, 1.6vw, 20px);
+        box-sizing: border-box;
         background: linear-gradient( 180deg, var(--c-ffffff), var(--c-eef5ff) );
     }
 
 
 
     .card-icon {
-        width: 72px;
-        height: 72px;
-        margin: -55px auto 15px;
+        width: clamp(48px, 6vw, 72px);
+        height: clamp(48px, 6vw, 72px);
+        margin: clamp(-55px, -5vw, -36px) auto clamp(8px, 1.2vw, 15px);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 34px;
+        font-size: clamp(24px, 3vw, 34px);
         /* nổi trên nền trắng */
         background: linear-gradient( 145deg, var(--c-ffffff), var(--c-eaf2ff) );
         border: 1px solid var(--c-rgba-255-255-255-8);
@@ -2402,7 +2406,7 @@
 
 
     .card-title {
-        font-size: 22px;
+        font-size: clamp(14px, 1.7vw, 22px);
         font-weight: 700;
         color: var(--c-202b3c);
     }
@@ -2411,9 +2415,30 @@
 
 
     .card-desc {
-        margin-top: 12px;
+        margin-top: clamp(6px, 1vw, 12px);
         color: var(--c-64748b);
         line-height: 1.5;
+        font-size: clamp(11px, 1.15vw, 16px);
+    }
+
+    .module-launcher-popup .dx-popup-content {
+        padding: 0 !important;
+        overflow: auto !important;
+    }
+
+    .module-launcher-popup .dx-closebutton {
+        z-index: 3;
+    }
+
+    @@media (max-width: 520px) {
+        .launcher-grid {
+            grid-template-columns: 1fr;
+            max-width: 320px;
+        }
+
+        .card-image {
+            height: 140px;
+        }
     }
 
 
