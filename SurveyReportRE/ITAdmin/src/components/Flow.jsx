@@ -1999,8 +1999,8 @@ function Flow({ id: propId }) {
                     >
                         <option value="">-- Không gửi Email --</option>
                         {mailTemplates.map((item) => (
-                            <option key={item.id} value={item.id}>
-                                {item.title || item.subject || item.name || `Template ${item.id}`}
+                            <option key={item.id || item.Id} value={item.id || item.Id}>
+                                {item.templateName || item.TemplateName || item.templateMailTitle || item.TemplateMailTitle || `Template ${item.id || item.Id}`}
                             </option>
                         ))}
                     </select>

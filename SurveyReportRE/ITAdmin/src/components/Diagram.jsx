@@ -245,17 +245,54 @@ const CustomEdge = ({
                     onMouseDown={onCorner3MouseDown}
                 />
             )}
-            {label && (
+            {(label || (data?.notificationTemplateId && String(data.notificationTemplateId).trim() !== '') || (data?.mailTemplateId && String(data.mailTemplateId).trim() !== '')) && (
                 <EdgeLabelRenderer>
                     <div
                         style={{
                             position: 'absolute',
                             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
                             pointerEvents: 'all',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            background: '#ffffff',
+                            padding: '3px 8px',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: '20px',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                            fontSize: '11px',
+                            color: '#334155',
+                            whiteSpace: 'nowrap'
                         }}
-                        className="nodrag nopan"
+                        className="nodrag nopan transition-label-container"
                     >
-                        {label}
+                        {label && <span style={{ fontWeight: '500' }}>{label}</span>}
+                        {data?.notificationTemplateId && String(data.notificationTemplateId).trim() !== '' && (
+                            <span 
+                                title="Notification Template Attached" 
+                                style={{ 
+                                    color: '#f59e0b', 
+                                    display: 'inline-flex', 
+                                    alignItems: 'center',
+                                    marginLeft: label ? '2px' : '0' 
+                                }}
+                            >
+                                <i className="fa-solid fa-bell" style={{ fontSize: '11px' }}></i>
+                            </span>
+                        )}
+                        {data?.mailTemplateId && String(data.mailTemplateId).trim() !== '' && (
+                            <span 
+                                title="Email Template Attached" 
+                                style={{ 
+                                    color: '#3b82f6', 
+                                    display: 'inline-flex', 
+                                    alignItems: 'center',
+                                    marginLeft: (label || (data?.notificationTemplateId && String(data.notificationTemplateId).trim() !== '')) ? '2px' : '0'
+                                }}
+                            >
+                                <i className="fa-solid fa-envelope" style={{ fontSize: '11px' }}></i>
+                            </span>
+                        )}
                     </div>
                 </EdgeLabelRenderer>
             )}

@@ -171,6 +171,19 @@ export default function DatabaseManagement() {
         alert("Đã sao chép Script vào Clipboard! 📋✅");
     };
 
+    const handleDownloadScript = () => {
+        if (!generatedScript) return;
+        const blob = new Blob([generatedScript], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `Database_Script_${new Date().toISOString().slice(0, 10)}.sql`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
     const filteredTablesForSelection = tablesList.filter(t => 
         t.tableName.toLowerCase().includes(searchTableKeyword.toLowerCase())
     );
@@ -211,6 +224,7 @@ export default function DatabaseManagement() {
                     <div style={{ height: "550px", overflow: "hidden" }}>
                         <CustomGrid
                             ref={gridRef}
+                            modelName="DatabaseManagement"
                             columns={gridColumns}
                             apiBaseUrl={API_BASE_URL}
                             showSelectionCheckbox={false}
@@ -369,9 +383,14 @@ export default function DatabaseManagement() {
                         <div className="db-code-preview-panel" style={{ gridColumn: "span 2" }}>
                             <div className="db-panel-header" style={{ marginBottom: "10px", paddingBottom: "10px" }}>
                                 <h3>Văn bản SQL Script (Tạo theo chuẩn SSMS)</h3>
-                                <button className="db-btn db-btn-primary" style={{ padding: "6px 14px", fontSize: "0.8rem" }} onClick={handleCopyScript}>
-                                    📋 Sao chép Script
-                                </button>
+                                <div style={{ display: "flex", gap: "8px" }}>
+                                    <button className="db-btn db-btn-secondary" style={{ padding: "6px 14px", fontSize: "0.8rem", background: "#f8fafc", color: "#0f172a", border: "1px solid #cbd5e1" }} onClick={handleDownloadScript}>
+                                        💾 Tải File SQL
+                                    </button>
+                                    <button className="db-btn db-btn-primary" style={{ padding: "6px 14px", fontSize: "0.8rem" }} onClick={handleCopyScript}>
+                                        📋 Sao chép Script
+                                    </button>
+                                </div>
                             </div>
                             <textarea 
                                 className="db-code-area"

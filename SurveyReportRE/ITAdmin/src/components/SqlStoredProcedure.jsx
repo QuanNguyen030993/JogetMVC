@@ -54,7 +54,7 @@ export default function SqlStoredProcedure() {
         setExecError(null);
         setParamValues({});
         try {
-            const res = await fetch(`${API_BASE_URL}/api/SqlStoredProcedure/GetSingle?id=${procId}`);
+            const res = await fetch(`${API_BASE_URL}/api/SqlStoredProcedure/GetSingle/${procId}`);
             if (res.ok) {
                 const data = await res.json();
                 setProcDetails(data);
@@ -89,14 +89,6 @@ export default function SqlStoredProcedure() {
         setSelectedProc(row);
     };
 
-    const handleParamChange = (name, val) => {
-        setParamValues(prev => ({
-            ...prev,
-            [name]: val
-        }));
-    };
-
-    // Run the stored procedure with parameters
     const executeProc = async () => {
         if (!procDetails) return;
         setExecuting(true);
@@ -256,11 +248,8 @@ export default function SqlStoredProcedure() {
                 <div style={{ height: "400px", overflow: "hidden" }}>
                     <CustomGrid
                         ref={gridRef}
-                        modelName="SqlStoredProcedure"
-                        gridType="System"
                         columns={gridColumns}
                         apiBaseUrl={API_BASE_URL}
-                        editMode="row"
                         showSelectionCheckbox={false}
                         showCommandsColumn={false}
                         onRowClick={handleGridRowClick}
@@ -298,155 +287,117 @@ export default function SqlStoredProcedure() {
                                         <span>{procDetails.name}</span>
                                     </div>
                                     <div className="sp-meta-item">
-                                        <strong>Số tham số</strong>
-                                        <span>{procDetails.parameters?.length || 0}</span>
-                                    </div>
-                                    <div className="sp-meta-item" style={{ gridColumn: "span 2" }}>
-                                        <strong>Ngày tạo (Database Catalog)</strong>
+                                        <strong>Ngày tạo</strong>
                                         <span>{procDetails.createDate ? new Date(procDetails.createDate).toLocaleString() : "-"}</span>
                                     </div>
                                 </div>
-                                <textarea
+                                <div style={{ fontWeight: "600", fontSize: "0.85rem", color: "#64748b", marginBottom: "6px" }}>
+                                    Đoạn code định nghĩa SQL (syscomments):
+                                </div>
+                                <textarea 
                                     className="sp-code-area"
-                                    value={procDetails.definition || ""}
+                                    value={procDetails.definition || "/* Không tìm thấy định nghĩa SQL */"}
                                     readOnly
-                                    style={{ marginBottom: "15px" }}
+                                    onClick={(e) => e.target.select()}
                                 />
-
-                                <div className="sp-detail-title" style={{ fontSize: "0.95rem", borderTop: "1px solid #f1f5f9", paddingTop: "15px", marginTop: "15px" }}>
-                                    <span>💡 Script mẫu hỗ trợ</span>
-                                </div>
-                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                                    <div>
-                                        <div style={{ fontSize: "0.75rem", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>ALTER TEMPLATE</div>
-                                        <textarea
-                                            className="sp-code-area"
-                                            value={getAlterScript()}
-                                            readOnly
-                                            style={{ height: "120px", fontSize: "0.75rem" }}
-                                            onClick={(e) => e.target.select()}
-                                        />
-                                    </div>
-                                    <div>
-                                        <div style={{ fontSize: "0.75rem", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>EXEC TEMPLATE</div>
-                                        <textarea
-                                            className="sp-code-area"
-                                            value={getExecScript()}
-                                            readOnly
-                                            style={{ height: "120px", fontSize: "0.75rem" }}
-                                            onClick={(e) => e.target.select()}
-                                        />
-                                    </div>
-                                </div>
                             </>
                         ) : (
-                            <div style={{ color: "#ef4444" }}>Không tìm thấy thông tin Stored Procedure.</div>
+                            <div style={{ padding: "40px", textAlign: "center", color: "#ef4444" }}>Lỗi tải thông tin chi tiết.</div>
                         )}
                     </div>
 
-                    {/* Right: Parameter values input and run panel */}
+                    {/* Right: Parameter settings and Execution testing */}
                     <div className="sp-detail-panel">
                         <div className="sp-detail-title">
-                            <span>🚀 Chạy thử (Execute Stored)</span>
+                            <span>⚡ Thực thi Stored Procedure</span>
                         </div>
 
-                        {loadingDetails ? (
-                            <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>Đang tải tham số...</div>
-                        ) : procDetails ? (
-                            <div style={{ display: "flex", flexDirection: "column", height: "100%", justifyContent: "space-between" }}>
-                                <div style={{ overflowY: "auto", maxHeight: "350px", paddingRight: "5px" }}>
-                                    {procDetails.parameters && procDetails.parameters.length > 0 ? (
-                                        procDetails.parameters.map((p) => (
-                                            <div key={p.name} className="sp-param-group">
-                                                <label className="sp-param-label">
-                                                    {p.name} {p.isOutput && <span style={{ color: "#ef4444", fontSize: "0.75rem" }}>(OUTPUT)</span>}
+                        {procDetails && (
+                            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                                <div className="sp-params-title">Tham Số Đầu Vào:</div>
+                                <div className="sp-params-list">
+                                    {(procDetails.parameters || []).length > 0 ? (
+                                        (procDetails.parameters || []).map(param => (
+                                            <div key={param.parameterId} className="sp-param-item">
+                                                <label>
+                                                    <code>{param.name}</code>
+                                                    <span style={{ fontSize: "0.75rem", color: "#64748b", marginLeft: "4px" }}>({param.dataType})</span>
                                                 </label>
-                                                <div className="sp-param-input-wrapper">
-                                                    <input
-                                                        type="text"
-                                                        className="sp-param-input"
-                                                        placeholder={`Nhập giá trị cho ${p.name}`}
-                                                        value={paramValues[p.name] ?? ""}
-                                                        onChange={(e) => handleParamChange(p.name, e.target.value)}
-                                                    />
-                                                    <span className="sp-param-type">{p.dataType}</span>
-                                                </div>
+                                                <input 
+                                                    type="text"
+                                                    className="sp-param-input"
+                                                    value={paramValues[param.name] || ""}
+                                                    placeholder={param.isOutput ? "Output Parameter" : "Nhập giá trị..."}
+                                                    disabled={param.isOutput}
+                                                    onChange={(e) => setParamValues({ ...paramValues, [param.name]: e.target.value })}
+                                                />
                                             </div>
                                         ))
                                     ) : (
-                                        <div style={{ color: "#64748b", padding: "20px 0", fontSize: "0.9rem", fontStyle: "italic" }}>
-                                            Stored Procedure này không yêu cầu tham số.
+                                        <div style={{ padding: "10px 0", color: "#94a3b8", fontSize: "0.85rem", fontStyle: "italic" }}>
+                                            Stored Procedure này không nhận tham số đầu vào.
                                         </div>
                                     )}
                                 </div>
 
-                                <div style={{ marginTop: "20px", borderTop: "1px solid #f1f5f9", paddingTop: "15px" }}>
-                                    <button 
-                                        className="sp-btn sp-btn-success" 
-                                        style={{ width: "100%", justifyContent: "center" }}
-                                        onClick={executeProc}
-                                        disabled={executing}
-                                    >
-                                        {executing ? "🔄 Đang chạy..." : "⚡ Thực thi Stored Procedure"}
-                                    </button>
-                                </div>
-                            </div>
-                        ) : (
-                            <div style={{ color: "#ef4444" }}>Không tìm thấy thông tin Stored Procedure.</div>
-                        )}
-                    </div>
+                                <div className="sp-script-title">Gợi Ý Câu Lệnh Gọi (EXEC Script):</div>
+                                <textarea 
+                                    className="sp-script-area"
+                                    value={getExecScript()}
+                                    readOnly
+                                    onClick={(e) => e.target.select()}
+                                />
 
-                    {/* Bottom: Results view */}
-                    <div className="sp-results-panel">
-                        <div className="sp-detail-title">
-                            <span>📊 Kết quả thực thi</span>
-                        </div>
+                                <button 
+                                    className="sp-btn sp-btn-primary" 
+                                    style={{ marginTop: "12px", width: "100%", justifyContent: "center" }}
+                                    onClick={executeProc}
+                                    disabled={executing}
+                                >
+                                    {executing ? "⏳ Đang thực thi..." : "⚡ Chạy Stored Procedure"}
+                                </button>
 
-                        {execError && (
-                            <div style={{ background: "#fef2f2", border: "1px solid #fee2e2", color: "#ef4444", padding: "12px", borderRadius: "8px", fontSize: "0.875rem", fontFamily: "monospace" }}>
-                                ⚠️ Error: {execError}
-                            </div>
-                        )}
+                                <div className="sp-params-title" style={{ marginTop: "16px" }}>Kết Quả Chạy (Results):</div>
+                                <div className="sp-results-panel">
+                                    {execError && (
+                                        <div style={{ color: "#ef4444", fontSize: "0.85rem", whiteSpace: "pre-wrap" }}>
+                                            Lỗi: {execError}
+                                        </div>
+                                    )}
 
-                        {execResult && (
-                            <div>
-                                <div style={{ marginBottom: "10px", fontSize: "0.85rem", color: "#64748b" }}>
-                                    Trả về {execResult.length} dòng dữ liệu.
-                                </div>
-                                <div className="sp-table-wrapper">
-                                    {execResult.length > 0 ? (
-                                        <table className="sp-results-table">
-                                            <thead>
-                                                <tr>
-                                                    {Object.keys(execResult[0]).map((col) => (
-                                                        <th key={col}>{col}</th>
-                                                    ))}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {execResult.map((row, idx) => (
-                                                    <tr key={idx}>
-                                                        {Object.keys(row).map((col, cIdx) => (
-                                                            <td key={cIdx}>
-                                                                {row[col] !== null ? String(row[col]) : <em style={{ color: "#cbd5e1" }}>NULL</em>}
-                                                            </td>
-                                                        ))}
+                                    {execResult && (
+                                        execResult.length > 0 ? (
+                                            <table className="sp-results-table">
+                                                <thead>
+                                                    <tr>
+                                                        {Object.keys(execResult[0]).map(k => <th key={k}>{k}</th>)}
                                                     </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    ) : (
+                                                </thead>
+                                                <tbody>
+                                                    {execResult.map((row, rIdx) => (
+                                                        <tr key={rIdx}>
+                                                            {Object.keys(row).map((col, cIdx) => (
+                                                                <td key={cIdx}>
+                                                                    {row[col] !== null ? String(row[col]) : <em style={{ color: "#cbd5e1" }}>NULL</em>}
+                                                                </td>
+                                                            ))}
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        ) : (
+                                            <div className="sp-empty-results">
+                                                Thực thi thành công. Không có dòng dữ liệu nào được trả về (hoặc Query không phải là SELECT).
+                                            </div>
+                                        )
+                                    )}
+
+                                    {!execResult && !execError && (
                                         <div className="sp-empty-results">
-                                            Thực thi thành công. Không có dòng dữ liệu nào được trả về (hoặc Query không phải là SELECT).
+                                            Nhấp vào nút "Thực thi Stored Procedure" ở trên để xem kết quả tại đây.
                                         </div>
                                     )}
                                 </div>
-                            </div>
-                        )}
-
-                        {!execResult && !execError && (
-                            <div className="sp-empty-results">
-                                Nhấp vào nút "Thực thi Stored Procedure" ở trên để xem kết quả tại đây.
                             </div>
                         )}
                     </div>
