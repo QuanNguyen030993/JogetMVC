@@ -1,0 +1,18 @@
+@page "{pageNum:int?}"
+@model ChecklistDefinition_FormModel
+
+<script>
+    $(function () {
+        var id = @Convert.ToInt32(ViewData["Id"]);
+        var formConfig = new MFormOption();
+        formConfig.originModelName = "@ChecklistDefinition_FormModel.ModelName";
+        formConfig.formElementName = "@ChecklistDefinition_FormModel.ModelName";
+        formConfig.schemeBasedOn = "@ChecklistDefinition_FormModel.SchemeModelName";
+        formConfig.allowFormActionButton = true;
+        formConfig.colCount = 1;
+
+        new MForm(id, null, formConfig);
+    });
+</script>
+
+<div id="form_@(ChecklistDefinition_FormModel.ModelName)_@Convert.ToInt32(ViewData["Id"])"></div>

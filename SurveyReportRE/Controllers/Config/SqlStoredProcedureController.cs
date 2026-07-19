@@ -1,37 +1,36 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using ERPCore.Models.Migration.Config;
 using ERPCore.Models.Request;
-using Dapper;
+using ERPCore.Controllers.Base;
 using Microsoft.AspNetCore.Http;
 using ERPCore.Common;
+using System.Net.Http;
+using System.Net;
 
 namespace ERPCore.Controllers.Config
 {
-    [Route("api/[controller]/[action]")]
     [ApiController]
-    public class SqlStoredProcedureController : ControllerBase
+    [Route("api/[controller]/[action]")]
+    public class SqlStoredProcedureController : BaseControllerApi<SqlStoredProcedure>
     {
+        private readonly IBaseRepository<SqlStoredProcedure> _BaseRepository;
         private readonly IConfiguration _configuration;
-        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public SqlStoredProcedureController(IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
+        public SqlStoredProcedureController(
+            IBaseRepository<SqlStoredProcedure> BaseRepository, 
+            IConfiguration configuration, 
+            IHttpContextAccessor httpContextAccessor) : base(BaseRepository, httpContextAccessor)
         {
+            _BaseRepository = BaseRepository;
             _configuration = configuration;
-            _httpContextAccessor = httpContextAccessor;
-        }
-
-        private string GetConnectionString()
-        {
-            string profile = _httpContextAccessor.HttpContext?.Session.GetString("CurrentDbProfile") ?? "Default";
-            var rawConn = _configuration.GetConnectionString(profile) ?? _configuration.GetConnectionString(ERPCore.ControllerUtil.ControllerUtil.tmivEnvironment + "Connection");
-            return ERPCore.ControllerUtil.ControllerUtil.ParseConnectionString(rawConn, _configuration);
         }
 
         [HttpGet]
@@ -39,39 +38,37 @@ namespace ERPCore.Controllers.Config
         {
             try
             {
-                using (var connection = new SqlConnection(GetConnectionString()))
+                string sql = @"
+                    SELECT DISTINCT
+                        o.id AS Id,
+                        o.name AS Name,
+                        o.crdate AS CreateDate,
+                        (SELECT COUNT(*) FROM sys.parameters param WHERE param.object_id = o.id) AS ParamCount
+                    FROM sysobjects o
+                    LEFT JOIN syscomments c ON c.id = o.id
+                    WHERE o.type = 'P' AND o.name NOT LIKE 'sp_%'";
+
+                var parameters = new Dictionary<string, object>();
+                if (!string.IsNullOrEmpty(searchText))
                 {
-                    string sql = @"
-                        SELECT DISTINCT
-                            o.id AS Id,
-                            o.name AS Name,
-                            o.crdate AS CreateDate,
-                            (SELECT COUNT(*) FROM sys.parameters param WHERE param.object_id = o.id) AS ParamCount
-                        FROM sysobjects o
-                        LEFT JOIN syscomments c ON c.id = o.id
-                        WHERE o.type = 'P' AND o.name NOT LIKE 'sp_%'";
-
-                    var parameters = new Dictionary<string, object>();
-                    if (!string.IsNullOrEmpty(searchText))
-                    {
-                        sql += " AND c.text LIKE @SearchText";
-                        parameters.Add("SearchText", $"%{searchText}%");
-                    }
-
-                    sql += " ORDER BY o.name";
-
-                    var result = await connection.QueryAsync<dynamic>(sql, parameters);
-                    
-                    var formattedResult = result.Select(r => new {
-                        id = r.Id,
-                        name = r.Name,
-                        createDate = r.CreateDate,
-                        modifyDate = r.CreateDate, // sysobjects has crdate only
-                        paramCount = r.ParamCount
-                    }).ToList();
-                    
-                    return Ok(formattedResult);
+                    sql += " AND c.text LIKE @SearchText";
+                    parameters.Add("SearchText", $"%{searchText}%");
                 }
+
+                sql += " ORDER BY o.name";
+
+                // Query securely via ExecuteCustomQuery using hardcoded query
+                var result = await _BaseRepository.ExecuteCustomQuery(sql, parameters);
+                
+                var formattedResult = result.Select(r => new {
+                    id = r.ContainsKey("Id") ? r["Id"] : null,
+                    name = r.ContainsKey("Name") ? r["Name"] : null,
+                    createDate = r.ContainsKey("CreateDate") ? r["CreateDate"] : null,
+                    modifyDate = r.ContainsKey("CreateDate") ? r["CreateDate"] : null, // sysobjects has crdate only
+                    paramCount = r.ContainsKey("ParamCount") ? r["ParamCount"] : null
+                }).ToList();
+                
+                return Ok(formattedResult);
             }
             catch (Exception ex)
             {
@@ -79,58 +76,57 @@ namespace ERPCore.Controllers.Config
             }
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetSingle(int id)
+        [HttpGet("{id}")]
+        public override async Task<ActionResult<SqlStoredProcedure>> GetSingle(int id)
         {
             try
             {
-                using (var connection = new SqlConnection(GetConnectionString()))
-                {
-                    var sql = @"
-                        SELECT 
-                            o.id AS Id,
-                            o.name AS Name,
-                            o.crdate AS CreateDate
-                        FROM sysobjects o
-                        WHERE o.id = @ObjectId AND o.type = 'P'";
-                    var proc = await connection.QueryFirstOrDefaultAsync<dynamic>(sql, new { ObjectId = id });
-                    if (proc == null) return NotFound("Stored procedure not found.");
+                var sql = @"
+                    SELECT 
+                        o.id AS Id,
+                        o.name AS Name,
+                        o.crdate AS CreateDate
+                    FROM sysobjects o
+                    WHERE o.id = @ObjectId AND o.type = 'P'";
+                
+                var procList = await _BaseRepository.ExecuteCustomQuery(sql, new Dictionary<string, object> { { "ObjectId", id } });
+                var proc = procList.FirstOrDefault();
+                if (proc == null) return NotFound("Stored procedure not found.");
 
-                    // Concatenate chunks from syscomments in order
-                    var chunksSql = "SELECT text FROM syscomments WHERE id = @ObjectId ORDER BY colid";
-                    var chunks = await connection.QueryAsync<string>(chunksSql, new { ObjectId = id });
-                    string definition = string.Concat(chunks);
+                // Concatenate chunks from syscomments in order
+                var chunksSql = "SELECT text FROM syscomments WHERE id = @ObjectId ORDER BY colid";
+                var chunksList = await _BaseRepository.ExecuteCustomQuery(chunksSql, new Dictionary<string, object> { { "ObjectId", id } });
+                string definition = string.Concat(chunksList.Select(c => c.ContainsKey("text") ? c["text"]?.ToString() : ""));
 
-                    var paramSql = @"
-                        SELECT 
-                            parameter_id AS ParameterId,
-                            name AS Name,
-                            TYPE_NAME(user_type_id) AS DataType,
-                            max_length AS MaxLength,
-                            is_output AS IsOutput
-                        FROM sys.parameters
-                        WHERE object_id = @ObjectId
-                        ORDER BY parameter_id";
-                    var parameters = await connection.QueryAsync<dynamic>(paramSql, new { ObjectId = id });
+                var paramSql = @"
+                    SELECT 
+                        parameter_id AS ParameterId,
+                        name AS Name,
+                        TYPE_NAME(user_type_id) AS DataType,
+                        max_length AS MaxLength,
+                        is_output AS IsOutput
+                    FROM sys.parameters
+                    WHERE object_id = @ObjectId
+                    ORDER BY parameter_id";
+                
+                var paramList = await _BaseRepository.ExecuteCustomQuery(paramSql, new Dictionary<string, object> { { "ObjectId", id } });
+                var formattedParams = paramList.Select(p => new {
+                    parameterId = p.ContainsKey("ParameterId") ? p["ParameterId"] : null,
+                    name = p.ContainsKey("Name") ? p["Name"] : null,
+                    dataType = p.ContainsKey("DataType") ? p["DataType"] : null,
+                    maxLength = p.ContainsKey("MaxLength") ? p["MaxLength"] : null,
+                    isOutput = p.ContainsKey("IsOutput") ? p["IsOutput"] : null
+                }).ToList();
 
-                    var formattedParams = parameters.Select(p => new {
-                        parameterId = p.ParameterId,
-                        name = p.Name,
-                        dataType = p.DataType,
-                        maxLength = p.MaxLength,
-                        isOutput = p.IsOutput
-                    }).ToList();
-
-                    var result = new {
-                        id = proc.Id,
-                        name = proc.Name,
-                        createDate = proc.CreateDate,
-                        modifyDate = proc.CreateDate,
-                        definition = definition,
-                        parameters = formattedParams
-                    };
-                    return Ok(result);
-                }
+                var result = new {
+                    id = proc.ContainsKey("Id") ? proc["Id"] : null,
+                    name = proc.ContainsKey("Name") ? proc["Name"] : null,
+                    createDate = proc.ContainsKey("CreateDate") ? proc["CreateDate"] : null,
+                    modifyDate = proc.ContainsKey("CreateDate") ? proc["CreateDate"] : null,
+                    definition = definition,
+                    parameters = formattedParams
+                };
+                return Ok(result);
             }
             catch (Exception ex)
             {
@@ -139,7 +135,7 @@ namespace ERPCore.Controllers.Config
         }
 
         [HttpPost]
-        public async Task<IActionResult> InsertData([FromForm] InsertFormCollection form)
+        public override async Task<IActionResult> InsertData([FromForm] InsertFormCollection form)
         {
             try
             {
@@ -152,19 +148,22 @@ namespace ERPCore.Controllers.Config
                 string definition = values["definition"];
                 string name = values.ContainsKey("name") ? values["name"] : "";
 
-                using (var connection = new SqlConnection(GetConnectionString()))
+                // Execute definition code compiling SP securely
+                await _BaseRepository.ExecuteCustomQuery(definition);
+
+                int? objectId = null;
+                if (!string.IsNullOrEmpty(name))
                 {
-                    await connection.ExecuteAsync(definition);
-
-                    int? objectId = null;
-                    if (!string.IsNullOrEmpty(name))
+                    var sql = "SELECT id AS Id FROM sysobjects WHERE name = @Name AND type = 'P'";
+                    var result = await _BaseRepository.ExecuteCustomQuery(sql, new Dictionary<string, object> { { "Name", name } });
+                    var item = result.FirstOrDefault();
+                    if (item != null && item.ContainsKey("Id"))
                     {
-                        var sql = "SELECT id FROM sysobjects WHERE name = @Name AND type = 'P'";
-                        objectId = await connection.QueryFirstOrDefaultAsync<int?>(sql, new { Name = name });
+                        objectId = Convert.ToInt32(item["Id"]);
                     }
-
-                    return Ok(new { id = objectId ?? 0, name = name, success = true });
                 }
+
+                return Ok(new { id = objectId ?? 0, name = name, success = true });
             }
             catch (Exception ex)
             {
@@ -173,72 +172,64 @@ namespace ERPCore.Controllers.Config
         }
 
         [HttpPost]
-        public async Task<IActionResult> UpdateData([FromForm] UpdateFormCollection form)
+        public override HttpResponseMessage UpdateData([FromForm] UpdateFormCollection form)
         {
             try
             {
                 var values = JsonConvert.DeserializeObject<Dictionary<string, string>>(form.values);
                 if (values == null || !values.ContainsKey("definition"))
                 {
-                    return BadRequest("Definition SQL is required.");
+                    return new HttpResponseMessage(HttpStatusCode.BadRequest);
                 }
 
                 string definition = values["definition"];
                 string newName = values.ContainsKey("name") ? values["name"] : "";
 
                 string oldName = "";
-                using (var connection = new SqlConnection(GetConnectionString()))
+                var oldNameResult = _BaseRepository.ExecuteCustomQuery(
+                    "SELECT name AS Name FROM sysobjects WHERE id = @ObjectId AND type = 'P'", 
+                    new Dictionary<string, object> { { "ObjectId", form.key } }).GetAwaiter().GetResult();
+                
+                var oldItem = oldNameResult.FirstOrDefault();
+                if (oldItem != null && oldItem.ContainsKey("Name"))
                 {
-                    oldName = await connection.QueryFirstOrDefaultAsync<string>(
-                        "SELECT name FROM sysobjects WHERE id = @ObjectId AND type = 'P'", 
-                        new { ObjectId = form.key });
+                    oldName = oldItem["Name"]?.ToString() ?? "";
                 }
 
-                using (var connection = new SqlConnection(GetConnectionString()))
+                if (!string.IsNullOrEmpty(oldName))
                 {
-                    if (!string.IsNullOrEmpty(oldName))
-                    {
-                        await connection.ExecuteAsync($"DROP PROCEDURE [{oldName}]");
-                    }
-
-                    await connection.ExecuteAsync(definition);
-
-                    int? newObjectId = null;
-                    if (!string.IsNullOrEmpty(newName))
-                    {
-                        newObjectId = await connection.QueryFirstOrDefaultAsync<int?>(
-                            "SELECT id FROM sysobjects WHERE name = @Name AND type = 'P'", 
-                            new { Name = newName });
-                    }
-
-                    return Ok(new { id = newObjectId ?? form.key, name = newName, success = true });
+                    _BaseRepository.ExecuteCustomQuery($"DROP PROCEDURE [{oldName}]").GetAwaiter().GetResult();
                 }
+
+                _BaseRepository.ExecuteCustomQuery(definition).GetAwaiter().GetResult();
+
+                return new HttpResponseMessage(HttpStatusCode.OK);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return BadRequest(new { success = false, message = ex.Message });
+                return new HttpResponseMessage(HttpStatusCode.InternalServerError);
             }
         }
 
         [HttpPost]
-        public async Task<IActionResult> DeleteData([FromForm] DeleteFormCollection form)
+        public override async Task<IActionResult> DeleteData([FromForm] DeleteFormCollection form)
         {
             try
             {
                 string procName = "";
-                using (var connection = new SqlConnection(GetConnectionString()))
+                var result = await _BaseRepository.ExecuteCustomQuery(
+                    "SELECT name AS Name FROM sysobjects WHERE id = @ObjectId AND type = 'P'", 
+                    new Dictionary<string, object> { { "ObjectId", form.key } });
+                
+                var item = result.FirstOrDefault();
+                if (item != null && item.ContainsKey("Name"))
                 {
-                    procName = await connection.QueryFirstOrDefaultAsync<string>(
-                        "SELECT name FROM sysobjects WHERE id = @ObjectId AND type = 'P'", 
-                        new { ObjectId = form.key });
+                    procName = item["Name"]?.ToString() ?? "";
                 }
 
                 if (!string.IsNullOrEmpty(procName))
                 {
-                    using (var connection = new SqlConnection(GetConnectionString()))
-                    {
-                        await connection.ExecuteAsync($"DROP PROCEDURE [{procName}]");
-                    }
+                    await _BaseRepository.ExecuteCustomQuery($"DROP PROCEDURE [{procName}]");
                     return Ok(new { success = true });
                 }
                 return NotFound("Stored procedure not found.");
@@ -254,7 +245,12 @@ namespace ERPCore.Controllers.Config
         {
             try
             {
-                using (var connection = new SqlConnection(GetConnectionString()))
+                // To execute stored procedure dynamically with parameters, we use direct command
+                string profile = HttpContext?.Session.GetString("CurrentDbProfile") ?? "Default";
+                var rawConn = _configuration.GetConnectionString(profile) ?? _configuration.GetConnectionString(ERPCore.ControllerUtil.ControllerUtil.tmivEnvironment + "Connection");
+                var connectionString = ERPCore.ControllerUtil.ControllerUtil.ParseConnectionString(rawConn, _configuration);
+
+                using (var connection = new SqlConnection(connectionString))
                 {
                     await connection.OpenAsync();
                     using (var command = new SqlCommand(request.Name, connection))
@@ -293,16 +289,15 @@ namespace ERPCore.Controllers.Config
         }
 
         [HttpGet]
-        public IActionResult GetScheme()
+        public override async Task<ActionResult<List<ERPCore.Models.Business.Migration.Config.DataGridConfig>>> GetScheme()
         {
-            var schema = new List<object>
+            var schema = new List<ERPCore.Models.Business.Migration.Config.DataGridConfig>
             {
-                new { dataField = "id", caption = "ID (Object ID)", dataType = "number", readOnly = true, visible = false },
-                new { dataField = "name", caption = "Tên Stored Procedure", dataType = "string", readOnly = false, visible = true, validationRules = new[] { new { type = "required", message = "Tên Stored Procedure là bắt buộc" } } },
-                new { dataField = "paramCount", caption = "Số lượng tham số", dataType = "number", readOnly = true, visible = true },
-                new { dataField = "createDate", caption = "Ngày tạo", dataType = "date", readOnly = true, visible = true },
-                new { dataField = "modifyDate", caption = "Ngày cập nhật", dataType = "date", readOnly = true, visible = true },
-                new { dataField = "definition", caption = "Định nghĩa SQL", dataType = "string", editorType = "textarea", visible = false }
+                new ERPCore.Models.Business.Migration.Config.DataGridConfig { DataField = "id", Caption = "ID", DataType = "number", Visible = false },
+                new ERPCore.Models.Business.Migration.Config.DataGridConfig { DataField = "name", Caption = "Tên Stored Procedure", DataType = "string", Visible = true },
+                new ERPCore.Models.Business.Migration.Config.DataGridConfig { DataField = "paramCount", Caption = "Số lượng tham số", DataType = "number", Visible = true },
+                new ERPCore.Models.Business.Migration.Config.DataGridConfig { DataField = "createDate", Caption = "Ngày tạo", DataType = "date", Visible = true },
+                new ERPCore.Models.Business.Migration.Config.DataGridConfig { DataField = "modifyDate", Caption = "Ngày cập nhật", DataType = "date", Visible = true }
             };
             return Ok(schema);
         }

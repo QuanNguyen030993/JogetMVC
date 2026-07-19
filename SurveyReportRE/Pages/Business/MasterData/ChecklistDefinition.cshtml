@@ -3,22 +3,12 @@
 
 <script>
     $(function () {
-        var gridConfig = {
-            editing: {
-                mode: "batch",
-                allowAdding: true,
-                allowUpdating: true,
-                allowDeleting: true
-            }
-        };
-
         new MGrid(
             null,
             $("#dataGrid_@ChecklistDefinitionModel.ModelName"),
             new ChecklistDefinitionGridOption(
                 "@ChecklistDefinitionModel.ModelName",
-                "User",
-                gridConfig),
+                "User"),
             null);
     });
 </script>

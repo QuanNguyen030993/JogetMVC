@@ -810,36 +810,31 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
             definition.LineId == lineId
             && definition.ProductId == productId
             && !definition.Deleted);
+
+        var existingRows = await _policyIssuanceChecklistRepository.GetListObject(item =>
+            item.PolicyIssuanceId == policyIssuanceId);
+
+        if (existingRows.Count > 0)
+        {
+            await _policyIssuanceChecklistRepository.BulkDeleteAsync(
+                existingRows.Select(item => (object)item.Id),
+                "Id",
+                true);
+        }
+
         if (definitions.Count == 0)
         {
             return 0;
         }
 
-        var copiedRows = await _policyIssuanceChecklistRepository.GetListObject(item =>
-            item.PolicyIssuanceId == policyIssuanceId && !item.Deleted);
-        //var copiedDefinitionIds = copiedRows
-        //    .Where(item => item.ChecklistDefinitionId.HasValue)
-        //    .Select(item => item.ChecklistDefinitionId!.Value)
-        //    .ToHashSet();
-        var copiedDefinitionGuids = copiedRows
-            .Where(item => item.CopyFromGuid.HasValue)
-            .Select(item => item.CopyFromGuid!.Value)
-            .ToHashSet();
-
         var rowsToInsert = definitions
-            .Where(definition =>
-                //!copiedDefinitionIds.Contains(definition.Id)
-                //&& 
-                !copiedDefinitionGuids.Contains(definition.Guid))
             .Select(definition => new PolicyIssuanceChecklist
             {
                 PolicyIssuanceId = policyIssuanceId,
                 RecordGuid = policyIssuance.Guid,
                 SequenceNo = definition.SequenceNo,
-                PMCheck = definition.PMCheck,
                 Checkpoint = definition.Checkpoint ?? "",
                 NeedToCheck = definition.NeedToCheck ?? "",
-                Result = definition.Result ? "1" : "0",
                 LineId = lineId,
                 ProductId = productId,
                 RowOrder = definition.RowOrder,

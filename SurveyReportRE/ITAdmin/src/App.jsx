@@ -21,6 +21,7 @@ import CustomGrid from '../../TMIVCom/src/components/CustomGrid'
 import NotificationHub from './components/NotificationHub';
 import SqlStoredProcedure from './components/SqlStoredProcedure';
 import NotificationTemplate from './components/NotificationTemplate';
+import DatabaseManagement from './components/DatabaseManagement';
 import './styles/flow.css';
 import './styles/com.all.css';
 import './styles/serilogs.css';
@@ -31,6 +32,7 @@ import './styles/mailqueue.css';
 import './styles/menudesigner.css';
 import './styles/sladesigner.css';
 import './styles/notificationtemplate.css';
+import './styles/databasemanagement.css';
 import "./fonts/css/all.min.css";
 
 function App() {
@@ -194,6 +196,7 @@ function App() {
     { id: 'asplog', label: 'Nhật ký ứng dụng (ASP Log)' },
     { id: 'systable', label: 'Bảng hệ thống' } ,
     { id: 'sql-stored', label: 'Quản lý Stored Procedure (TMIVCom)' },
+    { id: 'database-mgmt', label: 'Quản trị Database (Backup & Script)' },
     { id: 'datagridfielddesigner', label: 'Thiết kế trường DataGrid' },
     { id: 'formfielddesigner', label: 'Thiết kế trường Form (View)' },
     { id: 'datagridconfig-grid', label: 'Bảng DataGrid Config (CustomGrid)' },
@@ -268,6 +271,8 @@ function App() {
         return <SysTable />;
       case 'sql-stored':
         return <SqlStoredProcedure />;
+      case 'database-mgmt':
+        return <DatabaseManagement />;
       case 'datagridfielddesigner':
         return <DataGridFieldDesigner />;
       case 'formfielddesigner':
@@ -340,12 +345,6 @@ function App() {
       </aside>
 
       <main className="main-content">
-        <header className="topbar">
-          <div>
-            <h1>Administrator</h1>
-          </div>
-        </header>
-
         {content}
       </main>
     </div>

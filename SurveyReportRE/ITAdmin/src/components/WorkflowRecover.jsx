@@ -2,8 +2,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { API_BASE_URL } from "../config";
 import CustomGrid from "../../../TMIVCom/src/components/CustomGrid";
 import Flow from "../../../BusinessForm/src/components/Flow";
-import { useNodesState, useEdgesState, MarkerType } from "@xyflow/react";
-import Diagram, { createNodeStyle } from "./Diagram";
 
 const getValue = (row, ...keys) => {
   for (const key of keys) {
@@ -56,255 +54,23 @@ const workflowColumns = [
   { field: "updatedDate", caption: "UpdatedDate", width: "170px", dataType: "date" },
 ];
 
-// Helper mapping functions for Diagram renderer
-const mapWorkflowNodes = (workflowNodes = [], scaleX = 1.0, scaleY = 1.0) =>
-  workflowNodes.map((node, index) => {
-      const id = String(node.id ?? node.nodeId ?? `NODE_${index + 1}`);
-      const code = node.nodeCode || node.code || id;
-      const rawX = Number.isFinite(node.posX) ? node.posX : node.x;
-      const rawY = Number.isFinite(node.posY) ? node.posY : node.y;
-      const hasPosition = Number.isFinite(rawX) && Number.isFinite(rawY);
-
-      let parsedScreenConditions = [];
-      if (Array.isArray(node.screenConditions)) {
-          parsedScreenConditions = node.screenConditions;
-      } else if (node.data) {
-          try {
-              const parsed = typeof node.data === 'string' ? JSON.parse(node.data) : node.data;
-              if (Array.isArray(parsed.screenConditions)) {
-                  parsedScreenConditions = parsed.screenConditions;
-              } else if (parsed.rawNode && Array.isArray(parsed.rawNode.screenConditions)) {
-                  parsedScreenConditions = parsed.rawNode.screenConditions;
-              }
-          } catch (e) {}
-      }
-
-      return {
-          id,
-          type: 'workflowNode',
-          position: hasPosition
-              ? { x: rawX * scaleX, y: rawY * scaleY }
-              : { x: (140 + index * 260) * scaleX, y: (90 + (index % 3) * 180) * scaleY },
-          data: {
-              label: node.nodeName || node.departmentName || node.nodeCode || node.id || `Step ${index + 1}`,
-              subtitle: node.departmentName || '',
-              nodeType: node.nodeType || 'task',
-              departmentName: node.departmentName || '',
-              description: node.description || '',
-              manualPositioned: hasPosition,
-              laneId: node.laneId || '',
-              shape: node.shape || 'rectangle',
-              styleColor: node.styleColor || 'blue',
-              assignLabel: node.assignLabel || '',
-              orderLabel: node.orderLabel || '',
-              code,
-              flowType: node.flowType || node.nodeStatus || 'Both',
-              stepRole: node.stepRole || '',
-              levelNo: node.levelNo || '',
-              allowLoop: !!node.allowLoop,
-              loopGroup: node.loopGroup || '',
-              screenConditions: parsedScreenConditions,
-              custom: node.custom || '',
-          },
-          style: createNodeStyle(node),
-      };
-  });
-
-const formatTransitionLabel = (actionName, statusText, command) => {
-  const actionPart = actionName || '';
-  const statusPart = statusText || '';
-  const commandPart = command && command !== 'None' ? command : '';
-
-  if (!actionPart && !statusPart && !commandPart) {
-      return <span className="label-default">Transition</span>;
-  }
-
-  return (
-      <span className="flow-edge-label-container">
-          {actionPart && <span className="label-item label-action" style={{ display: 'inline-block', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', borderRadius: '4px', padding: '1px 4px', fontSize: '10px', marginRight: '2px' }}>{actionPart}</span>}
-          {statusPart && <span className="label-item label-status" style={{ display: 'inline-block', background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0', borderRadius: '4px', padding: '1px 4px', fontSize: '10px', marginRight: '2px' }}>{statusPart}</span>}
-          {commandPart && <span className="label-item label-command" style={{ display: 'inline-block', background: '#fff7ed', color: '#ea580c', border: '1px solid #ffedd5', borderRadius: '4px', padding: '1px 4px', fontSize: '10px' }}>{commandPart}</span>}
-      </span>
-  );
-};
-
-const parseJsonToRulesState = (jsonStr) => {
-  const fallback = { rootOperator: 'AND', rules: [] };
-  if (!jsonStr || jsonStr === '{}') return fallback;
-  try {
-      const obj = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr;
-      if (!obj || typeof obj !== 'object') return fallback;
-
-      if (obj.type === 'group') {
-          const rules = (obj.children || []).map((child, i) => ({
-              id: `rule-${Date.now()}-${i}`,
-              source: child.source || 'payload',
-              field: child.field || '',
-              dataType: child.dataType || 'string',
-              operator: child.operator || '=',
-              value: child.value != null ? String(child.value) : '',
-              customHandler: child.handler || '',
-              customArgs: child.args ? JSON.stringify(child.args, null, 2) : ''
-          }));
-          return {
-              rootOperator: obj.operator || 'AND',
-              rules
-          };
-      } else if (obj.type === 'rule' || obj.field || obj.handler) {
-          return {
-              rootOperator: 'AND',
-              rules: [{
-                  id: `rule-${Date.now()}-0`,
-                  source: obj.source || 'payload',
-                  field: obj.field || '',
-                  dataType: obj.dataType || 'string',
-                  operator: obj.operator || '=',
-                  value: obj.value != null ? String(obj.value) : '',
-                  customHandler: obj.handler || '',
-                  customArgs: obj.args ? JSON.stringify(obj.args, null, 2) : ''
-              }]
-          };
-      }
-  } catch (e) {
-      console.warn("Failed to parse condition JSON to rules state", e);
-  }
-  return fallback;
-};
-
-const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) =>
-  workflowTransitions.map((transition, index) => {
-      const isReturn = transition.isReturn === true || String(transition.isReturn) === 'true' || transition.flowType === 'Return';
-      const hasCommand = transition.command && transition.command !== 'None' && transition.command !== '0';
-      
-      let conditionJsonStr = '{}';
-      if (transition.conditionJson) {
-          conditionJsonStr = typeof transition.conditionJson === 'string' 
-              ? transition.conditionJson 
-              : JSON.stringify(transition.conditionJson, null, 2);
-      }
-
-      return {
-          id: `edge-${transition.fromNodeId || transition.from || 'from'}-${transition.toNodeId || transition.to || 'to'}-${index}`,
-          source: String(transition.fromNodeId || transition.from || ''),
-          target: String(transition.toNodeId || transition.to || ''),
-          animated: !hasCommand,
-          type: 'custom',
-          label: formatTransitionLabel(transition.actionName || transition.actionCode, transition.statusName || transition.statusId, transition.command),
-          style: isReturn
-              ? { stroke: '#dc2626', strokeWidth: 3 }
-              : { stroke: '#2563eb', strokeWidth: 2 },
-          markerEnd: {
-              type: MarkerType.ArrowClosed,
-              width: 16,
-              height: 16,
-              color: isReturn ? '#dc2626' : '#2563eb',
-          },
-          data: {
-              actionName: transition.actionName || '',
-              actionCode: transition.actionCode || '',
-              stepNo: transition.stepNo || '',
-              jumpStepNo: transition.jumpStepNo || '',
-              transitionType: transition.transitionType || 'Normal',
-              conditionJson: conditionJsonStr,
-              conditionRulesState: transition.conditionRulesState || parseJsonToRulesState(transition.conditionJson),
-              isExitTransition: Boolean(transition.isExitTransition),
-              isReturn: isReturn,
-              statusId: transition.statusId || '',
-              statusName: transition.statusName || '',
-              transitionScript: transition.transitionScript || '',
-              icon: transition.icon || '',
-              buttonClass: transition.buttonClass || '',
-              command: transition.command || 'None',
-              commandConfig: transition.commandConfig || '',
-              custom: transition.custom || '',
-              controlX: Number.isFinite(transition.controlX) ? transition.controlX * scaleX : null,
-              controlY: Number.isFinite(transition.controlY) ? transition.controlY * scaleY : null,
-          },
-      };
-  });
-
-const layoutNodes = (nodes = [], edges = [], forceLayout = false) => {
-  if (!nodes.length) {
-      return nodes;
-  }
-
-  const incoming = new Map(nodes.map((node) => [node.id, 0]));
-  edges.forEach((edge) => {
-      if (edge.target) {
-          incoming.set(edge.target, (incoming.get(edge.target) || 0) + 1);
-      }
-  });
-
-  const roots = nodes.filter((node) => (incoming.get(node.id) || 0) === 0).map((node) => node.id);
-  const levels = new Map();
-  const queue = [...roots];
-
-  while (queue.length) {
-      const currentId = queue.shift();
-      const currentLevel = levels.get(currentId) || 0;
-      const children = edges.filter((edge) => edge.source === currentId).map((edge) => edge.target);
-
-      children.forEach((childId) => {
-          const nextLevel = currentLevel + 1;
-          if (nextLevel < nodes.length) {
-              if ((levels.get(childId) || -1) < nextLevel) {
-                  levels.set(childId, nextLevel);
-                  queue.push(childId);
-              }
-          }
-      });
-  }
-
-  const buckets = new Map();
-  nodes.forEach((node) => {
-      const level = levels.get(node.id) || 0;
-      if (!buckets.has(level)) {
-          buckets.set(level, []);
-      }
-      buckets.get(level).push(node);
-  });
-
-  return nodes.map((node) => {
-      if (!forceLayout && node.data?.manualPositioned) {
-          return node;
-      }
-      const level = levels.get(node.id) || 0;
-      const bucket = buckets.get(level) || [];
-      const index = bucket.findIndex((item) => item.id === node.id);
-
-      return {
-          ...node,
-          position: {
-              x: 140 + level * 260,
-              y: 90 + index * 180,
-          },
-          data: {
-              ...node.data,
-              manualPositioned: !forceLayout ? node.data?.manualPositioned : false
-          }
-      };
-  });
-};
-
 export default function WorkflowRecover() {
   const gridRef = useRef(null);
+
   const [selectedWorkflow, setSelectedWorkflow] = useState(null);
   const [steps, setSteps] = useState([]);
   const [selectedNodeId, setSelectedNodeId] = useState("");
-  const [mode, setMode] = useState("Recover");
+  const [mode, setMode] = useState("Recover"); // "Recover" | "Revise"
   const [note, setNote] = useState("");
-  const [loadingSteps, setLoadingSteps] = useState(false);
+
   const [saving, setSaving] = useState(false);
+  const [loadingSteps, setLoadingSteps] = useState(false);
   const [message, setMessage] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Tab state for Diagram vs BusinessForm Flow
-  const [activeTab, setActiveTab] = useState("diagram"); // "diagram" | "businessForm"
-
-  // React Flow states for direct Diagram rendering
-  const [diagramNodes, setDiagramNodes, onDiagramNodesChange] = useNodesState([]);
-  const [diagramEdges, setDiagramEdges, onDiagramEdgesChange] = useEdgesState([]);
-  const [loadingDiagram, setLoadingDiagram] = useState(false);
+  // WorkflowDefinition query state
+  const [workflowDefDbId, setWorkflowDefDbId] = useState(null);
+  const [loadingWorkflowDef, setLoadingWorkflowDef] = useState(false);
 
   // Extract unique nodes dynamically from transition steps
   const uniqueNodes = useMemo(() => {
@@ -381,49 +147,33 @@ export default function WorkflowRecover() {
 
   const targetNode = mode === "Revise" ? firstStartNode : selectedNode;
 
-  // Load Diagram Nodes/Edges from WorkflowDefinition (ITAdmin version)
-  const loadDiagram = useCallback(async (workflow) => {
+  // Query WorkflowDefinition to retrieve its database ID for Flow loader
+  const loadWorkflowDefinition = useCallback(async (workflow) => {
     if (!workflow?.workflowDefinitionId) {
-      setDiagramNodes([]);
-      setDiagramEdges([]);
+      setWorkflowDefDbId(null);
       return;
     }
 
     try {
-      setLoadingDiagram(true);
-      const res = await fetch(`${API_BASE_URL}/api/WorkflowDefinition/GetSingle/${workflow.workflowDefinitionId}`);
+      setLoadingWorkflowDef(true);
+      const res = await fetch(`${API_BASE_URL}/api/WorkflowDefinition/GetAll?refKey=${workflow.workflowDefinitionId}&refField1=guid&take=999`);
       if (res.ok) {
         const data = await res.json();
-        const parsedPayload = typeof data.workflowNodes === 'string' ? JSON.parse(data.workflowNodes) : data.workflowNodes || {};
-        const scaleX = parsedPayload._layoutConfig?.SCALE_X || 1.0;
-        const scaleY = parsedPayload._layoutConfig?.SCALE_Y || 1.0;
-        
-        const nextNodes = Array.isArray(parsedPayload.workflowNodes)
-            ? mapWorkflowNodes(parsedPayload.workflowNodes, scaleX, scaleY)
-            : [];
-        const nextEdges = Array.isArray(parsedPayload.workflowTransitions)
-            ? mapWorkflowEdges(parsedPayload.workflowTransitions, scaleX, scaleY)
-            : [];
-
-        // Highlight current active step in workflow instance
-        const currentStep = workflow.currentStep;
-        const tracedNodes = nextNodes.map(n => ({
-            ...n,
-            data: {
-                ...n.data,
-                isTraced: String(n.id) === String(currentStep)
-            }
-        }));
-
-        setDiagramNodes(tracedNodes.length ? layoutNodes(tracedNodes, nextEdges) : []);
-        setDiagramEdges(nextEdges);
+        const list = Array.isArray(data) ? data : [];
+        if (list.length > 0) {
+          const dbId = list[0].id || list[0].Id;
+          setWorkflowDefDbId(dbId);
+        } else {
+          setWorkflowDefDbId(null);
+        }
       }
     } catch (e) {
-      console.error("Failed to fetch workflow definition for diagram", e);
+      console.error("Failed to query workflow definition", e);
+      setWorkflowDefDbId(null);
     } finally {
-      setLoadingDiagram(false);
+      setLoadingWorkflowDef(false);
     }
-  }, [setDiagramNodes, setDiagramEdges]);
+  }, []);
 
   const loadSteps = useCallback(async (workflow) => {
     if (!workflow?.workflowDefinitionId) {
@@ -481,9 +231,9 @@ export default function WorkflowRecover() {
   useEffect(() => {
     if (selectedWorkflow) {
       loadSteps(selectedWorkflow);
-      loadDiagram(selectedWorkflow);
+      loadWorkflowDefinition(selectedWorkflow);
     }
-  }, [loadSteps, loadDiagram, selectedWorkflow]);
+  }, [loadSteps, loadWorkflowDefinition, selectedWorkflow]);
 
   useEffect(() => {
     if (mode === "Revise" && firstStartNode) {
@@ -542,7 +292,6 @@ export default function WorkflowRecover() {
       setMessage(`${mode} completed. CurrentStep: ${result?.currentStep || targetNode.id}${stageText}`);
       setRefreshKey((value) => value + 1);
       
-      // Update local workflow state to reload steps and highlight new active step in React Flow diagram
       setSelectedWorkflow((prev) => prev ? { ...prev, currentStep: result?.currentStep || prev.currentStep } : prev);
     } catch (error) {
       console.error(error);
@@ -593,70 +342,24 @@ export default function WorkflowRecover() {
             selectionMode="single"
           />
           
-          {/* Diagrams Tab Panel */}
-          <div className="recover-flow-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-            <div className="recover-panel-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <span>Diagram Preview</span>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button 
-                  type="button" 
-                  style={{
-                    padding: '6px 12px',
-                    fontSize: '0.8rem',
-                    borderRadius: '6px',
-                    border: '1px solid #cbd5e1',
-                    background: activeTab === 'diagram' ? '#eff6ff' : '#fff',
-                    color: activeTab === 'diagram' ? '#1d4ed8' : '#334155',
-                    borderColor: activeTab === 'diagram' ? '#3b82f6' : '#cbd5e1',
-                    fontWeight: activeTab === 'diagram' ? '600' : '400',
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => setActiveTab('diagram')}
-                >
-                  Sơ đồ Thực tế (React Flow)
-                </button>
-                <button 
-                  type="button" 
-                  style={{
-                    padding: '6px 12px',
-                    fontSize: '0.8rem',
-                    borderRadius: '6px',
-                    border: '1px solid #cbd5e1',
-                    background: activeTab === 'businessForm' ? '#eff6ff' : '#fff',
-                    color: activeTab === 'businessForm' ? '#1d4ed8' : '#334155',
-                    borderColor: activeTab === 'businessForm' ? '#3b82f6' : '#cbd5e1',
-                    fontWeight: activeTab === 'businessForm' ? '600' : '400',
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => setActiveTab('businessForm')}
-                >
-                  BusinessForm Flow (Read-only)
-                </button>
-              </div>
+          {/* Workflow Flow Panel */}
+          <div className="recover-flow-panel" style={{ display: 'flex', flexDirection: 'column', marginTop: '20px' }}>
+            <div className="recover-panel-title" style={{ marginBottom: '12px' }}>
+              Workflow Flow (Read-only)
             </div>
 
-            {selectedWorkflow?.workflowDefinitionId ? (
-              activeTab === 'diagram' ? (
-                loadingDiagram ? (
-                  <div className="recover-empty">Loading React Flow diagram...</div>
-                ) : (
-                  <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden', height: '520px', background: '#f8fafc' }}>
-                    {/* <Diagram
-                      nodes={diagramNodes}
-                      edges={diagramEdges}
-                      readOnly={true}
-                    /> */}
-                  </div>
-                )
-              ) : (
-                selectedWorkflow?.recordGuid ? (
+            {selectedWorkflow ? (
+              workflowDefDbId ? (
+                <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden', height: '520px', background: '#f8fafc' }}>
                   <Flow
-                    id={selectedWorkflow.workflowDefinitionId}
+                    id={workflowDefDbId}
                     guid={selectedWorkflow.recordGuid}
                   />
-                ) : (
-                  <div className="recover-empty">Selected workflow does not contain a RecordGuid (needed for BusinessForm Flow).</div>
-                )
+                </div>
+              ) : loadingWorkflowDef ? (
+                <div className="recover-empty">Loading workflow definition...</div>
+              ) : (
+                <div className="recover-empty">Could not find a WorkflowDefinition record with guid matching: {selectedWorkflow.workflowDefinitionId}.</div>
               )
             ) : (
               <div className="recover-empty">Select an InstanceWorkflow row to render its workflow.</div>

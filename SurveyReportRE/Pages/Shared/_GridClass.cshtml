@@ -994,16 +994,22 @@
     }
 
     var ChecklistDefinitionGridOption = class ChecklistDefinitionGridOption extends MGridOption {
-        constructor(modelName, gridType, config) {
-            super(modelName, gridType, config);
-            if (config?.editing) {
-                this.gridEditorOptions = { editing: config.editing };
-            }
+        constructor(modelName, gridType) {
+            super(modelName, gridType);
         }
 
         onCustomizeColumns(columns) {
             super.onCustomizeColumns(columns);
             applyChecklistColumnConfiguration(columns, false);
+        }
+
+        onRowClick(e) {
+            if (e.rowType !== "data" || !e.data) return;
+
+            callElementView(
+                `/Business/MasterData/ChecklistDefinition_Form/${e.data.id}`,
+                `form_ChecklistDefinition_Form_${e.data.id}`,
+                `Checklist Definition ${e.data.checkpoint || e.data.sequenceNo || e.data.id}`);
         }
     }
 
