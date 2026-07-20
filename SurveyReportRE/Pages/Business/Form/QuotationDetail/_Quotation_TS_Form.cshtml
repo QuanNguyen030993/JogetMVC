@@ -17,6 +17,7 @@
         thisObject.formId = `@QTViewIdHelper.Form(dept, quotationId)`;
         thisObject.dept = "@dept";
         thisObject.prefix = "qt";
+        thisObject.schemeName = "Quotation";
 
         var that = new Object();
     var sectionId = "@(ViewData["Cd"])";
@@ -50,7 +51,24 @@
 
     var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
     var acceptStatusId = `Status_@QTViewIdHelper.Decision(dept, quotationId)`;
-    var itemsDelay = [acceptButtonId, acceptStatusId];
+    // V2 config: status/TAT, click handler va lifecycle cua Accept cung di qua
+    // renderDecisionDeferredV2; khong con dung cap string legacy.
+    var acceptDecisionV2 = {
+        buttonId: acceptButtonId,
+        statusId: acceptStatusId,
+        text: "Accept",
+        icon: "check",
+        type: "success",
+        buttonClass: "dx-button-success",
+        disabled: true,
+        useDefaultDecisionClick: true,
+        acceptStatusField: "actionStatus",
+        useTatAcceptStatus: true,
+        tatStatusText: "Accepted",
+        skipAcceptedMainFields: false,
+        statusButtonDisabled: true
+    };
+    var itemsDelay = [acceptDecisionV2];
 
     var mainFields = [  { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentByCase(that , that2) },
 

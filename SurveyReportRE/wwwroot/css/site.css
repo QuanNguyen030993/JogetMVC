@@ -1477,6 +1477,45 @@ aside {
     gap: 10px;
 }
 
+/* Decision controls use a stable two-row layout. Status/TAT loads in the
+   compact first row; user actions stay in the second row. */
+.workflow-decision-group .decision-status-row {
+    display: flex;
+    min-height: 24px;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.workflow-decision-group .decision-action-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.workflow-decision-group .decision-status-row .decision-common-status {
+    min-height: 22px !important;
+    padding: 2px 9px !important;
+    font-size: 11px !important;
+    box-shadow: none;
+    cursor: default;
+    user-select: none;
+}
+
+/* Form stage order: header -> upper body -> body -> lower body -> footer. */
+.form-stage-part {
+    opacity: 0;
+    transform: translateY(5px);
+    transition: opacity .16s ease, transform .16s ease;
+}
+
+.form-stage-part.form-stage-ready {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 .branchOverlay {
     position: fixed;
     inset: 0;

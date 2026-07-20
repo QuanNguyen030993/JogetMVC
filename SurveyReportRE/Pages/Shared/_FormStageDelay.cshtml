@@ -1,0 +1,108 @@
+<script>
+    /**
+     * Cac moc thoi gian cua pipeline render form.
+     *
+     * Thu tu bat buoc:
+     * 1. shell       : dung UI, decision area, submit area va cac section.
+     * 2. formData    : gan data vao tat ca dxForm cua phong ban.
+     * 3. assignment  : nap danh sach nhan vien va bind PIC vao dxTagBox.
+     * 4. overlayDone : tat loading tong; den day form va PIC da san sang.
+     * 5. routeState  : nap TAT, AcceptDate, findRoute va hien button dan dan.
+     *
+     * Thu tu phong ban sua tai departmentOrder. Trong tung phong ban, coordinator
+     * co dinh thu tu: header -> upperBody -> bodyForm -> lowerBody -> footer.
+     *
+     * Khong luu coordinator hay du lieu trung gian tren window. Moi man hinh tao
+     * mot coordinator rieng va truyen no qua tham so/closure cua chinh man hinh.
+     */
+    const FormStageDelay = Object.freeze({
+        departmentOrder: Object.freeze({
+            quotation: Object.freeze(["FO", "TS", "UW", "LMKT", "PM"]),
+            policyIssuance: Object.freeze(["FO", "TS", "PM"])
+        }),
+        shell: 1,
+        formData: 0,
+        assignment: 0,
+        unlockForm: 2000, 
+        overlayDone: 1100,
+        routeState: 3000,
+        routeComponent: 45,
+        reloadAssignment: 200,
+        sectionPart: 45,
+        departmentGap: 70,
+        legacyAssignment: 1000,
+        legacySubmit: 3000,
+        legacyDecision: 2000
+    });
+
+    const createFormStageCoordinator = function (onStageChanged) {
+        let currentStage = "idle";
+        const sectionParts = Object.freeze([
+            { name: "header", selector: ".dept-header" },
+            { name: "upperBody", selector: ".dept-upperbody" },
+            { name: "bodyForm", selector: ".dept-body" },
+            { name: "lowerBody", selector: ".dept-lowerbody" },
+            { name: "footer", selector: ".dept-footer" }
+        ]);
+
+        if (typeof onStageChanged === "function") {
+            onStageChanged(currentStage);
+        }
+
+        const wait = function (delay) {
+            return new Promise(resolve => setTimeout(resolve, Math.max(0, Number(delay) || 0)));
+        };
+
+        const enter = async function (stage, delay) {
+            currentStage = stage;
+            if (typeof onStageChanged === "function") {
+                onStageChanged(stage);
+            }
+            await wait(delay ?? FormStageDelay[stage] ?? 0);
+            return stage;
+        };
+
+        // Dung khi nhieu component cung stage can hien lan luot, tranh giat UI.
+        const pace = function (index) {
+            return wait((Math.max(0, Number(index) || 0)) * FormStageDelay.routeComponent);
+        };
+
+        const prepareSection = function (section) {
+            const $section = section?.jquery ? section : $(section);
+            sectionParts.forEach(function (part) {
+                $section.find(part.selector)
+                    .addClass("form-stage-part")
+                    .removeClass("form-stage-ready")
+                    .attr("data-form-part", part.name);
+            });
+        };
+
+        // Moi phong ban duoc bind theo thu tu departments cua man hinh. Ben trong
+        // phong ban, cac phan luon ready tu header xuong footer.
+        const revealSection = async function (section, department) {
+            const $section = section?.jquery ? section : $(section);
+            for (const part of sectionParts) {
+                currentStage = `section:${department}:${part.name}`;
+                if (typeof onStageChanged === "function") onStageChanged(currentStage);
+                $section.find(part.selector).addClass("form-stage-ready");
+                await wait(FormStageDelay.sectionPart);
+            }
+            await wait(FormStageDelay.departmentGap);
+        };
+
+        return Object.freeze({
+            enter,
+            pace,
+            prepareSection,
+            revealSection,
+            getCurrentStage: () => currentStage
+        });
+    };
+
+    // Alias cu chi con phuc vu cac form chua migrate sang coordinator.
+    const _delayQuotationsLoadForm = FormStageDelay.shell;
+    const _delayRenderAssigneeBox = FormStageDelay.legacyAssignment;
+    const _delayRenderSubmitButton = FormStageDelay.legacySubmit;
+    const _delayRenderDecisionButton = FormStageDelay.legacyDecision;
+    const _delayUnlockForm = FormStageDelay.unlockForm;
+</script>

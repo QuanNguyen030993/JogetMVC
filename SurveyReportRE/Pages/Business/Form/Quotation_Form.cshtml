@@ -297,11 +297,10 @@ Note:
                 animateOverviewSections(formModuleKeyQt);
                 setPhase("Ready", 100);
                 $overlay.addClass("is-leaving").attr("aria-busy", "false");
-                setTimeout(function () {
-                    if (token !== sequence) return;
-                    $root.removeClass("qt-render-loading");
-                    $overlay.removeClass("is-leaving");
-                }, 300);
+                await new Promise(resolve => setTimeout(resolve, FormStageDelay.overlayDone));
+                if (token !== sequence) return;
+                $root.removeClass("qt-render-loading");
+                $overlay.removeClass("is-leaving");
             }
 
             function fail(token, message) {
@@ -319,6 +318,14 @@ Note:
 
             return { begin, setPhase, complete, fail, setLoadingIcon };
         })();
+
+        // Coordinator chi ton tai trong instance form nay, khong dung window lam
+        // noi chua state trung gian giua dxForm, assignment va route buttons.
+        const quotationFormStages = createFormStageCoordinator(function (stageName) {
+            $(`#${quotationOverviewRootId}`).attr("data-render-stage", stageName);
+        });
+        const quotationDepartmentOrder = FormStageDelay.departmentOrder.quotation;
+        const assignmentLifecycle = { isAssigneeBoxRender: false };
 
         window.OverviewViewRegistry = window.OverviewViewRegistry || {};
         window.OverviewViewRegistry[quotationViewInstanceKey] = {
@@ -425,12 +432,14 @@ Note:
                     loadAndApplyQuotationScreenConditions(instance?.currentStep, state.selectedId);
                     return ajaxGet(`/api/StepsWorkflow/GetNextStep/${instance?.workflowDefinitionId ?? "00000000-0000-0000-0000-000000000000"}/${instance?.currentStep ?? 0}`, null)
                         .then(data => {
+                            data = Array.isArray(data) ? data : [];
                             state.nextStep.instanceWorkflow = instance;
                             state.nextStep.flowSteps = data;
                             state.nextStep.currentStep = instance?.currentStep ?? 0;
                             // setNextStep(state.nextStep);
-                            // $.each(qtDeptModuleCode, function (itemIndex, item) {
-                                    setTimeout(() => {
+                            // Route state chi duoc bind sau khi loading tong da dong va
+                            // tat ca dxForm/dxTagBox da co data.
+                            return quotationFormStages.enter("routeState").then(async function () {
                                        
                                         // var findRoute = data.find(f => !f.isReturn && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
                                          const customRoutes = data.filter(function (route) {
@@ -550,9 +559,12 @@ Note:
                                             }
 
                                             $host = $(`<div class="workflow-custom-route-host" data-route-custom-host="true" data-record-id="${recordId}" data-route-dept="${groupDept}"></div>`);
+                                            const $actionArea = $decisionArea
+                                                .find(".decision-action-row")
+                                                .first();
                                             $host
                                                 .attr("data-route-group-id", groupId)
-                                                .appendTo($decisionArea);
+                                                .appendTo($actionArea.length ? $actionArea : $decisionArea);
                                             return $host;
                                         };
 
@@ -576,11 +588,12 @@ Note:
                                                 fallbackInstance.option("disabled", stageDept !== "UW" || !!tatObject?.UW?.AcceptDate);
                                             }
                                         }
-                                        customRoutes.forEach(function (route, routeIndex) {
+                                        for (const [routeIndex, route] of customRoutes.entries()) {
+                                            await quotationFormStages.pace(routeIndex);
                                             const $routeHost = ensureCustomRouteHost(route);
-                                            if (!$routeHost.length) return;
+                                            if (!$routeHost.length) continue;
                                             const routeDept = normalizeRouteDept($routeHost.attr("data-route-dept"));
-                                            if (!routeDept) return;
+                                            if (!routeDept) continue;
 
                                             const rawRouteKey = route?.routeId || route?.id || route?.actionCode || routeIndex;
                                             const safeRouteKey = String(rawRouteKey).replace(/[^a-zA-Z0-9_-]/g, "_");
@@ -598,7 +611,7 @@ Note:
                                                 onClick: function () {
                                                     const routeFormId = window.QuotationIdManager.form(routeDept, recordId);
                                                     const routeFormItems = $(`#${routeFormId}`).dxForm("instance")?.option("formData") || {};
-                                                    const content = window.remarkBoxs?.[routeDept]?.controlRemark?.value?.() || "";
+                                                    const content = remarkBoxs?.[routeDept]?.controlRemark?.value?.() || "";
                                                     if (route.isReturn && !content) {
                                                         appNotifyWarning("Please put your reason to remarks!", false);
                                                         return;
@@ -612,11 +625,12 @@ Note:
                                                 }
                                             });
                                             applyTransitionButtonClass(`#${customButtonId}`, route);
-                                        });
+                                        }
                                            try {
                                             if (findRouteReturns?.length && tatObject) {
 
-                                                findRouteReturns.forEach(route => {
+                                                for (const [routeIndex, route] of findRouteReturns.entries()) {
+                                                    await quotationFormStages.pace(customRoutes.length + routeIndex);
 
                                                     const buttonId =
                                                         `${returnButtonId}_${route.routeId || route.actionCode}`;
@@ -659,7 +673,7 @@ Note:
                                                         }
                                                     });
                                                     applyTransitionButtonClass(`#${buttonId}`, route);
-                                                });
+                                                }
                                             }
                                         }
                                         catch (exception) {
@@ -669,7 +683,10 @@ Note:
 
                                             if (findRoutes?.length) {
 
-                                                findRoutes.forEach(route => {
+                                                for (const [routeIndex, route] of findRoutes.entries()) {
+                                                    await quotationFormStages.pace(
+                                                        customRoutes.length + findRouteReturns.length + routeIndex
+                                                    );
 
                                                     const buttonId =
                                                         `${submitButtonId}_${route.routeId || route.actionCode}`;
@@ -748,19 +765,17 @@ Note:
                                                     });
                                                     applyTransitionButtonClass(`#${buttonId}`, route);
 
-                                                });
+                                                }
                                             }
                                         }
                                         catch (exception) {
                                             console.log("Submit problem", exception);
                                         }
-                                   }, _delayRenderSubmitButton);
+                                   });
                             // });
                         });
                 });
         }
-        window.loadSelectedQuotationWorkflow = loadSelectedWorkflow;
-
         async function loadQuotePage(reset = false) {
             if (state.quotePaging.loading) return;
             if (!reset && state.quotePaging.done) return;
@@ -803,10 +818,9 @@ Note:
                     state.quotePaging.firstLoadDone = true;
                     quotationRenderGate.setPhase("Binding quotation state…", 52);
                     await syncSelectedState(state.quotes[0]);
-                    quotationRenderGate.setPhase("Loading workflow and permissions…", 68);
-                    await loadSelectedWorkflow();
-                    quotationRenderGate.setPhase("Initializing department controls…", 80);
-                    renderDetail();
+                    quotationRenderGate.setPhase("Initializing department forms…", 68);
+                    await renderDetail();
+                    quotationRenderGate.setPhase("Binding PIC assignments…", 86);
                 }
                 return true;
             } catch (err) {
@@ -840,7 +854,8 @@ Note:
                     await new Promise(resolve => setTimeout(resolve, 50));
                 }
 
-                // loadQuotePage already synchronizes state, loads workflow and calls renderDetail.
+                // loadQuotePage chi bind state, dxForm va PIC. Workflow/buttons duoc
+                // nap sau khi loading tong da dong o cuoi pipeline nay.
                 var loaded = await loadQuotePage(true);
                 if (!loaded) {
                     quotationRenderGate.fail(renderToken, "Quotation refresh failed");
@@ -856,6 +871,7 @@ Note:
                 applyEditLock();
                 updateHints();
                 await quotationRenderGate.complete(renderToken);
+                await loadSelectedWorkflow();
             })().finally(function () {
                 quotationReloadPromise = null;
             });
@@ -879,17 +895,28 @@ Note:
         };
 
 
-        function renderDeptForms() {
-
-            $.each(qtDeptModuleCode, function (itemIndex, item) {
-                var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
-                 $(`#${formId}`).dxForm({ formData: deptData[item], readOnly: true, colCount: 1 });
-
+        async function renderDeptForms() {
+            quotationDepartmentOrder.forEach(function (item) {
+                quotationFormStages.prepareSection(
+                    `#${formModuleKeyQt}-sec_${item}_@ViewData["Id"]`
+                );
             });
+
+            for (const item of quotationDepartmentOrder) {
+                var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
+                $(`#${formId}`).dxForm({ formData: deptData[item], readOnly: true, colCount: 1 });
+                await quotationFormStages.revealSection(
+                    `#${formModuleKeyQt}-sec_${item}_@ViewData["Id"]`,
+                    item
+                );
+            }
 
             reloadState();
             applyEditLock();
             updateHints();
+
+            // Cho DevExtreme gan formData va hoan tat nested templates.
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
         }
 
@@ -911,7 +938,7 @@ Note:
         // }
 
         function animateOverviewSections(prefix) {
-            const sequence = qtDeptModuleCode;
+            const sequence = quotationDepartmentOrder;
             sequence.forEach((dept, idx) => {
                 const sectionId = `#${prefix}-sec_${dept}_@ViewData["Id"]`;
                 const $section = $(sectionId);
@@ -953,6 +980,12 @@ Note:
                  $.each(qtDeptModuleCode, function (itemIndex, item) {
                     var saveButtonId = window.QuotationIdManager.btnSave(item,@ViewData["Id"]);
                     $(`#${saveButtonId}`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roleApply[item]);
+                    if (item === "TS") {
+                        $(`#qt-make-option-TS-@ViewData["Id"]`).dxButton("instance")?.option({
+                            visible: _isSuperUser ? true : !roleApply[item],
+                            disabled: _isSuperUser ? false : roleApply[item]
+                        });
+                    }
                     var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
                     $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
                      $(`#${formId}`).dxForm("instance")?.repaint();
@@ -1510,9 +1543,11 @@ Note:
             return { bind, loadAuditLogs, loadReferenceFields, openRightCommentPanel, closeRightCommentPanel };
         })();
 
-        function renderDetail() {
+        async function renderDetail() {
             var q = getSelectedModel();
             if (!q) return;
+
+            await quotationFormStages.enter("shell");
 
             $(`#${formModuleKeyQt}-recordNo`).text(q.quotationCode);
 
@@ -1546,13 +1581,20 @@ Note:
                 }
             });
 
-            renderDeptForms();
+            await quotationFormStages.enter("formData");
+            await renderDeptForms();
             // resetOverviewAnimation(formModuleKeyQt);
             applyNodeHighlights();
             applySectionFocusHighlight();
             updateHints();
             updateSectionUpdatedTime(q);
-            initDepartmentAssignees(formModuleKeyQt,deptData, firstRender ? null : 2000);
+            await quotationFormStages.enter("assignment");
+            await renderAssignment(
+                formModuleKeyQt,
+                deptData,
+                assignmentLifecycle,
+                firstRender ? FormStageDelay.assignment : FormStageDelay.reloadAssignment
+            );
             // animateOverviewSections(formModuleKeyQt);
             scrollToDept(formModuleKeyQt, { id: `${focusDept}`, keyId: "@ViewData["Id"]" } );
             // TinyMCEElementMaker(`.htmleditor`);
@@ -1671,6 +1713,7 @@ Note:
             applyEditLock();
             await quotationRenderGate.complete(initialRenderToken);
             firstRender = false;
+            await loadSelectedWorkflow();
         });
     }, _delayQuotationsLoadForm);
 

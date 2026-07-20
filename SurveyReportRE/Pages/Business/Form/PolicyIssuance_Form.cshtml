@@ -340,11 +340,10 @@ Note:
                 animateOverviewSections(formModuleKeyPi);
                 setPhase("Ready", 100);
                 $overlay.addClass("is-leaving").attr("aria-busy", "false");
-                setTimeout(function () {
-                    if (token !== sequence) return;
-                    $root.removeClass("pi-render-loading");
-                    $overlay.removeClass("is-leaving");
-                }, 300);
+                await new Promise(resolve => setTimeout(resolve, FormStageDelay.overlayDone));
+                if (token !== sequence) return;
+                $root.removeClass("pi-render-loading");
+                $overlay.removeClass("is-leaving");
             }
 
             function fail(token, message) {
@@ -362,6 +361,13 @@ Note:
 
             return { begin, setPhase, complete, fail, setLoadingIcon };
         })();
+
+        // State cua pipeline chi nam trong instance Policy Issuance hien tai.
+        const policyIssuanceFormStages = createFormStageCoordinator(function (stageName) {
+            $(`#${policyIssuanceOverviewRootId}`).attr("data-render-stage", stageName);
+        });
+        const policyIssuanceDepartmentOrder = FormStageDelay.departmentOrder.policyIssuance;
+        const policyAssignmentLifecycle = { isAssigneeBoxRender: false };
 
         window.OverviewViewRegistry = window.OverviewViewRegistry || {};
         window.OverviewViewRegistry[policyIssuanceViewInstanceKey] = {
@@ -488,12 +494,12 @@ Note:
                   .then(instance => {
                       return ajaxGet(`/api/StepsWorkflow/GetNextStep/${instance?.workflowDefinitionId ?? "00000000-0000-0000-0000-000000000000"}/${instance?.currentStep ?? 0}`, null)
                           .then(data => {
+                              data = Array.isArray(data) ? data : [];
                               state.nextStep.instanceWorkflow = instance;
                               state.nextStep.flowSteps = data;
                               state.nextStep.currentStep = instance?.currentStep ?? 0;
 
-
-                              setTimeout(() => {
+                              return policyIssuanceFormStages.enter("routeState").then(async function () {
                                         const customRoutes = data.filter(function (route) {
                                             return String(route?.flowType || "").trim().toLowerCase() === "custom";
                                         });
@@ -603,6 +609,10 @@ Note:
                                                 .first();
                                             if (!$decisionArea.length) return $();
 
+                                            const $actionArea = $decisionArea
+                                                .find(".decision-action-row")
+                                                .first();
+
                                             return $("<div>")
                                                 .addClass("workflow-custom-route-host")
                                                 .attr({
@@ -611,7 +621,7 @@ Note:
                                                     "data-route-dept": groupDept,
                                                     "data-route-group-id": groupId
                                                 })
-                                                .appendTo($decisionArea);
+                                                .appendTo($actionArea.length ? $actionArea : $decisionArea);
                                         };
 
                                         $(`[data-pi-route-custom-host][data-record-id="${recordId}"] [data-custom-route-button]`).each(function () {
@@ -619,9 +629,10 @@ Note:
                                             $(this).remove();
                                         });
 
-                                        customRoutes.forEach(function (route, routeIndex) {
+                                        for (const [routeIndex, route] of customRoutes.entries()) {
+                                            await policyIssuanceFormStages.pace(routeIndex);
                                             const $routeHost = ensureCustomRouteHost(route);
-                                            if (!$routeHost.length) return;
+                                            if (!$routeHost.length) continue;
 
                                             const routeDept = normalizeRouteDept($routeHost.attr("data-route-dept"));
                                             const rawRouteKey = route?.routeId || route?.id || route?.actionCode || routeIndex;
@@ -640,7 +651,7 @@ Note:
                                                 onClick: function () {
                                                     const routeFormId = window.PolicyIssuanceIdManager.form(routeDept, recordId);
                                                     const routeFormItems = $(`#${routeFormId}`).dxForm("instance")?.option("formData") || {};
-                                                    const content = window.remarkBoxs?.[routeDept]?.controlRemark?.value?.() || "";
+                                                    const content = remarkBoxs?.[routeDept]?.controlRemark?.value?.() || "";
                                                     if (route.isReturn && !content) {
                                                         appNotifyWarning("Please put your reason to remarks!", false);
                                                         return;
@@ -655,11 +666,12 @@ Note:
                                                 }
                                             });
                                             applyTransitionButtonClass(`#${customButtonId}`, route);
-                                        });
+                                        }
                                            try {
                                             if (findRouteReturns?.length && tatObject) {
 
-                                                findRouteReturns.forEach(route => {
+                                                for (const [routeIndex, route] of findRouteReturns.entries()) {
+                                                    await policyIssuanceFormStages.pace(customRoutes.length + routeIndex);
 
                                                     const buttonId =
                                                         `${returnButtonId}_${route.routeId || route.actionCode}`;
@@ -697,7 +709,7 @@ Note:
                                                             }
                                                         }
                                                     });
-                                                });
+                                                }
                                             }
                                         }
                                         catch (exception) {
@@ -707,7 +719,10 @@ Note:
 
                                             if (findRoutes?.length) {
                                                 console.log(findRoutes);
-                                                findRoutes.forEach(route => {
+                                                for (const [routeIndex, route] of findRoutes.entries()) {
+                                                    await policyIssuanceFormStages.pace(
+                                                        customRoutes.length + findRouteReturns.length + routeIndex
+                                                    );
 
                                                     const buttonId =
                                                         `${submitButtonId}_${route.routeId || route.actionCode}`;
@@ -782,13 +797,13 @@ Note:
     });
     applyTransitionButtonClass(`#${buttonId}`, route);
 
-                                                });
+                                                }
                                             }
                                         }
                                         catch (exception) {
                                             console.log("Submit problem", exception);
                                         }
-                                   }, _delayRenderSubmitButton);
+                                   });
                           });
                   });
           }
@@ -834,10 +849,9 @@ Note:
                     state.quotePaging.firstLoadDone = true;
                     policyIssuanceRenderGate.setPhase("Binding policy issuance state…", 52);
                     await syncSelectedState(state.quotes[0]);
-                    policyIssuanceRenderGate.setPhase("Loading workflow and permissions…", 68);
-                    await loadSelectedWorkflow();
-                    policyIssuanceRenderGate.setPhase("Initializing department controls…", 80);
-                    renderDetail();
+                    policyIssuanceRenderGate.setPhase("Initializing department forms…", 68);
+                    await renderDetail();
+                    policyIssuanceRenderGate.setPhase("Binding PIC assignments…", 86);
                 }
                 return true;
             } catch (err) {
@@ -861,7 +875,7 @@ Note:
                     await new Promise(resolve => setTimeout(resolve, 50));
                 }
 
-                // loadQuotePage already synchronizes state, loads workflow and calls renderDetail.
+                // Chi load state, dxForm va PIC khi overlay con dang mo.
                 var loaded = await loadQuotePage(true);
                 if (!loaded) {
                     policyIssuanceRenderGate.fail(renderToken, "Policy issuance refresh failed");
@@ -879,6 +893,7 @@ Note:
                 updateHints();
                 await policyIssuanceRenderGate.complete(renderToken);
                 firstRender = false;
+                await loadSelectedWorkflow();
             })().catch(function (err) {
                 console.error("reloadPolicyIssuanceComponents error:", err);
                 policyIssuanceRenderGate.fail(renderToken, "Policy issuance refresh failed");
@@ -914,15 +929,25 @@ Note:
         }
 
 
-        function renderDeptForms() {
-             $.each(piDeptModuleCode, function (itemIndex, item) {
-                var formId = window.PolicyIssuanceIdManager.form(item,@ViewData["Id"]);
-                 $(`#${formId}`).dxForm({ formData: deptData[item], readOnly: true, colCount: 1 });
-
+        async function renderDeptForms() {
+            policyIssuanceDepartmentOrder.forEach(function (item) {
+                policyIssuanceFormStages.prepareSection(
+                    `#${formModuleKeyPi}-sec_${item}_@ViewData["Id"]`
+                );
             });
+
+            for (const item of policyIssuanceDepartmentOrder) {
+                var formId = window.PolicyIssuanceIdManager.form(item,@ViewData["Id"]);
+                $(`#${formId}`).dxForm({ formData: deptData[item], readOnly: true, colCount: 1 });
+                await policyIssuanceFormStages.revealSection(
+                    `#${formModuleKeyPi}-sec_${item}_@ViewData["Id"]`,
+                    item
+                );
+            }
             reloadState();
             applyEditLock();
             updateHints();
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
         }
 
         
@@ -1508,7 +1533,7 @@ Note:
         }
 
         function animateOverviewSections() {
-            const sequence = piDeptModuleCode;
+            const sequence = policyIssuanceDepartmentOrder;
             sequence.forEach((dept, idx) => {
                 const sectionId = `#${formModuleKeyPi}-sec_${dept}_@ViewData["Id"]`;
                 const $section = $(sectionId);
@@ -1537,9 +1562,10 @@ Note:
             resetOverviewAnimation(prefix);
         }
 
-        function renderDetail() {
+        async function renderDetail() {
             var q = getSelectedModel();
             if (!q) return;
+            await policyIssuanceFormStages.enter("shell");
             // resetOverviewAnimation();
 
             $(`#${formModuleKeyPi}-recordNo`).text(q.policyIssuanceCode);
@@ -1569,12 +1595,19 @@ Note:
             });
 
 
-            renderDeptForms();
+            await policyIssuanceFormStages.enter("formData");
+            await renderDeptForms();
             applyNodeHighlights();
             applySectionFocusHighlight();
             updateHints();
             updateSectionUpdatedTime(q);
-            initDepartmentAssignees(formModuleKeyPi, deptData, firstRender ? null : 2000  );
+            await policyIssuanceFormStages.enter("assignment");
+            await renderAssignment(
+                formModuleKeyPi,
+                deptData,
+                policyAssignmentLifecycle,
+                firstRender ? FormStageDelay.assignment : FormStageDelay.reloadAssignment
+            );
             scrollToDept(formModuleKeyPi, { id: `${state.focusDept}`, keyId: "@ViewData["Id"]" });
             // TinyMCEElementMaker(`.htmleditor`);
 
@@ -1880,6 +1913,7 @@ Note:
             renderDeptCallouts(PIC_JSON);
             await policyIssuanceRenderGate.complete(initialRenderToken);
             firstRender = false;
+            await loadSelectedWorkflow();
         }).catch(function (err) {
             console.error("Initial policy issuance render error:", err);
             policyIssuanceRenderGate.fail(initialRenderToken, "Policy issuance data is unavailable");

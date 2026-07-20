@@ -2798,8 +2798,8 @@
                      col.allowEditing = true;
                         if (col.dataField === `pic${item}`) {
                         col.cellTemplate = function (container, options) {
-                            col.value = tryParseJSON(options.data.pic, "PIC Load Problem")[item];
-                            return $(`<div>`).text(tryParseJSON(options.data.pic, "PIC Load Problem")[item]).appendTo(container);
+                            col.value = tryParseJSON(options.data.pic, "PIC Load Problem From Grid")[item];
+                            return $(`<div>`).text(tryParseJSON(options.data.pic, "PIC Load Problem  From Grid")[item]).appendTo(container);
                         }
                     }
                 });
@@ -3053,7 +3053,7 @@
 
 
         onRowUpdating(e) {
-            const currentPIC = tryParseJSON(e.oldData.pic || "{}", "PIC Load Problem") || {};
+            const currentPIC = tryParseJSON(e.oldData.pic || "{}", "PIC Load Problem From Grid") || {};
             let picChanged = false;
 
             $.each(qtDeptModuleCode, function (_, dept) {

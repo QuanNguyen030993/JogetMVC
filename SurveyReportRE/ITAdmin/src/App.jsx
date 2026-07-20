@@ -21,6 +21,7 @@ import CustomGrid from '../../TMIVCom/src/components/CustomGrid'
 import NotificationHub from './components/NotificationHub';
 import SqlStoredProcedure from './components/SqlStoredProcedure';
 import NotificationTemplate from './components/NotificationTemplate';
+import NotificationTemplateDesigner from './components/NotificationTemplateDesigner';
 import DatabaseManagement from './components/DatabaseManagement';
 import './styles/flow.css';
 import './styles/com.all.css';
@@ -32,6 +33,7 @@ import './styles/mailqueue.css';
 import './styles/menudesigner.css';
 import './styles/sladesigner.css';
 import './styles/notificationtemplate.css';
+import './styles/notificationTemplateDesigner.css';
 import './styles/databasemanagement.css';
 import "./fonts/css/all.min.css";
 
@@ -207,6 +209,7 @@ function App() {
     { id: 'notification-grid', label: 'Bảng Notification (CustomGrid)' },
     { id: 'notification-hub', label: 'Trung tâm thông báo (Notification Hub)' },
     { id: 'notification-template', label: 'Thiết lập Notification Template' },
+    { id: 'notification-designer', label: 'Thiết kế Mẫu thông báo (GrapesJS)' },
     { id: 'sladesigner', label: 'Cấu hình chỉ số SLA' }
   ];
 
@@ -301,6 +304,8 @@ function App() {
         return <NotificationHub />;
       case 'notification-template':
         return <NotificationTemplate />;
+      case 'notification-designer':
+        return <NotificationTemplateDesigner />;
       case 'sladesigner':
         return <SlaDesign />;
       default:

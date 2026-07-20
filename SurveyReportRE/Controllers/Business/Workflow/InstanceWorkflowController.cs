@@ -28,6 +28,8 @@ using ERPCore.Models.Business.Migration.Config;
 using ERPCore.Models.Migration.Business.Workflow;
 using static WorkflowDefinition_FormModel;
 using ERPCore.Models.Migration.Config;
+using RESurveyTool.Models.Models.Parsing;
+using System.Reflection;
 
 public class WorkflowTransitionSubmitRequest : SubmitRequest
 {
@@ -279,7 +281,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             transferObject,
             NotificationTypeKeys.Quotation,
             quotation.WorkflowStatus);
-        await _notificationRepository.InsertData(notification);
+        //await _notificationRepository.InsertData(notification);
 
         return Ok();
     }
@@ -1090,7 +1092,65 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             return await ControllerUtil.NotifySameEmail(new Notification(), transferObject, notificationTypeId);
         }
 
-        return await ControllerUtil.Notify(transferObject, notificationTypeId);
+
+        //dynamic transferObject = new
+        //{
+        //    DOMAIN_NAME = DOMAIN_NAME,
+        //    Title = _messageSettings.Assign.Title,
+        //    Subject = string.Format(_messageSettings.Assign.Content, loginUser),
+        //    Resource = "Assign from ",
+        //    Guid = quotation.Guid,
+        //    ReceivedBy = accountName,
+        //    Id = quotation.Id,
+        //    Code = quotation.QuotationCode,
+        //    ModuleName = nameof(Quotation)
+        //};
+
+      
+
+        //Notification notification = await ControllerUtil.Notify(transferObject, assignNotificationTypeId);
+        foreach (string item in transferObject.ReceivedBy.Split(','))
+        {
+            long? assignNotificationTypeId = await NotificationTypeResolver.ResolveIdAsync(
+              _enumDataRepository,
+              NotificationTypeKeys.Assign);
+
+            //Assign or Accept no flow
+            NotificationRequest notification = new NotificationRequest();
+            Notification Notification = new Notification();
+            Notification.Title = transferObject.Title;
+            Notification.Message = transferObject.Subject;
+            Notification.IsRead = false;
+            Notification.Resource = $"{item}_Flow";
+            Notification.System = "WM";
+            Notification.RecordGuid = transferObject.Guid;
+            Notification.Type = assignNotificationTypeId;
+
+            Notification.ReceivedBy = item;
+            notification.Notification = Notification;
+            notification.connectionId = item;
+            notification.tabPublicUrl = Util.URLObjectMaking(transferObject);
+            PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
+            string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
+            Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(transferObject));
+
+            ControllerHelper.SignalRResponse(_usersSessionRepository, "R_NotificationReceive",
+            new
+            {
+                title = transferObject.Title,
+                message = transferObject.Subject
+            }
+            , item, DOMAIN_NAME);
+
+            await _notificationRepository.InsertData(Notification);
+        }
+
+
+
+        return new Notification();
+        //return await ControllerUtil.Notify(transferObject, notificationTypeId);
+
+
     }
 
     private async Task<long?> ResolveWorkflowNotificationTypeId(

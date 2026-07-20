@@ -223,6 +223,8 @@ function startSignalRConnection() {
                     console.warn("Shared overview reload handler is not available.", items);
                     return;
                 }
+
+                    //window.reloadOverviewViewComponents("@moduleCode", @quotationId, e.element, true);
                 window.reloadOverviewViewComponents(items.type, items.id)
                     .catch(function (err) {
                         console.error("Submitted item reload failed", err);

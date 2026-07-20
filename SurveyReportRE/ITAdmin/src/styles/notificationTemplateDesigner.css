@@ -1,0 +1,299 @@
+/* Notification Template Designer Stylesheet */
+
+.notification-template-designer {
+    width: 100%;
+    height: 100vh;
+    background: #f5f7fb;
+}
+
+.notification-content {
+    width: 650px;
+    min-height: 350px;
+    margin: auto;
+    padding: 30px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px #ddd;
+}
+
+.tmiv-field {
+    background: #e8f3ff;
+    border: 1px dashed #1677ff;
+    padding: 3px 8px;
+    border-radius: 5px;
+    color: #1677ff;
+}
+
+/* MAIN LAYOUT */
+.designer-container {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+}
+
+/* LEFT FIELD PANEL */
+.field-panel {
+    width: 250px;
+    min-width: 250px;
+    background: #fff;
+    border-right: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+}
+
+.panel-header {
+    height: 52px;
+    display: flex;
+    align-items: center;
+    padding: 0 18px;
+    font-size: 15px;
+    font-weight: 600;
+    border-bottom: 1px solid #eee;
+    color: #0f172a;
+}
+
+.fields-list {
+    flex: 1;
+    padding: 14px;
+    overflow-y: auto;
+}
+
+.field-item {
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    color: #374151;
+    font-size: 13.5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.field-item:hover {
+    background: #eff6ff;
+    border-color: #93c5fd;
+    color: #1d4ed8;
+}
+
+.field-item.selected {
+    background: #dbeafe;
+    border-color: #2563eb;
+    color: #1e40af;
+    font-weight: 600;
+}
+
+.panel-actions {
+    padding: 14px;
+    border-top: 1px solid #eee;
+}
+
+.btn {
+    height: 36px;
+    width: 100%;
+    border: 0;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 13.5px;
+}
+
+.btn.primary {
+    background: #2563eb;
+}
+
+.btn.primary:hover {
+    background: #1d4ed8;
+}
+
+.btn.secondary {
+    background: #64748b;
+}
+
+.btn.secondary:hover {
+    background: #475569;
+}
+
+.btn.danger {
+    background: #ef4444;
+}
+
+.btn.danger:hover {
+    background: #dc2626;
+}
+
+/* CENTER EDITOR */
+.editor-wrapper {
+    flex: 1;
+    height: 100vh;
+    display: flex;
+    min-width: 0;
+}
+
+.grapesjs-container {
+    flex: 1;
+    height: 100%;
+    min-width: 0;
+}
+
+/* RIGHT TOOL PANEL */
+.tool-panel {
+    width: 230px;
+    min-width: 230px;
+    background: #fff;
+    border-left: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+}
+
+.tool-title {
+    height: 52px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    font-size: 15px;
+    font-weight: 600;
+    border-bottom: 1px solid #eee;
+    color: #0f172a;
+}
+
+#gjs-notification-blocks {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    background: #2f2f2f;
+}
+
+#gjs-notification-blocks .gjs-blocks-c {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+#gjs-notification-blocks .gjs-block {
+    width: auto !important;
+    min-height: 60px !important;
+    flex-wrap: wrap;
+    background: #ffffff !important;
+    border: 1px solid transparent !important;
+    border-radius: 14px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    cursor: grab;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: all 0.2s ease;
+}
+
+#gjs-notification-blocks .gjs-block:hover {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 6px 18px rgba(59,130,246,0.25);
+    transform: translateY(-3px) scale(1.02);
+}
+
+.gjs-block-label {
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    color: #374151 !important;
+    text-align: center;
+    white-space: normal !important;
+    word-break: break-word;
+}
+
+.gjs-title {
+    color: #d1d5db !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    padding: 6px 2px;
+}
+
+.gjs-badge {
+    display: none !important;
+}
+
+/* CONTROL ELEMENT PANEL (SQL BOX & ENUM SETTINGS) */
+.sql-box {
+    width: 320px;
+    min-width: 320px;
+    background: #ffffff;
+    border-left: 1px solid #e2e8f0;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+}
+
+.control-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.control-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.control-input {
+    width: 100%;
+    height: 36px;
+    padding: 0 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #1e293b;
+    outline: none;
+}
+
+.control-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.control-select {
+    width: 100%;
+    height: 36px;
+    padding: 0 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #1e293b;
+    background: #ffffff;
+    outline: none;
+}
+
+.control-select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.sql-input {
+    width: 100%;
+    min-height: 180px;
+    font-family: monospace;
+    font-size: 12.5px;
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    color: #0f172a;
+    background: #f8fafc;
+    resize: vertical;
+    outline: none;
+}
+
+.sql-input:focus {
+    border-color: #2563eb;
+    background: #ffffff;
+}

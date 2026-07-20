@@ -2441,7 +2441,14 @@
             );
 
             try {
-                await Promise.resolve(store.update(recordId, values));
+                if (store && typeof store.update === "function") {
+                    await Promise.resolve(store.update(recordId, values));
+                } else {
+                    await Promise.resolve(ajaxPut(`/api/${controllerName}/UpdateData`, {
+                        key: recordId,
+                        values: JSON.stringify(values)
+                    }));
+                }
                 updateCompleted = true;
                 await Promise.resolve(
                     ajaxGet(`/api/${controllerName}/AssignTask/${recordId}/${dept}/${_loginUser}`, null)
@@ -2620,7 +2627,77 @@
             }, timeout + 100);
             }
 
-    function renderDepartmentAssigneeBox(selector, options, hideIfMuliple = true) {
+    /**
+     * Render assignment theo Promise de loading tong co the doi dxTagBox bind PIC.
+     * lifecycleState duoc truyen tu form; khong dat co render trung gian tren window.
+     */
+    async function renderAssignment(moduleKey, data, lifecycleState, delay) {
+        const renderState = lifecycleState || { isAssigneeBoxRender: false };
+        const isQuotation = moduleKey === "qt";
+        const departments = isQuotation
+            ? FormStageDelay.departmentOrder.quotation
+            : FormStageDelay.departmentOrder.policyIssuance;
+        const idManager = isQuotation ? window.QuotationIdManager : window.PolicyIssuanceIdManager;
+        const schemeName = isQuotation ? "Quotation" : "PolicyIssuance";
+        const sourceData = data || {};
+
+        renderState.isAssigneeBoxRender = false;
+        await new Promise(resolve => setTimeout(resolve, Math.max(0, Number(delay) || 0)));
+
+        for (const dept of departments) {
+            const dataForm = sourceData[dept];
+            if (!dataForm) continue;
+
+            const currentPic = getDefaultPicByDept(dept, dataForm);
+            const $section = $(`#${moduleKey}-sec_${dept}_${dataForm.id}`);
+            $section
+                .find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer")
+                .toggle(!!currentPic);
+
+            await renderDepartmentAssigneeBox(`#${idManager.assigneeBox(dept, dataForm.id)}`, {
+                groupName: dept,
+                dataForm: dataForm,
+                onClosed: function (selectedItems) {
+                    if (!renderState.isAssigneeBoxRender || !Array.isArray(selectedItems)) return;
+
+                    const formId = idManager.form(dept, this.dataForm.id);
+                    const form = $(`#${formId}`).dxForm("instance");
+                    const store = form?.option("dataSource");
+                    let picMap = {};
+                    try {
+                        picMap = JSON.parse(this.dataForm.pIC || this.dataForm.pic || "{}");
+                    } catch (e) {
+                        picMap = {};
+                    }
+
+                    // valueExpr la accountName; emailName chi ho tro record cu.
+                    const accounts = selectedItems
+                        .map(item => item?.accountName || item?.emailName)
+                        .filter(Boolean);
+                    $section
+                        .find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer")
+                        .toggle(accounts.length > 0);
+
+                    // Giu nguyen full selection. Loai currentPic tai day se lam PIC cu
+                    // bi mat chi vi user mo roi dong dropdown ma khong sua gi.
+                    picMap[dept] = accounts.join(",");
+                    this.dataForm.pIC = JSON.stringify(picMap);
+                    persistDepartmentAssignment(
+                        schemeName,
+                        this.dataForm.id,
+                        dept,
+                        store,
+                        { pIC: this.dataForm.pIC },
+                        formId
+                    );
+                }
+            });
+        }
+
+        renderState.isAssigneeBoxRender = true;
+    }
+
+    async function renderDepartmentAssigneeBox(selector, options, hideIfMuliple = true) {
         const settings = $.extend(true, {
             groupName: "",
             dataForm: {},
@@ -2636,6 +2713,7 @@
             loadMode: "raw",
 
             load: function (loadOptions) {
+                loadOptions = loadOptions || {};
                 return $.ajax({
                     url: "api/Employee/GetAssignableByGroup",
                     type: "GET",
@@ -2675,13 +2753,37 @@
         const $el = $(selector);
         if ($el.length === 0) return;
 
+        // Nap datasource truoc khi gan value. Voi CustomStore, chi option("value")
+        // co the khien TagBox render key truoc khi byKey tra ve va hien sai PIC.
+        let employees = [];
+        try {
+            employees = await Promise.resolve(store.load());
+            employees = Array.isArray(employees) ? employees.slice() : [];
+
+            const loadedKeys = new Set(employees.map(item => item?.accountName).filter(Boolean));
+            const missingKeys = selectedValues.filter(key => !loadedKeys.has(key));
+            const missingEmployees = await Promise.all(missingKeys.map(key =>
+                Promise.resolve(store.byKey(key)).catch(() => null)
+            ));
+            missingEmployees.filter(Boolean).forEach(item => employees.push(item));
+        } catch (error) {
+            console.warn(`Assignment list for ${settings.groupName} could not be preloaded.`, error);
+        }
+
+        const resolvedStore = new DevExpress.data.ArrayStore({
+            key: "accountName",
+            data: employees
+        });
+
         // Reuse existing dxTagBox instance to avoid recreating it
         const existingInstance = DevExpress.ui.dxTagBox.getInstance($el[0]);
         if (existingInstance) {
             existingInstance.option({
-                dataSource: store,
+                dataSource: resolvedStore,
                 value: selectedValues
             });
+            existingInstance.repaint();
+            await new Promise(resolve => requestAnimationFrame(resolve));
             return;
         }
 
@@ -2689,7 +2791,7 @@
             elementAttr: {
                 class: "outlined-tagbox"
             },
-            dataSource: store,
+            dataSource: resolvedStore,
             valueExpr: "accountName",
             displayExpr: "fullName",
             height: 38,
@@ -2770,6 +2872,7 @@
         $(tagBox).on("click", function (e) {
             e.stopPropagation();
         });
+        await new Promise(resolve => requestAnimationFrame(resolve));
     }
 
         function reloadWorkflow(selectedGuid, selectedId, stageDept, moduleKey) {
@@ -6878,10 +6981,28 @@ function styleModeChange(item){
                 //     }
                 // }
 
-            function delayAcceptStatus(mainFields,formId,dept, acceptButtonId, acceptButtonIdStatus,rejectButtonId, rejectButtonIdStatus ){
-                setTimeout(() => {
-                  renderDecisionDeferred(formId, dept, "decisionGroup.acceptButton",mainFields, acceptButtonId, acceptButtonIdStatus)
-                },_delayRenderDecisionButton);
+            // function delayAcceptStatus(mainFields,formId,dept, acceptButtonId, acceptButtonIdStatus,rejectButtonId, rejectButtonIdStatus ){
+            //     setTimeout(() => {
+            //       renderDecisionDeferred(formId, dept, "decisionGroup.acceptButton",mainFields, acceptButtonId, acceptButtonIdStatus)
+            //     },_delayRenderDecisionButton);
+            // }
+
+            function waitForDecisionRouteStage(formId) {
+                var $form = $(`#${formId}`);
+                var $stageRoot = $form.closest("[data-render-stage]");
+                if (!$stageRoot.length || $stageRoot.attr("data-render-stage") === "routeState") {
+                    return Promise.resolve();
+                }
+
+                return new Promise(function (resolve) {
+                    var root = $stageRoot[0];
+                    var observer = new MutationObserver(function () {
+                        if ($stageRoot.attr("data-render-stage") !== "routeState") return;
+                        observer.disconnect();
+                        resolve();
+                    });
+                    observer.observe(root, { attributes: true, attributeFilter: ["data-render-stage"] });
+                });
             }
 
             function delayAcceptStatusV2(mainFields,formProps, ...params ){
@@ -6889,11 +7010,13 @@ function styleModeChange(item){
                 var initialButtonId = getDelayAcceptButtonId(params[0]);
                 var initialStatusId = getDelayAcceptStatusId(params[0]) || params[1] || params[3];
                 setTimeout(() => {
-                    setDecisionCommonStatus(initialStatusId, initialButtonId, "idle", "No status");
+                    setDecisionCommonStatus(initialStatusId, initialButtonId, "loading");
                 }, 0);
-                setTimeout(() => {
-                    renderDecisionDeferredV2(formProps, `decision${delayObject.dept}Group.acceptButton`, mainFields, ...params)
-                },_delayRenderDecisionButton);
+                waitForDecisionRouteStage(formProps.formId).then(function () {
+                    setTimeout(() => {
+                        renderDecisionDeferredV2(formProps, `decision${delayObject.dept}Group.acceptButton`, mainFields, ...params)
+                    }, FormStageDelay.routeState);
+                });
             }
 
     function ensureDecisionCommonStatus(statusId, buttonId) {
@@ -6902,30 +7025,37 @@ function styleModeChange(item){
         var $status = $(`#${statusId}`);
         var $button = buttonId ? $(`#${buttonId}`) : $();
         if (!$status.length) {
-            $status = $(`<span id="${statusId}" class="accept-status-indicator decision-common-status"></span>`);
+            $status = $(`<span id="${statusId}" class="accept-status-indicator decision-common-status decision-status-button" role="button" aria-disabled="true"></span>`);
         }
 
         var $fieldItem = $button.length ? $button.closest(".dx-field-item") : $status.closest(".dx-field-item");
-        var $labelContent = $fieldItem.find(".dx-field-item-label-content").first();
-        if (!$labelContent.length) {
-            $labelContent = $fieldItem.find(".dx-field-item-label").first();
-        }
+        var $content = $button.length
+            ? $button.closest(".dx-field-item-content")
+            : $fieldItem.find(".dx-field-item-content").first();
 
-        if ($labelContent.length) {
-            $labelContent.css({
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                whiteSpace: "nowrap"
-            });
-            if (!$status.parent().is($labelContent)) {
-                $status.detach().appendTo($labelContent);
+        if ($content.length) {
+            var $statusRow = $content.children(".decision-status-row").first();
+            var $actionRow = $content.children(".decision-action-row").first();
+            if (!$statusRow.length) {
+                $statusRow = $('<div class="decision-status-row" aria-live="polite"></div>').prependTo($content);
+            }
+            if (!$actionRow.length) {
+                $actionRow = $('<div class="decision-action-row"></div>').appendTo($content);
+            }
+            if (!$status.parent().is($statusRow)) {
+                $status.detach().appendTo($statusRow);
+            }
+            if ($button.length && !$button.parent().is($actionRow)) {
+                $button.detach().appendTo($actionRow);
             }
         } else if (!$status.parent().length && $button.length) {
             $status.prependTo($button.parent());
         }
 
-        $status.css({
+        $status
+        .addClass("decision-common-status decision-status-button")
+        .attr({ role: "button", "aria-disabled": "true" })
+        .css({
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
@@ -6936,7 +7066,8 @@ function styleModeChange(item){
             fontSize: "11px",
             fontWeight: "600",
             lineHeight: "16px",
-            boxSizing: "border-box"
+            boxSizing: "border-box",
+            width: "fit-content"
         });
 
         return $status;
@@ -6981,6 +7112,7 @@ function styleModeChange(item){
     }
 
     function getDecisionCommonStatus(formItems, dept, tatObject) {
+        debugger
         var rawActionStatus = formItems?.actionStatus;
         var actionStatus = rawActionStatus && typeof rawActionStatus === "object"
             ? rawActionStatus
@@ -7063,70 +7195,70 @@ function styleModeChange(item){
 
        
 
-    function renderDecisionDeferred(formId, dept, groupName, mainField, acceptButtonId, acceptStatusElement) {
+    // function renderDecisionDeferred(formId, dept, groupName, mainField, acceptButtonId, acceptStatusElement) {
 
 
-            var form = $(`#${formId}`).dxForm("instance");
-            if (!form) return;
+    //         var form = $(`#${formId}`).dxForm("instance");
+    //         if (!form) return;
 
-            var formItems = form.option("formData") || {};
+    //         var formItems = form.option("formData") || {};
 
-            var picObject = tryParseJSON(formItems.pic, "PIC Load Problem") || {};
-                var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
-            var pic = picObject[dept];
-            if (!pic) {
+    //         var picObject = tryParseJSON(formItems.pic, "PIC Load Problem") || {};
+    //             var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
+    //         var pic = picObject[dept];
+    //         if (!pic) {
 
-                return;
+    //             return;
 
-            }
+    //         }
 
-            form.itemOption(groupName, "visible", pic ? true : false);
-            setTimeout(() => {
+    //         form.itemOption(groupName, "visible", pic ? true : false);
+    //         setTimeout(() => {
             
             
-                       $(`#${acceptButtonId}`).dxButton("instance").option("onClick", function (e){
-                            var passingObject = {
+    //                    $(`#${acceptButtonId}`).dxButton("instance").option("onClick", function (e){
+    //                         var passingObject = {
 
-                                       statusName: `${dept} Process`,
+    //                                    statusName: `${dept} Process`,
 
-                                       Comment: `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`,
+    //                                    Comment: `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`,
 
-                                       formItems: formItems,
+    //                                    formItems: formItems,
 
-                                       dept: dept,
+    //                                    dept: dept,
 
-                                       url: "/api/Quotation/UpdateData",
+    //                                    url: "/api/Quotation/UpdateData",
 
-                                       urlLog: "/api/Quotation/LogAction",
+    //                                    urlLog: "/api/Quotation/LogAction",
 
-                                       schemeName: "Quotation"
+    //                                    schemeName: "Quotation"
 
-                                   };
+    //                                };
 
-                                       acceptDecision(passingObject, dept);
-                       } )
+    //                                    acceptDecision(passingObject, dept);
+    //                    } )
                
-                      if (tatObject) if (tatObject[dept]?.AcceptDate)
-                    {
-                         if (acceptButtonId)
-                         {
-                                 form.option("items", [
-                                     ...form.option("items"),
-                                     ...mainField
-                                 ]);
-                            $(`#${acceptButtonId}`).css("background-color", window.DecisionColors.accepted);
-                                updateDelayAcceptStatus(
-                                    acceptStatusElement,
-                                    acceptButtonId,
-                                    tatObject[dept]?.AcceptDate
-                                );
-                            $(`#${acceptButtonId}`).dxButton("instance").option("disabled", true);
+    //                   if (tatObject) if (tatObject[dept]?.AcceptDate)
+    //                 {
+    //                      if (acceptButtonId)
+    //                      {
+    //                              form.option("items", [
+    //                                  ...form.option("items"),
+    //                                  ...mainField
+    //                              ]);
+    //                         $(`#${acceptButtonId}`).css("background-color", window.DecisionColors.accepted);
+    //                             updateDelayAcceptStatus(
+    //                                 acceptStatusElement,
+    //                                 acceptButtonId,
+    //                                 tatObject[dept]?.AcceptDate
+    //                             );
+    //                         $(`#${acceptButtonId}`).dxButton("instance").option("disabled", true);
                              
-                         }
+    //                      }
                         
-                }
-                               }, 100);
-    }
+    //             }
+    //                            }, 100);
+    // }
 
 
         function getDelayAcceptButtonId(item) {
@@ -7329,23 +7461,16 @@ function styleModeChange(item){
             var $host = $(`#${buttonId}`);
             if (!$host.length) return false;
 
-            var statusButtonId = item.statusButtonId || `${buttonId}_status`;
-            if (item.clearRouteButtonsOnStatus !== false) {
-                $host.children().not(`#${statusButtonId}`).remove();
-            }
-            var $statusButton = $(`#${statusButtonId}`);
-            if (!$statusButton.length) {
-                $statusButton = $(`<div id="${statusButtonId}"></div>`).appendTo($host);
-            }
-
-            $statusButton.dxButton({
-                disabled: item.statusButtonDisabled !== false,
-                text: statusText,
-                icon: statusIcon,
-                type: item.type || "info"
-            });
-            applyTransitionButtonClass(`#${statusButtonId}`, { buttonClass: statusClass });
-            $statusButton.find(".dx-button").css("background-color", item.acceptedColor || window.DecisionColors.accepted);
+            // Status la chip/button nho o hang tren; button thao tac goc duoc giu
+            // o hang duoi de layout khong nhay khi actionStatus/TAT tra ve.
+            var statusElementId = getDelayAcceptStatusId(item) || item.statusButtonId || `${buttonId}_status`;
+            setDecisionCommonStatus(
+                statusElementId,
+                buttonId,
+                "status",
+                statusText,
+                item.statusTitle || ""
+            );
 
             return true;
         }
@@ -7456,10 +7581,26 @@ function styleModeChange(item){
                     }
                     return;
                 }
-            //if (item && typeof item === "object" && item.useDefaultDecisionClick) {
                     var objSnapshot = cloneReusableOptions(formProps);
-                    instance.value.option("onClick", buildDefaultDecisionClick(objSnapshot));
-            //}
+                    var defaultButtonOptions = {
+                        onClick: buildDefaultDecisionClick(objSnapshot)
+                    };
+                    if (item && typeof item === "object") {
+                        if (item.text) defaultButtonOptions.text = item.text;
+                        if (item.icon) defaultButtonOptions.icon = item.icon;
+                        if (item.type) defaultButtonOptions.type = item.type;
+                        if (typeof item.disabled !== "undefined") {
+                            defaultButtonOptions.disabled = item.disabled;
+                        }
+                    }
+                    instance.value.option(defaultButtonOptions);
+                    applyTransitionButtonClass(`#${buttonId}`, item, item?.buttonClass);
+                    if (item?.buttonColor || item?.backgroundColor) {
+                        $(`#${buttonId}`).find(".dx-button").css(
+                            "background-color",
+                            item.buttonColor || item.backgroundColor
+                        );
+                    }
             }
         }
 
@@ -7467,28 +7608,28 @@ function styleModeChange(item){
 
             // setTimeout(function () {
 
-                var form = $(`#${formProps.formId}`).dxForm("instance");
-                if (!form) return;
-
-                var formItems = form.option("formData") || {};
-
-                var picObject = tryParseJSON(formItems.pic, "PIC Load Problem") || {};
-                    var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
-                var pic = picObject[formProps.dept];
-                if (!pic) {
-
-                    return;
-
-                }
-
-                try {
-                    form.itemOption(groupName, "visible", pic ? true : false);
-                } catch (e) {
-                }
+              
                 var commonAcceptButtonId = getDelayAcceptButtonId(params[0]);
                 var commonStatusId = getDelayAcceptStatusId(params[0]) || params[1] || params[3];
                 setDecisionCommonStatus(commonStatusId, commonAcceptButtonId, "loading");
                 setTimeout(() => {
+                            var form = $(`#${formProps.formId}`).dxForm("instance");
+                            if (!form) return;
+
+                            var formItems = form.option("formData") || {};
+                            var picObject = tryParseJSON(formItems.pic, "PIC Load Problem") || {};
+                            //var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
+                            var pic = picObject[formProps.dept];
+                            if (!pic) {
+
+                                return;
+
+                            }
+
+                            try {
+                                form.itemOption(groupName, "visible", pic ? true : false);
+                            } catch (e) {
+                            }
                            var latestFormItems = form.option("formData") || {};
                            var latestTatObject = tryParseJSON(latestFormItems.turnAroundTimeAttributes, "TAT Load Button Problem");
                            // Legacy callers (UW/LMKT) pass buttonId/statusId pairs.
@@ -7527,7 +7668,7 @@ function styleModeChange(item){
                                }
                            });
                           var acceptButtonId = getDelayAcceptButtonId(params[0]);
-                          if (!renderedStoredStatus && latestTatObject?.[formProps.dept]?.AcceptDate)
+                          if (latestTatObject?.[formProps.dept]?.AcceptDate)
                              {
                               var acceptStatusId = getDelayAcceptStatusId(params[0]) || params[1];
                               var skipAcceptedMainFields = params[0] && typeof params[0] === "object" && params[0].skipAcceptedMainFields;
@@ -7598,13 +7739,14 @@ function styleModeChange(item){
                                     finalDecisionStatus.text,
                                     finalDecisionStatus.title
                                 );
-                                if (formItems.stageDept == formProps.dept) {
+                                if (formItems.stageDept == formProps.dept
+                                    && !latestTatObject?.[formProps.dept]?.AcceptDate
+                                    && !renderedStoredStatus) {
+                                    $(`#${acceptButtonId}`).dxButton("instance")?.option("disabled", false);
+                                }
 
-                                  $(`#${acceptButtonId}`).dxButton("instance").option("disabled",false);
-                            }
-                           
-                            
-                                   },1000);
+
+        }, _delayUnlockForm);
 
 
         }

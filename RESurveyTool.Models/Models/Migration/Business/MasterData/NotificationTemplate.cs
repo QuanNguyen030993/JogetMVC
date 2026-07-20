@@ -15,6 +15,8 @@ namespace ERPCore.Models.Migration.Business.MasterData
         public long? TypeId { get; set; }
         public EnumData? TypeEnum { get; set; }
 
+        public string NotificationQuery { get; set; } = "";
+
         public bool? IsActive { get; set; }
     }
 }
