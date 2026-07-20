@@ -123,7 +123,8 @@ namespace ERPCore.ControllerUtil
             UsersSession currentUsersSession = usersSession.Where(w => w.CreatedBy == loginUser).OrderByDescending(s => s.CreatedDate)
                 .FirstOrDefault();
 
-
+            //IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
+            //OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(domainName, "") == connectionId);
             await FileProcessingHub._hubContext.Clients.Client(currentUsersSession?.SignalRConnectionId ?? "").SendAsync(UIMethod,
                 returnObject);
         }

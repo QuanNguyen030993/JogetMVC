@@ -8,8 +8,8 @@ namespace ERPCore.Models.Business.Migration.Config
 {
     public class Message
     {
-        public InitializeMessage InitializeMessage { get; set; }
-        public OverviewMessageLoading OverviewMessageLoading { get; set; }
+        public Assign Assign { get; set; }
+        public Accept Accept { get; set; }
     }
 
     public class TemplateNotifyMessage
@@ -19,10 +19,10 @@ namespace ERPCore.Models.Business.Migration.Config
 
     }
 
-    public class InitializeMessage : TemplateNotifyMessage
+    public class Assign : TemplateNotifyMessage
     {
     }
-    public class OverviewMessageLoading : TemplateNotifyMessage
+    public class Accept : TemplateNotifyMessage
     {
     }
 }

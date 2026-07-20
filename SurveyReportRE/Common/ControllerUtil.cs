@@ -115,14 +115,14 @@ namespace ERPCore.ControllerUtil
 
         public static (PICAttributes PICMain, PICSysHandleAttributes PICLeader, PICAttributes PICHOD) PersonInChargeHandle(dynamic objectIn, StepsWorkflow stepsWorkflow, Microsoft.Extensions.Options.IOptionsMonitor<BusinessConfig> businessConfig, List<EnumData> siteEnums)
         {
-            EnumData enumData = siteEnums.FirstOrDefault(f => f.Code == objectIn.BranchCode);
+            EnumData enumData = siteEnums.FirstOrDefault(f => f.Code == objectIn?.BranchCode?.Value);
             var getBranchId = businessConfig.CurrentValue.Sites.Values.Where(w => w.BranchCode == enumData.Code).ToList();
             PICSysHandleAttributes PICLeader = new PICSysHandleAttributes();
             PICAttributes PICHOD = new PICAttributes();
             PICLeader = getBranchId.First().LeaderFollowRequest;
             PICHOD = getBranchId.First().HODFollowRequest;
             PICAttributes PICMain = new PICAttributes();
-            PICMain = JsonConvert.DeserializeObject<PICAttributes>(objectIn.PIC);
+            PICMain = JsonConvert.DeserializeObject<PICAttributes>(objectIn?.PIC?.Value ?? "");
             //TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(objectIn.TurnAroundTimeAttributes);
             //TurnAroundItem tatObject = stepsWorkflow.ToNodeId switch
             //{
@@ -174,9 +174,11 @@ namespace ERPCore.ControllerUtil
             foreach (string item in transferObject.ReceivedBy.Split(','))
             {
                 OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(DOMAIN_NAME, "") == item);
+
+
                 if (onlineUser?.ConnectionId != null)
                 {
-                    await FileProcessingHub._hubContext.Clients.Client(onlineUser?.ConnectionId).SendAsync("NotificationReceive",
+                    await FileProcessingHub._hubContext.Clients.Client(onlineUser?.ConnectionId).SendAsync("R_NotificationReceive",
                               new
                               {
                                   title = notification?.Notification?.Title ?? "",
@@ -187,39 +189,7 @@ namespace ERPCore.ControllerUtil
             return Notification;
         }
 
-
-        //public static async Task<Notification> MakeNotificationFromEmail(Notification Notification, dynamic transferObject
-        //    )
-        //{
-        //    string DOMAIN_NAME = transferObject.DOMAIN_NAME;
-        //    NotificationRequest notification = new NotificationRequest();
-        //    notification.Notification = Notification;
-        //    notification.connectionId = transferObject.ReceivedBy;
-        //    notification.tabPublicUrl = new
-        //    {
-        //        url = $"/Business/Form/{nameof(Quotation)}_Form/{transferObject.Id}",
-        //        caption = $"form_{nameof(Quotation)}_Form_{transferObject.Id}",
-        //        name = $"{nameof(Quotation)} {transferObject.Code}",
-        //        data = ""
-        //    };
-        //    IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
-        //    foreach (string item in transferObject.ReceivedBy.Split(','))
-        //    {
-        //        OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(DOMAIN_NAME, "") == item);
-        //        if (onlineUser?.ConnectionId != null)
-        //        {
-        //            await FileProcessingHub._hubContext.Clients.Client(onlineUser?.ConnectionId).SendAsync("NotificationReceive",
-        //                      new
-        //                      {
-        //                          title = notification?.Notification?.Title ?? "",
-        //                          message = notification?.Notification?.Message ?? ""
-        //                      });
-        //        }
-        //    }
-
-        //    return Notification;
-        //}
-
+       
 
         public static async Task<Notification> NotifySameEmail(
             Notification Notification,
@@ -245,7 +215,7 @@ namespace ERPCore.ControllerUtil
                 OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(DOMAIN_NAME, "") == item);
                 if (onlineUser?.ConnectionId != null)
                 {
-                    await FileProcessingHub._hubContext.Clients.Client(onlineUser?.ConnectionId).SendAsync("NotificationReceive",
+                    await FileProcessingHub._hubContext.Clients.Client(onlineUser?.ConnectionId).SendAsync("R_NotificationReceive",
                               new
                               {
                                   title = notification?.Notification?.Title ?? "",
@@ -269,7 +239,7 @@ namespace ERPCore.ControllerUtil
             notification.Title = transferObject.Title;
             notification.Message = transferObject.Subject;
             notification.IsRead = false;
-            notification.Url = $"/Business/Form/{moduleName}_Form/{transferObject.Id}";
+            notification.Url = Util.URLObjectMaking(transferObject);// $"/Business/Form/{moduleName}_Form/{transferObject.Id}";
             notification.Resource = $"{transferObject.Resource}";
             notification.System = "WM";
             notification.RecordGuid = transferObject.Guid;

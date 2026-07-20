@@ -28,7 +28,6 @@ using ERPCore.Models.Models.Parsing;
 using static ERPCore.Models.Models.Parsing.JsonHandle;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
-using Microsoft.SharePoint.Taxonomy.WebServices;
 using System.Collections.Generic;
 
 [ApiController]
@@ -112,7 +111,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         _productRepository = new BaseRepository<Product>(configuration, _httpContextAccessor);
         _lineRepository = new BaseRepository<Line>(configuration, _httpContextAccessor);
         _slaRepository = new BaseRepository<SLA>(configuration, _httpContextAccessor);
-        _usersSessionRepository =  new BaseRepository<UsersSession>(configuration, _httpContextAccessor);
+        _usersSessionRepository = new BaseRepository<UsersSession>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
         _messageSettings = configuration.GetSection("Message").Get<Message>();
 
@@ -132,7 +131,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         _blobStorageSettings = blobStorageSettings;
         _businessConfig = businessConfig;
         _logger = logger;
-        
+
     }
 
     public async Task<IActionResult> GetIdsList()
@@ -158,12 +157,12 @@ public class QuotationController : BaseControllerApi<Quotation>
         entity = await _BaseRepository.GetSingleObject(s => s.Id == id);
         entity.IsNotMakeOption = true;
         await _BaseRepository.UpdateData(entity, JsonConvert.SerializeObject(new { IsNotMakeOption = true }), entity.Id, "Id");
-        ControllerHelper.SignalRResponse(_usersSessionRepository,"R_ItemSubmitted", new { id = id,type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        ControllerHelper.SignalRResponse(_usersSessionRepository, "R_ItemSubmitted", new { id = id, type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
 
         return Ok();
     }
     [HttpGet]
-    public  async Task<ActionResult<List<Quotation>>> RenewList()
+    public async Task<ActionResult<List<Quotation>>> RenewList()
     {
         var quotations = await _BaseRepository.GetAll(HttpContext.Request.Query.ToList());
         var renewSlaCode = _businessConfig.CurrentValue.SLA?.RenewQuotation;
@@ -225,7 +224,7 @@ public class QuotationController : BaseControllerApi<Quotation>
     }
 
 
-        [HttpGet]
+    [HttpGet]
     public override async Task<ActionResult<List<Quotation>>> GetAll()
     {
         var queryParams = HttpContext.Request.Query;
@@ -312,67 +311,67 @@ public class QuotationController : BaseControllerApi<Quotation>
             .ToList();
 
         string ccMails = "";
-        
-       
-            if (mailTemplate != null)
+
+
+        if (mailTemplate != null)
+        {
+            DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
+            Dictionary<string, object> flowDictionaryData = new Dictionary<string, object>();
+            if (query.Rows.Count > 0)
             {
-                DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
-                Dictionary<string, object> flowDictionaryData = new Dictionary<string, object>();
-                if (query.Rows.Count > 0)
+                flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
+                MailQueue mailQueue = new MailQueue();
+
+                string contentHandle = MailUtil.BodyContentHandle(mailTemplate.TemplateContent, new Dictionary<string, object>());
+                mailTemplate.TemplateMailTitle = MailUtil.TitleContentHandle(mailTemplate.TemplateMailTitle, new Dictionary<string, object>());
+                mailTemplate.PrefixTitleMail = MailUtil.TitleContentHandle(mailTemplate.PrefixTitleMail, new Dictionary<string, object>());
+                if (mailTemplate != null && rqEmployee != null)
                 {
-                    flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
-                    MailQueue mailQueue = new MailQueue();
-
-                    string contentHandle = MailUtil.BodyContentHandle(mailTemplate.TemplateContent, new Dictionary<string, object> ());
-                    mailTemplate.TemplateMailTitle = MailUtil.TitleContentHandle(mailTemplate.TemplateMailTitle, new Dictionary<string, object>());
-                    mailTemplate.PrefixTitleMail = MailUtil.TitleContentHandle(mailTemplate.PrefixTitleMail, new Dictionary<string, object>());
-                    if (mailTemplate != null && rqEmployee != null)
+                    if (mailTemplate.IsActive ?? false)
                     {
-                        if (mailTemplate.IsActive ?? false)
+                        MailItem mailItem = new MailItem();
+                        mailItem.ToName = !string.IsNullOrEmpty(rqEmployee.FullName) ? rqEmployee.FullName : mailTemplate.To;
+                        mailItem.ToEmail = !string.IsNullOrEmpty(rqEmployee.Email) ? rqEmployee.Email : mailTemplate.To;
+                        mailItem.Subject = $"{mailTemplate.PrefixTitleMail} {mailTemplate.TemplateMailTitle}";
+                        mailItem.HtmlBody = contentHandle;
+                        mailItem.TextBody = "";
+
+                        string ccAddresses = string.Join(';', mailTemplate.CC.Split(';').Concat(Util.CCAllEmail(_emailSettings.FollowCC, "").Split(';')).Where(w => !string.IsNullOrEmpty(w)));
+                        mailItem.CC = ccAddresses;
+                        //MailUtil.SendEmail(_emailSettings, mailItem, null).Wait();
+                        foreach (var memberName in result)
                         {
-                            MailItem mailItem = new MailItem();
-                            mailItem.ToName = !string.IsNullOrEmpty(rqEmployee.FullName) ? rqEmployee.FullName : mailTemplate.To;
-                            mailItem.ToEmail = !string.IsNullOrEmpty(rqEmployee.Email) ? rqEmployee.Email : mailTemplate.To;
-                            mailItem.Subject = $"{mailTemplate.PrefixTitleMail} {mailTemplate.TemplateMailTitle}";
-                            mailItem.HtmlBody = contentHandle;
-                            mailItem.TextBody = "";
-
-                            string ccAddresses = string.Join(';', mailTemplate.CC.Split(';').Concat(Util.CCAllEmail(_emailSettings.FollowCC, "").Split(';')).Where(w => !string.IsNullOrEmpty(w)));
-                            mailItem.CC = ccAddresses;
-                            //MailUtil.SendEmail(_emailSettings, mailItem, null).Wait();
-                            foreach (var memberName in result)
-                            {
-                                Employee employee = new Employee();
-                                Users flowUser = await _usersRepository.GetSingleObject(s => s.username == memberName);
-                                employee = await _employeeRepository.GetSingleObject(s => s.UsersId == flowUser.Id);
-                                ccMails += employee.Email + ";";
+                            Employee employee = new Employee();
+                            Users flowUser = await _usersRepository.GetSingleObject(s => s.username == memberName);
+                            employee = await _employeeRepository.GetSingleObject(s => s.UsersId == flowUser.Id);
+                            ccMails += employee.Email + ";";
 
 
-                                NotificationRequest notification = new NotificationRequest();
-                                Notification Notification = new Notification();
-                                Notification.Title = mailItem.Subject;
-                                Notification.Message = contentHandle;
-                                Notification.IsRead = false;
-                                Notification.Resource = $"{memberName}_{stepsWorkflow?.ToNodeId}";
-                                Notification.System = "WM";
-                                Notification.RecordGuid = quotation.Guid;
-                                Notification.Type = quotationNotificationTypeId;
+                            NotificationRequest notification = new NotificationRequest();
+                            Notification Notification = new Notification();
+                            Notification.Title = mailItem.Subject;
+                            Notification.Message = contentHandle;
+                            Notification.IsRead = false;
+                            Notification.Resource = $"{memberName}_{stepsWorkflow?.ToNodeId}";
+                            Notification.System = "WM";
+                            Notification.RecordGuid = quotation.Guid;
+                            Notification.Type = quotationNotificationTypeId;
 
-                                Notification.ReceivedBy = memberName;
-                                notification.Notification = Notification;
-                                notification.connectionId = memberName;
-                                notification.tabPublicUrl = Util.URLObjectMaking(quotation);
-                                PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
-                                string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
-                                Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
-                                await NotificationController.Notify(notification);
+                            Notification.ReceivedBy = memberName;
+                            notification.Notification = Notification;
+                            notification.connectionId = memberName;
+                            notification.tabPublicUrl = Util.URLObjectMaking(quotation);
+                            PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
+                            string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
+                            Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
+                            await NotificationController.Notify(notification);
 
-                            }
-
-                            mailQueue = Util.NotifySession(rqEmployee, mailTemplate, _emailSettings, flowDictionaryData, ccMails, null);
-                            await _mailQueueRepository.InsertData(mailQueue);
                         }
+
+                        mailQueue = Util.NotifySession(rqEmployee, mailTemplate, _emailSettings, flowDictionaryData, ccMails, null);
+                        await _mailQueueRepository.InsertData(mailQueue);
                     }
+                }
 
             }
         }
@@ -395,13 +394,13 @@ public class QuotationController : BaseControllerApi<Quotation>
         var quotationCommentLogApiController = new CommentLogController(_quotationCommentLogRepository, configuration, _httpContextAccessor, logger, _blobStorageSettings);
         string logQuery = $"SELECT * FROM CommentLog WHERE {nameof(Quotation)}Id = {quotation.Id}";
         string logHistoryQuery = $"SELECT * FROM QuotationWorkflowHistory WHERE {nameof(Quotation)}Id = {quotation.Id}";
-        var quotationCommentLogs =  await quotationCommentLogApiController.ExecuteCustomQuery(logQuery);
+        var quotationCommentLogs = await quotationCommentLogApiController.ExecuteCustomQuery(logQuery);
         var quotaionWorkflowHistory = await quotationCommentLogApiController.ExecuteCustomQuery(logHistoryQuery);
 
 
         Quotation quotationNew = new Quotation();
         quotationNew.IsView = false;
-        await _BaseRepository.UpdateData(quotationNew, quotation, ["IsView"],"Id"); 
+        await _BaseRepository.UpdateData(quotationNew, quotation, ["IsView"], "Id");
         int numberOfOptions = quotationData.QuotationData.Count;
         int startNoOption = 1;
         foreach (var item in quotationData.QuotationData)
@@ -417,10 +416,10 @@ public class QuotationController : BaseControllerApi<Quotation>
             quotationOp.LineId = item.LineId;
             quotationOp.LineCode = line.LineCode;
             quotationOp.LineName = line.LineName;
-            quotationOp.ProductId = item.ProductId; 
-            quotationOp.ProductCode = product.ProductCode; 
+            quotationOp.ProductId = item.ProductId;
+            quotationOp.ProductCode = product.ProductCode;
             quotationOp.ProductName = product.ProductName;
-            quotationOp.QuotationCode = $"{quotationOp.QuotationCode}-{startNoOption.ToString()}"; 
+            quotationOp.QuotationCode = $"{quotationOp.QuotationCode}-{startNoOption.ToString()}";
             startNoOption++;
             quotationOp.CreatedDate = DateTime.Now;
             quotationOp.ModifiedDate = DateTime.Now;
@@ -431,11 +430,11 @@ public class QuotationController : BaseControllerApi<Quotation>
             Document documentNew = new Document();
             documentNew.RecordGuid = quotationOp.Guid;
             documentNew.Attributes = document.Attributes.Replace(quotationData.QuotationId.ToString(), quotationOp.Id.ToString());
-            await _documentRepository.UpdateData(documentNew, document, ["RecordGuid", "Attributes"],"Id");
+            await _documentRepository.UpdateData(documentNew, document, ["RecordGuid", "Attributes"], "Id");
 
 
             InstanceWorkflow instanceWorkflowNew = new InstanceWorkflow();
-            JsonConvert.PopulateObject(JsonConvert.SerializeObject(instanceWorkflow),instanceWorkflowNew);
+            JsonConvert.PopulateObject(JsonConvert.SerializeObject(instanceWorkflow), instanceWorkflowNew);
             instanceWorkflowNew.Id = 0;
             instanceWorkflowNew.RecordGuid = quotationOp.Guid;
 
@@ -530,8 +529,8 @@ public class QuotationController : BaseControllerApi<Quotation>
                     {
                         await NotificationHandle(
                          workflowDefinition,
-                         quotation,
-                         quotationData,
+                         JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(quotation)),
+                         JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(quotationData)),
                         siteEnums,
                          file
                         );
@@ -547,7 +546,7 @@ public class QuotationController : BaseControllerApi<Quotation>
                             progressvalue = 75,//fileComplete,
                             type = "inprogress"
                         };
-                        ControllerHelper.SignalRResponse(_usersSessionRepository,"R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+                        ControllerHelper.SignalRResponse(_usersSessionRepository, "R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
 
                     }
 
@@ -587,8 +586,8 @@ public class QuotationController : BaseControllerApi<Quotation>
                     {
                         await NotificationHandle(
                         workflowDefinition,
-                        quotation,
-                        quotationData,
+                        JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(quotation)),
+                        JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(quotationData)), 
                         siteEnums,
                          null
                         );
@@ -615,8 +614,8 @@ public class QuotationController : BaseControllerApi<Quotation>
                             progressvalue = 100,//quotationComplete,
                             type = "error"
                         };
-                        ControllerHelper.SignalRResponse(_usersSessionRepository,"R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
-                        return BadRequest(new {detail = "Initial Quotation Error", message = "Flow not found!" });
+                        ControllerHelper.SignalRResponse(_usersSessionRepository, "R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+                        return BadRequest(new { detail = "Initial Quotation Error", message = "Flow not found!" });
                     }
                 }
             }
@@ -629,7 +628,7 @@ public class QuotationController : BaseControllerApi<Quotation>
                 progressvalue = 100,
                 type = "complete"
             };
-            ControllerHelper.SignalRResponse(_usersSessionRepository,"R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+            ControllerHelper.SignalRResponse(_usersSessionRepository, "R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
             return Ok();
         }
         catch (Exception ex)
@@ -777,59 +776,94 @@ public class QuotationController : BaseControllerApi<Quotation>
         };
         Employee employee = new Employee();
         flowUser = await _usersRepository.GetSingleObject(s => s.username == accountName);
-        employee = await _employeeRepository.GetSingleObject(s => s.UsersId == flowUser.Id);
-        try
+        if (flowUser != null)
         {
-            if (mailTemplate != null)
+            employee = await _employeeRepository.GetSingleObject(s => s.UsersId == flowUser.Id);
+            try
             {
-                DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
-                Dictionary<string, object> flowDictionaryData = new Dictionary<string, object>();
-                if (query.Rows.Count > 0)
+                if (mailTemplate != null)
+                {
+                    DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
+                    Dictionary<string, object> flowDictionaryData = new Dictionary<string, object>();
+                    if (query.Rows.Count > 0)
 
-                    flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
-                MailQueue mailQueue = new MailQueue();
-                mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
-                await _mailQueueRepository.InsertData(mailQueue);
+                        flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
+                    MailQueue mailQueue = new MailQueue();
+                    mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
+                    await _mailQueueRepository.InsertData(mailQueue);
+
+                }
+
+
+
+                dynamic transferObject = new
+                {
+                    DOMAIN_NAME = DOMAIN_NAME,
+                    Title = _messageSettings.Assign.Title,
+                    Subject = string.Format(_messageSettings.Assign.Content, loginUser),
+                     Resource = "Assign from ",
+                    Guid = quotation.Guid,
+                    ReceivedBy = accountName,
+                    Id = quotation.Id,
+                    Code = quotation.QuotationCode,
+                    ModuleName = nameof(Quotation)
+                };
+
+                long? assignNotificationTypeId = await NotificationTypeResolver.ResolveIdAsync(
+                    _enumDataRepository,
+                    NotificationTypeKeys.Assign);
+
+                //Assign or Accept no flow
+                NotificationRequest notification = new NotificationRequest();
+                Notification Notification = new Notification();
+                Notification.Title = transferObject.Title;
+                Notification.Message = transferObject.Subject;
+                Notification.IsRead = false;
+                Notification.Resource = $"{employee.EmailName}_{toDept}";
+                Notification.System = "WM";
+                Notification.RecordGuid = quotation.Guid;
+                Notification.Type = assignNotificationTypeId;
+
+                Notification.ReceivedBy = employee.EmailName;
+                notification.Notification = Notification;
+                notification.connectionId = employee.EmailName;
+                notification.tabPublicUrl = Util.URLObjectMaking(transferObject);
+                PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
+                string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
+                Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
+
+
+                //Notification notification = await ControllerUtil.Notify(transferObject, assignNotificationTypeId);
+                foreach (string item in transferObject.ReceivedBy.Split(','))
+                {
+
+                    ControllerHelper.SignalRResponse(_usersSessionRepository, "R_NotificationReceive",
+                    new
+                    {
+                        title = transferObject.Title,
+                        message = transferObject.Subject
+                    }
+                    , item, DOMAIN_NAME);
+
+                }
+
+
+                await _notificationRepository.InsertData(Notification);
+
 
             }
-
-
-
-            dynamic transferObject = new
+            catch (Exception exception)
             {
-                DOMAIN_NAME = DOMAIN_NAME,
-                Title = "Assigning Task",
-                Subject = $"You have been assigned from {loginUser}",
-                Resource = "Assign from ",
-                Guid = quotation.Guid,
-                ReceivedBy = accountName,
-                Id = quotation.Id,
-                Code = quotation.QuotationCode,
-                ModuleName = nameof(Quotation)
-            };
-
-            long? assignNotificationTypeId = await NotificationTypeResolver.ResolveIdAsync(
-                _enumDataRepository,
-                NotificationTypeKeys.Assign);
-            Notification notification = await ControllerUtil.Notify(transferObject, assignNotificationTypeId);
-
-
-
-            await _notificationRepository.InsertData(notification);
-
-
-            return Ok();
+                throw exception;
+            }
         }
-        catch (Exception exception)
-        {
-            throw exception;
-        }
+        return Ok();
     }
     [NonAction]
     public async Task NotificationHandle(
          WorkflowDefinition workflowDefinition,
-         Quotation quotation,
-        QuotationRequest quotationData,
+         dynamic quotation,
+            dynamic quotationData,
          List<EnumData> siteEnums,
         IFormFile file = null
         )
@@ -849,7 +883,8 @@ public class QuotationController : BaseControllerApi<Quotation>
             EnumData enumData = await _enumDataRepository.GetSingleObject(s => s.Id == stepsWorkflow.StatusId);
 
             quotation.WorkflowStatus = enumData?.Value ?? "";
-            quotation = await _BaseRepository.InsertData(quotation);
+            quotation = await _BaseRepository.InsertData(JsonConvert.DeserializeObject<Quotation>(JsonConvert.SerializeObject(quotation)));
+            
             if (file != null)
             {
                 Request.Headers["Folder"] = $@"{nameof(Quotation)}\{quotation.QuotationCode}";
@@ -883,22 +918,45 @@ public class QuotationController : BaseControllerApi<Quotation>
             long? initialNotificationTypeId = await NotificationTypeResolver.ResolveIdAsync(
                 _enumDataRepository,
                 NotificationTypeKeys.Initial);
-            string notificationTitle = await ResolveRouteTransitionNotificationTitleAsync(
+            NotificationTemplate notificationTitle = await ResolveRouteTransitionNotificationTitleAsyncV2(
                 workflowDefinition,
                 stepsWorkflow,
-                quotation);
+                JsonConvert.DeserializeObject<Quotation>(JsonConvert.SerializeObject(quotation)));
             string picsStr = picS.PICMain.GetType().GetProperty(stepsWorkflow?.ToNodeId ?? "")?.GetValue(picS.PICMain ?? new PICAttributes()).ToString() ?? "";
-            foreach (var memberName in picsStr.Split(","))
+            //foreach (var memberName in picsStr.Split(","))
+            //{
+            //    NotificationRequest notification = new NotificationRequest();
+            //    Notification Notification = new Notification();
+            //    Notification.Title = notificationTitle.Title;
+            //    Notification.Message = notificationTitle.Content;
+            //    Notification.IsRead = false;
+            //    Notification.Resource = $"{memberName}_{stepsWorkflow.ToNodeId}";
+            //    Notification.System = "WM";
+            //    Notification.RecordGuid = quotation.Guid;
+            //    Notification.Type = notificationTitle.TypeId;
+
+            //    Notification.ReceivedBy = memberName;
+            //    notification.Notification = Notification;
+            //    notification.connectionId = memberName;
+            //    notification.tabPublicUrl = Util.URLObjectMaking(quotation);
+            //    PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
+            //    string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
+            //    Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
+            //    await NotificationController.Notify(notification);
+            //}
+
+            foreach (string memberName in picsStr.Split(","))
             {
+
                 NotificationRequest notification = new NotificationRequest();
                 Notification Notification = new Notification();
-                Notification.Title = notificationTitle;
-                Notification.Message = quotation?.Subject ?? string.Format(_messageSettings.InitializeMessage.Content, "");
+                Notification.Title = notificationTitle.Title;
+                Notification.Message = notificationTitle.Content;
                 Notification.IsRead = false;
                 Notification.Resource = $"{memberName}_{stepsWorkflow.ToNodeId}";
                 Notification.System = "WM";
                 Notification.RecordGuid = quotation.Guid;
-                Notification.Type = initialNotificationTypeId;
+                Notification.Type = notificationTitle.TypeId;
 
                 Notification.ReceivedBy = memberName;
                 notification.Notification = Notification;
@@ -907,7 +965,15 @@ public class QuotationController : BaseControllerApi<Quotation>
                 PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
                 string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
                 Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
-                await NotificationController.Notify(notification);
+
+                ControllerHelper.SignalRResponse(_usersSessionRepository, "R_NotificationReceive",
+                new
+                {
+                    title = Notification.Title,
+                    message = Notification.Message
+                }
+                , memberName, DOMAIN_NAME);
+                await _notificationRepository.InsertData(Notification);
             }
         }
     }
@@ -919,7 +985,7 @@ public class QuotationController : BaseControllerApi<Quotation>
     {
         string fallbackTitle = $"Quotation {quotation.QuotationCode} created";
 
-        JObject? workflowPayload = TryReadWorkflowPayload(workflowDefinition.WorkflowNodes);
+        JObject? workflowPayload = Util.TryReadWorkflowPayload(workflowDefinition.WorkflowNodes);
         JArray? transitions = workflowPayload?
             .GetValue("workflowTransitions", StringComparison.OrdinalIgnoreCase) as JArray;
         JObject? routeTransition = transitions?
@@ -978,28 +1044,79 @@ public class QuotationController : BaseControllerApi<Quotation>
         string title = MailUtil.TitleContentHandle(notificationTemplate.Title, templateData).Trim();
         return string.IsNullOrWhiteSpace(title) ? fallbackTitle : title;
     }
-
-    private static JObject? TryReadWorkflowPayload(string? value)
+    private async Task<NotificationTemplate> ResolveRouteTransitionNotificationTitleAsyncV2(
+        WorkflowDefinition workflowDefinition,
+        StepsWorkflow stepsWorkflow,
+        Quotation quotation)
     {
-        if (string.IsNullOrWhiteSpace(value)) return null;
+        string fallbackTitle = $"Quotation {quotation.QuotationCode} created";
+        NotificationTemplate notificationTemplate = new NotificationTemplate();
+        notificationTemplate = await _notificationTemplateRepository.GetSingleObject(s => s.Id == stepsWorkflow.NotificationTemplateId);
+        if (notificationTemplate != null)
+        { 
+        JObject? workflowPayload = Util.TryReadWorkflowPayload(workflowDefinition.WorkflowNodes);
+        JArray? transitions = workflowPayload?
+            .GetValue("workflowTransitions", StringComparison.OrdinalIgnoreCase) as JArray;
+        JObject? routeTransition = transitions?
+            .OfType<JObject>()
+            .FirstOrDefault(transition =>
+                string.Equals(
+                    transition.GetValue("fromNodeId", StringComparison.OrdinalIgnoreCase)?.ToString(),
+                    stepsWorkflow.FromNodeId,
+                    StringComparison.OrdinalIgnoreCase)
+                && string.Equals(
+                    transition.GetValue("toNodeId", StringComparison.OrdinalIgnoreCase)?.ToString(),
+                    stepsWorkflow.ToNodeId,
+                    StringComparison.OrdinalIgnoreCase)
+                && (string.IsNullOrWhiteSpace(stepsWorkflow.ActionCode)
+                    || string.Equals(
+                        transition.GetValue("actionCode", StringComparison.OrdinalIgnoreCase)?.ToString(),
+                        stepsWorkflow.ActionCode,
+                        StringComparison.OrdinalIgnoreCase)));
 
-        try
-        {
-            JToken token = JToken.Parse(value);
-            while (token.Type == JTokenType.String)
-            {
-                string nestedValue = token.Value<string>() ?? "";
-                if (string.IsNullOrWhiteSpace(nestedValue)) return null;
-                token = JToken.Parse(nestedValue);
-            }
 
-            return token as JObject;
-        }
-        catch (JsonException)
+        string templateName = notificationTemplate.TemplateName;
+        if (string.IsNullOrWhiteSpace(templateName))
         {
-            return null;
+            _logger.LogWarning(
+                "No notification template is configured for quotation route transition {FromNodeId} -> {ToNodeId} ({ActionCode}).",
+                stepsWorkflow.FromNodeId,
+                stepsWorkflow.ToNodeId,
+                stepsWorkflow.ActionCode);
+            return new NotificationTemplate();
         }
+
+        if (notificationTemplate == null || !(notificationTemplate.IsActive ?? false))
+        {
+            _logger.LogWarning(
+                "Notification template {TemplateName} for quotation route transition was not found or is inactive.",
+                templateName);
+            return new NotificationTemplate();
+        }
+
+        Dictionary<string, object> templateData = new()
+        {
+            ["RecordId"] = quotation.Id,
+            ["RecordCode"] = quotation.QuotationCode ?? "",
+            ["QuotationId"] = quotation.Id,
+            ["QuotationCode"] = quotation.QuotationCode ?? "",
+            ["WorkflowStatus"] = quotation.WorkflowStatus ?? "",
+            ["FromNodeId"] = stepsWorkflow.FromNodeId ?? "",
+            ["ToNodeId"] = stepsWorkflow.ToNodeId ?? "",
+            ["ActionCode"] = stepsWorkflow.ActionCode ?? ""
+        };
+
+        notificationTemplate.Title = MailUtil.TitleContentHandle(notificationTemplate.Title, templateData).Trim();
+        notificationTemplate.Content = MailUtil.TitleContentHandle(notificationTemplate.Content, templateData).Trim();
+        return notificationTemplate;
     }
+        else
+        {
+            return new NotificationTemplate();
+}
+    }
+
+
 
     [HttpPost]
     public async Task<IActionResult> LogAction([FromForm] QuotationRequest quotationData)
@@ -1327,7 +1444,7 @@ public class QuotationController : BaseControllerApi<Quotation>
 
             }
         });
-        ControllerHelper.SignalRResponse(_usersSessionRepository, "R_ItemSubmitted", new { id = form.key,  type = nameof(Quotation) }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        ControllerHelper.SignalRResponse(_usersSessionRepository, "R_ItemSubmitted", new { id = form.key, type = nameof(Quotation) }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         return new HttpResponseMessage(HttpStatusCode.OK);
     }
     public async Task BulkInsertQuotationAsync(List<Quotation> data)
@@ -1468,7 +1585,7 @@ public class QuotationController : BaseControllerApi<Quotation>
                 if (res != null)
                 {
                     // check nếu res còn được dùng không
-                        await _resRepository.DeleteData(res, res.Id, "Id", true);
+                    await _resRepository.DeleteData(res, res.Id, "Id", true);
                 }
             }
 

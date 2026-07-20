@@ -431,7 +431,6 @@ Note:
                             // setNextStep(state.nextStep);
                             // $.each(qtDeptModuleCode, function (itemIndex, item) {
                                     setTimeout(() => {
-                                        debugger
                                        
                                         // var findRoute = data.find(f => !f.isReturn && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
                                          const customRoutes = data.filter(function (route) {
@@ -579,8 +578,6 @@ Note:
                                         }
                                         customRoutes.forEach(function (route, routeIndex) {
                                             const $routeHost = ensureCustomRouteHost(route);
-                                            console.log("");
-                                            debugger
                                             if (!$routeHost.length) return;
                                             const routeDept = normalizeRouteDept($routeHost.attr("data-route-dept"));
                                             if (!routeDept) return;

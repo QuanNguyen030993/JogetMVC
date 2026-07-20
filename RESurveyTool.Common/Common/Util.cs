@@ -28,6 +28,8 @@ using static ERPCore.Models.Models.Parsing.JsonHandle;
 using ERPCore.Models.Migration.Business.Workflow;
 using ERPCore.Models.Business.Migration.Config;
 using static SkiaSharp.HarfBuzz.SKShaper;
+using Newtonsoft.Json.Linq;
+using JsonException = System.Text.Json.JsonException;
 namespace ERPCore.Common
 {
     public static class Util
@@ -236,12 +238,12 @@ namespace ERPCore.Common
             {
                 Type objectType = ((Type)transferObject.GetType());
                 string CodeField = objectType.GetProperties().FirstOrDefault(f => f.Name.Contains("Code"))?.Name ?? "";
-                string fieldValue = objectType.GetProperties().FirstOrDefault(f => f.Name.Contains("Code"))?.GetValue((dynamic)transferObject) ?? "";
+                string fieldValue = objectType.GetProperties().FirstOrDefault(f => f.Name.Contains(objectType + "Code"))?.GetValue((dynamic)transferObject) ?? "";
                 string Guid = "/";
                     
                     try
                 {
-                    Guid = "/" + objectType.GetProperties().FirstOrDefault(f => f.Name.Contains("Guid"))?.GetValue(transferObject) ?? "";
+                    Guid = "/" + objectType.GetProperties().FirstOrDefault(f => f.Name == "Guid")?.GetValue(transferObject) ?? "";
 
                 }
                 catch
@@ -1566,7 +1568,8 @@ namespace ERPCore.Common
             string redirectMainView = $"{REDIRECT_MAIN_VIEW}{typeof(UrlCall).Name}{"/ReturnView"}";
             redirectMainView += $"?guid={urlCall.Guid}";
             notification.IsRead = false;
-            notification.Url = $"/Business/Form/{nameof(Quotation)}_Form/{objectIn.Id}";
+
+            notification.Url = Util.URLObjectMaking(objectIn); //$"/Business/Form/{nameof(Quotation)}_Form/{objectIn.Id}";
             notification.Resource = $"{objectIn.Resource}";
             notification.System = "WM";
             notification.Title = mailQueue.Subject;
@@ -1605,6 +1608,28 @@ namespace ERPCore.Common
                 }
             }
             return dictionary;
+        }
+
+        public static JObject? TryReadWorkflowPayload(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return null;
+
+            try
+            {
+                JToken token = JToken.Parse(value);
+                while (token.Type == JTokenType.String)
+                {
+                    string nestedValue = token.Value<string>() ?? "";
+                    if (string.IsNullOrWhiteSpace(nestedValue)) return null;
+                    token = JToken.Parse(nestedValue);
+                }
+
+                return token as JObject;
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
         }
 
         public static Dictionary<string, object> SimilarObject(object obj)

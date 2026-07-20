@@ -49,6 +49,7 @@ public class EmployeeController : BaseControllerApi<Employee>
     [HttpGet]
     public async Task<IActionResult> GetAssignableByGroup([FromQuery] GetAssignableByGroupRequest request)
     {
+        request.excludeCurrent = false; // test
         var currentLogin = (User?.Identity?.Name ?? "").Trim();
         EnumData enumData = await _enumDataRepository.GetSingleObject(s => s.Code == request.branchCode);
         if (enumData != null)
@@ -58,7 +59,7 @@ public class EmployeeController : BaseControllerApi<Employee>
         if (request.excludeCurrent ?? false)
         {
             data = data.Where(x =>
-                !string.Equals(x.AccountName?.Trim(), currentLogin, StringComparison.OrdinalIgnoreCase) 
+                !string.Equals(x.EmailName?.Trim(), currentLogin, StringComparison.OrdinalIgnoreCase) 
             ).ToList();
         }
         //data.ForEach(async em => em = await _BaseRepository.ObjectSpecificInclude(em, em => em.UsersFK));

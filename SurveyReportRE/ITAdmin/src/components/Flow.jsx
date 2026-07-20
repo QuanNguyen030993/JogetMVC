@@ -917,9 +917,6 @@ function Flow({ id: propId }) {
                     notificationTemplateId: edge.data?.notificationTemplateId || null,
                     custom: edge.data?.custom || null
                 };
-                console.log(stepData);
-                console.log(fromNode);
-                console.log(edge);
                 return {
                     sortOrder: index + 1,
                     stepNo: edge.data?.stepNo?.toString() || null,

@@ -2430,7 +2430,6 @@
             var controllerName = moduleCode === "pi" ? "PolicyIssuance" : "Quotation";
             var reloadKey = `${moduleCode}:${recordId}`;
             var updateCompleted = false;
-
             // Suppress the R_ItemSubmitted event raised by UpdateData. The final
             // refresh must happen only after AssignTask has read the saved PIC.
             window.WorkflowViewReloadState = window.WorkflowViewReloadState || {};
@@ -2496,8 +2495,7 @@
                                         renderDepartmentAssigneeBox(`#${window.QuotationIdManager.assigneeBox(item, data[item].id)}`, {
                             groupName: item,
                                 dataForm: data[item],
-                                         onClosed: function (itemChild) { //onChanged: function (itemChild, editor) {
-                                    
+                                onClosed: function (itemChild) { //onChanged: function (itemChild, editor) {
                                     // var  itemChild =    e.component.option("selectedItems") || []
                                 if (!stateLayout.isAssigneeBoxRender) return;
                                 var formId = window.QuotationIdManager.form(item,this.dataForm.id);
@@ -2513,7 +2511,7 @@
                                 if (!itemChild || !Array.isArray(itemChild)) return;
 
                                 const accounts = itemChild
-                                    .map(x => x?.accountName)
+                                    .map(x => x?.emailName)
                                     .filter(Boolean);
 
                                 const sectionId = `#${moduleKey}-sec_${item}_${this.dataForm.id}`;
@@ -2566,9 +2564,8 @@
                                 groupName: item,
                                 dataForm: data[item],
                                 //value: formItems.lmktAssigneeId || null,
-                                    onValueChanged: function (itemChild) {
-
-                                if (!stateLayout.isAssigneeBoxRender) return;
+                                    onClosed: function (itemChild) {
+                                if (!stateLsayout.isAssigneeBoxRender) return;
                                 var formId = window.PolicyIssuanceIdManager.form(item, this.dataForm.id);
                                 var ds = $(`#${formId}`).dxForm("instance").option("dataSource");
                                 var store = ds;
@@ -2582,7 +2579,7 @@
                                 if (!itemChild || !Array.isArray(itemChild)) return;
 
                                 const accounts = itemChild
-                                    .map(x => x?.accountName)
+                                    .map(x => x?.emailName)
                                     .filter(Boolean);
 
                                 const sectionId = `#${moduleKey}-sec_${item}_${this.dataForm.id}`;
@@ -7537,10 +7534,18 @@ function styleModeChange(item){
                               if (acceptButtonId)
                                  {
                                   if (!skipAcceptedMainFields) {
-                                      form.option("items", [
-                                          ...form.option("items"),
-                                          ...mainField
-                                      ]);
+                                      if (mainField)
+                                    {
+                                                                          form.option("items", [
+                                                                              ...form.option("items"),
+                                                                              ...mainField
+                                                                          ]);
+                                    }
+                                    else {
+                                        form.option("items", [
+                                                                              ...form.option("items"),
+                                                                          ]);
+                                    }
                                   }
 
                                      if (formProps.dept == "LMKT") {
@@ -7690,7 +7695,7 @@ function styleModeChange(item){
                      $(`#${item}`).dxButton("instance").option("disabled", true);
                  }
                  catch {
-                     console.log("error");
+                     console.log("error while try parse dxForm");
                  }
              },1);
          });

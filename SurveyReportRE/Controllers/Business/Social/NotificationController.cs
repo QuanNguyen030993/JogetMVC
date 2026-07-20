@@ -132,7 +132,7 @@ public class NotificationController : BaseControllerApi<Notification>
         //}
         if (onlineUser?.ConnectionId != null)
         {
-            await _hubContext.Clients.Client(onlineUser?.ConnectionId).SendAsync("NotificationReceive",
+            await _hubContext.Clients.Client(onlineUser?.ConnectionId).SendAsync("R_NotificationReceive",
                       new
                       {
                           title = notification?.Notification?.Title ?? "",

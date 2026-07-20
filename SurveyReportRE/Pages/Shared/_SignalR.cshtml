@@ -209,7 +209,7 @@ function startSignalRConnection() {
         signalRBlink();
         updateNotification(items.length);
     });
-    connectionSignR.on("NotificationReceive", function (items) {
+    connectionSignR.on("R_NotificationReceive", function (items) {
         signalRBlink();
 
         reloadNotifications();
@@ -239,8 +239,9 @@ function startSignalRConnection() {
         }
     });
     connectionSignR.on("R_OverviewLoading", function (responseData) {
+        debugger
         signalRBlink();
-        if (responseData.connectionId == _connectionId) {
+        // if (responseData.connectionId == _connectionId) {
             renderBrowserLoading(responseData);
             if (responseData.payload && responseData.payload.progressvalue >= 100) {
                 if (responseData.payload.tabName === "Employee Update" || responseData.payload.tabName === "User Update") {
@@ -315,7 +316,7 @@ function startSignalRConnection() {
             //    //  if (focusForm)
             //    // subTabValidationCheck(focusForm.formName);
             //}
-        }
+        // }
     });
     return _connectionId;
 }).catch(function (err) {

@@ -25,6 +25,8 @@ using System.Reflection;
 using ERPCore.Models.Migration.Business.Data;
 using ERPCore.Models.Migration.Business.MasterData;
 using Newtonsoft.Json.Linq;
+using Org.BouncyCastle.Bcpg.Sig;
+using AngleSharp.Text;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -54,10 +56,11 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     private readonly IBaseRepository<ChecklistDefinition> _checklistDefinitionRepository;
     private readonly IBaseRepository<Quotation> _quotationRepository;
     private readonly IBaseRepository<MailTemplate> _mailTemplateRepository;
+    private readonly IBaseRepository<NotificationTemplate> _notificationTemplateRepository;
     private readonly IBaseRepository<MailQueue> _mailQueueRepository;
     private readonly IBaseRepository<UsersSession> _usersSessionRepository;
     private readonly IBaseRepository<SLA> _slaRepository;
-
+    private readonly ILogger<PolicyIssuance> _logger;
     private readonly IConfigurationSection path;
     public static string MANAGER_APP = "";
     public static string APPROVER_APP = "";
@@ -105,6 +108,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         _checklistDefinitionRepository = new BaseRepository<ChecklistDefinition>(configuration, _httpContextAccessor);
         _quotationRepository = new BaseRepository<Quotation>(configuration, _httpContextAccessor);
         _mailTemplateRepository = new BaseRepository<MailTemplate>(configuration, _httpContextAccessor);
+        _notificationTemplateRepository = new BaseRepository<NotificationTemplate>(configuration, _httpContextAccessor);
         _mailQueueRepository = new BaseRepository<MailQueue>(configuration, _httpContextAccessor);
         _slaRepository = new BaseRepository<SLA>(configuration, _httpContextAccessor);
         _usersSessionRepository = new BaseRepository<UsersSession>(configuration, _httpContextAccessor);
@@ -126,6 +130,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         spPassword = configuration.GetSection("SharePoint:Password").Value;
         _blobStorageSettings = blobStorageSettings;
         _businessConfig = businessConfig;
+        _logger = logger;
     }
 
     public async Task<IActionResult> GetIdsList()
@@ -243,89 +248,88 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
             workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(s => s.WorkflowCode == _businessConfig.CurrentValue.Workflow.PolicyIssuance);
 
 
-            if (workflowDefinition != null) { 
-                StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.IsStart == true);
-                InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
-                instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
-                //instanceWorkflow.CurrentStep = "2";
-                if (stepsWorkflow != null)
+            //if (workflowDefinition != null) { 
+            //    StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.IsStart == true);
+            //    InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
+            //    instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
+            //    //instanceWorkflow.CurrentStep = "2";
+            //    if (stepsWorkflow != null)
 
-                {
-                    (PICAttributes PICMain, PICSysHandleAttributes PICLeader, PICAttributes PICHOD) picS = ControllerUtil.PersonInChargeHandle(PolicyIssuance, stepsWorkflow, _businessConfig, siteEnums);
-                    //quotation.LeaderPIC = JsonConvert.SerializeObject(picS.PICLeader);
-                    //quotation.HODPIC = JsonConvert.SerializeObject(picS.PICHOD);
-                    PolicyIssuance.StatusId = stepsWorkflow.StatusId;
-
-                    EnumData enumData = await _enumDataRepository.GetSingleObject(s => s.Id == stepsWorkflow.StatusId);
-
-                    PolicyIssuance.WorkflowStatus = enumData?.Value ?? "";
-                    PolicyIssuance.StageDept = stepsWorkflow.ToNodeId;
-
-                    PolicyIssuance = await _BaseRepository.InsertData(PolicyIssuance);
-                    PolicyIssuanceDetails policyIssuanceDetails = new PolicyIssuanceDetails();
-                    policyIssuanceDetails.PolicyIssuanceId = PolicyIssuance.Id;
-                    policyIssuanceDetails = await _policyIssuanceDetailsRepository.InsertData(policyIssuanceDetails);
-                    instanceWorkflow.RecordGuid = PolicyIssuance.Guid;
-                    instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
-                    instanceWorkflow.CurrentStepId = new Guid();
-                    instanceWorkflow.IsCancelled = false;
-                    instanceWorkflow.IsCompleted = false;
-                    instanceWorkflow = await _instanceWorkflowRepository.InsertData(instanceWorkflow);
+            //    {
+            //        (PICAttributes PICMain, PICSysHandleAttributes PICLeader, PICAttributes PICHOD) picS = ControllerUtil.PersonInChargeHandle(PolicyIssuance, stepsWorkflow, _businessConfig, siteEnums);
+            //        //quotation.LeaderPIC = JsonConvert.SerializeObject(picS.PICLeader);
+            //        //quotation.HODPIC = JsonConvert.SerializeObject(picS.PICHOD);
+  
+            //        instanceWorkflow.RecordGuid = PolicyIssuance.Guid;
+            //        instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
+            //        instanceWorkflow.CurrentStepId = new Guid();
+            //        instanceWorkflow.IsCancelled = false;
+            //        instanceWorkflow.IsCompleted = false;
+            //        instanceWorkflow = await _instanceWorkflowRepository.InsertData(instanceWorkflow);
 
 
 
 
-                    SubmitRequest submitRequest = new SubmitRequest();
-                    submitRequest.StepsWorkflow = stepsWorkflow;
-                    submitRequest.Comment = $"{PolicyIssuance.PolicyIssuanceCode} created!";
-                    submitRequest.InstanceWorkflow = instanceWorkflow;
+            //        SubmitRequest submitRequest = new SubmitRequest();
+            //        submitRequest.StepsWorkflow = stepsWorkflow;
+            //        submitRequest.Comment = $"{PolicyIssuance.PolicyIssuanceCode} created!";
+            //        submitRequest.InstanceWorkflow = instanceWorkflow;
 
 
 
 
-                    await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, PolicyIssuance, submitRequest, _blobStorageSettings);
+            //        await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, PolicyIssuance, submitRequest, _blobStorageSettings);
 
-                    //loop multiple account tai day
-                    var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
-                    long? initialNotificationTypeId = await NotificationTypeResolver.ResolveIdAsync(
-                        _enumDataRepository,
-                        NotificationTypeKeys.Initial);
-                    string picsStr = picS.PICMain.GetType().GetProperty(stepsWorkflow?.ToNodeId ?? "")?.GetValue(picS.PICMain ?? new PICAttributes()).ToString() ?? "";
-                    foreach (var memberName in picsStr.Split(","))
-                    {
-                        NotificationRequest notification = new NotificationRequest();
-                        Notification Notification = new Notification();
-                        Notification.Title = string.Format(_messageSettings.InitializeMessage.Title, PolicyIssuance.PolicyIssuanceCode);
-                        Notification.Message = PolicyIssuance?.Subject ?? string.Format(_messageSettings.InitializeMessage.Content, "");
-                        Notification.IsRead = false;
-                        Notification.Resource = $"{memberName}_{stepsWorkflow.ToNodeId}";
-                        Notification.System = "WM";
-                        Notification.RecordGuid = PolicyIssuance.Guid;
-                        Notification.Type = initialNotificationTypeId;
+            //        //loop multiple account tai day
+            //        var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
+            //        long? initialNotificationTypeId = await NotificationTypeResolver.ResolveIdAsync(
+            //            _enumDataRepository,
+            //            NotificationTypeKeys.Initial);
+            //        string picsStr = picS.PICMain.GetType().GetProperty(stepsWorkflow?.ToNodeId ?? "")?.GetValue(picS.PICMain ?? new PICAttributes()).ToString() ?? "";
+            //        foreach (var memberName in picsStr.Split(","))
+            //        {
+            //            NotificationRequest notification = new NotificationRequest();
+            //            Notification Notification = new Notification();
+            //            Notification.Title = string.Format(_messageSettings.InitializeMessage.Title, PolicyIssuance.PolicyIssuanceCode);
+            //            Notification.Message = PolicyIssuance?.Subject ?? string.Format(_messageSettings.InitializeMessage.Content, "");
+            //            Notification.IsRead = false;
+            //            Notification.Resource = $"{memberName}_{stepsWorkflow.ToNodeId}";
+            //            Notification.System = "WM";
+            //            Notification.RecordGuid = PolicyIssuance.Guid;
+            //            Notification.Type = initialNotificationTypeId;
 
-                        Notification.ReceivedBy = memberName;
-                        notification.Notification = Notification;
-                        notification.connectionId = memberName;
-                        notification.tabPublicUrl = Util.URLObjectMaking(PolicyIssuance);
-                        PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
-                        string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
-                        Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(PolicyIssuance));
-                        await NotificationController.Notify(notification);
-                    }
-                }
+            //            Notification.ReceivedBy = memberName;
+            //            notification.Notification = Notification;
+            //            notification.connectionId = memberName;
+            //            notification.tabPublicUrl = Util.URLObjectMaking(PolicyIssuance);
+            //            PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
+            //            string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
+            //            Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(PolicyIssuance));
+            //            await NotificationController.Notify(notification);
+            //        }
+            //    }
 
-                //quotationComplete = quotationCount ?? 0 / i; //Pending at ajax
-                result = new SignalRResult
+            //}
+            if (workflowDefinition != null)
             {
-                status = "Creating policy issuances...",
-                data = PolicyIssuanceData,
-                tabName = "Policy Issuance Creation",
-                subTabContent = "Creating the requested policy issuance records...",
-                progressvalue = 75,//quotationComplete,
-                type = "inprogress"
-            };
-            ControllerHelper.SignalRResponse(_usersSessionRepository, "R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
-            startCount++;
+                await NotificationHandle(
+                workflowDefinition,
+                JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(PolicyIssuance)),
+                JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(PolicyIssuanceData)),
+                siteEnums,
+                 null
+                );
+
+                result = new SignalRResult
+                {
+                    status = "Creating quotations...",
+                    data = PolicyIssuanceData,
+                    tabName = "Quotation Creation",
+                    subTabContent = "Creating the requested quotation records...",
+                    progressvalue = 75,//quotationComplete,
+                    type = "inprogress"
+                };
+                ControllerHelper.SignalRResponse(_usersSessionRepository, "R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
             }
             else
             {
@@ -341,8 +345,6 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
                 ControllerHelper.SignalRResponse(_usersSessionRepository, "R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
                 return BadRequest(new { detail = "Initial Quotation Error", message = "Flow not found!" });
             }
-
-
 
 
         }
@@ -616,7 +618,201 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         return Ok();
     }
 
+    [NonAction]
+    public async Task NotificationHandle(
+         WorkflowDefinition workflowDefinition,
+         dynamic quotation,
+            dynamic quotationData,
+         List<EnumData> siteEnums,
+        IFormFile file = null
+        )
+    {
+        StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.IsStart == true);
+        InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
+        instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
+        //instanceWorkflow.CurrentStep = "2";
+        if (stepsWorkflow != null)
 
+        {
+            (PICAttributes PICMain, PICSysHandleAttributes PICLeader, PICAttributes PICHOD) picS = ControllerUtil.PersonInChargeHandle(quotation, stepsWorkflow, _businessConfig, siteEnums);
+            quotation.LeaderPIC = JsonConvert.SerializeObject(picS.PICLeader);
+            quotation.HODPIC = JsonConvert.SerializeObject(picS.PICHOD);
+            quotation.StatusId = stepsWorkflow.StatusId;
+
+            EnumData enumData = await _enumDataRepository.GetSingleObject(s => s.Id == stepsWorkflow.StatusId);
+
+            quotation.WorkflowStatus = enumData?.Value ?? "";
+            quotation = await _BaseRepository.InsertData(JsonConvert.DeserializeObject<PolicyIssuance>(JsonConvert.SerializeObject(quotation)));
+            PolicyIssuanceDetails policyIssuanceDetails = new PolicyIssuanceDetails();
+            policyIssuanceDetails.PolicyIssuanceId = quotation.Id;
+            policyIssuanceDetails = await _policyIssuanceDetailsRepository.InsertData(policyIssuanceDetails);
+            //if (file != null)
+            //{
+            //    Request.Headers["Folder"] = $@"{nameof(Quotation)}\{quotation.PolicyIssuanceCode}";
+            //    Request.Headers["RecordGuid"] = quotation.Guid.ToString();
+            //    Request.Headers["SectionName"] = $@"{quotationData.QuotationData.Attributes.SectionName}_{quotation.Id.ToString()}";
+            //    await AsyncUploadSingleFile(file);
+            //}
+            instanceWorkflow.RecordGuid = quotation.Guid;
+
+            instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
+            instanceWorkflow.CurrentStepId = new Guid();
+            instanceWorkflow.IsCancelled = false;
+            instanceWorkflow.IsCompleted = false;
+            instanceWorkflow = await _instanceWorkflowRepository.InsertData(instanceWorkflow);
+
+
+
+
+            SubmitRequest submitRequest = new SubmitRequest();
+            submitRequest.StepsWorkflow = stepsWorkflow;
+            submitRequest.Comment = $"{quotation.PolicyIssuanceCode} created!";
+            submitRequest.InstanceWorkflow = instanceWorkflow;
+
+
+
+
+            await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
+
+            //loop multiple account tai day
+            var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
+            long? initialNotificationTypeId = await NotificationTypeResolver.ResolveIdAsync(
+                _enumDataRepository,
+                NotificationTypeKeys.Initial);
+            NotificationTemplate notificationTitle = await ResolveRouteTransitionNotificationTitleAsyncV2(
+                workflowDefinition,
+                stepsWorkflow,
+                JsonConvert.DeserializeObject<PolicyIssuance>(JsonConvert.SerializeObject(quotation)));
+            string picsStr = picS.PICMain.GetType().GetProperty(stepsWorkflow?.ToNodeId ?? "")?.GetValue(picS.PICMain ?? new PICAttributes()).ToString() ?? "";
+            //foreach (var memberName in picsStr.Split(","))
+            //{
+            //    NotificationRequest notification = new NotificationRequest();
+            //    Notification Notification = new Notification();
+            //    Notification.Title = notificationTitle.Title;
+            //    Notification.Message = notificationTitle.Content;
+            //    Notification.IsRead = false;
+            //    Notification.Resource = $"{memberName}_{stepsWorkflow.ToNodeId}";
+            //    Notification.System = "WM";
+            //    Notification.RecordGuid = quotation.Guid;
+            //    Notification.Type = notificationTitle.TypeId;
+
+            //    Notification.ReceivedBy = memberName;
+            //    notification.Notification = Notification;
+            //    notification.connectionId = memberName;
+            //    notification.tabPublicUrl = Util.URLObjectMaking(quotation);
+            //    PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
+            //    string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
+            //    Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
+            //    await NotificationController.Notify(notification);
+            //}
+            if (!string.IsNullOrEmpty(notificationTitle.Title))
+            {
+                foreach (string memberName in picsStr.Split(","))
+                {
+
+                    NotificationRequest notification = new NotificationRequest();
+                    Notification Notification = new Notification();
+                    Notification.Title = notificationTitle.Title;
+                    Notification.Message = notificationTitle.Content;
+                    Notification.IsRead = false;
+                    Notification.Resource = $"{memberName}_{stepsWorkflow.ToNodeId}";
+                    Notification.System = "WM";
+                    Notification.RecordGuid = quotation.Guid;
+                    Notification.Type = notificationTitle.TypeId;
+
+                    Notification.ReceivedBy = memberName;
+                    notification.Notification = Notification;
+                    notification.connectionId = memberName;
+                    notification.tabPublicUrl = Util.URLObjectMaking(quotation);
+                    PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
+                    string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
+                    Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
+
+                    ControllerHelper.SignalRResponse(_usersSessionRepository, "R_NotificationReceive",
+                    new
+                    {
+                        title = Notification.Title,
+                        message = Notification.Message
+                    }
+                    , memberName, DOMAIN_NAME);
+                    await _notificationRepository.InsertData(Notification);
+
+                }
+            }
+        }
+    }
+
+    private async Task<NotificationTemplate> ResolveRouteTransitionNotificationTitleAsyncV2(
+        WorkflowDefinition workflowDefinition,
+        StepsWorkflow stepsWorkflow,
+        PolicyIssuance quotation)
+    {
+        string fallbackTitle = $"Policy Issuance {quotation.PolicyIssuanceCode} created";
+        NotificationTemplate notificationTemplate = new NotificationTemplate();
+        notificationTemplate = await _notificationTemplateRepository.GetSingleObject(s => s.Id == stepsWorkflow.NotificationTemplateId);
+        if (notificationTemplate != null)
+        {
+            JObject? workflowPayload = Util.TryReadWorkflowPayload(workflowDefinition.WorkflowNodes);
+            JArray? transitions = workflowPayload?
+                .GetValue("workflowTransitions", StringComparison.OrdinalIgnoreCase) as JArray;
+            JObject? routeTransition = transitions?
+                .OfType<JObject>()
+                .FirstOrDefault(transition =>
+                    string.Equals(
+                        transition.GetValue("fromNodeId", StringComparison.OrdinalIgnoreCase)?.ToString(),
+                        stepsWorkflow.FromNodeId,
+                        StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(
+                        transition.GetValue("toNodeId", StringComparison.OrdinalIgnoreCase)?.ToString(),
+                        stepsWorkflow.ToNodeId,
+                        StringComparison.OrdinalIgnoreCase)
+                    && (string.IsNullOrWhiteSpace(stepsWorkflow.ActionCode)
+                        || string.Equals(
+                            transition.GetValue("actionCode", StringComparison.OrdinalIgnoreCase)?.ToString(),
+                            stepsWorkflow.ActionCode,
+                            StringComparison.OrdinalIgnoreCase)));
+
+
+            string templateName = notificationTemplate.TemplateName;
+            if (string.IsNullOrWhiteSpace(templateName))
+            {
+                _logger.LogWarning(
+                    "No notification template is configured for quotation route transition {FromNodeId} -> {ToNodeId} ({ActionCode}).",
+                    stepsWorkflow.FromNodeId,
+                    stepsWorkflow.ToNodeId,
+                    stepsWorkflow.ActionCode);
+                return new NotificationTemplate();
+            }
+
+            if (notificationTemplate == null || !(notificationTemplate.IsActive ?? false))
+            {
+                _logger.LogWarning(
+                    "Notification template {TemplateName} for quotation route transition was not found or is inactive.",
+                    templateName);
+                return new NotificationTemplate();
+            }
+
+            Dictionary<string, object> templateData = new()
+            {
+                ["RecordId"] = quotation.Id,
+                ["RecordCode"] = quotation.PolicyIssuanceCode ?? "",
+                ["QuotationId"] = quotation.Id,
+                ["PolicyIssuanceCode"] = quotation.PolicyIssuanceCode ?? "",
+                ["WorkflowStatus"] = quotation.WorkflowStatus ?? "",
+                ["FromNodeId"] = stepsWorkflow.FromNodeId ?? "",
+                ["ToNodeId"] = stepsWorkflow.ToNodeId ?? "",
+                ["ActionCode"] = stepsWorkflow.ActionCode ?? ""
+            };
+
+            notificationTemplate.Title = MailUtil.TitleContentHandle(notificationTemplate.Title, templateData).Trim();
+            notificationTemplate.Content = MailUtil.TitleContentHandle(notificationTemplate.Content, templateData).Trim();
+            return notificationTemplate;
+        }
+        else
+        {
+            return new NotificationTemplate();
+        }
+    }
 
     [HttpPost]
     public override async Task<object> ExecuteCustomQuery([FromBody] string query)

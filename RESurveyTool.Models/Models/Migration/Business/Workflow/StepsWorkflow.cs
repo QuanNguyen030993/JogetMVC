@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 using ERPCore.Models.Migration.Base;
+using ERPCore.Models.Migration.Business.MasterData;
 using ERPCore.Models.Migration.Config;
 namespace ERPCore.Models.Migration.Business.Workflow
 {
@@ -56,7 +57,13 @@ namespace ERPCore.Models.Migration.Business.Workflow
         public string? StatusName { get; set; } = "";
         public long? StatusId { get; set; } = 0;
         public bool? IsReturn { get; set; } = false;
-        public EnumData? StatusEnum { get; set; } 
+        public EnumData? StatusEnum { get; set; }
+
+
+        public long? NotificationTemplateId { get; set; } = 0;
+        public NotificationTemplate? NotificationTemplateFK { get; set; }
+        public long? MailTemplateId { get; set; } = 0;
+        public MailTemplate? MailTemplateFK { get; set; }
 
     }
 }
