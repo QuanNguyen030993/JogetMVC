@@ -23,6 +23,7 @@ import SqlStoredProcedure from './components/SqlStoredProcedure';
 import NotificationTemplate from './components/NotificationTemplate';
 import NotificationTemplateDesigner from './components/NotificationTemplateDesigner';
 import DatabaseManagement from './components/DatabaseManagement';
+import TurnAroundTimeAnalytics from './components/TurnAroundTimeAnalytics';
 import './styles/flow.css';
 import './styles/com.all.css';
 import './styles/serilogs.css';
@@ -35,6 +36,7 @@ import './styles/sladesigner.css';
 import './styles/notificationtemplate.css';
 import './styles/notificationTemplateDesigner.css';
 import './styles/databasemanagement.css';
+import './styles/turnAroundTimeAnalytics.css';
 import "./fonts/css/all.min.css";
 
 function App() {
@@ -210,7 +212,8 @@ function App() {
     { id: 'notification-hub', label: 'Trung tâm thông báo (Notification Hub)' },
     { id: 'notification-template', label: 'Thiết lập Notification Template' },
     { id: 'notification-designer', label: 'Thiết kế Mẫu thông báo (GrapesJS)' },
-    { id: 'sladesigner', label: 'Cấu hình chỉ số SLA' }
+    { id: 'sladesigner', label: 'Cấu hình chỉ số SLA' },
+    { id: 'tat-analytics', label: 'Biểu đồ Chu kỳ TAT (Turnaround Time)' }
   ];
 
   const systemStatus = useMemo(() => [
@@ -308,6 +311,8 @@ function App() {
         return <NotificationTemplateDesigner />;
       case 'sladesigner':
         return <SlaDesign />;
+      case 'tat-analytics':
+        return <TurnAroundTimeAnalytics />;
       default:
         return (
           <>

@@ -224,8 +224,25 @@ function startSignalRConnection() {
                     return;
                 }
 
-                    //window.reloadOverviewViewComponents("@moduleCode", @quotationId, e.element, true);
-                window.reloadOverviewViewComponents(items.type, items.id)
+                // SignalR khong co DevExtreme event.e.element nhu btnRefreshOverview,
+                // nen resolve chinh root element cua view tu registry. Truyen true de
+                // su kien submit di cung dung full-refresh path cua nut Refresh.
+                const normalizedType = String(items.type || "")
+                    .replace(/\s+/g, "")
+                    .toLowerCase();
+                const moduleCode = normalizedType === "policyissuance" ? "pi" : "qt";
+                const viewKey = `${moduleCode}:${items.id}`;
+                const viewInstance = window.OverviewViewRegistry?.[viewKey];
+                const triggerElement = viewInstance?.rootId
+                    ? document.getElementById(viewInstance.rootId)
+                    : null;
+
+                window.reloadOverviewViewComponents(
+                    items.type,
+                    items.id,
+                    triggerElement,
+                    true
+                )
                     .catch(function (err) {
                         console.error("Submitted item reload failed", err);
                     });
