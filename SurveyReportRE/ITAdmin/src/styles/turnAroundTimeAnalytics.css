@@ -190,20 +190,215 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 
-.card-header {
+/* ==========================================================
+   CYCLE NODE FLOW DIAGRAM STYLES (MATCHING USER DEMO IMAGE)
+   ========================================================== */
+.cycle-outer-card {
+    background: #fefce8; /* Soft warm yellow matching user image */
+    border: 2px solid #eab308;
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: 0 6px 18px rgba(234, 179, 8, 0.08);
+}
+
+.cycle-outer-header {
+    text-align: center;
     margin-bottom: 20px;
 }
 
-.card-header h3 {
-    margin: 0 0 4px 0;
+.outer-title-text {
     font-size: 16px;
-    color: #0f172a;
+    font-weight: 700;
+    color: #1e293b;
+    background: #ffffff;
+    padding: 6px 18px;
+    border-radius: 20px;
+    border: 1px solid #fde047;
+    display: inline-block;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
 }
 
-.card-header p {
-    margin: 0;
-    font-size: 12.5px;
-    color: #64748b;
+.cycle-sessions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.cycle-session-box {
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 20px 24px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.cycle-session-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 18px;
+    text-align: center;
+}
+
+.cycle-nodes-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: wrap;
+    padding: 10px 0;
+}
+
+/* CYCLE NODE BOXES (MATCHING EXACT COLORS IN IMAGE) */
+.cycle-node-box {
+    width: 85px;
+    height: 55px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cycle-node-box:hover {
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+}
+
+/* NODE COLORS */
+.node-bg-fo {
+    background: #2563eb; /* Vivid Blue as in image */
+}
+
+.node-bg-ts {
+    background: #15803d; /* Rich Dark Green as in image */
+}
+
+.node-bg-uw {
+    background: #334155; /* Dark Slate/Charcoal as in image */
+}
+
+.node-bg-pm {
+    background: #7c3aed; /* Purple */
+}
+
+.node-bg-lmkt {
+    background: #db2777; /* Pink */
+}
+
+.node-bg-default {
+    background: #64748b;
+}
+
+/* ARROW CONNECTOR WITH DURATION LABEL */
+.cycle-arrow-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 75px;
+    position: relative;
+}
+
+.arrow-line-wrapper {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    position: relative;
+}
+
+.arrow-line {
+    flex: 1;
+    height: 2px;
+    background: #475569;
+}
+
+.arrow-head {
+    font-size: 10px;
+    color: #475569;
+    margin-left: -4px;
+}
+
+.arrow-duration-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-top: 6px;
+}
+
+/* NODE HOVER TOOLTIP */
+.node-tooltip {
+    display: none;
+    position: absolute;
+    bottom: 65px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 220px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    padding: 10px 12px;
+    z-index: 1000;
+    pointer-events: none;
+    color: #1e293b;
+    font-size: 11px;
+    font-weight: 400;
+    text-align: left;
+}
+
+.node-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: #ffffff transparent transparent transparent;
+}
+
+.cycle-node-box:hover .node-tooltip {
+    display: block;
+}
+
+.tooltip-note {
+    margin-top: 4px;
+    background: #f1f5f9;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-style: italic;
+}
+
+/* LOOP ARC LINE */
+.cycle-loop-arc {
+    width: 100%;
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+}
+
+.arc-line-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fef3c7;
+    border: 1px dashed #f59e0b;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #92400e;
 }
 
 /* ==========================================================
@@ -219,7 +414,6 @@
     overflow: hidden;
 }
 
-/* HORIZONTAL TIME AXIS HEADER */
 .axis-header-row {
     display: flex;
     background: #f1f5f9;
@@ -272,7 +466,6 @@
     white-space: nowrap;
 }
 
-/* DIAGRAM BODY ROWS */
 .axis-body-rows {
     display: flex;
     flex-direction: column;
@@ -328,7 +521,6 @@
     pointer-events: none;
 }
 
-/* BLOCK ITEM (ITEM ROW BLOCK ON TIME AXIS) */
 .block-item {
     position: absolute;
     height: 34px;
@@ -372,32 +564,13 @@
     border-radius: 10px;
 }
 
-/* GRADIENTS FOR DEPARTMENT BLOCKS */
-.dept-bg-fo {
-    background: linear-gradient(135deg, #2563eb, #3b82f6);
-}
+.dept-bg-fo { background: linear-gradient(135deg, #2563eb, #3b82f6); }
+.dept-bg-ts { background: linear-gradient(135deg, #059669, #10b981); }
+.dept-bg-pm { background: linear-gradient(135deg, #7c3aed, #8b5cf6); }
+.dept-bg-uw { background: linear-gradient(135deg, #ea580c, #f97316); }
+.dept-bg-lmkt { background: linear-gradient(135deg, #db2777, #ec4899); }
+.dept-bg-default { background: linear-gradient(135deg, #475569, #64748b); }
 
-.dept-bg-ts {
-    background: linear-gradient(135deg, #059669, #10b981);
-}
-
-.dept-bg-pm {
-    background: linear-gradient(135deg, #7c3aed, #8b5cf6);
-}
-
-.dept-bg-uw {
-    background: linear-gradient(135deg, #ea580c, #f97316);
-}
-
-.dept-bg-lmkt {
-    background: linear-gradient(135deg, #db2777, #ec4899);
-}
-
-.dept-bg-default {
-    background: linear-gradient(135deg, #475569, #64748b);
-}
-
-/* BLOCK HOVER POPOVER TOOLTIP */
 .block-popover {
     display: none;
     position: absolute;

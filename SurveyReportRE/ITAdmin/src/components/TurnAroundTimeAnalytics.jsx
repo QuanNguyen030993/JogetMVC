@@ -8,8 +8,8 @@ function TurnAroundTimeAnalytics() {
     const [loading, setLoading] = useState(true);
     const [selectedRecordGuid, setSelectedRecordGuid] = useState('ALL');
     const [selectedDeptFilter, setSelectedDeptFilter] = useState('ALL');
-    const [activeTab, setActiveTab] = useState('timeline-axis'); // 'timeline-axis' | 'timeline-vertical' | 'summary' | 'table'
-    const [layoutMode, setLayoutMode] = useState('checkpoint-rows'); // 'checkpoint-rows' | 'dept-rows'
+    const [activeTab, setActiveTab] = useState('timeline-axis'); // 'timeline-axis' | 'summary' | 'table'
+    const [layoutMode, setLayoutMode] = useState('cycle-flow'); // 'cycle-flow' | 'checkpoint-rows' | 'dept-rows'
 
     // Fetch data from API on mount
     useEffect(() => {
@@ -46,7 +46,7 @@ function TurnAroundTimeAnalytics() {
         }
     };
 
-    // Realistic Demo Data Generator
+    // Realistic Demo Data Generator matching user's diagram
     const generateDemoTatData = () => {
         const demoGuid1 = "e7b89f21-4a3b-4c5d-8e9f-112233445566";
         const demoGuid2 = "f8c90a32-5b4c-5d6e-9f0a-223344556677";
@@ -57,50 +57,73 @@ function TurnAroundTimeAnalytics() {
                 sessionNo: 1,
                 sessionTypeId: 101,
                 sessionStartDate: "2026-07-10T08:00:00Z",
-                sessionEndDate: "2026-07-15T17:30:00Z",
-                totalDays: 5,
+                sessionEndDate: "2026-07-12T17:30:00Z",
+                totalDays: 2,
                 recordGuid: demoGuid1,
-                recordTitle: "Hồ sơ Bảo hiểm TS-2026-001 (Policy Issuance)"
+                recordTitle: "Quotation Request TS-2026-001"
             },
             {
                 id: 2,
                 sessionNo: 2,
                 sessionTypeId: 102,
-                sessionStartDate: "2026-07-16T09:00:00Z",
-                sessionEndDate: "2026-07-19T16:00:00Z",
+                sessionStartDate: "2026-07-13T09:00:00Z",
+                sessionEndDate: "2026-07-15T16:00:00Z",
                 totalDays: 3,
                 recordGuid: demoGuid1,
-                recordTitle: "Hồ sơ Bảo hiểm TS-2026-001 (Bổ sung chứng từ)"
+                recordTitle: "Quotation Request TS-2026-001 (Loop Round)"
             },
             {
                 id: 3,
-                sessionNo: 1,
+                sessionNo: 3,
                 sessionTypeId: 101,
-                sessionStartDate: "2026-07-12T10:00:00Z",
-                sessionEndDate: "2026-07-18T15:00:00Z",
-                totalDays: 6,
-                recordGuid: demoGuid2,
-                recordTitle: "Hồ sơ Đơn hàng QT-2026-099 (Quotation)"
+                sessionStartDate: "2026-07-16T10:00:00Z",
+                sessionEndDate: "2026-07-17T15:00:00Z",
+                totalDays: 1,
+                recordGuid: demoGuid1,
+                recordTitle: "Quotation Request TS-2026-001 (Final Review)"
+            },
+            {
+                id: 4,
+                sessionNo: 4,
+                sessionTypeId: 101,
+                sessionStartDate: "2026-07-18T08:00:00Z",
+                sessionEndDate: "2026-07-19T17:00:00Z",
+                totalDays: 2,
+                recordGuid: demoGuid1,
+                recordTitle: "Quotation Request TS-2026-001 (Issuance)"
             }
         ];
 
         const demoDeptProcessings = [
-            // Session 1 Checkpoints
-            { id: 101, turnAroundTimeSessionId: 1, department: "FO", acceptDate: "2026-07-10T08:00:00Z", completeDate: "2026-07-10T18:30:00Z", processingDays: 1, note: "FO Tiếp nhận & Kiểm tra sơ bộ" },
-            { id: 102, turnAroundTimeSessionId: 1, department: "TS", acceptDate: "2026-07-11T08:00:00Z", completeDate: "2026-07-12T12:00:00Z", processingDays: 2, note: "TS Thẩm định kỹ thuật lần 1" },
-            { id: 103, turnAroundTimeSessionId: 1, department: "PM", acceptDate: "2026-07-12T13:00:00Z", completeDate: "2026-07-13T16:00:00Z", processingDays: 1, note: "PM Xử lý phương án tái bảo hiểm" },
-            { id: 104, turnAroundTimeSessionId: 1, department: "TS", acceptDate: "2026-07-13T17:00:00Z", completeDate: "2026-07-14T11:00:00Z", processingDays: 1, note: "TS Duyệt lại thông số kỹ thuật (Vòng 2)" },
-            { id: 105, turnAroundTimeSessionId: 1, department: "UW", acceptDate: "2026-07-14T13:00:00Z", completeDate: "2026-07-15T17:30:00Z", processingDays: 1, note: "UW Phê duyệt cấp đơn cuối" },
+            // Quotation 1 (Session 1): FO -> TS (4h) -> FO -> TS (2h) -> FO -> UW
+            { id: 101, turnAroundTimeSessionId: 1, department: "FO", acceptDate: "2026-07-10T08:00:00Z", completeDate: "2026-07-10T10:00:00Z", processingDays: 0, durationText: "2h", note: "FO Khởi tạo hồ sơ" },
+            { id: 102, turnAroundTimeSessionId: 1, department: "TS", acceptDate: "2026-07-10T10:00:00Z", completeDate: "2026-07-10T14:00:00Z", processingDays: 0, durationText: "4h", note: "TS Duyệt thông số lần 1" },
+            { id: 103, turnAroundTimeSessionId: 1, department: "FO", acceptDate: "2026-07-10T14:00:00Z", completeDate: "2026-07-10T16:00:00Z", processingDays: 0, durationText: "2h", note: "FO Cập nhật thông tin khách hàng" },
+            { id: 104, turnAroundTimeSessionId: 1, department: "TS", acceptDate: "2026-07-10T16:00:00Z", completeDate: "2026-07-10T18:00:00Z", processingDays: 0, durationText: "2h", note: "TS Thẩm định bổ sung" },
+            { id: 105, turnAroundTimeSessionId: 1, department: "FO", acceptDate: "2026-07-11T08:00:00Z", completeDate: "2026-07-11T10:00:00Z", processingDays: 0, durationText: "2h", note: "FO Trình cấp đơn" },
+            { id: 106, turnAroundTimeSessionId: 1, department: "UW", acceptDate: "2026-07-11T10:00:00Z", completeDate: "2026-07-12T17:30:00Z", processingDays: 1, durationText: "1.5 ngày", note: "UW Duyệt cấp đơn thành công" },
 
-            // Session 2 Checkpoints
-            { id: 106, turnAroundTimeSessionId: 2, department: "FO", acceptDate: "2026-07-16T09:00:00Z", completeDate: "2026-07-16T17:00:00Z", processingDays: 1, note: "FO Nhận hồ sơ điều chỉnh" },
-            { id: 107, turnAroundTimeSessionId: 2, department: "LMKT", acceptDate: "2026-07-17T08:00:00Z", completeDate: "2026-07-18T12:00:00Z", processingDays: 2, note: "LMKT Đánh giá rủi ro thị trường" },
-            { id: 108, turnAroundTimeSessionId: 2, department: "PM", acceptDate: "2026-07-18T13:00:00Z", completeDate: "2026-07-19T16:00:00Z", processingDays: 1, note: "PM Hoàn tất ban hành sửa đổi" },
+            // Quotation 2 (Session 2 Loop): FO -> TS (1st 1h) -> FO -> TS (2nd 2h) -> FO -> UW
+            { id: 107, turnAroundTimeSessionId: 2, department: "FO", acceptDate: "2026-07-13T09:00:00Z", completeDate: "2026-07-13T10:00:00Z", processingDays: 0, durationText: "1h", note: "FO Nhận yêu cầu sửa đổi" },
+            { id: 108, turnAroundTimeSessionId: 2, department: "TS", acceptDate: "2026-07-13T10:00:00Z", completeDate: "2026-07-13T11:00:00Z", processingDays: 0, durationText: "1st 1h", note: "TS Thẩm định điều khoản 1" },
+            { id: 109, turnAroundTimeSessionId: 2, department: "FO", acceptDate: "2026-07-13T11:00:00Z", completeDate: "2026-07-13T14:00:00Z", processingDays: 0, durationText: "3h", note: "FO Trao đổi với khách hàng" },
+            { id: 110, turnAroundTimeSessionId: 2, department: "TS", acceptDate: "2026-07-13T14:00:00Z", completeDate: "2026-07-13T16:00:00Z", processingDays: 0, durationText: "2nd 2h", note: "TS Thẩm định điều khoản 2" },
+            { id: 111, turnAroundTimeSessionId: 2, department: "FO", acceptDate: "2026-07-14T08:00:00Z", completeDate: "2026-07-14T10:00:00Z", processingDays: 0, durationText: "2h", note: "FO Gửi UW đánh giá rủi ro" },
+            { id: 112, turnAroundTimeSessionId: 2, department: "UW", acceptDate: "2026-07-14T10:00:00Z", completeDate: "2026-07-15T16:00:00Z", processingDays: 1, durationText: "4th 4h", note: "UW Duyệt bổ sung" },
 
-            // Session 3 Checkpoints
-            { id: 109, turnAroundTimeSessionId: 3, department: "FO", acceptDate: "2026-07-12T10:00:00Z", completeDate: "2026-07-13T11:00:00Z", processingDays: 1, note: "FO Khởi tạo hồ sơ báo giá" },
-            { id: 110, turnAroundTimeSessionId: 3, department: "TS", acceptDate: "2026-07-13T13:00:00Z", completeDate: "2026-07-15T16:00:00Z", processingDays: 2, note: "TS Tính phí bảo hiểm" },
-            { id: 111, turnAroundTimeSessionId: 3, department: "UW", acceptDate: "2026-07-16T08:00:00Z", completeDate: "2026-07-18T15:00:00Z", processingDays: 3, note: "UW Đánh giá tổn thất dự kiến" }
+            // Quotation 3 (Session 3): FO -> TS (5h) -> FO -> UW
+            { id: 113, turnAroundTimeSessionId: 3, department: "FO", acceptDate: "2026-07-16T10:00:00Z", completeDate: "2026-07-16T11:00:00Z", processingDays: 0, durationText: "1h", note: "FO Yêu cầu báo giá lại" },
+            { id: 114, turnAroundTimeSessionId: 3, department: "TS", acceptDate: "2026-07-16T11:00:00Z", completeDate: "2026-07-16T16:00:00Z", processingDays: 0, durationText: "5h", note: "TS Tái thẩm định tổng thể" },
+            { id: 115, turnAroundTimeSessionId: 3, department: "FO", acceptDate: "2026-07-16T16:00:00Z", completeDate: "2026-07-17T09:00:00Z", processingDays: 0, durationText: "2h", note: "FO Chuẩn bị tờ trình" },
+            { id: 116, turnAroundTimeSessionId: 3, department: "UW", acceptDate: "2026-07-17T09:00:00Z", completeDate: "2026-07-17T15:00:00Z", processingDays: 0, durationText: "6h", note: "UW Chấp nhận cấp bảo hiểm" },
+
+            // Quotation 4 (Session 4): FO -> TS (2h) -> FO -> UW -> TS (1h) -> FO
+            { id: 117, turnAroundTimeSessionId: 4, department: "FO", acceptDate: "2026-07-18T08:00:00Z", completeDate: "2026-07-18T10:00:00Z", processingDays: 0, durationText: "2h", note: "FO Bắt đầu phát hành" },
+            { id: 118, turnAroundTimeSessionId: 4, department: "TS", acceptDate: "2026-07-18T10:00:00Z", completeDate: "2026-07-18T12:00:00Z", processingDays: 0, durationText: "2h", note: "TS Kiểm tra biểu phí" },
+            { id: 119, turnAroundTimeSessionId: 4, department: "FO", acceptDate: "2026-07-18T13:00:00Z", completeDate: "2026-07-18T15:00:00Z", processingDays: 0, durationText: "2h", note: "FO Chuyển UW phê duyệt" },
+            { id: 120, turnAroundTimeSessionId: 4, department: "UW", acceptDate: "2026-07-18T15:00:00Z", completeDate: "2026-07-19T10:00:00Z", processingDays: 1, durationText: "1 ngày", note: "UW Xem xét điều khoản phụ" },
+            { id: 121, turnAroundTimeSessionId: 4, department: "TS", acceptDate: "2026-07-19T10:00:00Z", completeDate: "2026-07-19T11:00:00Z", processingDays: 0, durationText: "1h", note: "TS Xác nhận bản cứng" },
+            { id: 122, turnAroundTimeSessionId: 4, department: "FO", acceptDate: "2026-07-19T11:00:00Z", completeDate: "2026-07-19T17:00:00Z", processingDays: 0, durationText: "6h", note: "FO Hoàn tất & Bàn giao" }
         ];
 
         return { sessions: demoSessions, deptProcessings: demoDeptProcessings };
@@ -151,6 +174,34 @@ function TurnAroundTimeAnalytics() {
         });
     }, [deptProcessings, filteredSessionIds, selectedDeptFilter]);
 
+    // Sessions Grouped Data for Cycle Flow Mode
+    const cycleSessionsGrouped = useMemo(() => {
+        return filteredSessions.map(s => {
+            const sId = String(s.id || s.Id);
+            const cps = deptProcessings
+                .filter(dp => String(dp.turnAroundTimeSessionId || dp.TurnAroundTimeSessionId) === sId)
+                .sort((a, b) => new Date(a.acceptDate || a.AcceptDate || 0) - new Date(b.acceptDate || b.AcceptDate || 0));
+
+            // Detect if department has loops (multiple occurrences)
+            const deptCounts = {};
+            let isLoop = false;
+            cps.forEach(cp => {
+                const d = cp.department || cp.Department;
+                deptCounts[d] = (deptCounts[d] || 0) + 1;
+                if (deptCounts[d] > 1) isLoop = true;
+            });
+
+            return {
+                sessionId: sId,
+                sessionNo: s.sessionNo || s.SessionNo || 1,
+                title: s.recordTitle || `Quotation ${s.sessionNo || s.SessionNo || 1}`,
+                totalDays: s.totalDays || s.TotalDays || 0,
+                isLoop,
+                checkpoints: cps
+            };
+        });
+    }, [filteredSessions, deptProcessings]);
+
     // Time Axis Calculations (Global Min Date & Max Date)
     const timeAxisBounds = useMemo(() => {
         if (filteredCheckpoints.length === 0) {
@@ -174,14 +225,12 @@ function TurnAroundTimeAnalytics() {
             maxTime = new Date().getTime();
         }
 
-        // Add padding (5% on each side)
         const rawSpan = maxTime - minTime;
-        const pad = Math.max(3600000, rawSpan * 0.03); // 3% padding
+        const pad = Math.max(3600000, rawSpan * 0.03);
         minTime = minTime - pad;
         maxTime = maxTime + pad;
         const totalSpanMs = maxTime - minTime;
 
-        // Generate 6 time ticks along the horizontal axis
         const ticksCount = 6;
         const ticks = [];
         for (let i = 0; i < ticksCount; i++) {
@@ -277,7 +326,17 @@ function TurnAroundTimeAnalytics() {
         }
     };
 
-    // Calculate position & width percentage for a block item on the time axis
+    const getDeptNodeClass = (dept) => {
+        switch ((dept || '').toUpperCase()) {
+            case 'FO': return 'cycle-node-box node-bg-fo';
+            case 'TS': return 'cycle-node-box node-bg-ts';
+            case 'UW': return 'cycle-node-box node-bg-uw';
+            case 'PM': return 'cycle-node-box node-bg-pm';
+            case 'LMKT': return 'cycle-node-box node-bg-lmkt';
+            default: return 'cycle-node-box node-bg-default';
+        }
+    };
+
     const calculateBlockPosition = (acceptStr, completeStr) => {
         const { minTime, totalSpanMs } = timeAxisBounds;
         const acceptTime = new Date(acceptStr).getTime();
@@ -287,7 +346,6 @@ function TurnAroundTimeAnalytics() {
         const rightPercent = Math.max(0, Math.min(100, ((completeTime - minTime) / totalSpanMs) * 100));
         let widthPercent = rightPercent - leftPercent;
 
-        // Ensure a minimum width (e.g. 5%) so short processing blocks are easily clickable & visible
         if (widthPercent < 5) widthPercent = 5;
 
         return { left: `${leftPercent.toFixed(2)}%`, width: `${widthPercent.toFixed(2)}%` };
@@ -298,8 +356,8 @@ function TurnAroundTimeAnalytics() {
             {/* Header & Filter Bar */}
             <div className="tat-header">
                 <div className="header-title">
-                    <h2>📊 Biểu Đồ Trục Thời Gian Chu Kỳ TAT (Turn Around Time Cycle)</h2>
-                    <p>Mỗi hàng (row) biểu diễn 1 giai đoạn/phòng ban dưới dạng khối Block trên trục thời gian ngang liên tục</p>
+                    <h2>📊 Biểu Đồ Chu Kỳ Xử Lý TAT (Turn Around Time Cycle Diagram)</h2>
+                    <p>Trực quan hóa chu kỳ xử lý dạng Sơ đồ Node lặp (Cycle Flow) hoặc Sơ đồ Trục thời gian (Time Axis Gantt)</p>
                 </div>
                 <div className="header-actions">
                     <button className="btn-refresh" onClick={fetchData} title="Tải lại dữ liệu">
@@ -344,14 +402,16 @@ function TurnAroundTimeAnalytics() {
 
                 {activeTab === 'timeline-axis' && (
                     <div className="filter-group">
-                        <label>🎨 Bố trí Row (Layout):</label>
+                        <label>🎨 Bố trí Sơ Đồ (Diagram Mode):</label>
                         <select
                             value={layoutMode}
                             onChange={(e) => setLayoutMode(e.target.value)}
                             className="filter-select"
+                            style={{ fontWeight: "600", color: "#2563eb" }}
                         >
-                            <option value="checkpoint-rows">Mỗi Checkpoint = 1 Row Riêng</option>
-                            <option value="dept-rows">Gộp Chung Theo Hàng Phòng Ban</option>
+                            <option value="cycle-flow">🔄 Sơ Đồ Chu Kỳ Lặp (Cycle Node Flow - Mẫu)</option>
+                            <option value="checkpoint-rows">🗺️ Trục Thời Gian - Mỗi Checkpoint 1 Row</option>
+                            <option value="dept-rows">🏢 Trục Thời Gian - Gộp Hàng Phòng Ban</option>
                         </select>
                     </div>
                 )}
@@ -398,7 +458,7 @@ function TurnAroundTimeAnalytics() {
                     className={`tab-btn ${activeTab === 'timeline-axis' ? 'active' : ''}`}
                     onClick={() => setActiveTab('timeline-axis')}
                 >
-                    🗺️ Sơ Đồ Trục Thời Gian (Time-Axis Gantt Block)
+                    🔄 Sơ Đồ Chu Kỳ Lặp TAT (Cycle Flow & Time Axis)
                 </button>
                 <button
                     className={`tab-btn ${activeTab === 'summary' ? 'active' : ''}`}
@@ -422,141 +482,206 @@ function TurnAroundTimeAnalytics() {
                 </div>
             ) : (
                 <div className="tat-tab-content">
-                    {/* TAB 1: TIME-AXIS BLOCK DIAGRAM */}
+                    {/* TAB 1: DIAGRAM VIEWS (CYCLE FLOW OR TIME AXIS) */}
                     {activeTab === 'timeline-axis' && (
-                        <div className="axis-diagram-card">
-                            <div className="card-header">
-                                <h3>Sơ Đồ Chu Kỳ Trục Thời Gian (Time Axis Block Diagram)</h3>
-                                <p>Trục thời gian chạy ngang từ <strong>Accept Date đầu tiên</strong> đến <strong>Complete Date cuối cùng</strong>. Mỗi dòng (row) chứa khối Block Item thể hiện khoảng thời gian xử lý.</p>
-                            </div>
-
-                            {filteredCheckpoints.length === 0 ? (
-                                <div className="no-data">Không có dữ liệu checkpoint phù hợp với bộ lọc.</div>
-                            ) : (
-                                <div className="time-axis-diagram">
-                                    {/* HORIZONTAL TIME AXIS HEADER BAR */}
-                                    <div className="axis-header-row">
-                                        <div className="axis-label-col">Phòng Ban / Row</div>
-                                        <div className="axis-track-col">
-                                            {timeAxisBounds.ticks.map((tick, i) => (
-                                                <div key={i} className="axis-tick-marker" style={{ left: `${tick.percent}%` }}>
-                                                    <span className="tick-line" />
-                                                    <span className="tick-label">{tick.label}</span>
-                                                </div>
-                                            ))}
-                                        </div>
+                        <>
+                            {/* MODE 1: CYCLE NODE FLOW (MAU HIEN THI THEO ANH YEU CAU) */}
+                            {layoutMode === 'cycle-flow' && (
+                                <div className="cycle-outer-card">
+                                    <div className="cycle-outer-header">
+                                        <span className="outer-title-text">
+                                            📋 {selectedRecordGuid !== 'ALL' 
+                                                ? (sessions.find(s => String(s.recordGuid || s.RecordGuid) === String(selectedRecordGuid))?.recordTitle || `Quotation Request (${selectedRecordGuid.slice(0, 8)})`)
+                                                : 'Quotation Request / Instance Cycle Flow'
+                                            }
+                                        </span>
                                     </div>
 
-                                    {/* DIAGRAM BODY ROWS */}
-                                    <div className="axis-body-rows">
-                                        {layoutMode === 'checkpoint-rows' ? (
-                                            // LAYOUT MODE 1: Each checkpoint gets its own row
-                                            filteredCheckpoints.map((cp, idx) => {
-                                                const dept = cp.department || cp.Department || 'N/A';
-                                                const acceptStr = cp.acceptDate || cp.AcceptDate;
-                                                const completeStr = cp.completeDate || cp.CompleteDate;
-                                                const durationText = formatDuration(acceptStr, completeStr);
-                                                const pos = calculateBlockPosition(acceptStr, completeStr);
-
-                                                return (
-                                                    <div key={cp.id || cp.Id || idx} className="axis-row">
-                                                        {/* Left Row Title Column */}
-                                                        <div className="axis-row-title">
-                                                            <span className="step-seq">#{idx + 1}</span>
-                                                            <span className={getDeptBadgeClass(dept)}>{dept}</span>
-                                                        </div>
-
-                                                        {/* Right Axis Track with Block Item */}
-                                                        <div className="axis-row-track">
-                                                            {/* Grid Lines */}
-                                                            {timeAxisBounds.ticks.map((tick, i) => (
-                                                                <span key={i} className="grid-vert-line" style={{ left: `${tick.percent}%` }} />
-                                                            ))}
-
-                                                            {/* Block Item */}
-                                                            <div
-                                                                className={`block-item dept-bg-${dept.toLowerCase()}`}
-                                                                style={{ left: pos.left, width: pos.width }}
-                                                            >
-                                                                <div className="block-inner">
-                                                                    <span className="block-dept-name">{dept}</span>
-                                                                    <span className="block-duration">{durationText}</span>
-                                                                </div>
-
-                                                                {/* Hover Tooltip Popover */}
-                                                                <div className="block-popover">
-                                                                    <div className="popover-header">
-                                                                        <strong>#{idx + 1} Phòng ban {dept}</strong>
-                                                                    </div>
-                                                                    <div className="popover-body">
-                                                                        <div>🟢 <strong>Bắt đầu (Accept):</strong> {acceptStr ? new Date(acceptStr).toLocaleString('vi-VN') : '---'}</div>
-                                                                        <div>🔴 <strong>Kết thúc (Complete):</strong> {completeStr ? new Date(completeStr).toLocaleString('vi-VN') : 'Đang xử lý...'}</div>
-                                                                        <div>⏱️ <strong>Thời gian:</strong> {durationText}</div>
-                                                                        {cp.note && <div className="popover-note">📝 {cp.note}</div>}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })
-                                        ) : (
-                                            // LAYOUT MODE 2: Grouped by Department Rows
-                                            deptGroupedRows.map(({ dept, checkpoints }) => (
-                                                <div key={dept} className="axis-row">
-                                                    {/* Left Row Title Column */}
-                                                    <div className="axis-row-title">
-                                                        <span className={getDeptBadgeClass(dept)}>{dept}</span>
-                                                        <small className="dept-count">({checkpoints.length} lượt)</small>
-                                                    </div>
-
-                                                    {/* Right Axis Track containing multiple Block Items for this department */}
-                                                    <div className="axis-row-track">
-                                                        {/* Grid Lines */}
-                                                        {timeAxisBounds.ticks.map((tick, i) => (
-                                                            <span key={i} className="grid-vert-line" style={{ left: `${tick.percent}%` }} />
-                                                        ))}
-
-                                                        {checkpoints.map((cp, idx) => {
-                                                            const acceptStr = cp.acceptDate || cp.AcceptDate;
-                                                            const completeStr = cp.completeDate || cp.CompleteDate;
-                                                            const durationText = formatDuration(acceptStr, completeStr);
-                                                            const pos = calculateBlockPosition(acceptStr, completeStr);
-
-                                                            return (
-                                                                <div
-                                                                    key={cp.id || cp.Id || idx}
-                                                                    className={`block-item dept-bg-${dept.toLowerCase()}`}
-                                                                    style={{ left: pos.left, width: pos.width }}
-                                                                >
-                                                                    <div className="block-inner">
-                                                                        <span className="block-dept-name">{dept} Lần {idx + 1}</span>
-                                                                        <span className="block-duration">{durationText}</span>
-                                                                    </div>
-
-                                                                    {/* Hover Tooltip Popover */}
-                                                                    <div className="block-popover">
-                                                                        <div className="popover-header">
-                                                                            <strong>Phòng ban {dept} (Lượt {idx + 1})</strong>
-                                                                        </div>
-                                                                        <div className="popover-body">
-                                                                            <div>🟢 <strong>Bắt đầu (Accept):</strong> {acceptStr ? new Date(acceptStr).toLocaleString('vi-VN') : '---'}</div>
-                                                                            <div>🔴 <strong>Kết thúc (Complete):</strong> {completeStr ? new Date(completeStr).toLocaleString('vi-VN') : 'Đang xử lý...'}</div>
-                                                                            <div>⏱️ <strong>Thời gian:</strong> {durationText}</div>
-                                                                            {cp.note && <div className="popover-note">📝 {cp.note}</div>}
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
+                                    <div className="cycle-sessions-list">
+                                        {cycleSessionsGrouped.map((sGroup) => (
+                                            <div key={sGroup.sessionId} className="cycle-session-box">
+                                                <div className="cycle-session-title">
+                                                    Quotation {sGroup.sessionNo} {sGroup.isLoop ? '(Loop)' : ''}
                                                 </div>
-                                            ))
-                                        )}
+
+                                                <div className="cycle-nodes-row">
+                                                    {sGroup.checkpoints.map((cp, idx) => {
+                                                        const isLast = idx === sGroup.checkpoints.length - 1;
+                                                        const dept = cp.department || cp.Department || 'N/A';
+                                                        const durText = cp.durationText || formatDuration(cp.acceptDate, cp.completeDate);
+
+                                                        return (
+                                                            <React.Fragment key={cp.id || idx}>
+                                                                {/* Colored Node Block Box */}
+                                                                <div className={getDeptNodeClass(dept)}>
+                                                                    <span className="node-label">{dept}</span>
+
+                                                                    {/* Tooltip on hover */}
+                                                                    <div className="node-tooltip">
+                                                                        <strong>Step #{idx + 1}: {dept}</strong>
+                                                                        <div>Accept: {cp.acceptDate ? new Date(cp.acceptDate).toLocaleString('vi-VN') : '---'}</div>
+                                                                        <div>Complete: {cp.completeDate ? new Date(cp.completeDate).toLocaleString('vi-VN') : 'Đang xử lý'}</div>
+                                                                        <div>Thời gian: {durText}</div>
+                                                                        {cp.note && <div className="tooltip-note">{cp.note}</div>}
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Arrow Connector between nodes */}
+                                                                {!isLast && (
+                                                                    <div className="cycle-arrow-container">
+                                                                        <div className="arrow-line-wrapper">
+                                                                            <span className="arrow-line" />
+                                                                            <span className="arrow-head">▶</span>
+                                                                        </div>
+                                                                        <span className="arrow-duration-label">{durText}</span>
+                                                                    </div>
+                                                                )}
+                                                            </React.Fragment>
+                                                        );
+                                                    })}
+                                                </div>
+
+                                                {/* Curved Loop / Return Line indicator if there's a loop */}
+                                                {sGroup.isLoop && (
+                                                    <div className="cycle-loop-arc">
+                                                        <div className="arc-line-container">
+                                                            <span className="arc-curve" />
+                                                            <span className="arc-text">↩️ 3rd 2h / 4th 4h (Return Loop)</span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             )}
-                        </div>
+
+                            {/* MODE 2 & 3: TIME AXIS GANTT BLOCK DIAGRAM */}
+                            {layoutMode !== 'cycle-flow' && (
+                                <div className="axis-diagram-card">
+                                    <div className="card-header">
+                                        <h3>Sơ Đồ Chu Kỳ Trục Thời Gian (Time Axis Block Diagram)</h3>
+                                        <p>Trục thời gian chạy ngang từ <strong>Accept Date đầu tiên</strong> đến <strong>Complete Date cuối cùng</strong>.</p>
+                                    </div>
+
+                                    {filteredCheckpoints.length === 0 ? (
+                                        <div className="no-data">Không có dữ liệu checkpoint phù hợp với bộ lọc.</div>
+                                    ) : (
+                                        <div className="time-axis-diagram">
+                                            {/* HORIZONTAL TIME AXIS HEADER BAR */}
+                                            <div className="axis-header-row">
+                                                <div className="axis-label-col">Phòng Ban / Row</div>
+                                                <div className="axis-track-col">
+                                                    {timeAxisBounds.ticks.map((tick, i) => (
+                                                        <div key={i} className="axis-tick-marker" style={{ left: `${tick.percent}%` }}>
+                                                            <span className="tick-line" />
+                                                            <span className="tick-label">{tick.label}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* DIAGRAM BODY ROWS */}
+                                            <div className="axis-body-rows">
+                                                {layoutMode === 'checkpoint-rows' ? (
+                                                    filteredCheckpoints.map((cp, idx) => {
+                                                        const dept = cp.department || cp.Department || 'N/A';
+                                                        const acceptStr = cp.acceptDate || cp.AcceptDate;
+                                                        const completeStr = cp.completeDate || cp.CompleteDate;
+                                                        const durationText = formatDuration(acceptStr, completeStr);
+                                                        const pos = calculateBlockPosition(acceptStr, completeStr);
+
+                                                        return (
+                                                            <div key={cp.id || cp.Id || idx} className="axis-row">
+                                                                <div className="axis-row-title">
+                                                                    <span className="step-seq">#{idx + 1}</span>
+                                                                    <span className={getDeptBadgeClass(dept)}>{dept}</span>
+                                                                </div>
+
+                                                                <div className="axis-row-track">
+                                                                    {timeAxisBounds.ticks.map((tick, i) => (
+                                                                        <span key={i} className="grid-vert-line" style={{ left: `${tick.percent}%` }} />
+                                                                    ))}
+
+                                                                    <div
+                                                                        className={`block-item dept-bg-${dept.toLowerCase()}`}
+                                                                        style={{ left: pos.left, width: pos.width }}
+                                                                    >
+                                                                        <div className="block-inner">
+                                                                            <span className="block-dept-name">{dept}</span>
+                                                                            <span className="block-duration">{durationText}</span>
+                                                                        </div>
+
+                                                                        <div className="block-popover">
+                                                                            <div className="popover-header">
+                                                                                <strong>#{idx + 1} Phòng ban {dept}</strong>
+                                                                            </div>
+                                                                            <div className="popover-body">
+                                                                                <div>🟢 <strong>Bắt đầu (Accept):</strong> {acceptStr ? new Date(acceptStr).toLocaleString('vi-VN') : '---'}</div>
+                                                                                <div>🔴 <strong>Kết thúc (Complete):</strong> {completeStr ? new Date(completeStr).toLocaleString('vi-VN') : 'Đang xử lý...'}</div>
+                                                                                <div>⏱️ <strong>Thời gian:</strong> {durationText}</div>
+                                                                                {cp.note && <div className="popover-note">📝 {cp.note}</div>}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })
+                                                ) : (
+                                                    deptGroupedRows.map(({ dept, checkpoints }) => (
+                                                        <div key={dept} className="axis-row">
+                                                            <div className="axis-row-title">
+                                                                <span className={getDeptBadgeClass(dept)}>{dept}</span>
+                                                                <small className="dept-count">({checkpoints.length} lượt)</small>
+                                                            </div>
+
+                                                            <div className="axis-row-track">
+                                                                {timeAxisBounds.ticks.map((tick, i) => (
+                                                                    <span key={i} className="grid-vert-line" style={{ left: `${tick.percent}%` }} />
+                                                                ))}
+
+                                                                {checkpoints.map((cp, idx) => {
+                                                                    const acceptStr = cp.acceptDate || cp.AcceptDate;
+                                                                    const completeStr = cp.completeDate || cp.CompleteDate;
+                                                                    const durationText = formatDuration(acceptStr, completeStr);
+                                                                    const pos = calculateBlockPosition(acceptStr, completeStr);
+
+                                                                    return (
+                                                                        <div
+                                                                            key={cp.id || cp.Id || idx}
+                                                                            className={`block-item dept-bg-${dept.toLowerCase()}`}
+                                                                            style={{ left: pos.left, width: pos.width }}
+                                                                        >
+                                                                            <div className="block-inner">
+                                                                                <span className="block-dept-name">{dept} Lần {idx + 1}</span>
+                                                                                <span className="block-duration">{durationText}</span>
+                                                                            </div>
+
+                                                                            <div className="block-popover">
+                                                                                <div className="popover-header">
+                                                                                    <strong>Phòng ban {dept} (Lượt {idx + 1})</strong>
+                                                                                </div>
+                                                                                <div className="popover-body">
+                                                                                    <div>🟢 <strong>Bắt đầu (Accept):</strong> {acceptStr ? new Date(acceptStr).toLocaleString('vi-VN') : '---'}</div>
+                                                                                    <div>🔴 <strong>Kết thúc (Complete):</strong> {completeStr ? new Date(completeStr).toLocaleString('vi-VN') : 'Đang xử lý...'}</div>
+                                                                                    <div>⏱️ <strong>Thời gian:</strong> {durationText}</div>
+                                                                                    {cp.note && <div className="popover-note">📝 {cp.note}</div>}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </>
                     )}
 
                     {/* TAB 2: AGGREGATED DEPARTMENT SUMMARY */}
