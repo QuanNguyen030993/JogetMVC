@@ -11,6 +11,7 @@ import CustomForm from "../components/CustomForm.jsx";
 import PreviewOffice from "../components/PreviewOffice.jsx";
 // import Map from "../components/Map.jsx";
 import FileUploader from "../components/FileUploader.jsx";
+import Notification, { notify } from "../components/Notification.jsx";
 import React from "react";
 
 import { createRoot } from "react-dom/client";
@@ -731,5 +732,14 @@ register(
     FileUploader
 );
 
-// export default { DateBox, HtmlEditor, CustomGrid, CommentEditor, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm, PreviewOffice, Map, FileUploader };
-export default { DateBox, HtmlEditor, CustomGrid, CommentEditor, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm, PreviewOffice, FileUploader };
+register(
+    "Notification",
+    Notification
+);
+
+window.TMIVCom.notify = notify;
+if (typeof $ !== "undefined") {
+    $.tmivnotify = notify;
+}
+
+export default { DateBox, HtmlEditor, CustomGrid, CommentEditor, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm, PreviewOffice, FileUploader, Notification, notify };

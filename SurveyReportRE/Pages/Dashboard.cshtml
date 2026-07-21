@@ -18,8 +18,22 @@
         font-family: Inter, "Segoe UI", Arial, sans-serif;
     }
 
+    /* Dashboard is loaded inside an absolute SPA tab, so it owns the vertical
+       viewport scroll instead of relying on the document body. */
+    #DashBoard {
+        box-sizing: border-box;
+        width: 100%;
+        height: calc(100vh - 72px);
+        height: calc(100dvh - 72px);
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-gutter: stable;
+    }
+
     .workload-dashboard-page {
-        min-height: 100vh;
+        box-sizing: border-box;
+        min-height: 100%;
         padding: 28px;
         background:
             radial-gradient(circle at 8% 0%, var(--c-rgba-74-112-255-13), transparent 25rem),

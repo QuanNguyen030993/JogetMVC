@@ -2012,7 +2012,7 @@ function Flow({ id: propId }) {
                         <option value="">-- Không gửi Thông báo --</option>
                         {notificationsList.map((item) => (
                             <option key={item.id} value={item.id}>
-                                {item.name || item.title || `Notification ${item.id}`}
+                                {item.templateName || item.title || `Notification ${item.id}`}
                             </option>
                         ))}
                     </select>

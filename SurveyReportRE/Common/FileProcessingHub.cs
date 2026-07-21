@@ -2,9 +2,12 @@ using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
 using System.Collections.Concurrent;
 using ERPCore.Models.Migration.Config;
+using ERPCore.ControllerUtil;
+using ERPCore.Models.Migration.Business.HumanResource;
 
 public class FileProcessingHub : Hub
 {
+    public const string ItExceptionMonitorGroup = "IT-ExceptionMonitor";
     // Kept as initialized compatibility accessors because existing controllers use
     // them to push events outside a Hub instance.
     public static MemoryPresenceStore _store { get; private set; } = new();
@@ -12,17 +15,20 @@ public class FileProcessingHub : Hub
 
     private readonly IConfiguration _configuration;
     private readonly IBaseRepository<UsersSession> _userSessionRepository;
+    private readonly IBaseRepository<Employee> _employeeRepository;
     private readonly ILogger<FileProcessingHub> _logger;
 
     public FileProcessingHub(
         IConfiguration configuration,
         IBaseRepository<UsersSession> userSessionRepository,
+        IBaseRepository<Employee> employeeRepository,
         MemoryPresenceStore presenceStore,
         IHubContext<FileProcessingHub> hubContext,
         ILogger<FileProcessingHub> logger)
     {
         _configuration = configuration;
         _userSessionRepository = userSessionRepository;
+        _employeeRepository = employeeRepository;
         _logger = logger;
         _store = presenceStore;
         _hubContext = hubContext;
@@ -43,6 +49,7 @@ public class FileProcessingHub : Hub
         _store.AddOrUpdate(user, authType, Context.ConnectionId);
 
         await TryOpenUserSessionAsync(user);
+        await TryJoinItExceptionMonitorAsync(user);
         await base.OnConnectedAsync();
         await Clients.All.SendAsync("onlineUsersChanged", _store.GetOnlineUsers());
     }
@@ -64,6 +71,31 @@ public class FileProcessingHub : Hub
 
     public Task<string> GetConnectionId()
         => Task.FromResult(Context.ConnectionId);
+
+    private async Task TryJoinItExceptionMonitorAsync(string user)
+    {
+        try
+        {
+            bool isSuperUser = ControllerUtil.IsSuperUser(_configuration, user);
+            Employee? employee = await _employeeRepository.GetSingleObjectFullInclude(
+                item => item.AccountName == user,
+                null,
+                item => item.SystemRolesFK);
+            bool isItRole = string.Equals(
+                employee?.SystemRolesFK?.RoleName?.Trim(),
+                "IT",
+                StringComparison.OrdinalIgnoreCase);
+
+            if (isSuperUser || isItRole)
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, ItExceptionMonitorGroup);
+            }
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Unable to determine IT error-stream access for {User}.", user);
+        }
+    }
 
     public Task NotifyFileProcessingCompleted(int surveyId)
         => Clients.Caller.SendAsync("FileProcessingCompleted", surveyId);
