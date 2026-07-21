@@ -548,7 +548,7 @@
                     </div>
                     <button id="openUserSettings" class="user-settings-entry" type="button">
                         <span class="user-settings-icon"><i class="fa fa-cog"></i></span>
-                        <span><strong>Settings</strong><small>Choose your workflow role</small></span>
+                        <span><strong>Settings</strong><small>Role and notifications</small></span>
                         <i class="fa fa-angle-right"></i>
                     </button>
                 </div>
@@ -574,12 +574,24 @@
                     <header class="user-settings-header">
                         <div>
                             <span class="user-settings-kicker">ACCOUNT SETTINGS</span>
-                            <h2 id="userSettingsTitle">Choose your workflow role</h2>
-                            <p>The role controls your working group and relevant workflow menus.</p>
+                            <h2 id="userSettingsTitle">Account settings</h2>
+                            <p>Choose your workflow role and notification experience.</p>
                         </div>
                         <button id="closeUserSettings" class="user-settings-close" type="button" aria-label="Close settings">&times;</button>
                     </header>
                     <div id="userRoleOptions" class="user-role-options"></div>
+                    <section class="account-notification-settings" aria-labelledby="chromeNotificationSettingTitle">
+                        <div class="account-notification-icon"><i class="fa fa-bell"></i></div>
+                        <div class="account-notification-copy">
+                            <strong id="chromeNotificationSettingTitle">Chrome notifications</strong>
+                            <span>Show workflow alerts through the browser. When disabled or unavailable, TMIVCom Notification will be used.</span>
+                            <small id="chromeNotificationPermissionStatus"></small>
+                        </div>
+                        <label class="account-setting-switch" title="Enable Chrome notifications">
+                            <input id="enableChromeNotifications" type="checkbox" />
+                            <span class="account-setting-slider"></span>
+                        </label>
+                    </section>
                     <div class="user-settings-note">
                         <i class="fa fa-info-circle"></i>
                         Menu permissions will be fully refreshed the next time this page is loaded.
@@ -606,42 +618,6 @@
     </div>
 </body>
 <script type="text/javascript">
-    //Chrome popup => allow site setting, allow windows chrome app notifications
-    //    $(document).on('DOMContentLoaded', function () {
-    //     // Request desktop notifications permission on page load
-
-    //     if (!Notification) {
-    //       console.log('Desktop notifications are not available in your browser.');
-    //       return;
-    //     }
-
-    //     if (Notification.permission !== 'granted') {
-    //       Notification.requestPermission();
-    //     }
-    //   });
-
-    //   function showNotification(title, body) {
-    //     if (Notification.permission !== 'granted') {
-    //       Notification.requestPermission();
-    //     } else {
-    //       const options = {
-    //         body: body,
-    //         dir: 'ltr'//,
-    //         // image: 'image.jpg'
-    //       };
-    //       const notification = new Notification(title, options);
-
-    //       notification.onclick = function () {
-    //         window.open('https://www.google.com');
-    //       };
-    //     }
-    //   }
-    // setTimeout(() => {
-    //     // window.confirm("your warning text here");
-    // showNotification( "RE Survey Tool",
-    //     "Quotation QT-2025-123 needs approval");},3000
-    // );
-    
     // function monitorConnection(url, buttonId, interval = 5000) {
         // checkConnection(url, interval).then(className => {
         //         updateButtonStatus(buttonId, className);
@@ -715,6 +691,82 @@
     ];
     let selectedUserRole = "";
     let userRoleOptions = fallbackRoleOptions;
+    const chromeNotificationStoragePrefix = "tmiv.chromeNotifications.enabled:";
+    let currentSettingsAccount = "";
+    let chromeNotificationsEnabled = true;
+    window.tmivChromeNotificationsEnabled = true;
+
+    function getChromeNotificationStorageKey() {
+        const account = String(currentSettingsAccount || _loginUser || "anonymous")
+            .trim()
+            .toLowerCase();
+        return `${chromeNotificationStoragePrefix}${account}`;
+    }
+
+    function readChromeNotificationPreference() {
+        try {
+            const storedValue = localStorage.getItem(getChromeNotificationStorageKey());
+            return storedValue === null ? true : storedValue === "true";
+        } catch {
+            return true;
+        }
+    }
+
+    function updateChromeNotificationPermissionStatus() {
+        const $status = $("#chromeNotificationPermissionStatus");
+        if (!("Notification" in window)) {
+            $status.text("Chrome notifications are unavailable; TMIVCom Notification will be used.");
+            return;
+        }
+
+        if (!chromeNotificationsEnabled) {
+            $status.text("Disabled — using TMIVCom Notification.");
+            return;
+        }
+
+        const permissionText = Notification.permission === "granted"
+            ? "Enabled and allowed by the browser."
+            : Notification.permission === "denied"
+                ? "Enabled, but browser permission is blocked — using TMIVCom Notification."
+                : "Enable and save to request browser permission.";
+        $status.text(permissionText);
+    }
+
+    function applyChromeNotificationPreference(enabled, persist) {
+        chromeNotificationsEnabled = enabled === true;
+        window.tmivChromeNotificationsEnabled = chromeNotificationsEnabled;
+        $("#enableChromeNotifications").prop("checked", chromeNotificationsEnabled);
+        if (persist) {
+            try {
+                localStorage.setItem(
+                    getChromeNotificationStorageKey(),
+                    String(chromeNotificationsEnabled));
+            } catch (error) {
+                console.warn("Unable to save Chrome notification preference.", error);
+            }
+        }
+        updateChromeNotificationPermissionStatus();
+    }
+
+    function requestChromeNotificationPermissionIfNeeded() {
+        if (!chromeNotificationsEnabled
+            || !("Notification" in window)
+            || Notification.permission !== "default") {
+            updateChromeNotificationPermissionStatus();
+            return Promise.resolve(window.Notification?.permission ?? "unavailable");
+        }
+
+        return Notification.requestPermission()
+            .then(function (permission) {
+                updateChromeNotificationPermissionStatus();
+                return permission;
+            })
+            .catch(function (error) {
+                console.warn("Chrome notification permission request failed.", error);
+                updateChromeNotificationPermissionStatus();
+                return "denied";
+            });
+    }
 
     function setUserSettingsModalVisible(visible) {
         $("#userSettingsModal")
@@ -739,6 +791,8 @@
             .done(function (response) {
                 if (!response?.success) return;
                 const profile = response.data;
+                currentSettingsAccount = profile.accountName || _loginUser || "";
+                applyChromeNotificationPreference(readChromeNotificationPreference(), false);
                 selectedUserRole = (profile.role || "").toUpperCase();
                 userRoleOptions = profile.roles?.length ? profile.roles : fallbackRoleOptions;
                 $("#accountRoleBadge").text(selectedUserRole || "Role not selected");
@@ -778,6 +832,11 @@
         selectedUserRole = this.value;
         renderUserRoleOptions();
     });
+    $("#enableChromeNotifications").on("change", function () {
+        chromeNotificationsEnabled = this.checked === true;
+        window.tmivChromeNotificationsEnabled = chromeNotificationsEnabled;
+        updateChromeNotificationPermissionStatus();
+    });
     $("#saveUserSettings").on("click", function () {
         if (!selectedUserRole) {
             appNotify({ message: "Please select a role.", type: "warning" });
@@ -785,6 +844,10 @@
         }
 
         const $button = $(this).prop("disabled", true).addClass("is-saving");
+        applyChromeNotificationPreference(
+            $("#enableChromeNotifications").prop("checked") === true,
+            true);
+        requestChromeNotificationPermissionIfNeeded();
         $.ajax({
             url: "/api/Employee/UpdateMyRole",
             method: "POST",
@@ -1853,6 +1916,102 @@
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
+    }
+
+    .account-notification-settings {
+        margin-top: 18px;
+        padding: 15px;
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 12px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+    }
+
+    .account-notification-icon {
+        width: 42px;
+        height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #2563eb;
+        background: #dbeafe;
+        border-radius: 12px;
+    }
+
+    .account-notification-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .account-notification-copy strong {
+        color: #172033;
+        font-size: 14px;
+    }
+
+    .account-notification-copy span,
+    .account-notification-copy small {
+        color: #737d8e;
+        font-size: 11px;
+        line-height: 1.45;
+    }
+
+    .account-notification-copy small {
+        color: #526173;
+        font-weight: 600;
+    }
+
+    .account-setting-switch {
+        position: relative;
+        width: 48px;
+        height: 26px;
+        margin: 0;
+        flex: 0 0 auto;
+    }
+
+    .account-setting-switch input {
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+    }
+
+    .account-setting-slider {
+        position: absolute;
+        inset: 0;
+        cursor: pointer;
+        background: #cbd5e1;
+        border-radius: 999px;
+        transition: background .18s ease;
+    }
+
+    .account-setting-slider::before {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        left: 3px;
+        top: 3px;
+        content: "";
+        background: #fff;
+        border-radius: 50%;
+        box-shadow: 0 1px 4px rgba(15, 23, 42, .25);
+        transition: transform .18s ease;
+    }
+
+    .account-setting-switch input:checked + .account-setting-slider {
+        background: #2563eb;
+    }
+
+    .account-setting-switch input:checked + .account-setting-slider::before {
+        transform: translateX(22px);
+    }
+
+    .account-setting-switch input:focus-visible + .account-setting-slider {
+        outline: 3px solid rgba(37, 99, 235, .25);
+        outline-offset: 2px;
     }
 
     .user-role-card {

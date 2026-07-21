@@ -3803,21 +3803,43 @@ function updateNotification(count) {
 
 
 
-function showPopupNotification(title, body) {
-    if (Notification.permission !== 'granted') {
-        Notification.requestPermission();
-    } else {
-        const options = {
-            body: body,
-            dir: 'ltr'//,
-            // image: 'image.jpg'
-        };
-        const notification = new Notification(title, options);
-
-        notification.onclick = function () {
-            window.open('https://www.google.com');
-        };
+function showTMIVComPopupNotification(title, body) {
+    if (window.TMIVCom && typeof window.TMIVCom.notify === "function") {
+        window.TMIVCom.notify({
+            title: title || "Notification",
+            content: body || "",
+            type: "info",
+            position: "bottom-right",
+            duration: 6000
+        });
+        return;
     }
+
+    const plainBody = $("<div>").html(body || "").text();
+    appNotifyInfo([title, plainBody].filter(Boolean).join(" - "));
+}
+
+function showPopupNotification(title, body) {
+    const chromeNotificationsEnabled = window.tmivChromeNotificationsEnabled === true;
+    const chromeNotificationsAvailable = "Notification" in window;
+
+    if (!chromeNotificationsEnabled
+        || !chromeNotificationsAvailable
+        || Notification.permission !== "granted") {
+        showTMIVComPopupNotification(title, body);
+        return;
+    }
+
+    const plainBody = $("<div>").html(body || "").text();
+    const notification = new Notification(title || "Notification", {
+        body: plainBody,
+        dir: "ltr"
+    });
+
+    notification.onclick = function () {
+        window.focus();
+        notification.close();
+    };
 }
 
 function flashNotificationDot() {

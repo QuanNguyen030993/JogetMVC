@@ -21,6 +21,67 @@
     //                 'formats/custom-list': CustomList
     //             }, true);
 
+    // Share GET results between controls. In-flight promises are cached as well so
+    // controls rendered in the same frame do not fan out identical HTTP requests.
+    const AppLazyRequest = (function () {
+        const responseCache = new Map();
+        const inFlight = new Map();
+
+        function normalizeUrl(url) {
+            try {
+                const parsed = new URL(url, window.location.origin);
+                parsed.searchParams.sort();
+                return `${parsed.pathname}${parsed.search}`;
+            } catch (_) {
+                return String(url || "");
+            }
+        }
+
+        function get(url, options) {
+            options = options || {};
+            const key = normalizeUrl(options.cacheKey || url);
+            const ttl = Math.max(0, Number(options.ttl) || 0);
+            const now = Date.now();
+
+            if (options.force) {
+                responseCache.delete(key);
+            } else {
+                const cached = responseCache.get(key);
+                if (cached && cached.expiresAt > now) {
+                    return Promise.resolve(cached.data);
+                }
+                if (inFlight.has(key)) {
+                    return inFlight.get(key);
+                }
+            }
+
+            const request = Promise.resolve($.ajax({
+                url: url,
+                type: "GET",
+                dataType: "json"
+            })).then(function (data) {
+                if (ttl > 0) {
+                    responseCache.set(key, {
+                        data: data,
+                        expiresAt: Date.now() + ttl
+                    });
+                }
+                return data;
+            }).finally(function () {
+                inFlight.delete(key);
+            });
+
+            inFlight.set(key, request);
+            return request;
+        }
+
+        function invalidate(url) {
+            responseCache.delete(normalizeUrl(url));
+        }
+
+        return { get: get, invalidate: invalidate };
+    })();
+
     function popupStandardContentByScroll(customContainer) {
         var scrollView = $("<div>");
         customContainer.appendTo(scrollView);
@@ -1542,7 +1603,8 @@
                                     //     // create commenteditor here
                                     // });
 
-                                    ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`,null,null)
+                                    const commentsUrl = `/api/SectionCommentNote/GetAll?${params.toString()}`;
+                                    AppLazyRequest.get(commentsUrl, { ttl: 30000 })
                                         .then(res => {
 
 
@@ -1587,7 +1649,7 @@
                                                       store.insert(commentData)
                                                      .done(function () {
                                                          DevExpress.ui.notify("Send message successfully", "success", 2000);
-                                                         ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null, null)
+                                                         AppLazyRequest.get(commentsUrl, { ttl: 30000, force: true })
                                                               .then(res => {
                                                                   var updatedComments = (res || []).map(x => ({
                                                                       id: x.id,
@@ -2717,16 +2779,14 @@
 
             load: function (loadOptions) {
                 loadOptions = loadOptions || {};
-                return $.ajax({
-                    url: "api/Employee/GetAssignableByGroup",
-                    type: "GET",
-                    dataType: "json",
-                    data: {
-                        group: settings.groupName,
-                        branchCode: _branch,
-                        excludeCurrent: true,
-                        keyword: loadOptions.searchValue || ""
-                    }
+                const params = new URLSearchParams({
+                    group: settings.groupName || "",
+                    branchCode: _branch || "",
+                    excludeCurrent: "true",
+                    keyword: loadOptions.searchValue || ""
+                });
+                return AppLazyRequest.get(`/api/Employee/GetAssignableByGroup?${params.toString()}`, {
+                    ttl: 300000
                 }).then(function (res) {
                     return res && res.success ? res.data : [];
                 });
@@ -2735,10 +2795,8 @@
             byKey: function (key) {
                 if (!key) return null;
 
-                return $.ajax({
-                    url: `api/Employee/EmployeeLookup/${key}`,
-                    type: "GET",
-                    dataType: "json"
+                return AppLazyRequest.get(`/api/Employee/EmployeeLookup/${encodeURIComponent(key)}`, {
+                    ttl: 300000
                 }).then(function (res) {
                     return res && res.success ? res.data : null;
                 });
@@ -3478,7 +3536,7 @@
         }
 
 
-        function loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions,renderTime) {
+        function loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions, renderTime, forceRefresh) {
             var currentOptions = getCurrentFormOptions(editorOptions);
                  if(!editorOptions.isNotLoading)
                 {
@@ -3494,10 +3552,10 @@
                     }
                 // if (editorOptions?.data) combine = sectionName;
                     // showUploaderLoader(editorOptions.uploaderId, "File loading...");
-                $.ajax({
-                        url: queryUrl,
-                    method: "GET",
-                    success: function (data) {
+                AppLazyRequest.get(queryUrl, {
+                    ttl: 30000,
+                    force: !!forceRefresh
+                }).then(function (data) {
                         const $preview = $(`#attList_${sectionName}_${renderTime}`);
                         renderAttachmentListLazy(data, $preview, {
                             batchSize: 6,
@@ -3512,16 +3570,15 @@
                             controllerName: controllerName,
                             uploaderAllow: editorOptions.uploaderAllow,
                             onDeleted: function () {
-                                loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions, renderTime);
+                                loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions, renderTime, true);
                             }
                         });
                             var uploader = $(`#fileUpload_${sectionName}_${renderTime}`).dxFileUploader("instance")
                             uploader?.option("storageData",data || {});
                             hideUploaderLoader(editorOptions.uploaderId);
-                    },
-                    error: function () {
-                            hideUploaderLoader(editorOptions.uploaderId);
-                    }
+                }).catch(function (error) {
+                    console.warn("Attachment list could not be loaded.", error);
+                    hideUploaderLoader(editorOptions.uploaderId);
                 });
           }
           else {
@@ -3543,11 +3600,38 @@
                                 controllerName: controllerName,
                                 uploaderAllow: editorOptions.uploaderAllow,
                                 onDeleted: function () {
-                                     loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions, renderTime);
+                                     loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions, renderTime, true);
                                 }
                             });
             }
         }
+        function loadDxFileUploaderAttachmentsWhenVisible(sectionName, controllerName, editorOptions, renderTime) {
+            const preview = document.getElementById(`attList_${sectionName}_${renderTime}`);
+            if (!preview || preview.dataset.attachmentLoadScheduled === "true") return;
+
+            preview.dataset.attachmentLoadScheduled = "true";
+            const load = function () {
+                loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions, renderTime, false);
+            };
+
+            if (!("IntersectionObserver" in window)) {
+                load();
+                return;
+            }
+
+            const observer = new IntersectionObserver(function (entries) {
+                if (!entries.some(function (entry) { return entry.isIntersecting; })) return;
+                observer.disconnect();
+                load();
+            }, {
+                root: null,
+                rootMargin: "300px 0px",
+                threshold: 0.01
+            });
+
+            observer.observe(preview);
+        }
+
         function cloneReusableOptions(value, seen) {
             if (value === null || typeof value !== "object") {
                 return value;
@@ -3785,7 +3869,7 @@
                              result.payload.progressvalue = 100;
                              renderBrowserLoading(result);
                     // hideUploaderLoader(editorOptionsIn.uploaderId);
-                    loadDxFileUploaderAttachments(controlId, controllerName, editorOptionsIn,renderTime)
+                    loadDxFileUploaderAttachments(controlId, controllerName, editorOptionsIn, renderTime, true)
 
 
                 },
@@ -3866,7 +3950,7 @@
             //             });
 
 
-          loadDxFileUploaderAttachments(controlId, controllerName, editorOptionsIn,renderTime);
+          loadDxFileUploaderAttachmentsWhenVisible(controlId, controllerName, editorOptionsIn, renderTime);
     }
 
         function setAttachmentPermissionForSection(sectionSelector, canEdit) {
@@ -4115,7 +4199,7 @@
                         }, {
                             onSuccess: function() {
                                 DevExpress.ui.notify("Document category updated successfully", "success", 1500);
-                                loadDxFileUploaderAttachments(options.editorOptions.data.SectionName, options.controllerName, options.editorOptions, options.renderTime);
+                                loadDxFileUploaderAttachments(options.editorOptions.data.SectionName, options.controllerName, options.editorOptions, options.renderTime, true);
                             },
                             onError: function() {
                                 DevExpress.ui.notify("Failed to update document category", "error", 2000);
@@ -6850,6 +6934,13 @@ function styleModeChange(item){
     }
 
         function getPersonInCharge(accountIds) {
+            window.PersonInChargeRequestCache = window.PersonInChargeRequestCache || new Map();
+            const cacheKey = String(accountIds || "").split(",").map(x => x.trim()).filter(Boolean).sort().join(",");
+            const cached = window.PersonInChargeRequestCache.get(cacheKey);
+            if (cached && cached.expiresAt > Date.now()) {
+                return cached.promise;
+            }
+
             var deferred = $.Deferred();
 
             $.ajax({
@@ -6868,7 +6959,15 @@ function styleModeChange(item){
                 }
             });
 
-            return deferred.promise();
+            const promise = deferred.promise();
+            window.PersonInChargeRequestCache.set(cacheKey, {
+                promise: promise,
+                expiresAt: Date.now() + 300000
+            });
+            promise.fail(function () {
+                window.PersonInChargeRequestCache.delete(cacheKey);
+            });
+            return promise;
         }
          //Popup hover
             function renderDeptCallouts(picJson) {
