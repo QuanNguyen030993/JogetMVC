@@ -11,7 +11,8 @@
         <span class="dept-title">Remarks</span> <div id="@QTViewIdHelper.RemarkBox(dept, quotationId)" class="htmleditor"></div>
     </div>
     <div class="actionRight">
-        <div id="@QTViewIdHelper.BtnSave(dept, quotationId)"></div>
+        @* Save button temporarily disabled for Quotation flow. *@
+        @* <div id="@QTViewIdHelper.BtnSave(dept, quotationId)"></div> *@
         <div id="@QTViewIdHelper.BtnReturnBranch(dept, quotationId)"></div>
         <div id="@QTViewIdHelper.BtnSubmitBranch(dept, quotationId)"></div>
     </div>
@@ -355,42 +356,24 @@
         popupInstance.show();
     }
 
-    function requestMakeOption_@(quotationId)(isExplicitAction) {
+    function requestMakeOption_@(quotationId)() {
         const quotationFiles = $(`[id^='attList_@(prefix)-body_@(dept)__default_@(quotationId)_'] .att-item`);
         const fileCount = quotationFiles.length || 0;
-        const formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
 
         if (fileCount <= 1) {
             appNotifyWarning("At least two quotation files are required to make options.", false);
             return Promise.resolve(false);
         }
-        if (!isExplicitAction && formItems.isNotMakeOption) {
-            return Promise.resolve(false);
-        }
 
-        const confirmText = isExplicitAction
-            ? "Create quotation options from the attached quotation files now?"
-            : "Would you like to make option of this quotation?";
-
-        return appNotifyWarning(confirmText, true, "Make Option", "Cancel").then(function (result) {
+        return appNotifyWarning(
+            "Create quotation options from the attached quotation files now?",
+            true,
+            "Make Option",
+            "Cancel"
+        ).then(function (result) {
             if (result.isConfirmed) {
                 openMakeOptionPopup_@(quotationId)();
                 return true;
-            }
-
-            // Save giu hanh vi cu: user co the danh dau quotation nay khong tao option.
-            if (!isExplicitAction) {
-                return appNotifyWarning(
-                    "Mark this quotation as not requiring options?",
-                    true,
-                    "Keep option",
-                    "Mark as no option"
-                ).then(function (markResult) {
-                    if (!markResult.isConfirmed) {
-                        return ajaxGet("api/Quotation/MarkNotAsOption/@(quotationId)", null);
-                    }
-                    return false;
-                });
             }
             return false;
         });
@@ -401,33 +384,34 @@
         icon: "save",
         type: "default",
         onClick: function () {
-            requestMakeOption_@(quotationId)(false);
+            const formId = "@QTViewIdHelper.Form(dept, quotationId)";
+            const formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+            const loadPanel = $("#loadingPopup").dxLoadPanel({
+                shadingColor: window.AppColors.c_rgba_0_0_0_0_4,
+                visible: false,
+                showIndicator: true,
+                showPane: false,
+                shading: true,
+                closeOnOutsideClick: false,
+                position: { of: `#${formId}` }
+            }).dxLoadPanel("instance");
+            loadPanel.show();
+
+            ajaxPut("/api/Quotation/UpdateData", {
+                key: formItems.id,
+                values: JSON.stringify(formItems)
+            }, {
+                onSuccess: function () {
+                    loadPanel.hide();
+                    notify("Quotation saved successfully!", "success");
+                },
+                onError: function (err) {
+                    loadPanel.hide();
+                    console.error("TS quotation save failed", err);
+                    notify("Quotation save failed!", "error");
+                }
+            });
         }
     });
 
-    // Make Option nam trong hang action cua TS Decision va dung chung toan bo
-    // flow voi Save, nhung luon hoi confirm chu dong truoc khi mo popup.
-    setTimeout(function () {
-        const makeOptionButtonId = "qt-make-option-TS-@quotationId";
-        const $decisionGroup = $("#qt-decision-group-TS-@quotationId");
-        let $actionRow = $decisionGroup.find(".decision-action-row").first();
-        if (!$actionRow.length) {
-            $actionRow = $('<div class="decision-action-row"></div>')
-                .appendTo($decisionGroup.find(".dx-form-group-content").first());
-        }
-        let $makeOptionButton = $(`#${makeOptionButtonId}`);
-        if (!$makeOptionButton.length) {
-            $makeOptionButton = $(`<div id="${makeOptionButtonId}"></div>`).appendTo($actionRow);
-        }
-        $makeOptionButton.dxButton({
-            text: "Make Option",
-            icon: "copy",
-            type: "default",
-            stylingMode: "outlined",
-            disabled: !_isSuperUser && _role !== "TS",
-            onClick: function () {
-                requestMakeOption_@(quotationId)(true);
-            }
-        });
-    }, 0);
 </script>

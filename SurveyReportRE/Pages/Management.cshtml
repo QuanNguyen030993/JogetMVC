@@ -1163,10 +1163,9 @@
                                   <div class="notif-message-preview rich-html-preview">
                                     ${itemData.message || ""}
                                   </div>
-                                  <div class="notif-view-more rich-view-more">Click to view more</div>
                                   <div style="margin-top:8px; display:flex; gap:8px;">
                                     <a href="javascript:void(0)" class="notif-mark">${isUnread ? "Mark read" : "Read"}</a>
-                                    <a href="javascript:void(0)" class="notif-view">View message</a>
+                                    <a href="javascript:void(0)" class="notif-view">Click to view more</a>
                                   </div>
                                 </div>
                               </div>
@@ -1175,7 +1174,8 @@
                         .css("cursor", "pointer")
                         .data("item", itemData)
                         .on("click", function (e) {
-                            if ($(e.target).closest("a, .notif-message-preview, .notif-view-more").length) return;
+                            // Links own their actions; every other area opens the notification record.
+                            if ($(e.target).closest("a").length) return;
                             openNotification(itemData);
                         })
                         .on("click", ".notif-mark", async function (e) {
@@ -1190,15 +1190,9 @@
                                 }
                             }
                         }).on("click", ".notif-view", async function (e) {
-                            openMessageDialog(itemData);
-                            
-                               e.stopPropagation();
-                            // mở popup đọc nội dung, không ảnh hưởng open/mark read
-                        });
-                        $notificationItem.on("click", ".notif-message-preview, .notif-view-more", function (e) {
-                            if (!$notificationItem.hasClass("rich-preview-overflowing") && !$(e.target).closest(".notif-view-more").length) return;
                             e.stopPropagation();
                             openMessageDialog(itemData);
+                            // mở popup đọc nội dung, không ảnh hưởng open/mark read
                         });
                         setTimeout(function () { updateRichPreviewOverflow($notificationItem); }, 0);
                         setTimeout(function () { updateRichPreviewOverflow($notificationItem); }, 350);
