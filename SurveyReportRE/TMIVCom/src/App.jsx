@@ -1,4 +1,4 @@
-import  React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import CustomGrid from './components/CustomGrid';
 import HtmlEditor from './components/HtmlEditor';
 import DateBox from './components/DateBox';
@@ -10,6 +10,7 @@ import SelectBox from './components/SelectBox';
 import DropDownBox from './components/DropDownBox';
 import CustomForm from './components/CustomForm';
 import FileUploader from "./components/FileUploader";
+import { notify } from './components/Notification';
   
 
           
@@ -129,6 +130,41 @@ function App() {
   const [selectValue, setSelectValue] = useState(2);
   const [dropValue, setDropValue] = useState(101);
 
+  const [countdown, setCountdown] = useState(5);
+  const [isTriggered, setIsTriggered] = useState(false);
+
+  // Live countdown timer logic
+  useEffect(() => {
+    if (countdown <= 0) {
+      if (!isTriggered) {
+        setIsTriggered(true);
+        notify({
+          title: "TMIVCom Countdown Event Triggered! 🚀",
+          content: "Đồng hồ đếm ngược vừa về <b>0 giây</b>!<br/>Thông báo Toast loại <b>Success</b> đã được phát thành công.",
+          type: "success",
+          position: "bottom-right",
+          duration: 6000,
+          onClick: () => {
+            notify("Bạn vừa click vào Toast từ sự kiện đếm ngược! 🌟", "info");
+          }
+        });
+      }
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [countdown, isTriggered]);
+
+  const restartTimer = () => {
+    setIsTriggered(false);
+    setCountdown(5);
+    notify("Đã khởi động lại đồng hồ đếm ngược 5 giây! ⏱️", "info", 2000);
+  };
+
 
     const uploaderRef = useRef(null);
 
@@ -167,10 +203,54 @@ function App() {
 
   return (
     <div className="tmivcom-app">
-      <header className="header">
+      <header className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
         <div>
           <h1>TMIVCom Reusable Controls</h1>
           <p>Custom React controls for ASP.NET integration: grid and HTML editor.</p>
+        </div>
+
+        {/* Live Countdown Timer Widget */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          padding: '10px 18px',
+          borderRadius: '10px',
+          background: countdown > 0 ? '#1e293b' : '#059669',
+          color: '#ffffff',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          transition: 'all 0.3s ease'
+        }}>
+          <div style={{ fontSize: '20px' }}>⏱️</div>
+          <div>
+            <div style={{ fontSize: '12px', opacity: 0.8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Đồng hồ sự kiện Toast
+            </div>
+            <div style={{ fontSize: '16px', fontWeight: 'bold' }}>
+              {countdown > 0 ? (
+                <span>Đang đếm ngược: <span style={{ color: '#fbbf24', fontSize: '18px' }}>{countdown} giây</span></span>
+              ) : (
+                <span>🎉 Đã phát Toast thành công!</span>
+              )}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={restartTimer}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '6px',
+              border: 'none',
+              background: '#ffffff',
+              color: '#0f172a',
+              fontWeight: '600',
+              fontSize: '13px',
+              cursor: 'pointer',
+              marginLeft: '8px'
+            }}
+          >
+            {countdown > 0 ? "Reset 5s" : "Kích hoạt lại (5s)"}
+          </button>
         </div>
       </header>
 

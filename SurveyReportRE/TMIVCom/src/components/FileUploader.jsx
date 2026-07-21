@@ -1,4 +1,15 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import { notify } from "./Notification.jsx";
+
+const safeNotify = (msgOrOptions, type = "info") => {
+    if (typeof notify === "function") {
+        notify(msgOrOptions, type);
+    } else if (window.TMIVCom && typeof window.TMIVCom.notify === "function") {
+        window.TMIVCom.notify(msgOrOptions, type);
+    } else {
+        alert(typeof msgOrOptions === "string" ? msgOrOptions : (msgOrOptions.content || msgOrOptions.message || ""));
+    }
+};
 
 const getIconByExt = (ext) => {
     ext = (ext || "").toLowerCase();
@@ -30,7 +41,6 @@ const fmtTimeLocal = (dateInput) => {
     const d = new Date(dateInput);
     if (isNaN(d.getTime())) return "—";
     
-    // Formatting as dd/MM/yyyy HH:mm
     const day = String(d.getDate()).padStart(2, '0');
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const year = d.getFullYear();
@@ -101,7 +111,7 @@ const FileUploader = forwardRef(({
         const validFiles = Array.from(files).filter(file => {
             if (file.size > maxFileSize) {
                 const maxMB = Math.round((maxFileSize / 1024 / 1024) * 100) / 100;
-                alert(`${file.name} exceeds the ${maxMB} MB upload limit.`);
+                safeNotify(`${file.name} exceeds the ${maxMB} MB upload limit.`, "warning");
                 return false;
             }
             return true;
@@ -119,7 +129,6 @@ const FileUploader = forwardRef(({
                 formData.append("file", file);
 
                 const combine = getFolderCombine();
-                // Determine folder path mimicking buildFolder
                 const moduleName = data?.ModuleName || "";
                 const isQt = (typeof moduleName === 'string' && moduleName.toLowerCase().includes('qt'));
                 const folderBase = isQt ? "Quotation" : "PolicyIssuance";
@@ -129,7 +138,6 @@ const FileUploader = forwardRef(({
                 const sectionName = `${data?.SectionName || ""}${specificFolder ? `_${specificFolder}` : ""}`;
                 const dept = data?.SectionName || "";
 
-                // Send request with headers
                 const headers = {
                     "RecordGuid": guid,
                     "Folder": folder,
@@ -156,15 +164,15 @@ const FileUploader = forwardRef(({
                 }
             }
 
-            // Upload complete success
             setIsUploading(false);
             setUploadProgress(100);
+            safeNotify("Tải tệp đính kèm thành công! ✅", "success");
             fetchAttachments();
             onUploaded?.();
         } catch (error) {
             console.error("Upload error:", error);
             setIsUploading(false);
-            alert("File upload failed. Please try again.");
+            safeNotify("Tải tệp thất bại. Vui lòng thử lại! ❌", "error");
         }
     };
 
@@ -180,7 +188,6 @@ const FileUploader = forwardRef(({
         }
     };
 
-    // Drag-and-drop handlers
     const handleDragEnter = (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -208,7 +215,6 @@ const FileUploader = forwardRef(({
         }
     };
 
-    // Attachment Actions: Preview, Download, Delete, Copy to clipboard
     const handlePreview = (item) => {
         const id = item.id || item.Id || item.attachmentId;
         const fileName = item.fileName || item.FileName || item.name || "Unnamed";
@@ -226,7 +232,7 @@ const FileUploader = forwardRef(({
         if (downloadUrl) {
             window.open(downloadUrl, "_blank");
         } else {
-            alert("No download URL available");
+            safeNotify("Không có đường dẫn tải tệp", "warning");
         }
     };
 
@@ -235,7 +241,7 @@ const FileUploader = forwardRef(({
         const id = item.id || item.Id || item.attachmentId;
         if (!id) return;
         
-        if (!window.confirm("Are you sure you want to delete this attachment?")) {
+        if (!window.confirm("Bạn có chắc chắn muốn xóa tệp này không?")) {
             return;
         }
 
@@ -244,6 +250,7 @@ const FileUploader = forwardRef(({
                 method: "GET"
             });
             if (response.ok) {
+                safeNotify("Đã xóa tệp thành công! 🗑️", "success");
                 fetchAttachments();
                 onDeleted?.(item);
             } else {
@@ -251,7 +258,7 @@ const FileUploader = forwardRef(({
             }
         } catch (error) {
             console.error("Delete error:", error);
-            alert("Delete document failed.");
+            safeNotify("Xóa tệp thất bại!", "error");
         }
     };
 
@@ -261,15 +268,14 @@ const FileUploader = forwardRef(({
         const fileName = item.fileName || item.FileName || item.name || "Unnamed";
         if (window.copyAttachmentToClipboard) {
             await window.copyAttachmentToClipboard(item, downloadUrl, fileName);
+            safeNotify("Đã sao chép đường dẫn!", "success");
         } else {
-            // Fallback clipboard write
             const link = window.location.origin + downloadUrl;
             navigator.clipboard.writeText(link);
-            alert("Link copied to clipboard!");
+            safeNotify("Đã sao chép liên kết vào clipboard!", "success");
         }
     };
 
-    // Exposing imperative options & API
     useImperativeHandle(ref, () => ({
         option(name, nextValue) {
             if (name === 'value') {
@@ -289,7 +295,6 @@ const FileUploader = forwardRef(({
 
     return (
         <div className="tmivcom-fileuploader-container" style={{ width: "100%" }}>
-            {/* Input Element (hidden) */}
             <input 
                 type="file" 
                 ref={fileInputRef} 
@@ -300,9 +305,32 @@ const FileUploader = forwardRef(({
                 disabled={disabled}
             />
 
-            
+            <div 
+                className={`attachment-drop-zone ${disabled ? "is-disabled" : ""} ${isDragging ? "is-dragging" : ""} ${isUploading ? "is-uploading" : ""}`}
+                role="button"
+                tabIndex={disabled ? -1 : 0}
+                onClick={triggerFilePicker}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+            >
+                <span className="dx-icon dx-icon-upload attachment-drop-zone__icon"></span>
+                <span className="attachment-drop-zone__content">
+                    {isUploading ? (
+                        <strong>Uploading file... ({uploadProgress}%)</strong>
+                    ) : (
+                        <>
+                            <strong>
+                                <span className="attachment-drop-zone__compact-label">{titleName}</span>
+                                <span className="attachment-drop-zone__drop-label">Drop files here</span>
+                            </strong>
+                            <span className="attachment-drop-zone__hint">or click to browse from your computer</span>
+                        </>
+                    )}
+                </span>
+            </div>
 
-            {/* Preview List */}
             <div className="att-preview" style={{ marginTop: "10px" }}>
                 {filesList.length === 0 ? (
                     <div style={{ opacity: 0.7, padding: "6px 2px" }}>No attachments</div>
@@ -342,7 +370,6 @@ const FileUploader = forwardRef(({
                                         </div>
                                     </div>
 
-                                    {/* Action Buttons */}
                                     <div className="att-actions" onClick={(e) => e.stopPropagation()} style={{ display: "flex", gap: "4px" }}>
                                         <button 
                                             type="button" 
@@ -382,32 +409,6 @@ const FileUploader = forwardRef(({
                         );
                     })
                 )}
-            </div>
-            {/* Drop Zone */}
-            <div 
-                className={`attachment-drop-zone ${disabled ? "is-disabled" : ""} ${isDragging ? "is-dragging" : ""} ${isUploading ? "is-uploading" : ""}`}
-                role="button"
-                tabIndex={disabled ? -1 : 0}
-                onClick={triggerFilePicker}
-                onDragEnter={handleDragEnter}
-                onDragLeave={handleDragLeave}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-            >
-                <span className="dx-icon dx-icon-upload attachment-drop-zone__icon"></span>
-                <span className="attachment-drop-zone__content">
-                    {isUploading ? (
-                        <strong>Uploading file...</strong>
-                    ) : (
-                        <>
-                            <strong>
-                                <span className="attachment-drop-zone__compact-label">{titleName}</span>
-                                <span className="attachment-drop-zone__drop-label">Drop files here</span>
-                            </strong>
-                            <span className="attachment-drop-zone__hint">or click to browse from your computer</span>
-                        </>
-                    )}
-                </span>
             </div>
         </div>
     );

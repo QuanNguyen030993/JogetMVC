@@ -6,6 +6,7 @@ import CheckBox from './CheckBox';
 import TextBox from './TextBox';
 import NumberBox from './NumberBox';
 import DateBox from './Datebox';
+import { notify } from './Notification';
 import * as XLSX from 'xlsx';
 
 const API_BASE_URL = CONFIG.API_URL || 'https://localhost:7254';
@@ -826,11 +827,11 @@ const CustomGrid = forwardRef(({
         body: formData
       });
       if (!res.ok) throw new Error("Insert row failed");
-      alert("Thêm dòng mới thành công! ✅");
+      notify("Thêm dòng mới thành công! ✅", "success");
       loadData();
     } catch (err) {
       console.error("Insert failed", err);
-      alert("Thêm dòng thất bại! ❌");
+      notify("Thêm dòng thất bại! ❌", "error");
     } finally {
       setLoading(false);
     }
@@ -855,7 +856,7 @@ const CustomGrid = forwardRef(({
       loadData();
     } catch (err) {
       console.error("Update failed", err);
-      alert("Cập nhật dòng thất bại! ❌");
+      notify("Cập nhật dòng thất bại! ❌", "error");
     } finally {
       setLoading(false);
     }
@@ -882,11 +883,11 @@ const CustomGrid = forwardRef(({
               body: formData
             });
           }
-          alert("Lưu tất cả thay đổi thành công! ✅");
+          notify("Lưu tất cả thay đổi thành công! ✅", "success");
           loadData();
         } catch (e) {
           console.error("Batch save failed", e);
-          alert("Lưu thay đổi thất bại! ❌");
+          notify("Lưu thay đổi thất bại! ❌", "error");
         } finally {
           setLoading(false);
         }
@@ -936,11 +937,11 @@ const CustomGrid = forwardRef(({
         body: formData
       });
       if (!res.ok) throw new Error("Delete row failed");
-      alert("Xóa dòng thành công! ✅");
+      notify("Xóa dòng thành công! ✅", "success");
       loadData();
     } catch (err) {
       console.error("Delete failed", err);
-      alert("Xóa dòng thất bại! ❌");
+      notify("Xóa dòng thất bại! ❌", "error");
     } finally {
       setLoading(false);
     }
@@ -950,7 +951,7 @@ const CustomGrid = forwardRef(({
     if (gridOption?.onViewRow) {
       gridOption.onViewRow(row);
     } else {
-      alert("Chi tiết dòng:\n" + JSON.stringify(row, null, 2));
+      notify(`Chi tiết dòng: ${row.id || row.Id || ''}`, "info");
     }
   };
 

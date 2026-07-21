@@ -283,6 +283,7 @@ ToastContainer.displayName = "ToastContainer";
 
 let globalToastRef = null;
 let globalToastHost = null;
+const pendingQueue = [];
 
 export const notify = (optionsOrTitle, type = "info", duration = 4000) => {
     let opts = {};
@@ -303,7 +304,20 @@ export const notify = (optionsOrTitle, type = "info", duration = 4000) => {
         };
     }
 
-    if (!globalToastHost) {
+    pendingQueue.push(opts);
+
+    const flushQueue = () => {
+        if (globalToastRef) {
+            while (pendingQueue.length > 0) {
+                const item = pendingQueue.shift();
+                globalToastRef.addToast(item);
+            }
+        }
+    };
+
+    if (globalToastRef) {
+        flushQueue();
+    } else if (!globalToastHost) {
         globalToastHost = document.createElement("div");
         globalToastHost.id = "tmiv-toast-root";
         document.body.appendChild(globalToastHost);
@@ -311,15 +325,16 @@ export const notify = (optionsOrTitle, type = "info", duration = 4000) => {
         const root = createRoot(globalToastHost);
         const refCallback = (r) => {
             globalToastRef = r;
-            if (r) {
-                r.addToast(opts);
-            }
+            flushQueue();
         };
         root.render(<ToastContainer ref={refCallback} />);
     } else {
-        if (globalToastRef) {
-            globalToastRef.addToast(opts);
-        }
+        const checkInterval = setInterval(() => {
+            if (globalToastRef) {
+                clearInterval(checkInterval);
+                flushQueue();
+            }
+        }, 30);
     }
 };
 

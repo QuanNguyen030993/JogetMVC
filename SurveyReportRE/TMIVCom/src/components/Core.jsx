@@ -742,4 +742,20 @@ if (typeof $ !== "undefined") {
     $.tmivnotify = notify;
 }
 
+// Test notification demo for TMIVCom library (triggers 5 seconds after load)
+if (typeof window !== "undefined") {
+    setTimeout(() => {
+        notify({
+            title: "TMIVCom Status Notification! 🚀",
+            content: "Thông báo thử nghiệm từ thư viện <b>TMIVCom</b> xuất hiện sau <b>5 giây</b> delay.<br/>Định vị: Right Bottom | Loại: Success",
+            type: "success",
+            position: "bottom-right",
+            duration: 6000,
+            onClick: (toast) => {
+                notify("Bạn vừa click vào thông báo thử nghiệm TMIVCom! 🌟", "info");
+            }
+        });
+    }, 5000);
+}
+
 export default { DateBox, HtmlEditor, CustomGrid, CommentEditor, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm, PreviewOffice, FileUploader, Notification, notify };
