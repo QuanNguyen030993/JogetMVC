@@ -833,11 +833,13 @@ public class QuotationController : BaseControllerApi<Quotation>
                 Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
 
 
+                // Persist before SignalR so the receiving client can immediately reload it.
+                await _notificationRepository.InsertData(Notification);
                 //Notification notification = await ControllerUtil.Notify(transferObject, assignNotificationTypeId);
                 foreach (string item in transferObject.ReceivedBy.Split(','))
                 {
 
-                    ControllerHelper.SignalRResponse(_usersSessionRepository, "R_NotificationReceive",
+                    await ControllerHelper.SignalRResponse(_usersSessionRepository, "R_NotificationReceive",
                     new
                     {
                         title = transferObject.Title,
@@ -848,9 +850,6 @@ public class QuotationController : BaseControllerApi<Quotation>
                 }
 
 
-                await _notificationRepository.InsertData(Notification);
-
-
             }
             catch (Exception exception)
             {
@@ -859,6 +858,116 @@ public class QuotationController : BaseControllerApi<Quotation>
         }
         return Ok();
     }
+
+    [HttpPost]
+    public async Task<IActionResult> AcceptTask([FromBody] AcceptTaskRequest request)
+    {
+        string dept = (request.Dept ?? "").Trim().ToUpperInvariant();
+        if (request.Id <= 0 || !new[] { "FO", "TS", "UW", "LMKT", "PM" }.Contains(dept))
+            return BadRequest(new { message = "A valid record id and department are required." });
+
+        Quotation? quotation = await _BaseRepository.GetSingleObject(item =>
+            item.Id == request.Id && !item.Deleted);
+        if (quotation == null) return NotFound(new { message = $"Quotation {request.Id} was not found." });
+
+        List<EnumData> overallStatuses = await _enumDataRepository.EnumData("OverallStatus");
+        EnumData? acceptedStatus = overallStatuses.FirstOrDefault(item =>
+            string.Equals(item.Value, $"{dept} Process", StringComparison.OrdinalIgnoreCase));
+
+        JObject tat;
+        try { tat = JObject.Parse(quotation.TurnAroundTimeAttributes ?? "{}"); }
+        catch { tat = new JObject(); }
+        DateTime acceptedAt = DateTime.Now;
+        JObject deptTat = tat[dept] as JObject ?? new JObject();
+        deptTat["AcceptDate"] = acceptedAt;
+        deptTat["CompleteDate"] = acceptedAt;
+        tat[dept] = deptTat;
+
+        quotation.TurnAroundTimeAttributes = tat.ToString(Formatting.None);
+        if (acceptedStatus != null)
+        {
+            quotation.StatusId = acceptedStatus.Id;
+            quotation.WorkflowStatus = acceptedStatus.Value;
+        }
+        await _BaseRepository.UpdateData(
+            quotation,
+            JsonConvert.SerializeObject(new
+            {
+                quotation.TurnAroundTimeAttributes,
+                quotation.StatusId,
+                quotation.WorkflowStatus
+            }),
+            quotation.Id,
+            "Id");
+
+        string actor = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration);
+        string moduleName = nameof(Quotation);
+        string code = quotation.QuotationCode ?? quotation.Id.ToString();
+        string acceptMessage = string.Format(
+            _messageSettings.Accept?.Content ?? "{0} {1} accepted by {2}!",
+            moduleName,
+            code,
+            actor);
+        var submitRequest = new SubmitRequest
+        {
+            Comment = string.IsNullOrWhiteSpace(request.Comment)
+                ? acceptMessage
+                : request.Comment,
+            StepsWorkflow = new StepsWorkflow { FromNodeId = dept, StepName = "Internal Workflow" },
+            isFullDetail = false
+        };
+        await ControllerUtil.LogAction(
+            _quotationCommentLogRepository,
+            _httpContextAccessor,
+            configuration,
+            DOMAIN_NAME,
+            quotation,
+            submitRequest,
+            _blobStorageSettings);
+
+        long? acceptTypeId = await NotificationTypeResolver.ResolveIdAsync(
+            _enumDataRepository,
+            NotificationTypeKeys.Accept);
+        string title = string.Format(
+            _messageSettings.Accept?.Title ?? "Accept {0} {1}",
+            moduleName,
+            code,
+            actor);
+        string message = acceptMessage;
+        PICAttributes pic = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC ?? "{}") ?? new PICAttributes();
+        string[] recipients = typeof(PICAttributes).GetProperties()
+            .Select(property => property.GetValue(pic)?.ToString())
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .SelectMany(value => value!.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        foreach (string recipient in recipients)
+        {
+            var notification = new Notification
+            {
+                Title = title,
+                Message = message,
+                IsRead = false,
+                Resource = $"{recipient}_{dept}",
+                System = "WM",
+                RecordGuid = quotation.Guid,
+                Type = acceptTypeId,
+                ReceivedBy = recipient,
+                Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation))
+            };
+            await _notificationRepository.InsertData(notification);
+            await ControllerHelper.SignalRResponse(
+                _usersSessionRepository,
+                "R_NotificationReceive",
+                new { title = notification.Title, message = notification.Message },
+                recipient,
+                DOMAIN_NAME);
+        }
+
+        return Ok(new { success = true, id = quotation.Id, dept, acceptedAt });
+    }
+
     [NonAction]
     public async Task NotificationHandle(
          WorkflowDefinition workflowDefinition,
@@ -966,14 +1075,14 @@ public class QuotationController : BaseControllerApi<Quotation>
                 string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
                 Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
 
-                ControllerHelper.SignalRResponse(_usersSessionRepository, "R_NotificationReceive",
+                await _notificationRepository.InsertData(Notification);
+                await ControllerHelper.SignalRResponse(_usersSessionRepository, "R_NotificationReceive",
                 new
                 {
                     title = Notification.Title,
                     message = Notification.Message
                 }
                 , memberName, DOMAIN_NAME);
-                await _notificationRepository.InsertData(Notification);
             }
         }
     }

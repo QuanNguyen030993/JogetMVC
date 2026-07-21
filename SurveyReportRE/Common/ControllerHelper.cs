@@ -106,6 +106,34 @@ namespace ERPCore.ControllerUtil
             , string domainName
             )
         {
+            static string NormalizeSignalRAccount(string? account, string? domain)
+            {
+                string value = (account ?? "").Trim();
+                if (!string.IsNullOrWhiteSpace(domain)) {
+                    value = value.Replace(domain, "", StringComparison.OrdinalIgnoreCase);
+                }
+                return value.Trim().TrimStart('\\').Split('\\').Last();
+            }
+
+            string targetAccount = NormalizeSignalRAccount(connectionId, domainName);
+            string[] liveConnectionIds = FileProcessingHub._store
+                .GetOnlineUsers()
+                .Where(item => string.Equals(
+                    NormalizeSignalRAccount(item.User, domainName),
+                    targetAccount,
+                    StringComparison.OrdinalIgnoreCase))
+                .Select(item => item.ConnectionId)
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Distinct()
+                .ToArray();
+
+            if (liveConnectionIds.Length > 0)
+            {
+                await FileProcessingHub._hubContext.Clients
+                    .Clients(liveConnectionIds)
+                    .SendAsync(UIMethod, returnObject);
+                return;
+            }
 
             //IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
             //    OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(domainName, "") == connectionId);
@@ -120,7 +148,12 @@ namespace ERPCore.ControllerUtil
                 .GetListObject(s => s.CreatedDate >= today
                          && s.CreatedDate < tomorrow
                 );
-            UsersSession currentUsersSession = usersSession.Where(w => w.CreatedBy == loginUser).OrderByDescending(s => s.CreatedDate)
+            UsersSession currentUsersSession = usersSession.Where(w =>
+                    string.Equals(
+                        NormalizeSignalRAccount(w.CreatedBy ?? w.UserName, domainName),
+                        targetAccount,
+                        StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(s => s.CreatedDate)
                 .FirstOrDefault();
 
             //IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();

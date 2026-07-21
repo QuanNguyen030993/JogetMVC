@@ -568,7 +568,7 @@
             <div id="notificationPopOver"></div>
             <div id="assigneeEntryForm"></div>
             <div id="moduleLauncherPopup"></div>
-            <div id="userSettingsModal" class="user-settings-modal" aria-hidden="true">
+            <div id="userSettingsModal" class="user-settings-modal" aria-hidden="true" hidden>
                 <div class="user-settings-backdrop"></div>
                 <section class="user-settings-dialog" role="dialog" aria-modal="true" aria-labelledby="userSettingsTitle">
                     <header class="user-settings-header">
@@ -716,6 +716,13 @@
     let selectedUserRole = "";
     let userRoleOptions = fallbackRoleOptions;
 
+    function setUserSettingsModalVisible(visible) {
+        $("#userSettingsModal")
+            .prop("hidden", !visible)
+            .toggleClass("is-open", visible)
+            .attr("aria-hidden", visible ? "false" : "true");
+    }
+
     function renderUserRoleOptions() {
         $("#userRoleOptions").html(userRoleOptions.map(role => `
             <label class="user-role-card ${selectedUserRole === role.code ? "is-selected" : ""}">
@@ -740,7 +747,8 @@
                 const initial = (profile.fullName || profile.accountName || "U").charAt(0).toUpperCase();
                 $("#accountAvatarInitial").text(initial);
                 renderUserRoleOptions();
-                if (openModal) $("#userSettingsModal").addClass("is-open").attr("aria-hidden", "false");
+                // Only reveal after the role cards have been fully rendered.
+                if (openModal) setUserSettingsModalVisible(true);
             })
             .fail(function (xhr) {
                 appNotify({ message: xhr.responseJSON?.message || "Unable to load account settings.", type: "warning" });
@@ -764,7 +772,7 @@
         refreshUserRoleSettings(true);
     });
     $("#closeUserSettings, #cancelUserSettings, .user-settings-backdrop").on("click", function () {
-        $("#userSettingsModal").removeClass("is-open").attr("aria-hidden", "true");
+        setUserSettingsModalVisible(false);
     });
     $("#userRoleOptions").on("change", "input[name='userWorkflowRole']", function () {
         selectedUserRole = this.value;
@@ -786,7 +794,7 @@
             _role = response.data.role;
             $("#accountRoleBadge").text(response.data.role);
             $("#roleLabel").text(`Workflow group ${response.data.role}`);
-            $("#userSettingsModal").removeClass("is-open").attr("aria-hidden", "true");
+            setUserSettingsModalVisible(false);
             appNotify({ message: "Role setting saved. Reload the page to refresh menu permissions.", type: "success" });
         }).fail(function (xhr) {
             appNotify({ message: xhr.responseJSON?.message || "Unable to save role setting.", type: "error" });
@@ -1769,6 +1777,10 @@
         align-items: center;
         justify-content: center;
         padding: 24px;
+    }
+
+    .user-settings-modal[hidden] {
+        display: none !important;
     }
 
     .user-settings-modal.is-open {

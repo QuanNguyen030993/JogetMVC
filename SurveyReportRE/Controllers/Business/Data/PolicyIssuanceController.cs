@@ -421,11 +421,20 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
             long? assignNotificationTypeId = await NotificationTypeResolver.ResolveIdAsync(
                 _enumDataRepository,
                 NotificationTypeKeys.Assign);
-            Notification notification = await ControllerUtil.Notify(transferObject, assignNotificationTypeId);
+            Notification notification = await ControllerUtil.Notify(
+                transferObject,
+                assignNotificationTypeId,
+                sendRealtime: false);
 
 
 
             await _notificationRepository.InsertData(notification);
+            await ControllerHelper.SignalRResponse(
+                _usersSessionRepository,
+                "R_NotificationReceive",
+                new { title = notification.Title, message = notification.Message },
+                accountName,
+                DOMAIN_NAME);
 
 
             return Ok();
@@ -434,6 +443,119 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         {
             throw exception;
         }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AcceptTask([FromBody] AcceptTaskRequest request)
+    {
+        string dept = (request.Dept ?? "").Trim().ToUpperInvariant();
+        if (request.Id <= 0 || !new[] { "FO", "TS", "UW", "LMKT", "PM" }.Contains(dept))
+            return BadRequest(new { message = "A valid record id and department are required." });
+
+        PolicyIssuance? policyIssuance = await _BaseRepository.GetSingleObject(item =>
+            item.Id == request.Id && !item.Deleted);
+        if (policyIssuance == null)
+            return NotFound(new { message = $"Policy Issuance {request.Id} was not found." });
+
+        List<EnumData> overallStatuses = await _enumDataRepository.EnumData("OverallStatus");
+        EnumData? acceptedStatus = overallStatuses.FirstOrDefault(item =>
+            string.Equals(item.Value, $"{dept} Process", StringComparison.OrdinalIgnoreCase));
+
+        JObject tat;
+        try { tat = JObject.Parse(policyIssuance.TurnAroundTimeAttributes ?? "{}"); }
+        catch { tat = new JObject(); }
+        DateTime acceptedAt = DateTime.Now;
+        JObject deptTat = tat[dept] as JObject ?? new JObject();
+        deptTat["AcceptDate"] = acceptedAt;
+        deptTat["CompleteDate"] = acceptedAt;
+        tat[dept] = deptTat;
+
+        policyIssuance.TurnAroundTimeAttributes = tat.ToString(Formatting.None);
+        if (acceptedStatus != null)
+        {
+            policyIssuance.StatusId = acceptedStatus.Id;
+            policyIssuance.WorkflowStatus = acceptedStatus.Value;
+        }
+        await _BaseRepository.UpdateData(
+            policyIssuance,
+            JsonConvert.SerializeObject(new
+            {
+                policyIssuance.TurnAroundTimeAttributes,
+                policyIssuance.StatusId,
+                policyIssuance.WorkflowStatus
+            }),
+            policyIssuance.Id,
+            "Id");
+
+        string actor = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration);
+        string moduleName = nameof(PolicyIssuance);
+        string code = policyIssuance.PolicyIssuanceCode ?? policyIssuance.Id.ToString();
+        string acceptMessage = string.Format(
+            _messageSettings.Accept?.Content ?? "{0} {1} accepted by {2}!",
+            moduleName,
+            code,
+            actor);
+        var submitRequest = new SubmitRequest
+        {
+            Comment = string.IsNullOrWhiteSpace(request.Comment)
+                ? acceptMessage
+                : request.Comment,
+            StepsWorkflow = new StepsWorkflow { FromNodeId = dept, StepName = "Internal Workflow" },
+            isFullDetail = false
+        };
+        await ControllerUtil.LogAction(
+            _quotationCommentLogRepository,
+            _httpContextAccessor,
+            configuration,
+            DOMAIN_NAME,
+            policyIssuance,
+            submitRequest,
+            _blobStorageSettings);
+
+        long? acceptTypeId = await NotificationTypeResolver.ResolveIdAsync(
+            _enumDataRepository,
+            NotificationTypeKeys.Accept);
+        string title = string.Format(
+            _messageSettings.Accept?.Title ?? "Accept {0} {1}",
+            moduleName,
+            code,
+            actor);
+        string message = acceptMessage;
+        PICAttributes pic = JsonConvert.DeserializeObject<PICAttributes>(policyIssuance.PIC ?? "{}") ?? new PICAttributes();
+        string[] recipients = typeof(PICAttributes).GetProperties()
+            .Select(property => property.GetValue(pic)?.ToString())
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .SelectMany(value => value!.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        policyIssuance.QuotationId = await ControllerUtil.ResolvePolicyIssuanceCloneIdAsync(
+            _quotationRepository,
+            policyIssuance);
+
+        foreach (string recipient in recipients)
+        {
+            var notification = new Notification
+            {
+                Title = title,
+                Message = message,
+                IsRead = false,
+                Resource = $"{recipient}_{dept}",
+                System = "WM",
+                RecordGuid = policyIssuance.Guid,
+                Type = acceptTypeId,
+                ReceivedBy = recipient,
+                Url = JsonConvert.SerializeObject(ControllerUtil.NotificationURLObjectMaking(policyIssuance))
+            };
+            await _notificationRepository.InsertData(notification);
+            await ControllerHelper.SignalRResponse(
+                _usersSessionRepository,
+                "R_NotificationReceive",
+                new { title = notification.Title, message = notification.Message },
+                recipient,
+                DOMAIN_NAME);
+        }
+
+        return Ok(new { success = true, id = policyIssuance.Id, dept, acceptedAt });
     }
     [HttpGet("{listIds}/{jsessionId}")]
     public async Task<ActionResult<PolicyIssuance>> PullDataBySession(string listIds,string jsessionId)
@@ -736,14 +858,14 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
                     string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
                     Notification.Url = JsonConvert.SerializeObject(ControllerUtil.NotificationURLObjectMaking(quotation));
 
-                    ControllerHelper.SignalRResponse(_usersSessionRepository, "R_NotificationReceive",
+                    await _notificationRepository.InsertData(Notification);
+                    await ControllerHelper.SignalRResponse(_usersSessionRepository, "R_NotificationReceive",
                     new
                     {
                         title = Notification.Title,
                         message = Notification.Message
                     }
                     , memberName, DOMAIN_NAME);
-                    await _notificationRepository.InsertData(Notification);
 
                 }
             }

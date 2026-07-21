@@ -161,7 +161,8 @@ namespace ERPCore.ControllerUtil
         }
         public static async Task<Notification> Notify(
             dynamic transferObject,
-            long? notificationTypeId = null)
+            long? notificationTypeId = null,
+            bool sendRealtime = true)
         {
             string DOMAIN_NAME = transferObject.DOMAIN_NAME;
             NotificationRequest notification = new NotificationRequest();
@@ -173,12 +174,16 @@ namespace ERPCore.ControllerUtil
 
             foreach (string item in transferObject.ReceivedBy.Split(','))
             {
-                OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(DOMAIN_NAME, "") == item);
-
-
-                if (onlineUser?.ConnectionId != null)
+                if (!sendRealtime) break;
+                string[] connectionIds = onlineUsers
+                    .Where(user => SameRealtimeAccount(user.User, item, DOMAIN_NAME))
+                    .Select(user => user.ConnectionId)
+                    .Where(id => !string.IsNullOrWhiteSpace(id))
+                    .Distinct()
+                    .ToArray();
+                if (connectionIds.Length > 0)
                 {
-                    await FileProcessingHub._hubContext.Clients.Client(onlineUser?.ConnectionId).SendAsync("R_NotificationReceive",
+                    await FileProcessingHub._hubContext.Clients.Clients(connectionIds).SendAsync("R_NotificationReceive",
                               new
                               {
                                   title = notification?.Notification?.Title ?? "",
@@ -212,10 +217,15 @@ namespace ERPCore.ControllerUtil
             IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
             foreach (string item in transferObject.ReceivedBy.Split(','))
             {
-                OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(DOMAIN_NAME, "") == item);
-                if (onlineUser?.ConnectionId != null)
+                string[] connectionIds = onlineUsers
+                    .Where(user => SameRealtimeAccount(user.User, item, DOMAIN_NAME))
+                    .Select(user => user.ConnectionId)
+                    .Where(id => !string.IsNullOrWhiteSpace(id))
+                    .Distinct()
+                    .ToArray();
+                if (connectionIds.Length > 0)
                 {
-                    await FileProcessingHub._hubContext.Clients.Client(onlineUser?.ConnectionId).SendAsync("R_NotificationReceive",
+                    await FileProcessingHub._hubContext.Clients.Clients(connectionIds).SendAsync("R_NotificationReceive",
                               new
                               {
                                   title = notification?.Notification?.Title ?? "",
@@ -225,6 +235,20 @@ namespace ERPCore.ControllerUtil
             }
            
             return Notification;
+        }
+
+        private static bool SameRealtimeAccount(string? left, string? right, string? domainName)
+        {
+            string Normalize(string? value)
+            {
+                string account = (value ?? "").Trim();
+                if (!string.IsNullOrWhiteSpace(domainName)) {
+                    account = account.Replace(domainName, "", StringComparison.OrdinalIgnoreCase);
+                }
+                return account.Trim().TrimStart('\\').Split('\\').Last();
+            }
+
+            return string.Equals(Normalize(left), Normalize(right), StringComparison.OrdinalIgnoreCase);
         }
 
         private static Notification BuildNotification(

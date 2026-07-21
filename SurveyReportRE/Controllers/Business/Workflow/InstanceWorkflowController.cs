@@ -1150,15 +1150,14 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
             Notification.Url = JsonConvert.SerializeObject(ControllerUtil.NotificationURLObjectMaking(transferObject));
 
-            ControllerHelper.SignalRResponse(_usersSessionRepository, "R_NotificationReceive",
+            await _notificationRepository.InsertData(Notification);
+            await ControllerHelper.SignalRResponse(_usersSessionRepository, "R_NotificationReceive",
             new
             {
                 title = transferObject.Title,
                 message = transferObject.Subject
             }
             , item, DOMAIN_NAME);
-
-            await _notificationRepository.InsertData(Notification);
         }
 
 

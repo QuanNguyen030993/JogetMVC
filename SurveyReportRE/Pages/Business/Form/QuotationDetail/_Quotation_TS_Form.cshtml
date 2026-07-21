@@ -18,6 +18,7 @@
         thisObject.dept = "@dept";
         thisObject.prefix = "qt";
         thisObject.schemeName = "Quotation";
+        thisObject.decisionColSpan = 2;
 
         var that = new Object();
     var sectionId = "@(ViewData["Cd"])";
@@ -68,7 +69,22 @@
         skipAcceptedMainFields: false,
         statusButtonDisabled: true
     };
-    var itemsDelay = [acceptDecisionV2];
+    var makeOptionDecisionV2 = {
+        buttonId: "qt-make-option-TS-@quotationId",
+        text: "Make Option",
+        icon: "copy",
+        type: "default",
+        stylingMode: "contained",
+        disabled: !_isSuperUser && _role !== "TS",
+        useDefaultDecisionClick: false,
+        trackDecisionStatus: false,
+        disableWithDecision: false,
+        onClick: function () {
+            requestMakeOption_@(quotationId)();
+        }
+    };
+    // One list drives both the V2 decision layout and its delayed button lifecycle.
+    var itemsDelay = [acceptDecisionV2, makeOptionDecisionV2];
 
     var mainFields = [  { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentByCase(that , that2) },
 
@@ -164,39 +180,7 @@
              colCount: 2,
              items: [
     
-           decisionField(thisObject.formId, thisObject.dept, acceptButtonId, acceptStatusId, null, null),
-           {
-               itemType: "simple",
-               name: "makeOptionButton",
-               colSpan: 1,
-               label: { visible: false },
-               cssClass: "ts-make-option-decision-item",
-               template: function (data, itemElement) {
-                   const $makeOptionButton = $("<div>", { id: "qt-make-option-TS-@quotationId" })
-                       .dxButton({
-                           text: "Make Option",
-                           icon: "copy",
-                           type: "default",
-                           stylingMode: "contained",
-                           disabled: !_isSuperUser && _role !== "TS",
-                           onClick: function () {
-                               requestMakeOption_@(quotationId)();
-                           }
-                       })
-                       .appendTo(itemElement);
-
-                   // decisionField tao action row sau template. Chuyen button vao
-                   // cung hang Accept ngay frame ke tiep, van render tu TS Form.
-                   requestAnimationFrame(function () {
-                       const $decisionGroup = $("#qt-decision-group-TS-@quotationId");
-                       const $actionRow = $decisionGroup.find(".decision-action-row").first();
-                       if ($actionRow.length) {
-                           $makeOptionButton.appendTo($actionRow);
-                           $(itemElement).closest(".dx-field-item").hide();
-                       }
-                   });
-               }
-           }
+           decisionFieldV2(thisObject, ...itemsDelay)
 
 
     ]}

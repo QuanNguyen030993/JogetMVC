@@ -4943,126 +4943,57 @@
        }
        window.reloadWorkflowViewComponents = reloadWorkflowViewComponents;
 
-       function acceptDecision(object, dept){
+       function acceptDecision(object, dept) {
+            object = object || {};
+            dept = dept || object.dept;
 
-                    object = object || {};
-                    dept = dept || object.dept;
-                    var scheme = object.schemeName || (object.prefix === "pi" ? "PolicyIssuance" : "Quotation");
-                    var formItems = object.formItems
-                        || $(`#${object.formId}`).dxForm("instance")?.option("formData")
-                        || {};
-                    var recordCode = formItems.quotationCode
-                        || formItems.policyIssuanceCode
-                        || formItems.code
-                        || formItems.id;
-                    var passingObject = {
-                        ...object,
-                        statusName: object.statusName || `${dept} Process`,
-                        Comment: object.Comment || `${scheme} ${recordCode || ""} accepted by ${_displayName}!`,
-                        formItems: formItems,
-                        dept: dept,
-                        url: object.url || (scheme === "PolicyIssuance"
-                            ? "/api/PolicyIssuance/UpdateData"
-                            : "/api/Quotation/UpdateData"),
-                        urlLog: object.urlLog || (scheme === "PolicyIssuance"
-                            ? "/api/PolicyIssuance/LogAction"
-                            : "/api/Quotation/LogAction"),
-                        schemeName: scheme
-                    };
+            var scheme = object.schemeName || (object.prefix === "pi" ? "PolicyIssuance" : "Quotation");
+            var formItems = object.formItems
+                || $(`#${object.formId}`).dxForm("instance")?.option("formData")
+                || {};
+            var loadingContext = beginWorkflowViewLoading(
+                scheme,
+                formItems.id,
+                `Accepting ${dept} decision...`
+            );
 
+            // Accept does not move the workflow. The API owns the status/TAT update,
+            // action log and the NotificationType = Accept notification.
+            var acceptRequest = $.ajax({
+                url: `/api/${scheme}/AcceptTask`,
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify({
+                    id: formItems.id,
+                    dept: dept,
+                    comment: object.Comment || null
+                })
+            });
 
-            var statusObject = _enums.OverallStatus.find(f => f.value == passingObject.statusName);
-                          if (statusObject) {
-                              passingObject.formItems.statusId  = statusObject.id;
-                              passingObject.formItems.workflowStatus = statusObject.value;
-                          }
+            acceptRequest.done(function () {
+                var refreshSource = object.formId
+                    ? document.getElementById(object.formId)
+                    : null;
+                reloadWorkflowViewComponents(scheme, formItems.id, refreshSource, true)
+                    .then(function (reloaded) {
+                        if (!reloaded) {
+                            failWorkflowViewLoading(loadingContext, "Workflow refresh unavailable");
+                        }
+                    })
+                    .catch(function (err) {
+                        failWorkflowViewLoading(loadingContext, "Workflow refresh failed");
+                        console.error("Accept decision reload failed", err);
+                    });
+            });
 
-                                   passingObject.formItems.turnAroundTimeAttributes = passingObject.formItems.turnAroundTimeAttributes
-                                        ? tryParseJSON(passingObject.formItems.turnAroundTimeAttributes, "Parse Accept TAT Problem" )
-                                    : {};
-                                   passingObject.formItems.turnAroundTimeAttributes = passingObject.formItems.turnAroundTimeAttributes || {};
+            acceptRequest.fail(function (xhr) {
+                failWorkflowViewLoading(loadingContext, "Accept decision failed");
+                appErrorHandling("Accept decision failed", xhr);
+            });
 
-                                var currentDate = new Date();
-
-                                            if (! passingObject.formItems.turnAroundTimeAttributes[dept]) {
-                                             passingObject.formItems.turnAroundTimeAttributes[dept] = {
-                                            AcceptDate: "",
-                                            CompleteDate: ""
-                                        };
-                                    }
-
-                                      passingObject.formItems.turnAroundTimeAttributes[dept].AcceptDate = currentDate;
-                                          passingObject.formItems.turnAroundTimeAttributes[dept].CompleteDate = currentDate;
-                    passingObject.formItems.turnAroundTimeAttributes = JSON.stringify( passingObject.formItems.turnAroundTimeAttributes);
-
-                               var loadingContext = beginWorkflowViewLoading(
-                                   passingObject.schemeName,
-                                   formItems.id,
-                                   `Accepting ${passingObject.dept} decision…`
-                               );
-                               var updateRequest = ajaxPut(passingObject.url,
-                            {
-                                key: formItems.id,
-                                values: JSON.stringify(
-                                    passingObject.formItems
-                                )
-                            },
-                            {
-                                onSuccess: function (response) {
-                                    notifyAcceptDecisionPicAccounts(passingObject);
-                                    var refreshSource = object.formId
-                                        ? document.getElementById(object.formId)
-                                        : null;
-                                    reloadWorkflowViewComponents(
-                                        passingObject.schemeName,
-                                        passingObject.formItems.id,
-                                        refreshSource,
-                                        true
-                                    )
-                                        .then(function (reloaded) {
-                                            if (!reloaded) failWorkflowViewLoading(loadingContext, "Workflow refresh unavailable");
-                                        })
-                                        .catch(function (err) {
-                                            failWorkflowViewLoading(loadingContext, "Workflow refresh failed");
-                                            console.error("Accept decision reload failed", err);
-                                        });
-                                },
-                                onError: function (err) {
-                                    failWorkflowViewLoading(loadingContext, "Accept decision failed");
-                                }
-                            });
-
-                        var submitRequest = new Object();
-                                submitRequest.Comment = passingObject.Comment;
-                            submitRequest.StepsWorkflow = new Object()
-                                submitRequest.StepsWorkflow.FromNodeId = passingObject.dept;
-                            submitRequest.StepsWorkflow.StepName = "Internal Workflow";
-                            submitRequest.isFullDetail = false;
-                         var quotationData = new Object();
-
-                            quotationData.Quotation = new Object();
-                            quotationData.Quotation.Id = passingObject.formItems.id;
-                            quotationData.Quotation.Guid = passingObject.formItems.guid;
-                            quotationData.Quotation.BranchCode = _branch;
-                                
-                            quotationData.Attributes = new Object();
-                            quotationData.Attributes.SectionName = passingObject.dept;
-                             var formData = new FormData();
-                            formData.append(`${passingObject.schemeName}Data`,JSON.stringify(quotationData));
-                            formData.append("SubmitRequest",JSON.stringify(submitRequest));
-                              $.ajax({
-                                    url:`${passingObject.urlLog}`,
-                                type: "POST",
-                                data: formData,
-                                processData: false,
-                                contentType: false,
-                                success: function (res) {
-                                },
-                                error: function (xhr) {
-                                }
-                            });
-                            return updateRequest;
+            return acceptRequest;
        }
+
        function rejectDecision(object){
             var statusObject = _enums.OverallStatus.find(f => f.value == object.statusName);
                           object.formItems.statusId  = statusObject.id;
@@ -7144,51 +7075,112 @@ function styleModeChange(item){
         return { text: "No status", title: "" };
     }
 
-    function decisionField(formId,dept,acceptButtonId, acceptStatusElement,rejectButtonId, rejectStatusElement ){
-              
-                return   {
-                     dataField: "decision",
-                     name:"acceptButton",
-                     label: {
-                         text: "Decision"
-                     },
-                     visible: false,
-                     itemType: "simple",
+    function normalizeDecisionFieldButtons(params) {
+        return params.reduce(function (items, item) {
+            if (Array.isArray(item)) return items.concat(normalizeDecisionFieldButtons(item));
+            if (item) items.push(item);
+            return items;
+        }, []);
+    }
 
-                     template: function (data, itemElement) {
-                             if (acceptButtonId){
-                                         $(`<div id='${acceptButtonId}'>`)
-                                    .dxButton({
-                                     elementAttr: {
-                                             id: acceptButtonId
-                                     },
-                                     disabled: true,
-                                     text: "Accept",
-                                     icon: "check",
-                                     onClick: function (e) {
-                                             
-                                         // var passingObject = new Object();
-                                         // passingObject.statusName = `${dept} Process`; // base on Dept
-                                         // passingObject.Comment = `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`;  // base on Dept
-                                         // passingObject.formItems = formItems;
-                                         //     passingObject.dept = dept;
-                                         // passingObject.url = '/api/Quotation/UpdateData';
-                                         // passingObject.urlLog = `/api/Quotation/LogAction`;
-                                         // passingObject.schemeName = `Quotation`;
-                                         // acceptDecision(passingObject);
-                                     }
-                                        }).appendTo(itemElement);
-                                                    var commonStatusId = acceptStatusElement || rejectStatusElement;
-                                                    if (commonStatusId) {
-                                                        setTimeout(function () {
-                                                            setDecisionCommonStatus(commonStatusId, acceptButtonId || rejectButtonId, "idle", "No status");
-                                                        }, 0);
-                                                    }
-                         }
-                                
-                     }
-                 }
-               
+    /**
+     * V2 renders every supplied button config into the same decision action row.
+     * The same configs can be spread into delayAcceptStatusV2 afterwards, so the
+     * layout and the delayed route/status lifecycle share one source of truth.
+     */
+    function decisionFieldV2(formProps, ...params) {
+        var buttonItems = normalizeDecisionFieldButtons(params);
+        var primaryItem = buttonItems[0] || {};
+        var primaryButtonId = getDelayAcceptButtonId(primaryItem);
+        var commonStatusId = getDelayAcceptStatusId(primaryItem);
+
+        return {
+            dataField: primaryItem.dataField || "decision",
+            name: primaryItem.fieldName || primaryItem.name || "acceptButton",
+            label: {
+                text: primaryItem.labelText || "Decision",
+                visible: primaryItem.labelVisible !== false
+            },
+            visible: false,
+            itemType: "simple",
+            colSpan: primaryItem.colSpan || formProps?.decisionColSpan || 1,
+            cssClass: "decision-field-v2",
+            template: function (data, itemElement) {
+                // Keep both rows as direct children of dx-field-item-content so
+                // ensureDecisionCommonStatus reuses them instead of creating a
+                // second action row and moving the primary button away.
+                var $content = $(itemElement).addClass("decision-field-v2-content");
+                $("<div>", {
+                    class: "decision-status-row",
+                    "aria-live": "polite"
+                }).appendTo($content);
+                var $actionRow = $("<div>", { class: "decision-action-row" }).appendTo($content);
+
+                buttonItems.forEach(function (item, index) {
+                    var config = typeof item === "string" ? { buttonId: item } : item;
+                    var buttonId = getDelayAcceptButtonId(config);
+                    if (!buttonId) return;
+
+                    var options = {
+                        elementAttr: { id: buttonId },
+                        disabled: typeof config.disabled === "undefined" ? true : config.disabled,
+                        text: config.text || (index === 0 ? "Accept" : ""),
+                        icon: config.icon || (index === 0 ? "check" : undefined),
+                        type: config.type || (index === 0 ? "success" : "default"),
+                        stylingMode: config.stylingMode || "contained"
+                    };
+                    if (typeof config.onClick === "function" && config.useDefaultDecisionClick !== true) {
+                        options.onClick = function (event) {
+                            return config.onClick(event, {
+                                formProps: formProps,
+                                config: config,
+                                formId: formProps?.formId,
+                                dept: formProps?.dept
+                            });
+                        };
+                    }
+
+                    var $button = $("<div>", { id: buttonId })
+                        .dxButton(options)
+                        .appendTo($actionRow);
+                    if (config.buttonClass) $button.addClass(config.buttonClass);
+                });
+
+                if (commonStatusId) {
+                    setTimeout(function () {
+                        setDecisionCommonStatus(commonStatusId, primaryButtonId, "idle", "No status");
+                    }, 0);
+                }
+            }
+        };
+    }
+
+    // Compatibility wrapper for existing department forms. New forms should pass
+    // config objects to decisionFieldV2(formProps, ...buttonConfigs).
+    function decisionField(formId, dept, acceptButtonId, acceptStatusElement, rejectButtonId, rejectStatusElement) {
+        var items = [];
+        if (acceptButtonId) {
+            items.push({
+                buttonId: acceptButtonId,
+                statusId: acceptStatusElement || rejectStatusElement,
+                text: "Accept",
+                icon: "check",
+                type: "success",
+                disabled: true,
+                useDefaultDecisionClick: true
+            });
+        }
+        if (rejectButtonId) {
+            items.push({
+                buttonId: rejectButtonId,
+                statusId: rejectStatusElement,
+                text: "Reject",
+                icon: "close",
+                type: "danger",
+                disabled: true
+            });
+        }
+        return decisionFieldV2({ formId: formId, dept: dept }, ...items);
     }
 
 
@@ -7438,6 +7430,7 @@ function styleModeChange(item){
         function renderDelayAcceptStoredStatusButton(formId, dept, item, formItems, tatObject) {
             var buttonId = getDelayAcceptButtonId(item);
             if (!buttonId || !item || typeof item !== "object") return false;
+            if (item.trackDecisionStatus === false) return false;
 
             var storedStatus = getDelayAcceptStoredStatus(formItems, dept, item);
             var statusText = "";
@@ -7582,9 +7575,21 @@ function styleModeChange(item){
                     return;
                 }
                     var objSnapshot = cloneReusableOptions(formProps);
-                    var defaultButtonOptions = {
-                        onClick: buildDefaultDecisionClick(objSnapshot)
-                    };
+                    var defaultButtonOptions = {};
+                    if (item && typeof item === "object"
+                        && typeof item.onClick === "function"
+                        && item.useDefaultDecisionClick !== true) {
+                        defaultButtonOptions.onClick = function (event) {
+                            return item.onClick(event, {
+                                formProps: objSnapshot,
+                                config: item,
+                                formId: objSnapshot.formId,
+                                dept: objSnapshot.dept
+                            });
+                        };
+                    } else if (!item || typeof item !== "object" || item.useDefaultDecisionClick !== false) {
+                        defaultButtonOptions.onClick = buildDefaultDecisionClick(objSnapshot);
+                    }
                     if (item && typeof item === "object") {
                         if (item.text) defaultButtonOptions.text = item.text;
                         if (item.icon) defaultButtonOptions.icon = item.icon;

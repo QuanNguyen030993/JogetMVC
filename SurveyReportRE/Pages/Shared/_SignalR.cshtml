@@ -461,8 +461,11 @@ function startSignalRConnection() {
     });
     connectionSignR.on("R_NotificationReceive", function (items) {
         signalRBlink();
-
-        reloadNotifications();
+        // Use the same debounced path as the initial Home load. A short retry
+        // covers legacy senders that still publish before their DB insert commits.
+        updateNotification();
+        setTimeout(updateNotification, 350);
+        setTimeout(updateNotification, 1200);
         showPopupNotification(items.title,
             items.message);
     });

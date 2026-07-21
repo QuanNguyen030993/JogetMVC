@@ -21,4 +21,5 @@ public class Notification : BaseModel
     public Guid? RecordGuid { get; set; }
     public long? Type { get; set; }
     public EnumDataTypeAttribute? TypeEnum { get; set; }
+
 }
