@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import CustomGrid from "../../../TMIVCom/src/components/CustomGrid";
+import { notify } from "../../../TMIVCom/src/components/Notification";
 import { API_BASE_URL } from "../config";
 import "../styles/databasemanagement.css";
 
@@ -111,7 +112,7 @@ export default function DatabaseManagement() {
     // Handle script generation
     const handleGenerateScript = async () => {
         if (selectedTables.length === 0) {
-            alert("Vui lòng chọn ít nhất một bảng!");
+            notify("Vui lòng chọn ít nhất một bảng!", "warning");
             return;
         }
 
@@ -168,7 +169,7 @@ export default function DatabaseManagement() {
     const handleCopyScript = () => {
         if (!generatedScript) return;
         navigator.clipboard.writeText(generatedScript);
-        alert("Đã sao chép Script vào Clipboard! 📋✅");
+        notify("Đã sao chép Script vào Clipboard! 📋✅", "success");
     };
 
     const handleDownloadScript = () => {

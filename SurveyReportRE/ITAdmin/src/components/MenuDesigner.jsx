@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { API_BASE_URL } from "../config";
 import CustomGrid from "../../../TMIVCom/src/components/CustomGrid";
+import { notify } from "../../../TMIVCom/src/components/Notification";
 
 const icons = [
   "",
@@ -80,7 +81,7 @@ export default function MenuDesigner() {
     };
 
     if (isDescendant(draggedItem, targetItem)) {
-      alert("Không thể kéo menu cha vào menu con của chính nó! ❌");
+      notify("Không thể kéo menu cha vào menu con của chính nó! ❌", "warning");
       return;
     }
 
@@ -256,11 +257,11 @@ export default function MenuDesigner() {
         }
       }
 
-      alert("Lưu thiết kế Menu thành công! ✅");
+      notify("Lưu thiết kế Menu thành công! ✅", "success");
       loadMenus();
     } catch (e) {
       console.error(e);
-      alert("Lưu thiết kế Menu thất bại! ❌");
+      notify("Lưu thiết kế Menu thất bại! ❌", "error");
     } finally {
       setSaving(false);
     }

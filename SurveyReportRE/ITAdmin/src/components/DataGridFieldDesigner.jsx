@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { API_BASE_URL } from "../config";
 import CustomGrid from "../../../TMIVCom/src/components/CustomGrid";
+import { notify } from "../../../TMIVCom/src/components/Notification";
 
 const safeParseBinaryJson = (val) => {
   if (!val) return {};
@@ -199,11 +200,11 @@ export default function DataGridFieldDesigner() {
         }
       }
 
-      alert("Lưu danh sách trường thành công! ✅");
+      notify("Lưu danh sách trường thành công! ✅", "success");
       loadFields(selectedTable);
     } catch (e) {
       console.error(e);
-      alert("Lưu cấu hình trường thất bại! ❌");
+      notify("Lưu cấu hình trường thất bại! ❌", "error");
     } finally {
       setSaving(false);
     }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { API_BASE_URL } from "../config";
 import CustomGrid from "../../../TMIVCom/src/components/CustomGrid";
+import { notify } from "../../../TMIVCom/src/components/Notification";
 
 const safeParseBinaryJson = (val) => {
   if (!val) return {};
@@ -129,11 +130,11 @@ export default function EnumDesign() {
       });
       if (!res.ok) throw new Error("Add Group failed");
       setGroupInput("");
-      alert(`Đã thêm nhóm "${groupInput}"! ✅`);
+      notify(`Đã thêm nhóm "${groupInput}"! ✅`, "success");
       await loadData();
     } catch (e) {
       console.error(e);
-      alert("Thêm nhóm thất bại! ❌");
+      notify("Thêm nhóm thất bại! ❌", "error");
     } finally {
       setSaving(false);
     }
@@ -155,11 +156,11 @@ export default function EnumDesign() {
       }
       setSelectedGroup("");
       setSelectedKey("");
-      alert(`Đã xóa nhóm! ✅`);
+      notify(`Đã xóa nhóm! ✅`, "success");
       await loadData();
     } catch (e) {
       console.error(e);
-      alert("Xóa nhóm thất bại! ❌");
+      notify("Xóa nhóm thất bại! ❌", "error");
     } finally {
       setSaving(false);
     }
@@ -186,11 +187,11 @@ export default function EnumDesign() {
       });
       if (!res.ok) throw new Error("Add Key failed");
       setKeyInput("");
-      alert(`Đã thêm key "${keyInput}" vào nhóm "${selectedGroup}"! ✅`);
+      notify(`Đã thêm key "${keyInput}" vào nhóm "${selectedGroup}"! ✅`, "success");
       await loadData();
     } catch (e) {
       console.error(e);
-      alert("Thêm key thất bại! ❌");
+      notify("Thêm key thất bại! ❌", "error");
     } finally {
       setSaving(false);
     }
@@ -207,11 +208,11 @@ export default function EnumDesign() {
         body: formData
       });
       if (!res.ok) throw new Error("Delete Key failed");
-      alert("Đã xóa key thành công! ✅");
+      notify("Đã xóa key thành công! ✅", "success");
       await loadData();
     } catch (e) {
       console.error(e);
-      alert("Xóa key thất bại! ❌");
+      notify("Xóa key thất bại! ❌", "error");
     } finally {
       setSaving(false);
     }
@@ -240,11 +241,11 @@ export default function EnumDesign() {
       });
       if (!res.ok) throw new Error("Update mapping failed");
       
-      alert(`Đã gán enum "${enumValue}" cho trường "${field.dataField}"! ✅`);
+      notify(`Đã gán enum "${enumValue}" cho trường "${field.dataField}"! ✅`, "success");
       await loadData();
     } catch (e) {
       console.error(e);
-      alert("Lưu liên kết thất bại! ❌");
+      notify("Lưu liên kết thất bại! ❌", "error");
     } finally {
       setSaving(false);
     }

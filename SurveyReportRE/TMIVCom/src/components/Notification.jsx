@@ -1,4 +1,4 @@
-import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useEffect, forwardRef, useImperativeHandle, useMemo } from "react";
 import { createRoot } from "react-dom/client";
 
 /**
@@ -200,26 +200,61 @@ export const ToastItem = ({ toast, onClose }) => {
     );
 };
 
+let globalToastRef = null;
+let globalToastHost = null;
+const pendingQueue = [];
+
 /**
  * Container component for multi-toast management
  */
 export const ToastContainer = forwardRef((props, ref) => {
     const [toasts, setToasts] = useState([]);
 
-    useImperativeHandle(ref, () => ({
-        addToast(toastOptions) {
-            const id = Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-            const newToast = { id, ...toastOptions };
-            setToasts((prev) => [...prev, newToast]);
-            return id;
-        },
-        removeToast(id) {
-            setToasts((prev) => prev.filter((t) => t.id !== id));
-        },
-        clearAll() {
-            setToasts([]);
+    const addToast = (toastOptions) => {
+        const id = Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+        const newToast = { id, ...toastOptions };
+        setToasts((prev) => [...prev, newToast]);
+        return id;
+    };
+
+    const removeToast = (id) => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+    };
+
+    const clearAll = () => {
+        setToasts([]);
+    };
+
+    const handleObj = useMemo(() => ({
+        addToast,
+        removeToast,
+        clearAll
+    }), []);
+
+    useImperativeHandle(ref, () => handleObj, [handleObj]);
+
+    // Register globalToastRef automatically whenever ToastContainer is mounted
+    useEffect(() => {
+        globalToastRef = handleObj;
+
+        if (typeof window !== "undefined") {
+            window.notify = notify;
+            window.TMIVCom = window.TMIVCom || {};
+            window.TMIVCom.notify = notify;
         }
-    }));
+
+        // Flush any pending notifications queued before component mount
+        while (pendingQueue.length > 0) {
+            const item = pendingQueue.shift();
+            handleObj.addToast(item);
+        }
+
+        return () => {
+            if (globalToastRef === handleObj) {
+                globalToastRef = null;
+            }
+        };
+    }, [handleObj]);
 
     const positions = {
         "top-right": toasts.filter(t => t.position === "top-right"),
@@ -281,10 +316,6 @@ export const ToastContainer = forwardRef((props, ref) => {
 
 ToastContainer.displayName = "ToastContainer";
 
-let globalToastRef = null;
-let globalToastHost = null;
-const pendingQueue = [];
-
 export const notify = (optionsOrTitle, type = "info", duration = 4000) => {
     let opts = {};
     if (typeof optionsOrTitle === "string") {
@@ -324,7 +355,9 @@ export const notify = (optionsOrTitle, type = "info", duration = 4000) => {
 
         const root = createRoot(globalToastHost);
         const refCallback = (r) => {
-            globalToastRef = r;
+            if (r) {
+                globalToastRef = r;
+            }
             flushQueue();
         };
         root.render(<ToastContainer ref={refCallback} />);
@@ -337,5 +370,12 @@ export const notify = (optionsOrTitle, type = "info", duration = 4000) => {
         }, 30);
     }
 };
+
+// Bind to window immediately when imported
+if (typeof window !== "undefined") {
+    window.notify = notify;
+    window.TMIVCom = window.TMIVCom || {};
+    window.TMIVCom.notify = notify;
+}
 
 export default { ToastContainer, ToastItem, notify };

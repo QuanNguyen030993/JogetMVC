@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { API_BASE_URL } from '../config';
+import { notify } from '../../../TMIVCom/src/components/Notification';
 
 const SlaDesign = () => {
     // List & Selection state
@@ -110,11 +111,11 @@ const SlaDesign = () => {
             });
 
             if (!response.ok) throw new Error(`Delete failed: ${response.status}`);
-            alert("Xóa cấu hình SLA thành công! ✅");
+            notify("Xóa cấu hình SLA thành công! ✅", "success");
             loadSlas();
         } catch (err) {
             console.error("Delete SLA failed:", err);
-            alert(`Xóa thất bại: ${err.message}`);
+            notify(`Xóa thất bại: ${err.message}`, "error");
             setLoading(false);
         }
     };
@@ -195,11 +196,11 @@ const SlaDesign = () => {
     // Save SLA configuration (Insert / Update)
     const handleSave = async () => {
         if (!editingSla.code) {
-            alert("Vui lòng điền mã SLA (Code)! ⚠️");
+            notify("Vui lòng điền mã SLA (Code)! ⚠️", "warning");
             return;
         }
         if (!editingSla.dept) {
-            alert("Vui lòng chọn bộ phận (Dept)! ⚠️");
+            notify("Vui lòng chọn bộ phận (Dept)! ⚠️", "warning");
             return;
         }
 
@@ -250,13 +251,13 @@ const SlaDesign = () => {
 
             if (!response.ok) throw new Error(`API Error: ${response.status}`);
 
-            alert("Lưu cấu hình SLA thành công! ✅");
+            notify("Lưu cấu hình SLA thành công! ✅", "success");
             setIsEditing(false);
             setEditingSla(null);
             loadSlas();
         } catch (err) {
             console.error("Save SLA failed:", err);
-            alert(`Lưu cấu hình thất bại: ${err.message} ❌`);
+            notify(`Lưu cấu hình thất bại: ${err.message} ❌`, "error");
             setLoading(false);
         }
     };

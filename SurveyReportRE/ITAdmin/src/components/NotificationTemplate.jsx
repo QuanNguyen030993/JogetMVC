@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import CustomGrid from "../../../TMIVCom/src/components/CustomGrid";
 import CustomForm from "../../../TMIVCom/src/components/CustomForm";
+import { notify } from "../../../TMIVCom/src/components/Notification";
 import { API_BASE_URL } from "../config";
 import "../styles/notificationtemplate.css";
 
@@ -137,20 +138,20 @@ export default function NotificationTemplate() {
             });
 
             if (res.ok) {
-                alert("Xóa thành công! ✅");
+                notify("Xóa thành công! ✅", "success");
                 setSelectedTemplate(null);
                 setRefreshKey(prev => prev + 1);
             } else {
                 const text = await res.text();
-                alert(`Xóa thất bại: ${text} ❌`);
+                notify(`Xóa thất bại: ${text} ❌`, "error");
             }
         } catch (e) {
-            alert(`Lỗi: ${e.message} ❌`);
+            notify(`Lỗi: ${e.message} ❌`, "error");
         }
     };
 
     const handleSaveSuccess = () => {
-        alert("Lưu thành công! ✅");
+        notify("Lưu thành công! ✅", "success");
         setRefreshKey(prev => prev + 1);
         setSelectedTemplate(null);
     };

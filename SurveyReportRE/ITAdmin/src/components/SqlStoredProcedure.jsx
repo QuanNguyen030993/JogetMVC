@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import CustomGrid from "../../../TMIVCom/src/components/CustomGrid";
 import CustomForm from "../../../TMIVCom/src/components/CustomForm";
+import { notify } from "../../../TMIVCom/src/components/Notification";
 import { API_BASE_URL } from "../config";
 import "../styles/sqlstoredprocedure.css";
 
@@ -167,22 +168,22 @@ export default function SqlStoredProcedure() {
             });
 
             if (res.ok) {
-                alert("Xóa Stored Procedure thành công! ✅");
+                notify("Xóa Stored Procedure thành công! ✅", "success");
                 setSelectedProc(null);
                 setProcDetails(null);
                 gridRef.current?.load();
             } else {
                 const text = await res.text();
-                alert(`Xóa thất bại: ${text} ❌`);
+                notify(`Xóa thất bại: ${text} ❌`, "error");
             }
         } catch (e) {
-            alert(`Lỗi: ${e.message} ❌`);
+            notify(`Lỗi: ${e.message} ❌`, "error");
         }
     };
 
     const handleSaveSuccess = () => {
         setShowFormModal(false);
-        alert("Lưu Stored Procedure thành công! ✅");
+        notify("Lưu Stored Procedure thành công! ✅", "success");
         gridRef.current?.load();
         
         if (editingProcId > 0) {

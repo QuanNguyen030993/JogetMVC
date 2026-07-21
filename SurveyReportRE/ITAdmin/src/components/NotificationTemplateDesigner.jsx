@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { API_BASE_URL } from "../config";
 import grapesjs from "grapesjs";
+import { notify } from "../../../TMIVCom/src/components/Notification";
 import "../styles/notificationTemplateDesigner.css";
 import "grapesjs/dist/css/grapes.min.css";
 
@@ -232,10 +233,10 @@ function NotificationTemplateDesigner() {
             const created = await res.json();
             setTemplates(prev => [created, ...prev]);
             loadTemplate(created);
-            alert("Đã tạo mẫu thông báo thành công ✅");
+            notify("Đã tạo mẫu thông báo thành công ✅", "success");
         } catch (err) {
             console.error("CREATE ERROR", err);
-            alert("Tạo mẫu thất bại ❌");
+            notify("Tạo mẫu thất bại ❌", "error");
         }
     };
 
@@ -243,7 +244,7 @@ function NotificationTemplateDesigner() {
         try {
             const editor = editorInstance.current;
             if (!editor || !selectedTemplate) {
-                alert("Vui lòng chọn một mẫu để lưu!");
+                notify("Vui lòng chọn một mẫu để lưu!", "warning");
                 return;
             }
 
@@ -276,11 +277,11 @@ function NotificationTemplateDesigner() {
 
             if (!res.ok) throw new Error("Update failed");
 
-            alert("Đã lưu mẫu thông báo thành công ✅");
+            notify("Đã lưu mẫu thông báo thành công ✅", "success");
             setTemplates(prev => prev.map(t => (t.id || t.Id) === updatedTemplate.id ? { ...t, ...updatedTemplate } : t));
         } catch (err) {
             console.error("SAVE ERROR", err);
-            alert("Lưu thất bại ❌");
+            notify("Lưu thất bại ❌", "error");
         }
     };
 
@@ -302,13 +303,13 @@ function NotificationTemplateDesigner() {
 
             if (!res.ok) throw new Error("Delete failed");
 
-            alert("Đã xóa mẫu thông báo thành công ✅");
+            notify("Đã xóa mẫu thông báo thành công ✅", "success");
             setTemplates(prev => prev.filter(t => (t.id || t.Id) !== id));
             setSelectedTemplate(null);
             if (editorInstance.current) editorInstance.current.setComponents("");
         } catch (err) {
             console.error("DELETE ERROR", err);
-            alert("Xóa thất bại ❌");
+            notify("Xóa thất bại ❌", "error");
         }
     };
 

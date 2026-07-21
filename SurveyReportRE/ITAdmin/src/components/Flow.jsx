@@ -8,6 +8,7 @@ import {
 import Diagram, { createNodeStyle } from './Diagram';
 import '@xyflow/react/dist/style.css';
 import CustomGrid from '../../../TMIVCom/src/components/CustomGrid';
+import { notify } from '../../../TMIVCom/src/components/Notification';
 
 const nodeTemplates = [
     {
@@ -780,10 +781,10 @@ function Flow({ id: propId }) {
                 throw new Error(`API error ${response.status}`);
             }
 
-            alert("Lưu quy trình thành công! ✅");
+            notify("Lưu quy trình thành công! ✅", "success");
         } catch (saveError) {
             setError(saveError.message || 'Failed to save workflow data');
-            alert("Lưu quy trình thất bại! ❌");
+            notify("Lưu quy trình thất bại! ❌", "error");
         } finally {
             setLoading(false);
         }
@@ -981,10 +982,10 @@ function Flow({ id: propId }) {
                 throw new Error(errorText || `API error ${response.status}`);
             }
 
-            alert("Build Workflow thành công! 🚀 Quy trình đã được biên dịch để thực thi.");
+            notify("Build Workflow thành công! 🚀 Quy trình đã được biên dịch để thực thi.", "success");
         } catch (err) {
             setError(err.message || 'Failed to build workflow steps');
-            alert(`Build quy trình thất bại! ❌ Chi tiết: ${err.message}`);
+            notify(`Build quy trình thất bại! ❌ Chi tiết: ${err.message}`, "error");
         } finally {
             setLoading(false);
         }
@@ -992,7 +993,7 @@ function Flow({ id: propId }) {
 
     const traceInstanceWorkflow = useCallback(async () => {
         if (!searchRecordGuid) {
-            alert("Vui lòng nhập Record GUID!");
+            notify("Vui lòng nhập Record GUID!", "warning");
             return;
         }
 
@@ -1009,7 +1010,7 @@ function Flow({ id: propId }) {
 
             const dataList = await response.json();
             if (!Array.isArray(dataList) || dataList.length === 0) {
-                alert("Không tìm thấy dòng dữ liệu nào cho Record GUID này! ❌");
+                notify("Không tìm thấy dòng dữ liệu nào cho Record GUID này! ❌", "error");
                 return;
             }
 
@@ -1018,7 +1019,7 @@ function Flow({ id: propId }) {
             const currentStep = record.currentStep || record.CurrentStep;
 
             if (!currentStep) {
-                alert("Dòng dữ liệu tìm thấy nhưng không có thông tin CurrentStep! ⚠️");
+                notify("Dòng dữ liệu tìm thấy nhưng không có thông tin CurrentStep! ⚠️", "warning");
                 return;
             }
 
@@ -1041,14 +1042,14 @@ function Flow({ id: propId }) {
             const nodeExists = nodes.find(n => n.id === currentStep);
             if (nodeExists) {
                 setSelectedNode(nodeExists);
-                // alert(`Tìm thấy tiến trình đang chạy tại bước: ${nodeExists.data?.label || currentStep} (Đã highlight) 🎯`);
+                notify(`Tìm thấy tiến trình đang chạy tại bước: ${nodeExists.data?.label || currentStep} 🎯`, "success");
             } else {
-                alert(`Tìm thấy CurrentStep: ${currentStep}, nhưng bước này chưa được vẽ trên sơ đồ hiện tại! ⚠️`);
+                notify(`Tìm thấy CurrentStep: ${currentStep}, nhưng bước này chưa được vẽ trên sơ đồ hiện tại! ⚠️`, "warning");
             }
 
         } catch (err) {
             console.error("Trace error:", err);
-            alert(`Lỗi tra cứu Instance: ${err.message}`);
+            notify(`Lỗi tra cứu Instance: ${err.message}`, "error");
         } finally {
             setLoading(false);
         }

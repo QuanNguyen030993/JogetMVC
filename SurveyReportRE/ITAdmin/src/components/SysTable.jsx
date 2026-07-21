@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { API_BASE_URL } from "../config";
+import { notify } from "../../../TMIVCom/src/components/Notification";
 
 const safeParseBinaryJson = (val) => {
   if (!val) return null;
@@ -128,11 +129,11 @@ export default function DataGridDesigner() {
         body: formData
       });
       if (!res.ok) throw new Error("Save config failed");
-      alert("Lưu cấu hình thành công! ✅");
+      notify("Lưu cấu hình thành công! ✅", "success");
       loadTables();
     } catch (e) {
       console.error(e);
-      alert("Lưu cấu hình thất bại! ❌");
+      notify("Lưu cấu hình thất bại! ❌", "error");
     } finally {
       setSaving(false);
     }
@@ -165,12 +166,12 @@ export default function DataGridDesigner() {
       if (!res.ok) throw new Error("Create table failed");
       const created = await res.json();
       setNewTableName("");
-      alert("Tạo bảng thành công! ✅");
+      notify("Tạo bảng thành công! ✅", "success");
       await loadTables();
       selectTable(created);
     } catch (e) {
       console.error(e);
-      alert("Tạo bảng thất bại! ❌");
+      notify("Tạo bảng thất bại! ❌", "error");
     } finally {
       setSaving(false);
     }

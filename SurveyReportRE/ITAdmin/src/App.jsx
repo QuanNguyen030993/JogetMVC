@@ -37,7 +37,20 @@ import './styles/notificationtemplate.css';
 import './styles/notificationTemplateDesigner.css';
 import './styles/databasemanagement.css';
 import './styles/turnAroundTimeAnalytics.css';
+import { notify, ToastContainer } from '../../TMIVCom/src/components/Notification';
 import "./fonts/css/all.min.css";
+
+// Override global window.alert to route through TMIVCom Notification (right bottom)
+if (typeof window !== 'undefined') {
+  window.alert = (message) => {
+    const msg = String(message || '');
+    const isError = /lỗi|thất bại|failed|error/i.test(msg);
+    const isSuccess = /thành công|success|đã lưu|đã thêm|đã xóa|đã sao chép|copied/i.test(msg);
+    const isWarning = /vui lòng|cảnh báo|warning|không thể/i.test(msg);
+    const type = isError ? 'error' : isSuccess ? 'success' : isWarning ? 'warning' : 'info';
+    notify({ content: msg, type: type, position: "bottom-right" });
+  };
+}
 
 function App() {
   const [loginStats,setLoginStats]=useState([]);
@@ -47,8 +60,26 @@ function App() {
   const [onlineUsers,setOnlineUsers]=useState([]);
   const [onlineUsersLoading,setOnlineUsersLoading]=useState(true);
   const [onlineUsersError,setOnlineUsersError]=useState('');
-   
-  useEffect(()=>{
+
+  // Demo Notification: Delay 5 seconds on load then trigger toast
+  useEffect(() => {
+    const testTimer = setTimeout(() => {
+      notify({
+        title: "Thông báo thử nghiệm! 🎉",
+        content: "Đây là thông báo Toast tự động xuất hiện sau <b>5 giây</b> delay.<br/>Hỗ trợ định dạng HTML, tự đóng & click handler!",
+        type: "success",
+        position: "bottom-right",
+        duration: 6000,
+        onClick: (toast) => {
+          notify("Bạn vừa click vào thông báo thử nghiệm! 🚀", "info");
+        }
+      });
+    }, 5000);
+
+    return () => clearTimeout(testTimer);
+  }, []);
+
+  useEffect(() => {
     let activeUsersTimer;
     const loadOnlineUsers = () => {
       setOnlineUsersLoading(true);
@@ -357,6 +388,7 @@ function App() {
       <main className="main-content">
         {content}
       </main>
+      <ToastContainer />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { API_BASE_URL } from "../config";
 import grapesjs from "grapesjs";
+import { notify } from "../../../TMIVCom/src/components/Notification";
 import "../styles/mailTemplateDesigner.css";
 import "grapesjs/dist/css/grapes.min.css";
 
@@ -159,11 +160,11 @@ setSqlQuery("");
         // ✅ select luôn
         loadTemplate(created);
 
-        alert("Template created ✅");
+        notify("Template created ✅", "success");
 
     } catch (err) {
         console.error("CREATE ERROR", err);
-        alert("Create failed ❌");
+        notify("Create failed ❌", "error");
     }
 };
 
@@ -784,11 +785,11 @@ const saveTemplate = async () => {
         if (!res.ok) throw new Error("Save failed");
 
         console.log("SAVE SUCCESS");
-        alert("Saved successfully ✅");
+        notify("Saved successfully ✅", "success");
 
     } catch (err) {
         console.error("SAVE ERROR", err);
-        alert("Save failed ❌");
+        notify("Save failed ❌", "error");
     }
 };
     const previewTemplate = ()=>{
