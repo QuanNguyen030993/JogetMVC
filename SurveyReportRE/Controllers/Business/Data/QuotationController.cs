@@ -755,108 +755,111 @@ public class QuotationController : BaseControllerApi<Quotation>
         return Ok(null);
     }
 
-    [HttpGet("{id}/{toDept}/{loginUser}")]
-    public async Task<IActionResult> AssignTask(long id, string toDept, string loginUser)
+    [HttpPost]
+    public async Task<IActionResult> AssignTask([FromBody] AssignTaskRequest request)
     {
-        MailTemplate mailTemplate = new MailTemplate();
-        mailTemplate = await _mailTemplateRepository.GetSingleObject(s => s.TemplateName == "Assign Mail");
-        Quotation quotation = new Quotation();
-        quotation = await _BaseRepository.GetSingleObject(s => s.Id == id);
-        Users flowUser = new Users();
-        PICAttributes pICAttributes = new PICAttributes();
-        pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
-        string accountName = toDept switch
+        string dept = (request.Dept ?? "").Trim().ToUpperInvariant();
+        if (request.Id <= 0 || !new[] { "FO", "TS", "UW", "LMKT", "PM" }.Contains(dept))
+            return BadRequest(new { message = "A valid record id and department are required." });
+
+        Quotation? quotation = await _BaseRepository.GetSingleObject(item =>
+            item.Id == request.Id && !item.Deleted);
+        if (quotation == null)
+            return NotFound(new { message = $"Quotation {request.Id} was not found." });
+
+        PICAttributes pic;
+        try { pic = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC ?? "{}") ?? new PICAttributes(); }
+        catch { pic = new PICAttributes(); }
+
+        string? assignedValue = dept switch
         {
-            "FO" => pICAttributes.FO,
-            "TS" => pICAttributes.TS,
-            "UW" => pICAttributes.UW,
-            "LMKT" => pICAttributes.LMKT,
-            "PM" => pICAttributes.PM,
+            "FO" => pic.FO,
+            "TS" => pic.TS,
+            "UW" => pic.UW,
+            "LMKT" => pic.LMKT,
+            "PM" => pic.PM,
             _ => null
         };
-        Employee employee = new Employee();
-        flowUser = await _usersRepository.GetSingleObject(s => s.username == accountName);
-        if (flowUser != null)
+        string[] recipients = (assignedValue ?? "")
+            .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(account => account.Split('\\').Last())
+            .Where(account => !string.IsNullOrWhiteSpace(account))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        if (recipients.Length == 0)
+            return BadRequest(new { message = $"No PIC is assigned to department {dept}." });
+
+        string actor = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration);
+        string title = _messageSettings.Assign?.Title ?? "Assign Task";
+        string message = string.Format(
+            _messageSettings.Assign?.Content ?? "You have been assigned from {0}",
+            actor);
+        long? assignTypeId = await NotificationTypeResolver.ResolveIdAsync(
+            _enumDataRepository,
+            NotificationTypeKeys.Assign);
+
+        foreach (string recipient in recipients)
         {
-            employee = await _employeeRepository.GetSingleObject(s => s.UsersId == flowUser.Id);
-            try
+            var notification = new Notification
             {
-                if (mailTemplate != null)
-                {
-                    DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
-                    Dictionary<string, object> flowDictionaryData = new Dictionary<string, object>();
-                    if (query.Rows.Count > 0)
+                Title = title,
+                Message = message,
+                IsRead = false,
+                Resource = $"{recipient}_{dept}",
+                System = "WM",
+                RecordGuid = quotation.Guid,
+                Type = assignTypeId,
+                ReceivedBy = recipient,
+                Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation))
+            };
+            // The receiver reloads immediately when SignalR arrives, so persist first.
+            await _notificationRepository.InsertData(notification);
+            await ControllerHelper.SignalRResponse(
+                _usersSessionRepository,
+                "R_NotificationReceive",
+                new { title = notification.Title, message = notification.Message },
+                recipient,
+                DOMAIN_NAME);
+        }
 
-                        flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
-                    MailQueue mailQueue = new MailQueue();
-                    mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
+        // Email is optional and must not prevent the in-app notification from succeeding.
+        try
+        {
+            MailTemplate? mailTemplate = await _mailTemplateRepository.GetSingleObject(
+                item => item.TemplateName == "Assign Mail");
+            if (mailTemplate != null)
+            {
+                DataTable query = DataUtil.ExecuteSelectQuery(
+                    _BaseRepository._connectionString,
+                    mailTemplate.MailQuery,
+                    ("", ""));
+                Dictionary<string, object> mailData = query.Rows.Count > 0
+                    ? Util.MakeQueryIntoDirectory(query.Rows[0])
+                    : new Dictionary<string, object>();
+
+                foreach (string recipient in recipients)
+                {
+                    Users? user = await _usersRepository.GetSingleObject(item => item.username == recipient);
+                    if (user == null) continue;
+                    Employee? employee = await _employeeRepository.GetSingleObject(item => item.UsersId == user.Id);
+                    if (employee == null) continue;
+                    MailQueue mailQueue = Util.NotifySession(
+                        employee,
+                        mailTemplate,
+                        _emailSettings,
+                        mailData,
+                        Util.CCAllEmail(_emailSettings.FollowCC, ""),
+                        null);
                     await _mailQueueRepository.InsertData(mailQueue);
-
                 }
-
-
-
-                dynamic transferObject = new
-                {
-                    DOMAIN_NAME = DOMAIN_NAME,
-                    Title = _messageSettings.Assign.Title,
-                    Subject = string.Format(_messageSettings.Assign.Content, loginUser),
-                     Resource = "Assign from ",
-                    Guid = quotation.Guid,
-                    ReceivedBy = accountName,
-                    Id = quotation.Id,
-                    Code = quotation.QuotationCode,
-                    ModuleName = nameof(Quotation)
-                };
-
-                long? assignNotificationTypeId = await NotificationTypeResolver.ResolveIdAsync(
-                    _enumDataRepository,
-                    NotificationTypeKeys.Assign);
-
-                //Assign or Accept no flow
-                NotificationRequest notification = new NotificationRequest();
-                Notification Notification = new Notification();
-                Notification.Title = transferObject.Title;
-                Notification.Message = transferObject.Subject;
-                Notification.IsRead = false;
-                Notification.Resource = $"{employee.EmailName}_{toDept}";
-                Notification.System = "WM";
-                Notification.RecordGuid = quotation.Guid;
-                Notification.Type = assignNotificationTypeId;
-
-                Notification.ReceivedBy = employee.EmailName;
-                notification.Notification = Notification;
-                notification.connectionId = employee.EmailName;
-                notification.tabPublicUrl = Util.URLObjectMaking(transferObject);
-                PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
-                string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
-                Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
-
-
-                // Persist before SignalR so the receiving client can immediately reload it.
-                await _notificationRepository.InsertData(Notification);
-                //Notification notification = await ControllerUtil.Notify(transferObject, assignNotificationTypeId);
-                foreach (string item in transferObject.ReceivedBy.Split(','))
-                {
-
-                    await ControllerHelper.SignalRResponse(_usersSessionRepository, "R_NotificationReceive",
-                    new
-                    {
-                        title = transferObject.Title,
-                        message = transferObject.Subject
-                    }
-                    , item, DOMAIN_NAME);
-
-                }
-
-
-            }
-            catch (Exception exception)
-            {
-                throw exception;
             }
         }
-        return Ok();
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Assign email could not be queued for Quotation {QuotationId}.", quotation.Id);
+        }
+
+        return Ok(new { success = true, id = quotation.Id, dept, recipients });
     }
 
     [HttpPost]

@@ -2450,9 +2450,12 @@
                     }));
                 }
                 updateCompleted = true;
-                await Promise.resolve(
-                    ajaxGet(`/api/${controllerName}/AssignTask/${recordId}/${dept}/${_loginUser}`, null)
-                );
+                await $.ajax({
+                    url: `/api/${controllerName}/AssignTask`,
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify({ id: recordId, dept: dept })
+                });
             } catch (err) {
                 console.error(`${controllerName} assignment failed`, err);
                 failWorkflowViewLoading(loadingContext, "Assignment failed");

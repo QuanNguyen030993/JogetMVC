@@ -361,88 +361,116 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         return Ok();
     }
 
-    [HttpGet("{id}/{toDept}/{loginUser}")]
-    public async Task<IActionResult> AssignTask(long id, string toDept, string loginUser)
+    [HttpPost]
+    public async Task<IActionResult> AssignTask([FromBody] AssignTaskRequest request)
     {
-        MailTemplate mailTemplate = new MailTemplate();
-        mailTemplate = await _mailTemplateRepository.GetSingleObject(s => s.TemplateName == "Assign Mail");
-        PolicyIssuance quotation = new PolicyIssuance();
-        quotation = await _BaseRepository.GetSingleObject(s => s.Id == id);
-        long? notificationCloneId = await ControllerUtil.ResolvePolicyIssuanceCloneIdAsync(
-            _quotationRepository,
-            quotation);
-        Users flowUser = new Users();
-        PICAttributes pICAttributes = new PICAttributes();
-        pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
-        string accountName = toDept switch
+        string dept = (request.Dept ?? "").Trim().ToUpperInvariant();
+        if (request.Id <= 0 || !new[] { "FO", "TS", "UW", "LMKT", "PM" }.Contains(dept))
+            return BadRequest(new { message = "A valid record id and department are required." });
+
+        PolicyIssuance? policyIssuance = await _BaseRepository.GetSingleObject(item =>
+            item.Id == request.Id && !item.Deleted);
+        if (policyIssuance == null)
+            return NotFound(new { message = $"Policy Issuance {request.Id} was not found." });
+
+        PICAttributes pic;
+        try { pic = JsonConvert.DeserializeObject<PICAttributes>(policyIssuance.PIC ?? "{}") ?? new PICAttributes(); }
+        catch { pic = new PICAttributes(); }
+
+        string? assignedValue = dept switch
         {
-            "FO" => pICAttributes.FO,
-            "TS" => pICAttributes.TS,
-            "UW" => pICAttributes.UW,
-            "LMKT" => pICAttributes.LMKT,
-            "PM" => pICAttributes.PM,
+            "FO" => pic.FO,
+            "TS" => pic.TS,
+            "UW" => pic.UW,
+            "LMKT" => pic.LMKT,
+            "PM" => pic.PM,
             _ => null
         };
-        Employee employee = new Employee();
-        flowUser = await _usersRepository.GetSingleObject(s => s.username == accountName);
-        employee = await _employeeRepository.GetSingleObject(s => s.UsersId == flowUser.Id);
-        try
+        string[] recipients = (assignedValue ?? "")
+            .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(account => account.Split('\\').Last())
+            .Where(account => !string.IsNullOrWhiteSpace(account))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        if (recipients.Length == 0)
+            return BadRequest(new { message = $"No PIC is assigned to department {dept}." });
+
+        string actor = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration);
+        string title = _messageSettings.Assign?.Title ?? "Assign Task";
+        string message = string.Format(
+            _messageSettings.Assign?.Content ?? "You have been assigned from {0}",
+            actor);
+        long? assignTypeId = await NotificationTypeResolver.ResolveIdAsync(
+            _enumDataRepository,
+            NotificationTypeKeys.Assign);
+        policyIssuance.QuotationId = await ControllerUtil.ResolvePolicyIssuanceCloneIdAsync(
+            _quotationRepository,
+            policyIssuance);
+
+        foreach (string recipient in recipients)
         {
-            if (mailTemplate != null)
+            var notification = new Notification
             {
-                DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
-                Dictionary<string, object> flowDictionaryData = new Dictionary<string, object>();
-                if (query.Rows.Count > 0)
-
-                    flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
-                MailQueue mailQueue = new MailQueue();
-                mailQueue = Util.NotifySession(employee, mailTemplate, _emailSettings, flowDictionaryData, Util.CCAllEmail(_emailSettings.FollowCC, ""), null);
-                await _mailQueueRepository.InsertData(mailQueue);
-
-            }
-
-
-
-            dynamic transferObject = new
-            {
-                DOMAIN_NAME = DOMAIN_NAME,
-                Title = "Assigning Task",
-                Subject = $"You have been assigned from {loginUser}",
-                Resource = "Assign from ",
-                Guid = quotation.Guid,
-                ReceivedBy = accountName,
-                Id = quotation.Id,
-                Code = quotation.PolicyIssuanceCode,
-                ModuleName = nameof(PolicyIssuance),
-                QuotationId = notificationCloneId,
-                CopyFromGuid = quotation.CopyFromGuid
+                Title = title,
+                Message = message,
+                IsRead = false,
+                Resource = $"{recipient}_{dept}",
+                System = "WM",
+                RecordGuid = policyIssuance.Guid,
+                Type = assignTypeId,
+                ReceivedBy = recipient,
+                Url = JsonConvert.SerializeObject(ControllerUtil.NotificationURLObjectMaking(policyIssuance))
             };
-
-            long? assignNotificationTypeId = await NotificationTypeResolver.ResolveIdAsync(
-                _enumDataRepository,
-                NotificationTypeKeys.Assign);
-            Notification notification = await ControllerUtil.Notify(
-                transferObject,
-                assignNotificationTypeId,
-                sendRealtime: false);
-
-
-
             await _notificationRepository.InsertData(notification);
             await ControllerHelper.SignalRResponse(
                 _usersSessionRepository,
                 "R_NotificationReceive",
                 new { title = notification.Title, message = notification.Message },
-                accountName,
+                recipient,
                 DOMAIN_NAME);
+        }
 
+        // Email is optional and must not prevent the in-app notification from succeeding.
+        try
+        {
+            MailTemplate? mailTemplate = await _mailTemplateRepository.GetSingleObject(
+                item => item.TemplateName == "Assign Mail");
+            if (mailTemplate != null)
+            {
+                DataTable query = DataUtil.ExecuteSelectQuery(
+                    _BaseRepository._connectionString,
+                    mailTemplate.MailQuery,
+                    ("", ""));
+                Dictionary<string, object> mailData = query.Rows.Count > 0
+                    ? Util.MakeQueryIntoDirectory(query.Rows[0])
+                    : new Dictionary<string, object>();
 
-            return Ok();
+                foreach (string recipient in recipients)
+                {
+                    Users? user = await _usersRepository.GetSingleObject(item => item.username == recipient);
+                    if (user == null) continue;
+                    Employee? employee = await _employeeRepository.GetSingleObject(item => item.UsersId == user.Id);
+                    if (employee == null) continue;
+                    MailQueue mailQueue = Util.NotifySession(
+                        employee,
+                        mailTemplate,
+                        _emailSettings,
+                        mailData,
+                        Util.CCAllEmail(_emailSettings.FollowCC, ""),
+                        null);
+                    await _mailQueueRepository.InsertData(mailQueue);
+                }
+            }
         }
         catch (Exception exception)
         {
-            throw exception;
+            _logger.LogWarning(
+                exception,
+                "Assign email could not be queued for PolicyIssuance {PolicyIssuanceId}.",
+                policyIssuance.Id);
         }
+
+        return Ok(new { success = true, id = policyIssuance.Id, dept, recipients });
     }
 
     [HttpPost]
