@@ -62,22 +62,22 @@ function App() {
   const [onlineUsersError,setOnlineUsersError]=useState('');
 
   // Demo Notification: Delay 5 seconds on load then trigger toast
-  useEffect(() => {
-    const testTimer = setTimeout(() => {
-      notify({
-        title: "Thông báo thử nghiệm! 🎉",
-        content: "Đây là thông báo Toast tự động xuất hiện sau <b>5 giây</b> delay.<br/>Hỗ trợ định dạng HTML, tự đóng & click handler!",
-        type: "success",
-        position: "bottom-right",
-        duration: 6000,
-        onClick: (toast) => {
-          notify("Bạn vừa click vào thông báo thử nghiệm! 🚀", "info");
-        }
-      });
-    }, 5000);
+  // useEffect(() => {
+  //   const testTimer = setTimeout(() => {
+  //     notify({
+  //       title: "Thông báo thử nghiệm! 🎉",
+  //       content: "Đây là thông báo Toast tự động xuất hiện sau <b>5 giây</b> delay.<br/>Hỗ trợ định dạng HTML, tự đóng & click handler!",
+  //       type: "success",
+  //       position: "bottom-right",
+  //       duration: 6000,
+  //       onClick: (toast) => {
+  //         notify("Bạn vừa click vào thông báo thử nghiệm! 🚀", "info");
+  //       }
+  //     });
+  //   }, 5000);
 
-    return () => clearTimeout(testTimer);
-  }, []);
+  //   return () => clearTimeout(testTimer);
+  // }, []);
 
   useEffect(() => {
     let activeUsersTimer;

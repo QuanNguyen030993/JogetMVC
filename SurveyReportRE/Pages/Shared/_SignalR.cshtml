@@ -158,6 +158,10 @@ function renderServerLogDetail(detail) {
     if (exception) {
         $content.append($("<strong>").text("Exception / Stack trace"));
         $content.append($("<pre>", { class: "it-server-log-detail__block" }).text(exception));
+    } else {
+        $content.append($("<strong>").text("Exception / Stack trace"));
+        $content.append($("<pre>", { class: "it-server-log-detail__block" })
+            .text("No Exception object was attached to this Error log. Use Log.Error(exception, message) to include the stack trace."));
     }
 
     const properties = read("properties", "Properties");
@@ -167,10 +171,16 @@ function renderServerLogDetail(detail) {
     }
 }
 
-function openServerLogDetail(alertId) {
+function openServerLogDetail(alertId, inlineDetail) {
     if (!alertId) return;
     const popup = ensureServerLogDetailPopup();
     popup.show();
+    if (inlineDetail) {
+        // dxPopup renders its content template during show(); defer one tick so
+        // the detail container always exists on the first click.
+        setTimeout(() => renderServerLogDetail(inlineDetail), 0);
+        return;
+    }
     $("#itServerLogDetailContent").text("Loading exception detail...");
 
     $.ajax({
@@ -201,6 +211,7 @@ function showServerLogAlert(alert) {
     const source = String(alert.source || alert.Source || "Server").split(".").pop();
     const traceId = String(alert.traceId || alert.TraceId || "");
     const occurredAt = alert.occurredAt || alert.OccurredAt;
+    const inlineDetail = alert.detail || alert.Detail || null;
     const timeText = occurredAt
         ? new Date(occurredAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
         : "";
@@ -236,7 +247,7 @@ function showServerLogAlert(alert) {
     $item.find(".it-server-log-alert__close").on("click", removeAlert);
     $item.on("click", function (event) {
         if ($(event.target).closest(".it-server-log-alert__close").length) return;
-        openServerLogDetail(alertId);
+        openServerLogDetail(alertId, inlineDetail);
     });
     setTimeout(removeAlert, 9000);
 }

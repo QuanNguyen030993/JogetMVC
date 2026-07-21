@@ -11,7 +11,8 @@ public sealed record RealtimeErrorLogAlert(
     string Source,
     string TraceId,
     string ExceptionType,
-    DateTimeOffset OccurredAt);
+    DateTimeOffset OccurredAt,
+    RealtimeErrorLogDetail Detail);
 
 public sealed record RealtimeErrorLogDetail(
     string Id,
@@ -50,17 +51,18 @@ public sealed class RealtimeErrorLogSink : ILogEventSink
             string id = Guid.NewGuid().ToString("N");
             string source = Limit(ReadProperty(logEvent, "SourceContext"), 160);
             string traceId = Limit(ReadFirstProperty(logEvent, "TraceId", "TraceIdentifier", "RequestId"), 120);
+            var detail = new RealtimeErrorLogDetail(
+                id,
+                logEvent.Level.ToString(),
+                Limit(logEvent.RenderMessage(), 4000),
+                Limit(logEvent.MessageTemplate.Text, 4000),
+                source,
+                traceId,
+                Limit(logEvent.Exception?.ToString() ?? "", 24000),
+                Limit(string.Join(Environment.NewLine, logEvent.Properties.Select(item => $"{item.Key}: {item.Value}")), 12000),
+                logEvent.Timestamp);
             Details[id] = new CachedErrorDetail(
-                new RealtimeErrorLogDetail(
-                    id,
-                    logEvent.Level.ToString(),
-                    Limit(logEvent.RenderMessage(), 4000),
-                    Limit(logEvent.MessageTemplate.Text, 4000),
-                    source,
-                    traceId,
-                    Limit(logEvent.Exception?.ToString() ?? "", 24000),
-                    Limit(string.Join(Environment.NewLine, logEvent.Properties.Select(item => $"{item.Key}: {item.Value}")), 12000),
-                    logEvent.Timestamp),
+                detail,
                 DateTimeOffset.UtcNow.Add(DetailLifetime));
             RemoveExpiredDetails();
 
@@ -71,7 +73,8 @@ public sealed class RealtimeErrorLogSink : ILogEventSink
                 source,
                 traceId,
                 Limit(logEvent.Exception?.GetType().Name ?? "", 120),
-                logEvent.Timestamp));
+                logEvent.Timestamp,
+                detail));
         }
         catch
         {
