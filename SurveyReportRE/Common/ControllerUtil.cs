@@ -257,13 +257,11 @@ namespace ERPCore.ControllerUtil
             Notification? notification = null)
         {
             notification ??= new Notification();
-            Type transferType = transferObject.GetType();
-            string moduleName = transferType.GetProperty("ModuleName")?.GetValue(transferObject)?.ToString()
-                                ?? nameof(Quotation);
             notification.Title = transferObject.Title;
             notification.Message = transferObject.Subject;
             notification.IsRead = false;
-            notification.Url = NotificationURLObjectMaking(transferObject);// $"/Business/Form/{moduleName}_Form/{transferObject.Id}";
+            notification.Url = JsonConvert.SerializeObject(
+                NotificationURLObjectMaking(transferObject));
             notification.Resource = $"{transferObject.Resource}";
             notification.System = "WM";
             notification.RecordGuid = transferObject.Guid;
@@ -283,32 +281,36 @@ namespace ERPCore.ControllerUtil
             Type transferType = transferObject.GetType();
             object? ReadProperty(string name) => transferType.GetProperty(name)?.GetValue(transferObject);
 
-            string moduleName = ReadProperty("ModuleName")?.ToString() ?? transferType.Name;
+            string moduleName = ReadProperty("ModuleName")?.ToString() ?? nameof(Quotation);
+            long.TryParse(ReadProperty("Id")?.ToString(), out long id);
+            string recordGuid = ReadProperty("Guid")?.ToString() ?? "";
+            string code = ReadProperty("Code")?.ToString() ?? "";
+
+            if (string.Equals(moduleName, nameof(Quotation), StringComparison.OrdinalIgnoreCase))
+            {
+                return new
+                {
+                    url = $"/Business/Form/{nameof(Quotation)}_Form/{id}/{recordGuid}",
+                    caption = $"form_{nameof(Quotation)}_Form_{id}",
+                    name = $"{nameof(Quotation)} {code}".Trim(),
+                    data = ""
+                };
+            }
+
             if (!string.Equals(moduleName, nameof(PolicyIssuance), StringComparison.OrdinalIgnoreCase))
             {
-                return Util.URLObjectMaking(transferObject);
+                return new
+                {
+                    url = $"/Business/Form/{moduleName}_Form/{id}/{recordGuid}",
+                    caption = $"form_{moduleName}_Form_{id}",
+                    name = $"{moduleName} {code}".Trim(),
+                    data = ""
+                };
             }
 
             string copyFromGuid = ReadProperty("CopyFromGuid")?.ToString() ?? "";
-            if (string.IsNullOrWhiteSpace(copyFromGuid)
-                || !System.Guid.TryParse(copyFromGuid, out System.Guid sourceGuid)
-                || sourceGuid == System.Guid.Empty)
-            {
-                return Util.URLObjectMaking(transferObject);
-            }
-
-            long.TryParse(ReadProperty("Id")?.ToString(), out long id);
             long.TryParse(ReadProperty("QuotationId")?.ToString(), out long cloneId);
-            string recordGuid = ReadProperty("Guid")?.ToString() ?? "";
-            if (cloneId <= 0)
-            {
-                // Do not emit an expanded route with an invalid source FK. Callers resolve
-                // legacy records from CopyFromGuid before reaching this builder.
-                return Util.URLObjectMaking(transferObject);
-            }
-            string code = ReadProperty("Code")?.ToString()
-                ?? ReadProperty("PolicyIssuanceCode")?.ToString()
-                ?? "";
+            System.Guid.TryParse(copyFromGuid, out System.Guid sourceGuid);
 
             return new
             {
