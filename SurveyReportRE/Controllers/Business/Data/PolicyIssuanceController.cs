@@ -368,6 +368,9 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         mailTemplate = await _mailTemplateRepository.GetSingleObject(s => s.TemplateName == "Assign Mail");
         PolicyIssuance quotation = new PolicyIssuance();
         quotation = await _BaseRepository.GetSingleObject(s => s.Id == id);
+        long? notificationCloneId = await ControllerUtil.ResolvePolicyIssuanceCloneIdAsync(
+            _quotationRepository,
+            quotation);
         Users flowUser = new Users();
         PICAttributes pICAttributes = new PICAttributes();
         pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
@@ -410,7 +413,9 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
                 ReceivedBy = accountName,
                 Id = quotation.Id,
                 Code = quotation.PolicyIssuanceCode,
-                ModuleName = nameof(PolicyIssuance)
+                ModuleName = nameof(PolicyIssuance),
+                QuotationId = notificationCloneId,
+                CopyFromGuid = quotation.CopyFromGuid
             };
 
             long? assignNotificationTypeId = await NotificationTypeResolver.ResolveIdAsync(
@@ -643,6 +648,9 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
 
             quotation.WorkflowStatus = enumData?.Value ?? "";
             quotation = await _BaseRepository.InsertData(JsonConvert.DeserializeObject<PolicyIssuance>(JsonConvert.SerializeObject(quotation)));
+            quotation.QuotationId = await ControllerUtil.ResolvePolicyIssuanceCloneIdAsync(
+                _quotationRepository,
+                JsonConvert.DeserializeObject<PolicyIssuance>(JsonConvert.SerializeObject(quotation)));
             PolicyIssuanceDetails policyIssuanceDetails = new PolicyIssuanceDetails();
             policyIssuanceDetails.PolicyIssuanceId = quotation.Id;
             policyIssuanceDetails = await _policyIssuanceDetailsRepository.InsertData(policyIssuanceDetails);
@@ -723,10 +731,10 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
                     Notification.ReceivedBy = memberName;
                     notification.Notification = Notification;
                     notification.connectionId = memberName;
-                    notification.tabPublicUrl = Util.URLObjectMaking(quotation);
+                    notification.tabPublicUrl = ControllerUtil.NotificationURLObjectMaking(quotation);
                     PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
                     string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
-                    Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
+                    Notification.Url = JsonConvert.SerializeObject(ControllerUtil.NotificationURLObjectMaking(quotation));
 
                     ControllerHelper.SignalRResponse(_usersSessionRepository, "R_NotificationReceive",
                     new

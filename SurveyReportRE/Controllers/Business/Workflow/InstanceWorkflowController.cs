@@ -436,6 +436,9 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         };
         ControllerHelper.SignalRResponse(_usersSessionRepository, "R_ItemSubmitted", new { id = quotation.Id, type = "PolicyIssuance" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         await PISendAttachedWorkflowMailAsync(submitRequest, quotation);
+        long? notificationCloneId = await ControllerUtil.ResolvePolicyIssuanceCloneIdAsync(
+            _quotationRepository,
+            quotation);
 
         dynamic transferObject = new
         {
@@ -447,7 +450,9 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             ReceivedBy = accountName,
             Id = quotation.Id,
             Code = quotation.PolicyIssuanceCode,
-            ModuleName = nameof(PolicyIssuance)
+            ModuleName = nameof(PolicyIssuance),
+            QuotationId = notificationCloneId,
+            CopyFromGuid = quotation.CopyFromGuid
         };
 
 
@@ -686,6 +691,10 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             }
         }
 
+        long? notificationCloneId = await ControllerUtil.ResolvePolicyIssuanceCloneIdAsync(
+            _quotationRepository,
+            policyIssuance);
+
         dynamic transferObject = new
         {
             DOMAIN_NAME,
@@ -696,7 +705,9 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             ReceivedBy = accountName,
             Id = policyIssuance.Id,
             Code = policyIssuance.PolicyIssuanceCode,
-            ModuleName = nameof(PolicyIssuance)
+            ModuleName = nameof(PolicyIssuance),
+            QuotationId = notificationCloneId,
+            CopyFromGuid = policyIssuance.CopyFromGuid
         };
 
         Notification notification = await SendWorkflowNotificationAsync(
@@ -1028,6 +1039,9 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         string fallbackType,
         string? workflowStatus)
     {
+        Type fallbackObjectType = fallbackTransferObject.GetType();
+        object? relatedQuotationId = fallbackObjectType.GetProperty("QuotationId")?.GetValue(fallbackTransferObject);
+        object? copyFromGuid = fallbackObjectType.GetProperty("CopyFromGuid")?.GetValue(fallbackTransferObject);
         string? templateName = await ResolveAttachedNotificationTemplateNameAsync(submitRequest);
         NotificationTemplate? notificationTemplate = null;
         if (!string.IsNullOrWhiteSpace(templateName))
@@ -1071,7 +1085,9 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                 ReceivedBy = fallbackTransferObject.ReceivedBy,
                 Id = fallbackTransferObject.Id,
                 Code = fallbackTransferObject.Code,
-                ModuleName = fallbackTransferObject.ModuleName
+                ModuleName = fallbackTransferObject.ModuleName,
+                QuotationId = relatedQuotationId,
+                CopyFromGuid = copyFromGuid
             };
             notificationTypeId = notificationTemplate.TypeId
                 ?? await ResolveWorkflowNotificationTypeId(
@@ -1129,10 +1145,10 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             Notification.ReceivedBy = item;
             notification.Notification = Notification;
             notification.connectionId = item;
-            notification.tabPublicUrl = Util.URLObjectMaking(transferObject);
+            notification.tabPublicUrl = ControllerUtil.NotificationURLObjectMaking(transferObject);
             PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
             string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
-            Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(transferObject));
+            Notification.Url = JsonConvert.SerializeObject(ControllerUtil.NotificationURLObjectMaking(transferObject));
 
             ControllerHelper.SignalRResponse(_usersSessionRepository, "R_NotificationReceive",
             new

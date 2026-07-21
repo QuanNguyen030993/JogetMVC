@@ -168,7 +168,7 @@ namespace ERPCore.ControllerUtil
             Notification Notification = BuildNotification(transferObject, notificationTypeId);
             notification.Notification = Notification;
             notification.connectionId = transferObject.ReceivedBy;
-            notification.tabPublicUrl = Util.URLObjectMaking(transferObject);
+            notification.tabPublicUrl = NotificationURLObjectMaking(transferObject);
             IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
 
             foreach (string item in transferObject.ReceivedBy.Split(','))
@@ -208,7 +208,7 @@ namespace ERPCore.ControllerUtil
             //    name = $"{nameof(Quotation)} {transferObject.Code}",
             //    data = ""
             //};
-            notification.tabPublicUrl = Util.URLObjectMaking(transferObject);
+            notification.tabPublicUrl = NotificationURLObjectMaking(transferObject);
             IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
             foreach (string item in transferObject.ReceivedBy.Split(','))
             {
@@ -239,13 +239,79 @@ namespace ERPCore.ControllerUtil
             notification.Title = transferObject.Title;
             notification.Message = transferObject.Subject;
             notification.IsRead = false;
-            notification.Url = Util.URLObjectMaking(transferObject);// $"/Business/Form/{moduleName}_Form/{transferObject.Id}";
+            notification.Url = NotificationURLObjectMaking(transferObject);// $"/Business/Form/{moduleName}_Form/{transferObject.Id}";
             notification.Resource = $"{transferObject.Resource}";
             notification.System = "WM";
             notification.RecordGuid = transferObject.Guid;
             notification.ReceivedBy = transferObject.ReceivedBy;
             notification.Type = notificationTypeId;
             return notification;
+        }
+
+        /// <summary>
+        /// Builds the target stored with a notification. Policy Issuance records cloned
+        /// from a Quotation need all four route values expected by PolicyIssuance_Form:
+        /// id/guid/cloneId/copyfromguid. QuotationId is the related FK and therefore is
+        /// the cloneId; CopyFromGuid identifies the source Quotation record.
+        /// </summary>
+        public static object NotificationURLObjectMaking(dynamic transferObject)
+        {
+            Type transferType = transferObject.GetType();
+            object? ReadProperty(string name) => transferType.GetProperty(name)?.GetValue(transferObject);
+
+            string moduleName = ReadProperty("ModuleName")?.ToString() ?? transferType.Name;
+            if (!string.Equals(moduleName, nameof(PolicyIssuance), StringComparison.OrdinalIgnoreCase))
+            {
+                return Util.URLObjectMaking(transferObject);
+            }
+
+            string copyFromGuid = ReadProperty("CopyFromGuid")?.ToString() ?? "";
+            if (string.IsNullOrWhiteSpace(copyFromGuid)
+                || !System.Guid.TryParse(copyFromGuid, out System.Guid sourceGuid)
+                || sourceGuid == System.Guid.Empty)
+            {
+                return Util.URLObjectMaking(transferObject);
+            }
+
+            long.TryParse(ReadProperty("Id")?.ToString(), out long id);
+            long.TryParse(ReadProperty("QuotationId")?.ToString(), out long cloneId);
+            string recordGuid = ReadProperty("Guid")?.ToString() ?? "";
+            if (cloneId <= 0)
+            {
+                // Do not emit an expanded route with an invalid source FK. Callers resolve
+                // legacy records from CopyFromGuid before reaching this builder.
+                return Util.URLObjectMaking(transferObject);
+            }
+            string code = ReadProperty("Code")?.ToString()
+                ?? ReadProperty("PolicyIssuanceCode")?.ToString()
+                ?? "";
+
+            return new
+            {
+                url = $"/Business/Form/{nameof(PolicyIssuance)}_Form/{id}/{recordGuid}/{cloneId}/{sourceGuid}",
+                caption = $"form_{nameof(PolicyIssuance)}_Form_{id}",
+                name = $"{nameof(PolicyIssuance)} {code}".Trim(),
+                data = ""
+            };
+        }
+
+        public static async Task<long?> ResolvePolicyIssuanceCloneIdAsync(
+            IBaseRepository<Quotation> quotationRepository,
+            PolicyIssuance policyIssuance)
+        {
+            if (policyIssuance.QuotationId.HasValue && policyIssuance.QuotationId.Value > 0)
+            {
+                return policyIssuance.QuotationId.Value;
+            }
+
+            if (!policyIssuance.CopyFromGuid.HasValue || policyIssuance.CopyFromGuid.Value == System.Guid.Empty)
+            {
+                return null;
+            }
+
+            Quotation? sourceQuotation = await quotationRepository.GetSingleObject(item =>
+                item.Guid == policyIssuance.CopyFromGuid.Value && !item.Deleted);
+            return sourceQuotation?.Id;
         }
         public static async Task CloneAction(
     IBaseRepository<CommentLog> _quotationCommentLogRepository,

@@ -7830,16 +7830,16 @@ function styleModeChange(item){
         return PIC_MAP[deptKey] || null;
     }
      function disableAllDecisionButton(items){
-         $.each(items, function(itemIndex, item){
-             setTimeout(() => { 
-                 try 
-                 {
-                     $(`#${item}`).dxButton("instance").option("disabled", true);
-                 }
-                 catch {
-                     console.log("error while try parse dxForm");
-                 }
-             },1);
-         });
+         // $.each(items, function(itemIndex, item){
+         //     setTimeout(() => { 
+         //         try 
+         //         {
+         //             $(`#${item}`).dxButton("instance").option("disabled", true);
+         //         }
+         //         catch {
+         //             console.log("error while try parse dxForm");
+         //         }
+         //     },1);
+         // });
      }
 </script>
