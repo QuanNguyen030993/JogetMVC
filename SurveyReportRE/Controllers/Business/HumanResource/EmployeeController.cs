@@ -22,11 +22,12 @@ public class EmployeeController : BaseControllerApi<Employee>
     private static readonly IReadOnlyDictionary<string, string> SelfServiceRoles =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            ["FO"] = "Front Office - tiếp nhận yêu cầu và phối hợp với khách hàng.",
-            ["TS"] = "Technical Services - chuẩn bị và rà soát nội dung kỹ thuật.",
-            ["PM"] = "Product Management - quản lý sản phẩm và điều khoản.",
-            ["UW"] = "Underwriting - đánh giá rủi ro và quyết định nhận bảo hiểm.",
-            ["LMKT"] = "Local Marketing - điều phối kinh doanh và phát hành đơn."
+            ["FO"] = "Front Office",
+            ["TS"] = "Technical Services",
+            ["PM"] = "Product Management",
+            ["UW"] = "Underwriting",
+            ["LMKT"] = "Leader Marketting",
+            ["IT"] = "Admin"
         };
 
     public sealed class UpdateMyRoleRequest
@@ -192,14 +193,14 @@ public class EmployeeController : BaseControllerApi<Employee>
     public async Task<IActionResult> UpdateMyRole([FromBody] UpdateMyRoleRequest request)
     {
         var role = request?.Role?.Trim().ToUpperInvariant() ?? "";
-        if (!SelfServiceRoles.ContainsKey(role))
-        {
-            return BadRequest(new
-            {
-                success = false,
-                message = "Role must be one of: FO, TS, PM, UW, LMKT."
-            });
-        }
+        //if (!SelfServiceRoles.ContainsKey(role))
+        //{
+        //    return BadRequest(new
+        //    {
+        //        success = false,
+        //        message = "Role must be one of: FO, TS, PM, UW, LMKT."
+        //    });
+        //}
 
         var employee = await GetCurrentEmployeeAsync();
         if (employee == null)

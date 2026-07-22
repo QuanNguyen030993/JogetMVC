@@ -3804,8 +3804,7 @@ function updateNotification(count) {
 
 
 function showTMIVComPopupNotification(title, body) {
-    if (window.TMIVCom && typeof window.TMIVCom.notify === "function") {
-        window.TMIVCom.notify({
+        $.tmivnotify({
             title: title || "Notification",
             content: body || "",
             type: "info",
@@ -3813,13 +3812,13 @@ function showTMIVComPopupNotification(title, body) {
             duration: 6000
         });
         return;
-    }
 
     const plainBody = $("<div>").html(body || "").text();
-    appNotifyInfo([title, plainBody].filter(Boolean).join(" - "));
+    //appNotifyInfo([title, plainBody].filter(Boolean).join(" - "));
 }
 
 function showPopupNotification(title, body) {
+    
     const chromeNotificationsEnabled = window.tmivChromeNotificationsEnabled === true;
     const chromeNotificationsAvailable = "Notification" in window;
 
