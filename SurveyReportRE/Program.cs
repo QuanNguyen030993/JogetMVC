@@ -62,6 +62,7 @@ if (!string.IsNullOrEmpty(connectionLogString))
              logEvent.Level == LogEventLevel.Error || 
              logEvent.Level == LogEventLevel.Fatal
         )
+        .WriteTo.Sink(new RealtimeErrorLogSink())
                     .WriteTo.MSSqlServer(
             connectionString: connectionLogString,
                             sinkOptions: new Serilog.Sinks.MSSqlServer.MSSqlServerSinkOptions
@@ -94,12 +95,15 @@ builder.Services.AddSignalR(options => {
     options.KeepAliveInterval = TimeSpan.FromSeconds(double.Parse(builder.Configuration.GetSection("SignalRConfig:KeepAliveInterval").Value));
     options.ClientTimeoutInterval = TimeSpan.FromSeconds(double.Parse(builder.Configuration.GetSection("SignalRConfig:ClientTimeoutInterval").Value)); // client timeout > keepalive
 });
+builder.Services.AddHostedService<RealtimeErrorLogBroadcastService>();
+
 builder.Services.AddSingleton<MemoryPresenceStore>();
 builder.Services.AddControllers();
 builder.Services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
 builder.Services.AddScoped(typeof(IHttpRequestAuditLogWriter), typeof(HttpRequestAuditLogWriter));
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddSingleton(connectionString);
+
 
 //-------------------------------------------
 //Comment out if Allow anomymous for debugging 

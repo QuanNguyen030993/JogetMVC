@@ -30,6 +30,7 @@ using ERPCore.Models.Business.Migration.Config;
 using static SkiaSharp.HarfBuzz.SKShaper;
 using Newtonsoft.Json.Linq;
 using JsonException = System.Text.Json.JsonException;
+using Syncfusion.DocIO.DLS.XML;
 namespace ERPCore.Common
 {
     public static class Util
@@ -1598,11 +1599,13 @@ namespace ERPCore.Common
                         {
                             DateTime? dueDate = DateTime.Parse(value);
                             string formattedDate = dueDate?.ToString("dd/MM/yyyy");
-                            dictionary.Add($"@@{char.ToLower(propertyName[0])}{propertyName.Substring(1)}", formattedDate);
+                            //dictionary.Add($"@@{char.ToLower(propertyName[0])}{propertyName.Substring(1)}", formattedDate);
+                            dictionary.Add($"@@{propertyName}", formattedDate);
                         }
                         else
                         {
-                            dictionary.Add($"@@{char.ToLower(propertyName[0])}{propertyName.Substring(1)}", value);
+                            //dictionary.Add($"@@{char.ToLower(propertyName[0])}{propertyName.Substring(1)}", value);
+                            dictionary.Add($"@@{propertyName}", value);
                         }
                     }
                 }

@@ -74,6 +74,7 @@ namespace ERPCore.Common
             catch (Exception ex)
             {
                 Handler.ErrorException(ex,"");
+                Serilog.Log.Error(ex, ex.Message);
                 return null; // Hoặc có thể ném lại exception tuỳ yêu cầu
             }
         }
