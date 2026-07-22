@@ -125,15 +125,16 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         if (submitRequest.ActionStatus != null)
             quotation.ActionStatus = submitRequest.ActionStatus;
         TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(quotation.TurnAroundTimeAttributes);
-        TurnAroundItem tatObject = submitRequest.StepsWorkflow.FromNodeId switch
-        {
-            "FO" => result.FO,
-            "TS" => result.TS,
-            "UW" => result.UW,
-            "LMKT" => result.LMKT,
-            "PM" => result.PM,
-            _ => null
-        };
+        TurnAroundItem tatObject = Util.TurnAroundTimePicker(result, submitRequest.StepsWorkflow.FromNodeId);
+        //    switch
+        //{
+        //    "FO" => result.FO,
+        //    "TS" => result.TS,
+        //    "UW" => result.UW,
+        //    "LMKT" => result.LMKT,
+        //    "PM" => result.PM,
+        //    _ => null
+        //};
         tatObject.CompleteDate = DateTime.Now;
         switch (submitRequest.StepsWorkflow.FromNodeId)
         {
@@ -177,6 +178,9 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                         break;
                     case "PM":
                         if (result.PM != null) { result.PM.AcceptDate = null; result.PM.CompleteDate = null; }
+                        break;
+                    default:
+                        if (result.FO != null) { result.FO.AcceptDate = null; result.FO.CompleteDate = null; }
                         break;
                 }
             }
@@ -248,15 +252,26 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 
         PICAttributes pICAttributes = new PICAttributes();
         pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
-        string accountName = submitRequest.StepsWorkflow.ToNodeId switch
-        {
-            "FO" => pICAttributes.FO,
-            "TS" => pICAttributes.TS,
-            "UW" => pICAttributes.UW,
-            "LMKT" => pICAttributes.LMKT,
-            "PM" => pICAttributes.PM,
-            _ => null
-        };
+        string accountName = Util.PICPicker(pICAttributes, submitRequest.StepsWorkflow.ToNodeId);
+        //switch
+        //{
+        //    "FO" => pICAttributes.FO,
+        //    "TS" => pICAttributes.TS,
+        //    "UW" => pICAttributes.UW,
+        //    "LMKT" => pICAttributes.LMKT,
+        //    "PM" => pICAttributes.PM,
+        //    _ =>
+        //        string.Join(",",
+        //                            new[]
+        //                            {
+        //                                pICAttributes.FO,
+        //                                pICAttributes.TS,
+        //                                pICAttributes.UW,
+        //                                pICAttributes.LMKT,
+        //                                pICAttributes.PM
+        //                            }.Where(x => !string.IsNullOrEmpty(x)))
+
+        //};
         ControllerHelper.SignalRResponse(_usersSessionRepository,"R_ItemSubmitted", new { id = quotation.Id, type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         await SendAttachedWorkflowMailAsync(submitRequest, quotation);
 
@@ -297,15 +312,17 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         if (submitRequest.ActionStatus != null)
             quotation.ActionStatus = submitRequest.ActionStatus;
         TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(quotation.TurnAroundTimeAttributes);
-        TurnAroundItem tatObject = submitRequest.StepsWorkflow.FromNodeId switch
-        {
-            "FO" => result.FO,
-            "TS" => result.TS,
-            "UW" => result.UW,
-            "LMKT" => result.LMKT,
-            "PM" => result.PM,
-            _ => null
-        };
+        TurnAroundItem tatObject = Util.TurnAroundTimePicker(result, submitRequest.StepsWorkflow.FromNodeId)
+            ; 
+        //switch
+        //{
+        //    "FO" => result.FO,
+        //    "TS" => result.TS,
+        //    "UW" => result.UW,
+        //    "LMKT" => result.LMKT,
+        //    "PM" => result.PM,
+        //    _ => null
+        //};
         tatObject.CompleteDate = DateTime.Now;
         switch (submitRequest.StepsWorkflow.FromNodeId)
         {
@@ -420,15 +437,16 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 
         PICAttributes pICAttributes = new PICAttributes();
         pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
-        string accountName = submitRequest.StepsWorkflow.ToNodeId switch
-        {
-            "FO" => pICAttributes.FO,
-            "TS" => pICAttributes.TS,
-            "UW" => pICAttributes.UW,
-            "LMKT" => pICAttributes.LMKT,
-            "PM" => pICAttributes.PM,
-            _ => null
-        };
+        string accountName = Util.PICPicker(pICAttributes, submitRequest.StepsWorkflow.ToNodeId);  
+        //string accountName = submitRequest.StepsWorkflow.ToNodeId switch
+        //{
+        //    "FO" => pICAttributes.FO,
+        //    "TS" => pICAttributes.TS,
+        //    "UW" => pICAttributes.UW,
+        //    "LMKT" => pICAttributes.LMKT,
+        //    "PM" => pICAttributes.PM,
+        //    _ => null
+        //};
         ControllerHelper.SignalRResponse(_usersSessionRepository, "R_ItemSubmitted", new { id = quotation.Id, type = "PolicyIssuance" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         await PISendAttachedWorkflowMailAsync(submitRequest, quotation);
         long? notificationCloneId = await ControllerUtil.ResolvePolicyIssuanceCloneIdAsync(
@@ -497,15 +515,17 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         if (submitRequest.ActionStatus != null)
             quotation.ActionStatus = submitRequest.ActionStatus;
         TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(quotation.TurnAroundTimeAttributes);
-        TurnAroundItem tatObject = submitRequest.StepsWorkflow.FromNodeId switch
-        {
-            "FO" => result.FO,
-            "TS" => result.TS,
-            "UW" => result.UW,
-            "LMKT" => result.LMKT,
-            "PM" => result.PM,
-            _ => null
-        };
+        TurnAroundItem tatObject = Util.TurnAroundTimePicker(result, submitRequest.StepsWorkflow.FromNodeId);
+
+        //    switch
+        //{
+        //    "FO" => result.FO,
+        //    "TS" => result.TS,
+        //    "UW" => result.UW,
+        //    "LMKT" => result.LMKT,
+        //    "PM" => result.PM,
+        //    _ => null
+        //};
         tatObject.CompleteDate = DateTime.Now;
         switch (submitRequest.StepsWorkflow.FromNodeId)
         {
@@ -535,15 +555,16 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 
         PICAttributes pICAttributes = new PICAttributes();
         pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
-        string accountName = submitRequest.StepsWorkflow.ToNodeId switch
-        {
-            "FO" => pICAttributes.FO,
-            "TS" => pICAttributes.TS,
-            "UW" => pICAttributes.UW,
-            "LMKT" => pICAttributes.LMKT,
-            "PM" => pICAttributes.PM,
-            _ => null
-        };
+        string accountName = Util.PICPicker(pICAttributes, submitRequest.StepsWorkflow.ToNodeId);
+        //string accountName = submitRequest.StepsWorkflow.ToNodeId switch
+        //{
+        //    "FO" => pICAttributes.FO,
+        //    "TS" => pICAttributes.TS,
+        //    "UW" => pICAttributes.UW,
+        //    "LMKT" => pICAttributes.LMKT,
+        //    "PM" => pICAttributes.PM,
+        //    _ => null
+        //};
         ControllerHelper.SignalRResponse(_usersSessionRepository, "R_ItemSubmitted", new { id = quotation.Id,  type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         bool attachedMailSent = await SendAttachedWorkflowMailAsync(submitRequest, quotation);
         if (!attachedMailSent)
@@ -608,15 +629,16 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         if (submitRequest.ActionStatus != null) policyIssuance.ActionStatus = submitRequest.ActionStatus;
 
         TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(policyIssuance.TurnAroundTimeAttributes);
-        TurnAroundItem tatObject = submitRequest.StepsWorkflow.FromNodeId switch
-        {
-            "FO" => result.FO,
-            "TS" => result.TS,
-            "UW" => result.UW,
-            "LMKT" => result.LMKT,
-            "PM" => result.PM,
-            _ => null
-        };
+        TurnAroundItem tatObject = Util.TurnAroundTimePicker(result, submitRequest.StepsWorkflow.FromNodeId);  
+        //submitRequest.StepsWorkflow.FromNodeId switch
+        //{
+        //    "FO" => result.FO,
+        //    "TS" => result.TS,
+        //    "UW" => result.UW,
+        //    "LMKT" => result.LMKT,
+        //    "PM" => result.PM,
+        //    _ => null
+        //};
         if (tatObject != null) tatObject.CompleteDate = DateTime.Now;
         policyIssuance.TurnAroundTimeAttributes = JsonConvert.SerializeObject(result);
 
@@ -637,15 +659,16 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             _blobStorageSettings);
 
         PICAttributes picAttributes = JsonConvert.DeserializeObject<PICAttributes>(policyIssuance.PIC);
-        string accountName = submitRequest.StepsWorkflow.ToNodeId switch
-        {
-            "FO" => picAttributes.FO,
-            "TS" => picAttributes.TS,
-            "UW" => picAttributes.UW,
-            "LMKT" => picAttributes.LMKT,
-            "PM" => picAttributes.PM,
-            _ => null
-        };
+        string accountName = Util.PICPicker(picAttributes, submitRequest.StepsWorkflow.ToNodeId);
+        //string accountName = submitRequest.StepsWorkflow.ToNodeId switch
+        //{
+        //    "FO" => picAttributes.FO,
+        //    "TS" => picAttributes.TS,
+        //    "UW" => picAttributes.UW,
+        //    "LMKT" => picAttributes.LMKT,
+        //    "PM" => picAttributes.PM,
+        //    _ => null
+        //};
 
         ControllerHelper.SignalRResponse(
             _usersSessionRepository,
@@ -1654,10 +1677,10 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 
     public class TransferFileConfig
     {
-        public string SourceDepartment { get; set; }
-        public string TargetDepartment { get; set; }
-        public string Strategy { get; set; } // Latest
-        public string FileSelector { get; set; } // First
+        public string? SourceDepartment { get; set; }
+        public string? TargetDepartment { get; set; }
+        public string? Strategy { get; set; } // Latest
+        public string? FileSelector { get; set; } // First
     }
 
     public class WorkflowRecoverRequest
@@ -1666,8 +1689,8 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         public long? StepsWorkflowId { get; set; }
         public string? TargetNodeId { get; set; }
         public string? TargetDeptCode { get; set; }
-        public string Mode { get; set; }
-        public string Note { get; set; }
+        public string? Mode { get; set; }
+        public string? Note { get; set; }
     }
 }
 

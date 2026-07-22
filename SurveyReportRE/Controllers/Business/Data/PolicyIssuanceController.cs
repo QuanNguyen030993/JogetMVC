@@ -377,15 +377,24 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         try { pic = JsonConvert.DeserializeObject<PICAttributes>(policyIssuance.PIC ?? "{}") ?? new PICAttributes(); }
         catch { pic = new PICAttributes(); }
 
-        string? assignedValue = dept switch
-        {
-            "FO" => pic.FO,
-            "TS" => pic.TS,
-            "UW" => pic.UW,
-            "LMKT" => pic.LMKT,
-            "PM" => pic.PM,
-            _ => null
-        };
+        string? assignedValue = Util.PICPicker(pic, dept);  
+        //dept switch
+        //{
+        //    "FO" => pic.FO,
+        //    "TS" => pic.TS,
+        //    "UW" => pic.UW,
+        //    "LMKT" => pic.LMKT,
+        //    "PM" => pic.PM,
+        //    _ => string.Join(",",
+        //                            new[]
+        //                            {
+        //                                pic.FO,
+        //                                pic.TS,
+        //                                pic.UW,
+        //                                pic.LMKT,
+        //                                pic.PM
+        //                            }.Where(x => !string.IsNullOrEmpty(x)))
+        //};
         string[] recipients = (assignedValue ?? "")
             .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Select(account => account.Split('\\').Last())

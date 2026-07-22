@@ -1509,10 +1509,32 @@ namespace ERPCore.Common
             return $"SELECT * FROM [{tableName}] WITH (NOLOCK) WHERE Active = 1 AND Deleted = 0";
         }
 
-        public static void TurnAroundTimeHandle(dynamic objectIn, StepsWorkflow stepsWorkflow)
+
+        public static string PICPicker(PICAttributes result, string nodeId)
         {
-            TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(objectIn.TurnAroundTimeAttributes);
-            TurnAroundItem tatObject = stepsWorkflow.FromNodeId switch
+            return nodeId switch
+            {
+                "FO" => result.FO,
+                "TS" => result.TS,
+                "UW" => result.UW,
+                "LMKT" => result.LMKT,
+                "PM" => result.PM,
+                _ => string.Join(",",
+                                new[]
+                                {
+                            result.FO,
+                            result.TS,
+                            result.UW,
+                            result.LMKT,
+                            result.PM
+                                }.Where(x => !string.IsNullOrEmpty(x)))
+            };
+        }
+
+
+        public static TurnAroundItem TurnAroundTimePicker(TurnAroundAttributes result, string nodeId)
+        {
+            return nodeId switch
             {
                 "FO" => result.FO,
                 "TS" => result.TS,
@@ -1521,6 +1543,28 @@ namespace ERPCore.Common
                 "PM" => result.PM,
                 _ => null
             };
+        }
+        public static void TurnAroundTimeHandle(dynamic objectIn, StepsWorkflow stepsWorkflow)
+        {
+            TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(objectIn.TurnAroundTimeAttributes);
+            TurnAroundItem tatObject = TurnAroundTimePicker(result, stepsWorkflow.FromNodeId); 
+            //stepsWorkflow.FromNodeId switch
+            //{
+            //    "FO" => result.FO,
+            //    "TS" => result.TS,
+            //    "UW" => result.UW,
+            //    "LMKT" => result.LMKT,
+            //    "PM" => result.PM,
+            //    _ => string.Join(",",
+            //                        new[]
+            //                        {
+            //                            result.FO,
+            //                            result.TS,
+            //                            result.UW,
+            //                            result.LMKT,
+            //                            result.PM
+            //                        }.Where(x => !string.IsNullOrEmpty(x)))
+            //};
             tatObject.CompleteDate = DateTime.Now;
             switch (stepsWorkflow.FromNodeId)
             {

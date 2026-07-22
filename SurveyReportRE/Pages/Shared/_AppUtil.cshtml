@@ -7836,15 +7836,16 @@
             return PIC_MAP[deptKey] || null;
         }
          function disableAllDecisionButton(items){
-             // $.each(items, function(itemIndex, item){
-             //     setTimeout(() => {
-             //         try
-             //         {
-             //             $(`#${item}`).dxButton("instance").option("disabled", true);
-             //         }
-             //         catch {
-             //             console.log("error while try parse dxForm");
-             //         }`
-             // });
+             $.each(items, function(itemIndex, item){
+                 setTimeout(() => {
+                     try
+                     {
+                         $(`#${item}`).dxButton("instance").option("disabled", true);
+                     }
+                     catch {
+                         console.log("error while try parse dxForm");
+                     }
+                 },1);
+             });
          }
 </script>

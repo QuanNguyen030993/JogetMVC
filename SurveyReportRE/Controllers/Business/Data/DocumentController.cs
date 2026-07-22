@@ -115,15 +115,24 @@ public class DocumentController : BaseControllerApi<Document>
                 string approveDept = "LMKT";
                 PICAttributes pICAttributes = new PICAttributes();
                 pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
-                string accountApproveName = approveDept switch
-                {
-                    "FO" => pICAttributes.FO,
-                    "TS" => pICAttributes.TS,
-                    "UW" => pICAttributes.UW,
-                    "LMKT" => pICAttributes.LMKT,
-                    "PM" => pICAttributes.PM,
-                    _ => null
-                };
+                string accountApproveName = Util.PICPicker(pICAttributes, approveDept);
+                //    switch
+                //{
+                //    "FO" => pICAttributes.FO,
+                //    "TS" => pICAttributes.TS,
+                //    "UW" => pICAttributes.UW,
+                //    "LMKT" => pICAttributes.LMKT,
+                //    "PM" => pICAttributes.PM,
+                //    _ => string.Join(",",
+                //                    new[]
+                //                    {
+                //                       pICAttributes.FO,
+                //                       pICAttributes.TS,
+                //                       pICAttributes.UW,
+                //                       pICAttributes.LMKT,
+                //                       pICAttributes.PM
+                //                    }.Where(x => !string.IsNullOrEmpty(x)))
+                //};
                 if (quotation != null)
                 {
                     if (!Directory.Exists(path.Value + "\\Digisign"))

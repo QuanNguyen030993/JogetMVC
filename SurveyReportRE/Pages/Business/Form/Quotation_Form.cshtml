@@ -457,6 +457,8 @@ Note:
                                         var returnButtonId = window.QuotationIdManager.btnReturnBranch(stageDept,@ViewData["Id"]);
                                         var submitButtonId = window.QuotationIdManager.btnSubmitBranch(stageDept,@ViewData["Id"]);
                                         // var remarkBoxId = window.QuotationIdManager.remarkBox(stageDept,@ViewData["Id"]);
+                                        if (qtDeptModuleCode.find(f => f == stageDept))
+                                        {
                                         var formId = window.QuotationIdManager.form(stageDept,@ViewData["Id"]);
                                         var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                                          var tatObject = new Object();
@@ -770,6 +772,7 @@ Note:
                                         }
                                         catch (exception) {
                                             console.log("Submit problem", exception);
+                                        }
                                         }
                                    });
                             // });
