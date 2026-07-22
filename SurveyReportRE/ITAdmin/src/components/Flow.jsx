@@ -277,7 +277,6 @@ const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) 
                 ? transition.conditionJson 
                 : JSON.stringify(transition.conditionJson, null, 2);
         }
-
         return {
             id: `edge-${transition.fromNodeId || transition.from || 'from'}-${transition.toNodeId || transition.to || 'to'}-${index}`,
             source: String(transition.fromNodeId || transition.from || ''),
@@ -329,13 +328,13 @@ const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) 
                 mailTemplateId: transition.mailTemplateId || (() => {
                     try {
                         const parsed = typeof transition.data === 'string' ? JSON.parse(transition.data) : (transition.data || {});
-                        return parsed.mailTemplateId || '';
+                        return parsed.mailTemplateId || "";
                     } catch (e) { return ''; }
                 })(),
                 notificationTemplateId: transition.notificationTemplateId || (() => {
                     try {
                         const parsed = typeof transition.data === 'string' ? JSON.parse(transition.data) : (transition.data || {});
-                        return parsed.notificationTemplateId || '';
+                        return parsed.notificationTemplateId || "";
                     } catch (e) { return ''; }
                 })(),
                 custom: (() => {
@@ -626,6 +625,7 @@ function Flow({ id: propId }) {
                 const data = await response.json();
                 setWorkflowGuid(data.guid || data.Guid || '');
                 const parsedPayload = typeof data.workflowNodes === 'string' ? JSON.parse(data.workflowNodes) : data.workflowNodes || {};
+                console.log(parsedPayload);
                 const scaleX = parsedPayload._layoutConfig?.SCALE_X || 1.0;
                 const scaleY = parsedPayload._layoutConfig?.SCALE_Y || 1.0;
                 setLayoutConfig(parsedPayload._layoutConfig || null);
@@ -712,10 +712,11 @@ function Flow({ id: propId }) {
                 const indexB = sortedNodesList.findIndex((n) => n.id === b.source);
                 return indexA - indexB;
             });
-
+   
             // Re-map edges to database structure in sorted order
             const workflowTransitions = sortedEdgesList.map((edge, index) => {
                 let parsedCondition = edge.data?.conditionJson || '{}';
+                console.log(edge);
                 if (typeof parsedCondition === 'string') {
                     try {
                         parsedCondition = JSON.parse(parsedCondition);
@@ -908,7 +909,6 @@ function Flow({ id: propId }) {
                         console.warn("Could not parse condition JSON for step data", e);
                     }
                 }
-
                 const stepData = {
                     ...conditionData,
                     transitionScript: normalizeTransitionScript(edge.data?.transitionScript) || null,
@@ -1022,7 +1022,6 @@ function Flow({ id: propId }) {
                 notify("Dòng dữ liệu tìm thấy nhưng không có thông tin CurrentStep! ⚠️", "warning");
                 return;
             }
-
             // Highlight the node matching currentStep using data.isTraced flag
             setTracedStep(currentStep);
             setSelectedNode(null);
@@ -1076,7 +1075,11 @@ function Flow({ id: propId }) {
                 if (!res.ok) throw new Error('API status ' + res.status);
                 return res.json();
             })
-            .then((data) => setMailTemplates(data || []))
+            .then((data) => 
+            {
+                
+                console.log(data);
+                setMailTemplates(data || []);})
             .catch((err) => console.error("Failed to load Mail Templates:", err));
 
         // Load Notification Templates
@@ -1284,7 +1287,6 @@ function Flow({ id: propId }) {
                 ...selectedNode.data,
                 [field]: value,
             };
-
             const nextNode = {
                 ...selectedNode,
                 data: nextNodeData,
@@ -1295,7 +1297,6 @@ function Flow({ id: propId }) {
                     styleColor: field === 'styleColor' ? value : nextNodeData.styleColor
                 }),
             };
-
             setNodes((currentNodes) =>
                 currentNodes.map((node) => (node.id === selectedNode.id ? nextNode : node)),
             );
@@ -1312,12 +1313,10 @@ function Flow({ id: propId }) {
 
             const matched = edges.find((e) => e.id === selectedEdge.id);
             const dataToUse = matched ? matched.data : selectedEdge.data;
-
             const nextData = {
                 ...dataToUse,
                 [field]: value,
             };
-
             const isReturn = nextData.isReturn === true || String(nextData.isReturn) === 'true';
             const hasCommand = nextData.command && nextData.command !== 'None' && nextData.command !== '0';
 

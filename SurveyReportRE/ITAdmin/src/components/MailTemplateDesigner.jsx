@@ -23,6 +23,9 @@ const [sqlQuery, setSqlQuery] = useState("");
 const [title, setTitle] = useState("");
 const [prefix, setPrefix] = useState("");
 const [cc, setCc] = useState("");
+const [isActive, setIsActive] = useState(true);
+
+
 
 const onSqlChange = (query) => {
     const editor = editorInstance.current;
@@ -210,7 +213,7 @@ const loadTemplate = (template) => {
     setTitle(template.templateMailTitle || "");
     setPrefix(template.prefixTitleMail || "");
     setCc(template.cc || "");
-
+    setIsActive(template.isActive !== undefined ? Boolean(template.isActive) : true);
 
     // ✅ parse SQL
     const fields = extractFieldsFromQuery(template.mailQuery);
@@ -768,8 +771,8 @@ const saveTemplate = async () => {
             mailQuery: sqlQuery ,  // ✅ thêm dòng này
             templateMailTitle: title,     // ✅ thêm
                 prefixTitleMail: prefix,   // ✅ thêm
-                cc: cc            // ✅ thêm
-
+                cc: cc,            // ✅ thêm
+            isActive: isActive
         };
 
         // ✅ dùng FormData
@@ -1054,6 +1057,18 @@ const saveTemplate = async () => {
                     placeholder="SELECT name AS customerName FROM table..."
 
                 />
+
+                 {/* Active Checkbox */}
+                        <div className="control-field" style={{ margin: "10px 0" }}>
+                            <label className="control-checkbox-label" style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "13px" }}>
+                                <input
+                                    type="checkbox"
+                                    checked={isActive}
+                                    onChange={(e) => setIsActive(e.target.checked)}
+                                />
+                                Kích hoạt Mẫu (Active)
+                            </label>
+                        </div>
             </div>
 
         </div>

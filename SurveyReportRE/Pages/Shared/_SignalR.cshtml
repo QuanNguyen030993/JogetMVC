@@ -515,7 +515,6 @@ function startSignalRConnection() {
         }
     });
     connectionSignR.on("R_OverviewLoading", function (responseData) {
-        debugger
         signalRBlink();
         // if (responseData.connectionId == _connectionId) {
             renderBrowserLoading(responseData);

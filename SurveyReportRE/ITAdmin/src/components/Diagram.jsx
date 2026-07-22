@@ -30,7 +30,7 @@ const CustomEdge = ({
     data = {},
 }) => {
     const { setEdges, getZoom } = useReactFlow();
-
+    console.log(data);
     const controlX = Number.isFinite(data?.controlX) ? data.controlX : (sourceX + targetX) / 2;
     const controlY = Number.isFinite(data?.controlY) ? data.controlY : (sourceY + targetY) / 2;
 
@@ -315,7 +315,7 @@ const CustomEdge = ({
                                     alignItems: 'center',
                                     position: 'relative',
                                     cursor: 'pointer',
-                                    marginLeft: (label || (data?.notificationTemplateId && String(data.notificationTemplateId).trim() !== '')) ? '2px' : '0'
+                                    marginLeft: (label || (data?.mailTemplateId && String(data.mailTemplateId).trim() !== '')) ? '2px' : '0'
                                 }}
                             >
                                 <i className="fa-solid fa-envelope" style={{ fontSize: '11px' }}></i>

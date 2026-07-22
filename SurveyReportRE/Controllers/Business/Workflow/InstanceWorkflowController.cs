@@ -29,6 +29,7 @@ using ERPCore.Models.Migration.Business.Workflow;
 using static WorkflowDefinition_FormModel;
 using ERPCore.Models.Migration.Config;
 using RESurveyTool.Models.Models.Parsing;
+using System.Text.RegularExpressions;
 
 public class WorkflowTransitionSubmitRequest : SubmitRequest
 {
@@ -959,9 +960,38 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             }
 
             Dictionary<string, object> templateData = new();
+            Dictionary<string, object> paramInObject = new();
+
+            paramInObject["RecordId"] = quotation.Id;
+            paramInObject["RecordCode"] = quotation.QuotationCode ?? "";
+            paramInObject["QuotationId"] = quotation.Id;
+            paramInObject["QuotationCode"] = quotation.QuotationCode ?? "";
+            paramInObject["WorkflowStatus"] = quotation.WorkflowStatus ?? "";
+            paramInObject["FromNodeId"] = submitRequest.StepsWorkflow?.FromNodeId ?? "";
+            paramInObject["ToNodeId"] = submitRequest.StepsWorkflow?.ToNodeId ?? "";
+            paramInObject["ActionCode"] = submitRequest.StepsWorkflow?.ActionCode ?? "";
+            paramInObject["ActionStatus"] = submitRequest.ActionStatus ?? "";
+            paramInObject["Comment"] = submitRequest.Comment ?? "";
+            string sql = mailTemplate.MailQuery;
+
+            List<(string, object)> parameters = new();
+
+            foreach (Match match in Regex.Matches(sql, @"\@(\w+)"))
+            {
+                string paramName = match.Groups[1].Value;
+
+                if (!paramInObject.TryGetValue(paramName, out object? value))
+                {
+                    throw new Exception($"Parameter '{paramName}' was not found.");
+                }
+
+                sql = sql.Replace(match.Value, $"@{paramName}");
+                parameters.Add((paramName, value?.ToString() ?? ""));
+            }
+
             if (!string.IsNullOrWhiteSpace(mailTemplate.MailQuery))
             {
-                DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
+                DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, parameters.ToArray()); // ("QuotationId", quotation.Id));
                 if (query.Rows.Count > 0) templateData = Util.MakeQueryIntoDirectory(query.Rows[0]);
             }
             templateData["RecordId"] = quotation.Id;
