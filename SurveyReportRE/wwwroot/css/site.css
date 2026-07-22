@@ -1015,6 +1015,86 @@ aside {
     animation: slideInFromLeft 0.5s ease-out 0.1s;
 }
 
+/* Overview status is revealed only after its status and PIC text are complete. */
+.overview-status-pill {
+    display: inline-flex;
+    align-items: center;
+    width: auto;
+    min-width: 0;
+    max-width: 0;
+    min-height: 26px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .94);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    overflow: hidden;
+    white-space: nowrap;
+    box-sizing: border-box;
+    opacity: 0;
+    transform: translateX(-8px) scaleX(.96);
+    transform-origin: left center;
+    animation: none;
+    will-change: max-width, opacity, transform;
+    transition:
+        max-width .62s cubic-bezier(.22, 1, .36, 1),
+        padding .42s cubic-bezier(.22, 1, .36, 1),
+        border-color .3s ease,
+        opacity .24s ease,
+        transform .46s cubic-bezier(.22, 1, .36, 1),
+        box-shadow .3s ease;
+}
+
+.overview-status-pill.is-ready {
+    max-width: min(560px, 55vw);
+    padding: 3px 10px 3px 4px;
+    border-color: rgba(148, 163, 184, .34);
+    opacity: 1;
+    transform: translateX(0) scaleX(1);
+    box-shadow: 0 5px 16px rgba(15, 23, 42, .13);
+}
+
+.overview-status-content {
+    display: inline-flex;
+    min-width: 0;
+    max-width: 100%;
+    align-items: center;
+    gap: 7px;
+    opacity: 0;
+    transform: translateX(-6px);
+    transition: opacity .24s ease .2s, transform .32s ease .16s;
+}
+
+.overview-status-pill.is-ready .overview-status-content {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.overview-status-state {
+    flex: 0 0 auto;
+    animation: none;
+}
+
+.overview-status-separator {
+    color: #94a3b8;
+}
+
+.overview-status-owner {
+    overflow: hidden;
+    color: #475569;
+    font-weight: 650;
+    text-overflow: ellipsis;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .overview-status-pill,
+    .overview-status-content {
+        transition-duration: .01ms !important;
+        transition-delay: 0ms !important;
+    }
+}
+
 .btn {
     animation: slideInFromLeft 0.5s ease-out;
 }

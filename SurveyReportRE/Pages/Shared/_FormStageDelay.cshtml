@@ -7,7 +7,9 @@
      * 2. formData    : gan data vao tat ca dxForm cua phong ban.
      * 3. assignment  : nap danh sach nhan vien va bind PIC vao dxTagBox.
      * 4. overlayDone : tat loading tong; den day form va PIC da san sang.
-     * 5. routeState  : nap TAT, AcceptDate, findRoute va hien button dan dan.
+     * 5. personInCharge: form da xong; resolve ten PIC tu cache/server.
+     * 6. routeState  : nap TAT, AcceptDate, findRoute va hien button dan dan.
+     * 7. comments    : route buttons da xong; bat dau nap comment dung cache chung.
      *
      * Thu tu phong ban sua tai departmentOrder. Trong tung phong ban, coordinator
      * co dinh thu tu: header -> upperBody -> bodyForm -> lowerBody -> footer.
@@ -25,7 +27,9 @@
         assignment: 0,
         unlockForm: 2000, 
         overlayDone: 1100,
+        personInCharge: 0,
         routeState: 3000,
+        comments: 0,
         routeComponent: 45,
         reloadAssignment: 200,
         sectionPart: 45,

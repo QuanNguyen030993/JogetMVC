@@ -432,23 +432,31 @@ public class DocumentController : BaseControllerApi<Document>
 
         // Lấy toàn bộ rồi filter (vì repo bạn đang có GetAll)
         // Nếu repo có method GetListObject(predicate) thì thay bằng query trực tiếp sẽ nhanh hơn
-        var all = await _BaseRepository.GetListObject(l => l.RecordGuid == recordGuid && l.Attributes.Contains($"{folder}"));
-
-        if (string.IsNullOrWhiteSpace(folder))
-            all = await _BaseRepository.GetListObject(l => l.RecordGuid == recordGuid);
-      
-        var docs = all
-            .Where(d => (d.Deleted == null || d.Deleted == false)
-                        && d.RecordGuid.HasValue
-                        && d.RecordGuid.Value == recordGuid)
-            .ToList();
+        IEnumerable<Document> all;
         if (isOutOfRule ?? false)
         {
-            all = await _BaseRepository.GetListObject(l => l.Attributes.Contains($"{folder}"));
-            docs = all
-            .Where(d => (d.Deleted == null || d.Deleted == false))
-            .ToList();
+            all = string.IsNullOrWhiteSpace(folder)
+                ? Enumerable.Empty<Document>()
+                : await _BaseRepository.GetListObject(l =>
+                    l.Attributes != null && l.Attributes.Contains(folder));
         }
+        else
+        {
+            // A request without folder is the record-level snapshot used by all
+            // upload controls. Query it once, then distribute by attributes in UI.
+            all = string.IsNullOrWhiteSpace(folder)
+                ? await _BaseRepository.GetListObject(l => l.RecordGuid == recordGuid)
+                : await _BaseRepository.GetListObject(l =>
+                    l.RecordGuid == recordGuid &&
+                    l.Attributes != null &&
+                    l.Attributes.Contains(folder));
+        }
+
+        var docs = all
+            .Where(d => (d.Deleted == null || d.Deleted == false)
+                        && ((isOutOfRule ?? false) ||
+                            (d.RecordGuid.HasValue && d.RecordGuid.Value == recordGuid)))
+            .ToList();
         //if (!string.IsNullOrEmpty(folder))
         //{
         //    var prefix = (folder.EndsWith("\\") ? folder : folder + "\\");

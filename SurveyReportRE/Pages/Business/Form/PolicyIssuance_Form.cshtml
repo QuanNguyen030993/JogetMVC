@@ -320,6 +320,9 @@ Note:
                 startedAt = performance.now();
                 $overlay.removeClass("is-leaving").attr("aria-busy", "true");
                 $root.addClass("pi-render-loading");
+                $root.find(".overview-status-pill")
+                    .removeClass("is-ready")
+                    .attr("aria-busy", "true");
                 resetProgressiveContent();
                 setPhase(message || "Loading policy issuance data…", 12);
                 return sequence;
@@ -451,42 +454,65 @@ Note:
             selectedAttachmentId = q.documentId ?? null;
             state.selectedCodeNo = q.quotationCode ?? null;
             stageDept = q.stageDept ?? null;
-            const params = new URLSearchParams();
-            params.set("refKey", state.selectedGuid);
-            params.set("refField", 'RecordGuid');
-            try {
-                var res = await ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null);
-                var pinnedNotes = (res || []).map(x => ({
-                        id: x.id,
-                        section: x.currentDepartment,//target main
-                        fromSection: x.fromDepartment,//target pin
-                        toSection: x.toDepartment,
-                        type: x.type,
-                        unread: !x.isRead,
-                        isRead: !x.isRead,
-                        linkedPin: x.isPinned,
-                        isPinned: x.isPinned,
-                        body: x.content,
-                        text: x.content,
-                        replies: 0,
-                        fullText: x.content,
-                        author: x.author,
-                        urgent: false,
-                        time: parseToGMT7(x.createdDate, 0)
-                }));
-                state.comments = pinnedNotes;
-                state.pinNotes = pinnedNotes.filter(f => f.isPinned);
-            } catch (err) {
-                console.warn("Unable to preload policy issuance comments", err);
-                state.comments = [];
-                state.pinNotes = [];
-            }
+            state.comments = [];
+            state.pinNotes = [];
 
             PIC_JSON = pICs.find(f => f.quotationCode == state.selectedCodeNo)?.pIC ?? q.pIC ?? "{}";
-            renderDeptCallouts(PIC_JSON);
             var map = parsePicMap(PIC_JSON);
             stageAccount = map[stageDept] ? map[stageDept] : "(Unassigned)";
 
+        }
+
+        async function loadPolicyIssuanceSectionComments() {
+            try {
+                const res = await loadSectionCommentsCached(state.selectedGuid);
+                const pinnedNotes = (res || []).map(x => ({
+                id: x.id,
+                section: x.currentDepartment,
+                fromSection: x.fromDepartment,
+                toSection: x.toDepartment,
+                type: x.type,
+                unread: !x.isRead,
+                isRead: !x.isRead,
+                linkedPin: x.isPinned,
+                isPinned: x.isPinned,
+                body: x.content,
+                text: x.content,
+                replies: 0,
+                fullText: x.content,
+                author: x.author,
+                urgent: false,
+                time: parseToGMT7(x.createdDate, 0)
+                }));
+                state.comments = pinnedNotes;
+                state.pinNotes = pinnedNotes.filter(f => f.isPinned);
+            } catch (error) {
+                state.comments = [];
+                state.pinNotes = [];
+                console.warn("Policy issuance comments could not be loaded.", error);
+            }
+            reloadState();
+        }
+
+        async function renderPolicyIssuancePersonInCharge() {
+            const q = getSelectedModel();
+            if (!q) return;
+            renderDeptCallouts(PIC_JSON);
+            let stageName = "";
+            try {
+                stageName = stageAccount && stageAccount !== "(Unassigned)"
+                    ? await getPersonInCharge(stageAccount)
+                    : "";
+            } catch (error) {
+                console.warn("Person in charge could not be resolved.", error);
+            }
+            revealOverviewPaneStatus(
+                `#${window.PolicyIssuanceIdManager.stageDeptPill(q.id)}`,
+                statusText(workflowStatus),
+                stageName,
+                statusClass(workflowStatus),
+                window.PolicyIssuanceIdManager.detailStatus(q.id)
+            );
         }
             function loadSelectedWorkflow() {
 
@@ -893,7 +919,12 @@ Note:
                 updateHints();
                 await policyIssuanceRenderGate.complete(renderToken);
                 firstRender = false;
+                await policyIssuanceFormStages.enter("personInCharge");
+                await renderPolicyIssuancePersonInCharge();
                 await loadSelectedWorkflow();
+                invalidateSectionCommentCache(state.selectedGuid);
+                await policyIssuanceFormStages.enter("comments");
+                await loadPolicyIssuanceSectionComments();
             })().catch(function (err) {
                 console.error("reloadPolicyIssuanceComponents error:", err);
                 policyIssuanceRenderGate.fail(renderToken, "Policy issuance refresh failed");
@@ -1572,12 +1603,6 @@ Note:
              workflowStatus = q.workflowStatus ?? q.status;
 
 
-             getPersonInCharge(stageAccount).then(function (stageName) {
-            $(`#${window.PolicyIssuanceIdManager.stageDeptPill(q.id)}`).html(`<span id="@ViewIdHelper.DetailStatus(moduleCode, Convert.ToInt64(ViewData["Id"]))" class="pill">${workflowStatus}</span> <span style="padding-left:5px">- ${stageName ?? ""}</span>`);
-            $(`#${window.PolicyIssuanceIdManager.detailStatus(q.id)}`)
-                .text(statusText(workflowStatus))
-                .attr("class", `statusTag ${statusClass(workflowStatus)}`);
-                   });
 
 
             var control = new Object();
@@ -1910,10 +1935,14 @@ Note:
             applyNodeHighlights();
             applySectionFocusHighlight();
             updateHints();
-            renderDeptCallouts(PIC_JSON);
             await policyIssuanceRenderGate.complete(initialRenderToken);
             firstRender = false;
+            await policyIssuanceFormStages.enter("personInCharge");
+            await renderPolicyIssuancePersonInCharge();
             await loadSelectedWorkflow();
+            invalidateSectionCommentCache(state.selectedGuid);
+            await policyIssuanceFormStages.enter("comments");
+            await loadPolicyIssuanceSectionComments();
         }).catch(function (err) {
             console.error("Initial policy issuance render error:", err);
             policyIssuanceRenderGate.fail(initialRenderToken, "Policy issuance data is unavailable");

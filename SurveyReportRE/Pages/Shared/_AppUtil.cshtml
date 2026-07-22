@@ -1458,6 +1458,59 @@
                         }
 
 
+                const sectionCommentRequestCache = new Map();
+
+                function normalizeSectionCommentGuid(guid) {
+                    return String(guid || "").trim().toLowerCase();
+                }
+
+                function invalidateSectionCommentCache(guid) {
+                    sectionCommentRequestCache.delete(normalizeSectionCommentGuid(guid));
+                }
+
+                function loadSectionCommentsCached(guid) {
+                    const key = normalizeSectionCommentGuid(guid);
+                    if (!key) return Promise.resolve([]);
+                    if (sectionCommentRequestCache.has(key)) {
+                        return sectionCommentRequestCache.get(key);
+                    }
+
+                    const params = new URLSearchParams({
+                        refKey: guid,
+                        refField: "RecordGuid"
+                    });
+                    const request = Promise.resolve(
+                        ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null, null)
+                    ).then(function (result) {
+                        return Array.isArray(result) ? result : [];
+                    }).catch(function (error) {
+                        sectionCommentRequestCache.delete(key);
+                        throw error;
+                    });
+
+                    sectionCommentRequestCache.set(key, request);
+                    return request;
+                }
+
+                function waitForCommentStage(idForm) {
+                    const $stageRoot = $(`#${idForm}`).closest("[data-render-stage]");
+                    if (!$stageRoot.length || $stageRoot.attr("data-render-stage") === "comments") {
+                        return Promise.resolve();
+                    }
+
+                    return new Promise(function (resolve) {
+                        const observer = new MutationObserver(function () {
+                            if ($stageRoot.attr("data-render-stage") !== "comments") return;
+                            observer.disconnect();
+                            resolve();
+                        });
+                        observer.observe($stageRoot[0], {
+                            attributes: true,
+                            attributeFilter: ["data-render-stage"]
+                        });
+                    });
+                }
+
                 function renderFormComment(idForm, dept, moduleKey, id, guid ) {
                     var control = new Object();
               $(`#${idForm}`).dxForm({
@@ -1521,12 +1574,6 @@
                                    var updateField = "content";
                                    var comments = [];
 
-                                       const params = new URLSearchParams();
-                                        params.set("refKey", guid);
-                                        params.set("refField", 'RecordGuid');
-                                            params.set("refKey2", dept);
-                                            params.set("refField2", 'CurrentDepartment');
-
                                         var d = $.Deferred();
 
                                         // ajaxGet(url, null)
@@ -1541,12 +1588,13 @@
                                         //     // create commenteditor here
                                         // });
 
-                                        ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`,null,null)
+                                        waitForCommentStage(idForm)
+                                            .then(function () { return loadSectionCommentsCached(guid); })
                                             .then(res => {
-
-
                                                      d.resolve(
-                                                            (res || []).map(x => ({
+                                                            (res || [])
+                                                                .filter(x => String(x.currentDepartment || "").toLowerCase() === String(dept || "").toLowerCase())
+                                                                .map(x => ({
                                                                 id: x.id,
                                                                 author: x.author,
                                                                 role: x.fromDepartment,
@@ -1557,6 +1605,9 @@
                                                             }))
                                                         );
 
+                                            }).catch(function (error) {
+                                                console.warn(`Comments for ${dept} could not be rendered.`, error);
+                                                d.resolve([]);
                                             });
                                                   item.control = $(itemElement).commenteditor({
                                                             items: initialComments,
@@ -1586,9 +1637,12 @@
                                                           store.insert(commentData)
                                                          .done(function () {
                                                              DevExpress.ui.notify("Send message successfully", "success", 2000);
-                                                             ajaxGet(`/api/SectionCommentNote/GetAll?${params.toString()}`, null, null)
+                                                             invalidateSectionCommentCache(guid);
+                                                             loadSectionCommentsCached(guid)
                                                                   .then(res => {
-                                                                      var updatedComments = (res || []).map(x => ({
+                                                                      var updatedComments = (res || [])
+                                                                          .filter(x => String(x.currentDepartment || "").toLowerCase() === String(dept || "").toLowerCase())
+                                                                          .map(x => ({
                                                                           id: x.id,
                                                                           author: x.author,
                                                                           role: x.fromDepartment,
@@ -2699,6 +2753,27 @@
             renderState.isAssigneeBoxRender = true;
         }
 
+        const employeeRequestCache = new Map();
+
+        function getCachedEmployeeRequest(cacheKey, requestFactory, ttl) {
+            const now = Date.now();
+            const cached = employeeRequestCache.get(cacheKey);
+            if (cached && cached.expiresAt > now) return cached.promise;
+
+            const entry = {
+                promise: null,
+                expiresAt: now + (Number(ttl) || 1800000)
+            };
+            entry.promise = Promise.resolve().then(requestFactory).catch(function (error) {
+                if (employeeRequestCache.get(cacheKey) === entry) {
+                    employeeRequestCache.delete(cacheKey);
+                }
+                throw error;
+            });
+            employeeRequestCache.set(cacheKey, entry);
+            return entry.promise;
+        }
+
         async function renderDepartmentAssigneeBox(selector, options, hideIfMuliple = true) {
             const settings = $.extend(true, {
                 groupName: "",
@@ -2716,17 +2791,26 @@
 
                 load: function (loadOptions) {
                     loadOptions = loadOptions || {};
-                    return $.ajax({
-                        url: "api/Employee/GetAssignableByGroup",
-                        type: "GET",
-                        dataType: "json",
-                        data: {
-                            group: settings.groupName,
-                            branchCode: _branch,
-                            excludeCurrent: true,
-                            keyword: loadOptions.searchValue || ""
-                        }
-                    }).then(function (res) {
+                    const keyword = loadOptions.searchValue || "";
+                    const cacheKey = [
+                        "assignable",
+                        String(_branch || "").toLowerCase(),
+                        String(settings.groupName || "").toLowerCase(),
+                        String(keyword).toLowerCase()
+                    ].join("|");
+                    return getCachedEmployeeRequest(cacheKey, function () {
+                        return $.ajax({
+                            url: "api/Employee/GetAssignableByGroup",
+                            type: "GET",
+                            dataType: "json",
+                            data: {
+                                group: settings.groupName,
+                                branchCode: _branch,
+                                excludeCurrent: true,
+                                keyword: keyword
+                            }
+                        });
+                    }, 1800000).then(function (res) {
                         return res && res.success ? res.data : [];
                     });
                 },
@@ -2734,11 +2818,14 @@
                 byKey: function (key) {
                     if (!key) return null;
 
-                    return $.ajax({
-                        url: `api/Employee/EmployeeLookup/${key}`,
-                        type: "GET",
-                        dataType: "json"
-                    }).then(function (res) {
+                    const cacheKey = `employee|${String(key).toLowerCase()}`;
+                    return getCachedEmployeeRequest(cacheKey, function () {
+                        return $.ajax({
+                            url: `api/Employee/EmployeeLookup/${encodeURIComponent(key)}`,
+                            type: "GET",
+                            dataType: "json"
+                        });
+                    }, 1800000).then(function (res) {
                         return res && res.success ? res.data : null;
                     });
                 }
@@ -3477,7 +3564,54 @@
             }
 
 
-            function loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions,renderTime) {
+            const attachmentRecordSnapshots = new Map();
+
+            function getAttachmentRecordSnapshot(controllerName, recordGuid, forceRefresh) {
+                const key = `${String(controllerName || "Document").toLowerCase()}|${recordGuid}`;
+                const current = attachmentRecordSnapshots.get(key);
+
+                if (!forceRefresh && current) return current.promise;
+                // Coalesce multiple onUploaded callbacks from the same upload batch.
+                if (forceRefresh && current?.refreshing) return current.promise;
+
+                const entry = { promise: null, refreshing: !!forceRefresh };
+                const url = `/api/${controllerName}/GetByKey?recordGuid=${encodeURIComponent(recordGuid)}`;
+                entry.promise = Promise.resolve($.ajax({
+                    url: url,
+                    method: "GET",
+                    dataType: "json"
+                })).then(function (data) {
+                    entry.refreshing = false;
+                    return Array.isArray(data) ? data : [];
+                }).catch(function (error) {
+                    if (attachmentRecordSnapshots.get(key) === entry) {
+                        attachmentRecordSnapshots.delete(key);
+                    }
+                    throw error;
+                });
+
+                attachmentRecordSnapshots.set(key, entry);
+                return entry.promise;
+            }
+
+            function attachmentBelongsToFolder(documentItem, folder) {
+                if (!folder) return true;
+
+                let attributes = documentItem?.attributes ?? documentItem?.Attributes ?? "";
+                if (typeof attributes !== "string") {
+                    try {
+                        attributes = JSON.stringify(attributes);
+                    } catch (_) {
+                        attributes = "";
+                    }
+                }
+
+                // Keep the same matching semantics as DocumentController's
+                // Attributes.Contains(folder), while doing it on the shared snapshot.
+                return attributes.toLocaleLowerCase().includes(String(folder).toLocaleLowerCase());
+            }
+
+            function loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions, renderTime, forceRefresh) {
                 var currentOptions = getCurrentFormOptions(editorOptions);
                      if(!editorOptions.isNotLoading)
                     {
@@ -3486,17 +3620,24 @@
                     if (!currentOptions || !currentOptions.guid) return;
                     var combine = editorOptions?.specificFolder ? `${editorOptions.moduleName}_${currentOptions.sectionName}_${currentOptions.id}_${editorOptions?.specificFolder}` : `${editorOptions.controlId}`;
                     combine = editorOptions.data.SectionName;
-                    var queryUrl = `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${(combine)}`;
+                    const useRecordSnapshot = String(controllerName || "").toLowerCase() === "document"
+                        && !editorOptions?.baseOnAttributes;
+                    var queryUrl = `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${encodeURIComponent(combine)}`;
+                    var attachmentRequest;
                         if (editorOptions?.baseOnAttributes){
                             combine = editorOptions.data[editorOptions?.baseOnAttributes];
-                            queryUrl = `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${(combine)}&isOutOfRule=true`
+                            queryUrl = `/api/${controllerName}/GetByKey?recordGuid=${currentOptions.guid}&folder=${encodeURIComponent(combine)}&isOutOfRule=true`
                         }
+                    attachmentRequest = useRecordSnapshot
+                        ? getAttachmentRecordSnapshot(controllerName, currentOptions.guid, !!forceRefresh)
+                        : $.ajax({ url: queryUrl, method: "GET", dataType: "json" });
                     // if (editorOptions?.data) combine = sectionName;
                         // showUploaderLoader(editorOptions.uploaderId, "File loading...");
-                    $.ajax({
-                            url: queryUrl,
-                        method: "GET",
-                        success: function (data) {
+                    Promise.resolve(attachmentRequest)
+                        .then(function (recordData) {
+                            const data = useRecordSnapshot
+                                ? recordData.filter(item => attachmentBelongsToFolder(item, combine))
+                                : recordData;
                             const $preview = $(`#attList_${sectionName}_${renderTime}`);
                             renderAttachmentListLazy(data, $preview, {
                                 batchSize: 6,
@@ -3511,17 +3652,17 @@
                                 controllerName: controllerName,
                                 uploaderAllow: editorOptions.uploaderAllow,
                                 onDeleted: function () {
-                                    loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions, renderTime);
+                                    loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions, renderTime, true);
                                 }
                             });
                                 var uploader = $(`#fileUpload_${sectionName}_${renderTime}`).dxFileUploader("instance")
                                 uploader?.option("storageData",data || {});
                                 hideUploaderLoader(editorOptions.uploaderId);
-                        },
-                        error: function () {
+                        })
+                        .catch(function (error) {
+                                console.warn("Attachment snapshot could not be loaded.", error);
                                 hideUploaderLoader(editorOptions.uploaderId);
-                        }
-                    });
+                        });
               }
               else {
                            const $preview = $(`#attList_${editorOptions.controlId}_${renderTime}`);
@@ -3542,7 +3683,7 @@
                                     controllerName: controllerName,
                                     uploaderAllow: editorOptions.uploaderAllow,
                                     onDeleted: function () {
-                                         loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions, renderTime);
+                                         loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions, renderTime, true);
                                     }
                                 });
                 }
@@ -3784,7 +3925,7 @@
                                  result.payload.progressvalue = 100;
                                  renderBrowserLoading(result);
                         // hideUploaderLoader(editorOptionsIn.uploaderId);
-                        loadDxFileUploaderAttachments(controlId, controllerName, editorOptionsIn,renderTime)
+                        loadDxFileUploaderAttachments(controlId, controllerName, editorOptionsIn, renderTime, true)
 
 
                     },
@@ -4114,7 +4255,7 @@
                             }, {
                                 onSuccess: function() {
                                     DevExpress.ui.notify("Document category updated successfully", "success", 1500);
-                                    loadDxFileUploaderAttachments(options.editorOptions.data.SectionName, options.controllerName, options.editorOptions, options.renderTime);
+                                    loadDxFileUploaderAttachments(options.editorOptions.data.SectionName, options.controllerName, options.editorOptions, options.renderTime, true);
                                 },
                                 onError: function() {
                                     DevExpress.ui.notify("Failed to update document category", "error", 2000);
@@ -6848,11 +6989,70 @@
             });
         }
 
+            function revealOverviewPaneStatus(target, statusTextValue, ownerText, statusCssClass, detailStatusId) {
+                const $target = target?.jquery ? target : $(target);
+                if (!$target.length) return;
+
+                const revealToken = `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+                const safeStatusClass = String(statusCssClass || "unknown").replace(/[^a-z0-9_-]/gi, "");
+                const statusText = String(statusTextValue || "Unknown").trim();
+                const owner = String(ownerText || "").trim();
+                const $content = $("<span>").addClass("overview-status-content");
+
+                const $state = $("<span>")
+                    .addClass(`overview-status-state statusTag ${safeStatusClass}`)
+                    .text(statusText)
+                    .appendTo($content);
+                if (detailStatusId) $state.attr("id", detailStatusId);
+
+                if (owner) {
+                    $("<span>")
+                        .addClass("overview-status-separator")
+                        .attr("aria-hidden", "true")
+                        .text("—")
+                        .appendTo($content);
+                    $("<span>")
+                        .addClass("overview-status-owner")
+                        .text(owner)
+                        .appendTo($content);
+                }
+
+                $target
+                    .data("overviewStatusRevealToken", revealToken)
+                    .removeClass("is-ready")
+                    .attr({
+                        "aria-busy": "true",
+                        title: owner ? `${statusText} — ${owner}` : statusText
+                    })
+                    .empty()
+                    .append($content);
+
+                requestAnimationFrame(function () {
+                    requestAnimationFrame(function () {
+                        if ($target.data("overviewStatusRevealToken") !== revealToken) return;
+                        $target.addClass("is-ready").attr("aria-busy", "false");
+                    });
+                });
+            }
+
             function getPersonInCharge(accountIds) {
+                const accounts = String(accountIds || "")
+                    .split(",")
+                    .map(item => item.trim())
+                    .filter(Boolean);
+                if (!accounts.length) return Promise.resolve("");
+
+                const cacheKey = `person-in-charge|${accounts
+                    .map(item => item.toLowerCase())
+                    .sort()
+                    .join(",")}`;
+                const cached = employeeRequestCache.get(cacheKey);
+                if (cached && cached.expiresAt > Date.now()) return cached.promise;
+
                 var deferred = $.Deferred();
 
                 $.ajax({
-                    url: `/api/Employee/PersonInChargeLookup/${encodeURIComponent(accountIds)}`,
+                    url: `/api/Employee/PersonInChargeLookup/${encodeURIComponent(accounts.join(","))}`,
                     type: "GET",
                     success: function (res) {
                         if (res.success) {
@@ -6867,7 +7067,15 @@
                     }
                 });
 
-                return deferred.promise();
+                const promise = deferred.promise();
+                employeeRequestCache.set(cacheKey, {
+                    promise: promise,
+                    expiresAt: Date.now() + 1800000
+                });
+                promise.fail(function () {
+                    employeeRequestCache.delete(cacheKey);
+                });
+                return promise;
             }
              //Popup hover
                 function renderDeptCallouts(picJson) {
@@ -6882,6 +7090,8 @@
                         // if (stageDept)
                             $co.find(".co-text").text(stageName);
                             $co.css({ color: window.AppColors.c_rgba_17_24_39_85 });
+                            }).catch(function (error) {
+                                console.warn(`PIC lookup for ${dept} failed.`, error);
                             });
                     });
                 }

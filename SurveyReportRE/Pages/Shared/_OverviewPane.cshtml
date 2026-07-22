@@ -14,7 +14,10 @@
             <div style="display:flex;align-items:center;gap:10px;">
                 <div class="h">@Model.Title</div>
                 @* <span id="@ViewIdHelper.DetailStatus(moduleCode,quotationId)" class="statusTag">-</span> *@
-                <span id="@ViewIdHelper.StageDeptPill(moduleCode,quotationId)" class="pill"></span>
+                <span id="@ViewIdHelper.StageDeptPill(moduleCode,quotationId)"
+                      class="overview-status-pill"
+                      aria-live="polite"
+                      aria-busy="true"></span>
             </div>
             <div style="display:flex;align-items:center;gap:8px;">
                 <div id="@ViewIdHelper.PanelHoverInFlow(moduleCode,quotationId)"></div>

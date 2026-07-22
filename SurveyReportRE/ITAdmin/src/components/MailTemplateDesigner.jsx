@@ -76,7 +76,7 @@ useEffect(() => {
 
 
 const convertToEditorFormat = (html) => {
-    return html.replace(/@@([a-zA-Z0-9_]+)/g, (_, key) => `{{${key}}}`);
+    return html;
 };
 
 const extractFieldsFromQuery = (query) => {
@@ -182,31 +182,8 @@ const loadTemplate = (template) => {
     const editor = editorInstance.current;
     if (!editor) return;
 
-    var html = convertToEditorFormat(template.templateContent);
-    
-    // html = html.replace(
-    //     />([^<>]+)</g,
-    //     (match, text) => {
-    //         if (text.trim()) {
-    //             return ` data-gjs-type="text">${text}<`;
-    //         }
-    //         return match;
-    //     }
-    // );
-
-    const components = convertToGrapesComponents(html, editor);
-
-    // editor.setComponents(`
-    //     <div class="mail-content">
-    //         ${html}
-    //     </div>
-    // `);
-    
-    editor.setComponents({
-            tagName: "div",
-            attributes: { class: "mail-content" },
-            components
-        });
+    var html = template.templateContent || "";
+    editor.setComponents(`<div class="mail-content">${html}</div>`);
 
     setSelectedTemplate(template);
     setSqlQuery(template.mailQuery || "");
@@ -227,19 +204,12 @@ const loadTemplate = (template) => {
         }
     });
 
-
-    // ✅ add block mới
+    // ✅ add block mới dưới dạng plain text @@FieldName
     fields.forEach(f => {
         bm.add(`field-${f}`, {
             label: f,
             category: "Fields",
-            content: {
-                type: "tmiv-field",
-                content: `{{${f}}}`,
-                attributes: {
-                    "data-bind": f
-                }
-            }
+            content: `@@${f} `
         });
     });
 };
@@ -403,75 +373,13 @@ const loadTemplate = (template) => {
 
 
         editor.setComponents(`
-
-
 <div class="mail-content">
-
-
-    <h2>
-        Approval Mail
-    </h2>
-
-
-
-    <p>
-        Dear 
-        <span 
-        class="tmiv-field"
-        data-bind="checkerName">
-
-        {{checkerName}}
-
-        </span>
-    </p>
-
-
-
-    <p>
-
-        Your report was approved!
-
-    </p>
-
-
-
-
-    <p>
-
-        Client:
-
-        <span
-        class="tmiv-field"
-        data-bind="shortName">
-
-        {{shortName}}
-
-        </span>
-
-    </p>
-
-
-
-    <p>
-
-        Location:
-
-        <span
-        class="tmiv-field"
-        data-bind="shortLocationName">
-
-        {{shortLocationName}}
-
-        </span>
-
-
-    </p>
-
-
-
+    <h2>Approval Mail</h2>
+    <p>Dear @@checkerName,</p>
+    <p>Your report was approved!</p>
+    <p>Client: @@shortName</p>
+    <p>Location: @@shortLocationName</p>
 </div>
-
-
 `);
 
 
@@ -678,73 +586,7 @@ editor.BlockManager.add(
 
     },[]);
 
-const convertToGrapesComponents = (html) => {
-    const container = document.createElement("div");
-    container.innerHTML = html;
-
-    const walk = (node) => {
-
-        // ✅ TEXT NODE
-        if (node.nodeType === Node.TEXT_NODE) {
-            const text = node.nodeValue;
-
-            if (!text) return null;
-
-            const parts = text.split(/(\{\{.*?\}\})/g);
-
-            return parts.map(p => {
-                const match = p.match(/\{\{(.*?)\}\}/);
-      
-                // ✅ FIELD → component
-                if (match) {
-                    const key = match[1].trim();
-        
-                    return {
-                        type: "tmiv-field",
-                        content: `{{${key}}}`,
-                        attributes: {
-                            class: "tmiv-field",
-                            "data-bind": key
-                        }
-                    };
-                }
-
-                // ✅ TEXT → RETURN STRING (NOT textnode)
-                
-        return {
-                    type: "text",
-                    content: p,
-                    editable: true
-                };
-
-                    });
-                }
-
-        // ✅ ELEMENT NODE
-        if (node.nodeType === Node.ELEMENT_NODE) {
-            return {
-                tagName: node.tagName.toLowerCase(),
-
-                attributes: Array.from(node.attributes).reduce((acc, attr) => {
-                    acc[attr.name] = attr.value;
-                    return acc;
-                }, {}),
-
-                components: Array.from(node.childNodes)
-                    .map(child => walk(child))
-                    .flat()
-                    .filter(c => c !== null && c !== undefined)
-            };
-        }
-
-        return null;
-    };
-
-    return Array.from(container.childNodes)
-        .map(n => walk(n))
-        .flat()
-        .filter(Boolean);
-};
+// Unused convertToGrapesComponents removed as placeholders are now raw @@ plain text.
 
 const saveTemplate = async () => {
     try {

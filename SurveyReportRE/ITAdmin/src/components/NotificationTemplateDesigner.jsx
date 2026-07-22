@@ -46,8 +46,7 @@ function NotificationTemplateDesigner() {
     }, [enumList]);
 
     const convertToEditorFormat = (html = "") => {
-        if (!html) return "";
-        return html.replace(/@@([a-zA-Z0-9_]+)/g, (_, key) => `{{${key}}}`);
+        return html;
     };
 
     const extractFieldsFromQuery = (query) => {
@@ -75,59 +74,7 @@ function NotificationTemplateDesigner() {
         return fields;
     };
 
-    const convertToGrapesComponents = (html) => {
-        const container = document.createElement("div");
-        container.innerHTML = html;
-
-        const walk = (node) => {
-            if (node.nodeType === Node.TEXT_NODE) {
-                const text = node.nodeValue;
-                if (!text) return null;
-
-                const parts = text.split(/(\{\{.*?\}\})/g);
-                return parts.map(p => {
-                    const match = p.match(/\{\{(.*?)\}\}/);
-                    if (match) {
-                        const key = match[1].trim();
-                        return {
-                            type: "tmiv-field",
-                            content: `{{${key}}}`,
-                            attributes: {
-                                class: "tmiv-field",
-                                "data-bind": key
-                            }
-                        };
-                    }
-                    return {
-                        type: "text",
-                        content: p,
-                        editable: true
-                    };
-                });
-            }
-
-            if (node.nodeType === Node.ELEMENT_NODE) {
-                return {
-                    tagName: node.tagName.toLowerCase(),
-                    attributes: Array.from(node.attributes).reduce((acc, attr) => {
-                        acc[attr.name] = attr.value;
-                        return acc;
-                    }, {}),
-                    components: Array.from(node.childNodes)
-                        .map(child => walk(child))
-                        .flat()
-                        .filter(Boolean)
-                };
-            }
-
-            return null;
-        };
-
-        return Array.from(container.childNodes)
-            .map(n => walk(n))
-            .flat()
-            .filter(Boolean);
-    };
+    // Unused convertToGrapesComponents removed as placeholders are now raw @@ plain text.
 
     const onSqlChange = (query) => {
         const editor = editorInstance.current;
@@ -143,18 +90,12 @@ function NotificationTemplateDesigner() {
             }
         });
 
-        // Add extracted field blocks
+        // Add extracted field blocks under plain text @@FieldName
         fields.forEach(f => {
             bm.add(`field-${f}`, {
                 label: f,
                 category: "Fields",
-                content: {
-                    type: "tmiv-field",
-                    content: `{{${f}}}`,
-                    attributes: {
-                        "data-bind": f
-                    }
-                }
+                content: `@@${f} `
             });
         });
 
@@ -166,14 +107,7 @@ function NotificationTemplateDesigner() {
         if (!editor) return;
 
         const rawContent = template.content || template.Content || template.templateContent || "";
-        const html = convertToEditorFormat(rawContent);
-        const components = convertToGrapesComponents(html);
-
-        editor.setComponents({
-            tagName: "div",
-            attributes: { class: "notification-content" },
-            components
-        });
+        editor.setComponents(`<div class="notification-content">${rawContent}</div>`);
 
         setSelectedTemplate(template);
         setTemplateName(template.templateName || template.TemplateName || "");
@@ -195,13 +129,7 @@ function NotificationTemplateDesigner() {
             bm.add(`field-${f}`, {
                 label: f,
                 category: "Fields",
-                content: {
-                    type: "tmiv-field",
-                    content: `{{${f}}}`,
-                    attributes: {
-                        "data-bind": f
-                    }
-                }
+                content: `@@${f} `
             });
         });
     };
