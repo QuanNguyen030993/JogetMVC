@@ -27,6 +27,7 @@ using ERPCore.Models.Models.Parsing;
 using ERPCore.Models.Migration.Business.Config;
 using Serilog;
 using Microsoft.AspNetCore.Authorization;
+using ERPCore.Storage;
 
 
 namespace ERPCore.Controllers.Base
@@ -39,6 +40,12 @@ namespace ERPCore.Controllers.Base
         internal ILogger<T> _loggerT { get; set; }
         internal static string DOMAIN_NAME = "";
         private static string BLOB_PATH = "";
+
+        protected static bool IsRemoteDocumentUrl(string? value)
+        {
+            return Uri.TryCreate(value, UriKind.Absolute, out var uri)
+                && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp);
+        }
 
         public BaseControllerApi(IBaseRepository<T> BaseRepository, IHttpContextAccessor httpContextAccessor)
         {
@@ -325,6 +332,11 @@ namespace ERPCore.Controllers.Base
                 Document attachment = await _attachmentRepository.GetObjectByIdAsync(id);
                 if (attachment != null)
                 {
+                    if (IsRemoteDocumentUrl(attachment.SubDirectory))
+                    {
+                        return Redirect(attachment.SubDirectory);
+                    }
+
                      string fullPath = System.IO.Path.Combine(BLOB_PATH, attachment.SubDirectory, attachment.Guid.ToString()+ attachment.FileType);
                     try
                     {
@@ -720,68 +732,185 @@ namespace ERPCore.Controllers.Base
             });
         }
 
+        private async Task StoreUploadedDocumentAsync(
+            Document document,
+            IFormFile file,
+            string folder,
+            IBaseRepository<Document> documentRepository,
+            CancellationToken cancellationToken)
+        {
+            var sharePointStorage = HttpContext.RequestServices
+                .GetRequiredService<ISharePointDocumentStorage>();
+            if (sharePointStorage.IsEnabled)
+            {
+                await using var uploadStream = file.OpenReadStream();
+                var remoteFileName =
+                    $"{document.Guid}_{System.IO.Path.GetFileName(file.FileName)}";
+                var webUrl = await sharePointStorage.UploadAsync(
+                    uploadStream,
+                    remoteFileName,
+                    folder,
+                    file.ContentType,
+                    cancellationToken);
+
+                var update = new Document
+                {
+                    SubDirectory = webUrl
+                };
+                await documentRepository.UpdateData(
+                    update,
+                    document,
+                    new[] { nameof(Document.SubDirectory) },
+                    nameof(Document.Id));
+
+                var persisted = await documentRepository.GetObjectByIdAsync(document.Id);
+                if (persisted == null
+                    || !string.Equals(
+                        persisted.SubDirectory,
+                        webUrl,
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidOperationException(
+                        "The file was uploaded to SharePoint, but its web URL could not be saved " +
+                        "to Document.SubDirectory.");
+                }
+
+                document.SubDirectory = webUrl;
+                return;
+            }
+
+            if (!System.IO.Directory.Exists(BLOB_PATH))
+            {
+                Directory.CreateDirectory(BLOB_PATH);
+            }
+
+            var localFolder = System.IO.Path.Combine(BLOB_PATH, folder);
+            if (!System.IO.Directory.Exists(localFolder))
+            {
+                Directory.CreateDirectory(localFolder);
+            }
+
+            var localFilePath = System.IO.Path.Combine(
+                localFolder,
+                $"{document.Guid}{document.FileType}");
+            await using var sourceStream = file.OpenReadStream();
+            await using var destinationStream = new FileStream(
+                localFilePath,
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.None,
+                bufferSize: 81920,
+                useAsync: true);
+            await sourceStream.CopyToAsync(destinationStream, cancellationToken);
+        }
+
+        private static Document CreateUploadedDocument(
+            IFormFile file,
+            string folder,
+            string guid,
+            string sectionName,
+            string department,
+            string? data = null)
+        {
+            var document = new Document
+            {
+                SubDirectory = System.IO.Path.Combine(folder),
+                RecordGuid = !string.IsNullOrWhiteSpace(guid) ? Guid.Parse(guid) : null,
+                FileName = file.FileName,
+                FileType = System.IO.Path.GetExtension(file.FileName),
+                Size = file.Length
+            };
+
+            if (!string.IsNullOrEmpty(data))
+            {
+                dynamic attributes = new ExpandoObject();
+                JsonConvert.PopulateObject(data, attributes);
+                document.Attributes = JsonConvert.SerializeObject(attributes);
+            }
+            else
+            {
+                document.Attributes = JsonConvert.SerializeObject(new
+                {
+                    SectionName = sectionName,
+                    Department = department
+                });
+            }
+
+            return document;
+        }
+
+        private async Task RemoveFailedDocumentRecordAsync(
+            IBaseRepository<Document> documentRepository,
+            Document? document)
+        {
+            if (document == null || document.Id <= 0) return;
+            try
+            {
+                await documentRepository.DeleteData(
+                    document,
+                    document.Id,
+                    nameof(Document.Id),
+                    true);
+            }
+            catch (Exception cleanupException)
+            {
+                _loggerT.LogError(
+                    cleanupException,
+                    "Could not remove failed Document record {DocumentId}.",
+                    document.Id);
+            }
+        }
+
         [HttpPost]
         public virtual async Task<IActionResult> AsyncUploadFile()
         {// Use blog settings while override this method instead
-            var path = BLOB_PATH;
             IBaseRepository<Document> _documentRepository = new BaseRepository<Document>(_BaseRepository._baseConfiguration, _httpContextAccessor);
-            //var storageFolder = _blobStorageSettings.CurrentValue.Path;
-            IFormFileCollection files = null;
-            files = ((FormCollection)(Request.Form)).Files;
+            IFormFileCollection files = ((FormCollection)(Request.Form)).Files;
             string folder = Request.Headers["Folder"];
             string guid = Request.Headers["RecordGuid"];
             string sectionName = Request.Headers["SectionName"];
             string department = Request.Headers["Department"];
             string data = Request.Headers["Data"];
-            IFormFile file = null;
-            file = files.FirstOrDefault();
+            IFormFile file = files.FirstOrDefault();
             if (file != null && file.Length > 0)
             {
                 var sizeValidationError = ValidateUploadFileSize(file);
                 if (sizeValidationError != null) return sizeValidationError;
 
-                using (var ms = new MemoryStream())
+                Document? document = null;
+                try
                 {
-                    file.CopyTo(ms);
-                    var fileBytes = ms.ToArray();
-                    var unixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                    string s = Convert.ToBase64String(fileBytes);
-                    if (!System.IO.Directory.Exists(BLOB_PATH))
-                        Directory.CreateDirectory(BLOB_PATH);
-                    if (!System.IO.Directory.Exists(Path.Combine(BLOB_PATH, folder)))
-                        Directory.CreateDirectory(Path.Combine(BLOB_PATH, folder));
-
-                    Document document = new Document();
-                    //Attachment attachmentForm = new Attachment();
-                    //document.SubDirectory = Path.Combine(folder, $"{unixMilliseconds}_{file.FileName}") ;
-                    document.SubDirectory = Path.Combine(folder) ;
-                    document.RecordGuid = guid != null ? Guid.Parse(guid) : null;
-                    document.FileName = file.FileName;
-                    document.FileType = System.IO.Path.GetExtension(file.FileName);
-                    document.Size = file.Length;
-
-                  
-
-                    
-                    if ( !string.IsNullOrEmpty(data))
-                    {
-                        dynamic obj = new ExpandoObject();
-
-                        JsonConvert.PopulateObject(data, obj);
-                        document.Attributes = JsonConvert.SerializeObject(obj);
-                    }
-                    else
-                    document.Attributes = JsonConvert.SerializeObject(new
-                    {
-                        SectionName = sectionName,
-                        Department = department
-                    }); 
+                    document = CreateUploadedDocument(
+                        file,
+                        folder,
+                        guid,
+                        sectionName,
+                        department,
+                        data);
                     document = await _documentRepository.InsertData(document);
-                    //AttachmentForm attachmentForm = ControllerHelper.BindingAttachmentForm(attachment, BLOB_PATH);
-                    //System.IO.File.WriteAllBytes(Path.Combine(path, folder, $"{unixMilliseconds}_{file.FileName}"), fileBytes);
-                    System.IO.File.WriteAllBytes(Path.Combine(path, folder, $"{document.Guid}{document.FileType}"), fileBytes);
+                    await StoreUploadedDocumentAsync(
+                        document,
+                        file,
+                        folder,
+                        _documentRepository,
+                        HttpContext.RequestAborted);
 
-                    return Ok(new { success = true, message = "File uploaded successfully", attachment = document });
+                    return Ok(new
+                    {
+                        success = true,
+                        message = "File uploaded successfully",
+                        attachment = document
+                    });
+                }
+                catch (Exception exception)
+                {
+                    await RemoveFailedDocumentRecordAsync(_documentRepository, document);
+                    _loggerT.LogError(exception, "Async document upload failed.");
+                    return StatusCode(StatusCodes.Status502BadGateway, new
+                    {
+                        success = false,
+                        message = exception.Message
+                    });
                 }
             }
             else
@@ -792,9 +921,7 @@ namespace ERPCore.Controllers.Base
         [HttpPost]
         public virtual async Task<IActionResult> AsyncUploadSingleFile(IFormFile file)
         {// Use blog settings while override this method instead
-            var path = BLOB_PATH;
             IBaseRepository<Document> _documentRepository = new BaseRepository<Document>(_BaseRepository._baseConfiguration, _httpContextAccessor);
-            //var storageFolder = _blobStorageSettings.CurrentValue.Path;
             string folder = Request.Headers["Folder"];
             string guid = Request.Headers["RecordGuid"];
             string sectionName = Request.Headers["SectionName"];
@@ -804,32 +931,39 @@ namespace ERPCore.Controllers.Base
                 var sizeValidationError = ValidateUploadFileSize(file);
                 if (sizeValidationError != null) return sizeValidationError;
 
-                using (var ms = new MemoryStream())
+                Document? document = null;
+                try
                 {
-                    file.CopyTo(ms);
-                    var fileBytes = ms.ToArray();
-                    var unixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                    string s = Convert.ToBase64String(fileBytes);
-                    if (!System.IO.Directory.Exists(BLOB_PATH))
-                        Directory.CreateDirectory(BLOB_PATH);
-                    if (!System.IO.Directory.Exists(Path.Combine(BLOB_PATH, folder)))
-                        Directory.CreateDirectory(Path.Combine(BLOB_PATH, folder));
-
-                    Document document = new Document();
-                    //Attachment attachmentForm = new Attachment();
-                    //document.SubDirectory = Path.Combine(folder, $"{unixMilliseconds}_{file.FileName}") ;
-                    document.SubDirectory = Path.Combine(folder);
-                    document.RecordGuid = guid != null ? Guid.Parse(guid) : null;
-                    document.FileName = file.FileName;
-                    document.FileType = System.IO.Path.GetExtension(file.FileName);
-                    document.Size = file.Length;
-                    document.Attributes = JsonConvert.SerializeObject((object)(new { SectionName = sectionName, Department = department }));
+                    document = CreateUploadedDocument(
+                        file,
+                        folder,
+                        guid,
+                        sectionName,
+                        department);
                     document = await _documentRepository.InsertData(document);
-                    //AttachmentForm attachmentForm = ControllerHelper.BindingAttachmentForm(attachment, BLOB_PATH);
-                    //System.IO.File.WriteAllBytes(Path.Combine(path, folder, $"{unixMilliseconds}_{file.FileName}"), fileBytes);
-                    System.IO.File.WriteAllBytes(Path.Combine(path, folder, $"{document.Guid}{document.FileType}"), fileBytes);
+                    await StoreUploadedDocumentAsync(
+                        document,
+                        file,
+                        folder,
+                        _documentRepository,
+                        HttpContext.RequestAborted);
 
-                    return Ok(new { success = true, message = "File uploaded successfully", attachment = document });
+                    return Ok(new
+                    {
+                        success = true,
+                        message = "File uploaded successfully",
+                        attachment = document
+                    });
+                }
+                catch (Exception exception)
+                {
+                    await RemoveFailedDocumentRecordAsync(_documentRepository, document);
+                    _loggerT.LogError(exception, "Async single document upload failed.");
+                    return StatusCode(StatusCodes.Status502BadGateway, new
+                    {
+                        success = false,
+                        message = exception.Message
+                    });
                 }
             }
             else

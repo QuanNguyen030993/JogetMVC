@@ -101,6 +101,13 @@ builder.Services.AddSingleton<MemoryPresenceStore>();
 builder.Services.AddControllers();
 builder.Services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
 builder.Services.AddScoped(typeof(IHttpRequestAuditLogWriter), typeof(HttpRequestAuditLogWriter));
+builder.Services.Configure<SharePointUploadOptions>(
+    builder.Configuration.GetSection(SharePointUploadOptions.SectionName));
+builder.Services.AddHttpClient("SharePointGraph", client =>
+{
+    client.Timeout = TimeSpan.FromMinutes(10);
+});
+builder.Services.AddSingleton<ISharePointDocumentStorage, GraphSharePointDocumentStorage>();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddSingleton(connectionString);
 

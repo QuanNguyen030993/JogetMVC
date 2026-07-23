@@ -41,6 +41,15 @@ public class DocumentController : BaseControllerApi<Document>
         try
         {
             Document Document = await _BaseRepository.GetObjectByIdAsync(id);
+            if (Document == null)
+            {
+                return NotFound($"Document id={id} not found.");
+            }
+            if (IsRemoteDocumentUrl(Document.SubDirectory))
+            {
+                return Redirect(Document.SubDirectory);
+            }
+
             string fullPath = System.IO.Path.Combine(path.Value, Document.SubDirectory, Document.Guid.ToString()+ Document.FileType);
             var mimeTypes = Util.GetMimeType(Document.FileName);
             if (System.IO.File.Exists(fullPath))
@@ -402,7 +411,7 @@ public class DocumentController : BaseControllerApi<Document>
         Document = await _BaseRepository.GetSingleObject(s => s.Id == id);
         if (Document != null)
         {
-            if (Document.SubDirectory != null)
+            if (Document.SubDirectory != null && !IsRemoteDocumentUrl(Document.SubDirectory))
                 if (System.IO.File.Exists(Path.Combine(path.Value, Document.SubDirectory, Document.Guid.ToString()+ Document.FileType)))
                     System.IO.File.Delete(Path.Combine(path.Value, Document.SubDirectory, Document.Guid.ToString()+ Document.FileType));
 
@@ -476,7 +485,15 @@ public class DocumentController : BaseControllerApi<Document>
                     : Path.GetFileName(d.SubDirectory ?? "");
 
                 var ext = d.FileType;
-                if (!System.IO.File.Exists(Path.Combine(path.Value,d.SubDirectory,d.Guid.ToString()+d.FileType))) ext = "Not Found On Server";
+                if (!IsRemoteDocumentUrl(d.SubDirectory)
+                    && !System.IO.File.Exists(
+                        Path.Combine(
+                            path.Value,
+                            d.SubDirectory,
+                            d.Guid.ToString() + d.FileType)))
+                {
+                    ext = "Not Found On Server";
+                }
                 return new
                 {
                     id = d.Id,
