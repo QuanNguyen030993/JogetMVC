@@ -392,8 +392,8 @@ public class QuotationController : BaseControllerApi<Quotation>
 
         var logger = loggerFactory.CreateLogger<CommentLog>();
         var quotationCommentLogApiController = new CommentLogController(_quotationCommentLogRepository, configuration, _httpContextAccessor, logger, _blobStorageSettings);
-        string logQuery = $"SELECT * FROM CommentLog WHERE {nameof(Quotation)}Id = {quotation.Id}";
-        string logHistoryQuery = $"SELECT * FROM QuotationWorkflowHistory WHERE {nameof(Quotation)}Id = {quotation.Id}";
+        string logQuery = $"SELECT * FROM CommentLog WHERE RecordGuid = {quotation.Guid}";
+        string logHistoryQuery = $"SELECT * FROM WorkflowHistory WHERE RecordGuid = {quotation.Guid}";
         var quotationCommentLogs = await quotationCommentLogApiController.ExecuteCustomQuery(logQuery);
         var quotaionWorkflowHistory = await quotationCommentLogApiController.ExecuteCustomQuery(logHistoryQuery);
 

@@ -68,7 +68,7 @@
          var acceptStatusId = `Status_@QTViewIdHelper.Decision(dept, quotationId)`;
      var noNeedToRefer = `NNTF_@QTViewIdHelper.Decision(dept, quotationId)`;
                      var items = [ `#${acceptButtonId}`, `#${noNeedToRefer}`];
-                                 var itemsDelay = [ acceptButtonId , acceptStatusId, noNeedToRefer, ''];
+                                 
     var sectionId = "@(ViewData["Cd"])";
     var that = new Object();
     that.ModelName = "Quotation";
@@ -101,10 +101,34 @@
         
         ];
 
+
+
+        var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
+        var acceptStatusId = `Status_@QTViewIdHelper.Decision(dept, quotationId)`;
+        // V2 config: status/TAT, click handler va lifecycle cua Accept cung di qua
+        // renderDecisionDeferredV2; khong con dung cap string legacy.
+        var acceptDecisionV2 = {
+            buttonId: acceptButtonId,
+            statusId: acceptStatusId,
+            text: "Accept",
+            icon: "check",
+            type: "success",
+            buttonClass: "dx-button-success",
+            disabled: true,
+            useDefaultDecisionClick: true,
+            acceptStatusField: "actionStatus",
+            useTatAcceptStatus: true,
+            tatStatusText: "Accepted",
+            skipAcceptedMainFields: false,
+            statusButtonDisabled: true
+        };
+      
+            // var itemsDelay = [ acceptButtonId];
+                var itemsDelay = [acceptDecisionV2];
         $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
-     dataSource: makeBasicDataSource(that, true),
-    items: [
-         {
+             dataSource: makeBasicDataSource(that, true),
+             items: [
+                 {
              itemType: "group",
              name: "decision@(dept)Group",
              cssClass: "workflow-decision-group qt-decision-group-@(dept)",
@@ -116,83 +140,84 @@
              caption: "UW Review",
              colCount: 2,
              items: [
-    
-                {
-                         dataField: "decision",
+                  
+                // {
+                //          dataField: "decision",
 
-                         label: {
-                             text: "Decision"
-                         },
-                         itemType: "simple",
+                //          label: {
+                //              text: "Decision"
+                //          },
+                //          itemType: "simple",
 
-                         template: function (data, itemElement) {
-                             var formId = `@QTViewIdHelper.Form(dept,quotationId)`;
-                                  var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
-                                  var noNeedToRefer = `NNTF_@QTViewIdHelper.Decision(dept, quotationId)`;
-                                  var acceptStatusElement = `Status_@QTViewIdHelper.Decision(dept, quotationId)`;
-                                 var $primaryActions = $(`<div class="uw-decision-primary-actions"></div>`)
-                                     .appendTo(itemElement);
-                                         var acceptButtonElement=    $(`<div id='${acceptButtonId}'>`)
-                                        .dxButton({
-                                         elementAttr: {
-                                                 id: acceptButtonId
-                                         },
-                                         disabled: true,
-                                         text: "Accept",
-                                         icon: "check",
-                                         onClick: function (e) {
-                                             var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-                                             var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem") || {};
+                //          template: function (data, itemElement) {
+                //              var formId = `@QTViewIdHelper.Form(dept,quotationId)`;
+                //                   var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
+                //                   var noNeedToRefer = `NNTF_@QTViewIdHelper.Decision(dept, quotationId)`;
+                //                   var acceptStatusElement = `Status_@QTViewIdHelper.Decision(dept, quotationId)`;
+                //                  var $primaryActions = $(`<div class="uw-decision-primary-actions"></div>`)
+                //                      .appendTo(itemElement);
+                //                          var acceptButtonElement=    $(`<div id='${acceptButtonId}'>`)
+                //                         .dxButton({
+                //                          elementAttr: {
+                //                                  id: acceptButtonId
+                //                          },
+                //                          disabled: true,
+                //                          text: "Accept",
+                //                          icon: "check",
+                //                          onClick: function (e) {
+                //                              var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                //                              var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem") || {};
                                                  
                                                      
-                                                     tatObject[uwDept] = tatObject[uwDept] || {};
-                                                     tatObject[uwDept].AcceptDate = formatDateToString(new Date()).gmt7;
-                                                     formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
-                                                     var passingObject = new Object();
-                                                     passingObject.statusName = `${uwDept} Process`; // base on Dept
-                                                     passingObject.Comment = `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`;  // base on Dept
-                                                     passingObject.formItems = formItems;
-                                                     passingObject.dept = uwDept;
-                                                     passingObject.url = '/api/Quotation/UpdateData';
-                                                     passingObject.urlLog = `/api/Quotation/LogAction`;
-                                                     passingObject.schemeName = `Quotation`;
-                                                     acceptDecision(passingObject,`@dept`);
+                //                                      tatObject[uwDept] = tatObject[uwDept] || {};
+                //                                      tatObject[uwDept].AcceptDate = formatDateToString(new Date()).gmt7;
+                //                                      formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+                //                                      var passingObject = new Object();
+                //                                      passingObject.statusName = `${uwDept} Process`; // base on Dept
+                //                                      passingObject.Comment = `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`;  // base on Dept
+                //                                      passingObject.formItems = formItems;
+                //                                      passingObject.dept = uwDept;
+                //                                      passingObject.url = '/api/Quotation/UpdateData';
+                //                                      passingObject.urlLog = `/api/Quotation/LogAction`;
+                //                                      passingObject.schemeName = `Quotation`;
+                //                                      acceptDecision(passingObject,`@dept`);
 
-                                         }
-                                            }).appendTo($primaryActions);
-                                                        if (!$(`#${acceptStatusElement}`).length) {
-                                                            $(`<div id="${acceptStatusElement}" class="accept-status-indicator"></div>`)
-                                                                .prependTo($primaryActions);
-                                                        }
-                                                var $uwRouteSlot = $(`<div id="uw-route-custom-host-@quotationId" class="uw-route-custom-host workflow-custom-route-host is-route-pending" data-route-custom-host="true" data-record-id="@quotationId" data-route-dept="UW" data-route-group-name="decisionUWGroup"></div>`)
-                                                    .appendTo($primaryActions);
-                                                             $(`<div id='${noNeedToRefer}' class="uw-route-fallback-button" data-uw-route-fallback="true">`)
-                                         .dxButton({
-                                         elementAttr: {
-                                                     id: noNeedToRefer
-                                         },
-                                         text: "No Need To Refer",
-                                                     icon: "fa-solid fa-person-running",
-                                         onClick: function (e) {
-                                             // var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-                                             // var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem") || {};
-                                             // tatObject[uwDept] = tatObject[uwDept] || {};
-                                             //     tatObject[uwDept].AcceptDate = formatDateToString(new Date()).gmt7;
-                                             // formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
+                //                          }
+                //                             }).appendTo($primaryActions);
+                //                                         if (!$(`#${acceptStatusElement}`).length) {
+                //                                             $(`<div id="${acceptStatusElement}" class="accept-status-indicator"></div>`)
+                //                                                 .prependTo($primaryActions);
+                //                                         }
+                //                                 var $uwRouteSlot = $(`<div id="uw-route-custom-host-@quotationId" class="uw-route-custom-host workflow-custom-route-host is-route-pending" data-route-custom-host="true" data-record-id="@quotationId" data-route-dept="UW" data-route-group-name="decisionUWGroup"></div>`)
+                //                                     .appendTo($primaryActions);
+                //                                              $(`<div id='${noNeedToRefer}' class="uw-route-fallback-button" data-uw-route-fallback="true">`)
+                //                          .dxButton({
+                //                          elementAttr: {
+                //                                      id: noNeedToRefer
+                //                          },
+                //                          text: "No Need To Refer",
+                //                                      icon: "fa-solid fa-person-running",
+                //                          onClick: function (e) {
+                //                              // var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                //                              // var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem") || {};
+                //                              // tatObject[uwDept] = tatObject[uwDept] || {};
+                //                              //     tatObject[uwDept].AcceptDate = formatDateToString(new Date()).gmt7;
+                //                              // formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
                                              
-                                             // var passingObject = new Object();
-                                             // passingObject.statusName = `${uwDept} No Need To Refer`; // base on Dept
-                                             // passingObject.Comment = `Quotation ${formItems.quotationCode} marked No Need To Refer by ${_displayName}!`;  // base on Dept
-                                             // passingObject.formItems = formItems;
-                                             // passingObject.dept = uwDept;
-                                             // passingObject.url = '/api/Quotation/UWReferal';
-                                             // passingObject.urlLog = `/api/Quotation/LogAction`;
-                                             // passingObject.schemeName = `Quotation`;
-                                             //  uwDecision(passingObject);
-                                         }
-                                             }).appendTo($uwRouteSlot);
-                         }
-                     }
+                //                              // var passingObject = new Object();
+                //                              // passingObject.statusName = `${uwDept} No Need To Refer`; // base on Dept
+                //                              // passingObject.Comment = `Quotation ${formItems.quotationCode} marked No Need To Refer by ${_displayName}!`;  // base on Dept
+                //                              // passingObject.formItems = formItems;
+                //                              // passingObject.dept = uwDept;
+                //                              // passingObject.url = '/api/Quotation/UWReferal';
+                //                              // passingObject.urlLog = `/api/Quotation/LogAction`;
+                //                              // passingObject.schemeName = `Quotation`;
+                //                              //  uwDecision(passingObject);
+                //                          }
+                //                              }).appendTo($uwRouteSlot);
+                //          }
+                //      }
+                    decisionFieldV2(thisObject, ...itemsDelay)
     ]},        
     
     ]        
@@ -242,7 +267,7 @@
           //           }
           //       }
           //   }
-            delayAcceptStatusV2(mainFields, thisObject, ...itemsDelay);
+    delayAcceptStatusV2(mainFields, thisObject, ...itemsDelay);
 
     setTimeout(() => {
         var picJson = PIC_JSON || "{}";

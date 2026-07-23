@@ -23,9 +23,19 @@
         var data = [];
         var quotationId = @quotationId;
         function prepareData(element) {
-            var uploaderId = "fileUpload_@(prefix)_default_@(dept)_@(quotationId)";
-            var uploader = $(`#${uploaderId}`).dxFileUploader("instance");
-            if (!uploader) {
+            debugger
+            // var uploaderId = "fileUpload_@(prefix)_default_@(dept)_@(quotationId)";
+             var uploaderId = "fileUpload_@(prefix)-body_@(dept)__default_@(quotationId)";
+              const uploaderId2 = $(`[id^='attList_@(prefix)-body_@(dept)__default_@(quotationId)_'] .att-item`);
+                    // const uploader2 = $(`[id^='attList_@(prefix)-body_@(dept)__supportingDoc_@(quotationId)_'] .att-item`);
+                const fileCount = uploaderId2.length || 0; // number of quote docs
+                // const fileCount2 = uploader2.length || 0; // number of sup docs
+                var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+
+
+
+            var uploader = $(`[id^='${uploaderId}']`).dxFileUploader("instance");
+            if (!fileCount) {
                 appNotifyWarning("Quotation attachments are still loading. Please try again.", false);
                 return false;
             }
@@ -315,6 +325,8 @@
 
     function openMakeOptionPopup_@(quotationId)() {
         if (!prepareData()) return;
+
+
         var popupInstance = makePopupWithScroll(
             renderOptionQuotationGrid(),
             "medium",

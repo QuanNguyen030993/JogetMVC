@@ -29,7 +29,7 @@
         var acceptStatusId = `Status_@QTViewIdHelper.Decision(dept, quotationId)`;
         var declinedButtonId = `DC_@QTViewIdHelper.Decision(dept, quotationId)`;
         var declinedStatusId = `DC_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
-        var itemsDelay = [acceptButtonId, acceptStatusId, declinedButtonId, declinedStatusId];
+        
 
     var that = new Object();
     var sectionId = "@(ViewData["Cd"])";
@@ -55,6 +55,25 @@
     // that2.uploaderAllow = _role == "@dept";
     that2.uploaderAllow = _role == "@dept";
     that2.data = { SectionName: `${sectionId}_${that2.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" }; //{"SectionName":"default_FO_410"}
+
+     var acceptDecisionV2 = {
+        buttonId: acceptButtonId,
+        statusId: acceptStatusId,
+        text: "Accept",
+        icon: "check",
+        type: "success",
+        buttonClass: "dx-button-success",
+        disabled: true,
+        useDefaultDecisionClick: true,
+        acceptStatusField: "actionStatus",
+        useTatAcceptStatus: true,
+        tatStatusText: "Accepted",
+        skipAcceptedMainFields: false,
+        statusButtonDisabled: true
+    };
+    // var itemsDelay = [null, null, declinedButtonId, declinedStatusId];
+    var itemsDelay = [acceptDecisionV2];
+
 
     function getClientDecisionStatus(actionStatus) {
         if (!actionStatus) return "";
@@ -201,7 +220,7 @@
                                 caption: "Client Confirm",
                                 colCount: 2,
                                 items: [
-                        decisionField(`@QTViewIdHelper.Form(dept, quotationId)`, "@dept",null,null,null,null  )
+                        decisionFieldV2(thisObject,  ...itemsDelay)
                     ]}
                ]
     

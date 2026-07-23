@@ -5,10 +5,12 @@
     string quotationGuid = ViewData["Guid"].ToString();
 
 }
+
+
 <!-- COMPOSER -->
 <div class="composer">
 
-    <div class="dept-title">Comments</div>
+    <div class="dept-title">@dept Comments</div> 
 
     <div id="@QTViewIdHelper.CommentPanelControl(dept, quotationId)"></div>
     <div class="composer-actions">
@@ -16,7 +18,7 @@
     <div class="filter-bar">
         <div class="filter-left">
             <div id="@QTViewIdHelper.FilterTypeSelect(dept,quotationId)"></div>
-
+            
             <div id="@QTViewIdHelper.BtnFilterAll(dept, quotationId)"></div>
             <div id="@QTViewIdHelper.BtnFilterRequest(dept, quotationId)"></div>
             <div id="@QTViewIdHelper.BtnFilterBlocker(dept, quotationId)"></div>

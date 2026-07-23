@@ -57,14 +57,34 @@
 
         var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
         var acceptStatusId = `Status_@QTViewIdHelper.Decision(dept, quotationId)`;
-        var declinedButtonId = `DC_@QTViewIdHelper.Decision(dept, quotationId)`;
-        var declinedStatusId = `DC_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
-        var itemsDelay = [acceptButtonId, acceptStatusId, declinedButtonId, declinedStatusId];
+        // var declinedButtonId = `DC_@QTViewIdHelper.Decision(dept, quotationId)`;
+        // var declinedStatusId = `DC_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
+        // var itemsDelay = [acceptButtonId, acceptStatusId, declinedButtonId, declinedStatusId];
+
+
+            var acceptDecisionV2 = {
+        buttonId: acceptButtonId,
+        statusId: acceptStatusId,
+        text: "Accept",
+        icon: "check",
+        type: "success",
+        buttonClass: "dx-button-success",
+        disabled: true,
+        useDefaultDecisionClick: true,
+        acceptStatusField: "actionStatus",
+        useTatAcceptStatus: true,
+        tatStatusText: "Accepted",
+        skipAcceptedMainFields: false,
+        statusButtonDisabled: true
+    };
+
+    var itemsDelay = [acceptDecisionV2];
         var items = [
             { id: "AC_@QTViewIdHelper.Decision(dept, quotationId)", text: "Approved", value: true },
             // { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Assign", value: false },
             { id: "DC_@QTViewIdHelper.Decision(dept, quotationId)", text: "Declined", value: false }
         ];
+        // var itemsDelay = [...items];
         $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
         dataSource: makeBasicDataSource(that, true),
                items: [
@@ -101,18 +121,7 @@
            ]
     });
     viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
-    // delayAcceptStatusV2(mainFields, `@QTViewIdHelper.Form(dept, quotationId)`, deptCode, {
-    //     buttonId: submitBranchId,
-    //     acceptStatusField: "actionStatus",
-    //     useTatAcceptStatus: true,
-    //     statusButtonDisabled: true,
-    //     skipAcceptedMainFields: true,
-    //     loadRouteButtons: function () {
-    //         if (typeof window.loadSelectedQuotationWorkflow === "function") {
-    //             window.loadSelectedQuotationWorkflow();
-    //         }
-    //     }
-    // });
+
 
         delayAcceptStatusV2(null, thisObject, ...itemsDelay);
 

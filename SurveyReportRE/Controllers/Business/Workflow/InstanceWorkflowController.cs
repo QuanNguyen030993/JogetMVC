@@ -1189,9 +1189,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         templateData["ToNodeId"] = submitRequest.StepsWorkflow?.ToNodeId ?? "";
         templateData["ActionCode"] = submitRequest.StepsWorkflow?.ActionCode ?? "";
         templateData["ActionStatus"] = submitRequest.ActionStatus ?? "";
-        string comment = string.IsNullOrWhiteSpace(submitRequest.Comment)
-            ? "<no comments>"
-            : submitRequest.Comment.Trim();
+        
         string actionName = await ResolveWorkflowActionNameAsync(submitRequest);
         var userInfo = await ControllerHelper.FetchUserRoles(
             _httpContextAccessor,
@@ -1202,7 +1200,9 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         {
             performedBy = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration) ?? "anonymous";
         }
-
+        string comment = string.IsNullOrWhiteSpace(submitRequest.Comment)
+            ? $"No comment from {performedBy}"
+            : submitRequest.Comment.Trim();
         templateData["ActionName"] = actionName;
         templateData["PerformedBy"] = performedBy;
         templateData["Comment"] = comment;
