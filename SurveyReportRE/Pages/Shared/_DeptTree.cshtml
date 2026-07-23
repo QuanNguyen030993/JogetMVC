@@ -7,25 +7,99 @@
     var deptCodes = moduleCode == "qt"
         ? new[] { "FO", "TS", "UW", "LMKT", "PM" }
         : new[] { "FO", "TS", "PM" };
+    var deptTreeId = moduleCode == "qt"
+        ? QTViewIdHelper.DeptTree(quotationId)
+        : PIViewIdHelper.DeptTree(quotationId);
+    var treeStackId = moduleCode == "qt"
+        ? QTViewIdHelper.TreeStack(quotationId)
+        : PIViewIdHelper.TreeStack(quotationId);
+    var overviewScrollId = ViewIdHelper.OverViewScroll(Model.Prefix, Model.Id);
+    var sectionParts = new[]
+    {
+        new { Key = "upperbody", Label = "Decision" },
+        new { Key = "body", Label = "Detail" },
+        new { Key = "lowerbody", Label = "Comment" },
+        new { Key = "footer", Label = "Route" }
+    };
 }
 
-<div id="@(moduleCode == "qt" ? QTViewIdHelper.DeptTree(quotationId) :  PIViewIdHelper.DeptTree(quotationId))" class="dept-tree">
-    <div class="treeStack" id="@(moduleCode == "qt" ? QTViewIdHelper.TreeStack(quotationId) :  PIViewIdHelper.TreeStack(quotationId))">
+<div id="@deptTreeId" class="dept-tree">
+    <div class="treeStack" id="@treeStackId">
         <div class="vline" id="@(moduleCode == "qt" ? QTViewIdHelper.TreeVLine(quotationId) :  PIViewIdHelper.TreeVLine(quotationId))"></div>
+        <div class="dept-scroll-beacon" aria-hidden="true"></div>
 
-        @foreach (var deptCode in deptCodes)
+        @for (var deptIndex = 0; deptIndex < deptCodes.Length; deptIndex++)
         {
+            var deptCode = deptCodes[deptIndex];
+            var hasAxisDetails = deptIndex < deptCodes.Length - 1;
             <div class="@($"{Model.Prefix}")-dept-tree dept-node"
                  data-key="@deptCode"
-                 data-target="#@($"{Model.Prefix}-sec-{deptCode}")">
+                 data-target="#@($"{Model.Prefix}-sec_{deptCode}_{Model.Id}")">
 
                 <div class="dept-callout" data-pic-for="@deptCode">
                     <span class="co-icon"></span>
                     <span class="co-text">-</span>
                 </div>
 
-                <div class="dept-circle">@deptCode</div>
+                @if (hasAxisDetails)
+                {
+                    <div class="dept-subnodes" aria-label="@deptCode section parts">
+                        <button type="button"
+                                class="dept-axis-trigger"
+                                aria-expanded="false"
+                                aria-label="@($"Open {deptCode} section shortcuts")"></button>
+                        @for (var partIndex = 0; partIndex < sectionParts.Length; partIndex++)
+                        {
+                            var part = sectionParts[partIndex];
+                            <button type="button"
+                                    class="dept-subnode"
+                                    style="--sub-index:@partIndex"
+                                    data-section-part="@part.Key"
+                                    data-feature-slot="@($"{deptCode}:{part.Key}")"
+                                    data-tooltip="@part.Label"
+                                    aria-label="@($"Scroll to {deptCode} {part.Label}")"></button>
+                        }
+                    </div>
+                }
+
+                <div class="dept-circle"
+                     role="button"
+                     tabindex="0"
+                     aria-label="Open @deptCode section">@deptCode</div>
             </div>
         }
     </div>
 </div>
+
+<script>
+    (function initializeDeptTreeEnhancements() {
+        var attempts = 0;
+        var treeStackId = "@treeStackId";
+        var overviewScrollId = "@overviewScrollId";
+
+        function bindWhenReady() {
+            var treeStack = document.getElementById(treeStackId);
+            var overviewScroll = document.getElementById(overviewScrollId);
+
+            if (treeStack && overviewScroll && typeof bindDeptTreeScrollSpy === "function") {
+                if (treeStack.deptTreeScrollSpy?.destroy) {
+                    treeStack.deptTreeScrollSpy.destroy();
+                }
+                treeStack.deptTreeScrollSpy = bindDeptTreeScrollSpy(
+                    "@moduleCode",
+                    @Model.Id,
+                    {
+                        treeStack: treeStack,
+                        container: overviewScroll
+                    }
+                );
+                if (treeStack.deptTreeScrollSpy) return;
+            }
+
+            attempts += 1;
+            if (attempts < 40) window.setTimeout(bindWhenReady, 50);
+        }
+
+        window.setTimeout(bindWhenReady, 0);
+    })();
+</script>

@@ -727,7 +727,8 @@ Note:
 
 
         function setupDeptTree() {
-           $(`.${formModuleKeyPi}-dept-tree.dept-node`).off("click.tree").on("click.tree", function () {
+           $(`.${formModuleKeyPi}-dept-tree.dept-node`).off("click.tree").on("click.tree", function (event) {
+                if ($(event.target).closest(".dept-subnode").length) return;
                 const key = $(this).data("key");
                 state.focusDept = key;
 
@@ -740,6 +741,7 @@ Note:
                 // optional: auto expand focused dept
                 setSectionCollapsed(state.focusDept, false);
             });
+            bindDeptTreeScrollSpy(formModuleKeyPi, null);
         }
 
       

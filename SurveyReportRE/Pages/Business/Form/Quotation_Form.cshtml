@@ -1122,7 +1122,8 @@ Note:
         }
 
         function setupDeptTree() {
-            $(`.${formModuleKeyQt}-dept-tree.dept-node`).off("click.tree").on("click.tree", function () {
+            $(`.${formModuleKeyQt}-dept-tree.dept-node`).off("click.tree").on("click.tree", function (event) {
+                if ($(event.target).closest(".dept-subnode").length) return;
                 const key = $(this).data("key");
                 focusDept = key;
 
@@ -1133,6 +1134,7 @@ Note:
                 scrollToDept(formModuleKeyQt, { id: `${focusDept}`, keyId: "@ViewData["Id"]" });
                 setSectionCollapsed(focusDept, false);
             });
+            bindDeptTreeScrollSpy(formModuleKeyQt, "@ViewData["Id"]");
         }
 
         function layoutTreeLine() {

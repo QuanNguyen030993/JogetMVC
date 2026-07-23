@@ -103,13 +103,13 @@
         flex: 0 0 auto;
         align-items: center;
         gap: 9px;
-        padding: 10px 14px;
-        border: 1px solid var(--c-rgba-255-255-255-22);
+        padding: 6px 12px;
+        border: 1px solid var(--c-d9deea, #d9deea);
         border-radius: 999px;
-        background: var(--c-rgba-255-255-255-12);
+        background: var(--c-f3f6fb, #f3f6fb);
         font-size: 13px;
         font-weight: 600;
-        backdrop-filter: blur(8px);
+        color: var(--dashboard-ink, #1f2937);
     }
 
     .workload-dashboard-badge-dot {
@@ -184,22 +184,15 @@
 <div id="DashBoard" class="dExForm">
 <main class="workload-dashboard-page">
     <div class="workload-dashboard-shell">
-        <header class="workload-dashboard-hero">
-            <div>
-                <div class="workload-dashboard-eyebrow">Operations overview</div>
-                <h1 class="workload-dashboard-title">Workload Dashboard</h1>
-                <p class="workload-dashboard-subtitle">
-                    Theo dõi khối lượng Quotation và Policy Issuance theo phòng ban, nhân sự và trạng thái xử lý.
-                </p>
-            </div>
-            <div id="workloadDataSourceBadge" class="workload-dashboard-badge is-mock">
-                <span class="workload-dashboard-badge-dot"></span>
-                <span id="workloadDataSourceLabel" class="workload-dashboard-source-label">Mock data</span>
-                <div id="workloadDataSourceSwitch" aria-label="Switch dashboard data source"></div>
-            </div>
-        </header>
-
         <section class="workload-dashboard-card" aria-label="Biểu đồ workload">
+            <div class="workload-card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+                <h1 style="margin: 0; font-size: 24px; font-weight: 750; letter-spacing: -.02em;">Workload Dashboard</h1>
+                <div id="workloadDataSourceBadge" class="workload-dashboard-badge is-mock">
+                    <span class="workload-dashboard-badge-dot"></span>
+                    <span id="workloadDataSourceLabel" class="workload-dashboard-source-label">Mock data</span>
+                    <div id="workloadDataSourceSwitch" aria-label="Switch dashboard data source"></div>
+                </div>
+            </div>
             <div id="workloadDashboard"></div>
         </section>
     </div>

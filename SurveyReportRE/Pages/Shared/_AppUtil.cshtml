@@ -2460,20 +2460,459 @@
             }
 
         function scrollToDept(module, dept) {
+            return scrollToDeptPart(module, dept, "header");
+        }
+
+        function scrollToDeptPart(module, dept, part) {
+            var deptCode = typeof dept === "object" ? dept.id : dept;
+            var recordId = typeof dept === "object" ? dept.keyId : null;
+            var container = null;
+            var section = null;
+
             if (module == "qt") {
-                var container = document.getElementById(`${window.QuotationIdManager.overviewScroll(dept.keyId)}`);
-                var el = document.getElementById(`${window.QuotationIdManager.sec(dept.id,dept.keyId)}`);
-                if (!container || !el) return;
-                container.scrollTo({ top: el.offsetTop - 8, behavior: "smooth" });
+                container = document.getElementById(window.QuotationIdManager.overviewScroll(recordId));
+                section = document.getElementById(window.QuotationIdManager.sec(deptCode, recordId));
             }
 
             if (module == "pi"){
-                var container = document.getElementById(`${window.PolicyIssuanceIdManager.overviewScroll(dept.keyId)}`);
-                var el = document.getElementById(`${window.PolicyIssuanceIdManager.sec(dept.id,dept.keyId)}`);
-                if (!container || !el) return;
-                container.scrollTo({ top: el.offsetTop - 8, behavior: "smooth" });
+                container = document.getElementById(window.PolicyIssuanceIdManager.overviewScroll(recordId));
+                section = document.getElementById(window.PolicyIssuanceIdManager.sec(deptCode, recordId));
             }
 
+            // Backward-compatible lookup for Individual forms that do not pass
+            // the record id into their older scrollToDept call.
+            if (!container && recordId == null) {
+                container = document.querySelector(`[id^="${module}-overviewScroll_"]`);
+            }
+            if (!section && recordId == null) {
+                section = document.querySelector(`[id^="${module}-sec_${deptCode}_"]`)
+                    || document.getElementById(`${module}-sec${deptCode}`);
+            }
+            if (!section) {
+                var treeNode = document.querySelector(`.${module}-dept-tree[data-key="${deptCode}"]`);
+                var targetSelector = treeNode?.getAttribute("data-target");
+                section = targetSelector ? document.querySelector(targetSelector) : null;
+                container = container
+                    || treeNode?.closest(".overview-wrap")?.querySelector(".overview-scroll");
+            }
+
+            if (!container || !section) return;
+
+            var partSelectors = {
+                header: ".dept-header",
+                upperbody: ".dept-upperbody",
+                body: ".dept-body",
+                lowerbody: ".dept-lowerbody",
+                footer: ".dept-footer"
+            };
+            var target = section.querySelector(partSelectors[part] || partSelectors.header)
+                || section.querySelector(".dept-header")
+                || section;
+            var containerRect = container.getBoundingClientRect();
+            var targetRect = target.getBoundingClientRect();
+            var stickyHeaderOffset = part === "header"
+                ? 8
+                : (section.querySelector(".dept-header")?.offsetHeight || 0) + 8;
+            var targetTop = container.scrollTop
+                + targetRect.top
+                - containerRect.top
+                - stickyHeaderOffset;
+
+            container.scrollTo({
+                top: Math.max(0, targetTop),
+                behavior: "smooth"
+            });
+        }
+
+        function resolveDeptTreeStack(treeStackOrSelector) {
+            if (!treeStackOrSelector) return null;
+            if (treeStackOrSelector.jquery) return treeStackOrSelector[0] || null;
+            if (treeStackOrSelector.nodeType === 1) return treeStackOrSelector;
+            if (typeof treeStackOrSelector === "string") {
+                return document.querySelector(treeStackOrSelector);
+            }
+            return null;
+        }
+
+        function setDeptTreePartOrder(treeStackOrSelector, requestedOrder) {
+            var treeStack = resolveDeptTreeStack(treeStackOrSelector);
+            if (!treeStack) return [];
+
+            var validParts = ["upperbody", "body", "lowerbody", "footer"];
+            var normalized = (Array.isArray(requestedOrder) ? requestedOrder : validParts)
+                .map(function (part) { return String(part || "").trim().toLowerCase(); })
+                .filter(function (part, index, values) {
+                    return validParts.includes(part) && values.indexOf(part) === index;
+                });
+
+            validParts.forEach(function (part) {
+                if (!normalized.includes(part)) normalized.push(part);
+            });
+
+            $(treeStack).find(".dept-subnodes").each(function () {
+                var subnodes = this;
+                normalized.forEach(function (part, index) {
+                    var button = subnodes.querySelector(
+                        `.dept-subnode[data-section-part="${part}"]`
+                    );
+                    if (!button) return;
+                    button.style.setProperty("--sub-index", index);
+                    subnodes.appendChild(button);
+                });
+            });
+
+            treeStack.setAttribute("data-part-order", normalized.join(","));
+            treeStack.deptTreeScrollSpy?.refresh?.();
+            return normalized;
+        }
+
+        function reverseDeptTreePartOrder(treeStackOrSelector) {
+            var treeStack = resolveDeptTreeStack(treeStackOrSelector);
+            if (!treeStack) return [];
+
+            var firstGroup = treeStack.querySelector(".dept-subnodes");
+            var currentOrder = firstGroup
+                ? Array.from(firstGroup.querySelectorAll(".dept-subnode")).map(function (button) {
+                    return button.getAttribute("data-section-part");
+                })
+                : [];
+
+            return setDeptTreePartOrder(treeStack, currentOrder.reverse());
+        }
+
+        window.setDeptTreePartOrder = setDeptTreePartOrder;
+        window.reverseDeptTreePartOrder = reverseDeptTreePartOrder;
+
+        function bindDeptTreeScrollSpy(module, recordId, options) {
+            var settings = $.extend({
+                headerOffset: 18,
+                onActiveChanged: null,
+                container: null,
+                treeStack: null
+            }, options);
+            var manager = module === "pi"
+                ? window.PolicyIssuanceIdManager
+                : window.QuotationIdManager;
+
+            var container = settings.container
+                || (manager && document.getElementById(manager.overviewScroll(recordId)));
+            var treeStack = settings.treeStack
+                || (manager && document.getElementById(manager.treeStack(recordId)));
+            if (recordId == null && manager) {
+                container = container || document.querySelector(`[id^="${module}-overviewScroll_"]`);
+                treeStack = treeStack || document.querySelector(`[id^="${module}-treeStack_"]`);
+            }
+            if (!container || !treeStack) return null;
+
+            var $container = $(container);
+            var $treeStack = $(treeStack);
+            var $nodes = $(treeStack).find(".dept-node[data-key]");
+            var $line = $treeStack.children(".vline").first();
+            var $beacon = $(treeStack).children(".dept-scroll-beacon").first();
+            var animationFrame = 0;
+            var activeDept = "";
+            var resizeObserver = null;
+            var mutationObserver = null;
+            var partSelectors = {
+                upperbody: ".dept-upperbody",
+                body: ".dept-body",
+                lowerbody: ".dept-lowerbody",
+                footer: ".dept-footer"
+            };
+
+            function getEntries() {
+                return $nodes.map(function () {
+                    var $node = $(this);
+                    var dept = String($node.attr("data-key") || "").trim();
+                    var targetSelector = $node.attr("data-target");
+                    var section = targetSelector
+                        ? document.querySelector(targetSelector)
+                        : (manager && document.getElementById(manager.sec(dept, recordId)));
+                    var header = section?.querySelector(".dept-header") || section;
+
+                    if (!section || !header || section.offsetParent === null) return null;
+                    return { dept: dept, node: this, section: section, header: header };
+                }).get().filter(Boolean);
+            }
+
+            function updateAxisGeometry() {
+                if (!$nodes.length) return null;
+                var firstCircle = $nodes.first().find(".dept-circle")[0];
+                var lastCircle = $nodes.last().find(".dept-circle")[0];
+                if (!firstCircle || !lastCircle) return null;
+
+                var stackRect = treeStack.getBoundingClientRect();
+                var firstRect = firstCircle.getBoundingClientRect();
+                var lastRect = lastCircle.getBoundingClientRect();
+                var startY = firstRect.top - stackRect.top + firstRect.height / 2;
+                var endY = lastRect.top - stackRect.top + lastRect.height / 2;
+
+                if ($line.length) {
+                    $line.css({
+                        top: `${startY}px`,
+                        height: `${Math.max(0, endY - startY)}px`
+                    });
+                }
+
+                return { startY: startY, endY: endY };
+            }
+
+            function measureSections(entries, containerRect) {
+                return entries.map(function (entry, index) {
+                    var sectionRect = entry.section.getBoundingClientRect();
+                    var start = container.scrollTop + sectionRect.top - containerRect.top;
+                    var nextEntry = entries[index + 1];
+                    var end = nextEntry
+                        ? container.scrollTop
+                            + nextEntry.section.getBoundingClientRect().top
+                            - containerRect.top
+                        : Math.max(start + sectionRect.height, container.scrollHeight);
+
+                    return {
+                        entry: entry,
+                        start: start,
+                        end: Math.max(start + 1, end),
+                        height: Math.max(1, end - start)
+                    };
+                });
+            }
+
+            function getNodeCenterY(node) {
+                var circle = node?.querySelector(".dept-circle");
+                if (!circle) return null;
+                var stackRect = treeStack.getBoundingClientRect();
+                var circleRect = circle.getBoundingClientRect();
+                return circleRect.top - stackRect.top + circleRect.height / 2;
+            }
+
+            function updateBeacon(sectionMeasurements, activeIndex, markerScrollTop) {
+                if (!$beacon.length || !sectionMeasurements.length) return;
+
+                var current = sectionMeasurements[activeIndex];
+                var currentY = getNodeCenterY(current.entry.node);
+                if (currentY == null) return;
+
+                var next = sectionMeasurements[activeIndex + 1];
+                var nextY = next ? getNodeCenterY(next.entry.node) : currentY;
+                if (nextY == null) nextY = currentY;
+
+                var progress = next
+                    ? Math.max(
+                        0,
+                        Math.min(1, (markerScrollTop - current.start) / current.height)
+                    )
+                    : 0;
+
+                $beacon.css("top", `${currentY + (nextY - currentY) * progress}px`);
+            }
+
+            function updateActivePart(activeEntry, markerY) {
+                var activePart = "header";
+                var partMarkerY = markerY + (activeEntry.header.offsetHeight || 0);
+
+                Object.keys(partSelectors).forEach(function (part) {
+                    var element = activeEntry.section.querySelector(partSelectors[part]);
+                    if (!element || element.offsetParent === null) return;
+                    if (element.getBoundingClientRect().top <= partMarkerY) activePart = part;
+                });
+
+                $nodes
+                    .removeAttr("data-active-part")
+                    .find(".dept-subnode")
+                    .removeClass("part-active")
+                    .removeAttr("aria-current");
+
+                var $activeNode = $(activeEntry.node).attr("data-active-part", activePart);
+                if (activePart !== "header") {
+                    $activeNode
+                        .find(`.dept-subnode[data-section-part="${activePart}"]`)
+                        .addClass("part-active")
+                        .attr("aria-current", "location");
+                }
+            }
+
+            function updateActiveNode() {
+                animationFrame = 0;
+                var entries = getEntries();
+                if (!entries.length) return;
+
+                updateAxisGeometry();
+                var containerRect = container.getBoundingClientRect();
+                var markerY = containerRect.top + settings.headerOffset;
+                var markerScrollTop = container.scrollTop + settings.headerOffset;
+                var sectionMeasurements = measureSections(entries, containerRect);
+                var activeIndex = 0;
+
+                sectionMeasurements.forEach(function (measurement, index) {
+                    if (measurement.start <= markerScrollTop) activeIndex = index;
+                });
+
+                var atBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 2;
+                if (atBottom) activeIndex = entries.length - 1;
+                var activeEntry = entries[activeIndex];
+                updateBeacon(sectionMeasurements, activeIndex, markerScrollTop);
+                updateActivePart(activeEntry, markerY);
+                entries.forEach(function (entry) {
+                    var sectionRect = entry.section.getBoundingClientRect();
+                    var headerRect = entry.header.getBoundingClientRect();
+                    var isFloated = entry === activeEntry
+                        && headerRect.top <= markerY + 1
+                        && sectionRect.bottom > containerRect.top + headerRect.height;
+                    $(entry.header).toggleClass("dept-header-floated", isFloated);
+                });
+                $nodes.removeClass("focus");
+                $(activeEntry.node).addClass("focus");
+
+                if (activeEntry.dept !== activeDept) {
+                    activeDept = activeEntry.dept;
+                    $nodes
+                        .removeClass("scroll-active")
+                        .removeAttr("aria-current");
+                    $(activeEntry.node)
+                        .addClass("scroll-active")
+                        .attr("aria-current", "step");
+
+                    if (typeof settings.onActiveChanged === "function") {
+                        settings.onActiveChanged(activeDept, activeEntry.section);
+                    }
+                }
+            }
+
+            function requestUpdate() {
+                if (animationFrame) return;
+                animationFrame = window.requestAnimationFrame(updateActiveNode);
+            }
+
+            function observeRenderedLayout() {
+                if (!resizeObserver) return;
+
+                resizeObserver.observe(treeStack);
+                resizeObserver.observe(container);
+                getEntries().forEach(function (entry) {
+                    resizeObserver.observe(entry.section);
+                    resizeObserver.observe(entry.header);
+                    Object.keys(partSelectors).forEach(function (part) {
+                        var element = entry.section.querySelector(partSelectors[part]);
+                        if (element) resizeObserver.observe(element);
+                    });
+                });
+            }
+
+            function setOpenDeptFan(node, shouldOpen) {
+                $nodes
+                    .not(node)
+                    .removeClass("fan-open")
+                    .find(".dept-axis-trigger")
+                    .attr("aria-expanded", "false");
+                $(node).toggleClass("fan-open", Boolean(shouldOpen));
+                $(node)
+                    .find(".dept-axis-trigger")
+                    .attr("aria-expanded", String(Boolean(shouldOpen)));
+            }
+
+            function closeDeptFansFromOutside(event) {
+                if ($(event.target).closest(treeStack).length
+                    && $(event.target).closest(".dept-subnodes").length) return;
+                $nodes
+                    .removeClass("fan-open")
+                    .find(".dept-axis-trigger")
+                    .attr("aria-expanded", "false");
+            }
+
+            $container
+                .off("scroll.deptTreeSpy")
+                .on("scroll.deptTreeSpy", requestUpdate);
+            $nodes
+                .off(".deptTreeParts")
+                .on("click.deptTreeParts", ".dept-axis-trigger", function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    var node = $(this).closest(".dept-node")[0];
+                    setOpenDeptFan(node, !node.classList.contains("fan-open"));
+                })
+                .on("click.deptTreeParts", ".dept-circle", function () {
+                    this.focus();
+                })
+                .on("click.deptTreeParts", ".dept-subnode", function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    var $node = $(this).closest(".dept-node");
+                    var section = document.querySelector($node.attr("data-target"));
+                    var part = $(this).attr("data-section-part");
+                    var target = section?.querySelector(partSelectors[part]);
+                    if (!target) return;
+
+                    var containerRect = container.getBoundingClientRect();
+                    var targetRect = target.getBoundingClientRect();
+                    var stickyHeaderOffset =
+                        (section.querySelector(".dept-header")?.offsetHeight || 0) + 8;
+                    container.scrollTo({
+                        top: Math.max(
+                            0,
+                            container.scrollTop
+                                + targetRect.top
+                                - containerRect.top
+                                - stickyHeaderOffset
+                        ),
+                        behavior: "smooth"
+                    });
+                });
+            document.addEventListener("click", closeDeptFansFromOutside);
+            $nodes
+                .find(".dept-circle")
+                .off("keydown.deptTreeSpy")
+                .on("keydown.deptTreeSpy", function (event) {
+                    if (event.key !== "Enter" && event.key !== " ") return;
+                    event.preventDefault();
+                    $(this).trigger("click");
+                });
+
+            if (typeof ResizeObserver === "function") {
+                resizeObserver = new ResizeObserver(requestUpdate);
+                observeRenderedLayout();
+            }
+            if (typeof MutationObserver === "function") {
+                mutationObserver = new MutationObserver(function () {
+                    observeRenderedLayout();
+                    requestUpdate();
+                });
+                mutationObserver.observe(container, {
+                    childList: true,
+                    subtree: true
+                });
+            }
+
+            requestUpdate();
+            setDeptTreePartOrder(treeStack, [
+                "upperbody",
+                "body",
+                "lowerbody",
+                "footer"
+            ]);
+            $treeStack.attr("data-dept-tree-ready", "true");
+
+            return {
+                refresh: requestUpdate,
+                destroy: function () {
+                    $container.off("scroll.deptTreeSpy");
+                    $nodes.off(".deptTreeParts");
+                    $nodes.find(".dept-circle").off("keydown.deptTreeSpy");
+                    if (resizeObserver) resizeObserver.disconnect();
+                    if (mutationObserver) mutationObserver.disconnect();
+                    document.removeEventListener("click", closeDeptFansFromOutside);
+                    if (animationFrame) window.cancelAnimationFrame(animationFrame);
+                    $nodes
+                        .removeClass("scroll-active fan-open")
+                        .removeAttr("aria-current data-active-part");
+                    $nodes
+                        .find(".dept-axis-trigger")
+                        .attr("aria-expanded", "false");
+                    getEntries().forEach(function (entry) {
+                        $(entry.header).removeClass("dept-header-floated");
+                    });
+                    $treeStack.removeAttr("data-dept-tree-ready");
+                }
+            };
         }
 
             async function persistDepartmentAssignment(schemeName, recordId, dept, store, values, formId) {
