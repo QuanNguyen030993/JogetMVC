@@ -2,6 +2,7 @@ import DateBox from "../components/Datebox.jsx";
 import HtmlEditor from "../components/HtmlEditor.jsx"; 
 import CustomGrid from "../components/CustomGrid.jsx"; 
 import CommentEditor from "../components/CommentEditor.jsx";
+import CommentEditorRoute from "../components/CommentEditorRoute.jsx";
 import TextBox from "../components/TextBox.jsx";
 import NumberBox from "../components/NumberBox.jsx";
 import CheckBox from "../components/CheckBox.jsx";
@@ -668,6 +669,41 @@ $.fn.fileuploader = function(arg1, arg2, arg3) {
     return this;
 };
 
+$.fn.tmivcommenteditorroute = function(arg1, arg2, arg3) {
+    if (typeof arg1 === "string") {
+        if (arg1 === "option") {
+            if (arguments.length === 2 && this.length === 1) {
+                const instance = roots.get(this[0]);
+                return instance?.ref?.current?.option?.(arg2) ?? instance?.options?.[arg2];
+            }
+
+            this.each(function() {
+                const instance = roots.get(this);
+                if (!instance) return;
+
+                if (instance.ref?.current) {
+                    instance.ref.current.option?.(arg2, arg3);
+                } else {
+                    instance.options[arg2] = arg3;
+                    const Component = controls[instance.name];
+                    instance.root.render(
+                        <Component ref={instance.ref} {...instance.options}/>
+                    );
+                }
+            });
+            return this;
+        }
+    }
+
+    if (typeof arg1 === "object" || typeof arg1 === "undefined") {
+        return this.each(function() {
+            mount(this, "CommentEditorRoute", arg1 || {});
+        });
+    }
+
+    return this;
+};
+
 register(
     "DateBox",
     DateBox
@@ -737,6 +773,11 @@ register(
     Notification
 );
 
+register(
+    "CommentEditorRoute",
+    CommentEditorRoute
+);
+
 window.TMIVCom.notify = notify;
 if (typeof $ !== "undefined") {
     $.tmivnotify = notify;
@@ -758,4 +799,4 @@ if (typeof window !== "undefined") {
     //}, 5000);
 }
 
-export default { DateBox, HtmlEditor, CustomGrid, CommentEditor, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm, PreviewOffice, FileUploader, Notification, notify };
+export default { DateBox, HtmlEditor, CustomGrid, CommentEditor, CommentEditorRoute, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm, PreviewOffice, FileUploader, Notification, notify };

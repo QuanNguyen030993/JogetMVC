@@ -1422,39 +1422,19 @@ aside {
     justify-content: space-between;
     margin-bottom: 10px;
 }
-     .dept-body {
-        overflow: hidden;
-       max-height: 5000px;
-        transition: max-height .18s ease, opacity .18s ease;
-        opacity: 1;
-        min-height: 200px;
-        padding: 10px;
-    }
-
-
-.dept-section.collapsed .dept-body,
-.dept-section.collapsed .dept-upperbody,
-.dept-section.collapsed .dept-lowerbody,
-.dept-section.collapsed .dept-footer,
-.dept-section.collapsed .composer,
-.dept-section.collapsed .filter-bar,
-.dept-section.collapsed .filter-bar .filter-left,
-.dept-section.collapsed .comment-card .composer-actions,
-.dept-section.collapsed .filter-bar .filter-note,
-.dept-section.collapsed .comment-card,
-.dept-section.collapsed .comment-card .comment-body,
-.dept-section.collapsed .comment-card .comment-actions,
-.dept-section.collapsed .filter-bar .comment-wrap {
-    max-height: 0px;
-    min-height: 0 !important;
-    opacity: 0;
-    overflow: hidden;
-    padding-top: 0;
-    padding-bottom: 0;
-    
+.dept-body {
+    min-height: 200px;
+    padding: 10px;
 }
 
+.dept-section-content {
+    opacity: 1;
+    will-change: max-height, opacity;
+}
 
+.dept-section.collapsed > .dept-section-content {
+    pointer-events: none;
+}
 
 .dept-upper {
     display: flex;
@@ -5809,8 +5789,74 @@ textarea {
     transform: translateY(-50%) rotate(-90deg);
 }
 
-.dx-form-groups-toggle-enabled .dx-form-group-toggle.is-collapsed > .dx-form-group-content {
-    display: none !important;
+.dx-form-groups-toggle-enabled .dx-form-group-toggle > .dx-form-group-content,
+.comment-groups-toggle-enabled .comment-group-toggle > .comment-group-content {
+    opacity: 1;
+    will-change: max-height, opacity;
+}
+
+.dx-form-groups-toggle-enabled .dx-form-group-toggle.is-collapsed > .dx-form-group-content,
+.comment-groups-toggle-enabled .comment-group-toggle.is-collapsed > .comment-group-content {
+    pointer-events: none;
+}
+
+/* Comments use the same caption/toggle language as a DevExtreme Form group. */
+.comment-groups-toggle-enabled .comment-group-toggle {
+    box-sizing: border-box;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .05), 0 1px 2px -1px rgba(0, 0, 0, .05);
+}
+
+.comment-groups-toggle-enabled .comment-group-toggle > .dept-title {
+    position: relative;
+    padding: 0 34px 8px 0;
+    margin-bottom: 14px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #2563eb;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    user-select: none;
+    transition: color .18s ease, border-color .18s ease, margin-bottom .18s ease;
+}
+
+.comment-groups-toggle-enabled .comment-group-toggle > .dept-title::after {
+    content: "\25BE";
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    color: #64748b;
+    font-size: 16px;
+    line-height: 1;
+    transform: translateY(-50%) rotate(0deg);
+    transform-origin: center;
+    transition: transform .18s ease, color .18s ease;
+}
+
+.comment-groups-toggle-enabled .comment-group-toggle > .dept-title:hover::after,
+.comment-groups-toggle-enabled .comment-group-toggle > .dept-title:focus-visible::after {
+    color: #2563eb;
+}
+
+.comment-groups-toggle-enabled .comment-group-toggle > .dept-title:focus-visible {
+    border-radius: 4px;
+    outline: 2px solid rgba(37, 99, 235, .35);
+    outline-offset: 3px;
+}
+
+.comment-groups-toggle-enabled .comment-group-toggle.is-collapsed > .dept-title {
+    margin-bottom: 0;
+    border-bottom-color: transparent;
+}
+
+.comment-groups-toggle-enabled .comment-group-toggle.is-collapsed > .dept-title::after {
+    transform: translateY(-50%) rotate(-90deg);
 }
 
 /* Make DevExtreme text area & text box borders soft and modern */

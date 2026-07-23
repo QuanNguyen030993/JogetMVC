@@ -477,8 +477,7 @@ Note:
 
           
           var formModuleKeyPi = "pi";
-
-
+        setTimeout(() => enableDxFormGroupToggle("#mainContentGrid"), 0);
 
         var pICs = [];
         if ($('[data-toggle="push-menu"]').hasClass("sidebar-collapse")) {
@@ -766,22 +765,7 @@ Note:
         // =========================
         function setSectionCollapsed(dept, collapsed) {
             const $sec = $(`#${formModuleKeyPi}-sec${dept}`);
-            if (!$sec.length) return;
-            const body = $sec.find(".dept-body")[0];
-
-            if (collapsed) {
-                $sec.addClass("collapsed");
-                if (body) {
-                    body.style.maxHeight = body.scrollHeight + "px";
-                    setTimeout(() => { body.style.maxHeight = "0px"; }, 220);
-                }
-            } else {
-                $sec.removeClass("collapsed");
-                if (body) {
-                    body.style.maxHeight = body.scrollHeight + "px";
-                    setTimeout(() => { body.style.maxHeight = "2000px"; }, 220);
-                }
-            }
+            setDeptSectionCollapsed($sec, collapsed);
         }
 
            function toggleSection(dept) {

@@ -1156,39 +1156,7 @@ Note:
 
         function setSectionCollapsed(dept, collapsed) {
             var $sec = $(`#${formModuleKeyQt}-sec_${dept}_@ViewData["Id"]`);
-            if (!$sec.length) return;
-            var body = $sec.find(".dept-body")[0];
-            var bodyUpper = $sec.find(".dept-upperbody")[0];
-            var bodyLower = $sec.find(".dept-lowerbody")[0];
-            if (collapsed) {
-                $sec.addClass("collapsed");
-                if (body) {
-                    // body.style.maxHeight = body.scrollHeight + "px";
-                    setTimeout(() => { body.style.maxHeight = "0px";body.style.minHeight = "0px";  }, 220);
-                }
-                if (bodyUpper) {
-                    // bodyUpper.style.maxHeight = bodyUpper.scrollHeight + "px";
-                    setTimeout(() => { bodyUpper.style.maxHeight = "0px";bodyUpper.style.minHeight = "0px"; }, 220);
-                }
-                if (bodyLower) {
-                    // bodyLower.style.maxHeight = bodyLower.scrollHeight + "px";
-                    setTimeout(() => { bodyLower.style.maxHeight = "0px";bodyLower.style.minHeight = "0px";}, 220);
-                }
-            } else {
-                $sec.removeClass("collapsed");
-                if (body) {
-                    // body.style.maxHeight = body.scrollHeight + "px";
-                    setTimeout(() => { body.style.maxHeight = "2000px"; body.style.minHeight = "200px";}, 220);
-                }
-                if (bodyUpper) {
-                    // bodyUpper.style.maxHeight = bodyUpper.scrollHeight + "px";
-                    setTimeout(() => { bodyUpper.style.maxHeight = "2000px"; bodyUpper.style.minHeight = "50px";}, 220);
-                }
-                if (bodyLower) {
-                    // bodyLower.style.maxHeight = bodyLower.scrollHeight + "px";
-                    setTimeout(() => { bodyLower.style.maxHeight = "2000px"; bodyLower.style.minHeight = "200px";}, 220);
-                }
-            }
+            setDeptSectionCollapsed($sec, collapsed);
         }
 
         function bindSectionHeaderToggle() {
@@ -1202,7 +1170,7 @@ Note:
                     setSectionCollapsed(dept, !isCollapsed);
                 });
 
-                $(`#${formModuleKeyQt}-expandCollapsedBtn_${dept}`).dxButton({
+                $(`#${window.QuotationIdManager.expandCollapsedBtn(dept, @ViewData["Id"])}`).dxButton({
                     onClick: function () {
                         var isCollapsed = $sec.hasClass("collapsed");
                         setSectionCollapsed(dept, !isCollapsed);

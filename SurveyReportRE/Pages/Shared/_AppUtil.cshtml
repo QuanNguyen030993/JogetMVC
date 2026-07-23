@@ -7133,14 +7133,25 @@
 
                 function delayAcceptStatusV2(mainFields,formProps, ...params ){
                     var delayObject = structuredClone(formProps);
-                    var initialButtonId = getDelayAcceptButtonId(params[0]);
-                    var initialStatusId = getDelayAcceptStatusId(params[0]) || params[1] || params[3];
+                    var decisionItems = normalizeDecisionFieldButtons(params);
+                    var initialButtonId = getDelayAcceptButtonId(decisionItems[0]);
+                    var initialStatusId = getDecisionFieldStatusId(
+                        formProps,
+                        decisionItems,
+                        params[1] || params[3]
+                    );
                     setTimeout(() => {
                         setDecisionCommonStatus(initialStatusId, initialButtonId, "loading");
                     }, 0);
                     waitForDecisionRouteStage(formProps.formId).then(function () {
                         setTimeout(() => {
-                            renderDecisionDeferredV2(formProps, `decision${delayObject.dept}Group.acceptButton`, mainFields, ...params)
+                            var decisionFieldName = getDecisionFieldName(formProps, decisionItems);
+                            renderDecisionDeferredV2(
+                                formProps,
+                                `decision${delayObject.dept}Group.${decisionFieldName}`,
+                                mainFields,
+                                ...params
+                            )
                         }, FormStageDelay.routeState);
                     });
                 }
@@ -7151,7 +7162,7 @@
             var $status = $(`#${statusId}`);
             var $button = buttonId ? $(`#${buttonId}`) : $();
             if (!$status.length) {
-                $status = $(`<span id="${statusId}" class="accept-status-indicator decision-common-status decision-status-button" role="button" aria-disabled="true"></span>`);
+                $status = $(`<span id="${statusId}" class="accept-status-indicator decision-common-status decision-status-button" role="status" aria-live="polite"></span>`);
             }
 
             var $fieldItem = $button.length ? $button.closest(".dx-field-item") : $status.closest(".dx-field-item");
@@ -7180,7 +7191,8 @@
 
             $status
             .addClass("decision-common-status decision-status-button")
-            .attr({ role: "button", "aria-disabled": "true" })
+            .attr({ role: "status", "aria-live": "polite" })
+            .removeAttr("aria-disabled")
             .css({
                 display: "inline-flex",
                 alignItems: "center",
@@ -7276,38 +7288,83 @@
             }, []);
         }
 
+        function getDecisionFieldKey(formProps) {
+            var formKey = String(formProps?.formId || "form")
+                .replace(/[^a-zA-Z0-9_-]/g, "-");
+            var deptKey = String(formProps?.dept || "common")
+                .replace(/[^a-zA-Z0-9_-]/g, "-");
+            return `${formKey}-${deptKey}`;
+        }
+
+        function getDecisionFieldName(formProps, buttonItems) {
+            var primaryItem = buttonItems?.[0] || {};
+            return formProps?.decisionFieldName
+                || formProps?.fieldName
+                || primaryItem.fieldName
+                || "decisionStatus";
+        }
+
+        function getDecisionFieldStatusId(formProps, buttonItems, legacyStatusId) {
+            var explicitStatusId = formProps?.decisionStatusId
+                || formProps?.statusId
+                || (buttonItems || []).map(getDelayAcceptStatusId).find(Boolean)
+                || legacyStatusId;
+            return explicitStatusId || `decision-status-${getDecisionFieldKey(formProps)}`;
+        }
+
+        function getDecisionFieldActionHostId(formProps) {
+            return formProps?.decisionActionHostId
+                || formProps?.actionHostId
+                || `decision-actions-${getDecisionFieldKey(formProps)}`;
+        }
+
         /**
-         * V2 renders every supplied button config into the same decision action row.
-         * The same configs can be spread into delayAcceptStatusV2 afterwards, so the
-         * layout and the delayed route/status lifecycle share one source of truth.
+         * Renders a stable workflow decision field. Status is the primary element;
+         * the action host always exists so flow routes can inject buttons even when
+         * this field has no local Accept button.
          */
-        function decisionFieldV2(formProps, ...params) {
+        function workflowDecisionField(formProps, ...params) {
             var buttonItems = normalizeDecisionFieldButtons(params);
             var primaryItem = buttonItems[0] || {};
             var primaryButtonId = getDelayAcceptButtonId(primaryItem);
-            var commonStatusId = getDelayAcceptStatusId(primaryItem);
+            var commonStatusId = getDecisionFieldStatusId(formProps, buttonItems);
+            var actionHostId = getDecisionFieldActionHostId(formProps);
 
             return {
-                dataField: primaryItem.dataField || "decision",
-                name: primaryItem.fieldName || primaryItem.name || "acceptButton",
+                dataField: formProps?.decisionDataField || primaryItem.dataField || "decision",
+                name: getDecisionFieldName(formProps, buttonItems),
                 label: {
-                    text: primaryItem.labelText || "Decision",
-                    visible: primaryItem.labelVisible !== false
+                    text: formProps?.labelText || primaryItem.labelText || "Decision",
+                    visible: formProps?.labelVisible !== false && primaryItem.labelVisible !== false
                 },
                 visible: false,
                 itemType: "simple",
                 colSpan: primaryItem.colSpan || formProps?.decisionColSpan || 1,
-                cssClass: "decision-field-v2",
+                cssClass: "workflow-decision-field decision-field-v2",
                 template: function (data, itemElement) {
                     // Keep both rows as direct children of dx-field-item-content so
                     // ensureDecisionCommonStatus reuses them instead of creating a
                     // second action row and moving the primary button away.
-                    var $content = $(itemElement).addClass("decision-field-v2-content");
-                    $("<div>", {
+                    var $content = $(itemElement)
+                        .addClass("workflow-decision-field-content decision-field-v2-content");
+                    var $statusRow = $("<div>", {
                         class: "decision-status-row",
-                        "aria-live": "polite"
+                        "aria-live": "polite",
+                        "data-decision-status-host": "true"
                     }).appendTo($content);
-                    var $actionRow = $("<div>", { class: "decision-action-row" }).appendTo($content);
+                    $("<span>", {
+                        id: commonStatusId,
+                        class: "accept-status-indicator decision-common-status decision-status-button",
+                        role: "status",
+                        "aria-live": "polite"
+                    }).appendTo($statusRow);
+
+                    var $actionRow = $("<div>", {
+                        id: actionHostId,
+                        class: "decision-action-row",
+                        "data-decision-action-host": "true",
+                        "data-route-dept": formProps?.dept || ""
+                    }).appendTo($content);
 
                     buttonItems.forEach(function (item, index) {
                         var config = typeof item === "string" ? { buttonId: item } : item;
@@ -7339,18 +7396,22 @@
                         if (config.buttonClass) $button.addClass(config.buttonClass);
                     });
 
-                    if (commonStatusId) {
-                        setTimeout(function () {
-                            console.log("decisionFieldV2");
-                            // setDecisionCommonStatus(commonStatusId, primaryButtonId, "idle", "No status");
-                        }, _delayRenderDecisionButton);
-                    }
+                    setDecisionCommonStatus(
+                        commonStatusId,
+                        primaryButtonId,
+                        formProps?.initialDecisionStatus || primaryItem.initialDecisionStatus || "No status"
+                    );
                 }
             };
         }
 
+        // Compatibility alias. Use workflowDecisionField for new and refactored forms.
+        function decisionFieldV2(formProps, ...params) {
+            return workflowDecisionField(formProps, ...params);
+        }
+
         // Compatibility wrapper for existing department forms. New forms should pass
-        // config objects to decisionFieldV2(formProps, ...buttonConfigs).
+        // config objects to workflowDecisionField(formProps, ...buttonConfigs).
         function decisionField(formId, dept, acceptButtonId, acceptStatusElement, rejectButtonId, rejectStatusElement) {
             var items = [];
             if (acceptButtonId) {
@@ -7374,7 +7435,7 @@
                     disabled: true
                 });
             }
-            return decisionFieldV2({ formId: formId, dept: dept }, ...items);
+            return workflowDecisionField({ formId: formId, dept: dept }, ...items);
         }
 
 
@@ -7711,7 +7772,12 @@
                  const formDataClone = structuredClone(formProps);
 
                     var commonAcceptButtonId = getDelayAcceptButtonId(params[0]);
-                    var commonStatusId = getDelayAcceptStatusId(params[0]) || params[1] || params[3];
+                    var normalizedDecisionItems = normalizeDecisionFieldButtons(params);
+                    var commonStatusId = getDecisionFieldStatusId(
+                        formProps,
+                        normalizedDecisionItems,
+                        params[1] || params[3]
+                    );
                     setDecisionCommonStatus(commonStatusId, commonAcceptButtonId, "loading");
                     setTimeout(() => {
                         var form = $(`#${formDataClone.formId}`).dxForm("instance");
@@ -7776,7 +7842,11 @@
                             );
                       if (latestTatObject?.[formDataClone.dept]?.AcceptDate)
                          {
-                          var acceptStatusId = getDelayAcceptStatusId(params[0]) || params[1];
+                          var acceptStatusId = getDecisionFieldStatusId(
+                              formDataClone,
+                              normalizedDecisionItems,
+                              params[1] || params[3]
+                          );
                           var skipAcceptedMainFields = params[0] && typeof params[0] === "object" && params[0].skipAcceptedMainFields;
                           if (acceptButtonId)
                              {
@@ -7837,7 +7907,8 @@
                                 acceptButtonId,
                                finalDecisionStatus.title
                             );
-                            if (formItems.stageDept == formDataClone.dept
+                            if (acceptButtonId
+                                && formItems.stageDept == formDataClone.dept
                                 && !latestTatObject?.[formDataClone.dept]?.AcceptDate
                                 && !renderedStoredStatus) {
                                 $(`#${acceptButtonId}`).dxButton("instance")?.option("disabled", false);

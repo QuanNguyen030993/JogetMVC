@@ -1126,75 +1126,7 @@ Note:
 
         function setSectionCollapsed(dept, collapsed) {
             var $sec = $(`#${formModuleKeyPi}-sec_${dept}_@ViewData["Id"]`);
-            if (!$sec.length) return;
-            var body = $sec.find(".dept-body")[0];
-            var bodyUpper = $sec.find(".dept-upperbody")[0];
-            var bodyLower = $sec.find(".dept-lowerbody")[0];
-            var bodyFooter = $sec.find(".dept-footer")[0];
-            if (collapsed) {
-                $sec.addClass("collapsed");
-                if (body) {
-                     body.style.maxHeight = body.scrollHeight + "px";
-                     setTimeout(() => {
-                         body.style.maxHeight = "0px";
-                         body.style.minHeight = "0px";
-                     }, 220);
-                }
-                if (bodyUpper) {
-                     bodyUpper.style.maxHeight = bodyUpper.scrollHeight + "px";
-                     setTimeout(() => {
-                         bodyUpper.style.maxHeight = "0px";
-                         bodyUpper.style.minHeight = "0px";
-                     }, 220);
-                }
-                if (bodyLower) {
-                     bodyLower.style.maxHeight = bodyLower.scrollHeight + "px";
-                     setTimeout(() => {
-                         bodyLower.style.maxHeight = "0px";
-                         bodyLower.style.minHeight = "0px";
-                     }, 220);
-                }
-                if (bodyFooter) {
-                    bodyFooter.style.maxHeight = bodyFooter.scrollHeight + "px";
-                    setTimeout(() => {
-                        bodyFooter.style.maxHeight = "0px";
-                        bodyFooter.style.minHeight = "0px";
-                        bodyFooter.style.opacity = "0";
-                        bodyFooter.style.overflow = "hidden";
-                    }, 220);
-                }
-            } else {
-                $sec.removeClass("collapsed");
-                if (body) {
-                     body.style.maxHeight = body.scrollHeight + "px";
-                     setTimeout(() => {
-                         body.style.maxHeight = "5000px";
-                         body.style.minHeight = "200px";
-                     }, 220);
-                }
-                if (bodyUpper) {
-                 bodyUpper.style.maxHeight = bodyUpper.scrollHeight + "px";
-                 setTimeout(() => {
-                     bodyUpper.style.maxHeight = "5000px";
-                     bodyUpper.style.minHeight = "50px";
-                 }, 220);
-                }
-                    if (bodyLower) {
-                     bodyLower.style.maxHeight = bodyLower.scrollHeight + "px";
-                 setTimeout(() => {
-                     bodyLower.style.maxHeight = "5000px";
-                     bodyLower.style.minHeight = "200px";
-                 }, 220);
-                }
-                if (bodyFooter) {
-                    bodyFooter.style.maxHeight = bodyFooter.scrollHeight + "px";
-                    bodyFooter.style.opacity = "1";
-                    setTimeout(() => {
-                        bodyFooter.style.maxHeight = "5000px";
-                        bodyFooter.style.overflow = "visible";
-                    }, 220);
-                }
-            }
+            setDeptSectionCollapsed($sec, collapsed);
         }
 
         function bindSectionHeaderToggle() {

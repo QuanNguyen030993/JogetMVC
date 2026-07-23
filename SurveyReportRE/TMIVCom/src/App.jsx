@@ -3,6 +3,7 @@ import CustomGrid from './components/CustomGrid';
 import HtmlEditor from './components/HtmlEditor';
 import DateBox from './components/DateBox';
 import CommentEditor from './components/CommentEditor';
+import CommentEditorRoute from './components/CommentEditorRoute';
 import TextBox from './components/TextBox';
 import NumberBox from './components/NumberBox';
 import CheckBox from './components/CheckBox';
@@ -168,6 +169,32 @@ function App() {
 
     const uploaderRef = useRef(null);
 
+    const demoDepartments = [
+        { id: 'UW', name: 'Phòng Bảo hiểm (Underwriting)' },
+        { id: 'CLAIM', name: 'Phòng Bồi thường (Claims)' },
+        { id: 'IT', name: 'Phòng Công nghệ thông tin (IT)' },
+        { id: 'FIN', name: 'Phòng Kế toán tài chính (Finance)' }
+    ];
+
+    const [routeComments, setRouteComments] = useState([
+        {
+            id: 1,
+            author: 'Nguyễn Văn A',
+            role: 'Chuyên viên UW',
+            text: 'Đã hoàn thành thẩm định sơ bộ, đề xuất chuyển phòng bồi thường xem xét lịch sử tổn thất.',
+            time: '14:20',
+            toDepartment: 'Phòng Bồi thường (Claims)'
+        },
+        {
+            id: 2,
+            author: 'Trần Thị B',
+            role: 'Trưởng nhóm Claims',
+            text: 'Đã kiểm tra lịch sử tổn thất của khách hàng, đề xuất chuyển phòng IT hỗ trợ cấu hình hệ thống tính phí đặc thù.',
+            time: '15:45',
+            toDepartment: 'Phòng Công nghệ thông tin (IT)'
+        }
+    ]);
+
     const [formData] = useState({
         ModuleName: "PolicyIssuance",
         code: "POL001",
@@ -269,27 +296,43 @@ function App() {
           />
         </div>
       </section>
- <div className="tmivcom-app">
-      <header className="header">
-        <div>
-          <h1>TMIVCom Reusable Controls</h1>
-      <FileUploader
-                ref={uploaderRef}
-                guid="3b6f39cc-8a18-4ce3-a8d2-cceb2757a111"
-                data={formData}
-                specificFolder="QuotationDoc"
-                controllerName="Document"
-                titleName="Upload tài liệu"
-                multiple={true}
-                maxFileSize={20 * 1024 * 1024}
-                accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg"
-                onUploaded={handleUploaded}
-                onDeleted={handleDeleted}
-                onChange={handleChange}
-            />
-              </div>
-      </header>
-</div>
+      <section className="section">
+        <div className="section-title">File Uploader</div>
+        <div style={{ padding: '16px', background: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+          <FileUploader
+            ref={uploaderRef}
+            guid="3b6f39cc-8a18-4ce3-a8d2-cceb2757a111"
+            data={formData}
+            specificFolder="QuotationDoc"
+            controllerName="Document"
+            titleName="Upload tài liệu"
+            multiple={true}
+            maxFileSize={20 * 1024 * 1024}
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg"
+            onUploaded={handleUploaded}
+            onDeleted={handleDeleted}
+            onChange={handleChange}
+          />
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="section-title">Comment Editor & Route (Ý kiến và Định hướng chuyển phòng ban)</div>
+        <div style={{ padding: '16px', background: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+          <CommentEditorRoute
+            items={routeComments}
+            departments={demoDepartments}
+            valueExpr="id"
+            displayExpr="name"
+            routePlaceholder="Chọn phòng ban cần định hướng giải quyết..."
+            routeLabel="Định hướng xử lý:"
+            onSubmit={(newComment, nextComments) => {
+              setRouteComments(nextComments);
+              notify(`Đã lưu ý kiến định hướng đến <b>${newComment.toDepartment}</b>!`, "success");
+            }}
+          />
+        </div>
+      </section>
 
 
 {/* 
