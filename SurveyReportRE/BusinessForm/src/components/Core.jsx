@@ -1,5 +1,6 @@
 import Flow from "../components/Flow.jsx"
 import WorkloadChart from "../components/WorkloadChart.jsx";
+import TATChart from "../components/TATChart.jsx";
 import React from "react";
 
 import { createRoot } from "react-dom/client";
@@ -170,7 +171,9 @@ function createJQueryPlugin(pluginName, componentName) {
 
 createJQueryPlugin("flow", "Flow");
 createJQueryPlugin("workloadchart", "WorkloadChart");
+createJQueryPlugin("tatchart", "TATChart");
 
 register("Flow", Flow);
 register("WorkloadChart", WorkloadChart);
-export default { WorkloadChart, Flow };
+register("TATChart", TATChart);
+export default { WorkloadChart, Flow, TATChart };

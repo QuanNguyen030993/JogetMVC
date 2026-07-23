@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState,useMemo  } from 'react';
 import { API_BASE_URL } from './config';
 
 import WorkloadChart from './components/WorkloadChart';
+import TATChart from './components/TATChart';
 // import MailTemplateDesigner from './components/MailTemplateDesigner';
 // import MailQueue from './components/MailQueue';
 import Flow from './components/Flow';
@@ -153,6 +154,7 @@ function App() {
 
   const menuItems = [
     { id: 'dashboard', label: 'Báo cáo công việc (Dashboard)' },
+    { id: 'tat', label: 'TAT Chart' },
     { id: 'serilog', label: 'Nhật ký hệ thống (Serilogs)' },
     { id: 'asplog', label: 'Nhật ký ứng dụng (ASP Log)' },
     { id: 'diagram', label: 'Diagram' }
@@ -166,6 +168,8 @@ function App() {
         return <AspLogViewer />;
       case 'diagram':
         return <Flow id={11} guid="6c5c0375-f255-49f7-aaec-c17ce778fe53"/>;
+      case 'tat':
+        return <TATChart />;
       case 'dashboard':
       default:
         return <WorkloadChart data={data} />;
@@ -203,6 +207,7 @@ function App() {
               }}
             >
               {item.id === 'dashboard' && <i className="fas fa-tachometer-alt" style={{ width: 18 }}></i>}
+              {item.id === 'tat' && <i className="fas fa-clock" style={{ width: 18 }}></i>}
               {item.id === 'serilog' && <i className="fas fa-database" style={{ width: 18 }}></i>}
               {item.id === 'asplog' && <i className="fas fa-file-alt" style={{ width: 18 }}></i>}
               {item.label}
