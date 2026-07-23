@@ -6167,13 +6167,15 @@ textarea {
 
 .overview-scroll .dept-section > .dept-header.dept-header-floated {
     border: 0 !important;
-    border-radius: 0 0 10px 10px !important;
+    border-radius: 10px 10px 0 0 !important;
+    margin-left: -25px !important;
+    margin-right: -25px !important;
     background: #fff !important;
     box-shadow:
-        inset 0 2px 0 #60a5fa,
-        inset 0 -2px 0 #2563eb,
-        inset 2px 0 0 #60a5fa,
-        inset -2px 0 0 #60a5fa,
+        inset 0 3px 0 #60a5fa,
+        inset 0 -3px 0 #2563eb,
+        inset 3px 0 0 #60a5fa,
+        inset -3px 0 0 #60a5fa,
         0 12px 28px rgba(15, 23, 42, .24) !important;
 }
 

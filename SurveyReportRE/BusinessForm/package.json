@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node move-to-wwwroot.js",
+    "build": "npm run build:lib",
     "preview": "vite preview",
     "build:lib": "vite build --config vite.config.lib.js"
   },

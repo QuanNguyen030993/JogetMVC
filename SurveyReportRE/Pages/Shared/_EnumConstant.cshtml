@@ -62,8 +62,13 @@
     if (!item.length)
             ajaxGet(`/api/EnumData/FetchEnum/${index}`).done(res => {
                 if (res) _enums[index] = res;
-                if (index === "NotificationType" && typeof refreshNotifUI === "function") {
-                    refreshNotifUI();
+                if (index === "NotificationType") {
+                    if (typeof refreshNotificationTypeFilterData === "function") {
+                        refreshNotificationTypeFilterData();
+                    }
+                    if (typeof refreshNotifUI === "function") {
+                        refreshNotifUI();
+                    }
                 }
         });
     });
