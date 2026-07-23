@@ -5859,6 +5859,338 @@ textarea {
     transform: translateY(-50%) rotate(-90deg);
 }
 
+/* Current section marker synchronized from the overview scroll position. */
+.dept-node.scroll-active .dept-circle,
+.dept-node.status.scroll-active .dept-circle,
+.dept-node.focus.scroll-active .dept-circle {
+    border-color: #2563eb;
+    transform: scale(1.1);
+    box-shadow: 0 0 0 5px rgba(37, 99, 235, .2), 0 12px 24px rgba(15, 23, 42, .14);
+}
+
+.dept-node.scroll-active .dept-callout {
+    border-color: rgba(37, 99, 235, .45);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, .12);
+}
+
+/* A continuous scroll position beacon that travels on the department axis. */
+.dept-tree .dept-scroll-beacon {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 10px;
+    height: 10px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: #2563eb;
+    box-shadow:
+        0 0 0 4px rgba(37, 99, 235, .18),
+        0 0 14px 5px rgba(37, 99, 235, .62);
+    transform: translate(-50%, -50%);
+    transition: top .08s linear;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.dept-tree .dept-scroll-beacon::after {
+    content: "";
+    position: absolute;
+    inset: -7px;
+    border: 1px solid rgba(37, 99, 235, .5);
+    border-radius: inherit;
+    animation: deptBeaconPulse 1.4s ease-out infinite;
+}
+
+@keyframes deptBeaconPulse {
+    0% {
+        opacity: .85;
+        transform: scale(.45);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.35);
+    }
+}
+
+/* The main axis keeps its original size. Clicking a vertical segment fans its
+   four section shortcuts out beside the axis on a compact arc. */
+.dept-tree .treeStack {
+    pointer-events: auto;
+}
+
+.dept-tree .vline {
+    transform: translateX(-50%);
+    width: 2px;
+    background: var(--line);
+    box-shadow: none;
+}
+
+.dept-node .dept-subnodes {
+    position: absolute;
+    left: 50%;
+    right: auto;
+    /* The node gap is 22px: place the fan origin at the midpoint of the
+       vertical segment between this department and the following one. */
+    top: calc(100% + 11px);
+    width: var(--node);
+    height: var(--node);
+    display: block;
+    transform: translate(-50%, -50%);
+    visibility: visible;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.dept-node .dept-axis-trigger {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 20px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    transform: translate(-50%, -50%);
+    pointer-events: auto;
+    cursor: pointer;
+    z-index: 6;
+}
+
+.dept-node .dept-axis-trigger::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 2px;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--line);
+    transform: translateX(-50%);
+    transition: width .15s ease, background-color .15s ease, box-shadow .15s ease;
+}
+
+.dept-node .dept-axis-trigger:hover::before,
+.dept-node .dept-axis-trigger:focus-visible::before,
+.dept-node.fan-open .dept-axis-trigger::before {
+    width: 4px;
+    background: #60a5fa;
+    box-shadow: 0 0 8px rgba(37, 99, 235, .48);
+}
+
+.dept-node .dept-axis-trigger:focus-visible {
+    outline: none;
+}
+
+.dept-node .dept-subnodes::before {
+    content: "";
+    position: absolute;
+    left: -57px;
+    top: -27px;
+    width: 48px;
+    height: 76px;
+    border-left: 1px solid rgba(96, 165, 250, .75);
+    border-radius: 50%;
+    opacity: 0;
+    transform: scale(.55);
+    transform-origin: right center;
+    transition: opacity .16s ease, transform .24s cubic-bezier(.2, .8, .2, 1);
+    pointer-events: none;
+}
+
+.dept-node .dept-subnode {
+    --fan-x: -38px;
+    --fan-y: 0px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 13px;
+    height: 13px;
+    padding: 0;
+    border: 2px solid #60a5fa;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, .18);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(.2);
+    transition:
+        opacity .18s ease,
+        transform .24s cubic-bezier(.2, .8, .2, 1),
+        color .16s ease,
+        background-color .16s ease,
+        border-color .16s ease;
+    transition-delay: calc(var(--sub-index) * 28ms);
+    pointer-events: none;
+    cursor: pointer;
+}
+
+.dept-node .dept-subnode:nth-child(2) {
+    --fan-x: -39px;
+    --fan-y: -32px;
+}
+
+.dept-node .dept-subnode:nth-child(3) {
+    --fan-x: -57px;
+    --fan-y: -11px;
+}
+
+.dept-node .dept-subnode:nth-child(4) {
+    --fan-x: -57px;
+    --fan-y: 11px;
+}
+
+.dept-node .dept-subnode:nth-child(5) {
+    --fan-x: -39px;
+    --fan-y: 32px;
+}
+
+.dept-node .dept-subnode::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: auto;
+    right: calc(100% + 10px);
+    top: 50%;
+    bottom: auto;
+    min-width: max-content;
+    padding: 5px 8px;
+    border: 1px solid #bfdbfe;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .96);
+    color: #1e3a8a;
+    font: 600 11px/1.2 sans-serif;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, .14);
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(4px, -50%) scale(.96);
+    transition: opacity .14s ease, transform .14s ease, visibility .14s ease;
+    pointer-events: none;
+    z-index: 8;
+}
+
+.dept-node .dept-subnode::before {
+    content: "";
+    position: absolute;
+    left: auto;
+    right: calc(100% + 1px);
+    top: 50%;
+    bottom: auto;
+    width: 10px;
+    height: 1px;
+    background: #60a5fa;
+    transform: translateY(-50%);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .14s ease, visibility .14s ease;
+    pointer-events: none;
+    z-index: 7;
+}
+
+.dept-node.fan-open .dept-subnodes {
+    pointer-events: auto;
+}
+
+.dept-node.fan-open .dept-callout {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.dept-node.fan-open .dept-subnodes::before {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.dept-node.fan-open .dept-subnode {
+    opacity: 1;
+    transform:
+        translate(
+            calc(-50% + var(--fan-x)),
+            calc(-50% + var(--fan-y))
+        )
+        scale(1);
+    pointer-events: auto;
+}
+
+.dept-node.fan-open .dept-subnode::before,
+.dept-node.fan-open .dept-subnode::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+.dept-node.fan-open .dept-subnode::after {
+    transform: translate(0, -50%) scale(1);
+}
+
+.dept-node .dept-subnode:hover::after,
+.dept-node .dept-subnode:focus-visible::after {
+    border-color: #60a5fa;
+    color: #1d4ed8;
+    box-shadow: 0 6px 16px rgba(37, 99, 235, .22);
+}
+
+.dept-node .dept-subnode:hover,
+.dept-node .dept-subnode:focus-visible,
+.dept-node .dept-subnode.part-active {
+    border-color: #1d4ed8;
+    background: #2563eb;
+    outline: none;
+    transform:
+        translate(
+            calc(-50% + var(--fan-x)),
+            calc(-50% + var(--fan-y))
+        )
+        scale(1.12);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, .16), 0 7px 16px rgba(37, 99, 235, .24);
+}
+
+/* The current department header stays at the top edge of the overview scroll
+   pane until the following department header pushes it away. */
+.overview-scroll .dept-section > .dept-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 50;
+    box-sizing: border-box;
+    isolation: isolate;
+    overflow: visible;
+    opacity: 1 !important;
+    background: #f8fafc !important;
+    background-image: none !important;
+    backdrop-filter: none !important;
+}
+
+/* Remove the original 14px top inset so the sticky department header sits
+   directly against the upper edge of the overview pane. */
+.overview-scroll {
+    padding-top: 0;
+    scroll-padding-top: 0;
+}
+
+.overview-scroll .dept-section > .dept-header.dept-header-floated {
+    border: 0 !important;
+    border-radius: 0 0 10px 10px !important;
+    background: #fff !important;
+    box-shadow:
+        inset 0 -2px 0 #2563eb,
+        inset 2px 0 0 #60a5fa,
+        inset -2px 0 0 #60a5fa,
+        0 12px 28px rgba(15, 23, 42, .24) !important;
+}
+
+.overview-scroll .dept-section > .dept-header.dept-header-floated .dept-title {
+    color: #1d4ed8 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dept-tree .dept-scroll-beacon,
+    .dept-node .dept-subnode {
+        transition: none;
+    }
+
+    .dept-tree .dept-scroll-beacon::after {
+        animation: none;
+    }
+}
+
 /* Make DevExtreme text area & text box borders soft and modern */
 .dept-upperbody .dx-texteditor {
     border-radius: 6px !important;
